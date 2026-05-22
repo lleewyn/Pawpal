@@ -322,14 +322,34 @@ ul {
    ========================================================================== */
 .hero-section {
     position: relative;
-    background-image: url('../images/hero-bg.png');
-    background-size: cover;
-    background-position: center;
+    overflow: hidden;
     padding: 140px 0 100px;
     color: #ffffff;
     min-height: 80vh;
     display: flex;
     align-items: center;
+}
+
+.hero-video-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100vw;
+    height: 56.25vw; /* 16:9 Aspect Ratio */
+    min-width: 100%;
+    min-height: 100%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.hero-video-bg iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
 }
 
 .hero-overlay {
@@ -338,7 +358,8 @@ ul {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, rgba(42, 89, 68, 0.7) 30%, rgba(42, 89, 68, 0.4) 100%);
+    background: linear-gradient(135deg, rgba(42, 89, 68, 0.75) 30%, rgba(42, 89, 68, 0.45) 100%);
+    z-index: 2;
 }
 
 .hero-container {
