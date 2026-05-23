@@ -1,0 +1,104 @@
+User Story 1a: Đăng ký thành viên chủ động
+Là một Khách hàng mới, tôi muốn thực hiện đăng ký tài khoản bằng số điện thoại và xác thực OTP để trở thành thành viên chính thức, bắt đầu tích lũy điểm thưởng và sử dụng đầy đủ các tính năng của Pawpal.
+
+Acceptance Criteria (AC):
+Hiển thị Form: Hệ thống hiển thị Form đăng ký gồm các trường: Họ tên (Text), Số điện thoại (Number), Mật khẩu (Password), Xác nhận mật khẩu.
+
+Lưu ý: Tất cả thông tin đều phải hợp lệ, Xác nhận mật khẩu phải khớp Mật khẩu thì nút Đăng ký mới được mở khóa
+
+Kiểm tra tính duy nhất: 
+
+Nếu SĐT đã tồn tại, hiển thị thông báo lỗi: "Số điện thoại đăng ký đã tồn tại. Vui lòng đăng nhập hoặc khôi phục mật khẩu!".
+
+Nếu SĐT sai định dạng (không đủ 10 số), hiển thị dòng cảnh báo đỏ dưới ô nhập 
+
+Kích hoạt OTP: Khi thông tin hợp lệ, hệ thống gửi mã OTP qua SMS Gateway. Mã có hiệu lực trong 05 phút.
+
+Xác thực thành công: Sau khi nhập đúng OTP, tài khoản được xác lập. Hệ thống điều hướng về Trang chủ.
+
+Ưu đãi chào mừng: Hiển thị Popup/Thông báo: "Chào mừng thành viên mới! Bạn đã nhận được 50 Paw Points đầu tiên".
+
+Mô tả giao diện:
+Giao diện đăng ký: đã des
+
+Popup OTP: Một cửa sổ nhỏ hiện lên giữa màn hình với 6 ô nhập mã số, có đồng hồ đếm ngược (05:00) và dòng chữ "Gửi lại mã" (mờ đi cho đến khi hết 60 giây).
+User Story 1b: Định danh lũy tiến cho Khách vãng lai
+Là một Khách hàng vãng lai đang thực hiện đặt lịch, tôi muốn hệ thống tự động ghi nhận thông tin của tôi mà không bắt buộc đăng ký ngay để quy trình đặt lịch không bị gián đoạn, đồng thời vẫn có cơ hội nhận ưu đãi sau khi giao dịch hoàn tất.
+
+Acceptance Criteria (AC):
+
+Khởi tạo ngầm: Khi Khách vãng lai nhấn "Xác nhận đặt lịch", hệ thống tự động khởi tạo một "Tài khoản tạm" trong CSDL dựa trên SĐT đã nhập.
+
+Quyền truy cập tạm thời: Hệ thống cho phép khách hàng xem lịch hẹn vừa đặt trên giao diện mà không yêu cầu mật khẩu ngay lúc đó.
+
+Gửi SMS kích hoạt: Ngay sau khi đặt lịch thành công, hệ thống gửi SMS chứa: Nội dung chào mừng + Link thiết lập mật khẩu.
+
+Hiệu lực liên kết: Link trong SMS phải có hiệu lực trong 48 giờ. Nếu truy cập sau 48 giờ, hiển thị trang lỗi kèm nút "Gửi lại link xác thực mới".
+
+Chuyển đổi trạng thái: Sau khi khách hàng đặt mật khẩu qua Link thành công, tài khoản chuyển từ "Tài khoản tạm" sang "Thành viên chính thức" và cộng 50 Paw Points vào ví.
+
+Mô tả giao diện:
+
+Màn hình Xác nhận đặt lịch: Có một dòng thông tin nhỏ ở dưới cùng: "Thông tin của bạn sẽ được lưu giữ để tích điểm thưởng cho lần sau".
+
+Trang thiết lập mật khẩu (từ Link SMS): Giao diện web hiển thị tên khách hàng và trường nhập Mật khẩu mới/Xác nhận mật khẩu, kèm theo hình ảnh món quà (50 điểm) để kích thích khách hàng hoàn tất.
+
+User Story 2a: Đăng nhập hệ thống
+Là một Người dùng (Thành viên hoặc Khách vãng lai), tôi muốn có thể đăng nhập vào hệ thống bằng mật khẩu hoặc mã xác thực OTP để truy cập vào Dashboard cá nhân, quản lý Pet ID và theo dõi các dịch vụ đang sử dụng.
+
+Acceptance Criteria (AC):
+
+Kiểm tra định danh: Khi nhập SĐT, nếu SĐT chưa tồn tại trong CSDL, hệ thống hiển thị thông báo lỗi: "Số điện thoại chưa được đăng ký. Vui lòng thực hiện đăng ký" kèm nút "Đăng ký ngay".
+
+Xác thực Mật khẩu (Thành viên): Đối với tài khoản đã kích hoạt bảo mật, nếu nhập sai mật khẩu, hệ thống báo lỗi: "Mật khẩu đăng nhập không chính xác".
+
+Xác thực OTP: Khách vãng lai có thể chọn "Đăng nhập qua OTP". Hệ thống gửi mã qua SMS Gateway có hiệu lực trong 05 phút. Đăng nhập thành công khi mã khớp.
+
+Quên mật khẩu: Hệ thống yêu cầu nhập số điện thoại, sau đó gửi link khôi phục qua SMS Gateway với hiệu lực 48 giờ để thiết lập lại mật khẩu mới.
+
+Giới hạn đăng nhập sai: Nếu nhập sai mật khẩu 05 lần liên tiếp, hệ thống tự động khóa tài khoản trong 30 phút.
+
+Khởi tạo phiên: Khi đăng nhập thành công, hệ thống cập nhật trạng thái Session Active, ghi nhận thời gian truy cập và điều hướng người dùng về Trang chủ.
+
+Mô tả giao diện:
+
+Màn hình Đăng nhập: Thiết kế tập trung vào hai trường chính (SĐT và Mật khẩu). Có tùy chọn chuyển đổi linh hoạt giữa "Đăng nhập bằng mật khẩu" và "Đăng nhập bằng OTP". Dòng “Quên mật khẩu” nằm dưới ô
+
+Trạng thái Khóa tài khoản: Hiển thị một lớp phủ (Overlay) mờ trên màn hình với biểu tượng ổ khóa, đồng hồ đếm ngược thời gian chờ và nút bấm gọi nhanh Hotline hỗ trợ.
+User Story 2b: Thay đổi mật khẩu và Bảo mật nâng cao
+Là một Thành viên đã đăng nhập, tôi muốn có thể thay đổi mật khẩu cá nhân trong mục cấu hình để tăng cường tính bảo mật cho tài khoản và bảo vệ thông tin của thú cưng.
+
+Acceptance Criteria (AC):
+
+Yêu cầu xác minh: Khi chọn "Đổi mật khẩu", hệ thống yêu cầu người dùng nhập mật khẩu cũ hoặc xác thực mã OTP từ SMS Gateway để xác nhận chính chủ.
+
+Ràng buộc mật khẩu mới: Mật khẩu mới phải đáp ứng: tối thiểu 8 ký tự, có ít nhất 1 chữ số và 1 ký tự đặc biệt.
+
+Đồng bộ hóa CSDL: Sau khi xác nhận mật khẩu mới hợp lệ, hệ thống cập nhật mật khẩu đã mã hóa vào CSDL và hiển thị thông báo "Cập nhật mật khẩu thành công".
+
+Ràng buộc tính năng nhạy cảm: Nếu người dùng chưa thiết lập mật khẩu (tài khoản tạm), hệ thống sẽ chặn truy cập vào mục "Đổi điểm thưởng" và yêu cầu hoàn thiện mật khẩu trước.
+
+Mô tả giao diện:
+
+Trang Cấu hình tài khoản: Giao diện dạng thẻ (Tab), mục "Bảo mật" nằm riêng biệt với các trường nhập liệu rõ ràng, có bộ đo độ mạnh yếu của mật khẩu (Thanh màu từ Đỏ sang Xanh).
+
+User Story 2c: Quản lý phiên và Cảnh báo bảo mật
+Là một Khách hàng, tôi muốn hệ thống tự động bảo vệ tài khoản khi tôi quên đăng xuất hoặc có truy cập lạ để giảm thiểu rủi ro bị đánh cắp thông tin cá  nhân.
+
+Acceptance Criteria (AC):
+
+Hết hạn phiên làm việc: Sau 55 phút không có thao tác, hiển thị một Popup đếm ngược (5 phút) với dòng chữ "Phiên đăng nhập sắp hết hạn" kèm nút "Tiếp tục đăng nhập" để gia hạn session. Đúng 60 phút không có thao tác, hệ thống tự động kết thúc phiên, điều hướng về trang đăng nhập kèm thông báo: "Phiên đăng nhập đã kết thúc, vui lòng đăng nhập lại!".
+
+Cảnh báo thiết bị lạ: Nếu đăng nhập từ một địa chỉ IP hoặc thiết bị chưa từng được ghi nhận, hệ thống gửi ngay tin nhắn SMS: "Phát hiện đăng nhập bất thường vào tài khoản Pawpal của bạn".
+
+Khôi phục mật khẩu: Tại màn hình đăng nhập, nếu chọn "Quên mật khẩu", hệ thống gửi link khôi phục qua SMS Gateway có hiệu lực 48 giờ để khách hàng thiết lập lại mật khẩu mới.
+
+Mô tả giao diện:
+
+Thông báo phiên hết hạn: Một Popup cảnh báo xuất hiện trước khi phiên kết thúc 1 phút, cho phép người dùng nhấn "Tiếp tục đăng nhập" để gia hạn phiên.
+
+Email/SMS cảnh báo: Nội dung ngắn gọn, súc tích, bao gồm thông tin thiết bị, vị trí và thời gian truy cập.
+
+
+
+

@@ -1,0 +1,1046 @@
+1.1. Bối cảnh hình thành ý tưởng và động lực phát triển
+1.1.1. Bối cảnh thực tiễn và Khoảnh khắc khơi gợi
+Trong những năm gần đây, ngành dịch vụ chăm sóc thú cưng tại Việt Nam đang trải qua giai đoạn tăng trưởng ấn tượng. Xu hướng "nhân cách hóa thú cưng" nơi mà thú cưng được coi như một thành viên thực sự trong gia đình đã thúc đẩy nhu cầu sử dụng các dịch vụ cao cấp như Pet Spa, cắt tỉa làm đẹp và lưu trú tăng mạnh, đặc biệt tại các đô thị lớn như TP.HCM và Hà Nội. Nhiều cơ sở kinh doanh đã nỗ lực nâng cấp chất lượng dịch vụ, đầu tư cơ sở vật chất và xây dựng đội ngũ nhân viên chuyên nghiệp.
+Tốc độ tăng trưởng nhu cầu hiện tại đang vượt xa khả năng đáp ứng về mặt công nghệ quản lý của nhiều cơ sở. Phần lớn các cửa hàng vẫn tiếp nhận đặt lịch qua tin nhắn mạng xã hội hoặc điện thoại, quản lý lịch hẹn bằng sổ tay và ghi nhớ sở thích khách hàng bằng kinh nghiệm cá nhân. Điều này không phải vì họ thiếu tâm huyết, mà bởi thị trường chưa có một giải pháp số hóa nào thực sự phù hợp và dễ tiếp cận dành riêng cho ngành dịch vụ thú cưng. Kết quả là, ngay cả những cơ sở có chất lượng dịch vụ tốt vẫn gặp khó khăn trong việc mang đến trải nghiệm liền mạch và minh bạch cho khách hàng, đặc biệt vào các dịp cao điểm.
+Ý tưởng xây dựng PawPal không đến từ một buổi họp chiến lược hay một bản phân tích thị trường khô khan. Nó bắt đầu từ câu chuyện của chị Phượng vào dịp Tết  khi chị đã nhắn tin cho hết Fanpage này đến Fanpage khác, chờ đợi hết lần này đến lần khác, mà vẫn không tìm được một chỗ gửi Bông ưng ý.
+Chị Phượng, 26 tuổi, là nhân viên Marketing tại một công ty truyền thông ở Quận 7, TP.HCM. Chị lên thành phố làm việc từ năm 22 tuổi, thuê phòng trọ một mình và sống khá tự lập. Với chị, sự cô đơn của những buổi tối tan làm muộn phần lớn được xoa dịu bởi chú Poodle tên Bông, bé chó mà chị đã nhận nuôi từ hồi năm hai năm trước khi thấy một bài đăng tìm nhà cho thú cưng trên mạng. Kể từ đó, Bông trở thành người bạn thân thiết nhất trong căn phòng trọ 20 mét vuông của chị. Chị đặt lịch tiêm phòng định kỳ, mua đồ ăn hạt nhập khẩu, thậm chí học cả cách đọc nhãn thành phần để tránh những thứ Bông dị ứng. Với chị, Bông không phải là vật nuôi mà là thành viên trong gia đình.
+Nghĩ rằng việc này đơn giản, chị mở Facebook lên và bắt đầu tìm kiếm. Chỉ trong vài phút, chị đã lướt qua hàng chục Fanpage với những tấm ảnh bắt mắt: cún nằm trong phòng điều hòa, nhân viên ôm ấp tươi cười, slogan đầy cảm xúc như "yêu thương như con". Chị chọn năm cơ sở có vẻ uy tín nhất và bắt đầu nhắn tin.
+Cơ sở thứ nhất  không có phản hồi sau 2 tiếng.
+Cơ sở thứ hai trả lời: "Bên em đang khá đông, chị cho em hỏi bé cân nặng bao nhiêu ạ?"  rồi sau đó mất hút.
+Cơ sở thứ ba phản hồi nhanh hơn, nhưng lại trả lời: "Tết này bên em kín rồi chị ơi, chị thử liên hệ chỗ khác nhé."
+Cơ sở thứ tư hỏi ngày gửi, hỏi ngày đón, rồi bảo "Để em kiểm tra lại nhé"  và đó là lần cuối cùng chị nghe từ họ.
+Đến cơ sở thứ năm, chị Phượng đã mất gần nửa ngày. Lần này họ có chỗ. Nhưng khi chị hỏi giá, nhân viên trả lời: "Giá tùy cân nặng và giống chó chị ơi, chị inbox em báo giá." Chị hỏi tiếp về chế độ ăn: "Bé nhà em bị dị ứng với thức ăn có lúa mì, bên em có thể chú ý không?"  và nhận được một bức ảnh chụp màn hình tờ thực đơn viết tay, chữ mờ, kèm câu trả lời: "Chị yên tâm, tụi em sẽ cố gắng cho bé ăn đồ phù hợp ạ." Không cam kết. Không rõ ràng. Không gì cả.
+Chị Phượng gửi Bông đi với một tâm trạng vừa nhẹ nhõm vừa bất an.
+Những ngày Tết sau đó, cảm giác bất an không hề tan biến  mà còn lớn hơn. Mỗi buổi sáng thức dậy, điều đầu tiên chị làm là cầm điện thoại lên nhắn tin hỏi: "Bông có ổn không bạn ơi?". Đôi khi nhận được một tấm ảnh mờ chụp vội, đôi khi tin nhắn chỉ được "seen" mà không ai trả lời. Có một buổi chiều, chị gửi tin lúc 2 giờ chiều và chờ đến tận 10 giờ đêm mới nhận được hồi âm: "Bé ổn chị ơi, bé đang ngủ." Một câu. Không ảnh. Không thêm gì nữa.
+Chị ngồi nhìn màn hình điện thoại và chợt nghĩ: mình đang lo lắng không khác gì một người gửi con đi mà không biết đứa bé đang được chăm sóc ra sao. Và câu hỏi cứ lẩn quẩn trong đầu chị suốt cả tuần: Tại sao lại không có một nơi nào để mình tự theo dõi, tự đặt lịch, tự biết bé đang như thế nào  thay vì phải chờ đợi và hỏi từng chút một như thế này?
+Đến ngày đón Bông về, chị Phượng muốn đặt thêm một buổi tắm Grooming cho bé trước khi về nhà cho bé sạch sẽ. Chị gọi điện, nhân viên bảo có thể làm lúc 3 giờ chiều. Chị đến nơi đúng giờ, nhưng nhân viên lại thông báo: "Ủa, sao em không thấy ghi trong lịch, hay là chị nhớ nhầm giờ không?" Không có bằng chứng, không có xác nhận, chị đành chờ thêm một tiếng rưỡi để được phục vụ.
+Ngồi chờ trong tiệm hôm đó, chị mở điện thoại lên và gõ vào ô tìm kiếm: "Ứng dụng đặt lịch pet hotel Việt Nam". Kết quả trả về toàn là những trang web chung chung, không có gì giải quyết được những gì chị vừa trải qua suốt cả tuần. Chị nhắn tin cho một người bạn học cùng ngành công nghệ thông tin và hỏi thẳng: "Tại sao đặt vé máy bay có thể chọn ghế theo sở thích, còn tìm chỗ gửi chó ngày Tết lại phải nhắn tin cho 5 nơi mà vẫn không biết còn chỗ hay không?"
+Câu hỏi đó không có lời giải ngay hôm đó. Nhưng nó không biến mất. Nó là hạt giống đầu tiên của PawPal  một nền tảng mà chị Phượng hình dung đơn giản như thế này: một nơi mà người nuôi thú cưng có thể tìm kiếm, đặt chỗ, xem thực đơn, theo dõi từng buổi chăm sóc và đặt lịch tắm trước khi đón về  tất cả chỉ trên một ứng dụng, minh bạch và không phải chờ đợi. Nghe có vẻ đơn giản. Nhưng chính sự đơn giản đó  điều mà bất kỳ ngành dịch vụ hiện đại nào cũng làm được lại đang hoàn toàn vắng mặt trong ngành chăm sóc thú cưng.
+1.1.2. Động lực và ý nghĩa của việc giải quyết vấn đề
+Câu chuyện của chị Phượng không phải là trường hợp cá biệt. Đó là trải nghiệm chung của hàng nghìn chủ nuôi thú cưng tại các đô thị lớn mỗi dịp cao điểm và cũng là lý do cốt lõi để PawPal ra đời.
+Ngành dịch vụ Pet Spa và Hotel tại Việt Nam đang bùng nổ mạnh mẽ, với quy mô thị trường thú cưng dự kiến đạt 168 triệu USD vào năm 2026. Sự tăng trưởng này đi kèm với một khoảng trống lớn về sự chuyên nghiệp trong vận hành số. Khách hàng ngày càng khó tính và đòi hỏi sự minh bạch cao, trong khi phần lớn các cơ sở vẫn duy trì phương thức quản lý thủ công dễ sai sót và thiếu minh bạch. Nếu không có một giải pháp công nghệ can thiệp kịp thời, khoảng cách giữa kỳ vọng của người tiêu dùng số và năng lực phục vụ của doanh nghiệp sẽ ngày càng rộng, dẫn đến tình trạng mất khách hàng và lãng phí tiềm năng tăng trưởng của toàn ngành.
+Mỗi dịp cao điểm  Tết, lễ, hè  hay thậm chí mỗi tuần, mỗi tháng bình thường trôi qua mà chưa có giải pháp số hóa, hàng nghìn chủ nuôi tiếp tục phải đối mặt với trải nghiệm bị động và bất an như câu chuyện của chị Phượng. Về phía doanh nghiệp, các cơ sở dịch vụ liên tục bỏ lỡ khách hàng tiềm năng chỉ vì không phản hồi kịp thời hoặc thiếu hệ thống quản lý công suất hiệu quả dẫn đến mất doanh thu và giảm uy tín thương hiệu.
+Đặc biệt, khi thế hệ Gen Z và Millennials những người quen thuộc với trải nghiệm số mượt mà đang trở thành nhóm chủ nuôi thú cưng chủ lực, thì khoảng cách giữa kỳ vọng của họ và thực tế dịch vụ sẽ chỉ ngày càng lớn hơn nếu không được giải quyết sớm. 
+Giá trị mang lại mà PawPal cung cấp:
+Cho chủ nuôi: PawPal mang đến sự an tâm tuyệt đối. Chủ nuôi có thể đặt lịch 24/7, theo dõi quá trình làm đẹp và lưu trú của thú cưng một cách minh bạch thông qua hình ảnh, video cập nhật liên tục. Họ không còn phải lo lắng về tình trạng của thú cưng khi vắng nhà, đồng thời tiết kiệm đáng kể thời gian tìm kiếm và liên hệ so với cách truyền thống.
+Cho doanh nghiệp: Nền tảng giúp tối ưu hóa vận hành, quản lý công suất phòng, lịch tắm hiệu quả, giảm tỷ lệ khách đặt nhưng không đến và tránh lãng phí nguồn lực nhân sự. Đồng thời, PawPal mở ra cơ hội tăng doanh thu từ bán lẻ Shop thông qua các gợi ý sản phẩm thông minh, cá nhân hóa theo hồ sơ từng thú cưng.
+Cho cộng đồng và ngành dịch vụ: PawPal góp phần nâng cao tiêu chuẩn chung của ngành chăm sóc thú cưng tại Việt Nam. Khi các cơ sở bắt đầu vận hành trên nền tảng số, chất lượng dịch vụ sẽ được giám sát tốt hơn thông qua hệ thống đánh giá công khai, từ đó thúc đẩy sự cạnh tranh lành mạnh và bảo vệ quyền lợi của cả thú cưng lẫn chủ nuôi.
+
+1.2. Tổng quan thị trường và xu hướng thương mại điện tử
+1.2.1. Phân tích quy mô và đặc thù ngành hàng
+Trong những năm gần đây, ngành dịch vụ chăm sóc thú cưng tại Việt Nam đang ghi nhận tốc độ tăng trưởng mạnh mẽ, gắn liền với sự thay đổi sâu sắc trong cấu trúc xã hội và hành vi tiêu dùng tại các đô thị lớn. Đặc biệt tại các thành phố như TP.HCM, xu hướng gia đình nhỏ và tỷ lệ người độc thân gia tăng đã góp phần thúc đẩy sự phát triển của "pet humanization" - hiện tượng người nuôi xem thú cưng như một thành viên trong gia đình. Điều này khiến nhu cầu đối với các dịch vụ chăm sóc thú cưng không còn dừng ở mức cơ bản mà chuyển sang các dịch vụ cao cấp, cá nhân hóa và giàu trải nghiệm hơn như Pet Spa, Grooming và Pet Hotel.
+Về quy mô thị trường, theo Euromonitor International, ngành thú cưng tại Việt Nam duy trì tốc độ tăng trưởng kép hàng năm (CAGR) khoảng 11%. Đồng thời, theo Mordor Intelligence, phân khúc thức ăn thú cưng tại Việt Nam được dự báo tăng trưởng với CAGR khoảng 9,4% trong giai đoạn 2024–2030, phản ánh sự mở rộng ổn định của toàn ngành. Đáng chú ý, phân khúc dịch vụ chăm sóc thú cưng như spa, grooming và lưu trú đang có tốc độ tăng trưởng nhanh hơn, ước tính khoảng 15% mỗi năm, nhờ vào sự gia tăng nhu cầu sử dụng dịch vụ cao cấp tại khu vực đô thị. Số lượng thú cưng tại Việt Nam cũng đang tăng nhanh, đạt khoảng 12 triệu con vào năm 2023 và dự báo có thể đạt 16 triệu con vào năm 2027.
+
+Báo cáo thị trường ngành chăm sóc thú cưng Việt Nam năm 2026
+Các khảo sát từ TGM Research cho thấy khoảng 79% đến 89,9% hộ gia đình tại khu vực đô thị Việt Nam đang sở hữu ít nhất một thú cưng. Trong số đó, khoảng 45% đến 56% người nuôi xem thú cưng như một thành viên gia đình, và hơn 55% có xu hướng tăng chi tiêu cho thú cưng trong tương lai. Những số liệu này phản ánh rõ ràng sự chuyển dịch từ nhu cầu cơ bản sang nhu cầu chăm sóc chất lượng cao và mang tính cảm xúc.
+Xét về đặc thù ngành, dịch vụ chăm sóc thú cưng là một lĩnh vực mang tính chất ra quyết định cao và chi phối cảm xúc. Quyết định sử dụng dịch vụ không chỉ dựa trên yếu tố chi phí mà phụ thuộc nhiều vào mức độ tin tưởng và cảm giác an tâm của khách hàng khi giao phó thú cưng - vốn được xem như thành viên gia đình. Điều này dẫn đến một số yêu cầu đặc thù đối với hệ thống website trong ngành. Thứ nhất, mức độ cá nhân hóa trong dịch vụ là rất cao, bởi mỗi thú cưng có đặc điểm riêng về giống loài, độ tuổi, tình trạng sức khỏe và thói quen sinh hoạt. Do đó, hệ thống website cần có khả năng lưu trữ và xử lý dữ liệu chi tiết để phục vụ việc gợi ý dịch vụ phù hợp. Thứ hai, yếu tố niềm tin đóng vai trò then chốt trong quyết định sử dụng dịch vụ. Khách hàng thường yêu cầu minh bạch về cơ sở vật chất, hình ảnh thực tế, đánh giá từ người dùng khác cũng như thông tin về nhân viên chăm sóc. Thứ ba, các dịch vụ trong ngành có tính lặp lại cao, đặc biệt là grooming, tiêm phòng và lưu trú. Vì vậy, website cần hỗ trợ đặt lịch định kỳ và tự động nhắc lịch nhằm tối ưu trải nghiệm người dùng.
+Từ những đặc điểm trên, có thể thấy website trong lĩnh vực chăm sóc thú cưng không chỉ đơn thuần là một kênh thông tin hoặc bán hàng, mà cần có khả năng quản lý dữ liệu thú cưng, cá nhân hóa trải nghiệm và hỗ trợ doanh nghiệp trong vận hành dịch vụ.
+1.2.2. Xu hướng chuyển đổi số và vai trò của thương mại điện tử
+
+Xếp hạng chỉ số thương mại điện tử Việt Nam năm 2025
+Trong bối cảnh chuyển đổi số, thương mại điện tử tại Việt Nam đang phát triển mạnh mẽ và trở thành một trong những động lực quan trọng của nền kinh tế số. Theo báo cáo DataReportal năm 2025, Việt Nam có khoảng 79,8 triệu người dùng Internet, tương đương 78,8% dân số, cùng với 76,2 triệu người sử dụng mạng xã hội, tạo nền tảng vững chắc cho sự phát triển của các hoạt động kinh doanh trực tuyến.
+
+Tỷ lệ từ bỏ giỏ hàng trực tuyến toàn cầu 2006-2026
+Theo báo cáo EBI 2025 của VECOM, thị trường thương mại điện tử Việt Nam đạt khoảng 32 tỷ USD vào năm 2024, tăng trưởng 27% so với năm trước, cho thấy tốc độ mở rộng rất nhanh của hành vi tiêu dùng số. Trên phạm vi toàn cầu, khoảng 70% giỏ hàng trực tuyến bị bỏ dở trước khi hoàn tất thanh toán, phản ánh một thách thức lớn liên quan đến trải nghiệm người dùng trên nền tảng số.
+
+Tỷ lệ truy cập các nguồn thông tin để tìm hiểu cách chăm sóc thú cưng
+Các hành vi tiêu dùng hiện đại cũng cho thấy sự thay đổi rõ rệt. Khoảng 49% người dùng hoàn tất toàn bộ hành trình mua sắm trên cùng một nền tảng, hơn 50% ưu tiên tốc độ giao hàng và độ tin cậy, trong khi khoảng 47% người dùng sử dụng live chat để hỗ trợ ra quyết định mua hàng. Đồng thời, khoảng 70% giao dịch thương mại điện tử hiện nay được thực hiện trên thiết bị di động, cho thấy xu hướng "mobile-first" ngày càng rõ rệt. Đối với ngành chăm sóc thú cưng, xu hướng số hóa thể hiện mạnh mẽ hơn khi có khoảng 57% người nuôi sử dụng mạng xã hội và YouTube như nguồn thông tin chính để tìm hiểu về dịch vụ và sản phẩm liên quan. Tuy nhiên, hiện nay phần lớn các cơ sở dịch vụ vẫn vận hành dựa trên các kênh phân mảnh như Facebook, Zalo hoặc đặt lịch thủ công, dẫn đến trải nghiệm người dùng chưa đồng bộ và thiếu tính minh bạch.
+Trong chuỗi giá trị doanh nghiệp, website không còn đơn thuần là một kênh bán hàng mà đã trở thành một nền tảng trung tâm với nhiều vai trò quan trọng. Trước hết, website đóng vai trò là kênh khám phá dịch vụ thông qua SEO và tìm kiếm địa phương, giúp khách hàng dễ dàng tiếp cận và so sánh các lựa chọn phù hợp. Bên cạnh đó, website là công cụ đặt lịch và quản lý dịch vụ theo thời gian thực, giúp tự động hóa quy trình xác nhận và nhắc lịch, từ đó giảm thiểu sai sót trong vận hành. Ngoài ra, website còn đóng vai trò là hệ thống thu thập và phân tích dữ liệu khách hàng, bao gồm thông tin thú cưng, lịch sử dịch vụ và hành vi sử dụng, từ đó hỗ trợ cá nhân hóa trải nghiệm và xây dựng chiến lược kinh doanh hiệu quả hơn. Đồng thời, website cũng là công cụ quan trọng trong việc xây dựng thương hiệu và niềm tin, thông qua việc cung cấp thông tin minh bạch, hình ảnh thực tế, đánh giá xác thực và nội dung chất lượng cao. Sau cùng, website còn là nền tảng marketing và xây dựng cộng đồng người dùng thông qua nội dung chia sẻ, blog và nội dung do người dùng tạo (UGC), góp phần tăng mức độ gắn kết và giữ chân khách hàng trong dài hạn.
+Từ những phân tích trên, có thể khẳng định rằng thương mại điện tử và chuyển đổi số không chỉ là xu hướng tất yếu mà còn là yếu tố cốt lõi định hình lại cách thức vận hành của ngành dịch vụ chăm sóc thú cưng. Trong bối cảnh đó, website đóng vai trò trung tâm trong việc kết nối doanh nghiệp và khách hàng, đồng thời tối ưu hóa toàn bộ chuỗi giá trị dịch vụ.
+1.3. Khảo sát và Đánh giá hệ thống đối thủ cạnh tranh
+1.3.1. Danh mục các đối thủ khảo sát
+1.3.1.1. Pet Mart
+Pet Mart hiện là hệ thống siêu thị thú cưng có độ phủ lớn nhất Việt Nam, định vị mình như một hệ sinh thái từ bán lẻ nhu yếu phẩm đến các dịch vụ spa và lưu trú. Website của Pet Mart (https://www.petmart.vn/) mang đặc trưng của một sàn thương mại điện tử quy mô lớn với danh mục sản phẩm đồ sộ và thông tin cập nhật liên tục. 
+
+Tuy nhiên, dưới góc nhìn của một khách hàng đang tìm kiếm sự an tâm cho thú cưng, trải nghiệm tại đây mang tính công nghiệp khá rõ rệt khi mọi thứ đều có sẵn nhưng thiếu sự cá nhân hóa. Giao diện trang chủ tràn ngập các biểu ngữ khuyến mãi và sản phẩm thức ăn, khiến thông tin về dịch vụ chăm sóc bị đẩy xuống thứ yếu. Khi nhấn vào mục "Dịch vụ", người dùng được dẫn đến một trang danh mục dài với các bài viết giới thiệu. Giao diện website phức tạp khiến việc tìm kiếm thông tin về dịch vụ lưu trú (Pet Hotel) trở nên mất thời gian vì bị lấn át bởi các banner quảng cáo sản phẩm. Khi có nhu cầu đặt lịch, website chỉ cung cấp bảng giá chung và Hotline, khách hàng phải gọi điện Hotline hoặc nhắn tin Zalo chờ đợi phản hồi. Sự thiếu vắng các tính năng tương tác cá nhân hóa tạo ra một khoảng cách về cảm xúc, khiến người dùng cảm thấy thú cưng của mình chỉ là một mã đơn hàng trong một hệ thống vận hành quá lớn mà không cảm nhận được sự chăm sóc cá nhân.
+1.3.1.2. Kimi Pet
+Kimi Pet (Công Ty TNHH Kimipet Việt Nam) có thế mạnh về chuyên môn, nổi tiếng với học viện đào tạo Grooming và các dịch vụ làm đẹp cao cấp. Website tập trung nhiều vào việc xây dựng uy tín thông qua các chứng chỉ, hình ảnh đội ngũ chuyên gia và quy trình kỹ thuật bài bản. Dịch vụ spa được giới thiệu rất chi tiết về quy trình kỹ thuật. 
+
+Tuy nhiên, trải nghiệm thực tế trên nền tảng số của Kimi Pet lại tồn tại một rào cản lớn về mặt tương tác khi luồng trải nghiệm mang tính giới thiệu nhiều hơn là giao dịch. Dù thông tin về các gói dịch vụ lưu trú được trình bày rất chuyên nghiệp, nhưng nút thắt lại nằm ở khâu chuyển đổi. Website không có hệ thống quản lý lịch hẹn thông minh, khách hàng khó có thể tìm thấy nút đặt lịch hiển thị ngay tại các bài viết dịch vụ khiến họ vẫn phải thực hiện các bước thủ công như nhắn tin qua Facebook hoặc gọi điện Hotline. Điều đó dẫn đến sự đứt gãy trải nghiệm và tỉ lệ bỏ dở hành trình cao khi khách hàng đang có cảm hứng muốn đặt dịch vụ ngay. Kimi Pet làm rất tốt việc khiến khách hàng tin tưởng về tay nghề, nhưng lại thất bại trong việc khiến họ chốt đơn nhanh chóng ngay trên nền tảng web.
+1.3.1.3. Bee Pet
+Bee Pet (Bee Pet - Đặt dịch vụ chăm sóc thú cưng tại nhà) là đại diện tiêu biểu cho mô hình Boutique Pet Shop & Hotel đang rất thịnh hành tại khu vực TP.HCM. Điểm mạnh nhất của Bee Pet nằm ở tư duy hình ảnh với website và mạng xã hội của họ cực kỳ bắt mắt, sử dụng các gam màu ấm áp, hình ảnh thú cưng được chăm sóc trong không gian sang trọng, sạch sẽ đánh mạnh vào cảm xúc của chủ nuôi. Quy trình chăm sóc thú cưng cũng được trình bày công khai, rõ ràng.
+
+Dưới góc nhìn khách hàng, trải nghiệm thực tế tại Bee Pet ban đầu rất hứa hẹn vì sự gần gũi và tính thẩm mỹ cao. Tuy nhiên, sự hiện đại này chỉ dừng lại ở lớp vỏ giao diện. Khi đi sâu vào quy trình sau khi gửi thú cưng, hệ thống bộc lộ sự rời rạc trong quản lý dữ liệu khi toàn bộ việc cập nhật tình hình thú cưng đều được thực hiện thủ công qua Zalo cá nhân của nhân viên trực ca. Khách hàng không có một nơi chính thống trên website để xem lại lịch sử chăm sóc hoặc nhận báo cáo định kỳ. Thông tin bị phân tán trong hàng chục tin nhắn, khiến việc theo dõi trở nên khó khăn. Bee Pet đã tạo ra được cảm xúc ban đầu tốt, nhưng chưa thể giải quyết được nỗi lo dài hạn về sự minh bạch và tính hệ thống trong quá trình chăm sóc.
+1.3.2. Bảng ma trận so sánh và Đánh giá khoảng trống thị trường
+Bảng : So sánh các đối thủ trên thị trường
+Tiêu chí so sánh
+Petmart
+Kimi Pet
+Bee Pet
+Giao diện (UI)
+Trực quan, dạng siêu thị, nhiều văn bản chữ và quảng cáo
+Chuyên nghiệp, dạng học viện, nhiều văn bản chữ
+Thẩm mỹ, trực quan, dạng boutique
+Tốc độ tải trang
+Nhanh
+Trung bình 
+Nhanh
+UX mua hàng/dịch vụ
+- Mua hàng: Có giỏ hàng bấm mua ngay
+- Dịch vụ: Phải liên hệ thủ công qua Zalo, Hotline
+- Mua hàng: Có giỏ hàng bấm mua ngay
+- Dịch vụ: Phải liên hệ thủ công qua Zalo, Hotline
+- Dịch vụ: Phải liên hệ thủ công qua Messenger, Hotline. Website tĩnh không liên kết các đường dẫn
+Hỗ trợ khách vãng lai
+Chatbot cơ bản, Hotline
+Hotline, Facebook
+Hotline, Facebook, Tiktok
+Tính năng AI
+Chưa tích hợp sâu
+Không có
+Không có
+Quản lý hồ sơ thú cưng
+Không có
+Không có
+Không có
+Minh bạch chi phí
+Có bảng giá tham khảo
+Có bảng giá tham khảo
+Theo thỏa thuận
+Minh bạch thông tin
+Chỉ có mô tả bằng văn bản
+Quy trình rõ ràng, có hình ảnh, thông tin nhân viên
+Quy trình rõ ràng, có hình ảnh, thông tin nhân viên
+
+Dựa trên những phân tích về thực trạng thị trường và hạn chế của các đối thủ đi trước, có thể thấy một khoảng trống lớn đang tồn tại giữa nhu cầu nhân cách hóa thú cưng của chủ nuôi và khả năng đáp ứng công nghệ của các doanh nghiệp hiện tại. Trong khi người dùng tại TP.HCM ngày càng coi trọng sự an tâm tuyệt đối, các nền tảng hiện nay vẫn chỉ dừng lại ở việc dùng website như một trang trưng bày thông tin thay vì thể hiện sự uy tín dịch vụ đến khách hàng. Đây chính là động lực cốt lõi để Pawpal ra đời, không phải để bắt chước những gì đã có, mà là để định nghĩa lại cách một chủ nuôi tương tác với dịch vụ chăm sóc thông qua một nền tảng minh bạch và cảm xúc hơn.
+Hiện nay, các đối thủ lớn như Pet Mart hay Kimi Pet không có cơ chế cập nhật tình trạng chăm sóc thú cưng theo từng giai đoạn khiến cho khách hàng chưa thể thật sự an tâm khi lựa chọn dịch vụ. Bee Pet thì vẫn duy trì việc cập nhật tình hình qua các kênh cá nhân rời rạc như Zalo hay Messenger, buộc khách hàng phải ở thế chủ động hỏi han và chờ đợi phản hồi trong lo âu. Bên cạnh sự thiếu hụt về minh bạch, thị trường còn bộc lộ một khoảng trống lớn về tốc độ ra quyết định và quy trình đặt lịch trực tuyến. Trong kỷ nguyên của sự bận rộn, quy trình đặt lịch còn phụ thuộc nhiều vào sự xác nhận thủ công từ con người, gây đứt gãy trải nghiệm của nhóm khách hàng là một rào cản khiến tỉ lệ khách hàng bỏ dở tăng cao. Thêm nữa là sự bỏ ngỏ về dữ liệu cá nhân hóa và quản lý vòng đời thú cưng. Hiện tại, dữ liệu về thói quen, dị ứng hay lịch sử y tế của vật nuôi thường bị phân tán hoặc chỉ được lưu trữ thủ công, khiến trải nghiệm của khách hàng mỗi lần quay lại đều phải bắt đầu lại và việc theo dõi tình trạng thú cưng cũng trở nên khó khăn. 
+Để giải quyết những bất cập này, website Pawpal được phát triển như một giải pháp số hóa toàn diện nhằm lấp đầy những điểm mù về niềm tin và tối ưu hóa hành trình trải nghiệm của khách hàng. Trước hết, hệ thống xóa bỏ hoàn toàn tình trạng cập nhật rời rạc bằng một nhật ký số cập nhật hình ảnh và trạng thái của thú cưng theo các mốc quy trình cố định, giúp chủ nuôi có thể chủ động theo dõi chỉ bằng việc đăng nhập website. Pawpal cũng loại bỏ rào cản chờ đợi bằng tính năng hiển thị chính xác lịch trống và cho phép hoàn tất đặt chỗ, thanh toán chỉ trong vài click, giúp giải tỏa tức thì nỗi lo âu thông qua một quy trình vận hành tức thời và chuyên nghiệp. Đặc biệt, thông qua việc xây dựng Pet ID, mỗi thú cưng sẽ sở hữu một danh tính số duy nhất giúp tự động ghi nhớ thói quen, lịch trình y tế để đưa ra các gợi ý chăm sóc cá nhân hóa, tất cả được vận hành trên nền tảng mang ngôn ngữ thiết kế ấm áp. Tổng hòa những điểm mới đột phá này không chỉ giúp Pawpal vượt lên trên các phương thức truyền thống mà còn kiến tạo một giá trị an tâm có thể đo lường được, đáp ứng trọn vẹn những kỳ vọng khắt khe nhất của thị trường thú cưng tại Việt Nam.
+1.4. Xác định vấn đề, Mục tiêu và Phạm vi đề tài
+1.4.1. Tầm nhìn và mục tiêu cụ thể
+Tầm nhìn của hệ thống PawPal là trở thành một nền tảng số hóa toàn diện trong lĩnh vực chăm sóc thú cưng, đóng vai trò cầu nối hiệu quả giữa người tiêu dùng và các nhà cung cấp dịch vụ. Trong dài hạn, hệ thống hướng tới việc phát triển thành một hệ sinh thái tích hợp, nơi người dùng có thể quản lý toàn bộ quá trình chăm sóc thú cưng, từ đặt lịch dịch vụ, theo dõi lịch sử, đến nhận các gợi ý chăm sóc phù hợp.
+Để hiện thực hóa tầm nhìn này, đề tài xác định các mục tiêu cụ thể trên ba khía cạnh chính: sản phẩm, người dùng và doanh nghiệp.
+Thứ nhất, về mặt sản phẩm, mục tiêu là xây dựng một hệ thống website có khả năng cung cấp các chức năng cốt lõi như: hiển thị danh mục dịch vụ, cho phép người dùng đặt lịch trực tuyến, quản lý hồ sơ thú cưng và lưu trữ lịch sử dịch vụ. Hệ thống cần đảm bảo tính thân thiện với người dùng, tối ưu trải nghiệm trên website, đồng thời đảm bảo tính ổn định và chính xác trong quá trình xử lý dữ liệu.
+Thứ hai, về mặt người dùng, hệ thống hướng tới việc cải thiện đáng kể trải nghiệm khi sử dụng dịch vụ chăm sóc thú cưng. Cụ thể, PawPal đặt mục tiêu giảm thiểu thời gian và công sức trong quá trình đặt lịch, tăng tính minh bạch của thông tin dịch vụ, và cung cấp các tiện ích hỗ trợ như nhắc lịch định kỳ. Ngoài ra, việc xây dựng hồ sơ thú cưng cá nhân hóa cho phép hệ thống ghi nhận đặc điểm và lịch sử chăm sóc của từng thú cưng, từ đó nâng cao chất lượng dịch vụ và sự hài lòng của khách hàng.
+Thứ ba, về mặt doanh nghiệp, hệ thống nhằm hỗ trợ các spa thú cưng trong việc quản lý lịch hẹn, tối ưu hóa quy trình vận hành và nâng cao hiệu quả kinh doanh. Thông qua việc số hóa dữ liệu khách hàng và dịch vụ, PawPal giúp doanh nghiệp dễ dàng theo dõi, phân tích và đưa ra các quyết định kinh doanh phù hợp. Đồng thời, hệ thống cũng tạo điều kiện để doanh nghiệp xây dựng mối quan hệ lâu dài với khách hàng thông qua các hoạt động chăm sóc sau dịch vụ.
+Tóm lại, các mục tiêu của đề tài không chỉ dừng lại ở việc xây dựng một sản phẩm công nghệ, mà còn hướng tới việc tạo ra giá trị thực tiễn cho cả người dùng và doanh nghiệp trong bối cảnh chuyển đổi số ngày càng mạnh mẽ.
+1.4.2. Phạm vi triển khai và giới hạn đề tài
+Đề tài "Phát triển website cung cấp dịch vụ chăm sóc thú cưng - Pawpal" được triển khai với phạm vi cụ thể trên các khía cạnh chức năng, công nghệ và đối tượng sử dụng. 
+Về phạm vi chức năng, hệ thống tập trung phát triển các tính năng cốt lõi phục vụ cho hoạt động đặt lịch và quản lý dịch vụ. Cụ thể, phía người dùng có thể đăng ký tài khoản, quản lý hồ sơ thú cưng, xem danh sách dịch vụ và thực hiện đặt lịch trực tuyến. Phía quản trị viên (đại diện cho spa thú cưng) có thể quản lý danh mục dịch vụ, theo dõi và cập nhật trạng thái các lịch hẹn, cũng như quản lý thông tin khách hàng. Hệ thống cũng bao gồm chức năng lưu trữ lịch sử dịch vụ và hỗ trợ nhắc lịch ở mức cơ bản nhằm nâng cao trải nghiệm người dùng.
+Về phạm vi công nghệ, đề tài tập trung xây dựng một ứng dụng web sử dụng các công nghệ phổ biến như frontend (HTML, CSS hoặc framework tương đương), backend (Python) và cơ sở dữ liệu (Supabase). Hệ thống được thiết kế theo mô hình client-server cơ bản, đảm bảo khả năng vận hành ổn định trong môi trường thử nghiệm.
+Về phạm vi đối tượng, hệ thống hướng đến nhóm khách hàng là người nuôi thú cưng tại khu vực đô thị, có nhu cầu sử dụng dịch vụ grooming/spa, và các doanh nghiệp cung cấp dịch vụ chăm sóc thú cưng quy mô nhỏ và vừa. Phạm vi địa lý được giới hạn trong một khu vực cụ thể (ví dụ: một thành phố) nhằm đảm bảo tính thực tiễn và khả năng mô phỏng.
+Bên cạnh đó, đề tài cũng tồn tại một số giới hạn nhất định. Thứ nhất, hệ thống không tích hợp các chức năng nâng cao như thanh toán trực tuyến thực tế hay phân tích dữ liệu lớn, do hạn chế về thời gian và nguồn lực. Thứ hai, dữ liệu sử dụng trong hệ thống chủ yếu mang tính mô phỏng, chưa phản ánh đầy đủ các tình huống thực tế phức tạp. Thứ ba, hệ thống chưa được triển khai ở quy mô lớn, do đó chưa đánh giá được các vấn đề liên quan đến hiệu năng, bảo mật và khả năng mở rộng.
+Tuy nhiên, mặc dù có những giới hạn nhất định, phạm vi triển khai của đề tài vẫn đủ để thể hiện rõ các chức năng cốt lõi và giá trị mà hệ thống mang lại. Đây cũng là nền tảng để phát triển và mở rộng trong các nghiên cứu hoặc ứng dụng thực tiễn trong tương lai.
+
+Chương 3: MÔ HÌNH KINH DOANH VÀ GIẢI PHÁP HỆ THỐNG PAWPAL
+3.1. Mô hình kinh doanh và chiến lược định vị thương hiệu	
+3.1.1. Mô hình kinh doanh
+Nền tảng PawPal vận hành dựa trên sự phối hợp chặt chẽ giữa các thành tố chiến lược nhằm tạo ra một hệ sinh thái chăm sóc thú cưng bền vững và hiện đại. Trọng tâm của mô hình chính là việc xác định rõ ràng phân khúc khách hàng mục tiêu bao gồm những người nuôi thú cưng thế hệ mới từ các bạn trẻ nhạy cảm xu hướng đến những quản lý bận rộn và nhóm khách hàng trung niên coi trọng giá trị truyền thống. Để phục vụ các đối tượng này PawPal đưa ra các giải pháp giá trị khác biệt tập trung vào việc số hóa niềm tin thông qua nhật ký chăm sóc thời gian thực và tối ưu hóa thời gian bằng quy trình giao dịch không ma sát. Những giá trị này được chuyển tải đến người dùng thông qua các kênh phân phối đa dạng mà cốt lõi là hệ thống website tương tác thông minh kết hợp cùng các nền tảng mạng xã hội và hệ thống tin nhắn định danh.
+
+Để duy trì sự gắn kết lâu dài PawPal chú trọng xây dựng mối quan hệ khách hàng dựa trên sự thấu hiểu cá nhân hóa thông qua dữ liệu hồ sơ bé cưng và các chương trình khách hàng thân thiết tự động hóa. Đằng sau những trải nghiệm mượt mà đó là sự vận hành liên tục của các hoạt động chính bao gồm việc thực hiện quy trình spa chuyên nghiệp quản lý lưu trú pet hotel và điều phối dòng chảy hàng hóa tại shop. Những hoạt động này được trợ lực bởi nguồn lực chính dồi dào từ đội ngũ chuyên gia chăm sóc có chứng chỉ hành nghề cơ sở vật chất đạt chuẩn cao cấp và hạ tầng công nghệ thông tin ổn định giúp đảm bảo tính toàn vẹn của dữ liệu và quy trình phục vụ.
+
+Sức mạnh vận hành của PawPal còn được củng cố bởi mạng lưới đối tác chiến lược quan trọng bao gồm các nhà cung cấp nhu yếu phẩm thú cưng hữu cơ các đơn vị hạ tầng thanh toán trực tuyến và nhà cung cấp dịch vụ viễn thông hỗ trợ xác thực thông tin. Sự cộng tác này cho phép hệ thống duy trì một cấu trúc chi phí được tối ưu hóa tập trung vào việc bảo trì nền tảng số chi trả hoa hồng tương xứng cho nhân viên và các chi phí vật tư y tế vệ sinh hàng ngày. Dòng doanh thu của PawPal được đa dạng hóa một cách khoa học từ phí dịch vụ chăm sóc định kỳ phí lưu trú nghỉ dưỡng và lợi nhuận bán lẻ sản phẩm Shop. Việc kết hợp thông minh giữa các nguồn thu này không chỉ đảm bảo sự ổn định về tài chính mà còn tạo ra cơ sở để hệ thống liên tục tái đầu tư vào công nghệ nhằm hiện thực hóa lời hứa thương hiệu mang lại sự an tâm tuyệt đối 
+cho cộng đồng người nuôi thú cưng.
+3.1.2. Định vị thương hiệu và giá trị cốt lõi
+3.1.2.1. Sứ mệnh
+Sứ mệnh của PawPal bắt nguồn từ một niềm tin sâu sắc rằng mỗi giây phút xa cách giữa người nuôi và bé cưng đều xứng đáng được lấp đầy bằng sự an tâm tuyệt đối và kết nối không gián đoạn. Chúng tôi tự nhận lãnh trách nhiệm thay đổi cách thức vận hành của ngành dịch vụ thú cưng truyền thống bằng việc tích hợp công nghệ để xóa bỏ mọi rào cản về khoảng cách và sự thiếu hụt thông tin. PawPal cam kết mang đến một môi trường nơi các giá trị về sự tận tâm được cụ thể hóa thông qua từng khung hình nhật ký chăm sóc thời gian thực và từng tương tác cá nhân hóa dựa trên dữ liệu. Mục đích cao cả nhất mà hệ thống hướng tới chính là bảo vệ sức khỏe thể chất lẫn tinh thần của các bé cưng, đồng thời giải phóng gánh nặng tâm lý cho những người chủ nuôi bận rộn bằng cách biến mỗi điểm chạm trên website thành một lời khẳng định về sự trung thực và lòng trắc ẩn.
+3.1.2.2. Tầm nhìn
+Tầm nhìn chiến lược của PawPal hướng tới việc thiết lập một chuẩn mực mới cho hệ sinh thái chăm sóc thú cưng tại Việt Nam và trở thành nền tảng dẫn đầu trong lĩnh vực dịch vụ số dành cho vật nuôi vào năm 2026. Chúng tôi không chỉ dừng lại ở phạm vi một website cung cấp dịch vụ đơn lẻ mà khát khao phát triển thành một biểu tượng công nghệ thấu hiểu và đáng tin cậy nhất trong tâm trí mỗi chủ nuôi. PawPal định hướng mở rộng mạng lưới kết nối toàn diện giữa các đội ngũ chuyên gia lành nghề và cộng đồng người nuôi thú cưng để tạo ra một kho tàng dữ liệu y tế và hành vi thông minh giúp dự báo chính xác nhu cầu của vật nuôi. Mục tiêu dài hạn của thương hiệu là định hình lại tư duy tiêu dùng của thị trường bằng cách khẳng định rằng sự minh bạch tuyệt đối và sự tiện lợi tối đa chính là những tiêu chuẩn cơ bản mà mọi thành viên trong đại gia đình thú cưng đều có quyền được hưởng.
+3.1.2.3. Giá trị cốt lõi
+Hệ giá trị cốt lõi của PawPal được hình thành từ sự giao thoa bền chặt giữa lòng trắc ẩn dành cho động vật và khát vọng đột phá trong công nghệ. Trụ cột đầu tiên là sự minh bạch tuyệt đối khi chúng tôi coi đây là nền móng duy nhất để xây dựng niềm tin và lòng trung thành bền vững của khách hàng. Mọi quy trình vận hành từ lúc tiếp nhận đến khi bàn giao bé cưng đều được phơi bày rõ ràng dưới sự giám sát của hệ thống nhật ký điện tử để đảm bảo tính trung thực và đạo đức nghề nghiệp. Tiếp theo là sự tận tâm tận lực khi mỗi nhân viên trong đội ngũ luôn coi thú cưng của khách hàng như người thân ruột thịt, đặt sự an toàn và trạng thái tinh thần của các bé lên trên hết mọi lợi ích kinh doanh. Cuối cùng chính là tinh thần đổi mới không ngừng nhằm tối giản hóa mọi trải nghiệm công nghệ phức tạp giúp PawPal trở thành một trợ thủ đắc lực, dễ tiếp cận và gần gũi với mọi đối tượng người dùng, từ đó nuôi dưỡng sợi dây liên kết cảm xúc giữa con người và vật nuôi thêm phần gắn bó.
+3.1.2.4. Phân tích bối cảnh chiến lược qua mô hình SWOT
+
+Thành phần
+Chi tiết phân tích chiến lược
+Điểm mạnh - S
+Lợi thế lớn nhất của PawPal nằm ở khả năng giải quyết triệt để sự đứt gãy niềm tin khách hàng thông qua tính năng nhật ký chăm sóc thời gian thực giúp người dùng có thể giám sát bé cưng mọi lúc mọi nơi. Hệ thống sở hữu quy trình định danh lũy tiến thông minh giúp loại bỏ rào cản đăng ký rườm rà kết hợp cùng cơ chế giữ chỗ tạm thời để đảm bảo tính công bằng và chính xác trong việc đặt lịch. Việc vận hành dựa trên cơ sở dữ liệu hồ sơ bé cưng tập trung cho phép cá nhân hóa toàn diện từ nội dung thông báo đến gợi ý mua sắm tại shop giúp tối ưu hóa trải nghiệm người dùng. Bên cạnh đó sự tích hợp giỏ hàng hợp nhất giữa sản phẩm vật lý và dịch vụ spa tạo ra một hành trình giao dịch liền mạch và hiện đại mà ít đối thủ truyền thống nào có thể thực hiện được.
+Điểm yếu - W
+PawPal là một thương hiệu mới nên việc xây dựng uy tín ban đầu để thay đổi thói quen của nhóm khách hàng trung niên vốn đã có sự gắn kết lâu dài với các tiệm thú cưng cũ là một thách thức đáng kể. Mô hình tích hợp đa dịch vụ từ spa lưu trú đến bán lẻ trên một nền tảng yêu cầu đội ngũ vận hành phải có kỹ năng quản trị dữ liệu phức tạp để tránh sai sót trong khâu đối soát tồn kho và lịch hẹn. Hệ thống còn có sự phụ thuộc sâu vào hạ tầng của các đối tác bên thứ ba như SMS Gateway cho luồng gửi link xác thực bốn mươi tám giờ và cổng thanh toán trực tuyến. Do mới bắt đầu nên khối lượng đánh giá và hình ảnh thực tế từ khách hàng cũ còn hạn chế làm giảm đi sức mạnh của các bằng chứng xã hội trên trang chủ trong giai đoạn đầu.
+
+
+Cơ hội - O
+Xu hướng nhân cách hóa thú cưng đang đạt đỉnh điểm tạo ra một tầng lớp khách hàng coi trọng chất lượng và sự minh bạch hơn là giá cả giúp các tính năng như nhật ký chăm sóc của PawPal trở thành tiêu chuẩn lựa chọn hàng đầu. Sự phát triển mạnh mẽ của thương mại điện tử và thói quen thanh toán không tiền mặt của thế hệ Gen Z tạo điều kiện thuận lợi để PawPal triển khai các chiến dịch tích điểm thưởng tự động. Thị trường đô thị tại Việt Nam đang thiếu hụt những nền tảng chuyên nghiệp có khả năng kết nối cảm xúc thay vì chỉ bán hàng thuần túy. Ngoài ra việc nhóm khách hàng lớn tuổi bắt đầu sử dụng điện thoại thành thạo mở ra cơ hội lớn cho các quy trình đặt lịch tối giản và chu đáo mà PawPal đang theo đuổi.
+Thách thức - T
+Các hệ thống cửa hàng thú cưng lớn với tiềm lực tài chính mạnh có thể nhanh chóng nâng cấp công nghệ để sao chép mô hình nhật ký chăm sóc trực tuyến tạo ra áp lực cạnh tranh gay gắt. Những thay đổi về chính sách bảo mật dữ liệu cá nhân của các nền tảng mạng xã hội có thể làm tăng chi phí tiếp cận khách hàng tiềm năng. Rủi ro từ việc bùng lịch hẹn hoặc các hành vi đầu cơ khung giờ đẹp đòi hỏi hệ thống phải liên tục cập nhật các quy tắc nghiệp vụ về xác thực OTP và chính sách hủy lịch. Thêm vào đó sự biến động của giá cả nguyên vật liệu đầu vào và các tiêu chuẩn khắt khe về vệ sinh y tế cho thú cưng buộc PawPal phải không ngừng cải tiến quy trình vận hành để duy trì mức biên lợi nhuận ổn định.
+
+
+3.1.2.5. Lời hứa thương hiệu và giá trị khác biệt cốt lõi
+Lời hứa thương hiệu của PawPal bắt nguồn từ cam kết rằng sự an tâm của khách hàng là thước đo duy nhất cho thành công của mọi hoạt động dịch vụ. Chúng tôi không chỉ dừng lại ở việc hứa hẹn về một diện mạo xinh đẹp hay một không gian lưu trú sạch sẽ cho thú cưng mà còn khẳng định về một sự kết nối cảm xúc không gián đoạn giữa chủ nuôi và vật nuôi trong suốt thời gian xa cách. Lời hứa này được cụ thể hóa bằng việc công khai toàn bộ các bước trong quy trình thực hiện giúp người dùng luôn cảm thấy như đang hiện diện trực tiếp bên cạnh bé cưng của mình. PawPal coi trọng sự tin tưởng của người dùng hơn mọi lợi ích kinh doanh ngắn hạn và sẵn sàng duy trì trách nhiệm cao nhất để đảm bảo mỗi thú cưng đều được đối xử bằng lòng trắc ẩn và sự tử tế thực thụ trong từng điểm chạm dịch vụ.
+Sự khác biệt mang tính bản sắc giúp PawPal tách mình ra khỏi các mô hình truyền thống chính là sự hội tụ giữa tay nghề chuyên môn cao và nền tảng hạ tầng công nghệ đồng bộ. PawPal xây dựng giá trị dựa trên sức mạnh của dữ liệu thực tế từ hồ sơ bé cưng tập trung. Điều này cho phép hệ thống không chỉ chăm sóc thú cưng theo những tiêu chuẩn chung chung mà có khả năng cá nhân hóa trải nghiệm dựa trên đặc điểm sinh lý và thói quen riêng biệt của từng vật nuôi. Việc biến những quy trình vận hành nội bộ thành một hành trình trải nghiệm thị giác sống động cho khách hàng thông qua nhật ký thời gian thực đã giúp PawPal định nghĩa lại chuẩn mực về tính minh bạch trong ngành Pet-Tech tại Việt Nam.
+Hơn thế nữa giá trị khác biệt của PawPal còn nằm ở triết lý thiết kế trải nghiệm giúp thấu hiểu tối đa giá trị thời gian của khách hàng hiện đại. Chúng tôi loại bỏ mọi rào cản về thủ tục công nghệ để ưu tiên phục vụ nhu cầu cấp thiết của người dùng trước khi yêu cầu định danh chính thức. Sự tinh tế trong việc kết hợp giữa các luồng dịch vụ spa lưu trú và bán lẻ vào một đơn hàng hợp nhất tạo nên một hệ sinh thái tiện lợi và nhất quán. Chính sự tận tâm được số hóa này đã giúp PawPal chuyển mình từ một đơn vị cung cấp dịch vụ đơn thuần trở thành một người đồng hành đáng tin cậy luôn thấu hiểu và phản hồi chính xác mọi mong đợi của cộng đồng những người yêu thương thú cưng.
+3.1.3. Hệ thống nhận diện thương hiệu
+3.1.3.1. Tên thương hiệu và ý nghĩa
+Tên thương hiệu được nhóm lựa chọn là PawPal. Đây là tên gọi được hình thành từ sự kết hợp giữa hai thành tố tiếng Anh gồm “Paw” và “Pal”. Trong đó, “Paw” mang ý nghĩa là bàn chân của thú cưng – hình ảnh biểu trưng quen thuộc đại diện cho chó mèo và các vật nuôi đồng hành trong đời sống con người. Thành tố “Pal” mang nghĩa là người bạn thân thiết, người đồng hành đáng tin cậy. Khi kết hợp lại, tên gọi “PawPal” truyền tải thông điệp về một người bạn đồng hành của thú cưng, đồng thời cũng là người bạn đáng tin cậy của các chủ nuôi trong hành trình chăm sóc và nuôi dưỡng thú cưng.
+3.1.3.2. Biểu tượng (Logo) và khẩu hiệu (Slogan)
+
+Hình. Logo kết hợp slogan của thương hiệu PawPal
+Logo của PawPal được thiết kế theo phong cách tối giản, thân thiện và mang tính nhận diện cao. Thành phần chính của logo là tên thương hiệu “PawPal” được cách điệu với các biểu tượng dấu chân thú cưng xuất hiện phía trên chữ cái, tạo cảm giác vui vẻ, gần gũi và dễ liên tưởng trực tiếp đến lĩnh vực chăm sóc thú cưng.
+Biểu tượng dấu chân được sử dụng như một yếu tố nhận diện xuyên suốt trong giao diện website và các thành phần thiết kế khác. Đây không chỉ là yếu tố đồ họa trang trí mà còn đóng vai trò gợi nhắc trực tiếp đến đối tượng trung tâm của hệ thống là thú cưng. Đồng thời, dấu chân cũng tượng trưng cho hành trình đồng hành, chăm sóc và kết nối giữa chủ nuôi với thú cưng thông qua nền tảng PawPal.
+Với khẩu hiệu được sử dụng là: “An tâm gửi gắm, yêu thương trọn vẹn” phản ánh giá trị cốt lõi mà PawPal hướng đến, đó là xây dựng sự an tâm cho chủ nuôi khi sử dụng các dịch vụ chăm sóc thú cưng. Cụm từ “An tâm gửi gắm” được sử dụng nhằm nhấn mạnh vai trò của PawPal như một nền tảng giúp khách hàng tin tưởng và yên tâm khi giao thú cưng cho cửa hàng chăm sóc. Bên cạnh đó, vế “yêu thương trọn vẹn” thể hiện định hướng phát triển dịch vụ dựa trên sự tận tâm, minh bạch và chăm sóc bằng cảm xúc thay vì chỉ tập trung vào quy trình vận hành đơn thuần. 
+3.1.3.3. Màu sắc chủ đạo và phong cách thiết kế
+
+Hình. Bảng màu chính của thương hiệu PawPal
+PawPal sử dụng bộ màu chủ đạo gồm xanh lá đậm, vàng cam và các tông màu trung tính sáng nhằm tạo nên trải nghiệm thị giác nhẹ nhàng, thân thiện và gần gũi. Ngoài hai màu chủ đạo, hệ thống còn sử dụng các gam màu pastel sáng nhằm duy trì được cảm giác mềm mại, phù hợp với nhóm khách hàng yêu thú cưng, thường có xu hướng ưu tiên trải nghiệm cảm xúc và sự dễ chịu trong quá trình sử dụng dịch vụ.
+Về phong cách thiết kế, giao diện website được xây dựng theo xu hướng hiện đại, tối giản kết hợp cùng các yếu tố minh họa giàu cảm xúc. Bố cục giao diện ưu tiên khoảng trắng lớn, hình ảnh thú cưng kích thước lớn và các khối nội dung bo góc mềm nhằm tạo cảm giác thân thiện và dễ tiếp cận.
+3.2. Dịch vụ và quy tắc kinh doanh	
+3.2.1. Dịch vụ
+Hệ thống PawPal được xây dựng theo mô hình nền tảng chăm sóc thú cưng tích hợp đa dịch vụ, kết hợp giữa cung cấp dịch vụ trực tiếp tại cửa hàng và thương mại điện tử trên website. Mục tiêu của hệ thống không chỉ dừng lại ở việc hỗ trợ khách hàng đặt lịch hoặc mua sản phẩm trực tuyến, mà còn hướng đến xây dựng một hệ sinh thái chăm sóc thú cưng toàn diện, nơi chủ nuôi có thể quản lý, theo dõi và đồng hành cùng thú cưng của mình trong suốt quá trình sử dụng dịch vụ.
+Dựa trên định hướng đó, hệ thống PawPal cung cấp ba nhóm dịch vụ cốt lõi gồm: dịch vụ Spa & Grooming, dịch vụ Pet Hotel và dịch vụ Pet Shop thương mại điện tử.
+a. Dịch vụ Spa & Grooming
+Dịch vụ Spa & Grooming tại PawPal được xây dựng theo định hướng chăm sóc thú cưng toàn diện, kết hợp giữa yếu tố vệ sinh, chăm sóc sức khỏe và nâng cao trải nghiệm cảm xúc cho thú cưng. Thay vì chỉ cung cấp các gói tắm rửa đơn thuần như nhiều cửa hàng truyền thống, PawPal hướng đến mô hình “Personalized Pet Care” gọi là cá nhân hóa quy trình chăm sóc dựa trên đặc điểm giống loài, độ tuổi, tình trạng sức khỏe và thói quen sinh hoạt của từng thú cưng thông qua hồ sơ Pet ID trên hệ thống.
+Hệ thống dịch vụ Spa & Grooming được chia thành nhiều nhóm dịch vụ khác nhau nhằm đáp ứng đa dạng nhu cầu của khách hàng.
+Đầu tiên là nhóm dịch vụ Chăm sóc cơ bản, bao gồm các thao tác chăm sóc cơ bản như tắm vệ sinh, sấy lông, cắt móng, vệ sinh tai, cạo lông bàn chân và xử lý tuyến hôi. Đây là nhóm dịch vụ phổ biến dành cho các khách hàng có nhu cầu chăm sóc định kỳ nhằm duy trì vệ sinh và sức khỏe cơ bản cho thú cưng.
+Tiếp theo là nhóm dịch vụ Tạo kiểu, tập trung vào dịch vụ cắt tỉa tạo kiểu theo giống loài hoặc yêu cầu riêng của khách hàng. Nhân viên grooming có thể tham khảo lịch sử tạo kiểu trước đó được lưu trên hồ sơ Pet ID nhằm đảm bảo tính nhất quán trong trải nghiệm dịch vụ. Đối với các giống chó có đặc điểm lông đặc thù như Poodle, Pomeranian hoặc Bichon, hệ thống hỗ trợ lưu trữ kiểu cắt tỉa, giúp khách hàng có thể đặt lại kiểu cắt cũ mà không cần mô tả lại nhiều lần.
+Ngoài ra, PawPal còn triển khai nhóm dịch vụ Chăm sóc nhanh dành cho khách hàng cần xử lý nhanh các nhu cầu chăm sóc ngắn hạn như vệ sinh chân sau khi đi dạo, cắt móng nhanh hoặc tắm khô khử mùi. Các dịch vụ này được thiết kế với thời lượng ngắn nhằm tối ưu trải nghiệm cho khách hàng bận rộn.
+Một điểm đặc biệt trong mô hình Spa & Grooming của PawPal là yếu tố minh bạch trải nghiệm dịch vụ. Trong suốt quá trình chăm sóc, nhân viên có thể cập nhật hình ảnh, video và trạng thái realtime lên nhật ký điện tử. Chủ nuôi có thể theo dõi trực tiếp các mốc như:
+Bé đã bắt đầu tắm
+Đang sấy lông
+Đã hoàn thành grooming
+Được kiểm tra sức khỏe sơ bộ
+Đang nghỉ ngơi sau dịch vụ
+b. Dịch vụ Pet Hotel
+Dịch vụ Pet Hotel của PawPal được xây dựng nhằm đáp ứng nhu cầu lưu trú thú cưng trong ngắn hạn hoặc dài hạn, mang đến trải nghiệm lưu trú an toàn, sạch sẽ và gần gũi như tại nhà cho thú cưng. Khác với mô hình gửi thú cưng truyền thống chỉ tập trung vào việc giữ hộ, PawPal định hướng Pet Hotel như một dịch vụ chăm sóc toàn diện kết hợp giữa lưu trú, theo dõi sức khỏe và chăm sóc cảm xúc cho thú cưng trong suốt thời gian chủ nuôi vắng mặt. Hệ thống được chia thành nhiều loại phòng khác nhau nhằm phù hợp với kích thước, tính cách và nhu cầu chăm sóc riêng của từng thú cưng: 
+Loại đầu tiên là Standard Room, phù hợp với các thú cưng nhỏ và có nhu cầu lưu trú cơ bản. Phòng được trang bị khu vực nghỉ ngơi riêng, khay ăn uống và hệ thống vệ sinh định kỳ. Đây là lựa chọn phổ biến dành cho khách hàng có nhu cầu gửi thú cưng ngắn ngày với chi phí tối ưu.
+Tiếp theo là loại phòng Deluxe, hướng đến nhóm khách hàng mong muốn không gian rộng rãi và riêng tư hơn cho thú cưng. Phòng Deluxe được bổ sung các tiện ích như:
+Đệm nằm cao cấp
+Khu vui chơi mini
+Điều hòa nhiệt độ
+Chế độ chăm sóc ưu tiên
+Ngoài ra, thú cưng sử dụng phòng Deluxe sẽ được cập nhật nhật ký với tần suất nhiều hơn nhằm tăng mức độ minh bạch và kết nối với chủ nuôi.
+Đối với các khách hàng có nhu cầu chăm sóc cao cấp, hệ thống triển khai loại phòng Luxury Suite. Đây là mô hình phòng lưu trú riêng biệt với diện tích lớn hơn, phù hợp cho thú cưng có tính nhạy cảm cao hoặc cần môi trường yên tĩnh. Các phòng Luxury Suite được thiết kế theo tiêu chuẩn gần giống không gian gia đình nhằm giảm stress cho thú cưng khi xa chủ. Khách hàng có thể sử dụng thêm các dịch vụ mở rộng như:
+Chế độ ăn riêng theo yêu cầu
+Camera theo dõi riêng
+Dắt đi dạo cá nhân
+Thời gian chơi tương tác riêng
+Grooming nhẹ trong thời gian lưu trú
+Báo cáo tình trạng sức khỏe hàng ngày
+Bên cạnh phân loại theo mức độ dịch vụ, hệ thống còn hỗ trợ tách khu lưu trú riêng cho chó và mèo nhằm đảm bảo môi trường phù hợp với đặc điểm hành vi của từng loài. Trong suốt quá trình lưu trú, hệ thống nhật ký sẽ liên tục ghi nhận các hoạt động của thú cưng và tiến hành đồng bộ dữ liệu trực tiếp lên tài khoản khách hàng nhằm giúp chủ nuôi theo dõi thú cưng theo thời gian thực và duy trì cảm giác kết nối dù không có mặt trực tiếp tại cửa hàng.
+c. Dịch vụ Pet Shop (Thương mại điện tử)
+Ngoài các dịch vụ chăm sóc trực tiếp, PawPal còn tích hợp module thương mại điện tử nhằm cung cấp các sản phẩm phục vụ nhu cầu chăm sóc và nuôi dưỡng thú cưng.
+Danh mục sản phẩm dự kiến bao gồm:
+Thức ăn cho chó mèo
+Pate và snack dinh dưỡng
+Đồ chơi thú cưng
+Phụ kiện thời trang
+Sữa tắm và sản phẩm vệ sinh
+Dụng cụ chăm sóc sức khỏe
+Hệ thống thương mại điện tử hỗ trợ đầy đủ các chức năng hiện đại như:
+Tìm kiếm và lọc sản phẩm
+Wishlist (Danh sách yêu thích)
+Giỏ hàng và thanh toán online
+Theo dõi trạng thái đơn hàng
+Quản lý lịch sử mua sắm
+Đánh giá và phản hồi sản phẩm
+d. Dịch vụ khách hàng thân thiết (Loyalty Services)
+Nhằm tăng khả năng giữ chân khách hàng và xây dựng mối quan hệ dài hạn với người dùng, hệ thống PawPal tích hợp chương trình khách hàng thân thiết thông qua cơ chế tích điểm Paw Points và quản lý Voucher. Sau mỗi giao dịch dịch vụ hoặc mua sắm thành công, khách hàng sẽ được tích lũy điểm thưởng tương ứng với giá trị chi tiêu. Số điểm này có thể được sử dụng để:
+Đổi voucher giảm giá
+Nhận quà tặng
+Nâng cấp dịch vụ
+Nhận ưu đãi độc quyền
+Ngoài ra, hệ thống còn triển khai chương trình giới thiệu bạn bè (Referral Program), cho phép khách hàng nhận thưởng khi giới thiệu người dùng mới đăng ký và phát sinh giao dịch thành công trên nền tảng. Thông qua cơ chế Loyalty này, PawPal không chỉ tăng khả năng quay lại của khách hàng mà còn xây dựng cộng đồng người dùng trung thành và tạo hiệu ứng lan truyền thương hiệu tự nhiên trên môi trường số.
+3.2.2. Quy tắc kinh doanh
+
+3.2.2.2. Quy tắc tính giá
+Hệ thống Pawpal áp dụng cơ chế tra cứu giá niêm yết tự động theo thời gian thực. Khi khách hàng chọn loại dịch vụ và thú cưng, hệ thống sẽ tự động truy xuất cân nặng trong Hồ sơ bé cưng hoặc thông tin khách vãng lai nhập để đối chiếu thẳng với bảng giá cấu hình trong CSDL.
+Giá thực trả = Giá niêm yết + Phụ phí yêu cầu - Ưu đãi hạng thành viên - Giá trị voucher - Điểm quy đổi
+Bảng : Giá niêm yết các gói dịch vụ Spa & Grooming
+Gói dịch vụ cụ thể 
+Hạng Siêu Nhỏ (< 5kg) 
+Hạng Nhỏ (5kg - 10kg)
+Hạng Vừa (11kg - 20kg)
+Hạng Lớn 
+(> 20kg)
+Tắm vệ sinh cơ bản (Tắm 2 lần, sấy khô, chải lông rụng)
+100.000 VNĐ
+130.000 VNĐ 
+180.000 VNĐ 
+250.000 VNĐ 
+Cắt tỉa lông tạo kiểu nghệ thuật theo yêu cầu
+250.000 VNĐ 
+300.000 VNĐ 
+400.000 VNĐ 
+550.000 VNĐ 
+Vệ sinh tai, móng và tuyến hôi 
+60.000 VNĐ 
+80.000 VNĐ 
+100.000 VNĐ 
+120.000 VNĐ 
+Chăm sóc da và lông chuyên sâu
+200.000 VNĐ 
+250.000 VNĐ 
+350.000 VNĐ 
+450.000 VNĐ 
+Spa dưỡng lông và khử mùi (Xông hơi bọt tuyết cao cấp)
+180.000 VNĐ 
+220.000 VNĐ 
+300.000 VNĐ 
+400.000 VNĐ 
+Combo chăm sóc toàn diện (Bao gồm tất cả các bước trên - Giá hời hơn)
+720.000 VNĐ
+910.000 VNĐ
+1.250.000 VNĐ
+1.700.000 VNĐ
+
+Bảng : Giá niêm yết các hạng phòng Pet Hotel (Tính theo ngày và đã bao gồm các bữa ăn)
+Hạng phòng
+Giới hạn trọng lượng
+Hạng Siêu Nhỏ / Nhỏ (< 11kg)
+Hạng Vừa (11kg - 20kg)
+Hạng Lớn 
+(> 20kg)
+Phòng Standard 
+Tối đa 10 kg
+150.000 VNĐ
+N/A
+N/A
+Phòng Deluxe 
+Tối đa 20 kg
+250.000 VNĐ 
+300.000 VNĐ
+N/A
+Phòng Luxury Suite 
+Mọi kích thước
+400.000 VNĐ
+450.000 VNĐ
+550.000 VNĐ
+
+
+Trong thời gian lưu trú tại Pet Hotel, khách hàng có thể tùy chọn tích hợp thêm các dịch vụ mở rộng nhằm gia tăng trải nghiệm cho thú cưng. Các dịch vụ này được tính phí riêng biệt theo lượt hoặc cộng dồn theo ngày vào tổng hóa đơn dịch vụ của khách sạn.
+Bảng : Giá các dịch vụ mở rộng đi kèm Pet Hotel
+Tên dịch vụ
+Hình thức tính phí
+Đơn giá niêm yết
+Ghi chú áp dụng
+Chăm sóc dinh dưỡng theo khẩu phần riêng
+Tính theo ngày
+30.000 VNĐ
+Khách tự chuẩn bị hạt, pate đặc trị
+Dắt đi dạo ngoài trời (30 phút)
+Tính theo lượt
+40.000 VNĐ
+Giới hạn tối đa 2 lượt / ngày
+Chơi tương tác định kỳ với bảo mẫu
+Tính theo lượt
+20.000 VNĐ
+Thời gian tương tác 20 phút / lượt
+Tắm vệ sinh trong thời gian lưu trú
+Tính theo lượt
+Giảm 20%
+Áp dụng trên đơn giá của Spa & Grooming
+
+Bên cạnh giá các loại dịch vụ cốt lõi, hệ thống tự động áp dụng các quy tắc phụ thu cố định dựa trên hành vi lựa chọn nhân sự của khách hàng và thời điểm đặt lịch, đồng thời tự động tính toán mức chiết khấu tri ân dựa trên thứ hạng tài khoản thành viên của chủ nuôi.
+Bảng : Biểu phí phụ thu theo thời gian
+Loại phụ phí
+Thời gian
+Mức phụ thu áp dụng
+Cơ chế kích hoạt tự động
+Phụ phí ngày Lễ
+Thứ Bảy, Chủ Nhật, Ngày Lễ
++10% dựa trên giá niêm yết
+Tự động nhận diện theo lịch hệ thống
+
+
+Bảng : Mức chiết khấu ưu đãi theo hạng thành viên 
+Hạng thành viên
+Điều kiện tổng chi tiêu tích lũy
+Mức giảm trừ dịch vụ
+Phương thức áp dụng
+Hạng Bạc 
+Dưới 5.000.000 VNĐ
+0%
+Áp dụng đơn giá tiêu chuẩn
+Hạng Vàng
+Từ 5.000.000 đến 15.000.000 VNĐ
+5%
+Giảm trừ trực tiếp trên giá niêm yết
+Hạng Kim Cương 
+Trên 15.000.000 VNĐ
+10%
+Giảm trừ trực tiếp trên giá niêm yết
+
+
+Đối với dịch vụ Pet Shop, hệ thống áp dụng cơ chế giá tĩnh được thiết lập trực tiếp trên từng mã định danh sản phẩm trong CSDL hàng hóa. Đơn giá hiển thị trên website là giá cuối cùng đã bao gồm các loại thuế liên quan. Hệ thống hỗ trợ tính năng cập nhật giá động tại màn hình giỏ hàng khi người dùng thay đổi số lượng mặt hàng, hoặc khi hệ thống ghi nhận thời gian thực trùng khớp với các chiến dịch giảm giá do Admin cấu hình trước đó.
+Đối với quy tắc quy đổi điểm thưởng Paw Points, hệ thống thiết lập tỷ lệ quy đổi cố định trong mã nguồn là 1 Paw Point tương đương với 1.000 VNĐ giảm giá trực tiếp vào hóa đơn. Để đảm bảo cân bằng dòng tiền và phòng tránh các hành vi gian lận dữ liệu, khách hàng chỉ được hệ thống mở khóa tính năng quy đổi điểm khi tài khoản thành viên đạt số dư tích lũy tối thiểu là 50 Paw Points. 
+Mọi chi phí dịch vụ Spa & Grooming và Pet Hotel sẽ được thanh toán trực tiếp tại cửa hàng sau khi hoàn tất dịch vụ mà không phát sinh bất kỳ khoản đặt cọc giữ chỗ nào.
+
+3.2.2.3. Quy tắc đặt lịch
+Về giới hạn thời gian, khách hàng bắt buộc phải thực hiện thao tác đặt lịch trước thời điểm dịch vụ bắt đầu tối thiểu 2 tiếng nhằm đảm bảo cửa hàng có đủ thời gian điều phối nhân sự phù hợp, đồng thời hệ thống chỉ mở cổng tiếp nhận lịch đặt trước trong phạm vi tối đa 30 ngày so với thời gian thực tế. Cơ chế giữ chỗ tạm thời sẽ được kích hoạt tự động ngay khi người dùng nhấp chọn vào một ô giờ trống trên giao diện, lúc này hệ thống tiến hành khóa cục bộ ô lịch đó trong vòng 15 phút dưới trạng thái "Đang chờ" để người dùng hoàn thiện thông tin. Nhằm đảm bảo tính công bằng cho toàn bộ cộng đồng chủ nuôi, mỗi phiên làm việc hoặc số điện thoại chỉ được phép giữ chỗ duy nhất 01 ô lịch tại một thời điểm, nếu khách hàng thay đổi ý định và nhấp chọn sang một ô lịch mới thì ô lịch cũ sẽ lập tức được giải phóng về trạng thái trống cho người khác. 
+Hệ thống Pawpal áp dụng chính sách không thu phí đặt cọc trực tuyến, tức là ngay khi khách hàng nhấn nút xác nhận cuối cùng, lịch hẹn sẽ chuyển thẳng từ trạng thái "Đang chờ" sang "Đã đặt" với giá trị cọc ghi nhận là 0 VNĐ, và khách hàng sẽ thực hiện thanh toán toàn bộ chi phí trực tiếp tại quầy sau khi bé cưng hoàn thành dịch vụ. Để hạn chế các hành vi spam hệ thống, mỗi tài khoản thành viên chỉ được sở hữu tối đa 3 lịch hẹn ở trạng thái "Đã đặt" trong cùng một ngày, đồng thời nếu hệ thống phát hiện một số điện thoại có hành vi hủy lịch quá 3 lần trong vòng 7 ngày thì tính năng đặt lịch trực tuyến của tài khoản đó sẽ tự động bị khóa trong 7 ngày tiếp theo để bảo vệ tài nguyên vận hành của cơ sở.
+3.2.2.4. Quy tắc tiếp nhận
+Hệ thống quy định khung thời gian hiệu lực cho mỗi lịch hẹn cho phép khách hàng thực hiện thủ tục check-in sớm tối đa 15 phút hoặc trễ hẹn không quá 15 phút so với giờ đã đăng ký. Trong trường hợp vượt quá ngưỡng trễ này mà khách hàng không xuất hiện thì Admin sẽ liên hệ khách hàng thông qua số điện thoại để xác nhận tình trạng. Nếu không nhận được phản hồi hoặc khách hàng yêu cầu hủy, Admin sẽ thao tác trên hệ thống chuyển trạng thái đơn thành "Hủy do khách không đến" để giải phóng nhân viên phụ trách. 
+Khi khách hàng đưa bé cưng đến, tại quầy tiếp nhận, Admin có trách nhiệm đối chiếu khối lượng thực tế của thú cưng với thông tin khai báo trên Pet ID, và trong trường hợp phát hiện sai lệch vượt quá hạng cân đã đặt, Admin sẽ thông báo với khách hàng và sử dụng giao diện quản trị để hiệu chỉnh lại dữ liệu, từ đó hệ thống tự động cập nhật đơn giá mới dựa trên quy tắc tính giá đã được niêm yết. Ngay khi Admin nhấn nút xác nhận tiếp nhận thành công, trạng thái lịch hẹn lập tức chuyển sang "Đang thực hiện", đồng thời hệ thống tự động khởi tạo phiên theo dõi dịch vụ thời gian thực, mở quyền truy cập dòng thời gian "Nhật ký bé cưng" trên Dashboard của khách hàng và đồng bộ luồng stream từ thiết bị ngoại vi tại khu vực dịch vụ. Đối với trường hợp khách vãng lai mang thú cưng đến trực tiếp mà không đặt lịch trước, Admin bắt buộc phải thực hiện luồng định danh nhanh bằng cách nhập Họ tên và Số điện thoại khách hàng để hệ thống khởi tạo tài khoản tạm và mã Pet ID định danh duy nhất trước khi làm thủ tục check-in, đảm bảo mọi dữ liệu hành trình của thú cưng luôn được lưu vết khép kín.
+3.2.2.5. Quy tắc huỷ và đổi lịch
+Khách hàng chỉ được phép tự thực hiện thay đổi hoặc hủy lịch hẹn trực tuyến trước giờ bắt đầu dịch vụ tối thiểu 02 tiếng. Nhằm hạn chế việc thay đổi liên tục gây ảnh hưởng đến khách hàng khác, mỗi lịch hẹn chỉ được phép thay đổi thời gian trực tuyến tối đa 02 lần, sau giới hạn đó quyền tự thao tác trên website của khách hàng sẽ bị khóa.
+Đối với cơ chế giữ chỗ khi đổi lịch, ngay khi khách hàng chọn một khung giờ mới, hệ thống sẽ tiến hành giữ chỗ tạm thời trong vòng 15 phút. Trong suốt khoảng thời gian này, lịch hẹn cũ vẫn được giữ nguyên trạng thái cho đến khi thao tác đổi lịch mới được xác nhận thành công, lúc đó khung giờ cũ mới chính thức được giải phóng cho người dùng khác; ngược lại, nếu quá 15 phút mà khách hàng không xác nhận, phiên giữ chỗ mới sẽ tự động hết hạn và hủy bỏ. Hệ thống cũng áp dụng ràng buộc chặt chẽ về loại dịch vụ khi quy định khách hàng không được phép đổi trực tiếp loại dịch vụ chính như từ Spa sang Hotel trong quy trình thay đổi lịch mà bắt buộc phải thực hiện quy trình hủy lịch cũ và đặt lại lịch mới từ đầu.
+Bên cạnh đó, chính sách chống spam được kích hoạt tự động dựa trên số điện thoại, theo đó nếu một số điện thoại thực hiện hủy lịch quá 03 lần trong vòng 07 ngày, hệ thống sẽ khóa tính năng đặt lịch trực tuyến của tài khoản tương ứng trong 07 ngày tiếp theo để bảo vệ tài nguyên của cửa hàng.
+Ngoài ra, nhằm bảo mật thao tác đối với các tài khoản tạm thời chưa định danh đầy đủ, hệ thống yêu cầu người dùng bắt buộc phải truy cập thông qua đường link định danh duy nhất được gửi trong SMS hoặc tài khoản phải được thiết lập mật khẩu mới có đủ thẩm quyền thực hiện việc hủy hoặc đổi lịch hẹn.
+3.2.2.6. Quy tắc minh bạch
+Nhằm xây dựng lòng tin tối đa với khách hàng, Pawpal tích hợp tính năng theo dõi thời gian thực mang tên "Nhật ký bé cưng", cho phép hiển thị dòng thời gian chi tiết với các cột mốc dịch vụ cụ thể từ lúc tiếp nhận, đang tắm, đang sấy, đã cho ăn cho đến khi hoàn tất. Để đảm bảo tính xác thực bằng hình ảnh và dữ liệu, các trạng thái cập nhật cốt lõi trên dòng thời gian này bắt buộc phải được gắn dấu thời gian tự động và đính kèm hình ảnh hoặc video thực tế của thú cưng tại chính thời điểm đó, giúp chủ nuôi dễ dàng giám sát từ xa.
+Song song với việc hiển thị cho khách hàng, hệ thống cũng thực hiện lưu vết nghiêm ngặt bằng cách ghi nhận lại ID của người thực hiện cùng thời gian thực tế của tất cả các thao tác quan trọng bao gồm đặt lịch, hủy lịch, thanh toán, cập nhật trạng thái đơn hàng hoặc hỗ trợ khách hàng vào nhật ký hệ thống để làm cơ sở dữ liệu phục vụ cho công tác tra soát và giải quyết khiếu nại sau này. Sự minh bạch về giá cả được đảm bảo tuyệt đối nhờ vào cơ chế tự động tính toán của hệ thống dựa trên bảng giá niêm yết kết hợp với dữ liệu cân nặng và giống loài đồng bộ từ mã định danh Pet ID, loại bỏ hoàn toàn mọi sai lệch mang tính cảm tính từ phía nhân viên cửa hàng.
+Ngoài ra, hệ thống cũng cam kết mang lại những đánh giá khách quan nhất từ người dùng thực tế bằng cách chỉ cho phép các giao dịch đã chuyển sang trạng thái hoàn thành mới được quyền viết phản hồi, đồng thời các đánh giá này sẽ được gắn nhãn chứng thực rõ ràng nhằm xây dựng một cộng đồng tin cậy cho những người nuôi thú cưng khác tham khảo.
+3.2.2.7. Quy tắc thành viên
+Chương trình khách hàng thân thiết của Pawpal được xây dựng trên một hệ thống phân hạng rõ ràng gồm 3 cấp bậc dựa theo tổng chi tiêu tích lũy của khách hàng. Cụ thể, Hạng Bạc dành cho các tài khoản có mức chi tiêu dưới 5.000.000 VNĐ; Hạng Vàng áp dụng cho mức chi tiêu từ 5.000.000 VNĐ đến 15.000.000 VNĐ và đi kèm đặc quyền giảm trực tiếp 5% trên giá dịch vụ; Hạng Kim Cương cao cấp nhất dành cho khách hàng chi tiêu trên 15.000.000 VNĐ với mức ưu đãi giảm thẳng 10% vào hóa đơn.
+Quá trình tích lũy điểm thưởng Paw Points được thực hiện tự động theo tỷ lệ quy đổi cứ mỗi 50.000 VNĐ trên hóa đơn sẽ tương ứng với 1 Paw Point, và số điểm này chỉ được cộng vào tài khoản ngay sau khi giao dịch chuyển sang trạng thái hoàn thành thành công. Đối với các thành viên mới đăng ký, hệ thống sẽ tặng ngay một phần quà chào mừng trị giá 50 điểm thưởng, tuy nhiên số điểm tặng này chỉ có giá trị sử dụng sau khi tài khoản phát sinh và hoàn tất đơn hàng đầu tiên. Khi tiến hành quy đổi ưu đãi, 1 Paw Point sẽ có giá trị tương đương với 1.000 VNĐ giảm giá, với điều kiện khách hàng phải đạt số dư tích lũy tối thiểu từ 50 Paw Points trở lên và tài khoản phải là thành viên chính thức đã thiết lập mật khẩu bảo mật.
+Về thời hạn sử dụng, điểm Paw Points của từng giao dịch sẽ có hiệu lực trong vòng 12 tháng kể từ ngày phát sinh và hệ thống sẽ tự động gửi thông báo nhắc nhở trước 30 ngày cho khách hàng trước khi điểm chính thức hết hạn. Tất cả các mã giảm giá được đổi từ điểm thưởng, không có giá trị quy đổi thành tiền mặt và chỉ được áp dụng giới hạn cho một đơn hàng duy nhất trong quá trình thanh toán.
+
+
+
+
+
+2.1. Hành trình khách hàng	
+2.1.1. Lý thuyết về hành trình khách hàng
+Customer Journey Map giúp doanh nghiệp hiểu rõ hơn về khách hàng, cách họ tương tác với sản phẩm hoặc dịch vụ, nhu cầu và cảm nhận của khách hàng về thương hiệu,… Tất cả những yếu tố này giúp doanh nghiệp định hướng và cải thiện tốt hơn những trải nghiệm khách hàng. 
+Thông qua thiết lập bản đồ hành trình khách hàng chi tiết, doanh nghiệp có thể nhận biết được những khó khăn, thách thức mà khách hàng gặp phải trong quá trình tương tác với thương hiệu. Chẳng hạn như: 
+Khách hàng không biết nhiều thông tin về sản phẩm/dịch vụ mà doanh nghiệp cung cấp.
+Sản phẩm, dịch vụ không đáp ứng nhu cầu khách hàng.
+Khách hàng không hài lòng về chất lượng sản phẩm/dịch vụ hay quy trình chăm sóc khách hàng. 
+Khách hàng gặp khó khăn trong quá trình đặt hàng và thanh toán qua các kênh.
+Thông qua việc phát hiện các lỗ hổng trong bản đồ hành trình khách hàng, doanh nghiệp có thể điều chỉnh sản phẩm/dịch vụ của mình để cải thiện mức độ hài lòng của khách hàng. 
+
+
+
+
+2.1.2. Phân loại các nhóm khách hàng trọng tâm
+Nhóm 1: Khách hàng trẻ (18 - 30 tuổi)
+Đây là nhóm chiếm tỷ trọng lớn nhất trên các nền tảng mạng xã hội video ngắn như TikTok và Threads. Tập trung chủ yếu là sinh viên và những người mới đi làm sống tại các đô thị lớn, nhóm này coi thú cưng là người bạn đồng hành quan trọng nhất trong không gian sống độc thân hoặc tại các căn hộ thuê. Dù có sự gắn bó cảm xúc sâu sắc, ngân sách dành cho thú cưng của họ thường có giới hạn và phụ thuộc vào sự cân đối chi tiêu hàng tháng. Quy trình đưa ra quyết định của nhóm này thường kéo dài vì họ có thói quen lưu trữ nhiều thông tin, so sánh giá cả và đọc kỹ các bình luận thực tế trước khi lựa chọn một cơ sở mới. Và họ rất nhạy cảm với sự minh bạch về chi phí và tốc độ phản hồi, bất kỳ sự chậm trễ hay thiếu nhất quán nào trong thông tin giá cả đều có thể khiến họ từ bỏ ý định sử dụng dịch vụ và chuyển sang tìm kiếm các lựa chọn khác từ cộng đồng mạng.
+
+Nhóm 2: Khách hàng từ 30 đến 45 tuổi
+Nhóm này bao gồm các nhân viên văn phòng hoặc quản lý có thu nhập cao và ổn định. Đây là nhóm có mức chi tiêu cho dịch vụ thú cưng chuyên sâu lớn nhất thị trường, gắn liền với xu hướng coi thú cưng là thành viên quan trọng hoặc con cái trong gia đình. Với lịch trình làm việc bận rộn, họ coi thời gian là tài sản quý giá và đã quen thuộc với hệ sinh thái dịch vụ số tức thì. Rào cản lớn nhất của nhóm này là sự thiếu chính xác trong quản lý lịch trình và sự thiếu minh bạch của quy trình chăm sóc khi họ không có mặt trực tiếp. Họ không cần được thuyết phục về giá trị dịch vụ, nhưng đòi hỏi một quy trình vận hành mượt mà, hiển thị thông tin thực tế và cho phép họ giám sát được tình trạng thú cưng một cách xuyên suốt. Đây là nhóm khách hàng có lòng trung thành cao nhưng cũng là nhóm khắt khe nhất về tính minh bạch và độ tin cậy của dịch vụ.
+
+Nhóm 3: Khách hàng trên 45 tuổi
+Tập trung vào những người đã ổn định về tài chính và thường có kinh nghiệm nuôi thú cưng lâu năm, đây là nhóm khách hàng đóng góp giá trị cao cho các dịch vụ chăm sóc spa thẩm mỹ, cắt tỉa chuyên sâu và lưu trú nghỉ dưỡng dài ngày. Khác với các nhóm trẻ, họ tìm kiếm dịch vụ chủ yếu qua sự giới thiệu từ các mối quan hệ thân thiết hoặc những người có cùng kinh nghiệm chăm sóc thú cưng lâu năm thay vì các quảng cáo trực tuyến. Dù thành thạo các tính năng giao tiếp cơ bản trên thiết bị di động, họ lại có tâm lý e ngại trước các quy trình công nghệ yêu cầu nhiều bước thiết lập hồ sơ hay xác minh tài khoản phức tạp ngay từ đầu. Ngưỡng khởi đầu công nghệ cao thường là rào cản khiến họ từ chối sử dụng các nền tảng trực tuyến. Đối với nhóm khách hàng này, sự đơn giản trong thao tác, chất lượng dịch vụ thực tế và khả năng xây dựng niềm tin lâu dài thông qua sự tận tình, chu đáo là những yếu tố then chốt để duy trì sự gắn kết bền vững với thương hiệu.
+
+Bảng: Tổng hợp đặc điểm hành vi của khách hàng theo phân khúc độ tuổi
+Đặc điểm
+Nhóm khách hàng trẻ
+Nhóm khách hàng trung niên
+Nhóm khách hàng lớn tuổi
+Đặc trưng hành vi
+Khách hàng nhạy cảm xu hướng và chi phí.
+Khách hàng tập trung hiệu quả và sự minh bạch.
+Khách hàng ưu tiên uy tín và sự đơn giản.
+Kênh tiếp cận
+Mạng xã hội video, hội nhóm trực tuyến.
+Công cụ tìm kiếm, quảng cáo số, đặt chỗ.
+Giới thiệu trực tiếp từ các mối quan hệ tin cậy.
+Động lực chi tiêu
+Nhu cầu spa làm đẹp, mua sắm phụ kiện theo xu hướng.
+Nhu cầu chăm sóc chuyên sâu định kỳ và quản lý thời gian.
+Nhu cầu lưu trú nghỉ dưỡng và spa phục hồi cho thú cưng.
+Hành vi quyết định
+So sánh giá cả, đọc đánh giá cộng đồng, ưu đãi đi kèm.
+Tốc độ phản hồi hệ thống, chất lượng xác nhận lịch trình.
+Sự tận tâm của nhân viên, mức độ đơn giản trong thao tác.
+Rào cản trải nghiệm
+Chi phí không minh bạch, quy trình phản hồi chậm.
+Tình trạng trùng lịch, thiếu công cụ giám sát dịch vụ từ xa.
+Quy trình đăng ký tài khoản và xác minh thông tin phức tạp.
+Kỳ vọng
+Bảng giá công khai, cơ chế tích điểm thưởng rõ ràng.
+Hiển thị lịch trống thời gian thực, nhật ký chăm sóc trực tuyến.
+Giao diện tối giản, quy trình giao dịch nhanh gọn.
+Khả năng chi trả
+Trung bình
+Cao
+Cao
+
+
+2.1.3. Xác định chân dung khách hàng
+
+
+
+2.2. Chiến lược tiếp cận và Kích thích hành vi mua hàng
+2.2.1. Chiến lược thu hút và chuyển đổi
+2.2.2. Chiến lược giữ chân và cá nhân hóa
+
+
+
+
+
+TÀI LIỆU THAM KHẢO:
+Hành trình khách hàng (Customer journey) là gì? 5 Mô hình phổ biến 
+Customer Journey Map là gì? Ví dụ về hành trình khách hàng 2025 
+Customer Journey là gì? 9 bước xây dựng bản đồ hành trình 
+
+
+
+
+3.1.Mô tả quy trình nghiệp vụ và Sơ đồ BPMN
+3.1.1. Quy trình đăng ký
+Mô tả quy trình 
+Quy trình đăng ký thành viên trên hệ thống Pawpal được thiết kế linh hoạt nhằm tối ưu hóa tỷ lệ chuyển đổi thông qua hai luồng tiếp cận chính là Đăng ký chủ động dành cho những khách hàng muốn trở thành thành viên chính thức trước khi sử dụng dịch vụ và Định danh lũy tiến khi khách hàng vãng lai thực hiện đặt lịch hoặc thanh toán mà chưa có tài khoản.
+Đối với Đăng ký chủ động, quy trình bắt đầu khi người dùng chọn chức năng "Đăng ký" trên giao diện Pawpal và cung cấp các thông tin gồm Họ tên, Số điện thoại và Mật khẩu. Ngay lập tức, hệ thống thực hiện kiểm tra tính duy nhất của số điện thoại trong cơ sở dữ liệu (CSDL). Sau khi xác nhận số điện thoại hợp lệ, hệ thống gửi lệnh điều khiển đến tác nhân SMS Gateway gửi một mã OTP để xác thực quyền sở hữu số điện thoại. Sau khi xác thực thành công, tài khoản chính thức được xác lập và người dùng có thể đăng nhập, hệ thống điều hướng người dùng vào Trang chủ để bắt đầu hoàn thiện hồ sơ bé cưng. Hệ thống hiển thị dòng thông báo chào mừng và tặng ngay 50 điểm thưởng Paw Points cho khách hàng thành viên mới.  Quy trình hoàn tất khi hệ thống ghi nhận thông tin tài khoản hợp lệ vào CSDL.
+Đối với Định danh lũy tiến dành cho khách hàng vãng lai, tại bước xác nhận giao dịch hoặc xác nhận đặt lịch, hệ thống sẽ ngầm khởi tạo một "Tài khoản tạm" gắn với số điện thoại khách hàng cung cấp. Sau khi giao dịch hoàn tất, hệ thống tự động gửi một tin nhắn SMS với nội dung chào mừng, kèm theo đường dẫn thiết lập mật khẩu có hiệu lực trong 48 giờ và thông báo tặng ngay 50 điểm thưởng Paw Points để khuyến khích khách hàng kích hoạt tài khoản. Quy trình chính thức hoàn tất khi khách hàng nhấn vào liên kết, thiết lập mật khẩu và hệ thống ghi nhận tài khoản chuyển đổi trạng thái từ "Tài khoản tạm" sang "Thành viên chính thức" bằng cách đồng bộ dữ liệu vào “Nhật ký chăm sóc” và “Đơn hàng của tôi” 
+Ngoài ra, trong trường hợp khách hàng trực tiếp đến cơ sở, Admin có thể hỗ trợ thực hiện quy trình đăng ký nhanh tại quầy thông qua giao diện quản trị để giúp khách hàng sở hữu tài khoản định danh ngay lập tức.
+Quy tắc nghiệp vụ 
+Định danh duy nhất: Số điện thoại phải là duy nhất trên hệ thống và đúng định dạng nhà mạng Việt Nam.
+Xác thực OTP: Mã OTP có hiệu lực trong vòng 05 phút. Nếu quá thời gian này, khách hàng phải yêu cầu gửi lại mã mới.
+Cơ chế tài khoản tạm: Tài khoản tạm được hệ thống tự động khởi tạo ngay khi khách hàng vãng lai nhấn Xác nhận đặt lịch/thanh toán.
+Hiệu lực liên kết xác thực: Đường dẫn thiết lập mật khẩu được gửi qua SMS Gateway có thời hạn sử dụng tối đa là 48 giờ.
+Quyền truy cập tạm thời: Sau khi nhập SĐT, khách hàng được cấp quyền truy cập ngay dưới dạng tài khoản chưa kích hoạt hoàn toàn để trải nghiệm dịch vụ.
+Bảo mật mật khẩu: Hệ thống bắt buộc khách hàng phải thiết lập mật khẩu trước khi có thể thực hiện quy trình Đổi điểm thưởng hoặc Hủy lịch hẹn. 
+Ưu đãi chuyển đổi: Điểm thưởng Paw Points chỉ được cộng vào ví khách hàng sau khi họ hoàn tất xác thực OTP hoặc thiết lập mật khẩu từ đường dẫn trong SMS.
+Quyền hạn tài khoản tạm: Tài khoản tạm chỉ có quyền xem lịch hẹn hiện tại, không có quyền đổi điểm thưởng hay quản lý chuyên sâu Pet ID cho đến khi được kích hoạt chính thức.
+Cấp tài khoản tại quầy: Admin có quyền tạo tài khoản cho khách chỉ với Họ tên và SĐT, quy trình gửi link xác thực mật khẩu diễn ra tương tự đăng ký trực tuyến.
+Tình huống ngoại lệ
+Số điện thoại đã tồn tại: Hệ thống từ chối đăng ký và hiển thị thông báo lỗi: "Số điện thoại đã tồn tại. Vui lòng đăng nhập hoặc khôi phục mật khẩu!" 
+Lỗi kết nối SMS Gateway: Nếu hệ thống không thể liên kết với nhà mạng, quy trình sẽ thực hiện gửi lại tối đa 3 lần. Nếu vẫn thất bại, hệ thống thông báo "Dịch vụ xác thực tạm gián đoạn" và lưu yêu cầu vào hàng chờ báo lỗi cho Admin.
+Link thiết lập mật khẩu hết hạn: Khi khách hàng nhấn vào link sau 48 giờ, hệ thống hiển thị thông báo lỗi "Liên kết đã hết hiệu lực" và cung cấp nút "Gửi lại link xác thực mới" để bảo mật lại từ đầu.
+Số điện thoại không đúng định dạng: Hệ thống kiểm tra ngay tại bước nhập liệu, nếu không đủ 10 chữ số hoặc đầu số không hợp lệ sẽ hiển thị cảnh báo đỏ
+Khách hàng không thiết lập mật khẩu: Sau 48 giờ nếu khách vãng lai không kích hoạt, "Tài khoản tạm" vẫn tồn tại để lưu trữ lịch sử giao dịch nhưng sẽ không có điểm thưởng và không thể đăng nhập cho đến khi khách yêu cầu khôi phục mật khẩu.
+Nhập sai mã OTP quá 3 lần: Hệ thống sẽ tạm khóa tính năng đăng ký cho số điện thoại đó trong 15 phút để phòng chống hành vi tấn công giả mạo
+3.1.2. Quy trình đăng nhập và bảo mật
+Mô tả quy trình 
+Quy trình đăng nhập bắt đầu khi người dùng chọn chức năng “Đăng nhập” trên giao diện hệ thống. Tại đây, người dùng thực hiện nhập Số điện thoại, đối với Thành viên chính thức hệ thống yêu cầu thêm Mật khẩu cá nhân, sau đó nhấn nút “Đăng nhập” để gửi yêu cầu truy cập. Khi nhận được yêu cầu, hệ thống tiến hành truy xuất và kiểm tra dữ liệu người dùng trong CSDL. Trong trường hợp hệ thống không tìm thấy số điện thoại tương ứng, hệ thống hiển thị thông báo “Số điện thoại chưa được đăng ký. Vui lòng thực hiện đăng ký” 
+Đối với trường hợp tài khoản đã tồn tại, hệ thống thực hiện xác thực thông tin dựa trên phương thức mà người dùng lựa chọn:
+Trường hợp khách hàng thành viên đã thiết lập mật khẩu, hệ thống tiến hành so sánh mật khẩu người dùng vừa nhập với mật khẩu đã được mã hóa lưu trữ trong CSDL. Nếu mật khẩu không hợp lệ, hệ thống hiển thị thông báo lỗi “Mật khẩu đăng nhập không chính xác” và yêu cầu người dùng nhập lại.
+Trường hợp khách hàng vãng lai đăng nhập bằng tài khoản tạm, người dùng chọn chức năng “Đăng nhập qua OTP”. Lúc này, hệ thống điều khiển tác nhân SMS Gateway gửi một mã xác thực về số điện thoại đã đăng ký. Sau khi người dùng nhập và hệ thống xác minh mã OTP trùng khớp, yêu cầu truy cập sẽ được chấp nhận.
+Nếu thông tin hợp lệ và xác thực thành công, hệ thống tiến hành cập nhật trạng thái phiên đăng nhập, ghi nhận thời gian truy cập thực tế và khởi tạo các quyền hạn tương ứng. Sau đó, hệ thống hiển thị thông báo “Đăng nhập thành công” và tự động điều hướng về Dashboard cá nhân.
+Nhằm tăng cường tính an toàn cho tài khoản, trong quá trình sử dụng, người dùng có thể truy cập vào mục “Cấu hình tài khoản” để thay đổi mật khẩu hoặc cập nhật các lớp bảo mật nâng cao. Tại đây, hệ thống bắt buộc yêu cầu xác nhận mật khẩu cũ hoặc nhập mã xác thực OTP từ SMS Gateway để đảm bảo thao tác do chính chủ thực hiện trước khi cập nhật dữ liệu mới vào CSDL. 
+Quy trình kết thúc khi người dùng truy cập thành công vào hệ thống hoặc sau khi hệ thống hiển thị các thông báo lỗi yêu cầu người dùng xử lý lại.
+Quy tắc nghiệp vụ 
+Định danh duy nhất: Hệ thống sử dụng Số điện thoại là khóa chính duy nhất để định danh tài khoản người dùng trong cơ sở dữ liệu.
+Độ phức tạp mật khẩu: Mật khẩu phải có độ dài tối thiểu 8 ký tự, bao gồm ít nhất một chữ số và một ký tự đặc biệt
+Hiệu lực mã OTP: Mã xác thực OTP được gửi qua hệ thống SMS Gateway có thời gian hiệu lực tối đa là 05 phút kể từ thời điểm phát sinh.
+Giới hạn đăng nhập sai: Tài khoản tự động bị khóa trong 30 phút nếu nhập sai mật khẩu quá 5 lần liên tiếp.
+Ràng buộc bảo mật: Khách hàng bắt buộc phải hoàn tất bước thiết lập mật khẩu cá nhân mới có quyền truy cập vào các tính năng nhạy cảm như Đổi điểm thưởng (Paw Points) hoặc Thay đổi thông tin thanh toán.
+Hệ thống bắt buộc đăng nhập để xem Nhật ký chăm sóc chuyên sâu để đảm bảo quyền riêng tư cho bé cưng.
+Tình huống ngoại lệ
+Tài khoản bị tạm khóa: Hiển thị thông báo "Tài khoản tạm khóa do nhập sai nhiều lần" kèm đồng hồ đếm ngược thời gian mở khóa và cung cấp số Hotline để Admin hỗ trợ nếu cần thiết.
+Quên mật khẩu: Hệ thống yêu cầu nhập số điện thoại, sau đó gửi link khôi phục qua SMS Gateway với hiệu lực 48 giờ để thiết lập lại mật khẩu mới.
+Truy cập từ thiết bị lạ: Hệ thống gửi cảnh báo "Phát hiện đăng nhập bất thường" qua tin nhắn để khách hàng chủ động kiểm tra và thực hiện đổi mật khẩu nếu cần.
+Số điện thoại chưa đăng ký: Nếu người dùng nhập SĐT không tồn tại trong hệ thống, giao diện sẽ hiển thị thông báo lỗi và nút "Đăng ký ngay" để dẫn dắt người dùng vào luồng khởi tạo tài khoản.
+3.1.3. Quản lý hồ sơ bé cưng
+Mô tả quy trình 
+Quy trình quản lý hồ sơ bé cưng khởi đầu sau khi người dùng đăng nhập thành công và truy cập vào mục "Hồ sơ của bé" trên Trang chủ. Tại giao diện này, hệ thống cho phép người dùng khởi tạo và duy trì danh tính số (Pet ID) cho các bé cưng của mình thông qua các thao tác cụ thể
+Trường hợp thêm mới hồ sơ, người dùng thực hiện cung cấp các thông tin định danh cơ bản bao gồm: Tên bé cưng, Giống loài, Cân nặng, Ảnh đại diện và đặc biệt là các thông tin nhạy cảm về y tế như tiền sử bệnh lý, dị ứng hoặc thói quen sinh hoạt. Sau khi nhấn nút “Lưu hồ sơ”, hệ thống sẽ kiểm tra tính hợp lệ của dữ liệu, sau đó khởi tạo một mã định danh Pet ID duy nhất trong CSDL.
+
+Trường hợp cập nhật thông tin, người dùng chọn một hồ sơ hiện có để thay đổi các thông tin hoặc cập nhật ảnh mới. Hệ thống sẽ ghi nhận phiên bản cập nhật mới nhất để đảm bảo dữ liệu luôn khớp với tình trạng thực tế của thú cưng tại thời điểm sử dụng dịch vụ.
+Ngay khi hồ sơ được xác lập, toàn bộ lích sử từ lúc bé “Đã tiếp nhận” cho đến lúc hoàn thành sẽ được lưu trữ trong Nhật ký chăm sóc. Trong quá trình thú cưng lưu trú hoặc làm đẹp tại cửa hàng, các luồng dữ liệu hình ảnh từ Thiết bị ngoại vi sẽ được hệ thống gán trực tiếp vào mã Pet ID tương ứng, cho phép khách hàng giám sát thông tin một cách xuyên suốt. Khách hàng và Admin đều có quyền cập nhật các chỉ số sinh hoạt cho thú cưng để đảm bảo dữ liệu luôn khớp với tình trạng thực tế tại mỗi thời điểm sử dụng dịch vụ.
+Quy trình kết thúc khi thông tin hồ sơ được lưu trữ thành công vào hệ thống hoặc sau khi khách hàng nhận được thông báo xác nhận cập nhật Pet ID hoàn tất.
+Quy tắc nghiệp vụ 
+Quyền sở hữu: Mỗi Pet ID phải thuộc sở hữu của một tài khoản khách hàng duy nhất; một khách hàng có quyền tạo không giới hạn số lượng Pet ID.
+Dữ liệu bắt buộc: Các trường thông tin gồm Tên, Giống loài và Cân nặng là bắt buộc phải hoàn thiện để hệ thống có cơ sở tính toán đơn giá dịch vụ chính xác trong quy trình Đặt lịch.
+Ưu tiên hiển thị y tế: Thông tin về "Dị ứng" và "Lưu ý đặc biệt" phải luôn được làm nổi bật trên giao diện của hệ thống chăm sóc.
+Đồng bộ Nhật ký chăm sóc: Mỗi Pet ID sẽ được hệ thống tự động gán một lịch sử chăm sóc riêng biệt, không được phép gộp chung nhật ký giữa các bé thú cưng khác nhau.
+Cập nhật hình ảnh: Ảnh đại diện của Pet ID phải là ảnh thực tế và được khuyến khích cập nhật mới mỗi khi bé có sự thay đổi lớn về ngoại hình
+Tính kế thừa dữ liệu: Mọi lịch sử dịch vụ, hình ảnh từ Nhật ký chăm sóc và hóa đơn mua sắm liên quan đều phải được gán theo mã Pet ID để phục vụ việc phân tích xu hướng sức khỏe vật nuôi lâu dài.
+Tình huống ngoại lệ
+Xóa nhầm hồ sơ: Hệ thống không xóa vĩnh viễn ngay mà đưa vào "Trạng thái lưu trữ" trong 30 ngày. Khách hàng có thể yêu cầu Admin khôi phục lại dữ liệu và lịch sử chăm sóc trong thời gian này.
+Ảnh tải lên sai định dạng/dung lượng: Hệ thống hiển thị thông báo "Dung lượng ảnh vượt quá 5MB" hoặc "Định dạng không hỗ trợ" và khóa nút lưu cho đến khi người dùng điều chỉnh lại.
+Hồ sơ chưa hoàn thiện khi đặt lịch: Nếu khách hàng chọn một Pet ID thiếu thông tin để đặt dịch vụ, hệ thống sẽ tự động điều hướng về trang chỉnh sửa hồ sơ kèm thông báo: "Vui lòng cập nhật thông tin thú cưng".
+Trùng tên vật nuôi trong một tài khoản: Hệ thống yêu cầu người dùng thêm ký hiệu phân biệt hoặc hậu tố nếu phát hiện tên thú cưng mới trùng với tên thú cưng đã có trong cùng một tài khoản khách hàng.
+Sai lệch thông tin tại quầy: Trường hợp thông tin Pet ID bị khách hàng khai báo sai, Admin có quyền hiệu chỉnh lại dữ liệu dưới sự xác nhận của khách hàng ngay tại thời điểm tiếp nhận dịch vụ.
+3.1.4. Đặt lịch hẹn
+Mô tả quy trình 
+Quy trình đặt lịch hẹn được thực hiện trực tuyến hoàn toàn trên website nhằm tối ưu hóa thời gian cho khách hàng và giảm tải vận hành cho Admin. Quy trình bắt đầu khi  người dùng truy cập mục "Đặt lịch ngay", nơi khách hàng lựa chọn loại hình mong muốn. Tại đây, hệ thống phân tách luồng xử lý dựa trên định danh người dùng.
+Đối với Khách hàng thành viên, hệ thống điều hướng đến màn hình " Chọn bé cưng". Khách hàng chọn một hoặc nhiều hồ sơ có sẵn từ danh sách Pet ID. Hệ thống tự động truy xuất dữ liệu cân nặng và giống loài để làm cơ sở tính giá.
+Đối với Khách vãng lai, hệ thống hiển thị màn hình “Thông tin khách hàng". Khách hàng nhập Họ tên, Số điện thoại và thông tin cơ bản của thú cưng bao gồm Tên, Giống loài, Cân nặng. Lúc này hệ thống chỉ ghi nhận dữ liệu vào bộ nhớ đệm , chưa lưu vào CSDL chính thức.
+Sau khi xác định đối tượng, khách hàng được chuyển đến màn hình "Chọn lịch & Nhân viên". Hệ thống hiển thị các khung giờ trống theo thời gian thực và danh sách nhân viên chăm sóc đang sẵn sàng. Khách hàng có thể chọn đích danh nhân viên yêu thích hoặc chọn ngẫu nhiên để hệ thống tự điều phối. Ngay khi khách hàng nhấn chọn vào một ô lịch và nhân viên cụ thể, hệ thống sẽ thực hiện lệnh "Giữ chỗ tạm thời" và chuyển trạng thái ô đó sang "Đang chờ" trong vòng 15 phút. Trong thời gian này, không một người dùng nào khác có thể nhìn thấy hoặc thao tác trên ô đó. Cơ chế giữ chỗ này vẫn được duy trì ngay cả khi khách hàng thoát khỏi màn hình đặt lịch hoặc đóng trình duyệt, nhằm đảm bảo quyền ưu tiên cho khách hàng đã thao tác trước.
+Tiếp theo, tại mục “Xác nhận thông tin dịch vụ", hệ thống hiển thị chi tiết dịch vụ và tổng tiền dự kiến. Khi khách hàng nhấn nút "Xác nhận đặt lịch", lịch hẹn sẽ chuyển từ "Đang chờ" sang "Đã đặt". Đối với khách vãng lai, lúc này hệ thống mới ngầm khởi tạo "Tài khoản tạm" và đồng thời kích hoạt SMS Gateway gửi link thiết lập mật khẩu.
+Quy trình hoàn tất khi khách hàng nhấn nút "Xác nhận đặt lịch", hệ thống hiển thị thông báo "Đặt lịch thành công" và đồng thời gửi tin nhắn thông báo đến số điện thoại khách hàng thông qua SMS Gateway. Trên website thì thông tin sẽ hiển thị ở mục “Lịch hẹn của bé” và đồng thời được đồng bộ lên lịch vận hành của cửa hàng.
+Quy tắc nghiệp vụ
+Cơ chế kích hoạt giữ chỗ: Trạng thái "Giữ chỗ tạm thời" bắt đầu ngay từ thời điểm khách hàng nhấn chọn vào ô lịch
+Thời gian đặt lịch tối thiểu: Khách hàng phải đặt lịch trước ít nhất 2 tiếng so với thời điểm dịch vụ bắt đầu.
+Tính bền vững của lượt giữ chỗ tạm thời: Lượt giữ chỗ gắn liền với phiên làm việc. Nếu khách đóng trình duyệt và quay lại trong vòng 15 phút, ô lịch đã chọn vẫn hiển thị trạng thái đang chờ riêng cho họ.
+Chính sách đặt cọc: Hệ thống không thu bất kỳ khoản phí đặt cọc nào. Tổng giá trị đơn hàng sẽ được thanh toán trực tiếp tại cửa hàng sau khi hoàn thành dịch vụ
+Định danh khách vãng lai: "Tài khoản tạm" chỉ được khởi tạo chính thức sau khi nút "Xác nhận đặt lịch" được nhấn thành công.
+Số lượng lịch giữ: Mỗi khách hàng chỉ được phép giữ chỗ tối đa 1 ô lịch tại một thời điểm để tránh hành vi đầu cơ khung giờ đẹp
+Xác thực khung giờ trống: Hệ thống chỉ hiển thị các khung thời gian dựa trên công suất thực tế của nhân viên và thiết bị tại cửa hàng.
+Tính giá tự động: Đơn giá dịch vụ được hệ thống tự động tính toán dựa trên bảng giá niêm yết cộng với các hệ số phụ thu theo cân nặng/giống loài từ Pet ID.
+Trạng thái lịch hẹn: Lịch hẹn chỉ có giá trị thực hiện khi chuyển sang trạng thái "Đã xác nhận" bởi hệ thống
+Tình huống ngoại lệ
+Hết thời gian giữ chỗ: Sau 15 phút nếu khách không nhấn "Xác nhận đặt lịch", hệ thống tự động xóa dữ liệu tạm và mở lại ô lịch đó trên bản đồ giờ trống.
+Trường hợp hai người cùng bấm vào một ô lịch ở cùng một mili giây, hệ thống sẽ ưu tiên yêu cầu gửi đến máy chủ trước và báo lỗi "Khung giờ này vừa được đặt" cho người còn lại.
+Khách vãng lai nhập sai SĐT: Nếu SĐT không hợp lệ, hệ thống sẽ không thể khởi tạo tài khoản tạm và gửi SMS. Khách hàng phải điều chỉnh thông tin chính xác mới có thể nhấn "Xác nhận đặt lịch"
+Thoát trang nhưng không quay lại: Sau 15 phút, hệ thống tự giải phóng slot mà không cần bất kỳ thao tác nào từ phía người dùng hay Admin.
+Đặt lịch vào khung giờ đã qua: Nếu khách hàng chọn khung giờ vừa mới trôi qua thời gian thực, hệ thống báo lỗi "Thời gian không hợp lệ" và tự động làm mới lại bảng giờ trống.
+Pet ID chưa đủ thông tin yêu cầu: Hệ thống yêu cầu khách hàng cập nhật nhanh thông tin tại bước chọn Pet rồi mới cho phép đi tiếp.
+3.1.5. Thay đổi lịch hẹn
+Mô tả quy trình 
+Quy trình thay đổi lịch hẹn bắt đầu khi khách hàng truy cập vào mục “Quản lý lịch hẹn” trên hệ thống PawPal và chọn một lịch hẹn đang ở trạng thái "Đã xác nhận", chọn chức năng "Thay đổi lịch". Người dùng chỉ có thể thay đổi lịch hẹn trước 2 tiếng so với lịch cũ.  
+Hệ thống sẽ điều hướng người dùng đến màn hình “Chọn lịch mới". Tại đây, hệ thống hiển thị các khung giờ trống theo thời gian thực và danh sách nhân viên chăm sóc đang sẵn sàng. Tương tự như quy trình đặt lịch ban đầu, ngay khi khách hàng nhấn chọn vào một ô lịch mới, hệ thống sẽ thực hiện lệnh "Giữ chỗ tạm thời" cho khung giờ đó trong vòng 15 phút và chuyển trạng thái ô lịch sang "Đang chờ". Đồng thời, hệ thống vẫn giữ nguyên trạng thái ô lịch cũ của khách hàng cho đến khi thao tác thay đổi được xác nhận thành công.
+Sau khi chọn giờ và nhân viên mới, khách hàng tiến hành kiểm tra lại thông tin tại màn hình xác nhận. Nếu có sự chênh lệch về giá, hệ thống sẽ hiển thị bảng kê chi tiết số tiền cần bù hoặc số tiền dư được chuyển vào ví điểm thưởng. Sau đó, khách hàng nhấn "Xác nhận thay đổi" tại màn hình “Xác nhận thông tin dịch vụ". Lúc này, hệ thống thực hiện cập nhật thời gian mới vào CSDL theo Hồ sơ bé cưng và chuyển trạng thái lịch hẹn mới thành "Đã đặt". Đồng thời, hệ thống lập tức giải phóng ô lịch cũ để chuyển về trạng thái "Trống" cho người dùng khác.
+Quy trình hoàn tất khi khách hàng nhấn nút "Xác nhận thay đổi", hệ thống hiển thị thông báo "Thay đổi lịch hẹn thành công" và thông tin được đồng bộ lên lịch vận hành của cửa hàng.
+Quy tắc nghiệp vụ 
+Giới hạn thời gian thay đổi: Khách hàng chỉ được phép thay đổi lịch hẹn trước giờ bắt đầu dịch vụ tối thiểu 2 tiếng.
+Cơ chế giữ chỗ mới: Ô lịch mới được khách hàng chọn sẽ được khóa tạm thời trong 15 phút. Nếu khách hàng thoát trang hoặc không xác nhận trong thời gian này, ô lịch mới sẽ bị giải phóng và lịch hẹn cũ vẫn được giữ nguyên.
+Hiệu lực khung giờ cũ: Khung giờ ban đầu sẽ chỉ được giải phóng trên hệ thống sau khi việc thay đổi lịch hẹn mới đã được xác nhận thành công.
+Giới hạn số lần thay đổi: Mỗi lịch hẹn chỉ được phép thay đổi trực tuyến tối đa 02 lần. Sau giới hạn này, nút "Thay đổi" sẽ bị ẩn và khách hàng bắt buộc phải liên hệ Hotline để được Admin hỗ trợ thủ công.
+Ràng buộc loại dịch vụ: Khách hàng không được phép thay đổi loại dịch vụ chính từ Spa sang Hotel trong quy trình này. Mọi thay đổi về loại dịch vụ bắt buộc phải thực hiện thông qua quy trình Hủy lịch và Đặt lịch mới.
+Bảo mật thao tác: Đối với tài khoản tạm, hệ thống yêu cầu khách hàng phải truy cập thông qua liên kết định danh trong SMS hoặc đã thiết lập mật khẩu trước đó mới có quyền thực hiện thay đổi.
+Lưu vết hệ thống: Mọi thao tác thay đổi lịch phải ghi nhận rõ ID người thực hiện, thời gian thay đổi vào nhật ký hệ thống.
+Tình huống ngoại lệ
+Thay đổi sát giờ hẹn: Nếu thời gian còn lại dưới 2 tiếng, nút "Thay đổi" sẽ bị vô hiệu hóa, hệ thống hiển thị thông báo: "Đã quá thời gian tự thay đổi lịch tự động, vui lòng gọi Hotline để nhân viên hỗ trợ bạn trực tiếp".
+Thông báo chênh lệch giá: Nếu đổi sang khung giờ có giá cao hơn, hệ thống hiển thị thông báo mức giá chênh lệch chi tiết để người dùng xác nhận.
+Lịch hẹn đã Check-in: Nếu thú cưng đã ở cửa hàng và trạng thái là "Đang thực hiện", chức năng thay đổi lịch trên website sẽ bị khóa hoàn toàn. Mọi thay đổi về thời gian đón bé phải trao đổi trực tiếp với Lễ tân.
+Hết 15 phút giữ chỗ mới: Nếu khách hàng để máy chờ quá 15 phút mà không nhấn xác nhận, hệ thống sẽ tự động hủy lệnh thay đổi, giải phóng ô lịch mới và giữ nguyên lịch hẹn cũ cho khách hàng.
+3.1.6. Hủy lịch
+Mô tả quy trình
+Quy trình hủy lịch hẹn bắt đầu khi khách hàng truy cập vào màn hình “Quản lý lịch hẹn” trên hệ thống PawPal và lựa chọn một lịch hẹn đang ở trạng thái “Đã xác nhận”. Tại giao diện chi tiết lịch hẹn, khách hàng nhấn vào chức năng “Hủy lịch hẹn”, lúc này hệ thống hiển thị cửa sổ xác nhận nhằm tránh các thao tác nhầm lẫn ngoài ý muốn.
+Sau khi khách hàng xác nhận yêu cầu hủy, hệ thống tiến hành kiểm tra nếu lịch hẹn vẫn còn trong thời gian cho phép hủy trực tuyến và chưa bước vào giai đoạn thực hiện dịch vụ, hệ thống sẽ cập nhật trạng thái lịch hẹn sang “Đã hủy”.
+Ngay sau khi hủy thành công, hệ thống tự động giải phóng khung giờ tương ứng để cập nhật lại lịch trống trên hệ thống đặt lịch. Đồng thời, thông báo xác nhận hủy lịch được gửi đến khách hàng và Admin nhằm hỗ trợ cửa hàng chủ động điều chỉnh kế hoạch vận hành, phân bổ nhân sự và sắp xếp lịch tiếp nhận khách khác phù hợp hơn.
+Thông tin lịch hẹn đã hủy vẫn được lưu trong lịch sử đặt lịch của khách hàng với trạng thái “Đã hủy”. Ngoài ra, hệ thống cũng ghi nhận dữ liệu về số lần hủy lịch nhằm hỗ trợ đánh giá mức độ ổn định của khách hàng trong tương lai.
+Trong trường hợp khách hàng hủy lịch nhiều lần liên tiếp trong thời gian ngắn hoặc thường xuyên đặt lịch nhưng không sử dụng dịch vụ, hệ thống có thể ghi nhận hành vi bất thường để phục vụ cơ chế cảnh báo nội bộ hoặc áp dụng chính sách hạn chế đặt lịch tự động nhằm tránh ảnh hưởng đến khả năng vận hành thực tế của cửa hàng.
+Sau khi trạng thái lịch hẹn được cập nhật hoàn tất và khung giờ được giải phóng thành công, quy trình hủy lịch kết thúc.
+Quy tắc nghiệp vụ
+Khách hàng chỉ được phép tự hủy lịch hẹn trước giờ bắt đầu dịch vụ tối thiểu 2 tiếng.
+Các lịch hẹn đã chuyển sang trạng thái “Đang thực hiện”, “Đã tiếp nhận” hoặc “Hoàn thành” sẽ không được phép hủy trực tiếp trên website.
+Sau khi lịch hẹn được hủy thành công, hệ thống phải tự động giải phóng khung giờ tương ứng để cập nhật lại khả năng đặt lịch.
+Một lịch hẹn chỉ được phép hủy duy nhất một lần và không thể khôi phục sau khi xác nhận hủy thành công.
+Hệ thống phải gửi thông báo xác nhận hủy lịch đến cả khách hàng và Admin ngay sau khi cập nhật trạng thái thành công.
+Mọi thao tác hủy lịch phải được ghi nhận vào nhật ký hệ thống nhằm phục vụ tra soát hoặc xử lý khiếu nại khi cần thiết.
+Hệ thống phải lưu lịch sử hủy lịch của khách hàng để phục vụ phân tích hành vi và hỗ trợ vận hành.
+Tình huống ngoại lệ
+Nếu khách hàng thực hiện hủy lịch khi thời gian còn lại dưới 2 tiếng trước giờ hẹn, hệ thống phải vô hiệu hóa nút “Hủy lịch” và hiển thị thông báo: “Quá thời gian cho phép hủy trực tuyến, vui lòng liên hệ trực tiếp Admin để được hỗ trợ.”
+Trong trường hợp xảy ra lỗi đồng bộ dữ liệu khi cập nhật trạng thái lịch hẹn, hệ thống phải khôi phục giao dịch và giữ nguyên trạng thái cũ nhằm đảm bảo tính toàn vẹn dữ liệu.
+Nếu khách hàng thoát trang hoặc mất kết nối internet trước khi xác nhận thao tác cuối cùng, hệ thống sẽ không ghi nhận yêu cầu hủy lịch.
+Trong trường hợp nhiều thao tác xảy ra đồng thời trên cùng một lịch hẹn (ví dụ: Admin đang check-in trong khi khách yêu cầu hủy), hệ thống phải ưu tiên thao tác được xử lý trước và khóa lịch hẹn để tránh xung đột dữ liệu.
+Nếu hệ thống không thể truy cập CSDL Đặt lịch tại thời điểm xử lý, hệ thống phải hiển thị thông báo: “Hệ thống đang bận, vui lòng thử lại sau.”
+3.1.7. Theo dõi dịch vụ
+Mô tả quy trình
+Quy trình theo dõi dịch vụ bắt đầu khi khách hàng đã đặt lịch thành công và thú cưng được tiếp nhận tại cửa hàng PawPal để sử dụng các dịch vụ như Grooming, Spa, Pet Hotel hoặc chăm sóc đặc biệt. Tại thời điểm tiếp nhận, nhân viên lễ tân tiến hành xác nhận thông tin lịch hẹn, đối chiếu hồ sơ thú cưng và cập nhật trạng thái "Đã tiếp nhận" trên hệ thống. Đồng thời, hệ thống tự động khởi tạo một phiên "Theo dõi trải nghiệm dịch vụ" tương ứng với lịch hẹn hiện tại và liên kết với Hồ sơ bé cưng của khách hàng.
+Sau khi phiên theo dõi được tạo, hệ thống chuyển sang cơ chế thông báo tức thì tới khách hàng thông qua giao diện "Nhật ký Thú cưng". Trong suốt quá trình chăm sóc, nhân viên phụ trách có trách nhiệm cập nhật các cột mốc dịch vụ quan trọng như: "Đang tắm", "Đang sấy lông", "Đang nghỉ ngơi", "Đã cho ăn", "Đã uống thuốc" hoặc "Hoàn tất chăm sóc". Mỗi trạng thái cập nhật đều được gắn thời gian thực tế nhằm giúp khách hàng dễ dàng theo dõi tiến độ dịch vụ.
+Khi khách hàng truy cập màn hình "Nhật ký bé cưng", hệ thống tiến hành truy xuất dữ liệu dòng thời gian tương ứng với lịch dịch vụ đang diễn ra từ CSDL Nhật ký chăm sóc. Nếu phiên dịch vụ chưa có bất kỳ cập nhật nào, hệ thống hiển thị trạng thái "Đang chờ cập nhật từ nhân viên". Ngược lại, nếu đã có dữ liệu, toàn bộ các mốc trạng thái sẽ được hiển thị theo thứ tự thời gian từ mới đến cũ, kèm hình ảnh, ghi chú và thời gian cập nhật tương ứng.
+Trong trường hợp phát sinh sự cố hoặc tình huống đặc biệt như thú cưng có dấu hiệu căng thẳng, bỏ ăn, dị ứng sản phẩm hoặc cần xử lý y tế cơ bản, nhân viên có thể tạo "Ghi chú khẩn cấp" trên timeline. Khi đó, hệ thống sẽ ưu tiên gửi thông báo realtime đến tài khoản khách hàng để chủ nuôi kịp thời nắm bắt tình trạng và đưa ra phản hồi cần thiết. Nếu khách hàng phản hồi thông qua hệ thống, dữ liệu trao đổi sẽ được lưu đồng thời vào lịch sử chăm sóc để phục vụ tra soát sau này.
+Sau khi dịch vụ hoàn tất và thú cưng được bàn giao lại cho khách hàng, nhân viên cập nhật trạng thái cuối cùng là "Hoàn tất dịch vụ". Hệ thống sẽ đóng phiên theo dõi thời gian thực và tự động chuyển toàn bộ dữ liệu sang khu vực "Lưu trữ nhật ký". Tại đây, khách hàng có thể xem lại lịch sử chăm sóc của thú cưng theo từng lần sử dụng dịch vụ, bao gồm hình ảnh, ghi chú chăm sóc và dòng thời gian chi tiết. Dữ liệu này được lưu trữ như một hồ sơ hành trình trải nghiệm giúp khách hàng dễ dàng theo dõi quá trình phát triển và chăm sóc thú cưng theo thời gian.
+Ngoài mục tiêu minh bạch hóa dịch vụ, hệ thống còn sử dụng dữ liệu từ nhật ký chăm sóc để hỗ trợ cá nhân hóa trải nghiệm khách hàng. Dựa trên lịch sử dịch vụ trước đó, hệ thống có thể gợi ý lịch chăm sóc định kỳ, đề xuất các gói dịch vụ phù hợp hoặc nhắc lịch grooming theo chu kỳ của từng giống thú cưng. 
+Quy tắc nghiệp vụ
+Mỗi lịch dịch vụ chỉ được phép tồn tại duy nhất một phiên "Theo dõi trải nghiệm dịch vụ" đang hoạt động tại cùng một thời điểm.
+Hệ thống chỉ cho phép nhân viên có quyền phụ trách dịch vụ cập nhật trạng thái hoặc đăng tải nội dung lên Timeline của thú cưng.
+Mọi cập nhật trạng thái trên Timeline phải được gắn timestamp nhằm đảm bảo tính minh bạch và khả năng tra soát dữ liệu.
+Hình ảnh hoặc video được tải lên phải liên kết trực tiếp với phiên dịch vụ hiện tại của thú cưng để tránh nhầm lẫn dữ liệu.
+Timeline phải hiển thị dữ liệu theo thứ tự thời gian thực tế từ mới đến cũ nhằm đảm bảo tính liên tục trải nghiệm.
+Khi dịch vụ kết thúc, hệ thống phải tự động khóa quyền chỉnh sửa Timeline và chuyển dữ liệu sang chế độ lưu trữ.
+Chỉ chủ sở hữu hợp lệ của thú cưng hoặc tài khoản được phân quyền mới được phép truy cập nhật ký chăm sóc.
+Mọi thao tác cập nhật trạng thái, hình ảnh hoặc ghi chú phải được ghi nhận vào nhật ký hệ thống nhằm phục vụ kiểm tra nội bộ hoặc xử lý khiếu nại.
+Tình huống ngoại lệ 
+Nếu nhân viên chưa cập nhật bất kỳ trạng thái nào sau khi thú cưng được check-in, hệ thống phải hiển thị thông báo: "Dịch vụ đang được chuẩn bị, vui lòng chờ cập nhật từ nhân viên."
+Khi nhân viên tải lên hình ảnh hoặc video không hợp lệ (sai định dạng, vượt dung lượng cho phép), hệ thống phải từ chối upload và hiển thị thông báo lỗi cụ thể.
+Nếu kết nối mạng bị gián đoạn trong lúc cập nhật Timeline, hệ thống phải lưu tạm dữ liệu cục bộ và cho phép nhân viên gửi lại khi kết nối được khôi phục.
+Trong trường hợp khách hàng truy cập Timeline nhưng hệ thống không thể truy xuất dữ liệu từ CSDL Nhật ký chăm sóc, hệ thống hiển thị thông báo: "Không thể tải dữ liệu trải nghiệm lúc này, vui lòng thử lại sau."
+Nếu xảy ra xung đột dữ liệu do nhiều nhân viên cùng cập nhật một trạng thái tại cùng thời điểm, hệ thống phải ưu tiên bản ghi mới nhất và lưu lịch sử chỉnh sửa để phục vụ đối chiếu.
+Khi phiên dịch vụ đã chuyển sang trạng thái "Hoàn tất", mọi thao tác chỉnh sửa hoặc xóa dữ liệu Timeline đều phải bị khóa nhằm đảm bảo tính toàn vẹn dữ liệu.
+Nếu khách hàng mất kết nối hoặc thoát website trong lúc theo dõi realtime, hệ thống phải tự động đồng bộ lại toàn bộ Timeline mới nhất khi người dùng truy cập trở lại.
+3.1.8. Mua sắm
+Mô tả quy trình
+Quy trình mua sắm sản phẩm bắt đầu khi khách hàng truy cập vào trang "Cửa hàng" trên hệ thống PawPal để tìm kiếm và lựa chọn các sản phẩm dành cho thú cưng như thức ăn, phụ kiện, đồ chơi, quần áo hoặc sản phẩm chăm sóc sức khỏe. Tại màn hình danh mục cửa hàng, hệ thống tiến hành truy xuất danh sách sản phẩm từ CSDL Sản phẩm và hiển thị theo nhiều nhóm phân loại như danh mục, thương hiệu, giá bán hoặc tình trạng còn hàng nhằm hỗ trợ khách hàng dễ dàng khám phá sản phẩm phù hợp với nhu cầu.
+Trong quá trình duyệt sản phẩm, khách hàng có thể sử dụng thanh tìm kiếm hoặc các bộ lọc nâng cao để thu hẹp phạm vi lựa chọn. Khi người dùng nhập từ khóa tìm kiếm, hệ thống sẽ đối chiếu dữ liệu trong CSDL Sản phẩm theo tên sản phẩm, thương hiệu và các từ khóa liên quan để trả về kết quả tìm kiếm sản phẩm. Nếu không tìm thấy kết quả phù hợp, hệ thống hiển thị thông báo tương ứng và đề xuất các sản phẩm tương tự hoặc sản phẩm bán chạy nhằm giảm khả năng người dùng rời bỏ website.
+Sau khi lựa chọn một sản phẩm cụ thể, khách hàng được chuyển đến màn hình "Chi tiết sản phẩm". Tại đây, hệ thống hiển thị đầy đủ các thông tin liên quan bao gồm hình ảnh sản phẩm, mô tả chi tiết, giá bán, số lượng tồn kho khả dụng, đánh giá từ khách hàng trước đó và các sản phẩm liên quan. Nếu sản phẩm đang trong trạng thái hết hàng, hệ thống phải hiển thị cảnh báo "Tạm hết hàng" và vô hiệu hóa chức năng thêm vào giỏ hàng nhằm tránh phát sinh yêu cầu mua vượt tồn kho thực tế.
+Khi khách hàng muốn lưu sản phẩm để xem lại sau, hệ thống hỗ trợ chức năng "Danh sách yêu thích". Nếu người dùng đã đăng nhập, sản phẩm sẽ được lưu trực tiếp vào tài khoản cá nhân và đồng bộ trên nhiều thiết bị. Trong trường hợp khách vãng lai chưa đăng nhập, hệ thống sẽ lưu Wishlist tạm thời trên session trình duyệt để đảm bảo trải nghiệm liên tục trong suốt phiên truy cập.
+Khi khách hàng lựa chọn "Thêm vào giỏ hàng", hệ thống tiến hành kiểm tra số lượng tồn kho thực tế. Nếu số lượng khách yêu cầu vượt quá số lượng còn lại trong kho, hệ thống phải ngay lập tức hiển thị thông báo lỗi và yêu cầu điều chỉnh số lượng phù hợp. Ngược lại, nếu tồn kho đáp ứng đủ điều kiện, sản phẩm sẽ được thêm vào "Giỏ hàng" cùng các thông tin bao gồm tên sản phẩm, số lượng, đơn giá và tổng tiền tạm tính.
+Tại màn hình "Giỏ hàng", khách hàng có thể thực hiện các thao tác quản lý đơn hàng tạm thời như cập nhật số lượng sản phẩm, xóa sản phẩm khỏi giỏ hoặc áp dụng mã giảm giá nếu có. Sau mỗi thao tác thay đổi, hệ thống phải tự động tính toán lại tổng giá trị đơn hàng nhằm đảm bảo dữ liệu hiển thị luôn chính xác. Đồng thời, hệ thống tiếp tục kiểm tra tính hợp lệ của tồn kho trong thời gian thực nhằm tránh trường hợp sản phẩm đã hết hàng trong lúc khách đang thao tác mua sắm.
+Trong trường hợp khách hàng rời khỏi website khi chưa hoàn tất đơn hàng, hệ thống sẽ lưu trạng thái giỏ hàng nhằm hỗ trợ khôi phục dữ liệu trong lần truy cập tiếp theo. Đối với khách hàng đã đăng nhập, dữ liệu giỏ hàng được đồng bộ trực tiếp với tài khoản cá nhân; còn đối với khách vãng lai, dữ liệu sẽ được lưu tạm trên session trình duyệt trong khoảng thời gian cho phép.
+Khi khách hàng hoàn tất việc lựa chọn sản phẩm và xác nhận tiếp tục mua hàng, hệ thống chuyển người dùng sang bước "Thanh toán đơn hàng". Tại thời điểm này, quy trình mua sắm kết thúc và dữ liệu đơn hàng tạm thời được chuyển sang quy trình xử lý thanh toán để tiếp tục thực hiện giao dịch.
+Quy tắc nghiệp vụ
+Mỗi sản phẩm phải được liên kết với dữ liệu tồn kho thực tế nhằm đảm bảo tính chính xác khi mua sắm.
+Hệ thống phải kiểm tra tồn kho tại thời điểm thêm vào giỏ hàng và cả khi khách cập nhật số lượng sản phẩm.
+Một sản phẩm hết hàng không được phép thêm mới vào giỏ hàng.
+Wishlist của khách hàng đã đăng nhập phải được đồng bộ đa thiết bị thông qua tài khoản cá nhân.
+Hệ thống phải tự động cập nhật tổng giá trị đơn hàng sau mỗi thao tác thay đổi số lượng hoặc áp dụng mã giảm giá.
+Dữ liệu giỏ hàng phải được lưu tạm để hỗ trợ khôi phục khi khách hàng quay lại website.
+Các thao tác thêm/xóa/cập nhật sản phẩm trong giỏ hàng phải được ghi nhận vào nhật ký hệ thống nhằm phục vụ phân tích hành vi mua sắm và xử lý khiếu nại nếu có.
+Tình huống ngoại lệ
+Nếu hệ thống không tìm thấy bất kỳ sản phẩm nào phù hợp với từ khóa tìm kiếm, hệ thống phải hiển thị thông báo: "Không tìm thấy sản phẩm phù hợp" và đề xuất các sản phẩm tương tự hoặc sản phẩm bán chạy.
+Nếu khách hàng cố gắng thêm số lượng sản phẩm vượt quá tồn kho khả dụng, hệ thống phải từ chối thao tác và hiển thị số lượng tối đa có thể mua.
+Trong trường hợp sản phẩm vừa hết hàng khi khách đang thao tác trong giỏ hàng, hệ thống phải hiển thị cảnh báo và yêu cầu khách cập nhật lại đơn hàng trước khi tiếp tục.
+Nếu mã giảm giá không hợp lệ hoặc đã hết hạn, hệ thống phải hiển thị thông báo lỗi cụ thể và không áp dụng ưu đãi vào tổng đơn hàng.
+Khi hệ thống không thể truy cập CSDL Sản phẩm hoặc dữ liệu tồn kho, website phải hiển thị thông báo: "Hệ thống đang bận, vui lòng thử lại sau."
+Nếu khách hàng mất kết nối trong quá trình mua sắm, dữ liệu giỏ hàng chưa thanh toán phải được lưu tạm để tránh mất thông tin lựa chọn sản phẩm.
+Trong trường hợp nhiều khách hàng cùng đặt mua một sản phẩm với số lượng giới hạn tại cùng thời điểm, hệ thống phải ưu tiên người hoàn tất thao tác trước và cập nhật lại tồn kho theo thời gian thực nhằm tránh phát sinh đơn hàng vượt mức tồn kho.
+3.1.9. Thanh toán
+Quy trình thanh toán bắt đầu khi khách hàng hoàn tất bước lựa chọn sản phẩm tại "Giỏ hàng" và nhấn nút "Tiến hành thanh toán" trên hệ thống PawPal. Tại thời điểm này, hệ thống tiến hành kiểm tra lại toàn bộ dữ liệu đơn hàng bao gồm danh sách sản phẩm, số lượng, giá bán hiện tại, mã giảm giá đã áp dụng, điểm thưởng nhận được và tình trạng tồn kho thực tế nhằm đảm bảo dữ liệu thanh toán luôn chính xác trước khi tạo giao dịch.
+Sau khi xác minh dữ liệu đơn hàng hợp lệ, hệ thống hiển thị màn hình "Thanh toán đơn hàng". Đối với khách hàng đã đăng nhập, hệ thống tự động truy xuất thông tin nhận hàng đã lưu trước đó như họ tên, số điện thoại và địa chỉ giao hàng nhằm rút ngắn thao tác nhập liệu. Trong trường hợp khách vãng lai chưa đăng nhập, hệ thống yêu cầu cung cấp các thông tin tối thiểu bao gồm họ tên, số điện thoại và địa chỉ nhận hàng trước khi tiếp tục quy trình thanh toán.
+Khi khách hàng hoàn tất thông tin giao hàng, hệ thống hiển thị danh sách các phương thức thanh toán được hỗ trợ như thanh toán khi nhận hàng (COD) hoặc thanh toán trực tuyến thông qua cổng thanh toán tích hợp. Nếu khách hàng lựa chọn COD, hệ thống sẽ trực tiếp chuyển sang bước xác nhận đơn hàng và tạo giao dịch ở trạng thái "Chờ xử lý". Ngược lại, nếu khách hàng chọn thanh toán online, hệ thống sẽ tạo một mã giao dịch tạm thời và chuyển hướng người dùng sang cổng thanh toán tương ứng để tiếp tục xử lý.
+Tại cổng thanh toán trực tuyến, khách hàng tiến hành xác thực và hoàn tất giao dịch theo quy trình của nhà cung cấp thanh toán. Sau khi xử lý xong, cổng thanh toán sẽ gửi kết quả phản hồi về hệ thống PawPal thông qua cơ chế callback/API xác nhận giao dịch. Khi nhận được tín hiệu phản hồi thành công, hệ thống tiến hành cập nhật trạng thái đơn hàng sang "Đã thanh toán", đồng thời ghi nhận thông tin giao dịch bao gồm mã giao dịch, thời gian thanh toán, phương thức thanh toán và số tiền thanh toán vào CSDL Giao dịch.
+Sau khi giao dịch thành công, hệ thống hiển thị "Trang Kết quả giao dịch thành công" kèm theo mã đơn hàng, trạng thái thanh toán, thông tin giao hàng và tóm tắt danh sách sản phẩm đã mua. Đồng thời, hệ thống tự động gửi SMS hoặc thông báo xác nhận đơn hàng nhằm giúp khách hàng dễ dàng tra cứu trong tương lai. 
+Trong trường hợp giao dịch thất bại, bị từ chối hoặc khách hàng hủy thanh toán giữa chừng, hệ thống cập nhật trạng thái giao dịch thành "Thanh toán thất bại" nhưng vẫn giữ lại dữ liệu đơn hàng tạm thời trong một khoảng thời gian nhất định. Sau đó, hệ thống hiển thị "Trang kết quả giao dịch thất bại" và cho phép khách hàng lựa chọn thanh toán lại bằng cùng phương thức hoặc chuyển sang phương thức thanh toán khác mà không cần tạo lại toàn bộ đơn hàng từ đầu.
+Để tránh phát sinh tình trạng trùng giao dịch, hệ thống áp dụng cơ chế khóa thanh toán tạm thời đối với mỗi đơn hàng trong thời gian xử lý giao dịch online. Trong trường hợp người dùng refresh trang hoặc nhấn thanh toán nhiều lần liên tiếp, hệ thống phải đảm bảo chỉ ghi nhận duy nhất một giao dịch hợp lệ nhằm tránh thanh toán trùng lặp.
+Sau khi đơn hàng được thanh toán thành công, hệ thống tiến hành xử lý cộng điểm thưởng Paw Points cho khách hàng và đồng bộ trạng thái tồn kho trên hệ thống. Các sản phẩm trong đơn hàng sẽ được khóa số lượng tồn tương ứng nhằm đảm bảo tính chính xác dữ liệu kho trước khi chuyển sang quy trình vận hành giao hàng.
+Cuối cùng, toàn bộ lịch sử thanh toán và trạng thái giao dịch sẽ được lưu trữ tại "Chi tiết đơn hàng" để khách hàng có thể tra cứu lại bất kỳ lúc nào. Tại thời điểm này, quy trình thanh toán kết thúc và đơn hàng chính thức chuyển sang giai đoạn xử lý vận hành hậu cần.
+Quy tắc nghiệp vụ
+Hệ thống phải kiểm tra lại tồn kho và giá bán tại thời điểm thanh toán nhằm tránh sai lệch dữ liệu do thay đổi trong quá trình mua sắm.
+Một đơn hàng chỉ được phép tồn tại duy nhất một giao dịch thành công.
+Hệ thống chỉ cập nhật trạng thái "Đã thanh toán" khi nhận được tín hiệu xác nhận hợp lệ từ cổng thanh toán hoặc khi khách hàng chọn COD.
+Trong trường hợp thanh toán online, hệ thống phải lưu mã giao dịch để phục vụ tra soát và xử lý khiếu nại.
+Các giao dịch thất bại không được phép tự động trừ tồn kho chính thức.
+Đơn hàng COD phải được đánh dấu trạng thái "Chờ thanh toán" cho đến khi hoàn tất giao hàng.
+Hệ thống phải ghi nhận đầy đủ nhật ký giao dịch bao gồm thời gian thanh toán, IP truy cập, phương thức thanh toán và trạng thái xử lý.
+Thông tin thanh toán của khách hàng phải được mã hóa và không lưu trữ trực tiếp dữ liệu nhạy cảm như mật khẩu ngân hàng hoặc mã CVV.
+Tình huống ngoại lệ
+Nếu sản phẩm trong giỏ hàng vừa hết hàng tại thời điểm thanh toán, hệ thống phải hiển thị thông báo: "Một số sản phẩm đã hết hàng hoặc không đủ số lượng." và yêu cầu khách cập nhật lại đơn hàng.
+Nếu mã giảm giá hết hạn trong lúc thanh toán, hệ thống phải tự động loại bỏ ưu đãi và hiển thị thông báo giải thích rõ nguyên nhân.
+Trong trường hợp khách hàng thanh toán online nhưng mất kết nối internet giữa chừng, hệ thống phải giữ trạng thái giao dịch ở mức "Đang chờ xác minh" cho đến khi nhận phản hồi chính thức từ cổng thanh toán.
+Nếu cổng thanh toán phản hồi lỗi hoặc timeout, hệ thống phải cập nhật trạng thái "Thanh toán thất bại" và cho phép người dùng thực hiện lại giao dịch.
+Khi khách hàng refresh trang thanh toán nhiều lần hoặc gửi yêu cầu thanh toán trùng lặp, hệ thống phải chặn duplicate transaction và chỉ ghi nhận một giao dịch hợp lệ duy nhất.
+Nếu hệ thống không thể ghi dữ liệu giao dịch vào cơ sở dữ liệu do lỗi máy chủ, trạng thái thanh toán phải được chuyển sang "Cần tra soát" để tránh mất dữ liệu giao dịch.
+Trong trường hợp callback từ cổng thanh toán bị trễ hoặc gửi nhiều lần, hệ thống phải kiểm tra mã giao dịch duy nhất trước khi cập nhật trạng thái nhằm tránh ghi nhận thanh toán trùng lặp.
+Nếu khách hàng thoát trang trước khi hoàn tất thanh toán, đơn hàng tạm thời phải được lưu trong thời gian cho phép để hỗ trợ khách tiếp tục thanh toán sau đó mà không cần tạo lại đơn hàng mới.
+3.1.10. Quản lý đơn hàng
+Mô tả quy trình
+Quy trình quản lý đơn hàng bắt đầu sau khi khách hàng hoàn tất giao dịch mua sắm trên hệ thống PawPal. Khi đơn hàng được tạo thành công, hệ thống tự động ghi nhận thông tin vào CSDL Đơn hàng và khởi tạo trạng thái ban đầu là “Chờ xác nhận”. Đồng thời, dữ liệu đơn hàng được đồng bộ sang “Đơn hàng của tôi” để hệ thống tiếp nhận và xử lý vận hành.
+Tại phía khách hàng, người dùng có thể truy cập mục “Chi tiết đơn hàng” để theo dõi toàn bộ các đơn hàng đã phát sinh trên hệ thống. Khi truy cập màn hình này, hệ thống tiến hành truy xuất danh sách đơn hàng theo tài khoản khách hàng và hiển thị các thông tin cơ bản như mã đơn hàng, ngày đặt hàng, tổng giá trị đơn hàng, trạng thái thanh toán và trạng thái vận chuyển hiện tại.
+Khi khách hàng chọn xem chi tiết một đơn hàng cụ thể, hệ thống hiển thị đầy đủ dữ liệu liên quan bao gồm danh sách sản phẩm đã mua, số lượng, giá bán từng sản phẩm, phương thức thanh toán, địa chỉ giao hàng, lịch sử cập nhật trạng thái và thông tin vận chuyển tương ứng. Các trạng thái đơn hàng được hiển thị theo tiến trình xử lý thực tế như “Chờ xác nhận”, “Đang chuẩn bị hàng”, “Đang giao”, “Hoàn thành”, “Đã hủy” hoặc “Hoàn trả”.
+Trong quá trình xử lý vận chuyển, hệ thống sẽ cập nhật trạng thái đơn hàng sang “Đang giao” hoặc ghi nhận các tình huống ngoại lệ như giao thất bại, khách từ chối nhận hàng hoặc thiếu sản phẩm. Mỗi lần trạng thái được cập nhật, hệ thống tự động gửi thông báo realtime hoặc email đến khách hàng nhằm giúp người dùng dễ dàng theo dõi tiến độ đơn hàng mà không cần liên hệ trực tiếp cửa hàng.
+Khi đơn hàng được giao thành công, hệ thống cập nhật trạng thái cuối cùng là “Hoàn thành”, đồng thời ghi nhận thời gian hoàn tất giao hàng vào lịch sử giao dịch của khách hàng. Sau đó, đơn hàng sẽ được lưu trữ lâu dài trong mục “Lịch sử mua hàng” nhằm hỗ trợ khách hàng tra cứu lại các giao dịch trước đây hoặc thực hiện các chức năng hậu mãi như đánh giá sản phẩm, yêu cầu đổi trả hoặc mua lại sản phẩm cũ.
+Trong trường hợp khách hàng thực hiện hủy đơn hàng trước khi vận chuyển hoặc phát sinh yêu cầu hoàn trả sau khi giao hàng thành công, hệ thống sẽ chuyển sang quy trình xử lý hậu mãi tương ứng và cập nhật trạng thái đơn hàng liên quan theo thời gian thực. Đồng thời, các thay đổi trạng thái này cũng được phản ánh trực tiếp trong lịch sử đơn hàng của khách hàng để đảm bảo tính minh bạch dữ liệu.
+Quy tắc nghiệp vụ
+Mỗi đơn hàng phải được gắn một mã đơn hàng duy nhất để phục vụ tra cứu và quản lý.
+Hệ thống phải lưu toàn bộ lịch sử thay đổi trạng thái đơn hàng nhằm đảm bảo khả năng kiểm tra và đối soát dữ liệu.
+Chỉ Admin hoặc nhân viên được phân quyền mới có quyền cập nhật trạng thái đơn hàng.
+Khi đơn hàng được xác nhận xử lý, hệ thống phải khóa số lượng tồn kho tương ứng.
+Các trạng thái đơn hàng phải tuân thủ đúng luồng xử lý nghiệp vụ và không được phép chuyển ngược bất hợp lệ (ví dụ: từ “Hoàn thành” quay về “Đang chuẩn bị hàng”).
+Mọi thay đổi trạng thái đơn hàng phải kích hoạt cơ chế gửi thông báo đến khách hàng.
+Đơn hàng hoàn thành phải được lưu trữ trong Đơn hàng của tôi để phục vụ tra cứu lâu dài và các chức năng hậu mãi.
+Tình huống ngoại lệ
+Nếu hệ thống không thể truy xuất dữ liệu đơn hàng từ cơ sở dữ liệu, hệ thống phải hiển thị thông báo: “Không thể tải dữ liệu đơn hàng, vui lòng thử lại sau.”
+Trong trường hợp tồn kho không đủ khi Admin xác nhận đơn hàng, hệ thống phải hiển thị cảnh báo để nhân viên xử lý thủ công trước khi tiếp tục.
+Nếu xảy ra lỗi đồng bộ trạng thái giữa hệ thống PawPal và đơn vị vận chuyển, trạng thái đơn hàng sẽ được chuyển sang “Cần kiểm tra” để tránh hiển thị sai dữ liệu cho khách hàng.
+Nếu khách hàng mất kết nối internet trong lúc theo dõi đơn hàng, hệ thống phải tự động đồng bộ lại trạng thái mới nhất khi người dùng truy cập lại.
+Khi đơn hàng bị hủy hoặc hoàn trả, hệ thống phải cập nhật đồng thời trạng thái đơn hàng và dữ liệu tồn kho nhằm đảm bảo tính nhất quán dữ liệu vận hành.
+3.1.11. Đánh giá
+Mô tả quy trình nghiệp vụ
+Quy trình đánh giá được thiết kế để thu thập phản hồi của khách hàng về chất lượng sản phẩm và dịch vụ, bắt đầu thông qua hai luồng kích hoạt song song. Ở luồng thứ nhất, ngay khi hệ thống ghi nhận một giao dịch (mua hàng hoặc hoàn tất Spa/Hotel) chuyển sang trạng thái 'Hoàn thành', hệ thống sẽ tự động gửi một thông báo đến tài khoản người dùng kèm đường dẫn trực tiếp đến biểu mẫu phản hồi. Ở luồng thứ hai, người dùng chủ động truy cập vào màn hình Lịch hẹn cho bé (đối với các gói dịch vụ đã xong) hoặc mục Đơn hàng của tôi (đối với sản phẩm Shop) trên Dashboard cá nhân. Tại đây, hệ thống thực hiện lệnh truy vấn cơ sở dữ liệu để lọc và hiển thị danh sách các hoạt động đã hoàn tất nhưng chưa thực hiện đánh giá, kèm theo nút thao tác “Viết đánh giá”
+Khi người dùng nhấn vào thông báo hoặc chọn thực thể từ danh sách, hệ thống thực hiện bước truy vấn thông tin chi tiết để hiển thị chính xác tên sản phẩm, hình ảnh minh họa hoặc tên dịch vụ đã sử dụng. Đồng thời, hệ thống tự động thực hiện một bước kiểm tra bảo mật: đối soát mã tài khoản người dùng với mã hóa đơn để xác thực quyền hạn. Bước này nhằm ngăn chặn các hành vi phản hồi ảo hoặc trùng lặp, đảm bảo mỗi lượt giao dịch chỉ được đánh giá duy nhất một lần. Sau khi xác thực thành công, hệ thống hiển thị biểu mẫu yêu cầu người dùng cung cấp thông tin bao gồm: chọn số sao với thang đo từ 1 đến 5, viết nội dung nhận xét và tùy chọn đính kèm tệp tin đa phương tiện hình ảnh hoặc video thực tế.
+Trước khi ghi nhận dữ liệu chính thức, hệ thống hiển thị một thông báo xác nhận cuối cùng: "Bạn có chắc chắn muốn công khai phản hồi này không?". Quy trình phân nhánh tại đây: nếu người dùng chọn "Hủy", thao tác sẽ dừng lại và giữ nguyên các dữ liệu đã nhập trong biểu mẫu để người dùng có thể chỉnh sửa tiếp; nếu chọn "Xác nhận", hệ thống sẽ tiến hành ghi dữ liệu vào CSDL Đánh giá và tự động gắn nhãn "Người mua thực" cho phản hồi đó.
+Ngay sau khi dữ liệu được lưu thành công, hệ thống thực hiện luồng xử lý hiển thị tự động dựa trên mức độ hài lòng. Các đánh giá đạt từ 4 sao trở lên sẽ được hệ thống hiển thị công khai ngay lập tức trên trang chi tiết tương ứng. Trong trường hợp đánh giá dưới 3 sao, trạng thái phản hồi sẽ được hệ thống xác lập là "Đang chờ hỗ trợ" để kích hoạt các luồng xử lý hậu mãi tự động nhằm bảo vệ quyền lợi khách hàng. Cuối cùng, hệ thống thực hiện lệnh cộng điểm thưởng Paw Points vào ví ưu đãi của thành viên như một sự tri ân, chính thức kết thúc quy trình đánh giá.
+Quy tắc nghiệp vụ
+Chỉ những giao dịch có trạng thái "Hoàn thành" (đã nhận hàng hoặc đã Check-out và thanh toán 100%) mới được phép đánh giá.
+Mỗi mã giao dịch (mã hóa đơn/mã lịch hẹn) chỉ được phép thực hiện đánh giá 01 lần duy nhất.
+Trường dữ liệu "Số sao" là bắt buộc; trường "Nội dung văn bản" và "Hình ảnh/Video" là tùy chọn.
+Hệ thống tự động gắn nhãn "Người mua thực" cho tất cả đánh giá phát sinh từ quy trình này.
+Điểm thưởng chỉ được cộng sau khi nhấn "Xác nhận" và dữ liệu đã được ghi thành công vào CSDL.
+Hệ thống tự động kiểm duyệt và ẩn các đánh giá chứa từ ngữ nhạy cảm, xúc phạm hoặc vi phạm tiêu chuẩn cộng đồng (Sử dụng bộ lọc từ khóa có sẵn).
+Tình huống ngoại lệ
+Người dùng cố tình truy cập đánh giá của người khác: Hệ thống đối soát mã định danh, nếu không khớp sẽ hiển thị lỗi "Bạn không có quyền thực hiện thao tác này" và điều hướng về trang chủ.
+Đơn hàng đã được đánh giá trước đó: Ẩn nút "Viết đánh giá" và thay bằng nhãn "Đã đánh giá". Nếu truy cập bằng link trực tiếp, hệ thống hiển thị thông báo "Giao dịch này đã hoàn tất phản hồi".
+Nếu tệp quá dung lượng hoặc sai định dạng, hệ thống hiển thị cảnh báo đỏ và yêu cầu chọn lại tệp trước khi cho phép nhấn "Gửi".
+Mất kết nối mạng khi đang gửi: Hệ thống lưu tạm nội dung vào bộ nhớ đệm và hiển thị thông báo "Đang thử kết nối lại để gửi đánh giá".
+Người dùng nhấn "Hủy" tại bước xác nhận cuối: Hệ thống đóng cửa sổ thông báo xác nhận, giữ nguyên các dữ liệu đã nhập trong biểu mẫu để khách hàng có thể chỉnh sửa tiếp.
+
+3.1.12. Quy trình Đổi trả hàng
+Mô tả quy trình
+Quy trình bắt đầu khi người dùng chủ động truy cập vào màn hình Đơn hàng của tôi trên Dashboard cá nhân. Ngay khi trang được tải, hệ thống thực hiện lệnh truy vấn cơ sở dữ liệu giao dịch để lọc và hiển thị danh sách các sản phẩm đã mua có trạng thái “Hoàn thành”. Tại đây, hệ thống thực hiện bước kiểm tra logic về thời gian: chỉ những đơn hàng nằm trong thời hạn đổi trả quy định (07 ngày kể từ ngày nhận hàng) mới hiển thị nút thao tác “Yêu cầu Đổi trả”
+Khi người dùng nhấn vào nút yêu cầu, hệ thống hiển thị một biểu mẫu điện tử yêu cầu cung cấp các thông tin cần thiết bao gồm: lựa chọn loại hình là đổi hàng mới hoặc hoàn tiền, nhập lý do chi tiết và đính kèm tệp tin minh chứng là hình ảnh hoặc video thực tế của sản phẩm. Sau khi người dùng nhấn "Gửi yêu cầu", hệ thống thực hiện bước kiểm tra tính đầy đủ của dữ liệu; nếu hợp lệ, một Phiếu hậu mãi sẽ được khởi tạo với mã định danh duy nhất. Khách hàng ngay lập tức nhận được thông báo xác nhận và có thể theo dõi trạng thái của phiếu "Chờ kiểm duyệt", "Đã chấp nhận" hoặc "Cần bổ sung thông tin" trực tiếp tại màn hình quản lý yêu cầu trong mục “Đơn hàng của tôi”.
+Quy trình phân nhánh dựa trên kết quả phản hồi của hệ thống được hiển thị tới người dùng. Trong trường hợp yêu cầu được chấp nhận, hệ thống hiển thị thông tin hướng dẫn chi tiết về quy trình đóng gói và địa chỉ gửi trả hàng về trung tâm chăm sóc của PawPal. Sau khi sản phẩm trả về được xác nhận khớp với minh chứng, người dùng sẽ nhận được thông báo về kết quả cuối cùng: nếu là đổi hàng, hệ thống tự động hiển thị mã đơn hàng mới với giá trị 0đ; nếu là hoàn tiền, hệ thống gửi thông báo xác nhận số tiền sẽ được hoàn trả về phương thức thanh toán ban đầu. Quy trình kết thúc khi trạng thái phiếu hậu mãi chuyển sang "Hoàn tất", đồng thời hệ thống thực hiện lệnh điều chỉnh điểm thưởng Paw Points tương ứng trong hồ sơ thành viên để đảm bảo tính chính xác của dữ liệu ưu đãi.
+Quy tắc nghiệp vụ
+Chỉ áp dụng cho sản phẩm vật lý mua tại Shop (thức ăn, phụ kiện, đồ chơi...). Không áp dụng đổi trả đối với các dịch vụ đã thực hiện xong (Spa, Hotel).
+Yêu cầu phải được gửi trong vòng 07 ngày kể từ ngày đơn hàng chuyển sang trạng thái "Hoàn thành". Quá thời hạn này, nút "Yêu cầu Đổi trả" sẽ tự động ẩn.
+Sản phẩm trả về phải còn nguyên tem mác, bao bì (đối với lỗi do khách hàng muốn đổi ý) hoặc có hình ảnh minh chứng hư hỏng/sai lệch (đối với lỗi do cửa hàng).
+Hoàn lại 100% giá trị thực trả của sản phẩm sau khi trừ mã giảm giá.
+Chỉ hỗ trợ đổi sang sản phẩm cùng loại hoặc sản phẩm có giá trị bằng/cao hơn (khách hàng bù chênh lệch).
+Khi phiếu hoàn tiền được xác nhận thành công, hệ thống tự động khấu trừ số điểm Paw Points mà khách hàng đã nhận được từ đơn hàng đó.
+Nếu lỗi do cửa hàng (giao sai, sản phẩm lỗi), shop chịu 100% phí ship. Nếu lỗi do khách hàng đổi ý, khách hàng chịu phí ship gửi trả và nhận hàng mới.
+Xử lý ngoại lệ
+Sản phẩm cần đổi đã hết hàng trong kho: Hệ thống hiển thị cảnh báo cho Nhân viên. Nhân viên liên hệ khách hàng để chuyển sang phương án hoàn tiền hoặc đổi sang sản phẩm tương đương.
+Khách hàng đã dùng hết số điểm Paw Points định thu hồi: Hệ thống ghi nhận số dư Paw Points âm và sẽ trừ trừ dần vào các lần tích điểm tiếp theo của khách hàng.
+Hàng trả về thực tế không đúng với minh chứng trong ảnh: Nhân viên nhấn nút "Khiếu nại yêu cầu", đính kèm ảnh chụp hàng thực tế nhận được. Hệ thống chuyển trạng thái phiếu sang "Tranh chấp" để Quản lý cơ sở vào phân xử.
+Mất kết nối cổng thanh toán khi đang thực hiện hoàn tiền online: Hệ thống lưu trạng thái "Hoàn tiền thất bại", tự động thử lại sau mỗi 30 phút và gửi thông báo lỗi đến kỹ thuật viên nếu sau 3 lần vẫn thất bại.
+Khách hàng đã đánh giá sản phẩm trước khi yêu cầu đổi trả: Hệ thống vẫn cho phép đổi trả, nhưng nếu hoàn tiền thành công, hệ thống sẽ gắn nhãn "Giao dịch đã hủy" lên bài đánh giá cũ để đảm bảo tính khách quan.
+Khách hàng vãng lai yêu cầu đổi trả: Hệ thống yêu cầu khách hàng nhập "Mã đơn hàng" và "OTP SĐT" để xác thực quyền truy cập vào Phiếu hậu mãi mà không bắt buộc tạo mật khẩu.
+3.1.13. Ưu đãi thành viên
+Mô tả quy trình
+Quy trình bắt đầu khi người dùng chủ động truy cập vào trang "Ưu đãi & Thành viên" thông qua Dashboard cá nhân. Ngay khi giao diện được tải, hệ thống tự động thực hiện lệnh truy vấn cơ sở dữ liệu thành viên để hiển thị chính xác số dư điểm thưởng Paw Points tích lũy và hạng thành viên hiện tại (Bạc, Vàng hoặc Kim Cương). Đồng thời, hệ thống cũng tiến hành quét danh mục ưu đãi để lọc ra các mã giảm giá hoặc phần thưởng đang khả dụng và phù hợp với cấp bậc tài khoản của người dùng. Luồng dữ liệu này giúp khách hàng nắm bắt nhanh chóng quyền lợi của mình và các mốc điểm cần thiết để đổi lấy những ưu đãi mong muốn.
+Khi khách hàng chọn một phần thưởng cụ thể và nhấn nút "Đổi ưu đãi", hệ thống thực hiện một bước đối soát logic quan trọng: kiểm tra số dư Paw Points hiện có so với mức điểm yêu cầu của phần thưởng đó. Quy trình phân nhánh tại đây: nếu số dư không đủ, hệ thống hiển thị thông báo "Số điểm hiện tại chưa đủ để đổi quà" kèm theo gợi ý các cách thức tích lũy thêm điểm qua việc mua sắm; nếu số dư đạt yêu cầu, hệ thống sẽ hiển thị một cửa sổ xác nhận cuối cùng: "Bạn có chắc chắn muốn sử dụng [X] điểm để đổi lấy ưu đãi này không?". Bước xác nhận này giúp đảm bảo khách hàng đã kiểm tra kỹ trước khi hệ thống thực hiện lệnh trừ điểm vĩnh viễn.
+Sau khi người dùng nhấn "Xác nhận", hệ thống bắt đầu thực hiện giao dịch ghi nợ điểm trong CSDL và đồng thời khởi tạo một Mã ưu đãi duy nhất gắn liền với tài khoản người dùng. Ngay lập tức, hệ thống thực hiện lệnh đồng bộ hóa dữ liệu để chuyển mã ưu đãi này vào mục "Voucher của tôi", giúp khách hàng có thể quản lý và sử dụng ngay tại bước thanh toán cho các đơn hàng tiếp theo. Quy trình kết thúc khi hệ thống hiển thị thông báo "Đổi quà thành công" kèm theo các thông tin về thời hạn sử dụng và điều kiện áp dụng, đảm bảo khách hàng luôn chủ động trong việc tận hưởng các đặc quyền thành viên tại PawPal.
+Quy tắc nghiệp vụ
+Hệ thống tự động cộng điểm theo tỷ lệ 100.000 VNĐ hóa đơn = 1 Paw Point. Điểm chỉ được cộng khi giao dịch ở trạng thái "Hoàn thành".
+Phân hạng thành viên:
+Hạng Bạc (Silver): Tổng chi tiêu < 5.000.000 VNĐ.
+Hạng Vàng (Gold): Tổng chi tiêu từ 5.000.000 - 15.000.000 VNĐ.
+Hạng Kim cương (Diamond): Tổng chi tiêu > 15.000.000 VNĐ.
+ Khách hàng phải có tài khoản định danh chính thức (đã thiết lập mật khẩu) mới được thực hiện quyền đổi điểm lấy ưu đãi.
+Mỗi mã giảm giá chỉ được áp dụng cho 01 đơn hàng/dịch vụ duy nhất và không có giá trị quy đổi thành tiền mặt.
+Điểm Paw Points có thời hạn sử dụng trong vòng 12 tháng kể từ ngày phát sinh giao dịch cuối cùng. Hệ thống sẽ tự động gửi thông báo nhắc nhở 30 ngày trước khi điểm hết hạn.
+Voucher đổi từ điểm thưởng có thể áp dụng đồng thời với các chương trình khuyến mãi chung của hệ thống.
+Tình huống ngoại lệ
+Hết số lượng ưu đãi: Hệ thống cập nhật trạng thái "Hết hàng" ngay trên giao diện đổi quà và ẩn nút "Đổi quà" để tránh khách hàng bị trừ điểm oan.
+Mất kết nối CSDL khi đang thực hiện trừ điểm: Hệ thống áp dụng cơ chế Transaction: Nếu lệnh trừ điểm thất bại, lệnh cấp mã Voucher sẽ không được thực hiện. Hiển thị lỗi "Hệ thống bận, vui lòng thử lại sau".
+Khách hàng vãng lai muốn đổi điểm: Hệ thống hiển thị popup: "Bạn cần thiết lập mật khẩu để sử dụng điểm thưởng". Sau khi khách tạo mật khẩu thành công, hệ thống tự động quay lại trang đổi quà.
+Lỗi áp dụng Voucher khi thanh toán: Nếu mã đã hết hạn hoặc không khớp điều kiện, hệ thống hiển thị cảnh báo chi tiết lý do mã không hợp lệ.
+Hoàn trả đơn hàng đã dùng Voucher đổi từ điểm: Nếu đơn hàng bị hủy/hoàn, hệ thống hoàn trả lại Voucher vào ví "Voucher của tôi" và thu hồi lại số điểm tích lũy mới (nhưng không trả lại điểm đã dùng để đổi Voucher đó).
+3.1.14. Quản lý thông báo
+Mô tả quy trình
+Quy trình bắt đầu khi hệ thống ghi nhận một sự kiện thay đổi trạng thái liên quan đến hành trình trải nghiệm của khách hàng và bé cưng, bao gồm: xác nhận đặt lịch thành công, có cập nhật mới tại Nhật ký chăm sóc, đơn hàng chuyển sang trạng thái đang giao, hoặc các chương trình ưu đãi sắp hết hạn. Ngay khi sự kiện phát sinh, hệ thống tự động thực hiện lệnh truy vấn Cơ sở dữ liệu để trích xuất thông tin định danh và thực hiện luồng "Cá nhân hóa nội dung", đảm bảo các thông báo gửi đi bao gồm chính xác tên của người dùng và tên thú cưng từ Hồ sơ bé cưng tương ứng.
+Khách hàng tiếp nhận thông báo thông qua hai hình thức chính trên giao diện website. Ở hình thức thứ nhất, một thông báo đẩy sẽ xuất hiện tức thì tại góc màn hình để thu hút sự chú ý đối với các sự kiện quan trọng. Ở hình thức thứ hai, người dùng có thể chủ động theo dõi tại biểu tượng "Chuông thông báo" trên thanh trình đơn. Khi nhấn vào biểu tượng này, hệ thống thực hiện truy vấn CSDL thông báo để hiển thị danh sách các tin nhắn được sắp xếp theo trình tự thời gian từ mới nhất đến cũ nhất, kèm theo các nhãn phân loại: dịch vụ, mua sắm, ưu đãi, giúp người dùng dễ dàng lọc và quản lý thông tin.
+Quy trình phân nhánh khi người dùng tương tác với danh sách thông báo. Nếu người dùng nhấn vào một tiêu đề thông báo cụ thể, hệ thống sẽ thực hiện đồng thời hai hành động: (1) Thực hiện lệnh điều hướng dẫn người dùng đến chính xác màn hình liên quan đến nội dung đó, như dẫn về mục Lịch hẹn cho bé đối với các thông báo xác nhận/nhắc lịch, dẫn về Nhật ký chăm sóc đối với các cập nhật hình ảnh real-time, hoặc trang Chi tiết đơn hàng đối với việc mua sắm sản phẩm, (2) Tự động cập nhật trạng thái từ "Chưa đọc" sang "Đã đọc" trong CSDL để đồng bộ hiển thị.
+Trong trường hợp người dùng muốn dọn dẹp không gian quản lý, hệ thống cung cấp tính năng "Đánh dấu đã đọc tất cả" hoặc "Xóa thông báo". Khi người dùng xác nhận thao tác xóa, hệ thống sẽ hiển thị một thông báo kiểm tra cuối cùng trước khi thực hiện lệnh ẩn hoặc xóa vĩnh viễn bản ghi khỏi giao diện Dashboard cá nhân. Quy trình kết thúc khi trạng thái hiển thị của các thông báo được cập nhật chính xác theo hành vi tương tác của khách hàng, đảm bảo một trải nghiệm quản lý thông tin liền mạch và không bị bỏ lỡ các cột mốc quan trọng trong quá trình sử dụng dịch vụ tại PawPal.
+Quy tắc nghiệp vụ
+Tất cả thông báo liên quan đến dịch vụ chăm sóc bắt buộc phải bao gồm tên của thú cưng (ví dụ: "Bé Bông đã tắm xong!") để tăng sự gắn kết cảm xúc.
+Thời gian gửi: Các thông báo về khuyến mãi/marketing chỉ được gửi trong khung giờ từ 08:00 đến 21:00. Các thông báo giao dịch (OTP, xác nhận lịch) được gửi tức thì 24/7.
+Nếu thông báo quan trọng (như thay đổi lịch hẹn) không được người dùng đọc trên website sau 15 phút, hệ thống tự động chuyển sang gửi tin nhắn Zalo/SMS dự phòng.
+Giới hạn không quá 03 thông báo marketing/tuần cho mỗi khách hàng để tránh gây phiền hà.
+Thông báo được lưu trữ trong danh sách "Thông báo của tôi" trong vòng 90 ngày, sau thời gian này hệ thống sẽ tự động xóa để tối ưu dung lượng.
+Tình huống ngoại lệ
+Gửi thông báo thất bại do lỗi mạng: Hệ thống lưu thông báo vào hàng chờ và thực hiện gửi lại tối đa 3 lần. Nếu vẫn thất bại, ghi nhận vào log lỗi để kỹ thuật viên kiểm tra.
+Người dùng chặn nhận thông báo: Hệ thống kiểm tra cài đặt quyền riêng tư của người dùng trước khi gửi. Nếu người dùng tắt thông báo Shop, hệ thống chỉ gửi thông báo Dịch vụ khẩn cấp.
+Thông báo nhắc lịch bị trễ: Nếu thời gian gửi thông báo nhắc lịch diễn ra sau giờ hẹn thực tế, hệ thống sẽ tự động hủy lệnh gửi để tránh gây hiểu lầm cho khách hàng.
+Sai lệch thông tin trong nội dung: Nếu dữ liệu Hồ sơ thú cưng bị trống, hệ thống sử dụng cụm từ thay thế mặc định (ví dụ: "Bé yêu của bạn") để đảm bảo thông báo không bị lỗi hiển thị.
+Trùng lặp thông báo: Hệ thống có bộ lọc kiểm tra trong vòng 5 phút, nếu có 2 thông báo cùng nội dung gửi cho 1 người dùng, hệ thống sẽ tự động hủy bỏ thông báo thứ hai.
+3.1.15. Hỗ trợ khách hàng
+Mô tả quy trình
+Quy trình bắt đầu khi người dùng truy cập vào trang "Trung tâm trợ giúp" hoặc nhấn vào biểu tượng Chat trực tuyến tích hợp trên website. Ngay khi trang được tải, hệ thống thực hiện lệnh truy vấn vào cơ sở dữ liệu để hiển thị danh sách các câu hỏi thường gặp (FAQ) đã được phân loại theo từng danh mục như: tài khoản, đặt lịch và chính sách. Luồng dữ liệu này giúp người dùng có thể chủ động tìm kiếm giải pháp cho các vấn đề phổ biến thông qua thanh tìm kiếm thông minh mà không cần sự trợ giúp trực tiếp.
+Trong trường hợp cần hỗ trợ chuyên sâu, người dùng tương tác qua khung chat để kích hoạt Chatbot AI. Hệ thống thực hiện lệnh đối soát thông tin từ mục Lịch hẹn cho bé (để kiểm tra lịch sắp tới), Nhật ký chăm sóc (để xem trạng thái chăm sóc hiện tại) và Đơn hàng của tôi (để theo dõi vận chuyển) để trả về các hướng dẫn cá nhân hóa ngay lập tức. Nếu giải pháp của AI đáp ứng được nhu cầu, người dùng nhấn "Hài lòng" để kết thúc. Ngược lại, hệ thống hiển thị tùy chọn "Kết nối với nhân viên". Tại đây, hệ thống kiểm tra trạng thái khả dụng của tư vấn viên; nếu trong giờ làm việc, người dùng sẽ được chuyển sang giao diện Chat trực tiếp.
+
+Nếu yêu cầu phát sinh ngoài giờ làm việc hoặc người dùng muốn gửi khiếu nại bằng văn bản, hệ thống cung cấp biểu mẫu khởi tạo phiếu hỗ trợ. Người dùng thực hiện nhập tiêu đề, mô tả chi tiết sự cố và có tùy chọn đính kèm tệp tin đa phương tiện (hình ảnh/video) để minh chứng. Sau khi nhấn "Gửi yêu cầu", hệ thống hiển thị thông báo xác nhận kèm mã định danh Ticket duy nhất. Người dùng có thể theo dõi tiến độ xử lý, xem các phản hồi và gửi thêm phản biện trực tiếp tại màn hình "Yêu cầu của tôi" trên Dashboard cá nhân.
+Quy trình phân nhánh ở giai đoạn kết thúc: sau khi nhận được phản hồi giải quyết từ phía cửa hàng, người dùng có quyền lựa chọn "Tiếp tục trao đổi" nếu chưa thỏa đáng, hoặc nhấn nút "Đóng hỗ trợ" để hoàn tất yêu cầu. Ngay sau khi nhấn đóng, hệ thống hiển thị một biểu mẫu đánh giá chất lượng cho phép người dùng chấm điểm mức độ hài lòng về quá trình hỗ trợ. Quy trình chính thức khép lại khi dữ liệu đánh giá được ghi nhận và hệ thống gửi thông báo cảm ơn đến người dùng.
+
+Quy tắc nghiệp vụ
+Các yêu cầu hỗ trợ liên quan đến sự cố sức khỏe bé cưng tại Hotel hoặc lỗi thanh toán trực tuyến bắt buộc phải được gắn nhãn "Ưu tiên cao" (High Priority) và xử lý trong vòng 15 phút.
+Trong giờ làm việc (08:00 - 22:00), các Ticket thông thường phải được phản hồi trong tối đa 60 phút. Ngoài giờ làm việc, hệ thống tự động gửi thông báo hẹn thời gian xử lý vào đầu giờ sáng hôm sau.
+Chatbot bắt buộc phải truy xuất được tên bé từ Hồ sơ bé cưng và mã vận đơn từ Đơn hàng của tôi để đưa ra câu trả lời chính xác, tránh bắt khách hàng phải cung cấp lại mã đơn hàng nhiều lần.
+Nhân viên CSKH chỉ được quyền xem và xử lý các Ticket được phân phối cho mình hoặc của nhóm mình phụ trách.
+Toàn bộ lịch sử hỗ trợ và Ticket phải được lưu trữ trong hồ sơ khách hàng để phục vụ công tác tra soát và cải thiện dịch vụ tại module CRM.
+Tình huống ngoại lệ
+Nhân viên hỗ trợ đang bận hoặc offline hết: Chatbot tự động gửi thông báo: "Hiện tại các tư vấn viên đều đang bận, bạn vui lòng để lại lời nhắn, chúng tôi sẽ phản hồi sớm nhất trong vòng 1 giờ".
+Khách hàng vãng lai yêu cầu hỗ trợ: Hệ thống cho phép gửi Ticket nhưng yêu cầu cung cấp SĐT để xác thực qua OTP trước khi lưu Ticket nhằm tránh hành vi spam hệ thống.
+Người dùng sử dụng từ ngữ không phù hợp trong Chat	Hệ thống tự động kích hoạt bộ lọc nội dung, cảnh báo người dùng và có quyền tự động ngắt phiên chat nếu vi phạm nhiều lần.
+Lỗi tải tệp tin đính kèm: Nếu tệp không đúng định dạng hoặc quá dung lượng, hệ thống hiển thị cảnh báo và hướng dẫn khách hàng gửi ảnh qua link Zalo chính thức của PawPal.
+Ticket bị bỏ quên: Hệ thống tự động kích hoạt lệnh nhắc nhở gửi đến Quản lý cơ sở để yêu cầu kiểm tra và xử lý ngay lập tức.
+
+3.3. Yêu cầu chức năng
+3.3.1. Đăng ký và định danh
+
+Mã số
+Tên chức năng
+Mô tả chi tiết
+Ưu tiên
+FR1-1
+Kiểm tra định danh duy nhất
+Hệ thống thực hiện lệnh truy vấn CSDL để đối soát số điện thoại ngay khi người dùng nhập liệu; ngăn chặn đăng ký trùng lặp và hiển thị cảnh báo nếu SĐT đã tồn tại.
+Rất cao
+FR1-2
+Xác thực OTP qua SMS Gateway
+Hệ thống kết nối với hạ tầng viễn thông để gửi mã xác thực 6 số; thực hiện kiểm tra tính hợp lệ và thời gian hiệu lực (05 phút) trước khi cho phép xác lập tài khoản.
+Rất cao
+FR1-3
+Khởi tạo định danh lũy tiến
+Hệ thống tự động khởi tạo "Tài khoản tạm" gắn với SĐT khách hàng ngay khi có thao tác Xác nhận đặt lịch hoặc Xác nhận thanh toán từ khách vãng lai.
+Cao
+FR1-4
+Quản lý liên kết 
+Hệ thống tự động tạo và gửi tin nhắn chứa đường dẫn thiết lập mật khẩu; thực hiện đếm ngược và vô hiệu hóa liên kết sau 48 giờ.
+Cao
+FR1-5
+Hợp nhất và đồng bộ dữ liệu
+Sau khi khách hàng thiết lập mật khẩu thành công, hệ thống thực hiện lệnh chuyển giao lịch sử từ tài khoản tạm sang tài khoản chính thức, phân bổ dữ liệu về đúng mục "Nhật ký chăm sóc" và "Đơn hàng của tôi".
+Rất cao
+
+
+
+FR1-6
+Đăng ký nhanh tại quầy
+Cung cấp giao diện cho Admin để khởi tạo tài khoản nhanh cho khách trực tiếp chỉ với Họ tên và SĐT, kích hoạt luồng gửi link xác thực mật khẩu tự động.
+Trung bình
+FR1-7
+Tự động cấp điểm thưởng
+Hệ thống thực hiện lệnh cộng 50 Paw Points vào ví khách hàng ngay khi trạng thái tài khoản chuyển sang "Thành viên chính thức" (hoàn tất OTP hoặc kích hoạt link SMS).
+Cao
+FR1-8
+Kiểm soát quyền hạn tài khoản
+Hệ thống tự động cấu hình rào cản: chặn quyền sử dụng điểm thưởng và xem nhật ký chăm sóc chuyên sâu đối với các tài khoản ở trạng thái "Tạm".
+Rất cao
+
+
+3.3.2. Đăng nhập và Bảo mật
+
+Mã số
+Tên chức năng
+Mô tả chi tiết
+Ưu tiên
+FR2.1
+Đối soát tài khoản hệ thống
+Hệ thống thực hiện lệnh truy vấn CSDL ngay khi người dùng nhập số điện thoại để xác định trạng thái tài khoản (Thành viên/Tài khoản tạm) và điều hướng luồng xác thực phù hợp.
+Rất cao
+FR2.2
+Xác thực bằng mật khẩu mã hóa
+Hệ thống thực hiện so sánh thông tin đăng nhập với dữ liệu mật khẩu đã được mã hóa trong CSDL; chỉ cấp quyền truy cập khi thông tin trùng khớp hoàn toàn.
+Rất cao
+FR2.3
+Đăng nhập nhanh qua mã OTP
+Hệ thống kết nối với SMS Gateway để gửi mã xác thực 6 số cho các tài khoản tạm hoặc người dùng muốn đăng nhập không cần mật khẩu; thực hiện kiểm tra hiệu lực trong 05 phút.
+Cao
+FR2.4
+Phân quyền và điều hướng (RBAC)
+Hệ thống tự động nhận diện vai trò người dùng sau khi xác thực để điều hướng về đúng giao diện Dashboard và khởi tạo các quyền hạn tương ứng.
+Rất cao
+FR2.5
+Tự động khóa tài khoản bảo mật
+Hệ thống kích hoạt cơ chế đếm số lần đăng nhập sai; tự động khóa quyền truy cập của số điện thoại đó trong 30 phút nếu vượt quá 05 lần liên tiếp để phòng chống tấn công.
+Cao
+FR2.6
+Khôi phục mật khẩu tự động
+Cung cấp luồng tự phục vụ: khách hàng nhập SĐT để nhận link khôi phục qua SMS; hệ thống cho phép thiết lập mật khẩu mới và vô hiệu hóa link sau 48 giờ.
+Trung bình
+FR2.7
+Xác thực hai lớp cho thao tác nhạy cảm
+Hệ thống bắt buộc yêu cầu mật khẩu cũ hoặc mã OTP khi người dùng thực hiện thay đổi thông tin cá nhân, mật khẩu hoặc sử dụng điểm thưởng Paw Points.
+Rất cao
+FR2.8
+Kiểm soát quyền riêng tư Nhật ký
+Hệ thống thiết lập rào cản kỹ thuật: chỉ cho phép các tài khoản đã đăng nhập thành công mới được quyền truy cập xem chi tiết Nhật ký chăm sóc realtime của bé cưng.
+Rất cao
+
+
+3.3.3. Quản lý hồ sơ bé cưng
+
+
+Mã số
+Tên chức năng
+Mô tả chi tiết
+Ưu tiên
+FR3.1
+Khởi tạo hồ sơ bé cưng
+Hệ thống cung cấp biểu mẫu nhập liệu các thông tin định danh: Tên, Giống loài, Cân nặng, Ảnh đại diện và các lưu ý y tế/thói quen sinh hoạt.
+Rất cao
+FR3.2
+Tự động cấp mã định danh Pet ID
+Hệ thống tự động sinh một mã ID duy nhất cho mỗi hồ sơ bé cưng ngay sau khi lưu thành công để làm khóa liên kết dữ liệu xuyên suốt hệ thống.
+Cao
+FR3.3
+Kiểm tra tính toàn vẹn dữ liệu
+Hệ thống bắt buộc người dùng hoàn thiện các trường: Tên, Giống loài, Cân nặng trước khi cho phép lưu để có cơ sở tính đơn giá dịch vụ.
+Rất cao
+FR3.4
+Cập nhật chỉ số sinh trưởng
+Cho phép người dùng hiệu chỉnh thông tin hồ sơ; hệ thống tự động ghi nhận phiên bản mới nhất và đồng bộ cân nặng sang module Đặt lịch và Thanh toán.
+Rất cao
+FR3.5
+Quản lý tệp đa phương tiện
+Hệ thống cho phép tải lên và lưu trữ ảnh thực tế của bé cưng; thực hiện kiểm tra dung lượng (<5MB) và định dạng tệp (.jpg, .png) trước khi lưu.
+Cao
+FR3.6
+Gắn nhãn ưu tiên y tế
+Hệ thống tự động nhận diện các thông tin "Dị ứng" hoặc "Lưu ý đặc biệt" để hiển thị nổi bật (đánh dấu đỏ) trên giao diện dành cho nhân viên tiếp nhận.
+Rất cao
+FR3.7
+Lưu trữ hồ sơ tạm thời 
+Khi người dùng xóa hồ sơ, hệ thống không hủy vĩnh viễn mà chuyển sang trạng thái "Lưu trữ" trong 30 ngày để phục vụ việc khôi phục nếu cần.
+Thấp
+FR3.8
+Ánh xạ nhật ký chăm sóc
+Hệ thống tự động liên kết Pet ID với các phiên dịch vụ; gán hình ảnh/video từ thiết bị ngoại vi vào đúng dòng thời gian của hồ sơ bé cưng tương ứng.
+Rất cao
+FR3.9
+Quyền hiệu chỉnh tại quầy
+Cung cấp chức năng cho Admin thực hiện cập nhật lại cân nặng hoặc lưu ý y tế của bé ngay tại thời điểm tiếp nhận dưới sự xác nhận của khách.
+Trung bình
+
+3.3.4. Quản lý đặt lịch hẹn
+
+
+Mã số
+Tên chức năng
+Mô tả chi tiết
+Ưu tiên
+FR4.1
+Truy vấn lịch biểu thời gian thực
+Hệ thống tự động quét lịch làm việc của nhân viên và trạng thái phòng Hotel trong CSDL để hiển thị các ô giờ còn trống lên giao diện đặt lịch.
+Rất cao
+FR4.2
+Cơ chế khóa dữ liệu tạm 
+Ngay khi người dùng chọn một ô lịch, hệ thống thực hiện lệnh khóa ô đó trong 15 phút dựa trên SessionID, ngăn chặn tất cả người dùng khác đặt trùng khung giờ này.
+Rất cao
+FR4.3
+Phân rẽ luồng định danh người dùng
+Hệ thống tự động nhận diện trạng thái đăng nhập: truy xuất danh sách hồ sơ bé cưng đối với Thành viên hoặc hiển thị form nhập liệu nhanh đối với Khách vãng lai.
+Cao
+FR4.4
+Tự động tính giá dịch vụ động
+Hệ thống thực hiện lệnh đối soát cân nặng/giống loài của bé cưng với bảng giá niêm yết để tính toán tổng tiền và các khoản phụ phí dự kiến ngay tại bước xác nhận.
+Rất cao
+FR4.5
+Kiểm tra ràng buộc thời gian đặt
+Hệ thống tự động tính toán khoảng cách giữa thời gian hiện tại và giờ hẹn; chỉ cho phép nhấn "Xác nhận" nếu thời gian này 
+≥ 02 tiếng.
+Cao
+FR4.6
+Khởi tạo giao dịch và Tài khoản tạm
+Đối với khách vãng lai, hệ thống thực hiện lệnh ghi đồng thời: (1) Lưu lịch hẹn; (2) Tạo tài khoản tạm; (3) Kích hoạt SMS Gateway gửi link thiết lập mật khẩu 48h.
+Cao
+FR4.7
+Đồng bộ hóa Nhật ký chăm sóc
+Sau khi đặt lịch thành công, hệ thống tự động đẩy thông tin lịch hẹn vào mục "Nhật ký chăm sóc" trên Dashboard khách hàng và màn hình điều hành tại cửa hàng.
+Rất cao
+FR4.8
+Tự động giải phóng khung giờ 
+Hệ thống thực hiện lệnh đếm ngược 15 phút; nếu không nhận được lệnh "Xác nhận đặt lịch", hệ thống tự động nhả ô lịch về trạng thái "Trống" và xóa dữ liệu tạm.
+Cao
+
+
+3.3.5. Thay đổi lịch hẹn
+
+Mã số
+Tên chức năng
+Mô tả chi tiết
+Ưu tiên
+FR5.1
+Kiểm tra ràng buộc thời gian 
+Hệ thống tự động tính toán thời gian thực; chỉ cho phép hiển thị nút "Thay đổi" nếu thời điểm hiện tại cách giờ hẹn cũ ít nhất 02 tiếng.
+Rất cao
+FR5.2
+Truy vấn và hoán đổi khung giờ
+Hệ thống cho phép khách hàng chọn khung giờ mới trên lịch trực tuyến; thực hiện lệnh giữ chỗ khung giờ mới trong khi vẫn bảo lưu khung giờ cũ.
+Rất cao
+FR5.3
+Tính toán chênh lệch hóa đơn
+Hệ thống tự động so sánh đơn giá giữa lịch cũ và lịch mới để hiển thị bảng kê số tiền cần bù thêm hoặc số tiền dư sẽ được hoàn trả vào ví Paw Points.
+Cao
+FR5.4
+Kiểm soát giới hạn lượt thay đổi
+Hệ thống thực hiện lệnh đếm và chặn chức năng thay đổi trực tuyến nếu mã lịch hẹn đã thực hiện quá 02 lần chỉnh sửa trước đó.
+Trung bình
+FR5.5
+Xác nhận thay đổi và Giải phóng lịch cũ
+Sau khi khách hàng nhấn "Xác nhận", hệ thống thực hiện cập nhật CSDL đồng thời: xác lập khung giờ mới và giải phóng khung giờ cũ về trạng thái "Trống".
+Rất cao
+FR5.6
+Cập nhật Task làm việc nội bộ
+Hệ thống tự động điều chỉnh danh sách công việc trên Dashboard của nhân viên chăm sóc và gửi thông báo thay đổi lịch đến nhân viên phụ trách.
+Cao
+FR5.7
+Ràng buộc loại dịch vụ 
+Hệ thống thực hiện kiểm tra và chặn luồng thay đổi nếu khách hàng cố tình chuyển đổi từ Spa sang lưu trú hoặc ngược lại ngay tại luồng này.
+Rất cao
+FR5.8
+Lưu vết lịch sử thay đổi 
+Hệ thống tự động ghi lại lịch sử: ID người thực hiện, thời gian thực hiện thao tác và các thông số thay đổi để phục vụ tra soát khiếu nại.
+Trung bình
+
+
+
+3.4. Yêu cầu phi chức năng
+
+Yêu cầu phi chức năng
+Mã số
+Yêu cầu phi chức năng
+Mô tả chi tiết
+Ưu tiên
+NFR-01
+Hiệu suất
+Thời gian phản hồi trang < 2 giây. Hỗ trợ tối thiểu 100 người dùng truy cập cùng lúc không lag.
+Cao
+NFR-02
+Bảo mật
+Mã hóa mật khẩu một chiều. Xác thực OTP cho giao dịch và đăng ký. Tuân thủ chuẩn HTTPS.
+Rất cao
+NFR-03
+Phân quyền truy cập
+Hệ thống phân quyền chặt chẽ. Mỗi nhóm chỉ thấy và sử dụng đúng chức năng của mình.
+Rất cao
+NFR-04
+Khả năng chịu lỗi
+Nếu có lỗi xảy ra hệ thống phải báo lỗi rõ ràng cho người dùng thay vì hiện trang trắng hoặc sập luôn.
+Trung bình
+NFR-05
+Sao lưu dữ liệu
+Dữ liệu được lưu dự phòng hàng ngày để không bị mất nếu máy chủ gặp sự cố.
+Cao
+NFR-06
+Khả năng mở rộng
+Dễ dàng thêm các dịch vụ mới hoặc thêm cơ sở mới vào hệ thống sau này mà không cần làm lại từ đầu.
+Trung bình
+NFR-07
+Giao diện người dùng
+Giao diện đơn giản, dễ dùng, chữ to rõ ràng. Hoạt động tốt trên cả máy tính và điện thoại di động.
+Cao
+NFR-08
+Khả năng bảo trì
+Code viết gọn gàng, có ghi chú để khi cần sửa chữa hoặc nâng cấp thì người khác cũng làm được dễ dàng.
+Trung bình
+NFR-09
+Thời gian hoạt động
+Web luôn sẵn sàng hoạt động 24/7 để khách có thể đặt lịch bất cứ lúc nào.
+Cao
+
+
+

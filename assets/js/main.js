@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initShopFilter();
     initCuteEnhancements();
     initDraggableServicesCarousel();
+    initPetIdCardTilt();
 });
 
 /**
@@ -366,100 +367,36 @@ function initCuteEnhancements() {
  */
 function initDraggableServicesCarousel() {
     const wrapper = document.querySelector('.services-arched-wrapper');
-    const cards = document.querySelectorAll('.services-arched-wrapper .arched-card');
+    const prevBtn = document.querySelector('.carousel-prev');
+    const nextBtn = document.querySelector('.carousel-next');
     
-    if (!wrapper || cards.length === 0) return;
+    if (!wrapper) return;
 
     let isDown = false;
     let startX;
     let scrollLeft;
 
-    let cachedWrapperWidth = 0;
-    let cardCaches = [];
-
-    // --- Cache Layout Values to Eliminate Layout Thrashing ---
-    function cacheLayout() {
-        // Temporarily reset transforms to get pristine layout values
-        cards.forEach(card => {
-            card.style.transform = 'none';
-        });
-
-        // Force browser to compute layout once
-        cachedWrapperWidth = wrapper.offsetWidth;
-
-        cardCaches = Array.from(cards).map(card => {
-            return {
-                element: card,
-                centerX: card.offsetLeft + card.offsetWidth / 2
-            };
-        });
-
-        // Immediately apply arched transform with new layout offsets
-        updateArcTransform();
-    }
-
-    // --- Dynamic Parabolic Arc Position Calculation ---
-    function updateArcTransform() {
-        const scrollLeft = wrapper.scrollLeft;
-        const containerCenterX = cachedWrapperWidth / 2;
-        
-        // Define the horizontal window where the curve takes effect.
-        const maxDistance = Math.min(600, cachedWrapperWidth * 0.45);
-
-        cardCaches.forEach(cache => {
-            const distanceX = cache.centerX - scrollLeft - containerCenterX;
-            
-            // Normalized distance: -1 at left of curve, 0 at center, 1 at right of curve
-            let pct = distanceX / maxDistance;
-            
-            // Clamp normalized distance to keep cards from over-rotating far offscreen
-            pct = Math.max(-1.5, Math.min(1.5, pct));
-
-            // Parabolic vertical offset: highest in the center (translateY = 0), drops as pct increases
-            // We use power of 2 for a clean parabolic shape, multiplied by max vertical offset (80px)
-            const translateY = Math.pow(Math.abs(pct), 2) * 80;
-
-            // Rotation: tilt outwards. Max rotation is 22 degrees.
-            const rotate = pct * 22;
-
-            // Scale: slightly smaller at the sides to add depth
-            const scale = 1 - Math.pow(Math.abs(pct), 2) * 0.04;
-
-            cache.element.style.transform = `translateY(${translateY}px) rotate(${rotate}deg) scale(${scale})`;
-        });
-    }
-
-    // Throttle scroll events with requestAnimationFrame for 60fps/120fps scrolling
-    let ticking = false;
-    function requestTick() {
-        if (!ticking) {
-            requestAnimationFrame(() => {
-                updateArcTransform();
-                ticking = false;
-            });
-            ticking = true;
-        }
-    }
-
-    // --- Drag to Scroll Logic ---
     wrapper.addEventListener('mousedown', (e) => {
         isDown = true;
+        wrapper.classList.add('is-scrolling');
         wrapper.style.cursor = 'grabbing';
+        wrapper.style.scrollSnapType = 'none'; // Vô hiệu hóa snap khi đang kéo để không bị giật/kẹt cứng
+        wrapper.style.scrollBehavior = 'auto'; // Instant response during drag
         startX = e.pageX - wrapper.offsetLeft;
         scrollLeft = wrapper.scrollLeft;
-        // Disable smooth scroll behavior during drag for instant response
-        wrapper.style.scrollBehavior = 'auto';
     });
 
-    wrapper.addEventListener('mouseleave', () => {
+    const endDrag = () => {
+        if (!isDown) return;
         isDown = false;
+        wrapper.classList.remove('is-scrolling');
         wrapper.style.cursor = 'grab';
-    });
+        wrapper.style.scrollBehavior = 'smooth';
+        wrapper.style.scrollSnapType = 'x mandatory'; // Kích hoạt lại snap sau khi nhả chuột để tự hút vào thẻ gần nhất
+    };
 
-    wrapper.addEventListener('mouseup', () => {
-        isDown = false;
-        wrapper.style.cursor = 'grab';
-    });
+    wrapper.addEventListener('mouseleave', endDrag);
+    wrapper.addEventListener('mouseup', endDrag);
 
     wrapper.addEventListener('mousemove', (e) => {
         if (!isDown) return;
@@ -469,44 +406,67 @@ function initDraggableServicesCarousel() {
         wrapper.scrollLeft = scrollLeft - walk;
     });
 
-    // Touch events for mobile
+    // Touch support for mobile swipe
     wrapper.addEventListener('touchstart', (e) => {
         isDown = true;
+        wrapper.style.scrollSnapType = 'none';
+        wrapper.style.scrollBehavior = 'auto';
         startX = e.touches[0].pageX - wrapper.offsetLeft;
         scrollLeft = wrapper.scrollLeft;
-        wrapper.style.scrollBehavior = 'auto';
-    }, {passive: true});
-    
+    }, { passive: true });
+
     wrapper.addEventListener('touchend', () => {
         isDown = false;
+        wrapper.style.scrollBehavior = 'smooth';
+        wrapper.style.scrollSnapType = 'x mandatory';
     });
 
-    // Handle all scrolling (mousewheel, trackpad, arrow keys, drag, touch scroll)
-    wrapper.addEventListener('scroll', requestTick);
-
-    // Run on window resize and load to keep things centered and correct
-    window.addEventListener('resize', cacheLayout);
-    window.addEventListener('load', cacheLayout);
-    if (document.fonts) {
-        document.fonts.ready.then(cacheLayout);
-    }
-
-    // --- Arrow Navigation ---
-    const prevBtn = document.querySelector('.carousel-prev');
-    const nextBtn = document.querySelector('.carousel-next');
-
+    // Arrow Navigation
     if (prevBtn && nextBtn) {
         prevBtn.addEventListener('click', () => {
             wrapper.style.scrollBehavior = 'smooth';
-            wrapper.scrollLeft -= 280; 
+            const card = wrapper.querySelector('.arched-card');
+            const cardWidth = card ? card.offsetWidth + 30 : 320; // card width + gap
+            wrapper.scrollLeft -= cardWidth; 
         });
 
         nextBtn.addEventListener('click', () => {
             wrapper.style.scrollBehavior = 'smooth';
-            wrapper.scrollLeft += 280; 
+            const card = wrapper.querySelector('.arched-card');
+            const cardWidth = card ? card.offsetWidth + 30 : 320;
+            wrapper.scrollLeft += cardWidth; 
         });
     }
+}
 
-    // Trigger initial calculation once layout is loaded and rendered
-    setTimeout(cacheLayout, 100);
+/**
+ * 3D Mouse Hover Tilt Effect for Pet ID Card
+ */
+function initPetIdCardTilt() {
+    const card = document.getElementById('petPassportCard');
+    if (!card) return;
+
+    card.addEventListener('mousemove', (e) => {
+        const cardRect = card.getBoundingClientRect();
+        const cardWidth = cardRect.width;
+        const cardHeight = cardRect.height;
+        
+        // Calculate coordinate center of the card
+        const centerX = cardRect.left + cardWidth / 2;
+        const centerY = cardRect.top + cardHeight / 2;
+        
+        // Calculate distance from cursor to center
+        const mouseX = e.clientX - centerX;
+        const mouseY = e.clientY - centerY;
+        
+        // Map to rotation degrees (-12 to 12 degrees max for elegance)
+        const rotateX = -12 * (mouseY / (cardHeight / 2));
+        const rotateY = 12 * (mouseX / (cardWidth / 2));
+        
+        card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+    });
+
+    card.addEventListener('mouseleave', () => {
+        card.style.transform = 'rotateX(0) rotateY(0) scale(1)';
+    });
 }

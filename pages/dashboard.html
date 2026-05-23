@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PawPal - Bảng điều khiển cá nhân</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="dashboard-page-body">
+
+    <!-- Header Navigation -->
+    <header class="main-header" id="mainHeader">
+        <div class="header-container">
+            <a href="../index.html" class="logo">
+                <img src="../assets/images/Logo_pawpal_navbar.png" alt="PawPal">
+            </a>
+            
+            <div class="search-bar">
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" placeholder="Tìm kiếm sản phẩm...">
+            </div>
+
+            <!-- Mobile Navigation Toggle -->
+            <button class="mobile-nav-toggle" aria-controls="primary-navigation" aria-expanded="false" id="mobileNavToggle">
+                <svg class="icon-menu" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>
+                <svg class="icon-close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <nav class="nav-menu" id="primaryNavigation">
+                <ul>
+                    <li><a href="../index.html">Trang chủ</a></li>
+                    <li><a href="../index.html#services">Dịch vụ</a></li>
+                    <li><a href="../index.html#shop">Cửa hàng</a></li>
+                    <li><a href="../index.html#experts">Về chúng tôi</a></li>
+                    <li><a href="../index.html#process">Tin tức</a></li>
+                    <li><a href="../index.html#contact">Liên hệ</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <a href="#cart" class="cart-btn" aria-label="Giỏ hàng">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                </a>
+                <a href="dashboard.html" class="login-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span>Tài khoản</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Container -->
+    <main class="dashboard-page-main" style="max-width: 1200px; margin: 40px auto; padding: 0 20px; min-height: 70vh;">
+        <div class="dashboard-page-wrapper glass-panel" style="border-radius: 24px; overflow: hidden; background: rgba(255, 255, 255, 0.96); border: 1px solid rgba(42, 89, 68, 0.08); box-shadow: 0 20px 25px -5px rgba(42, 89, 68, 0.12); display: flex; flex-direction: column;">
+            
+            <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; padding: 24px 30px; border-bottom: 1px solid rgba(42, 89, 68, 0.06); background-color: var(--color-primary-light);">
+                <div class="user-profile-summary" style="display: flex; align-items: center; gap: 16px;">
+                    <div class="user-avatar" id="dashAvatar" style="width: 48px; height: 48px; border-radius: 50%; background-color: var(--color-primary); color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: var(--font-primary); font-weight: 700; font-size: 1.1rem;">U</div>
+                    <div class="user-profile-text">
+                        <h3 id="dashName" style="font-family: var(--font-primary); font-size: 1.15rem; font-weight: 700; color: var(--color-primary-dark); margin: 0;">Nguyễn Văn A</h3>
+                        <span class="membership-badge" id="dashBadge" style="display: inline-block; font-size: 0.68rem; font-weight: 700; background-color: var(--color-accent-light); color: var(--color-accent-dark); padding: 2px 8px; border-radius: 4px; margin-top: 2px;">Hạng Bạc</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-body" style="display: flex; min-height: 480px;">
+                <!-- Tab Menu (Left Navigation) -->
+                <div class="dashboard-tabs-nav" style="width: 240px; border-right: 1px solid rgba(42, 89, 68, 0.06); padding: 24px 16px; display: flex; flex-direction: column; gap: 10px;">
+                    <button class="dash-tab-btn active" data-dash-tab="dash-info">Thông tin chung</button>
+                    <button class="dash-tab-btn" data-dash-tab="dash-petid">Hồ sơ Pet ID</button>
+                    <button class="dash-tab-btn" data-dash-tab="dash-booking">Lịch hẹn của tôi</button>
+                    <button class="dash-tab-btn" data-dash-tab="dash-security">Bảo mật</button>
+                    <button class="btn-dashboard-logout" id="dashboardLogoutBtn">Đăng xuất</button>
+                </div>
+
+                <!-- Tab Content Wrapper (Right Panel) -->
+                <div class="dashboard-tab-content-wrapper" style="flex-grow: 1; padding: 30px; overflow-y: auto;">
+                    
+                    <!-- Tab 1: Info -->
+                    <div class="dash-tab-content active" id="dash-info">
+                        <h4 style="font-family: var(--font-primary); font-size: 1.25rem; font-weight: 700; color: var(--color-primary-dark); margin-bottom: 18px;">Tổng quan tài khoản</h4>
+                        <div class="dash-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="dash-info-card">
+                                <span class="label">SỐ ĐIỆN THOẠI</span>
+                                <span class="value" id="dashPhone">0987 654 321</span>
+                            </div>
+                            <div class="dash-info-card">
+                                <span class="label">ĐIỂM PAW POINTS</span>
+                                <span class="value highlight" id="dashPoints">50 Points</span>
+                                <div class="redeem-points-area" style="margin-top: 10px;">
+                                    <button class="btn-redeem-points" id="redeemPointsBtn">Đổi điểm thưởng</button>
+                                    <span class="redeem-restricted-note" id="redeemRestrictedNote" style="display: none; color: #ef4444; font-size: 0.78rem; font-weight: 500; margin-top: 8px;">🔒 Vui lòng thiết lập mật khẩu trong tab Bảo mật để mở khóa.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Pet ID -->
+                    <div class="dash-tab-content" id="dash-petid">
+                        <h4 style="font-family: var(--font-primary); font-size: 1.25rem; font-weight: 700; color: var(--color-primary-dark); margin-bottom: 18px;">Hồ sơ số của bé cưng</h4>
+                        <p class="petid-intro" style="font-size: 0.9rem; color: var(--color-text-light); margin-bottom: 20px;">Hồ sơ thông tin trực quan giúp theo dõi và phục vụ dịch vụ tốt nhất.</p>
+                        
+                        <div class="dash-pet-passport-placeholder" id="dashPetPassportContainer" style="display: flex; justify-content: center; padding: 10px 0;">
+                            <!-- Standard Passport card structure -->
+                            <div class="pet-passport-card" id="petPassportCard" style="max-width: 380px; width: 100%; border-radius: 16px; border: 1px solid var(--color-border); box-shadow: var(--shadow-md); background: #ffffff; overflow: hidden;">
+                                <div class="passport-header" style="background-color: var(--color-primary); color: #ffffff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="font-weight: 700; font-size: 0.85rem; letter-spacing: 1px;">PAWPORT • VIỆT NAM</div>
+                                    <div style="font-size: 0.75rem; background: var(--color-accent); color: var(--color-primary-dark); padding: 2px 8px; border-radius: 4px; font-weight: 700;">PET ID</div>
+                                </div>
+                                <div class="passport-body" style="padding: 20px; display: flex; gap: 16px;">
+                                    <div style="width: 100px; height: 100px; border-radius: 12px; overflow: hidden; background: #e2e8f0;">
+                                        <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=300&q=80" alt="Bé Bông" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </div>
+                                    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                                        <h4 style="font-family: var(--font-primary); font-size: 1.1rem; color: var(--color-primary-dark); font-weight: 700; margin: 0;">Bé Bông</h4>
+                                        <div style="font-size: 0.8rem; color: var(--color-text-light);"><strong style="color: var(--color-text-dark);">Giống:</strong> Poodle</div>
+                                        <div style="font-size: 0.8rem; color: var(--color-text-light);"><strong style="color: var(--color-text-dark);">Tuổi:</strong> 2 tuổi</div>
+                                        <div style="font-size: 0.8rem; color: var(--color-text-light);"><strong style="color: var(--color-text-dark);">Cân nặng:</strong> 4.5 kg</div>
+                                        <div style="font-size: 0.8rem; color: var(--color-text-light);"><strong style="color: var(--color-text-dark);">ID:</strong> PP-9831</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Bookings -->
+                    <div class="dash-tab-content" id="dash-booking">
+                        <h4 style="font-family: var(--font-primary); font-size: 1.25rem; font-weight: 700; color: var(--color-primary-dark); margin-bottom: 18px;">Lịch hẹn chăm sóc</h4>
+                        <p class="booking-intro" style="font-size: 0.9rem; color: var(--color-text-light); margin-bottom: 20px;">Danh sách các dịch vụ bạn đã đặt tại PawPal.</p>
+                        <div class="dash-bookings-list" id="dashBookingsList">
+                            <div class="no-bookings" id="noBookingsMsg">Bạn chưa có lịch hẹn nào.</div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 4: Security -->
+                    <div class="dash-tab-content" id="dash-security">
+                        <h4 id="securityTabTitle" style="font-family: var(--font-primary); font-size: 1.25rem; font-weight: 700; color: var(--color-primary-dark); margin-bottom: 18px;">Cấu hình mật khẩu</h4>
+                        <form id="changePasswordForm" class="security-form">
+                            <div class="form-group" id="oldPasswordGroup">
+                                <label for="oldPassword">Mật khẩu cũ (hoặc gửi OTP nếu quên)</label>
+                                <div class="password-with-otp-wrapper">
+                                    <input type="password" id="oldPassword" placeholder="Nhập mật khẩu cũ...">
+                                    <button type="button" class="btn-send-otp-security" id="sendOtpSecurityBtn">Nhận OTP</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" id="securityOtpGroup" style="display: none;">
+                                <label for="securityOtpInput">Nhập OTP xác minh (đã gửi qua SMS)</label>
+                                <input type="text" id="securityOtpInput" placeholder="Nhập mã OTP 6 số...">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="newPassword">Mật khẩu mới</label>
+                                <input type="password" id="newPassword" required placeholder="Nhập mật khẩu mới (tối thiểu 8 ký tự)...">
+                                <div class="password-strength-container">
+                                    <div class="strength-bar-wrapper">
+                                        <div class="strength-bar" id="newPasswordStrengthBar"></div>
+                                    </div>
+                                    <span class="strength-label" id="newPasswordStrengthLabel">Yêu</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmNewPassword">Xác nhận mật khẩu mới</label>
+                                <input type="password" id="confirmNewPassword" required placeholder="Nhập lại mật khẩu mới...">
+                                <span class="input-error-msg" id="newPasswordError" style="display: none; color: #ef4444; font-size: 0.78rem; font-weight: 500; margin-top: 4px;">Mật khẩu xác nhận không trùng khớp.</span>
+                            </div>
+                            <button type="submit" class="btn-submit-security" id="changePasswordSubmitBtn" disabled>Cập nhật mật khẩu</button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/main.js"></script>
+</body>
+</html>

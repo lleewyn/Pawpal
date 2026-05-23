@@ -60,6 +60,7 @@
 
 html {
     scroll-behavior: smooth;
+    scroll-padding-top: 110px; /* Khoảng trống bù lại cho header sticky để không bị che khuất tiêu đề */
 }
 
 body {
@@ -382,7 +383,9 @@ ul {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.28); /* Nhẹ hơn để ảnh nền rõ hơn như Figma */
+    background-color: rgba(250, 249, 246, 0.45); /* Màu kem ấm dịu mắt hòa hợp với theme */
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
     z-index: 2;
 }
 
@@ -607,79 +610,72 @@ ul {
    Features Section
    ========================================================================== */
 .features-section {
-    background-color: var(--color-bg-white);
-    padding: 50px 0;
+    background: linear-gradient(to bottom, var(--color-bg-light), var(--color-bg-white));
+    padding: 70px 0;
     border-bottom: 1px solid var(--color-border);
 }
 
 .features-container {
-    max-width: 1200px;
+    max-width: 1300px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 24px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 30px;
+    width: 100%;
 }
 
 .feature-item {
+    background-color: var(--color-bg-white);
+    border-radius: 20px;
+    border: 1px solid rgba(42, 89, 68, 0.06);
+    padding: 32px 24px;
     text-align: center;
-    padding: 16px;
-    transition: var(--transition-smooth);
+    box-shadow: 0 4px 20px rgba(42, 89, 68, 0.02);
+    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                box-shadow 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                border-color 0.4s ease;
 }
 
 .feature-item:hover {
-    transform: translateY(-5px);
+    transform: translateY(-6px);
+    border-color: rgba(229, 169, 60, 0.3);
+    box-shadow: 0 20px 40px rgba(42, 89, 68, 0.05), 0 0 15px rgba(229, 169, 60, 0.05);
 }
 
-/* Feature icon wrapper — circular photo avatar like design */
-.feature-icon-wrapper {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    margin: 0 auto 14px;
-    border: 3px solid var(--color-primary-light);
-    box-shadow: var(--shadow-sm);
-    transition: var(--transition-smooth);
-    background-color: var(--color-primary-light);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.feature-icon-wrapper svg {
-    width: 32px;
-    height: 32px;
+/* Feature metric typography */
+.feature-metric {
+    font-family: var(--font-display);
+    font-size: 3.5rem;
+    line-height: 1;
     color: var(--color-primary);
-    transition: var(--transition-smooth);
+    margin: 0 auto 16px;
+    font-style: italic;
+    font-weight: 400;
+    transition: color 0.4s ease, transform 0.4s ease;
+    display: inline-block;
 }
 
-.feature-icon-wrapper:hover {
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 4px rgba(229, 169, 60, 0.2);
-}
-
-.feature-icon-wrapper:hover svg {
-    color: var(--color-accent);
-}
-
-.feature-item:hover .feature-icon-wrapper {
-    transform: scale(1.06);
+.feature-item:hover .feature-metric {
+    color: var(--color-accent-dark);
+    transform: scale(1.08) rotate(-2deg);
 }
 
 .feature-item h3 {
     font-family: var(--font-primary);
-    font-size: var(--fs-sub-title);
-    font-weight: 600;
+    font-size: 1.15rem;
+    font-weight: 700;
     color: var(--color-primary-dark);
-    letter-spacing: 0.5px;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
 }
 
 .feature-item p {
     font-family: var(--font-primary);
-    font-size: var(--fs-body-semibold);
-    font-weight: 600;
+    font-size: 0.92rem;
+    font-weight: 400;
     color: var(--color-text-light);
+    line-height: 1.5;
 }
 
 /* ==========================================================================
@@ -699,32 +695,33 @@ ul {
     position: relative;
 }
 
-/* Curved guideline behind arched cards */
+/* Hide curved dashed background line completely for visual simplicity */
 .services-curved-bg {
-    position: absolute;
-    left: 8%;
-    right: 8%;
-    top: 360px;
-    height: 180px;
-    border-top: 2px dashed rgba(229, 169, 60, 0.35);
-    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-    z-index: 1;
-    pointer-events: none;
+    display: none;
 }
 
 .services-arched-wrapper {
     display: flex;
-    align-items: center;
-    gap: 36px;
-    margin-top: 20px; /* Reduced since odds/evens will offset */
+    align-items: stretch;
+    gap: 30px;
+    margin-top: 40px;
     position: relative;
     z-index: 2;
-    padding: 20px 15vw 80px 15vw; /* Show ~30% of cards on the edges */
+    padding: 20px 20px 40px 20px;
     overflow-x: auto;
     scrollbar-width: none;
-    scroll-behavior: auto;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
     cursor: grab;
     width: 100%;
+    justify-content: flex-start;
+}
+
+@media (min-width: 1910px) {
+    .services-arched-wrapper {
+        justify-content: center;
+        padding: 20px 0 40px 0;
+    }
 }
 
 .services-arched-wrapper::-webkit-scrollbar {
@@ -735,48 +732,44 @@ ul {
     cursor: grabbing;
 }
 
-/* Disable transition while dragging/scrolling to prevent jitter */
-.services-arched-wrapper.is-scrolling .arched-card {
-    transition: box-shadow 0.3s ease, z-index 0.2s ease !important;
-}
-
+/* Redesigned clean, premium cards */
 .arched-card {
     background-color: var(--color-bg-white);
-    border-radius: 120px 120px 24px 24px / 108px 108px 24px 24px; /* Matches the inner arch proportionally */
-    padding: 12px; /* Frame the inner image */
-    box-shadow: var(--shadow-md);
-    transition: box-shadow 0.3s ease, z-index 0.2s ease;
-    flex: 0 0 auto;
-    width: 240px; /* Make card wider for carousel view */
+    border-radius: var(--border-radius-lg);
+    padding: 16px;
+    box-shadow: 0 10px 30px rgba(42, 89, 68, 0.04);
+    border: 1px solid var(--color-border);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+    flex: 0 0 290px; /* Standardized card width for clean scrolling */
     display: flex;
     flex-direction: column;
     position: relative;
     z-index: 3;
     user-select: none;
-    transform: none;
+    scroll-snap-align: start;
 }
 
-/* Alternating margin-top to create a wavy effect on desktop */
+/* Remove alternating staggered margins */
 .services-arched-wrapper .arched-card:nth-child(odd) {
     margin-top: 0px;
 }
 .services-arched-wrapper .arched-card:nth-child(even) {
-    margin-top: 70px;
+    margin-top: 0px;
 }
 
-/* Elegant hover interaction */
+/* Modern hover interaction */
 .arched-card:hover {
-    box-shadow: var(--shadow-lg);
-    z-index: 10;
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(42, 89, 68, 0.08);
+    border-color: rgba(42, 89, 68, 0.2);
 }
 
 .card-image-wrapper {
     position: relative;
     width: 100%;
     height: 240px;
-    border-radius: 50% 50% 0 0 / 40% 40% 0 0; /* Elliptical arch shape requested */
+    border-radius: var(--border-radius-md) var(--border-radius-md) 0 0; /* Clean semi-arch or rounded top */
     overflow: hidden;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
 }
 
 .card-image-wrapper img {
@@ -787,55 +780,30 @@ ul {
 }
 
 .arched-card:hover .card-image-wrapper img {
-    transform: scale(1.08);
+    transform: scale(1.06);
 }
 
+/* Elegant, small number badge */
 .card-number {
     position: absolute;
-    top: 15px;
-    left: 18px;
-    font-family: var(--font-heading);
-    font-size: 4rem; /* Super large size */
-    font-weight: 800;
-    color: #ffffff; /* White text */
-    text-shadow: 2px 4px 15px rgba(0, 0, 0, 0.6); /* Heavy dark shadow */
+    top: 16px;
+    left: 16px;
+    font-family: var(--font-primary);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    background-color: var(--color-bg-white);
+    padding: 6px 12px;
+    border-radius: var(--border-radius-sm);
     z-index: 2;
     line-height: 1;
+    box-shadow: var(--shadow-sm);
 }
 
-.arrow-btn {
-    position: absolute;
-    right: 15px;
-    bottom: -20px;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background-color: var(--color-accent);
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 10px rgba(229, 169, 60, 0.4);
-    z-index: 3;
-    transition: var(--transition-smooth);
-    cursor: pointer;
-}
-
-.arrow-btn svg {
-    width: 18px;
-    height: 18px;
-}
-
-.arrow-btn:hover {
-    background-color: var(--color-primary);
-    color: #ffffff;
-    transform: scale(1.1) rotate(45deg);
-    box-shadow: 0 6px 14px rgba(42, 89, 68, 0.4);
-}
-
+/* Service Card Info & Typography */
 .card-info {
-    padding: 28px 14px 20px;
-    text-align: center;
+    padding: 20px 16px 16px;
+    text-align: left;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -844,45 +812,70 @@ ul {
 
 .card-info h3 {
     font-family: var(--font-primary);
-    font-size: 0.95rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: var(--color-primary-dark);
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     line-height: 1.3;
 }
 
 .card-info p {
     font-family: var(--font-primary);
-    font-size: 0.8rem;
+    font-size: 0.88rem;
     color: var(--color-text-light);
-    line-height: 1.45;
-    margin-bottom: 12px;
+    line-height: 1.5;
+    margin-bottom: 16px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-/* Service Card Price Tag */
+/* Service Card Price Tag & Footer layout */
+.service-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: auto;
+    border-top: 1px dashed rgba(42, 89, 68, 0.08);
+    padding-top: 14px;
+}
+
 .service-price-tag {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
     background-color: var(--color-accent-light);
     color: var(--color-accent-dark);
     font-family: var(--font-primary);
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     font-weight: 700;
-    padding: 4px 10px;
+    padding: 6px 14px;
     border-radius: var(--border-radius-pill);
-    border: 1px solid rgba(229, 169, 60, 0.3);
+    border: 1px solid rgba(229, 169, 60, 0.25);
     width: fit-content;
-    margin: 0 auto;
 }
 
-.service-price-tag::before {
-    content: '🏷';
-    font-size: 0.7rem;
+.service-book-btn {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: var(--transition-smooth);
+}
+
+.service-book-btn span {
+    transition: transform 0.3s ease;
+}
+
+.service-book-btn:hover {
+    color: var(--color-accent-dark);
+}
+
+.service-book-btn:hover span {
+    transform: translateX(4px);
 }
 
 /* Carousel Navigation */
@@ -890,7 +883,7 @@ ul {
     display: flex;
     justify-content: center;
     gap: 15px;
-    margin-top: 10px;
+    margin-top: 20px;
     position: relative;
     z-index: 5;
 }
@@ -1190,6 +1183,7 @@ ul {
 }
 
 .card-image-box {
+    position: relative; /* ensure relative positioning for live camera tag overlay */
     border-radius: var(--border-radius-sm);
     overflow: hidden;
     height: 140px;
@@ -1199,6 +1193,54 @@ ul {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+/* Live Camera Tag in mockups */
+.live-camera-tag {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background-color: rgba(42, 89, 68, 0.85); /* Deep green translucent */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    color: #ffffff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
+
+.live-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #ef4444; /* bright red */
+    border-radius: 50%;
+    animation: livePulse 1.5s infinite;
+}
+
+@keyframes livePulse {
+    0% { transform: scale(0.9); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.3; }
+    100% { transform: scale(0.9); opacity: 1; }
+}
+
+/* Pet ID Registration note */
+.pet-id-registration-note {
+    font-size: 0.85rem;
+    color: var(--color-accent-dark);
+    margin-top: 14px;
+    background-color: var(--color-accent-light);
+    padding: 8px 14px;
+    border-radius: var(--border-radius-sm);
+    display: inline-block;
+    border: 1px solid rgba(229, 169, 60, 0.15);
 }
 
 /* ==========================================================================
@@ -2784,13 +2826,7 @@ ul {
 
 /* 2. Bouncy Card Hover & Stickers (arched card bouncy hover removed as requested) */
 
-.feature-item {
-    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.4s ease;
-}
-
-.feature-item:hover {
-    transform: translateY(-8px) scale(1.02);
-}
+/* .feature-item hover transition rules consolidated into the main Features block above */
 
 /* Decorative SVG Stickers */
 .sticker-deco {
@@ -2843,3 +2879,1401 @@ ul {
     background-repeat: no-repeat;
     opacity: 0.8;
 }
+
+/* ==========================================================================
+   Pet ID Showcase Section & Glassmorphic Passport Card
+   ========================================================================== */
+.pet-id-showcase-section {
+    background-color: var(--color-bg-white);
+    padding: 100px 0;
+    border-bottom: 1px solid var(--color-border);
+    position: relative;
+    overflow: hidden;
+}
+
+.pet-id-showcase-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 80px;
+    align-items: center;
+}
+
+/* Cột chứa thẻ Pet ID */
+.pet-id-card-col {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1000px; /* Bật chiều sâu 3D */
+}
+
+/* Thẻ Glassmorphic Passport */
+.pet-passport-card {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(42, 89, 68, 0.15);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 4px 12px rgba(42, 89, 68, 0.02);
+    width: 100%;
+    max-width: 440px;
+    padding: 28px;
+    color: var(--color-primary-dark);
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.15s ease-out, box-shadow 0.3s ease;
+}
+
+.pet-passport-card:hover {
+    box-shadow: 0 8px 24px rgba(42, 89, 68, 0.05);
+}
+
+/* Header thẻ */
+.passport-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(42, 89, 68, 0.15);
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+}
+
+.passport-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: var(--color-primary);
+}
+
+.passport-logo .paw-svg {
+    width: 16px;
+    height: 16px;
+    color: var(--color-accent);
+}
+
+.passport-chip {
+    width: 32px;
+    height: 24px;
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 50%, #94a3b8 100%);
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+/* Body thẻ */
+.passport-body {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.passport-photo-area {
+    position: relative;
+    flex: 0 0 140px;
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    border: 2px solid #ffffff;
+    box-shadow: var(--shadow-sm);
+}
+
+.passport-photo {
+    width: 140px;
+    height: 170px;
+    object-fit: cover;
+}
+
+.passport-status-tag {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-size: 0.68rem;
+    text-align: center;
+    padding: 4px 2px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.passport-info-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    flex: 1;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--color-text-light);
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+}
+
+.info-value small {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--color-text-light);
+    display: block;
+}
+
+/* Footer thẻ */
+.passport-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-top: 1px dashed rgba(42, 89, 68, 0.15);
+    padding-top: 16px;
+}
+
+.allergy-warning-box {
+    background-color: rgba(229, 60, 60, 0.06);
+    padding: 12px 14px;
+    border-radius: var(--border-radius-sm);
+}
+
+.warning-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #ef4444;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.warning-content {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #b91c1c;
+    line-height: 1.4;
+}
+
+.passport-petid-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 4px;
+}
+
+.passport-pet-id {
+    font-family: monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--color-text-light);
+    opacity: 0.85;
+}
+
+/* Cột văn bản giới thiệu */
+.pet-id-text-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.subtitle-tag {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--color-accent-dark);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.pet-id-text-col h2 {
+    font-family: var(--font-heading);
+    font-size: var(--fs-section-title);
+    color: var(--color-primary);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+}
+
+.section-desc {
+    font-size: 1.05rem;
+    color: var(--color-text-light);
+    line-height: 1.7;
+}
+
+.pet-id-features {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    margin-top: 10px;
+}
+
+.pet-id-feature-item {
+    position: relative;
+    padding-left: 20px;
+}
+
+.pet-id-feature-item::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    top: -2px;
+    color: var(--color-accent);
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.pet-id-feature-item .feature-text h4 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    margin-bottom: 6px;
+}
+
+.pet-id-feature-item .feature-text p {
+    font-size: 0.92rem;
+    color: var(--color-text-light);
+    line-height: 1.6;
+}
+
+/* Timeline staff note */
+.card-staff-text {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--color-accent-dark);
+    margin: 4px 0 10px 0;
+    line-height: 1.4;
+    background-color: var(--color-accent-light);
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* Responsive cho Pet ID Showcase */
+/* Responsive cho Pet ID Showcase */
+@media (max-width: 991px) {
+    .pet-id-showcase-container {
+        grid-template-columns: 1fr;
+        gap: 50px;
+    }
+    
+    .pet-id-card-col {
+        order: 2;
+    }
+    
+    .pet-id-text-col {
+        order: 1;
+        text-align: center;
+        align-items: center;
+    }
+    
+    .pet-id-feature-item {
+        text-align: left;
+    }
+}
+
+/* ==========================================================================
+   Authentication, Dashboard Modals, Lock Overlay & Toast System (Boutique UI)
+   ========================================================================== */
+
+/* 1. Base Modal Wrapper Styles */
+.auth-modal,
+.dashboard-modal,
+.activation-modal,
+.otp-verify-modal,
+.link-expired-modal,
+.welcome-gift-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.auth-modal.open,
+.dashboard-modal.open,
+.activation-modal.open,
+.otp-verify-modal.open,
+.link-expired-modal.open,
+.welcome-gift-modal.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.auth-modal-overlay,
+.dashboard-overlay,
+.activation-overlay,
+.otp-verify-overlay,
+.link-expired-overlay,
+.welcome-gift-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(42, 89, 68, 0.25); /* Tinted forest green glass overlay */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    top: 0;
+    left: 0;
+}
+
+/* 2. Modal Content (Boutique Glassmorphism) */
+.auth-modal-content,
+.dashboard-modal-content,
+.activation-content,
+.otp-verify-content,
+.link-expired-content,
+.welcome-gift-content {
+    background-color: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(42, 89, 68, 0.08);
+    box-shadow: 0 20px 50px rgba(42, 89, 68, 0.12);
+    border-radius: 24px;
+    position: relative;
+    z-index: 2005;
+    width: 90%;
+    max-width: 480px;
+    padding: 36px 30px;
+    transform: translateY(20px);
+    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.auth-modal.open .auth-modal-content,
+.dashboard-modal.open .dashboard-modal-content,
+.activation-modal.open .activation-content,
+.otp-verify-modal.open .otp-verify-content,
+.link-expired-modal.open .link-expired-content,
+.welcome-gift-modal.open .welcome-gift-content {
+    transform: translateY(0);
+}
+
+/* 3. Close Buttons */
+.auth-modal-close,
+.dashboard-modal-close,
+.activation-modal-close,
+.pricing-modal-close,
+.booking-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    color: var(--color-text-light);
+    cursor: pointer;
+    line-height: 1;
+    transition: var(--transition-smooth);
+}
+
+.auth-modal-close:hover,
+.dashboard-modal-close:hover,
+.activation-modal-close:hover {
+    color: var(--color-primary);
+    transform: scale(1.1);
+}
+
+/* 4. Auth Tabs */
+.auth-tabs {
+    display: flex;
+    border-bottom: 2px solid rgba(42, 89, 68, 0.06);
+    margin-bottom: 24px;
+}
+
+.auth-tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 12px;
+    font-family: var(--font-primary);
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--color-text-light);
+    cursor: pointer;
+    position: relative;
+    transition: var(--transition-smooth);
+}
+
+.auth-tab-btn.active {
+    color: var(--color-primary);
+}
+
+.auth-tab-btn::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--color-primary);
+    transition: var(--transition-smooth);
+}
+
+.auth-tab-btn.active::after {
+    width: 100%;
+}
+
+/* 5. Forms Layout */
+.auth-form-container {
+    display: none;
+}
+
+.auth-form-container.active {
+    display: block;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+}
+
+.form-group label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(42, 89, 68, 0.12);
+    font-family: var(--font-primary);
+    font-size: 0.95rem;
+    background-color: var(--color-bg-white);
+    color: var(--color-text-dark);
+    outline: none;
+    transition: var(--transition-smooth);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(42, 89, 68, 0.08);
+}
+
+/* 6. Form Actions & Buttons */
+.form-actions-inline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.btn-toggle-login-method,
+.btn-forget-pass,
+.btn-back-to-login {
+    background: none;
+    border: none;
+    font-family: var(--font-primary);
+    font-weight: 600;
+    color: var(--color-primary);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.btn-toggle-login-method:hover,
+.btn-forget-pass:hover,
+.btn-back-to-login:hover {
+    color: var(--color-accent-dark);
+    text-decoration: underline;
+}
+
+.btn-submit-auth,
+.btn-submit-activation,
+.btn-submit-security {
+    width: 100%;
+    padding: 14px;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-smooth);
+}
+
+.btn-submit-auth:hover:not(:disabled),
+.btn-submit-activation:hover:not(:disabled),
+.btn-submit-security:hover:not(:disabled) {
+    background-color: var(--color-primary-dark);
+    transform: translateY(-2px);
+}
+
+.btn-submit-auth:disabled,
+.btn-submit-activation:disabled,
+.btn-submit-security:disabled {
+    background-color: #cbd5e1;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* 7. OTP Digits Input */
+.otp-code-inputs {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin: 24px 0;
+}
+
+.otp-digit {
+    width: 48px;
+    height: 52px;
+    border-radius: 12px;
+    border: 1px solid rgba(42, 89, 68, 0.15);
+    text-align: center;
+    font-family: var(--font-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    background-color: var(--color-bg-white);
+    outline: none;
+    transition: var(--transition-smooth);
+}
+
+.otp-digit:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(42, 89, 68, 0.08);
+}
+
+.otp-input-wrapper {
+    display: flex;
+    gap: 10px;
+}
+
+.otp-input-wrapper input {
+    flex: 1;
+}
+
+.btn-send-otp-login,
+.btn-send-otp-security {
+    padding: 0 16px;
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    border: 1px solid rgba(42, 89, 68, 0.15);
+    border-radius: 12px;
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    white-space: nowrap;
+}
+
+.btn-send-otp-login:hover,
+.btn-send-otp-security:hover {
+    background-color: var(--color-primary);
+    color: #ffffff;
+}
+
+.otp-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.88rem;
+    margin-bottom: 24px;
+}
+
+.btn-resend-otp {
+    background: none;
+    border: none;
+    font-family: var(--font-primary);
+    font-weight: 700;
+    color: var(--color-primary);
+    cursor: pointer;
+}
+
+.btn-resend-otp:disabled {
+    color: var(--color-text-light);
+    cursor: not-allowed;
+    font-weight: 400;
+}
+
+.otp-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-verify-otp {
+    flex: 1;
+    padding: 12px;
+    background-color: var(--color-accent);
+    color: var(--color-primary-dark);
+    font-family: var(--font-primary);
+    font-weight: 700;
+    border: none;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.btn-verify-otp:hover:not(:disabled) {
+    background-color: var(--color-accent-dark);
+    color: #ffffff;
+}
+
+.btn-verify-otp:disabled {
+    background-color: #cbd5e1;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.btn-cancel-otp {
+    flex: 1;
+    padding: 12px;
+    background-color: #f1f5f9;
+    color: var(--color-text-light);
+    font-family: var(--font-primary);
+    font-weight: 600;
+    border: none;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.btn-cancel-otp:hover {
+    background-color: #e2e8f0;
+}
+
+/* 8. Activation Modal & Password Strength */
+.gift-banner {
+    text-align: center;
+    background-color: var(--color-accent-light);
+    padding: 24px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(229, 169, 60, 0.2);
+}
+
+.gift-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 10px;
+    animation: bounceGift 1s infinite alternate;
+}
+
+@keyframes bounceGift {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-8px); }
+}
+
+.password-strength-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.strength-bar-wrapper {
+    flex: 1;
+    height: 4px;
+    background-color: #cbd5e1;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.strength-bar {
+    height: 100%;
+    width: 0;
+    background-color: #ef4444;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.strength-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-text-light);
+    text-transform: uppercase;
+}
+
+/* 9. Lock Overlay */
+.lock-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(45, 55, 50, 0.97); /* Very dark green backdrop */
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+.lock-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.lock-overlay-content {
+    text-align: center;
+    color: #ffffff;
+    max-width: 400px;
+    padding: 40px 20px;
+}
+
+.lock-icon-box {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    animation: lockShake 1.5s infinite;
+}
+
+@keyframes lockShake {
+    0%, 100% { transform: rotate(0); }
+    20%, 60% { transform: rotate(-5deg); }
+    40%, 80% { transform: rotate(5deg); }
+}
+
+.lock-timer {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--color-accent);
+    margin: 20px 0;
+    font-family: monospace;
+}
+
+.btn-call-hotline {
+    display: inline-block;
+    padding: 14px 32px;
+    background-color: #ef4444;
+    color: #ffffff;
+    font-family: var(--font-primary);
+    font-weight: 700;
+    border-radius: 100px;
+    transition: var(--transition-smooth);
+}
+
+.btn-call-hotline:hover {
+    background-color: #b91c1c;
+    transform: scale(1.03);
+}
+
+/* 10. Dashboard Modal Content */
+.dashboard-modal-content {
+    max-width: 900px;
+    padding: 0; /* Clear padding for custom layout */
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 30px;
+    border-bottom: 1px solid rgba(42, 89, 68, 0.06);
+    background-color: var(--color-primary-light);
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+}
+
+.user-profile-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.user-profile-text h3 {
+    font-family: var(--font-primary);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+}
+
+.membership-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    background-color: var(--color-accent-light);
+    color: var(--color-accent-dark);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-top: 2px;
+}
+
+.dashboard-body {
+    display: flex;
+    flex-grow: 1;
+    min-height: 450px;
+}
+
+.dashboard-tabs-nav {
+    width: 220px;
+    border-right: 1px solid rgba(42, 89, 68, 0.06);
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dash-tab-btn {
+    text-align: left;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    border-radius: 12px;
+    font-family: var(--font-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-text-light);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.dash-tab-btn:hover {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.dash-tab-btn.active {
+    background-color: var(--color-primary);
+    color: #ffffff;
+}
+
+.btn-dashboard-logout {
+    margin-top: auto;
+    text-align: left;
+    padding: 12px 16px;
+    background-color: rgba(239, 68, 68, 0.05);
+    border: none;
+    border-radius: 12px;
+    font-family: var(--font-primary);
+    font-weight: 600;
+    color: #ef4444;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.btn-dashboard-logout:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+
+.dashboard-tab-content-wrapper {
+    flex-grow: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.dash-tab-content {
+    display: none;
+}
+
+.dash-tab-content.active {
+    display: block;
+}
+
+.dash-tab-content h4 {
+    font-family: var(--font-primary);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    margin-bottom: 18px;
+}
+
+.dash-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.dash-info-card {
+    background-color: #ffffff;
+    border: 1px solid rgba(42, 89, 68, 0.06);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dash-info-card .label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-text-light);
+    letter-spacing: 0.5px;
+}
+
+.dash-info-card .value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--color-primary-dark);
+}
+
+.dash-info-card .value.highlight {
+    color: var(--color-accent-dark);
+}
+
+.redeem-points-area {
+    margin-top: 10px;
+}
+
+.btn-redeem-points {
+    padding: 8px 16px;
+    background-color: var(--color-accent);
+    color: var(--color-primary-dark);
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: none;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.btn-redeem-points:hover:not(:disabled) {
+    background-color: var(--color-accent-dark);
+    color: #ffffff;
+}
+
+.btn-redeem-points:disabled {
+    background-color: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.redeem-restricted-note {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.78rem;
+    color: #ef4444;
+    font-weight: 500;
+}
+
+/* Dashboard Pet ID integration */
+.dash-pet-passport-placeholder {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.dash-pet-passport-placeholder .pet-passport-card {
+    max-width: 380px;
+    width: 100%;
+}
+
+/* Dashboard Bookings */
+.dash-bookings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.no-bookings {
+    text-align: center;
+    color: var(--color-text-light);
+    padding: 40px 0;
+    font-size: 0.95rem;
+}
+
+.dash-booking-card {
+    background-color: #ffffff;
+    border: 1px solid rgba(42, 89, 68, 0.08);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.booking-card-info h5 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    margin-bottom: 4px;
+}
+
+.booking-card-info p {
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+}
+
+.btn-cancel-booking-dash {
+    padding: 8px 16px;
+    background-color: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: 100px;
+    color: #ef4444;
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.btn-cancel-booking-dash:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+
+.password-with-otp-wrapper {
+    display: flex;
+    gap: 10px;
+}
+
+.password-with-otp-wrapper input {
+    flex: 1;
+}
+
+/* 11. Toast System styling */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 4000;
+    max-width: 380px;
+    width: 100%;
+}
+
+.toast-message {
+    background-color: rgba(42, 89, 68, 0.95);
+    border-left: 5px solid var(--color-accent);
+    color: #ffffff;
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    font-family: var(--font-primary);
+    font-size: 0.88rem;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    animation: slideInToast 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+@keyframes slideInToast {
+    0% { transform: translateX(50px); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+.toast-header {
+    font-weight: 700;
+    color: var(--color-accent);
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.toast-body {
+    line-height: 1.4;
+}
+
+.toast-body a {
+    color: var(--color-accent);
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.toast-body a:hover {
+    color: #ffffff;
+}
+
+/* Responsive adjustments for Modals */
+@media (max-width: 768px) {
+    .dashboard-modal-content {
+        width: 95%;
+        height: 85vh;
+    }
+    
+    .dashboard-body {
+        flex-direction: column;
+    }
+    
+    .dashboard-tabs-nav {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid rgba(42, 89, 68, 0.06);
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 12px;
+        gap: 6px;
+    }
+    
+    .dash-tab-btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+    
+    .btn-dashboard-logout {
+        margin-top: 0;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+    
+    .dashboard-tab-content-wrapper {
+        padding: 20px;
+    }
+    
+    .dash-info-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+/* 12. Miscellaneous progressive indicators */
+.booking-note-progressive {
+    font-size: 0.82rem;
+    color: var(--color-primary);
+    font-weight: 600;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.pet-id-registration-note {
+    font-size: 0.85rem;
+    color: var(--color-accent-dark);
+    margin-top: 14px;
+    background-color: var(--color-accent-light);
+    padding: 8px 14px;
+    border-radius: var(--border-radius-sm);
+    display: inline-block;
+    border: 1px solid rgba(229, 169, 60, 0.15);
+}
+
+/* ==========================================================================
+   Multi-page Dedicated Layouts (login.html & dashboard.html)
+   ========================================================================== */
+
+/* Base auth & dashboard pages */
+.auth-page-body {
+    background-color: var(--color-bg-light);
+    font-family: var(--font-primary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+
+.dashboard-page-body {
+    background-color: var(--color-bg-light);
+    font-family: var(--font-primary);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+/* Login Page Grid Layout */
+.auth-page-container {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+.auth-showcase-panel {
+    flex: 1.1;
+    background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+    color: #ffffff;
+    position: relative;
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.auth-showcase-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=1200&q=80');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.12;
+    z-index: 1;
+}
+
+.auth-showcase-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.auth-showcase-text {
+    margin: 40px 0;
+}
+
+.showcase-title {
+    font-family: var(--font-heading);
+    font-size: 3.5rem;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    color: #ffffff;
+}
+
+.showcase-desc {
+    font-size: 1.1rem;
+    opacity: 0.85;
+    max-width: 480px;
+    line-height: 1.6;
+}
+
+.auth-benefits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.benefit-icon {
+    font-size: 1.8rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 12px;
+    line-height: 1;
+}
+
+.benefit-text h5 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-accent);
+    margin-bottom: 4px;
+}
+
+.benefit-text p {
+    font-size: 0.88rem;
+    opacity: 0.8;
+    margin: 0;
+}
+
+/* Right Auth Form panel */
+.auth-form-panel {
+    flex: 0.9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    background-color: var(--color-bg-light);
+}
+
+.auth-form-wrapper {
+    width: 100%;
+    max-width: 440px;
+    padding: 40px;
+    border-radius: var(--border-radius-lg);
+    background: #ffffff;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(42, 89, 68, 0.08);
+}
+
+.btn-back-home {
+    display: inline-block;
+    font-size: 0.88rem;
+    color: var(--color-primary);
+    font-weight: 600;
+    margin-bottom: 24px;
+    transition: var(--transition-smooth);
+}
+
+.btn-back-home:hover {
+    color: var(--color-accent-dark);
+    transform: translateX(-4px);
+}
+
+.auth-page-tabs {
+    display: flex;
+    border-bottom: 2px solid #f1f5f9;
+    margin-bottom: 30px;
+}
+
+.auth-page-tabs .auth-tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 12px;
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--color-text-light);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+}
+
+.auth-page-tabs .auth-tab-btn:hover {
+    color: var(--color-primary);
+}
+
+.auth-page-tabs .auth-tab-btn.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+/* Responsive adjustments for multi-page */
+@media (max-width: 1024px) {
+    .auth-showcase-panel {
+        display: none;
+    }
+    .auth-form-panel {
+        flex: 1;
+        padding: 20px;
+    }
+}
+
