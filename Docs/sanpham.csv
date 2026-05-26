@@ -1,0 +1,91 @@
+Phân loại	Mã sản phẩm (SKU): (Ví dụ: HẠT01, CAT02).	Tên sản phẩm: (Ví dụ: Thức ăn hạt cao cấp cho mèo con).	Thương hiệu (Brand): (Ví dụ: Royal Canin, King's Pet).	Danh mục (Category): (Thực phẩm, Đồ dùng, Vệ sinh, Phụ kiện).	Giá bán lẻ: Giá niêm yết trên web.	Giá sau tích điểm: (Mức giá gợi ý cho thành viên để kích thích bạn Linh mua hàng).	Số lượng tồn kho (Inventory): Số lượng thực tế còn trong kho.	Cảnh báo tồn kho tối thiểu: (Ví dụ: Khi còn 5 sản phẩm thì hệ thống báo Admin nhập thêm).	Mô tả sản phẩm: Thành phần, công dụng, cách sử dụng.	Thuộc tính đặc biệt: (Ví dụ: Vị cá hồi, dành cho mèo dưới 12 tháng tuổi).	Trạng thái: (Còn hàng / Hết hàng / Ngừng kinh doanh).
+Thực phẩm	TP-HAT-01	Thức ăn hạt cao cấp Royal Canin Mother & Babycat	Royal Canin	Thực phẩm	200.000	185.000	45	5	"TP: Thịt gia cầm, protein tách biệt, mỡ động vật.
+
+CD: Tăng cường hệ miễn dịch, hỗ trợ tiêu hóa tốt.
+
+HDSD: Ăn trực tiếp hoặc ngâm nước ấm cho mềm."	Hạt siêu nhỏ, dành cho mèo mẹ mang thai và mèo con từ 1–4 tháng tuổi.	Còn hàng
+Thực phẩm	TP-PATE-02	Pate lon hỗn hợp cá hồi và gà chín mềm King's Pet	King's Pet	Thực phẩm	45.000	39.000	120	10	"TP: Cá hồi tươi (30%), thịt ức gà (50%), gan gà, thạch.
+
+CD: Cung cấp độ ẩm dồi dào, hạn chế sỏi thận, mượt lông.
+
+HDSD: Cho ăn trực tiếp, bảo quản lạnh sau khi mở nắp."	Dạng lon 400g siêu tiết kiệm, vị cá hồi thơm ngon kích thích vị giác.	Còn hàng
+Thực phẩm	TP-SUP-03	Súp thưởng Ciao Churu vị cá ngừ thanh mát thanh mát	Inaba Ciao	Thực phẩm	55.000	49.000	3	5	"TP: Cá ngừ, chiết xuất trà xanh, vitamin E, men vi sinh.
+
+CD: Bánh thưởng tương tác, bổ sung nước, giảm mùi hôi chất thải.
+
+HDSD: Xé gói cho ăn trực tiếp từ thanh súp."	Gói 4 thanh x 14g. Vị cá ngừ đại dương, dạng súp sệt dễ liếm.	Còn hàng (Hệ thống sẽ tự động bật cảnh báo khẩn cấp cho Admin vì Tồn kho 3 < Cảnh báo tối thiểu 5)
+Thực phẩm	TP-HAT-04	Thức ăn hạt Whiskas vị cá biển thơm ngon cho mèo lớn	Whiskas	Thực phẩm	130.000	119.000	0	5	"TP: Ngũ cốc lúa mì, cá biển, dầu đậu nành, khoáng chất.
+
+CD: Bổ sung omega 3&6 cho lông bóng mượt, phát triển cơ bắp.
+
+HDSD: Chia khẩu phần ăn theo bảng hướng dẫn trên bao bì."	Vị cá biển nướng, dành cho mèo trưởng thành trên 12 tháng tuổi.	Hết hàng
+Đồ dùng	DD-BAT-01	Bát ăn đôi bằng inox đế nhựa PP cao cấp chống kiến bò	OEM	Đồ dùng	85.000	75.000	25	3	"TP: Khay nền nhựa PP nguyên sinh, lòng bát inox 304 không gỉ.
+
+CD: Thiết kế rãnh chứa nước xung quanh chống kiến, gián bò vào đồ ăn.
+
+HDSD: Đổ nước vào rãnh, bỏ thức ăn vào lòng bát inox."	Màu hồng pastel, lòng bát có thể tháo rời độc lập để dễ súc rửa.	Còn hàng
+Đồ dùng	DD-BINH-02	Bình nước gắn chuồng đầu bi lăn tự động thông minh	Pawise	Đồ dùng	110.000	99.000	12	3	"TP: Thân bình nhựa ABS dày dặn, đầu vòi thép không gỉ, bi lăn tròn.
+
+CD: Giữ nước luôn sạch tuyệt đối, gài chuồng tránh lật đổ bình.
+
+HDSD: Đổ đầy nước, vặn chặt vòi gài nan chuồng cho pet liếm đầu bi."	Dung tích 500ml, cơ chế lò xo đầu bi kép chống rò rỉ nước ra chuồng.	Còn hàng
+Đồ dùng	DD-MAY-03	Đài phun nước lọc tự động thông minh Petkit Eversweet 3	Petkit	Đồ dùng	950.000	890.000	0	2	"TP: Thân máy nhựa Tritan cao cấp, lõi lọc than hoạt tính 3 lớp.
+
+CD: Lọc sạch lông bụi, tạo dòng nước động kích thích uống nước chống suy thận.
+
+HDSD: Cắm nguồn điện USB, thay lõi định kỳ mỗi 30 ngày."	Vận hành siêu êm dưới 30dB, có đèn LED thông minh báo hết nước/thay lõi.	Ngừng kinh doanh
+Đồ dùng	DD-CHEN-04	Chén ăn bằng sứ vân đá cao cấp chân đế gỗ chống gù lưng	Nupet	Đồ dùng	145.000	129.000	18	4	"TP: Chén bằng gốm sứ tráng men cao cấp, chân đế bằng gỗ tre tự nhiên.
+
+CD: Nâng cao góc ăn giúp bảo vệ cột sống cổ và giảm nôn trớ khi ăn.
+
+HDSD: Đặt chén sứ lên đế gỗ, vệ sinh chén sau mỗi bữa ăn."	Chén sứ nặng tay chịu nhiệt, góc nghiêng 15 độ khoa học bảo vệ khớp cổ.	Còn hàng
+Vệ sinh	VS-LUOC-01	Lược chải lông nút bấm lấy lông rụng thông minh	Deli	Vệ sinh	120.000	105.000	35	5	"TP: Tay cầm nhựa bọc cao su, răng lược inox bọc nhựa.
+
+CD: Loại bỏ lông chết, gỡ rối, massage kích thích mọc lông.
+
+HDSD: Chải theo chiều lông, bấm nút sau lưng để đẩy búi lông."	Màu xanh mint, đầu kim có bọc hạt nhựa tròn không gây đau da pet.	Còn hàng
+Vệ sinh	VS-KIM-02	Kìm cắt móng lò xo có đèn LED và khay hứng móng	Petkit	Vệ sinh	195.000	175.000	2	5	"TP: Lưỡi thép không gỉ, cán nhựa ABS, đèn LED dùng pin.
+
+CD: Cắt tỉa móng gọn gàng, tránh pet cào xước đồ đạc.
+
+HDSD: Bật LED soi rõ tủy máu, đặt móng góc 45 độ và bấm."	Tích hợp đèn LED siêu sáng soi tủy móng tránh cắt phạm gây chảy máu.	Còn hàng
+Vệ sinh	VS-CAT-04	Cát vệ sinh đậu nành Tofu hương trà xanh hữu cơ	Cature	Vệ sinh	135.000	120.000	150	15	"TP: Bã đậu nành tự nhiên, tinh bột ngô, chiết xuất trà xanh.
+
+CD: Thấm hút chất thải, vón cục nhanh, khử mùi hôi khay.
+
+HDSD: Đổ dày 5-7cm, xúc bỏ cục vón hàng ngày, xả được bồn cầu."	Gói túi 6L (~2.5kg). Hạt cát siêu nhỏ 2mm cực nhanh vón, an toàn.	Còn hàng
+Vệ sinh	VS-MAYHUT-05	Máy hút lông thú cưng rụng trên quần áo sofa cầm tay	Neabot	Vệ sinh	850.000	790.000	0	2	"TP: Thân máy nhựa ABS, màng lọc HEPA, hộp chứa bụi lớn.
+
+CD: Hút sạch lông pet bám trên sofa, nệm, quần áo, làm sạch nhà.
+
+HDSD: Bật công tắc, rà đầu hút lên bề mặt cần làm sạch."	Thiết kế không dây sạc pin USB tiện lợi, lực hút mạnh, độ ồn thấp.	Hết hàng
+Phụ kiện	PK-BALO-05	Balo phi hành gia trong suốt vận chuyển thú cưng	OEM	Phụ kiện	250.000	225.000	40	5	"TP: Nhựa PC chịu lực, vải Oxford chống thấm.
+
+CD: Vận chuyển thú cưng đi chơi an toàn, thoáng khí.
+
+HDSD: Cho pet vào trong, kéo khóa, có thể lót thêm tã mỏng."	Màu vàng tươi, kính vòm trong suốt giúp pet dễ quan sát bên ngoài.	Còn hàng
+Phụ kiện	PK-NEM-06	Nệm vuông lông cừu êm ái ấm áp cho chó mèo	Pidan	Phụ kiện	320.000	290.000	15	3	"TP: Vải bông lông cừu nhân tạo, bông PP đàn hồi cao.
+
+CD: Tạo không gian ngủ ấm áp, bảo vệ xương khớp cho pet.
+
+HDSD: Đặt ở góc nhà khô ráo, có thể giặt máy chế độ nhẹ."	Kích thước 50x50cm, màu xám ghi sang trọng, phù hợp pet < 7kg.	Còn hàng
+Phụ kiện	PK-CHUONG-07	Chuồng quây sắt lắp ghép decor sơn tĩnh điện	OEM	Phụ kiện	420.000	380.000	8	2	"TP: Sắt tấm lưới sơn tĩnh điện chống rỉ, chốt nối nhựa ABS.
+
+CD: Quây vùng không gian cho pet chơi/ngủ, dễ thay đổi kiểu dáng.
+
+HDSD: Dùng búa gõ nhẹ cố định tấm lưới vào chốt nhựa."	Bộ gồm 12 tấm lưới 35x35cm + 24 chốt. Màu đen basic, tự do sáng tạo.	Còn hàng
+Phụ kiện	PK-DOCHOI-08	Đồ chơi tháp bóng 3 tầng kích thích vận động cho mèo	Petstages	Phụ kiện	180.000	165.000	50	5	"TP: Nhựa PP cao cấp không độc hại, bóng nhựa có chuông.
+
+CD: Giúp mèo giải trí, giảm stress, kích thích bản năng săn mồi.
+
+HDSD: Đặt trên nền phẳng để mèo tự dùng chân gạt bóng."	Tháp 3 tầng màu cam nổi bật, có đệm cao su chống trượt ở đáy.	Còn hàng
+Phụ kiện	PK-AO-09	Áo nỉ sọc kẻ giữ ấm thời trang cho cún miu	PetStyle	Phụ kiện	95.000	85.000	4	5	"TP: Vải nỉ bông co giãn, bo viền cổ và tay chắc chắn.
+
+CD: Giữ ấm cơ thể vào mùa lạnh, làm đẹp khi đi dạo.
+
+HDSD: Chọn size phù hợp cân nặng, giặt sạch định kỳ."	Size M (cho pet từ 3-5kg), họa tiết sọc kẻ đỏ trắng năng động.	Còn hàng
+Phụ kiện	PK-VONG-10	Vòng cổ chuông dâu tây dễ thương cho chó mèo	OEM	Phụ kiện	35.000	30.000	85	10	"TP: Dây vải dù mềm mại, khóa cài nhựa, chuông đồng dâu tây.
+
+CD: Định vị vị trí của pet nhờ tiếng chuông, làm điệu.
+
+HDSD: Đeo vào cổ pet, điều chỉnh độ rộng vừa 2 ngón tay."	Chiều dài điều chỉnh từ 15-30cm, họa tiết quả dâu ngọt ngào.	Còn hàng

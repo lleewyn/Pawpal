@@ -60,7 +60,8 @@
 
 html {
     scroll-behavior: smooth;
-    scroll-padding-top: 110px; /* Khoảng trống bù lại cho header sticky để không bị che khuất tiêu đề */
+    scroll-padding-top: 90px; /* Khoảng trống bù lại cho header sticky để không bị che khuất tiêu đề */
+    overscroll-behavior-y: none; /* Ngăn chặn khoảng trắng khi cuộn quá đà (rubber-banding) */
 }
 
 body {
@@ -186,7 +187,7 @@ ul {
     position: sticky;
     top: 0;
     z-index: 1000;
-    padding: 16px 0;
+    padding: 10px 0;
     box-shadow: var(--shadow-sm);
 }
 
@@ -206,7 +207,7 @@ ul {
 }
 
 .logo img {
-    height: 70px; /* Tăng kích thước logo */
+    height: 58px; /* Giảm một chút để navbar bớt dày */
     width: auto;
     object-fit: contain;
 }
@@ -216,7 +217,6 @@ ul {
 .search-bar {
     position: relative;
     width: 280px;
-    margin-right: auto; /* Đẩy phần còn lại (menu, actions) sang phải */
 }
 
 .search-bar input {
@@ -348,7 +348,7 @@ ul {
 .hero-section {
     position: relative;
     overflow: hidden;
-    padding: 140px 0 100px;
+    padding: 100px 0 140px; /* Giảm top, tăng bottom để đẩy content lên */
     color: #ffffff;
     min-height: 80vh;
     display: flex;

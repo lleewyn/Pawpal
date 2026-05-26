@@ -13,16 +13,27 @@
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
+    <!-- Smart Loader: only shows if page load takes > 300ms -->
+    <script>
+        window._pageLoadStart = Date.now();
+        var _loaderThreshold = 300; // ms
+        var _loaderTimeout = setTimeout(function() {
+            var loader = document.getElementById('cute-loader');
+            if (loader) loader.style.display = 'flex';
+        }, _loaderThreshold);
+    </script>
 
-    <!-- Cute Paw Loader -->
-    <div id="cute-loader">
+    <!-- Cute Paw Loader (hidden by default) -->
+    <div id="cute-loader" style="display:none;">
         <div class="paw-loader-container">
             <svg class="paw-icon paw-1" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C9 2 8 5 8 7C8 9 10 11 12 11C14 11 16 9 16 7C16 5 15 2 12 2ZM5.5 8C3.5 8 2 9.5 2 11.5C2 13.5 3.5 15 5.5 15C7.5 15 9 13.5 9 11.5C9 9.5 7.5 8 5.5 8ZM18.5 8C16.5 8 15 9.5 15 11.5C15 13.5 16.5 15 18.5 15C20.5 15 22 13.5 22 11.5C22 9.5 20.5 8 18.5 8ZM12 12C9 12 6 13 5 16C4 19 6 22 12 22C18 22 20 19 19 16C18 13 15 12 12 12Z"/></svg>
             <svg class="paw-icon paw-2" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C9 2 8 5 8 7C8 9 10 11 12 11C14 11 16 9 16 7C16 5 15 2 12 2ZM5.5 8C3.5 8 2 9.5 2 11.5C2 13.5 3.5 15 5.5 15C7.5 15 9 13.5 9 11.5C9 9.5 7.5 8 5.5 8ZM18.5 8C16.5 8 15 9.5 15 11.5C15 13.5 16.5 15 18.5 15C20.5 15 22 13.5 22 11.5C22 9.5 20.5 8 18.5 8ZM12 12C9 12 6 13 5 16C4 19 6 22 12 22C18 22 20 19 19 16C18 13 15 12 12 12Z"/></svg>
             <svg class="paw-icon paw-3" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C9 2 8 5 8 7C8 9 10 11 12 11C14 11 16 9 16 7C16 5 15 2 12 2ZM5.5 8C3.5 8 2 9.5 2 11.5C2 13.5 3.5 15 5.5 15C7.5 15 9 13.5 9 11.5C9 9.5 7.5 8 5.5 8ZM18.5 8C16.5 8 15 9.5 15 11.5C15 13.5 16.5 15 18.5 15C20.5 15 22 13.5 22 11.5C22 9.5 20.5 8 18.5 8ZM12 12C9 12 6 13 5 16C4 19 6 22 12 22C18 22 20 19 19 16C18 13 15 12 12 12Z"/></svg>
             <svg class="paw-icon paw-4" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C9 2 8 5 8 7C8 9 10 11 12 11C14 11 16 9 16 7C16 5 15 2 12 2ZM5.5 8C3.5 8 2 9.5 2 11.5C2 13.5 3.5 15 5.5 15C7.5 15 9 13.5 9 11.5C9 9.5 7.5 8 5.5 8ZM18.5 8C16.5 8 15 9.5 15 11.5C15 13.5 16.5 15 18.5 15C20.5 15 22 13.5 22 11.5C22 9.5 20.5 8 18.5 8ZM12 12C9 12 6 13 5 16C4 19 6 22 12 22C18 22 20 19 19 16C18 13 15 12 12 12Z"/></svg>
         </div>
-    </div>    <!-- Notification Bar -->
+    </div>
+
+    <!-- Notification Bar -->
     <div class="notification-bar">
         <div class="notification-content">
             <span>🎁 Ưu đãi đặc biệt: Giảm ngay 10% cho lần trải nghiệm Spa & Hotel đầu tiên của bé! Code: <strong>PAWFIRST10</strong></span>
@@ -35,11 +46,6 @@
             <a href="#" class="logo">
                 <img src="assets/images/Logo_pawpal_navbar.png" alt="PawPal">
             </a>
-            
-            <div class="search-bar">
-                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" placeholder="Tìm kiếm sản phẩm...">
-            </div>
 
             <!-- Mobile Navigation Toggle -->
             <button class="mobile-nav-toggle" aria-controls="primary-navigation" aria-expanded="false" id="mobileNavToggle">
@@ -50,15 +56,19 @@
             <nav class="nav-menu" id="primaryNavigation">
                 <ul>
                     <li><a href="#" class="active">Trang chủ</a></li>
-                    <li><a href="#services">Dịch vụ</a></li>
-                    <li><a href="#shop">Cửa hàng</a></li>
+                    <li><a href="pages/services.html">Dịch vụ</a></li>
+                    <li><a href="pages/shop.html">Cửa hàng</a></li>
                     <li><a href="#experts">Về chúng tôi</a></li>
-                    <li><a href="#process">Tin tức</a></li>
+                    <li><a href="#process">Cẩm nang</a></li>
                     <li><a href="#contact">Liên hệ</a></li>
                 </ul>
             </nav>
 
             <div class="header-actions">
+                <div class="search-bar">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" placeholder="Tìm kiếm sản phẩm...">
+                </div>
                 <a href="#cart" class="cart-btn" aria-label="Giỏ hàng">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                 </a>
@@ -88,7 +98,7 @@
                 <!-- Logo + Title cùng hàng ngang như Figma -->
                 <div class="hero-title-wrapper">
                     <h1 class="hero-title">
-                        Chăm sóc <span class="accent-italic has-stroke">bằng cả</span><br><span class="accent-italic">trái tim</span> yêu thương.
+                        Chăm sóc <span class="accent-italic">bằng cả</span><br><span class="accent-italic">trái tim</span> yêu thương.
                     </h1>
                 </div>
                 
@@ -105,7 +115,7 @@
 
                 <!-- CTA Button + Social Proof -->
                 <div class="hero-cta-container">
-                    <a href="#booking" class="btn-cta main-cta-btn">Đặt lịch ngay (Chỉ 30 giây)</a>
+                    <a href="pages/booking.html" class="btn-cta main-cta-btn">Đặt lịch ngay (Chỉ 30 giây)</a>
                     <div class="hero-status-widget">
                         <span class="status-dot"></span>
                         <span>Hôm nay còn trống: <strong>3 slot Spa</strong> | <strong>2 phòng Hotel</strong> (Cập nhật 5 phút trước)</span>
@@ -1042,6 +1052,25 @@
     <!-- Script -->
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/main.js"></script>
+    <script>
+        // Smart Loader: hide as soon as DOM is ready, cancel show-timer if fast enough
+        (function() {
+            function hideLoader() {
+                clearTimeout(window._loaderTimeout);
+                var loader = document.getElementById('cute-loader');
+                if (!loader) return;
+                if (loader.style.display === 'none') return; // Never shown, do nothing
+                loader.style.opacity = '0';
+                loader.style.transition = 'opacity 0.3s ease';
+                setTimeout(function() { loader.style.display = 'none'; }, 300);
+            }
+            if (document.readyState === 'complete') {
+                hideLoader();
+            } else {
+                window.addEventListener('load', hideLoader);
+            }
+        })();
+    </script>
 
     <!-- Zalo Float Chat Button -->
     <a class="zalo-float-btn" href="https://zalo.me/0987654321" target="_blank" rel="noopener" aria-label="Chat Zalo với PawPal">
