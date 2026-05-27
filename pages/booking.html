@@ -106,8 +106,27 @@
                         <p>Điền thông tin để chúng tôi chuẩn bị tốt nhất cho bé.</p>
                     </div>
 
-                    <form id="petInfoForm" class="booking-form" novalidate>
-                        <div class="form-section-title">Thông tin chủ nuôi</div>
+                    <!-- Luồng Thành viên (Member Flow) -->
+                    <div id="memberFlow" style="display: none;">
+                        <p style="margin-bottom: 15px; color: var(--text-light);">Chọn bé cưng của bạn để đặt lịch nhanh chóng:</p>
+                        <div class="pet-cards-grid" id="memberPetList">
+                            <!-- Pet cards will be injected here -->
+                        </div>
+                        
+                        <div class="form-group full-width" id="memberGroomingStyleSection" style="display:none; margin-top: 20px;">
+                            <label for="memberGroomingStyle">Yêu cầu cắt tỉa (Grooming)</label>
+                            <input type="text" id="memberGroomingStyle" placeholder="Ví dụ: Cắt kiểu gấu bông, cạo gọn lửng...">
+                            <label class="policy-checkbox" style="margin-top: 8px;">
+                                <input type="checkbox" id="memberUseLastGroomingStyle">
+                                <span style="font-size: 0.9em; color: var(--color-primary);">🔄 Sử dụng lại kiểu cắt tỉa lần trước</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Luồng Vãng lai (Guest Flow) -->
+                    <div id="guestFlow">
+                        <form id="petInfoForm" class="booking-form" novalidate>
+                            <div class="form-section-title">Thông tin chủ nuôi</div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="ownerName">Họ và tên <span class="required">*</span></label>
@@ -163,9 +182,10 @@
                             <label for="petNote">Ghi chú đặc biệt</label>
                             <textarea id="petNote" rows="3" placeholder="Dị ứng thức ăn, sợ tiếng ồn, cần chế độ ăn riêng..."></textarea>
                         </div>
-                    </form>
+                        </form>
+                    </div>
 
-                    <p class="guest-info-note">💡 Thông tin của bạn sẽ được lưu giữ để tích điểm thưởng cho lần sau.</p>
+                    <p class="guest-info-note" id="guestInfoNote">💡 Thông tin của bạn sẽ được lưu giữ để tích điểm thưởng cho lần sau.</p>
 
                     <div class="step-actions">
                         <button class="btn-step-back btn-green-outline" id="step2Back">← Quay lại</button>

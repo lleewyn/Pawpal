@@ -908,3 +908,115 @@
     -webkit-appearance: none;
     margin: 0;
 }
+
+/* ── Member Flow Pet Cards ── */
+.pet-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+}
+
+.pet-select-card {
+    border: 2px solid var(--color-border);
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--color-bg-white);
+    position: relative;
+    overflow: hidden;
+}
+
+.pet-select-card:hover {
+    border-color: rgba(43, 142, 102, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.pet-select-card.selected {
+    border-color: var(--color-primary);
+    background: rgba(43, 142, 102, 0.05);
+}
+
+.pet-select-card .pet-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--color-bg-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.pet-select-card .pet-info-short {
+    flex: 1;
+}
+
+.pet-select-card .pet-info-short h4 {
+    margin: 0 0 4px 0;
+    color: var(--color-text-dark);
+    font-size: 1rem;
+}
+
+.pet-select-card .pet-info-short p {
+    margin: 0;
+    color: var(--color-text-light);
+    font-size: 0.8rem;
+}
+
+.pet-card-radio {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.pet-select-card.selected .pet-card-radio {
+    border-color: var(--color-primary);
+}
+
+.pet-select-card.selected .pet-card-radio::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    background: var(--color-primary);
+    border-radius: 50%;
+}
+
+.btn-add-pet-card {
+    border: 2px dashed var(--color-border);
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--color-text-light);
+    text-align: center;
+    min-height: 82px;
+    background: transparent;
+    font-weight: 500;
+}
+
+.btn-add-pet-card:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: rgba(43, 142, 102, 0.02);
+}
+
+.btn-add-pet-card .icon-add {
+    font-size: 20px;
+    margin-bottom: 4px;
+}

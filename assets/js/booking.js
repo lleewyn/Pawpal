@@ -8,6 +8,9 @@ const state = {
     services: [],          // all services from CSV
     activeType: 'spa',     // 'spa' | 'hotel'
     selectedService: null, // service object
+    isMember: false,
+    memberPets: [],
+    selectedPetId: null,
     petInfo: {},
     schedule: {
         date: null,
@@ -34,26 +37,43 @@ const BUSY_SLOTS = ['09:00','10:30','14:00','15:30'];
 
 // ── Parse CSV ─────────────────────────────────────────────────────────────────
 function parseCSV(text) {
-    const lines = text.trim().split('\n');
-    const headers = splitLine(lines[0]);
-    return lines.slice(1).map(line => {
-        const vals = splitLine(line);
-        const obj = {};
-        headers.forEach((h, i) => { obj[h.trim()] = (vals[i] || '').trim(); });
-        return obj;
-    }).filter(row => Object.values(row).some(v => v));
-}
-
-function splitLine(line) {
-    const result = [];
-    let cur = '', inQ = false;
-    for (const ch of line) {
-        if (ch === '"') { inQ = !inQ; }
-        else if (ch === '\t' && !inQ) { result.push(cur); cur = ''; }
-        else { cur += ch; }
+    const records = [];
+    let cur = [];
+    let field = '';
+    let inQ = false;
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === '"') {
+            inQ = !inQ;
+        } else if (ch === '\t' && !inQ) {
+            cur.push(field);
+            field = '';
+        } else if (ch === '\n' && !inQ) {
+            cur.push(field);
+            records.push(cur);
+            cur = [];
+            field = '';
+        } else if (ch === '\r' && !inQ) {
+            // skip \r if not in quotes
+        } else {
+            field += ch;
+        }
     }
-    result.push(cur);
-    return result;
+    if (field || cur.length > 0) {
+        cur.push(field);
+        if (cur.length > 1 || cur[0].trim() !== '') records.push(cur);
+    }
+    
+    if (records.length === 0) return [];
+    
+    const headers = records[0];
+    return records.slice(1).map(row => {
+        const obj = {};
+        headers.forEach((h, i) => { 
+            if (h) obj[h.trim()] = (row[i] || '').trim(); 
+        });
+        return obj;
+    }).filter(row => Object.keys(row).length > 0 && Object.values(row).some(v => v));
 }
 
 function mapService(row) {
@@ -105,7 +125,8 @@ function renderServiceList() {
     );
 
     list.innerHTML = filtered.map(svc => {
-        const isPaused = !svc.status.toLowerCase().includes('đang phục vụ');
+        const statusStr = (svc.status || '').toLowerCase();
+        const isPaused = statusStr.includes('ngưng') || statusStr.includes('ngng') || statusStr.includes('tạm') || statusStr.includes('tm');
         const isSelected = state.selectedService?.id === svc.id;
         return `
         <div class="svc-select-card ${isSelected ? 'selected' : ''} ${isPaused ? 'paused' : ''}"
@@ -302,7 +323,78 @@ function updateSummary() {
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────
+// ── Pet Selection (Member Flow) ───────────────────────────────────────────────────
+function renderPetSelection() {
+    const list = document.getElementById('memberPetList');
+    if (!list) return;
+
+    list.innerHTML = state.memberPets.map(pet => {
+        const isSelected = state.selectedPetId === pet.id;
+        const avatar = pet.photo ? `<img src="${pet.photo}" alt="${pet.name}">` : (pet.species === 'Mèo' ? '🐱' : '🐶');
+        return `
+        <div class="pet-select-card ${isSelected ? 'selected' : ''}" data-id="${pet.id}" role="button" tabindex="0">
+            <div class="pet-avatar">${avatar}</div>
+            <div class="pet-info-short">
+                <h4>${pet.name}</h4>
+                <p>${pet.breed || pet.species} · ${pet.weight}kg</p>
+            </div>
+            <div class="pet-card-radio"></div>
+        </div>
+        `;
+    }).join('') + `
+        <div class="btn-add-pet-card" role="button" tabindex="0">
+            <span class="icon-add">➕</span>
+            <span>Thêm bé mới</span>
+        </div>
+    `;
+
+    list.querySelectorAll('.pet-select-card').forEach(card => {
+        card.addEventListener('click', () => {
+            state.selectedPetId = card.dataset.id;
+            renderPetSelection();
+            
+            // Sync selected pet data to state.petInfo temporarily
+            const pet = state.memberPets.find(p => p.id === state.selectedPetId);
+            if (pet) {
+                const user = JSON.parse(localStorage.getItem('pawpal_user') || '{}');
+                state.petInfo = {
+                    ownerName: user.name || '',
+                    ownerPhone: user.phone || '',
+                    petName: pet.name,
+                    petType: pet.species,
+                    petBreed: pet.breed,
+                    petWeight: pet.weight,
+                    petNote: pet.notes || '',
+                    groomingStyle: document.getElementById('memberGroomingStyle')?.value.trim() || ''
+                };
+                updateSummary();
+            }
+        });
+    });
+}
+
+// ── Validation ────────────────────────────────────────────────────────────────
 function validateStep2() {
+    if (state.isMember) {
+        if (!state.selectedPetId) {
+            alert('Vui lòng chọn một bé cưng để đặt lịch!');
+            return false;
+        }
+        const pet = state.memberPets.find(p => p.id === state.selectedPetId);
+        const user = JSON.parse(localStorage.getItem('pawpal_user') || '{}');
+        state.petInfo = {
+            ownerName: user.name || '',
+            ownerPhone: user.phone || '',
+            petName: pet.name,
+            petType: pet.species,
+            petBreed: pet.breed,
+            petWeight: pet.weight,
+            petNote: pet.notes || '',
+            groomingStyle: document.getElementById('memberGroomingStyle').value.trim() || ''
+        };
+        return true;
+    }
+
     let valid = true;
     const fields = [
         { id: 'ownerName',  errId: 'ownerNameErr',  msg: 'Vui lòng nhập họ tên.' },
@@ -398,8 +490,13 @@ function bindEvents() {
     document.getElementById('step1Next').addEventListener('click', () => {
         if (state.selectedService) {
             const isGrooming = state.selectedService.category.toLowerCase().includes('cắt tỉa');
-            const groomingSec = document.getElementById('groomingStyleSection');
-            if(groomingSec) groomingSec.style.display = isGrooming ? 'block' : 'none';
+            if (state.isMember) {
+                const groomingSec = document.getElementById('memberGroomingStyleSection');
+                if(groomingSec) groomingSec.style.display = isGrooming ? 'block' : 'none';
+            } else {
+                const groomingSec = document.getElementById('groomingStyleSection');
+                if(groomingSec) groomingSec.style.display = isGrooming ? 'block' : 'none';
+            }
             goToStep(2);
         }
     });
@@ -427,6 +524,25 @@ function bindEvents() {
             input.value = '';
             input.disabled = false;
         }
+    });
+
+    document.getElementById('memberUseLastGroomingStyle')?.addEventListener('change', e => {
+        const input = document.getElementById('memberGroomingStyle');
+        if (e.target.checked) {
+            input.value = 'Kiểu Gấu Bông (Lần trước)';
+            input.disabled = true;
+            if(state.petInfo) state.petInfo.groomingStyle = input.value;
+        } else {
+            input.value = '';
+            input.disabled = false;
+            if(state.petInfo) state.petInfo.groomingStyle = '';
+        }
+        updateSummary();
+    });
+    
+    document.getElementById('memberGroomingStyle')?.addEventListener('input', e => {
+        if(state.petInfo) state.petInfo.groomingStyle = e.target.value.trim();
+        updateSummary();
     });
 
     // Step 3
@@ -537,6 +653,20 @@ window.updateAddonQty = function(id, change) {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
+    // Check Member Flow
+    const userJson = localStorage.getItem('pawpal_user');
+    if (userJson) {
+        state.isMember = true;
+        state.memberPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+        const guestFlow = document.getElementById('guestFlow');
+        const guestNote = document.getElementById('guestInfoNote');
+        const memberFlow = document.getElementById('memberFlow');
+        if (guestFlow) guestFlow.style.display = 'none';
+        if (guestNote) guestNote.style.display = 'none';
+        if (memberFlow) memberFlow.style.display = 'block';
+        renderPetSelection();
+    }
+
     try {
         const res = await fetch('../Docs/dichvu.csv');
         if (!res.ok) throw new Error('Không tải được dichvu.csv');
