@@ -13,8 +13,8 @@
 | Xem dịch vụ | `services.html` | — | ✅ Hoàn thành |
 | Cửa hàng + Giỏ hàng | `shop.html` | — | ✅ Hoàn thành |
 | Đặt lịch (4 bước) | `booking.html` | 3.1.4 | ✅ Cơ bản |
-| **Pet ID form** | `dashboard.html` | **3.1.3** | 🔄 Đang làm |
-| Lịch hẹn + Hủy lịch | `dashboard.html` | 3.1.4 + 3.1.6 | ⏳ Chưa làm |
+| **Pet ID form** | `dashboard.html` | **3.1.3** | ✅ Hoàn thành |
+| Lịch hẹn + Hủy lịch | `dashboard.html` | 3.1.4 + 3.1.6 | ✅ Hoàn thành |
 | Nhật ký chăm sóc | `dashboard.html` | 3.1.7 | ⏳ Chưa làm |
 | Timeslot thực + giữ chỗ | `booking.html` | 3.1.4 | ⏳ Chưa làm |
 | Đổi lịch UI | `dashboard.html` | 3.1.5 | ⏳ Chưa làm |

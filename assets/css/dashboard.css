@@ -622,3 +622,705 @@
     .petid-tab-header { flex-direction: column; align-items: flex-start; }
     .petid-photo-upload { flex-direction: column; align-items: flex-start; }
 }
+
+/* ==========================================================================
+   Phần 2 — Booking List
+   ========================================================================== */
+
+/* ── Filter tabs ── */
+.booking-filter-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.booking-filter-btn {
+    padding: 6px 14px;
+    border-radius: var(--border-radius-pill);
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg-white);
+    font-family: var(--font-primary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-light);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    white-space: nowrap;
+}
+
+.booking-filter-btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.booking-filter-btn.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+}
+
+/* ── Booking list ── */
+.booking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* ── Booking card ── */
+.booking-card {
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-white);
+    overflow: hidden;
+    transition: var(--transition-smooth);
+}
+
+.booking-card:hover {
+    box-shadow: var(--shadow-sm);
+    border-color: rgba(42, 89, 68, 0.18);
+}
+
+.booking-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: var(--color-bg-light);
+    border-bottom: 1px solid var(--color-border);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.booking-card-code {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--color-text-light);
+    font-family: monospace;
+}
+
+/* Status badges */
+.booking-status-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: var(--border-radius-pill);
+    white-space: nowrap;
+}
+
+.status-pending    { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.status-confirmed  { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.status-inprogress { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+.status-done       { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+.status-cancelled  { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+.booking-card-body {
+    padding: 16px 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+}
+
+.booking-info-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.booking-info-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--color-text-light);
+}
+
+.booking-info-value {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+    line-height: 1.4;
+}
+
+.booking-card-footer {
+    padding: 10px 18px;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.booking-footer-note {
+    font-size: 0.75rem;
+    color: var(--color-text-light);
+    font-weight: 500;
+}
+
+.booking-footer-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-booking-cancel {
+    padding: 6px 14px;
+    border-radius: var(--border-radius-pill);
+    border: 1.5px solid rgba(220, 38, 38, 0.3);
+    background: transparent;
+    color: #dc2626;
+    font-family: var(--font-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.btn-booking-cancel:hover {
+    background: #fef2f2;
+    border-color: #dc2626;
+}
+
+.btn-booking-rebook {
+    padding: 6px 14px;
+    border-radius: var(--border-radius-pill);
+    border: 1.5px solid rgba(42, 89, 68, 0.3);
+    background: transparent;
+    color: var(--color-primary);
+    font-family: var(--font-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-booking-rebook:hover {
+    background: var(--color-primary);
+    color: #ffffff;
+    border-color: var(--color-primary);
+}
+
+/* ── Cancel warning ── */
+.booking-cancel-warning {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #92400e;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: var(--border-radius-sm);
+    padding: 8px 12px;
+    margin-bottom: 16px;
+    text-align: left;
+    line-height: 1.5;
+}
+
+/* ── Booking empty state ── */
+.booking-empty {
+    text-align: center;
+    padding: 60px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.booking-empty-icon { font-size: 3rem; }
+
+.booking-empty h5 {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: var(--color-primary);
+}
+
+.booking-empty p {
+    font-size: 0.88rem;
+    color: var(--color-text-light);
+    max-width: 300px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+    .booking-card-body { grid-template-columns: 1fr; }
+    .booking-filter-tabs { gap: 4px; }
+    .booking-filter-btn { font-size: 0.72rem; padding: 5px 10px; }
+}
+
+
+/* ==========================================================================
+   Phần 3 — Tracker / Nhật ký chăm sóc
+   ========================================================================== */
+
+/* ── Pet selector & booking bar ── */
+.tracker-pet-select,
+.tracker-booking-select {
+    padding: 8px 14px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--border-radius-pill);
+    font-family: var(--font-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+    background: var(--color-bg-white);
+    outline: none;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    min-width: 160px;
+}
+
+.tracker-pet-select:focus,
+.tracker-booking-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(42, 89, 68, 0.1);
+}
+
+.tracker-booking-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background: var(--color-bg-light);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--color-border);
+    flex-wrap: wrap;
+}
+
+.tracker-booking-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-text-light);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+/* ── Live banner ── */
+.tracker-live-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);
+    border: 1.5px solid #86efac;
+    border-radius: var(--border-radius-md);
+    margin-bottom: 24px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #166534;
+}
+
+.tracker-live-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #22c55e;
+    flex-shrink: 0;
+    animation: trackerPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes trackerPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(1.3); }
+}
+
+.tracker-live-badge {
+    margin-left: auto;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    background: #22c55e;
+    color: #ffffff;
+    padding: 3px 9px;
+    border-radius: var(--border-radius-pill);
+}
+
+/* ── Timeline container ── */
+.tracker-timeline {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-left: 32px;
+}
+
+/* Vertical line */
+.tracker-timeline::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 16px;
+    bottom: 16px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--color-primary) 0%, var(--color-border) 100%);
+    border-radius: 2px;
+}
+
+/* ── Timeline item ── */
+.tracker-item {
+    position: relative;
+    padding: 0 0 28px 20px;
+    animation: trackerFadeIn 0.4s ease both;
+}
+
+.tracker-item:last-child { padding-bottom: 0; }
+
+@keyframes trackerFadeIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Dot on the line */
+.tracker-item-dot {
+    position: absolute;
+    left: -32px;
+    top: 14px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--color-bg-white);
+    border: 2.5px solid var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    z-index: 2;
+    transition: var(--transition-smooth);
+}
+
+.tracker-item.is-live .tracker-item-dot {
+    background: #22c55e;
+    border-color: #22c55e;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+    animation: trackerPulse 1.5s ease-in-out infinite;
+}
+
+/* Card */
+.tracker-card {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    transition: var(--transition-smooth);
+}
+
+.tracker-card:hover {
+    box-shadow: var(--shadow-sm);
+    border-color: rgba(42, 89, 68, 0.2);
+}
+
+.tracker-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--color-bg-light);
+    border-bottom: 1px solid var(--color-border);
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.tracker-card-time {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-light);
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+
+.tracker-card-step-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: var(--border-radius-pill);
+    background: var(--color-primary-light);
+    color: var(--color-primary-dark);
+    border: 1px solid rgba(42, 89, 68, 0.15);
+    white-space: nowrap;
+}
+
+.tracker-card-step-badge.badge-live {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
+}
+
+.tracker-card-step-badge.badge-done {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+/* ── Card body ── */
+.tracker-card-body {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tracker-card-title {
+    font-family: var(--font-primary);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.tracker-card-note {
+    font-size: 0.82rem;
+    color: var(--color-text-light);
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+/* Staff info row */
+.tracker-card-staff {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: var(--color-text-light);
+    font-weight: 500;
+}
+
+.tracker-staff-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Media grid (ảnh/video) */
+.tracker-media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.tracker-media-item {
+    aspect-ratio: 1;
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    position: relative;
+}
+
+.tracker-media-item:hover {
+    transform: scale(1.03);
+    box-shadow: var(--shadow-sm);
+}
+
+.tracker-media-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.tracker-media-item .media-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    color: #ffffff;
+    font-size: 1.2rem;
+}
+
+.tracker-media-item:hover .media-overlay { opacity: 1; }
+
+/* Mood tag */
+.tracker-mood-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: var(--border-radius-pill);
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+    width: fit-content;
+}
+
+.tracker-mood-tag.mood-happy  { background: #dcfce7; color: #166534; border-color: #86efac; }
+.tracker-mood-tag.mood-calm   { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+.tracker-mood-tag.mood-active { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.tracker-mood-tag.mood-tired  { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+
+/* ── Summary bar (tổng kết buổi) ── */
+.tracker-summary-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, #f0fdf4 100%);
+    border: 1px solid rgba(42, 89, 68, 0.12);
+    border-radius: var(--border-radius-md);
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.tracker-summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 80px;
+}
+
+.tracker-summary-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--color-text-light);
+}
+
+.tracker-summary-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+}
+
+.tracker-summary-divider {
+    width: 1px;
+    height: 32px;
+    background: rgba(42, 89, 68, 0.15);
+    flex-shrink: 0;
+}
+
+/* ── Progress steps bar ── */
+.tracker-progress-wrap {
+    margin-bottom: 24px;
+}
+
+.tracker-progress-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-text-light);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.tracker-progress-bar-bg {
+    height: 8px;
+    background: var(--color-border);
+    border-radius: 100px;
+    overflow: hidden;
+}
+
+.tracker-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary) 0%, #4ade80 100%);
+    border-radius: 100px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Empty states ── */
+.tracker-empty {
+    text-align: center;
+    padding: 60px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.tracker-empty-icon { font-size: 3rem; }
+
+.tracker-empty h5 {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: var(--color-primary);
+}
+
+.tracker-empty p {
+    font-size: 0.88rem;
+    color: var(--color-text-light);
+    max-width: 300px;
+    line-height: 1.6;
+}
+
+/* ── Lightbox overlay ── */
+.tracker-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    background: rgba(0, 0, 0, 0.88);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.tracker-lightbox.open {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.tracker-lightbox img {
+    max-width: 90vw;
+    max-height: 85vh;
+    border-radius: var(--border-radius-md);
+    object-fit: contain;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+    transform: scale(0.95);
+    transition: transform 0.25s ease;
+}
+
+.tracker-lightbox.open img { transform: scale(1); }
+
+.tracker-lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    color: #ffffff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-smooth);
+}
+
+.tracker-lightbox-close:hover { background: rgba(255,255,255,0.3); }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+    .tracker-timeline { padding-left: 24px; }
+    .tracker-timeline::before { left: 7px; }
+    .tracker-item-dot { left: -24px; width: 18px; height: 18px; }
+    .tracker-media-grid { grid-template-columns: repeat(3, 1fr); }
+    .tracker-summary-bar { gap: 10px; }
+    .tracker-summary-divider { display: none; }
+}

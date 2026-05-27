@@ -81,6 +81,7 @@
                     <button class="dash-tab-btn active" data-dash-tab="dash-info">Thông tin chung</button>
                     <button class="dash-tab-btn" data-dash-tab="dash-petid">Hồ sơ Pet ID</button>
                     <button class="dash-tab-btn" data-dash-tab="dash-booking">Lịch hẹn của tôi</button>
+                    <button class="dash-tab-btn" data-dash-tab="dash-tracker">Nhật ký bé</button>
                     <button class="dash-tab-btn" data-dash-tab="dash-security">Bảo mật</button>
                     <button class="btn-dashboard-logout" id="dashboardLogoutBtn">Đăng xuất</button>
                 </div>
@@ -136,14 +137,88 @@
 
                     <!-- Tab 3: Bookings -->
                     <div class="dash-tab-content" id="dash-booking">
-                        <h4 style="font-family: var(--font-primary); font-size: 1.25rem; font-weight: 700; color: var(--color-primary-dark); margin-bottom: 18px;">Lịch hẹn chăm sóc</h4>
-                        <p class="booking-intro" style="font-size: 0.9rem; color: var(--color-text-light); margin-bottom: 20px;">Danh sách các dịch vụ bạn đã đặt tại PawPal.</p>
-                        <div class="dash-bookings-list" id="dashBookingsList">
-                            <div class="no-bookings" id="noBookingsMsg">Bạn chưa có lịch hẹn nào.</div>
+                        <div class="petid-tab-header">
+                            <div>
+                                <h4 class="dash-tab-title">Lịch hẹn chăm sóc</h4>
+                                <p class="dash-tab-subtitle">Theo dõi và quản lý tất cả lịch hẹn của bé tại PawPal.</p>
+                            </div>
+                            <a href="booking.html" class="btn-add-pet">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Đặt lịch mới
+                            </a>
+                        </div>
+
+                        <!-- Filter tabs -->
+                        <div class="booking-filter-tabs" id="bookingFilterTabs">
+                            <button class="booking-filter-btn active" data-filter="all">Tất cả</button>
+                            <button class="booking-filter-btn" data-filter="Chờ xác nhận">Chờ xác nhận</button>
+                            <button class="booking-filter-btn" data-filter="Đã đặt">Đã đặt</button>
+                            <button class="booking-filter-btn" data-filter="Đang thực hiện">Đang thực hiện</button>
+                            <button class="booking-filter-btn" data-filter="Hoàn thành">Hoàn thành</button>
+                            <button class="booking-filter-btn" data-filter="Đã hủy">Đã hủy</button>
+                        </div>
+
+                        <!-- Booking list — render bởi JS -->
+                        <div class="booking-list" id="dashBookingsList"></div>
+
+                        <!-- Empty state -->
+                        <div class="booking-empty" id="bookingEmpty" style="display:none;">
+                            <div class="booking-empty-icon">📅</div>
+                            <h5>Chưa có lịch hẹn nào</h5>
+                            <p>Đặt lịch ngay để PawPal chăm sóc bé cưng của bạn.</p>
+                            <a href="booking.html" class="btn-cta">Đặt lịch ngay</a>
                         </div>
                     </div>
 
-                    <!-- Tab 4: Security -->
+                    <!-- Tab 4: Tracker / Nhật ký bé -->
+                    <div class="dash-tab-content" id="dash-tracker">
+                        <div class="petid-tab-header">
+                            <div>
+                                <h4 class="dash-tab-title">Nhật ký chăm sóc</h4>
+                                <p class="dash-tab-subtitle">Theo dõi từng khoảnh khắc của bé trong thời gian ở PawPal.</p>
+                            </div>
+                            <!-- Pet selector nếu có nhiều bé -->
+                            <select class="tracker-pet-select" id="trackerPetSelect">
+                                <option value="">-- Chọn bé --</option>
+                            </select>
+                        </div>
+
+                        <!-- Booking selector — chọn lịch hẹn để xem nhật ký -->
+                        <div class="tracker-booking-bar" id="trackerBookingBar" style="display:none;">
+                            <label class="tracker-booking-label">Lịch hẹn:</label>
+                            <select class="tracker-booking-select" id="trackerBookingSelect"></select>
+                        </div>
+
+                        <!-- Live status banner -->
+                        <div class="tracker-live-banner" id="trackerLiveBanner" style="display:none;">
+                            <span class="tracker-live-dot"></span>
+                            <span id="trackerLiveText">Bé đang được chăm sóc tại PawPal</span>
+                            <span class="tracker-live-badge">LIVE</span>
+                        </div>
+
+                        <!-- Timeline -->
+                        <div class="tracker-timeline" id="trackerTimeline"></div>
+
+                        <!-- Empty states -->
+                        <div class="tracker-empty" id="trackerEmptyNoPet" style="display:none;">
+                            <div class="tracker-empty-icon">🐾</div>
+                            <h5>Chưa có hồ sơ bé nào</h5>
+                            <p>Thêm bé cưng trong tab <strong>Hồ sơ Pet ID</strong> để xem nhật ký.</p>
+                        </div>
+                        <div class="tracker-empty" id="trackerEmptyNoBooking" style="display:none;">
+                            <div class="tracker-empty-icon">📋</div>
+                            <h5>Chưa có lịch hẹn nào</h5>
+                            <p>Bé chưa có lịch hẹn nào tại PawPal. Đặt lịch để bắt đầu theo dõi.</p>
+                            <a href="booking.html" class="btn-cta">Đặt lịch ngay</a>
+                        </div>
+                        <div class="tracker-empty" id="trackerEmptyNoLog" style="display:none;">
+                            <div class="tracker-empty-icon">⏳</div>
+                            <h5>Chưa có cập nhật nào</h5>
+                            <p>Nhật ký sẽ được cập nhật khi bé bắt đầu sử dụng dịch vụ.</p>
+                        </div>
+                    </div>
+
+                    <!-- Tab 5: Security -->
                     <div class="dash-tab-content" id="dash-security">
                         <h4 id="securityTabTitle" style="font-family: var(--font-primary); font-size: 1.25rem; font-weight: 700; color: var(--color-primary-dark); margin-bottom: 18px;">Cấu hình mật khẩu</h4>
                         <form id="changePasswordForm" class="security-form">
@@ -186,6 +261,23 @@
 
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container"></div>
+
+    <!-- ══ Booking Cancel Confirm ══ -->
+    <div id="bookingCancelModal" class="petid-delete-modal">
+        <div class="petid-modal-overlay" id="bookingCancelOverlay"></div>
+        <div class="petid-delete-content">
+            <div class="petid-delete-icon">❌</div>
+            <h4>Hủy lịch hẹn này?</h4>
+            <p>Lịch hẹn sẽ bị hủy và khung giờ sẽ được giải phóng. Thao tác này không thể hoàn tác.</p>
+            <div class="booking-cancel-warning" id="bookingCancelWarning" style="display:none;">
+                ⚠️ Bạn đã hủy nhiều lần gần đây. Nếu hủy thêm, tính năng đặt lịch có thể bị tạm khóa.
+            </div>
+            <div class="petid-delete-actions">
+                <button class="btn-green-outline" id="bookingCancelNo">Giữ lại</button>
+                <button class="btn-delete-confirm" id="bookingCancelYes">Xác nhận hủy</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ══ Pet ID Modal ══ -->
     <div id="petidModal" class="petid-modal" role="dialog" aria-modal="true" aria-labelledby="petidModalTitle">
@@ -290,6 +382,8 @@
     <!-- Scripts -->
     <script src="../assets/js/auth.js"></script>
     <script src="../assets/js/main.js"></script>
+    <!-- Seed data: inject dữ liệu demo vào localStorage (chỉ chạy 1 lần) -->
+    <script src="../assets/js/seed-data.js"></script>
     <script src="../assets/js/dashboard.js"></script>
 </body>
 </html>
