@@ -149,6 +149,16 @@
                                 <span class="field-error" id="petWeightErr"></span>
                             </div>
                         </div>
+                        
+                        <div class="form-group full-width" id="groomingStyleSection" style="display:none; margin-bottom: 16px;">
+                            <label for="petGroomingStyle">Yêu cầu cắt tỉa (Grooming)</label>
+                            <input type="text" id="petGroomingStyle" placeholder="Ví dụ: Cắt kiểu gấu bông, cạo gọn lửng...">
+                            <label class="policy-checkbox" style="margin-top: 8px;">
+                                <input type="checkbox" id="useLastGroomingStyle">
+                                <span style="font-size: 0.9em; color: var(--color-primary);">🔄 Sử dụng lại kiểu cắt tỉa lần trước (Kiểu Gấu Bông)</span>
+                            </label>
+                        </div>
+
                         <div class="form-group full-width">
                             <label for="petNote">Ghi chú đặc biệt</label>
                             <textarea id="petNote" rows="3" placeholder="Dị ứng thức ăn, sợ tiếng ồn, cần chế độ ăn riêng..."></textarea>
@@ -186,6 +196,62 @@
                             <span class="nights-icon">🌙</span>
                             <span id="hotelNightsText">0 đêm</span>
                             <span id="hotelTotalPrice" class="nights-price"></span>
+                        </div>
+
+                        <!-- Hotel Addons -->
+                        <div class="hotel-addons-section" id="hotelAddonsSection" style="margin-top: 24px; display: none;">
+                            <p class="timeslot-label" style="margin-bottom: 12px;">Dịch vụ mở rộng</p>
+                            
+                            <label class="addon-item">
+                                <input type="checkbox" id="addonMeal" class="addon-checkbox">
+                                <div class="addon-info">
+                                    <span class="addon-name">🥩 Chăm sóc dinh dưỡng riêng</span>
+                                    <span class="addon-desc">Khách tự chuẩn bị hạt, pate đặc trị</span>
+                                </div>
+                                <span class="addon-price">30.000đ/ngày</span>
+                            </label>
+
+                            <label class="addon-item" for="addonWalk">
+                                <input type="checkbox" id="addonWalk" class="addon-checkbox">
+                                <div class="addon-info">
+                                    <span class="addon-name">🦮 Dắt đi dạo ngoài trời (30p)</span>
+                                    <span class="addon-desc">Tối đa 2 lượt/ngày</span>
+                                </div>
+                                <div class="addon-qty-control" id="qtyWalkCtrl" style="display:none;">
+                                    <button type="button" class="qty-btn" onclick="updateAddonQty('addonWalkQty', -1); event.preventDefault();">-</button>
+                                    <input type="number" id="addonWalkQty" class="qty-input" value="1" min="1" readonly>
+                                    <button type="button" class="qty-btn" onclick="updateAddonQty('addonWalkQty', 1); event.preventDefault();">+</button>
+                                </div>
+                                <span class="addon-price">40.000đ/lượt</span>
+                            </label>
+
+                            <label class="addon-item" for="addonPlay">
+                                <input type="checkbox" id="addonPlay" class="addon-checkbox">
+                                <div class="addon-info">
+                                    <span class="addon-name">🎾 Chơi tương tác với bảo mẫu</span>
+                                    <span class="addon-desc">20 phút tương tác riêng</span>
+                                </div>
+                                <div class="addon-qty-control" id="qtyPlayCtrl" style="display:none;">
+                                    <button type="button" class="qty-btn" onclick="updateAddonQty('addonPlayQty', -1); event.preventDefault();">-</button>
+                                    <input type="number" id="addonPlayQty" class="qty-input" value="1" min="1" readonly>
+                                    <button type="button" class="qty-btn" onclick="updateAddonQty('addonPlayQty', 1); event.preventDefault();">+</button>
+                                </div>
+                                <span class="addon-price">20.000đ/lượt</span>
+                            </label>
+
+                            <label class="addon-item" for="addonBath">
+                                <input type="checkbox" id="addonBath" class="addon-checkbox">
+                                <div class="addon-info">
+                                    <span class="addon-name">🛁 Tắm vệ sinh lưu trú</span>
+                                    <span class="addon-desc">Giảm 20% giá Spa cơ bản</span>
+                                </div>
+                                <div class="addon-qty-control" id="qtyBathCtrl" style="display:none;">
+                                    <button type="button" class="qty-btn" onclick="updateAddonQty('addonBathQty', -1); event.preventDefault();">-</button>
+                                    <input type="number" id="addonBathQty" class="qty-input" value="1" min="1" readonly>
+                                    <button type="button" class="qty-btn" onclick="updateAddonQty('addonBathQty', 1); event.preventDefault();">+</button>
+                                </div>
+                                <span class="addon-price" id="addonBathPriceText">Tuỳ hạng cân</span>
+                            </label>
                         </div>
                     </div>
 

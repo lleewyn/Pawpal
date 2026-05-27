@@ -16,6 +16,12 @@ const state = {
         checkOut: null,
         nights: 0,
     },
+    addons: {
+        meal: false,
+        walk: false, walkQty: 1,
+        play: false, playQty: 1,
+        bath: false, bathQty: 1,
+    }
 };
 
 // ── Time slots (simulated availability) ──────────────────────────────────────
@@ -184,8 +190,15 @@ function buildConfirmSummary() {
     if (svc?.isHotel && sch.checkIn && sch.checkOut) {
         const nights = Math.round((new Date(sch.checkOut) - new Date(sch.checkIn)) / 86400000);
         dateStr = `Check-in: ${formatDate(sch.checkIn)}<br>Check-out: ${formatDate(sch.checkOut)}<br>${nights} đêm`;
-        const total = svc.priceNum * nights;
-        priceStr = formatVND(total) + ` (${nights} đêm × ${svc.price})`;
+        
+        let total = svc.priceNum * nights;
+        let addonStr = '';
+        if(state.addons.meal) { total += 30000 * nights; addonStr += `<br><small style="color:var(--color-text-light)">+ Dinh dưỡng riêng (${nights} ngày)</small>`; }
+        if(state.addons.walk) { total += 40000 * state.addons.walkQty; addonStr += `<br><small style="color:var(--color-text-light)">+ Dạo ngoài trời (${state.addons.walkQty} lượt)</small>`; }
+        if(state.addons.play) { total += 20000 * state.addons.playQty; addonStr += `<br><small style="color:var(--color-text-light)">+ Chơi tương tác (${state.addons.playQty} lượt)</small>`; }
+        if(state.addons.bath) { total += 150000 * state.addons.bathQty; addonStr += `<br><small style="color:var(--color-text-light)">+ Tắm vệ sinh (${state.addons.bathQty} lượt)</small>`; }
+        
+        priceStr = formatVND(total) + `<br><small style="font-weight:normal;color:var(--color-text-light)">(${nights} đêm × ${svc.price})</small>${addonStr}`;
     } else if (sch.date && sch.slot) {
         dateStr = `${formatDate(sch.date)} lúc ${sch.slot}`;
     }
@@ -208,6 +221,7 @@ function buildConfirmSummary() {
                 <p class="confirm-row-value">${pet.petName || '—'} (${pet.petType || ''})
                     ${pet.petBreed ? '· ' + pet.petBreed : ''}
                     ${pet.petWeight ? '· ' + pet.petWeight + 'kg' : ''}
+                    ${pet.groomingStyle ? '<br><small style="color:var(--color-text-light)">✂️ Kiểu cắt: ' + pet.groomingStyle + '</small>' : ''}
                 </p>
             </div>
             <button class="confirm-edit-btn" onclick="goToStep(2)">Sửa</button>
@@ -274,7 +288,14 @@ function updateSummary() {
     let priceStr = svc?.price || null;
     if (svc?.isHotel && sch.checkIn && sch.checkOut) {
         const nights = Math.round((new Date(sch.checkOut) - new Date(sch.checkIn)) / 86400000);
-        if (nights > 0) priceStr = formatVND(svc.priceNum * nights);
+        if (nights > 0) {
+            let total = svc.priceNum * nights;
+            if(state.addons.meal) total += 30000 * nights;
+            if(state.addons.walk) total += 40000 * state.addons.walkQty;
+            if(state.addons.play) total += 20000 * state.addons.playQty;
+            if(state.addons.bath) total += 150000 * state.addons.bathQty;
+            priceStr = formatVND(total);
+        }
     }
     document.getElementById('sumPriceVal').textContent = priceStr || '—';
     document.getElementById('sumMemberNote').style.display = svc ? 'block' : 'none';
@@ -312,6 +333,7 @@ function validateStep2() {
             petBreed:   document.getElementById('petBreed').value.trim(),
             petWeight:  document.getElementById('petWeight').value.trim(),
             petNote:    document.getElementById('petNote').value.trim(),
+            groomingStyle: document.getElementById('petGroomingStyle').value.trim(),
         };
     }
     return valid;
@@ -374,7 +396,12 @@ function bindEvents() {
     });
 
     document.getElementById('step1Next').addEventListener('click', () => {
-        if (state.selectedService) goToStep(2);
+        if (state.selectedService) {
+            const isGrooming = state.selectedService.category.toLowerCase().includes('cắt tỉa');
+            const groomingSec = document.getElementById('groomingStyleSection');
+            if(groomingSec) groomingSec.style.display = isGrooming ? 'block' : 'none';
+            goToStep(2);
+        }
     });
 
     // Step 2
@@ -385,8 +412,20 @@ function bindEvents() {
             const isHotel = state.selectedService?.isHotel;
             document.getElementById('hotelDateRange').style.display = isHotel ? 'block' : 'none';
             document.getElementById('spaSchedule').style.display    = isHotel ? 'none' : 'block';
+            document.getElementById('hotelAddonsSection').style.display = isHotel ? 'block' : 'none';
             renderTimeSlots();
             goToStep(3);
+        }
+    });
+
+    document.getElementById('useLastGroomingStyle')?.addEventListener('change', e => {
+        const input = document.getElementById('petGroomingStyle');
+        if (e.target.checked) {
+            input.value = 'Kiểu Gấu Bông (Lần trước)';
+            input.disabled = true;
+        } else {
+            input.value = '';
+            input.disabled = false;
         }
     });
 
@@ -440,6 +479,21 @@ function bindEvents() {
             selectService(preService);
         }
     }
+
+    // Addons
+    ['addonMeal', 'addonWalk', 'addonPlay', 'addonBath'].forEach(id => {
+        const cb = document.getElementById(id);
+        if(cb) {
+            cb.addEventListener('change', e => {
+                const key = id.replace('addon', '').toLowerCase();
+                state.addons[key] = e.target.checked;
+                const ctrl = document.getElementById('qty' + id.replace('addon', '') + 'Ctrl');
+                if(ctrl) ctrl.style.display = e.target.checked ? 'flex' : 'none';
+                updateHotelNights();
+                updateSummary();
+            });
+        }
+    });
 }
 
 function updateHotelNights() {
@@ -450,12 +504,35 @@ function updateHotelNights() {
         const nights = Math.round((new Date(co) - new Date(ci)) / 86400000);
         state.schedule.nights = nights;
         document.getElementById('hotelNightsText').textContent = `${nights} đêm`;
-        const total = (state.selectedService?.priceNum || 0) * nights;
+        
+        let total = (state.selectedService?.priceNum || 0) * nights;
+        if(state.addons) {
+            if(state.addons.meal) total += 30000 * nights;
+            if(state.addons.walk) total += 40000 * state.addons.walkQty;
+            if(state.addons.play) total += 20000 * state.addons.playQty;
+            if(state.addons.bath) total += 150000 * state.addons.bathQty;
+        }
+
         document.getElementById('hotelTotalPrice').textContent = total > 0 ? '→ ' + formatVND(total) : '';
         display.style.display = 'flex';
     } else {
         display.style.display = 'none';
     }
+}
+
+window.updateAddonQty = function(id, change) {
+    const input = document.getElementById(id);
+    if (!input) return;
+    let val = parseInt(input.value) + change;
+    if (val < 1) val = 1;
+    input.value = val;
+    
+    if (id === 'addonWalkQty') state.addons.walkQty = val;
+    if (id === 'addonPlayQty') state.addons.playQty = val;
+    if (id === 'addonBathQty') state.addons.bathQty = val;
+    
+    updateHotelNights();
+    updateSummary();
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
