@@ -1,49 +1,60 @@
 User Story 1a: Đăng ký thành viên chủ động	"Là một Khách hàng mới, tôi muốn thực hiện đăng ký tài khoản bằng số điện thoại và xác thực OTP để trở thành thành viên chính thức, bắt đầu tích lũy điểm thưởng và sử dụng đầy đủ các tính năng của Pawpal.
 
-Acceptance Criteria (AC):
+AAcceptance Criteria (AC):
 
 Hiển thị Form: Hệ thống hiển thị Form đăng ký gồm các trường: Họ tên (Text), Số điện thoại (Number), Mật khẩu (Password), Xác nhận mật khẩu.
 
-Lưu ý: Tất cả thông tin đều phải hợp lệ, Xác nhận mật khẩu phải khớp Mật khẩu thì nút Đăng ký mới được mở khóa
+Frontend thực hiện kiểm tra điều kiện: Tất cả thông tin phải được điền đầy đủ, trường "Xác nhận mật khẩu" phải trùng khớp hoàn toàn với trường "Mật khẩu" thì nút "Đăng ký" mới được chuyển từ trạng thái Vô hiệu hóa (Disabled - mờ) sang trạng thái Kích hoạt (Enabled - sáng lên để cho phép click).
 
 Kiểm tra tính duy nhất: 
 
-Nếu SĐT đã tồn tại, hiển thị thông báo lỗi: ""Số điện thoại đăng ký đã tồn tại. Vui lòng đăng nhập hoặc khôi phục mật khẩu!"".
+Nếu SĐT đã tồn tại, hiển thị thông báo lỗi, Frontend thực hiện render một thông báo lỗi dạng Banner đỏ động ở đầu Form: "Số điện thoại đăng ký đã tồn tại. Vui lòng đăng nhập hoặc khôi phục mật khẩu!".
 
-Nếu SĐT sai định dạng (không đủ 10 số), hiển thị dòng cảnh báo đỏ dưới ô nhập 
+Ngay khi người dùng đang nhập hoặc vừa rời khỏi ô Số điện thoại (sự kiện onBlur/onChange): Nếu SĐT sai định dạng (không đủ 10 số), hiển thị dòng cảnh báo đỏ dưới ô nhập 
 
-Kích hoạt OTP: Khi thông tin hợp lệ, hệ thống gửi mã OTP qua SMS Gateway. Mã có hiệu lực trong 05 phút.
+Kích hoạt OTP và Đếm ngược : Khi thông tin hợp lệ và người dùng bấm nút, Frontend thực hiện chuyển sang Popup nhập OTP, đồng thời kích hoạt một đồng hồ đếm ngược thời gian thực từ 05:00 về 00:00.
 
-Xác thực thành công: Sau khi nhập đúng OTP, tài khoản được xác lập. Hệ thống điều hướng về Trang chủ.
+Xác thực thành công: Khi người dùng nhập đủ 6 chữ số vào các ô OTP, Frontend sẽ tự động kích hoạt lệnh gửi dữ liệu xác thực (không bắt người dùng phải bấm thêm nút gửi) tài khoản được xác lập. Hệ thống điều hướng về Trang chủ.
 
-Ưu đãi chào mừng: Hiển thị Popup/Thông báo: ""Chào mừng thành viên mới! Bạn đã nhận được 50 Paw Points đầu tiên"".
+Ưu đãi chào mừng: Hiển thị Popup/Thông báo: "Chào mừng thành viên mới! Bạn đã nhận được 50 Paw Points đầu tiên".
 
 Mô tả giao diện:
 
 Giao diện đăng ký: đã des
 
-Popup OTP: Một cửa sổ nhỏ hiện lên giữa màn hình với 6 ô nhập mã số, có đồng hồ đếm ngược (05:00) và dòng chữ ""Gửi lại mã"" (mờ đi cho đến khi hết 60 giây)."
+Popup OTP: Một cửa sổ nhỏ hiện lên giữa màn hình với 6 ô nhập mã số, có đồng hồ đếm ngược (05:00) và dòng chữ "Gửi lại mã" (mờ đi cho đến khi hết 60 giây).
+
+
 User Story 1b: Định danh lũy tiến cho Khách vãng lai	"Là một Khách hàng vãng lai đang thực hiện đặt lịch, tôi muốn hệ thống tự động ghi nhận thông tin của tôi mà không bắt buộc đăng ký ngay để quy trình đặt lịch không bị gián đoạn, đồng thời vẫn có cơ hội nhận ưu đãi sau khi giao dịch hoàn tất.
+
+Là một Khách hàng vãng lai đang thực hiện đặt lịch, tôi muốn hệ thống tự động ghi nhận thông tin của tôi mà không bắt buộc đăng ký ngay để quy trình đặt lịch không bị gián đoạn, đồng thời vẫn có cơ hội nhận ưu đãi sau khi giao dịch hoàn tất.
 
 Acceptance Criteria (AC):
 
-Khởi tạo ngầm: Khi Khách vãng lai nhấn ""Xác nhận đặt lịch"", hệ thống tự động khởi tạo một ""Tài khoản tạm"" trong CSDL dựa trên SĐT đã nhập.
+Khởi tạo ngầm: Khi Khách vãng lai nhấn "Xác nhận đặt lịch",Frontend thu thập toàn bộ thông tin từ Form nhập liệu (Form này ở quy trình Đặt lịch) và lưu tạm vào bộ nhớ trình duyệt (SessionStorage hoặc LocalStorage) để duy trì trạng thái "Tài khoản tạm" của phiên làm việc đó mà không làm tải lại trang 
 
-Quyền truy cập tạm thời: Hệ thống cho phép khách hàng xem lịch hẹn vừa đặt trên giao diện mà không yêu cầu mật khẩu ngay lúc đó.
+**Cái tài khoản tạm này t ko biết nếu ko có CSDL thì lưu gì, v thì cứ theo front-end là sẽ có tài khoản tạm đi, ko đề cập back-end luôn. 
+
+Ẩn/Hiện tính năng theo quyền truy cập: Hệ thống cho phép khách hàng xem giao diện lịch hẹn vừa đặt. Tuy nhiên, Frontend sẽ thực hiện ẩn các nút chức năng nâng cao (Đổi điểm thưởng, quản lý Pet ID) hoặc hiển thị icon Ổ khóa kèm Tooltip thông báo: "Vui lòng kích hoạt tài khoản để dùng tính năng này".
+
+Trang phản hồi Đặt lịch: Ngay sau khi đặt lịch thành công, giao diện hiển thị màn hình thông báo hoàn tất trực quan, kèm theo dòng chữ hướng dẫn nổi bật: "Một liên kết kích hoạt tài khoản đã được gửi đến số điện thoại của bạn. Vui lòng kiểm tra trong vòng 48h để nhận 50 điểm thưởng!".
 
 Gửi SMS kích hoạt: Ngay sau khi đặt lịch thành công, hệ thống gửi SMS chứa: Nội dung chào mừng + Link thiết lập mật khẩu.
 
-Hiệu lực liên kết: Link trong SMS phải có hiệu lực trong 48 giờ. Nếu truy cập sau 48 giờ, hiển thị trang lỗi kèm nút ""Gửi lại link xác thực mới"".
+Hiệu lực liên kết: Link trong SMS phải có hiệu lực trong 48 giờ. Nếu truy cập sau 48 giờ, Frontend tự động render ra một trang thông báo lỗi riêng (Error Page) kèm nút bấm "Gửi lại link xác thực mới" để người dùng chủ động thao tác lại.
 
-Chuyển đổi trạng thái: Sau khi khách hàng đặt mật khẩu qua Link thành công, tài khoản chuyển từ ""Tài khoản tạm"" sang ""Thành viên chính thức"" và cộng 50 Paw Points vào ví.
+Chuyển đổi trạng thái: Sau khi khách hàng đặt mật khẩu qua Link thành công, Frontend lập tức cập nhật lại trạng thái giao diện (UI State) từ "Tài khoản tạm" sang "Thành viên chính thức" ngay trên màn hình hiện tại, hiển thị số điểm 50 Paw Points vọt lên trên thanh Header kèm hiệu ứng tăng số động (Number Animation) => Kiểu pháo hoa giấy giấy bùm bùn
 
 Mô tả giao diện:
 
-Màn hình Xác nhận đặt lịch: Có một dòng thông tin nhỏ ở dưới cùng: ""Thông tin của bạn sẽ được lưu giữ để tích điểm thưởng cho lần sau"".
+Màn hình Xác nhận đặt lịch: Có một dòng thông tin nhỏ ở dưới cùng: "Thông tin của bạn sẽ được lưu giữ để tích điểm thưởng cho lần sau".
 
-Trang thiết lập mật khẩu (từ Link SMS): Giao diện web hiển thị tên khách hàng và trường nhập Mật khẩu mới/Xác nhận mật khẩu, kèm theo hình ảnh món quà (50 điểm) để kích thích khách hàng hoàn tất.
-"
+Trang thiết lập mật khẩu (từ Link SMS): Giao diện web hiển thị tên khách hàng và trường nhập Mật khẩu mới/Xác nhận mật khẩu, kèm theo hình ảnh món quà (50 điểm) để kích thích khách hàng hoàn tất. Trường nhập mật khẩu có thêm icon "mắt đóng/mở" để người dùng click ẩn hoặc hiện ký tự.
+
+
 User Story 1c: Admin hỗ trợ đăng ký nhanh tại quầy	"Là một Nhân viên quản trị (Admin), tôi muốn hỗ trợ khách hàng đăng ký tài khoản nhanh chỉ với Họ tên và SĐT ngay tại quầy để tối ưu hóa thời gian check-in và giúp khách hàng không rành công nghệ vẫn có Pet ID.
+
+Là một Nhân viên quản trị (Admin), tôi muốn hỗ trợ khách hàng đăng ký tài khoản nhanh chỉ với Họ tên và SĐT ngay tại quầy để tối ưu hóa thời gian check-in và giúp khách hàng không rành công nghệ vẫn có Pet ID.
 
 Acceptance Criteria (AC):
 
@@ -51,146 +62,161 @@ Giao diện Admin: Hệ thống hiển thị Form đăng ký nhanh trong bảng 
 
 Tối giản thông tin: Admin chỉ cần nhập Họ tên và SĐT của khách.
 
-Cơ chế xác thực: Sau khi Admin nhấn ""Lưu"", hệ thống tự động kích hoạt luồng gửi SMS chứa Link thiết lập mật khẩu cho khách hàng (tương tự luồng vãng lai).
+Tối ưu hóa tốc độ nhập liệu bằng bàn phím: rontend phải cấu hình thứ tự phím Tab chuẩn xác và tự động Focus con trỏ chuột vào ô "Họ tên" ngay khi Form được mở, giúp Admin có thể gõ phím liên tục và nhấn Enter để lưu mà không cần dùng chuột.=> tự nhiên đọc được cái này trên fb thấy cũng hay, làm được thì oke
 
-Đồng bộ Pet ID: Sau khi đăng ký nhanh, Admin có thể tạo ngay Pet ID gán cho tài khoản này để thực hiện Check-in.
+Phản hồi trạng thái xử lý: Sau khi Admin nhấn "Lưu", nút "Lưu" ngay lập tức chuyển sang trạng thái quay tròn (Loading Spinner) và khóa click để tránh Admin bấm nhiều lần. Khi có phản hồi thành công, Form tự động đóng và hiển thị một thông báo Toast màu xanh lá ở góc màn hình: "Đã khởi tạo tài khoản tạm và kích hoạt SMS thành công!".
+
+Đồng bộ Pet ID: SSau khi Form đăng ký nhanh đóng lại, Frontend tự động bắt sự kiện và đẩy hiển thị tiếp một Popup là Form "Thêm nhanh thông tin bé cưng", cho phép Admin nhập ngay cân nặng, giống loài để tạo PetID hoàn tất thủ tục Check-in tại quầy mà không bị ngắt quãng
 
 Mô tả giao diện:
 
-Trình quản lý khách hàng (Admin): Nút ""Thêm khách hàng nhanh"" nằm ở vị trí dễ thấy. Form nhập liệu dạng bảng ngang hoặc popup đơn giản, ưu tiên tốc độ nhập liệu.
-"
-User Story 2a: Đăng nhập hệ thống	"Là một Người dùng (Thành viên hoặc Khách vãng lai), tôi muốn có thể đăng nhập vào hệ thống bằng mật khẩu hoặc mã xác thực OTP để truy cập vào Dashboard cá nhân, quản lý Pet ID và theo dõi các dịch vụ đang sử dụng.
+Trình quản lý khách hàng (Admin): Nút "Thêm khách hàng nhanh" nằm ở vị trí dễ thấy. Form nhập liệu dạng bảng ngang hoặc popup đơn giản, ưu tiên tốc độ nhập liệu.
+
+
+User Story 2a: Đăng nhập hệ thống	Là một Người dùng (Thành viên hoặc Khách vãng lai), tôi muốn có thể đăng nhập vào hệ thống bằng mật khẩu hoặc mã xác thực OTP để truy cập vào Dashboard cá nhân, quản lý Pet ID và theo dõi các dịch vụ đang sử dụng.
 
 Acceptance Criteria (AC):
 
-Kiểm tra định danh: Khi nhập SĐT, nếu SĐT chưa tồn tại trong CSDL, hệ thống hiển thị thông báo lỗi: ""Số điện thoại chưa được đăng ký. Vui lòng thực hiện đăng ký"" kèm nút ""Đăng ký ngay"".
+Kiểm tra định danh: 
 
-Xác thực Mật khẩu (Thành viên): Đối với tài khoản đã kích hoạt bảo mật, nếu nhập sai mật khẩu, hệ thống báo lỗi: ""Mật khẩu đăng nhập không chính xác"".
+Ngay khi người dùng rời khỏi ô nhập Số điện thoại (onBlur), Frontend thực hiện kiểm tra định dạng. Nếu số điện thoại trống hoặc không đủ 10 chữ số, nút "Đăng nhập" sẽ bị vô hiệu hóa (Disabled), đồng thời viền ô nhập đổi sang màu đỏ kèm dòng cảnh báo dưới ô. 
 
-Xác thực OTP: Khách vãng lai có thể chọn ""Đăng nhập qua OTP"". Hệ thống gửi mã qua SMS Gateway có hiệu lực trong 05 phút. Đăng nhập thành công khi mã khớp.
+Nếu SĐT chưa đăng ký, hệ thống hiển thị thông báo lỗi: "Số điện thoại chưa được đăng ký. Vui lòng thực hiện đăng ký" kèm nút "Đăng ký ngay".
+
+Quản lý tab Đăng nhập linh hoạt: Frontend xử lý chuyển đổi mượt mà bằng trạng thái giữa hai phương thức: "Đăng nhập bằng mật khẩu" và "Đăng nhập bằng OTP" thông qua giao diện Thẻ (Tabs) mà không làm tải lại trang. Khi chọn Tab OTP, trường "Mật khẩu" sẽ ẩn đi và thay thế bằng nút "Nhận mã OTP". => Đã des
+
+Xác thực Mật khẩu (Thành viên): Khi Thành viên chính thức nhập mật khẩu và nhấn Đăng nhập, nếu lỗi không khớp, Frontend giữ lại số điện thoại đã nhập, làm trống ô mật khẩu, tự động focus con trỏ chuột vào ô mật khẩu và render dòng thông báo lỗi đỏ: "Mật khẩu đăng nhập không chính xác".
+
+Xác thực OTP: Khách vãng lai có thể chọn "Đăng nhập qua OTP". Hệ thống gửi mã qua SMS Gateway, Frontend hiển thị ô nhập mã OTP (6 ô số độc lập) có hiệu lực trong 05 phút đi kèm hiệu ứng đếm ngược thời gian thực và Nút "Gửi lại mã". Đăng nhập thành công khi mã khớp.
 
 Quên mật khẩu: Hệ thống yêu cầu nhập số điện thoại, sau đó gửi link khôi phục qua SMS Gateway với hiệu lực 48 giờ để thiết lập lại mật khẩu mới.
-
-Giới hạn đăng nhập sai: Nếu nhập sai mật khẩu 05 lần liên tiếp, hệ thống tự động khóa tài khoản trong 30 phút.
 
 Khởi tạo phiên: Khi đăng nhập thành công, hệ thống cập nhật trạng thái Session Active, ghi nhận thời gian truy cập và điều hướng người dùng về Trang chủ.
 
 Mô tả giao diện:
 
-Màn hình Đăng nhập: Thiết kế tập trung vào hai trường chính (SĐT và Mật khẩu). Có tùy chọn chuyển đổi linh hoạt giữa ""Đăng nhập bằng mật khẩu"" và ""Đăng nhập bằng OTP"". Dòng “Quên mật khẩu” nằm dưới ô
+Màn hình Đăng nhập: Thiết kế tập trung vào hai trường chính (SĐT và Mật khẩu). Có tùy chọn chuyển đổi linh hoạt giữa "Đăng nhập bằng mật khẩu" và "Đăng nhập bằng OTP". Dòng “Quên mật khẩu” nằm dưới ô
 
-Trạng thái Khóa tài khoản: Hiển thị một lớp phủ (Overlay) mờ trên màn hình với biểu tượng ổ khóa, đồng hồ đếm ngược thời gian chờ và nút bấm gọi nhanh Hotline hỗ trợ.
-"
-User Story 2b: Thay đổi mật khẩu và Bảo mật nâng cao	"Là một Thành viên đã đăng nhập, tôi muốn có thể thay đổi mật khẩu cá nhân trong mục cấu hình để tăng cường tính bảo mật cho tài khoản và bảo vệ thông tin của thú cưng.
+Là một Thành viên đã đăng nhập, tôi muốn có thể thay đổi mật khẩu cá nhân trong mục cấu hình để tăng cường tính bảo mật cho tài khoản và bảo vệ thông tin của thú cưng.
 
 Acceptance Criteria (AC):
 
-Yêu cầu xác minh: Khi chọn ""Đổi mật khẩu"", hệ thống yêu cầu người dùng nhập mật khẩu cũ hoặc xác thực mã OTP từ SMS Gateway để xác nhận chính chủ.
+Yêu cầu xác minh: Khi chọn "Đổi mật khẩu", hệ thống yêu cầu người dùng nhập mật khẩu cũ hoặc xác thực mã OTP đếm ngược từ SMS Gateway để xác nhận chính chủ.
 
-Ràng buộc mật khẩu mới: Mật khẩu mới phải đáp ứng: tối thiểu 8 ký tự, có ít nhất 1 chữ số và 1 ký tự đặc biệt.
+Ràng buộc mật khẩu mới: Khi người dùng gõ mật khẩu mới, Frontend bắt sự kiện gõ phím và chạy kiểm tra Regex trực tiếp: 
 
-Đồng bộ hóa CSDL: Sau khi xác nhận mật khẩu mới hợp lệ, hệ thống cập nhật mật khẩu đã mã hóa vào CSDL và hiển thị thông báo ""Cập nhật mật khẩu thành công"".
+ Độ dài tối thiểu 8 ký tự.
 
-Ràng buộc tính năng nhạy cảm: Nếu người dùng chưa thiết lập mật khẩu (tài khoản tạm), hệ thống sẽ chặn truy cập vào mục ""Đổi điểm thưởng"" và yêu cầu hoàn thiện mật khẩu trước.
+Chứa ít nhất một chữ số và một ký tự đặc biệt.
+
+Hiển thị thanh chỉ báo trực quan dưới ô nhập (Thanh đổi màu liên tục: Đỏ nếu Yếu --> Vàng nếu Trung bình --> Xanh lá nếu Mạnh).
+
+Ràng buộc logic nút bấm: Nếu mật khẩu mới không thỏa mãn Regex hoặc ô "Xác nhận mật khẩu mới" không khớp, Frontend khóa nút "Cập nhật mật khẩu thành công" ở trạng thái mờ (Disabled).
+
+Hiển thị thông báo thành công: Sau khi cập nhật thành công, Frontend render thông báo Toast nhỏ góc màn hình: "Cập nhật mật khẩu thành công".
+
+Ràng buộc tính năng nhạy cảm: Nếu người dùng chưa thiết lập mật khẩu (tài khoản tạm), frontend sẽ tự động ẩn hoặc khóa click (Disable) mục "Đổi điểm thưởng", đồng thời hiển thị một Banner thông báo màu vàng ngay trên đầu màn hình cấu hình: "Vui lòng thiết lập mật khẩu cá nhân để mở khóa tính năng đổi điểm thưởng".
 
 Mô tả giao diện:
 
-Trang Cấu hình tài khoản: Giao diện dạng thẻ (Tab), mục ""Bảo mật"" nằm riêng biệt với các trường nhập liệu rõ ràng, có bộ đo độ mạnh yếu của mật khẩu (Thanh màu từ Đỏ sang Xanh).
+Trang Cấu hình tài khoản: Giao diện dạng thẻ (Tab), mục "Bảo mật" nằm riêng biệt với các trường nhập liệu rõ ràng, có bộ đo độ mạnh yếu của mật khẩu (Thanh màu từ Đỏ sang Xanh).
 
-"
-User Story 2c: Quản lý phiên và Cảnh báo bảo mật	"Là một Khách hàng, tôi muốn hệ thống tự động bảo vệ tài khoản khi tôi quên đăng xuất hoặc có truy cập lạ để giảm thiểu rủi ro bị đánh cắp thông tin cá  nhân.
 
-Acceptance Criteria (AC):
-
-Hết hạn phiên làm việc: Sau 55 phút không có thao tác, hiển thị một Popup đếm ngược (5 phút) với dòng chữ ""Phiên đăng nhập sắp hết hạn"" kèm nút ""Tiếp tục đăng nhập"" để gia hạn session. Đúng 60 phút không có thao tác, hệ thống tự động kết thúc phiên, điều hướng về trang đăng nhập kèm thông báo: ""Phiên đăng nhập đã kết thúc, vui lòng đăng nhập lại!"".
-
-Cảnh báo thiết bị lạ: Nếu đăng nhập từ một địa chỉ IP hoặc thiết bị chưa từng được ghi nhận, hệ thống gửi ngay tin nhắn SMS: ""Phát hiện đăng nhập bất thường vào tài khoản Pawpal của bạn"".
-
-Khôi phục mật khẩu: Tại màn hình đăng nhập, nếu chọn ""Quên mật khẩu"", hệ thống gửi link khôi phục qua SMS Gateway có hiệu lực 48 giờ để khách hàng thiết lập lại mật khẩu mới.
-
-Mô tả giao diện:
-
-Thông báo phiên hết hạn: Một Popup cảnh báo xuất hiện trước khi phiên kết thúc 1 phút, cho phép người dùng nhấn ""Tiếp tục đăng nhập"" để gia hạn phiên.
-
-Email/SMS cảnh báo: Nội dung ngắn gọn, súc tích, bao gồm thông tin thiết bị, vị trí và thời gian truy cập.
-"
-User Story 3a: Khởi tạo và Cập nhật hồ sơ Pet ID	"Là một Khách hàng (Thành viên) hoặc Admin, tôi muốn khởi tạo và cập nhật hồ sơ chi tiết cho thú cưng để hệ thống có cơ sở tính toán giá dịch vụ chính xác và lưu trữ lịch sử y tế xuyên suốt cho bé.
+User Story 2c: Cảnh báo bảo mật	Là một Khách hàng, tôi muốn hệ thống tự động bảo vệ tài khoản khi tôi quên đăng xuất hoặc có truy cập lạ để giảm thiểu rủi ro bị đánh cắp thông tin cá  nhân.
 
 Acceptance Criteria (AC):
 
-Hiển thị Form nhập liệu: Hệ thống cung cấp form gồm: Tên thú cưng (Text), Giống loài (Text), Cân nặng (Number), Ảnh đại diện (Upload), Tiền sử y tế/Dị ứng (Textarea).
+Cảnh báo thiết bị lạ: Giao diện cấu hình tài khoản có một khu vực mô phỏng lịch sử đăng nhập, render rõ danh sách các thiết bị, vị trí và mốc thời gian thực tế để khách hàng dễ dàng kiểm soát.
 
-Ràng buộc dữ liệu bắt buộc: Hệ thống khóa nút ""Lưu"" và báo lỗi nếu các trường Tên, Giống loài, Cân nặng bị bỏ trống.
+Khôi phục mật khẩu: Tại màn hình đăng nhập, khi click "Quên mật khẩu", Frontend sử dụng Router chuyển mượt mà sang Form nhập SĐT khôi phục mà không làm tải lại trang, hiển thị thông báo tiến trình gửi link thành công sau khi người dùng điền SĐT hợp lệ.
+
+
+User Story 3a: Khởi tạo và Cập nhật hồ sơ Pet ID	Là một Khách hàng (Thành viên) hoặc Admin, tôi muốn khởi tạo và cập nhật hồ sơ chi tiết cho thú cưng để hệ thống có cơ sở tính toán giá dịch vụ chính xác và lưu trữ lịch sử y tế xuyên suốt cho bé.
+
+Acceptance Criteria (AC):
+
+Hiển thị Form nhập liệu: Hệ thống cung cấp form gồm: Tên thú cưng (Text), Giống loài (Text), Cân nặng (Number), Ảnh đại diện (Upload), Tiền sử y tế/Dị ứng (Textarea). 
+
+Ràng buộc dữ liệu bắt buộc: Frontend thực hiện kiểm tra điều kiện ngay khi người dùng nhập liệu, Hệ thống khóa nút "Lưu" và báo lỗi nếu các trường Tên, Giống loài, Cân nặng bị bỏ trống.
 
 Xử lý hình ảnh: 
 
-Chỉ chấp nhận định dạng JPG, PNG, WEBP.
+Chỉ chấp nhận định dạng JPG, PNG, WEBP. Nếu định dạng tệp không phải JPG, PNG, WEBP, Frontend từ chối nhận tệp, đổi viền khung upload sang màu đỏ và hiển thị lỗi: "Định dạng file không hỗ trợ".
 
-Nếu dung lượng > 5MB, hiển thị thông báo lỗi: ""Dung lượng ảnh vượt quá 5MB"".
+Nếu dung lượng > 5MB, hiển thị thông báo lỗi: "Dung lượng ảnh vượt quá 5MB".
 
-Kiểm tra trùng tên: Nếu tên thú cưng mới trùng với tên thú cưng đã có trong cùng một tài khoản, hệ thống yêu cầu: ""Vui lòng thêm ký hiệu phân biệt cho bé (Ví dụ: Bông 1, Bông 2)"".
+Xử lý xem trước ảnh (Image Preview): Ngay khi tệp ảnh tải lên hợp lệ, Frontend thực hiện render ảnh đó lên khung tròn đại diện dạng Preview ngay lập tức để người dùng nhìn thấy trước khi nhấn Lưu.
 
-Khởi tạo định danh: Khi nhấn ""Lưu"", hệ thống cấp một mã Pet ID duy nhất và hiển thị thông báo: ""Khởi tạo hồ sơ thành công"".
+Kiểm tra trùng tên: Nếu tên thú cưng mới trùng với tên thú cưng đã có trong cùng một tài khoản,Frontend thực hiện render một dòng thông báo lỗi màu cam ngay dưới ô nhập Tên bé: "Vui lòng thêm ký hiệu phân biệt cho bé (Ví dụ: Bông 1, Bông 2)".
+
+Khởi tạo định danh: Khi nhấn "Lưu" và dữ liệu hợp lệ, Frontend kích hoạt hiệu ứng chuyển trạng thái nút bấm sang dạng tải dữ liệu (Loading Spinner), sau đó đóng Form và hiển thị một thông báo dạng Toast xanh lá thông báo: "Khởi tạo hồ sơ thành công".
 
 Mô tả giao diện:
 
-Trang ""Bé cưng của tôi"": Giao diện dạng lưới (Grid) hiển thị các thẻ (Card) của từng bé thú cưng với ảnh đại diện tròn và thông số nhanh (cân nặng, giống). Khi click vào thì ra trang thông tin từng bé và lịch sử các lần dịch vụ
+Trang "Bé cưng của tôi": Giao diện dạng lưới (Grid) hiển thị các thẻ (Card) của từng bé thú cưng với ảnh đại diện tròn và thông số nhanh (cân nặng, giống). Khi click vào thì ra trang thông tin từng bé và lịch sử các lần dịch vụ
 
-Màn hình chỉnh sửa: Thiết kế như một trang ""Hồ sơ cá nhân"" (Bio) thu nhỏ. Các thông tin về Dị ứng/Lưu ý được đặt trong khung màu đỏ/vàng nổi bật để dễ gây chú ý.
-"
-User Story 3b: Kết nối Nhật ký chăm sóc và Thiết bị ngoại vi	"Là một Khách hàng, tôi muốn hồ sơ thú cưng của mình được kết nối tự động với các thiết bị giám sát để tôi có thể theo dõi hình ảnh và Nhật ký chăm sóc thực tế của bé bất cứ lúc nào.
+Màn hình chỉnh sửa: Thiết kế như một trang "Hồ sơ cá nhân" (Bio) thu nhỏ. Các thông tin về Dị ứng/Lưu ý được đặt trong khung màu đỏ/vàng nổi bật để dễ gây chú ý.
+
+
+User Story 3b: Kết nối Nhật ký chăm sóc và Thiết bị ngoại vi	Là một Khách hàng, tôi muốn hồ sơ thú cưng của mình được kết nối tự động với các thiết bị giám sát để tôi có thể theo dõi hình ảnh và Nhật ký chăm sóc thực tế của bé bất cứ lúc nào.
 
 Acceptance Criteria (AC):
 
-Liên kết tự động: Ngay khi Pet ID được tạo, hệ thống tự động khởi tạo một phân mục ""Nhật ký chăm sóc"" riêng biệt gắn liền với mã định danh đó.
+Liên kết tự động: Ngay khi Pet ID được tạo, hệ thống tự động khởi tạo một phân mục "Nhật ký chăm sóc" riêng biệt gắn liền với mã định danh đó.
 
-Truy xuất dữ liệu thiết bị: Hệ thống cho phép hiển thị luồng dữ liệu hình ảnh/video từ Thiết bị ngoại vi trực tiếp lên Dashboard của Pet ID khi bé đang ở tiệm.
+Tích hợp trình phát Video trực tuyến: Frontend tích hợp một khung phát video trên giao diện Timeline. Khi phiên dịch vụ của bé ở trạng thái "Đang thực hiện", khung này sẽ hiển thị một nút "Xem bé cưng" màu xanh nhấp nháy, cho phép click vào để mở ra luồng dữ liệu hình ảnh trực tiếp từ Thiết bị ngoại vi .
 
-Tính kế thừa: Mọi lịch sử tắm, cắt tỉa, lưu trú và hóa đơn mua sắm phải được liệt kê chi tiết trong hồ sơ của từng Pet ID riêng lẻ.
+Tính kế thừa: Mọi lịch sử tắm, cắt tỉa, lưu trú và hóa đơn mua sắm phải được Frontend sắp xếp và render tự động lên một trục dòng thời gian theo thứ tự từ mới nhất đến cũ nhất.
 
 Cập nhật chỉ số sinh hoạt: Cho phép cả Khách hàng và Admin cập nhật các chỉ số hàng ngày (ăn uống, đi vệ sinh, tâm trạng) vào Nhật ký để đảm bảo dữ liệu khớp với thực tế.
 
 Mô tả giao diện:
 
-Nhật ký chăm sóc: Một dòng thời gian (Timeline) hiển thị các mốc sự kiện. Ví dụ: ""10:00 - Bé bắt đầu tắm"", kèm theo hình ảnh hoặc nút xem Live-Stream từ thiết bị ngoại vi.
+Nhật ký chăm sóc: Một dòng thời gian (Timeline) hiển thị các mốc sự kiện. Ví dụ: "10:00 - Bé bắt đầu tắm", kèm theo hình ảnh hoặc nút xem Live-Stream từ thiết bị ngoại vi.
 
-Mục ""Lịch sử"": Liệt kê danh sách các lần sử dụng dịch vụ trước đó, nhấn vào từng lần để xem lại chi tiết nhật ký và ảnh cũ.
+Mục "Lịch sử": Liệt kê danh sách các lần sử dụng dịch vụ trước đó, nhấn vào từng lần để xem lại chi tiết nhật ký và ảnh cũ.
 
-"
-User Story 3c: Lưu trữ và Phục hồi hồ sơ	"Là một Khách hàng, tôi muốn hồ sơ thú cưng của mình không bị mất vĩnh viễn nếu lỡ tay xóa để tôi có thể khôi phục lại dữ liệu y tế và lịch sử chăm sóc quan trọng khi cần.
+
+User Story 3c: Lưu trữ và Phục hồi hồ sơ	Là một Khách hàng, tôi muốn hồ sơ thú cưng của mình không bị mất vĩnh viễn nếu lỡ tay xóa để tôi có thể khôi phục lại dữ liệu y tế và lịch sử chăm sóc quan trọng khi cần.
 
 Acceptance Criteria (AC):
 
-Cơ chế xóa tạm thời: Khi chọn ""Xóa"", hệ thống hiển thị xác nhận và chuyển hồ sơ vào ""Trạng thái lưu trữ"" trong 30 ngày.
+Khi người dùng nhấn nút "Xóa", Frontend chặn hành động xóa ngay lập tức và render một cửa sổ bật lên (Modal) đè lên màn hình hiện tại để xác nhận, đi kèm hiệu ứng làm mờ nền phía sau (Backdrop Blur) nhằm tránh thao tác nhầm ngoài ý muốn.
 
-Quyền khôi phục: Trong vòng 30 ngày, hồ sơ vẫn tồn tại trong mục ""Đã xóa"". Khách hàng có thể nhấn ""Khôi phục"" để đưa bé trở lại danh sách hoạt động.
+Cập nhật danh sách lưu trữ tức thì: Khi người dùng xác nhận xóa, Frontend lập tức xóa thẻ thú cưng đó khỏi danh sách hoạt động trên màn hình (bằng cách cập nhật mốc State hiện tại) và đẩy hồ sơ đó vào Tab "Kho lưu trữ" mà không yêu cầu người dùng F5 lại trang.
 
-Ràng buộc quy trình Đặt lịch: Nếu người dùng chọn một hồ sơ chưa hoàn thiện (thiếu cân nặng/thông tin y tế) để đặt lịch, hệ thống điều hướng về trang chỉnh sửa kèm thông báo: ""Vui lòng cập nhật thông tin thú cưng trước khi đặt lịch"".
+Quyền khôi phục: Trong vòng 30 ngày, hồ sơ vẫn tồn tại trong mục "Đã xóa". Khách hàng có thể nhấn "Khôi phục" để đưa bé trở lại danh sách hoạt động. Mỗi hồ sơ đều có 1 con số hiển thị số ngày còn lại có thể khôi phục
 
-Quyền hạn Admin: Admin có quyền hiệu chỉnh dữ liệu Pet ID tại quầy khi tiếp nhận thú cưng nếu phát hiện thông tin khách khai báo sai lệch so với thực tế.
+Ràng buộc quy trình Đặt lịch: Nếu người dùng chọn một hồ sơ chưa hoàn thiện (thiếu cân nặng/thông tin y tế) để đặt lịch, Frontend sẽ tự động kích hoạt Router thực hiện lệnh chuyển hướng trang (Redirect) đưa khách hàng quay lại màn hình chỉnh sửa hồ sơ kèm theo một Banner thông báo màu vàng cảnh báo ở đầu trang: "Vui lòng cập nhật đầy đủ thông tin của bé để hệ thống tính giá dịch vụ chính xác".
+
+Quyền hạn Admin: Trên giao diện quản trị của Admin, hệ thống tích hợp một chế độ "Chỉnh sửa nhanh tại quầy" (Inline Editing). Admin có thể click đúp chuột trực tiếp vào các trường dữ liệu Pet ID bị sai để biến trường đó thành ô nhập liệu và sửa trực tiếp tại chỗ khi làm thủ tục check-in.
 
 Mô tả giao diện:
 
 Thông báo điều hướng: Một Banner màu vàng xuất hiện phía trên cùng màn hình Đặt lịch nếu hồ sơ Pet ID chưa đủ điều kiện để tính giá dịch vụ.
 
-Mục ""Kho lưu trữ"": Nằm trong phần Cài đặt, nơi hiển thị các hồ sơ sắp bị xóa vĩnh viễn kèm đồng hồ đếm ngược số ngày còn lại.
+Mục "Kho lưu trữ": Nằm trong phần Cài đặt, nơi hiển thị các hồ sơ sắp bị xóa vĩnh viễn kèm đồng hồ đếm ngược số ngày còn lại.
 
-"
-User Story 4a: Lựa chọn Dịch vụ và Khai báo thực thể	"Là một Người dùng (Thành viên hoặc Khách vãng lai), tôi muốn hệ thống nhận diện đúng đối tượng và hồ sơ thú cưng để làm cơ sở tính toán giá dịch vụ chính xác trước khi chọn lịch.
+
+User Story 4a: Lựa chọn Dịch vụ và Khai báo thực thể	Là một Người dùng (Thành viên hoặc Khách vãng lai), tôi muốn hệ thống nhận diện đúng đối tượng và hồ sơ thú cưng để làm cơ sở tính toán giá dịch vụ chính xác trước khi chọn lịch.
 
 Acceptance Criteria (AC):
 
+Xử lý thanh điều hướng thông minh: Khi người dùng di chuột vào ô "Dịch vụ" trên thanh Navigation, Frontend bắt sự kiện onMouseEnter để kích hoạt hiệu ứng trượt mở (Slide-down) hiển thị một cửa sổ danh mục xổ xuống (Dropdown Menu) chứa 3 tùy chọn: Spa & Grooming, Pet Hotel. Khi chuột rời đi (onMouseLeave), Dropdown tự động ẩn đi bằng CSS Opacity mượt mà.
+
 Phân tách luồng:  
 
-Nếu là Thành viên: Hiển thị danh sách Pet ID sẵn có. Khách có thể chọn một hoặc nhiều bé.
+Luồng A (Thành viên): Hệ thống nạp và render danh sách các Pet ID dưới dạng các thẻ (Card) bo góc nhỏ, đi kèm ô Checkbox có thuộc tính gán State checked. Người dùng có thể click chọn một hoặc nhiều bé cùng lúc, các thẻ được chọn sẽ tự động đổi viền sang màu Vàng nghệ đậm.
 
-Nếu là Khách vãng lai: Hiển thị Form nhập: Họ tên, SĐT và thông tin thú cưng (Tên, Giống, Cân nặng).
+Luồng B (Khách vãng lai): Hệ thống render biểu mẫu "Thông tin đặt lịch nhanh" cấu hình theo cấu trúc một cột dọc, chữ tiêu đề input to, khoảng cách rộng rãi, bao gồm thông tin chủ nuôi (Họ tên, SĐT) và thông tin bé cưng (Tên bé, Giống loài Dropdown, Cân nặng Input dạng Number kèm nút + - để tăng giảm giá trị).
 
-Ghi nhớ tạm thời (Cache): Đối với khách vãng lai, thông tin nhập vào chỉ được lưu vào bộ nhớ đệm (Session), chưa được ghi vào CSDL chính thức ở bước này.
+Ràng buộc dữ liệu: 
 
-Ràng buộc dữ liệu: Nếu Pet ID (Thành viên) thiếu cân nặng hoặc Khách vãng lai bỏ trống thông tin thú cưng, hệ thống báo lỗi và yêu cầu cập nhật ngay tại màn hình này.
+Pet ID của thành viên bị thiếu trường dữ liệu cân nặng, Frontend lập tức chặn tiến trình chuyển bước, hiển thị viền đỏ cảnh báo tại thẻ của bé đó và yêu cầu hoàn thiện nhanh.
 
-Tính giá tự động: Dựa vào giống loài và cân nặng đã chọn, hệ thống hiển thị mức giá dự kiến (Base Price) cho dịch vụ đó.
+Đối với khách vãng lai, nếu trường SĐT bị bỏ trống hoặc nhập sai cấu trúc 10 chữ số, ngay khi người dùng chuyển tab nhập liệu (onBlur), Frontend lập tức đổi viền ô nhập sang màu đỏ, render dòng chữ cảnh báo đỏ phía dưới: "Số điện thoại phải bao gồm 10 chữ số", đồng thời gán thuộc tính disabled (khóa cứng click) lên nút "Xác nhận" ở bước cuối cùng.
+
+Tính giá tự động: Toàn bộ thông tin khách vãng lai nhập vào tại màn hình này sẽ được Frontend đẩy vào một biến State tổng và đồng bộ lưu tạm vào bộ nhớ trình duyệt (SessionStorage) để làm dữ liệu tính giá tự động ở các bước sau mà không cần tải lại trang
 
 Mô tả giao diện:
 
@@ -216,7 +242,7 @@ Màn hình Phân tách Luồng Định danh (Thông tin bé cưng)
 
 Luồng A: Đối với Khách hàng thành viên (Đã đăng nhập)
 
-Tên màn hình: ""Chọn bé cưng của bạn""
+Tên màn hình: "Chọn bé cưng của bạn"
 
 Thành phần UI: * Hiển thị danh sách các Pet ID dưới dạng các thẻ bo góc nhỏ. Mỗi thẻ gồm: Ảnh đại diện tròn của thú cưng, Tên bé, Giống loài, Cân nặng (ví dụ: Bông - Samoyed - 25kg).
 
@@ -226,7 +252,7 @@ Nút bấm bổ sung: Thẻ cuối cùng luôn là một nút dấu cộng [+] T
 
 Luồng B: Đối với Khách vãng lai (Chưa đăng nhập)
 
-Tên màn hình: ""Thông tin đặt lịch nhanh""
+Tên màn hình: "Thông tin đặt lịch nhanh"
 
 Biểu mẫu (Form) nhập liệu: Thiết kế một cột dọc, chữ tiêu đề input to, khoảng cách rộng rãi:
 
@@ -234,15 +260,15 @@ Thông tin chủ nuôi: Ô nhập Họ tên (Text Input), Ô nhập Số điện
 
 Thông tin bé cưng: Ô nhập Tên bé (Text), Ô nhập giống loài, Ô nhập Cân nặng (Number Input kèm nút tăng giảm + -).
 
-Trạng thái Sai định dạng nhập liệu: Nếu khách vãng lai nhập thiếu số điện thoại hoặc sai cấu trúc, trường nhập liệu đó lập tức đổi viền sang màu đỏ, xuất hiện dòng chữ nhỏ phía dưới: ""Số điện thoại phải bao gồm 10 chữ số"", đồng thời nút ""Xác nhận"" ở bước cuối sẽ bị mờ đi và không thể click.
+Trạng thái Sai định dạng nhập liệu: Nếu khách vãng lai nhập thiếu số điện thoại hoặc sai cấu trúc, trường nhập liệu đó lập tức đổi viền sang màu đỏ, xuất hiện dòng chữ nhỏ phía dưới: "Số điện thoại phải bao gồm 10 chữ số", đồng thời nút "Xác nhận" ở bước cuối sẽ bị mờ đi và không thể click.
 
-Ghi chú chân trang: Một dòng chữ nhỏ màu xanh mờ: ""Thông tin sẽ được lưu tạm để tính giá chính xác và tích điểm thưởng sau khi hoàn tất. "".
+Ghi chú chân trang: Một dòng chữ nhỏ màu xanh mờ: "Thông tin sẽ được lưu tạm để tính giá chính xác và tích điểm thưởng sau khi hoàn tất. ".
 
 Màn hình Chọn Lịch & Nhân viên
 
 Bố cục: Chia làm 2 khu vực:
 
-Bên trái - Chọn nhân viên: Giao diện trượt ngang (Carousel) hiển thị các thẻ tròn gồm Ảnh chân dung nhân viên, Tên, Chuyên viên bao nhiêu năm kinh nghiệm và số sao đánh giá. Thẻ đầu tiên luôn là tùy chọn ""Chọn ngẫu nhiên (Hệ thống tự điều phối)"" với biểu tượng PawPal màu xanh lá. Trong trường hợp này, khi chọn ngẫu nhiên xong thì hệ thống phải hiện lên nhân viên đó trên màn hình (Như 1 cái popup), Khách hàng nhấn Đồng ý      
+Bên trái - Chọn nhân viên: Giao diện trượt ngang (Carousel) hiển thị các thẻ tròn gồm Ảnh chân dung nhân viên, Tên, Chuyên viên bao nhiêu năm kinh nghiệm và số sao đánh giá. Thẻ đầu tiên luôn là tùy chọn "Chọn ngẫu nhiên (Hệ thống tự điều phối)" với biểu tượng PawPal màu xanh lá. Trong trường hợp này, khi chọn ngẫu nhiên xong thì hệ thống phải hiện lên nhân viên đó trên màn hình (Như 1 cái popup), Khách hàng nhấn Đồng ý      
 
 Bên phải - Bảng giờ (Time Slot Grid): Hiển thị danh sách các ô giờ theo hàng và cột (Ví dụ: 08:00, 09:00, 10:00,...). Làm như cái Calendar í
 
@@ -252,9 +278,9 @@ Logic tương tác và Giao diện Giữ chỗ (Hold UI):
 
 Ô giờ đã có người đặt: Nền xám mờ, bị khóa (Disabled) và có icon ổ khóa nhỏ.
 
-Ngay khi khách click chọn 1 ô giờ: Ô đó lập tức đổi sang màu Vàng nghệ (trạng thái ""Đang chờ"").
+Ngay khi khách click chọn 1 ô giờ: Ô đó lập tức đổi sang màu Vàng nghệ (trạng thái "Đang chờ").
 
-Một Thanh đếm ngược thời gian (Countdown Banner) màu vàng cam tinh tế sẽ trượt nhẹ từ trên xuống đầu trang với nội dung: ""Paw & Pal đang giữ khung giờ này riêng cho bạn trong: 14:59s""
+Một Thanh đếm ngược thời gian (Countdown Banner) màu vàng cam tinh tế sẽ trượt nhẹ từ trên xuống đầu trang với nội dung: "Paw & Pal đang giữ khung giờ này riêng cho bạn trong: 14:59s"
 
 Nếu khách đóng trình duyệt hoặc mất kết nối, trong vòng 15 phút đó, nếu họ quay lại, hệ thống vẫn nhận diện Session và giữ nguyên lượt chọn cho họ.
 
@@ -262,9 +288,9 @@ Giới hạn số lượng: Mỗi SĐT/Session chỉ được giữ tối đa 01
 
 Ngoại lệ: 
 
-Trạng thái Hết giờ giữ chỗ (Timeout): Khi đồng hồ đếm ngược về 00:00, hệ thống tự động làm mờ màn hình và hiện một Popup thông báo màu đỏ nhạt: ""Thời gian giữ chỗ 15 phút đã hết. Vui lòng chọn lại khung giờ mới!"" kèm một nút bấm duy nhất: ""Làm mới bảng giờ"".
+Trạng thái Hết giờ giữ chỗ (Timeout): Khi đồng hồ đếm ngược về 00:00, hệ thống tự động làm mờ màn hình và hiện một Popup thông báo màu đỏ nhạt: "Thời gian giữ chỗ 15 phút đã hết. Vui lòng chọn lại khung giờ mới!" kèm một nút bấm duy nhất: "Làm mới bảng giờ".
 
-Trạng thái Tranh chấp: Nếu ô lịch vừa có người giật trước ở mili giây trước, ngay khi khách bấm vào, ô lịch lập tức chuyển sang màu xám khóa lại và một Thông báo nhỏ tự ẩn màu đỏ hiện ở góc phải màn hình: ""Rất tiếc, khung giờ này vừa được người khác giữ chỗ!"".
+Trạng thái Tranh chấp: Nếu ô lịch vừa có người giật trước ở mili giây trước, ngay khi khách bấm vào, ô lịch lập tức chuyển sang màu xám khóa lại và một Thông báo nhỏ tự ẩn màu đỏ hiện ở góc phải màn hình: "Rất tiếc, khung giờ này vừa được người khác giữ chỗ!".
 
 
 
@@ -296,7 +322,7 @@ Tổng thanh toán tại cửa hàng: [Tổng số tiền] VNĐ.
 
 Hiển thị dòng chữ nhỏ ở dưới/trên “*Mọi chi phí sẽ được thanh toán sau khi hoàn tất dịch vụ tại Pawpal.”
 
-Nút hành động chính (Primary CTA Button): Nút capsule kích thước lớn đặt ở dưới cùng với dòng chữ: ""XÁC NHẬN ĐẶT LỊCH"".
+Nút hành động chính (Primary CTA Button): Nút capsule kích thước lớn đặt ở dưới cùng với dòng chữ: "XÁC NHẬN ĐẶT LỊCH".
 
 Màn hình / Popup Đặt lịch thành công
 
@@ -306,31 +332,31 @@ Thành phần UI:
 
 Biểu tượng dấu tích xanh lá lớn hoặc hình ảnh hoạt họa bàn chân chó PawPal đang vẫy chào vui vẻ.
 
-Dòng chữ lớn: ""Đặt lịch thành công! PawPal đang chờ đón bé"".
+Dòng chữ lớn: "Đặt lịch thành công! PawPal đang chờ đón bé".
 
 Mã đặt lịch (Booking ID) bằng chữ in hoa đậm (Ví dụ: PP-180526).
 
-Nút điều hướng chính: ""Theo dõi hành trình tại Nhật ký chăm sóc"" 
-"
-User Story 4b: Giữ chỗ thời gian thực	"Là một Khách hàng, tôi muốn khung giờ và nhân viên tôi chọn được giữ riêng cho tôi ngay lập tức để tôi có đủ thời gian hoàn tất thông tin mà không sợ người khác đặt mất.
+Nút điều hướng chính: "Theo dõi hành trình tại Nhật ký chăm sóc" 
+
+
+User Story 4b: Giữ chỗ thời gian thực	Là một Khách hàng, tôi muốn khung giờ và nhân viên tôi chọn được giữ riêng cho tôi ngay lập tức để tôi có đủ thời gian hoàn tất thông tin mà không sợ người khác đặt mất.
 
 Acceptance Criteria (AC):
 
-Kích hoạt giữ chỗ: Ngay khi khách nhấn vào một ô lịch/nhân viên, hệ thống chuyển trạng thái ô đó thành ""Đang chờ"".
+Kích hoạt giữ chỗ: Ngay khi khách nhấn vào một ô lịch/nhân viên, hệ thống chuyển trạng thái ô đó thành "Đang chờ".
 
-Khóa đối xứng: Trong 15 phút giữ chỗ, ô lịch này sẽ hiển thị trạng thái ""Đã có người giữ"" hoặc mờ đi đối với tất cả người dùng khác.
+Khóa đối xứng: Trong 15 phút giữ chỗ, ô lịch này sẽ hiển thị trạng thái "Đã có người giữ" hoặc mờ đi đối với tất cả người dùng khác.
 
 Tính bền vững (Persistence): Nếu khách đóng trình duyệt hoặc mất kết nối, trong vòng 15 phút đó, nếu họ quay lại, hệ thống vẫn nhận diện Session và giữ nguyên lượt chọn cho họ.
 
 Giới hạn số lượng: Mỗi SĐT/Session chỉ được giữ tối đa 01 ô lịch tại một thời điểm. Nếu chọn ô mới, ô cũ tự động giải phóng.
 
-Xử lý tranh chấp (Race Condition): Nếu 2 người bấm cùng lúc vào 1 mili giây, hệ thống ưu tiên yêu cầu đến máy chủ trước và báo lỗi cho người thứ hai: ""Khung giờ này vừa được người khác giữ"".
+Xử lý tranh chấp (Race Condition): Nếu 2 người bấm cùng lúc vào 1 mili giây, hệ thống ưu tiên yêu cầu đến máy chủ trước và báo lỗi cho người thứ hai: "Khung giờ này vừa được người khác giữ".
 
 Mô tả giao diện:
 
 Bảng lịch (Calendar Grid): Ô lịch khách đang chọn đổi sang màu vàng (Đang chờ) kèm biểu tượng đồng hồ đếm ngược nhỏ (15:00). Các ô người khác đang giữ sẽ có màu xám mờ. 
 
-=> CÁI NÀY ỨNG DỤNG CÁI LỊCH HỒI PHƯỢNG LÀM BÊN KIẾN TẬP MÀ KHÔNG XÀI NÈ"
 User Story 4c: Xác nhận đặt lịch và Định danh lũy tiến	"Là một Khách vãng lai, tôi muốn hoàn tất đặt lịch mà không cần cọc tiền để trải nghiệm dịch vụ nhanh chóng, đồng thời được tự động tạo tài khoản để tích điểm.
 
 Acceptance Criteria (AC):

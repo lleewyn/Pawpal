@@ -503,12 +503,11 @@ Số điện thoại chưa đăng ký: Nếu người dùng nhập SĐT không t
 Mô tả quy trình 
 Quy trình quản lý hồ sơ bé cưng khởi đầu sau khi người dùng đăng nhập thành công và truy cập vào mục "Hồ sơ của bé" trên Trang chủ. Tại giao diện này, hệ thống cho phép người dùng khởi tạo và duy trì danh tính số (Pet ID) cho các bé cưng của mình thông qua các thao tác cụ thể
 Trường hợp thêm mới hồ sơ, người dùng thực hiện cung cấp các thông tin định danh cơ bản bao gồm: Tên bé cưng, Giống loài, Cân nặng, Ảnh đại diện và đặc biệt là các thông tin nhạy cảm về y tế như tiền sử bệnh lý, dị ứng hoặc thói quen sinh hoạt. Sau khi nhấn nút “Lưu hồ sơ”, hệ thống sẽ kiểm tra tính hợp lệ của dữ liệu, sau đó khởi tạo một mã định danh Pet ID duy nhất trong CSDL.
-
 Trường hợp cập nhật thông tin, người dùng chọn một hồ sơ hiện có để thay đổi các thông tin hoặc cập nhật ảnh mới. Hệ thống sẽ ghi nhận phiên bản cập nhật mới nhất để đảm bảo dữ liệu luôn khớp với tình trạng thực tế của thú cưng tại thời điểm sử dụng dịch vụ.
 Ngay khi hồ sơ được xác lập, toàn bộ lích sử từ lúc bé “Đã tiếp nhận” cho đến lúc hoàn thành sẽ được lưu trữ trong Nhật ký chăm sóc. Trong quá trình thú cưng lưu trú hoặc làm đẹp tại cửa hàng, các luồng dữ liệu hình ảnh từ Thiết bị ngoại vi sẽ được hệ thống gán trực tiếp vào mã Pet ID tương ứng, cho phép khách hàng giám sát thông tin một cách xuyên suốt. Khách hàng và Admin đều có quyền cập nhật các chỉ số sinh hoạt cho thú cưng để đảm bảo dữ liệu luôn khớp với tình trạng thực tế tại mỗi thời điểm sử dụng dịch vụ.
 Quy trình kết thúc khi thông tin hồ sơ được lưu trữ thành công vào hệ thống hoặc sau khi khách hàng nhận được thông báo xác nhận cập nhật Pet ID hoàn tất.
 Quy tắc nghiệp vụ 
-Quyền sở hữu: Mỗi Pet ID phải thuộc sở hữu của một tài khoản khách hàng duy nhất; một khách hàng có quyền tạo không giới hạn số lượng Pet ID.
+Quyền sở hữu: Mỗi Pet ID phải thuộc sở hữu của một tài khoản khách hàng duy nhất; một khách hàng có quyền tạo không giới hạn số lượng Pet ID và ẩn hồ sơ khỏi trang.
 Dữ liệu bắt buộc: Các trường thông tin gồm Tên, Giống loài và Cân nặng là bắt buộc phải hoàn thiện để hệ thống có cơ sở tính toán đơn giá dịch vụ chính xác trong quy trình Đặt lịch.
 Ưu tiên hiển thị y tế: Thông tin về "Dị ứng" và "Lưu ý đặc biệt" phải luôn được làm nổi bật trên giao diện của hệ thống chăm sóc.
 Đồng bộ Nhật ký chăm sóc: Mỗi Pet ID sẽ được hệ thống tự động gán một lịch sử chăm sóc riêng biệt, không được phép gộp chung nhật ký giữa các bé thú cưng khác nhau.
@@ -520,6 +519,7 @@ Xóa nhầm hồ sơ: Hệ thống không xóa vĩnh viễn ngay mà đưa vào 
 Hồ sơ chưa hoàn thiện khi đặt lịch: Nếu khách hàng chọn một Pet ID thiếu thông tin để đặt dịch vụ, hệ thống sẽ tự động điều hướng về trang chỉnh sửa hồ sơ kèm thông báo: "Vui lòng cập nhật thông tin thú cưng".
 Trùng tên vật nuôi trong một tài khoản: Hệ thống yêu cầu người dùng thêm ký hiệu phân biệt hoặc hậu tố nếu phát hiện tên thú cưng mới trùng với tên thú cưng đã có trong cùng một tài khoản khách hàng.
 Sai lệch thông tin tại quầy: Trường hợp thông tin Pet ID bị khách hàng khai báo sai, Admin có quyền hiệu chỉnh lại dữ liệu dưới sự xác nhận của khách hàng ngay tại thời điểm tiếp nhận dịch vụ.
+
 3.1.4. Đặt lịch hẹn
 Mô tả quy trình 
 Quy trình đặt lịch hẹn được thực hiện trực tuyến hoàn toàn trên website nhằm tối ưu hóa thời gian cho khách hàng và giảm tải vận hành cho Admin. Quy trình bắt đầu khi  người dùng truy cập mục "Đặt lịch ngay", nơi khách hàng lựa chọn loại hình mong muốn. Tại đây, hệ thống phân tách luồng xử lý dựa trên định danh người dùng.
@@ -564,6 +564,8 @@ Thay đổi sát giờ hẹn: Nếu thời gian còn lại dưới 2 tiếng, n�
 Thông báo chênh lệch giá: Nếu đổi sang khung giờ có giá cao hơn, hệ thống hiển thị thông báo mức giá chênh lệch chi tiết để người dùng xác nhận.
 Lịch hẹn đã Check-in: Nếu thú cưng đã ở cửa hàng và trạng thái là "Đang thực hiện", chức năng thay đổi lịch trên website sẽ bị khóa hoàn toàn. Mọi thay đổi về thời gian đón bé phải trao đổi trực tiếp với Lễ tân.
 Hết 15 phút giữ chỗ mới: Nếu khách hàng để máy chờ quá 15 phút mà không nhấn xác nhận, hệ thống sẽ tự động hủy lệnh thay đổi, giải phóng ô lịch mới và giữ nguyên lịch hẹn cũ cho khách hàng.
+
+
 3.1.6. Hủy lịch
 Mô tả quy trình
 Quy trình hủy lịch hẹn bắt đầu khi khách hàng truy cập vào màn hình “Quản lý lịch hẹn” trên hệ thống PawPal và lựa chọn một lịch hẹn đang ở trạng thái “Đã xác nhận”. Tại giao diện chi tiết lịch hẹn, khách hàng nhấn vào chức năng “Hủy lịch hẹn”, lúc này hệ thống hiển thị cửa sổ xác nhận nhằm tránh các thao tác nhầm lẫn ngoài ý muốn.
