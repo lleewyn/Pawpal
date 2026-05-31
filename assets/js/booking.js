@@ -771,18 +771,104 @@ function submitBooking() {
     const code = 'PP-' + Math.floor(100000 + Math.random() * 900000);
     document.getElementById('bookingCode').textContent = code;
 
-    // Save to localStorage (demo)
-    const booking = {
-        code,
-        service: state.selectedService,
-        petInfo: state.petInfo,
-        schedule: state.schedule,
-        createdAt: new Date().toISOString(),
+    const svc = state.selectedService;
+    const sch = state.schedule;
+    let dateStr = '';
+    let timeStr = '';
+    if (svc?.isHotel && sch.checkIn && sch.checkOut) {
+        dateStr = sch.checkIn;
+        timeStr = 'Check-in';
+    } else if (sch.date && sch.slot) {
+        // Convert YYYY-MM-DD to DD/MM/YYYY for consistency with auth.js
+        const parts = sch.date.split('-');
+        dateStr = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : sch.date;
+        timeStr = sch.slot;
+    }
+
+    const newBookingRecord = {
+        id: code,
+        service: svc?.name || 'Dịch vụ PawPal',
+        date: dateStr,
+        time: timeStr,
         status: 'Chờ xác nhận',
+        staffName: state.selectedStaffName || 'Ngẫu nhiên',
+        petName: state.petInfo?.petName || '',
+        petWeight: state.petInfo?.petWeight || '',
+        changeCount: 0,
     };
-    const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-    bookings.push(booking);
-    localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
+
+    // ── Luồng Thành viên đã đăng nhập ──────────────────────────────────────
+    const loggedInPhone = localStorage.getItem('pawpal_logged_in_user');
+    if (loggedInPhone) {
+        const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
+        const userIdx = users.findIndex(u => u.phone === loggedInPhone);
+        if (userIdx >= 0) {
+            users[userIdx].bookings = users[userIdx].bookings || [];
+            users[userIdx].bookings.push(newBookingRecord);
+            localStorage.setItem('pawpal_users', JSON.stringify(users));
+        }
+    } else {
+        // ── Luồng Khách vãng lai — Định danh lũy tiến (User Story 1b) ──────
+        const ownerPhone = state.petInfo?.ownerPhone || '';
+        const ownerName  = state.petInfo?.ownerName  || 'Khách hàng';
+
+        if (ownerPhone) {
+            const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
+            let guestUser = users.find(u => u.phone === ownerPhone);
+
+            if (!guestUser) {
+                // Tạo tài khoản tạm mới
+                guestUser = {
+                    phone: ownerPhone,
+                    name: ownerName,
+                    password: '',
+                    points: 0,
+                    membership: 'Hạng Bạc',
+                    isTemporary: true,
+                    bookings: [newBookingRecord],
+                    loginHistory: [],
+                };
+                users.push(guestUser);
+            } else {
+                // Thêm booking vào tài khoản đã có
+                guestUser.bookings = guestUser.bookings || [];
+                guestUser.bookings.push(newBookingRecord);
+            }
+            localStorage.setItem('pawpal_users', JSON.stringify(users));
+
+            // Gửi SMS toast kích hoạt tài khoản (mô phỏng)
+            setTimeout(() => {
+                const toastContainer = document.getElementById('toastContainer');
+                if (!toastContainer) return;
+                const toast = document.createElement('div');
+                toast.className = 'toast-message';
+                toast.innerHTML = `
+                    <div class="toast-header">💬 SMS GATEWAY • CHÀO MỪNG KHÁCH MỚI</div>
+                    <div class="toast-body">
+                        <p>Cảm ơn <strong>${ownerName}</strong> đã đặt lịch tại PawPal! Nhấn vào đây để thiết lập mật khẩu, kích hoạt tài khoản và nhận ngay <strong>50 Paw Points</strong>.</p>
+                        <p><a href="#" class="toast-action">Thiết lập mật khẩu ngay (48h)</a></p>
+                    </div>
+                `;
+                toastContainer.appendChild(toast);
+                const actionLink = toast.querySelector('.toast-action');
+                if (actionLink) {
+                    actionLink.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        toast.remove();
+                        window.location.href = `login.html?activate=${ownerPhone}`;
+                    });
+                }
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(50px)';
+                    setTimeout(() => toast.remove(), 400);
+                }, 12000);
+            }, 1500);
+        }
+    }
+
+    // Giải phóng hold sau khi xác nhận
+    releaseCurrentHold();
 
     document.getElementById('successModal').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -1008,18 +1094,28 @@ window.updateAddonQty = function(id, change) {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
-    // Check Member Flow
-    const userJson = localStorage.getItem('pawpal_user');
-    if (userJson) {
-        state.isMember = true;
-        state.memberPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-        const guestFlow = document.getElementById('guestFlow');
-        const guestNote = document.getElementById('guestInfoNote');
-        const memberFlow = document.getElementById('memberFlow');
-        if (guestFlow) guestFlow.style.display = 'none';
-        if (guestNote) guestNote.style.display = 'none';
-        if (memberFlow) memberFlow.style.display = 'block';
-        renderPetSelection();
+    // Check Member Flow — dùng cùng key với auth.js
+    const loggedInPhone = localStorage.getItem('pawpal_logged_in_user');
+    if (loggedInPhone) {
+        const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
+        const currentUser = users.find(u => u.phone === loggedInPhone);
+        if (currentUser) {
+            state.isMember = true;
+            // Lấy pets từ pawpal_pets (key dùng bởi pet-profile.js)
+            state.memberPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]').filter(p => !p.deleted);
+            // Gán thông tin chủ nuôi vào state để dùng khi submit
+            state.petInfo = {
+                ownerName: currentUser.name,
+                ownerPhone: currentUser.phone,
+            };
+            const guestFlow = document.getElementById('guestFlow');
+            const guestNote = document.getElementById('guestInfoNote');
+            const memberFlow = document.getElementById('memberFlow');
+            if (guestFlow) guestFlow.style.display = 'none';
+            if (guestNote) guestNote.style.display = 'none';
+            if (memberFlow) memberFlow.style.display = 'block';
+            renderPetSelection();
+        }
     }
 
     try {

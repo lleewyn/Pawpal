@@ -1,0 +1,496 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PawPal - Quáº£n trá»‹ Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <style>
+        .admin-page-body { background: var(--color-bg-light); min-height: 100vh; }
+        .admin-container { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+        .admin-header-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 28px; padding-bottom: 20px;
+            border-bottom: 1px solid rgba(42,89,68,0.1);
+        }
+        .admin-title { font-family: var(--font-heading); font-size: 2rem; color: var(--color-primary-dark); font-weight: 500; margin: 0; }
+        .admin-subtitle { font-size: 0.88rem; color: var(--color-text-light); margin: 4px 0 0 0; }
+        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 768px) { .admin-grid { grid-template-columns: 1fr; } }
+        .admin-card {
+            background: #fff; border: 1px solid rgba(42,89,68,0.08);
+            border-radius: 20px; padding: 28px;
+            box-shadow: 0 4px 12px rgba(42,89,68,0.06);
+        }
+        .admin-card-title {
+            font-family: var(--font-primary); font-size: 1.05rem; font-weight: 700;
+            color: var(--color-primary-dark); margin: 0 0 6px 0;
+        }
+        .admin-card-desc { font-size: 0.82rem; color: var(--color-text-light); margin: 0 0 20px 0; }
+        .admin-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        @media (max-width: 500px) { .admin-form-row { grid-template-columns: 1fr; } }
+        .admin-form-group { display: flex; flex-direction: column; gap: 5px; }
+        .admin-form-group label { font-size: 0.82rem; font-weight: 600; color: var(--color-primary-dark); }
+        .admin-form-group input, .admin-form-group select {
+            padding: 10px 14px; border: 1.5px solid var(--color-border);
+            border-radius: 10px; font-size: 0.9rem; font-family: var(--font-primary);
+            transition: border-color 0.2s;
+        }
+        .admin-form-group input:focus, .admin-form-group select:focus {
+            outline: none; border-color: var(--color-primary);
+        }
+        .admin-form-group input.error { border-color: #ef4444; }
+        .field-error-msg { font-size: 0.75rem; color: #ef4444; font-weight: 500; min-height: 16px; }
+        .btn-admin-save {
+            width: 100%; padding: 12px; background: var(--color-primary);
+            color: #fff; border: none; border-radius: 12px; font-weight: 700;
+            font-size: 0.95rem; cursor: pointer; transition: background 0.2s;
+            position: relative;
+        }
+        .btn-admin-save:hover { background: var(--color-primary-dark); }
+        .btn-admin-save:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-loading-spin::after {
+            content: ''; position: absolute; width: 18px; height: 18px;
+            top: 50%; left: 50%; margin: -9px 0 0 -9px;
+            border: 2px solid rgba(255,255,255,0.3); border-radius: 50%;
+            border-top-color: #fff; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-loading-spin { color: transparent !important; pointer-events: none; }
+        .customer-table-wrap { overflow-x: auto; margin-top: 16px; }
+        .customer-table {
+            width: 100%; border-collapse: collapse; font-size: 0.85rem;
+        }
+        .customer-table th {
+            text-align: left; padding: 10px 14px; background: var(--color-primary-light);
+            color: var(--color-primary-dark); font-weight: 700; font-size: 0.78rem;
+            text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .customer-table td { padding: 10px 14px; border-bottom: 1px solid rgba(42,89,68,0.06); vertical-align: middle; }
+        .customer-table tr:hover td { background: rgba(42,89,68,0.02); }
+        .badge-temp { background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+        .badge-member { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+        .btn-inline-edit {
+            padding: 4px 12px; border: 1.5px solid var(--color-primary); background: transparent;
+            color: var(--color-primary); border-radius: 8px; font-size: 0.78rem; font-weight: 600;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .btn-inline-edit:hover { background: var(--color-primary); color: #fff; }
+        .admin-search-bar {
+            display: flex; gap: 10px; margin-bottom: 16px;
+        }
+        .admin-search-bar input {
+            flex: 1; padding: 10px 14px; border: 1.5px solid var(--color-border);
+            border-radius: 10px; font-size: 0.9rem; font-family: var(--font-primary);
+        }
+        .admin-search-bar input:focus { outline: none; border-color: var(--color-primary); }
+        .inline-edit-row td input {
+            width: 100%; padding: 6px 10px; border: 1.5px solid var(--color-primary);
+            border-radius: 8px; font-size: 0.85rem; font-family: var(--font-primary);
+        }
+        .btn-inline-save { padding: 4px 12px; background: var(--color-primary); color: #fff; border: none; border-radius: 8px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+        .btn-inline-cancel { padding: 4px 10px; background: transparent; border: 1.5px solid #d1d5db; color: #555; border-radius: 8px; font-size: 0.78rem; cursor: pointer; }
+        .admin-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+        @media (max-width: 600px) { .admin-stats-row { grid-template-columns: 1fr 1fr; } }
+        .stat-card { background: #fff; border: 1px solid rgba(42,89,68,0.08); border-radius: 14px; padding: 16px 20px; text-align: center; }
+        .stat-card .stat-num { font-size: 1.8rem; font-weight: 800; color: var(--color-primary); font-family: var(--font-primary); }
+        .stat-card .stat-label { font-size: 0.78rem; color: var(--color-text-light); margin-top: 2px; }
+        .admin-login-guard { display: none; }
+        .admin-login-screen {
+            max-width: 400px; margin: 80px auto; background: #fff;
+            border: 1px solid rgba(42,89,68,0.1); border-radius: 20px;
+            padding: 40px; box-shadow: 0 8px 24px rgba(42,89,68,0.1);
+        }
+    </style>
+</head>
+<body class="admin-page-body">
+
+<!-- Main Admin Panel -->
+<div id="adminMainPanel" style="display:none;">
+    <div class="admin-container">
+        <div class="admin-header-bar">
+            <div>
+                <h1 class="admin-title">Báº£ng Ä‘iá»u khiá»ƒn Admin</h1>
+                <p class="admin-subtitle">Quáº£n lÃ½ khÃ¡ch hÃ ng vÃ  há»— trá»£ Ä‘Äƒng kÃ½ nhanh táº¡i quáº§y</p>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;">
+                <span id="adminWelcome" style="font-size:0.85rem;color:var(--color-text-light);"></span>
+                <button id="adminLogoutBtn" style="padding:8px 16px;border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:10px;font-weight:600;cursor:pointer;font-size:0.85rem;">ÄÄƒng xuáº¥t</button>
+                <a href="dashboard.html" style="padding:8px 16px;background:var(--color-primary);color:#fff;border-radius:10px;font-weight:600;font-size:0.85rem;text-decoration:none;">â† Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="admin-stats-row" id="adminStatsRow"></div>
+
+        <div class="admin-grid">
+            <!-- Card 1: ÄÄƒng kÃ½ nhanh táº¡i quáº§y (User Story 1c) -->
+            <div class="admin-card">
+                <h3 class="admin-card-title">âž• ThÃªm khÃ¡ch hÃ ng nhanh</h3>
+                <p class="admin-card-desc">ÄÄƒng kÃ½ tÃ i khoáº£n táº¡m cho khÃ¡ch táº¡i quáº§y. Há»‡ thá»‘ng sáº½ gá»­i SMS kÃ­ch hoáº¡t tá»± Ä‘á»™ng.</p>
+
+                <form id="quickRegisterForm" novalidate>
+                    <div class="admin-form-row">
+                        <div class="admin-form-group">
+                            <label for="qrName">Há» vÃ  tÃªn <span style="color:#ef4444">*</span></label>
+                            <input type="text" id="qrName" placeholder="Nguyá»…n VÄƒn A..." autocomplete="off">
+                            <span class="field-error-msg" id="qrNameErr"></span>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="qrPhone">Sá»‘ Ä‘iá»‡n thoáº¡i <span style="color:#ef4444">*</span></label>
+                            <input type="tel" id="qrPhone" placeholder="0912345678..." autocomplete="off">
+                            <span class="field-error-msg" id="qrPhoneErr"></span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-admin-save" id="qrSaveBtn">ðŸ’¾ LÆ°u & Gá»­i SMS kÃ­ch hoáº¡t</button>
+                </form>
+
+                <!-- Popup thÃªm Pet ID nhanh sau khi táº¡o tÃ i khoáº£n -->
+                <div id="quickPetForm" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid rgba(42,89,68,0.08);">
+                    <h4 style="font-family:var(--font-primary);font-size:0.95rem;font-weight:700;color:var(--color-primary-dark);margin:0 0 12px 0;">ðŸ¾ ThÃªm nhanh thÃ´ng tin bÃ© cÆ°ng</h4>
+                    <p style="font-size:0.8rem;color:var(--color-text-light);margin:0 0 14px 0;">Táº¡o Pet ID Ä‘á»ƒ hoÃ n táº¥t thá»§ tá»¥c Check-in ngay táº¡i quáº§y.</p>
+                    <div class="admin-form-row">
+                        <div class="admin-form-group">
+                            <label for="qpName">TÃªn bÃ© cÆ°ng <span style="color:#ef4444">*</span></label>
+                            <input type="text" id="qpName" placeholder="BÃ© BÃ´ng...">
+                            <span class="field-error-msg" id="qpNameErr"></span>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="qpSpecies">LoÃ i <span style="color:#ef4444">*</span></label>
+                            <select id="qpSpecies">
+                                <option value="">-- Chá»n --</option>
+                                <option value="ChÃ³">ðŸ¶ ChÃ³</option>
+                                <option value="MÃ¨o">ðŸ± MÃ¨o</option>
+                            </select>
+                            <span class="field-error-msg" id="qpSpeciesErr"></span>
+                        </div>
+                    </div>
+                    <div class="admin-form-row">
+                        <div class="admin-form-group">
+                            <label for="qpBreed">Giá»‘ng loÃ i</label>
+                            <input type="text" id="qpBreed" placeholder="Poodle, Corgi...">
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="qpWeight">CÃ¢n náº·ng (kg) <span style="color:#ef4444">*</span></label>
+                            <input type="number" id="qpWeight" placeholder="4.5" min="0.1" step="0.1">
+                            <span class="field-error-msg" id="qpWeightErr"></span>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-top:4px;">
+                        <button type="button" class="btn-admin-save" id="qpSaveBtn" style="flex:1;">âœ… Táº¡o Pet ID & Check-in</button>
+                        <button type="button" id="qpSkipBtn" style="padding:12px 16px;border:1.5px solid #d1d5db;background:transparent;color:#555;border-radius:12px;font-weight:600;cursor:pointer;font-size:0.88rem;">Bá» qua</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Danh sÃ¡ch khÃ¡ch hÃ ng -->
+            <div class="admin-card" style="grid-row: span 2;">
+                <h3 class="admin-card-title">ðŸ‘¥ Danh sÃ¡ch khÃ¡ch hÃ ng</h3>
+                <p class="admin-card-desc">Xem vÃ  chá»‰nh sá»­a nhanh thÃ´ng tin khÃ¡ch hÃ ng. Double-click vÃ o Ã´ Ä‘á»ƒ sá»­a trá»±c tiáº¿p.</p>
+                <div class="admin-search-bar">
+                    <input type="text" id="customerSearch" placeholder="ðŸ” TÃ¬m theo tÃªn hoáº·c SÄT...">
+                </div>
+                <div class="customer-table-wrap">
+                    <table class="customer-table">
+                        <thead>
+                            <tr>
+                                <th>Há» tÃªn</th>
+                                <th>SÄT</th>
+                                <th>Äiá»ƒm</th>
+                                <th>Tráº¡ng thÃ¡i</th>
+                                <th>Thao tÃ¡c</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script>
+
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function getUsersList() { return JSON.parse(localStorage.getItem('pawpal_users') || '[]'); }
+function saveUsersList(u) { localStorage.setItem('pawpal_users', JSON.stringify(u)); }
+function getPets() { return JSON.parse(localStorage.getItem('pawpal_pets') || '[]'); }
+function savePets(p) { localStorage.setItem('pawpal_pets', JSON.stringify(p)); }
+function generatePetId() { return 'PET-' + Math.floor(100000 + Math.random() * 900000); }
+
+function showToast(msg, type = 'success') {
+    const tc = document.getElementById('toastContainer');
+    if (!tc) return;
+    const t = document.createElement('div');
+    t.className = 'toast-message';
+    t.innerHTML = `<div class="toast-header">${type === 'success' ? 'âœ…' : 'ðŸ’¬'} ADMIN PANEL</div><div class="toast-body"><p>${msg}</p></div>`;
+    tc.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(50px)'; setTimeout(() => t.remove(), 400); }, 5000);
+}
+
+function showSmsSimulation(phone, name) {
+    const tc = document.getElementById('toastContainer');
+    if (!tc) return;
+    const t = document.createElement('div');
+    t.className = 'toast-message';
+    t.innerHTML = `
+        <div class="toast-header">ðŸ’¬ SMS GATEWAY â€¢ Gá»¬I THÃ€NH CÃ”NG</div>
+        <div class="toast-body">
+            <p>ÄÃ£ gá»­i SMS Ä‘áº¿n <strong>${phone}</strong>:<br>
+            "ChÃ o <strong>${name}</strong>! TÃ i khoáº£n PawPal Ä‘Ã£ Ä‘Æ°á»£c táº¡o. Nháº¥n vÃ o link Ä‘á»ƒ thiáº¿t láº­p máº­t kháº©u vÃ  nháº­n 50 Paw Points."</p>
+            <p><a href="#" class="toast-action" onclick="event.preventDefault();window.open('login.html?activate=${phone}','_blank')">Xem trang kÃ­ch hoáº¡t</a></p>
+        </div>`;
+    tc.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(50px)'; setTimeout(() => t.remove(), 12000); }, 12000);
+}
+
+// â”€â”€ Admin Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+let adminPhone = null;
+
+function checkAdminSession() {
+    const stored = sessionStorage.getItem('pawpal_admin_phone');
+    if (stored) {
+        adminPhone = stored;
+        showAdminPanel(stored);
+    } else {
+        // ChÆ°a Ä‘Äƒng nháº­p admin â†’ redirect vá» login vá»›i tab admin
+        window.location.href = 'login.html?tab=admin';
+    }
+}
+
+function showAdminPanel(phone) {
+    document.getElementById('adminMainPanel').style.display = 'block';
+    const users = getUsersList();
+    const u = users.find(x => x.phone === phone);
+    const welcome = document.getElementById('adminWelcome');
+    if (welcome && u) welcome.textContent = `Xin chÃ o, ${u.name}`;
+    renderStats();
+    renderCustomerTable();
+    // Focus vÃ o Ã´ Há» tÃªn ngay khi panel má»Ÿ (tá»‘i Æ°u tá»‘c Ä‘á»™ nháº­p liá»‡u)
+    setTimeout(() => document.getElementById('qrName')?.focus(), 200);
+}
+
+document.getElementById('adminLogoutBtn').addEventListener('click', () => {
+    sessionStorage.removeItem('pawpal_admin_phone');
+    adminPhone = null;
+    window.location.href = 'login.html?tab=admin';
+});
+
+// â”€â”€ Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function renderStats() {
+    const users = getUsersList();
+    const total = users.length;
+    const members = users.filter(u => !u.isTemporary).length;
+    const temps = users.filter(u => u.isTemporary).length;
+    document.getElementById('adminStatsRow').innerHTML = `
+        <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Tá»•ng khÃ¡ch hÃ ng</div></div>
+        <div class="stat-card"><div class="stat-num">${members}</div><div class="stat-label">ThÃ nh viÃªn chÃ­nh thá»©c</div></div>
+        <div class="stat-card"><div class="stat-num">${temps}</div><div class="stat-label">TÃ i khoáº£n táº¡m</div></div>
+    `;
+}
+
+// â”€â”€ Quick Register Form (User Story 1c) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+let lastCreatedPhone = null;
+
+document.getElementById('quickRegisterForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name  = document.getElementById('qrName').value.trim();
+    const phone = document.getElementById('qrPhone').value.trim();
+    let valid = true;
+
+    document.getElementById('qrNameErr').textContent = '';
+    document.getElementById('qrPhoneErr').textContent = '';
+    document.getElementById('qrName').classList.remove('error');
+    document.getElementById('qrPhone').classList.remove('error');
+
+    if (!name) {
+        document.getElementById('qrNameErr').textContent = 'Vui lÃ²ng nháº­p há» tÃªn.';
+        document.getElementById('qrName').classList.add('error');
+        valid = false;
+    }
+    const phoneRegex = /^(0[3-9]\d{8})$/;
+    if (!phoneRegex.test(phone)) {
+        document.getElementById('qrPhoneErr').textContent = 'Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng há»£p lá»‡ (10 chá»¯ sá»‘).';
+        document.getElementById('qrPhone').classList.add('error');
+        valid = false;
+    }
+    if (!valid) return;
+
+    const btn = document.getElementById('qrSaveBtn');
+    btn.classList.add('btn-loading-spin');
+    btn.disabled = true;
+
+    setTimeout(() => {
+        const users = getUsersList();
+        const existing = users.find(u => u.phone === phone);
+        if (existing) {
+            btn.classList.remove('btn-loading-spin');
+            btn.disabled = false;
+            document.getElementById('qrPhoneErr').textContent = 'Sá»‘ Ä‘iá»‡n thoáº¡i Ä‘Ã£ tá»“n táº¡i trong há»‡ thá»‘ng.';
+            document.getElementById('qrPhone').classList.add('error');
+            return;
+        }
+
+        const newUser = {
+            phone, name,
+            password: '',
+            points: 0,
+            membership: 'Háº¡ng Báº¡c',
+            isTemporary: true,
+            bookings: [],
+            loginHistory: [],
+            createdAt: new Date().toISOString(),
+            createdBy: 'admin',
+        };
+        users.push(newUser);
+        saveUsersList(users);
+        lastCreatedPhone = phone;
+
+        btn.classList.remove('btn-loading-spin');
+        btn.disabled = false;
+
+        // Gá»­i SMS mÃ´ phá»ng
+        showSmsSimulation(phone, name);
+        showToast(`ÄÃ£ táº¡o tÃ i khoáº£n táº¡m cho <strong>${name}</strong> (${phone}) thÃ nh cÃ´ng!`);
+
+        // Reset form vÃ  focus láº¡i
+        document.getElementById('quickRegisterForm').reset();
+        document.getElementById('qrName').focus();
+
+        // Hiá»‡n form thÃªm Pet ID nhanh
+        document.getElementById('quickPetForm').style.display = 'block';
+        document.getElementById('qpName').focus();
+
+        renderStats();
+        renderCustomerTable();
+    }, 800);
+});
+
+// â”€â”€ Quick Pet Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+document.getElementById('qpSaveBtn').addEventListener('click', () => {
+    if (!lastCreatedPhone) return;
+    const petName    = document.getElementById('qpName').value.trim();
+    const petSpecies = document.getElementById('qpSpecies').value;
+    const petWeight  = parseFloat(document.getElementById('qpWeight').value);
+    let valid = true;
+
+    ['qpNameErr','qpSpeciesErr','qpWeightErr'].forEach(id => document.getElementById(id).textContent = '');
+
+    if (!petName) { document.getElementById('qpNameErr').textContent = 'Vui lÃ²ng nháº­p tÃªn bÃ©.'; valid = false; }
+    if (!petSpecies) { document.getElementById('qpSpeciesErr').textContent = 'Vui lÃ²ng chá»n loÃ i.'; valid = false; }
+    if (!petWeight || petWeight <= 0) { document.getElementById('qpWeightErr').textContent = 'CÃ¢n náº·ng pháº£i > 0.'; valid = false; }
+    if (!valid) return;
+
+    const btn = document.getElementById('qpSaveBtn');
+    btn.classList.add('btn-loading-spin');
+
+    setTimeout(() => {
+        const pets = getPets();
+        const newPet = {
+            id: generatePetId(),
+            ownerPhone: lastCreatedPhone,
+            name: petName,
+            species: petSpecies,
+            breed: document.getElementById('qpBreed').value.trim(),
+            weight: petWeight,
+            deleted: false,
+            createdAt: new Date().toISOString(),
+            createdBy: 'admin',
+        };
+        pets.push(newPet);
+        savePets(pets);
+
+        btn.classList.remove('btn-loading-spin');
+        showToast(`ÄÃ£ táº¡o Pet ID <strong>${petName}</strong> cho khÃ¡ch hÃ ng thÃ nh cÃ´ng! Sáºµn sÃ ng Check-in.`);
+        document.getElementById('quickPetForm').style.display = 'none';
+        document.getElementById('quickPetForm').querySelectorAll('input,select').forEach(el => el.value = '');
+        lastCreatedPhone = null;
+    }, 600);
+});
+
+document.getElementById('qpSkipBtn').addEventListener('click', () => {
+    document.getElementById('quickPetForm').style.display = 'none';
+    document.getElementById('quickPetForm').querySelectorAll('input,select').forEach(el => el.value = '');
+    lastCreatedPhone = null;
+});
+
+// â”€â”€ Customer Table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function renderCustomerTable(filter = '') {
+    const users = getUsersList();
+    const tbody = document.getElementById('customerTableBody');
+    const filtered = filter
+        ? users.filter(u => u.name.toLowerCase().includes(filter.toLowerCase()) || u.phone.includes(filter))
+        : users;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--color-text-light);padding:20px;">KhÃ´ng tÃ¬m tháº¥y khÃ¡ch hÃ ng nÃ o.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filtered.map((u, idx) => `
+        <tr id="row-${idx}" data-phone="${u.phone}">
+            <td>${u.name}</td>
+            <td>${u.phone}</td>
+            <td>${u.points || 0}</td>
+            <td><span class="${u.isTemporary ? 'badge-temp' : 'badge-member'}">${u.isTemporary ? 'TÃ i khoáº£n táº¡m' : 'ThÃ nh viÃªn'}</span></td>
+            <td><button class="btn-inline-edit" onclick="startInlineEdit(${idx}, '${u.phone}')">Sá»­a</button></td>
+        </tr>
+    `).join('');
+}
+
+window.startInlineEdit = function(idx, phone) {
+    const users = getUsersList();
+    const u = users.find(x => x.phone === phone);
+    if (!u) return;
+    const row = document.getElementById('row-' + idx);
+    if (!row) return;
+    row.classList.add('inline-edit-row');
+    row.innerHTML = `
+        <td><input type="text" value="${u.name}" id="editName-${idx}"></td>
+        <td>${u.phone}</td>
+        <td>${u.points || 0}</td>
+        <td><span class="${u.isTemporary ? 'badge-temp' : 'badge-member'}">${u.isTemporary ? 'TÃ i khoáº£n táº¡m' : 'ThÃ nh viÃªn'}</span></td>
+        <td style="display:flex;gap:6px;">
+            <button class="btn-inline-save" onclick="saveInlineEdit(${idx}, '${phone}')">LÆ°u</button>
+            <button class="btn-inline-cancel" onclick="renderCustomerTable()">Há»§y</button>
+        </td>
+    `;
+    document.getElementById('editName-' + idx)?.focus();
+};
+
+window.saveInlineEdit = function(idx, phone) {
+    const newName = document.getElementById('editName-' + idx)?.value.trim();
+    if (!newName) { alert('TÃªn khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.'); return; }
+    const users = getUsersList();
+    const uIdx = users.findIndex(x => x.phone === phone);
+    if (uIdx < 0) return;
+    users[uIdx].name = newName;
+    saveUsersList(users);
+    showToast(`ÄÃ£ cáº­p nháº­t tÃªn khÃ¡ch hÃ ng thÃ nh <strong>${newName}</strong>.`);
+    renderCustomerTable();
+};
+
+document.getElementById('customerSearch').addEventListener('input', e => {
+    renderCustomerTable(e.target.value.trim());
+});
+
+// â”€â”€ Tab key navigation trong quick register form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+document.getElementById('qrName').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('qrPhone').focus(); }
+});
+document.getElementById('qrPhone').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('quickRegisterForm').dispatchEvent(new Event('submit')); }
+});
+
+// â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+checkAdminSession();
+</script>
+</body>
+</html>
+

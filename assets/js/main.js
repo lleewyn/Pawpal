@@ -3,6 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    initPremiumMotion();
     initMobileNavigation();
     initTimelineTracker();
     initBookingWidget();
@@ -469,4 +470,189 @@ function initPetIdCardTilt() {
     card.addEventListener('mouseleave', () => {
         card.style.transform = 'rotateX(0) rotateY(0) scale(1)';
     });
+}
+
+/**
+ * Premium Motion System (Lenis Smooth Scroll & GSAP ScrollTrigger)
+ */
+function initPremiumMotion() {
+    // 1. Initialize Lenis if library is available
+    if (typeof Lenis === 'undefined') {
+        console.warn('Lenis is not loaded.');
+        return;
+    }
+
+    const lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // smooth easeOutExpo
+        direction: 'vertical',
+        gestureDirection: 'vertical',
+        smooth: true,
+        mouseMultiplier: 1,
+        smoothTouch: false,
+        touchMultiplier: 2,
+        infinite: false,
+    });
+
+    // RequestAnimationFrame loop for Lenis
+    function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    // 2. Connect GSAP and ScrollTrigger if available
+    if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+        console.warn('GSAP or ScrollTrigger is not loaded.');
+        return;
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Sync ScrollTrigger with Lenis scroll events
+    lenis.on('scroll', () => {
+        ScrollTrigger.update();
+    });
+
+    // 3. Hero Section Load Animations
+    const heroTl = gsap.timeline();
+    
+    if (document.querySelector('.hero-title')) {
+        heroTl.from('.hero-title', {
+            opacity: 0,
+            y: 45,
+            duration: 1.2,
+            ease: 'power4.out',
+        });
+    }
+    
+    if (document.querySelector('.hero-description-box')) {
+        heroTl.from('.hero-description-box', {
+            opacity: 0,
+            y: 30,
+            duration: 1.0,
+            ease: 'power4.out',
+        }, '-=0.9');
+    }
+    
+    if (document.querySelector('.hero-cta-container')) {
+        heroTl.from('.hero-cta-container', {
+            opacity: 0,
+            y: 30,
+            duration: 1.0,
+            ease: 'power4.out',
+        }, '-=0.8');
+    }
+
+    // 4. Scroll-Triggered Reveal Animations for Sections
+    // Batch reveal section headers
+    gsap.utils.toArray('.section-header').forEach((header) => {
+        gsap.from(header, {
+            scrollTrigger: {
+                trigger: header,
+                start: 'top 85%',
+                toggleActions: 'play none none none',
+            },
+            opacity: 0,
+            y: 35,
+            duration: 1.0,
+            ease: 'power3.out',
+            clearProps: "all"
+        });
+    });
+
+    // Batch reveal feature items
+    if (document.querySelector('.feature-item')) {
+        gsap.from('.feature-item', {
+            scrollTrigger: {
+                trigger: '.features-section',
+                start: 'top 85%',
+                toggleActions: 'play none none none',
+            },
+            opacity: 0,
+            y: 40,
+            stagger: 0.15,
+            duration: 1.0,
+            ease: 'power3.out',
+            clearProps: "all"
+        });
+    }
+
+    // Batch reveal services cards
+    if (document.querySelector('.arched-card')) {
+        gsap.from('.arched-card', {
+            scrollTrigger: {
+                trigger: '.services-section',
+                start: 'top 85%', // Changed from 80% to be consistent with others
+                toggleActions: 'play none none none',
+            },
+            opacity: 0,
+            y: 40, // Changed from x: 50 to avoid flex overflow bug
+            stagger: 0.1,
+            duration: 1.0,
+            ease: 'power3.out',
+            clearProps: "all" // Ensure inline styles are cleared after animation to prevent layout bugs
+        });
+    }
+
+    // Batch reveal safety commitment cards
+    if (document.querySelector('.safety-card')) {
+        gsap.from('.safety-card', {
+            scrollTrigger: {
+                trigger: '.safety-section',
+                start: 'top 85%',
+                toggleActions: 'play none none none',
+            },
+            opacity: 0,
+            y: 40,
+            stagger: 0.15,
+            duration: 1.0,
+            ease: 'power3.out',
+            clearProps: "all"
+        });
+    }
+
+    // Batch reveal expert cards
+    if (document.querySelector('.expert-card')) {
+        gsap.from('.expert-card', {
+            scrollTrigger: {
+                trigger: '.experts-section',
+                start: 'top 85%',
+                toggleActions: 'play none none none',
+            },
+            opacity: 0,
+            y: 50,
+            stagger: 0.2,
+            duration: 1.2,
+            ease: 'power4.out',
+            clearProps: "all"
+        });
+    }
+
+    // Batch reveal step cards
+    if (document.querySelector('.step-card')) {
+        gsap.from('.step-card', {
+            scrollTrigger: {
+                trigger: '.process-section',
+                start: 'top 85%',
+                toggleActions: 'play none none none',
+            },
+            opacity: 0,
+            scale: 0.95,
+            y: 30,
+            stagger: 0.15,
+            duration: 1.0,
+            ease: 'back.out(1.4)',
+            clearProps: "all"
+        });
+    }
+
+    // Refresh ScrollTrigger to calculate correct layout offsets
+    window.addEventListener('load', () => {
+        ScrollTrigger.refresh();
+    });
+    // Fallback refresh
+    setTimeout(() => {
+        ScrollTrigger.refresh();
+    }, 500);
 }

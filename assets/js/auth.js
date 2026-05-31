@@ -83,6 +83,10 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('pawpal_users', JSON.stringify(users));
     }
 
+    function getLoggedInUser() {
+        return localStorage.getItem('pawpal_logged_in_user');
+    }
+
     function getBookingHolds() {
         try {
             const raw = localStorage.getItem(HOLD_STORAGE_KEY);
@@ -437,6 +441,24 @@ document.addEventListener('DOMContentLoaded', () => {
         safeBind(tabRegisterBtn, 'click', showRegisterForm);
         safeBind(forgetPassBtn, 'click', showForgetPassForm);
         safeBind(backToLoginBtn, 'click', showLoginForm);
+
+        // Tab Admin
+        const tabAdminBtn = document.getElementById('tabAdminBtn');
+        const adminFormContainer = document.getElementById('adminFormContainer');
+        safeBind(tabAdminBtn, 'click', showAdminLoginForm);
+
+        function showAdminLoginForm() {
+            if (tabLoginBtn) tabLoginBtn.classList.remove('active');
+            if (tabRegisterBtn) tabRegisterBtn.classList.remove('active');
+            if (tabAdminBtn) tabAdminBtn.classList.add('active');
+            if (loginFormContainer) loginFormContainer.classList.remove('active');
+            if (registerFormContainer) registerFormContainer.classList.remove('active');
+            if (forgetPassContainer) forgetPassContainer.classList.remove('active');
+            if (activationFormContainer) activationFormContainer.classList.remove('active');
+            if (adminFormContainer) adminFormContainer.classList.add('active');
+            if (authPageTabs) authPageTabs.style.display = 'flex';
+            setTimeout(() => document.getElementById('adminPhone')?.focus(), 100);
+        }
 
         function showLoginForm() {
             if (tabLoginBtn) tabLoginBtn.classList.add('active');
@@ -846,6 +868,39 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = pagePrefix + "dashboard.html";
         });
 
+        // --- Admin Login Form Submit ---
+        const adminLoginForm = document.getElementById('adminLoginForm');
+        if (adminLoginForm) {
+            adminLoginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const phone = document.getElementById('adminPhone').value.trim();
+                const pass  = document.getElementById('adminPassword').value;
+                const phoneErr = document.getElementById('adminPhoneError');
+                const passErr  = document.getElementById('adminPasswordError');
+
+                phoneErr.style.display = 'none';
+                passErr.style.display  = 'none';
+
+                const users = getUsersList();
+                const user  = users.find(u => u.phone === phone);
+
+                if (!user) {
+                    phoneErr.textContent = 'Số điện thoại chưa được đăng ký.';
+                    phoneErr.style.display = 'block';
+                    return;
+                }
+                if (user.password !== pass) {
+                    passErr.textContent = 'Mật khẩu không chính xác.';
+                    passErr.style.display = 'block';
+                    return;
+                }
+
+                // Lưu session admin và redirect
+                sessionStorage.setItem('pawpal_admin_phone', phone);
+                window.location.href = pagePrefix + 'admin.html';
+            });
+        }
+
         // Lock state helpers
         function lockAccount(phone) {
             const lockUntil = Date.now() + 30 * 60 * 1000;
@@ -911,7 +966,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (activatePhone) {
                 const users = getUsersList();
                 const user = users.find(u => u.phone === activatePhone);
-                if (user && user.isTemporary) {
+                if (user) {
+                    // Hiện form activation cho cả tài khoản tạm lẫn tài khoản quên mật khẩu
                     setTimeout(() => {
                         showActivationForm(user.phone, user.name);
                     }, 500);
@@ -921,6 +977,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         checkLockState();
         checkUrlParams();
+
+        // Tự động mở tab Admin nếu có ?tab=admin trong URL
+        const urlTabParam = new URLSearchParams(window.location.search).get('tab');
+        if (urlTabParam === 'admin') {
+            showAdminLoginForm();
+        }
     }
 
     // ==========================================================================
@@ -1381,5 +1443,143 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         document.getElementById('changeBookingConfirmBtn')?.addEventListener('click', confirmChangeBooking);
+
+        // ── Lịch sử đăng nhập (User Story 2c) ──────────────────────────────
+        function renderLoginHistory() {
+            const container = document.getElementById('loginHistoryList');
+            if (!container) return;
+            const history = user.loginHistory || [];
+            if (history.length === 0) {
+                container.innerHTML = '<p style="color:var(--color-text-light);font-size:0.85rem;">Chưa có lịch sử đăng nhập nào được ghi nhận.</p>';
+                return;
+            }
+            container.innerHTML = history.slice().reverse().slice(0, 5).map(entry => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid rgba(42,89,68,0.08);border-radius:10px;margin-bottom:8px;background:#f8fafc;">
+                    <div>
+                        <p style="margin:0;font-size:0.88rem;font-weight:600;color:var(--color-primary-dark);">${entry.device || 'Trình duyệt Web'}</p>
+                        <p style="margin:2px 0 0 0;font-size:0.78rem;color:var(--color-text-light);">${entry.location || 'Việt Nam'} · ${entry.time || ''}</p>
+                    </div>
+                    <span style="font-size:0.75rem;padding:3px 10px;border-radius:20px;background:${entry.suspicious ? '#fee2e2' : '#dcfce7'};color:${entry.suspicious ? '#dc2626' : '#16a34a'};font-weight:600;">${entry.suspicious ? '⚠️ Bất thường' : '✓ Bình thường'}</span>
+                </div>
+            `).join('');
+        }
+
+        // Ghi nhận lần đăng nhập hiện tại
+        function recordCurrentLogin() {
+            const users = getUsersList();
+            const u = users.find(usr => usr.phone === loggedInPhone);
+            if (!u) return;
+            u.loginHistory = u.loginHistory || [];
+            const now = new Date();
+            const entry = {
+                time: now.toLocaleString('vi-VN'),
+                device: navigator.userAgent.includes('Mobile') ? 'Thiết bị di động' : 'Máy tính',
+                location: 'Việt Nam',
+                suspicious: false,
+            };
+            u.loginHistory.push(entry);
+            if (u.loginHistory.length > 10) u.loginHistory = u.loginHistory.slice(-10);
+            saveUsersList(users);
+        }
+
+        recordCurrentLogin();
+        renderLoginHistory();
     }
+
+    // ==========================================================================
+    // SESSION TIMEOUT — User Story 2c (áp dụng mọi trang khi đã đăng nhập)
+    // ==========================================================================
+    function getLoggedInUserForSession() {
+        return localStorage.getItem('pawpal_logged_in_user');
+    }
+
+    if (getLoggedInUserForSession()) {
+        const SESSION_WARN_MS  = 55 * 60 * 1000; // 55 phút
+        const SESSION_LIMIT_MS = 60 * 60 * 1000; // 60 phút
+        const SESSION_KEY = 'pawpal_session_last_activity';
+
+        function refreshActivity() {
+            localStorage.setItem(SESSION_KEY, Date.now().toString());
+        }
+
+        function getIdleMs() {
+            const last = parseInt(localStorage.getItem(SESSION_KEY) || '0');
+            return last ? Date.now() - last : 0;
+        }
+
+        // Khởi tạo activity nếu chưa có
+        if (!localStorage.getItem(SESSION_KEY)) refreshActivity();
+
+        // Reset timer khi có tương tác
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+            document.addEventListener(evt, refreshActivity, { passive: true });
+        });
+
+        // Popup cảnh báo session
+        let sessionWarnShown = false;
+        let sessionCheckInterval = null;
+
+        function createSessionWarningPopup() {
+            if (document.getElementById('sessionWarnPopup')) return;
+            const popup = document.createElement('div');
+            popup.id = 'sessionWarnPopup';
+            popup.style.cssText = `
+                position:fixed;bottom:24px;right:24px;z-index:9999;
+                background:#fff;border:1px solid #f97316;border-radius:16px;
+                box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:20px 24px;
+                max-width:320px;font-family:var(--font-primary,sans-serif);
+            `;
+            popup.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <span style="font-size:1.4rem;">⏰</span>
+                    <strong style="color:#c2410c;font-size:0.95rem;">Phiên đăng nhập sắp hết hạn</strong>
+                </div>
+                <p style="margin:0 0 14px 0;font-size:0.85rem;color:#555;">Bạn không có thao tác trong một thời gian. Phiên sẽ kết thúc sau <strong id="sessionCountdownText">5:00</strong>.</p>
+                <button id="sessionExtendBtn" style="width:100%;padding:10px;background:var(--color-primary,#2a5944);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.9rem;">Tiếp tục đăng nhập</button>
+            `;
+            document.body.appendChild(popup);
+
+            document.getElementById('sessionExtendBtn').addEventListener('click', () => {
+                refreshActivity();
+                sessionWarnShown = false;
+                popup.remove();
+            });
+        }
+
+        function updateSessionCountdown() {
+            const idleMs = getIdleMs();
+            const remaining = SESSION_LIMIT_MS - idleMs;
+            const text = document.getElementById('sessionCountdownText');
+            if (text) {
+                const mins = Math.floor(remaining / 60000);
+                const secs = Math.floor((remaining % 60000) / 1000);
+                text.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
+
+        sessionCheckInterval = setInterval(() => {
+            const idleMs = getIdleMs();
+
+            if (idleMs >= SESSION_LIMIT_MS) {
+                // Hết phiên — đăng xuất
+                clearInterval(sessionCheckInterval);
+                localStorage.removeItem('pawpal_logged_in_user');
+                localStorage.removeItem(SESSION_KEY);
+                alert('Phiên đăng nhập đã kết thúc, vui lòng đăng nhập lại!');
+                window.location.href = pathPrefix + 'login.html';
+                return;
+            }
+
+            if (idleMs >= SESSION_WARN_MS && !sessionWarnShown) {
+                sessionWarnShown = true;
+                createSessionWarningPopup();
+            }
+
+            if (sessionWarnShown) {
+                updateSessionCountdown();
+            }
+        }, 1000);
+    }
+
 });
+
