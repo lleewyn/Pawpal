@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PawPal - Hồ sơ bé cưng</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <style>
+        .pet-form-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 0 20px;
+            min-height: 80vh;
+        }
+        .pet-form-card {
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(42, 89, 68, 0.08);
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(42, 89, 68, 0.12);
+            padding: 40px;
+        }
+        .pet-form-header {
+            border-bottom: 1px solid rgba(42, 89, 68, 0.06);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .pet-form-title {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            color: var(--color-primary-dark);
+            font-weight: 500;
+        }
+        .pet-form-subtitle {
+            font-size: 0.9rem;
+            color: var(--color-text-light);
+            margin-top: 4px;
+        }
+        .banner-warning {
+            background-color: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 12px;
+            padding: 16px;
+            color: #92400e;
+            font-size: 0.88rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .pet-photo-large {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--color-bg-light);
+            border-radius: 16px;
+            border: 1px dashed var(--color-border);
+        }
+        .pet-photo-large-preview {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #ffffff;
+            box-shadow: var(--shadow-md);
+            position: relative;
+        }
+        .pet-photo-large-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .pet-photo-large-preview svg {
+            width: 50px;
+            height: 50px;
+            opacity: 0.4;
+            color: var(--color-text-light);
+        }
+        .btn-upload-large {
+            cursor: pointer;
+            padding: 10px 20px;
+            background: var(--color-bg-white);
+            border: 1.5px solid var(--color-primary);
+            color: var(--color-primary);
+            border-radius: 100px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: var(--transition-smooth);
+        }
+        .btn-upload-large:hover {
+            background: var(--color-primary);
+            color: #ffffff;
+        }
+        .form-row-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 640px) {
+            .form-row-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .required-star {
+            color: #ef4444;
+        }
+        .input-hint-message {
+            font-size: 0.78rem;
+            color: #d97706; /* Màu cam cảnh báo trùng tên */
+            font-weight: 500;
+            margin-top: 4px;
+        }
+        .input-success-message {
+            font-size: 0.78rem;
+            color: #15803d;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+            pointer-events: none;
+        }
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            top: 50%;
+            left: 50%;
+            margin-top: -9px;
+            margin-left: -9px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin-loading 0.8s linear infinite;
+        }
+        @keyframes spin-loading {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="dashboard-page-body">
+
+    <!-- Header Navigation -->
+    <header class="main-header" id="mainHeader">
+        <div class="header-container">
+            <a href="../index.html" class="logo">
+                <img src="../assets/images/Logo_pawpal_navbar.png" alt="PawPal">
+            </a>
+            <nav class="nav-menu" id="primaryNavigation">
+                <ul>
+                    <li><a href="../index.html">Trang chủ</a></li>
+                    <li><a href="../index.html#services">Dịch vụ</a></li>
+                    <li><a href="../index.html#shop">Cửa hàng</a></li>
+                    <li><a href="../index.html#experts">Về chúng tôi</a></li>
+                    <li><a href="../index.html#process">Cẩm nang</a></li>
+                    <li><a href="../index.html#contact">Liên hệ</a></li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <a href="dashboard.html" class="login-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span>Tài khoản</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="pet-form-container">
+        <!-- Banner cảnh báo điều hướng từ Đặt lịch -->
+        <div id="bookingRedirectBanner" class="banner-warning" style="display: none;">
+            ⚠️ <span>Vui lòng cập nhật đầy đủ thông tin của bé để hệ thống tính giá dịch vụ chính xác.</span>
+        </div>
+
+        <div class="pet-form-card">
+            <div class="pet-form-header">
+                <h2 class="pet-form-title" id="formTitle">Thêm hồ sơ bé cưng</h2>
+                <p class="pet-form-subtitle">Lưu trữ thông tin thói quen, giống loài để chăm sóc bé tốt nhất.</p>
+            </div>
+
+            <form id="petForm" class="petid-form" novalidate>
+                <input type="hidden" id="petEditId">
+
+                <!-- Ảnh đại diện lớn -->
+                <div class="pet-photo-large">
+                    <div class="pet-photo-large-preview" id="petPhotoPreview">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                    </div>
+                    <label class="btn-upload-large" for="petPhotoInput">
+                        📷 Chọn ảnh bé
+                        <input type="file" id="petPhotoInput" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                    </label>
+                    <p class="petid-photo-hint">JPG, PNG, WEBP · Tối đa 5MB</p>
+                    <span class="field-error" id="petPhotoError"></span>
+                </div>
+
+                <!-- Thông tin cơ bản -->
+                <div class="petid-form-section">
+                    <p class="petid-section-label">Thông tin cơ bản</p>
+                    
+                    <div class="form-row-grid">
+                        <div class="petid-form-group">
+                            <label for="petName">Tên bé cưng <span class="required-star">*</span></label>
+                            <input type="text" id="petName" placeholder="Bé Bông, Miu..." required>
+                            <span class="field-error" id="petNameErr"></span>
+                            <div class="input-hint-message" id="petNameHint" style="display: none;"></div>
+                        </div>
+                        <div class="petid-form-group">
+                            <label for="petSpecies">Loài <span class="required-star">*</span></label>
+                            <select id="petSpecies" required>
+                                <option value="">-- Chọn loài --</option>
+                                <option value="Chó">🐶 Chó</option>
+                                <option value="Mèo">🐱 Mèo</option>
+                            </select>
+                            <span class="field-error" id="petSpeciesErr"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row-grid">
+                        <div class="petid-form-group">
+                            <label for="petBreed">Giống loài</label>
+                            <input type="text" id="petBreed" placeholder="Poodle, Corgi, Ba Tư...">
+                        </div>
+                        <div class="petid-form-group">
+                            <label for="petWeight">Cân nặng (kg) <span class="required-star">*</span></label>
+                            <input type="number" id="petWeight" placeholder="4.5" min="0.1" max="100" step="0.1" required>
+                            <span class="field-error" id="petWeightErr"></span>
+                        </div>
+                    </div>
+
+                    <div class="petid-form-group">
+                        <label for="petBirthday">Ngày sinh</label>
+                        <input type="date" id="petBirthday">
+                    </div>
+                </div>
+
+                <!-- Thông tin y tế -->
+                <div class="petid-form-section" style="margin-top: 15px;">
+                    <p class="petid-section-label">Thông tin y tế <span class="petid-section-badge">Quan trọng</span></p>
+                    
+                    <div class="petid-form-group">
+                        <label for="petAllergies">Dị ứng / Lưu ý đặc biệt</label>
+                        <textarea id="petAllergies" rows="2" placeholder="Dị ứng lúa mì, dị ứng sữa, sợ sấy lông..."></textarea>
+                        <p class="petid-allergy-hint" style="margin-top: 5px;">⚠️ Lưu ý này sẽ được đưa lên hàng đầu trong hồ sơ làm việc của nhân viên.</p>
+                    </div>
+
+                    <div class="petid-form-group">
+                        <label for="petNotes">Mô tả thêm / Thói quen</label>
+                        <textarea id="petNotes" rows="2" placeholder="Thích ăn hạt ẩm, thích gãi cằm..."></textarea>
+                    </div>
+                </div>
+
+                <div class="petid-form-actions" style="margin-top: 20px;">
+                    <button type="button" class="btn-green-outline petid-cancel-btn" id="btnCancel">Hủy</button>
+                    <button type="submit" class="btn-cta petid-save-btn" id="btnSave">💾 Lưu hồ sơ</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/pet-profile.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const petId = urlParams.get('id');
+            const isBookingRedirect = urlParams.get('redirect') === 'booking';
+
+            if (isBookingRedirect) {
+                document.getElementById('bookingRedirectBanner').style.display = 'flex';
+            }
+
+            const pets = getPets();
+            let petPhotoData = '';
+
+            // Đưa form về chế độ Edit nếu có ID
+            if (petId) {
+                const pet = pets.find(p => p.id === petId);
+                if (pet) {
+                    document.getElementById('formTitle').textContent = 'Chỉnh sửa hồ sơ bé cưng';
+                    document.getElementById('petEditId').value = pet.id;
+                    document.getElementById('petName').value = pet.name;
+                    document.getElementById('petSpecies').value = pet.species;
+                    document.getElementById('petBreed').value = pet.breed || '';
+                    document.getElementById('petWeight').value = pet.weight;
+                    document.getElementById('petBirthday').value = pet.birthday || '';
+                    document.getElementById('petAllergies').value = pet.allergies || '';
+                    document.getElementById('petNotes').value = pet.notes || '';
+                    
+                    if (pet.photo) {
+                        petPhotoData = pet.photo;
+                        document.getElementById('petPhotoPreview').innerHTML = `<img src="${pet.photo}" alt="${pet.name}">`;
+                    }
+                }
+            }
+
+            // Real-time photo load and validation
+            const photoInput = document.getElementById('petPhotoInput');
+            photoInput.addEventListener('change', e => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+
+                const errorEl = document.getElementById('petPhotoError');
+                errorEl.textContent = '';
+
+                if (!ALLOWED_TYPES.includes(file.type)) {
+                    errorEl.textContent = 'Định dạng file không hỗ trợ (chỉ nhận JPG, PNG, WEBP).';
+                    document.querySelector('.pet-photo-large').style.borderColor = '#ef4444';
+                    return;
+                }
+
+                if (file.size > MAX_PHOTO_MB * 1024 * 1024) {
+                    errorEl.textContent = 'Dung lượng ảnh vượt quá 5MB.';
+                    document.querySelector('.pet-photo-large').style.borderColor = '#ef4444';
+                    return;
+                }
+
+                document.querySelector('.pet-photo-large').style.borderColor = '';
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    petPhotoData = ev.target.result;
+                    document.getElementById('petPhotoPreview').innerHTML = `<img src="${petPhotoData}" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Validate Tên trùng real-time
+            const nameInput = document.getElementById('petName');
+            const nameHint = document.getElementById('petNameHint');
+            nameInput.addEventListener('input', () => {
+                const nameVal = nameInput.value.trim();
+                const editingId = document.getElementById('petEditId').value;
+                nameHint.style.display = 'none';
+
+                if (nameVal) {
+                    const isDuplicate = pets.some(p => p.name.toLowerCase() === nameVal.toLowerCase() && p.id !== editingId && !p.deleted);
+                    if (isDuplicate) {
+                        nameHint.textContent = '⚠️ Vui lòng thêm ký hiệu phân biệt cho bé (Ví dụ: ' + nameVal + ' 1, ' + nameVal + ' 2)';
+                        nameHint.style.display = 'block';
+                    }
+                }
+            });
+
+            // Form Submit and Validation
+            const form = document.getElementById('petForm');
+            form.addEventListener('submit', e => {
+                e.preventDefault();
+
+                // Validation
+                let isValid = true;
+                const name = nameInput.value.trim();
+                const species = document.getElementById('petSpecies').value;
+                const weight = parseFloat(document.getElementById('petWeight').value);
+                const editingId = document.getElementById('petEditId').value;
+
+                // Clear errors
+                document.getElementById('petNameErr').textContent = '';
+                document.getElementById('petSpeciesErr').textContent = '';
+                document.getElementById('petWeightErr').textContent = '';
+
+                if (!name) {
+                    document.getElementById('petNameErr').textContent = 'Vui lòng nhập tên bé cưng.';
+                    isValid = false;
+                }
+
+                if (!species) {
+                    document.getElementById('petSpeciesErr').textContent = 'Vui lòng chọn loài.';
+                    isValid = false;
+                }
+
+                if (!weight || weight <= 0) {
+                    document.getElementById('petWeightErr').textContent = 'Cân nặng phải lớn hơn 0.';
+                    isValid = false;
+                }
+
+                if (!isValid) return;
+
+                // Show Loading
+                const btnSave = document.getElementById('btnSave');
+                btnSave.classList.add('btn-loading');
+
+                setTimeout(() => {
+                    const finalId = editingId || generatePetId();
+                    const newPet = {
+                        id: finalId,
+                        name: name,
+                        species: species,
+                        breed: document.getElementById('petBreed').value.trim(),
+                        weight: weight,
+                        birthday: document.getElementById('petBirthday').value,
+                        allergies: document.getElementById('petAllergies').value.trim(),
+                        notes: document.getElementById('petNotes').value.trim(),
+                        photo: petPhotoData,
+                        deleted: false,
+                        createdAt: editingId ? (pets.find(p => p.id === editingId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    };
+
+                    let allPets = getPets();
+                    if (editingId) {
+                        const idx = allPets.findIndex(p => p.id === editingId);
+                        if (idx >= 0) allPets[idx] = newPet;
+                    } else {
+                        allPets.push(newPet);
+                    }
+                    savePets(allPets);
+
+                    btnSave.classList.remove('btn-loading');
+                    showToast(editingId ? 'Cập nhật hồ sơ thành công!' : 'Khởi tạo hồ sơ thành công!');
+
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                }, 800);
+            });
+
+            document.getElementById('btnCancel').addEventListener('click', () => {
+                window.location.href = 'dashboard.html';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -607,22 +607,20 @@ Thời gian gợi ý = Ngày dùng dịch vụ gần nhất + C
 
 Nếu Ngày hiện tại >= Thời gian gợi ý, hệ thống sẽ generate bản ghi vào bảng User_Recommendations để hiển thị lên UI của khách hàng.
 "
-User Story 8a: Duyệt tìm sản phẩm & Xem chi tiết	"Là một Khách hàng của PawPal, Tôi muốn dễ dàng tìm kiếm, lọc và xem thông tin chi tiết các sản phẩm thú cưng, để tôi có đầy đủ thông tin tin cậy trước khi quyết định chọn mua sản phẩm.
+User Story 8a: Duyệt tìm sản phẩm & Xem chi tiết	Là một Khách hàng của PawPal, Tôi muốn dễ dàng tìm kiếm, lọc và xem thông tin chi tiết các sản phẩm thú cưng, để tôi có đầy đủ thông tin tin cậy trước khi quyết định chọn mua sản phẩm.
 
 Acceptance Criteria (AC)
-
 Truy xuất & Phân loại: Hệ thống phải hiển thị danh sách sản phẩm phân loại theo: Danh mục (thức ăn, đồ chơi...), Thương hiệu, Giá bán, Tình trạng kho.
 
 Tìm kiếm thông minh (Search): Hệ thống thực hiện đối chiếu từ khóa với Tên sản phẩm, Thương hiệu, Từ khóa liên quan (Tags) để trả kết quả.
 
-Xử lý Không tìm thấy kết quả (No Search Result): Nếu không có sản phẩm trùng khớp, hệ thống phải hiển thị thông báo lỗi và tự động hiển thị danh sách ""Sản phẩm tương tự"" hoặc ""Sản phẩm bán chạy"".
+Xử lý Không tìm thấy kết quả (No Search Result): Nếu không có sản phẩm trùng khớp, hệ thống phải hiển thị thông báo lỗi và tự động hiển thị danh sách "Sản phẩm tương tự" hoặc "Sản phẩm bán chạy".
 
 Thông tin trang Chi tiết (Product Detail): Phải hiển thị đầy đủ: Ảnh sản phẩm, Mô tả, Giá, Số lượng tồn kho khả dụng, Đánh giá (Reviews), và Sản phẩm liên quan (Related Products).
 
-Ràng buộc Hết hàng (Out of Stock): Nếu số lượng tồn kho khả dụng bằng 0, hệ thống bắt buộc phải hiển thị nhãn ""Tạm hết hàng"" và vô hiệu hóa (Disable) nút ""Thêm vào giỏ hàng"".
+Ràng buộc Hết hàng (Out of Stock): Nếu số lượng tồn kho khả dụng bằng 0, hệ thống bắt buộc phải hiển thị nhãn "Tạm hết hàng" và vô hiệu hóa (Disable) nút "Thêm vào giỏ hàng".
 
 Giao diện
-
 Bố cục chủ đạo: Trang Cửa hàng dạng Lưới (Grid View) kết hợp thanh Bộ lọc (Sidebar Filter). Trang Chi tiết sản phẩm dạng chia đôi (Ảnh bên trái, Thông tin mua hàng bên phải).
 
 Thành phần giao diện:
@@ -633,19 +631,17 @@ Trang Chi tiết: Nút tăng/giảm số lượng (+ / -), khu vực hiển th�
 
 Tương tác UX:
 
-Trạng thái hết hàng: Khi sản phẩm hết hàng, hình ảnh sản phẩm tại trang danh mục sẽ bị phủ một lớp màu xám mờ (Opacity 50%) kèm chữ ""Tạm hết hàng"". Nút mua hàng chuyển thành màu xám.
+Trạng thái hết hàng: Khi sản phẩm hết hàng, hình ảnh sản phẩm tại trang danh mục sẽ bị phủ một lớp màu xám mờ (Opacity 50%) kèm chữ "Tạm hết hàng". Nút mua hàng chuyển thành màu xám.
 
 Dòng chảy dữ liệu (Data Flow)
-
 Search Query: Khi người dùng nhập từ khóa, hệ thống gọi API GET /api/v1/products?search=keyword.
 
 Nếu products.length == 0, hệ thống kích hoạt fallback API GET /api/v1/products/recommended?type=best-seller để lấy danh sách sản phẩm bán chạy lấp vào giao diện.
 
-"
-User Story 8b: Quản lý danh sách yêu thích (wishlist)	"Là một Khách hàng của PawPal, Tôi muốn lưu lại các sản phẩm mình quan tâm vào ""Danh sách yêu thích"", Để tôi có thể nhanh chóng xem lại và mua chúng trong tương lai mà không cần tìm kiếm lại.
+
+User Story 8b: Quản lý danh sách yêu thích (wishlist)	Là một Khách hàng của PawPal, Tôi muốn lưu lại các sản phẩm mình quan tâm vào "Danh sách yêu thích", Để tôi có thể nhanh chóng xem lại và mua chúng trong tương lai mà không cần tìm kiếm lại.
 
 Acceptance Criteria (AC)
-
 Cơ chế lưu trữ theo đối tượng:
 
 Đối với Khách đã đăng nhập: Sản phẩm yêu thích phải được lưu trực tiếp vào CSDL gắn với User ID và đồng bộ trên mọi thiết bị (Mobile, Web).
@@ -655,8 +651,7 @@ Cơ chế lưu trữ theo đối tượng:
 Đồng bộ hóa khi Đăng nhập: Nếu khách vãng lai thêm sản phẩm vào Wishlist, sau đó thực hiện đăng nhập, hệ thống phải tự động gộp (Merge) danh sách từ Session vào CSDL của tài khoản đó.
 
 Giao diện
-
-Bố cục chủ đạo: Biểu tượng Trái tim trên mỗi thẻ sản phẩm và một trang ""Danh sách yêu thích"" riêng biệt.
+Bố cục chủ đạo: Biểu tượng Trái tim trên mỗi thẻ sản phẩm và một trang "Danh sách yêu thích" riêng biệt.
 
 Thành phần giao diện:
 
@@ -664,18 +659,17 @@ Icon Trái tim: Nằm ở góc trên cùng bên phải của mỗi ảnh sản p
 
 Tương tác UX:
 
-Trạng thái Icon: Khi bấm vào trái tim trống, icon lập tức chuyển sang màu đỏ rực (Filled Heart) và hiển thị Toast Message: ""Đã thêm vào danh sách yêu thích"". Bấm lần nữa để hủy yêu thích (icon trở về dạng viền trống).
+Trạng thái Icon: Khi bấm vào trái tim trống, icon lập tức chuyển sang màu đỏ rực (Filled Heart) và hiển thị Toast Message: "Đã thêm vào danh sách yêu thích". Bấm lần nữa để hủy yêu thích (icon trở về dạng viền trống).
 
 Dòng chảy dữ liệu (Data Flow)
-
 Khách vãng lai: Thao tác tác động trực tiếp vào mảng dữ liệu localStorage.getItem('pawpal_wishlist').
 
 Khách đã đăng nhập: Trigger API POST /api/v1/wishlist/toggle để cập nhật trạng thái dữ liệu trong CSDL.
+
 "
-User Story 8c: Giỏ hàng & Đồng bộ dữ liệu	"Là một Khách hàng của PawPal, Tôi muốn thêm sản phẩm vào giỏ hàng, điều chỉnh số lượng và áp mã giảm giá, Để tôi chuẩn bị đầy đủ danh sách mặt hàng trước khi tiến hành thanh toán đơn hàng.
+User Story 8c: Giỏ hàng & Đồng bộ dữ liệu	Là một Khách hàng của PawPal, Tôi muốn thêm sản phẩm vào giỏ hàng, điều chỉnh số lượng và áp mã giảm giá, Để tôi chuẩn bị đầy đủ danh sách mặt hàng trước khi tiến hành thanh toán đơn hàng.
 
 Acceptance Criteria (AC)
-
 Kiểm tra tồn kho khi Thêm (Add to Cart): Hệ thống bắt buộc phải check CSDL tồn kho. Nếu Số lượng yêu cầu > Số lượng tồn kho, hệ thống chặn hành động và báo lỗi. Ngược lại, thêm vào giỏ thành công.
 
 Tính toán tự động tại Giỏ hàng: Khi khách hàng thay đổi số lượng hoặc xóa sản phẩm trong Giỏ hàng, hệ thống phải cập nhật lập tức: Đơn giá, Số lượng, Tổng tiền tạm tính của sản phẩm, Tổng giá trị đơn hàng.
@@ -689,25 +683,24 @@ Lưu trạng thái Giỏ hàng bỏ rơi (Abandoned Cart): * Khách đã đăng 
 Khách vãng lai: Lưu vào Cookie/Session trình duyệt với thời gian hết hạn (TTL) quy định.
 
 Giao diện
-
-Bố cục chủ đạo: Trang ""Giỏ hàng"" (Cart Page) dạng danh sách dòng sản phẩm kèm cột thông tin giá; có một khu vực Tổng kết đơn hàng (Order Summary Side-bar) ở bên phải.
+Bố cục chủ đạo: Trang "Giỏ hàng" (Cart Page) dạng danh sách dòng sản phẩm kèm cột thông tin giá; có một khu vực Tổng kết đơn hàng (Order Summary Side-bar) ở bên phải.
 
 Thành phần giao diện:
 
-Nút cập nhật: Bộ tăng/giảm số lượng ngay trên từng hàng sản phẩm. Nút ""Xóa"" (Icon Thùng rác).
+Nút cập nhật: Bộ tăng/giảm số lượng ngay trên từng hàng sản phẩm. Nút "Xóa" (Icon Thùng rác).
 
-Khung Coupon: Ô nhập text ""Mã giảm giá"" và nút ""Áp dụng"".
+Khung Coupon: Ô nhập text "Mã giảm giá" và nút "Áp dụng".
 
 Tương tác UX:
 
-Lỗi vượt tồn kho: Nếu khách cố bấm cộng số lượng vượt mức kho cho phép, hệ thống hiển thị thông báo ngay dưới chân sản phẩm: ""Rất tiếc, cửa hàng chỉ còn [X] sản phẩm này"".
+Lỗi vượt tồn kho: Nếu khách cố bấm cộng số lượng vượt mức kho cho phép, hệ thống hiển thị thông báo ngay dưới chân sản phẩm: "Rất tiếc, cửa hàng chỉ còn [X] sản phẩm này".
 
 Dòng chảy dữ liệu (Data Flow)
+Khi Click "Thanh toán": Hệ thống đóng gói toàn bộ Data trong Giỏ hàng chuyển trạng thái thành Đơn hàng tạm thời (Draft Order) và thực hiện Redirect người dùng sang cổng Module 3.1.9. Thanh toán.
 
-Khi Click ""Thanh toán"": Hệ thống đóng gói toàn bộ Data trong Giỏ hàng chuyển trạng thái thành Đơn hàng tạm thời (Draft Order) và thực hiện Redirect người dùng sang cổng Module 3.1.9. Thanh toán.
+Cơ chế khóa tồn kho tạm thời (Soft-lock): Khi bấm "Thêm vào giỏ", hệ thống có thể tùy chọn giữ chỗ (soft-lock) số lượng sản phẩm đó trong vòng x phút nhằm đảm bảo trải nghiệm checkout không bị tranh chấp dữ liệu.
 
-Cơ chế khóa tồn kho tạm thời (Soft-lock): Khi bấm ""Thêm vào giỏ"", hệ thống có thể tùy chọn giữ chỗ (soft-lock) số lượng sản phẩm đó trong vòng x phút nhằm đảm bảo trải nghiệm checkout không bị tranh chấp dữ liệu.
-"
+
 User Story 9a: Khởi tạo thông tin & Lựa chọn phương thức thanh toán	"Là một Khách hàng của PawPal, Tôi muốn kiểm tra lại thông tin đơn hàng, điền địa chỉ giao hàng và lựa chọn phương thức thanh toán phù hợp để tôi có thể chuẩn bị hoàn tất giao dịch mua sắm một cách nhanh chóng và chính xác.
 
 Acceptance Criteria (AC)

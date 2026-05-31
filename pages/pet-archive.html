@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PawPal - Kho lưu trữ hồ sơ bé cưng</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <style>
+        .archive-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+            min-height: 80vh;
+        }
+        .archive-card {
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(42, 89, 68, 0.08);
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(42, 89, 68, 0.12);
+            padding: 40px;
+        }
+        .archive-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(42, 89, 68, 0.06);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .archive-title {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            color: var(--color-primary-dark);
+            font-weight: 500;
+        }
+        .countdown-badge {
+            background: #fee2e2;
+            color: #991b1b;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 100px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body class="dashboard-page-body">
+
+    <!-- Header Navigation -->
+    <header class="main-header" id="mainHeader">
+        <div class="header-container">
+            <a href="../index.html" class="logo">
+                <img src="../assets/images/Logo_pawpal_navbar.png" alt="PawPal">
+            </a>
+            <nav class="nav-menu" id="primaryNavigation">
+                <ul>
+                    <li><a href="../index.html">Trang chủ</a></li>
+                    <li><a href="../index.html#services">Dịch vụ</a></li>
+                    <li><a href="../index.html#shop">Cửa hàng</a></li>
+                    <li><a href="../index.html#experts">Về chúng tôi</a></li>
+                    <li><a href="../index.html#process">Cẩm nang</a></li>
+                    <li><a href="../index.html#contact">Liên hệ</a></li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <a href="dashboard.html" class="login-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span>Tài khoản</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="archive-container">
+        <div class="archive-card">
+            <div class="archive-header">
+                <div>
+                    <h2 class="archive-title">Kho lưu trữ hồ sơ</h2>
+                    <p class="dash-tab-subtitle">Các hồ sơ đã xóa sẽ lưu lại 30 ngày trước khi bị xóa hoàn toàn khỏi hệ thống.</p>
+                </div>
+                <a href="dashboard.html" class="btn-green-outline" style="font-size: 0.85rem; padding: 8px 18px;">🔙 Quay lại Dashboard</a>
+            </div>
+
+            <!-- Danh sách các bé đã xóa mềm -->
+            <div class="petid-list" id="archiveList">
+                <!-- Javascript inject card ở đây -->
+            </div>
+
+            <!-- Empty state -->
+            <div class="petid-empty" id="archiveEmpty" style="display: none;">
+                <div class="petid-empty-icon">📁</div>
+                <h5>Kho lưu trữ trống</h5>
+                <p>Không có hồ sơ nào đang nằm trong hàng chờ xóa.</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/pet-profile.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderArchive();
+        });
+
+        function renderArchive() {
+            const listEl = document.getElementById('archiveList');
+            const emptyEl = document.getElementById('archiveEmpty');
+            if (!listEl || !emptyEl) return;
+
+            // Đọc toàn bộ
+            const raw = localStorage.getItem(STORAGE_KEY);
+            const allPets = raw ? JSON.parse(raw) : [];
+
+            // Lọc các bé đã bị soft-delete
+            const deletedPets = allPets.filter(p => p.deleted);
+
+            if (deletedPets.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.style.display = 'flex';
+                return;
+            }
+
+            emptyEl.style.display = 'none';
+
+            listEl.innerHTML = deletedPets.map(pet => {
+                const photoHtml = pet.photo
+                    ? `<img src="${pet.photo}" alt="${pet.name}">`
+                    : `<div class="pawport-photo-placeholder"><span style="font-size:2rem;">${pet.species === 'Chó' ? '🐶' : '🐱'}</span></div>`;
+
+                // Tính toán số ngày còn lại
+                const deletedDate = new Date(pet.deletedAt || pet.updatedAt);
+                const expiryDate = new Date(deletedDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+                const now = new Date();
+                const diffTime = expiryDate - now;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const daysLeft = diffDays > 0 ? diffDays : 0;
+
+                return `
+                <div class="pawport-card" data-id="${pet.id}">
+                    <div class="pawport-header" style="background-color: var(--color-text-light)">
+                        <span class="pawport-header-label">ĐÃ LƯU TRỮ</span>
+                        <span class="pawport-id-badge" style="background:#cbd5e1; color:#1e293b;">${pet.id}</span>
+                    </div>
+                    <div class="pawport-body">
+                        <div class="pawport-photo">${photoHtml}</div>
+                        <div class="pawport-info">
+                            <h4 class="pawport-name">${pet.name}</h4>
+                            <div class="pawport-detail"><strong>Loài:</strong> ${pet.species}</div>
+                            <span class="countdown-badge">⏳ Còn lại ${daysLeft} ngày</span>
+                        </div>
+                    </div>
+                    <div class="pawport-footer">
+                        <button class="btn-pawport-edit btn-restore" data-id="${pet.id}" style="color: var(--color-primary); border-color: rgba(42, 89, 68, 0.3);">🔄 Khôi phục</button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Bind click khôi phục
+            listEl.querySelectorAll('.btn-restore').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const petId = btn.dataset.id;
+                    restorePet(petId);
+                });
+            });
+        }
+
+        function restorePet(id) {
+            let allPets = getPets();
+            const idx = allPets.findIndex(p => p.id === id);
+            if (idx >= 0) {
+                allPets[idx].deleted = false;
+                delete allPets[idx].deletedAt;
+                allPets[idx].updatedAt = new Date().toISOString();
+                savePets(allPets);
+                showToast(`✅ Đã khôi phục hồ sơ ${allPets[idx].name}!`);
+                renderArchive();
+            }
+        }
+    </script>
+</body>
+</html>

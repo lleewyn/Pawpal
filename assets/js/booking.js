@@ -19,6 +19,9 @@ const state = {
         checkOut: null,
         nights: 0,
     },
+    selectedStaffId: null,
+    selectedStaffName: null,
+    currentHoldId: null,
     addons: {
         meal: false,
         walk: false, walkQty: 1,
@@ -34,6 +37,17 @@ const ALL_SLOTS = ['08:00','08:30','09:00','09:30','10:00','10:30',
 
 // Slots that are "busy" — in real app this comes from backend
 const BUSY_SLOTS = ['09:00','10:30','14:00','15:30'];
+
+const STAFF_MEMBERS = [
+    { id: 'NV01', name: 'Thảo', role: 'Chăm sóc Spa' },
+    { id: 'NV02', name: 'Hưng', role: 'Chuyên viên Grooming' },
+    { id: 'NV03', name: 'Linh', role: 'Chăm sóc Pet Hotel' },
+    { id: 'NV04', name: 'Minh', role: 'Bảo mẫu VIP' }
+];
+
+const HOLD_STORAGE_KEY = 'pawpal_booking_holds';
+const CURRENT_HOLD_KEY = 'pawpal_current_booking_hold';
+let holdBannerTimer = null;
 
 // ── Parse CSV ─────────────────────────────────────────────────────────────────
 function parseCSV(text) {
@@ -93,6 +107,209 @@ function mapService(row) {
     };
 }
 
+function getBookingHolds() {
+    try {
+        const raw = localStorage.getItem(HOLD_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch {
+        return [];
+    }
+}
+
+function saveBookingHolds(holds) {
+    const valid = holds.filter(h => !isHoldExpired(h));
+    localStorage.setItem(HOLD_STORAGE_KEY, JSON.stringify(valid));
+}
+
+function isHoldExpired(hold) {
+    return new Date(hold.expiresAt) <= new Date();
+}
+
+function cleanupExpiredHolds() {
+    const holds = getBookingHolds();
+    const active = holds.filter(h => !isHoldExpired(h));
+    if (active.length !== holds.length) {
+        saveBookingHolds(active);
+    }
+}
+
+function getActiveHolds() {
+    return getBookingHolds().filter(h => !isHoldExpired(h));
+}
+
+function getHoldKey(hold) {
+    if (hold.serviceId && hold.slot && hold.date) {
+        return `${hold.serviceId}|${hold.date}|${hold.slot}`;
+    }
+    if (hold.serviceId && hold.checkIn && hold.checkOut) {
+        return `${hold.serviceId}|${hold.checkIn}|${hold.checkOut}|HOTEL`;
+    }
+    return '';
+}
+
+function getSelectedScheduleKey() {
+    if (state.selectedService?.isHotel) {
+        return `${state.selectedService.id}|${state.schedule.checkIn || ''}|${state.schedule.checkOut || ''}|HOTEL`;
+    }
+    return `${state.selectedService?.id || ''}|${state.schedule.date || ''}|${state.schedule.slot || ''}`;
+}
+
+function findHoldForCurrentSelection() {
+    const key = getSelectedScheduleKey();
+    if (!key) return null;
+    return getActiveHolds().find(h => getHoldKey(h) === key);
+}
+
+function isSlotHeldByOther() {
+    const currentKey = getSelectedScheduleKey();
+    if (!currentKey) return false;
+    const hold = getActiveHolds().find(h => getHoldKey(h) === currentKey);
+    return hold && hold.id !== state.currentHoldId;
+}
+
+function stopHoldCountdown() {
+    if (holdBannerTimer) {
+        clearInterval(holdBannerTimer);
+        holdBannerTimer = null;
+    }
+}
+
+function startHoldCountdown() {
+    stopHoldCountdown();
+    if (!state.currentHoldId) return;
+    holdBannerTimer = setInterval(() => {
+        const hold = getActiveHolds().find(h => h.id === state.currentHoldId);
+        if (!hold) {
+            updateBookingHoldBanner();
+            stopHoldCountdown();
+            return;
+        }
+        updateBookingHoldBanner();
+    }, 1000);
+}
+
+function releaseCurrentHold() {
+    if (!state.currentHoldId) return;
+    const holds = getActiveHolds().filter(h => h.id !== state.currentHoldId);
+    saveBookingHolds(holds);
+    localStorage.removeItem(CURRENT_HOLD_KEY);
+    state.currentHoldId = null;
+    stopHoldCountdown();
+}
+
+function createHold() {
+    if (!state.selectedService) return;
+    const key = getSelectedScheduleKey();
+    if (!key) return;
+
+    if (isSlotHeldByOther()) {
+        alert('Xin lỗi, lịch này vừa được giữ bởi khách hàng khác. Vui lòng chọn lịch khác.');
+        return;
+    }
+
+    if (state.currentHoldId) {
+        const existing = getActiveHolds().find(h => h.id === state.currentHoldId);
+        if (existing) {
+            if (getHoldKey(existing) !== key) {
+                releaseCurrentHold();
+            } else {
+                existing.staffId = state.selectedStaffId || existing.staffId;
+                existing.staffName = state.selectedStaffName || existing.staffName;
+                existing.expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+                const holds = getActiveHolds().map(h => h.id === existing.id ? existing : h);
+                saveBookingHolds(holds);
+                localStorage.setItem(CURRENT_HOLD_KEY, existing.id);
+                state.currentHoldId = existing.id;
+                updateBookingHoldBanner();
+                return;
+            }
+        }
+    }
+
+    const hold = {
+        id: 'HOLD-' + Math.floor(100000 + Math.random() * 900000),
+        ownerPhone: state.petInfo.ownerPhone || 'guest',
+        ownerName: state.petInfo.ownerName || 'Khách hàng',
+        serviceId: state.selectedService.id,
+        serviceName: state.selectedService.name,
+        date: state.schedule.date || state.schedule.checkIn || '',
+        slot: state.schedule.slot || 'HOTEL',
+        checkIn: state.schedule.checkIn || '',
+        checkOut: state.schedule.checkOut || '',
+        staffId: state.selectedStaffId || '',
+        staffName: state.selectedStaffName || '',
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        createdAt: new Date().toISOString(),
+    };
+
+    const holds = getActiveHolds();
+    holds.push(hold);
+    saveBookingHolds(holds);
+    localStorage.setItem(CURRENT_HOLD_KEY, hold.id);
+    state.currentHoldId = hold.id;
+    updateBookingHoldBanner();
+}
+
+function updateBookingHoldBanner() {
+    const banner = document.getElementById('bookingHoldBanner');
+    if (!banner) return;
+
+    const hold = getActiveHolds().find(h => h.id === state.currentHoldId);
+    if (hold) {
+        const diff = Math.max(0, new Date(hold.expiresAt) - new Date());
+        if (diff <= 0) {
+            banner.style.display = 'none';
+            stopHoldCountdown();
+            return;
+        }
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        const timeText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        const scheduleText = hold.slot !== 'HOTEL' ? `${hold.date} lúc ${hold.slot}` : `${hold.date}`;
+        banner.innerHTML = `
+            <div class="booking-hold-banner-row">
+                <div class="booking-hold-banner-text">
+                    <strong>🛡️ Giữ chỗ thành công</strong><br>
+                    Bạn đang giữ lịch ${scheduleText} với nhân viên <strong>${hold.staffName || 'Ngẫu nhiên'}</strong>.
+                </div>
+                <div class="booking-hold-countdown">Còn lại <strong>${timeText}</strong></div>
+            </div>
+        `;
+        banner.style.display = 'block';
+        if (!holdBannerTimer) startHoldCountdown();
+    } else {
+        banner.style.display = 'none';
+        stopHoldCountdown();
+    }
+}
+
+function loadCurrentHold() {
+    cleanupExpiredHolds();
+    const holdId = localStorage.getItem(CURRENT_HOLD_KEY);
+    if (!holdId) return;
+    const hold = getActiveHolds().find(h => h.id === holdId);
+    if (!hold) {
+        localStorage.removeItem(CURRENT_HOLD_KEY);
+        return;
+    }
+
+    state.currentHoldId = hold.id;
+    state.selectedStaffId = hold.staffId;
+    state.selectedStaffName = hold.staffName;
+    state.selectedService = state.services.find(s => s.id === hold.serviceId) || state.selectedService;
+    if (state.selectedService) {
+        state.activeType = state.selectedService.isHotel ? 'hotel' : 'spa';
+    }
+    if (hold.date) {
+        state.schedule.date = hold.date;
+        state.schedule.slot = hold.slot !== 'HOTEL' ? hold.slot : null;
+    }
+    if (hold.checkIn) {
+        state.schedule.checkIn = hold.checkIn;
+        state.schedule.checkOut = hold.checkOut;
+    }
+}
+
 // ── Step navigation ───────────────────────────────────────────────────────────
 function goToStep(n) {
     // Update panels
@@ -120,6 +337,7 @@ function goToStep(n) {
 // ── Step 1: Service list ──────────────────────────────────────────────────────
 function renderServiceList() {
     const list = document.getElementById('svcSelectList');
+    document.querySelectorAll('.svc-type-tab').forEach(t => t.classList.toggle('active', t.dataset.type === state.activeType));
     const filtered = state.services.filter(s =>
         state.activeType === 'spa' ? !s.isHotel : s.isHotel
     );
@@ -159,8 +377,13 @@ function renderServiceList() {
 
 function selectService(id) {
     state.selectedService = state.services.find(s => s.id === id) || null;
+    state.selectedStaffId = null;
+    state.selectedStaffName = null;
+    state.schedule = { date: null, slot: null, checkIn: null, checkOut: null, nights: 0 };
+    releaseCurrentHold();
     renderServiceList();
-    document.getElementById('step1Next').disabled = !state.selectedService;
+    renderStaffList();
+    document.getElementById('step2Next').disabled = !state.selectedService;
     updateSummary();
 }
 
@@ -169,21 +392,76 @@ function renderTimeSlots() {
     const grid = document.getElementById('timeslotGrid');
     grid.innerHTML = ALL_SLOTS.map(slot => {
         const busy = BUSY_SLOTS.includes(slot);
+        const hold = getActiveHolds().find(h =>
+            h.date === state.schedule.date && h.slot === slot && h.serviceId === state.selectedService?.id
+        );
+        const heldByOther = hold && hold.id !== state.currentHoldId;
         const selected = state.schedule.slot === slot;
-        return `<button class="timeslot-btn ${selected ? 'selected' : ''}"
-                    data-slot="${slot}" ${busy ? 'disabled' : ''}
-                    aria-label="${slot}${busy ? ' (đã đầy)' : ''}">
-                    ${slot}${busy ? '<br><small>Đầy</small>' : ''}
+        return `<button class="timeslot-btn ${selected ? 'selected' : ''} ${heldByOther ? 'held' : ''}"
+                    data-slot="${slot}" ${(busy || heldByOther) ? 'disabled' : ''}
+                    aria-label="${slot}${busy ? ' (đã đầy)' : heldByOther ? ' (Đang chờ)' : ''}">
+                    ${slot}${busy ? '<br><small>Đầy</small>' : heldByOther ? '<br><small>Đang chờ</small>' : ''}
                 </button>`;
     }).join('');
 
     grid.querySelectorAll('.timeslot-btn:not(:disabled)').forEach(btn => {
         btn.addEventListener('click', () => {
+            const priorSlot = state.schedule.slot;
             state.schedule.slot = btn.dataset.slot;
+            if (priorSlot && priorSlot !== state.schedule.slot) {
+                releaseCurrentHold();
+            }
             renderTimeSlots();
             checkStep3Valid();
+            maybeCreateHold();
         });
     });
+}
+
+function renderStaffList() {
+    const list = document.getElementById('staffList');
+    if (!list) return;
+    list.innerHTML = STAFF_MEMBERS.map(member => {
+        const selected = state.selectedStaffId === member.id;
+        return `
+            <div class="staff-card ${selected ? 'selected' : ''}" data-id="${member.id}" role="button" tabindex="0">
+                <div class="staff-card-avatar">${member.name.slice(0, 1)}</div>
+                <div class="staff-card-info">
+                    <h4>${member.name}</h4>
+                    <p>${member.role}</p>
+                </div>
+                <div class="staff-card-status">${selected ? 'Đã chọn' : 'Chọn'}</div>
+            </div>`;
+    }).join('');
+
+    list.querySelectorAll('.staff-card').forEach(card => {
+        card.addEventListener('click', () => selectStaff(card.dataset.id));
+    });
+}
+
+function selectStaff(staffId) {
+    const staff = STAFF_MEMBERS.find(s => s.id === staffId);
+    if (!staff) return;
+    state.selectedStaffId = staff.id;
+    state.selectedStaffName = staff.name;
+    renderStaffList();
+    maybeCreateHold();
+    checkStep3Valid();
+    updateSummary();
+}
+
+function maybeCreateHold() {
+    const svc = state.selectedService;
+    if (!svc) return;
+    if (svc.isHotel) {
+        if (state.schedule.checkIn && state.schedule.checkOut && state.selectedStaffId) {
+            createHold();
+        }
+    } else {
+        if (state.schedule.date && state.schedule.slot && state.selectedStaffId) {
+            createHold();
+        }
+    }
 }
 
 function checkStep3Valid() {
@@ -191,9 +469,11 @@ function checkStep3Valid() {
     let valid = false;
     if (svc?.isHotel) {
         valid = !!(state.schedule.checkIn && state.schedule.checkOut &&
-                   state.schedule.checkOut > state.schedule.checkIn);
+                   state.schedule.checkOut > state.schedule.checkIn &&
+                   state.selectedStaffId && !isSlotHeldByOther());
     } else {
-        valid = !!(state.schedule.date && state.schedule.slot);
+        valid = !!(state.schedule.date && state.schedule.slot && state.selectedStaffId &&
+                   !isSlotHeldByOther());
     }
     document.getElementById('step3Next').disabled = !valid;
     updateSummary();
@@ -225,6 +505,9 @@ function buildConfirmSummary() {
     }
 
     document.getElementById('confirmSummary').innerHTML = `
+        <div class="confirm-warning-note">
+            <strong>📌 Lưu ý:</strong> Mức giá hiển thị chỉ là giá dự kiến dựa trên số cân nặng do khách hàng tự khai báo. Khi khách hàng mang bé cưng đến cửa hàng, nhân viên xin phép cân lại thực tế để áp mức giá niêm yết chính xác nhất.
+        </div>
         <div class="confirm-row">
             <span class="confirm-icon">✂️</span>
             <div class="confirm-row-content">
@@ -256,7 +539,15 @@ function buildConfirmSummary() {
             <button class="confirm-edit-btn" onclick="goToStep(2)">Sửa</button>
         </div>
         <div class="confirm-row">
-            <span class="confirm-icon">📅</span>
+            <span class="confirm-icon">�</span>
+            <div class="confirm-row-content">
+                <p class="confirm-row-label">Nhân viên</p>
+                <p class="confirm-row-value">${state.selectedStaffName || 'Ngẫu nhiên'}</p>
+            </div>
+            <button class="confirm-edit-btn" onclick="goToStep(3)">Sửa</button>
+        </div>
+        <div class="confirm-row">
+            <span class="confirm-icon">�📅</span>
             <div class="confirm-row-content">
                 <p class="confirm-row-label">Lịch hẹn</p>
                 <p class="confirm-row-value">${dateStr || '—'}</p>
@@ -292,9 +583,10 @@ function updateSummary() {
         valEl.innerHTML = val || '';
     };
 
-    show('sumService', svc?.name);
+    show('sumService', svc ? svc.name : null);
     show('sumPet', pet.petName ? `${pet.petName} (${pet.petType || '?'})` : null);
     show('sumOwner', pet.ownerName ? `${pet.ownerName} · ${pet.ownerPhone}` : null);
+    show('sumStaff', state.selectedStaffName ? state.selectedStaffName : null);
 
     let dateStr = null;
     if (svc?.isHotel && sch.checkIn && sch.checkOut) {
@@ -348,14 +640,27 @@ function renderPetSelection() {
         </div>
     `;
 
+    list.querySelectorAll('.btn-add-pet-card').forEach(btn => {
+        btn.addEventListener('click', () => {
+            window.location.href = 'pet-form.html';
+        });
+    });
+
     list.querySelectorAll('.pet-select-card').forEach(card => {
         card.addEventListener('click', () => {
-            state.selectedPetId = card.dataset.id;
-            renderPetSelection();
+            const petId = card.dataset.id;
+            const pet = state.memberPets.find(p => p.id === petId);
             
-            // Sync selected pet data to state.petInfo temporarily
-            const pet = state.memberPets.find(p => p.id === state.selectedPetId);
             if (pet) {
+                // Kiểm tra ràng buộc thiếu thông tin (Tên, giống loài, cân nặng) theo quy tắc 3.1.3
+                if (!pet.weight || pet.weight <= 0 || !pet.name || !pet.species) {
+                    window.location.href = `pet-form.html?id=${pet.id}&redirect=booking`;
+                    return;
+                }
+
+                state.selectedPetId = petId;
+                renderPetSelection();
+                
                 const user = JSON.parse(localStorage.getItem('pawpal_user') || '{}');
                 state.petInfo = {
                     ownerName: user.name || '',
@@ -374,7 +679,7 @@ function renderPetSelection() {
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────
-function validateStep2() {
+function validatePetInfo() {
     if (state.isMember) {
         if (!state.selectedPetId) {
             alert('Vui lòng chọn một bé cưng để đặt lịch!');
@@ -431,6 +736,36 @@ function validateStep2() {
     return valid;
 }
 
+function isPetInfoComplete() {
+    if (state.isMember) {
+        return !!state.selectedPetId;
+    }
+
+    const ownerName = document.getElementById('ownerName')?.value.trim();
+    const ownerPhone = document.getElementById('ownerPhone')?.value.trim();
+    const petName = document.getElementById('petName')?.value.trim();
+    const petType = document.getElementById('petType')?.value;
+    const petWeight = document.getElementById('petWeight')?.value.trim();
+    return !!(ownerName && ownerPhone && petName && petType && petWeight);
+}
+
+function isStep3Valid() {
+    const svc = state.selectedService;
+    if (!svc) return false;
+    if (svc.isHotel) {
+        return !!(state.schedule.checkIn && state.schedule.checkOut && state.schedule.checkOut > state.schedule.checkIn && state.selectedStaffId && !isSlotHeldByOther());
+    }
+    return !!(state.schedule.date && state.schedule.slot && state.selectedStaffId && !isSlotHeldByOther());
+}
+
+function canNavigateToStep(n) {
+    if (n === 1) return true;
+    if (n === 2) return isPetInfoComplete();
+    if (n === 3) return isPetInfoComplete() && !!state.selectedService;
+    if (n === 4) return isPetInfoComplete() && !!state.selectedService && isStep3Valid();
+    return false;
+}
+
 // ── Booking submission ────────────────────────────────────────────────────────
 function submitBooking() {
     const code = 'PP-' + Math.floor(100000 + Math.random() * 900000);
@@ -481,22 +816,31 @@ function bindEvents() {
             tab.classList.add('active');
             state.activeType = tab.dataset.type;
             state.selectedService = null;
-            document.getElementById('step1Next').disabled = true;
+            document.getElementById('step2Next').disabled = true;
             renderServiceList();
             updateSummary();
         });
     });
 
-    document.getElementById('step1Next').addEventListener('click', () => {
-        if (state.selectedService) {
-            const isGrooming = state.selectedService.category.toLowerCase().includes('cắt tỉa');
-            if (state.isMember) {
-                const groomingSec = document.getElementById('memberGroomingStyleSection');
-                if(groomingSec) groomingSec.style.display = isGrooming ? 'block' : 'none';
-            } else {
-                const groomingSec = document.getElementById('groomingStyleSection');
-                if(groomingSec) groomingSec.style.display = isGrooming ? 'block' : 'none';
+    document.querySelectorAll('.step').forEach(step => {
+        step.addEventListener('click', () => {
+            const target = parseInt(step.dataset.step, 10);
+            if (canNavigateToStep(target)) {
+                goToStep(target);
+            } else if (target > state.currentStep) {
+                alert('Vui lòng hoàn thành các bước trước để tiếp tục.');
             }
+        });
+        step.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                step.click();
+            }
+        });
+    });
+
+    document.getElementById('step1Next').addEventListener('click', () => {
+        if (validatePetInfo()) {
             goToStep(2);
         }
     });
@@ -504,15 +848,18 @@ function bindEvents() {
     // Step 2
     document.getElementById('step2Back').addEventListener('click', () => goToStep(1));
     document.getElementById('step2Next').addEventListener('click', () => {
-        if (validateStep2()) {
-            // Show/hide hotel vs spa schedule
-            const isHotel = state.selectedService?.isHotel;
-            document.getElementById('hotelDateRange').style.display = isHotel ? 'block' : 'none';
-            document.getElementById('spaSchedule').style.display    = isHotel ? 'none' : 'block';
-            document.getElementById('hotelAddonsSection').style.display = isHotel ? 'block' : 'none';
-            renderTimeSlots();
-            goToStep(3);
+        if (!state.selectedService) {
+            alert('Vui lòng chọn dịch vụ trước khi tiếp tục.');
+            return;
         }
+        const isHotel = state.selectedService?.isHotel;
+        document.getElementById('hotelDateRange').style.display = isHotel ? 'block' : 'none';
+        document.getElementById('spaSchedule').style.display    = isHotel ? 'none' : 'block';
+        document.getElementById('hotelAddonsSection').style.display = isHotel ? 'block' : 'none';
+        renderTimeSlots();
+        renderStaffList();
+        updateBookingHoldBanner();
+        goToStep(3);
     });
 
     document.getElementById('useLastGroomingStyle')?.addEventListener('change', e => {
@@ -553,23 +900,31 @@ function bindEvents() {
     });
 
     document.getElementById('bookingDate').addEventListener('change', e => {
+        releaseCurrentHold();
         state.schedule.date = e.target.value;
         state.schedule.slot = null;
         renderTimeSlots();
+        updateBookingHoldBanner();
         checkStep3Valid();
     });
 
     document.getElementById('checkInDate').addEventListener('change', e => {
+        releaseCurrentHold();
         state.schedule.checkIn = e.target.value;
         document.getElementById('checkOutDate').min = e.target.value;
         updateHotelNights();
+        updateBookingHoldBanner();
         checkStep3Valid();
+        maybeCreateHold();
     });
 
     document.getElementById('checkOutDate').addEventListener('change', e => {
+        releaseCurrentHold();
         state.schedule.checkOut = e.target.value;
         updateHotelNights();
+        updateBookingHoldBanner();
         checkStep3Valid();
+        maybeCreateHold();
     });
 
     // Step 4
@@ -672,9 +1027,12 @@ async function init() {
         if (!res.ok) throw new Error('Không tải được dichvu.csv');
         const text = await res.text();
         state.services = parseCSV(text).map(mapService).filter(s => s.id);
+        loadCurrentHold();
 
         setMinDates();
         renderServiceList();
+        renderStaffList();
+        updateBookingHoldBanner();
         bindEvents();
     } catch (err) {
         console.error('booking.js:', err);

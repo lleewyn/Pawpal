@@ -39,8 +39,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const pathPrefix = isInPagesSubdir ? '../' : '';
     const pagePrefix = isInPagesSubdir ? '' : 'pages/';
 
+    // Booking change state and hold helpers
+    const BOOKING_SLOTS = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'];
+    const BOOKING_BUSY_SLOTS = ['09:00','10:30','14:00','15:30'];
+    const STAFF_MEMBERS = [
+        { id: 'NV01', name: 'Thảo', role: 'Chăm sóc Spa' },
+        { id: 'NV02', name: 'Hưng', role: 'Chuyên viên Grooming' },
+        { id: 'NV03', name: 'Linh', role: 'Chăm sóc Pet Hotel' },
+        { id: 'NV04', name: 'Minh', role: 'Bảo mẫu VIP' }
+    ];
+    const HOLD_STORAGE_KEY = 'pawpal_booking_holds';
+    const CURRENT_CHANGE_HOLD_KEY = 'pawpal_current_change_hold';
+    let changeBookingState = null;
+
     // Toast Container
     const toastContainer = document.getElementById('toastContainer');
+
+    // Ensure a safe global opener exists early so dashboard can call it before auth module
+    window._queuedChangeBookingRequests = window._queuedChangeBookingRequests || [];
+    window._actualOpenChangeBookingModal = window._actualOpenChangeBookingModal || null;
+    window.openChangeBookingModal = function(booking) {
+        if (typeof window._actualOpenChangeBookingModal === 'function') {
+            return window._actualOpenChangeBookingModal(booking);
+        }
+        console.log('auth: queueing openChangeBookingModal request until actual handler is ready', booking);
+        window._queuedChangeBookingRequests.push(booking);
+    };
 
     // Safe helper to bind event listeners
     function safeBind(el, event, handler) {
@@ -59,8 +83,146 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('pawpal_users', JSON.stringify(users));
     }
 
-    function getLoggedInUser() {
-        return localStorage.getItem('pawpal_logged_in_user');
+    function getBookingHolds() {
+        try {
+            const raw = localStorage.getItem(HOLD_STORAGE_KEY);
+            return raw ? JSON.parse(raw) : [];
+        } catch {
+            return [];
+        }
+    }
+
+    function saveBookingHolds(holds) {
+        const valid = holds.filter(h => !isHoldExpired(h));
+        localStorage.setItem(HOLD_STORAGE_KEY, JSON.stringify(valid));
+    }
+
+    function isHoldExpired(hold) {
+        return new Date(hold.expiresAt) <= new Date();
+    }
+
+    function cleanupExpiredHolds() {
+        const holds = getBookingHolds();
+        const active = holds.filter(h => !isHoldExpired(h));
+        if (active.length !== holds.length) saveBookingHolds(active);
+    }
+
+    function getActiveHolds() {
+        cleanupExpiredHolds();
+        return getBookingHolds().filter(h => !isHoldExpired(h));
+    }
+
+    function getChangeHoldKey(bookingId, date, slot) {
+        return `${bookingId}|${date}|${slot}`;
+    }
+
+    function releaseCurrentChangeHold() {
+        if (!changeBookingState?.currentHoldId) return;
+        const holds = getActiveHolds().filter(h => h.id !== changeBookingState.currentHoldId);
+        saveBookingHolds(holds);
+        localStorage.removeItem(CURRENT_CHANGE_HOLD_KEY);
+        changeBookingState.currentHoldId = null;
+    }
+
+    function startChangeHoldCountdown() {
+        if (!changeBookingState?.currentHoldId) return;
+        if (changeBookingState.holdTimer) return;
+        changeBookingState.holdTimer = setInterval(() => {
+            const hold = getActiveHolds().find(h => h.id === changeBookingState.currentHoldId);
+            if (!hold) {
+                updateChangeBookingHoldBanner();
+                clearInterval(changeBookingState.holdTimer);
+                changeBookingState.holdTimer = null;
+                return;
+            }
+            updateChangeBookingHoldBanner();
+        }, 1000);
+    }
+
+    function stopChangeHoldCountdown() {
+        if (changeBookingState?.holdTimer) {
+            clearInterval(changeBookingState.holdTimer);
+            changeBookingState.holdTimer = null;
+        }
+    }
+
+    function getCurrentUser() {
+        const loggedInPhone = getLoggedInUser();
+        if (!loggedInPhone) return null;
+        const users = getUsersList();
+        return users.find(u => u.phone === loggedInPhone) || null;
+    }
+
+    function saveCurrentUser(user) {
+        const users = getUsersList();
+        const idx = users.findIndex(u => u.phone === user.phone);
+        if (idx >= 0) {
+            users[idx] = user;
+        } else {
+            users.push(user);
+        }
+        saveUsersList(users);
+    }
+
+    function parseBookingDateTime(dateString, timeString) {
+        if (!dateString) return null;
+        const parts = dateString.split('/').map(p => p.trim());
+        if (parts.length !== 3) return null;
+        const [day, month, year] = parts;
+        return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timeString || '00:00'}:00`);
+    }
+
+    function formatBookingDate(dateString) {
+        if (!dateString) return '';
+        const d = parseBookingDateTime(dateString, '00:00');
+        if (!d || isNaN(d)) return dateString;
+        return d.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    function getMinutesUntilBooking(booking) {
+        const dt = parseBookingDateTime(booking.date, booking.time);
+        if (!dt) return Infinity;
+        return Math.round((dt - new Date()) / 60000);
+    }
+
+    function canModifyBooking(booking) {
+        if (!booking || !booking.status) return false;
+        if (['Đang thực hiện','Đã tiếp nhận','Hoàn thành','Đã hủy'].includes(booking.status)) return false;
+        const minutes = getMinutesUntilBooking(booking);
+        return minutes > 120;
+    }
+
+    function canCancelBooking(booking) {
+        if (!booking || !booking.status) return false;
+        if (['Đang thực hiện','Đã tiếp nhận','Hoàn thành','Đã hủy'].includes(booking.status)) return false;
+        const minutes = getMinutesUntilBooking(booking);
+        return minutes > 120;
+    }
+
+    function recordBookingAudit(booking, action, note) {
+        if (!booking) return;
+        booking.auditTrail = booking.auditTrail || [];
+        booking.auditTrail.push({
+            action,
+            note,
+            actor: getCurrentUser()?.phone || 'guest',
+            timestamp: new Date().toISOString(),
+        });
+    }
+
+    function getServiceCategory(booking) {
+        if (!booking?.service) return 'spa';
+        return booking.service.toLowerCase().includes('hotel') ? 'hotel' : 'spa';
+    }
+
+    function getBookingCategoryLabel(booking) {
+        return getServiceCategory(booking) === 'hotel' ? 'Pet Hotel' : 'Spa & Grooming';
+    }
+
+    function loadBookingServiceForChange(booking) {
+        if (!booking) return null;
+        const category = getServiceCategory(booking);
+        return STATE_SERVICES ? STATE_SERVICES.find(s => s.isHotel === (category === 'hotel')) : null;
     }
 
     function setLoggedInUser(phone) {
@@ -917,50 +1079,307 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Booking cancellation
+        // Booking management
         function renderDashboardBookings(bookings) {
             const dashBookingsList = document.getElementById('dashBookingsList');
-            const noBookingsMsg = document.getElementById('noBookingsMsg');
+            const bookingEmpty = document.getElementById('bookingEmpty');
             if (!dashBookingsList) return;
             dashBookingsList.innerHTML = '';
 
             if (!bookings || bookings.length === 0) {
-                if (noBookingsMsg) dashBookingsList.appendChild(noBookingsMsg);
+                if (bookingEmpty) dashBookingsList.appendChild(bookingEmpty);
                 return;
             }
 
             bookings.forEach((bk, index) => {
+                const canChange = canModifyBooking(bk) && !user.isTemporary && (bk.changeCount || 0) < 2;
+                const canCancel = canCancelBooking(bk) && !user.isTemporary;
+                const changeLabel = (bk.changeCount || 0) >= 2 ? 'Đã đạt giới hạn thay đổi' : 'Thay đổi lịch';
+
                 const card = document.createElement('div');
                 card.className = 'dash-booking-card';
                 card.innerHTML = `
                     <div class="booking-card-info">
-                        <h5 style="margin: 0 0 4px 0; font-family: var(--font-primary); font-size: 1rem; color: var(--color-primary-dark); font-weight: 700;">${bk.service}</h5>
-                        <p style="margin: 0; font-size: 0.85rem; color: var(--color-text-light);">📅 Ngày: ${bk.date} | ⏰ Khung giờ: ${bk.time}</p>
+                        <h5 style="margin: 0 0 4px 0; font-family: var(--font-primary); font-size: 1rem; color: var(--color-primary-dark); font-weight: 700;">${bk.service || 'Chưa có dịch vụ'}</h5>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--color-text-light);">📅 Ngày: ${bk.date || '—'} | ⏰ Khung giờ: ${bk.time || '—'}</p>
                         <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--color-text-light);">Trạng thái: <strong style="color:var(--color-primary);">${bk.status}</strong></p>
+                        ${bk.changeCount ? `<p style="margin: 4px 0 0 0; font-size: 0.8rem; color:#79797a;">Đã thay đổi ${bk.changeCount} lần</p>` : ''}
                     </div>
-                    <button class="btn-cancel-booking-dash" data-index="${index}">Hủy lịch</button>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;">
+                        <button class="btn-change-booking-dash" data-index="${index}" ${canChange ? '' : 'disabled'}>${changeLabel}</button>
+                        ${canCancel ? `<button class="btn-cancel-booking-dash" data-index="${index}">Hủy lịch</button>` : `<span style="font-size:0.78rem;color:#a3a3a3;">Không thể hủy</span>`}
+                    </div>
                 `;
 
-                card.querySelector('.btn-cancel-booking-dash').addEventListener('click', () => {
-                    if (user.isTemporary) {
-                        alert('Bạn phải thiết lập mật khẩu bảo mật trong tab Bảo mật trước khi tiến hành hủy lịch.');
-                        return;
-                    }
-                    const confirmPass = prompt('Nhập mật khẩu tài khoản để xác nhận hủy lịch hẹn:');
-                    if (confirmPass === user.password) {
-                        if (confirm('Bạn chắc chắn muốn hủy lịch hẹn chăm sóc này?')) {
-                            user.bookings.splice(index, 1);
-                            saveUsersList(users);
-                            renderDashboardBookings(user.bookings);
-                            alert('Đã hủy lịch hẹn thành công.');
+                if (canChange) {
+                    card.querySelector('.btn-change-booking-dash').addEventListener('click', () => {
+                        openChangeBookingModal(bk);
+                    });
+                }
+
+                const cancelBtn = card.querySelector('.btn-cancel-booking-dash');
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', () => {
+                        if (user.isTemporary) {
+                            alert('Bạn phải thiết lập mật khẩu bảo mật trong tab Bảo mật trước khi tiến hành hủy lịch.');
+                            return;
                         }
-                    } else if (confirmPass !== null) {
-                        alert('Mật khẩu không chính xác. Thao tác hủy lịch bị chặn.');
-                    }
-                });
+                        const confirmPass = prompt('Nhập mật khẩu tài khoản để xác nhận hủy lịch hẹn:');
+                        if (confirmPass === user.password) {
+                            if (!canCancel) {
+                                alert('Quá thời gian cho phép hủy trực tuyến. Vui lòng liên hệ Admin để được hỗ trợ.');
+                                return;
+                            }
+                            if (confirm('Bạn chắc chắn muốn hủy lịch hẹn chăm sóc này?')) {
+                                bk.status = 'Đã hủy';
+                                recordBookingAudit(bk, 'cancel', 'Hủy lịch trực tuyến');
+                                saveCurrentUser(user);
+                                renderDashboardBookings(user.bookings);
+                                alert('Đã hủy lịch hẹn thành công.');
+                            }
+                        } else if (confirmPass !== null) {
+                            alert('Mật khẩu không chính xác. Thao tác hủy lịch bị chặn.');
+                        }
+                    });
+                }
 
                 dashBookingsList.appendChild(card);
             });
         }
+
+        function openChangeBookingModal(booking) {
+            if (!booking) return;
+            changeBookingState = {
+                originalBooking: booking,
+                selectedDate: null,
+                selectedSlot: null,
+                selectedStaffId: null,
+                selectedStaffName: null,
+                currentHoldId: null,
+                holdTimer: null,
+            };
+
+            const modal = document.getElementById('bookingChangeModal');
+            const overlay = document.getElementById('bookingChangeOverlay');
+            const note = document.getElementById('changeBookingNote');
+            const summary = document.getElementById('changeBookingSummary');
+            const dateInput = document.getElementById('changeBookingDate');
+            const confirmBtn = document.getElementById('changeBookingConfirmBtn');
+
+            if (note) note.textContent = 'Lưu ý: khung giờ mới sẽ được giữ trong 15 phút. Nếu không xác nhận, lịch cũ sẽ vẫn được giữ nguyên.';
+            if (summary) {
+                summary.innerHTML = `
+                    <div style="margin-bottom:12px;padding:14px;background:#f8fafc;border:1px solid #d1d5db;border-radius:12px;">
+                        <strong>Thông tin lịch cũ</strong><br>
+                        ${booking.service} — ${booking.date} lúc ${booking.time}<br>
+                        Trạng thái: <strong>${booking.status}</strong>
+                    </div>
+                `;
+            }
+            if (dateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.min = today;
+                dateInput.value = booking.date.split('/').reverse().join('-');
+                changeBookingState.selectedDate = dateInput.value;
+            }
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+                confirmBtn.textContent = 'Xác nhận thay đổi';
+            }
+            renderChangeTimeslotGrid();
+            renderChangeStaffList();
+            if (overlay) overlay.addEventListener('click', closeChangeBookingModal);
+            document.getElementById('changeBookingCloseBtn').addEventListener('click', closeChangeBookingModal);
+            document.getElementById('changeBookingCancelBtn').addEventListener('click', closeChangeBookingModal);
+            if (dateInput) {
+                dateInput.addEventListener('change', () => {
+                    changeBookingState.selectedDate = dateInput.value;
+                    releaseCurrentChangeHold();
+                    renderChangeTimeslotGrid();
+                    updateChangeBookingHoldBanner();
+                });
+            }
+            if (modal) {
+                modal.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeChangeBookingModal() {
+            if (!changeBookingState) return;
+            releaseCurrentChangeHold();
+            stopChangeHoldCountdown();
+            const modal = document.getElementById('bookingChangeModal');
+            if (modal) modal.classList.remove('open');
+            document.body.style.overflow = '';
+            changeBookingState = null;
+        }
+
+        window._actualOpenChangeBookingModal = openChangeBookingModal;
+        console.log('auth: actual openChangeBookingModal handler is ready');
+        if (Array.isArray(window._queuedChangeBookingRequests) && window._queuedChangeBookingRequests.length) {
+            console.log('auth: flushing queued change booking requests', window._queuedChangeBookingRequests.length);
+            window._queuedChangeBookingRequests.forEach(q => {
+                try { window._actualOpenChangeBookingModal(q); } catch (e) { console.error('auth: queued change booking request failed', e); }
+            });
+            window._queuedChangeBookingRequests = [];
+        }
+
+        function renderChangeTimeslotGrid() {
+            const grid = document.getElementById('changeTimeslotGrid');
+            if (!grid || !changeBookingState) return;
+            grid.innerHTML = BOOKING_SLOTS.map(slot => {
+                const busy = BOOKING_BUSY_SLOTS.includes(slot);
+                const hold = getActiveHolds().find(h => h.date === changeBookingState.selectedDate && h.slot === slot && h.bookingId !== changeBookingState.originalBooking.id);
+                const heldByOther = hold && hold.id !== changeBookingState.currentHoldId;
+                const selected = changeBookingState.selectedSlot === slot;
+                return `
+                    <button class="timeslot-btn ${selected ? 'selected' : ''} ${heldByOther ? 'held' : ''}" type="button" data-slot="${slot}" ${busy || heldByOther ? 'disabled' : ''}>
+                        ${slot}${busy ? '<br><small>Đầy</small>' : heldByOther ? '<br><small>Đang chờ</small>' : ''}
+                    </button>`;
+            }).join('');
+
+            grid.querySelectorAll('.timeslot-btn:not(:disabled)').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    changeBookingState.selectedSlot = btn.dataset.slot;
+                    renderChangeTimeslotGrid();
+                    updateChangeBookingHoldBanner();
+                    maybeCreateChangeHold();
+                });
+            });
+        }
+
+        function renderChangeStaffList() {
+            const list = document.getElementById('changeStaffList');
+            if (!list || !changeBookingState) return;
+            list.innerHTML = STAFF_MEMBERS.map(member => {
+                const selected = changeBookingState.selectedStaffId === member.id;
+                return `
+                    <div class="staff-card ${selected ? 'selected' : ''}" data-id="${member.id}" role="button" tabindex="0">
+                        <div class="staff-card-avatar">${member.name.slice(0, 1)}</div>
+                        <div class="staff-card-info">
+                            <h4>${member.name}</h4>
+                            <p>${member.role}</p>
+                        </div>
+                        <div class="staff-card-status">${selected ? 'Đã chọn' : 'Chọn'}</div>
+                    </div>`;
+            }).join('');
+            list.querySelectorAll('.staff-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const id = card.dataset.id;
+                    const staff = STAFF_MEMBERS.find(s => s.id === id);
+                    if (!staff) return;
+                    changeBookingState.selectedStaffId = staff.id;
+                    changeBookingState.selectedStaffName = staff.name;
+                    renderChangeStaffList();
+                    maybeCreateChangeHold();
+                });
+            });
+        }
+
+        function maybeCreateChangeHold() {
+            if (!changeBookingState) return;
+            if (!changeBookingState.selectedDate || !changeBookingState.selectedSlot || !changeBookingState.selectedStaffId) return;
+            const key = getChangeHoldKey(changeBookingState.originalBooking.id, changeBookingState.selectedDate, changeBookingState.selectedSlot);
+            const existing = getActiveHolds().find(h => h.key === key);
+            if (existing && existing.id !== changeBookingState.currentHoldId) {
+                alert('Khung giờ này đang được giữ bởi khách khác. Vui lòng chọn lịch khác.');
+                return;
+            }
+            if (changeBookingState.currentHoldId) {
+                const current = getActiveHolds().find(h => h.id === changeBookingState.currentHoldId);
+                if (current && current.key !== key) {
+                    releaseCurrentChangeHold();
+                }
+            }
+            if (changeBookingState.currentHoldId) {
+                const current = getActiveHolds().find(h => h.id === changeBookingState.currentHoldId);
+                if (current) {
+                    current.date = changeBookingState.selectedDate;
+                    current.slot = changeBookingState.selectedSlot;
+                    current.staffId = changeBookingState.selectedStaffId;
+                    current.staffName = changeBookingState.selectedStaffName;
+                    current.expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+                    current.key = key;
+                    saveBookingHolds(getActiveHolds().map(h => h.id === current.id ? current : h));
+                    updateChangeBookingHoldBanner();
+                    return;
+                }
+            }
+            const hold = {
+                id: 'HOLD-' + Math.floor(100000 + Math.random() * 900000),
+                bookingId: changeBookingState.originalBooking.id,
+                service: changeBookingState.originalBooking.service,
+                date: changeBookingState.selectedDate,
+                slot: changeBookingState.selectedSlot,
+                staffId: changeBookingState.selectedStaffId,
+                staffName: changeBookingState.selectedStaffName,
+                expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+                key,
+            };
+            const holds = getActiveHolds();
+            holds.push(hold);
+            saveBookingHolds(holds);
+            localStorage.setItem(CURRENT_CHANGE_HOLD_KEY, hold.id);
+            changeBookingState.currentHoldId = hold.id;
+            updateChangeBookingHoldBanner();
+        }
+
+        function updateChangeBookingHoldBanner() {
+            const banner = document.getElementById('changeBookingHoldBanner');
+            if (!banner || !changeBookingState) return;
+            const hold = getActiveHolds().find(h => h.id === changeBookingState.currentHoldId);
+            if (hold) {
+                const diff = Math.max(0, new Date(hold.expiresAt) - new Date());
+                if (diff <= 0) {
+                    banner.style.display = 'none';
+                    stopChangeHoldCountdown();
+                    return;
+                }
+                const minutes = Math.floor(diff / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                const timeText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                banner.innerHTML = `
+                    <div class="booking-hold-banner-row">
+                        <div class="booking-hold-banner-text">
+                            🛡️ Bạn đang giữ chỗ ${hold.date} lúc ${hold.slot} với nhân viên <strong>${hold.staffName}</strong>.
+                        </div>
+                        <div class="booking-hold-countdown">Còn lại <strong>${timeText}</strong></div>
+                    </div>`;
+                banner.style.display = 'block';
+                startChangeHoldCountdown();
+                document.getElementById('changeBookingConfirmBtn').disabled = false;
+            } else {
+                banner.style.display = 'none';
+                document.getElementById('changeBookingConfirmBtn').disabled = true;
+            }
+        }
+
+        function confirmChangeBooking() {
+            if (!changeBookingState || !changeBookingState.originalBooking) return;
+            if (!changeBookingState.selectedDate || !changeBookingState.selectedSlot || !changeBookingState.selectedStaffId) {
+                alert('Vui lòng chọn ngày, giờ và nhân viên mới.');
+                return;
+            }
+            const booking = changeBookingState.originalBooking;
+            if (!canModifyBooking(booking)) {
+                alert('Quá thời gian để thay đổi lịch trực tuyến. Vui lòng liên hệ Hotline.');
+                return;
+            }
+            booking.previousSchedule = { date: booking.date, time: booking.time };
+            booking.date = changeBookingState.selectedDate.split('-').reverse().join('/');
+            booking.time = changeBookingState.selectedSlot;
+            booking.staff = changeBookingState.selectedStaffName;
+            booking.status = 'Đã đặt';
+            booking.changeCount = (booking.changeCount || 0) + 1;
+            recordBookingAudit(booking, 'change', `Chuyển từ ${booking.previousSchedule?.date || ''} ${booking.previousSchedule?.time || ''} sang ${booking.date} ${booking.time}`);
+            saveCurrentUser(user);
+            releaseCurrentChangeHold();
+            closeChangeBookingModal();
+            renderDashboardBookings(user.bookings);
+            alert('Thay đổi lịch hẹn thành công. Lịch cũ đã được giải phóng và lịch mới đã được cập nhật.');
+        }
+
+        document.getElementById('changeBookingConfirmBtn')?.addEventListener('click', confirmChangeBooking);
     }
 });

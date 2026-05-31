@@ -55,52 +55,29 @@
 
                 <!-- Progress Stepper -->
                 <div class="booking-stepper" id="bookingStepper">
-                    <div class="step active" data-step="1">
+                    <div class="step active" data-step="1" tabindex="0" role="button">
                         <div class="step-circle">1</div>
+                        <span class="step-label">Chọn bé cưng</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step" data-step="2" tabindex="0" role="button">
+                        <div class="step-circle">2</div>
                         <span class="step-label">Chọn dịch vụ</span>
                     </div>
                     <div class="step-line"></div>
-                    <div class="step" data-step="2">
-                        <div class="step-circle">2</div>
-                        <span class="step-label">Thông tin bé</span>
-                    </div>
-                    <div class="step-line"></div>
-                    <div class="step" data-step="3">
+                    <div class="step" data-step="3" tabindex="0" role="button">
                         <div class="step-circle">3</div>
-                        <span class="step-label">Chọn lịch</span>
+                        <span class="step-label">Chọn lịch & nhân viên</span>
                     </div>
                     <div class="step-line"></div>
-                    <div class="step" data-step="4">
+                    <div class="step" data-step="4" tabindex="0" role="button">
                         <div class="step-circle">4</div>
                         <span class="step-label">Xác nhận</span>
                     </div>
                 </div>
 
-                <!-- ══ STEP 1: Chọn dịch vụ ══ -->
+                <!-- ══ STEP 1: Thông tin bé & chủ ══ -->
                 <div class="booking-step-panel active" id="step1">
-                    <div class="step-header">
-                        <h2>Chọn <span class="accent-italic">dịch vụ</span></h2>
-                        <p>Chọn loại dịch vụ bạn muốn đặt cho bé.</p>
-                    </div>
-
-                    <!-- Service type tabs -->
-                    <div class="svc-type-tabs" id="svcTypeTabs">
-                        <button class="svc-type-tab active" data-type="spa">✂️ Spa & Grooming</button>
-                        <button class="svc-type-tab" data-type="hotel">🏨 Pet Hotel</button>
-                    </div>
-
-                    <!-- Service cards list -->
-                    <div class="svc-select-list" id="svcSelectList">
-                        <!-- Injected by JS -->
-                    </div>
-
-                    <div class="step-actions">
-                        <button class="btn-step-next btn-cta" id="step1Next" disabled>Tiếp theo →</button>
-                    </div>
-                </div>
-
-                <!-- ══ STEP 2: Thông tin bé & chủ ══ -->
-                <div class="booking-step-panel" id="step2">
                     <div class="step-header">
                         <h2>Thông tin <span class="accent-italic">bé cưng</span></h2>
                         <p>Điền thông tin để chúng tôi chuẩn bị tốt nhất cho bé.</p>
@@ -188,16 +165,39 @@
                     <p class="guest-info-note" id="guestInfoNote">💡 Thông tin của bạn sẽ được lưu giữ để tích điểm thưởng cho lần sau.</p>
 
                     <div class="step-actions">
+                        <button class="btn-step-next btn-cta" id="step1Next">Tiếp theo →</button>
+                    </div>
+                </div>
+
+                <!-- ══ STEP 2: Chọn dịch vụ ══ -->
+                <div class="booking-step-panel" id="step2">
+                    <div class="step-header">
+                        <h2>Chọn <span class="accent-italic">dịch vụ</span></h2>
+                        <p>Chọn loại dịch vụ bạn muốn đặt cho bé.</p>
+                    </div>
+
+                    <!-- Service type tabs -->
+                    <div class="svc-type-tabs" id="svcTypeTabs">
+                        <button class="svc-type-tab active" data-type="spa">✂️ Spa & Grooming</button>
+                        <button class="svc-type-tab" data-type="hotel">🏨 Pet Hotel</button>
+                    </div>
+
+                    <!-- Service cards list -->
+                    <div class="svc-select-list" id="svcSelectList">
+                        <!-- Injected by JS -->
+                    </div>
+
+                    <div class="step-actions">
                         <button class="btn-step-back btn-green-outline" id="step2Back">← Quay lại</button>
-                        <button class="btn-step-next btn-cta" id="step2Next">Tiếp theo →</button>
+                        <button class="btn-step-next btn-cta" id="step2Next" disabled>Tiếp theo →</button>
                     </div>
                 </div>
 
                 <!-- ══ STEP 3: Chọn ngày & giờ ══ -->
                 <div class="booking-step-panel" id="step3">
                     <div class="step-header">
-                        <h2>Chọn <span class="accent-italic">lịch hẹn</span></h2>
-                        <p>Chọn ngày và khung giờ phù hợp với bạn.</p>
+                        <h2>Chọn <span class="accent-italic">lịch & nhân viên</span></h2>
+                        <p>Chọn ngày, khung giờ và nhân viên phù hợp cho bé.</p>
                     </div>
 
                     <!-- Hotel: check-in / check-out -->
@@ -287,8 +287,18 @@
                             <div class="timeslot-availability">
                                 <span class="avail-dot avail-open"></span> Còn trống
                                 <span class="avail-dot avail-busy" style="margin-left:16px;"></span> Đã đầy
+                                <span class="avail-dot avail-held" style="margin-left:16px;"></span> Đang giữ chỗ
                             </div>
                             <div class="timeslot-grid" id="timeslotGrid">
+                                <!-- Injected by JS -->
+                            </div>
+                        </div>
+
+                        <div class="booking-hold-banner" id="bookingHoldBanner" style="display:none; margin: 16px 0; padding:14px; border:1px solid #f9c74f; background:rgba(249,199,79,0.12); border-radius:12px; color:#665200;"></div>
+
+                        <div class="staff-selection" id="staffSelection">
+                            <p class="timeslot-label">Chọn nhân viên thực hiện <span class="required">*</span></p>
+                            <div class="staff-list" id="staffList">
                                 <!-- Injected by JS -->
                             </div>
                         </div>
@@ -350,6 +360,10 @@
                         <div class="summary-row" id="sumOwner" style="display:none;">
                             <span class="sum-label">Chủ nuôi</span>
                             <span class="sum-value" id="sumOwnerVal">—</span>
+                        </div>
+                        <div class="summary-row" id="sumStaff" style="display:none;">
+                            <span class="sum-label">Nhân viên</span>
+                            <span class="sum-value" id="sumStaffVal">—</span>
                         </div>
                         <div class="summary-row" id="sumDate" style="display:none;">
                             <span class="sum-label">Lịch hẹn</span>

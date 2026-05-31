@@ -804,6 +804,36 @@
     border-color: var(--color-primary);
 }
 
+.btn-booking-change {
+    padding: 6px 14px;
+    border-radius: var(--border-radius-pill);
+    border: 1.5px solid rgba(59, 130, 246, 0.35);
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+    font-family: var(--font-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: inline-flex;
+    align-items: center;
+    margin-right: 8px;
+}
+
+.btn-booking-change:hover {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+}
+
+.btn-booking-change:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: rgba(148, 163, 184, 0.12);
+    border-color: rgba(148, 163, 184, 0.3);
+    color: #64748b;
+}
+
 /* ── Cancel warning ── */
 .booking-cancel-warning {
     font-size: 0.8rem;
@@ -841,6 +871,162 @@
     font-size: 0.88rem;
     color: var(--color-text-light);
     max-width: 300px;
+}
+
+.btn-change-booking-dash {
+    padding: 8px 16px;
+    background-color: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 100px;
+    color: #2563eb;
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.btn-change-booking-dash:hover {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+.btn-change-booking-dash:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background-color: rgba(148, 163, 184, 0.12);
+    border-color: rgba(148, 163, 184, 0.3);
+    color: #64748b;
+}
+
+.timeslot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.timeslot-btn {
+    padding: 10px 8px;
+    border-radius: 14px;
+    border: 1.5px solid rgba(148, 163, 184, 0.35);
+    background: #ffffff;
+    font-family: var(--font-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #0f172a;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    text-align: center;
+}
+
+.timeslot-btn:hover:not(:disabled) {
+    border-color: #16a34a;
+    background: rgba(16, 185, 129, 0.12);
+}
+
+.timeslot-btn.selected {
+    background: #16a34a;
+    border-color: #16a34a;
+    color: #ffffff;
+}
+
+.timeslot-btn.held {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.12);
+    color: #92400e;
+}
+
+.timeslot-btn:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+    border-color: #e2e8f0;
+}
+
+.booking-hold-banner-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.booking-hold-countdown {
+    background: rgba(249, 199, 79, 0.18);
+    color: #92400e;
+    font-weight: 700;
+    padding: 10px 14px;
+    border-radius: 999px;
+    min-width: 120px;
+    text-align: center;
+}
+
+.change-booking-note {
+    font-size: 0.95rem;
+    color: #334155;
+    padding: 14px 0;
+}
+
+.change-booking-summary {
+    margin-bottom: 18px;
+}
+
+.staff-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.staff-card {
+    border: 1px solid rgba(42, 89, 68, 0.15);
+    border-radius: 16px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.staff-card:hover {
+    border-color: var(--color-primary);
+}
+
+.staff-card.selected {
+    border-color: var(--color-primary);
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.staff-card-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: #ffffff;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+}
+
+.staff-card-info h4 {
+    font-size: 0.95rem;
+    margin: 0;
+    color: #0f172a;
+}
+
+.staff-card-info p {
+    margin: 4px 0 0 0;
+    font-size: 0.82rem;
+    color: #64748b;
+}
+
+.staff-card-status {
+    margin-left: auto;
+    color: #334155;
+    font-size: 0.82rem;
+    font-weight: 700;
 }
 
 /* ── Responsive ── */

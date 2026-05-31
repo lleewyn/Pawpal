@@ -13,6 +13,7 @@ const CATEGORY_IMAGES = {
 // ── State ─────────────────────────────────────────────────────────────────────
 let allProducts = [];
 let cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+let wishlist = JSON.parse(localStorage.getItem('pawpal_wishlist') || '[]');
 let activeFilters = {
     category: 'all',
     stock: 'all-stock',
@@ -25,6 +26,15 @@ let currentSort = 'default';
 let currentView = 'grid';
 let modalQty = 1;
 let modalCurrentSku = null;
+
+// ── Coupon system ─────────────────────────────────────────────────────────────
+const VALID_COUPONS = {
+    'PAWPAL10':  { type: 'percent',  value: 10, desc: 'Giảm 10% toàn đơn' },
+    'MEMBER15':  { type: 'percent',  value: 15, desc: 'Giảm 15% cho thành viên' },
+    'SUMMER20':  { type: 'percent',  value: 20, desc: 'Flash sale hè - giảm 20%' },
+    'FREESHIP':  { type: 'shipping', value: 0,  desc: 'Miễn phí vận chuyển' },
+};
+let appliedCoupon = JSON.parse(localStorage.getItem('pawpal_coupon') || 'null');
 
 // ── Parse CSV (tab-separated) ─────────────────────────────────────────────────
 function parseCSV(text) {
@@ -152,6 +162,7 @@ function applyFiltersAndSort() {
 function renderProducts() {
     const grid      = document.getElementById('productGrid');
     const empty     = document.getElementById('emptyState');
+    const recFallback = document.getElementById('recommendedFallback');
     const countEl   = document.getElementById('resultCount');
     const filtered  = applyFiltersAndSort();
 
@@ -160,22 +171,47 @@ function renderProducts() {
     if (filtered.length === 0) {
         grid.innerHTML = '';
         empty.style.display = 'block';
+        // Show bestsellers only when there's an active search query
+        if (activeFilters.search) {
+            renderRecommended();
+            recFallback.style.display = 'block';
+        } else {
+            recFallback.style.display = 'none';
+        }
         return;
     }
     empty.style.display = 'none';
+    recFallback.style.display = 'none';
     grid.innerHTML = filtered.map(buildCard).join('');
+    bindCardEvents(grid);
+}
 
-    grid.querySelectorAll('.prod-card').forEach(card => {
+function renderRecommended() {
+    const recGrid = document.getElementById('recommendedGrid');
+    const bestsellers = allProducts
+        .filter(p => getStockStatus(p) !== 'out' && getStockStatus(p) !== 'discontinued')
+        .slice(0, 4);
+    recGrid.innerHTML = bestsellers.map(buildCard).join('');
+    bindCardEvents(recGrid);
+}
+
+function bindCardEvents(container) {
+    container.querySelectorAll('.prod-card').forEach(card => {
         card.addEventListener('click', e => {
-            if (e.target.closest('.prod-card-add-btn')) return;
+            if (e.target.closest('.prod-card-add-btn') || e.target.closest('.wishlist-btn')) return;
             openModal(card.dataset.sku);
         });
     });
-
-    grid.querySelectorAll('.prod-card-add-btn').forEach(btn => {
+    container.querySelectorAll('.prod-card-add-btn').forEach(btn => {
         btn.addEventListener('click', e => {
             e.stopPropagation();
             addToCart(btn.dataset.sku, 1);
+        });
+    });
+    container.querySelectorAll('.wishlist-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            toggleWishlist(btn.dataset.sku);
         });
     });
 }
@@ -188,6 +224,7 @@ function buildCard(p) {
     const saving = p.retailPrice > p.memberPrice
         ? Math.round((1 - p.memberPrice / p.retailPrice) * 100) : 0;
     const canAdd = st !== 'out' && st !== 'discontinued';
+    const wishlisted = isInWishlist(p.sku);
 
     return `
     <div class="prod-card ${st === 'out' ? 'out-of-stock' : st === 'discontinued' ? 'discontinued' : ''}"
@@ -196,6 +233,9 @@ function buildCard(p) {
             <img src="${img}" alt="${p.name}" loading="lazy">
             <span class="prod-card-tag ${tag.cls}">${tag.label}</span>
             <span class="prod-card-stock-dot ${dotCls}" title="${p.stock} còn lại"></span>
+            <button class="wishlist-btn ${wishlisted ? 'active' : ''}" data-sku="${p.sku}" aria-label="${wishlisted ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="${wishlisted ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            </button>
         </div>
         <div class="prod-card-body">
             <p class="prod-card-category">${p.catLabel}</p>
@@ -215,6 +255,41 @@ function buildCard(p) {
             </div>
         </div>
     </div>`;
+}
+
+// ── Wishlist ──────────────────────────────────────────────────────────────────
+function isInWishlist(sku) {
+    return wishlist.includes(sku);
+}
+
+function toggleWishlist(sku) {
+    const p = allProducts.find(x => x.sku === sku);
+    if (!p) return;
+    if (isInWishlist(sku)) {
+        wishlist = wishlist.filter(s => s !== sku);
+        showToast(`💔 Đã xóa "${p.name}" khỏi danh sách yêu thích`);
+    } else {
+        wishlist.push(sku);
+        showToast(`❤️ Đã thêm "${p.name}" vào danh sách yêu thích`);
+    }
+    localStorage.setItem('pawpal_wishlist', JSON.stringify(wishlist));
+    // Update all heart icons on page
+    document.querySelectorAll(`.wishlist-btn[data-sku="${sku}"]`).forEach(btn => {
+        const inList = isInWishlist(sku);
+        btn.classList.toggle('active', inList);
+        btn.setAttribute('aria-label', inList ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích');
+        const svg = btn.querySelector('svg');
+        if (svg) svg.setAttribute('fill', inList ? 'currentColor' : 'none');
+    });
+    // Update modal heart if open for same sku
+    const modalHeart = document.getElementById('modalWishlistBtn');
+    if (modalHeart && modalHeart.dataset.sku === sku) {
+        const inList = isInWishlist(sku);
+        modalHeart.classList.toggle('active', inList);
+        modalHeart.setAttribute('aria-label', inList ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích');
+        const svg = modalHeart.querySelector('svg');
+        if (svg) svg.setAttribute('fill', inList ? 'currentColor' : 'none');
+    }
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
@@ -274,6 +349,17 @@ function openModal(sku) {
     addBtn.disabled = !canAdd;
     addBtn.textContent = canAdd ? '🛒 Thêm vào giỏ' : '❌ Không thể mua';
 
+    // Wishlist heart in modal
+    const modalHeart = document.getElementById('modalWishlistBtn');
+    if (modalHeart) {
+        const inList = isInWishlist(sku);
+        modalHeart.dataset.sku = sku;
+        modalHeart.classList.toggle('active', inList);
+        modalHeart.setAttribute('aria-label', inList ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích');
+        const svg = modalHeart.querySelector('svg');
+        if (svg) svg.setAttribute('fill', inList ? 'currentColor' : 'none');
+    }
+
     document.getElementById('productDetailModal').classList.add('open');
     document.body.style.overflow = 'hidden';
 }
@@ -287,17 +373,35 @@ function closeModal() {
 function addToCart(sku, qty) {
     const p = allProducts.find(x => x.sku === sku);
     if (!p) return;
+    const st = getStockStatus(p);
+    if (st === 'out' || st === 'discontinued') {
+        showToast(`❌ Sản phẩm "${p.name}" hiện không thể mua`, 'error');
+        return;
+    }
     const existing = cart.find(c => c.sku === sku);
-    if (existing) {
-        existing.qty = Math.min(existing.qty + qty, p.stock || 99);
+    const currentQty = existing ? existing.qty : 0;
+    const newQty = currentQty + qty;
+    if (newQty > p.stock) {
+        showToast(`⚠️ Cửa hàng chỉ còn ${p.stock} sản phẩm "${p.name}"`, 'warning');
+        if (!existing && p.stock > 0) {
+            cart.push({ sku, qty: p.stock, name: p.name, brand: p.brand,
+                        price: p.memberPrice, img: CATEGORY_IMAGES[p.catLabel], maxStock: p.stock });
+        } else if (existing) {
+            existing.qty = p.stock;
+        }
     } else {
-        cart.push({ sku, qty, name: p.name, brand: p.brand,
-                    price: p.memberPrice, img: CATEGORY_IMAGES[p.catLabel] });
+        if (existing) {
+            existing.qty = newQty;
+            existing.maxStock = p.stock;
+        } else {
+            cart.push({ sku, qty, name: p.name, brand: p.brand,
+                        price: p.memberPrice, img: CATEGORY_IMAGES[p.catLabel], maxStock: p.stock });
+        }
+        showToast(`✅ Đã thêm "${p.name}" vào giỏ hàng`);
     }
     saveCart();
     updateCartBadge();
     renderCartDrawer();
-    showToast(`✅ Đã thêm "${p.name}" vào giỏ hàng`);
 }
 
 function removeFromCart(sku) {
@@ -310,7 +414,14 @@ function removeFromCart(sku) {
 function updateCartQty(sku, delta) {
     const item = cart.find(c => c.sku === sku);
     if (!item) return;
-    item.qty = Math.max(1, item.qty + delta);
+    const newQty = item.qty + delta;
+    if (newQty < 1) { removeFromCart(sku); return; }
+    const maxStock = item.maxStock || 99;
+    if (newQty > maxStock) {
+        showToast(`⚠️ Cửa hàng chỉ còn ${maxStock} sản phẩm này`, 'warning');
+        return;
+    }
+    item.qty = newQty;
     saveCart();
     updateCartBadge();
     renderCartDrawer();
@@ -318,6 +429,57 @@ function updateCartQty(sku, delta) {
 
 function saveCart() {
     localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+}
+
+// ── Coupon ────────────────────────────────────────────────────────────────────
+function applyCouponCode(code) {
+    const feedback = document.getElementById('couponFeedback');
+    const upper = code.trim().toUpperCase();
+    if (!upper) {
+        feedback.textContent = '';
+        return;
+    }
+    const coupon = VALID_COUPONS[upper];
+    if (!coupon) {
+        feedback.textContent = '❌ Mã giảm giá không hợp lệ hoặc đã hết hạn.';
+        feedback.className = 'coupon-feedback error';
+        appliedCoupon = null;
+        localStorage.removeItem('pawpal_coupon');
+        renderCartDrawer();
+        return;
+    }
+    appliedCoupon = { code: upper, ...coupon };
+    localStorage.setItem('pawpal_coupon', JSON.stringify(appliedCoupon));
+    feedback.textContent = `✅ Áp dụng thành công: ${coupon.desc}`;
+    feedback.className = 'coupon-feedback success';
+    renderCartDrawer();
+}
+
+function removeCoupon() {
+    appliedCoupon = null;
+    localStorage.removeItem('pawpal_coupon');
+    const input = document.getElementById('couponInput');
+    const feedback = document.getElementById('couponFeedback');
+    if (input) input.value = '';
+    if (feedback) { feedback.textContent = ''; feedback.className = 'coupon-feedback'; }
+    renderCartDrawer();
+}
+
+function calcCartTotals(subtotal) {
+    let discount = 0;
+    let shippingCost = subtotal >= 300000 ? 0 : 30000;
+    let discountLabel = '';
+    if (appliedCoupon) {
+        if (appliedCoupon.type === 'percent') {
+            discount = Math.round(subtotal * appliedCoupon.value / 100);
+            discountLabel = `Giảm ${appliedCoupon.value}% (${appliedCoupon.code})`;
+        } else if (appliedCoupon.type === 'shipping') {
+            shippingCost = 0;
+            discountLabel = `Miễn ship (${appliedCoupon.code})`;
+        }
+    }
+    const total = Math.max(0, subtotal - discount + shippingCost);
+    return { discount, shippingCost, total, discountLabel };
 }
 
 function updateCartBadge() {
@@ -368,10 +530,32 @@ function renderCartDrawer() {
 
     // Summary
     const subtotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
-    const freeShip = subtotal >= 300000;
+    const { discount, shippingCost, total, discountLabel } = calcCartTotals(subtotal);
     document.getElementById('cartSubtotal').textContent = formatPrice(subtotal);
-    document.getElementById('cartShipping').textContent = freeShip ? 'Miễn phí 🎉' : formatPrice(30000);
-    document.getElementById('cartTotal').textContent = formatPrice(subtotal + (freeShip ? 0 : 30000));
+
+    // Discount row
+    const discountRow = document.getElementById('cartDiscountRow');
+    if (discount > 0) {
+        discountRow.style.display = 'flex';
+        document.getElementById('cartDiscountLabel').textContent = discountLabel;
+        document.getElementById('cartDiscount').textContent = `-${formatPrice(discount)}`;
+    } else if (appliedCoupon && appliedCoupon.type === 'shipping') {
+        discountRow.style.display = 'flex';
+        document.getElementById('cartDiscountLabel').textContent = discountLabel;
+        document.getElementById('cartDiscount').textContent = 'Miễn phí 🎉';
+    } else {
+        discountRow.style.display = 'none';
+    }
+
+    const freeShipDisplay = shippingCost === 0;
+    document.getElementById('cartShipping').textContent = freeShipDisplay ? 'Miễn phí 🎉' : formatPrice(shippingCost);
+    document.getElementById('cartTotal').textContent = formatPrice(total);
+
+    // Sync coupon input if coupon is already applied
+    const couponInput = document.getElementById('couponInput');
+    if (couponInput && appliedCoupon && !couponInput.value) {
+        couponInput.value = appliedCoupon.code;
+    }
 }
 
 function openCartDrawer() {
@@ -385,11 +569,11 @@ function closeCartDrawer() {
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
-function showToast(msg) {
+function showToast(msg, type = 'success') {
     const container = document.getElementById('toastContainer');
     if (!container) return;
     const toast = document.createElement('div');
-    toast.className = 'toast toast-success';
+    toast.className = `toast toast-${type}`;
     toast.textContent = msg;
     container.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 10);
@@ -546,6 +730,14 @@ function bindEvents() {
         }
     });
 
+    // Modal wishlist button
+    const modalWishlistBtn = document.getElementById('modalWishlistBtn');
+    if (modalWishlistBtn) {
+        modalWishlistBtn.addEventListener('click', () => {
+            if (modalCurrentSku) toggleWishlist(modalCurrentSku);
+        });
+    }
+
     // Description tabs
     document.querySelectorAll('.prod-desc-tab').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -561,6 +753,25 @@ function bindEvents() {
     document.getElementById('cartDrawerClose').addEventListener('click', closeCartDrawer);
     document.getElementById('cartDrawerOverlay').addEventListener('click', closeCartDrawer);
     document.getElementById('cartContinueBtn').addEventListener('click', closeCartDrawer);
+
+    // Coupon
+    const applyCouponBtn = document.getElementById('applyCouponBtn');
+    const couponInput = document.getElementById('couponInput');
+    if (applyCouponBtn && couponInput) {
+        applyCouponBtn.addEventListener('click', () => applyCouponCode(couponInput.value));
+        couponInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') applyCouponCode(couponInput.value);
+        });
+        // If coupon already applied (from localStorage), restore input
+        if (appliedCoupon) {
+            couponInput.value = appliedCoupon.code;
+            const feedback = document.getElementById('couponFeedback');
+            if (feedback) {
+                feedback.textContent = `✅ Đã áp dụng: ${appliedCoupon.desc}`;
+                feedback.className = 'coupon-feedback success';
+            }
+        }
+    }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────

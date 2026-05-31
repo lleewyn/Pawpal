@@ -206,10 +206,16 @@
 
                     <!-- Empty State -->
                     <div class="shop-empty-state" id="emptyState" style="display:none;">
-                        <div class="empty-icon">🛒</div>
+                        <div class="empty-icon">🔍</div>
                         <h3>Không tìm thấy sản phẩm phù hợp</h3>
                         <p>Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm nhé.</p>
                         <button class="btn-cta" onclick="document.getElementById('resetFilterBtn').click()">Xóa bộ lọc</button>
+                    </div>
+
+                    <!-- Recommended Fallback (shown when search returns 0 results) -->
+                    <div class="recommended-fallback" id="recommendedFallback" style="display:none;">
+                        <h4 class="recommended-fallback-title">🔥 Sản phẩm bán chạy dành cho bạn</h4>
+                        <div class="product-grid-shop" id="recommendedGrid"></div>
                     </div>
                 </div>
             </div>
@@ -278,6 +284,9 @@
                             <button class="qty-btn" id="qtyPlus">+</button>
                         </div>
                         <button class="btn-cta prod-add-cart-btn" id="modalAddCartBtn">🛒 Thêm vào giỏ</button>
+                        <button class="wishlist-btn wishlist-btn-modal" id="modalWishlistBtn" aria-label="Thêm vào yêu thích">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -300,10 +309,22 @@
                 <div class="cart-items-list" id="cartItemsList"></div>
             </div>
             <div class="cart-drawer-footer" id="cartDrawerFooter" style="display:none;">
+                <!-- Coupon row -->
+                <div class="cart-coupon-wrap">
+                    <div class="cart-coupon-row">
+                        <input type="text" id="couponInput" class="coupon-input" placeholder="Nhập mã giảm giá..." autocomplete="off" spellcheck="false">
+                        <button class="btn-apply-coupon" id="applyCouponBtn">Áp dụng</button>
+                    </div>
+                    <p class="coupon-feedback" id="couponFeedback"></p>
+                </div>
                 <div class="cart-summary">
                     <div class="cart-summary-row">
                         <span>Tạm tính</span>
                         <span id="cartSubtotal">0đ</span>
+                    </div>
+                    <div class="cart-summary-row cart-discount-row" id="cartDiscountRow" style="display:none;">
+                        <span id="cartDiscountLabel">Mã giảm giá</span>
+                        <span id="cartDiscount" class="discount-value">-0đ</span>
                     </div>
                     <div class="cart-summary-row free-ship" id="freeShipRow">
                         <span>Vận chuyển</span>
@@ -314,7 +335,7 @@
                         <span id="cartTotal">0đ</span>
                     </div>
                 </div>
-                <a href="booking.html" class="btn-cta cart-checkout-btn">Tiến hành đặt hàng →</a>
+                <a href="checkout.html" class="btn-cta cart-checkout-btn" id="cartCheckoutBtn">Tiến hành đặt hàng →</a>
                 <button class="btn-green-outline cart-continue-btn" id="cartContinueBtn">Tiếp tục mua sắm</button>
             </div>
         </div>
