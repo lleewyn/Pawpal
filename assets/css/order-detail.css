@@ -1,0 +1,263 @@
+/* ── Order Detail Page ─────────────────────────────────────────────────────── */
+
+.od-main {
+    max-width: 1180px;
+    margin: 0 auto 80px;
+    padding: 28px 20px;
+}
+
+/* Breadcrumb */
+.od-breadcrumb {
+    margin-bottom: 20px;
+}
+
+.od-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: opacity .15s;
+}
+
+.od-back-link:hover {
+    opacity: .75;
+    text-decoration: underline;
+}
+
+/* Page header */
+.od-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    padding-bottom: 24px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid rgba(42, 89, 68, 0.1);
+}
+
+.od-eyebrow {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    margin-bottom: 8px;
+}
+
+.od-page-header h1 {
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    margin: 0 0 6px;
+    line-height: 1.1;
+}
+
+.od-header-meta {
+    color: #6b7280;
+    font-size: 0.88rem;
+    margin: 0;
+}
+
+.od-page-header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.od-header-total {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-primary-dark);
+    margin-top: 4px;
+}
+
+/* Top 2-col: shipping | payment */
+.od-section-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Card */
+.od-card,
+.od-col-card {
+    background: #ffffff;
+    border: 1px solid rgba(42, 89, 68, 0.1);
+    border-radius: 20px;
+    padding: 22px;
+    min-width: 0;
+}
+
+.od-card h3,
+.od-col-card h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0 0 14px;
+    color: var(--color-primary-dark);
+}
+
+/* Rows inside card */
+.od-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(42, 89, 68, 0.05);
+    font-size: 0.92rem;
+}
+
+.od-row:last-child {
+    border-bottom: none;
+}
+
+.od-row-label {
+    color: #6b7280;
+    flex-shrink: 0;
+}
+
+.od-row-value {
+    font-weight: 600;
+    text-align: right;
+}
+
+.od-row-value-wrap {
+    white-space: normal;
+    word-break: break-word;
+}
+
+.od-discount {
+    color: #16a34a;
+}
+
+/* Total row */
+.od-row-total {
+    margin-top: 6px;
+    padding-top: 12px !important;
+    border-top: 1.5px solid rgba(42, 89, 68, 0.12) !important;
+    border-bottom: none !important;
+}
+
+.od-total-label {
+    font-weight: 700;
+    color: var(--color-text-dark) !important;
+}
+
+.od-total-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--color-primary-dark);
+}
+
+/* Bottom 2-col: products | timeline */
+.od-section-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.od-col-subtitle {
+    font-size: 0.83rem;
+    color: #6b7280;
+    margin: -8px 0 14px;
+}
+
+/* Product list — reuses detail-product-list from orders.css */
+#odProductList {
+    max-height: 380px;
+    overflow-y: auto;
+}
+
+/* Timeline — reuses timeline-list, .timeline-item etc. from orders.css */
+#odTimeline {
+    max-height: 380px;
+    overflow-y: auto;
+}
+
+/* Action bar */
+.od-action-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    background: #ffffff;
+    border: 1px solid rgba(42, 89, 68, 0.1);
+    border-radius: 20px;
+    flex-wrap: wrap;
+}
+
+.od-action-spacer {
+    flex: 1;
+}
+
+/* Not-found state */
+.od-not-found {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 100px 24px;
+    gap: 16px;
+    color: #475569;
+}
+
+.od-not-found-icon {
+    font-size: 3.5rem;
+}
+
+.od-not-found h2 {
+    margin: 0;
+    font-size: 1.6rem;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .od-section-top,
+    .od-section-bottom {
+        grid-template-columns: 1fr;
+    }
+
+    .od-page-header {
+        flex-direction: column;
+    }
+
+    .od-page-header-right {
+        align-items: flex-start;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .od-header-total {
+        width: 100%;
+        text-align: left;
+        font-size: 1.3rem;
+    }
+
+    #odProductList,
+    #odTimeline {
+        max-height: none;
+    }
+}
+
+@media (max-width: 700px) {
+    .od-action-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .od-action-bar button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .od-action-spacer {
+        display: none;
+    }
+}

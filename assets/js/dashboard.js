@@ -25,6 +25,31 @@ function loadPets() {
     }
 }
 
+function loadOrderSummary() {
+    const raw = localStorage.getItem('pawpal_orders');
+    if (!raw) return { total: 0, processing: 0, shipping: 0, completed: 0 };
+    try {
+        const orders = JSON.parse(raw);
+        const summary = { total: orders.length, processing: 0, shipping: 0, completed: 0 };
+        orders.forEach(order => {
+            if (['Chờ xác nhận', 'Đang chuẩn bị hàng'].includes(order.orderStatus)) summary.processing++;
+            else if (order.orderStatus === 'Đang giao') summary.shipping++;
+            else if (order.orderStatus === 'Hoàn thành') summary.completed++;
+        });
+        return summary;
+    } catch {
+        return { total: 0, processing: 0, shipping: 0, completed: 0 };
+    }
+}
+
+function renderOrderSummaryTab() {
+    const summary = loadOrderSummary();
+    document.getElementById('dashOrdersCount')?.textContent = summary.total;
+    document.getElementById('dashOrdersProcessing')?.textContent = summary.processing;
+    document.getElementById('dashOrdersShipping')?.textContent = summary.shipping;
+    document.getElementById('dashOrdersCompleted')?.textContent = summary.completed;
+}
+
 function savePets() {
     try {
         // Đọc toàn bộ (kể cả deleted) để không mất soft-delete records
@@ -380,8 +405,9 @@ function initTabs() {
             btn.classList.add('active');
             document.getElementById(target)?.classList.add('active');
 
-            // Render Pet ID list khi chuyển sang tab đó
+            // Render tab-specific content khi chuyển sang tab đó
             if (target === 'dash-petid') renderPetList();
+            if (target === 'dash-orders') renderOrderSummaryTab();
         });
     });
 }

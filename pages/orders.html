@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PawPal - Đơn hàng của tôi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/orders.css">
+</head>
+<body class="orders-body">
+    <header class="main-header" id="mainHeader">
+        <div class="header-container">
+            <a href="../index.html" class="logo">
+                <img src="../assets/images/Logo_pawpal_navbar.png" alt="PawPal">
+            </a>
+            <nav class="nav-menu" id="primaryNavigation">
+                <ul>
+                    <li><a href="../index.html">Trang chủ</a></li>
+                    <li><a href="services.html">Dịch vụ</a></li>
+                    <li><a href="shop.html">Cửa hàng</a></li>
+                    <li><a href="about.html">Về chúng tôi</a></li>
+                    <li><a href="blog.html">Cẩm nang</a></li>
+                    <li><a href="contact.html">Liên hệ</a></li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <a href="dashboard.html" class="btn-outline-secondary">Tài khoản</a>
+                <a href="shop.html" class="btn-cta">Tiếp tục mua sắm</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="orders-main">
+        <section class="orders-hero">
+            <div>
+                <p class="orders-eyebrow">Đơn hàng của tôi</p>
+                <h1>Quản lý tiến độ giao nhận<br><span>và lịch sử mua hàng</span></h1>
+                <p>Theo dõi trạng thái đơn hàng từng bước, xem chi tiết sản phẩm và nhận thông báo khi có cập nhật.</p>
+            </div>
+        </section>
+
+        <section class="orders-panel">
+            <div class="orders-filter-bar" id="ordersFilterBar">
+                <button class="orders-filter-btn active" data-filter="all">Tất cả</button>
+                <button class="orders-filter-btn" data-filter="pendingPayment">Chờ thanh toán</button>
+                <button class="orders-filter-btn" data-filter="processing">Đang xử lý</button>
+                <button class="orders-filter-btn" data-filter="shipping">Đang giao</button>
+                <button class="orders-filter-btn" data-filter="completed">Hoàn thành</button>
+                <button class="orders-filter-btn" data-filter="cancelled">Đã hủy / Hoàn trả</button>
+            </div>
+
+            <div class="orders-summary-bar">
+                <div>
+                    <span id="ordersCount">0</span>
+                    <p>đơn hàng đã ghi nhận</p>
+                </div>
+                <button class="btn-green-outline" id="ordersRefreshBtn">Cập nhật</button>
+            </div>
+
+            <div id="ordersList" class="orders-list"></div>
+
+            <div class="orders-empty" id="ordersEmpty" style="display:none;">
+                <div class="orders-empty-icon">🛍️</div>
+                <h3>Chưa có đơn hàng nào</h3>
+                <p>Hoàn tất đặt hàng để theo dõi tiến trình giao nhận tại PawPal.</p>
+                <a href="shop.html" class="btn-cta">Mua sắm ngay</a>
+            </div>
+        </section>
+    </main>
+
+    <div id="orderDetailModal" class="orders-modal" aria-hidden="true">
+        <div class="orders-modal-overlay" id="orderDetailOverlay"></div>
+        <div class="orders-modal-content">
+            <header class="orders-modal-header">
+                <div>
+                    <span class="modal-label">Chi tiết đơn hàng</span>
+                    <h2 id="detailOrderCode">PP-000000</h2>
+                </div>
+                <button class="orders-modal-close" id="orderDetailClose" aria-label="Đóng">✕</button>
+            </header>
+            <div class="orders-modal-body">
+                <section class="order-detail-top">
+                    <div class="order-detail-status">
+                        <div>
+                            <span class="detail-label">Trạng thái đơn hàng</span>
+                            <div id="detailOrderStatus" class="status-badge status-pending">Chờ xác nhận</div>
+                        </div>
+                        <div>
+                            <span class="detail-label">Trạng thái thanh toán</span>
+                            <div id="detailPaymentStatus" class="status-badge status-info">Chưa thanh toán</div>
+                        </div>
+                    </div>
+                    <div class="order-detail-meta">
+                        <div>
+                            <span class="detail-label">Ngày đặt</span>
+                            <p id="detailCreatedAt">-</p>
+                        </div>
+                        <div>
+                            <span class="detail-label">Tổng đơn</span>
+                            <p id="detailTotal">0đ</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="order-detail-grid">
+                    <div class="order-detail-card">
+                        <h3>Thông tin giao hàng</h3>
+                        <div class="order-detail-row"><span>Người nhận</span><span id="detailName">-</span></div>
+                        <div class="order-detail-row"><span>Điện thoại</span><span id="detailPhone">-</span></div>
+                        <div class="order-detail-row"><span>Địa chỉ</span><span id="detailAddress">-</span></div>
+                        <div class="order-detail-row"><span>Ghi chú</span><span id="detailNote">-</span></div>
+                    </div>
+                    <div class="order-detail-card">
+                        <h3>Phương thức thanh toán</h3>
+                        <div class="order-detail-row"><span>Hình thức</span><span id="detailPaymentMethod">-</span></div>
+                        <div class="order-detail-row"><span>Coupon</span><span id="detailCoupon">-</span></div>
+                        <div class="order-detail-row"><span>Tiền hàng</span><span id="detailSubtotal">-</span></div>
+                        <div class="order-detail-row"><span>Phí ship</span><span id="detailShipping">-</span></div>
+                        <div class="order-detail-row"><span>Giảm giá</span><span id="detailDiscount">-</span></div>
+                    </div>
+                </section>
+
+                <div class="order-detail-bottom">
+                    <section class="order-detail-products">
+                        <h3>Danh sách sản phẩm</h3>
+                        <div id="detailProductList" class="detail-product-list"></div>
+                    </section>
+
+                    <section class="order-detail-timeline">
+                        <div class="timeline-header">
+                            <h3>Tiến trình đơn hàng</h3>
+                            <p>Lịch sử cập nhật trạng thái theo thời gian thực.</p>
+                        </div>
+                        <div id="detailTimeline" class="timeline-list"></div>
+                    </section>
+                </div>
+            </div>
+            <footer class="orders-modal-footer">
+                <button class="btn-danger-outline" id="cancelOrderBtn" style="display:none;">Hủy đơn hàng</button>
+                <div class="modal-footer-spacer"></div>
+                <button class="btn-outline-secondary" id="rebuyOrderBtn">Mua lại</button>
+                <button class="btn-outline-secondary" id="returnOrderBtn">Yêu cầu đổi/trả</button>
+                <button class="btn-green-outline" id="reviewOrderBtn">Đánh giá ngay</button>
+            </footer>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+    <script src="../assets/js/orders.js"></script>
+</body>
+</html>

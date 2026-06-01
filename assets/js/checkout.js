@@ -168,16 +168,32 @@ function handleCheckout() {
     const subtotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
     const { discount, shippingCost, total } = calcTotals(subtotal);
 
+    const paymentStatus = method === 'COD' ? 'Chưa thanh toán' : 'Đã thanh toán';
+    const now = new Date().toISOString();
+
     orderData = {
-        code:       generateOrderCode(),
+        code:           generateOrderCode(),
         method,
-        onlineMethod: method === 'ONLINE' ? getSelectedOnlineMethod() : null,
+        onlineMethod:   method === 'ONLINE' ? getSelectedOnlineMethod() : null,
+        paymentStatus,
+        orderStatus:    'Chờ xác nhận',
+        statusHistory: [
+            {
+                status: 'Chờ xác nhận',
+                note:   'Đơn hàng đã được ghi nhận và đang chờ xử lý.',
+                timestamp: now,
+            }
+        ],
         form,
         cart: [...cart],
-        subtotal, discount, shippingCost, total,
+        subtotal,
+        discount,
+        shippingCost,
+        total,
         coupon: appliedCoupon,
         pawPoints: Math.floor(total / 1000),
-        createdAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
     };
 
     if (method === 'COD') {

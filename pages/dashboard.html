@@ -132,10 +132,12 @@
                 <div class="dashboard-tabs-nav"
                     style="width: 240px; border-right: 1px solid rgba(42, 89, 68, 0.06); padding: 24px 16px; display: flex; flex-direction: column; gap: 10px;">
                     <button class="dash-tab-btn active" data-dash-tab="dash-info">Thông tin chung</button>
+                    <button class="dash-tab-btn" data-dash-tab="dash-orders">Đơn hàng của tôi</button>
                     <button class="dash-tab-btn" data-dash-tab="dash-petid">Hồ sơ bé cưng</button>
                     <button class="dash-tab-btn" data-dash-tab="dash-booking">Lịch hẹn chăm sóc</button>
                     <button class="dash-tab-btn" data-dash-tab="dash-tracker">Nhật ký chăm sóc</button>
                     <button class="dash-tab-btn" data-dash-tab="dash-security">Bảo mật</button>
+                    <a href="orders.html" class="btn-green-outline" style="text-align:center;">Đơn hàng của tôi</a>
                     <button class="btn-dashboard-logout" id="dashboardLogoutBtn">Đăng xuất</button>
                 </div>
 
@@ -161,6 +163,34 @@
                                         style="display: none; color: #ef4444; font-size: 0.78rem; font-weight: 500; margin-top: 8px;">🔒
                                         Vui lòng thiết lập mật khẩu trong tab Bảo mật để mở khóa.</span>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dash-tab-content" id="dash-orders">
+                        <div class="petid-tab-header" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+                            <div>
+                                <h4 class="dash-tab-title">Đơn hàng của tôi</h4>
+                                <p class="dash-tab-subtitle">Xem nhanh tiến độ đơn hàng và truy cập chi tiết lịch sử giao nhận.</p>
+                            </div>
+                            <a href="orders.html" class="btn-add-pet" style="font-size: 0.9rem; padding: 10px 16px; white-space: nowrap;">Xem toàn bộ đơn hàng</a>
+                        </div>
+                        <div class="orders-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 20px;">
+                            <div class="dash-info-card">
+                                <span class="label">Tổng đơn hàng</span>
+                                <span class="value" id="dashOrdersCount">0</span>
+                            </div>
+                            <div class="dash-info-card">
+                                <span class="label">Đang xử lý</span>
+                                <span class="value" id="dashOrdersProcessing">0</span>
+                            </div>
+                            <div class="dash-info-card">
+                                <span class="label">Đang giao</span>
+                                <span class="value" id="dashOrdersShipping">0</span>
+                            </div>
+                            <div class="dash-info-card">
+                                <span class="label">Hoàn thành</span>
+                                <span class="value" id="dashOrdersCompleted">0</span>
                             </div>
                         </div>
                     </div>

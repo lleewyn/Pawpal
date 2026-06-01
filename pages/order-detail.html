@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PawPal - Chi tiết đơn hàng</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/orders.css">
+    <link rel="stylesheet" href="../assets/css/order-detail.css">
+</head>
+<body class="orders-body">
+
+    <header class="main-header" id="mainHeader">
+        <div class="header-container">
+            <a href="../index.html" class="logo">
+                <img src="../assets/images/Logo_pawpal_navbar.png" alt="PawPal">
+            </a>
+            <nav class="nav-menu" id="primaryNavigation">
+                <ul>
+                    <li><a href="../index.html">Trang chủ</a></li>
+                    <li><a href="services.html">Dịch vụ</a></li>
+                    <li><a href="shop.html">Cửa hàng</a></li>
+                    <li><a href="about.html">Về chúng tôi</a></li>
+                    <li><a href="blog.html">Cẩm nang</a></li>
+                    <li><a href="contact.html">Liên hệ</a></li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <a href="dashboard.html" class="btn-outline-secondary">Tài khoản</a>
+                <a href="shop.html" class="btn-cta">Tiếp tục mua sắm</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="od-main" id="odMain">
+
+        <!-- Not-found state (hidden by default) -->
+        <div class="od-not-found" id="odNotFound" style="display:none;">
+            <div class="od-not-found-icon">🔍</div>
+            <h2>Không tìm thấy đơn hàng</h2>
+            <p>Mã đơn hàng không hợp lệ hoặc đơn hàng không tồn tại.</p>
+            <a href="orders.html" class="btn-cta">← Quay lại danh sách đơn hàng</a>
+        </div>
+
+        <!-- Main content (shown after loading) -->
+        <div id="odContent" style="display:none;">
+
+            <!-- Breadcrumb -->
+            <div class="od-breadcrumb">
+                <a href="orders.html" class="od-back-link">← Đơn hàng của tôi</a>
+            </div>
+
+            <!-- Page header -->
+            <div class="od-page-header">
+                <div class="od-page-header-left">
+                    <span class="od-eyebrow">Chi tiết đơn hàng</span>
+                    <h1 id="odCode">PP-000000</h1>
+                    <p class="od-header-meta">Đặt lúc: <span id="odCreatedAt">-</span></p>
+                </div>
+                <div class="od-page-header-right">
+                    <div id="odOrderStatus"></div>
+                    <div id="odPaymentStatus"></div>
+                    <div class="od-header-total" id="odTotal">0đ</div>
+                </div>
+            </div>
+
+            <!-- Top section: shipping + payment -->
+            <section class="od-section-top">
+                <div class="od-card">
+                    <h3>Thông tin giao hàng</h3>
+                    <div class="od-row">
+                        <span class="od-row-label">Người nhận</span>
+                        <span class="od-row-value" id="odName">-</span>
+                    </div>
+                    <div class="od-row">
+                        <span class="od-row-label">Điện thoại</span>
+                        <span class="od-row-value" id="odPhone">-</span>
+                    </div>
+                    <div class="od-row">
+                        <span class="od-row-label">Địa chỉ</span>
+                        <span class="od-row-value od-row-value-wrap" id="odAddress">-</span>
+                    </div>
+                    <div class="od-row">
+                        <span class="od-row-label">Ghi chú</span>
+                        <span class="od-row-value od-row-value-wrap" id="odNote">-</span>
+                    </div>
+                </div>
+                <div class="od-card">
+                    <h3>Thông tin thanh toán</h3>
+                    <div class="od-row">
+                        <span class="od-row-label">Hình thức</span>
+                        <span class="od-row-value" id="odPaymentMethod">-</span>
+                    </div>
+                    <div class="od-row">
+                        <span class="od-row-label">Coupon</span>
+                        <span class="od-row-value" id="odCoupon">-</span>
+                    </div>
+                    <div class="od-row">
+                        <span class="od-row-label">Tiền hàng</span>
+                        <span class="od-row-value" id="odSubtotal">-</span>
+                    </div>
+                    <div class="od-row">
+                        <span class="od-row-label">Phí vận chuyển</span>
+                        <span class="od-row-value" id="odShipping">-</span>
+                    </div>
+                    <div class="od-row">
+                        <span class="od-row-label">Giảm giá</span>
+                        <span class="od-row-value od-discount" id="odDiscount">-</span>
+                    </div>
+                    <div class="od-row od-row-total">
+                        <span class="od-row-label od-total-label">Tổng cộng</span>
+                        <span class="od-row-value od-total-value" id="odTotalBottom">-</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bottom section: products + timeline -->
+            <section class="od-section-bottom">
+                <div class="od-col-card">
+                    <h3>Danh sách sản phẩm</h3>
+                    <div id="odProductList" class="detail-product-list"></div>
+                </div>
+                <div class="od-col-card">
+                    <h3>Tiến trình đơn hàng</h3>
+                    <p class="od-col-subtitle">Lịch sử cập nhật trạng thái theo thời gian thực.</p>
+                    <div id="odTimeline" class="timeline-list"></div>
+                </div>
+            </section>
+
+            <!-- Action bar -->
+            <div class="od-action-bar">
+                <button class="btn-danger-outline" id="odCancelBtn" style="display:none;">
+                    Hủy đơn hàng
+                </button>
+                <div class="od-action-spacer"></div>
+                <button class="btn-outline-secondary" id="odRebuyBtn">Mua lại</button>
+                <button class="btn-outline-secondary" id="odReturnBtn">Khiếu nại / Đổi trả</button>
+                <button class="btn-green-outline" id="odReviewBtn">Đánh giá ngay</button>
+            </div>
+
+        </div><!-- /#odContent -->
+    </main>
+
+    <div id="toastContainer" class="toast-container"></div>
+    <script src="../assets/js/order-detail.js"></script>
+</body>
+</html>
