@@ -6,7 +6,7 @@
 
 (function seedPawPalData() {
     // Không seed lại nếu đã có dữ liệu thật
-    if (localStorage.getItem('pawpal_seeded') === 'v4') return;
+    if (localStorage.getItem('pawpal_seeded') === 'v5') return;
 
     /* ──────────────────────────────────────────────────────────────────────
        1. USER INFO
@@ -745,13 +745,154 @@
     localStorage.setItem('pawpal_tracker_logs', JSON.stringify(trackerLogs));
 
     /* ──────────────────────────────────────────────────────────────────────
-       5. Đánh dấu đã seed
+       5. ORDERS — Đơn hàng mua sắm từ cửa hàng
+       Key: pawpal_orders  →  [ ...orderObjects ]
     ────────────────────────────────────────────────────────────────────── */
-    localStorage.setItem('pawpal_seeded', 'v4');
+    const orders = [
+
+        /* ── Đơn 1: Hoàn thành — đã thanh toán ── */
+        {
+            code:          'DH-20260001',
+            orderStatus:   'Hoàn thành',
+            paymentStatus: 'Đã thanh toán',
+            method:        'COD',
+            createdAt:     new Date(today.getTime() - 10 * 86400000).toISOString(),
+            updatedAt:     new Date(today.getTime() - 8  * 86400000).toISOString(),
+            form: {
+                name:     'Nguyễn Phương Anh',
+                phone:    '0901 234 567',
+                address:  '123 Nguyễn Trãi',
+                ward:     'Phường Bến Thành',
+                district: 'Quận 1',
+                province: 'TP. Hồ Chí Minh',
+                note:     'Giao giờ hành chính',
+            },
+            cart: [
+                { sku: 'RC-POODLE-A', name: 'Royal Canin Poodle Adult 3kg', brand: 'Royal Canin', price: 420000, qty: 1, img: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=80&h=80&fit=crop' },
+                { sku: 'KONG-BALL-M', name: 'Đồ chơi bóng KONG Classic M', brand: 'KONG',        price: 185000, qty: 2, img: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=80&h=80&fit=crop' },
+            ],
+            subtotal:     790000,
+            shippingCost: 0,
+            discount:     0,
+            total:        790000,
+            coupon:       null,
+            statusHistory: [
+                { status: 'Chờ xác nhận',       timestamp: new Date(today.getTime() - 10 * 86400000).toISOString(), note: 'Đơn hàng đã được đặt thành công.' },
+                { status: 'Đang chuẩn bị hàng', timestamp: new Date(today.getTime() -  9 * 86400000).toISOString(), note: 'Kho hàng đang đóng gói sản phẩm.' },
+                { status: 'Đang giao',           timestamp: new Date(today.getTime() -  8 * 86400000).toISOString(), note: 'Đơn hàng đã được bàn giao cho đơn vị vận chuyển.' },
+                { status: 'Hoàn thành',          timestamp: new Date(today.getTime() -  7 * 86400000).toISOString(), note: 'Giao hàng thành công. Cảm ơn bạn đã mua sắm tại PawPal! 🐾' },
+            ],
+        },
+
+        /* ── Đơn 2: Đang giao — chưa thanh toán (COD) ── */
+        {
+            code:          'DH-20260002',
+            orderStatus:   'Đang giao',
+            paymentStatus: 'Chưa thanh toán',
+            method:        'COD',
+            createdAt:     new Date(today.getTime() - 2 * 86400000).toISOString(),
+            updatedAt:     new Date(today.getTime() - 1 * 86400000).toISOString(),
+            form: {
+                name:     'Nguyễn Phương Anh',
+                phone:    '0901 234 567',
+                address:  '123 Nguyễn Trãi',
+                ward:     'Phường Bến Thành',
+                district: 'Quận 1',
+                province: 'TP. Hồ Chí Minh',
+                note:     '',
+            },
+            cart: [
+                { sku: 'SHAMPOO-POODLE', name: 'Sữa tắm Poodle Pro 500ml', brand: 'PawPal Care', price: 145000, qty: 2, img: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=80&h=80&fit=crop' },
+                { sku: 'COMB-FINE',      name: 'Lược chải lông mịn',       brand: 'Trixie',      price:  89000, qty: 1, img: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=80&h=80&fit=crop' },
+            ],
+            subtotal:     379000,
+            shippingCost: 30000,
+            discount:     0,
+            total:        409000,
+            coupon:       null,
+            statusHistory: [
+                { status: 'Chờ xác nhận',       timestamp: new Date(today.getTime() - 2 * 86400000).toISOString(), note: 'Đơn hàng đã được đặt thành công.' },
+                { status: 'Đang chuẩn bị hàng', timestamp: new Date(today.getTime() - 1 * 86400000 - 3600000).toISOString(), note: 'Kho hàng đang đóng gói sản phẩm.' },
+                { status: 'Đang giao',           timestamp: new Date(today.getTime() - 1 * 86400000).toISOString(), note: 'Đơn hàng đang trên đường giao đến bạn.' },
+            ],
+        },
+
+        /* ── Đơn 3: Chờ xác nhận — thanh toán online ── */
+        {
+            code:          'DH-20260003',
+            orderStatus:   'Chờ xác nhận',
+            paymentStatus: 'Đã thanh toán',
+            method:        'online',
+            onlineMethod:  'Thẻ ATM nội địa',
+            createdAt:     new Date(today.getTime() - 3600000).toISOString(),
+            updatedAt:     new Date(today.getTime() - 3600000).toISOString(),
+            form: {
+                name:     'Nguyễn Phương Anh',
+                phone:    '0901 234 567',
+                address:  '123 Nguyễn Trãi',
+                ward:     'Phường Bến Thành',
+                district: 'Quận 1',
+                province: 'TP. Hồ Chí Minh',
+                note:     'Để trước cửa nếu không có người nhận',
+            },
+            cart: [
+                { sku: 'RC-KITTEN-2KG', name: 'Royal Canin Kitten 2kg',       brand: 'Royal Canin', price: 380000, qty: 1, img: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=80&h=80&fit=crop' },
+                { sku: 'SNACK-CAT-50G', name: 'Snack thưởng mèo Ciao 50g x3', brand: 'Ciao',        price:  75000, qty: 3, img: 'https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=80&h=80&fit=crop' },
+            ],
+            subtotal:     605000,
+            shippingCost: 0,
+            discount:     50000,
+            total:        555000,
+            coupon:       { code: 'PAWPAL10' },
+            statusHistory: [
+                { status: 'Chờ xác nhận', timestamp: new Date(today.getTime() - 3600000).toISOString(), note: 'Đơn hàng đã được đặt thành công. Đang chờ xác nhận từ cửa hàng.' },
+            ],
+        },
+
+        /* ── Đơn 4: Đã hủy ── */
+        {
+            code:          'DH-20260004',
+            orderStatus:   'Đã hủy',
+            paymentStatus: 'Chưa thanh toán',
+            method:        'COD',
+            createdAt:     new Date(today.getTime() - 20 * 86400000).toISOString(),
+            updatedAt:     new Date(today.getTime() - 19 * 86400000).toISOString(),
+            form: {
+                name:     'Nguyễn Phương Anh',
+                phone:    '0901 234 567',
+                address:  '123 Nguyễn Trãi',
+                ward:     'Phường Bến Thành',
+                district: 'Quận 1',
+                province: 'TP. Hồ Chí Minh',
+                note:     '',
+            },
+            cart: [
+                { sku: 'HARNESS-S', name: 'Dây dắt chó có yếm size S', brand: 'Ruffwear', price: 320000, qty: 1, img: 'https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?w=80&h=80&fit=crop' },
+            ],
+            subtotal:     320000,
+            shippingCost: 30000,
+            discount:     0,
+            total:        350000,
+            coupon:       null,
+            statusHistory: [
+                { status: 'Chờ xác nhận', timestamp: new Date(today.getTime() - 20 * 86400000).toISOString(), note: 'Đơn hàng đã được đặt thành công.' },
+                { status: 'Đã hủy',       timestamp: new Date(today.getTime() - 19 * 86400000).toISOString(), note: 'Khách hàng yêu cầu hủy đơn hàng.' },
+            ],
+        },
+
+    ];
+
+    localStorage.setItem('pawpal_orders', JSON.stringify(orders));
+
+    /* ──────────────────────────────────────────────────────────────────────
+       6. Đánh dấu đã seed
+    ────────────────────────────────────────────────────────────────────── */
+    localStorage.setItem('pawpal_seeded', 'v5');
 
     console.log('%c[PawPal Seed] ✅ Dữ liệu demo đã được inject vào localStorage.', 'color:#2A5944;font-weight:bold;');
     console.log('  → pawpal_pets:',          JSON.parse(localStorage.getItem('pawpal_pets')).length, 'bé');
     console.log('  → pawpal_bookings:',      JSON.parse(localStorage.getItem('pawpal_bookings')).length, 'lịch hẹn');
     console.log('  → pawpal_tracker_logs:',  Object.keys(JSON.parse(localStorage.getItem('pawpal_tracker_logs'))).length, 'nhật ký');
+    console.log('  → pawpal_orders:',        JSON.parse(localStorage.getItem('pawpal_orders')).length, 'đơn hàng');
 
 })();

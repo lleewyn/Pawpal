@@ -559,7 +559,7 @@ function loadBookings() {
     }
 }
 
-function loadTrackerLogs() {
+function loadAllTrackerLogs() {
     try {
         const raw = localStorage.getItem('pawpal_tracker_logs');
         trackerLogsStore = raw ? JSON.parse(raw) : {};
@@ -1287,7 +1287,7 @@ function renderTracker() {
     });
 
     // Also render recommendations & historical lists up-to-date
-    loadTrackerLogs();
+    loadAllTrackerLogs();
     renderRecommendationsWidget();
     renderHistoricalLogs();
 }
@@ -1296,7 +1296,7 @@ function renderTracker() {
 function renderHistoricalLogs() {
     loadBookings();
     loadPets();
-    loadTrackerLogs();
+    loadAllTrackerLogs();
     const container = document.getElementById('historicalLogsList');
     if (!container) return;
     const closed = bookings.filter(b => b.status === 'Hoàn thành').sort((a,b)=> new Date(b.completedAt || b.createdAt)-new Date(a.completedAt||a.createdAt));
@@ -1336,7 +1336,7 @@ function buildHistoricalCard(booking) {
 }
 
 function openHistoryDetailModal(code) {
-    loadTrackerLogs();
+    loadAllTrackerLogs();
     const logs = trackerLogsStore[code] || [];
     const booking = bookings.find(b=>b.code===code) || {};
     const title = `${booking.code || code} · ${booking.selectedService?.name || ''} · ${formatBookingDate(booking)}`;
@@ -1356,7 +1356,7 @@ function openHistoryDetailModal(code) {
 
 // ── Recommendation engine (simple, runs once per day on load) ───────────────
 function generateRecommendations() {
-    loadPets(); loadBookings(); loadTrackerLogs();
+    loadPets(); loadBookings(); loadAllTrackerLogs();
     const todayStr = new Date().toISOString().slice(0,10);
     const lastRun = localStorage.getItem('pawpal_recommendations_last_run');
     if (lastRun === todayStr) return; // already generated today
@@ -1695,7 +1695,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (activeTrackerTab) {
         loadPets();
         loadBookings();
-        loadTrackerLogs();
+        loadAllTrackerLogs();
         generateRecommendations();
         renderRecommendationsWidget();
         renderHistoricalLogs();
