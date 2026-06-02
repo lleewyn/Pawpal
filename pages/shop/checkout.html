@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PawPal - Thanh toán</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/checkout.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+<body class="checkout-body">
+
+    <!-- Header -->
+    <header class="checkout-header">
+        <div class="checkout-header-inner">
+            <a href="../../index.html" class="logo">
+                <img src="../../assets/images/Logo_pawpal_navbar.png" alt="PawPal">
+            </a>
+            <div class="checkout-steps">
+                <div class="checkout-step done">
+                    <span class="step-dot">✓</span>
+                    <span class="step-label">Giỏ hàng</span>
+                </div>
+                <div class="checkout-step-line"></div>
+                <div class="checkout-step active" id="stepCheckout">
+                    <span class="step-dot">2</span>
+                    <span class="step-label">Thanh toán</span>
+                </div>
+                <div class="checkout-step-line"></div>
+                <div class="checkout-step" id="stepDone">
+                    <span class="step-dot">3</span>
+                    <span class="step-label">Hoàn tất</span>
+                </div>
+            </div>
+            <a href="../shop/shop.html" class="checkout-back-link">← Quay lại cửa hàng</a>
+        </div>
+    </header>
+
+    <!-- ─── CHECKOUT PAGE ─── -->
+    <main id="checkoutPage">
+        <div class="container checkout-container">
+            <div class="row g-4">
+
+            <!-- LEFT: Form -->
+            <div class="col-12 col-lg-7 checkout-left">
+
+                <!-- Shipping Info -->
+                <section class="checkout-section">
+                    <h2 class="checkout-section-title">
+                        <span class="section-num">1</span>
+                        Thông tin giao hàng
+                    </h2>
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label class="form-label" for="shipName">Họ và tên <span class="required">*</span></label>
+                            <input type="text" id="shipName" class="form-input" placeholder="Nguyễn Văn A" autocomplete="name">
+                            <p class="field-error" id="errName"></p>
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="shipPhone">Số điện thoại <span class="required">*</span></label>
+                            <input type="tel" id="shipPhone" class="form-input" placeholder="0987 654 321" autocomplete="tel" maxlength="10">
+                            <p class="field-error" id="errPhone"></p>
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="shipProvince">Tỉnh / Thành phố <span class="required">*</span></label>
+                            <select id="shipProvince" class="form-input form-select">
+                                <option value="">-- Chọn Tỉnh/Thành --</option>
+                                <option value="Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                                <option value="Hà Nội">Hà Nội</option>
+                                <option value="Đà Nẵng">Đà Nẵng</option>
+                                <option value="Cần Thơ">Cần Thơ</option>
+                                <option value="Hải Phòng">Hải Phòng</option>
+                                <option value="Bình Dương">Bình Dương</option>
+                                <option value="Đồng Nai">Đồng Nai</option>
+                                <option value="An Giang">An Giang</option>
+                                <option value="Bà Rịa - Vũng Tàu">Bà Rịa - Vũng Tàu</option>
+                                <option value="Khánh Hòa">Khánh Hòa</option>
+                                <option value="Lâm Đồng">Lâm Đồng</option>
+                                <option value="Tỉnh khác">Tỉnh/Thành khác</option>
+                            </select>
+                            <p class="field-error" id="errProvince"></p>
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="shipDistrict">Quận / Huyện <span class="required">*</span></label>
+                            <input type="text" id="shipDistrict" class="form-input" placeholder="Quận 1, Huyện Bình Chánh...">
+                            <p class="field-error" id="errDistrict"></p>
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" for="shipWard">Phường / Xã</label>
+                            <input type="text" id="shipWard" class="form-input" placeholder="Phường Bến Nghé...">
+                        </div>
+                        <div class="form-field full-width">
+                            <label class="form-label" for="shipAddress">Địa chỉ chi tiết <span class="required">*</span></label>
+                            <input type="text" id="shipAddress" class="form-input" placeholder="Số nhà, tên đường..." autocomplete="street-address">
+                            <p class="field-error" id="errAddress"></p>
+                        </div>
+                        <div class="form-field full-width">
+                            <label class="form-label" for="shipNote">Ghi chú đơn hàng</label>
+                            <textarea id="shipNote" class="form-input form-textarea" placeholder="Giao giờ hành chính, để trước cổng..."></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Payment Method -->
+                <section class="checkout-section">
+                    <h2 class="checkout-section-title">
+                        <span class="section-num">2</span>
+                        Phương thức thanh toán
+                    </h2>
+                    <div class="payment-methods">
+                        <label class="payment-option" id="optCOD">
+                            <input type="radio" name="payment" value="COD" checked>
+                            <div class="payment-option-inner">
+                                <div class="payment-icon">🚚</div>
+                                <div class="payment-info">
+                                    <strong>Thanh toán khi nhận hàng (COD)</strong>
+                                    <p>Kiểm tra hàng trước khi thanh toán. Không cần thẻ ngân hàng.</p>
+                                </div>
+                                <div class="payment-radio-mark"></div>
+                            </div>
+                        </label>
+                        <label class="payment-option" id="optOnline">
+                            <input type="radio" name="payment" value="ONLINE">
+                            <div class="payment-option-inner">
+                                <div class="payment-icon">📱</div>
+                                <div class="payment-info">
+                                    <strong>Thanh toán trực tuyến</strong>
+                                    <p>QR Code, Thẻ quốc tế (Visa/Mastercard), Ví điện tử (MoMo, ZaloPay)</p>
+                                </div>
+                                <div class="payment-radio-mark"></div>
+                            </div>
+                        </label>
+                    </div>
+                    <!-- Online payment sub-options (shown when ONLINE is selected) -->
+                    <div class="online-sub-methods" id="onlineSubMethods" style="display:none;">
+                        <label class="online-sub-option">
+                            <input type="radio" name="onlineMethod" value="QR" checked>
+                            <span class="online-sub-label">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Vietcombank-logo.png/64px-Vietcombank-logo.png" alt="QR">
+                                Chuyển khoản QR
+                            </span>
+                        </label>
+                        <label class="online-sub-option">
+                            <input type="radio" name="onlineMethod" value="MOMO">
+                            <span class="online-sub-label">
+                                <span style="font-size:1.2rem;">💜</span>
+                                MoMo
+                            </span>
+                        </label>
+                        <label class="online-sub-option">
+                            <input type="radio" name="onlineMethod" value="ZALOPAY">
+                            <span class="online-sub-label">
+                                <span style="font-size:1.2rem;">💙</span>
+                                ZaloPay
+                            </span>
+                        </label>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- RIGHT: Order Summary -->
+            <aside class="col-12 col-lg-5 checkout-right">
+                <div class="order-summary-card">
+                    <h3 class="order-summary-title">Tóm tắt đơn hàng</h3>
+
+                    <!-- Validation banner (shown if cart has issues) -->
+                    <div class="cart-validation-banner" id="cartValidationBanner" style="display:none;"></div>
+
+                    <div class="order-items" id="orderItems">
+                        <!-- Injected by JS -->
+                    </div>
+
+                    <div class="order-divider"></div>
+
+                    <div class="order-totals">
+                        <div class="order-total-row">
+                            <span>Tạm tính</span>
+                            <span id="summarySubtotal">0đ</span>
+                        </div>
+                        <div class="order-total-row discount-row" id="summaryDiscountRow" style="display:none;">
+                            <span id="summaryDiscountLabel">Giảm giá</span>
+                            <span id="summaryDiscount" class="discount-val">-0đ</span>
+                        </div>
+                        <div class="order-total-row">
+                            <span>Vận chuyển</span>
+                            <span id="summaryShipping">30.000đ</span>
+                        </div>
+                        <div class="order-divider"></div>
+                        <div class="order-total-row grand-total">
+                            <span>Tổng cộng</span>
+                            <span id="summaryTotal">0đ</span>
+                        </div>
+                        <p class="order-paw-points" id="orderPawPoints">🐾 Bạn sẽ nhận được <strong id="pawPointsEarn">0</strong> Paw Points</p>
+                    </div>
+
+                    <button class="btn-checkout-submit" id="checkoutSubmitBtn">
+                        <span id="submitBtnText">Đặt hàng ngay →</span>
+                    </button>
+                    <p class="checkout-security-note">
+                        🔒 Thông tin của bạn được bảo mật tuyệt đối
+                    </p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- ─── PROCESSING PAGE ─── -->
+    <div id="processingPage" style="display:none;">
+        <div class="fullpage-status">
+            <div class="processing-spinner"></div>
+            <h2 class="processing-title">PawPal đang xử lý giao dịch</h2>
+            <p class="processing-desc">Vui lòng <strong>không tắt hoặc refresh</strong> trình duyệt trong lúc này...</p>
+            <div class="processing-progress">
+                <div class="processing-progress-bar" id="processingBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── SUCCESS PAGE ─── -->
+    <div id="successPage" style="display:none;">
+        <div class="fullpage-status">
+            <div class="success-animation">
+                <div class="success-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" width="52" height="52">
+                        <circle class="success-circle-bg" cx="26" cy="26" r="25" fill="none"/>
+                        <path class="success-checkmark" fill="none" d="M14 27 L22 35 L38 17"/>
+                    </svg>
+                </div>
+            </div>
+            <h2 class="success-title">Đặt hàng thành công! 🎉</h2>
+            <p class="success-subtitle">PawPal đã nhận được đơn hàng của bạn</p>
+
+            <div class="success-order-card">
+                <div class="success-order-code">
+                    <span class="order-code-label">Mã đơn hàng</span>
+                    <span class="order-code-value" id="orderCode">PP-000000</span>
+                    <button class="btn-copy-code" id="copyOrderCode" title="Sao chép mã đơn">📋</button>
+                </div>
+                <div class="success-order-info" id="successOrderInfo">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+
+            <div class="success-paw-points" id="successPawPoints" style="display:none;">
+                <span class="paw-points-icon">🐾</span>
+                <span>Bạn đã nhận được <strong id="earnedPoints">0</strong> Paw Points từ đơn hàng này!</span>
+            </div>
+
+            <div class="success-actions">
+                <a href="../shop/shop.html" class="btn-cta">Tiếp tục mua sắm</a>
+                <a href="../user/orders.html" class="btn-outline-secondary">Xem đơn hàng của tôi</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── FAILURE PAGE ─── -->
+    <div id="failurePage" style="display:none;">
+        <div class="fullpage-status">
+            <div class="failure-icon">❌</div>
+            <h2 class="failure-title">Thanh toán thất bại</h2>
+            <p class="failure-desc" id="failureDesc">Giao dịch không được xử lý thành công. Vui lòng thử lại.</p>
+
+            <div class="failure-actions">
+                <button class="btn-cta" id="retryPaymentBtn">Thử lại phương thức khác</button>
+                <button class="btn-outline-secondary" id="backToCartBtn">Quay lại giỏ hàng</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="../../assets/js/checkout.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmxc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

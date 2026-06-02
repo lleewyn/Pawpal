@@ -44,10 +44,14 @@ function loadOrderSummary() {
 
 function renderOrderSummaryTab() {
     const summary = loadOrderSummary();
-    document.getElementById('dashOrdersCount')?.textContent = summary.total;
-    document.getElementById('dashOrdersProcessing')?.textContent = summary.processing;
-    document.getElementById('dashOrdersShipping')?.textContent = summary.shipping;
-    document.getElementById('dashOrdersCompleted')?.textContent = summary.completed;
+    const el1 = document.getElementById('dashOrdersCount');
+    const el2 = document.getElementById('dashOrdersProcessing');
+    const el3 = document.getElementById('dashOrdersShipping');
+    const el4 = document.getElementById('dashOrdersCompleted');
+    if (el1) el1.textContent = summary.total;
+    if (el2) el2.textContent = summary.processing;
+    if (el3) el3.textContent = summary.shipping;
+    if (el4) el4.textContent = summary.completed;
 }
 
 function savePets() {
@@ -518,6 +522,19 @@ function init() {
     // Render ngay nếu tab Pet ID đang active
     const activePetTab = document.querySelector('.dash-tab-btn.active[data-dash-tab="dash-petid"]');
     if (activePetTab) renderPetList();
+
+    // Xử lý URL param ?tab=xxx (ví dụ: từ suspicious login banner)
+    const urlTab = new URLSearchParams(window.location.search).get('tab');
+    if (urlTab) {
+        const targetBtn = document.querySelector(`.dash-tab-btn[data-dash-tab="dash-${urlTab}"]`);
+        if (targetBtn) {
+            targetBtn.click();
+            // Scroll nhẹ xuống dashboard content
+            setTimeout(() => {
+                document.querySelector('.dashboard-page-main')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', init);

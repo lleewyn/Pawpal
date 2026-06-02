@@ -10,8 +10,7 @@
 .booking-layout {
     max-width: 1160px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 340px;
+    /* display: grid; grid-template-columns: 1fr 340px; */
     gap: 36px;
     align-items: start;
 }

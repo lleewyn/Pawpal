@@ -4,7 +4,6 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     initPremiumMotion();
-    initMobileNavigation();
     initTimelineTracker();
     initBookingWidget();
     initPricingModal();
@@ -478,44 +477,57 @@ function initPetIdCardTilt() {
 function initPremiumMotion() {
     // 1. Initialize Lenis if library is available
     if (typeof Lenis === 'undefined') {
-        console.warn('Lenis is not loaded.');
-        return;
+        console.warn('Lenis is not loaded — skipping smooth scroll.');
+        // Vẫn chạy GSAP nếu có, không return sớm
     }
 
-    const lenis = new Lenis({
-        duration: 1.2,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // smooth easeOutExpo
-        direction: 'vertical',
-        gestureDirection: 'vertical',
-        smooth: true,
-        mouseMultiplier: 1,
-        smoothTouch: false,
-        touchMultiplier: 2,
-        infinite: false,
-    });
+    let lenis = null;
+    if (typeof Lenis !== 'undefined') {
+        try {
+            lenis = new Lenis({
+                duration: 1.2,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                smoothWheel: true,
+                wheelMultiplier: 1,
+                touchMultiplier: 2,
+            });
 
-    // RequestAnimationFrame loop for Lenis
-    function raf(time) {
-        lenis.raf(time);
-        requestAnimationFrame(raf);
+            function raf(time) {
+                lenis.raf(time);
+                requestAnimationFrame(raf);
+            }
+            requestAnimationFrame(raf);
+        } catch (e) {
+            console.warn('Lenis init failed:', e);
+            lenis = null;
+        }
     }
-    requestAnimationFrame(raf);
 
     // 2. Connect GSAP and ScrollTrigger if available
     if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
-        console.warn('GSAP or ScrollTrigger is not loaded.');
+        console.warn('GSAP or ScrollTrigger is not loaded — skipping animations.');
         return;
     }
 
     gsap.registerPlugin(ScrollTrigger);
 
-    // Sync ScrollTrigger with Lenis scroll events
-    lenis.on('scroll', () => {
-        ScrollTrigger.update();
-    });
+    // Đánh dấu GSAP đã sẵn sàng — tắt CSS fallback opacity:1
+    document.documentElement.classList.add('gsap-ready');
+
+    // Sync ScrollTrigger with Lenis scroll events if lenis loaded
+    if (lenis) {
+        lenis.on('scroll', () => {
+            ScrollTrigger.update();
+        });
+    }
 
     // 3. Hero Section Load Animations
-    const heroTl = gsap.timeline();
+    const heroTl = gsap.timeline({
+        onComplete: () => {
+            // Đánh dấu hero đã animated xong
+            document.documentElement.classList.add('hero-animated');
+        }
+    });
     
     if (document.querySelector('.hero-title')) {
         heroTl.from('.hero-title', {
@@ -523,6 +535,7 @@ function initPremiumMotion() {
             y: 45,
             duration: 1.2,
             ease: 'power4.out',
+            clearProps: 'all',
         });
     }
     
@@ -532,6 +545,7 @@ function initPremiumMotion() {
             y: 30,
             duration: 1.0,
             ease: 'power4.out',
+            clearProps: 'all',
         }, '-=0.9');
     }
     
@@ -541,6 +555,7 @@ function initPremiumMotion() {
             y: 30,
             duration: 1.0,
             ease: 'power4.out',
+            clearProps: 'all',
         }, '-=0.8');
     }
 

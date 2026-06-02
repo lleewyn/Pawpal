@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    PawPal Frontend Multi-Page Auth & Data Simulation Engine
    ========================================================================== */
 
@@ -319,6 +319,23 @@ document.addEventListener('DOMContentLoaded', () => {
             toast.style.transform = 'translateX(50px)';
             setTimeout(() => toast.remove(), 400);
         }, 10000);
+    }
+
+    // Show success toast (green, non-SMS)
+    function showToastSuccess(message) {
+        if (!toastContainer) return;
+        const toast = document.createElement('div');
+        toast.className = 'toast-message toast-success';
+        toast.innerHTML = `
+            <div class="toast-header" style="background:linear-gradient(135deg,#16a34a,#15803d);">✅ THÀNH CÔNG</div>
+            <div class="toast-body"><p>${message}</p></div>
+        `;
+        toastContainer.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(50px)';
+            setTimeout(() => toast.remove(), 400);
+        }, 4000);
     }
 
     // Update Header states
@@ -727,8 +744,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         
                         setLoggedInUser(phoneVal);
-                        alert('Đăng nhập thành công!');
-                        window.location.href = pagePrefix + "dashboard.html";
+                        showToastSuccess('Đăng nhập thành công! Đang chuyển hướng...');
+                        setTimeout(() => { window.location.href = pagePrefix + "dashboard.html"; }, 1200);
                     }
                 } else {
                     alert('Mã OTP xác thực không chính xác.');
@@ -794,9 +811,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!user) {
                 loginPhoneError.textContent = 'Số điện thoại chưa được đăng ký.';
                 loginPhoneError.style.display = 'block';
+                // Hiện nút "Đăng ký ngay"
+                const registerPrompt = document.getElementById('registerPrompt');
+                if (registerPrompt) registerPrompt.style.display = 'flex';
                 return;
             } else {
                 loginPhoneError.style.display = 'none';
+                const registerPrompt = document.getElementById('registerPrompt');
+                if (registerPrompt) registerPrompt.style.display = 'none';
             }
 
             if (isOtpLogin) {
@@ -804,11 +826,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Xác thực mật khẩu
             if (user.password === document.getElementById('loginPassword').value) {
                 loginFailedCount[phone] = 0;
+
+                // Kiểm tra thiết bị lạ (suspicious login)
+                const knownDeviceKey = `pawpal_known_device_${phone}`;
+                const deviceFingerprint = `${navigator.userAgent}|${screen.width}x${screen.height}`;
+                const knownDevice = localStorage.getItem(knownDeviceKey);
+                if (!knownDevice) {
+                    localStorage.setItem(knownDeviceKey, deviceFingerprint);
+                } else if (knownDevice !== deviceFingerprint) {
+                    sessionStorage.setItem('pawpal_suspicious_login', '1');
+                    showSmsToast('CẢNH BÁO BẢO MẬT', `Phát hiện đăng nhập bất thường vào tài khoản PawPal của bạn từ thiết bị mới. Nếu không phải bạn, hãy đổi mật khẩu ngay.`);
+                    localStorage.setItem(knownDeviceKey, deviceFingerprint);
+                }
+
                 setLoggedInUser(phone);
-                alert('Đăng nhập thành công!');
-                window.location.href = pagePrefix + "dashboard.html";
+                // Ghi nhận lịch sử đăng nhập
+                const users2 = getUsersList();
+                const u2 = users2.find(usr => usr.phone === phone);
+                if (u2) {
+                    u2.loginHistory = u2.loginHistory || [];
+                    u2.loginHistory.push({
+                        time: new Date().toLocaleString('vi-VN'),
+                        device: navigator.userAgent.includes('Mobile') ? 'Thiết bị di động' : 'Máy tính',
+                        location: 'Việt Nam',
+                        suspicious: sessionStorage.getItem('pawpal_suspicious_login') === '1',
+                    });
+                    if (u2.loginHistory.length > 10) u2.loginHistory = u2.loginHistory.slice(-10);
+                    saveUsersList(users2);
+                }
+
+                showToastSuccess('Đăng nhập thành công! Đang chuyển hướng...');
+                setTimeout(() => { window.location.href = pagePrefix + "dashboard.html"; }, 1200);
             } else {
                 loginFailedCount[phone] = (loginFailedCount[phone] || 0) + 1;
                 if (loginFailedCount[phone] >= 5) {
@@ -824,21 +875,27 @@ document.addEventListener('DOMContentLoaded', () => {
         forgetPassForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const phone = document.getElementById('forgetPhone').value.trim();
+            const forgetPhoneErrEl = document.getElementById('forgetPhoneError');
             const users = getUsersList();
             const user = users.find(u => u.phone === phone);
 
             if (!user) {
-                alert('Số điện thoại chưa được đăng ký.');
+                if (forgetPhoneErrEl) {
+                    forgetPhoneErrEl.textContent = 'Số điện thoại này chưa có tài khoản trong hệ thống.';
+                    forgetPhoneErrEl.style.display = 'block';
+                }
                 return;
             }
 
+            if (forgetPhoneErrEl) forgetPhoneErrEl.style.display = 'none';
+
             setTimeout(() => {
-                showSmsToast('KHÔI PHỤC MẬT KHẨU', `Yêu cầu lấy lại mật khẩu. Click vào link này để đặt mật khẩu mới: login.html?activate=${phone}`, 'Khôi phục mật khẩu', () => {
+                showSmsToast('KHÔI PHỤC MẬT KHẨU', `Yêu cầu lấy lại mật khẩu. Click vào link này để đặt mật khẩu mới: login.html?activate=${phone}`, 'Khôi phục mật khẩu ngay', () => {
                     showActivationForm(phone, user.name);
                 });
             }, 1200);
 
-            alert('Yêu cầu khôi phục mật khẩu đã được gửi. Kiểm tra Zalo/SMS.');
+            showToastSuccess('Liên kết khôi phục đã được gửi qua SMS. Vui lòng kiểm tra điện thoại.');
         });
 
         // --- Activation Submit (Set password first time) ---
@@ -983,7 +1040,75 @@ document.addEventListener('DOMContentLoaded', () => {
         if (urlTabParam === 'admin') {
             showAdminLoginForm();
         }
-    }
+
+        // ── "Đăng ký ngay" button trong register prompt ──────────────────────
+        const registerNowBtn = document.getElementById('registerNowBtn');
+        safeBind(registerNowBtn, 'click', () => {
+            // Prefill SĐT vào form đăng ký nếu đã nhập
+            const phoneVal = document.getElementById('loginPhone').value.trim();
+            showRegisterForm();
+            if (phoneVal) {
+                const regPhone = document.getElementById('registerPhone');
+                if (regPhone) {
+                    regPhone.value = phoneVal;
+                    validateRegisterForm();
+                }
+            }
+        });
+
+        // ── Validation form quên mật khẩu ────────────────────────────────────
+        const forgetPhoneInput = document.getElementById('forgetPhone');
+        const forgetPhoneError = document.getElementById('forgetPhoneError');
+        const forgetPassSubmitBtn = document.getElementById('forgetPassSubmitBtn');
+
+        if (forgetPhoneInput) {
+            forgetPhoneInput.addEventListener('input', () => {
+                const val = forgetPhoneInput.value.trim();
+                const phoneRegex = /^(0[3|5|7|8|9])[0-9]{8}$/;
+                if (val.length === 0) {
+                    forgetPhoneError.style.display = 'none';
+                    if (forgetPassSubmitBtn) forgetPassSubmitBtn.setAttribute('disabled', 'true');
+                } else if (!phoneRegex.test(val)) {
+                    forgetPhoneError.textContent = 'Số điện thoại không đúng định dạng Việt Nam (10 số, bắt đầu 03/05/07/08/09).';
+                    forgetPhoneError.style.display = 'block';
+                    if (forgetPassSubmitBtn) forgetPassSubmitBtn.setAttribute('disabled', 'true');
+                } else {
+                    forgetPhoneError.style.display = 'none';
+                    if (forgetPassSubmitBtn) forgetPassSubmitBtn.removeAttribute('disabled');
+                }
+            });
+        }
+
+        // ── Suspicious Login Banner ───────────────────────────────────────────
+        function checkSuspiciousLogin() {
+            const flag = sessionStorage.getItem('pawpal_suspicious_login');
+            if (flag === '1') {
+                const banner = document.getElementById('suspiciousBanner');
+                if (banner) {
+                    banner.style.display = 'block';
+                    sessionStorage.removeItem('pawpal_suspicious_login');
+                }
+            }
+        }
+
+        const dismissBannerBtn = document.getElementById('dismissBannerBtn');
+        safeBind(dismissBannerBtn, 'click', () => {
+            const banner = document.getElementById('suspiciousBanner');
+            if (banner) {
+                banner.style.animation = 'bannerSlideOut 0.3s ease forwards';
+                setTimeout(() => { banner.style.display = 'none'; }, 300);
+            }
+        });
+
+        const changePassFromBannerBtn = document.getElementById('changePassFromBannerBtn');
+        safeBind(changePassFromBannerBtn, 'click', () => {
+            // Điều hướng về dashboard tab bảo mật
+            window.location.href = pagePrefix + 'dashboard.html?tab=security';
+        });
+
+        checkSuspiciousLogin();
+
+    } // end if (isLoginPage)
 
     // ==========================================================================
     // 3. DASHBOARD PAGE SPECIFIC LOGIC (dashboard.html)
@@ -1582,4 +1707,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 });
+
 

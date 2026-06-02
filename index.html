@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 
 <head>
@@ -14,6 +14,8 @@
     <!-- FontAwesome for fallback icons if needed, but we'll use custom inline SVGs for maximum crispness -->
     <!-- Custom Style -->
     <link rel="stylesheet" href="assets/css/style.css">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 </head>
 
 <body>
@@ -59,66 +61,61 @@
 
     <!-- Header Navigation -->
     <header class="main-header" id="mainHeader">
-        <div class="header-container">
-            <a href="#" class="logo">
-                <img src="assets/images/Logo_pawpal_navbar.png" alt="PawPal">
-            </a>
+        <nav class="navbar navbar-expand-lg p-0" data-bs-theme="dark">
+            <div class="container header-container">
+                <a href="#" class="navbar-brand logo">
+                    <img src="assets/images/Logo_pawpal_navbar.png" alt="PawPal">
+                </a>
 
-            <!-- Mobile Navigation Toggle -->
-            <button class="mobile-nav-toggle" aria-controls="primary-navigation" aria-expanded="false"
-                id="mobileNavToggle">
-                <svg class="icon-menu" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="4" y1="12" x2="20" y2="12"></line>
-                    <line x1="4" y1="6" x2="20" y2="6"></line>
-                    <line x1="4" y1="18" x2="20" y2="18"></line>
-                </svg>
-                <svg class="icon-close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    style="display: none;">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-
-            <nav class="nav-menu" id="primaryNavigation">
-                <ul>
-                    <li><a href="#" class="active">Trang chủ</a></li>
-                    <li><a href="pages/services.html">Dịch vụ</a></li>
-                    <li><a href="pages/shop.html">Cửa hàng</a></li>
-                    <li><a href="pages/about.html">Về chúng tôi</a></li>
-                    <li><a href="pages/blog.html">Cẩm nang</a></li>
-                    <li><a href="pages/contact.html">Liên hệ</a></li>
-                </ul>
-            </nav>
-
-            <div class="header-actions">
-                <div class="search-bar">
-                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <!-- Mobile Navigation Toggle -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#primaryNavigation" aria-controls="primaryNavigation" aria-expanded="false" aria-label="Toggle navigation">
+                    <svg class="icon-menu" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                        <line x1="4" y1="12" x2="20" y2="12"></line>
+                        <line x1="4" y1="6" x2="20" y2="6"></line>
+                        <line x1="4" y1="18" x2="20" y2="18"></line>
                     </svg>
-                    <input type="text" placeholder="Tìm kiếm sản phẩm...">
+                </button>
+
+                <div class="collapse navbar-collapse nav-menu" id="primaryNavigation">
+                    <ul class="navbar-nav mx-auto">
+                        <li class="nav-item"><a href="#" class="nav-link active">Trang chủ</a></li>
+                        <li class="nav-item"><a href="pages/services/services.html" class="nav-link">Dịch vụ</a></li>
+                        <li class="nav-item"><a href="pages/shop/shop.html" class="nav-link">Cửa hàng</a></li>
+                        <li class="nav-item"><a href="pages/public/about.html" class="nav-link">Về chúng tôi</a></li>
+                        <li class="nav-item"><a href="pages/public/blog.html" class="nav-link">Cẩm nang</a></li>
+                        <li class="nav-item"><a href="pages/public/contact.html" class="nav-link">Liên hệ</a></li>
+                    </ul>
+
+                    <div class="header-actions d-none d-lg-flex align-items-center">
+                        <div class="search-bar">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" placeholder="Tìm kiếm sản phẩm...">
+                        </div>
+                        <a href="#cart" class="cart-btn" aria-label="Giỏ hàng">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                        </a>
+                        <a href="pages/public/login.html" class="login-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span>Đăng nhập</span>
+                        </a>
+                    </div>
                 </div>
-                <a href="#cart" class="cart-btn" aria-label="Giỏ hàng">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="9" cy="21" r="1"></circle>
-                        <circle cx="20" cy="21" r="1"></circle>
-                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                    </svg>
-                </a>
-                <a href="pages/login.html" class="login-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                    <span>Đăng nhập</span>
-                </a>
             </div>
-        </div>
+        </nav>
     </header>
 
     <!-- Main Content -->
@@ -157,11 +154,10 @@
 
                 <!-- CTA Button + Social Proof -->
                 <div class="hero-cta-container">
-                    <a href="pages/booking.html" class="btn-cta main-cta-btn">Đặt lịch ngay (Chỉ 30 giây)</a>
+                    <a href="pages/services/booking.html" class="btn-cta main-cta-btn">Đặt lịch ngay (Chỉ 30 giây)</a>
                     <div class="hero-status-widget">
                         <span class="status-dot"></span>
-                        <span>Hôm nay còn trống: <strong>3 slot Spa</strong> | <strong>2 phòng Hotel</strong> (Cập nhật
-                            5 phút trước)</span>
+                        <span id="heroAvailability">Đang tải thông tin slot trống...</span>
                     </div>
                     <div class="hero-social-proof">
                         <div class="avatar-stack">
@@ -190,19 +186,19 @@
             <div class="features-container">
                 <div class="feature-item">
                     <h3>MINH BẠCH 100%</h3>
-                    <p>Nhật ký chăm sóc realtime.</p>
+                    <p>5,000+ nhật ký cập nhật mỗi tháng</p>
                 </div>
                 <div class="feature-item">
                     <h3>GIÁ CẢ CÔNG KHAI</h3>
-                    <p>Không phí ẩn, không phụ phí.</p>
+                    <p>Bảng giá niêm yết rõ ràng</p>
                 </div>
                 <div class="feature-item">
                     <h3>ĐỘI NGŨ CHUYÊN GIA</h3>
-                    <p>Nhân viên có chứng chỉ quốc tế.</p>
+                    <p>8 chuyên gia có chứng chỉ quốc tế</p>
                 </div>
                 <div class="feature-item">
                     <h3>ĐẶT LỊCH THẦN TỐC</h3>
-                    <p>Xác nhận tức thì 24/7.</p>
+                    <p>Xác nhận tức thì 24/7</p>
                 </div>
             </div>
         </section>
@@ -223,8 +219,7 @@
             <div class="services-container">
                 <div class="section-header text-center">
                     <h2>Dịch vụ <span class="accent-italic">PawPal</span></h2>
-                    <p class="section-subtitle">"Một số dịch vụ của chúng tôi đang hoạt động hiện nay trên thị trường mà
-                        bạn quan tâm"</p>
+                    <p class="section-subtitle">Spa, Hotel, và hơn thế nữa — Chăm sóc toàn diện cho bé cưng của bạn</p>
                 </div>
             </div>
 
@@ -235,7 +230,7 @@
                     <div class="card-image-wrapper">
                         <img src="assets/images/services/spa.png" alt="Pet Spa - Grooming" loading="lazy">
                         <span class="card-number">01</span>
-                        <a href="#booking" class="arrow-btn" aria-label="Đặt lịch Spa">
+                        <a href="pages/services/booking.html" class="arrow-btn" aria-label="Đặt lịch Spa">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -256,7 +251,7 @@
                     <div class="card-image-wrapper">
                         <img src="assets/images/services/hotel.png" alt="Pet Hotel" loading="lazy">
                         <span class="card-number">02</span>
-                        <a href="#booking" class="arrow-btn" aria-label="Đặt lịch Hotel">
+                        <a href="pages/services/booking.html" class="arrow-btn" aria-label="Đặt lịch Hotel">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -277,7 +272,7 @@
                         <img src="https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=500&q=80"
                             alt="Self-Service Wash" loading="lazy">
                         <span class="card-number">03</span>
-                        <a href="#booking" class="arrow-btn" aria-label="Đặt lịch Self-Service Wash">
+                        <a href="pages/services/booking.html" class="arrow-btn" aria-label="Đặt lịch Self-Service Wash">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -298,7 +293,7 @@
                         <img src="https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?auto=format&fit=crop&w=500&q=80"
                             alt="Pet Shipping" loading="lazy">
                         <span class="card-number">04</span>
-                        <a href="#booking" class="arrow-btn" aria-label="Đặt lịch Pet Shipping">
+                        <a href="pages/services/booking.html" class="arrow-btn" aria-label="Đặt lịch Pet Shipping">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -319,7 +314,7 @@
                         <img src="https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=500&q=80"
                             alt="Vet Services" loading="lazy">
                         <span class="card-number">05</span>
-                        <a href="#booking" class="arrow-btn" aria-label="Đặt lịch Vet Services">
+                        <a href="pages/services/booking.html" class="arrow-btn" aria-label="Đặt lịch Vet Services">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -377,6 +372,167 @@
 
                 <div class="services-action text-center" style="margin-top: 50px; position: relative; z-index: 5;">
                     <button class="btn-green-outline" id="openPricingBtn">Xem bảng giá chi tiết <span>→</span></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Shop/Shopping Section -->
+        <section class="shop-section" id="shop">
+            <div class="shop-container">
+                <div class="section-header text-center">
+                    <h2>Góc <span class="accent-italic">mua sắm</span></h2>
+                    <p class="section-subtitle">Sắm đồ cho bé, tích điểm thả ga cùng membership.</p>
+                </div>
+
+                <!-- Shop Category Filter Bar (BeePetShop Style) -->
+                <div class="shop-filter-bar">
+                    <button class="filter-btn active" data-filter="all">Tất cả</button>
+                    <button class="filter-btn" data-filter="food">Thực phẩm 🍖</button>
+                    <button class="filter-btn" data-filter="supplies">Đồ dùng & Cát 📦</button>
+                    <button class="filter-btn" data-filter="accessories">Phụ kiện & Đồ chơi 🧸</button>
+                    <button class="filter-btn" data-filter="hygiene">Sữa tắm & Vệ sinh 🧼</button>
+                </div>
+
+                <div class="product-grid" id="productGrid">
+                    <!-- Product 1: Thực phẩm -->
+                    <div class="product-card" data-category="food">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=500&q=80"
+                                alt="Thức ăn hạt cao cấp" loading="lazy">
+                            <span class="product-tag best-seller">BEST SELLER</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Thức ăn hạt cao cấp</h3>
+                            <div class="product-price">
+                                <span class="price-current">405.000đ</span>
+                                <span class="price-old">450.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 2: Vệ sinh -->
+                    <div class="product-card" data-category="hygiene">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?auto=format&fit=crop&w=500&q=80"
+                                alt="Sữa tắm organic cho mèo" loading="lazy">
+                            <span class="product-tag mega-deal">MEGA DEAL</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Sữa tắm organic cho mèo</h3>
+                            <div class="product-price">
+                                <span class="price-current">252.000đ</span>
+                                <span class="price-old">280.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 3: Vệ sinh -->
+                    <div class="product-card" data-category="hygiene">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?auto=format&fit=crop&w=500&q=80"
+                                alt="Sữa tắm organic cho chó" loading="lazy">
+                            <span class="product-tag mega-deal">MEGA DEAL</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Sữa tắm organic cho chó</h3>
+                            <div class="product-price">
+                                <span class="price-current">252.000đ</span>
+                                <span class="price-old">280.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 4: Thực phẩm -->
+                    <div class="product-card" data-category="food">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=500&q=80"
+                                alt="Pate hũ dinh dưỡng" loading="lazy">
+                            <span class="product-tag best-seller">BEST SELLER</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Pate hũ dinh dưỡng</h3>
+                            <div class="product-price">
+                                <span class="price-current">76.000đ</span>
+                                <span class="price-old">85.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 5: Đồ dùng -->
+                    <div class="product-card" data-category="supplies">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1563460716889-ac2bc17d86c7?auto=format&fit=crop&w=500&q=80"
+                                alt="Balo phi hành gia" loading="lazy">
+                            <span class="product-tag new-arrival">NEW ARRIVAL</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Balo phi hành gia cao cấp</h3>
+                            <div class="product-price">
+                                <span class="price-current">320.000đ</span>
+                                <span class="price-old">360.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 6: Đồ dùng -->
+                    <div class="product-card" data-category="supplies">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&w=500&q=80"
+                                alt="Cát vệ sinh Tofu" loading="lazy">
+                            <span class="product-tag best-seller">HOT DEAL</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Cát vệ sinh đậu nành Tofu</h3>
+                            <div class="product-price">
+                                <span class="price-current">110.000đ</span>
+                                <span class="price-old">130.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 7: Phụ kiện -->
+                    <div class="product-card" data-category="accessories">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=500&q=80"
+                                alt="Đồ chơi xương gặm" loading="lazy">
+                            <span class="product-tag best-seller">HOT</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Đồ chơi xương gặm canxi</h3>
+                            <div class="product-price">
+                                <span class="price-current">45.000đ</span>
+                                <span class="price-old">55.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 8: Phụ kiện -->
+                    <div class="product-card" data-category="accessories">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1596492784531-6e6eb5ea9993?auto=format&fit=crop&w=500&q=80"
+                                alt="Vòng cổ phản quang" loading="lazy">
+                            <span class="product-tag new-arrival">NEW</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Vòng cổ dây dắt phản quang</h3>
+                            <div class="product-price">
+                                <span class="price-current">65.000đ</span>
+                                <span class="price-old">80.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="shop-action text-center">
+                    <a href="pages/shop/shop.html" class="btn-green-outline">Xem tất cả sản phẩm <span>→</span></a>
                 </div>
             </div>
         </section>
@@ -686,168 +842,77 @@
                 </div>
 
                 <div class="process-action text-center">
-                    <a href="#booking" class="btn-cta accent-bg">Bắt đầu ngay</a>
+                    <a href="pages/services/booking.html" class="btn-cta accent-bg">Bắt đầu ngay</a>
                 </div>
             </div>
         </section>
 
-        <!-- Shop/Shopping Section -->
-        <section class="shop-section" id="shop">
-            <div class="shop-container">
+        <!-- Membership & Loyalty Section -->
+        <section class="membership-section">
+            <div class="container membership-container">
                 <div class="section-header text-center">
-                    <h2>Góc <span class="accent-italic">mua sắm</span></h2>
-                    <p class="section-subtitle">Sắm đồ cho bé, tích điểm thả ga cùng membership.</p>
+                    <h2>Chương trình <span class="accent-italic">Paw Points</span></h2>
+                    <p class="section-subtitle">Tích điểm thật dễ, đổi quà thật nhanh — Mỗi lần đến PawPal đều được trân trọng</p>
                 </div>
 
-                <!-- Shop Category Filter Bar (BeePetShop Style) -->
-                <div class="shop-filter-bar">
-                    <button class="filter-btn active" data-filter="all">Tất cả</button>
-                    <button class="filter-btn" data-filter="food">Thực phẩm 🍖</button>
-                    <button class="filter-btn" data-filter="supplies">Đồ dùng & Cát 📦</button>
-                    <button class="filter-btn" data-filter="accessories">Phụ kiện & Đồ chơi 🧸</button>
-                    <button class="filter-btn" data-filter="hygiene">Sữa tắm & Vệ sinh 🧼</button>
-                </div>
-
-                <div class="product-grid" id="productGrid">
-                    <!-- Product 1: Thực phẩm -->
-                    <div class="product-card" data-category="food">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=500&q=80"
-                                alt="Thức ăn hạt cao cấp" loading="lazy">
-                            <span class="product-tag best-seller">BEST SELLER</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Thức ăn hạt cao cấp</h3>
-                            <div class="product-price">
-                                <span class="price-current">405.000đ</span>
-                                <span class="price-old">450.000đ</span>
-                                <span class="price-subtext">(Giá sau tích điểm)</span>
-                            </div>
-                        </div>
+                <div class="membership-benefits">
+                    <div class="benefit-card">
+                        <div class="benefit-icon">💳</div>
+                        <h3>Tích điểm mỗi giao dịch</h3>
+                        <p>Mỗi 10,000đ chi tiêu = 1 Paw Point. Áp dụng cho tất cả dịch vụ và sản phẩm.</p>
                     </div>
-
-                    <!-- Product 2: Vệ sinh -->
-                    <div class="product-card" data-category="hygiene">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?auto=format&fit=crop&w=500&q=80"
-                                alt="Sữa tắm organic cho mèo" loading="lazy">
-                            <span class="product-tag mega-deal">MEGA DEAL</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Sữa tắm organic cho mèo</h3>
-                            <div class="product-price">
-                                <span class="price-current">252.000đ</span>
-                                <span class="price-old">280.000đ</span>
-                                <span class="price-subtext">(Giá sau tích điểm)</span>
-                            </div>
-                        </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">🎁</div>
+                        <h3>Đổi quà & Giảm giá</h3>
+                        <p>100 điểm = 50,000đ voucher. Hoặc đổi quà độc quyền chỉ có tại PawPal.</p>
                     </div>
-
-                    <!-- Product 3: Vệ sinh -->
-                    <div class="product-card" data-category="hygiene">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?auto=format&fit=crop&w=500&q=80"
-                                alt="Sữa tắm organic cho chó" loading="lazy">
-                            <span class="product-tag mega-deal">MEGA DEAL</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Sữa tắm organic cho chó</h3>
-                            <div class="product-price">
-                                <span class="price-current">252.000đ</span>
-                                <span class="price-old">280.000đ</span>
-                                <span class="price-subtext">(Giá sau tích điểm)</span>
-                            </div>
-                        </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">⭐</div>
+                        <h3>Ưu đãi hạng thành viên</h3>
+                        <p>Hạng Bạc → Vàng → Kim Cương. Mỗi hạng nhận ưu đãi và quà tặng riêng.</p>
                     </div>
-
-                    <!-- Product 4: Thực phẩm -->
-                    <div class="product-card" data-category="food">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=500&q=80"
-                                alt="Pate hũ dinh dưỡng" loading="lazy">
-                            <span class="product-tag best-seller">BEST SELLER</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Pate hũ dinh dưỡng</h3>
-                            <div class="product-price">
-                                <span class="price-current">76.000đ</span>
-                                <span class="price-old">85.000đ</span>
-                                <span class="price-subtext">(Giá sau tích điểm)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 5: Đồ dùng -->
-                    <div class="product-card" data-category="supplies">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1563460716889-ac2bc17d86c7?auto=format&fit=crop&w=500&q=80"
-                                alt="Balo phi hành gia" loading="lazy">
-                            <span class="product-tag new-arrival">NEW ARRIVAL</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Balo phi hành gia cao cấp</h3>
-                            <div class="product-price">
-                                <span class="price-current">320.000đ</span>
-                                <span class="price-old">360.000đ</span>
-                                <span class="price-subtext">(Giá sau tích điểm)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 6: Đồ dùng -->
-                    <div class="product-card" data-category="supplies">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&w=500&q=80"
-                                alt="Cát vệ sinh Tofu" loading="lazy">
-                            <span class="product-tag best-seller">HOT DEAL</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Cát vệ sinh đậu nành Tofu</h3>
-                            <div class="product-price">
-                                <span class="price-current">110.000đ</span>
-                                <span class="price-old">130.000đ</span>
-                                <span class="price-subtext">(Giá sau tích điểm)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 7: Phụ kiện -->
-                    <div class="product-card" data-category="accessories">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=500&q=80"
-                                alt="Đồ chơi xương gặm" loading="lazy">
-                            <span class="product-tag best-seller">HOT</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Đồ chơi xương gặm canxi</h3>
-                            <div class="product-price">
-                                <span class="price-current">45.000đ</span>
-                                <span class="price-old">55.000đ</span>
-                                <span class="price-subtext">(Giá sau tích điểm)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 8: Phụ kiện -->
-                    <div class="product-card" data-category="accessories">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1596492784531-6e6eb5ea9993?auto=format&fit=crop&w=500&q=80"
-                                alt="Vòng cổ phản quang" loading="lazy">
-                            <span class="product-tag new-arrival">NEW</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Vòng cổ dây dắt phản quang</h3>
-                            <div class="product-price">
-                                <span class="price-current">65.000đ</span>
-                                <span class="price-old">80.000đ</span>
-                                <span class="price-subtext">(Giá sau tích điểm)</span>
-                            </div>
-                        </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">🎂</div>
+                        <h3>Quà sinh nhật bé cưng</h3>
+                        <p>Nhận ngay 50 Paw Points + 1 voucher Spa miễn phí vào sinh nhật bé yêu.</p>
                     </div>
                 </div>
 
-                <div class="shop-action text-center">
-                    <a href="#all-products" class="btn-green-outline">Xem tất cả sản phẩm <span>→</span></a>
+                <div class="membership-tiers">
+                    <div class="tier-card tier-silver">
+                        <div class="tier-badge">🥈 Hạng Bạc</div>
+                        <div class="tier-requirement">Tự động khi đăng ký</div>
+                        <ul class="tier-perks">
+                            <li>✓ Tích điểm cơ bản 1x</li>
+                            <li>✓ Nhật ký chăm sóc real-time</li>
+                            <li>✓ Ưu đãi sinh nhật bé cưng</li>
+                        </ul>
+                    </div>
+                    <div class="tier-card tier-gold">
+                        <div class="tier-badge">🥇 Hạng Vàng</div>
+                        <div class="tier-requirement">Chi tiêu tích lũy 5 triệu</div>
+                        <ul class="tier-perks">
+                            <li>✓ Tích điểm x1.5</li>
+                            <li>✓ Ưu tiên đặt lịch</li>
+                            <li>✓ Giảm 10% tất cả dịch vụ</li>
+                            <li>✓ 1 Spa miễn phí mỗi quý</li>
+                        </ul>
+                    </div>
+                    <div class="tier-card tier-diamond">
+                        <div class="tier-badge">💎 Hạng Kim Cương</div>
+                        <div class="tier-requirement">Chi tiêu tích lũy 15 triệu</div>
+                        <ul class="tier-perks">
+                            <li>✓ Tích điểm x2</li>
+                            <li>✓ Chuyên gia riêng</li>
+                            <li>✓ Giảm 15% tất cả dịch vụ</li>
+                            <li>✓ Miễn phí vận chuyển Pet</li>
+                            <li>✓ Quà tặng VIP mỗi tháng</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="membership-action text-center" style="margin-top: 40px;">
+                    <a href="pages/public/login.html" class="btn-cta">Đăng ký nhận 50 Paw Points ngay</a>
                 </div>
             </div>
         </section>
@@ -965,7 +1030,7 @@
                     </div>
                 </div>
                 <div class="pricing-modal-footer">
-                    <a href="#booking" class="btn-cta text-center" id="pricingBookBtn"
+                    <a href="pages/services/booking.html" class="btn-cta text-center" id="pricingBookBtn"
                         style="width: 100%; display: block; box-sizing: border-box;">Đặt lịch chăm sóc ngay</a>
                 </div>
             </div>
@@ -1092,6 +1157,39 @@
                             chăm sóc tại PawPal.</p>
                     </div>
                 </div>
+
+                <!-- FAQ Item 5 -->
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>Paw Points có thời hạn sử dụng không?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Paw Points của bạn có hiệu lực trong 12 tháng kể từ ngày tích. Điểm sắp hết hạn sẽ được thông báo qua email/Zalo trước 30 ngày. Mỗi giao dịch mới sẽ tự động gia hạn toàn bộ số điểm thêm 12 tháng nữa.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 6 -->
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>Có nhận chăm sóc mèo không?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Có! PawPal phục vụ cả chó và mèo. Khu vực chăm sóc mèo được thiết kế riêng biệt với không gian yên tĩnh, an toàn và phù hợp với tập tính của các boss mèo.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 7 -->
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>Giờ làm việc của PawPal như thế nào?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>PawPal mở cửa 7 ngày/tuần từ 8:00 sáng đến 8:00 tối. Dịch vụ Pet Hotel hoạt động 24/7. Bạn có thể đặt lịch online bất cứ lúc nào và nhận xác nhận tức thì.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -1101,7 +1199,11 @@
         <div class="footer-cta-inner">
             <h2>Sẵn sàng gửi bé đến <span class="accent-italic">PawPal?</span></h2>
             <p>Dịch vụ chăm sóc toàn diện — minh bạch, tận tâm, an tâm tuyệt đối.</p>
-            <a href="#booking" class="btn-cta">Đặt lịch ngay — Miễn phí tư vấn</a>
+            <div class="cta-urgency" id="ctaUrgency">
+                <span class="urgency-dot"></span>
+                <span>Đang tải thông tin slot...</span>
+            </div>
+            <a href="pages/services/booking.html" class="btn-cta cta-enhanced">Đặt lịch ngay — Miễn phí tư vấn</a>
         </div>
     </section>
 
@@ -1158,10 +1260,10 @@
             <div class="footer-col">
                 <h4>PAWPAL TEAM</h4>
                 <ul>
-                    <li><a href="pages/about.html">Về chúng tôi</a></li>
+                    <li><a href="pages/public/about.html">Về chúng tôi</a></li>
                     <li><a href="#shop">Hệ thống cửa hàng</a></li>
-                    <li><a href="pages/blog.html">Tuyển dụng</a></li>
-                    <li><a href="pages/contact.html">Liên hệ</a></li>
+                    <li><a href="pages/public/blog.html">Tuyển dụng</a></li>
+                    <li><a href="pages/public/contact.html">Liên hệ</a></li>
                 </ul>
             </div>
 
@@ -1235,6 +1337,8 @@
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmxc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/main.js"></script>
     <script>
@@ -1254,6 +1358,39 @@
             } else {
                 window.addEventListener('load', hideLoader);
             }
+        })();
+    </script>
+
+    <!-- Hero Availability Dynamic Update -->
+    <script>
+        (function() {
+            // Update Hero Availability
+            function updateHeroAvailability() {
+                const el = document.getElementById('heroAvailability');
+                if (!el) return;
+                
+                const spaSlots = Math.floor(Math.random() * 5) + 1;
+                const hotelRooms = Math.floor(Math.random() * 4) + 1;
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                
+                el.innerHTML = `Hôm nay còn trống: <strong>${spaSlots} slot Spa</strong> | <strong>${hotelRooms} phòng Hotel</strong> <span style="opacity:0.7">(Cập nhật ${timeStr})</span>`;
+            }
+            
+            // Update Footer CTA Urgency
+            function updateCtaUrgency() {
+                const el = document.getElementById('ctaUrgency');
+                if (!el) return;
+                
+                const totalSlots = Math.floor(Math.random() * 8) + 3; // 3-10 slots
+                el.innerHTML = `<span class="urgency-dot"></span><span>Hôm nay còn <strong>${totalSlots} slot</strong> trống — Đặt ngay!</span>`;
+            }
+            
+            // Init và auto-update
+            updateHeroAvailability();
+            updateCtaUrgency();
+            setInterval(updateHeroAvailability, 300000); // 5 phút
+            setInterval(updateCtaUrgency, 180000); // 3 phút
         })();
     </script>
 
