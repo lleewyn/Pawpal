@@ -16,7 +16,7 @@
 <body class="auth-page-body">
 
     <div class="auth-page-container container-fluid p-0">
-        <div class="row m-0 min-vh-100">
+        <div class="row m-0 min-vh-100 align-items-stretch">
         <!-- Left panel: Brand Showcase & Member Benefits -->
         <div class="auth-showcase-panel col-12 col-lg-5 d-none d-lg-flex flex-column p-0">
             <div class="auth-showcase-overlay"></div>
@@ -180,13 +180,17 @@
             <h3>Xác thực số điện thoại</h3>
             <p>Mã OTP đã được gửi về số điện thoại của bạn. Vui lòng nhập mã để hoàn tất.</p>
             
-            <div class="otp-code-inputs">
-                <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]*" inputmode="numeric">
-                <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]*" inputmode="numeric">
-                <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]*" inputmode="numeric">
-                <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]*" inputmode="numeric">
-                <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]*" inputmode="numeric">
-                <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]*" inputmode="numeric">
+            <div class="otp-single-input-wrapper">
+                <input
+                    type="text"
+                    id="otpSingleInput"
+                    class="otp-single-input"
+                    maxlength="6"
+                    pattern="[0-9]*"
+                    inputmode="numeric"
+                    autocomplete="one-time-code"
+                    placeholder="_ _ _ _ _ _"
+                >
             </div>
             
             <div class="otp-meta">

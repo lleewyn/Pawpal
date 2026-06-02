@@ -3,6 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    initMobileNavigation();
     initPremiumMotion();
     initTimelineTracker();
     initBookingWidget();

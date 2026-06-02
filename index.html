@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 
 <head>
@@ -68,12 +68,17 @@
                 </a>
 
                 <!-- Mobile Navigation Toggle -->
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#primaryNavigation" aria-controls="primaryNavigation" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler mobile-nav-toggle" id="mobileNavToggle" type="button" aria-controls="primaryNavigation" aria-expanded="false" aria-label="Toggle navigation">
                     <svg class="icon-menu" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
                         <line x1="4" y1="12" x2="20" y2="12"></line>
                         <line x1="4" y1="6" x2="20" y2="6"></line>
                         <line x1="4" y1="18" x2="20" y2="18"></line>
+                    </svg>
+                    <svg class="icon-close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" style="display: none;">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
                 </button>
 
@@ -131,74 +136,110 @@
             </div>
             <div class="hero-overlay"></div>
 
+            <!-- Asymmetric split layout: left copy / right visual -->
             <div class="hero-container">
-                <!-- Logo + Title cùng hàng ngang như Figma -->
-                <div class="hero-title-wrapper">
-                    <h1 class="hero-title">
-                        Chăm sóc <span class="accent-italic">bằng cả</span><br><span class="accent-italic">trái
-                            tim</span> yêu thương.
-                    </h1>
-                </div>
 
-                <!-- Description Card -->
-                <div class="hero-description-box">
-                    <p>Dịch vụ spa cao cấp, chăm sóc tận tâm và không gian nghỉ dưỡng lý tưởng dành riêng cho Chó & Mèo.
-                        Bởi vì người bạn thân nhất của bạn xứng đáng với những gì tốt đẹp nhất.</p>
-                    <div class="hero-tracker-badge-container">
-                        <a href="#tracker" class="btn-tracker">
-                            <span class="bullet-symbol">•</span>
-                            THEO DÕI HÀNH TRÌNH CỦA BÉ QUA NHẬT KÝ REAL-TIME
-                        </a>
+                <!-- LEFT: Editorial copy column -->
+                <div class="hero-left">
+                    <!-- Single eyebrow tag — used only here on this page -->
+                    <div class="hero-eyebrow">
+                        <span class="hero-eyebrow-dot"></span>
+                        <span>Pet Spa &amp; Hotel · Hà Nội</span>
                     </div>
-                </div>
 
-                <!-- CTA Button + Social Proof -->
-                <div class="hero-cta-container">
-                    <a href="pages/services/booking.html" class="btn-cta main-cta-btn">Đặt lịch ngay (Chỉ 30 giây)</a>
+                    <h1 class="hero-title">
+                        Chăm sóc<br>
+                        <em class="accent-italic">bằng cả</em><br>
+                        trái tim.
+                    </h1>
+
+                    <p class="hero-desc">Spa cao cấp, hotel tiện nghi, chăm sóc toàn diện dành riêng cho Chó &amp; Mèo — vì bé xứng đáng với những gì tốt nhất.</p>
+
+                    <div class="hero-actions">
+                        <a href="pages/services/booking.html" class="btn-cta main-cta-btn" id="heroCta">
+                            <span>Đặt lịch ngay</span>
+                            <span class="btn-icon-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </span>
+                        </a>
+                        <div class="hero-social-proof">
+                            <div class="avatar-stack">
+                                <div class="av">ML</div>
+                                <div class="av">AT</div>
+                                <div class="av">MA</div>
+                                <div class="av">HT</div>
+                                <div class="av">+</div>
+                            </div>
+                            <span class="hero-social-proof-text"><span class="stars">★★★★★</span> <strong>5000+</strong> Sen tin tưởng</span>
+                        </div>
+                    </div>
+
+                    <!-- Live availability badge -->
                     <div class="hero-status-widget">
                         <span class="status-dot"></span>
                         <span id="heroAvailability">Đang tải thông tin slot trống...</span>
                     </div>
-                    <div class="hero-social-proof">
-                        <div class="avatar-stack">
-                            <div class="av">ML</div>
-                            <div class="av">AT</div>
-                            <div class="av">MA</div>
-                            <div class="av">HT</div>
-                            <div class="av">+</div>
+                </div>
+
+                <!-- RIGHT: Visual panel -->
+                <div class="hero-right">
+                    <div class="hero-visual-frame">
+                        <img src="assets/images/hero-spa.png" alt="Chuyên gia PawPal đang chăm sóc thú cưng" loading="eager">
+
+                        <!-- Floating metric badge: top-left -->
+                        <div class="hero-badge hero-badge--tl">
+                            <span class="hero-badge-num">5,000+</span>
+                            <span class="hero-badge-label">Nhật ký mỗi tháng</span>
                         </div>
-                        <span class="hero-social-proof-text"><span class="stars">★★★★★</span> <strong>5000+</strong> Sen
-                            tin tưởng</span>
+
+                        <!-- Floating metric badge: bottom-right -->
+                        <div class="hero-badge hero-badge--br">
+                            <span class="hero-badge-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            </span>
+                            <span class="hero-badge-label">Cam kết an toàn 100%</span>
+                        </div>
+
+                        <!-- Tracker quick-link -->
+                        <a href="#tracker" class="hero-tracker-pill">
+                            <span class="hero-tracker-dot"></span>
+                            Theo dõi real-time
+                        </a>
                     </div>
                 </div>
+
             </div>
         </section>
 
 
-        <!-- Features Grid -->
-        <section class="features-section" style="position: relative;">
-            <!-- Cute Sticker -->
-            <svg class="sticker-deco sticker-top-right" style="color: var(--color-accent);" viewBox="0 0 24 24"
-                fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path
-                    d="M12 2C9 2 8 5 8 7C8 9 10 11 12 11C14 11 16 9 16 7C16 5 15 2 12 2ZM5.5 8C3.5 8 2 9.5 2 11.5C2 13.5 3.5 15 5.5 15C7.5 15 9 13.5 9 11.5C9 9.5 7.5 8 5.5 8ZM18.5 8C16.5 8 15 9.5 15 11.5C15 13.5 16.5 15 18.5 15C20.5 15 22 13.5 22 11.5C22 9.5 20.5 8 18.5 8ZM12 12C9 12 6 13 5 16C4 19 6 22 12 22C18 22 20 19 19 16C18 13 15 12 12 12Z" />
-            </svg>
-            <div class="features-container">
-                <div class="feature-item">
-                    <h3>MINH BẠCH 100%</h3>
-                    <p>5,000+ nhật ký cập nhật mỗi tháng</p>
+        <!-- Features Strip — horizontal stat bar, intentionally DIFFERENT layout from hero -->
+        <section class="features-section" aria-label="Điểm nổi bật">
+            <div class="features-strip">
+                <div class="feature-stat">
+                    <span class="feature-stat-num">5,000+</span>
+                    <span class="feature-stat-divider"></span>
+                    <span class="feature-stat-label">Nhật ký cập nhật mỗi tháng</span>
                 </div>
-                <div class="feature-item">
-                    <h3>GIÁ CẢ CÔNG KHAI</h3>
-                    <p>Bảng giá niêm yết rõ ràng</p>
+                <span class="features-strip-sep" aria-hidden="true">·</span>
+                <div class="feature-stat">
+                    <span class="feature-stat-num">100%</span>
+                    <span class="feature-stat-divider"></span>
+                    <span class="feature-stat-label">Bảng giá niêm yết công khai</span>
                 </div>
-                <div class="feature-item">
-                    <h3>ĐỘI NGŨ CHUYÊN GIA</h3>
-                    <p>8 chuyên gia có chứng chỉ quốc tế</p>
+                <span class="features-strip-sep" aria-hidden="true">·</span>
+                <div class="feature-stat">
+                    <span class="feature-stat-num">8</span>
+                    <span class="feature-stat-divider"></span>
+                    <span class="feature-stat-label">Chuyên gia chứng chỉ quốc tế</span>
                 </div>
-                <div class="feature-item">
-                    <h3>ĐẶT LỊCH THẦN TỐC</h3>
-                    <p>Xác nhận tức thì 24/7</p>
+                <span class="features-strip-sep" aria-hidden="true">·</span>
+                <div class="feature-stat">
+                    <span class="feature-stat-num">24/7</span>
+                    <span class="feature-stat-divider"></span>
+                    <span class="feature-stat-label">Xác nhận đặt lịch tức thì</span>
                 </div>
             </div>
         </section>
@@ -842,7 +883,15 @@
                 </div>
 
                 <div class="process-action text-center">
-                    <a href="pages/services/booking.html" class="btn-cta accent-bg">Bắt đầu ngay</a>
+                    <a href="pages/services/booking.html" class="btn-cta accent-bg">
+                        <span>Bắt đầu ngay</span>
+                        <span class="btn-icon-wrapper">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </span>
+                    </a>
                 </div>
             </div>
         </section>
@@ -857,22 +906,49 @@
 
                 <div class="membership-benefits">
                     <div class="benefit-card">
-                        <div class="benefit-icon">💳</div>
+                        <div class="benefit-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
+                                <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                <line x1="2" y1="10" x2="22" y2="10"></line>
+                                <line x1="6" y1="15" x2="10" y2="15"></line>
+                            </svg>
+                        </div>
                         <h3>Tích điểm mỗi giao dịch</h3>
                         <p>Mỗi 10,000đ chi tiêu = 1 Paw Point. Áp dụng cho tất cả dịch vụ và sản phẩm.</p>
                     </div>
                     <div class="benefit-card">
-                        <div class="benefit-icon">🎁</div>
+                        <div class="benefit-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
+                                <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                                <rect x="2" y="7" width="20" height="5"></rect>
+                                <line x1="12" y1="22" x2="12" y2="7"></line>
+                                <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                                <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                            </svg>
+                        </div>
                         <h3>Đổi quà & Giảm giá</h3>
                         <p>100 điểm = 50,000đ voucher. Hoặc đổi quà độc quyền chỉ có tại PawPal.</p>
                     </div>
                     <div class="benefit-card">
-                        <div class="benefit-icon">⭐</div>
+                        <div class="benefit-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </div>
                         <h3>Ưu đãi hạng thành viên</h3>
                         <p>Hạng Bạc → Vàng → Kim Cương. Mỗi hạng nhận ưu đãi và quà tặng riêng.</p>
                     </div>
                     <div class="benefit-card">
-                        <div class="benefit-icon">🎂</div>
+                        <div class="benefit-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
+                                <path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"></path>
+                                <path d="M4 16h16"></path>
+                                <path d="M10 9V5a2 2 0 0 1 4 0v4"></path>
+                                <path d="M12 5V2"></path>
+                                <path d="M6 11V9a2 2 0 0 1 4 0v2"></path>
+                                <path d="M14 11V9a2 2 0 0 1 4 0v2"></path>
+                            </svg>
+                        </div>
                         <h3>Quà sinh nhật bé cưng</h3>
                         <p>Nhận ngay 50 Paw Points + 1 voucher Spa miễn phí vào sinh nhật bé yêu.</p>
                     </div>
@@ -912,7 +988,15 @@
                 </div>
 
                 <div class="membership-action text-center" style="margin-top: 40px;">
-                    <a href="pages/public/login.html" class="btn-cta">Đăng ký nhận 50 Paw Points ngay</a>
+                    <a href="pages/public/login.html" class="btn-cta">
+                        <span>Đăng ký nhận 50 Paw Points ngay</span>
+                        <span class="btn-icon-wrapper">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </span>
+                    </a>
                 </div>
             </div>
         </section>
@@ -1203,7 +1287,15 @@
                 <span class="urgency-dot"></span>
                 <span>Đang tải thông tin slot...</span>
             </div>
-            <a href="pages/services/booking.html" class="btn-cta cta-enhanced">Đặt lịch ngay — Miễn phí tư vấn</a>
+            <a href="pages/services/booking.html" class="btn-cta cta-enhanced">
+                <span>Đặt lịch ngay — Miễn phí tư vấn</span>
+                <span class="btn-icon-wrapper">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </span>
+            </a>
         </div>
     </section>
 

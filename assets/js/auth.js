@@ -34,10 +34,93 @@ document.addEventListener('DOMContentLoaded', () => {
     const isDashboardPage = !!document.getElementById('dashBookingsList');
     const isHomePage = !isLoginPage && !isDashboardPage;
 
-    // Subdirectory Detection & Dynamic Paths Prefix
-    const isInPagesSubdir = window.location.pathname.includes('/pages/');
-    const pathPrefix = isInPagesSubdir ? '../' : '';
-    const pagePrefix = isInPagesSubdir ? '' : 'pages/';
+    // Path resolution based on current page location
+    // Detect which subdir we're in to compute correct relative paths
+    const _path = window.location.pathname;
+    const _isRoot       = !_path.includes('/pages/');
+    const _isPublicDir  = _path.includes('/pages/public/');
+    const _isUserDir    = _path.includes('/pages/user/');
+    const _isServicesDir = _path.includes('/pages/services/');
+    const _isShopDir    = _path.includes('/pages/shop/');
+    const _isAdminDir   = _path.includes('/pages/admin/');
+    const _isInPagesSubdir = !_isRoot; // any pages/* dir
+
+    // Helper: build correct URL from any page to a known named destination
+    function _url(dest) {
+        // dest options: 'root', 'login', 'dashboard', 'admin', 'booking', 'shop'
+        if (_isRoot) {
+            const map = {
+                root:      'index.html',
+                login:     'pages/public/login.html',
+                dashboard: 'pages/user/dashboard.html',
+                admin:     'pages/admin/index.html',
+                booking:   'pages/services/booking.html',
+                shop:      'pages/shop/shop.html',
+            };
+            return map[dest] || dest;
+        }
+        if (_isPublicDir) {
+            const map = {
+                root:      '../../index.html',
+                login:     'login.html',
+                dashboard: '../user/dashboard.html',
+                admin:     '../admin/index.html',
+                booking:   '../services/booking.html',
+                shop:      '../shop/shop.html',
+            };
+            return map[dest] || dest;
+        }
+        if (_isUserDir) {
+            const map = {
+                root:      '../../index.html',
+                login:     '../public/login.html',
+                dashboard: 'dashboard.html',
+                admin:     '../admin/index.html',
+                booking:   '../services/booking.html',
+                shop:      '../shop/shop.html',
+            };
+            return map[dest] || dest;
+        }
+        if (_isServicesDir) {
+            const map = {
+                root:      '../../index.html',
+                login:     '../public/login.html',
+                dashboard: '../user/dashboard.html',
+                admin:     '../admin/index.html',
+                booking:   'booking.html',
+                shop:      '../shop/shop.html',
+            };
+            return map[dest] || dest;
+        }
+        if (_isShopDir) {
+            const map = {
+                root:      '../../index.html',
+                login:     '../public/login.html',
+                dashboard: '../user/dashboard.html',
+                admin:     '../admin/index.html',
+                booking:   '../services/booking.html',
+                shop:      'shop.html',
+            };
+            return map[dest] || dest;
+        }
+        if (_isAdminDir) {
+            const map = {
+                root:      '../../index.html',
+                login:     '../public/login.html',
+                dashboard: '../user/dashboard.html',
+                admin:     'index.html',
+                booking:   '../services/booking.html',
+                shop:      '../shop/shop.html',
+            };
+            return map[dest] || dest;
+        }
+        // fallback
+        return dest;
+    }
+
+    // Legacy aliases kept for any remaining code that uses them
+    const pathPrefix = _isRoot ? '' : '../../';
+    const pagePrefix = _isRoot ? 'pages/' : '';
 
     // Booking change state and hold helpers
     const BOOKING_SLOTS = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'];
@@ -237,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('pawpal_logged_in_user');
         updateHeaderState();
         alert('Đã đăng xuất tài khoản.');
-        window.location.href = pathPrefix + 'index.html';
+        window.location.href = _url('root');
     }
 
     function formatPhone(phone) {
@@ -350,7 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const user = users.find(u => u.phone === loggedInPhone);
             if (user) {
                 const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                navLoginBtn.href = pagePrefix + "dashboard.html";
+                navLoginBtn.href = _url('dashboard');
                 navLoginBtn.innerHTML = `
                     <div style="display:flex; align-items:center; gap:8px;">
                         <div style="width:28px; height:28px; border-radius:50%; background-color:var(--color-accent); color:var(--color-primary-dark); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;">${initials}</div>
@@ -362,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Return to standard login button pointing to login page
-        navLoginBtn.href = pagePrefix + "login.html";
+        navLoginBtn.href = _url('login');
         navLoginBtn.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             <span>Đăng nhập</span>
@@ -415,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Send SMS Toast notification with Activation URL Link
                     setTimeout(() => {
                         showSmsToast('CHÀO MỪNG KHÁCH MỚI', `Cảm ơn bạn đã đặt lịch tại PawPal. Nhấn vào đây để thiết lập mật khẩu, kích hoạt tài khoản chính thức và nhận ngay <strong>50 Paw Points</strong>.`, 'Thiết lập mật khẩu ngay', () => {
-                            window.location.href = pagePrefix + `login.html?activate=${phone}`;
+                            window.location.href = _url('login') + `?activate=${phone}`;
                         });
                     }, 2000);
 
@@ -439,6 +522,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. LOGIN PAGE SPECIFIC LOGIC (login.html)
     // ==========================================================================
     if (isLoginPage) {
+        // --- GUARD: Nếu đã đăng nhập thì redirect thẳng về dashboard ---
+        if (getLoggedInUser()) {
+            window.location.href = _url('dashboard');
+            return;
+        }
+
         const tabLoginBtn = document.getElementById('tabLoginBtn');
         const tabRegisterBtn = document.getElementById('tabRegisterBtn');
         const registerFormContainer = document.getElementById('registerFormContainer');
@@ -618,79 +707,96 @@ document.addEventListener('DOMContentLoaded', () => {
         const otpVerifyModal = document.getElementById('otpVerifyModal');
         const verifyOtpBtn = document.getElementById('verifyOtpBtn');
         const resendOtpBtn = document.getElementById('resendOtpBtn');
-        const otpDigits = document.querySelectorAll('.otp-digit');
+        const otpSingleInput = document.getElementById('otpSingleInput');
         const otpTimerText = document.getElementById('otpTimerText');
         const resendCountdown = document.getElementById('resendCountdown');
         const cancelOtpBtn = document.getElementById('cancelOtpBtn');
+        let otpFailCount = 0;
 
-        safeBind(cancelOtpBtn, 'click', () => otpVerifyModal.classList.remove('open'));
+        safeBind(cancelOtpBtn, 'click', () => {
+            otpVerifyModal.classList.remove('open');
+            currentOtp = null;
+            otpFailCount = 0;
+        });
 
         function launchOtpVerification(phone, mode) {
             currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
-            
+            otpFailCount = 0;
+
+            // Gửi SMS toast — click để auto-fill
             setTimeout(() => {
                 showSmsToast('XÁC THỰC OTP', `Mã OTP của bạn là: <strong style="font-size:1.15rem; color:var(--color-accent);">${currentOtp}</strong> (hiệu lực 5 phút).`, 'Nhập nhanh OTP', () => {
-                    const digits = currentOtp.split('');
-                    otpDigits.forEach((el, index) => {
-                        el.value = digits[index] || '';
-                    });
-                    verifyOtpBtn.removeAttribute('disabled');
+                    if (otpSingleInput) {
+                        otpSingleInput.value = currentOtp;
+                        otpSingleInput.classList.add('is-valid');
+                        verifyOtpBtn.removeAttribute('disabled');
+                    }
                 });
             }, 800);
 
-            otpDigits.forEach(el => el.value = '');
+            // Reset input
+            if (otpSingleInput) {
+                otpSingleInput.value = '';
+                otpSingleInput.classList.remove('is-valid', 'is-error');
+            }
             verifyOtpBtn.setAttribute('disabled', 'true');
             otpVerifyModal.classList.add('open');
+            setTimeout(() => otpSingleInput?.focus(), 300);
 
-            setTimeout(() => otpDigits[0].focus(), 300);
-
-            otpDigits.forEach((digit, index) => {
-                digit.addEventListener('keyup', (e) => {
-                    if (e.key >= '0' && e.key <= '9') {
-                        if (index < otpDigits.length - 1) otpDigits[index + 1].focus();
-                    } else if (e.key === 'Backspace') {
-                        if (index > 0) otpDigits[index - 1].focus();
-                    }
-                    
-                    const allFilled = Array.from(otpDigits).every(el => el.value !== '');
-                    if (allFilled) {
+            // Live validate khi gõ
+            if (otpSingleInput) {
+                otpSingleInput.oninput = () => {
+                    const val = otpSingleInput.value.replace(/\D/g, '').slice(0, 6);
+                    otpSingleInput.value = val;
+                    otpSingleInput.classList.remove('is-valid', 'is-error');
+                    if (val.length === 6) {
                         verifyOtpBtn.removeAttribute('disabled');
                     } else {
                         verifyOtpBtn.setAttribute('disabled', 'true');
                     }
-                });
-            });
+                };
+                // Enter = submit
+                otpSingleInput.onkeydown = (e) => {
+                    if (e.key === 'Enter' && otpSingleInput.value.length === 6) {
+                        verifyOtpBtn.click();
+                    }
+                };
+            }
 
             // 5 mins countdown
             let totalSeconds = 300;
             clearInterval(otpTimerInterval);
-            otpTimerText.textContent = '05:00';
+            if (otpTimerText) otpTimerText.textContent = '05:00';
             otpTimerInterval = setInterval(() => {
                 totalSeconds--;
                 const mins = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
                 const secs = (totalSeconds % 60).toString().padStart(2, '0');
-                otpTimerText.textContent = `${mins}:${secs}`;
+                if (otpTimerText) otpTimerText.textContent = `${mins}:${secs}`;
                 
                 if (totalSeconds <= 0) {
                     clearInterval(otpTimerInterval);
                     currentOtp = null;
-                    alert('Mã OTP đã hết hạn.');
+                    if (otpSingleInput) {
+                        otpSingleInput.value = '';
+                        otpSingleInput.classList.remove('is-valid', 'is-error');
+                    }
+                    verifyOtpBtn.setAttribute('disabled', 'true');
                     otpVerifyModal.classList.remove('open');
+                    showSmsToast('OTP HẾT HẠN', 'Mã OTP đã hết hiệu lực. Vui lòng nhấn "Gửi lại mã" để nhận mã mới.');
                 }
             }, 1000);
 
             // 60s resend lock
             let resendSeconds = 60;
             resendOtpBtn.setAttribute('disabled', 'true');
-            resendCountdown.textContent = '60';
-            resendOtpBtn.textContent = `Gửi lại mã (${resendSeconds}s)`;
+            if (resendCountdown) resendCountdown.textContent = '60';
+            resendOtpBtn.textContent = `Gửi lại mã (60s)`;
             clearInterval(resendTimerInterval);
             
             resendTimerInterval = setInterval(() => {
                 resendSeconds--;
-                resendCountdown.textContent = resendSeconds;
+                if (resendCountdown) resendCountdown.textContent = resendSeconds;
                 resendOtpBtn.textContent = `Gửi lại mã (${resendSeconds}s)`;
-                
                 if (resendSeconds <= 0) {
                     clearInterval(resendTimerInterval);
                     resendOtpBtn.removeAttribute('disabled');
@@ -701,11 +807,25 @@ document.addEventListener('DOMContentLoaded', () => {
             resendOtpBtn.onclick = () => launchOtpVerification(phone, mode);
 
             verifyOtpBtn.onclick = () => {
-                const enteredOtp = Array.from(otpDigits).map(el => el.value).join('');
+                const enteredOtp = otpSingleInput ? otpSingleInput.value.trim() : '';
+
+                // Lock sau 3 lần sai — theo quy trình 3.1.2
+                if (otpFailCount >= 3) {
+                    showSmsToast('TÀI KHOẢN TẠM KHÓA', 'Bạn đã nhập sai OTP quá 3 lần. Vui lòng thử lại sau 15 phút.');
+                    otpVerifyModal.classList.remove('open');
+                    currentOtp = null;
+                    return;
+                }
+
                 if (enteredOtp === currentOtp) {
                     clearInterval(otpTimerInterval);
                     clearInterval(resendTimerInterval);
-                    otpVerifyModal.classList.remove('open');
+                    if (otpSingleInput) otpSingleInput.classList.add('is-valid');
+                    otpFailCount = 0;
+
+                    setTimeout(() => {
+                        otpVerifyModal.classList.remove('open');
+                    }, 400);
                     
                     if (mode === 'register') {
                         const newUser = {
@@ -745,10 +865,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         setLoggedInUser(phoneVal);
                         showToastSuccess('Đăng nhập thành công! Đang chuyển hướng...');
-                        setTimeout(() => { window.location.href = pagePrefix + "dashboard.html"; }, 1200);
+                        setTimeout(() => { window.location.href = _url('dashboard'); }, 1200);
                     }
                 } else {
-                    alert('Mã OTP xác thực không chính xác.');
+                    otpFailCount++;
+                    if (otpSingleInput) {
+                        otpSingleInput.classList.add('is-error');
+                        otpSingleInput.value = '';
+                        setTimeout(() => {
+                            otpSingleInput.classList.remove('is-error');
+                            otpSingleInput.focus();
+                        }, 600);
+                    }
+                    const remaining = 3 - otpFailCount;
+                    if (remaining > 0) {
+                        showSmsToast('OTP SAI', `Mã OTP không chính xác. Còn ${remaining} lần thử.`);
+                    }
                 }
             };
         }
@@ -859,7 +991,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 showToastSuccess('Đăng nhập thành công! Đang chuyển hướng...');
-                setTimeout(() => { window.location.href = pagePrefix + "dashboard.html"; }, 1200);
+                setTimeout(() => { window.location.href = _url('dashboard'); }, 1200);
             } else {
                 loginFailedCount[phone] = (loginFailedCount[phone] || 0) + 1;
                 if (loginFailedCount[phone] >= 5) {
@@ -890,7 +1022,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (forgetPhoneErrEl) forgetPhoneErrEl.style.display = 'none';
 
             setTimeout(() => {
-                showSmsToast('KHÔI PHỤC MẬT KHẨU', `Yêu cầu lấy lại mật khẩu. Click vào link này để đặt mật khẩu mới: login.html?activate=${phone}`, 'Khôi phục mật khẩu ngay', () => {
+                showSmsToast('KHÔI PHỤC MẬT KHẨU', `Yêu cầu lấy lại mật khẩu. Click vào link này để đặt mật khẩu mới: ${_url('login')}?activate=${phone}`, 'Khôi phục mật khẩu ngay', () => {
                     showActivationForm(phone, user.name);
                 });
             }, 1200);
@@ -922,7 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Close Welcome Gift redirection
         const closeGiftBtn = document.getElementById('closeGiftBtn');
         safeBind(closeGiftBtn, 'click', () => {
-            window.location.href = pagePrefix + "dashboard.html";
+            window.location.href = _url('dashboard');
         });
 
         // --- Admin Login Form Submit ---
@@ -954,7 +1086,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Lưu session admin và redirect
                 sessionStorage.setItem('pawpal_admin_phone', phone);
-                window.location.href = pagePrefix + 'admin.html';
+                window.location.href = _url('admin');
             });
         }
 
@@ -1102,8 +1234,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const changePassFromBannerBtn = document.getElementById('changePassFromBannerBtn');
         safeBind(changePassFromBannerBtn, 'click', () => {
-            // Điều hướng về dashboard tab bảo mật
-            window.location.href = pagePrefix + 'dashboard.html?tab=security';
+            window.location.href = _url('dashboard') + '?tab=security';
         });
 
         checkSuspiciousLogin();
@@ -1117,7 +1248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- ROUTE GUARD ---
         const loggedInPhone = getLoggedInUser();
         if (!loggedInPhone) {
-            window.location.href = pagePrefix + "login.html";
+            window.location.href = _url('login');
             return;
         }
 
@@ -1691,7 +1822,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.removeItem('pawpal_logged_in_user');
                 localStorage.removeItem(SESSION_KEY);
                 alert('Phiên đăng nhập đã kết thúc, vui lòng đăng nhập lại!');
-                window.location.href = pathPrefix + 'login.html';
+                window.location.href = _url('login');
                 return;
             }
 

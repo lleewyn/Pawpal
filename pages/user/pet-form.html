@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
     <!-- Custom Style -->
     <link rel="stylesheet" href="../../assets/css/style.css">
-    <link rel="stylesheet" href="../../assets/css/dashboard.css">
+    <link rel="stylesheet" href="../../assets/css/user/dashboard.css">
     <style>
         .pet-form-container {
             max-width: 700px;
@@ -314,9 +314,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmxc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="../../assets/js/main.js"></script>
-    <script src="../../assets/js/pet-profile.js"></script>
+    <script src="../../assets/js/user/pet-profile.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // ── Route Guard: phải đăng nhập mới được vào ──
+            const loggedInPhone = localStorage.getItem('pawpal_logged_in_user');
+            if (!loggedInPhone) {
+                window.location.href = '../public/login.html';
+                return;
+            }
+
             const urlParams = new URLSearchParams(window.location.search);
             const petId = urlParams.get('id');
             const isBookingRedirect = urlParams.get('redirect') === 'booking';
@@ -325,7 +332,9 @@
                 document.getElementById('bookingRedirectBanner').style.display = 'flex';
             }
 
-            const pets = getPets();
+            // Chỉ load pets của user hiện tại
+            const allPets = getPets();
+            const pets = allPets.filter(p => p.ownerPhone === loggedInPhone);
             let petPhotoData = '';
 
             // Đưa form về chế độ Edit nếu có ID
@@ -438,6 +447,7 @@
                     const finalId = editingId || generatePetId();
                     const newPet = {
                         id: finalId,
+                        ownerPhone: loggedInPhone,
                         name: name,
                         species: species,
                         breed: document.getElementById('petBreed').value.trim(),
@@ -474,5 +484,6 @@
             });
         });
     </script>
+    <script src="../../assets/js/auth.js"></script>
 </body>
 </html>
