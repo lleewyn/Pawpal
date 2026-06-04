@@ -260,46 +260,77 @@ function initFaqAccordion() {
     });
 }
 
-/**
- * Shop Category Filter Logic
- */
 function initShopFilter() {
-    const filterBtns = document.querySelectorAll('.shop-filter-bar .filter-btn');
+    const mainTabBtns = document.querySelectorAll('.shop-tab-bar .shop-tab-btn');
+    const subFilterBtns = document.querySelectorAll('.shop-sub-filters .shop-sub-filter-btn');
     const products = document.querySelectorAll('#productGrid .product-card');
 
-    if (filterBtns.length === 0 || products.length === 0) return;
+    if (products.length === 0) return;
 
-    filterBtns.forEach(btn => {
+    let activeMarketingStatus = 'all'; // default to all on page load
+    let activeCategory = 'all';        // default to all on page load
+
+    function applyFilter() {
+        products.forEach(product => {
+            const productCategory = product.getAttribute('data-category') || '';
+            const productMarketing = product.getAttribute('data-marketing') || '';
+            const marketingList = productMarketing.split(/\s+/);
+
+            const matchesCategory = (activeCategory === 'all' || productCategory === activeCategory);
+            const matchesMarketing = (activeMarketingStatus === 'all' || marketingList.includes(activeMarketingStatus));
+
+            if (matchesCategory && matchesMarketing) {
+                product.style.display = 'flex';
+                setTimeout(() => {
+                    product.style.opacity = '1';
+                    product.style.transform = 'translateY(0) scale(1)';
+                }, 20);
+            } else {
+                product.style.opacity = '0';
+                product.style.transform = 'translateY(10px) scale(0.95)';
+                setTimeout(() => {
+                    if (product.style.opacity === '0') {
+                        product.style.display = 'none';
+                    }
+                }, 300);
+            }
+        });
+    }
+
+    mainTabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            const filter = btn.getAttribute('data-filter');
-
-            // Toggle active classes on filter buttons
-            filterBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            // Apply smooth show/hide transitions
-            products.forEach(product => {
-                const category = product.getAttribute('data-category');
-                if (filter === 'all' || category === filter) {
-                    product.style.display = 'flex';
-                    // Trigger a tiny delay to allow display flex to be processed before animating opacity
-                    setTimeout(() => {
-                        product.style.opacity = '1';
-                        product.style.transform = 'translateY(0) scale(1)';
-                    }, 20);
-                } else {
-                    product.style.opacity = '0';
-                    product.style.transform = 'translateY(10px) scale(0.95)';
-                    // Hide from document layout after transition completes
-                    setTimeout(() => {
-                        if (product.style.opacity === '0') {
-                            product.style.display = 'none';
-                        }
-                    }, 300);
-                }
-            });
+            const isAlreadyActive = btn.classList.contains('active');
+            
+            mainTabBtns.forEach(b => b.classList.remove('active'));
+            
+            if (isAlreadyActive) {
+                activeMarketingStatus = 'all';
+            } else {
+                btn.classList.add('active');
+                activeMarketingStatus = btn.getAttribute('data-tab');
+            }
+            applyFilter();
         });
     });
+
+    subFilterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const isAlreadyActive = btn.classList.contains('active');
+            
+            subFilterBtns.forEach(b => b.classList.remove('active'));
+            
+            if (isAlreadyActive) {
+                activeCategory = 'all';
+            } else {
+                btn.classList.add('active');
+                activeCategory = btn.getAttribute('data-tag');
+            }
+            applyFilter();
+        });
+    });
+
+    // Run initial filter (shows all products since defaults are 'all')
+    applyFilter();
 }
 
 /**
@@ -639,6 +670,84 @@ function initPremiumMotion() {
             clearProps: "all"
         });
     }
+
+    // Make safety guardians draggable inside safety section
+    const guardians = document.querySelectorAll('.safety-guardian');
+    guardians.forEach(guardian => {
+        guardian.style.cursor = 'grab';
+        
+        // Prevent default drag events on image
+        const img = guardian.querySelector('img');
+        if (img) {
+            img.addEventListener('dragstart', (e) => e.preventDefault());
+        }
+
+        guardian.addEventListener('pointerdown', (e) => {
+            // Only left mouse button or touch
+            if (e.button !== 0 && e.pointerType === 'mouse') return;
+            
+            guardian.style.cursor = 'grabbing';
+            // Store current transitions to restore later
+            const originalTransition = guardian.style.transition;
+            const originalAnimation = guardian.style.animation;
+            
+            guardian.style.transition = 'none';
+            guardian.style.animation = 'none'; // Stop floating animation entirely when grabbed
+            
+            const parent = guardian.offsetParent || guardian.parentElement;
+            const parentRect = parent.getBoundingClientRect();
+            
+            // Grandparent section bounds for dragging constraints
+            const section = document.querySelector('.safety-section');
+            const sectionRect = section.getBoundingClientRect();
+            
+            const guardianRect = guardian.getBoundingClientRect();
+            
+            const shiftX = e.clientX - guardianRect.left;
+            const shiftY = e.clientY - guardianRect.top;
+            
+            guardian.setPointerCapture(e.pointerId);
+            
+            const onPointerMove = (moveEvent) => {
+                // Determine new coordinates relative to the parent offset container
+                let left = moveEvent.clientX - parentRect.left - shiftX;
+                let top = moveEvent.clientY - parentRect.top - shiftY;
+                
+                // Keep the guardian within the vertical bounds of the section
+                const sectionTopInParent = sectionRect.top - parentRect.top;
+                const sectionBottomInParent = sectionRect.bottom - parentRect.top;
+                
+                // Constrain top & bottom
+                const minTop = sectionTopInParent;
+                const maxTop = sectionBottomInParent - guardianRect.height;
+                top = Math.max(minTop, Math.min(top, maxTop));
+                
+                // Constrain left & right (can be moved anywhere horizontally within viewport section boundary)
+                const minLeft = sectionRect.left - parentRect.left;
+                const maxLeft = sectionRect.right - parentRect.left - guardianRect.width;
+                left = Math.max(minLeft, Math.min(left, maxLeft));
+                
+                guardian.style.left = `${left}px`;
+                guardian.style.top = `${top}px`;
+                guardian.style.right = 'auto';
+                guardian.style.bottom = 'auto';
+            };
+            
+            const onPointerUp = (upEvent) => {
+                guardian.releasePointerCapture(upEvent.pointerId);
+                guardian.style.cursor = 'grab';
+                
+                guardian.style.transition = originalTransition;
+                // Leave it where it is, do not restore old animations to prevent jumping back
+                
+                guardian.removeEventListener('pointermove', onPointerMove);
+                guardian.removeEventListener('pointerup', onPointerUp);
+            };
+            
+            guardian.addEventListener('pointermove', onPointerMove);
+            guardian.addEventListener('pointerup', onPointerUp);
+        });
+    });
 
     // Refresh ScrollTrigger to calculate correct layout offsets
     window.addEventListener('load', () => {
