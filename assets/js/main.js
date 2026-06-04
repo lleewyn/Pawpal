@@ -381,15 +381,46 @@ function initDraggableServicesCarousel() {
     
     if (!wrapper) return;
 
+    const cards = wrapper.querySelectorAll('.arched-card');
+    if (cards.length === 0) return;
+
     let isDown = false;
     let startX;
     let scrollLeft;
+
+    // Focus state updates based on distance to the center
+    function updateFocus() {
+        const wrapperCenter = wrapper.scrollLeft + (wrapper.offsetWidth / 2);
+        
+        let closestCard = null;
+        let minDistance = Infinity;
+        
+        cards.forEach(card => {
+            const cardCenter = card.offsetLeft + (card.offsetWidth / 2);
+            const distance = Math.abs(wrapperCenter - cardCenter);
+            
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestCard = card;
+            }
+        });
+        
+        cards.forEach(card => {
+            if (card === closestCard) {
+                card.classList.add('active-focus');
+            } else {
+                card.classList.remove('active-focus');
+            }
+        });
+    }
+
+    wrapper.addEventListener('scroll', updateFocus);
 
     wrapper.addEventListener('mousedown', (e) => {
         isDown = true;
         wrapper.classList.add('is-scrolling');
         wrapper.style.cursor = 'grabbing';
-        wrapper.style.scrollSnapType = 'none'; // Vô hiệu hóa snap khi đang kéo để không bị giật/kẹt cứng
+        wrapper.style.scrollSnapType = 'none'; // Vô hiệu hóa snap khi đang kéo
         wrapper.style.scrollBehavior = 'auto'; // Instant response during drag
         startX = e.pageX - wrapper.offsetLeft;
         scrollLeft = wrapper.scrollLeft;
@@ -401,7 +432,9 @@ function initDraggableServicesCarousel() {
         wrapper.classList.remove('is-scrolling');
         wrapper.style.cursor = 'grab';
         wrapper.style.scrollBehavior = 'smooth';
-        wrapper.style.scrollSnapType = 'x mandatory'; // Kích hoạt lại snap sau khi nhả chuột để tự hút vào thẻ gần nhất
+        wrapper.style.scrollSnapType = 'x mandatory'; // Kích hoạt lại snap sau khi nhả chuột
+        // Force recalculation
+        setTimeout(updateFocus, 50);
     };
 
     wrapper.addEventListener('mouseleave', endDrag);
@@ -428,6 +461,7 @@ function initDraggableServicesCarousel() {
         isDown = false;
         wrapper.style.scrollBehavior = 'smooth';
         wrapper.style.scrollSnapType = 'x mandatory';
+        setTimeout(updateFocus, 50);
     });
 
     // Arrow Navigation
@@ -446,6 +480,10 @@ function initDraggableServicesCarousel() {
             wrapper.scrollLeft += cardWidth; 
         });
     }
+
+    // Run once on init to set the initial focused card
+    // Use setTimeout to ensure container sizes and layout offsets are computed
+    setTimeout(updateFocus, 100);
 }
 
 /**
