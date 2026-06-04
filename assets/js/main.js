@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCuteEnhancements();
     initDraggableServicesCarousel();
     initPetIdCardTilt();
+    initTestimonialsCarousel();
 });
 
 /**
@@ -375,115 +376,86 @@ function initCuteEnhancements() {
  * Draggable Curved Carousel for Services
  */
 function initDraggableServicesCarousel() {
-    const wrapper = document.querySelector('.services-arched-wrapper');
+    const wrappers = document.querySelectorAll('.services-arched-wrapper');
     const prevBtn = document.querySelector('.carousel-prev');
     const nextBtn = document.querySelector('.carousel-next');
     
-    if (!wrapper) return;
+    if (wrappers.length === 0) return;
 
-    const cards = wrapper.querySelectorAll('.arched-card');
-    if (cards.length === 0) return;
+    wrappers.forEach(wrapper => {
+        const cards = wrapper.querySelectorAll('.arched-card');
+        if (cards.length === 0) return;
 
-    let isDown = false;
-    let startX;
-    let scrollLeft;
+        let isDown = false;
+        let startX;
+        let scrollLeft;
 
-    // Focus state updates based on distance to the center
-    function updateFocus() {
-        const wrapperCenter = wrapper.scrollLeft + (wrapper.offsetWidth / 2);
-        
-        let closestCard = null;
-        let minDistance = Infinity;
-        
-        cards.forEach(card => {
-            const cardCenter = card.offsetLeft + (card.offsetWidth / 2);
-            const distance = Math.abs(wrapperCenter - cardCenter);
-            
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestCard = card;
-            }
+        wrapper.addEventListener('mousedown', (e) => {
+            isDown = true;
+            wrapper.classList.add('is-scrolling');
+            wrapper.style.cursor = 'grabbing';
+            wrapper.style.scrollSnapType = 'none'; // Vô hiệu hóa snap khi đang kéo
+            wrapper.style.scrollBehavior = 'auto'; // Instant response during drag
+            startX = e.pageX - wrapper.offsetLeft;
+            scrollLeft = wrapper.scrollLeft;
         });
-        
-        cards.forEach(card => {
-            if (card === closestCard) {
-                card.classList.add('active-focus');
-            } else {
-                card.classList.remove('active-focus');
-            }
+
+        const endDrag = () => {
+            if (!isDown) return;
+            isDown = false;
+            wrapper.classList.remove('is-scrolling');
+            wrapper.style.cursor = 'grab';
+            wrapper.style.scrollBehavior = 'smooth';
+            wrapper.style.scrollSnapType = 'x mandatory'; // Kích hoạt lại snap sau khi nhả chuột
+        };
+
+        wrapper.addEventListener('mouseleave', endDrag);
+        wrapper.addEventListener('mouseup', endDrag);
+
+        wrapper.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - wrapper.offsetLeft;
+            const walk = (x - startX) * 1.5; // Scroll speed multiplier
+            wrapper.scrollLeft = scrollLeft - walk;
         });
-    }
 
-    wrapper.addEventListener('scroll', updateFocus);
+        // Touch support for mobile swipe
+        wrapper.addEventListener('touchstart', (e) => {
+            isDown = true;
+            wrapper.style.scrollSnapType = 'none';
+            wrapper.style.scrollBehavior = 'auto';
+            startX = e.touches[0].pageX - wrapper.offsetLeft;
+            scrollLeft = wrapper.scrollLeft;
+        }, { passive: true });
 
-    wrapper.addEventListener('mousedown', (e) => {
-        isDown = true;
-        wrapper.classList.add('is-scrolling');
-        wrapper.style.cursor = 'grabbing';
-        wrapper.style.scrollSnapType = 'none'; // Vô hiệu hóa snap khi đang kéo
-        wrapper.style.scrollBehavior = 'auto'; // Instant response during drag
-        startX = e.pageX - wrapper.offsetLeft;
-        scrollLeft = wrapper.scrollLeft;
+        wrapper.addEventListener('touchend', () => {
+            isDown = false;
+            wrapper.style.scrollBehavior = 'smooth';
+            wrapper.style.scrollSnapType = 'x mandatory';
+        });
     });
 
-    const endDrag = () => {
-        if (!isDown) return;
-        isDown = false;
-        wrapper.classList.remove('is-scrolling');
-        wrapper.style.cursor = 'grab';
-        wrapper.style.scrollBehavior = 'smooth';
-        wrapper.style.scrollSnapType = 'x mandatory'; // Kích hoạt lại snap sau khi nhả chuột
-        // Force recalculation
-        setTimeout(updateFocus, 50);
-    };
-
-    wrapper.addEventListener('mouseleave', endDrag);
-    wrapper.addEventListener('mouseup', endDrag);
-
-    wrapper.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
-        e.preventDefault();
-        const x = e.pageX - wrapper.offsetLeft;
-        const walk = (x - startX) * 1.5; // Scroll speed multiplier
-        wrapper.scrollLeft = scrollLeft - walk;
-    });
-
-    // Touch support for mobile swipe
-    wrapper.addEventListener('touchstart', (e) => {
-        isDown = true;
-        wrapper.style.scrollSnapType = 'none';
-        wrapper.style.scrollBehavior = 'auto';
-        startX = e.touches[0].pageX - wrapper.offsetLeft;
-        scrollLeft = wrapper.scrollLeft;
-    }, { passive: true });
-
-    wrapper.addEventListener('touchend', () => {
-        isDown = false;
-        wrapper.style.scrollBehavior = 'smooth';
-        wrapper.style.scrollSnapType = 'x mandatory';
-        setTimeout(updateFocus, 50);
-    });
-
-    // Arrow Navigation
+    // Arrow Navigation controls all rows in sync
     if (prevBtn && nextBtn) {
         prevBtn.addEventListener('click', () => {
-            wrapper.style.scrollBehavior = 'smooth';
-            const card = wrapper.querySelector('.arched-card');
-            const cardWidth = card ? card.offsetWidth + 30 : 320; // card width + gap
-            wrapper.scrollLeft -= cardWidth; 
+            wrappers.forEach(wrapper => {
+                wrapper.style.scrollBehavior = 'smooth';
+                const card = wrapper.querySelector('.arched-card');
+                const cardWidth = card ? card.offsetWidth + 30 : 320; // card width + gap
+                wrapper.scrollLeft -= cardWidth; 
+            });
         });
 
         nextBtn.addEventListener('click', () => {
-            wrapper.style.scrollBehavior = 'smooth';
-            const card = wrapper.querySelector('.arched-card');
-            const cardWidth = card ? card.offsetWidth + 30 : 320;
-            wrapper.scrollLeft += cardWidth; 
+            wrappers.forEach(wrapper => {
+                wrapper.style.scrollBehavior = 'smooth';
+                const card = wrapper.querySelector('.arched-card');
+                const cardWidth = card ? card.offsetWidth + 30 : 320;
+                wrapper.scrollLeft += cardWidth; 
+            });
         });
     }
-
-    // Run once on init to set the initial focused card
-    // Use setTimeout to ensure container sizes and layout offsets are computed
-    setTimeout(updateFocus, 100);
 }
 
 /**
@@ -515,6 +487,103 @@ function initPetIdCardTilt() {
 
     card.addEventListener('mouseleave', () => {
         card.style.transform = 'rotateX(0) rotateY(0) scale(1)';
+    });
+}
+
+/**
+ * Infinite Loop Carousel for Customer Testimonials
+ */
+function initTestimonialsCarousel() {
+    const track = document.querySelector('.testimonials-carousel-track');
+    const cards = document.querySelectorAll('.testimonials-carousel-track .testimonial-card');
+    const prevBtn = document.querySelector('.testimonials-carousel-container .prev-btn');
+    const nextBtn = document.querySelector('.testimonials-carousel-container .next-btn');
+
+    if (!track || cards.length === 0 || !prevBtn || !nextBtn) return;
+
+    const cardWidth = 320;
+    const gap = 30;
+    const step = cardWidth + gap;
+    const wrapper = document.querySelector('.testimonials-carousel-wrapper');
+    
+    const totalCards = cards.length;
+
+    // Clone cards at the beginning and the end to support infinite scroll
+    cards.forEach(card => {
+        const clone = card.cloneNode(true);
+        track.appendChild(clone);
+    });
+    // Append in reverse order or standard order to keep index matching correct
+    for (let i = totalCards - 1; i >= 0; i--) {
+        const clone = cards[i].cloneNode(true);
+        track.insertBefore(clone, track.firstChild);
+    }
+
+    const allCards = track.querySelectorAll('.testimonial-card');
+    
+    // Position starts at the first original card (after totalCards prepended clones)
+    let positionIndex = totalCards;
+
+    function updateSlider(instant = false) {
+        track.style.transition = instant ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+        
+        const wrapperWidth = wrapper.offsetWidth;
+        const offset = - (positionIndex * step) + (wrapperWidth / 2) - (cardWidth / 2);
+        
+        track.style.transform = `translateX(${offset}px)`;
+
+        // Highlight center active card
+        allCards.forEach((card, idx) => {
+            if (idx === positionIndex) {
+                card.classList.add('active-center');
+            } else {
+                card.classList.remove('active-center');
+            }
+        });
+    }
+
+    let isTransitioning = false;
+
+    function handleNext() {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        positionIndex++;
+        updateSlider();
+
+        // Safe transition check
+        setTimeout(() => {
+            if (positionIndex >= totalCards * 2) {
+                positionIndex = totalCards;
+                updateSlider(true);
+            }
+            isTransitioning = false;
+        }, 500);
+    }
+
+    function handlePrev() {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        positionIndex--;
+        updateSlider();
+
+        setTimeout(() => {
+            if (positionIndex < totalCards) {
+                positionIndex = totalCards * 2 - 1;
+                updateSlider(true);
+            }
+            isTransitioning = false;
+        }, 500);
+    }
+
+    nextBtn.addEventListener('click', handleNext);
+    prevBtn.addEventListener('click', handlePrev);
+
+    // Initial positioning
+    updateSlider(true);
+
+    // Refresh layout dynamically on resize
+    window.addEventListener('resize', () => {
+        updateSlider(true);
     });
 }
 

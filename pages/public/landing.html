@@ -325,7 +325,7 @@
             </div>
 
             <!-- Carousel full-width wrapper (outside services-container) -->
-            <div class="services-arched-wrapper">
+            <div class="services-arched-wrapper services-track-top">
                 <!-- Card 01: Pet Spa - Grooming -->
                 <div class="arched-card">
                     <div class="card-image-wrapper">
@@ -387,7 +387,9 @@
                         <div class="service-price-tag">Từ 80.000đ</div>
                     </div>
                 </div>
+            </div>
 
+            <div class="services-arched-wrapper services-track-bottom">
                 <!-- Card 04: Pet Shipping -->
                 <div class="arched-card">
                     <div class="card-image-wrapper">
@@ -750,7 +752,9 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round">
-                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                    <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
+                                    <path d="M7 2v20"></path>
+                                    <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>
                                 </svg>
                             </div>
                             <div class="indicator-info">
@@ -764,8 +768,7 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round">
-                                    <path d="M2 22h20C22 13 17 6 12 6S2 13 2 22z"></path>
-                                    <path d="M7 14h10"></path>
+                                    <path d="M12 22a7 7 0 0 0 7-7c0-4.3-7-11-7-11S5 10.7 5 15a7 7 0 0 0 7 7z"></path>
                                 </svg>
                             </div>
                             <div class="indicator-info">
@@ -779,10 +782,7 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
                                 </svg>
                             </div>
                             <div class="indicator-info">
@@ -1265,55 +1265,128 @@
             <div class="testimonials-container">
                 <div class="section-header text-center">
                     <h2>Hơn 5000+ Sen đã <span class="accent-italic">tin tưởng PawPal</span></h2>
-                    <div class="stars-rating">★★★★★</div>
                 </div>
 
-                <div class="testimonials-grid">
-                    <!-- Review 1 -->
-                    <div class="testimonial-card">
-                        <span class="quote-mark">“</span>
-                        <p class="testimonial-text">Xưa nay đi spa cho thú cưng lo nhất là người ta đối xử không tốt với
-                            con mình. Từ ngày có PawPal, mình an tâm hẳn vì lúc nào cũng có thể check nhật ký hình ảnh
-                            real-time. Dịch vụ quá tuyệt vời!</p>
-                        <div class="testimonial-user">
-                            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80"
-                                alt="Chị Mai Lan" loading="lazy">
-                            <div class="user-meta">
-                                <span class="user-name">Chị Mai Lan</span>
-                                <span class="user-sub">Mẹ bé Măng</span>
+                <div class="testimonials-carousel-container">
+                    <button class="testimonials-nav-btn prev-btn" aria-label="Previous Review">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                    </button>
+
+                    <div class="testimonials-carousel-wrapper">
+                        <div class="testimonials-carousel-track">
+                            <!-- Review 1 -->
+                            <div class="testimonial-card">
+                                <div class="testimonial-rating-row">
+                                    <div class="card-stars">⭐⭐⭐⭐⭐</div>
+                                    <div class="review-date">Tháng 5/2026</div>
+                                </div>
+                                <span class="quote-mark">“</span>
+                                <p class="testimonial-text">Xưa nay đi spa cho thú cưng lo nhất là người ta đối xử không tốt với con mình. Từ ngày có PawPal, mình an tâm hẳn vì lúc nào cũng có thể check nhật ký hình ảnh real-time. Dịch vụ quá tuyệt vời!</p>
+                                <div class="testimonial-user">
+                                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80" alt="Chị Mai Lan" loading="lazy">
+                                    <div class="user-meta">
+                                        <span class="user-name">Chị Mai Lan</span>
+                                        <span class="user-sub">Mẹ bé Măng</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Review 2 -->
+                            <div class="testimonial-card">
+                                <div class="testimonial-rating-row">
+                                    <div class="card-stars">⭐⭐⭐⭐⭐</div>
+                                    <div class="review-date">Tháng 5/2026</div>
+                                </div>
+                                <span class="quote-mark">“</span>
+                                <p class="testimonial-text">Dịch vụ pet hotel ở đây sạch sẽ dã man, mấy bạn nhân viên kỹ tính cực kỳ. Chỗ nghỉ dưỡng lý tưởng cho con mỗi khi mình bận đi công tác.</p>
+                                <div class="testimonial-user">
+                                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" alt="Anh Tuấn" loading="lazy">
+                                    <div class="user-meta">
+                                        <span class="user-name">Anh Tuấn</span>
+                                        <span class="user-sub">Ba bé Lu</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Review 3 -->
+                            <div class="testimonial-card">
+                                <div class="testimonial-rating-row">
+                                    <div class="card-stars">⭐⭐⭐⭐⭐</div>
+                                    <div class="review-date">Tháng 5/2026</div>
+                                </div>
+                                <span class="quote-mark">“</span>
+                                <p class="testimonial-text">Giá cả rõ ràng không lằng nhằng, mình là sinh viên nên rất thích vụ tích điểm mua sắm ở đây. Tiết kiệm được một khoản kha khá mỗi tháng.</p>
+                                <div class="testimonial-user">
+                                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80" alt="Bạn Minh Anh" loading="lazy">
+                                    <div class="user-meta">
+                                        <span class="user-name">Bạn Minh Anh</span>
+                                        <span class="user-sub">Mẹ bé Cà Phê</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Review 4 -->
+                            <div class="testimonial-card">
+                                <div class="testimonial-rating-row">
+                                    <div class="card-stars">⭐⭐⭐⭐⭐</div>
+                                    <div class="review-date">Tháng 5/2026</div>
+                                </div>
+                                <span class="quote-mark">“</span>
+                                <p class="testimonial-text">Bé cún nhà mình cực kỳ nhát nước mà các bạn nhân viên tắm dỗ dành ngọt ngào lắm. Nhìn qua camera thấy bé rất hợp tác, sẽ tiếp tục ủng hộ dài lâu.</p>
+                                <div class="testimonial-user">
+                                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="Chị Hương Giang" loading="lazy">
+                                    <div class="user-meta">
+                                        <span class="user-name">Chị Hương Giang</span>
+                                        <span class="user-sub">Mẹ bé Kiki</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Review 5 -->
+                            <div class="testimonial-card">
+                                <div class="testimonial-rating-row">
+                                    <div class="card-stars">⭐⭐⭐⭐⭐</div>
+                                    <div class="review-date">Tháng 4/2026</div>
+                                </div>
+                                <span class="quote-mark">“</span>
+                                <p class="testimonial-text">Shop đồ ăn rất phong phú, toàn hàng chọn lọc chất lượng cao. Ship cực nhanh và nhân viên tư vấn siêu dễ thương.</p>
+                                <div class="testimonial-user">
+                                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80" alt="Anh Minh Hoàng" loading="lazy">
+                                    <div class="user-meta">
+                                        <span class="user-name">Anh Minh Hoàng</span>
+                                        <span class="user-sub">Ba bé Bột</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Review 6 -->
+                            <div class="testimonial-card">
+                                <div class="testimonial-rating-row">
+                                    <div class="card-stars">⭐⭐⭐⭐⭐</div>
+                                    <div class="review-date">Tháng 4/2026</div>
+                                </div>
+                                <span class="quote-mark">“</span>
+                                <p class="testimonial-text">Điểm cộng cực lớn cho khâu vệ sinh phòng hotel. Sạch bóng không tì vết và không hề có mùi hôi như các nơi khác. Rất đáng tiền!</p>
+                                <div class="testimonial-user">
+                                    <img src="https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&w=150&q=80" alt="Chị Phương Thảo" loading="lazy">
+                                    <div class="user-meta">
+                                        <span class="user-name">Chị Phương Thảo</span>
+                                        <span class="user-sub">Mẹ bé Matcha</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Review 2 -->
-                    <div class="testimonial-card">
-                        <span class="quote-mark">“</span>
-                        <p class="testimonial-text">Dịch vụ pet hotel ở đây sạch sẽ dã man, mấy bạn nhân viên kỹ tính
-                            cực kỳ. Chỗ nghỉ dưỡng lý tưởng cho con mỗi khi mình bận đi công tác.</p>
-                        <div class="testimonial-user">
-                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
-                                alt="Anh Tuấn" loading="lazy">
-                            <div class="user-meta">
-                                <span class="user-name">Anh Tuấn</span>
-                                <span class="user-sub">Ba bé Lu</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Review 3 -->
-                    <div class="testimonial-card">
-                        <span class="quote-mark">“</span>
-                        <p class="testimonial-text">Giá cả rõ ràng không lằng nhằng, mình là sinh viên nên rất thích vụ
-                            tích điểm mua sắm ở đây. Tiết kiệm được một khoản kha khá mỗi tháng.</p>
-                        <div class="testimonial-user">
-                            <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80"
-                                alt="Bạn Minh Anh" loading="lazy">
-                            <div class="user-meta">
-                                <span class="user-name">Bạn Minh Anh</span>
-                                <span class="user-sub">Mẹ bé Cà Phê</span>
-                            </div>
-                        </div>
-                    </div>
+                    <button class="testimonials-nav-btn next-btn" aria-label="Next Review">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </section>
@@ -1446,11 +1519,12 @@
         <div class="footer-container">
             <!-- Col 1 -->
             <div class="footer-col col-brand">
-                <a href="#" class="logo footer-logo">
-                    <span class="brand-paw">Paw</span><span class="brand-pal">&Pal</span>
+                <a href="#" class="logo footer-logo" style="display: block; margin-bottom: 16px;">
+                    <img src="../../assets/images/logo.png" alt="PawPal Logo" style="height: 52px; width: auto; object-fit: contain;">
                 </a>
-                <p class="brand-description">Chăm sóc thú cưng bằng trái tim và công nghệ đỉnh cao. Chúng tôi mang đến
-                    sự an tâm tuyệt đối cho các "Sen".</p>
+                <p class="brand-description" style="font-size: 0.85rem; line-height: 1.6; margin-bottom: 20px; color: rgba(255,255,255,0.7);">
+                    PawPal - Hệ sinh thái chăm sóc thú cưng toàn diện bằng cả tình yêu thương và công nghệ hiện đại. Mang đến sự an tâm tuyệt đối cho các Sen gửi gắm boss yêu.
+                </p>
                 <div class="social-links">
                     <a href="#" aria-label="Facebook">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -1480,29 +1554,31 @@
 
             <!-- Col 2 -->
             <div class="footer-col">
-                <h4>DỊCH VỤ</h4>
+                <h4>DỊCH VỤ &amp; CHÍNH SÁCH</h4>
                 <ul>
-                    <li><a href="#services">Spa & Grooming</a></li>
+                    <li><a href="#services">Spa &amp; Grooming</a></li>
                     <li><a href="#services">Pet Hotel</a></li>
                     <li><a href="#services">Pet Shop</a></li>
+                    <li><a href="#">Chính sách bảo mật</a></li>
+                    <li><a href="#">Điều khoản dịch vụ</a></li>
                 </ul>
             </div>
 
             <!-- Col 3 -->
             <div class="footer-col">
-                <h4>PAWPAL TEAM</h4>
+                <h4>PAWPAL TEAM &amp; ĐỐI TÁC</h4>
                 <ul>
                     <li><a href="../../pages/public/about.html">Về chúng tôi</a></li>
-                    <li><a href="#shop">Hệ thống cửa hàng</a></li>
                     <li><a href="../../pages/public/blog.html">Tuyển dụng</a></li>
                     <li><a href="../../pages/public/contact.html">Liên hệ</a></li>
+                    <li><a href="#" style="opacity: 0.8; pointer-events: none; font-size: 0.85rem;">Đối tác: Royal Canin, Whiskas</a></li>
                 </ul>
             </div>
 
             <!-- Col 4 -->
             <div class="footer-col col-contact">
-                <h4>LIÊN HỆ & CHI NHÁNH</h4>
-                <ul class="contact-list">
+                <h4>LIÊN HỆ &amp; ĐĂNG KÝ</h4>
+                <ul class="contact-list" style="margin-bottom: 20px;">
                     <li>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1515,35 +1591,22 @@
                     <li>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
-                            </path>
-                            <polyline points="22,6 12,13 2,6"></polyline>
-                        </svg>
-                        <span>Email: contact@pawpal.vn</span>
-                    </li>
-                    <li class="branch-item">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                             <circle cx="12" cy="10" r="3"></circle>
                         </svg>
-                        <div>
-                            <strong>CN1 (TP. HCM):</strong>
-                            <span class="branch-address">123 Đường Thú Cưng, Tân Phong, Quận 7</span>
-                        </div>
-                    </li>
-                    <li class="branch-item">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                            <circle cx="12" cy="10" r="3"></circle>
-                        </svg>
-                        <div>
-                            <strong>CN2 (Hà Nội):</strong>
-                            <span class="branch-address">456 Phố Sen Hồng, Dịch Vọng, Cầu Giấy</span>
-                        </div>
+                        <span>123 Đường Thú Cưng, Tân Phong, Q.7, TP. HCM</span>
                     </li>
                 </ul>
+                <form class="footer-newsletter-form" onsubmit="event.preventDefault(); alert('Đăng ký nhận tin thành công!'); this.reset();">
+                    <input type="email" placeholder="Email của bạn..." required>
+                    <button type="submit">Đăng ký</button>
+                </form>
+                <div class="payment-methods">
+                    <span class="payment-badge">Momo</span>
+                    <span class="payment-badge">Visa</span>
+                    <span class="payment-badge">Mastercard</span>
+                    <span class="payment-badge">VietQR</span>
+                </div>
             </div>
         </div>
 
