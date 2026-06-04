@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    PawPal Frontend Multi-Page Auth & Data Simulation Engine
    ========================================================================== */
 
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // dest options: 'root', 'login', 'dashboard', 'admin', 'booking', 'shop'
         if (_isRoot) {
             const map = {
-                root:      'index.html',
+                root:      'pages/public/landing.html',
                 login:     'pages/public/login.html',
                 dashboard: 'pages/user/dashboard.html',
                 admin:     'pages/admin/index.html',
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (_isPublicDir) {
             const map = {
-                root:      '../../index.html',
+                root:      'landing.html',
                 login:     'login.html',
                 dashboard: '../user/dashboard.html',
                 admin:     '../admin/index.html',
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (_isUserDir) {
             const map = {
-                root:      '../../index.html',
+                root:      '../public/landing.html',
                 login:     '../public/login.html',
                 dashboard: 'dashboard.html',
                 admin:     '../admin/index.html',
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (_isServicesDir) {
             const map = {
-                root:      '../../index.html',
+                root:      '../public/landing.html',
                 login:     '../public/login.html',
                 dashboard: '../user/dashboard.html',
                 admin:     '../admin/index.html',
@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (_isShopDir) {
             const map = {
-                root:      '../../index.html',
+                root:      '../public/landing.html',
                 login:     '../public/login.html',
                 dashboard: '../user/dashboard.html',
                 admin:     '../admin/index.html',
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (_isAdminDir) {
             const map = {
-                root:      '../../index.html',
+                root:      '../public/landing.html',
                 login:     '../public/login.html',
                 dashboard: '../user/dashboard.html',
                 admin:     'index.html',
@@ -1278,32 +1278,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Render profile fields
         if (user) {
-            const dashName = document.getElementById('dashName');
-            const dashPhone = document.getElementById('dashPhone');
-            const dashPoints = document.getElementById('dashPoints');
-            const dashBadge = document.getElementById('dashBadge');
-            const dashAvatar = document.getElementById('dashAvatar');
+            const dashNames = document.querySelectorAll('#dashName');
+            const dashPhones = document.querySelectorAll('#dashPhone');
+            const dashPoints = document.querySelectorAll('#dashPoints');
+            const dashBadges = document.querySelectorAll('#dashBadge');
+            const dashAvatars = document.querySelectorAll('#dashAvatar');
 
-            if (dashName) dashName.textContent = user.name;
-            if (dashPhone) dashPhone.textContent = formatPhone(user.phone);
-            if (dashPoints) dashPoints.textContent = `${user.points} Points`;
-            if (dashBadge) dashBadge.textContent = user.membership;
-            if (dashAvatar) dashAvatar.textContent = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            dashNames.forEach(el => { el.textContent = user.name; });
+            dashPhones.forEach(el => { el.textContent = formatPhone(user.phone); });
+            dashPoints.forEach(el => { el.textContent = `${user.points} Points`; });
+            dashBadges.forEach(el => { el.textContent = user.membership; });
+            dashAvatars.forEach(el => { el.textContent = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(); });
 
             // Handle temporary restrictions
-            const redeemPointsBtn = document.getElementById('redeemPointsBtn');
-            const redeemRestrictedNote = document.getElementById('redeemRestrictedNote');
+            const redeemPointsBtns = document.querySelectorAll('#redeemPointsBtn');
+            const redeemRestrictedNotes = document.querySelectorAll('#redeemRestrictedNote');
             const oldPasswordGroup = document.getElementById('oldPasswordGroup');
             const securityTabTitle = document.getElementById('securityTabTitle');
 
             if (user.isTemporary) {
-                if (redeemPointsBtn) redeemPointsBtn.setAttribute('disabled', 'true');
-                if (redeemRestrictedNote) redeemRestrictedNote.style.display = 'block';
+                redeemPointsBtns.forEach(btn => { btn.setAttribute('disabled', 'true'); });
+                redeemRestrictedNotes.forEach(note => { note.style.display = 'block'; });
                 if (securityTabTitle) securityTabTitle.textContent = 'Thiết lập mật khẩu lần đầu';
                 if (oldPasswordGroup) oldPasswordGroup.style.display = 'none';
             } else {
-                if (redeemPointsBtn) redeemPointsBtn.removeAttribute('disabled');
-                if (redeemRestrictedNote) redeemRestrictedNote.style.display = 'none';
+                redeemPointsBtns.forEach(btn => { btn.removeAttribute('disabled'); });
+                redeemRestrictedNotes.forEach(note => { note.style.display = 'none'; });
                 if (securityTabTitle) securityTabTitle.textContent = 'Cấu hình mật khẩu';
                 if (oldPasswordGroup) oldPasswordGroup.style.display = 'block';
             }

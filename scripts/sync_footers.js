@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const baseDir = path.resolve(__dirname, '..');
-const indexHtml = fs.readFileSync(path.join(baseDir, 'index.html'), 'utf8');
+const indexHtml = fs.readFileSync(path.join(baseDir, 'pages', 'public', 'landing.html'), 'utf8');
 
 const footerStart = indexHtml.indexOf('<footer class="main-footer"');
 const footerEnd = indexHtml.indexOf('</footer>', footerStart) + '</footer>'.length;

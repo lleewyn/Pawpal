@@ -5,15 +5,39 @@
    ========================================================================== */
 
 (function seedPawPalData() {
-    // Không seed lại nếu đã có dữ liệu thật
-    if (localStorage.getItem('pawpal_seeded') === 'v5') return;
+    // Tìm thông tin tài khoản đang đăng nhập hiện tại
+    const loggedInPhone = localStorage.getItem('pawpal_logged_in_user');
+    let currentUserName = 'Nguyễn Phương Anh';
+    let currentUserPhone = '0901 234 567';
+
+    if (loggedInPhone) {
+        try {
+            const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
+            const userMatch = users.find(u => u.phone === loggedInPhone);
+            if (userMatch) {
+                currentUserName = userMatch.name || 'Khách hàng';
+                currentUserPhone = userMatch.phone;
+                
+                // Đồng bộ điểm và hạng thành viên lên tài khoản đang đăng nhập để trải nghiệm demo tốt nhất
+                userMatch.points = 820;
+                userMatch.membership = 'Hạng Vàng';
+                localStorage.setItem('pawpal_users', JSON.stringify(users));
+            }
+        } catch (e) {
+            console.error('Error reading logged in user during seeding:', e);
+        }
+    }
+
+    // Không seed lại nếu tài khoản này đã được seed
+    const seedKey = 'pawpal_seeded_' + currentUserPhone.replace(/\s+/g, '');
+    if (localStorage.getItem(seedKey) === 'v6') return;
 
     /* ──────────────────────────────────────────────────────────────────────
        1. USER INFO
     ────────────────────────────────────────────────────────────────────── */
     const user = {
-        name:      'Nguyễn Phương Anh',
-        phone:     '0901 234 567',
+        name:      currentUserName,
+        phone:     currentUserPhone,
         points:    820,
         rank:      'Vàng',
         createdAt: '2025-01-15T08:00:00.000Z',
@@ -82,8 +106,8 @@
                 price:    '350.000đ',
             },
             petInfo: {
-                ownerName: 'Nguyễn Phương Anh',
-                phone:     '0901 234 567',
+                ownerName: currentUserName,
+                phone:     currentUserPhone,
                 petName:   'Bông',
                 petType:   'Chó',
                 breed:     'Poodle',
@@ -109,8 +133,8 @@
                 price:    '180.000đ',
             },
             petInfo: {
-                ownerName: 'Nguyễn Phương Anh',
-                phone:     '0901 234 567',
+                ownerName: currentUserName,
+                phone:     currentUserPhone,
                 petName:   'Bông',
                 petType:   'Chó',
                 breed:     'Poodle',
@@ -136,8 +160,8 @@
                 price:    '350.000đ/đêm × 3 đêm = 1.050.000đ',
             },
             petInfo: {
-                ownerName: 'Nguyễn Phương Anh',
-                phone:     '0901 234 567',
+                ownerName: currentUserName,
+                phone:     currentUserPhone,
                 petName:   'Bông',
                 petType:   'Chó',
                 breed:     'Poodle',
@@ -163,8 +187,8 @@
                 price:    '280.000đ',
             },
             petInfo: {
-                ownerName: 'Nguyễn Phương Anh',
-                phone:     '0901 234 567',
+                ownerName: currentUserName,
+                phone:     currentUserPhone,
                 petName:   'Miu',
                 petType:   'Mèo',
                 breed:     'Mèo Anh lông ngắn',
@@ -190,8 +214,8 @@
                 price:    '220.000đ',
             },
             petInfo: {
-                ownerName: 'Nguyễn Phương Anh',
-                phone:     '0901 234 567',
+                ownerName: currentUserName,
+                phone:     currentUserPhone,
                 petName:   'Miu',
                 petType:   'Mèo',
                 breed:     'Mèo Anh lông ngắn',
@@ -216,8 +240,8 @@
                 price:    '480.000đ',
             },
             petInfo: {
-                ownerName: 'Nguyễn Phương Anh',
-                phone:     '0901 234 567',
+                ownerName: currentUserName,
+                phone:     currentUserPhone,
                 petName:   'Bông',
                 petType:   'Chó',
                 breed:     'Poodle',
@@ -242,8 +266,8 @@
                 price:    '500.000đ/đêm',
             },
             petInfo: {
-                ownerName: 'Nguyễn Phương Anh',
-                phone:     '0901 234 567',
+                ownerName: currentUserName,
+                phone:     currentUserPhone,
                 petName:   'Bông',
                 petType:   'Chó',
                 breed:     'Poodle',
@@ -270,8 +294,8 @@
                 price:    '500.000đ/đêm × 2 đêm = 1.000.000đ',
             },
             petInfo: {
-                ownerName: 'Nguyễn Phương Anh',
-                phone:     '0901 234 567',
+                ownerName: currentUserName,
+                phone:     currentUserPhone,
                 petName:   'Bông',
                 petType:   'Chó',
                 breed:     'Poodle',
@@ -298,8 +322,8 @@
                 price:    '180.000đ',
             },
             petInfo: {
-                ownerName: 'Nguyễn Phương Anh',
-                phone:     '0901 234 567',
+                ownerName: currentUserName,
+                phone:     currentUserPhone,
                 petName:   'Miu',
                 petType:   'Mèo',
                 breed:     'Mèo Anh lông ngắn',
@@ -759,8 +783,8 @@
             createdAt:     new Date(today.getTime() - 10 * 86400000).toISOString(),
             updatedAt:     new Date(today.getTime() - 8  * 86400000).toISOString(),
             form: {
-                name:     'Nguyễn Phương Anh',
-                phone:    '0901 234 567',
+                name:     currentUserName,
+                phone:    currentUserPhone,
                 address:  '123 Nguyễn Trãi',
                 ward:     'Phường Bến Thành',
                 district: 'Quận 1',
@@ -793,8 +817,8 @@
             createdAt:     new Date(today.getTime() - 2 * 86400000).toISOString(),
             updatedAt:     new Date(today.getTime() - 1 * 86400000).toISOString(),
             form: {
-                name:     'Nguyễn Phương Anh',
-                phone:    '0901 234 567',
+                name:     currentUserName,
+                phone:    currentUserPhone,
                 address:  '123 Nguyễn Trãi',
                 ward:     'Phường Bến Thành',
                 district: 'Quận 1',
@@ -827,8 +851,8 @@
             createdAt:     new Date(today.getTime() - 3600000).toISOString(),
             updatedAt:     new Date(today.getTime() - 3600000).toISOString(),
             form: {
-                name:     'Nguyễn Phương Anh',
-                phone:    '0901 234 567',
+                name:     currentUserName,
+                phone:    currentUserPhone,
                 address:  '123 Nguyễn Trãi',
                 ward:     'Phường Bến Thành',
                 district: 'Quận 1',
@@ -858,8 +882,8 @@
             createdAt:     new Date(today.getTime() - 20 * 86400000).toISOString(),
             updatedAt:     new Date(today.getTime() - 19 * 86400000).toISOString(),
             form: {
-                name:     'Nguyễn Phương Anh',
-                phone:    '0901 234 567',
+                name:     currentUserName,
+                phone:    currentUserPhone,
                 address:  '123 Nguyễn Trãi',
                 ward:     'Phường Bến Thành',
                 district: 'Quận 1',
@@ -887,7 +911,7 @@
     /* ──────────────────────────────────────────────────────────────────────
        6. Đánh dấu đã seed
     ────────────────────────────────────────────────────────────────────── */
-    localStorage.setItem('pawpal_seeded', 'v5');
+    localStorage.setItem('pawpal_seeded_' + currentUserPhone.replace(/\s+/g, ''), 'v6');
 
     console.log('%c[PawPal Seed] ✅ Dữ liệu demo đã được inject vào localStorage.', 'color:#2A5944;font-weight:bold;');
     console.log('  → pawpal_pets:',          JSON.parse(localStorage.getItem('pawpal_pets')).length, 'bé');

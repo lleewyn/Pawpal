@@ -16,45 +16,22 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Mobile Navigation Drawer Toggle
+ * Mobile Navigation — handled by Bootstrap Collapse (data-bs-toggle="collapse")
+ * Custom toggle removed: navbar-toggler now uses data-bs-target="#primaryNavigation"
  */
 function initMobileNavigation() {
-    const navToggle = document.getElementById('mobileNavToggle');
+    // Bootstrap Collapse handles open/close automatically via data-bs-toggle
+    // Close menu when a nav link is clicked (Bootstrap doesn't do this by default)
     const primaryNav = document.getElementById('primaryNavigation');
-    const iconMenu = navToggle?.querySelector('.icon-menu');
-    const iconClose = navToggle?.querySelector('.icon-close');
+    if (!primaryNav) return;
 
-    if (!navToggle || !primaryNav) return;
-
-    navToggle.addEventListener('click', () => {
-        const isOpen = primaryNav.classList.contains('open');
-        
-        if (isOpen) {
-            primaryNav.classList.remove('open');
-            navToggle.setAttribute('aria-expanded', 'false');
-            if (iconMenu && iconClose) {
-                iconMenu.style.display = 'block';
-                iconClose.style.display = 'none';
-            }
-        } else {
-            primaryNav.classList.add('open');
-            navToggle.setAttribute('aria-expanded', 'true');
-            if (iconMenu && iconClose) {
-                iconMenu.style.display = 'none';
-                iconClose.style.display = 'block';
-            }
-        }
-    });
-
-    // Close menu when a link is clicked
     const navLinks = primaryNav.querySelectorAll('a');
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
-            primaryNav.classList.remove('open');
-            navToggle.setAttribute('aria-expanded', 'false');
-            if (iconMenu && iconClose) {
-                iconMenu.style.display = 'block';
-                iconClose.style.display = 'none';
+            // Only collapse if menu is currently open (mobile view)
+            if (primaryNav.classList.contains('show')) {
+                const bsCollapse = bootstrap.Collapse.getInstance(primaryNav);
+                if (bsCollapse) bsCollapse.hide();
             }
         });
     });

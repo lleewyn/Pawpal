@@ -119,7 +119,7 @@ function buildOrderCard(order) {
 function bindOrderCardButtons() {
     document.querySelectorAll('.order-detail-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            window.location.href = `order-detail.html?order=${encodeURIComponent(btn.dataset.order)}`;
+            openOrderDetailModal(btn.dataset.order);
         });
     });
 }
@@ -372,9 +372,9 @@ function initOrdersPage() {
         if (currentDetailCode) openOrderDetailModal(currentDetailCode);
     });
 
-    // Deep-link: orders.html?order=PP-XXXXXX → redirect to detail page
+    // Deep-link: ?order=PP-XXXXXX → open the modal directly
     const code = new URLSearchParams(window.location.search).get('order');
-    if (code) window.location.replace(`order-detail.html?order=${encodeURIComponent(code)}`);
+    if (code) openOrderDetailModal(code);
 }
 
 window.addEventListener('DOMContentLoaded', initOrdersPage);

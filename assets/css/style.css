@@ -109,9 +109,7 @@ ul {
 }
 
 /* Common Layout Elements */
-.text-center {
-    text-align: center;
-}
+/* .text-center đã được xóa — dùng Bootstrap's .text-center { text-align: center !important; } */
 
 .section-header {
     max-width: 700px;
@@ -388,9 +386,8 @@ ul {
     opacity: 1;
 }
 
-/* Mobile Nav Toggle Icon */
+/* Mobile Nav Toggle Icon — styling only, Bootstrap navbar-toggler handles display */
 .mobile-nav-toggle {
-    display: none;
     background: none;
     border: none;
     color: #ffffff;
@@ -2656,9 +2653,12 @@ ul {
         box-shadow: -10px 0 30px rgba(0,0,0,0.15);
         transition: var(--transition-smooth);
         z-index: 1000;
+        /* Bootstrap Collapse thường set display:none/block — override để giữ drawer animation */
+        display: block !important;
     }
 
-    .nav-menu.open {
+    /* Bootstrap Collapse thêm .show khi mở — thay thế .open cũ */
+    .nav-menu.show {
         right: 0;
     }
 

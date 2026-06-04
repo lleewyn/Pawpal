@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const baseDir = path.resolve(__dirname, '..');
-const indexHtml = fs.readFileSync(path.join(baseDir, 'index.html'), 'utf8');
+const indexHtml = fs.readFileSync(path.join(baseDir, 'pages', 'public', 'landing.html'), 'utf8');
 
 const headerStart = indexHtml.indexOf('<header class="main-header" id="mainHeader">');
 const headerEnd = indexHtml.indexOf('</header>', headerStart) + '</header>'.length;
@@ -29,7 +29,7 @@ subDirs.forEach(subDir => {
             
             // Fix asset paths (2 levels deep: pages/subdir/)
             subPageHeader = subPageHeader.replace(/src="assets\//g, 'src="../../assets/');
-            subPageHeader = subPageHeader.replace(/href="#"/g, 'href="../../index.html"');
+            subPageHeader = subPageHeader.replace(/href="#"/g, 'href="../public/landing.html"');
             
             // Fix links to pages (from root pages/ -> các subdir)
             subPageHeader = subPageHeader.replace(/href="pages\/services\.html"/g, 'href="../services/services.html"');

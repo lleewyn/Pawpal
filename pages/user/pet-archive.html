@@ -8,58 +8,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS — load trước để custom CSS có thể override -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <!-- Custom Style -->
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="../../assets/css/user/dashboard.css">
-    <style>
-        .archive-container {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0 20px;
-            min-height: 80vh;
-        }
-        .archive-card {
-            background: rgba(255, 255, 255, 0.96);
-            border: 1px solid rgba(42, 89, 68, 0.08);
-            border-radius: 24px;
-            box-shadow: 0 20px 25px -5px rgba(42, 89, 68, 0.12);
-            padding: 40px;
-        }
-        .archive-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(42, 89, 68, 0.06);
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        .archive-title {
-            font-family: var(--font-heading);
-            font-size: 2rem;
-            color: var(--color-primary-dark);
-            font-weight: 500;
-        }
-        .countdown-badge {
-            background: #fee2e2;
-            color: #991b1b;
-            font-size: 0.72rem;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 100px;
-            display: inline-block;
-            margin-top: 5px;
-        }
-    </style>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="../../assets/css/user/pet-archive.css">
 </head>
 <body class="dashboard-page-body">
 
     <!-- Header Navigation -->
     <header class="main-header" id="mainHeader">
         <nav class="navbar navbar-expand-lg p-0" data-bs-theme="dark">
-            <div class="container header-container">
+            <div class="header-container">
                 <a href="#" class="navbar-brand logo">
                     <img src="../../assets/images/Logo_pawpal_navbar.png" alt="PawPal">
                 </a>
@@ -76,7 +37,7 @@
 
                 <div class="collapse navbar-collapse nav-menu" id="primaryNavigation">
                     <ul class="navbar-nav mx-auto">
-                        <li class="nav-item"><a href="../../index.html" class="nav-link">Trang chủ</a></li>
+                        <li class="nav-item"><a href="../../pages/public/landing.html" class="nav-link">Trang chủ</a></li>
                         <li class="nav-item"><a href="../services/services.html" class="nav-link">Dịch vụ</a></li>
                         <li class="nav-item"><a href="../shop/shop.html" class="nav-link">Cửa hàng</a></li>
                         <li class="nav-item"><a href="../public/about.html" class="nav-link">Về chúng tôi</a></li>

@@ -3,6 +3,16 @@
    localStorage key: pawpal_pets
    ========================================================================== */
 
+// ── Helper: chạy callback khi DOM ready, kể cả khi script load sau DOMContentLoaded ──
+function _runWhenReady(fn) {
+    if (document.readyState === 'loading') {
+        _runWhenReady(fn);
+    } else {
+        // DOM đã ready (script load ở bottom body)
+        setTimeout(fn, 0);
+    }
+}
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 const STORAGE_KEY = 'pawpal_pets';
 const MAX_PHOTO_MB = 5;
@@ -17,10 +27,12 @@ let deleteTargetId = null;
 function loadPets() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
+        console.log('loadPets: raw data from localStorage:', raw);
         const all = raw ? JSON.parse(raw) : [];
-        // Chỉ hiển thị bé chưa bị soft-delete
         pets = all.filter(p => !p.deleted);
-    } catch {
+        console.log('loadPets: active pets loaded:', pets);
+    } catch (e) {
+        console.error('loadPets error:', e);
         pets = [];
     }
 }
@@ -94,8 +106,13 @@ function calcAge(birthday) {
 function renderPetList() {
     const list  = document.getElementById('petidList');
     const empty = document.getElementById('petidEmpty');
-    if (!list || !empty) return;
+    console.log('renderPetList: list element:', list, 'empty element:', empty);
+    if (!list || !empty) {
+        console.warn('renderPetList: elements missing from DOM!');
+        return;
+    }
 
+    console.log('renderPetList: rendering pets. Total count:', pets.length);
     if (pets.length === 0) {
         list.innerHTML = '';
         empty.style.display = 'flex';
@@ -477,16 +494,15 @@ function loadUserInfo() {
         if (!raw) return;
         const user = JSON.parse(raw);
 
-        const nameEl   = document.getElementById('dashName');
-        const phoneEl  = document.getElementById('dashPhone');
-        const pointsEl = document.getElementById('dashPoints');
-        const badgeEl  = document.getElementById('dashBadge');
-        const avatarEl = document.getElementById('dashAvatar');
+        const nameEls   = document.querySelectorAll('#dashName');
+        const phoneEls  = document.querySelectorAll('#dashPhone');
+        const pointsEls = document.querySelectorAll('#dashPoints');
+        const badgeEls  = document.querySelectorAll('#dashBadge');
+        const avatarEls = document.querySelectorAll('#dashAvatar');
 
-        if (nameEl  && user.name)   nameEl.textContent  = user.name;
-        if (phoneEl && user.phone)  phoneEl.textContent = user.phone;
-        if (pointsEl && user.points !== undefined)
-            pointsEl.textContent = `${user.points.toLocaleString('vi-VN')} Points`;
+        nameEls.forEach(el => { if (user.name) el.textContent = user.name; });
+        phoneEls.forEach(el => { if (user.phone) el.textContent = user.phone; });
+        pointsEls.forEach(el => { if (user.points !== undefined) el.textContent = `${user.points.toLocaleString('vi-VN')} Points`; });
 
         // Hạng thành viên
         const rank = user.rank || 'Bạc';
@@ -496,19 +512,127 @@ function loadUserInfo() {
             'Kim cương': { label: '💎 Kim Cương',       bg: '#ede9fe', color: '#5b21b6' },
         };
         const rankInfo = rankMap[rank] || rankMap['Bạc'];
-        if (badgeEl) {
+        
+        badgeEls.forEach(badgeEl => {
             badgeEl.textContent = rankInfo.label;
             badgeEl.style.background = rankInfo.bg;
             badgeEl.style.color      = rankInfo.color;
-        }
+        });
 
         // Avatar initials
-        if (avatarEl && user.name) {
-            const parts = user.name.trim().split(' ');
-            avatarEl.textContent = parts[parts.length - 1].charAt(0).toUpperCase();
-        }
+        avatarEls.forEach(avatarEl => {
+            if (user.name) {
+                const parts = user.name.trim().split(' ');
+                avatarEl.textContent = parts[parts.length - 1].charAt(0).toUpperCase();
+            }
+        });
     } catch (e) {
         console.error('dashboard.js loadUserInfo:', e);
+    }
+}
+
+// ── Render Dashboard Overview (Trang tổng quan phẳng, không dùng card) ───────────
+function renderDashboardOverview() {
+    const nextBookingEl = document.getElementById('overviewNextBooking');
+    const petsListEl = document.getElementById('overviewPetsList');
+    const recentOrdersEl = document.getElementById('overviewRecentOrders');
+    const liveStatusEl = document.getElementById('overviewLiveStatus');
+    const liveTextEl = document.getElementById('overviewLiveText');
+
+    // 1. Render Pets List
+    loadPets();
+    if (petsListEl) {
+        if (pets.length === 0) {
+            petsListEl.innerHTML = `<p style="font-size: 0.9rem; color: var(--color-text-light); margin: 0;">Bạn chưa đăng ký hồ sơ thú cưng nào. <button class="btn-green-outline" id="btnAddPetEmpty" style="font-size:0.8rem; padding:4px 10px; margin-left:8px;">+ Thêm bé đầu tiên</button></p>`;
+            document.getElementById('btnAddPetEmpty')?.addEventListener('click', openAddModal);
+        } else {
+            petsListEl.innerHTML = pets.map(p => {
+                return `<div class="overview-list-row">
+                    <div class="overview-list-main">
+                        <span class="overview-list-title">${p.name}</span>
+                        <span class="overview-list-meta">${p.species} ${p.breed ? `(${p.breed})` : ''} · Cân nặng: ${p.weight}kg</span>
+                    </div>
+                    ${p.allergies ? `<span class="overview-badge badge-warning">⚠️ Dị ứng: ${p.allergies}</span>` : ''}
+                </div>`;
+            }).join('');
+        }
+    }
+
+    // 2. Render Upcoming Appointment
+    loadBookings();
+    let nextBk = null;
+    let liveBk = null;
+
+    const activeBookings = bookings.filter(b => b.status !== 'Đã hủy' && b.status !== 'Hoàn thành');
+    liveBk = bookings.find(b => b.status === 'Đang thực hiện');
+
+    if (activeBookings.length > 0) {
+        activeBookings.sort((a, b) => {
+            const dateA = a.schedule?.date || a.schedule?.checkIn || '';
+            const dateB = b.schedule?.date || b.schedule?.checkIn || '';
+            return new Date(dateA) - new Date(dateB);
+        });
+        nextBk = activeBookings[0];
+    }
+
+    // Live status banner
+    if (liveStatusEl && liveTextEl) {
+        if (liveBk) {
+            let pName = liveBk.petInfo?.petName || 'Bé cưng';
+            liveTextEl.innerHTML = `Bé <strong>${pName}</strong> đang thực hiện dịch vụ: <strong>${liveBk.selectedService?.name || liveBk.service}</strong> (Đang thực hiện)`;
+            liveStatusEl.style.display = 'block';
+        } else {
+            liveStatusEl.style.display = 'none';
+        }
+    }
+
+    // Next booking
+    if (nextBookingEl) {
+        if (nextBk) {
+            let pName = nextBk.petInfo?.petName || 'bé yêu';
+            if (nextBk.petId) {
+                const linkedPet = pets.find(p => p.id === nextBk.petId);
+                if (linkedPet) pName = linkedPet.name;
+            }
+            const dateStr = formatBookingDate(nextBk);
+            nextBookingEl.innerHTML = `<div class="overview-list-row">
+                <div class="overview-list-main">
+                    <span class="overview-list-title">${nextBk.selectedService?.name || nextBk.service}</span>
+                    <span class="overview-list-meta">Dành cho bé <strong>${pName}</strong> vào lúc ${dateStr}</span>
+                </div>
+                <span class="overview-status status-${nextBk.status === 'Đang thực hiện' ? 'live' : 'pending'}">${nextBk.status}</span>
+            </div>`;
+        } else {
+            nextBookingEl.innerHTML = `<p style="font-size: 0.9rem; color: var(--color-text-light); margin: 0;">Bạn không có lịch hẹn nào sắp tới. <a href="../services/booking.html" style="color: var(--color-primary); font-weight: 700; text-decoration: none; margin-left: 8px;">Đặt lịch ngay &rarr;</a></p>`;
+        }
+    }
+
+    // 3. Render Recent Orders
+    if (recentOrdersEl) {
+        const rawOrders = localStorage.getItem('pawpal_orders');
+        let orders = [];
+        try {
+            orders = rawOrders ? JSON.parse(rawOrders) : [];
+        } catch {
+            orders = [];
+        }
+
+        if (orders.length === 0) {
+            recentOrdersEl.innerHTML = `<p style="font-size: 0.9rem; color: var(--color-text-light); margin: 0;">Bạn chưa có đơn hàng nào. <a href="../shop/shop.html" style="color: var(--color-primary); font-weight: 700; text-decoration: none; margin-left: 8px;">Ghé cửa hàng mua sắm &rarr;</a></p>`;
+        } else {
+            const latestOrder = orders[orders.length - 1];
+            const orderCode = latestOrder.code || latestOrder.orderCode || latestOrder.id || 'N/A';
+            recentOrdersEl.innerHTML = `<div class="overview-list-row">
+                <div class="overview-list-main">
+                    <span class="overview-list-title">Đơn hàng #${orderCode}</span>
+                    <span class="overview-list-meta">Tổng tiền: ${(latestOrder.total || latestOrder.totalPrice || 0).toLocaleString('vi-VN')}đ</span>
+                </div>
+                <div class="overview-list-side">
+                    <span class="overview-status status-${latestOrder.orderStatus === 'Hoàn thành' ? 'success' : 'cancelled'}">${latestOrder.orderStatus}</span>
+                    <a href="#" onclick="event.preventDefault();document.querySelector('[data-dash-tab=dash-orders]').click();" class="overview-row-link" style="margin-left: 12px;">Chi tiết &rarr;</a>
+                </div>
+            </div>`;
+        }
     }
 }
 
@@ -518,6 +642,7 @@ function init() {
     loadUserInfo();
     initTabs();
     bindEvents();
+    renderDashboardOverview();
 
     // Render ngay nếu tab Pet ID đang active
     const activePetTab = document.querySelector('.dash-tab-btn.active[data-dash-tab="dash-petid"]');
@@ -537,8 +662,11 @@ function init() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', init);
-
+_runWhenReady(init);
+// Fallback: nếu DOMContentLoaded đã fired trước khi script load
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(init, 0);
+}
 /* ==========================================================================
    Phần 2 — Booking List & Cancel
    localStorage key: pawpal_bookings, pawpal_cancel_log
@@ -944,7 +1072,7 @@ function bindBookingEvents() {
 // Patch: khi chuyển sang tab booking thì render
 const _origInitTabs = initTabs;
 // Override tab switching để thêm booking render
-document.addEventListener('DOMContentLoaded', () => {
+_runWhenReady(() => {
     document.querySelectorAll('.dash-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             if (btn.dataset.dashTab === 'dash-booking') {
@@ -957,7 +1085,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Extend init ───────────────────────────────────────────────────────────────
 const _origInit = init;
-document.addEventListener('DOMContentLoaded', () => {
+_runWhenReady(() => {
     loadBookings();
     migrateBookingPetIds();
     initBookingFilters();
@@ -1694,7 +1822,7 @@ function initTracker() {
 }
 
 // ── Patch tab switching để render tracker khi chuyển tab ─────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+_runWhenReady(() => {
     initTracker();
 
     document.querySelectorAll('.dash-tab-btn').forEach(btn => {

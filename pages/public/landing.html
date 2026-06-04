@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PawPal - Chăm Sóc Thú Cưng Bằng Cả Trái Tim</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
+        rel="stylesheet">
+    <!-- Bootstrap 5 CSS — load trước để custom CSS có thể override -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+
+<body>
+    <!-- Smart Loader: only shows if page load takes > 300ms -->
+    <script>
+        window._pageLoadStart = Date.now();
+        var _loaderThreshold = 300; // ms
+        var _loaderTimeout = setTimeout(function () {
+            var loader = document.getElementById('cute-loader');
+            if (loader) loader.style.display = 'flex';
+        }, _loaderThreshold);
+    </script>
+
+    <!-- Cute Paw Loader (hidden by default) -->
+    <div id="cute-loader" style="display:none;">
+        <div class="paw-loader-container">
+            <svg class="paw-icon paw-1" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M12 2C9 2 8 5 8 7C8 9 10 11 12 11C14 11 16 9 16 7C16 5 15 2 12 2ZM5.5 8C3.5 8 2 9.5 2 11.5C2 13.5 3.5 15 5.5 15C7.5 15 9 13.5 9 11.5C9 9.5 7.5 8 5.5 8ZM18.5 8C16.5 8 15 9.5 15 11.5C15 13.5 16.5 15 18.5 15C20.5 15 22 13.5 22 11.5C22 9.5 20.5 8 18.5 8ZM12 12C9 12 6 13 5 16C4 19 6 22 12 22C18 22 20 19 19 16C18 13 15 12 12 12Z" />
+            </svg>
+            <svg class="paw-icon paw-2" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M12 2C9 2 8 5 8 7C8 9 10 11 12 11C14 11 16 9 16 7C16 5 15 2 12 2ZM5.5 8C3.5 8 2 9.5 2 11.5C2 13.5 3.5 15 5.5 15C7.5 15 9 13.5 9 11.5C9 9.5 7.5 8 5.5 8ZM18.5 8C16.5 8 15 9.5 15 11.5C15 13.5 16.5 15 18.5 15C20.5 15 22 13.5 22 11.5C22 9.5 20.5 8 18.5 8ZM12 12C9 12 6 13 5 16C4 19 6 22 12 22C18 22 20 19 19 16C18 13 15 12 12 12Z" />
+            </svg>
+            <svg class="paw-icon paw-3" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M12 2C9 2 8 5 8 7C8 9 10 11 12 11C14 11 16 9 16 7C16 5 15 2 12 2ZM5.5 8C3.5 8 2 9.5 2 11.5C2 13.5 3.5 15 5.5 15C7.5 15 9 13.5 9 11.5C9 9.5 7.5 8 5.5 8ZM18.5 8C16.5 8 15 9.5 15 11.5C15 13.5 16.5 15 18.5 15C20.5 15 22 13.5 22 11.5C22 9.5 20.5 8 18.5 8ZM12 12C9 12 6 13 5 16C4 19 6 22 12 22C18 22 20 19 19 16C18 13 15 12 12 12Z" />
+            </svg>
+            <svg class="paw-icon paw-4" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M12 2C9 2 8 5 8 7C8 9 10 11 12 11C14 11 16 9 16 7C16 5 15 2 12 2ZM5.5 8C3.5 8 2 9.5 2 11.5C2 13.5 3.5 15 5.5 15C7.5 15 9 13.5 9 11.5C9 9.5 7.5 8 5.5 8ZM18.5 8C16.5 8 15 9.5 15 11.5C15 13.5 16.5 15 18.5 15C20.5 15 22 13.5 22 11.5C22 9.5 20.5 8 18.5 8ZM12 12C9 12 6 13 5 16C4 19 6 22 12 22C18 22 20 19 19 16C18 13 15 12 12 12Z" />
+            </svg>
+        </div>
+    </div>
+
+    <!-- Notification Bar -->
+    <div class="notification-bar">
+        <div class="notification-content">
+            <span>🎁 Ưu đãi đặc biệt: Giảm ngay 10% cho lần trải nghiệm Spa & Hotel đầu tiên của bé! Code:
+                <strong>PAWFIRST10</strong></span>
+        </div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="main-header" id="mainHeader">
+        <nav class="navbar navbar-expand-lg p-0" data-bs-theme="dark">
+            <div class="header-container">
+                <a href="#" class="navbar-brand logo">
+                    <img src="../../assets/images/Logo_pawpal_navbar.png" alt="PawPal">
+                </a>
+
+                <!-- Mobile Navigation Toggle -->
+                <button class="navbar-toggler mobile-nav-toggle" id="mobileNavToggle" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#primaryNavigation"
+                    aria-controls="primaryNavigation" aria-expanded="false" aria-label="Toggle navigation">
+                    <svg class="icon-menu" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                        <line x1="4" y1="12" x2="20" y2="12"></line>
+                        <line x1="4" y1="6" x2="20" y2="6"></line>
+                        <line x1="4" y1="18" x2="20" y2="18"></line>
+                    </svg>
+                </button>
+
+                <div class="collapse navbar-collapse nav-menu" id="primaryNavigation">
+                    <ul class="navbar-nav mx-auto">
+                        <li class="nav-item"><a href="#" class="nav-link active">Trang chủ</a></li>
+                        <li class="nav-item"><a href="../../pages/services/services.html" class="nav-link">Dịch vụ</a></li>
+                        <li class="nav-item"><a href="../../pages/shop/shop.html" class="nav-link">Cửa hàng</a></li>
+                        <li class="nav-item"><a href="../../pages/public/about.html" class="nav-link">Về chúng tôi</a></li>
+                        <li class="nav-item"><a href="../../pages/public/blog.html" class="nav-link">Cẩm nang</a></li>
+                        <li class="nav-item"><a href="../../pages/public/contact.html" class="nav-link">Liên hệ</a></li>
+                    </ul>
+
+                    <div class="header-actions d-none d-lg-flex align-items-center">
+                        <div class="search-bar">
+                            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" placeholder="Tìm kiếm sản phẩm...">
+                        </div>
+                        <a href="#cart" class="cart-btn" aria-label="Giỏ hàng">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                        </a>
+                        <a href="../../pages/public/login.html" class="login-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span>Đăng nhập</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+
+        <!-- Hero Section -->
+        <section class="hero-section" id="hero">
+            <!-- Full background Cloudinary video embed -->
+            <div class="hero-video-bg">
+                <iframe
+                    src="https://player.cloudinary.com/embed/?cloud_name=dktop1afs&public_id=4503918-uhd_4096_2160_24fps_qktcjy&autoplay=true&loop=true&muted=true&controls=false"
+                    allow="autoplay; fullscreen" allowfullscreen frameborder="0"></iframe>
+            </div>
+            <div class="hero-overlay"></div>
+
+            <!-- Asymmetric split layout: left copy / right visual -->
+            <div class="hero-container">
+
+                <!-- LEFT: Editorial copy column -->
+                <div class="hero-left">
+                    <!-- Single eyebrow tag — used only here on this page -->
+                    <div class="hero-eyebrow">
+                        <span class="hero-eyebrow-dot"></span>
+                        <span>Pet Spa &amp; Hotel · Hà Nội</span>
+                    </div>
+
+                    <h1 class="hero-title">
+                        Chăm sóc<br>
+                        <em class="accent-italic">bằng cả</em><br>
+                        trái tim.
+                    </h1>
+
+                    <p class="hero-desc">Spa cao cấp, hotel tiện nghi, chăm sóc toàn diện dành riêng cho Chó &amp; Mèo — vì bé xứng đáng với những gì tốt nhất.</p>
+
+                    <div class="hero-actions">
+                        <a href="../../pages/services/booking.html" class="btn-cta main-cta-btn" id="heroCta">
+                            <span>Đặt lịch ngay</span>
+                            <span class="btn-icon-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </span>
+                        </a>
+                        <div class="hero-social-proof">
+                            <div class="avatar-stack">
+                                <div class="av">ML</div>
+                                <div class="av">AT</div>
+                                <div class="av">MA</div>
+                                <div class="av">HT</div>
+                                <div class="av">+</div>
+                            </div>
+                            <span class="hero-social-proof-text"><span class="stars">★★★★★</span> <strong>5000+</strong> Sen tin tưởng</span>
+                        </div>
+                    </div>
+
+                    <!-- Live availability badge -->
+                    <div class="hero-status-widget">
+                        <span class="status-dot"></span>
+                        <span id="heroAvailability">Đang tải thông tin slot trống...</span>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Visual panel -->
+                <div class="hero-right">
+                    <div class="hero-visual-frame">
+                        <img src="../../assets/images/hero-spa.png" alt="Chuyên gia PawPal đang chăm sóc thú cưng" loading="eager">
+
+                        <!-- Floating metric badge: top-left -->
+                        <div class="hero-badge hero-badge--tl">
+                            <span class="hero-badge-num">5,000+</span>
+                            <span class="hero-badge-label">Nhật ký mỗi tháng</span>
+                        </div>
+
+                        <!-- Floating metric badge: bottom-right -->
+                        <div class="hero-badge hero-badge--br">
+                            <span class="hero-badge-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            </span>
+                            <span class="hero-badge-label">Cam kết an toàn 100%</span>
+                        </div>
+
+                        <!-- Tracker quick-link -->
+                        <a href="#tracker" class="hero-tracker-pill">
+                            <span class="hero-tracker-dot"></span>
+                            Theo dõi real-time
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- Features Strip — horizontal stat bar, intentionally DIFFERENT layout from hero -->
+        <section class="features-section" aria-label="Điểm nổi bật">
+            <div class="features-strip">
+                <div class="feature-stat">
+                    <span class="feature-stat-num">5,000+</span>
+                    <span class="feature-stat-divider"></span>
+                    <span class="feature-stat-label">Nhật ký cập nhật mỗi tháng</span>
+                </div>
+                <span class="features-strip-sep" aria-hidden="true">·</span>
+                <div class="feature-stat">
+                    <span class="feature-stat-num">100%</span>
+                    <span class="feature-stat-divider"></span>
+                    <span class="feature-stat-label">Bảng giá niêm yết công khai</span>
+                </div>
+                <span class="features-strip-sep" aria-hidden="true">·</span>
+                <div class="feature-stat">
+                    <span class="feature-stat-num">8</span>
+                    <span class="feature-stat-divider"></span>
+                    <span class="feature-stat-label">Chuyên gia chứng chỉ quốc tế</span>
+                </div>
+                <span class="features-strip-sep" aria-hidden="true">·</span>
+                <div class="feature-stat">
+                    <span class="feature-stat-num">24/7</span>
+                    <span class="feature-stat-divider"></span>
+                    <span class="feature-stat-label">Xác nhận đặt lịch tức thì</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Services Section (BeePetShop Arched Layout Style) -->
+        <section class="services-section" id="services" style="position: relative;">
+            <!-- Cute Sticker -->
+            <svg class="sticker-deco sticker-bottom-left"
+                style="color: var(--color-primary-light); transform: rotate(-15deg); width: 48px; height: 48px;"
+                viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M12 2C9 2 8 5 8 7C8 9 10 11 12 11C14 11 16 9 16 7C16 5 15 2 12 2ZM5.5 8C3.5 8 2 9.5 2 11.5C2 13.5 3.5 15 5.5 15C7.5 15 9 13.5 9 11.5C9 9.5 7.5 8 5.5 8ZM18.5 8C16.5 8 15 9.5 15 11.5C15 13.5 16.5 15 18.5 15C20.5 15 22 13.5 22 11.5C22 9.5 20.5 8 18.5 8ZM12 12C9 12 6 13 5 16C4 19 6 22 12 22C18 22 20 19 19 16C18 13 15 12 12 12Z" />
+            </svg>
+            <div class="services-curved-bg">
+                <div class="curved-bg-line"></div>
+            </div>
+            <!-- Section Header inside standard constrained container -->
+            <div class="services-container">
+                <div class="section-header text-center">
+                    <h2>Dịch vụ <span class="accent-italic">PawPal</span></h2>
+                    <p class="section-subtitle">Spa, Hotel, và hơn thế nữa — Chăm sóc toàn diện cho bé cưng của bạn</p>
+                </div>
+            </div>
+
+            <!-- Carousel full-width wrapper (outside services-container) -->
+            <div class="services-arched-wrapper">
+                <!-- Card 01: Pet Spa - Grooming -->
+                <div class="arched-card">
+                    <div class="card-image-wrapper">
+                        <img src="../../assets/images/services/spa.png" alt="Pet Spa - Grooming" loading="lazy">
+                        <span class="card-number">01</span>
+                        <a href="../../pages/services/booking.html" class="arrow-btn" aria-label="Đặt lịch Spa">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="card-info">
+                        <h3>Pet Spa - Grooming</h3>
+                        <p>Với đội ngũ nhân sự ưu tú, PawPal tự tin với mục tiêu đem lại chất lượng dịch vụ tắm, cắt tỉa
+                            tốt nhất.</p>
+                        <div class="service-price-tag">Từ 150.000đ</div>
+                    </div>
+                </div>
+
+                <!-- Card 02: Pet Hotel -->
+                <div class="arched-card">
+                    <div class="card-image-wrapper">
+                        <img src="../../assets/images/services/hotel.png" alt="Pet Hotel" loading="lazy">
+                        <span class="card-number">02</span>
+                        <a href="../../pages/services/booking.html" class="arrow-btn" aria-label="Đặt lịch Hotel">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="card-info">
+                        <h3>Pet Hotel</h3>
+                        <p>Khách sạn thú cưng chó mèo với không gian riêng tư, mát mẻ, giúp boss nghỉ ngơi trọn vẹn.</p>
+                        <div class="service-price-tag">Từ 350.000đ/đêm</div>
+                    </div>
+                </div>
+
+                <!-- Card 03: Self - Service Wash -->
+                <div class="arched-card">
+                    <div class="card-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=500&q=80"
+                            alt="Self-Service Wash" loading="lazy">
+                        <span class="card-number">03</span>
+                        <a href="../../pages/services/booking.html" class="arrow-btn" aria-label="Đặt lịch Self-Service Wash">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="card-info">
+                        <h3>Self - Service Wash</h3>
+                        <p>Dịch vụ tắm cho thú cưng tiện lợi, sạch sẽ, đầy đủ bồn tắm và máy sấy chuyên dụng.</p>
+                        <div class="service-price-tag">Từ 80.000đ</div>
+                    </div>
+                </div>
+
+                <!-- Card 04: Pet Shipping -->
+                <div class="arched-card">
+                    <div class="card-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?auto=format&fit=crop&w=500&q=80"
+                            alt="Pet Shipping" loading="lazy">
+                        <span class="card-number">04</span>
+                        <a href="../../pages/services/booking.html" class="arrow-btn" aria-label="Đặt lịch Pet Shipping">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="card-info">
+                        <h3>Pet Shipping</h3>
+                        <p>Đưa đón thú cưng tận nơi an toàn, nhanh chóng, đúng giờ, phù hợp lịch trình của bạn.</p>
+                        <div class="service-price-tag">Từ 50.000đ</div>
+                    </div>
+                </div>
+
+                <!-- Card 05: Vet Services -->
+                <div class="arched-card">
+                    <div class="card-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=500&q=80"
+                            alt="Vet Services" loading="lazy">
+                        <span class="card-number">05</span>
+                        <a href="../../pages/services/booking.html" class="arrow-btn" aria-label="Đặt lịch Vet Services">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="card-info">
+                        <h3>Vet Services</h3>
+                        <p>Tư vấn sức khoẻ, tiêm ngừa, điều trị hiệu quả cho chó mèo - an toàn, uy tín.</p>
+                        <div class="service-price-tag">Từ 100.000đ</div>
+                    </div>
+                </div>
+
+                <!-- Card 06: Pet Shop -->
+                <div class="arched-card">
+                    <div class="card-image-wrapper">
+                        <img src="../../assets/images/services/shop.png" alt="Pet Shop" loading="lazy">
+                        <span class="card-number">06</span>
+                        <a href="#shop" class="arrow-btn" aria-label="Xem Cửa Hàng">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="card-info">
+                        <h3>Pet Shop PawPal</h3>
+                        <p>Cung cấp đồ ăn, hạt dinh dưỡng, pate thơm ngon và đồ dùng hàng chọn lọc.</p>
+                        <div class="service-price-tag">Xem ngay →</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carousel Navigation & Action inside another constrained container -->
+            <div class="services-container">
+                <!-- Carousel Navigation -->
+                <div class="carousel-nav">
+                    <button class="carousel-prev" aria-label="Previous">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                    </button>
+                    <button class="carousel-next" aria-label="Next">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="services-action text-center" style="margin-top: 50px; position: relative; z-index: 5;">
+                    <button class="btn-green-outline" id="openPricingBtn">Xem bảng giá chi tiết <span>→</span></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Shop/Shopping Section -->
+        <section class="shop-section" id="shop">
+            <div class="shop-container">
+                <div class="section-header text-center">
+                    <h2>Góc <span class="accent-italic">mua sắm</span></h2>
+                    <p class="section-subtitle">Sắm đồ cho bé, tích điểm thả ga cùng membership.</p>
+                </div>
+
+                <!-- Shop Category Filter Bar (BeePetShop Style) -->
+                <div class="shop-filter-bar">
+                    <button class="filter-btn active" data-filter="all">Tất cả</button>
+                    <button class="filter-btn" data-filter="food">Thực phẩm 🍖</button>
+                    <button class="filter-btn" data-filter="supplies">Đồ dùng & Cát 📦</button>
+                    <button class="filter-btn" data-filter="accessories">Phụ kiện & Đồ chơi 🧸</button>
+                    <button class="filter-btn" data-filter="hygiene">Sữa tắm & Vệ sinh 🧼</button>
+                </div>
+
+                <div class="product-grid" id="productGrid">
+                    <!-- Product 1: Thực phẩm -->
+                    <div class="product-card" data-category="food">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=500&q=80"
+                                alt="Thức ăn hạt cao cấp" loading="lazy">
+                            <span class="product-tag best-seller">BEST SELLER</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Thức ăn hạt cao cấp</h3>
+                            <div class="product-price">
+                                <span class="price-current">405.000đ</span>
+                                <span class="price-old">450.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 2: Vệ sinh -->
+                    <div class="product-card" data-category="hygiene">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?auto=format&fit=crop&w=500&q=80"
+                                alt="Sữa tắm organic cho mèo" loading="lazy">
+                            <span class="product-tag mega-deal">MEGA DEAL</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Sữa tắm organic cho mèo</h3>
+                            <div class="product-price">
+                                <span class="price-current">252.000đ</span>
+                                <span class="price-old">280.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 3: Vệ sinh -->
+                    <div class="product-card" data-category="hygiene">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?auto=format&fit=crop&w=500&q=80"
+                                alt="Sữa tắm organic cho chó" loading="lazy">
+                            <span class="product-tag mega-deal">MEGA DEAL</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Sữa tắm organic cho chó</h3>
+                            <div class="product-price">
+                                <span class="price-current">252.000đ</span>
+                                <span class="price-old">280.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 4: Thực phẩm -->
+                    <div class="product-card" data-category="food">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=500&q=80"
+                                alt="Pate hũ dinh dưỡng" loading="lazy">
+                            <span class="product-tag best-seller">BEST SELLER</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Pate hũ dinh dưỡng</h3>
+                            <div class="product-price">
+                                <span class="price-current">76.000đ</span>
+                                <span class="price-old">85.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 5: Đồ dùng -->
+                    <div class="product-card" data-category="supplies">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1563460716889-ac2bc17d86c7?auto=format&fit=crop&w=500&q=80"
+                                alt="Balo phi hành gia" loading="lazy">
+                            <span class="product-tag new-arrival">NEW ARRIVAL</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Balo phi hành gia cao cấp</h3>
+                            <div class="product-price">
+                                <span class="price-current">320.000đ</span>
+                                <span class="price-old">360.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 6: Đồ dùng -->
+                    <div class="product-card" data-category="supplies">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&w=500&q=80"
+                                alt="Cát vệ sinh Tofu" loading="lazy">
+                            <span class="product-tag best-seller">HOT DEAL</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Cát vệ sinh đậu nành Tofu</h3>
+                            <div class="product-price">
+                                <span class="price-current">110.000đ</span>
+                                <span class="price-old">130.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 7: Phụ kiện -->
+                    <div class="product-card" data-category="accessories">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=500&q=80"
+                                alt="Đồ chơi xương gặm" loading="lazy">
+                            <span class="product-tag best-seller">HOT</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Đồ chơi xương gặm canxi</h3>
+                            <div class="product-price">
+                                <span class="price-current">45.000đ</span>
+                                <span class="price-old">55.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 8: Phụ kiện -->
+                    <div class="product-card" data-category="accessories">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1596492784531-6e6eb5ea9993?auto=format&fit=crop&w=500&q=80"
+                                alt="Vòng cổ phản quang" loading="lazy">
+                            <span class="product-tag new-arrival">NEW</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Vòng cổ dây dắt phản quang</h3>
+                            <div class="product-price">
+                                <span class="price-current">65.000đ</span>
+                                <span class="price-old">80.000đ</span>
+                                <span class="price-subtext">(Giá sau tích điểm)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="shop-action text-center">
+                    <a href="../../pages/shop/shop.html" class="btn-green-outline">Xem tất cả sản phẩm <span>→</span></a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Timeline Tracker Section -->
+        <section class="tracker-section" id="tracker">
+            <div class="tracker-container">
+
+                <div class="tracker-text-col">
+                    <h2>Bạn ở xa, nhưng <br><span class="accent-italic">vẫn ở bên bé.</span></h2>
+                    <p class="tracker-desc">Mọi khoảnh khắc của bé tại PawPal đều được cập nhật lên dòng thời gian riêng
+                        của bạn. Minh bạch, an tâm, mọi lúc mọi nơi.</p>
+                    <div class="tracker-benefits">
+                        <div class="tracker-benefit-item"><span class="check">✓</span> Nhận ảnh/video ngay khi bé ăn,
+                            tắm, vui chơi</div>
+                        <div class="tracker-benefit-item"><span class="check">✓</span> Lịch sử chăm sóc lưu trữ vĩnh
+                            viễn, xem lại bất kỳ lúc nào</div>
+                        <div class="tracker-benefit-item"><span class="check">✓</span> Thông báo tức thì qua Zalo khi có
+                            cập nhật mới</div>
+                    </div>
+
+                    <div class="timeline-indicators">
+                        <div class="timeline-indicator-item active" data-step="1">
+                            <div class="indicator-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                </svg>
+                            </div>
+                            <div class="indicator-info">
+                                <span class="time">10:00</span>
+                                <span class="title">Bé Lu đã ăn xong</span>
+                            </div>
+                        </div>
+
+                        <div class="timeline-indicator-item" data-step="2">
+                            <div class="indicator-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M2 22h20C22 13 17 6 12 6S2 13 2 22z"></path>
+                                    <path d="M7 14h10"></path>
+                                </svg>
+                            </div>
+                            <div class="indicator-info">
+                                <span class="time">14:30</span>
+                                <span class="title">Bé Lu bắt đầu tắm</span>
+                            </div>
+                        </div>
+
+                        <div class="timeline-indicator-item" data-step="3">
+                            <div class="indicator-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                            </div>
+                            <div class="indicator-info">
+                                <span class="time">15:15</span>
+                                <span class="title">Kiểm tra sức khỏe định kỳ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tracker-mockup-col">
+                    <div class="phone-mockup">
+                        <div class="phone-screen">
+                            <div class="phone-header">
+                                <span class="phone-title">Nhật ký bé Lu</span>
+                                <span class="phone-dot"></span>
+                            </div>
+
+                            <div class="phone-timeline">
+                                <!-- Card 1 -->
+                                <div class="phone-timeline-card active" id="phone-card-1">
+                                    <div class="card-meta">
+                                        <span class="card-dot"></span>
+                                        <span class="card-time">10:00</span>
+                                    </div>
+                                    <h4 class="card-title">Bé Lu đã ăn xong</h4>
+                                    <div class="card-image-box">
+                                        <img src="../../assets/images/tracker/belu-1.png" alt="Bé Lu đã ăn xong">
+                                    </div>
+                                </div>
+
+                                <!-- Card 2 -->
+                                <div class="phone-timeline-card" id="phone-card-2">
+                                    <div class="card-meta">
+                                        <span class="card-dot"></span>
+                                        <span class="card-time">14:30</span>
+                                    </div>
+                                    <h4 class="card-title">Bé Lu bắt đầu tắm</h4>
+                                    <div class="card-image-box">
+                                        <img src="../../assets/images/tracker/belu-2.png" alt="Bé Lu bắt đầu tắm">
+                                    </div>
+                                </div>
+
+                                <!-- Card 3 -->
+                                <div class="phone-timeline-card" id="phone-card-3">
+                                    <div class="card-meta">
+                                        <span class="card-dot"></span>
+                                        <span class="card-time">15:15</span>
+                                    </div>
+                                    <h4 class="card-title">Kiểm tra sức khỏe định kỳ</h4>
+                                    <div class="card-image-box">
+                                        <img src="../../assets/images/tracker/belu-3.png" alt="Kiểm tra sức khỏe">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Safety & Commitment Section -->
+        <section class="safety-section">
+            <div class="safety-container">
+                <div class="section-header text-center">
+                    <h2>Cam kết <span class="accent-italic">An Tâm Tuyệt Đối</span></h2>
+                    <p class="section-subtitle">Sức khỏe và sự an toàn của các bé luôn là ưu tiên hàng đầu tại PawPal.
+                    </p>
+                </div>
+                <div class="safety-grid">
+                    <!-- Card 1: Hygiene -->
+                    <div class="safety-card">
+                        <div class="safety-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                        <h3>Tiêu chuẩn Vệ sinh</h3>
+                        <p>Khử khuẩn toàn diện phòng 2 lần/ngày bằng dung dịch sinh học chuyên dụng, bảo vệ bé khỏi các
+                            bệnh lây nhiễm chéo.</p>
+                    </div>
+                    <!-- Card 2: Vaccine -->
+                    <div class="safety-card">
+                        <div class="safety-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                            </svg>
+                        </div>
+                        <h3>Yêu cầu Vaccine</h3>
+                        <p>100% các bé lưu trú tại khách sạn đều phải tiêm đủ ít nhất 2 mũi vaccine cơ bản và có sổ kiểm
+                            tra sức khỏe đầy đủ.</p>
+                    </div>
+                    <!-- Card 3: Protection -->
+                    <div class="safety-card">
+                        <div class="safety-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                        </div>
+                        <h3>Chính sách Bảo vệ</h3>
+                        <p>Cam kết chịu 100% chi phí y tế nếu xảy ra bất kỳ sự cố phát sinh nào về sức khỏe của bé trong
+                            thời gian ở PawPal.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Experts Section -->
+        <section class="experts-section" id="experts">
+            <div class="experts-container">
+                <div class="section-header text-center">
+                    <h2>Đội ngũ chuyên gia — <span class="accent-italic">Những trái tim yêu thú cưng</span></h2>
+                    <p class="section-subtitle">Gửi gắm bé yêu cho những đôi tay lành nghề nhất. Tại PawPal, mỗi nhân
+                        viên không chỉ là một chuyên gia mà còn là một người bạn thực thụ của thú cưng.</p>
+                </div>
+
+                <div class="experts-grid">
+                    <!-- Expert 1 -->
+                    <div class="expert-card">
+                        <div class="expert-image-box">
+                            <img src="../../assets/images/experts/expert-a.png" alt="Minh Tuấn">
+                            <div class="expert-badge-overlay">
+                                <span class="expert-name">Minh Tuấn</span>
+                                <span class="expert-title">Chuyên gia Grooming (Kinh nghiệm 5 năm)</span>
+                            </div>
+                        </div>
+                        <div class="expert-info">
+                            <div class="expert-cert">
+                                <span class="cert-icon">✓</span>
+                                <span>Chứng chỉ CPGDS (Certified Professional Groomer Specialist)</span>
+                            </div>
+                            <blockquote class="expert-quote">
+                                "Với tôi, mỗi chú chó một tính cách. Không phong cách nào bằng sự thoải mái."
+                            </blockquote>
+                            <div class="expert-stats">
+                                <div class="expert-stat-item">
+                                    <span class="stat-label">Đánh giá:</span>
+                                    <span class="stat-value">4.9★ <span class="stat-count">(350+ lượt)</span></span>
+                                </div>
+                                <div class="expert-stat-item">
+                                    <span class="stat-label">Đã chăm sóc:</span>
+                                    <span class="stat-value">1,200+ bé</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expert 2 -->
+                    <div class="expert-card">
+                        <div class="expert-image-box">
+                            <img src="../../assets/images/experts/expert-b.png" alt="Thanh Hà">
+                            <div class="expert-badge-overlay">
+                                <span class="expert-name">Thanh Hà</span>
+                                <span class="expert-title">Chuyên gia Hotel &amp; Care (Kinh nghiệm 7 năm)</span>
+                            </div>
+                        </div>
+                        <div class="expert-info">
+                            <div class="expert-cert">
+                                <span class="cert-icon">✓</span>
+                                <span>Chứng chỉ IACP (International Association of Canine Professionals)</span>
+                            </div>
+                            <blockquote class="expert-quote">
+                                "Sự thấu hiểu hành vi chăm sóc tạo nên sự an tâm trọn vẹn."
+                            </blockquote>
+                            <div class="expert-stats">
+                                <div class="expert-stat-item">
+                                    <span class="stat-label">Đánh giá:</span>
+                                    <span class="stat-value">4.8★ (420+ lượt)</span>
+                                </div>
+                                <div class="expert-stat-item">
+                                    <span class="stat-label">Đã chăm sóc:</span>
+                                    <span class="stat-value">2,500+ bé</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expert 3 -->
+                    <div class="expert-card">
+                        <div class="expert-image-box">
+                            <img src="../../assets/images/experts/expert-c.png" alt="Hoàng Phúc">
+                            <div class="expert-badge-overlay">
+                                <span class="expert-name">Hoàng Phúc</span>
+                                <span class="expert-title">Bác sĩ thú y (Kinh nghiệm 3 năm)</span>
+                            </div>
+                        </div>
+                        <div class="expert-info">
+                            <div class="expert-cert">
+                                <span class="cert-icon">✓</span>
+                                <span>Chứng chỉ Veterinary Assistant International</span>
+                            </div>
+                            <blockquote class="expert-quote">
+                                "Sức khỏe của các bé là niềm hạnh phúc lớn nhất của tôi mỗi ngày."
+                            </blockquote>
+                            <div class="expert-stats">
+                                <div class="expert-stat-item">
+                                    <span class="stat-label">Đánh giá:</span>
+                                    <span class="stat-value">5.0★ (280+ lượt)</span>
+                                </div>
+                                <div class="expert-stat-item">
+                                    <span class="stat-label">Đã khám bệnh:</span>
+                                    <span class="stat-value">1,800+ ca</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Process Section -->
+        <section class="process-section" id="process">
+            <div class="process-container">
+                <div class="section-header text-center inverted">
+                    <h2>Quy trình <span class="accent-italic">đơn giản</span></h2>
+                    <p class="section-subtitle">Chỉ với 3 bước chạm để bé yêu được chăm sóc tốt nhất.</p>
+                </div>
+
+                <div class="process-steps">
+                    <!-- Step 1 -->
+                    <div class="step-card">
+                        <div class="step-num">01</div>
+                        <h3>Chọn dịch vụ</h3>
+                        <p>Spa, Hotel hoặc Shop. Tiện lợi, không cần tạo tài khoản.</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="step-card">
+                        <div class="step-num">02</div>
+                        <h3>Chọn khung giờ</h3>
+                        <p>Hiển thị lịch trống thời gian thực. Chính xác tuyệt đối.</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="step-card">
+                        <div class="step-num">03</div>
+                        <h3>Hoàn tất</h3>
+                        <p>Nhận thông báo xác nhận ngay lập tức qua SMS/Zalo.</p>
+                    </div>
+                </div>
+
+                <div class="process-action text-center">
+                    <a href="../../pages/services/booking.html" class="btn-cta accent-bg">
+                        <span>Bắt đầu ngay</span>
+                        <span class="btn-icon-wrapper">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Membership & Loyalty Section -->
+        <section class="membership-section">
+            <div class="container membership-container">
+                <div class="section-header text-center">
+                    <h2>Chương trình <span class="accent-italic">Paw Points</span></h2>
+                    <p class="section-subtitle">Tích điểm thật dễ, đổi quà thật nhanh — Mỗi lần đến PawPal đều được trân trọng</p>
+                </div>
+
+                <div class="membership-benefits">
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
+                                <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                <line x1="2" y1="10" x2="22" y2="10"></line>
+                                <line x1="6" y1="15" x2="10" y2="15"></line>
+                            </svg>
+                        </div>
+                        <h3>Tích điểm mỗi giao dịch</h3>
+                        <p>Mỗi 10,000đ chi tiêu = 1 Paw Point. Áp dụng cho tất cả dịch vụ và sản phẩm.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
+                                <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                                <rect x="2" y="7" width="20" height="5"></rect>
+                                <line x1="12" y1="22" x2="12" y2="7"></line>
+                                <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                                <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                            </svg>
+                        </div>
+                        <h3>Đổi quà & Giảm giá</h3>
+                        <p>100 điểm = 50,000đ voucher. Hoặc đổi quà độc quyền chỉ có tại PawPal.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </div>
+                        <h3>Ưu đãi hạng thành viên</h3>
+                        <p>Hạng Bạc → Vàng → Kim Cương. Mỗi hạng nhận ưu đãi và quà tặng riêng.</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
+                                <path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"></path>
+                                <path d="M4 16h16"></path>
+                                <path d="M10 9V5a2 2 0 0 1 4 0v4"></path>
+                                <path d="M12 5V2"></path>
+                                <path d="M6 11V9a2 2 0 0 1 4 0v2"></path>
+                                <path d="M14 11V9a2 2 0 0 1 4 0v2"></path>
+                            </svg>
+                        </div>
+                        <h3>Quà sinh nhật bé cưng</h3>
+                        <p>Nhận ngay 50 Paw Points + 1 voucher Spa miễn phí vào sinh nhật bé yêu.</p>
+                    </div>
+                </div>
+
+                <div class="membership-tiers">
+                    <div class="tier-card tier-silver">
+                        <div class="tier-badge">🥈 Hạng Bạc</div>
+                        <div class="tier-requirement">Tự động khi đăng ký</div>
+                        <ul class="tier-perks">
+                            <li>✓ Tích điểm cơ bản 1x</li>
+                            <li>✓ Nhật ký chăm sóc real-time</li>
+                            <li>✓ Ưu đãi sinh nhật bé cưng</li>
+                        </ul>
+                    </div>
+                    <div class="tier-card tier-gold">
+                        <div class="tier-badge">🥇 Hạng Vàng</div>
+                        <div class="tier-requirement">Chi tiêu tích lũy 5 triệu</div>
+                        <ul class="tier-perks">
+                            <li>✓ Tích điểm x1.5</li>
+                            <li>✓ Ưu tiên đặt lịch</li>
+                            <li>✓ Giảm 10% tất cả dịch vụ</li>
+                            <li>✓ 1 Spa miễn phí mỗi quý</li>
+                        </ul>
+                    </div>
+                    <div class="tier-card tier-diamond">
+                        <div class="tier-badge">💎 Hạng Kim Cương</div>
+                        <div class="tier-requirement">Chi tiêu tích lũy 15 triệu</div>
+                        <ul class="tier-perks">
+                            <li>✓ Tích điểm x2</li>
+                            <li>✓ Chuyên gia riêng</li>
+                            <li>✓ Giảm 15% tất cả dịch vụ</li>
+                            <li>✓ Miễn phí vận chuyển Pet</li>
+                            <li>✓ Quà tặng VIP mỗi tháng</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="membership-action text-center mt-5">
+                    <a href="../../pages/public/login.html" class="btn-cta">
+                        <span>Đăng ký nhận 50 Paw Points ngay</span>
+                        <span class="btn-icon-wrapper">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Booking Modal Container -->
+        <div id="booking" class="booking-modal">
+            <div class="booking-modal-overlay" id="bookingOverlay"></div>
+            <div class="booking-modal-content">
+                <div class="booking-modal-header">
+                    <h3>Đặt lịch chăm sóc bé</h3>
+                    <button class="booking-modal-close" id="closeBookingBtn">&times;</button>
+                </div>
+                <form id="bookingForm" class="booking-form"
+                    onsubmit="event.preventDefault(); alert('Đặt lịch thành công! PawPal sẽ gửi xác nhận qua SMS/Zalo sau vài giây.'); this.reset(); document.getElementById('booking').classList.remove('open');">
+                    <div class="form-group">
+                        <label for="bookingName">Tên của bạn</label>
+                        <input type="text" id="bookingName" required placeholder="Nhập họ và tên...">
+                    </div>
+                    <div class="form-group">
+                        <label for="bookingPhone">Số điện thoại</label>
+                        <input type="tel" id="bookingPhone" required placeholder="Nhập số điện thoại...">
+                    </div>
+                    <div class="form-group">
+                        <label for="bookingService">Chọn dịch vụ</label>
+                        <select id="bookingService">
+                            <option>Spa & Grooming</option>
+                            <option>Pet Hotel</option>
+                            <option>Khám sức khỏe</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-submit-booking">Xác nhận đặt lịch</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Pricing Modal Container -->
+        <div id="pricingModal" class="pricing-modal">
+            <div class="pricing-modal-overlay" id="pricingOverlay"></div>
+            <div class="pricing-modal-content">
+                <div class="pricing-modal-header">
+                    <h3>Bảng Giá Dịch Vụ Chi Tiết</h3>
+                    <button class="pricing-modal-close" id="closePricingBtn">&times;</button>
+                </div>
+                <div class="pricing-modal-body">
+                    <div class="pricing-tabs">
+                        <button class="pricing-tab-btn active" data-tab="spa-pricing">Spa & Grooming</button>
+                        <button class="pricing-tab-btn" data-tab="hotel-pricing">Pet Hotel</button>
+                    </div>
+
+                    <div class="pricing-tab-content active" id="spa-pricing">
+                        <table class="pricing-table">
+                            <thead>
+                                <tr>
+                                    <th>Cân nặng của bé</th>
+                                    <th>Tắm cơ bản</th>
+                                    <th>Combo toàn diện (Tắm + Cắt tỉa)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Dưới 5kg</td>
+                                    <td>150.000đ</td>
+                                    <td>350.000đ</td>
+                                </tr>
+                                <tr>
+                                    <td>5kg - 10kg</td>
+                                    <td>200.000đ</td>
+                                    <td>450.000đ</td>
+                                </tr>
+                                <tr>
+                                    <td>10kg - 20kg</td>
+                                    <td>300.000đ</td>
+                                    <td>600.000đ</td>
+                                </tr>
+                                <tr>
+                                    <td>Trên 20kg</td>
+                                    <td>Từ 400.000đ</td>
+                                    <td>Từ 750.000đ</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="pricing-note">* Bảng giá áp dụng chung cho cả chó và mèo. Giá thực tế có thể dao động
+                            nhẹ tùy theo tình trạng xơ rối lông của bé.</p>
+                    </div>
+
+                    <div class="pricing-tab-content" id="hotel-pricing">
+                        <table class="pricing-table">
+                            <thead>
+                                <tr>
+                                    <th>Hạng phòng</th>
+                                    <th>Đặc điểm nổi bật</th>
+                                    <th>Giá / Đêm</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Standard Room</td>
+                                    <td>Khử khuẩn tự động, đệm sưởi êm ấm</td>
+                                    <td>350.000đ</td>
+                                </tr>
+                                <tr>
+                                    <td>Deluxe Room</td>
+                                    <td>Có camera riêng để Sen theo dõi 24/7</td>
+                                    <td>500.000đ</td>
+                                </tr>
+                                <tr>
+                                    <td>Royal Suite</td>
+                                    <td>Sân chơi kính riêng biệt, bữa ăn thiết kế riêng</td>
+                                    <td>800.000đ</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="pricing-note">* Đã bao gồm 3 bữa ăn tiêu chuẩn dinh dưỡng cao và thời gian vui chơi
+                            tương tác hàng ngày.</p>
+                    </div>
+                </div>
+                <div class="pricing-modal-footer">
+                    <a href="../../pages/services/booking.html" class="btn-cta text-center" id="pricingBookBtn"
+                        style="width: 100%; display: block; box-sizing: border-box;">Đặt lịch chăm sóc ngay</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testimonials Section -->
+        <section class="testimonials-section">
+            <div class="testimonials-container">
+                <div class="section-header text-center">
+                    <h2>Hơn 5000+ Sen đã <span class="accent-italic">tin tưởng PawPal</span></h2>
+                    <div class="stars-rating">★★★★★</div>
+                </div>
+
+                <div class="testimonials-grid">
+                    <!-- Review 1 -->
+                    <div class="testimonial-card">
+                        <span class="quote-mark">“</span>
+                        <p class="testimonial-text">Xưa nay đi spa cho thú cưng lo nhất là người ta đối xử không tốt với
+                            con mình. Từ ngày có PawPal, mình an tâm hẳn vì lúc nào cũng có thể check nhật ký hình ảnh
+                            real-time. Dịch vụ quá tuyệt vời!</p>
+                        <div class="testimonial-user">
+                            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80"
+                                alt="Chị Mai Lan" loading="lazy">
+                            <div class="user-meta">
+                                <span class="user-name">Chị Mai Lan</span>
+                                <span class="user-sub">Mẹ bé Măng</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review 2 -->
+                    <div class="testimonial-card">
+                        <span class="quote-mark">“</span>
+                        <p class="testimonial-text">Dịch vụ pet hotel ở đây sạch sẽ dã man, mấy bạn nhân viên kỹ tính
+                            cực kỳ. Chỗ nghỉ dưỡng lý tưởng cho con mỗi khi mình bận đi công tác.</p>
+                        <div class="testimonial-user">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
+                                alt="Anh Tuấn" loading="lazy">
+                            <div class="user-meta">
+                                <span class="user-name">Anh Tuấn</span>
+                                <span class="user-sub">Ba bé Lu</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review 3 -->
+                    <div class="testimonial-card">
+                        <span class="quote-mark">“</span>
+                        <p class="testimonial-text">Giá cả rõ ràng không lằng nhằng, mình là sinh viên nên rất thích vụ
+                            tích điểm mua sắm ở đây. Tiết kiệm được một khoản kha khá mỗi tháng.</p>
+                        <div class="testimonial-user">
+                            <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80"
+                                alt="Bạn Minh Anh" loading="lazy">
+                            <div class="user-meta">
+                                <span class="user-name">Bạn Minh Anh</span>
+                                <span class="user-sub">Mẹ bé Cà Phê</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FAQ Accordion Section -->
+    <section class="faq-section" id="faq">
+        <div class="faq-container">
+            <div class="section-header text-center">
+                <h2>Câu hỏi <span class="accent-italic">thường gặp</span></h2>
+                <p class="section-subtitle">Giải đáp thắc mắc phổ biến nhất của các Sen khi gửi bé tại PawPal.</p>
+            </div>
+
+            <div class="faq-list">
+                <!-- FAQ Item 1 -->
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>Yêu cầu tiêm vaccine đối với bé như thế nào?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Để đảm bảo sức khỏe cho tất cả các bé lưu trú, PawPal yêu cầu 100% thú cưng phải tiêm đủ ít
+                            nhất 2 mũi vaccine cơ bản và được tiêm phòng dại đầy đủ. Vui lòng mang theo sổ sức khỏe khi
+                            làm thủ tục check-in.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 2 -->
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>Tôi có cần tự chuẩn bị đồ ăn cho bé không?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>PawPal đã cung cấp sẵn bữa ăn tiêu chuẩn dinh dưỡng cao phù hợp với độ tuổi và loài. Tuy
+                            nhiên, nếu bé có chế độ ăn kiêng đặc biệt hoặc dị ứng thức ăn, bạn hoàn toàn có thể tự chuẩn
+                            bị và mang theo đồ ăn riêng cho bé, nhân viên sẽ cho bé ăn đúng giờ theo yêu cầu.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 3 -->
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>Nhật ký chăm sóc real-time được cập nhật bao lâu một lần?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Chúng tôi cập nhật hình ảnh và video hoạt động của bé lên nhật ký trực tuyến tối thiểu 3 lần
+                            mỗi ngày. Các Sen cũng sẽ nhận được thông báo tự động qua Zalo ngay khi có cập nhật mới để
+                            hoàn toàn an tâm.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 4 -->
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>Nếu bé gặp sự cố sức khỏe, PawPal xử lý thế nào?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Tại mỗi chi nhánh của PawPal luôn có bác sĩ thú y trực 24/7. Nếu bé có bất kỳ dấu hiệu bất
+                            thường nào về sức khỏe, bác sĩ sẽ thăm khám ngay lập tức và liên hệ thông báo cho bạn. Chúng
+                            tôi cam kết bảo vệ bé và chịu 100% chi phí y tế phát sinh nếu sự cố xuất phát từ quy trình
+                            chăm sóc tại PawPal.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 5 -->
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>Paw Points có thời hạn sử dụng không?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Paw Points của bạn có hiệu lực trong 12 tháng kể từ ngày tích. Điểm sắp hết hạn sẽ được thông báo qua email/Zalo trước 30 ngày. Mỗi giao dịch mới sẽ tự động gia hạn toàn bộ số điểm thêm 12 tháng nữa.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 6 -->
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>Có nhận chăm sóc mèo không?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Có! PawPal phục vụ cả chó và mèo. Khu vực chăm sóc mèo được thiết kế riêng biệt với không gian yên tĩnh, an toàn và phù hợp với tập tính của các boss mèo.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 7 -->
+                <div class="faq-item">
+                    <button class="faq-question" aria-expanded="false">
+                        <span>Giờ làm việc của PawPal như thế nào?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>PawPal mở cửa 7 ngày/tuần từ 8:00 sáng đến 8:00 tối. Dịch vụ Pet Hotel hoạt động 24/7. Bạn có thể đặt lịch online bất cứ lúc nào và nhận xác nhận tức thì.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer CTA Banner -->
+    <section class="footer-cta-banner">
+        <div class="footer-cta-inner">
+            <h2>Sẵn sàng gửi bé đến <span class="accent-italic">PawPal?</span></h2>
+            <p>Dịch vụ chăm sóc toàn diện — minh bạch, tận tâm, an tâm tuyệt đối.</p>
+            <div class="cta-urgency" id="ctaUrgency">
+                <span class="urgency-dot"></span>
+                <span>Đang tải thông tin slot...</span>
+            </div>
+            <a href="../../pages/services/booking.html" class="btn-cta cta-enhanced">
+                <span>Đặt lịch ngay — Miễn phí tư vấn</span>
+                <span class="btn-icon-wrapper">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </span>
+            </a>
+        </div>
+    </section>
+
+
+
+    <!-- Footer -->
+    <footer class="main-footer" id="contact">
+        <div class="footer-container">
+            <!-- Col 1 -->
+            <div class="footer-col col-brand">
+                <a href="#" class="logo footer-logo">
+                    <span class="brand-paw">Paw</span><span class="brand-pal">&Pal</span>
+                </a>
+                <p class="brand-description">Chăm sóc thú cưng bằng trái tim và công nghệ đỉnh cao. Chúng tôi mang đến
+                    sự an tâm tuyệt đối cho các "Sen".</p>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                        </svg>
+                    </a>
+                    <a href="#" aria-label="Instagram">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                        </svg>
+                    </a>
+                    <a href="#" aria-label="Youtube">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z">
+                            </path>
+                            <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Col 2 -->
+            <div class="footer-col">
+                <h4>DỊCH VỤ</h4>
+                <ul>
+                    <li><a href="#services">Spa & Grooming</a></li>
+                    <li><a href="#services">Pet Hotel</a></li>
+                    <li><a href="#services">Pet Shop</a></li>
+                </ul>
+            </div>
+
+            <!-- Col 3 -->
+            <div class="footer-col">
+                <h4>PAWPAL TEAM</h4>
+                <ul>
+                    <li><a href="../../pages/public/about.html">Về chúng tôi</a></li>
+                    <li><a href="#shop">Hệ thống cửa hàng</a></li>
+                    <li><a href="../../pages/public/blog.html">Tuyển dụng</a></li>
+                    <li><a href="../../pages/public/contact.html">Liên hệ</a></li>
+                </ul>
+            </div>
+
+            <!-- Col 4 -->
+            <div class="footer-col col-contact">
+                <h4>LIÊN HỆ & CHI NHÁNH</h4>
+                <ul class="contact-list">
+                    <li>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                            </path>
+                        </svg>
+                        <span>Hotline: 0987 654 321</span>
+                    </li>
+                    <li>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                            </path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                        <span>Email: contact@pawpal.vn</span>
+                    </li>
+                    <li class="branch-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <div>
+                            <strong>CN1 (TP. HCM):</strong>
+                            <span class="branch-address">123 Đường Thú Cưng, Tân Phong, Quận 7</span>
+                        </div>
+                    </li>
+                    <li class="branch-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <div>
+                            <strong>CN2 (Hà Nội):</strong>
+                            <span class="branch-address">456 Phố Sen Hồng, Dịch Vọng, Cầu Giấy</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Google Maps Capsule inside Footer -->
+        <div class="footer-map-section">
+            <div class="map-container">
+                <div class="map-badge">Maps</div>
+                <div class="map-capsule-wrapper">
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.9544103877597!2d106.6978907!3d10.7380015!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f9b8c0a8747%3A0xf6398b1b22e1b10a!2zMTIzIMSQxrDhu51uZyBUaMO6IEPGsG5nLCBUw6JuIFBob25nLCBRdeG6rW4gNywgVGjDoG5oIHBo4buRIEjhu5MgQ2jDrSBNaW5o!5e0!3m2!1svi!2svn!4v1700000000000!5m2!1svi!2svn"
+                        width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom text-center">
+            <p>&copy; 2026 PawPal. All rights reserved. Designed with love for your best friends.</p>
+        </div>
+    </footer>
+
+    <!-- Script -->
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmxc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="../../assets/js/auth.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script>
+        // Smart Loader: hide as soon as DOM is ready, cancel show-timer if fast enough
+        (function () {
+            function hideLoader() {
+                clearTimeout(window._loaderTimeout);
+                var loader = document.getElementById('cute-loader');
+                if (!loader) return;
+                if (loader.style.display === 'none') return; // Never shown, do nothing
+                loader.style.opacity = '0';
+                loader.style.transition = 'opacity 0.3s ease';
+                setTimeout(function () { loader.style.display = 'none'; }, 300);
+            }
+            if (document.readyState === 'complete') {
+                hideLoader();
+            } else {
+                window.addEventListener('load', hideLoader);
+            }
+        })();
+    </script>
+
+    <!-- Hero Availability Dynamic Update -->
+    <script>
+        (function() {
+            // Update Hero Availability
+            function updateHeroAvailability() {
+                const el = document.getElementById('heroAvailability');
+                if (!el) return;
+                
+                const spaSlots = Math.floor(Math.random() * 5) + 1;
+                const hotelRooms = Math.floor(Math.random() * 4) + 1;
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                
+                el.innerHTML = `Hôm nay còn trống: <strong>${spaSlots} slot Spa</strong> | <strong>${hotelRooms} phòng Hotel</strong> <span style="opacity:0.7">(Cập nhật ${timeStr})</span>`;
+            }
+            
+            // Update Footer CTA Urgency
+            function updateCtaUrgency() {
+                const el = document.getElementById('ctaUrgency');
+                if (!el) return;
+                
+                const totalSlots = Math.floor(Math.random() * 8) + 3; // 3-10 slots
+                el.innerHTML = `<span class="urgency-dot"></span><span>Hôm nay còn <strong>${totalSlots} slot</strong> trống — Đặt ngay!</span>`;
+            }
+            
+            // Init và auto-update
+            updateHeroAvailability();
+            updateCtaUrgency();
+            setInterval(updateHeroAvailability, 300000); // 5 phút
+            setInterval(updateCtaUrgency, 180000); // 3 phút
+        })();
+    </script>
+
+    <!-- Zalo Float Chat Button -->
+    <a class="zalo-float-btn" href="https://zalo.me/0987654321" target="_blank" rel="noopener"
+        aria-label="Chat Zalo với PawPal">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="22">
+            <rect width="32" height="32" rx="8" fill="white" fill-opacity="0.25" />
+            <text x="50%" y="57%" dominant-baseline="middle" text-anchor="middle" font-size="18" font-weight="900"
+                fill="white" font-family="Arial, sans-serif">Z</text>
+        </svg>
+        Chat Zalo
+    </a>
+
+</body>
+
+</html>

@@ -11,10 +11,13 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
         rel="stylesheet">
+    <!-- Bootstrap 5 CSS — load trước để custom CSS có thể override -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <!-- Custom Style -->
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="../../assets/css/user/dashboard.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="../../assets/css/user/orders.css">
+    <link rel="stylesheet" href="../../assets/css/user/order-detail.css">
 </head>
 
 <body class="dashboard-page-body">
@@ -30,7 +33,7 @@
     <!-- Header Navigation -->
     <header class="main-header" id="mainHeader">
         <nav class="navbar navbar-expand-lg p-0" data-bs-theme="dark">
-            <div class="container header-container">
+            <div class="header-container">
                 <a href="#" class="navbar-brand logo">
                     <img src="../../assets/images/Logo_pawpal_navbar.png" alt="PawPal">
                 </a>
@@ -47,7 +50,7 @@
 
                 <div class="collapse navbar-collapse nav-menu" id="primaryNavigation">
                     <ul class="navbar-nav mx-auto">
-                        <li class="nav-item"><a href="../../index.html" class="nav-link">Trang chủ</a></li>
+                        <li class="nav-item"><a href="../../pages/public/landing.html" class="nav-link">Trang chủ</a></li>
                         <li class="nav-item"><a href="../services/services.html" class="nav-link">Dịch vụ</a></li>
                         <li class="nav-item"><a href="../shop/shop.html" class="nav-link">Cửa hàng</a></li>
                         <li class="nav-item"><a href="../public/about.html" class="nav-link">Về chúng tôi</a></li>
@@ -87,77 +90,107 @@
     </header>
 
     <!-- Main Dashboard Container -->
-    <main class="dashboard-page-main container" style="margin-top: 40px; margin-bottom: 40px; min-height: 70vh;">
-        <div class="dashboard-page-wrapper glass-panel"
-            style="border-radius: 24px; overflow: hidden; background: rgba(255, 255, 255, 0.96); border: 1px solid rgba(42, 89, 68, 0.08); box-shadow: 0 20px 25px -5px rgba(42, 89, 68, 0.12); display: flex; flex-direction: column;">
-
-            <div class="dashboard-header"
-                style="display: flex; justify-content: space-between; align-items: center; padding: 24px 30px; border-bottom: 1px solid rgba(42, 89, 68, 0.06); background-color: var(--color-primary-light);">
-                <div class="user-profile-summary" style="display: flex; align-items: center; gap: 16px;">
-                    <div class="user-avatar" id="dashAvatar"
-                        style="width: 48px; height: 48px; border-radius: 50%; background-color: var(--color-primary); color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: var(--font-primary); font-weight: 700; font-size: 1.1rem;">
-                        U</div>
-                    <div class="user-profile-text">
-                        <h3 id="dashName"
-                            style="font-family: var(--font-primary); font-size: 1.15rem; font-weight: 700; color: var(--color-primary-dark); margin: 0;">
-
-                        <!-- History Detail Modal -->
-                        <div id="historyDetailModal" class="petid-modal" style="display:none;">
-                            <div class="petid-modal-overlay" id="historyDetailOverlay"></div>
-                            <div class="petid-modal-content" style="max-width:800px;">
-                                <div class="petid-modal-header">
-                                    <h3 id="historyDetailTitle">Chi tiết phiên</h3>
-                                    <button class="petid-modal-close" id="historyDetailClose" aria-label="Đóng">✕</button>
-                                </div>
-                                <div class="petid-modal-body">
-                                    <div id="historyDetailSummary" style="margin-bottom:12px;"></div>
-                                    <div id="historyDetailTimeline"></div>
-                                </div>
-                            </div>
-                        </div>
-                            Nguyễn Văn A</h3>
-                        <span class="membership-badge" id="dashBadge"
-                            style="display: inline-block; font-size: 0.68rem; font-weight: 700; background-color: var(--color-accent-light); color: var(--color-accent-dark); padding: 2px 8px; border-radius: 4px; margin-top: 2px;">Hạng
-                            Bạc</span>
-                    </div>
+    <main class="dashboard-page-main container-fluid mt-5 mb-5" style="min-height: 70vh; max-width: 1600px;">
+        
+        <!-- Welcome Section (Flat) -->
+        <div class="dashboard-welcome-section">
+            <div class="user-profile-summary">
+                <div class="user-avatar" id="dashAvatar">U</div>
+                <div class="user-profile-text">
+                    <span class="welcome-text">Xin chào,</span>
+                    <h2 id="dashName" style="margin: 0;">Nguyễn Văn A</h2>
+                    <span class="membership-badge" id="dashBadge">Hạng Bạc</span>
                 </div>
             </div>
+        </div>
 
-            <div class="dashboard-body row m-0" style="min-height: 480px;">
+        <div class="dashboard-page-wrapper">
+            <div class="dashboard-body row m-0">
                 <!-- Tab Menu (Left Navigation) -->
-                <div class="dashboard-tabs-nav col-12 col-lg-3"
-                    style=" border-right: 1px solid rgba(42, 89, 68, 0.06); padding: 24px 16px; display: flex; flex-direction: column; gap: 10px;">
-                    <button class="dash-tab-btn active" data-dash-tab="dash-info">Thông tin chung</button>
-                    <button class="dash-tab-btn" data-dash-tab="dash-orders">Đơn hàng của tôi</button>
-                    <button class="dash-tab-btn" data-dash-tab="dash-petid">Hồ sơ bé cưng</button>
-                    <button class="dash-tab-btn" data-dash-tab="dash-booking">Lịch hẹn chăm sóc</button>
-                    <button class="dash-tab-btn" data-dash-tab="dash-tracker">Nhật ký chăm sóc</button>
-                    <button class="dash-tab-btn" data-dash-tab="dash-security">Bảo mật</button>
-                    <a href="../user/orders.html" class="btn-green-outline" style="text-align:center;">Đơn hàng của tôi</a>
-                    <button class="btn-dashboard-logout" id="dashboardLogoutBtn">Đăng xuất</button>
+                <div class="dashboard-tabs-nav col-12 col-lg-2">
+                    <button class="dash-tab-btn active" data-dash-tab="dash-info">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        Thông tin chung
+                    </button>
+                    <button class="dash-tab-btn" data-dash-tab="dash-orders">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                        Đơn hàng của tôi
+                    </button>
+                    <button class="dash-tab-btn" data-dash-tab="dash-petid">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10-4.48-10-10-10zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><circle cx="9" cy="10" r="1.5"/><circle cx="15" cy="10" r="1.5"/><path d="M12 14c-1.5 0-2.81-.61-3.75-1.59l1.41-1.41c.58.59 1.4 1 2.34 1s1.76-.41 2.34-1l1.41 1.41c-.94.98-2.25 1.59-3.75 1.59z"/></svg>
+                        Hồ sơ bé cưng
+                    </button>
+                    <button class="dash-tab-btn" data-dash-tab="dash-booking">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        Lịch hẹn chăm sóc
+                    </button>
+                    <button class="dash-tab-btn" data-dash-tab="dash-tracker">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                        Nhật ký chăm sóc
+                    </button>
+                    <button class="dash-tab-btn" data-dash-tab="dash-security">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        Bảo mật
+                    </button>
+                    <button class="btn-dashboard-logout" id="dashboardLogoutBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        Đăng xuất
+                    </button>
                 </div>
 
-                <!-- Tab Content Wrapper (Right Panel) -->
-                <div class="dashboard-tab-content-wrapper col-12 col-lg-9" style="padding: 30px; overflow-y: auto;">
-
-                    <!-- Tab 1: Info -->
+                <!-- Tab Content (Middle Column) -->
+                <div class="dashboard-tab-content-wrapper col-12 col-lg-7">
+                    <!-- Tab 1: Info (Tổng quan Dashboard phẳng) -->
                     <div class="dash-tab-content active" id="dash-info">
-                        <h4
-                            style="font-family: var(--font-primary); font-size: 1.25rem; font-weight: 700; color: var(--color-primary-dark); margin-bottom: 18px;">
-                            Tổng quan tài khoản</h4>
-                        <div class="dash-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                            <div class="dash-info-card">
-                                <span class="label">SỐ ĐIỆN THOẠI</span>
-                                <span class="value" id="dashPhone">0987 654 321</span>
+                        
+                        <!-- Live status (Chỉ hiện khi bé đang dùng dịch vụ) -->
+                        <div id="overviewLiveStatus" class="overview-section" style="display: none; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid rgba(42, 89, 68, 0.08);">
+                            <h4 class="dash-tab-title" style="color: #dc2626; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                                <span class="tracker-live-dot" style="display:inline-block; width:8px; height:8px; background:#dc2626; border-radius:50%; animation: trackerPulse 1.5s ease-in-out infinite;"></span>
+                                Theo dõi bé cưng (Trực tuyến)
+                            </h4>
+                            <p id="overviewLiveText" style="font-size: 0.9rem; font-weight: 600; color: var(--color-text-dark); margin: 8px 0 12px 0;">Bé đang được chăm sóc tại Spa</p>
+                            <button class="btn-green-outline" onclick="document.querySelector('[data-dash-tab=dash-tracker]').click()" style="font-size: 0.8rem; padding: 6px 14px;">Xem chi tiết nhật ký</button>
+                        </div>
+
+                        <!-- Lịch hẹn sắp tới -->
+                        <div class="overview-section" style="margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid rgba(42, 89, 68, 0.08);">
+                            <h4 class="dash-tab-title" style="font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">Lịch hẹn sắp tới</h4>
+                            <div id="overviewNextBooking">
+                                <p style="font-size: 0.9rem; color: var(--color-text-light); margin: 0;">Đang tìm kiếm lịch hẹn sắp tới...</p>
                             </div>
-                            <div class="dash-info-card">
-                                <span class="label">ĐIỂM PAW POINTS</span>
-                                <span class="value highlight" id="dashPoints">50 Points</span>
-                                <div class="redeem-points-area" style="margin-top: 10px;">
-                                    <button class="btn-redeem-points" id="redeemPointsBtn">Đổi điểm thưởng</button>
-                                    <span class="redeem-restricted-note" id="redeemRestrictedNote"
-                                        style="display: none; color: #ef4444; font-size: 0.78rem; font-weight: 500; margin-top: 8px;">🔒
-                                        Vui lòng thiết lập mật khẩu trong tab Bảo mật để mở khóa.</span>
+                        </div>
+
+                        <!-- Hồ sơ bé cưng -->
+                        <div class="overview-section" style="margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid rgba(42, 89, 68, 0.08);">
+                            <h4 class="dash-tab-title" style="font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">Thú cưng của tôi</h4>
+                            <div id="overviewPetsList" style="display: flex; flex-direction: column; gap: 10px;">
+                                <p style="font-size: 0.9rem; color: var(--color-text-light); margin: 0;">Chưa có hồ sơ thú cưng...</p>
+                            </div>
+                        </div>
+
+                        <!-- Hoạt động đơn hàng gần đây -->
+                        <div class="overview-section">
+                            <h4 class="dash-tab-title" style="font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">Đơn mua sắm gần đây</h4>
+                            <div id="overviewRecentOrders">
+                                <p style="font-size: 0.9rem; color: var(--color-text-light); margin: 0;">Không có đơn hàng nào vừa thực hiện...</p>
+                            </div>
+                        </div>
+
+                        <!-- Chỉ hiển thị số điện thoại và điểm thưởng trên Mobile (do Sidebar bị ẩn trên mobile) -->
+                        <div class="overview-section d-block d-lg-none" style="margin-top: 40px; padding-top: 24px; border-top: 2px solid rgba(42, 89, 68, 0.1);">
+                            <h4 class="dash-tab-title" style="font-size: 1.1rem; margin-bottom: 12px;">Tài khoản &amp; Ưu đãi</h4>
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(42,89,68,0.06); padding-bottom:8px;">
+                                    <span style="font-size:0.85rem; color:var(--color-text-light);">Số điện thoại</span>
+                                    <strong style="font-size:0.9rem; color:var(--color-primary-dark);" id="dashPhone">0901 234 567</strong>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:8px;">
+                                    <div>
+                                        <span style="font-size:0.85rem; color:var(--color-text-light); display:block;">Điểm tích lũy</span>
+                                        <strong style="font-size:1.1rem; color:var(--color-primary);" id="dashPoints">50 Points</strong>
+                                    </div>
+                                    <button class="btn-green-outline" id="redeemPointsBtn" style="font-size:0.8rem; padding:6px 14px;">Đổi quà</button>
                                 </div>
                             </div>
                         </div>
@@ -167,27 +200,35 @@
                         <div class="petid-tab-header" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">
                             <div>
                                 <h4 class="dash-tab-title">Đơn hàng của tôi</h4>
-                                <p class="dash-tab-subtitle">Xem nhanh tiến độ đơn hàng và truy cập chi tiết lịch sử giao nhận.</p>
+                                <p class="dash-tab-subtitle">Theo dõi trạng thái đơn hàng từng bước, xem chi tiết sản phẩm.</p>
                             </div>
-                            <a href="../user/orders.html" class="btn-add-pet" style="font-size: 0.9rem; padding: 10px 16px; white-space: nowrap;">Xem toàn bộ đơn hàng</a>
                         </div>
-                        <div class="orders-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 20px;">
-                            <div class="dash-info-card">
-                                <span class="label">Tổng đơn hàng</span>
-                                <span class="value" id="dashOrdersCount">0</span>
+
+                        <!-- Filter bar -->
+                        <div class="orders-filter-bar" id="ordersFilterBar">
+                            <button class="orders-filter-btn active" data-filter="all">Tất cả</button>
+                            <button class="orders-filter-btn" data-filter="pendingPayment">Chờ thanh toán</button>
+                            <button class="orders-filter-btn" data-filter="processing">Đang xử lý</button>
+                            <button class="orders-filter-btn" data-filter="shipping">Đang giao</button>
+                            <button class="orders-filter-btn" data-filter="completed">Hoàn thành</button>
+                            <button class="orders-filter-btn" data-filter="cancelled">Đã hủy / Hoàn trả</button>
+                        </div>
+
+                        <div class="orders-summary-bar">
+                            <div>
+                                <span id="ordersCount">0</span>
+                                <p>đơn hàng đã ghi nhận</p>
                             </div>
-                            <div class="dash-info-card">
-                                <span class="label">Đang xử lý</span>
-                                <span class="value" id="dashOrdersProcessing">0</span>
-                            </div>
-                            <div class="dash-info-card">
-                                <span class="label">Đang giao</span>
-                                <span class="value" id="dashOrdersShipping">0</span>
-                            </div>
-                            <div class="dash-info-card">
-                                <span class="label">Hoàn thành</span>
-                                <span class="value" id="dashOrdersCompleted">0</span>
-                            </div>
+                            <button class="btn-green-outline" id="ordersRefreshBtn">Cập nhật</button>
+                        </div>
+
+                        <div id="ordersList" class="orders-list"></div>
+
+                        <div class="orders-empty" id="ordersEmpty" style="display:none;">
+                            <div class="orders-empty-icon">🛍️</div>
+                            <h3>Chưa có đơn hàng nào</h3>
+                            <p>Hoàn tất đặt hàng để theo dõi tiến trình giao nhận tại PawPal.</p>
+                            <a href="../shop/shop.html" class="btn-cta">Mua sắm ngay</a>
                         </div>
                     </div>
 
@@ -304,11 +345,11 @@
                             <p>Thêm bé cưng trong tab <strong>Hồ sơ Pet ID</strong> để xem nhật ký.</p>
                         </div>
                         <!-- Historical logs + Recommendations -->
-                        <div class="tracker-historical-recommend" style="display:flex; gap:18px; margin-top:24px;">
+                        <div class="tracker-historical-recommend d-flex gap-3 mt-3">
                             <div style="flex:1;">
                                 <h5 style="margin:0 0 12px 0;">Chi tiết nhật ký cũ</h5>
                                 <div id="historicalLogsList"></div>
-                                <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;">
+                                <div class="d-flex gap-2 justify-content-center mt-3">
                                     <button id="histPrevBtn" class="btn-green-outline">« Trước</button>
                                     <button id="histNextBtn" class="btn-green-outline">Tiếp »</button>
                                 </div>
@@ -383,11 +424,108 @@
                     </div>
 
                 </div>
+
+                <!-- Persistent Stats Sidebar (Right Column) -->
+                <div class="dashboard-sidebar-stats col-12 col-lg-3 d-none d-lg-block">
+                    <h4 style="font-family: var(--font-primary); font-size: 1.05rem; font-weight: 700; color: var(--color-primary-dark); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Tài khoản &amp; Ưu đãi</h4>
+                    
+                    <div class="dash-info-card">
+                        <span class="label">Số điện thoại</span>
+                        <span class="value" id="dashPhone">0987 654 321</span>
+                    </div>
+                    
+                    <div class="dash-info-card">
+                        <span class="label">Điểm tích lũy</span>
+                        <span class="value highlight" id="dashPoints">50 Points</span>
+                        <div class="redeem-points-area" style="margin-top: 12px;">
+                            <button class="btn-green-outline" id="redeemPointsBtn" style="font-size: 0.8rem; padding: 6px 14px; width: 100%;">Đổi điểm thưởng</button>
+                            <span class="redeem-restricted-note" id="redeemRestrictedNote"
+                                style="display: none; color: #ef4444; font-size: 0.78rem; font-weight: 500; margin-top: 8px;">🔒
+                                 Vui lòng thiết lập mật khẩu trong tab Bảo mật để mở khóa.</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </main>
 
     <!-- Toast Notification Container -->
+    <!-- Order Detail Modal -->
+    <div id="orderDetailModal" class="orders-modal" aria-hidden="true">
+        <div class="orders-modal-overlay" id="orderDetailOverlay"></div>
+        <div class="orders-modal-content">
+            <header class="orders-modal-header">
+                <div>
+                    <span class="modal-label">Chi tiết đơn hàng</span>
+                    <h2 id="detailOrderCode">PP-000000</h2>
+                </div>
+                <button class="orders-modal-close" id="orderDetailClose" aria-label="Đóng">✕</button>
+            </header>
+            <div class="orders-modal-body">
+                <section class="order-detail-top">
+                    <div class="order-detail-status">
+                        <div>
+                            <span class="detail-label">Trạng thái đơn hàng</span>
+                            <div id="detailOrderStatus" class="status-badge status-pending">Chờ xác nhận</div>
+                        </div>
+                        <div>
+                            <span class="detail-label">Trạng thái thanh toán</span>
+                            <div id="detailPaymentStatus" class="status-badge status-info">Chưa thanh toán</div>
+                        </div>
+                    </div>
+                    <div class="order-detail-meta">
+                        <div>
+                            <span class="detail-label">Ngày đặt</span>
+                            <p id="detailCreatedAt">-</p>
+                        </div>
+                        <div>
+                            <span class="detail-label">Tổng đơn</span>
+                            <p id="detailTotal">0đ</p>
+                        </div>
+                    </div>
+                </section>
+                <section class="order-detail-grid">
+                    <div class="order-detail-card">
+                        <h3>Thông tin giao hàng</h3>
+                        <div class="order-detail-row"><span>Người nhận</span><span id="detailName">-</span></div>
+                        <div class="order-detail-row"><span>Điện thoại</span><span id="detailPhone">-</span></div>
+                        <div class="order-detail-row"><span>Địa chỉ</span><span id="detailAddress">-</span></div>
+                        <div class="order-detail-row"><span>Ghi chú</span><span id="detailNote">-</span></div>
+                    </div>
+                    <div class="order-detail-card">
+                        <h3>Phương thức thanh toán</h3>
+                        <div class="order-detail-row"><span>Hình thức</span><span id="detailPaymentMethod">-</span></div>
+                        <div class="order-detail-row"><span>Coupon</span><span id="detailCoupon">-</span></div>
+                        <div class="order-detail-row"><span>Tiền hàng</span><span id="detailSubtotal">-</span></div>
+                        <div class="order-detail-row"><span>Phí ship</span><span id="detailShipping">-</span></div>
+                        <div class="order-detail-row"><span>Giảm giá</span><span id="detailDiscount">-</span></div>
+                    </div>
+                </section>
+                <div class="order-detail-bottom">
+                    <section class="order-detail-products">
+                        <h3>Danh sách sản phẩm</h3>
+                        <div id="detailProductList" class="detail-product-list"></div>
+                    </section>
+                    <section class="order-detail-timeline">
+                        <div class="timeline-header">
+                            <h3>Tiến trình đơn hàng</h3>
+                            <p>Lịch sử cập nhật trạng thái theo thời gian thực.</p>
+                        </div>
+                        <div id="detailTimeline" class="timeline-list"></div>
+                    </section>
+                </div>
+            </div>
+            <footer class="orders-modal-footer">
+                <button class="btn-danger-outline" id="cancelOrderBtn" style="display:none;">Hủy đơn hàng</button>
+                <div class="modal-footer-spacer"></div>
+                <button class="btn-outline-secondary" id="rebuyOrderBtn">Mua lại</button>
+                <button class="btn-outline-secondary" id="returnOrderBtn">Yêu cầu đổi/trả</button>
+                <button class="btn-green-outline" id="reviewOrderBtn">Đánh giá ngay</button>
+            </footer>
+        </div>
+    </div>
+
     <div id="toastContainer" class="toast-container"></div>
 
     <!-- ══ Booking Cancel Confirm ══ -->
@@ -555,15 +693,31 @@
         </div>
     </div>
 
+    <!-- History Detail Modal -->
+    <div id="historyDetailModal" class="petid-modal" style="display:none;">
+        <div class="petid-modal-overlay" id="historyDetailOverlay"></div>
+        <div class="petid-modal-content" style="max-width:800px;">
+            <div class="petid-modal-header">
+                <h3 id="historyDetailTitle">Chi tiết phiên</h3>
+                <button class="petid-modal-close" id="historyDetailClose" aria-label="Đóng">✕</button>
+            </div>
+            <div class="petid-modal-body">
+                <div id="historyDetailSummary" style="margin-bottom:12px;"></div>
+                <div id="historyDetailTimeline"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
-    <script src="../../assets/js/auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmxc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="../../assets/js/auth.js"></script>
     <script src="../../assets/js/main.js"></script>
     <!-- Seed data: inject dữ liệu demo vào localStorage (chỉ chạy 1 lần) -->
     <script src="../../assets/js/user/seed-data.js"></script>
+    <script src="../../assets/js/user/orders.js"></script>
     <script src="../../assets/js/user/dashboard.js"></script>
 </body>
 

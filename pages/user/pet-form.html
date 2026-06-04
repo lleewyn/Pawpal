@@ -8,158 +8,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS — load trước để custom CSS có thể override -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <!-- Custom Style -->
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="../../assets/css/user/dashboard.css">
-    <style>
-        .pet-form-container {
-            max-width: 700px;
-            margin: 40px auto;
-            padding: 0 20px;
-            min-height: 80vh;
-        }
-        .pet-form-card {
-            background: rgba(255, 255, 255, 0.96);
-            border: 1px solid rgba(42, 89, 68, 0.08);
-            border-radius: 24px;
-            box-shadow: 0 20px 25px -5px rgba(42, 89, 68, 0.12);
-            padding: 40px;
-        }
-        .pet-form-header {
-            border-bottom: 1px solid rgba(42, 89, 68, 0.06);
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-        }
-        .pet-form-title {
-            font-family: var(--font-heading);
-            font-size: 2rem;
-            color: var(--color-primary-dark);
-            font-weight: 500;
-        }
-        .pet-form-subtitle {
-            font-size: 0.9rem;
-            color: var(--color-text-light);
-            margin-top: 4px;
-        }
-        .banner-warning {
-            background-color: #fef3c7;
-            border: 1px solid #fcd34d;
-            border-radius: 12px;
-            padding: 16px;
-            color: #92400e;
-            font-size: 0.88rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-        .pet-photo-large {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: var(--color-bg-light);
-            border-radius: 16px;
-            border: 1px dashed var(--color-border);
-        }
-        .pet-photo-large-preview {
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: var(--color-border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #ffffff;
-            box-shadow: var(--shadow-md);
-            position: relative;
-        }
-        .pet-photo-large-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .pet-photo-large-preview svg {
-            width: 50px;
-            height: 50px;
-            opacity: 0.4;
-            color: var(--color-text-light);
-        }
-        .btn-upload-large {
-            cursor: pointer;
-            padding: 10px 20px;
-            background: var(--color-bg-white);
-            border: 1.5px solid var(--color-primary);
-            color: var(--color-primary);
-            border-radius: 100px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            transition: var(--transition-smooth);
-        }
-        .btn-upload-large:hover {
-            background: var(--color-primary);
-            color: #ffffff;
-        }
-        .form-row-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        @media (max-width: 640px) {
-            .form-row-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        .required-star {
-            color: #ef4444;
-        }
-        .input-hint-message {
-            font-size: 0.78rem;
-            color: #d97706; /* Màu cam cảnh báo trùng tên */
-            font-weight: 500;
-            margin-top: 4px;
-        }
-        .input-success-message {
-            font-size: 0.78rem;
-            color: #15803d;
-            font-weight: 500;
-            margin-top: 4px;
-        }
-        .btn-loading {
-            position: relative;
-            color: transparent !important;
-            pointer-events: none;
-        }
-        .btn-loading::after {
-            content: '';
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            top: 50%;
-            left: 50%;
-            margin-top: -9px;
-            margin-left: -9px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #ffffff;
-            animation: spin-loading 0.8s linear infinite;
-        }
-        @keyframes spin-loading {
-            to { transform: rotate(360deg); }
-        }
-    </style>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="../../assets/css/user/pet-form.css">
 </head>
 <body class="dashboard-page-body">
 
     <!-- Header Navigation -->
     <header class="main-header" id="mainHeader">
         <nav class="navbar navbar-expand-lg p-0" data-bs-theme="dark">
-            <div class="container header-container">
+            <div class="header-container">
                 <a href="#" class="navbar-brand logo">
                     <img src="../../assets/images/Logo_pawpal_navbar.png" alt="PawPal">
                 </a>
@@ -176,7 +37,7 @@
 
                 <div class="collapse navbar-collapse nav-menu" id="primaryNavigation">
                     <ul class="navbar-nav mx-auto">
-                        <li class="nav-item"><a href="../../index.html" class="nav-link">Trang chủ</a></li>
+                        <li class="nav-item"><a href="../../pages/public/landing.html" class="nav-link">Trang chủ</a></li>
                         <li class="nav-item"><a href="../services/services.html" class="nav-link">Dịch vụ</a></li>
                         <li class="nav-item"><a href="../shop/shop.html" class="nav-link">Cửa hàng</a></li>
                         <li class="nav-item"><a href="../public/about.html" class="nav-link">Về chúng tôi</a></li>
