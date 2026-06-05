@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initDraggableServicesCarousel();
     initPetIdCardTilt();
     initTestimonialsCarousel();
+    initExpertsCarousel();
+    initInteractivePawPass();
 });
 
 /**
@@ -588,6 +590,97 @@ function initTestimonialsCarousel() {
 }
 
 /**
+ * Infinite Loop Carousel for Experts
+ */
+function initExpertsCarousel() {
+    const track = document.querySelector('.experts-carousel-track');
+    const cards = document.querySelectorAll('.experts-carousel-track .expert-card');
+    const prevBtn = document.querySelector('.experts-carousel-container .prev-btn');
+    const nextBtn = document.querySelector('.experts-carousel-container .next-btn');
+
+    if (!track || cards.length === 0 || !prevBtn || !nextBtn) return;
+
+    const cardWidth = 320;
+    const gap = 30;
+    const step = cardWidth + gap;
+    const wrapper = document.querySelector('.experts-carousel-wrapper');
+    
+    const totalCards = cards.length;
+
+    // Clone cards to support infinite scroll
+    cards.forEach(card => {
+        const clone = card.cloneNode(true);
+        track.appendChild(clone);
+    });
+    for (let i = totalCards - 1; i >= 0; i--) {
+        const clone = cards[i].cloneNode(true);
+        track.insertBefore(clone, track.firstChild);
+    }
+
+    const allCards = track.querySelectorAll('.expert-card');
+    let positionIndex = totalCards;
+
+    function updateSlider(instant = false) {
+        track.style.transition = instant ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+        
+        const wrapperWidth = wrapper.offsetWidth;
+        const offset = - (positionIndex * step) + (wrapperWidth / 2) - (cardWidth / 2);
+        
+        track.style.transform = `translateX(${offset}px)`;
+
+        // Highlight center active card
+        allCards.forEach((card, idx) => {
+            if (idx === positionIndex) {
+                card.classList.add('highlighted-expert');
+            } else {
+                card.classList.remove('highlighted-expert');
+            }
+        });
+    }
+
+    let isTransitioning = false;
+
+    function handleNext() {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        positionIndex++;
+        updateSlider();
+
+        setTimeout(() => {
+            if (positionIndex >= totalCards * 2) {
+                positionIndex = totalCards;
+                updateSlider(true);
+            }
+            isTransitioning = false;
+        }, 500);
+    }
+
+    function handlePrev() {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        positionIndex--;
+        updateSlider();
+
+        setTimeout(() => {
+            if (positionIndex < totalCards) {
+                positionIndex = totalCards * 2 - 1;
+                updateSlider(true);
+            }
+            isTransitioning = false;
+        }, 500);
+    }
+
+    nextBtn.addEventListener('click', handleNext);
+    prevBtn.addEventListener('click', handlePrev);
+
+    updateSlider(true);
+
+    window.addEventListener('resize', () => {
+        updateSlider(true);
+    });
+}
+
+/**
  * Premium Motion System (Lenis Smooth Scroll & GSAP ScrollTrigger)
  */
 function initPremiumMotion() {
@@ -743,9 +836,9 @@ function initPremiumMotion() {
         });
     }
 
-    // Batch reveal expert cards
-    if (document.querySelector('.expert-card')) {
-        gsap.from('.expert-card', {
+    // Batch reveal experts carousel
+    if (document.querySelector('.experts-carousel-container')) {
+        gsap.from('.experts-carousel-container', {
             scrollTrigger: {
                 trigger: '.experts-section',
                 start: 'top 85%',
@@ -753,7 +846,6 @@ function initPremiumMotion() {
             },
             opacity: 0,
             y: 50,
-            stagger: 0.2,
             duration: 1.2,
             ease: 'power4.out',
             clearProps: "all"
@@ -865,3 +957,125 @@ function initPremiumMotion() {
         ScrollTrigger.refresh();
     }, 500);
 }
+
+/**
+ * Interactive PawPass Loyalty Card Previewer
+ */
+function initInteractivePawPass() {
+    const virtualCard = document.getElementById('pawpassVirtualCard');
+    const tierCards = document.querySelectorAll('.tier-card-interactive');
+    
+    if (!virtualCard || tierCards.length === 0) return;
+
+    // Card text fields
+    const cardTierText = document.getElementById('virtualCardTier');
+    const cardPointsText = document.getElementById('virtualCardPoints');
+    const cardPerkText = document.getElementById('virtualCardPerk');
+
+    // Data definition for each tier to update the virtual card
+    const tierData = {
+        silver: {
+            tierName: 'Hạng Bạc',
+            pointsMultiplier: '1x Points',
+            primaryPerk: 'Nhật ký Care-Log',
+            className: 'tier-silver'
+        },
+        gold: {
+            tierName: 'Hạng Vàng',
+            pointsMultiplier: '1.5x Points',
+            primaryPerk: 'Giảm 10% dịch vụ',
+            className: 'tier-gold'
+        },
+        diamond: {
+            tierName: 'Hạng Kim Cương',
+            pointsMultiplier: '2x Points',
+            primaryPerk: 'Giảm 15% dịch vụ',
+            className: 'tier-diamond'
+        }
+    };
+
+    function updateVirtualCard(tierKey) {
+        const data = tierData[tierKey];
+        if (!data) return;
+
+        // Animate out card content slightly before updating
+        const elementsToAnimate = [cardTierText, cardPointsText, cardPerkText];
+        elementsToAnimate.forEach(el => {
+            if (el) {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(4px)';
+            }
+        });
+
+        setTimeout(() => {
+            // Remove all tier classes
+            virtualCard.classList.remove('tier-silver', 'tier-gold', 'tier-diamond');
+            // Add new tier class
+            virtualCard.classList.add(data.className);
+
+            // Update text values
+            if (cardTierText) cardTierText.textContent = data.tierName;
+            if (cardPointsText) cardPointsText.textContent = data.pointsMultiplier;
+            if (cardPerkText) cardPerkText.textContent = data.primaryPerk;
+
+            // Animate in updated content
+            elementsToAnimate.forEach(el => {
+                if (el) {
+                    el.style.transition = 'all 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }
+            });
+        }, 150);
+    }
+
+    // Set up click/hover listeners on the tier cards
+    tierCards.forEach(card => {
+        const tier = card.getAttribute('data-tier');
+        
+        const selectTier = () => {
+            // Reset active states for cards
+            tierCards.forEach(c => c.classList.remove('active'));
+            // Set current active card
+            card.classList.add('active');
+
+            // Update virtual card
+            updateVirtualCard(tier);
+        };
+
+        card.addEventListener('click', selectTier);
+        card.addEventListener('mouseenter', selectTier);
+    });
+
+    // 3D Card Hover Tilt effect for the virtual card
+    const cardWrapper = document.querySelector('.pawpass-card-wrapper');
+    if (cardWrapper && virtualCard) {
+        cardWrapper.addEventListener('mousemove', (e) => {
+            const rect = cardWrapper.getBoundingClientRect();
+            const x = e.clientX - rect.left - (rect.width / 2);
+            const y = e.clientY - rect.top - (rect.height / 2);
+            
+            // Limit tilt values for sub-milliradian elegance
+            const rotateX = -(y / (rect.height / 2)) * 12;
+            const rotateY = (x / (rect.width / 2)) * 12;
+            
+            virtualCard.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.03)`;
+            
+            // Highlight reflective sweep based on cursor location
+            const shimmer = virtualCard.querySelector('.card-shimmer');
+            if (shimmer) {
+                const percentX = (e.clientX - rect.left) / rect.width * 100;
+                shimmer.style.transform = `translateX(${percentX - 100}%) translateZ(10px)`;
+            }
+        });
+
+        cardWrapper.addEventListener('mouseleave', () => {
+            virtualCard.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
+            const shimmer = virtualCard.querySelector('.card-shimmer');
+            if (shimmer) {
+                shimmer.style.transform = 'translateX(-50%) translateZ(10px)';
+            }
+        });
+    }
+}
+
