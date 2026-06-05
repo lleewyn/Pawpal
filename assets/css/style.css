@@ -1359,7 +1359,7 @@ ul {
    ========================================================================== */
 .tracker-section {
     background-color: var(--color-bg-white);
-    padding: 90px 0;
+    padding: 60px 0;
     border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
 }
@@ -1687,7 +1687,7 @@ ul {
    ========================================================================== */
 .experts-section {
     background-color: var(--color-bg-light); /* Warm cream bg */
-    padding: 100px 0;
+    padding: 60px 0;
 }
 
 .experts-section .section-header {
@@ -1858,7 +1858,7 @@ ul {
 .process-section {
     background-color: var(--color-primary);
     color: #ffffff;
-    padding: 90px 0;
+    padding: 60px 0;
 }
 
 .process-container {
@@ -1967,7 +1967,7 @@ ul {
    ========================================================================== */
 .shop-section {
     background-color: var(--color-bg-white);
-    padding: 90px 0;
+    padding: 60px 0;
 }
 
 .shop-section .section-header,
@@ -2320,7 +2320,7 @@ ul {
    ========================================================================== */
 .membership-section {
     background-color: var(--color-bg-light); /* Warm cream bg */
-    padding: 100px 0;
+    padding: 60px 0;
     border-top: 1px solid var(--color-border);
 }
 
@@ -2547,7 +2547,7 @@ ul {
    ========================================================================== */
 .testimonials-section {
     background-color: var(--color-primary-dark);
-    padding: 100px 0;
+    padding: 60px 0;
     color: #ffffff;
     border-bottom: 1px solid rgba(255,255,255,0.08);
 }
@@ -3660,7 +3660,7 @@ ul {
 .safety-section {
     background-color: var(--color-primary-dark);
     color: #ffffff;
-    padding: 130px 0; /* Massive whitespace padding */
+    padding: 70px 0; /* Reduced padding */
     border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
@@ -3848,7 +3848,7 @@ ul {
 /* FAQ Accordion Section */
 .faq-section {
     background-color: var(--color-bg-white);
-    padding: 90px 0;
+    padding: 60px 0;
     border-top: 1px solid var(--color-border);
 }
 
