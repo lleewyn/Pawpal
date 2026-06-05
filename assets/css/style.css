@@ -1432,43 +1432,68 @@ ul {
 
 .timeline-indicator-item {
     display: flex;
-    align-items: center;
-    gap: 20px;
-    padding: 12px 20px;
-    border-radius: 6px;
-    background-color: #ffffff;
+    align-items: flex-start;
+    gap: 16px;
     cursor: pointer;
-    border: 1px solid rgba(42, 89, 68, 0.06);
-    border-left: 3px solid rgba(42, 89, 68, 0.15);
     transition: var(--transition-smooth);
 }
 
-.timeline-indicator-item:hover {
-    background-color: #ffffff;
-    border-color: rgba(42, 89, 68, 0.1);
-    border-left-color: var(--color-primary);
-    box-shadow: var(--shadow-sm);
-}
-
-.timeline-indicator-item.active {
-    background-color: #ffffff;
-    border-color: rgba(42, 89, 68, 0.12);
-    border-left: 3px solid var(--color-primary);
-    box-shadow: var(--shadow-sm);
+.timeline-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 24px;
+    flex-shrink: 0;
+    align-self: stretch;
+    position: relative;
 }
 
 .indicator-dot {
-    width: 8px;
-    height: 8px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    background-color: #cbd5e1;
+    background-color: var(--color-primary); /* Green for inactive dot */
+    z-index: 2;
     transition: var(--transition-smooth);
-    flex-shrink: 0;
+    margin-top: 18px; /* Centered with first line of card text */
 }
 
 .timeline-indicator-item.active .indicator-dot {
-    background-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(42, 89, 68, 0.15);
+    background-color: var(--color-accent); /* Amber/Gold for active dot */
+    box-shadow: 0 0 0 5px rgba(229, 169, 60, 0.25); /* Outer cream ring */
+    transform: scale(1.15);
+}
+
+.rail-line {
+    width: 2px;
+    flex-grow: 1;
+    background-color: #d8d0c5; /* Thin vertical connector line */
+    z-index: 1;
+    margin-top: 6px;
+    margin-bottom: -26px; /* Extends past card bottom to touch next dot */
+}
+
+.timeline-indicator-item:last-child .rail-line {
+    display: none;
+}
+
+.indicator-info {
+    flex-grow: 1;
+    background-color: #ffffff;
+    padding: 14px 20px;
+    border-radius: 6px;
+    border: 1px solid rgba(42, 89, 68, 0.05);
+    transition: var(--transition-smooth);
+}
+
+.timeline-indicator-item:hover .indicator-info {
+    border-color: rgba(42, 89, 68, 0.15);
+    box-shadow: var(--shadow-sm);
+}
+
+.timeline-indicator-item.active .indicator-info {
+    border-color: rgba(42, 89, 68, 0.12);
+    box-shadow: var(--shadow-sm);
 }
 
 
