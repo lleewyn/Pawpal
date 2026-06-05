@@ -1358,7 +1358,7 @@ ul {
    Timeline Tracker Section
    ========================================================================== */
 .tracker-section {
-    background-color: #F5F0E8; /* Warm off-white background */
+    background-color: var(--color-bg-light);
     padding: 60px 0;
     border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
