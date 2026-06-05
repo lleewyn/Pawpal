@@ -1426,7 +1426,7 @@ ul {
 .timeline-indicators {
     display: flex;
     flex-direction: column;
-    gap: 0; /* Remove gap so cards touch */
+    gap: 12px; /* Restored gap between cards */
     position: relative;
 }
 
@@ -1452,7 +1452,7 @@ ul {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background-color: var(--color-primary); /* Keep green */
+    background-color: var(--color-primary); /* Green dot */
     z-index: 2;
     transition: var(--transition-smooth);
     margin-top: 20px; /* Centered with first line of card text */
@@ -1470,7 +1470,7 @@ ul {
     width: 2px;
     position: absolute;
     top: 28px; /* start below dot */
-    bottom: -20px; /* stretch down to meet the next dot */
+    bottom: -16px; /* stretch down across the gap to meet the next dot */
     background-color: #d8d0c5; /* Thin vertical connector line */
     z-index: 1;
 }
@@ -1483,38 +1483,20 @@ ul {
     flex-grow: 1;
     background-color: #ffffff;
     padding: 14px 20px;
+    border-radius: 6px; /* Restored standard border-radius on all cards */
     border: 1px solid rgba(42, 89, 68, 0.05);
     transition: var(--transition-smooth);
-}
-
-/* Touching cards borders and border-radius rules */
-.timeline-indicator-item:first-child .indicator-info {
-    border-radius: 8px 8px 0 0;
-    border-bottom: none;
-}
-
-.timeline-indicator-item:not(:first-child):not(:last-child) .indicator-info {
-    border-radius: 0;
-    border-bottom: none;
-}
-
-.timeline-indicator-item:last-child .indicator-info {
-    border-radius: 0 0 8px 8px;
 }
 
 /* Active / Hover card elevations and border colors */
 .timeline-indicator-item:hover .indicator-info {
     border-color: rgba(42, 89, 68, 0.15);
     box-shadow: var(--shadow-sm);
-    position: relative;
-    z-index: 3;
 }
 
 .timeline-indicator-item.active .indicator-info {
     border-color: rgba(42, 89, 68, 0.12);
     box-shadow: var(--shadow-sm);
-    position: relative;
-    z-index: 2;
 }
 
 
