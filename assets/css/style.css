@@ -1426,7 +1426,7 @@ ul {
 .timeline-indicators {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 0; /* Remove gap so cards touch */
     position: relative;
 }
 
@@ -1452,25 +1452,27 @@ ul {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background-color: var(--color-primary); /* Green for inactive dot */
+    background-color: var(--color-primary); /* Keep green */
     z-index: 2;
     transition: var(--transition-smooth);
-    margin-top: 18px; /* Centered with first line of card text */
+    margin-top: 20px; /* Centered with first line of card text */
+    opacity: 0.6;
 }
 
 .timeline-indicator-item.active .indicator-dot {
-    background-color: var(--color-accent); /* Amber/Gold for active dot */
-    box-shadow: 0 0 0 5px rgba(229, 169, 60, 0.25); /* Outer cream ring */
-    transform: scale(1.15);
+    background-color: var(--color-primary); /* Green active dot */
+    box-shadow: 0 0 0 5px rgba(42, 89, 68, 0.18); /* Green outer ring */
+    transform: scale(1.2);
+    opacity: 1;
 }
 
 .rail-line {
     width: 2px;
-    flex-grow: 1;
+    position: absolute;
+    top: 28px; /* start below dot */
+    bottom: -20px; /* stretch down to meet the next dot */
     background-color: #d8d0c5; /* Thin vertical connector line */
     z-index: 1;
-    margin-top: 6px;
-    margin-bottom: -26px; /* Extends past card bottom to touch next dot */
 }
 
 .timeline-indicator-item:last-child .rail-line {
@@ -1481,19 +1483,38 @@ ul {
     flex-grow: 1;
     background-color: #ffffff;
     padding: 14px 20px;
-    border-radius: 6px;
     border: 1px solid rgba(42, 89, 68, 0.05);
     transition: var(--transition-smooth);
 }
 
+/* Touching cards borders and border-radius rules */
+.timeline-indicator-item:first-child .indicator-info {
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+}
+
+.timeline-indicator-item:not(:first-child):not(:last-child) .indicator-info {
+    border-radius: 0;
+    border-bottom: none;
+}
+
+.timeline-indicator-item:last-child .indicator-info {
+    border-radius: 0 0 8px 8px;
+}
+
+/* Active / Hover card elevations and border colors */
 .timeline-indicator-item:hover .indicator-info {
     border-color: rgba(42, 89, 68, 0.15);
     box-shadow: var(--shadow-sm);
+    position: relative;
+    z-index: 3;
 }
 
 .timeline-indicator-item.active .indicator-info {
     border-color: rgba(42, 89, 68, 0.12);
     box-shadow: var(--shadow-sm);
+    position: relative;
+    z-index: 2;
 }
 
 
