@@ -1358,7 +1358,7 @@ ul {
    Timeline Tracker Section
    ========================================================================== */
 .tracker-section {
-    background-color: var(--color-bg-white);
+    background-color: #F5F0E8; /* Warm off-white background */
     padding: 60px 0;
     border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
@@ -1413,17 +1413,12 @@ ul {
     color: var(--color-primary-dark);
 }
 
-.tracker-benefit-item .check {
-    width: 20px;
-    height: 20px;
-    background-color: var(--color-primary);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    font-size: 0.65rem;
-    font-weight: 800;
+.bullet-bar {
+    display: inline-block;
+    width: 3px;
+    height: 12px;
+    background-color: var(--color-accent);
+    border-radius: 1px;
     flex-shrink: 0;
 }
 
@@ -1431,54 +1426,52 @@ ul {
 .timeline-indicators {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 10px;
+    position: relative;
 }
 
 .timeline-indicator-item {
     display: flex;
     align-items: center;
     gap: 20px;
-    padding: 16px 20px;
-    border-radius: var(--border-radius-md);
-    background-color: var(--color-bg-light);
+    padding: 12px 20px;
+    border-radius: 6px;
+    background-color: #ffffff;
     cursor: pointer;
-    border: 1px solid transparent;
+    border: 1px solid rgba(42, 89, 68, 0.06);
+    border-left: 3px solid rgba(42, 89, 68, 0.15);
     transition: var(--transition-smooth);
 }
 
 .timeline-indicator-item:hover {
     background-color: #ffffff;
-    box-shadow: var(--shadow-sm);
     border-color: rgba(42, 89, 68, 0.1);
+    border-left-color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
 }
 
 .timeline-indicator-item.active {
-    background-color: var(--color-primary-light);
-    border-color: rgba(42, 89, 68, 0.15);
-}
-
-.indicator-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--border-radius-sm);
     background-color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-text-light);
+    border-color: rgba(42, 89, 68, 0.12);
+    border-left: 3px solid var(--color-primary);
     box-shadow: var(--shadow-sm);
+}
+
+.indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #cbd5e1;
     transition: var(--transition-smooth);
+    flex-shrink: 0;
 }
 
-.timeline-indicator-item.active .indicator-icon {
+.timeline-indicator-item.active .indicator-dot {
     background-color: var(--color-primary);
-    color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(42, 89, 68, 0.15);
 }
 
-.indicator-icon svg {
-    width: 20px;
-    height: 20px;
-}
+
 
 .indicator-info {
     display: flex;
@@ -1503,9 +1496,27 @@ ul {
 .tracker-mockup-col {
     display: flex;
     justify-content: center;
+    position: relative;
+}
+
+.tracker-mockup-col::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 380px;
+    height: 380px;
+    background: radial-gradient(circle, rgba(42, 89, 68, 0.12) 0%, rgba(229, 169, 60, 0.05) 50%, rgba(255, 255, 255, 0) 70%);
+    border-radius: 50%;
+    filter: blur(25px);
+    z-index: 0;
+    pointer-events: none;
 }
 
 .phone-mockup {
+    position: relative;
+    z-index: 1;
     width: 320px;
     height: 580px;
     background-color: #0b0c10;
