@@ -469,7 +469,7 @@ ul {
     position: relative;
     overflow: hidden;
     color: #ffffff;
-    min-height: 100dvh;
+    min-height: 80vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
