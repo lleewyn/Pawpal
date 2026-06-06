@@ -615,10 +615,10 @@ ul {
 
 .hero-pet-tags {
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-    margin-bottom: 15px;
+    gap: 8px;
+    flex-wrap: nowrap;
+    margin-top: 12px;
+    margin-bottom: 18px;
 }
 
 .pet-tag {
@@ -626,14 +626,15 @@ ul {
     align-items: center;
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 6px 14px;
+    padding: 5px 12px;
     border-radius: var(--border-radius-pill);
-    font-size: 0.82rem;
+    font-size: 0.76rem;
     font-weight: 600;
     color: #ffffff;
     backdrop-filter: blur(8px);
     transition: var(--transition-smooth);
     user-select: none;
+    white-space: nowrap;
 }
 
 .pet-tag:hover {
