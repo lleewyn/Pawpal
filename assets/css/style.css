@@ -593,8 +593,8 @@ ul {
 /* Hero Title — left-aligned, Lora warm editorial scale */
 .hero-title {
     font-family: var(--font-heading);
-    font-size: var(--fs-display);
-    line-height: 1.25;
+    font-size: clamp(2.4rem, 4.8vw, 4.5rem); /* Reduced slightly to ensure it fits perfectly on exactly 2 lines */
+    line-height: 1.2;
     font-weight: 600;
     color: #ffffff;
     text-align: left;
