@@ -5,9 +5,9 @@
 /* Typography & Variables */
 :root {
     /* Color Palette */
-    --color-primary:       hsl(156, 38%, 28%);      /* Forest Green #2F5F48 */
-    --color-primary-light: hsl(156, 30%, 94%);
-    --color-primary-dark:  hsl(156, 40%, 12%);      /* Deep Forest #1E3D2B */
+    --color-primary:       hsl(155, 32%, 30%);      /* Eucalyptus Green #346450 */
+    --color-primary-light: hsl(155, 25%, 95%);
+    --color-primary-dark:  hsl(155, 35%, 22%);      /* Deep Warm Green #244C3B */
     --color-accent:        hsl(36, 65%, 52%);       /* Warm Gold #C47E28 */
     --color-accent-light:  hsl(36, 50%, 95%);
     --color-accent-dark:   hsl(36, 68%, 40%);       /* Deep Gold #8B5E1A */
@@ -1977,11 +1977,11 @@ ul {
 }
 
 /* ==========================================================================
-   Process Section (Green Background)
+   Process Section (Light Cream Background)
    ========================================================================== */
 .process-section {
-    background-color: var(--color-primary);
-    color: #ffffff;
+    background-color: var(--color-bg-light);
+    color: var(--color-text-dark);
     padding: var(--space-xl) 0;
 }
 
@@ -1992,11 +1992,11 @@ ul {
 }
 
 .section-header.inverted h2 {
-    color: #ffffff;
+    color: var(--color-primary);
 }
 
 .section-header.inverted .section-subtitle {
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--color-text-light);
 }
 
 .process-steps {
@@ -2030,7 +2030,7 @@ ul {
     left: 0;
     width: calc(100% + 40px); /* spans to the next card */
     height: 1px;
-    border-top: 1px dashed rgba(255, 255, 255, 0.25);
+    border-top: 1px dashed rgba(42, 89, 68, 0.15);
     z-index: 1;
     pointer-events: none;
 }
@@ -2045,7 +2045,7 @@ ul {
     margin-bottom: 20px;
     position: relative;
     z-index: 2;
-    background-color: var(--color-primary); /* masks the line behind it */
+    background-color: var(--color-bg-light); /* masks the line behind it */
     display: inline-block;
     padding-right: 20px;
 }
@@ -2055,16 +2055,15 @@ ul {
     font-size: var(--fs-sub-title);
     font-weight: 600;
     margin-bottom: 12px;
-    color: #ffffff;
+    color: var(--color-primary-dark);
 }
 
 .step-card p {
     font-family: var(--font-primary);
     font-size: 0.95rem;
     font-weight: 500;
-    opacity: 0.8;
     line-height: 1.6;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--color-text-light);
 }
 
 @media (max-width: 768px) {
@@ -2077,7 +2076,7 @@ ul {
         top: 4.5rem;
         width: 1px;
         height: calc(100% + 48px - 4.5rem);
-        border-left: 1px dashed rgba(255, 255, 255, 0.25);
+        border-left: 1px dashed rgba(42, 89, 68, 0.15);
         border-top: none;
     }
     .step-num {
@@ -3133,21 +3132,21 @@ ul {
 
 
 /* ==========================================================================
-   Testimonials Section (Dark Forest Green background for contrast)
+   Testimonials Section (Light Cream Background)
    ========================================================================== */
 .testimonials-section {
-    background-color: var(--color-primary-dark);
+    background-color: var(--color-bg-light);
     padding: var(--space-xl) 0;
-    color: #ffffff;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    color: var(--color-text-dark);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .testimonials-section .section-header h2 {
-    color: #ffffff;
+    color: var(--color-primary);
 }
 
 .testimonials-section .section-header .section-subtitle {
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--color-text-light);
 }
 
 .testimonials-container {
@@ -3349,11 +3348,11 @@ ul {
     width: 320px;
     box-sizing: border-box;
     min-height: 280px;
-    background-color: rgba(255, 255, 255, 0.04);
+    background-color: var(--color-bg-white);
     border-radius: var(--card-border-radius);
     padding: 36px 28px;
     box-shadow: var(--shadow-sm);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(42, 89, 68, 0.08);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -3366,18 +3365,18 @@ ul {
 .testimonials-carousel-track .testimonial-card.active-center {
     opacity: 1;
     transform: scale(1.05);
-    background-color: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+    background-color: var(--color-bg-white);
+    border-color: rgba(42, 89, 68, 0.2);
+    box-shadow: 0 20px 45px rgba(42, 89, 68, 0.08);
 }
 
 .testimonials-nav-btn {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #ffffff;
+    background-color: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    color: var(--color-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3385,12 +3384,13 @@ ul {
     transition: all 0.3s ease;
     z-index: 10;
     flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
 }
 
 .testimonials-nav-btn:hover {
-    background-color: var(--color-accent);
-    color: var(--color-primary-dark);
-    border-color: var(--color-accent);
+    background-color: var(--color-primary);
+    color: #ffffff;
+    border-color: var(--color-primary);
     transform: scale(1.1);
 }
 
@@ -3413,7 +3413,7 @@ ul {
 
 .review-date {
     font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.45);
+    color: var(--color-text-light);
     font-family: var(--font-primary);
 }
 
@@ -3430,7 +3430,7 @@ ul {
 
 .testimonial-text {
     font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--color-text-dark);
     line-height: 1.75;
     margin-bottom: 24px;
     position: relative;
@@ -3478,12 +3478,12 @@ ul {
 .user-name {
     font-size: 0.85rem;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--color-primary-dark);
 }
 
 .user-sub {
     font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.60);
+    color: var(--color-text-light);
 }
 
 /* ==========================================================================

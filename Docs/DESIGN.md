@@ -73,9 +73,9 @@
 
 ```css
 /* Brand Core */
---color-primary:       hsl(156, 38%, 28%)   /* Forest Green #2F5F48 */
---color-primary-light: hsl(156, 30%, 94%)
---color-primary-dark:  hsl(156, 40%, 12%)   /* Deep Forest #1E3D2B */
+--color-primary:       hsl(155, 32%, 30%)   /* Eucalyptus Green */
+--color-primary-light: hsl(155, 25%, 95%)
+--color-primary-dark:  hsl(155, 35%, 22%)   /* Deep Warm Green */
 --color-accent:        hsl(36, 65%, 52%)    /* Warm Gold #C47E28 */
 --color-accent-light:  hsl(36, 50%, 95%)
 --color-accent-dark:   hsl(36, 68%, 40%)    /* Deep Gold #8B5E1A */
@@ -117,10 +117,10 @@
 
 | Màu nền | Dùng ở section nào | Ghi chú |
 |---------|--------------------|---------|
-| `--color-bg-light` (#FAF9F6) | Header, Services, Tracker, Experts, Membership, Safety | Warm cream — màu nền mặc định |
+| `--color-bg-light` (#FAF9F6) | Header, Services, Safety, Process, Testimonials | Warm cream — màu nền mặc định |
 | `--color-bg-white` (#ffffff) | Shop, FAQ, Pet ID | Trắng thuần — tạo contrast với cream |
-| `--color-primary` | Process, Footer CTA | Green đậm — section call-to-action |
-| `--color-primary-dark` | Features Strip, Testimonials, Footer | Đậm nhất — tạo nhịp dark/light |
+| `--color-primary` | Footer CTA | Green đậm — section call-to-action |
+| `--color-primary-dark` | Features Strip, Footer | Đậm nhất — tạo nhịp dark/light |
 
 > **Quy tắc xen kẽ:** Các section nên luân phiên background để tạo visual rhythm khi scroll. Không để 2 section `bg-white` liền nhau hoặc 2 section dark liền nhau.
 
