@@ -5,12 +5,12 @@
 /* Typography & Variables */
 :root {
     /* Color Palette */
-    --color-primary:       hsl(155, 32%, 30%);      /* Eucalyptus Green #346450 */
-    --color-primary-light: hsl(155, 25%, 95%);
-    --color-primary-dark:  hsl(155, 35%, 22%);      /* Deep Warm Green #244C3B */
-    --color-accent:        hsl(36, 65%, 52%);       /* Warm Gold #C47E28 */
-    --color-accent-light:  hsl(36, 50%, 95%);
-    --color-accent-dark:   hsl(36, 68%, 40%);       /* Deep Gold #8B5E1A */
+    --color-primary:       hsl(155, 28%, 35%);      /* Soft Sage Green #4F7A68 */
+    --color-primary-light: hsl(155, 20%, 96%);
+    --color-primary-dark:  hsl(155, 30%, 25%);      /* Deep Sage Green #33594A */
+    --color-accent:        hsl(38, 75%, 50%);       /* Amber Gold #E09F1F */
+    --color-accent-light:  hsl(38, 50%, 95%);
+    --color-accent-dark:   hsl(38, 65%, 40%);       /* Deep Amber Gold #9E6B17 */
 
     /* Semantic Colors */
     --color-danger:        hsl(0, 72%, 51%);        /* #DC2626 — badge khuyến mãi, error */
