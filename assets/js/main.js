@@ -600,11 +600,11 @@ function initExpertsCarousel() {
 
     if (!track || cards.length === 0 || !prevBtn || !nextBtn) return;
 
-    const cardWidth = 320;
+    const cardWidth = 340;
     const gap = 30;
     const step = cardWidth + gap;
     const wrapper = document.querySelector('.experts-carousel-wrapper');
-    
+
     const totalCards = cards.length;
 
     // Clone cards to support infinite scroll

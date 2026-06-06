@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap"
         rel="stylesheet">
     <!-- Bootstrap 5 CSS — load trước để custom CSS có thể override -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -60,7 +60,7 @@
 
     <!-- Header Navigation -->
     <header class="main-header" id="mainHeader">
-        <nav class="navbar navbar-expand-lg p-0" data-bs-theme="dark">
+        <nav class="navbar navbar-expand-lg p-0" data-bs-theme="light">
             <div class="header-container">
                 <a href="#" class="navbar-brand logo">
                     <img src="../../assets/images/Logo_pawpal_navbar.png" alt="PawPal">
@@ -327,10 +327,11 @@
             <!-- Carousel full-width wrapper (outside services-container) -->
             <div class="services-arched-wrapper services-track-top">
                 <!-- Card 01: Pet Spa - Grooming -->
-                <div class="arched-card">
+                <div class="arched-card" style="border: 2px solid var(--color-primary); background-color: var(--color-primary-light);">
                     <div class="card-image-wrapper">
                         <img src="../../assets/images/services/spa.png" alt="Pet Spa - Grooming" loading="lazy">
                         <span class="card-number">01</span>
+                        <div style="position:absolute; top: 16px; right: 16px; background-color: var(--color-danger); color: white; padding: 4px 10px; border-radius: var(--border-radius-sm); font-size: 0.75rem; font-weight: 700; z-index: 5;">Phổ biến nhất</div>
                         <a href="../../pages/services/booking.html" class="arrow-btn" aria-label="Đặt lịch Spa">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -343,7 +344,11 @@
                         <h3>Pet Spa - Grooming</h3>
                         <p>Với đội ngũ nhân sự ưu tú, PawPal tự tin với mục tiêu đem lại chất lượng dịch vụ tắm, cắt tỉa
                             tốt nhất.</p>
-                        <div class="service-price-tag">Từ 150.000đ</div>
+                        <div class="service-time" style="font-size: 0.8rem; color: var(--color-text-light); margin-bottom: 2px;">⏱ Thời gian: 60 - 90 phút</div>
+                        <div class="service-card-footer">
+                            <div class="service-price-tag">Từ 150.000đ</div>
+                            <a href="../../pages/services/booking.html" class="service-book-btn">Đặt lịch <span>→</span></a>
+                        </div>
                     </div>
                 </div>
 
@@ -363,14 +368,18 @@
                     <div class="card-info">
                         <h3>Pet Hotel</h3>
                         <p>Khách sạn thú cưng chó mèo với không gian riêng tư, mát mẻ, giúp boss nghỉ ngơi trọn vẹn.</p>
-                        <div class="service-price-tag">Từ 350.000đ/đêm</div>
+                        <div class="service-time" style="font-size: 0.8rem; color: var(--color-text-light); margin-bottom: 2px;">⏱ Nhận trả: 7h - 21h</div>
+                        <div class="service-card-footer">
+                            <div class="service-price-tag">Từ 350.000đ/đêm</div>
+                            <a href="../../pages/services/booking.html" class="service-book-btn">Đặt lịch <span>→</span></a>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Card 03: Self - Service Wash -->
                 <div class="arched-card">
                     <div class="card-image-wrapper">
-                        <img src="https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=500&q=80"
+                        <img src="https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=500&q=80"
                             alt="Self-Service Wash" loading="lazy">
                         <span class="card-number">03</span>
                         <a href="../../pages/services/booking.html" class="arrow-btn" aria-label="Đặt lịch Self-Service Wash">
@@ -384,7 +393,11 @@
                     <div class="card-info">
                         <h3>Self - Service Wash</h3>
                         <p>Dịch vụ tắm cho thú cưng tiện lợi, sạch sẽ, đầy đủ bồn tắm và máy sấy chuyên dụng.</p>
-                        <div class="service-price-tag">Từ 80.000đ</div>
+                        <div class="service-time" style="font-size: 0.8rem; color: var(--color-text-light); margin-bottom: 2px;">⏱ Không giới hạn thời gian</div>
+                        <div class="service-card-footer">
+                            <div class="service-price-tag">Từ 80.000đ</div>
+                            <a href="../../pages/services/booking.html" class="service-book-btn">Đặt lịch <span>→</span></a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -407,14 +420,18 @@
                     <div class="card-info">
                         <h3>Pet Shipping</h3>
                         <p>Đưa đón thú cưng tận nơi an toàn, nhanh chóng, đúng giờ, phù hợp lịch trình của bạn.</p>
-                        <div class="service-price-tag">Từ 50.000đ</div>
+                        <div class="service-time" style="font-size: 0.8rem; color: var(--color-text-light); margin-bottom: 2px;">⏱ Hoạt động: 24/7</div>
+                        <div class="service-card-footer">
+                            <div class="service-price-tag">Từ 50.000đ</div>
+                            <a href="../../pages/services/booking.html" class="service-book-btn">Đặt lịch <span>→</span></a>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Card 05: Vet Services -->
                 <div class="arched-card">
                     <div class="card-image-wrapper">
-                        <img src="https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=500&q=80"
+                        <img src="https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=500&q=80"
                             alt="Vet Services" loading="lazy">
                         <span class="card-number">05</span>
                         <a href="../../pages/services/booking.html" class="arrow-btn" aria-label="Đặt lịch Vet Services">
@@ -428,7 +445,11 @@
                     <div class="card-info">
                         <h3>Vet Services</h3>
                         <p>Tư vấn sức khoẻ, tiêm ngừa, điều trị hiệu quả cho chó mèo - an toàn, uy tín.</p>
-                        <div class="service-price-tag">Từ 100.000đ</div>
+                        <div class="service-time" style="font-size: 0.8rem; color: var(--color-text-light); margin-bottom: 2px;">⏱ Giờ khám: 8h - 20h</div>
+                        <div class="service-card-footer">
+                            <div class="service-price-tag">Từ 100.000đ</div>
+                            <a href="../../pages/services/booking.html" class="service-book-btn">Đặt lịch <span>→</span></a>
+                        </div>
                     </div>
                 </div>
 
@@ -448,32 +469,17 @@
                     <div class="card-info">
                         <h3>Pet Shop PawPal</h3>
                         <p>Cung cấp đồ ăn, hạt dinh dưỡng, pate thơm ngon và đồ dùng hàng chọn lọc.</p>
-                        <div class="service-price-tag">Xem ngay →</div>
+                        <div class="service-time" style="font-size: 0.8rem; color: var(--color-text-light); margin-bottom: 2px;">⏱ Mở cửa: 8h - 22h</div>
+                        <div class="service-card-footer" style="justify-content: flex-end;">
+                            <a href="#shop" class="service-book-btn">Mua sắm <span>→</span></a>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Carousel Navigation & Action inside another constrained container -->
             <div class="services-container">
-                <!-- Carousel Navigation -->
-                <div class="carousel-nav">
-                    <button class="carousel-prev" aria-label="Previous">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="19" y1="12" x2="5" y2="12"></line>
-                            <polyline points="12 19 5 12 12 5"></polyline>
-                        </svg>
-                    </button>
-                    <button class="carousel-next" aria-label="Next">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                            <polyline points="12 5 19 12 12 19"></polyline>
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="services-action text-center" style="margin-top: 50px; position: relative; z-index: 5;">
+                <div class="services-action text-center" style="margin-top: var(--space-md); position: relative; z-index: 5;">
                     <button class="btn-green-outline" id="openPricingBtn">Xem bảng giá chi tiết <span>→</span></button>
                 </div>
             </div>
@@ -547,179 +553,208 @@
                 </div>
 
                 <div class="product-grid" id="productGrid">
-                    <!-- Product 1: Hạt cao cấp -->
-                    <div class="product-card" data-category="thucan" data-marketing="banchay hangmoi khuyenmai">
+                    <!-- Product 1 -->
+                    <div class="product-card" data-category="thucan" data-marketing="banchay hangmoi">
                         <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=500&q=80"
-                                alt="Thức ăn hạt cao cấp" loading="lazy">
+                            <img src="https://images.unsplash.com/photo-1589924691995-400dc9ecc119?auto=format&fit=crop&w=500&q=80" alt="Thức ăn hạt cao cấp cho chó lớn 2.5kg" loading="lazy">
                             <span class="tag-badge tag-banchay">Bán chạy</span>
                         </div>
                         <div class="product-info">
-                            <h3>Thức ăn hạt cao cấp</h3>
+                            <h3>Thức ăn hạt cao cấp cho chó lớn 2.5kg</h3>
+                            <div class="product-meta">
+                                <span class="rating-stars">★★★★★</span> <span class="rating-score">4.9</span> <span class="sold-count">(1.2k đã bán)</span>
+                            </div>
                             <div class="product-info-footer">
                                 <div class="product-price">
                                     <span class="price-current">450.000đ</span>
                                     <span class="price-old">500.000đ</span>
                                 </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                                </button>
+                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
                             </div>
-                            <div class="product-reward-tip">Áp dụng tích điểm để giảm giá →</div>
                         </div>
                     </div>
 
-                    <!-- Product 2: Sữa tắm organic cho mèo -->
-                    <div class="product-card" data-category="vesinh" data-marketing="khuyenmai banchay">
+                    <!-- Product 2 -->
+                    <div class="product-card" data-category="thucan" data-marketing="banchay">
                         <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?auto=format&fit=crop&w=500&q=80"
-                                alt="Sữa tắm organic cho mèo" loading="lazy">
+                            <img src="https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?auto=format&fit=crop&w=500&q=80" alt="Thức ăn hạt dinh dưỡng cho mèo 1.5kg" loading="lazy">
                             <span class="tag-badge tag-khuyenmai">Khuyến mãi</span>
                         </div>
                         <div class="product-info">
-                            <h3>Sữa tắm organic cho mèo</h3>
+                            <h3>Thức ăn hạt dinh dưỡng cho mèo 1.5kg</h3>
+                            <div class="product-meta">
+                                <span class="rating-stars">★★★★☆</span> <span class="rating-score">4.8</span> <span class="sold-count">(850 đã bán)</span>
+                            </div>
                             <div class="product-info-footer">
                                 <div class="product-price">
-                                    <span class="price-current">252.000đ</span>
-                                    <span class="price-old">280.000đ</span>
+                                    <span class="price-current">250.000đ</span>
+                                    <span class="price-old">300.000đ</span>
                                 </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                                </button>
+                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
                             </div>
-                            <div class="product-reward-tip">Áp dụng tích điểm để giảm giá →</div>
                         </div>
                     </div>
 
-                    <!-- Product 3: Sữa tắm organic cho chó -->
-                    <div class="product-card" data-category="vesinh" data-marketing="khuyenmai hangmoi">
+                    <!-- Product 3 -->
+                    <div class="product-card" data-category="thucan" data-marketing="hangmoi">
                         <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?auto=format&fit=crop&w=500&q=80"
-                                alt="Sữa tắm organic cho chó" loading="lazy">
-                            <span class="tag-badge tag-khuyenmai">Khuyến mãi</span>
+                            <img src="https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=500&q=80" alt="Pate cá hồi Na Uy hảo hạng lon 80g" loading="lazy">
+                            <span class="tag-badge tag-hangmoi">Hàng mới</span>
                         </div>
                         <div class="product-info">
-                            <h3>Sữa tắm organic cho chó</h3>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">252.000đ</span>
-                                    <span class="price-old">280.000đ</span>
-                                </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                                </button>
+                            <h3>Pate cá hồi Na Uy hảo hạng lon 80g</h3>
+                            <div class="product-meta">
+                                <span class="rating-stars">★★★★★</span> <span class="rating-score">5.0</span> <span class="sold-count">(300 đã bán)</span>
                             </div>
-                            <div class="product-reward-tip">Áp dụng tích điểm để giảm giá →</div>
-                        </div>
-                    </div>
-
-                    <!-- Product 4: Pate hũ dinh dưỡng -->
-                    <div class="product-card" data-category="thucan" data-marketing="banchay khuyenmai">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=500&q=80"
-                                alt="Pate hũ dinh dưỡng" loading="lazy">
-                            <span class="tag-badge tag-banchay">Bán chạy</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Pate hũ dinh dưỡng</h3>
                             <div class="product-info-footer">
                                 <div class="product-price">
                                     <span class="price-current">85.000đ</span>
                                 </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                                </button>
+                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
                             </div>
-                            <div class="product-reward-tip">Áp dụng tích điểm để giảm giá →</div>
                         </div>
                     </div>
 
-                    <!-- Product 5: Balo phi hành gia -->
-                    <div class="product-card" data-category="phukien" data-marketing="hangmoi banchay">
+                    <!-- Product 4 -->
+                    <div class="product-card" data-category="vesinh" data-marketing="khuyenmai">
                         <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1563460716889-ac2bc17d86c7?auto=format&fit=crop&w=500&q=80"
-                                alt="Balo phi hành gia" loading="lazy">
-                            <span class="tag-badge tag-hangmoi">Hàng mới</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Balo phi hành gia cao cấp</h3>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">360.000đ</span>
-                                </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                                </button>
-                            </div>
-                            <div class="product-reward-tip">Áp dụng tích điểm để giảm giá →</div>
-                        </div>
-                    </div>
-
-                    <!-- Product 6: Cát vệ sinh Tofu -->
-                    <div class="product-card" data-category="vesinh" data-marketing="banchay khuyenmai">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&w=500&q=80"
-                                alt="Cát vệ sinh Tofu" loading="lazy">
-                            <span class="tag-badge tag-banchay">Bán chạy</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Cát vệ sinh đậu nành Tofu</h3>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">130.000đ</span>
-                                    <span class="price-old">150.000đ</span>
-                                </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                                </button>
-                            </div>
-                            <div class="product-reward-tip">Áp dụng tích điểm để giảm giá →</div>
-                        </div>
-                    </div>
-
-                    <!-- Product 7: Xương gặm canxi -->
-                    <div class="product-card" data-category="phukien" data-marketing="khuyenmai">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=500&q=80"
-                                alt="Đồ chơi xương gặm" loading="lazy">
+                            <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=500&q=80" alt="Sữa tắm organic mượt lông cho mèo 500ml" loading="lazy">
                             <span class="tag-badge tag-khuyenmai">Khuyến mãi</span>
                         </div>
                         <div class="product-info">
-                            <h3>Đồ chơi xương gặm canxi</h3>
+                            <h3>Sữa tắm organic mượt lông cho mèo 500ml</h3>
+                            <div class="product-meta">
+                                <span class="rating-stars">★★★★☆</span> <span class="rating-score">4.7</span> <span class="sold-count">(1.5k đã bán)</span>
+                            </div>
                             <div class="product-info-footer">
                                 <div class="product-price">
-                                    <span class="price-current">45.000đ</span>
-                                    <span class="price-old">55.000đ</span>
+                                    <span class="price-current">252.000đ</span>
+                                    <span class="price-old">280.000đ</span>
                                 </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                                </button>
+                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
                             </div>
-                            <div class="product-reward-tip">Áp dụng tích điểm để giảm giá →</div>
                         </div>
                     </div>
 
-                    <!-- Product 8: Vòng cổ phản quang -->
-                    <div class="product-card" data-category="phukien" data-marketing="hangmoi banchay">
+                    <!-- Product 5 -->
+                    <div class="product-card" data-category="vesinh" data-marketing="banchay">
                         <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1596492784531-6e6eb5ea9993?auto=format&fit=crop&w=500&q=80"
-                                alt="Vòng cổ phản quang" loading="lazy">
+                            <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=500&q=80" alt="Sữa tắm khử mùi chuyên sâu cho chó 500ml" loading="lazy">
+                            <span class="tag-badge tag-banchay">Bán chạy</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Sữa tắm khử mùi chuyên sâu cho chó 500ml</h3>
+                            <div class="product-meta">
+                                <span class="rating-stars">★★★★★</span> <span class="rating-score">4.9</span> <span class="sold-count">(2.1k đã bán)</span>
+                            </div>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current">252.000đ</span>
+                                </div>
+                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 6 -->
+                    <div class="product-card" data-category="phukien" data-marketing="hangmoi">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1544568100-847a948585b9?auto=format&fit=crop&w=500&q=80" alt="Balo phi hành gia trong suốt chống nước" loading="lazy">
                             <span class="tag-badge tag-hangmoi">Hàng mới</span>
                         </div>
                         <div class="product-info">
-                            <h3>Vòng cổ dây dắt phản quang</h3>
+                            <h3>Balo phi hành gia trong suốt chống nước</h3>
+                            <div class="product-meta">
+                                <span class="rating-stars">★★★★☆</span> <span class="rating-score">4.8</span> <span class="sold-count">(450 đã bán)</span>
+                            </div>
                             <div class="product-info-footer">
                                 <div class="product-price">
-                                    <span class="price-current">80.000đ</span>
+                                    <span class="price-current">360.000đ</span>
+                                    <span class="price-old">400.000đ</span>
                                 </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                                </button>
+                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
                             </div>
-                            <div class="product-reward-tip">Áp dụng tích điểm để giảm giá →</div>
                         </div>
                     </div>
 
+                    <!-- Product 7 -->
+                    <div class="product-card" data-category="vesinh" data-marketing="banchay khuyenmai">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=500&q=80" alt="Cát vệ sinh đậu nành Tofu khử mùi 5L" loading="lazy">
+                            <span class="tag-badge tag-khuyenmai">Khuyến mãi</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Cát vệ sinh đậu nành Tofu khử mùi 5L</h3>
+                            <div class="product-meta">
+                                <span class="rating-stars">★★★★★</span> <span class="rating-score">4.9</span> <span class="sold-count">(5.2k đã bán)</span>
+                            </div>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current">130.000đ</span>
+                                </div>
+                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 8 -->
+                    <div class="product-card" data-category="vesinh" data-marketing="hangmoi">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1548681528-6a5c45b66b42?auto=format&fit=crop&w=500&q=80" alt="Khay vệ sinh thành cao chống văng" loading="lazy">
+                        </div>
+                        <div class="product-info">
+                            <h3>Khay vệ sinh thành cao chống văng</h3>
+                            <div class="product-meta">
+                                <span class="rating-stars">★★★★☆</span> <span class="rating-score">4.6</span> <span class="sold-count">(120 đã bán)</span>
+                            </div>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current">190.000đ</span>
+                                </div>
+                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 9 -->
+                    <div class="product-card" data-category="phukien" data-marketing="banchay">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=500&q=80" alt="Xương gặm canxi sạch răng cho chó 100g" loading="lazy">
+                            <span class="tag-badge tag-banchay">Bán chạy</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Xương gặm canxi sạch răng cho chó 100g</h3>
+                            <div class="product-meta">
+                                <span class="rating-stars">★★★★★</span> <span class="rating-score">4.9</span> <span class="sold-count">(3.4k đã bán)</span>
+                            </div>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current">45.000đ</span>
+                                </div>
+                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product 10 -->
+                    <div class="product-card" data-category="phukien" data-marketing="khuyenmai">
+                        <div class="product-image-box">
+                            <img src="https://images.unsplash.com/photo-1537151608804-ea6fac25d474?auto=format&fit=crop&w=500&q=80" alt="Vòng cổ dây dắt phản quang size M" loading="lazy">
+                            <span class="tag-badge tag-khuyenmai">Khuyến mãi</span>
+                        </div>
+                        <div class="product-info">
+                            <h3>Vòng cổ dây dắt phản quang size M</h3>
+                            <div class="product-meta">
+                                <span class="rating-stars">★★★★☆</span> <span class="rating-score">4.7</span> <span class="sold-count">(940 đã bán)</span>
+                            </div>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current">80.000đ</span>
+                                    <span class="price-old">100.000đ</span>
+                                </div>
+                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -901,13 +936,14 @@
                                 <div class="expert-info">
                                     <div class="expert-header-info">
                                         <h3 class="expert-name">Minh Tuấn</h3>
-                                        <span class="expert-title">Chuyên gia Grooming (Kinh nghiệm 5 năm)</span>
+                                        <span class="expert-title">Chuyên gia Grooming</span>
+                                        <span class="expert-exp">Kinh nghiệm: 5 năm</span>
                                     </div>
                                     <div class="expert-cert">
-                                        <span>Chứng chỉ CPGDS (Certified Professional Groomer Specialist)</span>
+                                        <span class="cert-badge" style="display: inline-flex; align-items: center; gap: 4px; border: 1.5px solid currentColor; padding: 2px 8px; border-radius: 100px; font-size: 0.75rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> CPGDS</span>
                                     </div>
                                     <blockquote class="expert-quote">
-                                        "Với tôi, mỗi chú chó một tính cách. Không phong cách nào bằng sự thoải mái."
+                                        "Mỗi chú chó một tính cách riêng."
                                     </blockquote>
                                     <div class="expert-stats">
                                         <div class="expert-stat-item">
@@ -916,7 +952,7 @@
                                         </div>
                                         <div class="expert-stat-item">
                                             <span class="stat-label">Đã chăm sóc:</span>
-                                            <span class="stat-value">1,200+ bé</span>
+                                            <span class="stat-value">2,800+ bé</span>
                                         </div>
                                     </div>
                                 </div>
@@ -930,13 +966,14 @@
                                 <div class="expert-info">
                                     <div class="expert-header-info">
                                         <h3 class="expert-name">Thanh Hà</h3>
-                                        <span class="expert-title">Chuyên gia Hotel &amp; Care (Kinh nghiệm 7 năm)</span>
+                                        <span class="expert-title">Chuyên gia Hotel &amp; Care</span>
+                                        <span class="expert-exp">Kinh nghiệm: 7 năm</span>
                                     </div>
                                     <div class="expert-cert">
-                                        <span>Chứng chỉ IACP (International Association of Canine Professionals)</span>
+                                        <span class="cert-badge" style="display: inline-flex; align-items: center; gap: 4px; border: 1.5px solid currentColor; padding: 2px 8px; border-radius: 100px; font-size: 0.75rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> IACP</span>
                                     </div>
                                     <blockquote class="expert-quote">
-                                        "Sự thấu hiểu hành vi chăm sóc tạo nên sự an tâm trọn vẹn."
+                                        "Sự thấu hiểu tạo nên an tâm trọn vẹn."
                                     </blockquote>
                                     <div class="expert-stats">
                                         <div class="expert-stat-item">
@@ -945,7 +982,7 @@
                                         </div>
                                         <div class="expert-stat-item">
                                             <span class="stat-label">Đã chăm sóc:</span>
-                                            <span class="stat-value">2,500+ bé</span>
+                                            <span class="stat-value">4,500+ bé</span>
                                         </div>
                                     </div>
                                 </div>
@@ -959,13 +996,14 @@
                                 <div class="expert-info">
                                     <div class="expert-header-info">
                                         <h3 class="expert-name">Hoàng Phúc</h3>
-                                        <span class="expert-title">Bác sĩ thú y (Kinh nghiệm 3 năm)</span>
+                                        <span class="expert-title">Bác sĩ thú y</span>
+                                        <span class="expert-exp">Kinh nghiệm: 3 năm</span>
                                     </div>
                                     <div class="expert-cert">
-                                        <span>Chứng chỉ Veterinary Assistant International</span>
+                                        <span class="cert-badge" style="display: inline-flex; align-items: center; gap: 4px; border: 1.5px solid currentColor; padding: 2px 8px; border-radius: 100px; font-size: 0.75rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> VAI</span>
                                     </div>
                                     <blockquote class="expert-quote">
-                                        "Sức khỏe của các bé là niềm hạnh phúc lớn nhất của tôi mỗi ngày."
+                                        "Sức khỏe của các bé là niềm hạnh phúc."
                                     </blockquote>
                                     <div class="expert-stats">
                                         <div class="expert-stat-item">
@@ -974,7 +1012,7 @@
                                         </div>
                                         <div class="expert-stat-item">
                                             <span class="stat-label">Đã khám bệnh:</span>
-                                            <span class="stat-value">1,800+ ca</span>
+                                            <span class="stat-value">1,200+ ca</span>
                                         </div>
                                     </div>
                                 </div>
@@ -988,6 +1026,18 @@
                             <polyline points="12 5 19 12 12 19"></polyline>
                         </svg>
                     </button>
+                </div>
+                
+                <!-- Carousel Dots Indicator -->
+                <div class="carousel-dots" style="display: flex; justify-content: center; gap: 8px; margin-top: 24px;">
+                    <span class="dot active" style="width: 8px; height: 8px; background-color: var(--color-primary); border-radius: 50%; display: inline-block; transition: all 0.3s ease;"></span>
+                    <span class="dot" style="width: 8px; height: 8px; background-color: var(--color-border); border-radius: 50%; display: inline-block; transition: all 0.3s ease;"></span>
+                    <span class="dot" style="width: 8px; height: 8px; background-color: var(--color-border); border-radius: 50%; display: inline-block; transition: all 0.3s ease;"></span>
+                </div>
+                
+                <!-- CTA Button -->
+                <div class="team-cta text-center" style="margin-top: 32px; position: relative; z-index: 10;">
+                    <a href="../../pages/about/team.html" style="display: inline-block; padding: 12px 32px; border-radius: var(--border-radius-pill); font-weight: 700; background-color: var(--color-primary); color: #fff; text-decoration: none; box-shadow: 0 4px 12px rgba(42, 89, 68, 0.2); transition: all 0.3s ease;">Gặp toàn bộ đội ngũ <span style="margin-left: 4px;">→</span></a>
                 </div>
             </div>
         </section>
@@ -1018,7 +1068,7 @@
                     <!-- Step 3 -->
                     <div class="step-card">
                         <div class="step-num">03</div>
-                        <h3>Hoàn tất</h3>
+                        <h3>Yên tâm chờ đón bé</h3>
                         <p>Nhận thông báo xác nhận ngay lập tức qua SMS/Zalo.</p>
                     </div>
                 </div>

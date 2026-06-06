@@ -5,51 +5,103 @@
 /* Typography & Variables */
 :root {
     /* Color Palette */
-    --color-primary: hsl(156, 36%, 26%);       /* Forest Green #2A5944 */
-    --color-primary-light: hsl(156, 36%, 95%);
-    --color-primary-dark: hsl(156, 36%, 16%);
-    --color-accent: hsl(38, 77%, 57%);         /* Gold/Yellow #E5A93C */
-    --color-accent-light: hsl(38, 77%, 95%);
-    --color-accent-dark: hsl(38, 77%, 45%);
-    
-    --color-text-dark: #2d3732;
+    --color-primary:       hsl(156, 38%, 28%);      /* Forest Green #2F5F48 */
+    --color-primary-light: hsl(156, 30%, 94%);
+    --color-primary-dark:  hsl(156, 40%, 12%);      /* Deep Forest #1E3D2B */
+    --color-accent:        hsl(36, 65%, 52%);       /* Warm Gold #C47E28 */
+    --color-accent-light:  hsl(36, 50%, 95%);
+    --color-accent-dark:   hsl(36, 68%, 40%);       /* Deep Gold #8B5E1A */
+
+    /* Semantic Colors */
+    --color-danger:        hsl(0, 72%, 51%);        /* #DC2626 — badge khuyến mãi, error */
+    --color-danger-light:  hsl(0, 72%, 96%);
+    --color-info:          hsl(210, 60%, 48%);      /* Blue — thông báo, link phụ */
+    --color-info-light:    hsl(210, 60%, 95%);
+    --color-success:       hsl(142, 50%, 38%);      /* Green nhạt — trạng thái thành công */
+    --color-success-light: hsl(142, 50%, 95%);
+    --color-neutral:       hsl(156, 8%, 46%);       /* Warm gray — text phụ, divider */
+    --color-neutral-light: hsl(156, 8%, 96%);
+    --color-neutral-dark:  hsl(156, 8%, 25%);
+
+    /* Base UI Colors */
+    --color-text-dark:  #2d3732;
     --color-text-light: #606f66;
-    --color-border: #e2e8f0;
-    --color-bg-white: #ffffff;
-    --color-bg-light: #FAF9F6;                 /* Synchronized Warm Cream */
-    
-    /* Service card custom tones */
-    --color-spa-bg: hsl(156, 40%, 96%);
-    --color-hotel-bg: hsl(30, 60%, 97%);
-    --color-shop-bg: hsl(200, 50%, 97%);
+    --color-border:     #e2e8f0;
+    --color-bg-white:   #ffffff;
+    --color-bg-light:   #FAF9F6;               /* Warm Cream */
 
-    /* Fonts */
-    --font-primary: 'Plus Jakarta Sans', sans-serif;
-    --font-heading: 'Playfair Display', serif;       /* Section headings */
-    --font-display: 'Playfair Display', serif;  /* Hero / big display title */
+    /* Fonts — Lora (heading, serif, warm) + DM Sans (body, geometric, friendly) */
+    --font-heading: 'Lora', Georgia, serif;      /* Headings, accent italic, display */
+    --font-body: 'DM Sans', system-ui, sans-serif; /* Body, UI, buttons, labels */
 
-    /* Font Sizes (matching design spec) */
-    --fs-hero-title: clamp(3.2rem, 8.5vw, 7.1875rem); /* 115px on desktop */
-    --fs-section-title: clamp(1.8rem, 4vw, 2.75rem);  /* Adjusted to 44px on desktop for harmony */
-    --fs-desc-hero: 1.625rem;                       /* 26px regular */
-    --fs-sub-title: 1.625rem;                        /* 26px semibold */
-    --fs-body-semibold: 1.125rem;                    /* 18px semibold */
-    --fs-body-medium: 1.125rem;                      /* 18px medium */
-    --fs-small: 0.875rem;                            /* 14px */
+    /* Legacy aliases — kept for backward compat, map to new vars */
+    --font-primary: var(--font-body);
+    --font-display: var(--font-heading);
+
+    /* Type Scale — Modular 1.250 (Major Third)
+       All headings use Lora, all body/UI use DM Sans
+    --------------------------------------------------------- */
+    --fs-display:   clamp(2.8rem, 6.5vw, 5.5rem);  /* Hero h1          */
+    --fs-h2:        clamp(1.6rem, 3vw, 2.25rem);    /* Section titles   */
+    --fs-h3:        1.25rem;                         /* Card titles      */
+    --fs-h4:        1.05rem;                         /* Label headings   */
+    --fs-body-lg:   1rem;                            /* Hero desc, subtitle */
+    --fs-body:      0.9375rem;                       /* Card body, general  */
+    --fs-small:     0.875rem;                        /* Tags, meta       */
+    --fs-caption:   0.75rem;                         /* Badge label, time   */
+
+    /* Legacy aliases — map old tokens to new scale */
+    --fs-hero-title:    var(--fs-display);
+    --fs-section-title: var(--fs-h2);
+    --fs-sub-title:     var(--fs-h3);
+    --fs-body-semibold: var(--fs-body);
+    --fs-body-medium:   var(--fs-body-lg);
+    --fs-desc-hero:     var(--fs-body-lg);
 
 
     /* Transitions & Shadows */
     --transition-smooth: all 0.6s cubic-bezier(0.32, 0.72, 0, 1);
-    --shadow-sm: 0 4px 6px -1px rgba(42, 89, 68, 0.05), 0 2px 4px -1px rgba(42, 89, 68, 0.03);
-    --shadow-md: 0 10px 15px -3px rgba(42, 89, 68, 0.08), 0 4px 6px -2px rgba(42, 89, 68, 0.04);
-    --shadow-lg: 0 20px 40px -5px rgba(42, 89, 68, 0.12), 0 10px 20px -5px rgba(42, 89, 68, 0.06);
-    --shadow-lg: 0 20px 25px -5px rgba(42, 89, 68, 0.12), 0 10px 10px -5px rgba(42, 89, 68, 0.04);
+    --shadow-sm: 0 2px 4px rgba(42, 89, 68, 0.04), 0 1px 2px rgba(42, 89, 68, 0.02);
+    --shadow-md: 0 4px 8px -2px rgba(42, 89, 68, 0.06), 0 2px 4px -2px rgba(42, 89, 68, 0.03);
+    --shadow-lg: 0 10px 20px -4px rgba(42, 89, 68, 0.08), 0 4px 8px -4px rgba(42, 89, 68, 0.03);
     
     --border-radius-lg: 24px;
     --border-radius-md: 16px;
     --border-radius-sm: 8px;
     --border-radius-pill: 100px;
     --card-border-radius: 16px;                 /* Standardized Card Border Radius */
+
+    /* Container Widths */
+    --container-hero: 1600px;       /* Hero section — wide editorial split */
+    --container-xl: 1400px;         /* Standard section containers */
+    --container-md: 1280px;         /* Text-heavy sections (tracker, process) */
+    --container-sm: 800px;          /* FAQ, narrow text sections */
+    --container-padding: 40px;      /* Horizontal padding inside containers */
+
+    /* Spacing System — Base 8px */
+    --space-xs:  8px;    /* Gap nhỏ: icon/text */
+    --space-sm:  16px;   /* Card padding, element gap */
+    --space-md:  24px;   /* Card grid gap */
+    --space-lg:  40px;   /* Container padding, component margin */
+    --space-xl:  64px;   /* Section padding default */
+}
+
+@media (max-width: 1024px) {
+    :root {
+        --space-xl: 48px;
+        --space-lg: 32px;
+        --space-md: 20px;
+        --space-sm: 14px;
+    }
+}
+
+@media (max-width: 640px) {
+    :root {
+        --space-xl: 40px;
+        --space-lg: 24px;
+        --space-md: 16px;
+        --space-sm: 12px;
+    }
 }
 
 /* Base Styles */
@@ -85,7 +137,7 @@ html {
 }
 
 body {
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     background-color: var(--color-bg-light);
     color: var(--color-text-dark);
     line-height: 1.6;
@@ -112,25 +164,26 @@ ul {
 /* .text-center đã được xóa — dùng Bootstrap's .text-center { text-align: center !important; } */
 
 .section-header {
-    max-width: 700px;
-    margin: 0 auto 50px;
+    max-width: 640px;
+    margin: 0 auto var(--space-lg);
 }
 
 .section-header h2 {
     font-family: var(--font-heading);
-    font-size: var(--fs-section-title);
+    font-size: var(--fs-h2);
     color: var(--color-primary);
-    font-weight: 500;
+    font-weight: 600;
     margin-bottom: 14px;
-    letter-spacing: -0.04em;
-    line-height: 1.1;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
 }
 
 .section-header .section-subtitle {
-    font-family: var(--font-primary);
-    font-size: var(--fs-body-medium);
-    font-weight: 500;
+    font-family: var(--font-body);
+    font-size: var(--fs-body-lg);
+    font-weight: 400;
     color: var(--color-text-light);
+    line-height: 1.6;
 }
 
 .accent-italic {
@@ -236,13 +289,14 @@ ul {
    Header & Navigation
    ========================================================================== */
 .main-header {
-    background-color: var(--color-primary);
-    color: #ffffff;
+    background-color: var(--color-bg-light);
+    color: var(--color-text-dark);
     position: sticky;
     top: 0;
     z-index: 1000;
     padding: 10px 0;
     box-shadow: var(--shadow-sm);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .header-container {
@@ -276,9 +330,9 @@ ul {
 .search-bar input {
     width: 100%;
     padding: 10px 16px 10px 42px;
-    border: none;
+    border: 1px solid var(--color-border);
     border-radius: var(--border-radius-pill);
-    background-color: rgba(255, 255, 255, 0.95);
+    background-color: #ffffff;
     font-family: var(--font-primary);
     font-size: 0.9rem;
     color: var(--color-text-dark);
@@ -316,6 +370,7 @@ ul {
 .nav-menu a {
     font-weight: 500;
     font-size: 0.95rem;
+    color: var(--color-text-dark);
     opacity: 0.85;
     position: relative;
     padding: 6px 0;
@@ -356,7 +411,7 @@ ul {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #ffffff;
+    color: var(--color-text-dark);
     opacity: 0.9;
     transition: var(--transition-smooth);
 }
@@ -376,7 +431,7 @@ ul {
     border: none;
     font-size: 0.9rem;
     font-weight: 600;
-    color: #ffffff;
+    color: var(--color-text-dark);
     opacity: 0.9;
     transition: var(--transition-smooth);
 }
@@ -390,7 +445,7 @@ ul {
 .mobile-nav-toggle {
     background: none;
     border: none;
-    color: #ffffff;
+    color: var(--color-text-dark);
     cursor: pointer;
     padding: 4px;
 }
@@ -462,8 +517,7 @@ ul {
     position: relative;
     max-width: 1600px;
     margin: 0 auto;
-    padding: 60px 64px 90px;
-    transform: translateY(-40px);
+    padding: var(--space-xl) 64px;
     z-index: 3;
     width: 100%;
     display: grid;
@@ -512,12 +566,12 @@ ul {
     50% { opacity: 0.6; transform: scale(0.85); }
 }
 
-/* Hero Title — left-aligned, Playfair editorial scale */
+/* Hero Title — left-aligned, Lora warm editorial scale */
 .hero-title {
-    font-family: var(--font-display);
-    font-size: clamp(3.6rem, 7.5vw, 7.5rem);
-    line-height: 1.0;
-    font-weight: 400;
+    font-family: var(--font-heading);
+    font-size: var(--fs-display);
+    line-height: 1.05;
+    font-weight: 600;
     color: #ffffff;
     text-align: left;
     letter-spacing: -0.03em;
@@ -910,8 +964,7 @@ ul {
     .hero-container {
         grid-template-columns: 1fr;
         gap: 40px;
-        padding: 60px 32px 80px;
-        transform: translateY(-15px);
+        padding: var(--space-xl) 32px;
     }
 
     .hero-right {
@@ -930,9 +983,8 @@ ul {
 
 @media (max-width: 640px) {
     .hero-container {
-        padding: 50px 20px 60px;
+        padding: var(--space-xl) 20px;
         gap: 32px;
-        transform: translateY(-10px);
     }
 
     .hero-visual-frame {
@@ -964,7 +1016,7 @@ ul {
 }
 
 .features-strip {
-    max-width: 1340px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 0 48px;
     display: flex;
@@ -1044,15 +1096,15 @@ ul {
    ========================================================================== */
 .services-section {
     background-color: var(--color-bg-light);
-    padding: 40px 0 45px;
+    padding: var(--space-xl) 0;
     position: relative;
     overflow: hidden;
 }
 
 .services-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 40px;
     position: relative;
 }
 
@@ -1064,11 +1116,11 @@ ul {
 .services-arched-wrapper {
     display: flex;
     align-items: stretch;
-    gap: 30px;
-    margin-top: 40px;
+    gap: var(--space-md);
+    margin-top: 0;
     position: relative;
     z-index: 2;
-    padding: 30px calc(50% - 145px) 50px calc(50% - 145px); /* Center padding matching half card width */
+    padding: 0 calc(50% - 145px) var(--space-xs) calc(50% - 145px);
     scroll-padding: 0 calc(50% - 145px);
     overflow-x: auto;
     scrollbar-width: none;
@@ -1082,15 +1134,15 @@ ul {
 @media (min-width: 992px) {
     .services-arched-wrapper {
         justify-content: center;
-        padding: 30px 0 50px 0;
+        padding: 0;
         scroll-padding: 0;
         overflow-x: visible;
     }
     .services-track-top {
-        padding: 10px 0;
+        padding: 0 0 var(--space-xs) 0;
     }
     .services-track-bottom {
-        padding: 5px 0 10px 0;
+        padding: var(--space-xs) 0 0 0;
         scroll-padding: 0;
     }
 }
@@ -1107,7 +1159,7 @@ ul {
 .arched-card {
     background-color: var(--color-bg-white);
     border-radius: var(--border-radius-lg);
-    padding: 16px;
+    padding: 10px;
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 1), 0 10px 20px rgba(42, 89, 68, 0.04);
     border: 1px solid rgba(42, 89, 68, 0.08);
     transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s, box-shadow 0.6s, border-color 0.6s, z-index 0.6s;
@@ -1137,52 +1189,30 @@ ul {
 /* Top and Bottom track specific spacings */
 .services-track-top {
     margin-bottom: 0;
-    padding: 10px calc(50% - 145px) 10px calc(50% - 145px);
+    padding: 0 calc(50% - 145px) var(--space-xs) calc(50% - 145px);
 }
 
 .services-track-bottom {
     margin-top: 0;
-    padding: 5px calc(50% - 115px) 10px calc(50% - 115px);
+    padding: var(--space-xs) calc(50% - 115px) 0 calc(50% - 115px);
     scroll-padding: 0 calc(50% - 115px);
 }
 
 /* Centered on desktop via the media query above */
 
-/* Sizing overrides for bottom track cards to make them smaller */
+/* Sizing overrides for bottom track — same width as top, slightly smaller image */
 .services-track-bottom .arched-card {
-    flex: 0 0 230px;
-    padding: 12px;
-    transform: scale(0.9); /* Smaller but uniform scale */
+    flex: 0 0 290px;
+    padding: 16px;
+    transform: scale(0.96);
 }
 
 .services-track-bottom .card-image-wrapper {
-    height: 100px; /* Further reduced image height in bottom row */
+    height: 90px;
 }
 
 .services-track-bottom .card-info {
-    padding: 14px 10px 10px;
-}
-
-.services-track-bottom .card-info h3 {
-    font-size: 1.15rem;
-    margin-bottom: 6px;
-}
-
-.services-track-bottom .card-info p {
-    font-size: 0.85rem;
-    line-height: 1.5;
-}
-
-.services-track-bottom .service-price-tag {
-    font-size: 0.85rem;
-    margin-top: 10px;
-}
-
-.services-track-bottom .card-number {
-    font-size: 0.8rem;
-    padding: 4px 8px;
-    top: 12px;
-    left: 12px;
+    padding: 12px 10px 10px;
 }
 
 /* Modern hover interaction: any hovered card takes prominence */
@@ -1195,7 +1225,7 @@ ul {
 }
 
 .services-track-bottom .arched-card:hover {
-    transform: scale(1.0) translateY(-6px) !important;
+    transform: scale(1.06) translateY(-8px) !important;
 }
 
 .arched-card:hover::before {
@@ -1206,7 +1236,7 @@ ul {
 .card-image-wrapper {
     position: relative;
     width: 100%;
-    height: 150px; /* Further reduced card image height in top row */
+    height: 100px; /* Further reduced card image height in top row */
     border-radius: var(--border-radius-md) var(--border-radius-md) 0 0; /* Clean semi-arch or rounded top */
     overflow: hidden;
 }
@@ -1241,7 +1271,7 @@ ul {
 
 /* Service Card Info & Typography */
 .card-info {
-    padding: 20px 16px 16px;
+    padding: 12px 10px 10px;
     text-align: left;
     flex-grow: 1;
     display: flex;
@@ -1254,7 +1284,7 @@ ul {
     font-size: 1.1rem;
     font-weight: 700;
     color: var(--color-primary-dark);
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     line-height: 1.3;
 }
 
@@ -1262,10 +1292,10 @@ ul {
     font-family: var(--font-primary);
     font-size: 0.88rem;
     color: var(--color-text-light);
-    line-height: 1.5;
-    margin-bottom: 16px;
+    line-height: 1.4;
+    margin-bottom: 4px;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -1278,7 +1308,7 @@ ul {
     width: 100%;
     margin-top: auto;
     border-top: 1px dashed rgba(42, 89, 68, 0.08);
-    padding-top: 14px;
+    padding-top: 6px;
 }
 
 .service-price-tag {
@@ -1321,8 +1351,8 @@ ul {
 .carousel-nav {
     display: flex;
     justify-content: center;
-    gap: 15px;
-    margin-top: 20px;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
     position: relative;
     z-index: 5;
 }
@@ -1359,15 +1389,15 @@ ul {
    ========================================================================== */
 .tracker-section {
     background-color: var(--color-bg-light);
-    padding: 60px 0;
+    padding: var(--space-xl) 0;
     border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
 }
 
 .tracker-container {
-    max-width: 1200px;
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 40px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 60px;
@@ -1698,7 +1728,7 @@ ul {
 .live-dot {
     width: 6px;
     height: 6px;
-    background-color: #ef4444; /* bright red */
+    background-color: var(--color-danger); /* bright red */
     border-radius: 50%;
     animation: livePulse 1.5s infinite;
 }
@@ -1725,8 +1755,8 @@ ul {
    Experts Section
    ========================================================================== */
 .experts-section {
-    background-color: var(--color-bg-light); /* Warm cream bg */
-    padding: 80px 0;
+    background-color: var(--color-bg-light);
+    padding: var(--space-xl) 0;
 }
 
 .experts-section .section-header {
@@ -1736,9 +1766,9 @@ ul {
 }
 
 .experts-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 0 40px;
 }
 
 .experts-carousel-container {
@@ -1753,9 +1783,10 @@ ul {
 
 .experts-carousel-wrapper {
     overflow: hidden;
-    width: 1020px;
-    padding: 60px 0;
-    margin: -30px 0;
+    width: 1080px;
+    max-width: 100%;
+    padding: 32px 0;
+    margin: -16px 0;
 }
 
 .experts-carousel-track {
@@ -1766,8 +1797,8 @@ ul {
 }
 
 .expert-card {
-    flex: 0 0 320px;
-    width: 320px;
+    flex: 0 0 340px;
+    width: 340px;
     box-sizing: border-box;
     background-color: var(--color-bg-white);
     border-radius: 20px;
@@ -1777,7 +1808,7 @@ ul {
     transition: var(--transition-smooth);
     display: flex;
     flex-direction: column;
-    height: 520px;
+    height: auto;
     transform: scale(0.96);
     opacity: 0.85;
 }
@@ -1828,7 +1859,7 @@ ul {
     position: relative;
     overflow: hidden;
     width: 100%;
-    aspect-ratio: 4 / 3.2;
+    aspect-ratio: 3 / 2;
 }
 
 .expert-image-box img {
@@ -1855,8 +1886,8 @@ ul {
 
 .expert-name {
     font-family: var(--font-primary);
-    font-size: 1.35rem;
-    font-weight: 600;
+    font-size: 1.6rem;
+    font-weight: 800;
     color: var(--color-primary-dark, #1c2b22);
     margin: 0 0 4px 0;
 }
@@ -1876,17 +1907,25 @@ ul {
     color: rgba(255, 255, 255, 0.85);
 }
 
+.expert-exp {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--color-text-light);
+    margin-top: 4px;
+}
+
+.expert-card.highlighted-expert .expert-exp {
+    color: rgba(255, 255, 255, 0.8);
+}
+
 .expert-cert {
-    border-left: 2px solid var(--color-primary);
-    padding-left: 12px;
     margin-bottom: 18px;
-    min-height: 40px;
     display: flex;
     align-items: center;
 }
 
 .expert-card.highlighted-expert .expert-cert {
-    border-left-color: var(--color-accent);
+    /* No border needed */
 }
 
 .expert-cert span {
@@ -1902,7 +1941,7 @@ ul {
 }
 
 .expert-quote {
-    font-family: var(--font-display); /* Playfair Display */
+    font-family: var(--font-heading); /* Lora — italic serif for quotes */
     font-size: 1rem;
     font-style: italic;
     font-weight: 400;
@@ -1922,12 +1961,12 @@ ul {
 
 .expert-quote::before {
     content: '“';
-    font-family: Georgia, serif;
+    font-family: var(--font-heading);
     font-size: 4rem;
     color: var(--color-primary-light);
     position: absolute;
-    top: -24px;
-    left: -10px;
+    top: -20px;
+    left: -4px;
     z-index: -1;
     line-height: 1;
     opacity: 0.6;
@@ -1943,13 +1982,13 @@ ul {
 .process-section {
     background-color: var(--color-primary);
     color: #ffffff;
-    padding: 60px 0;
+    padding: var(--space-xl) 0;
 }
 
 .process-container {
-    max-width: 1200px;
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 40px;
 }
 
 .section-header.inverted h2 {
@@ -2052,21 +2091,21 @@ ul {
    ========================================================================== */
 .shop-section {
     background-color: var(--color-bg-white);
-    padding: 60px 0;
+    padding: var(--space-xl) 0;
 }
 
 .shop-section .section-header,
 .shop-section .product-grid,
 .shop-section .shop-action {
-    max-width: 1200px;
+    max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: 40px;
+    padding-right: 40px;
 }
 
 .shop-section .section-header {
-    margin-bottom: 24px; /* Reduced gap above the banner */
+    margin-bottom: var(--space-md); /* Compact above banner */
 }
 
 .shop-section-wrapper {
@@ -2095,8 +2134,8 @@ ul {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
     border-radius: var(--border-radius-lg);
     overflow: hidden;
-    margin: 0 auto 24px; /* Reduced gap below the banner to 24px */
-    max-width: 1200px;
+    margin: 0 auto var(--space-md);
+    max-width: 1400px;
     height: 280px; /* Slimmer fixed height on desktop */
     box-shadow: var(--shadow-lg);
     color: #ffffff;
@@ -2179,7 +2218,7 @@ ul {
     gap: 32px;
     border-bottom: 2px solid var(--color-border);
     max-width: 900px;
-    margin: 0 auto 40px;
+    margin: 0 auto var(--space-md);
     padding: 0 20px;
 }
 
@@ -2222,9 +2261,21 @@ ul {
 
 .product-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-    margin-bottom: 45px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+@media (max-width: 1200px) {
+    .product-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    .product-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 .product-card {
@@ -2237,6 +2288,7 @@ ul {
     display: flex;
     flex-direction: column;
     transform-origin: center;
+    height: 100%;
 }
 
 .product-card:hover {
@@ -2245,7 +2297,7 @@ ul {
 }
 
 .product-image-box {
-    height: 160px; /* Reduced from 200px to make card compact */
+    aspect-ratio: 16 / 9;
     position: relative;
     overflow: hidden;
 }
@@ -2279,24 +2331,24 @@ ul {
 }
 
 .tag-banchay {
-    background-color: rgba(229, 169, 60, 0.88); /* Gold/orange */
+    background-color: var(--color-accent);
 }
 
 .tag-khuyenmai {
-    background-color: rgba(239, 68, 68, 0.85); /* Premium Rose/Red */
+    background-color: var(--color-danger);
 }
 
 .tag-hangmoi {
-    background-color: rgba(42, 89, 68, 0.88); /* Deep forest green */
+    background-color: var(--color-primary);
 }
 
 /* Reward Tip */
 .product-reward-tip {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--color-text-light);
-    margin-top: 8px;
+    margin-top: 4px;
     border-top: 1px dashed var(--color-border);
-    padding-top: 8px;
+    padding-top: 6px;
     transition: var(--transition-smooth);
     cursor: pointer;
 }
@@ -2306,7 +2358,7 @@ ul {
 }
 
 .product-info {
-    padding: 16px; /* Reduced from 20px for tighter spacing */
+    padding: 8px 10px;
     text-align: left;
     display: flex;
     flex-direction: column;
@@ -2315,12 +2367,40 @@ ul {
 }
 
 .product-info h3 {
-    font-family: var(--font-primary);
-    font-size: 1.05rem; /* Reduced from var(--fs-sub-title) 26px for elegant card size */
+    font-family: var(--font-body);
+    font-size: 0.875rem;
     font-weight: 700;
     color: var(--color-primary-dark);
+    margin-bottom: 4px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 2.6em;
+}
+
+.product-meta {
+    font-size: 0.75rem;
     margin-bottom: 6px;
-    line-height: 1.35;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rating-stars {
+    color: #F59E0B;
+    letter-spacing: -1px;
+}
+
+.rating-score {
+    color: var(--color-primary-dark);
+    font-weight: 600;
+}
+
+.sold-count {
+    color: var(--color-text-light);
 }
 
 .product-price {
@@ -2332,7 +2412,7 @@ ul {
 .price-current {
     font-size: 1.15rem;
     font-weight: 800;
-    color: #ef4444;
+    color: var(--color-danger);
 }
 
 .price-old {
@@ -2345,31 +2425,33 @@ ul {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 8px;
+    margin-top: 4px;
     width: 100%;
 }
 
 .add-to-cart-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
+    padding: 6px 12px;
+    border-radius: var(--border-radius-pill);
     background-color: var(--color-primary-light);
-    color: var(--color-primary);
+    color: var(--color-primary-dark);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.8rem;
     border: none;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: var(--transition-smooth);
-    box-shadow: 0 4px 8px rgba(42, 89, 68, 0.06);
-    padding: 0;
+    box-shadow: var(--shadow-sm);
+    white-space: nowrap;
 }
 
 .add-to-cart-btn:hover {
     background-color: var(--color-primary);
     color: #ffffff;
-    transform: scale(1.08) translateY(-2px);
-    box-shadow: 0 6px 14px rgba(42, 89, 68, 0.18);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 .add-to-cart-btn svg {
@@ -2405,14 +2487,14 @@ ul {
    ========================================================================== */
 .membership-section {
     background-color: var(--color-bg-light); /* Warm cream bg */
-    padding: 32px 0;
+    padding: var(--space-xl) 0;
     border-top: 1px solid var(--color-border);
 }
 
 .membership-container-full {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 0 40px;
 }
 
 .membership-category {
@@ -2459,7 +2541,7 @@ ul {
 
 /* Steps Flow (Restored to original pill styling, width optimized) */
 .membership-section .section-header {
-    margin-bottom: 20px;
+    margin-bottom: var(--space-lg);
 }
 
 .membership-steps-flow {
@@ -3017,7 +3099,7 @@ ul {
 /* Responsive adjustment for Membership split layout */
 @media (max-width: 991px) {
     .membership-section {
-        padding: 40px 0;
+        padding: var(--space-xl) 0;
     }
     .membership-steps-flow {
         flex-wrap: wrap;
@@ -3055,7 +3137,7 @@ ul {
    ========================================================================== */
 .testimonials-section {
     background-color: var(--color-primary-dark);
-    padding: 60px 0;
+    padding: var(--space-xl) 0;
     color: #ffffff;
     border-bottom: 1px solid rgba(255,255,255,0.08);
 }
@@ -3069,9 +3151,9 @@ ul {
 }
 
 .testimonials-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 40px;
 }
 
 /* ==========================================================================
@@ -3079,7 +3161,7 @@ ul {
    ========================================================================== */
 .footer-cta-banner {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-    padding: 80px 20px;
+    padding: var(--space-xl) var(--container-padding);
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -3242,7 +3324,7 @@ ul {
     align-items: center;
     justify-content: center;
     position: relative;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 40px auto 0;
     gap: 20px;
 }
@@ -3340,7 +3422,7 @@ ul {
     top: 10px;
     left: 20px;
     font-size: 4.5rem;
-    font-family: Georgia, serif;
+    font-family: var(--font-heading);
     color: var(--color-accent);
     opacity: 0.2;
     line-height: 1;
@@ -3414,9 +3496,9 @@ ul {
 }
 
 .footer-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 40px;
     display: grid;
     grid-template-columns: 2.2fr 1.5fr 2fr 2.3fr;
     gap: 40px;
@@ -3570,9 +3652,9 @@ ul {
 }
 
 .footer-bottom {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 20px auto 0;
-    padding: 15px 20px 0;
+    padding: 15px 40px 0;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     font-size: 0.8rem;
 }
@@ -3750,14 +3832,14 @@ ul {
     flex-wrap: wrap;
     gap: 8px;
     border-top: none;
-    padding-top: 14px;
+    padding-top: 8px;
     margin-top: auto;
 }
 
 .expert-stat-item {
     display: inline-flex;
     align-items: center;
-    padding: 6px 14px;
+    padding: 4px 12px;
     border-radius: 100px;
     font-size: 0.8rem;
     line-height: 1.2;
@@ -4178,7 +4260,7 @@ ul {
 .safety-section {
     background-color: var(--color-primary-dark);
     color: #ffffff;
-    padding: 70px 0; /* Reduced padding */
+    padding: var(--space-xl) 0;
     border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
@@ -4194,14 +4276,14 @@ ul {
 
 .safety-layout-wrapper {
     position: relative;
-    margin-top: 50px;
+    margin-top: var(--space-lg);
     width: 100%;
 }
 
 .safety-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 0 40px;
     position: relative; /* Coordinate anchor for absolute guardians */
 }
 
@@ -4369,7 +4451,7 @@ ul {
 /* FAQ Accordion Section */
 .faq-section {
     background-color: var(--color-bg-white);
-    padding: 60px 0;
+    padding: var(--space-xl) 0;
     border-top: 1px solid var(--color-border);
 }
 
@@ -4661,16 +4743,16 @@ ul {
    ========================================================================== */
 .pet-id-showcase-section {
     background-color: var(--color-bg-white);
-    padding: 100px 0;
+    padding: var(--space-xl) 0;
     border-bottom: 1px solid var(--color-border);
     position: relative;
     overflow: hidden;
 }
 
 .pet-id-showcase-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 40px;
     display: grid;
     grid-template-columns: 1.1fr 0.9fr;
     gap: 80px;
@@ -4828,7 +4910,7 @@ ul {
 .warning-title {
     font-size: 0.72rem;
     font-weight: 800;
-    color: #ef4444;
+    color: var(--color-danger);
     letter-spacing: 0.5px;
     display: block;
     margin-bottom: 2px;
@@ -5251,7 +5333,7 @@ ul {
 }
 
 .otp-single-input.is-error {
-    border-color: #ef4444;
+    border-color: var(--color-danger);
     box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
     animation: shake 0.3s ease;
 }
@@ -5430,7 +5512,7 @@ ul {
 .strength-bar {
     height: 100%;
     width: 0;
-    background-color: #ef4444;
+    background-color: var(--color-danger);
     transition: width 0.3s ease, background-color 0.3s ease;
 }
 
@@ -5493,7 +5575,7 @@ ul {
 .btn-call-hotline {
     display: inline-block;
     padding: 14px 32px;
-    background-color: #ef4444;
+    background-color: var(--color-danger);
     color: #ffffff;
     font-family: var(--font-primary);
     font-weight: 700;
@@ -5611,13 +5693,13 @@ ul {
     border-radius: 12px;
     font-family: var(--font-primary);
     font-weight: 600;
-    color: #ef4444;
+    color: var(--color-danger);
     cursor: pointer;
     transition: var(--transition-smooth);
 }
 
 .btn-dashboard-logout:hover {
-    background-color: #ef4444;
+    background-color: var(--color-danger);
     color: #ffffff;
 }
 
@@ -5708,7 +5790,7 @@ ul {
     display: block;
     margin-top: 8px;
     font-size: 0.78rem;
-    color: #ef4444;
+    color: var(--color-danger);
     font-weight: 500;
 }
 
@@ -5765,7 +5847,7 @@ ul {
     background-color: rgba(239, 68, 68, 0.05);
     border: 1px solid rgba(239, 68, 68, 0.15);
     border-radius: 100px;
-    color: #ef4444;
+    color: var(--color-danger);
     font-family: var(--font-primary);
     font-weight: 600;
     font-size: 0.8rem;
@@ -5774,7 +5856,7 @@ ul {
 }
 
 .btn-cancel-booking-dash:hover {
-    background-color: #ef4444;
+    background-color: var(--color-danger);
     color: #ffffff;
 }
 
@@ -6367,8 +6449,8 @@ ul {
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
-    gap: 16px;
-    margin: 16px auto 0;
+    gap: var(--space-sm);
+    margin: var(--space-sm) auto 0;
     max-width: 900px;
     padding: 0 16px;
 }
@@ -6424,7 +6506,7 @@ ul {
     align-items: center;
     flex-wrap: wrap;
     gap: 12px;
-    margin: -15px auto 40px;
+    margin: var(--space-sm) auto var(--space-md);
     padding: 0 16px;
 }
 
