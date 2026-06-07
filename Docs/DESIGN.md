@@ -418,23 +418,23 @@ Trên mobile, spacing scale down để tránh lãng phí không gian màn hình 
 ## 6. Border Radius
 
 ```css
---border-radius-lg:   24px   /* Card ngoài, modal, image frame lớn */
---border-radius-md:   16px   /* Card sản phẩm, inner elements */
---border-radius-sm:   8px    /* Badge, input, tag nhỏ */
---border-radius-pill: 100px  /* Button, label pill, search bar */
---card-border-radius: 16px   /* Alias của --border-radius-md — dùng cho product cards */
+--border-radius-lg:   2px;     /* Card ngoài, modal, image frame lớn - bo góc rất nhẹ tạo cá tính */
+--border-radius-md:   2px;     /* Card sản phẩm, inner elements - bo góc rất nhẹ tạo cá tính */
+--border-radius-sm:   2px;     /* Badge nhỏ, input, tag phụ - bo nhẹ tinh tế */
+--border-radius-pill: 100px;   /* Button, label pill, search bar chính - bo tròn viên thuốc */
+--card-border-radius: 2px;     /* Alias của --border-radius-md — dùng cho product/service cards */
 ```
 
 **Quy tắc dùng:**
 
-| Element | Token |
-|---------|-------|
-| Service card, modal, image hero | `--border-radius-lg` (24px) |
-| Product card, expert card, form input | `--border-radius-md` / `--card-border-radius` (16px) |
-| Badge, tag, tooltip | `--border-radius-sm` (8px) |
-| Button, search bar, pill label | `--border-radius-pill` (100px) |
+| Element | Token | Trạng thái bo góc |
+|---------|-------|-------------------|
+| Service card, testimonial card, modal, image hero | `--border-radius-lg` / `--card-border-radius` | **2px** (Bo góc siêu nhẹ) |
+| Product card, expert card, blog card | `--border-radius-md` / `--card-border-radius` | **2px** (Bo góc siêu nhẹ) |
+| Badge phụ nhỏ, form input, tag phụ | `--border-radius-sm` | **2px** (Bo góc siêu nhẹ) |
+| Button hành động, search bar chính, nhãn thú cưng | `--border-radius-pill` | **100px** (Bo tròn viên thuốc) |
 
-> `--card-border-radius` và `--border-radius-md` cùng giá trị `16px`. `--card-border-radius` là **semantic alias** dành riêng cho product/service cards — nếu sau này muốn đổi radius card thì chỉ cần sửa 1 token này, không ảnh hưởng các element khác dùng `--border-radius-md` (form input, inner card elements).
+> `--card-border-radius` và `--border-radius-md` cùng giá trị `2px`. `--card-border-radius` là **semantic alias** dành riêng cho product/service cards — nếu sau này muốn đổi radius card thì chỉ cần sửa 1 token này, không ảnh hưởng các element khác dùng `--border-radius-md`.
 >
 > **Quy tắc:** Trong CSS của card, **luôn dùng `--card-border-radius`**, không dùng `--border-radius-md` trực tiếp — để khi thay đổi card radius không gây side effect.
 
