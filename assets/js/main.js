@@ -1,7 +1,5 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    // Tải động Header và Footer trực tiếp vào các thẻ gốc
-    await loadComponents();
-    
+document.addEventListener('DOMContentLoaded', () => {
+    initMobileNavigation();
     initPremiumMotion();
     initTimelineTracker();
     initBookingWidget();
@@ -15,34 +13,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     initExpertsCarousel();
     initInteractivePawPass();
 });
-
-/**
- * Tải động nội dung của Header và Footer từ components/
- */
-async function loadComponents() {
-    const components = [
-        { id: 'mainHeader', url: '../../components/header.html', callback: initMobileNavigation },
-        { id: 'contact', url: '../../components/footer.html' }
-    ];
-
-    const promises = components.map(async (comp) => {
-        const el = document.getElementById(comp.id);
-        if (!el) return;
-        try {
-            const response = await fetch(comp.url);
-            if (response.ok) {
-                el.innerHTML = await response.text();
-                if (comp.callback) comp.callback();
-            } else {
-                console.error(`Failed to load component: ${comp.url}`);
-            }
-        } catch (err) {
-            console.error(`Error loading component ${comp.url}:`, err);
-        }
-    });
-
-    await Promise.all(promises);
-}
 
 /**
  * Mobile Navigation — handled by Bootstrap Collapse (data-bs-toggle="collapse")

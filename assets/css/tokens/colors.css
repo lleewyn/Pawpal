@@ -1,0 +1,32 @@
+/* ==========================================================================
+   PawPal Design Tokens — Colors
+   ========================================================================== */
+
+:root {
+    /* Color Palette */
+    --color-primary:       hsl(155, 28%, 35%);      /* Soft Sage Green #4F7A68 */
+    --color-primary-light: hsl(155, 20%, 96%);
+    --color-primary-dark:  hsl(155, 30%, 25%);      /* Deep Sage Green #33594A */
+    --color-accent:        hsl(38, 75%, 50%);       /* Amber Gold #E09F1F */
+    --color-accent-light:  hsl(38, 50%, 95%);
+    --color-accent-dark:   hsl(38, 65%, 40%);       /* Deep Amber Gold #9E6B17 */
+
+    /* Semantic Colors */
+    --color-danger:        hsl(0, 72%, 51%);        /* #DC2626 — badge khuyến mãi, error */
+    --color-danger-light:  hsl(0, 72%, 96%);
+    --color-id-danger:     hsl(0, 72%, 51%);        /* Alias for legacy booking template compatibility */
+    --color-info:          hsl(210, 60%, 48%);      /* Blue — thông báo, link phụ */
+    --color-info-light:    hsl(210, 60%, 95%);
+    --color-success:       hsl(142, 50%, 38%);      /* Green nhạt — trạng thái thành công */
+    --color-success-light: hsl(142, 50%, 95%);
+    --color-neutral:       hsl(156, 8%, 46%);       /* Warm gray — text phụ, divider */
+    --color-neutral-light: hsl(156, 8%, 96%);
+    --color-neutral-dark:  hsl(156, 8%, 25%);
+
+    /* Base UI Colors */
+    --color-text-dark:  #2d3732;
+    --color-text-light: #606f66;
+    --color-border:     #e2e8f0;
+    --color-bg-white:   #ffffff;
+    --color-bg-light:   #FAF9F6;               /* Warm Cream */
+}

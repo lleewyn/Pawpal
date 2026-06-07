@@ -161,8 +161,7 @@
 .shop-catalog-container {
     max-width: 1300px;
     margin: 0 auto;
-    padding: 0 20px;
-    /* /* display: grid; grid-template-columns: 260px 1fr; */ */
+    /* display: grid; grid-template-columns: 260px 1fr; */
     gap: 36px;
     align-items: start;
 }

@@ -418,23 +418,23 @@ Trên mobile, spacing scale down để tránh lãng phí không gian màn hình 
 ## 6. Border Radius
 
 ```css
---border-radius-lg:   2px;     /* Card ngoài, modal, image frame lớn - bo góc rất nhẹ tạo cá tính */
---border-radius-md:   2px;     /* Card sản phẩm, inner elements - bo góc rất nhẹ tạo cá tính */
---border-radius-sm:   2px;     /* Badge nhỏ, input, tag phụ - bo nhẹ tinh tế */
+--border-radius-lg:   0;       /* Card ngoài, modal, image frame lớn - góc vuông hoàn toàn */
+--border-radius-md:   0;       /* Card sản phẩm, inner elements - góc vuông hoàn toàn */
+--border-radius-sm:   0;       /* Badge nhỏ, input, tag phụ - góc vuông hoàn toàn */
 --border-radius-pill: 100px;   /* Button, label pill, search bar chính - bo tròn viên thuốc */
---card-border-radius: 2px;     /* Alias của --border-radius-md — dùng cho product/service cards */
+--card-border-radius: 0;       /* Alias của --border-radius-md — dùng cho product/service cards */
 ```
 
 **Quy tắc dùng:**
 
 | Element | Token | Trạng thái bo góc |
 |---------|-------|-------------------|
-| Service card, testimonial card, modal, image hero | `--border-radius-lg` / `--card-border-radius` | **2px** (Bo góc siêu nhẹ) |
-| Product card, expert card, blog card | `--border-radius-md` / `--card-border-radius` | **2px** (Bo góc siêu nhẹ) |
-| Badge phụ nhỏ, form input, tag phụ | `--border-radius-sm` | **2px** (Bo góc siêu nhẹ) |
+| Service card, testimonial card, modal, image hero | `--border-radius-lg` / `--card-border-radius` | **0px** (Góc vuông hoàn toàn) |
+| Product card, expert card, blog card | `--border-radius-md` / `--card-border-radius` | **0px** (Góc vuông hoàn toàn) |
+| Badge phụ nhỏ, form input, tag phụ | `--border-radius-sm` | **0px** (Góc vuông hoàn toàn) |
 | Button hành động, search bar chính, nhãn thú cưng | `--border-radius-pill` | **100px** (Bo tròn viên thuốc) |
 
-> `--card-border-radius` và `--border-radius-md` cùng giá trị `2px`. `--card-border-radius` là **semantic alias** dành riêng cho product/service cards — nếu sau này muốn đổi radius card thì chỉ cần sửa 1 token này, không ảnh hưởng các element khác dùng `--border-radius-md`.
+> `--card-border-radius` và `--border-radius-md` cùng giá trị `0`. `--card-border-radius` là **semantic alias** dành riêng cho product/service cards — nếu sau này muốn đổi radius card thì chỉ cần sửa 1 token này, không ảnh hưởng các element khác dùng `--border-radius-md`.
 >
 > **Quy tắc:** Trong CSS của card, **luôn dùng `--card-border-radius`**, không dùng `--border-radius-md` trực tiếp — để khi thay đổi card radius không gây side effect.
 
@@ -508,10 +508,30 @@ Tất cả shadow dùng màu `--color-primary` tinted (green-tinted shadows) tha
 
 ---
 
-## 10. Changelog
+## 10. Chiến Thuật Phòng Chống AI Slop (Anti-AI Slop)
+
+PawPal cam kết không sử dụng giao diện rập khuôn giá rẻ. Toàn bộ thiết kế phải tuân thủ 4 trụ cột chiến thuật:
+
+1. **Hình học sắc sảo (Geometry):**
+   * Đưa tất cả các loại thẻ (Card), khung tìm kiếm, thanh bộ lọc bên, ô nhập dữ liệu, và cửa sổ pop-up modal về **góc vuông hoàn toàn (`border-radius: 0`)**.
+   * Chỉ sử dụng góc bo tròn cho các trường hợp mô phỏng đồ vật ngoài đời thực (skeuomorphism) như thẻ thành viên nhựa ảo PawPass.
+2. **Bố cục bất đối xứng (Asymmetric Layout):**
+   * Tránh chia đều 50/55 cho tất cả phần hoặc lặp lại cấu trúc một hàng thẳng tắp.
+   * Sử dụng lưới bento không đều (thẻ to thẻ nhỏ xếp xen kẽ) và các tỷ lệ cột lệch (như 45% chữ, 55% hình ảnh trong Hero) để tạo nhịp điệu đọc đa dạng.
+3. **Typography tạp chí (Editorial Typeface):**
+   * Sử dụng sự đối lập rõ nét giữa font tiêu đề Serif cổ điển (`Lora`) và font nội dung Sans-serif hiện đại (`DM Sans`).
+   * Phóng khoáng trong sử dụng khoảng trắng (whitespace) và duy trì `line-height` cao (1.6 - 1.7) giúp trang dễ thở.
+4. **Tương tác co giãn (Elastic Micro-motion):**
+   * Áp dụng đường cong gia tốc bezier cụ thể `cubic-bezier(0.25, 1, 0.5, 1)` cho các hiệu ứng trượt, hover co giãn nhẹ để giao diện góc vuông không bị khô ráp mà đắt tiền, sinh động.
+
+---
+
+## 11. Changelog
 
 | Ngày | Thay đổi |
 |------|---------|
+| 06/2026 | Khai tử bo góc card mặc định, chuyển các token `--border-radius-lg/md/sm` và `--card-border-radius` về **`0`** |
+| 06/2026 | Bổ sung phần **10. Chiến Thuật Phòng Chống AI Slop** vào tài liệu hệ thống |
 | 06/2026 | Đổi font từ Playfair Display + Plus Jakarta Sans → **Lora + DM Sans** |
 | 06/2026 | Thiết lập Type Scale modular 1.25, thêm legacy token aliases |
 | 06/2026 | Đồng bộ container max-width: 1200px → **1400px** cho tất cả section |

@@ -25,7 +25,7 @@
 .admin-card {
     background: #fff;
     border: 1px solid rgba(42,89,68,0.08);
-    border-radius: 20px;
+    border-radius: var(--card-border-radius);
     padding: 28px;
     box-shadow: 0 4px 12px rgba(42,89,68,0.06);
 }
@@ -262,7 +262,7 @@
 .stat-card {
     background: #fff;
     border: 1px solid rgba(42,89,68,0.08);
-    border-radius: 14px;
+    border-radius: var(--card-border-radius);
     padding: 16px 20px;
     text-align: center;
 }

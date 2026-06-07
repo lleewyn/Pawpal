@@ -1,5 +1,8 @@
 {
+  "scripts": {
+    "sync": "node scripts/sync_static.js"
+  },
   "dependencies": {
-    "bootstrap": "^5.3.8"
+    "bootstrap": "^5.3.3"
   }
 }
