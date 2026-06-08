@@ -35,7 +35,7 @@
     --border-radius-md: 16px;
     --border-radius-sm: 8px;
     --border-radius-pill: 100px;
-    --card-border-radius: 0;                 /* Standardized Card Border Radius */
+    --card-border-radius: 10px;              /* Standardized Card Border Radius for main cards */
 
     /* Container Widths */
     --container-hero: 1600px;       /* Hero section — wide editorial split */

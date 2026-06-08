@@ -418,25 +418,26 @@ Trên mobile, spacing scale down để tránh lãng phí không gian màn hình 
 ## 6. Border Radius
 
 ```css
---border-radius-lg:   0;       /* Card ngoài, modal, image frame lớn - góc vuông hoàn toàn */
---border-radius-md:   0;       /* Card sản phẩm, inner elements - góc vuông hoàn toàn */
---border-radius-sm:   0;       /* Badge nhỏ, input, tag phụ - góc vuông hoàn toàn */
---border-radius-pill: 100px;   /* Button, label pill, search bar chính - bo tròn viên thuốc */
---card-border-radius: 0;       /* Alias của --border-radius-md — dùng cho product/service cards */
+--border-radius-lg:   24px;    /* Large panels, image frames, section cards */
+--border-radius-md:   16px;    /* Secondary panels, form groups, nested cards */
+--border-radius-sm:   8px;     /* Small badges, tags, inputs */
+--border-radius-pill: 100px;   /* Pills, buttons, rounded labels */
+--card-border-radius: 10px;    /* Primary semantic radius for main cards */
 ```
 
 **Quy tắc dùng:**
 
-| Element | Token | Trạng thái bo góc |
-|---------|-------|-------------------|
-| Service card, testimonial card, modal, image hero | `--border-radius-lg` / `--card-border-radius` | **0px** (Góc vuông hoàn toàn) |
-| Product card, expert card, blog card | `--border-radius-md` / `--card-border-radius` | **0px** (Góc vuông hoàn toàn) |
-| Badge phụ nhỏ, form input, tag phụ | `--border-radius-sm` | **0px** (Góc vuông hoàn toàn) |
-| Button hành động, search bar chính, nhãn thú cưng | `--border-radius-pill` | **100px** (Bo tròn viên thuốc) |
+| Element | Token | Dùng khi nào |
+|---------|-------|---------------|
+| Main card wrappers, testimonial cards, product/expert tiles, promo cards | `--card-border-radius` | Mặt card chính, block card có shadow và nền trắng/cream |
+| Large framed surfaces, hero image panels, modal overlays | `--border-radius-lg` | Khi cần bo lớn hơn và tạo cảm giác panel lớn |
+| Secondary panels, form panels, nested content containers | `--border-radius-md` | Các surface phụ và group nội dung |
+| Small badges, chips, input fields | `--border-radius-sm` | Các thành phần cần bo nhẹ |
+| Action buttons, pill labels, rounded avatars | `--border-radius-pill` | Bo tròn viên thuốc/full pill |
 
-> `--card-border-radius` và `--border-radius-md` cùng giá trị `0`. `--card-border-radius` là **semantic alias** dành riêng cho product/service cards — nếu sau này muốn đổi radius card thì chỉ cần sửa 1 token này, không ảnh hưởng các element khác dùng `--border-radius-md`.
+> `--card-border-radius` là token semantic riêng cho card. Dùng `--card-border-radius` cho tất cả card chính thay vì `--border-radius-md` trực tiếp, để khi đổi radius card chỉ cần sửa một giá trị.
 >
-> **Quy tắc:** Trong CSS của card, **luôn dùng `--card-border-radius`**, không dùng `--border-radius-md` trực tiếp — để khi thay đổi card radius không gây side effect.
+> **Quy tắc:** Không hardcode `border-radius` cho card. Luôn dùng token phù hợp — `--card-border-radius` cho card chính, `--border-radius-lg/md/sm/pill` cho các surface khác.
 
 ---
 
