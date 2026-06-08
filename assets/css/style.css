@@ -1,21 +1,6 @@
 /* ==========================================================================
-   PawPal — Master Stylesheet
-   ==========================================================================
-   File này chứa toàn bộ styles: tokens, base, components, landing sections.
-
-   CÁCH SỬA ĐÚNG:
-     - Tokens    → sửa tại assets/css/tokens/*.css    rồi sync vào đây
-     - Base      → sửa tại assets/css/base/reset.css  rồi sync vào đây
-     - Components → sửa tại assets/css/components/*.css rồi sync vào đây
-     - Page CSS  → sửa trực tiếp tại assets/css/{public|services|shop|user|admin}/*.css
-
-   NOTE: @import không hoạt động khi mở file:// (không có HTTP server).
-   Nội dung tokens/base/components được inline trực tiếp vào file này.
-   Khi dùng Vite dev server (npm run dev), có thể chuyển lại thành @import.
+   PawPal Core Compiled Styles (Do not edit directly above the marker)
    ========================================================================== */
-
-
-/* --- Tokens & Base (inlined từ source files — không edit trực tiếp) --- */
 
 /* ==========================================================================
    PawPal Design Tokens — Colors
@@ -64,6 +49,7 @@
     --color-cta-darker:   #B87A08;             /* Hover của CTA trên nền tối */
 }
 
+
 /* ==========================================================================
    PawPal Design Tokens — Typography
    ========================================================================== */
@@ -97,6 +83,7 @@
     --fs-body-medium:   var(--fs-body-lg);
     --fs-desc-hero:     var(--fs-body-lg);
 }
+
 
 /* ==========================================================================
    PawPal Design Tokens — Spacing & Layout
@@ -170,6 +157,7 @@
     }
 }
 
+
 /* ==========================================================================
    PawPal Base Styles & CSS Resets
    ========================================================================== */
@@ -233,6 +221,152 @@ h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
     font-weight: 600;
 }
+
+
+/* ==========================================================================
+   PawPal Base Utility Classes
+   ========================================================================== */
+
+/* Layout helpers */
+.container-wrapper {
+    width: 100%;
+    max-width: var(--container-xl);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+}
+
+.section-container {
+    width: 100%;
+    max-width: var(--container-md);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-lg);
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-lg);
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stack {
+    display: grid;
+    gap: var(--space-md);
+}
+
+.stack-sm {
+    display: grid;
+    gap: var(--space-sm);
+}
+
+.stack-lg {
+    display: grid;
+    gap: var(--space-lg);
+}
+
+.full-width {
+    width: 100%;
+}
+
+.center-block {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Text helpers */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-muted {
+    color: var(--color-text-muted);
+}
+
+.capitalize {
+    text-transform: capitalize;
+}
+
+.truncate {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.sr-only,
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Button and card helpers */
+.btn-reset {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font: inherit;
+    padding: 0;
+    cursor: pointer;
+}
+
+.btn-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-pill);
+    padding: calc(var(--space-sm) / 1.15) var(--space-md);
+}
+
+.card-base {
+    background-color: var(--color-bg-white);
+    border: 1px solid rgba(34, 77, 49, 0.1);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.shadow-soft {
+    box-shadow: var(--shadow-sm);
+}
+
+.shadow-medium {
+    box-shadow: var(--shadow-md);
+}
+
 
 /* ==========================================================================
    PawPal Button Components — SOURCE FILE
@@ -349,6 +483,7 @@ h1, h2, h3, h4, h5, h6 {
     transform: translateY(-2px);
     box-shadow: 0 10px 24px rgba(255, 255, 255, 0.1);
 }
+
 
 /* ==========================================================================
    PawPal Header & Navigation — SOURCE FILE
@@ -515,6 +650,7 @@ h1, h2, h3, h4, h5, h6 {
     cursor: pointer;
     padding: 4px;
 }
+
 
 /* ==========================================================================
    PawPal Footer & Footer CTA Banner — SOURCE FILE
@@ -789,6 +925,7 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 0.8rem;
 }
 
+
 /* ==========================================================================
    PawPal Zalo Floating Chat Button — SOURCE FILE
    Import qua: assets/css/style.css (@import './components/chat.css')
@@ -851,6 +988,183 @@ h1, h2, h3, h4, h5, h6 {
     0% { transform: scale(1); opacity: 1; }
     75%, 100% { transform: scale(2); opacity: 0; }
 }
+
+
+/* ==========================================================================
+   PawPal Filter Sidebar — SOURCE FILE
+   Dùng chung cho: pages/services/services.html, pages/shop/shop.html
+   ========================================================================== */
+
+/* ------------------------------------------------------------------
+   Filter Group — wrapper mỗi nhóm bộ lọc
+   ------------------------------------------------------------------ */
+.filter-group {
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.filter-group:last-of-type {
+    border-bottom: none;
+    margin-bottom: 20px;
+    padding-bottom: 0;
+}
+
+.filter-group-title {
+    font-family: var(--font-primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--color-text-light);
+    margin-bottom: 14px;
+}
+
+/* ------------------------------------------------------------------
+   Filter Options — list các lựa chọn
+   ------------------------------------------------------------------ */
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    border: 1px solid transparent;
+}
+
+/* Ẩn radio/checkbox mặc định — dùng visual custom */
+.filter-option input[type="radio"],
+.filter-option input[type="checkbox"] {
+    display: none;
+}
+
+.filter-option:hover {
+    background-color: var(--color-primary-light);
+}
+
+.filter-option.active {
+    background-color: var(--color-primary-light);
+    border-color: rgba(42, 89, 68, 0.2);
+}
+
+.filter-option-label {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--color-text-dark);
+    flex: 1;
+}
+
+.filter-option.active .filter-option-label {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* ------------------------------------------------------------------
+   Filter Count Badge
+   ------------------------------------------------------------------ */
+.filter-count {
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: var(--color-border);
+    color: var(--color-text-light);
+    padding: 2px 7px;
+    border-radius: 20px;
+    min-width: 22px;
+    text-align: center;
+}
+
+.filter-option.active .filter-count {
+    background: var(--color-primary);
+    color: #ffffff;
+}
+
+/* ------------------------------------------------------------------
+   Price Range Input (shop only — không có trong services)
+   ------------------------------------------------------------------ */
+.price-range-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.price-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.price-range-inputs input {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    font-family: var(--font-primary);
+    font-size: 0.85rem;
+    color: var(--color-text-dark);
+    outline: none;
+    width: 0;
+    transition: var(--transition-smooth);
+}
+
+.price-range-inputs input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(42, 89, 68, 0.1);
+}
+
+.price-range-inputs span {
+    color: var(--color-text-light);
+    font-size: 0.9rem;
+}
+
+.btn-apply-price {
+    width: 100%;
+    padding: 9px;
+    background: var(--color-primary);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    font-family: var(--font-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.btn-apply-price:hover {
+    background: var(--color-primary-dark);
+}
+
+/* ------------------------------------------------------------------
+   Reset Filter Button
+   ------------------------------------------------------------------ */
+.btn-reset-filter {
+    width: 100%;
+    padding: 10px;
+    background: none;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--border-radius-sm);
+    font-family: var(--font-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-light);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.btn-reset-filter:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+
 
 /* ==========================================================================
    PawPal Modal Components — SOURCE FILE
@@ -1001,6 +1315,7 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 12px 24px rgba(229, 169, 60, 0.35);
     transform: translateY(-2px);
 }
+
 
 /* ==========================================================================
    PawPal Notification & Status Components — SOURCE FILE
@@ -1251,180 +1566,8 @@ h1, h2, h3, h4, h5, h6 {
     padding-top: 20px;
 }
 
-/* ==========================================================================
-   PawPal Filter Sidebar — SOURCE FILE
-   Dùng chung cho: pages/services/services.html, pages/shop/shop.html
-   ========================================================================== */
 
-/* ------------------------------------------------------------------
-   Filter Group — wrapper mỗi nhóm bộ lọc
-   ------------------------------------------------------------------ */
-.filter-group {
-    margin-bottom: 28px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.filter-group:last-of-type {
-    border-bottom: none;
-    margin-bottom: 20px;
-    padding-bottom: 0;
-}
-
-.filter-group-title {
-    font-family: var(--font-primary);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--color-text-light);
-    margin-bottom: 14px;
-}
-
-/* ------------------------------------------------------------------
-   Filter Options — list các lựa chọn
-   ------------------------------------------------------------------ */
-.filter-options {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.filter-option {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 12px;
-    border-radius: var(--border-radius-sm);
-    cursor: pointer;
-    transition: var(--transition-smooth);
-    border: 1px solid transparent;
-}
-
-/* Ẩn radio/checkbox mặc định — dùng visual custom */
-.filter-option input[type="radio"],
-.filter-option input[type="checkbox"] {
-    display: none;
-}
-
-.filter-option:hover {
-    background-color: var(--color-primary-light);
-}
-
-.filter-option.active {
-    background-color: var(--color-primary-light);
-    border-color: rgba(42, 89, 68, 0.2);
-}
-
-.filter-option-label {
-    font-size: 0.88rem;
-    font-weight: 500;
-    color: var(--color-text-dark);
-    flex: 1;
-}
-
-.filter-option.active .filter-option-label {
-    color: var(--color-primary);
-    font-weight: 600;
-}
-
-/* ------------------------------------------------------------------
-   Filter Count Badge
-   ------------------------------------------------------------------ */
-.filter-count {
-    font-size: 0.72rem;
-    font-weight: 700;
-    background: var(--color-border);
-    color: var(--color-text-light);
-    padding: 2px 7px;
-    border-radius: 20px;
-    min-width: 22px;
-    text-align: center;
-}
-
-.filter-option.active .filter-count {
-    background: var(--color-primary);
-    color: #ffffff;
-}
-
-/* ------------------------------------------------------------------
-   Price Range Input (shop only — không có trong services)
-   ------------------------------------------------------------------ */
-.price-range-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.price-range-inputs {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.price-range-inputs input {
-    flex: 1;
-    padding: 8px 10px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-sm);
-    font-family: var(--font-primary);
-    font-size: 0.85rem;
-    color: var(--color-text-dark);
-    outline: none;
-    width: 0;
-    transition: var(--transition-smooth);
-}
-
-.price-range-inputs input:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px rgba(42, 89, 68, 0.1);
-}
-
-.price-range-inputs span {
-    color: var(--color-text-light);
-    font-size: 0.9rem;
-}
-
-.btn-apply-price {
-    width: 100%;
-    padding: 9px;
-    background: var(--color-primary);
-    color: #ffffff;
-    border: none;
-    border-radius: var(--border-radius-sm);
-    font-family: var(--font-primary);
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition-smooth);
-}
-
-.btn-apply-price:hover {
-    background: var(--color-primary-dark);
-}
-
-/* ------------------------------------------------------------------
-   Reset Filter Button
-   ------------------------------------------------------------------ */
-.btn-reset-filter {
-    width: 100%;
-    padding: 10px;
-    background: none;
-    border: 1px dashed var(--color-border);
-    border-radius: var(--border-radius-sm);
-    font-family: var(--font-primary);
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--color-text-light);
-    cursor: pointer;
-    transition: var(--transition-smooth);
-}
-
-.btn-reset-filter:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-    background: var(--color-primary-light);
-}
+/* --- CORE_STYLES_START --- */
 
 /* --- End Tokens & Base --- */
 

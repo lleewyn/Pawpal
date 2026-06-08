@@ -1,0 +1,143 @@
+/* ==========================================================================
+   PawPal Base Utility Classes
+   ========================================================================== */
+
+/* Layout helpers */
+.container-wrapper {
+    width: 100%;
+    max-width: var(--container-xl);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+}
+
+.section-container {
+    width: 100%;
+    max-width: var(--container-md);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-lg);
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-lg);
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stack {
+    display: grid;
+    gap: var(--space-md);
+}
+
+.stack-sm {
+    display: grid;
+    gap: var(--space-sm);
+}
+
+.stack-lg {
+    display: grid;
+    gap: var(--space-lg);
+}
+
+.full-width {
+    width: 100%;
+}
+
+.center-block {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Text helpers */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-muted {
+    color: var(--color-text-muted);
+}
+
+.capitalize {
+    text-transform: capitalize;
+}
+
+.truncate {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.sr-only,
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Button and card helpers */
+.btn-reset {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font: inherit;
+    padding: 0;
+    cursor: pointer;
+}
+
+.btn-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-pill);
+    padding: calc(var(--space-sm) / 1.15) var(--space-md);
+}
+
+.card-base {
+    background-color: var(--color-bg-white);
+    border: 1px solid rgba(34, 77, 49, 0.1);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.shadow-soft {
+    box-shadow: var(--shadow-sm);
+}
+
+.shadow-medium {
+    box-shadow: var(--shadow-md);
+}

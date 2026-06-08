@@ -44,7 +44,14 @@ const cssFilesToConcat = [
     path.join(baseDir, 'assets', 'css', 'tokens', 'typography.css'),
     path.join(baseDir, 'assets', 'css', 'tokens', 'spacing.css'),
     path.join(baseDir, 'assets', 'css', 'base', 'reset.css'),
-    path.join(baseDir, 'assets', 'css', 'components', 'button.css')
+    path.join(baseDir, 'assets', 'css', 'base', 'utilities.css'),
+    path.join(baseDir, 'assets', 'css', 'components', 'button.css'),
+    path.join(baseDir, 'assets', 'css', 'components', 'nav.css'),
+    path.join(baseDir, 'assets', 'css', 'components', 'footer.css'),
+    path.join(baseDir, 'assets', 'css', 'components', 'chat.css'),
+    path.join(baseDir, 'assets', 'css', 'components', 'filter.css'),
+    path.join(baseDir, 'assets', 'css', 'components', 'modal.css'),
+    path.join(baseDir, 'assets', 'css', 'components', 'notification.css')
 ];
 
 let concatenatedCss = `/* ==========================================================================\n   PawPal Core Compiled Styles (Do not edit directly above the marker)\n   ========================================================================== */\n\n`;
