@@ -1,4 +1,4 @@
-/* 1. Base Modal Wrapper Styles */
+﻿/* 1. Base Modal Wrapper Styles */
 .auth-modal,
 .dashboard-modal,
 .activation-modal,
@@ -288,7 +288,7 @@
 }
 
 .otp-single-input.is-valid {
-    border-color: #22c55e;
+    border-color: var(--color-live);
     box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
 }
 
@@ -743,7 +743,7 @@
 }
 
 /* ── Responsive ── */
-@media (max-width: 991.98px) {
+@media (max-width: 1024px) {
     .auth-showcase-panel {
         min-height: auto;
         padding: 40px 32px;
@@ -757,7 +757,7 @@
     }
 }
 
-@media (max-width: 575.98px) {
+@media (max-width: 640px) {
     .auth-form-panel {
         padding: 24px 16px;
         align-items: flex-start;

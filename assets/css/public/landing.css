@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    Hero Section — Asymmetric Split Layout
    ========================================================================== */
 
@@ -182,7 +182,7 @@
     font-family: var(--font-primary);
     font-size: 1rem;
     font-weight: 700;
-    background-color: #D4900A;
+    background-color: var(--color-cta-dark);
     color: #ffffff;
     border-radius: var(--border-radius-pill);
     border: 2px solid rgba(255,255,255,0.25);
@@ -193,7 +193,7 @@
 }
 
 .btn-cta.main-cta-btn:hover {
-    background-color: #B87A08;
+    background-color: var(--color-cta-darker);
     transform: translateY(-2px);
     box-shadow: 0 14px 32px rgba(180, 120, 0, 0.50);
 }
@@ -529,14 +529,6 @@
     background: rgba(255, 255, 255, 0.32);
     transform: translateY(-50%) scale(1.08);
 }
-
-/* Legacy classes kept for GSAP targeting backwards-compat */
-.hero-title-wrapper { display: contents; }
-.hero-description-box { display: none; }
-.hero-tracker-badge-container { display: none; }
-.hero-cta-container { display: none; }
-.btn-tracker { display: none; }
-.bullet-symbol { display: none; }
 
 /* Pulse animations */
 @keyframes pulse {
@@ -1422,7 +1414,7 @@
     object-fit: cover;
 }
 
-@media (max-width: 991px) {
+@media (max-width: 1024px) {
     .shop-promo-banner {
         flex-direction: column;
         height: auto; /* Let stack naturally on tablet/mobile */
@@ -1733,6 +1725,164 @@
     padding: 0 40px;
 }
 
+.testimonials-carousel-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    margin-top: calc(var(--space-lg) + 0px);
+    flex-wrap: wrap;
+}
+
+.testimonials-carousel-wrapper {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.testimonials-carousel-track {
+    display: flex;
+    gap: 30px;
+    align-items: stretch;
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    will-change: transform;
+}
+
+.testimonial-card {
+    min-width: 320px;
+    max-width: 320px;
+    flex: 0 0 320px;
+    background-color: var(--color-white);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid rgba(34, 77, 49, 0.08);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.08);
+    padding: 28px 26px;
+    position: relative;
+}
+
+.testimonial-rating-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 18px;
+    color: var(--color-text-light);
+    font-size: 0.95rem;
+}
+
+.card-stars {
+    color: #f3b63f;
+    font-size: 1rem;
+}
+
+.testimonial-card .quote-mark {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    font-size: 4rem;
+    color: rgba(58, 91, 58, 0.08);
+    line-height: 1;
+}
+
+.testimonial-text {
+    margin-top: 10px;
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--color-text-dark);
+    min-height: 110px;
+}
+
+.testimonial-user {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 24px;
+}
+
+.testimonial-user img {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(34, 77, 49, 0.08);
+}
+
+.user-meta .user-name {
+    display: block;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.user-meta .user-sub {
+    display: block;
+    color: var(--color-text-light);
+    font-size: 0.92rem;
+}
+
+.testimonials-nav-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 1px solid rgba(34, 77, 49, 0.14);
+    background-color: var(--color-white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.testimonials-nav-btn:hover {
+    transform: translateY(-1px);
+    background-color: #f6f7f0;
+}
+
+.testimonials-nav-btn svg {
+    stroke: var(--color-primary);
+}
+
+.active-center {
+    transform: scale(1.03);
+    box-shadow: 0 30px 65px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 1100px) {
+    .testimonial-card {
+        min-width: 280px;
+        max-width: 280px;
+        flex: 0 0 280px;
+    }
+}
+
+@media (max-width: 820px) {
+    .testimonials-carousel-container {
+        flex-direction: column;
+    }
+
+    .testimonials-nav-btn {
+        width: 48px;
+        height: 48px;
+    }
+
+    .testimonial-card {
+        min-width: 260px;
+        max-width: 260px;
+        flex: 0 0 260px;
+    }
+}
+
+@media (max-width: 640px) {
+    .testimonials-carousel-container {
+        gap: 16px;
+    }
+
+    .testimonial-card {
+        min-width: 240px;
+        max-width: 240px;
+        flex: 0 0 240px;
+    }
+}
+
 
 /* ==========================================================================
    Pet ID Showcase Section & Glassmorphic Passport Card
@@ -2016,7 +2166,7 @@
 
 /* Responsive cho Pet ID Showcase */
 /* Responsive cho Pet ID Showcase */
-@media (max-width: 991px) {
+@media (max-width: 1024px) {
     .pet-id-showcase-container {
         grid-template-columns: 1fr;
         gap: 50px;

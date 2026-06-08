@@ -2,6 +2,28 @@
    PawPal Design Tokens — Spacing & Layout
    ========================================================================== */
 
+/*
+ * BREAKPOINT SYSTEM — 4 mốc cố định, dùng nhất quán toàn dự án:
+ *
+ *   --bp-lg   : 1024px  — Desktop → Tablet (layout shift chính)
+ *   --bp-md   :  768px  — Tablet  → Mobile landscape
+ *   --bp-sm   :  640px  — Mobile  (spacing scale-down)
+ *   --bp-xs   :  480px  — Mobile portrait (single column)
+ *
+ * Cách dùng trong CSS:
+ *   @media (max-width: 1024px) { ... }   ← --bp-lg
+ *   @media (max-width:  768px) { ... }   ← --bp-md
+ *   @media (max-width:  640px) { ... }   ← --bp-sm
+ *   @media (max-width:  480px) { ... }   ← --bp-xs
+ *
+ * KHÔNG dùng: 991px, 992px, 500px, 575px, 600px, 700px, 900px, 1200px
+ * Map về mốc gần nhất:
+ *   480px–640px  → --bp-sm  (640px)
+ *   700px–800px  → --bp-md  (768px)
+ *   900px–992px  → --bp-lg  (1024px)
+ *   1100px–1200px → --bp-lg (1024px) hoặc thêm riêng nếu cần
+ */
+
 :root {
     /* Transitions & Shadows */
     --transition-smooth: all 0.6s cubic-bezier(0.32, 0.72, 0, 1);

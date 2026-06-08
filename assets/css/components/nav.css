@@ -1,0 +1,165 @@
+/* ==========================================================================
+   PawPal Header & Navigation — SOURCE FILE
+   Import qua: assets/css/style.css (@import './components/nav.css')
+   ========================================================================== */
+
+.main-header {
+    background-color: var(--color-bg-light);
+    color: var(--color-text-dark);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 6px 0;
+    box-shadow: var(--shadow-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.header-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    margin-right: 32px;
+}
+
+.logo img {
+    height: 48px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Search bar styling */
+.search-bar {
+    position: relative;
+    width: 280px;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 10px 16px 10px 42px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-pill);
+    background-color: #ffffff;
+    font-family: var(--font-primary);
+    font-size: 0.9rem;
+    color: var(--color-text-dark);
+    outline: none;
+    transition: var(--transition-smooth);
+}
+
+.search-bar input::placeholder {
+    color: #99aab0;
+}
+
+.search-bar input:focus {
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(229, 169, 60, 0.4);
+    width: 320px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: #88989f;
+    pointer-events: none;
+}
+
+/* Navigation Links */
+.nav-menu ul {
+    display: flex;
+    gap: 28px;
+}
+
+.nav-menu a {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--color-text-dark);
+    opacity: 0.85;
+    position: relative;
+    padding: 6px 0;
+}
+
+.nav-menu a:hover,
+.nav-menu a.active {
+    opacity: 1;
+    color: var(--color-accent);
+}
+
+.nav-menu a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--color-accent);
+    transition: var(--transition-smooth);
+}
+
+.nav-menu a:hover::after,
+.nav-menu a.active::after {
+    width: 100%;
+}
+
+/* Actions in Header */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.cart-btn {
+    padding: 8px;
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-dark);
+    opacity: 0.9;
+    transition: var(--transition-smooth);
+}
+
+.cart-btn:hover {
+    color: var(--color-accent);
+    transform: scale(1.08);
+    opacity: 1;
+}
+
+.login-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: transparent;
+    padding: 8px 12px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-dark);
+    opacity: 0.9;
+    transition: var(--transition-smooth);
+}
+
+.login-btn:hover {
+    color: var(--color-accent);
+    opacity: 1;
+}
+
+/* Mobile Nav Toggle — Bootstrap navbar-toggler handles display logic */
+.mobile-nav-toggle {
+    background: none;
+    border: none;
+    color: var(--color-text-dark);
+    cursor: pointer;
+    padding: 4px;
+}

@@ -1,9 +1,9 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    Pet Form — Hồ sơ bé cưng
    ========================================================================== */
 
 .pet-form-container {
-    max-width: 700px;
+    max-width: 768px;
     margin: 40px auto;
     padding: 0 20px;
     min-height: 80vh;
@@ -131,7 +131,7 @@
 
 .input-success-message {
     font-size: 0.78rem;
-    color: #15803d;
+    color: var(--color-live-dark);
     font-weight: 500;
     margin-top: 4px;
 }

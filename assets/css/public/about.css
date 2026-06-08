@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    About Us Page Styles
    ========================================================================== */
 
@@ -47,7 +47,7 @@
     font-size: 1.1rem;
     color: var(--color-text-light);
     line-height: 1.7;
-    max-width: 700px;
+    max-width: 768px;
     margin: 0 auto;
 }
 
@@ -58,7 +58,7 @@
 }
 
 .brand-story-container {
-    max-width: 1200px;
+    max-width: 1024px;
     margin: 0 auto;
     padding: 0 20px;
     /* display: grid; grid-template-columns: 1fr 1fr; */
@@ -150,7 +150,7 @@
 .gallery-item-3 { grid-column: span 4; grid-row: span 1; }
 .gallery-item-4 { grid-column: span 3; grid-row: span 1; }
 
-@media (max-width: 992px) {
+@media (max-width: 1024px) {
     .brand-story-container {
         grid-template-columns: 1fr;
         gap: 50px;

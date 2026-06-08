@@ -1,4 +1,4 @@
-/* ── Order Detail Page ─────────────────────────────────────────────────────── */
+﻿/* ── Order Detail Page ─────────────────────────────────────────────────────── */
 
 .od-main {
     max-width: 1180px;
@@ -55,7 +55,7 @@
 }
 
 .od-header-meta {
-    color: #6b7280;
+    color: var(--color-text-muted);
     font-size: 0.88rem;
     margin: 0;
 }
@@ -118,7 +118,7 @@
 }
 
 .od-row-label {
-    color: #6b7280;
+    color: var(--color-text-muted);
     flex-shrink: 0;
 }
 
@@ -133,7 +133,7 @@
 }
 
 .od-discount {
-    color: #16a34a;
+    color: var(--color-live-dark);
 }
 
 /* Total row */
@@ -165,7 +165,7 @@
 
 .od-col-subtitle {
     font-size: 0.83rem;
-    color: #6b7280;
+    color: var(--color-text-muted);
     margin: -8px 0 14px;
 }
 
@@ -217,7 +217,7 @@
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
     .od-section-top,
     .od-section-bottom {
         grid-template-columns: 1fr;
@@ -246,7 +246,7 @@
     }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 768px) {
     .od-action-bar {
         flex-direction: column;
         align-items: stretch;

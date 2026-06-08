@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    Contact Page Styles
    ========================================================================== */
 
@@ -38,14 +38,14 @@
 }
 
 .contact-container {
-    max-width: 1200px;
+    max-width: 1024px;
     margin: 0 auto;
     padding: 0 20px;
     /* display: grid; grid-template-columns: 1fr 1fr; */
     gap: 80px;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1024px) {
     .contact-container {
         grid-template-columns: 1fr;
         gap: 60px;

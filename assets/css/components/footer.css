@@ -1,0 +1,272 @@
+/* ==========================================================================
+   PawPal Footer & Footer CTA Banner — SOURCE FILE
+   Import qua: assets/css/style.css (@import './components/footer.css')
+   ========================================================================== */
+
+/* ------------------------------------------------------------------
+   Footer CTA Banner
+   ------------------------------------------------------------------ */
+.footer-cta-banner {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    padding: var(--space-xl) var(--container-padding);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.footer-cta-banner::before {
+    content: '🐾';
+    position: absolute;
+    font-size: 12rem;
+    opacity: 0.05;
+    top: -20px;
+    right: 5%;
+    pointer-events: none;
+}
+
+.footer-cta-inner {
+    max-width: 700px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.footer-cta-banner h2 {
+    font-family: var(--font-heading);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 500;
+    color: #ffffff;
+    margin-bottom: 12px;
+    line-height: 1.3;
+}
+
+.footer-cta-banner p {
+    color: rgba(255,255,255,0.75);
+    font-size: 1rem;
+    margin-bottom: 20px;
+}
+
+.cta-urgency {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.9);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: var(--border-radius-pill);
+    margin-bottom: 24px;
+}
+
+.urgency-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #4ade80;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 8px #4ade80;
+    animation: pulse-green 1.5s infinite;
+}
+
+@keyframes pulse-green {
+    0%, 100% { opacity: 1; box-shadow: 0 0 6px #4ade80; }
+    50% { opacity: 0.7; box-shadow: 0 0 14px #4ade80; }
+}
+
+.cta-enhanced {
+    display: block;
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.footer-cta-banner .btn-cta {
+    background-color: var(--color-cta-dark);
+    color: #ffffff;
+    padding: 16px 44px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border: 2px solid rgba(255,255,255,0.2);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.footer-cta-banner .btn-cta:hover {
+    background-color: var(--color-cta-darker);
+    transform: translateY(-3px);
+    box-shadow: 0 14px 36px rgba(0,0,0,0.3);
+}
+
+
+/* ------------------------------------------------------------------
+   Main Footer
+   ------------------------------------------------------------------ */
+.main-footer {
+    background-color: var(--color-primary-dark);
+    color: rgba(255, 255, 255, 0.75);
+    padding: 30px 0 15px;
+}
+
+.footer-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: 2.2fr 1.5fr 2fr 2.3fr;
+    gap: 40px;
+}
+
+.footer-col h4 {
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+
+.footer-logo {
+    margin-bottom: 16px;
+    font-size: 1.8rem;
+}
+
+.brand-description {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    margin-bottom: 12px;
+}
+
+.social-links {
+    display: flex;
+    gap: 12px;
+}
+
+.social-links a {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    transition: var(--transition-smooth);
+}
+
+.social-links a:hover {
+    background-color: var(--color-accent);
+    color: var(--color-primary-dark);
+    transform: translateY(-2px);
+}
+
+.footer-col ul {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer-col ul a {
+    font-size: 0.9rem;
+    transition: var(--transition-smooth);
+}
+
+.footer-col ul a:hover {
+    color: var(--color-accent);
+    padding-left: 4px;
+}
+
+.contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.contact-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.contact-list li svg {
+    margin-top: 2px;
+    flex-shrink: 0;
+    color: var(--color-accent);
+}
+
+/* Footer Newsletter Signup */
+.footer-newsletter-form {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    margin-bottom: 20px;
+}
+
+.footer-newsletter-form input {
+    flex: 1;
+    padding: 10px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--border-radius-pill);
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    font-size: 0.85rem;
+    outline: none;
+    transition: var(--transition-smooth);
+}
+
+.footer-newsletter-form input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.footer-newsletter-form input:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--color-accent);
+}
+
+.footer-newsletter-form button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius-pill);
+    background-color: var(--color-accent);
+    color: var(--color-primary-dark);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.footer-newsletter-form button:hover {
+    background-color: var(--color-accent-dark);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+/* Payment Methods */
+.payment-methods {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.payment-badge {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius-sm);
+    padding: 4px 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    user-select: none;
+}
+
+.footer-bottom {
+    max-width: 1400px;
+    margin: 20px auto 0;
+    padding: 15px 40px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.8rem;
+}

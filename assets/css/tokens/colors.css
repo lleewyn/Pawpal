@@ -29,4 +29,18 @@
     --color-border:     #e2e8f0;
     --color-bg-white:   #ffffff;
     --color-bg-light:   #FAF9F6;               /* Warm Cream */
+
+    /* Extended UI Colors — dùng cho secondary text, meta info */
+    --color-text-muted:   #6b7280;             /* Gray muted — meta, timestamp, label phụ */
+    --color-text-subtle:  #4b5563;             /* Gray subtle — body text phụ */
+    --color-text-faint:   #9ca3af;             /* Gray faint — placeholder, disabled */
+
+    /* Live / Online indicator */
+    --color-live:         #22c55e;             /* Green — dot online, slot trống, stock */
+    --color-live-dark:    #15803d;             /* Green dark — text trên nền sáng */
+    --color-live-bg:      #dcfce7;             /* Green light bg — badge "còn hàng" */
+
+    /* CTA accent override — dùng trên nền tối (footer CTA banner) */
+    --color-cta-dark:     #D4900A;             /* Amber đậm hơn accent — CTA trên nền primary */
+    --color-cta-darker:   #B87A08;             /* Hover của CTA trên nền tối */
 }
