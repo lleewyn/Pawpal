@@ -15,6 +15,7 @@ function initApp() {
     initTestimonialsCarousel();
     initExpertsCarousel();
     initInteractivePawPass();
+    initProcessTimeline();
 }
 
 // Run nav init after header is injected by components.js
@@ -87,25 +88,53 @@ function initActiveNav() {
 }
 
 /**
- * Mobile Navigation — handled by Bootstrap Collapse (data-bs-toggle="collapse")
- * Custom toggle removed: navbar-toggler now uses data-bs-target="#primaryNavigation"
+ * Mobile Navigation — Custom toggle (không dùng Bootstrap Collapse)
  */
 function initMobileNavigation() {
-    // Bootstrap Collapse handles open/close automatically via data-bs-toggle
-    // Close menu when a nav link is clicked (Bootstrap doesn't do this by default)
-    const primaryNav = document.getElementById('primaryNavigation');
-    if (!primaryNav) return;
+    const toggleBtn = document.getElementById('mobileNavToggle');
+    const nav = document.getElementById('primaryNavigation');
+    if (!toggleBtn || !nav) return;
 
-    const navLinks = primaryNav.querySelectorAll('a');
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            // Only collapse if menu is currently open (mobile view)
-            if (primaryNav.classList.contains('show')) {
-                const bsCollapse = bootstrap.Collapse.getInstance(primaryNav);
-                if (bsCollapse) bsCollapse.hide();
-            }
-        });
+    // Toggle open/close
+    toggleBtn.addEventListener('click', () => {
+        const isOpen = nav.classList.contains('show');
+        if (isOpen) {
+            closeDrawer();
+        } else {
+            openDrawer();
+        }
     });
+
+    // Close when nav link clicked
+    nav.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', closeDrawer);
+    });
+
+    // Close on overlay click (click outside drawer)
+    document.addEventListener('click', (e) => {
+        if (nav.classList.contains('show') &&
+            !nav.contains(e.target) &&
+            !toggleBtn.contains(e.target)) {
+            closeDrawer();
+        }
+    });
+
+    // Close on ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeDrawer();
+    });
+
+    function openDrawer() {
+        nav.classList.add('show');
+        toggleBtn.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDrawer() {
+        nav.classList.remove('show');
+        toggleBtn.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
 }
 
 /**
@@ -668,7 +697,7 @@ function initExpertsCarousel() {
 
     if (!track || cards.length === 0 || !prevBtn || !nextBtn) return;
 
-    const cardWidth = 340;
+    const cardWidth = 300;
     const gap = 30;
     const step = cardWidth + gap;
     const wrapper = document.querySelector('.experts-carousel-wrapper');
@@ -1324,3 +1353,209 @@ function _escLookup(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
 }
+
+/**
+ * Process Timeline — horizontal scroll with nav buttons and active state
+ */
+function initProcessTimeline() {
+    const track = document.getElementById('processTrack');
+    if (!track) return;
+
+    const steps = track.querySelectorAll('.process-step');
+    const prevBtn = document.querySelector('.process-prev');
+    const nextBtn = document.querySelector('.process-next');
+
+    if (steps.length === 0) return;
+
+    let currentIndex = 0;
+
+    function getStepWidth() {
+        return steps[0] ? steps[0].offsetWidth : 280;
+    }
+
+    function setActive(index) {
+        steps.forEach((s, i) => {
+            s.classList.toggle('active', i === index);
+        });
+        currentIndex = index;
+    }
+
+    function scrollToStep(index) {
+        const stepW = getStepWidth();
+        const trackW = track.offsetWidth;
+        const offset = index * stepW - (trackW / 2 - stepW / 2);
+        track.scrollTo({ left: Math.max(0, offset), behavior: 'smooth' });
+        setActive(index);
+    }
+
+    // Nav buttons
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            const next = Math.max(0, currentIndex - 1);
+            scrollToStep(next);
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            const next = Math.min(steps.length - 1, currentIndex + 1);
+            scrollToStep(next);
+        });
+    }
+
+    // Drag to scroll
+    let isDown = false, startX, scrollLeft;
+    track.addEventListener('mousedown', (e) => {
+        isDown = true;
+        track.classList.add('is-dragging');
+        startX = e.pageX - track.offsetLeft;
+        scrollLeft = track.scrollLeft;
+    });
+    track.addEventListener('mouseleave', () => { isDown = false; track.classList.remove('is-dragging'); });
+    track.addEventListener('mouseup', () => { isDown = false; track.classList.remove('is-dragging'); });
+    track.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - track.offsetLeft;
+        track.scrollLeft = scrollLeft - (x - startX) * 1.5;
+    });
+
+    // Touch
+    track.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].pageX - track.offsetLeft;
+        scrollLeft = track.scrollLeft;
+    }, { passive: true });
+    track.addEventListener('touchmove', (e) => {
+        const x = e.touches[0].pageX - track.offsetLeft;
+        track.scrollLeft = scrollLeft - (x - startX);
+    }, { passive: true });
+
+    // Update active on scroll end
+    track.addEventListener('scrollend', () => {
+        const stepW = getStepWidth();
+        const center = track.scrollLeft + track.offsetWidth / 2;
+        let closest = 0;
+        let minDist = Infinity;
+        steps.forEach((s, i) => {
+            const stepCenter = i * stepW + stepW / 2;
+            const dist = Math.abs(stepCenter - center);
+            if (dist < minDist) { minDist = dist; closest = i; }
+        });
+        setActive(closest);
+    });
+
+    // Init
+    setActive(0);
+}
+
+/**
+ * FAB Stack — AI Chatbot + Scroll to top
+ */
+function initFab() {
+    // ── Scroll to top button visibility ──
+    const bookingBtn = document.getElementById('fabBookingBtn');
+    if (bookingBtn) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) {
+                bookingBtn.classList.add('visible');
+            } else {
+                bookingBtn.classList.remove('visible');
+            }
+        }, { passive: true });
+    }
+
+    // ── AI Chatbot Panel ──
+    const aiBtn    = document.getElementById('fabAiBtn');
+    const chatPanel = document.getElementById('fabChatPanel');
+    const closeBtn = document.getElementById('fabChatClose');
+    const input    = document.getElementById('fabChatInput');
+    const sendBtn  = document.getElementById('fabChatSend');
+    const messages = document.getElementById('fabChatMessages');
+
+    if (!aiBtn || !chatPanel) return;
+
+    aiBtn.addEventListener('click', () => {
+        chatPanel.classList.toggle('open');
+        if (chatPanel.classList.contains('open') && input) {
+            setTimeout(() => input.focus(), 300);
+        }
+    });
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => chatPanel.classList.remove('open'));
+    }
+
+    // Send message
+    function sendMessage() {
+        if (!input || !input.value.trim()) return;
+        const text = input.value.trim();
+        input.value = '';
+        appendMessage(text, 'user');
+        showTyping();
+        setTimeout(() => {
+            removeTyping();
+            appendMessage(getBotReply(text), 'bot');
+        }, 900 + Math.random() * 600);
+    }
+
+    if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+    if (input) {
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    }
+
+    function appendMessage(text, type) {
+        const bubble = document.createElement('div');
+        bubble.className = `fab-chat-bubble fab-chat-bubble--${type}`;
+        bubble.innerHTML = text;
+        // Remove suggestions on first user message
+        if (type === 'user') {
+            const sug = messages && messages.querySelector('.fab-chat-suggestions');
+            if (sug) sug.remove();
+        }
+        if (messages) {
+            messages.appendChild(bubble);
+            messages.scrollTop = messages.scrollHeight;
+        }
+    }
+
+    function showTyping() {
+        const typing = document.createElement('div');
+        typing.className = 'fab-chat-bubble fab-chat-bubble--typing';
+        typing.id = 'fabTyping';
+        typing.innerHTML = '<span></span><span></span><span></span>';
+        if (messages) {
+            messages.appendChild(typing);
+            messages.scrollTop = messages.scrollHeight;
+        }
+    }
+
+    function removeTyping() {
+        const t = document.getElementById('fabTyping');
+        if (t) t.remove();
+    }
+
+    // Simple rule-based replies — thay bằng API call sau
+    function getBotReply(text) {
+        const t = text.toLowerCase();
+        if (t.match(/spa|grooming|tắm|cắt/))
+            return 'Dịch vụ Spa & Grooming của PawPal bao gồm tắm, cắt tỉa, vệ sinh tai & móng. Giá từ <strong>120.000đ</strong>. Bạn muốn đặt lịch không?';
+        if (t.match(/hotel|lưu trú|gửi/))
+            return 'Pet Hotel có phòng riêng, điều hòa, camera 24/7. Giá từ <strong>180.000đ/đêm</strong>. Yêu cầu vaccine đầy đủ.';
+        if (t.match(/giá|bao nhiêu|phí/))
+            return 'Bạn có thể xem bảng giá đầy đủ tại <a href="pages/services/services.html" style="color:#7c3aed">trang dịch vụ</a>. Cần tư vấn dịch vụ cụ thể nào?';
+        if (t.match(/chuẩn bị|mang gì|cần gì/))
+            return 'Cần mang: sổ tiêm phòng, đồ ăn riêng (nếu có), đồ chơi yêu thích của bé. Chúng tôi lo phần còn lại!';
+        if (t.match(/đặt lịch|booking/))
+            return 'Bạn có thể đặt lịch ngay tại <a href="pages/services/booking.html" style="color:#7c3aed">trang đặt lịch</a> — xác nhận tức thì qua SMS/Zalo.';
+        if (t.match(/giờ|mở cửa|thời gian/))
+            return 'PawPal mở cửa <strong>8:00–20:00</strong> mỗi ngày. Pet Hotel hoạt động 24/7.';
+        return 'Cảm ơn bạn đã nhắn tin! 🐾 Để được tư vấn chi tiết hơn, bạn có thể gọi hotline <strong>0774 561 496</strong> hoặc chat Zalo nhé.';
+    }
+}
+
+// Gọi initFab sau khi footerInjected (fab inject cùng lúc với footer)
+document.addEventListener('footerInjected', function () {
+    setTimeout(initFab, 100);
+});

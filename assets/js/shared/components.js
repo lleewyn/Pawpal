@@ -78,6 +78,25 @@
             return;
         }
 
+        // Try sessionStorage cache first (eliminates layout shift on repeat visits)
+        var cacheKey = 'pawpal_component_' + targetId;
+        var cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+            el.outerHTML = cached;
+            if (targetId === 'site-header') {
+                document.dispatchEvent(new CustomEvent('headerInjected'));
+                if (typeof initActiveNav === 'function') initActiveNav();
+                if (typeof initMobileNavigation === 'function') initMobileNavigation();
+            }
+            if (targetId === 'site-footer') {
+                document.dispatchEvent(new CustomEvent('footerInjected'));
+            }
+            if (targetId === 'site-fab') {
+                document.dispatchEvent(new CustomEvent('footerInjected'));
+            }
+            return;
+        }
+
         var url = componentPath + '?v=' + Date.now();
         fetch(url, { cache: 'no-store' })
             .then(function (res) {
@@ -86,15 +105,19 @@
             })
             .then(function (html) {
                 var cleanedHtml = cleanInjectedHtml(html);
+                // Cache for this session
+                try { sessionStorage.setItem(cacheKey, cleanedHtml); } catch(e) {}
                 el.outerHTML = cleanedHtml;
                 console.log('[components.js] injected', targetId);
                 if (targetId === 'site-header') {
-                    // Dispatch event so module scripts can listen
                     document.dispatchEvent(new CustomEvent('headerInjected'));
                     if (typeof initActiveNav === 'function') initActiveNav();
                     if (typeof initMobileNavigation === 'function') initMobileNavigation();
                 }
                 if (targetId === 'site-footer') {
+                    document.dispatchEvent(new CustomEvent('footerInjected'));
+                }
+                if (targetId === 'site-fab') {
                     document.dispatchEvent(new CustomEvent('footerInjected'));
                 }
             })
@@ -108,6 +131,7 @@
         console.log('[components.js] root detected:', root);
         injectComponent('site-header', root + 'components/header.html');
         injectComponent('site-footer', root + 'components/footer.html');
+        injectComponent('site-fab', root + 'components/fab.html');
     }
 
     if (document.readyState === 'loading') {

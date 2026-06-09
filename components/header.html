@@ -8,7 +8,7 @@
         </div>
     </div>
 
-    <nav class="navbar navbar-expand-lg p-0" data-bs-theme="light">
+    <nav class="navbar navbar-expand-custom p-0" data-bs-theme="light">
         <div class="header-container">
 
             <!-- Left: Logo + Search -->
@@ -27,8 +27,9 @@
             </div>
 
             <!-- Mobile Toggle -->
-            <button class="navbar-toggler mobile-nav-toggle" type="button" data-bs-toggle="collapse"
-                data-bs-target="#primaryNavigation" aria-controls="primaryNavigation" aria-expanded="false"
+            <button class="navbar-toggler mobile-nav-toggle" type="button"
+                id="mobileNavToggle"
+                aria-controls="primaryNavigation" aria-expanded="false"
                 aria-label="Toggle navigation">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
@@ -38,7 +39,7 @@
                 </svg>
             </button>
 
-            <div class="collapse navbar-collapse nav-menu" id="primaryNavigation">
+            <div class="nav-menu" id="primaryNavigation">
 
                 <!-- Nav links — mx-auto căn giữa trong collapse -->
                 <ul class="navbar-nav mx-auto">

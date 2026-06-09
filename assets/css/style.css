@@ -1,81 +1,76 @@
 ﻿/* ==========================================================================
-   PawPal Core Compiled Styles (Do not edit directly above the marker)
+   PawPal — Global Entry Point
+   Chứa: Design Tokens + Base Reset + Utilities
+   Components được import riêng trong từng trang qua <link>
    ========================================================================== */
 
+
 /* ==========================================================================
-   PawPal Design Tokens — Colors
+   Design Tokens — Colors
    ========================================================================== */
 
 :root {
-    /* Color Palette */
-    --color-primary:       hsl(155, 28%, 35%);      /* Soft Sage Green #4F7A68 */
+    /* Brand */
+    --color-primary:       hsl(155, 28%, 35%);
     --color-primary-light: hsl(155, 20%, 96%);
-    --color-primary-dark:  hsl(155, 30%, 25%);      /* Deep Sage Green #33594A */
-    --color-accent:        hsl(38, 75%, 50%);       /* Amber Gold #E09F1F */
+    --color-primary-dark:  hsl(155, 30%, 25%);
+    --color-accent:        hsl(38, 75%, 50%);
     --color-accent-light:  hsl(38, 50%, 95%);
-    --color-accent-dark:   hsl(38, 65%, 40%);       /* Deep Amber Gold #9E6B17 */
+    --color-accent-dark:   hsl(38, 65%, 40%);
 
-    /* Semantic Colors */
-    --color-danger:        hsl(0, 72%, 51%);        /* #DC2626 — badge khuyến mãi, error */
+    /* Semantic */
+    --color-danger:        hsl(0, 72%, 51%);
     --color-danger-light:  hsl(0, 72%, 96%);
-    --color-id-danger:     hsl(0, 72%, 51%);        /* Alias for legacy booking template compatibility */
-    --color-info:          hsl(210, 60%, 48%);      /* Blue — thông báo, link phụ */
+    --color-id-danger:     hsl(0, 72%, 51%);
+    --color-info:          hsl(210, 60%, 48%);
     --color-info-light:    hsl(210, 60%, 95%);
-    --color-success:       hsl(142, 50%, 38%);      /* Green nhạt — trạng thái thành công */
+    --color-success:       hsl(142, 50%, 38%);
     --color-success-light: hsl(142, 50%, 95%);
-    --color-neutral:       hsl(156, 8%, 46%);       /* Warm gray — text phụ, divider */
+    --color-neutral:       hsl(156, 8%, 46%);
     --color-neutral-light: hsl(156, 8%, 96%);
     --color-neutral-dark:  hsl(156, 8%, 25%);
 
-    /* Base UI Colors */
-    --color-text-dark:  #2d3732;
-    --color-text-light: #606f66;
-    --color-border:     #e2e8f0;
-    --color-bg-white:   #ffffff;
-    --color-bg-light:   #FAF9F6;               /* Warm Cream */
+    /* Base UI */
+    --color-text-dark:   #2d3732;
+    --color-text-light:  #606f66;
+    --color-text-muted:  #6b7280;
+    --color-text-subtle: #4b5563;
+    --color-text-faint:  #9ca3af;
+    --color-border:      #e2e8f0;
+    --color-bg-white:    #ffffff;
+    --color-bg-light:    #FAF9F6;
 
-    /* Extended UI Colors — dùng cho secondary text, meta info */
-    --color-text-muted:   #6b7280;             /* Gray muted — meta, timestamp, label phụ */
-    --color-text-subtle:  #4b5563;             /* Gray subtle — body text phụ */
-    --color-text-faint:   #9ca3af;             /* Gray faint — placeholder, disabled */
+    /* Live indicator */
+    --color-live:    #22c55e;
+    --color-live-dark: #15803d;
+    --color-live-bg: #dcfce7;
 
-    /* Live / Online indicator */
-    --color-live:         #22c55e;             /* Green — dot online, slot trống, stock */
-    --color-live-dark:    #15803d;             /* Green dark — text trên nền sáng */
-    --color-live-bg:      #dcfce7;             /* Green light bg — badge "còn hàng" */
-
-    /* CTA accent override — dùng trên nền tối (footer CTA banner) */
-    --color-cta-dark:     #D4900A;             /* Amber đậm hơn accent — CTA trên nền primary */
-    --color-cta-darker:   #B87A08;             /* Hover của CTA trên nền tối */
+    /* CTA on dark backgrounds */
+    --color-cta-dark:   #D4900A;
+    --color-cta-darker: #B87A08;
 }
 
 
 /* ==========================================================================
-   PawPal Design Tokens — Typography
+   Design Tokens — Typography
    ========================================================================== */
 
 :root {
-    /* Fonts — Lora (heading, serif, warm) + DM Sans (body, geometric, friendly) */
-    --font-heading: 'Lora', Georgia, serif;      /* Headings, accent italic, display */
-    --font-body: 'DM Sans', system-ui, sans-serif; /* Body, UI, buttons, labels */
+    --font-heading:  'Lora', Georgia, serif;
+    --font-body:     'DM Sans', system-ui, sans-serif;
+    --font-primary:  var(--font-body);
+    --font-display:  var(--font-heading);
 
-    /* Legacy aliases — kept for backward compat, map to new vars */
-    --font-primary: var(--font-body);
-    --font-display: var(--font-heading);
+    --fs-display:   clamp(2.8rem, 6.5vw, 5.5rem);
+    --fs-h2:        clamp(1.6rem, 3vw, 2.25rem);
+    --fs-h3:        1.25rem;
+    --fs-h4:        1.05rem;
+    --fs-body-lg:   1rem;
+    --fs-body:      0.9375rem;
+    --fs-small:     0.875rem;
+    --fs-caption:   0.75rem;
 
-    /* Type Scale — Modular 1.250 (Major Third)
-       All headings use Lora, all body/UI use DM Sans
-    --------------------------------------------------------- */
-    --fs-display:   clamp(2.8rem, 6.5vw, 5.5rem);  /* Hero h1          */
-    --fs-h2:        clamp(1.6rem, 3vw, 2.25rem);    /* Section titles   */
-    --fs-h3:        1.25rem;                         /* Card titles      */
-    --fs-h4:        1.05rem;                         /* Label headings   */
-    --fs-body-lg:   1rem;                            /* Hero desc, subtitle */
-    --fs-body:      0.9375rem;                       /* Card body, general  */
-    --fs-small:     0.875rem;                        /* Tags, meta       */
-    --fs-caption:   0.75rem;                         /* Badge label, time   */
-
-    /* Legacy aliases — map old tokens to new scale */
+    /* Legacy aliases */
     --fs-hero-title:    var(--fs-display);
     --fs-section-title: var(--fs-h2);
     --fs-sub-title:     var(--fs-h3);
@@ -86,60 +81,44 @@
 
 
 /* ==========================================================================
-   PawPal Design Tokens — Spacing & Layout
+   Design Tokens — Spacing, Shadows, Radius, Containers
    ========================================================================== */
 
-/*
- * BREAKPOINT SYSTEM — 4 mốc cố định, dùng nhất quán toàn dự án:
- *
- *   --bp-lg   : 1024px  — Desktop → Tablet (layout shift chính)
- *   --bp-md   :  768px  — Tablet  → Mobile landscape
- *   --bp-sm   :  640px  — Mobile  (spacing scale-down)
- *   --bp-xs   :  480px  — Mobile portrait (single column)
- *
- * Cách dùng trong CSS:
- *   @media (max-width: 1024px) { ... }   ← --bp-lg
- *   @media (max-width:  768px) { ... }   ← --bp-md
- *   @media (max-width:  640px) { ... }   ← --bp-sm
- *   @media (max-width:  480px) { ... }   ← --bp-xs
- *
- * KHÔNG dùng: 991px, 992px, 500px, 575px, 600px, 700px, 900px, 1200px
- * Map về mốc gần nhất:
- *   480px–640px  → --bp-sm  (640px)
- *   700px–800px  → --bp-md  (768px)
- *   900px–992px  → --bp-lg  (1024px)
- *   1100px–1200px → --bp-lg (1024px) hoặc thêm riêng nếu cần
- */
-
 :root {
-    /* Transitions & Shadows */
+    /* Transitions */
     --transition-smooth: all 0.6s cubic-bezier(0.32, 0.72, 0, 1);
-    --shadow-sm: 0 2px 4px rgba(42, 89, 68, 0.04), 0 1px 2px rgba(42, 89, 68, 0.02);
-    --shadow-md: 0 4px 8px -2px rgba(42, 89, 68, 0.06), 0 2px 4px -2px rgba(42, 89, 68, 0.03);
-    --shadow-lg: 0 10px 20px -4px rgba(42, 89, 68, 0.08), 0 4px 8px -4px rgba(42, 89, 68, 0.03);
-    /* Card elevation — dùng cho tất cả cards, panels, modals */
-    --shadow-card:       0 2px 8px rgba(42, 89, 68, 0.05), 0 1px 3px rgba(42, 89, 68, 0.03);
-    --shadow-card-hover: 0 8px 24px rgba(42, 89, 68, 0.10), 0 2px 6px rgba(42, 89, 68, 0.05);
-    
-    --border-radius-lg: 24px;
-    --border-radius-md: 16px;
-    --border-radius-sm: 8px;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(42,89,68,0.04), 0 1px 2px rgba(42,89,68,0.02);
+    --shadow-md: 0 4px 8px -2px rgba(42,89,68,0.06), 0 2px 4px -2px rgba(42,89,68,0.03);
+    --shadow-lg: 0 10px 20px -4px rgba(42,89,68,0.08), 0 4px 8px -4px rgba(42,89,68,0.03);
+    --shadow-card:       0 2px 8px rgba(42,89,68,0.05), 0 1px 3px rgba(42,89,68,0.03);
+    --shadow-card-hover: 0 8px 24px rgba(42,89,68,0.10), 0 2px 6px rgba(42,89,68,0.05);
+
+    /* Card borders */
+    --border-card:       1px solid rgba(42, 89, 68, 0.08);   /* card trên nền sáng */
+    --border-card-dark:  1px solid rgba(255, 255, 255, 0.08); /* card trên nền tối */
+
+    /* Border Radius */
+    --border-radius-lg:   24px;   /* deprecated — dùng --card-border-radius */
+    --border-radius-md:   16px;   /* deprecated */
+    --border-radius-sm:   8px;    /* deprecated */
     --border-radius-pill: 100px;
-    --card-border-radius: 10px;              /* Standardized Card Border Radius for main cards */
+    --card-border-radius: 10px;
 
-    /* Container Widths */
-    --container-hero: 1600px;       /* Hero section — wide editorial split */
-    --container-xl: 1400px;         /* Standard section containers */
-    --container-md: 1280px;         /* Text-heavy sections (tracker, process) */
-    --container-sm: 800px;          /* FAQ, narrow text sections */
-    --container-padding: 40px;      /* Horizontal padding inside containers */
+    /* Containers */
+    --container-hero:    1600px;
+    --container-xl:      1400px;
+    --container-md:      1280px;
+    --container-sm:      800px;
+    --container-padding: 40px;
 
-    /* Spacing System — Base 8px */
-    --space-xs:  8px;    /* Gap nhỏ: icon/text */
-    --space-sm:  16px;   /* Card padding, element gap */
-    --space-md:  24px;   /* Card grid gap */
-    --space-lg:  40px;   /* Container padding, component margin */
-    --space-xl:  64px;   /* Section padding default */
+    /* Spacing */
+    --space-xs: 8px;
+    --space-sm: 16px;
+    --space-md: 24px;
+    --space-lg: 40px;
+    --space-xl: 64px;
 }
 
 @media (max-width: 1024px) {
@@ -162,39 +141,26 @@
 
 
 /* ==========================================================================
-   PawPal Base Styles & CSS Resets
+   Base Reset & Global Styles
    ========================================================================== */
 
-* {
+*, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-html.lenis, html.lenis body {
-    height: auto;
-}
-
-.lenis-smooth {
-    scroll-behavior: auto !important;
-}
-
-.lenis-smooth [data-lenis-prevent] {
-    overscroll-behavior: contain;
-}
-
-.lenis-stopped {
-    overflow: hidden;
-}
-
-.lenis-scrolling iframe {
-    pointer-events: none;
-}
-
 html {
-    scroll-padding-top: 90px; /* Khoảng trống bù lại cho header sticky để không bị che khuất tiêu đề */
-    overscroll-behavior-y: none; /* Ngăn chặn khoảng trắng khi cuộn quá đà (rubber-banding) */
+    scroll-padding-top: 90px;
+    overscroll-behavior-y: none;
 }
+
+/* Lenis smooth scroll */
+html.lenis, html.lenis body { height: auto; }
+.lenis-smooth            { scroll-behavior: auto !important; }
+.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis-stopped           { overflow: hidden; }
+.lenis-scrolling iframe  { pointer-events: none; }
 
 body {
     font-family: var(--font-body);
@@ -216,9 +182,7 @@ a {
     transition: var(--transition-smooth);
 }
 
-ul {
-    list-style: none;
-}
+ul { list-style: none; }
 
 h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
@@ -227,117 +191,86 @@ h1, h2, h3, h4, h5, h6 {
 
 
 /* ==========================================================================
-   PawPal Base Utility Classes
+   Base Utilities
    ========================================================================== */
 
-/* Layout helpers */
+/* Layout */
 .container-wrapper {
     width: 100%;
     max-width: var(--container-xl);
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: var(--container-padding);
-    padding-right: var(--container-padding);
+    margin-inline: auto;
+    padding-inline: var(--container-padding);
 }
 
 .section-container {
     width: 100%;
     max-width: var(--container-md);
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: var(--container-padding);
-    padding-right: var(--container-padding);
+    margin-inline: auto;
+    padding-inline: var(--container-padding);
 }
 
-.grid-2 {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-lg);
-}
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-lg); }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); }
+.flex        { display: flex; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-between{ display: flex; justify-content: space-between; align-items: center; }
+.stack    { display: grid; gap: var(--space-md); }
+.stack-sm { display: grid; gap: var(--space-sm); }
+.stack-lg { display: grid; gap: var(--space-lg); }
+.full-width  { width: 100%; }
+.center-block{ margin-inline: auto; }
 
-.grid-3 {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-lg);
-}
-
-.flex {
-    display: flex;
-}
-
-.flex-center {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.flex-between {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.stack {
-    display: grid;
-    gap: var(--space-md);
-}
-
-.stack-sm {
-    display: grid;
-    gap: var(--space-sm);
-}
-
-.stack-lg {
-    display: grid;
-    gap: var(--space-lg);
-}
-
-.full-width {
-    width: 100%;
-}
-
-.center-block {
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* Text helpers */
-.text-center {
-    text-align: center;
-}
-
-.text-right {
-    text-align: right;
-}
-
-.text-muted {
-    color: var(--color-text-muted);
-}
-
-.capitalize {
-    text-transform: capitalize;
-}
-
-.truncate {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
+/* Text */
+.text-center { text-align: center; }
+.text-right  { text-align: right; }
+.text-muted  { color: var(--color-text-muted); }
+.capitalize  { text-transform: capitalize; }
+.truncate    { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
 .sr-only,
 .visually-hidden {
     position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
     overflow: hidden;
-    clip: rect(0, 0, 0, 0);
+    clip: rect(0,0,0,0);
     white-space: nowrap;
     border: 0;
 }
 
-/* Button and card helpers */
+/* Accent italic — used in headings */
+.accent-italic {
+    font-family: var(--font-heading);
+    font-style: italic;
+    color: var(--color-primary);
+}
+
+/* Section header common pattern */
+.section-header {
+    max-width: 640px;
+    margin-bottom: var(--space-lg);
+}
+
+.section-header.text-center {
+    margin-inline: auto;
+}
+
+.section-header h2 {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h2);
+    font-weight: 600;
+    color: var(--color-primary-dark);
+    line-height: 1.2;
+    margin-bottom: 12px;
+}
+
+.section-subtitle {
+    font-size: var(--fs-body-lg);
+    color: var(--color-text-light);
+    line-height: 1.6;
+}
+
+/* Button helpers */
 .btn-reset {
     background: transparent;
     border: none;
@@ -347,1988 +280,19 @@ h1, h2, h3, h4, h5, h6 {
     cursor: pointer;
 }
 
-.btn-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--border-radius-pill);
-    padding: calc(var(--space-sm) / 1.15) var(--space-md);
-}
-
+/* Card helpers */
 .card-base {
     background-color: var(--color-bg-white);
     border: 1px solid rgba(34, 77, 49, 0.1);
     border-radius: var(--card-border-radius);
-    box-shadow: var(--shadow-sm);
-}
-
-.shadow-soft {
-    box-shadow: var(--shadow-sm);
-}
-
-.shadow-medium {
-    box-shadow: var(--shadow-md);
-}
-
-
-/* ==========================================================================
-   PawPal Button Components — SOURCE FILE
-   Import qua: assets/css/style.css (@import './components/button.css')
-   ========================================================================== */
-
-/* Buttons */
-.btn-cta {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    padding: 10px 10px 10px 32px; /* compact, accommodates the icon circle */
-    background-color: var(--color-accent);
-    color: var(--color-primary-dark) !important;
-    font-weight: 700;
-    font-size: 0.95rem;
-    border-radius: var(--border-radius-pill);
-    box-shadow: 0 8px 24px rgba(229, 169, 60, 0.25);
-    transition: var(--transition-smooth);
-    border: 2px solid rgba(255,255,255,0.2);
-    cursor: pointer;
-    text-decoration: none;
-}
-
-/* Adjust padding for buttons without icons if any */
-.btn-cta:not(:has(.btn-icon-wrapper)) {
-    padding: 14px 32px;
-}
-
-.btn-cta:hover {
-    background-color: var(--color-accent-dark);
-    color: #ffffff !important;
-    box-shadow: 0 12px 32px rgba(229, 169, 60, 0.4);
-    transform: translateY(-2px);
-}
-
-.btn-cta:active {
-    transform: translateY(-1px) scale(0.98);
-}
-
-.btn-icon-wrapper {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.25);
-    color: currentColor;
-    transition: var(--transition-smooth);
-}
-
-.btn-cta:hover .btn-icon-wrapper {
-    background-color: #ffffff;
-    color: var(--color-accent-dark);
-    transform: translateX(4px) scale(1.05);
-}
-
-.btn-cta.accent-bg {
-    background-color: var(--color-accent);
-    color: var(--color-primary-dark) !important;
-}
-
-.btn-cta.accent-bg:hover {
-    background-color: #ffffff;
-    color: var(--color-primary-dark) !important;
-    box-shadow: 0 12px 32px rgba(255, 255, 255, 0.25);
-}
-
-.btn-cta.accent-bg:hover .btn-icon-wrapper {
-    background-color: var(--color-primary-dark);
-    color: #ffffff;
-}
-
-.btn-link {
-    display: inline-block;
-    font-weight: 700;
-    font-size: 0.85rem;
-    letter-spacing: 1px;
-    color: var(--color-primary);
-    border-bottom: 2px solid var(--color-primary);
-    padding-bottom: 4px;
-    transition: var(--transition-smooth);
-}
-
-.btn-link:hover {
-    color: var(--color-accent);
-    border-color: var(--color-accent);
-    letter-spacing: 1.5px;
-}
-
-.btn-cta-outline {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px 36px;
-    background-color: rgba(255, 255, 255, 0.15); /* Nền mờ rõ hơn trên nền tối */
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 0.95rem;
-    border-radius: var(--border-radius-pill);
-    border: 2px solid rgba(255, 255, 255, 0.95); /* Tăng tương phản và độ dày cho border */
-    backdrop-filter: blur(8px);
-    cursor: pointer;
-    text-decoration: none;
-    transition: var(--transition-smooth);
-}
-
-.btn-cta-outline:hover {
-    background-color: rgba(255, 255, 255, 0.18);
-    border-color: #ffffff;
-    color: #ffffff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(255, 255, 255, 0.1);
-}
-
-
-/* ==========================================================================
-   PawPal Header & Navigation — SOURCE FILE
-   Import qua: assets/css/style.css (@import './components/nav.css')
-   ========================================================================== */
-
-.main-header {
-    background-color: var(--color-bg-light);
-    color: var(--color-text-dark);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    padding: 0 0 6px 0;
-    box-shadow: var(--shadow-sm);
-    border-bottom: 1px solid var(--color-border);
-}
-
-/* Override Bootstrap navbar default padding & width constraints */
-.main-header .navbar {
-    width: 100%;
-    padding: 0;
-}
-
-/* Header container — 3-column Grid: [logo] [nav center] [actions] */
-.header-container {
-    width: 100%;
-    padding: 0 48px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-@media (min-width: 992px) {
-    .header-container {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        grid-template-rows: auto;
-        align-items: center;
-        gap: 0 8px;
-    }
-
-    /* Header-left (logo + search) — cột 1, căn trái */
-    .header-container > .header-left {
-        grid-column: 1;
-        grid-row: 1;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    /* Mobile toggle — ẩn hoàn toàn khỏi grid */
-    .header-container > .navbar-toggler {
-        display: none;
-    }
-
-    /* Nav links — cột 2, căn giữa hoàn toàn */
-    .header-container > .nav-menu.navbar-collapse {
-        grid-column: 2;
-        grid-row: 1;
-        width: 100%;
-        justify-content: center;
-        overflow: hidden;
-        display: flex !important;
-        align-items: center;
-        justify-self: center;
-    }
-
-    .header-container > .nav-menu.navbar-collapse .navbar-nav {
-        justify-content: center;
-        width: 100%;
-    }
-
-    /* Header actions — cột 3, căn phải */
-    .header-container > .header-actions {
-        grid-column: 3;
-        grid-row: 1;
-        justify-self: end;
-        flex-shrink: 0;
-        white-space: nowrap;
-    }
-
-    /* Force navbar-collapse hiện trên desktop */
-    .header-container > .nav-menu.navbar-collapse {
-        display: flex !important;
-        flex-basis: auto;
-        min-width: 0;
-    }
-}
-
-
-/* ==========================================================================
-   Mobile header / drawer — áp dụng dưới breakpoint lg (Bootstrap navbar-expand-lg)
-   Source duy nhất cho mọi page (header inject qua components.js)
-   ========================================================================== */
-@media (max-width: 991.98px) {
-    /* Header bám sát mép trên + nằm TRÊN drawer (che phần đầu drawer) */
-    .main-header {
-        padding-top: 0;
-        z-index: 1100;
-    }
-
-    /* Header layout: logo trái — toggle phải */
-    .header-container {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 20px;
-    }
-
-    .header-left {
-        display: flex;
-        align-items: center;
-        min-width: 0;
-    }
-
-    /* Ẩn search trên mobile */
-    .header-left .search-bar {
-        display: none;
-    }
-
-    /* Toggle hiển thị và nằm trên drawer */
-    .mobile-nav-toggle {
-        display: block;
-        z-index: 1002;
-    }
-
-    /* Nav menu trở thành drawer trượt từ phải */
-    .nav-menu,
-    .nav-menu.navbar-collapse {
-        position: fixed;
-        top: 0;
-        right: -100%;
-        width: min(260px, 78vw);
-        height: 100dvh;
-        background-color: var(--color-primary-dark);
-        padding: 72px 28px 32px;
-        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.18);
-        transition: right 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-        z-index: 1001;
-        overflow-y: auto;
-        display: flex !important;   /* override Bootstrap collapse display:none */
-        flex-direction: column;
-        justify-content: flex-start;
-        flex-basis: auto;
-    }
-
-    /* Bootstrap thêm .show khi mở */
-    .nav-menu.show,
-    .nav-menu.navbar-collapse.show {
-        right: 0;
-    }
-
-    .nav-menu ul,
-    .nav-menu .navbar-nav {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0;
-        width: 100%;
-    }
-
-    .nav-menu .nav-item {
-        width: 100%;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .nav-menu .nav-item:last-child {
-        border-bottom: none;
-    }
-
-    /* Link sáng màu trên nền xanh đậm */
-    .nav-menu a,
-    .nav-menu .nav-link {
-        display: block;
-        width: 100%;
-        padding: 14px 0;
-        font-size: 0.95rem;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.85);
-        opacity: 1;
-        letter-spacing: 0.01em;
-    }
-
-    .nav-menu a:hover,
-    .nav-menu a.active,
-    .nav-menu .nav-link:hover,
-    .nav-menu .nav-link.active {
-        color: #ffffff;
-        padding-left: 6px;
-    }
-
-    /* Bỏ underline animation trong drawer */
-    .nav-menu a::after {
-        display: none;
-    }
-
-    /* CTA trong drawer (Đặt lịch / Đăng ký) — dùng màu accent nổi bật */
-    .nav-menu .nav-link-cta-mobile {
-        color: var(--color-accent) !important;
-    }
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    margin-right: 0;   /* grid layout không cần margin-right */
-}
-
-.logo img {
-    height: 48px;
-    width: auto;
-    object-fit: contain;
-}
-
-/* Search bar styling */
-.search-bar {
-    position: relative;
-    width: 220px;
-}
-
-.search-bar input {
-    width: 100%;
-    padding: 10px 16px 10px 42px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-pill);
-    background-color: #ffffff;
-    font-family: var(--font-primary);
-    font-size: 0.9rem;
-    color: var(--color-text-dark);
-    outline: none;
-    transition: var(--transition-smooth);
-}
-
-.search-bar input::placeholder {
-    color: #99aab0;
-}
-
-.search-bar input:focus {
-    background-color: #ffffff;
-    border-color: var(--color-accent);
-}
-
-.search-icon {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 16px;
-    height: 16px;
-    color: #88989f;
-    pointer-events: none;
-}
-
-/* Navigation Links */
-.nav-menu ul {
-    display: flex;
-    gap: 8px;          /* tăng gap giữa các nav items */
-}
-
-.nav-menu a {
-    font-weight: 500;
-    font-size: 0.9rem;
-    color: var(--color-text-dark);
-    opacity: 0.85;
-    position: relative;
-    padding: 6px 10px;
-}
-
-.nav-menu a:hover,
-.nav-menu a.active {
-    opacity: 1;
-    color: var(--color-accent);
-}
-
-.nav-menu a::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 10px;         /* căn với padding ngang */
-    right: 10px;
-    width: auto;
-    height: 2px;
-    background-color: var(--color-accent);
-    transform: scaleX(0);
-    transition: transform 0.3s ease;
-}
-
-.nav-menu a:hover::after,
-.nav-menu a.active::after {
-    transform: scaleX(1);
-}
-
-/* Actions in Header */
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-shrink: 0;  /* không bị co lại */
-}
-
-.auth-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.btn-signup {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 16px;
-    border-radius: var(--border-radius-pill);
-    border: 1px solid var(--color-accent);
-    background-color: transparent;
-    color: var(--color-accent);
-    font-family: var(--font-primary);
-    font-size: 0.9rem;
-    font-weight: 700;
-    text-decoration: none;
-    transition: var(--transition-smooth);
-}
-
-.btn-signup:hover {
-    background-color: rgba(224, 159, 31, 0.12);
-    transform: translateY(-1px);
-    box-shadow: 0 10px 18px rgba(224, 159, 31, 0.12);
-}
-
-.cart-btn {
-    padding: 8px 10px;
-    background-color: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-text-dark);
-    opacity: 0.9;
-    transition: var(--transition-smooth);
-}
-
-.cart-btn:hover {
-    color: var(--color-accent);
-    transform: scale(1.08);
-    opacity: 1;
-}
-
-.login-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: transparent;
-    padding: 8px 12px;
-    border: none;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--color-text-dark);
-    opacity: 0.9;
-    transition: var(--transition-smooth);
-}
-
-.login-btn:hover {
-    color: var(--color-accent);
-    opacity: 1;
-}
-
-/* Mobile Nav Toggle — Bootstrap navbar-toggler handles display logic */
-.mobile-nav-toggle {
-    background: none;
-    border: none;
-    color: var(--color-text-dark);
-    cursor: pointer;
-    padding: 4px;
-}
-
-/* Header Actions responsive — ẩn trên mobile, hiện trên desktop */
-@media (max-width: 991.98px) {
-    .header-actions {
-        display: none !important;
-    }
-}
-
-@media (min-width: 992px) {
-    .header-actions {
-        display: flex !important;
-        align-items: center;
-    }
-}
-
-/* Header divider */
-.header-divider {
-    width: 1px;
-    height: 20px;
-    background-color: var(--color-border);
-    flex-shrink: 0;
-    margin: 0 4px;
-}
-
-/* Đặt lịch CTA button in header */
-.btn-header-cta {
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 18px;
-    background-color: var(--color-accent);
-    color: var(--color-primary-dark) !important;
-    font-family: var(--font-primary);
-    font-size: 0.85rem;
-    font-weight: 700;
-    border-radius: var(--border-radius-pill);
-    transition: var(--transition-smooth);
-    white-space: nowrap;
-    border: none;
-}
-
-.btn-header-cta:hover {
-    background-color: var(--color-accent-dark);
-    color: #ffffff !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(229, 169, 60, 0.3);
-}
-
-/* Mobile CTA nav link */
-.nav-link-cta-mobile {
-    color: var(--color-accent-dark) !important;
-    font-weight: 700 !important;
-}
-
-/* Active nav state — dot + bold */
-.nav-menu a.active {
-    opacity: 1;
-    color: var(--color-primary) !important;
-    font-weight: 700;
-}
-
-.nav-menu a.active::after {
-    transform: scaleX(1);
-    background-color: var(--color-primary);
-}
-
-
-/* ==========================================================================
-   PawPal Footer & Footer CTA Banner — SOURCE FILE
-   Import qua: assets/css/style.css (@import './components/footer.css')
-   ========================================================================== */
-
-/* ------------------------------------------------------------------
-   Footer CTA Banner
-   ------------------------------------------------------------------ */
-.footer-cta-banner {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-    padding: var(--space-xl) var(--container-padding);
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.footer-cta-banner::before {
-    content: '🐾';
-    position: absolute;
-    font-size: 12rem;
-    opacity: 0.05;
-    top: -20px;
-    right: 5%;
-    pointer-events: none;
-}
-
-.footer-cta-inner {
-    max-width: 700px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-}
-
-.footer-cta-banner h2 {
-    font-family: var(--font-heading);
-    font-size: clamp(1.8rem, 4vw, 3rem);
-    font-weight: 500;
-    color: #ffffff;
-    margin-bottom: 12px;
-    line-height: 1.3;
-}
-
-.footer-cta-banner p {
-    color: rgba(255,255,255,0.75);
-    font-size: 1rem;
-    margin-bottom: 20px;
-}
-
-.cta-urgency {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background-color: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: rgba(255,255,255,0.9);
-    font-size: 0.85rem;
-    font-weight: 600;
-    padding: 8px 18px;
-    border-radius: var(--border-radius-pill);
-    margin-bottom: 24px;
-}
-
-.urgency-dot {
-    width: 8px;
-    height: 8px;
-    background-color: #4ade80;
-    border-radius: 50%;
-    flex-shrink: 0;
-    box-shadow: 0 0 8px #4ade80;
-    animation: pulse-green 1.5s infinite;
-}
-
-@keyframes pulse-green {
-    0%, 100% { opacity: 1; box-shadow: 0 0 6px #4ade80; }
-    50% { opacity: 0.7; box-shadow: 0 0 14px #4ade80; }
-}
-
-.cta-enhanced {
-    display: block;
-    width: fit-content;
-    margin: 0 auto;
-}
-
-.footer-cta-banner .btn-cta {
-    background-color: var(--color-cta-dark);
-    color: #ffffff;
-    padding: 16px 44px;
-    font-size: 1.05rem;
-    font-weight: 700;
-    border: 2px solid rgba(255,255,255,0.2);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-}
-
-.footer-cta-banner .btn-cta:hover {
-    background-color: var(--color-cta-darker);
-    transform: translateY(-3px);
-    box-shadow: 0 14px 36px rgba(0,0,0,0.3);
-}
-
-
-/* ------------------------------------------------------------------
-   Main Footer
-   ------------------------------------------------------------------ */
-.main-footer {
-    background-color: var(--color-primary-dark);
-    color: rgba(255, 255, 255, 0.75);
-    padding: 30px 0 15px;
-}
-
-.footer-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 40px;
-    display: grid;
-    grid-template-columns: 2.2fr 1.5fr 2fr 2.3fr;
-    gap: 40px;
-}
-
-.footer-col h4 {
-    color: #ffffff;
-    font-size: 0.85rem;
-    font-weight: 800;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-    text-transform: uppercase;
-}
-
-.footer-logo {
-    margin-bottom: 16px;
-    font-size: 1.8rem;
-}
-
-.brand-description {
-    font-size: 0.85rem;
-    line-height: 1.7;
-    margin-bottom: 12px;
-}
-
-.social-links {
-    display: flex;
-    gap: 12px;
-}
-
-.social-links a {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    transition: var(--transition-smooth);
-}
-
-.social-links a:hover {
-    background-color: var(--color-accent);
-    color: var(--color-primary-dark);
-    transform: translateY(-2px);
-}
-
-.footer-col ul {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.footer-col ul a {
-    font-size: 0.9rem;
-    transition: var(--transition-smooth);
-}
-
-.footer-col ul a:hover {
-    color: var(--color-accent);
-    padding-left: 4px;
-}
-
-.contact-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.contact-list li {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    font-size: 0.85rem;
-    line-height: 1.5;
-}
-
-.contact-list li svg {
-    margin-top: 2px;
-    flex-shrink: 0;
-    color: var(--color-accent);
-}
-
-/* Footer Newsletter Signup */
-.footer-newsletter-form {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-    margin-bottom: 20px;
-}
-
-.footer-newsletter-form input {
-    flex: 1;
-    padding: 10px 16px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: var(--border-radius-pill);
-    background-color: rgba(255, 255, 255, 0.05);
-    color: #ffffff;
-    font-size: 0.85rem;
-    outline: none;
-    transition: var(--transition-smooth);
-}
-
-.footer-newsletter-form input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-}
-
-.footer-newsletter-form input:focus {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-color: var(--color-accent);
-}
-
-.footer-newsletter-form button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: var(--border-radius-pill);
-    background-color: var(--color-accent);
-    color: var(--color-primary-dark);
-    font-weight: 700;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: var(--transition-smooth);
-}
-
-.footer-newsletter-form button:hover {
-    background-color: var(--color-accent-dark);
-    color: #ffffff;
-    transform: translateY(-1px);
-}
-
-/* Payment Methods */
-.payment-methods {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-}
-
-.payment-badge {
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--card-border-radius);
-    padding: 4px 10px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.8);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    user-select: none;
-}
-
-.footer-bottom {
-    max-width: 1400px;
-    margin: 20px auto 0;
-    padding: 15px 40px 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 0.8rem;
-}
-
-/* Google Maps Capsule inside Footer — shared across all pages */
-.footer-map-section {
-    margin-top: 30px;
-    position: relative;
-    z-index: 1;
-}
-
-.map-container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 24px;
-    position: relative;
-}
-
-.map-capsule-wrapper {
-    position: relative;
-    border-radius: 200px 200px 0 0;
-    border: 6px solid var(--color-accent);
-    border-bottom: none;
-    box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.15);
-    overflow: hidden;
-    height: 220px;
-    transition: var(--transition-smooth);
-    background-color: var(--color-bg-white);
-}
-
-.map-capsule-wrapper:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 -15px 35px rgba(0, 0, 0, 0.25);
-}
-
-.map-capsule-wrapper iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    display: block;
-}
-
-.map-badge {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: var(--color-primary-dark);
-    color: var(--color-accent);
-    font-family: var(--font-display);
-    font-size: 2.8rem;
-    font-weight: 500;
-    padding: 4px 28px;
-    border-radius: var(--border-radius-pill);
-    border: 4px solid var(--color-accent);
-    z-index: 10;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-    pointer-events: none;
-    letter-spacing: 1px;
-}
-
-@media (max-width: 768px) {
-    .map-capsule-wrapper {
-        border-radius: 30px 30px 0 0;
-        height: 160px;
-        border-width: 4px;
-    }
-    .map-badge {
-        font-size: 2rem;
-        padding: 2px 18px;
-        border-width: 3px;
-    }
-}
-
-
-/* ==========================================================================
-   PawPal Zalo Floating Chat Button — SOURCE FILE
-   Import qua: assets/css/style.css (@import './components/chat.css')
-   ========================================================================== */
-
-.zalo-float-btn {
-    position: fixed;
-    bottom: 28px;
-    right: 28px;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: #0068FF;
-    color: #ffffff;
-    padding: 12px 18px;
-    border-radius: var(--border-radius-pill);
-    box-shadow: 0 8px 24px rgba(0, 104, 255, 0.4);
-    font-family: var(--font-primary);
-    font-size: 0.85rem;
-    font-weight: 700;
-    text-decoration: none;
-    transition: var(--transition-smooth);
-    animation: zalo-bounce 3s ease-in-out infinite;
-}
-
-.zalo-float-btn:hover {
-    background-color: #0050CC;
-    transform: translateY(-3px) scale(1.03);
-    box-shadow: 0 12px 32px rgba(0, 104, 255, 0.55);
-    animation: none;
-}
-
-.zalo-float-btn svg {
-    width: 22px;
-    height: 22px;
-    flex-shrink: 0;
-}
-
-@keyframes zalo-bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-}
-
-/* Online indicator dot */
-.zalo-float-btn::before {
-    content: '';
-    position: absolute;
-    top: -3px;
-    right: -3px;
-    width: 10px;
-    height: 10px;
-    background-color: var(--color-live);
-    border-radius: 50%;
-    border: 2px solid #ffffff;
-    animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-@keyframes ping {
-    0% { transform: scale(1); opacity: 1; }
-    75%, 100% { transform: scale(2); opacity: 0; }
-}
-
-
-/* ==========================================================================
-   PawPal Filter Sidebar — SOURCE FILE
-   Dùng chung cho: pages/services/services.html, pages/shop/shop.html
-   ========================================================================== */
-
-/* ------------------------------------------------------------------
-   Filter Group — wrapper mỗi nhóm bộ lọc
-   ------------------------------------------------------------------ */
-.filter-group {
-    margin-bottom: 28px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.filter-group:last-of-type {
-    border-bottom: none;
-    margin-bottom: 20px;
-    padding-bottom: 0;
-}
-
-.filter-group-title {
-    font-family: var(--font-primary);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--color-text-light);
-    margin-bottom: 14px;
-}
-
-/* ------------------------------------------------------------------
-   Filter Options — list các lựa chọn
-   ------------------------------------------------------------------ */
-.filter-options {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.filter-option {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 12px;
-    border-radius: var(--card-border-radius);
-    cursor: pointer;
-    transition: var(--transition-smooth);
-    border: 1px solid transparent;
-}
-
-/* Ẩn radio/checkbox mặc định — dùng visual custom */
-.filter-option input[type="radio"],
-.filter-option input[type="checkbox"] {
-    display: none;
-}
-
-.filter-option:hover {
-    background-color: var(--color-primary-light);
-}
-
-.filter-option.active {
-    background-color: var(--color-primary-light);
-    border-color: rgba(42, 89, 68, 0.2);
-}
-
-.filter-option-label {
-    font-size: 0.88rem;
-    font-weight: 500;
-    color: var(--color-text-dark);
-    flex: 1;
-}
-
-.filter-option.active .filter-option-label {
-    color: var(--color-primary);
-    font-weight: 600;
-}
-
-/* ------------------------------------------------------------------
-   Filter Count Badge
-   ------------------------------------------------------------------ */
-.filter-count {
-    font-size: 0.72rem;
-    font-weight: 700;
-    background: var(--color-border);
-    color: var(--color-text-light);
-    padding: 2px 7px;
-    border-radius: var(--border-radius-pill);
-    min-width: 22px;
-    text-align: center;
-}
-
-.filter-option.active .filter-count {
-    background: var(--color-primary);
-    color: #ffffff;
-}
-
-/* ------------------------------------------------------------------
-   Price Range Input (shop only — không có trong services)
-   ------------------------------------------------------------------ */
-.price-range-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.price-range-inputs {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.price-range-inputs input {
-    flex: 1;
-    padding: 8px 10px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--card-border-radius);
-    font-family: var(--font-primary);
-    font-size: 0.85rem;
-    color: var(--color-text-dark);
-    outline: none;
-    width: 0;
-    transition: var(--transition-smooth);
-}
-
-.price-range-inputs input:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px rgba(42, 89, 68, 0.1);
-}
-
-.price-range-inputs span {
-    color: var(--color-text-light);
-    font-size: 0.9rem;
-}
-
-.btn-apply-price {
-    width: 100%;
-    padding: 9px;
-    background: var(--color-primary);
-    color: #ffffff;
-    border: none;
-    border-radius: var(--card-border-radius);
-    font-family: var(--font-primary);
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition-smooth);
-}
-
-.btn-apply-price:hover {
-    background: var(--color-primary-dark);
-}
-
-/* ------------------------------------------------------------------
-   Reset Filter Button
-   ------------------------------------------------------------------ */
-.btn-reset-filter {
-    width: 100%;
-    padding: 10px;
-    background: none;
-    border: 1px dashed var(--color-border);
-    border-radius: var(--card-border-radius);
-    font-family: var(--font-primary);
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--color-text-light);
-    cursor: pointer;
-    transition: var(--transition-smooth);
-}
-
-.btn-reset-filter:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-    background: var(--color-primary-light);
-}
-
-
-/* ==========================================================================
-   PawPal Modal Components — SOURCE FILE
-   Import qua: assets/css/style.css (@import './components/modal.css')
-   ========================================================================== */
-
-/* ------------------------------------------------------------------
-   Booking Modal
-   ------------------------------------------------------------------ */
-.booking-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    z-index: 2000;
-    display: none; /* Controlled by JS — thêm class .open để hiển thị */
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-.booking-modal.open {
-    display: flex;
-}
-
-.booking-modal-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(42, 89, 68, 0.6);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-
-.booking-modal-content {
-    position: relative;
-    background: var(--color-bg-white);
-    border-radius: var(--card-border-radius);
-    box-shadow: var(--shadow-lg), 0 20px 40px rgba(0, 0, 0, 0.1);
-    max-width: 500px;
-    width: 100%;
-    padding: 36px;
-    z-index: 2001;
-    transform: scale(0.9);
-    opacity: 0;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
-}
-
-.booking-modal.open .booking-modal-content {
-    transform: scale(1);
-    opacity: 1;
-}
-
-.booking-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    border-bottom: 1px solid var(--color-border);
-    padding-bottom: 16px;
-}
-
-.booking-modal-header h3 {
-    font-family: var(--font-heading);
-    font-size: 1.8rem;
-    color: var(--color-primary);
-    font-weight: 500;
-    margin: 0;
-}
-
-.booking-modal-close {
-    background: none;
-    border: none;
-    font-size: 2.2rem;
-    color: var(--color-text-light);
-    cursor: pointer;
-    line-height: 1;
-    transition: var(--transition-smooth);
-}
-
-.booking-modal-close:hover {
-    color: var(--color-accent-dark);
-    transform: scale(1.1);
-}
-
-/* Booking Form inside Modal */
-.booking-form .form-group {
-    margin-bottom: 20px;
-}
-
-.booking-form label {
-    display: block;
-    margin-bottom: 8px;
-    font-family: var(--font-primary);
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--color-primary-dark);
-    text-align: left;
-}
-
-.booking-form input,
-.booking-form select {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--card-border-radius);
-    font-family: var(--font-primary);
-    font-size: 1rem;
-    color: var(--color-text-dark);
-    background-color: var(--color-bg-light);
-    outline: none;
-    transition: var(--transition-smooth);
-}
-
-.booking-form input::placeholder {
-    color: #a0aec0;
-}
-
-.booking-form input:focus,
-.booking-form select:focus {
-    border-color: var(--color-accent);
-    background-color: #ffffff;
-    box-shadow: 0 0 0 3px rgba(229, 169, 60, 0.25);
-}
-
-.btn-submit-booking {
-    display: block;
-    width: 100%;
-    padding: 16px;
-    background-color: var(--color-accent);
-    color: #ffffff;
-    font-family: var(--font-primary);
-    font-weight: 700;
-    font-size: 1.05rem;
-    border: none;
-    border-radius: var(--border-radius-pill);
-    cursor: pointer;
-    box-shadow: 0 10px 20px rgba(229, 169, 60, 0.25);
-    transition: var(--transition-smooth);
-    margin-top: 10px;
-}
-
-.btn-submit-booking:hover {
-    background-color: var(--color-accent-dark);
-    box-shadow: 0 12px 24px rgba(229, 169, 60, 0.35);
-    transform: translateY(-2px);
-}
-
-
-/* ==========================================================================
-   PawPal Notification & Status Components — SOURCE FILE
-   Import qua: assets/css/style.css (@import './components/notification.css')
-   Gồm: Notification Bar, Hero Status Widget, Pricing Modal
-   ========================================================================== */
-
-/* ------------------------------------------------------------------
-   Notification Bar (top of header)
-   ------------------------------------------------------------------ */
-.notification-bar {
-    background-color: var(--color-accent);
-    color: var(--color-primary-dark);
-    padding: 10px 20px;
-    text-align: center;
-    font-family: var(--font-primary);
-    font-size: 0.85rem;
-    font-weight: 600;
-    position: relative;
-    z-index: 1002;
     box-shadow: var(--shadow-card);
 }
 
-.notification-bar strong {
-    background-color: var(--color-primary-dark);
-    color: var(--color-accent);
-    padding: 2px 6px;
-    border-radius: var(--card-border-radius);
-    margin-left: 4px;
-}
-
-
-/* ------------------------------------------------------------------
-   Hero Status Widget (live availability badge)
-   ------------------------------------------------------------------ */
-.hero-status-widget {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background-color: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    padding: 6px 16px;
-    border-radius: var(--border-radius-pill);
-    font-family: var(--font-primary);
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--color-primary-dark);
-    box-shadow: var(--shadow-card);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    margin-bottom: 8px;
-}
-
-.hero-status-widget .status-dot {
-    width: 8px;
-    height: 8px;
-    background-color: var(--color-live);
-    border-radius: 50%;
-    position: relative;
-}
-
-.hero-status-widget .status-dot::after {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    border-radius: 50%;
-    border: 2px solid var(--color-live);
-    animation: status-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-@keyframes status-ping {
-    0% { transform: scale(1); opacity: 1; }
-    75%, 100% { transform: scale(2); opacity: 0; }
-}
-
-.hero-status-widget strong {
-    color: var(--color-primary);
-    font-weight: 700;
-}
-
-
-/* ------------------------------------------------------------------
-   Pricing Modal
-   ------------------------------------------------------------------ */
-.pricing-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    z-index: 2000;
-    display: none; /* Controlled by JS — thêm class .open để hiển thị */
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-.pricing-modal.open {
-    display: flex;
-}
-
-.pricing-modal-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(42, 89, 68, 0.6);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-
-.pricing-modal-content {
-    position: relative;
-    background: var(--color-bg-white);
-    border-radius: var(--card-border-radius);
-    box-shadow: var(--shadow-lg), 0 20px 40px rgba(0, 0, 0, 0.1);
-    max-width: 650px;
-    width: 100%;
-    padding: 36px;
-    z-index: 2001;
-    transform: scale(0.9);
-    opacity: 0;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.pricing-modal.open .pricing-modal-content {
-    transform: scale(1);
-    opacity: 1;
-}
-
-.pricing-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    border-bottom: 1px solid var(--color-border);
-    padding-bottom: 16px;
-}
-
-.pricing-modal-header h3 {
-    font-family: var(--font-heading);
-    font-size: 1.8rem;
-    color: var(--color-primary);
-    font-weight: 500;
-    margin: 0;
-}
-
-.pricing-modal-close {
-    background: none;
-    border: none;
-    font-size: 2.2rem;
-    color: var(--color-text-light);
-    cursor: pointer;
-    line-height: 1;
-    transition: var(--transition-smooth);
-}
-
-.pricing-modal-close:hover {
-    color: var(--color-accent-dark);
-    transform: scale(1.1);
-}
-
-/* Pricing Tabs */
-.pricing-tabs {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-    border-bottom: 2px solid var(--color-border);
-    padding-bottom: 10px;
-}
-
-.pricing-tab-btn {
-    background: none;
-    border: none;
-    padding: 8px 16px;
-    font-family: var(--font-primary);
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--color-text-light);
-    cursor: pointer;
-    border-radius: var(--card-border-radius);
-    transition: var(--transition-smooth);
-}
-
-.pricing-tab-btn:hover {
-    color: var(--color-primary);
-    background-color: var(--color-bg-light);
-}
-
-.pricing-tab-btn.active {
-    color: #ffffff;
-    background-color: var(--color-primary);
-}
-
-.pricing-tab-content {
-    display: none;
-}
-
-.pricing-tab-content.active {
-    display: block;
-}
-
-/* Pricing Table */
-.pricing-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 16px;
-    text-align: left;
-    font-family: var(--font-primary);
-    font-size: 0.9rem;
-}
-
-.pricing-table th,
-.pricing-table td {
-    padding: 12px;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.pricing-table th {
-    background-color: var(--color-primary-light);
-    color: var(--color-primary-dark);
-    font-weight: 700;
-}
-
-.pricing-table td {
-    color: var(--color-text-dark);
-}
-
-.pricing-table tbody tr:hover {
-    background-color: var(--color-bg-light);
-}
-
-.pricing-note {
-    font-size: 0.8rem;
-    font-style: italic;
-    color: var(--color-text-light);
-    margin-bottom: 24px;
-}
-
-.pricing-modal-footer {
-    border-top: 1px solid var(--color-border);
-    padding-top: 20px;
-}
-
-
-
-
-/* ==========================================================================
-   Lookup Button (header action)
-   ========================================================================== */
-
-.lookup-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 16px;
-    background-color: var(--color-primary-light);
-    border: 1px solid rgba(42, 89, 68, 0.15);
-    border-radius: var(--border-radius-pill);
-    font-family: var(--font-primary);
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--color-primary);
-    cursor: pointer;
-    transition: var(--transition-smooth);
-    white-space: nowrap;
-}
-
-/* Neutralise the nav-menu a::after underline — lookup-btn is never a nav item */
-.lookup-btn::after {
-    display: none !important;
-}
-
-.lookup-btn:hover {
-    background-color: var(--color-primary);
-    color: #ffffff;
-    border-color: var(--color-primary);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(42, 89, 68, 0.15);
-}
-
-.lookup-nav-trigger {
-    background: none;
-    border: none;
-    font-family: var(--font-primary);
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: var(--color-text-dark);
-    opacity: 0.85;
-    cursor: pointer;
-    padding: 6px 0;
-}
-
-.lookup-nav-trigger:hover {
-    color: var(--color-accent);
-    opacity: 1;
-}
-
-
-/* ==========================================================================
-   Lookup Modal
-   ========================================================================== */
-
-.lookup-modal-overlay {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(4px);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.25s ease, visibility 0.25s ease;
-}
-
-.lookup-modal-overlay.open {
-    opacity: 1;
-    visibility: visible;
-}
-
-.lookup-modal {
-    background-color: var(--color-bg-white);
-    border-radius: var(--card-border-radius);
-    width: 100%;
-    max-width: 520px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
-    overflow: hidden;
-    transform: translateY(16px) scale(0.98);
-    transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.lookup-modal-overlay.open .lookup-modal {
-    transform: translateY(0) scale(1);
-}
-
-.lookup-modal-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 24px 24px 16px;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.lookup-modal-title-group {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-}
-
-.lookup-modal-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--card-border-radius);
-    background-color: var(--color-primary-light);
-    color: var(--color-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.lookup-modal-title {
-    font-family: var(--font-heading);
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: var(--color-primary-dark);
-    margin: 0 0 2px;
-}
-
-.lookup-modal-subtitle {
-    font-size: 0.82rem;
-    color: var(--color-text-light);
-    margin: 0;
-}
-
-.lookup-modal-close {
-    background: none;
-    border: none;
-    color: var(--color-text-light);
-    cursor: pointer;
-    padding: 4px;
-    border-radius: var(--card-border-radius);
-    transition: var(--transition-smooth);
-    flex-shrink: 0;
-}
-
-.lookup-modal-close:hover {
-    background-color: var(--color-neutral-light);
-    color: var(--color-text-dark);
-}
-
-.lookup-tabs {
-    display: flex;
-    gap: 4px;
-    padding: 16px 24px 0;
-}
-
-.lookup-tab {
-    flex: 1;
-    padding: 8px 12px;
-    background: none;
-    border: 1px solid var(--color-border);
-    border-radius: var(--card-border-radius);
-    font-family: var(--font-primary);
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--color-text-light);
-    cursor: pointer;
-    transition: var(--transition-smooth);
-}
-
-.lookup-tab:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-    background-color: var(--color-primary-light);
-}
-
-.lookup-tab.active {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
-    color: #ffffff;
-}
-
-.lookup-form-area {
-    padding: 20px 24px;
-}
-
-.lookup-label {
-    display: block;
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--color-primary-dark);
-    margin-bottom: 8px;
-}
-
-.lookup-input-row {
-    display: flex;
-    gap: 10px;
-}
-
-.lookup-input {
-    flex: 1;
-    padding: 12px 16px;
-    border: 1.5px solid var(--color-border);
-    border-radius: var(--card-border-radius);
-    font-family: var(--font-primary);
-    font-size: 0.95rem;
-    color: var(--color-text-dark);
-    background-color: #ffffff;
-    outline: none;
-    transition: border-color 0.2s ease;
-}
-
-.lookup-input:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(42, 89, 68, 0.08);
-}
-
-.lookup-input::placeholder {
-    color: var(--color-text-faint);
-}
-
-.lookup-submit-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
-    background-color: var(--color-primary);
-    color: #ffffff;
-    border: none;
-    border-radius: var(--card-border-radius);
-    font-family: var(--font-primary);
-    font-size: 0.88rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: var(--transition-smooth);
-    white-space: nowrap;
-}
-
-.lookup-submit-btn:hover {
-    background-color: var(--color-primary-dark);
-    transform: translateY(-1px);
-}
-
-.lookup-hint {
-    font-size: 0.78rem;
-    color: var(--color-text-faint);
-    margin: 8px 0 0;
-}
-
-.lookup-results {
-    padding: 0 24px 20px;
-    max-height: 320px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-}
-
-.lookup-results-header {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: var(--color-text-light);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 12px;
-}
-
-.lookup-result-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background-color: var(--color-bg-light);
-    border: 1px solid var(--color-border);
-    border-radius: var(--card-border-radius);
-    margin-bottom: 8px;
-    transition: var(--transition-smooth);
-}
-
-.lookup-result-item:hover {
-    border-color: var(--color-primary);
-    background-color: var(--color-primary-light);
-}
-
-.lookup-result-info {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.lookup-result-id {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--color-primary-dark);
-}
-
-.lookup-result-meta {
-    font-size: 0.78rem;
-    color: var(--color-text-light);
-}
-
-.lookup-result-status {
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: var(--border-radius-pill);
-}
-
-.lookup-status-pending {
-    background-color: var(--color-accent-light);
-    color: var(--color-accent-dark);
-}
-
-.lookup-status-done {
-    background-color: var(--color-success-light);
-    color: var(--color-success);
-}
-
-.lookup-status-cancelled {
-    background-color: var(--color-danger-light);
-    color: var(--color-danger);
-}
-
-.lookup-empty {
-    text-align: center;
-    padding: 32px 0;
-    color: var(--color-text-light);
-    font-size: 0.88rem;
-}
-
-.lookup-empty-icon {
-    font-size: 2rem;
-    margin-bottom: 8px;
-}
-
-.lookup-modal-footer {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 24px;
-    border-top: 1px solid var(--color-border);
-    background-color: var(--color-bg-light);
-    font-size: 0.82rem;
-    color: var(--color-text-light);
-}
-
-.lookup-modal-footer a {
-    font-weight: 700;
-    color: var(--color-primary);
-}
-
-.lookup-modal-footer a:hover {
-    color: var(--color-accent-dark);
-}
-
-@media (max-width: 640px) {
-    .lookup-modal {
-        border-radius: var(--card-border-radius);
-    }
-    .lookup-modal-header {
-        padding: 20px 18px 14px;
-    }
-    .lookup-form-area {
-        padding: 16px 18px;
-    }
-    .lookup-input-row {
-        flex-direction: column;
-    }
-    .lookup-submit-btn {
-        width: 100%;
-        justify-content: center;
-    }
-    .lookup-results {
-        padding: 0 18px 16px;
-    }
-    .lookup-modal-footer {
-        padding: 12px 18px;
-    }
-}
-
-
-/* ==========================================================================
-   View Transitions API — smooth page navigation (Chrome/Edge 111+)
-   ========================================================================== */
-
-/* Default cross-fade for entire page */
-@keyframes vt-fade-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-@keyframes vt-fade-out {
-    from { opacity: 1; }
-    to   { opacity: 0; }
-}
-
-@keyframes vt-slide-in {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes vt-slide-out {
-    from { opacity: 1; transform: translateY(0); }
-    to   { opacity: 0; transform: translateY(-8px); }
-}
-
-/* Old page fades out */
-::view-transition-old(root) {
-    animation: 180ms ease-out both vt-fade-out;
-}
-
-/* New page slides in */
-::view-transition-new(root) {
-    animation: 280ms ease-out both vt-slide-in;
-}
-
-/* Header stays fixed — no transition effect on it */
-.main-header {
-    view-transition-name: site-header;
-}
-
-::view-transition-old(site-header),
-::view-transition-new(site-header) {
-    animation: none;
-    mix-blend-mode: normal;
-}
+/* View Transitions */
+@keyframes vt-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes vt-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes vt-slide-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes vt-slide-out{ from { opacity: 1; transform: translateY(0); }    to { opacity: 0; transform: translateY(-8px); } }
+
+::view-transition-old(root) { animation: 180ms ease-out both vt-fade-out; }
+::view-transition-new(root) { animation: 280ms ease-out both vt-slide-in; }

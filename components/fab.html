@@ -1,0 +1,78 @@
+<!-- FAB Stack — Fixed Action Buttons -->
+<div class="fab-stack" id="fabStack">
+
+    <!-- Chatbot AI -->
+    <div class="fab-item fab-item--ai" id="fabAiBtn" title="Chat với AI PawPal">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+            <path d="M12 2a10 10 0 0 1 10 10"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        <span class="fab-tooltip">Hỏi AI PawPal</span>
+    </div>
+
+    <!-- Messenger -->
+    <a class="fab-item fab-item--messenger" href="https://m.me/pawpal" target="_blank" rel="noopener" title="Chat Messenger">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.477 2 2 6.145 2 11.259c0 2.822 1.32 5.344 3.397 7.04V22l3.104-1.708A11.06 11.06 0 0 0 12 20.52c5.523 0 10-4.146 10-9.26C22 6.144 17.523 2 12 2zm1.007 12.47-2.548-2.717-4.973 2.716 5.467-5.798 2.61 2.717 4.91-2.717-5.466 5.799z"/>
+        </svg>
+        <span class="fab-tooltip">Messenger</span>
+    </a>
+
+    <!-- Zalo -->
+    <a class="fab-item fab-item--zalo" href="https://zalo.me/0774561496" target="_blank" rel="noopener" title="Chat Zalo">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 48 48" fill="currentColor">
+            <path d="M24 4C13 4 4 13 4 24s9 20 20 20 20-9 20-20S35 4 24 4zm-6.3 27.2H12v-1.5l5.4-7.3H12v-1.9h5.8v1.5l-5.3 7.3h5.2v1.9zm5.5 0h-2.1V22.1h2.1v9.1zm-1-10.6a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6zm13.5 6.7c0 2.3-1.7 4.1-4.1 4.1-2.4 0-4.1-1.8-4.1-4.1v-2c0-2.3 1.7-4.1 4.1-4.1 2.4 0 4.1 1.8 4.1 4.1v2zm-2-2c0-1.2-.9-2.1-2.1-2.1s-2.1.9-2.1 2.1v2c0 1.2.9 2.1 2.1 2.1s2.1-.9 2.1-2.1v-2z"/>
+        </svg>
+        <span class="fab-tooltip">Chat Zalo</span>
+    </a>
+
+    <!-- Hotline -->
+    <a class="fab-item fab-item--phone" href="tel:0774561496" title="Gọi hotline">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12.6a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.44 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path>
+        </svg>
+        <span class="fab-tooltip">0774 561 496</span>
+    </a>
+
+    <!-- Đặt lịch + scroll to top -->
+    <button class="fab-item fab-item--booking" id="fabBookingBtn" title="Đặt lịch ngay" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="19" x2="12" y2="5"></line>
+            <polyline points="5 12 12 5 19 12"></polyline>
+        </svg>
+        <span class="fab-tooltip">Lên đầu trang</span>
+    </button>
+
+</div>
+
+<!-- AI Chatbot Panel -->
+<div class="fab-chatbot-panel" id="fabChatPanel">
+    <div class="fab-chat-header">
+        <div class="fab-chat-avatar">🐾</div>
+        <div class="fab-chat-title">
+            <span>PawPal AI</span>
+            <span class="fab-chat-status">Trực tuyến</span>
+        </div>
+        <button class="fab-chat-close" id="fabChatClose" aria-label="Đóng">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    </div>
+    <div class="fab-chat-messages" id="fabChatMessages">
+        <div class="fab-chat-bubble fab-chat-bubble--bot">
+            Xin chào! Tôi là trợ lý AI của PawPal 🐾<br>
+            Bạn cần tư vấn về dịch vụ nào?
+        </div>
+        <div class="fab-chat-suggestions">
+            <button class="fab-chat-suggest" onclick="pawpalAIAsk(this)">Dịch vụ Spa & Grooming</button>
+            <button class="fab-chat-suggest" onclick="pawpalAIAsk(this)">Pet Hotel giá bao nhiêu?</button>
+            <button class="fab-chat-suggest" onclick="pawpalAIAsk(this)">Cần chuẩn bị gì khi gửi bé?</button>
+        </div>
+    </div>
+    <div class="fab-chat-input-row">
+        <input type="text" id="fabChatInput" class="fab-chat-input" placeholder="Nhập câu hỏi...">
+        <button class="fab-chat-send" id="fabChatSend" aria-label="Gửi">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
+    </div>
+</div>

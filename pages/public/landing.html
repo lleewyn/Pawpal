@@ -16,6 +16,15 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom Style -->
     <link rel="stylesheet" href="../../assets/css/style.css">
+    <!-- Components -->
+    <link rel="stylesheet" href="../../assets/css/components/button.css">
+    <link rel="stylesheet" href="../../assets/css/components/nav.css">
+    <link rel="stylesheet" href="../../assets/css/components/footer.css">
+    <link rel="stylesheet" href="../../assets/css/components/modal.css">
+    <link rel="stylesheet" href="../../assets/css/components/filter.css">
+    <link rel="stylesheet" href="../../assets/css/components/notification.css">
+    <link rel="stylesheet" href="../../assets/css/components/chat.css">
+    <link rel="stylesheet" href="../../assets/css/components/fab.css">
     <!-- Page Specific Style -->
     <link rel="stylesheet" href="../../assets/css/public/landing.css">
 </head>
@@ -35,7 +44,7 @@
 
 
 
-    <div id="site-header"></div>
+    <div id="site-header" style="min-height:110px;background:var(--color-bg-light);"></div>
 
 
 
@@ -680,15 +689,11 @@
 
                 <div class="tracker-text-col">
                     <h2>Bạn ở xa, nhưng <br><span class="accent-italic">vẫn ở bên bé.</span></h2>
-                    <p class="tracker-desc">Mọi khoảnh khắc của bé tại PawPal đều được cập nhật lên dòng thời gian riêng
-                        của bạn. Minh bạch, an tâm, mọi lúc mọi nơi.</p>
+
                     <div class="tracker-benefits">
-                        <div class="tracker-benefit-item"><span class="bullet-bar"></span>Nhận ảnh/video ngay khi bé ăn,
-                            tắm, vui chơi</div>
-                        <div class="tracker-benefit-item"><span class="bullet-bar"></span>Lịch sử chăm sóc lưu trữ vĩnh
-                            viễn, xem lại bất kỳ lúc nào</div>
-                        <div class="tracker-benefit-item"><span class="bullet-bar"></span>Thông báo tức thì qua Zalo khi
-                            có cập nhật mới</div>
+                        <div class="tracker-benefit-item"><span class="bullet-bar"></span>Nhận ảnh/video ngay khi bé ăn, tắm, vui chơi</div>
+                        <div class="tracker-benefit-item"><span class="bullet-bar"></span>Lịch sử lưu trữ vĩnh viễn</div>
+                        <div class="tracker-benefit-item"><span class="bullet-bar"></span>Thông báo tức thì qua Zalo khi có cập nhật mới</div>
                     </div>
 
                     <div class="timeline-indicators">
@@ -778,54 +783,32 @@
 
             </div>
         </section>
-
-        <!-- Safety & Commitment Section -->
         <section class="safety-section">
             <div class="safety-container">
-                <!-- Left Guardian: Dog -->
-                <div class="safety-guardian safety-guardian-left">
-                    <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=350&q=80"
-                        alt="Hộ vệ cún cưng" class="guardian-img">
+
+                <!-- Statement: cam kết chính -->
+                <div class="safety-statement">
+                    <p class="safety-statement-lead">Nếu bé có bất kỳ sự cố sức khỏe nào<br>trong thời gian ở PawPal</p>
+                    <p class="safety-statement-bold">CHÚNG TÔI CHỊU <span class="safety-highlight">100%</span> CHI PHÍ Y TẾ.</p>
+                    <p class="safety-statement-sub">Không điều khoản. Không ngoại lệ.</p>
                 </div>
 
-                <div class="section-header text-center">
-                    <h2>An Tâm Gửi Bé – <span class="accent-italic">Trọn Vẹn Niềm Tin</span></h2>
-                    <p class="section-subtitle">“Tại PawPal, mỗi bạn nhỏ đều được yêu thương và bảo vệ như chính thành
-                        viên trong gia đình.”</p>
-                </div>
+                <!-- Divider -->
+                <div class="safety-divider"></div>
 
-                <!-- Right Guardian: Cat -->
-                <div class="safety-guardian safety-guardian-right">
-                    <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=350&q=80"
-                        alt="Hộ vệ mèo cưng" class="guardian-img">
-                </div>
-
-                <div class="safety-layout-wrapper">
-                    <!-- Center: 3 equal commitment cards -->
-                    <div class="safety-grid-three">
-                        <!-- Card 1: Hygiene -->
-                        <div class="safety-card">
-                            <span class="safety-number">01</span>
-                            <h3>Tiêu chuẩn Vệ sinh</h3>
-                            <p>Khử khuẩn toàn diện phòng 2 lần/ngày bằng dung dịch sinh học chuyên dụng, bảo vệ bé khỏi
-                                các bệnh lây nhiễm chéo.</p>
-                        </div>
-                        <!-- Card 2: Vaccine -->
-                        <div class="safety-card">
-                            <span class="safety-number">02</span>
-                            <h3>Yêu cầu Vaccine</h3>
-                            <p>100% các bé lưu trú tại khách sạn đều phải tiêm đủ ít nhất 2 mũi vaccine cơ bản và có sổ
-                                kiểm tra sức khỏe đầy đủ.</p>
-                        </div>
-                        <!-- Card 3: Protection -->
-                        <div class="safety-card">
-                            <span class="safety-number">03</span>
-                            <h3>Chính sách Bảo vệ</h3>
-                            <p>Cam kết chịu 100% chi phí y tế nếu xảy ra bất kỳ sự cố phát sinh nào về sức khỏe của bé
-                                trong thời gian ở PawPal.</p>
-                        </div>
+                <!-- 2 stat items -->
+                <div class="safety-stats">
+                    <div class="safety-stat">
+                        <span class="safety-stat-num">2×/ngày</span>
+                        <span class="safety-stat-label">Khử khuẩn phòng bằng dung dịch sinh học chuyên dụng</span>
+                    </div>
+                    <div class="safety-stat-sep"></div>
+                    <div class="safety-stat">
+                        <span class="safety-stat-num">100%</span>
+                        <span class="safety-stat-label">Bé lưu trú phải có vaccine & sổ kiểm tra sức khỏe</span>
                     </div>
                 </div>
+
             </div>
         </section>
 
@@ -834,14 +817,11 @@
             <div class="experts-container">
                 <div class="section-header text-center">
                     <h2>Đội ngũ chuyên gia — <span class="accent-italic">Những trái tim yêu thú cưng</span></h2>
-                    <p class="section-subtitle">Gửi gắm bé yêu cho những đôi tay lành nghề nhất. Tại PawPal, mỗi nhân
-                        viên không chỉ là một chuyên gia mà còn là một người bạn thực thụ của thú cưng.</p>
                 </div>
 
                 <div class="experts-carousel-container">
                     <button class="experts-nav-btn prev-btn" aria-label="Previous Expert">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
                             <line x1="19" y1="12" x2="5" y2="12"></line>
                             <polyline points="12 19 5 12 12 5"></polyline>
                         </svg>
@@ -849,143 +829,179 @@
 
                     <div class="experts-carousel-wrapper">
                         <div class="experts-carousel-track">
-                            <!-- Expert 1 -->
+
+                            <!-- Expert 1 — Minh Tuấn -->
                             <div class="expert-card">
                                 <div class="expert-image-box">
                                     <img src="../../assets/images/experts/expert-a.png" alt="Minh Tuấn">
                                 </div>
                                 <div class="expert-info">
-                                    <div class="expert-header-info">
+                                    <div class="expert-header">
                                         <h3 class="expert-name">Minh Tuấn</h3>
                                         <span class="expert-title">Chuyên gia Grooming</span>
-                                        <span class="expert-exp">Kinh nghiệm: 5 năm</span>
+                                        <span class="expert-exp">5 năm kinh nghiệm</span>
                                     </div>
-                                    <div class="expert-cert">
-                                        <span class="cert-badge"
-                                            style="display: inline-flex; align-items: center; gap: 4px; border: 1.5px solid currentColor; padding: 2px 8px; border-radius: 100px; font-size: 0.75rem;"><svg
-                                                width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                                                stroke-linejoin="round">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg> CPGDS</span>
-                                    </div>
-                                    <blockquote class="expert-quote">
-                                        "Mỗi chú chó một tính cách riêng."
-                                    </blockquote>
+                                    <span class="cert-badge">✓ CPGDS</span>
+                                    <blockquote class="expert-quote">"Mỗi chú chó một tính cách riêng."</blockquote>
                                     <div class="expert-stats">
-                                        <div class="expert-stat-item">
-                                            <span class="stat-label">Đánh giá:</span>
-                                            <span class="stat-value">4.9★ <span class="stat-count">(350+
-                                                    lượt)</span></span>
+                                        <div class="expert-stat">
+                                            <span class="stat-num">4.9★</span>
+                                            <span class="stat-sub">350+ lượt</span>
                                         </div>
-                                        <div class="expert-stat-item">
-                                            <span class="stat-label">Đã chăm sóc:</span>
-                                            <span class="stat-value">2,800+ bé</span>
+                                        <div class="expert-stat">
+                                            <span class="stat-num">2,800+</span>
+                                            <span class="stat-sub">bé đã chăm</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Expert 2 -->
+                            <!-- Expert 2 — Thanh Hà -->
                             <div class="expert-card">
                                 <div class="expert-image-box">
                                     <img src="../../assets/images/experts/expert-b.png" alt="Thanh Hà">
                                 </div>
                                 <div class="expert-info">
-                                    <div class="expert-header-info">
+                                    <div class="expert-header">
                                         <h3 class="expert-name">Thanh Hà</h3>
                                         <span class="expert-title">Chuyên gia Hotel &amp; Care</span>
-                                        <span class="expert-exp">Kinh nghiệm: 7 năm</span>
+                                        <span class="expert-exp">7 năm kinh nghiệm</span>
                                     </div>
-                                    <div class="expert-cert">
-                                        <span class="cert-badge"
-                                            style="display: inline-flex; align-items: center; gap: 4px; border: 1.5px solid currentColor; padding: 2px 8px; border-radius: 100px; font-size: 0.75rem;"><svg
-                                                width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                                                stroke-linejoin="round">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg> IACP</span>
-                                    </div>
-                                    <blockquote class="expert-quote">
-                                        "Sự thấu hiểu tạo nên an tâm trọn vẹn."
-                                    </blockquote>
+                                    <span class="cert-badge">✓ IACP</span>
+                                    <blockquote class="expert-quote">"Sự thấu hiểu tạo nên an tâm trọn vẹn."</blockquote>
                                     <div class="expert-stats">
-                                        <div class="expert-stat-item">
-                                            <span class="stat-label">Đánh giá:</span>
-                                            <span class="stat-value">4.8★ <span class="stat-count">(420+
-                                                    lượt)</span></span>
+                                        <div class="expert-stat">
+                                            <span class="stat-num">4.8★</span>
+                                            <span class="stat-sub">420+ lượt</span>
                                         </div>
-                                        <div class="expert-stat-item">
-                                            <span class="stat-label">Đã chăm sóc:</span>
-                                            <span class="stat-value">4,500+ bé</span>
+                                        <div class="expert-stat">
+                                            <span class="stat-num">4,500+</span>
+                                            <span class="stat-sub">bé đã chăm</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Expert 3 -->
+                            <!-- Expert 3 — Hoàng Phúc -->
                             <div class="expert-card">
                                 <div class="expert-image-box">
                                     <img src="../../assets/images/experts/expert-c.png" alt="Hoàng Phúc">
                                 </div>
                                 <div class="expert-info">
-                                    <div class="expert-header-info">
+                                    <div class="expert-header">
                                         <h3 class="expert-name">Hoàng Phúc</h3>
-                                        <span class="expert-title">Bác sĩ thú y</span>
-                                        <span class="expert-exp">Kinh nghiệm: 3 năm</span>
+                                        <span class="expert-title">Bác sĩ Thú y</span>
+                                        <span class="expert-exp">3 năm kinh nghiệm</span>
                                     </div>
-                                    <div class="expert-cert">
-                                        <span class="cert-badge"
-                                            style="display: inline-flex; align-items: center; gap: 4px; border: 1.5px solid currentColor; padding: 2px 8px; border-radius: 100px; font-size: 0.75rem;"><svg
-                                                width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                                                stroke-linejoin="round">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg> VAI</span>
-                                    </div>
-                                    <blockquote class="expert-quote">
-                                        "Sức khỏe của các bé là niềm hạnh phúc."
-                                    </blockquote>
+                                    <span class="cert-badge">✓ VAI</span>
+                                    <blockquote class="expert-quote">"Sức khỏe của các bé là niềm hạnh phúc."</blockquote>
                                     <div class="expert-stats">
-                                        <div class="expert-stat-item">
-                                            <span class="stat-label">Đánh giá:</span>
-                                            <span class="stat-value">5.0★ <span class="stat-count">(280+
-                                                    lượt)</span></span>
+                                        <div class="expert-stat">
+                                            <span class="stat-num">5.0★</span>
+                                            <span class="stat-sub">280+ lượt</span>
                                         </div>
-                                        <div class="expert-stat-item">
-                                            <span class="stat-label">Đã khám bệnh:</span>
-                                            <span class="stat-value">1,200+ ca</span>
+                                        <div class="expert-stat">
+                                            <span class="stat-num">1,200+</span>
+                                            <span class="stat-sub">ca đã khám</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+
+                            <!-- Expert 4 — Lan Anh -->
+                            <div class="expert-card">
+                                <div class="expert-image-box">
+                                    <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80" alt="Lan Anh">
+                                </div>
+                                <div class="expert-info">
+                                    <div class="expert-header">
+                                        <h3 class="expert-name">Lan Anh</h3>
+                                        <span class="expert-title">Chuyên gia Grooming Mèo</span>
+                                        <span class="expert-exp">4 năm kinh nghiệm</span>
+                                    </div>
+                                    <span class="cert-badge">✓ NAIA</span>
+                                    <blockquote class="expert-quote">"Mèo cần sự kiên nhẫn — tôi có thừa."</blockquote>
+                                    <div class="expert-stats">
+                                        <div class="expert-stat">
+                                            <span class="stat-num">4.9★</span>
+                                            <span class="stat-sub">190+ lượt</span>
+                                        </div>
+                                        <div class="expert-stat">
+                                            <span class="stat-num">1,600+</span>
+                                            <span class="stat-sub">bé đã chăm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Expert 5 — Quốc Huy -->
+                            <div class="expert-card">
+                                <div class="expert-image-box">
+                                    <img src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=400&q=80" alt="Quốc Huy">
+                                </div>
+                                <div class="expert-info">
+                                    <div class="expert-header">
+                                        <h3 class="expert-name">Quốc Huy</h3>
+                                        <span class="expert-title">Chuyên gia Pet Taxi &amp; Logistics</span>
+                                        <span class="expert-exp">6 năm kinh nghiệm</span>
+                                    </div>
+                                    <span class="cert-badge">✓ PTA</span>
+                                    <blockquote class="expert-quote">"Đưa bé đến nơi an toàn là trách nhiệm."</blockquote>
+                                    <div class="expert-stats">
+                                        <div class="expert-stat">
+                                            <span class="stat-num">4.7★</span>
+                                            <span class="stat-sub">310+ lượt</span>
+                                        </div>
+                                        <div class="expert-stat">
+                                            <span class="stat-num">3,100+</span>
+                                            <span class="stat-sub">chuyến đã chở</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Expert 6 — Minh Châu -->
+                            <div class="expert-card">
+                                <div class="expert-image-box">
+                                    <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=400&q=80" alt="Minh Châu">
+                                </div>
+                                <div class="expert-info">
+                                    <div class="expert-header">
+                                        <h3 class="expert-name">Minh Châu</h3>
+                                        <span class="expert-title">Kỹ thuật viên Self-Wash</span>
+                                        <span class="expert-exp">2 năm kinh nghiệm</span>
+                                    </div>
+                                    <span class="cert-badge">✓ PSWC</span>
+                                    <blockquote class="expert-quote">"Hướng dẫn tận tâm từng bước một."</blockquote>
+                                    <div class="expert-stats">
+                                        <div class="expert-stat">
+                                            <span class="stat-num">4.8★</span>
+                                            <span class="stat-sub">150+ lượt</span>
+                                        </div>
+                                        <div class="expert-stat">
+                                            <span class="stat-num">900+</span>
+                                            <span class="stat-sub">buổi đã hỗ trợ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div><!-- /.experts-carousel-track -->
+                    </div><!-- /.experts-carousel-wrapper -->
 
                     <button class="experts-nav-btn next-btn" aria-label="Next Expert">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                             <polyline points="12 5 19 12 12 19"></polyline>
                         </svg>
                     </button>
                 </div>
 
-                <!-- Carousel Dots Indicator -->
-                <div class="carousel-dots" style="display: flex; justify-content: center; gap: 8px; margin-top: 24px;">
-                    <span class="dot active"
-                        style="width: 8px; height: 8px; background-color: var(--color-primary); border-radius: 50%; display: inline-block; transition: all 0.3s ease;"></span>
-                    <span class="dot"
-                        style="width: 8px; height: 8px; background-color: var(--color-border); border-radius: 50%; display: inline-block; transition: all 0.3s ease;"></span>
-                    <span class="dot"
-                        style="width: 8px; height: 8px; background-color: var(--color-border); border-radius: 50%; display: inline-block; transition: all 0.3s ease;"></span>
-                </div>
-
-                <!-- CTA Button -->
-                <div class="team-cta text-center" style="margin-top: 32px; position: relative; z-index: 10;">
-                    <a href="../../pages/about/team.html"
-                        style="display: inline-block; padding: 12px 32px; border-radius: var(--border-radius-pill); font-weight: 700; background-color: var(--color-primary); color: #fff; text-decoration: none; box-shadow: 0 4px 12px rgba(42, 89, 68, 0.2); transition: all 0.3s ease;">Gặp
-                        toàn bộ đội ngũ <span style="margin-left: 4px;">→</span></a>
+                <!-- CTA -->
+                <div class="experts-cta text-center">
+                    <a href="../../pages/services/booking.html" class="btn-green-outline">
+                        Đặt lịch với chuyên gia <span>→</span>
+                    </a>
                 </div>
             </div>
         </section>
@@ -994,43 +1010,66 @@
         <section class="process-section" id="process">
             <div class="process-container">
                 <div class="section-header text-center">
-                    <h2>Quy trình <span class="accent-italic">đơn giản</span></h2>
-                    <p class="section-subtitle">Chỉ với 3 bước chạm để bé yêu được chăm sóc tốt nhất.</p>
+                    <span class="process-eyebrow">Dịch vụ tiêu biểu</span>
+                    <h2>Combo <span class="accent-italic">Chăm Sóc Cơ Bản</span></h2>
+                    <p class="section-subtitle">Trọn gói tắm, cắt tỉa và vệ sinh tai — hoàn thành trong 90 phút với đội ngũ chứng chỉ quốc tế.</p>
                 </div>
 
                 <div class="process-steps">
                     <!-- Step 1 -->
-                    <div class="step-card">
-                        <div class="step-num">01</div>
-                        <h3>Chọn dịch vụ</h3>
-                        <p>Spa, Hotel hoặc Shop. Tiện lợi, không cần tạo tài khoản.</p>
+                    <div class="process-step">
+                        <div class="process-step-img">
+                            <img src="https://images.unsplash.com/photo-1583512603805-3cc6b41f3edb?auto=format&fit=crop&w=600&q=80" alt="Tiếp nhận và kiểm tra" loading="lazy">
+                        </div>
+                        <div class="process-step-dot"><span>01</span></div>
+                        <div class="process-step-info">
+                            <h3>Tiếp nhận & kiểm tra</h3>
+                            <p>Nhân viên kiểm tra tình trạng da lông, tai và móng — ghi nhận yêu cầu đặc biệt của bé trước khi bắt đầu.</p>
+                        </div>
                     </div>
 
                     <!-- Step 2 -->
-                    <div class="step-card">
-                        <div class="step-num">02</div>
-                        <h3>Chọn khung giờ</h3>
-                        <p>Hiển thị lịch trống thời gian thực. Chính xác tuyệt đối.</p>
+                    <div class="process-step">
+                        <div class="process-step-img">
+                            <img src="https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=600&q=80" alt="Tắm và thổi khô" loading="lazy">
+                        </div>
+                        <div class="process-step-dot"><span>02</span></div>
+                        <div class="process-step-info">
+                            <h3>Tắm sạch & thổi khô</h3>
+                            <p>Tắm bằng sữa tắm chuyên dụng dịu nhẹ, thổi khô hoàn toàn bằng máy sấy chuyên dụng không làm rối lông.</p>
+                        </div>
                     </div>
 
                     <!-- Step 3 -->
-                    <div class="step-card">
-                        <div class="step-num">03</div>
-                        <h3>Yên tâm chờ đón bé</h3>
-                        <p>Nhận thông báo xác nhận ngay lập tức qua SMS/Zalo.</p>
+                    <div class="process-step">
+                        <div class="process-step-img">
+                            <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=600&q=80" alt="Cắt tỉa và vệ sinh" loading="lazy">
+                        </div>
+                        <div class="process-step-dot"><span>03</span></div>
+                        <div class="process-step-info">
+                            <h3>Cắt tỉa & vệ sinh</h3>
+                            <p>Cắt tỉa lông theo yêu cầu, vệ sinh tai, cắt móng và xịt thơm nhẹ — bé ra về thơm tho, gọn gàng.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="process-step">
+                        <div class="process-step-img">
+                            <img src="https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=600&q=80" alt="Bàn giao và nhật ký" loading="lazy">
+                        </div>
+                        <div class="process-step-dot"><span>04</span></div>
+                        <div class="process-step-info">
+                            <h3>Bàn giao & nhật ký</h3>
+                            <p>Bé được bàn giao kèm báo cáo chăm sóc thực tế — ảnh & video gửi thẳng qua app hoặc Zalo.</p>
+                        </div>
                     </div>
                 </div>
 
                 <div class="process-action text-center">
-                    <a href="../../pages/services/booking.html" class="btn-cta accent-bg">
-                        <span>Bắt đầu ngay</span>
+                    <a href="../../pages/services/booking.html" class="btn-cta">
+                        <span>Đặt lịch ngay</span>
                         <span class="btn-icon-wrapper">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                                width="14" height="14">
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                <polyline points="12 5 19 12 12 19"></polyline>
-                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                         </span>
                     </a>
                 </div>
@@ -1510,97 +1549,76 @@
         <div class="faq-container">
             <div class="section-header text-center">
                 <h2>Câu hỏi <span class="accent-italic">thường gặp</span></h2>
-                <p class="section-subtitle">Giải đáp thắc mắc phổ biến nhất của các Sen khi gửi bé tại PawPal.</p>
             </div>
 
             <div class="faq-list">
-                <!-- FAQ Item 1 -->
                 <div class="faq-item">
                     <button class="faq-question" aria-expanded="false">
-                        <span>Yêu cầu tiêm vaccine đối với bé như thế nào?</span>
-                        <span class="faq-icon">+</span>
+                        <span>Bé cần tiêm vaccine gì trước khi lưu trú?</span>
+                        <span class="faq-icon"></span>
                     </button>
                     <div class="faq-answer">
-                        <p>Để đảm bảo sức khỏe cho tất cả các bé lưu trú, PawPal yêu cầu 100% thú cưng phải tiêm đủ ít
-                            nhất 2 mũi vaccine cơ bản và được tiêm phòng dại đầy đủ. Vui lòng mang theo sổ sức khỏe khi
-                            làm thủ tục check-in.</p>
+                        <p>Ít nhất 2 mũi vaccine cơ bản + phòng dại. Mang theo sổ sức khỏe khi check-in.</p>
                     </div>
                 </div>
 
-                <!-- FAQ Item 2 -->
                 <div class="faq-item">
                     <button class="faq-question" aria-expanded="false">
-                        <span>Tôi có cần tự chuẩn bị đồ ăn cho bé không?</span>
-                        <span class="faq-icon">+</span>
+                        <span>Tôi có cần mang đồ ăn riêng cho bé không?</span>
+                        <span class="faq-icon"></span>
                     </button>
                     <div class="faq-answer">
-                        <p>PawPal đã cung cấp sẵn bữa ăn tiêu chuẩn dinh dưỡng cao phù hợp với độ tuổi và loài. Tuy
-                            nhiên, nếu bé có chế độ ăn kiêng đặc biệt hoặc dị ứng thức ăn, bạn hoàn toàn có thể tự chuẩn
-                            bị và mang theo đồ ăn riêng cho bé, nhân viên sẽ cho bé ăn đúng giờ theo yêu cầu.</p>
+                        <p>PawPal cung cấp bữa ăn dinh dưỡng theo độ tuổi và loài. Nếu bé có chế độ ăn đặc biệt, bạn có thể mang theo — nhân viên sẽ cho bé ăn đúng giờ.</p>
                     </div>
                 </div>
 
-                <!-- FAQ Item 3 -->
                 <div class="faq-item">
                     <button class="faq-question" aria-expanded="false">
-                        <span>Nhật ký chăm sóc real-time được cập nhật bao lâu một lần?</span>
-                        <span class="faq-icon">+</span>
+                        <span>Nhật ký chăm sóc cập nhật bao lâu một lần?</span>
+                        <span class="faq-icon"></span>
                     </button>
                     <div class="faq-answer">
-                        <p>Chúng tôi cập nhật hình ảnh và video hoạt động của bé lên nhật ký trực tuyến tối thiểu 3 lần
-                            mỗi ngày. Các Sen cũng sẽ nhận được thông báo tự động qua Zalo ngay khi có cập nhật mới để
-                            hoàn toàn an tâm.</p>
+                        <p>Tối thiểu 3 lần/ngày. Bạn nhận thông báo tự động qua Zalo mỗi khi có ảnh/video mới.</p>
                     </div>
                 </div>
 
-                <!-- FAQ Item 4 -->
                 <div class="faq-item">
                     <button class="faq-question" aria-expanded="false">
-                        <span>Nếu bé gặp sự cố sức khỏe, PawPal xử lý thế nào?</span>
-                        <span class="faq-icon">+</span>
+                        <span>Bé gặp sự cố sức khỏe, PawPal xử lý thế nào?</span>
+                        <span class="faq-icon"></span>
                     </button>
                     <div class="faq-answer">
-                        <p>Tại mỗi chi nhánh của PawPal luôn có bác sĩ thú y trực 24/7. Nếu bé có bất kỳ dấu hiệu bất
-                            thường nào về sức khỏe, bác sĩ sẽ thăm khám ngay lập tức và liên hệ thông báo cho bạn. Chúng
-                            tôi cam kết bảo vệ bé và chịu 100% chi phí y tế phát sinh nếu sự cố xuất phát từ quy trình
-                            chăm sóc tại PawPal.</p>
+                        <p>Bác sĩ thú y trực 24/7 tại mỗi chi nhánh. PawPal chịu 100% chi phí y tế nếu sự cố phát sinh từ quy trình chăm sóc của chúng tôi.</p>
                     </div>
                 </div>
 
-                <!-- FAQ Item 5 -->
                 <div class="faq-item">
                     <button class="faq-question" aria-expanded="false">
-                        <span>Paw Points có thời hạn sử dụng không?</span>
-                        <span class="faq-icon">+</span>
+                        <span>Paw Points có hết hạn không?</span>
+                        <span class="faq-icon"></span>
                     </button>
                     <div class="faq-answer">
-                        <p>Paw Points của bạn có hiệu lực trong 12 tháng kể từ ngày tích. Điểm sắp hết hạn sẽ được thông
-                            báo qua email/Zalo trước 30 ngày. Mỗi giao dịch mới sẽ tự động gia hạn toàn bộ số điểm thêm
-                            12 tháng nữa.</p>
+                        <p>Có hiệu lực 12 tháng kể từ ngày tích. Mỗi giao dịch mới tự động gia hạn thêm 12 tháng. Thông báo trước 30 ngày khi sắp hết hạn.</p>
                     </div>
                 </div>
 
-                <!-- FAQ Item 6 -->
                 <div class="faq-item">
                     <button class="faq-question" aria-expanded="false">
-                        <span>Có nhận chăm sóc mèo không?</span>
-                        <span class="faq-icon">+</span>
+                        <span>PawPal có nhận chăm sóc mèo không?</span>
+                        <span class="faq-icon"></span>
                     </button>
                     <div class="faq-answer">
-                        <p>Có! PawPal phục vụ cả chó và mèo. Khu vực chăm sóc mèo được thiết kế riêng biệt với không
-                            gian yên tĩnh, an toàn và phù hợp với tập tính của các boss mèo.</p>
+                        <p>Có. Khu chăm sóc mèo tách biệt hoàn toàn — không gian yên tĩnh, phù hợp tập tính của boss mèo.</p>
                     </div>
                 </div>
 
-                <!-- FAQ Item 7 -->
                 <div class="faq-item">
                     <button class="faq-question" aria-expanded="false">
-                        <span>Giờ làm việc của PawPal như thế nào?</span>
-                        <span class="faq-icon">+</span>
+                        <span>Giờ làm việc và đặt lịch như thế nào?</span>
+                        <span class="faq-icon"></span>
                     </button>
                     <div class="faq-answer">
-                        <p>PawPal mở cửa 7 ngày/tuần từ 8:00 sáng đến 8:00 tối. Dịch vụ Pet Hotel hoạt động 24/7. Bạn có
-                            thể đặt lịch online bất cứ lúc nào và nhận xác nhận tức thì.</p>
+                        <p>Mở cửa 8:00–20:00 mỗi ngày. Pet Hotel hoạt động 24/7. Đặt lịch online bất kỳ lúc nào, xác nhận tức thì.</p>
                     </div>
                 </div>
             </div>
@@ -1778,17 +1796,7 @@
         });
     </script>
 
-    <!-- Zalo Float Chat Button -->
-    <a class="zalo-float-btn" href="https://zalo.me/0987654321" target="_blank" rel="noopener"
-        aria-label="Chat Zalo với PawPal">
-        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="22">
-            <rect width="32" height="32" rx="8" fill="white" fill-opacity="0.25" />
-            <text x="50%" y="57%" dominant-baseline="middle" text-anchor="middle" font-size="18" font-weight="900"
-                fill="white" font-family="Arial, sans-serif">Z</text>
-        </svg>
-        Chat Zalo
-    </a>
-
+    <div id="site-fab"></div>
 </body>
 
 </html>

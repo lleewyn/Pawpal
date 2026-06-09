@@ -1,7 +1,30 @@
 ﻿/* ==========================================================================
-   PawPal Header & Navigation — SOURCE FILE
-   Import qua: assets/css/style.css (@import './components/nav.css')
+   PawPal — Header & Navigation
    ========================================================================== */
+
+/* Force Bootstrap collapse behavior at custom breakpoint 1100px */
+.navbar-expand-custom .navbar-toggler { display: block; }
+.navbar-expand-custom .navbar-collapse { display: none !important; flex-basis: auto; }
+.navbar-expand-custom .navbar-collapse.show { display: flex !important; }
+
+/* Desktop: nav-menu visible as flex row */
+@media (min-width: 1100px) {
+    .navbar-expand-custom .navbar-toggler { display: none !important; }
+    .navbar-expand-custom .navbar-collapse { display: flex !important; }
+    .nav-menu {
+        position: static !important;
+        display: flex !important;
+        flex-direction: row !important;
+        height: auto !important;
+        width: auto !important;
+        background: transparent !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+        right: auto !important;
+    }
+    .mobile-nav-toggle { display: none !important; }
+}
 
 .main-header {
     background-color: var(--color-bg-light);
@@ -9,24 +32,180 @@
     position: sticky;
     top: 0;
     z-index: 1000;
-    padding: 6px 0;
+    padding: 0 0 6px 0;
     box-shadow: var(--shadow-sm);
     border-bottom: 1px solid var(--color-border);
+    view-transition-name: site-header;
 }
 
+.main-header .navbar {
+    width: 100%;
+    padding: 0;
+}
+
+/* Header container — 3-column grid: [logo] [nav] [actions] */
 .header-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 40px;
+    width: 100%;
+    padding: 0 32px;
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
+@media (min-width: 1100px) {
+    .header-container {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 0 8px;
+    }
+
+    .header-container > .header-left {
+        grid-column: 1;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .header-container > .navbar-toggler {
+        display: none;
+    }
+
+    /* Nav menu — cột giữa, căn giữa */
+    .header-container > .nav-menu {
+        grid-column: 2;
+        width: 100%;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        justify-self: center;
+        flex-basis: auto;
+        min-width: 0;
+        /* Reset any mobile drawer styles */
+        position: static !important;
+        top: auto !important;
+        right: auto !important;
+        height: auto !important;
+        background: transparent !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+        flex-direction: row !important;
+        transition: none !important;
+    }
+
+    .header-container > .nav-menu .navbar-nav {
+        justify-content: center;
+        width: 100%;
+        flex-direction: row !important;
+    }
+
+    .header-container > .header-actions {
+        grid-column: 3;
+        justify-self: end;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+}
+
+/* Mobile drawer */
+@media (max-width: 1099.98px) {
+    .main-header {
+        padding-top: 0;
+        z-index: 1100;
+    }
+
+    .header-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .header-left .search-bar { display: none; }
+
+    .mobile-nav-toggle {
+        display: block;
+        z-index: 1002;
+    }
+
+    /* Drawer — hidden by default */
+    .nav-menu {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: min(280px, 80vw);
+        height: 100dvh;
+        background-color: var(--color-primary-dark);
+        padding: 72px 28px 32px;
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.18);
+        transition: right 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+        z-index: 1001;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .nav-menu.show { right: 0; }
+
+    .nav-menu ul,
+    .nav-menu .navbar-nav {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+        width: 100%;
+    }
+
+    .nav-menu .nav-item {
+        width: 100%;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .nav-menu .nav-item:last-child { border-bottom: none; }
+
+    .nav-menu a,
+    .nav-menu .nav-link {
+        display: block;
+        width: 100%;
+        padding: 14px 0;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.9);
+        opacity: 1;
+        white-space: normal;
+    }
+
+    .nav-menu a:hover,
+    .nav-menu .nav-link:hover { color: #ffffff; padding-left: 6px; }
+
+    .nav-menu a.active,
+    .nav-menu .nav-link.active {
+        color: var(--color-accent) !important;
+        font-weight: 700;
+    }
+
+    .nav-menu a::after { display: none; }
+    .nav-menu .nav-link-cta-mobile { color: var(--color-accent) !important; }
+    .header-actions { display: none !important; }
+}
+
+@media (min-width: 1100px) {
+    .header-actions {
+        display: flex !important;
+        align-items: center;
+    }
+}
+
+/* Logo */
 .logo {
     display: flex;
     align-items: center;
-    margin-right: 32px;
 }
 
 .logo img {
@@ -35,10 +214,10 @@
     object-fit: contain;
 }
 
-/* Search bar styling */
+/* Search bar */
 .search-bar {
     position: relative;
-    width: 280px;
+    width: 220px;
 }
 
 .search-bar input {
@@ -59,9 +238,8 @@
 }
 
 .search-bar input:focus {
+    border-color: var(--color-accent);
     background-color: #ffffff;
-    box-shadow: 0 0 0 3px rgba(229, 169, 60, 0.4);
-    width: 320px;
 }
 
 .search-icon {
@@ -75,19 +253,20 @@
     pointer-events: none;
 }
 
-/* Navigation Links */
+/* Nav links */
 .nav-menu ul {
     display: flex;
-    gap: 28px;
+    gap: 8px;
 }
 
 .nav-menu a {
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--color-text-dark);
     opacity: 0.85;
     position: relative;
-    padding: 6px 0;
+    padding: 6px 10px;
+    white-space: nowrap;
 }
 
 .nav-menu a:hover,
@@ -100,19 +279,31 @@
     content: '';
     position: absolute;
     bottom: 0;
-    left: 0;
-    width: 0;
+    left: 10px;
+    right: 10px;
     height: 2px;
     background-color: var(--color-accent);
-    transition: var(--transition-smooth);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
 }
 
 .nav-menu a:hover::after,
 .nav-menu a.active::after {
-    width: 100%;
+    transform: scaleX(1);
 }
 
-/* Actions in Header */
+.nav-menu a.active {
+    opacity: 1;
+    color: var(--color-accent) !important;
+    font-weight: 600;
+}
+
+.nav-menu a.active::after {
+    transform: scaleX(1);
+    background-color: var(--color-accent);
+}
+
+/* Header actions */
 .header-actions {
     display: flex;
     align-items: center;
@@ -124,6 +315,14 @@
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+.header-divider {
+    width: 1px;
+    height: 20px;
+    background-color: var(--color-border);
+    flex-shrink: 0;
+    margin: 0 4px;
 }
 
 .btn-signup {
@@ -149,7 +348,7 @@
 }
 
 .cart-btn {
-    padding: 8px;
+    padding: 8px 10px;
     background-color: transparent;
     display: flex;
     align-items: center;
@@ -184,7 +383,6 @@
     opacity: 1;
 }
 
-/* Mobile Nav Toggle — Bootstrap navbar-toggler handles display logic */
 .mobile-nav-toggle {
     background: none;
     border: none;
@@ -193,31 +391,41 @@
     padding: 4px;
 }
 
-/* Header Actions responsive — ẩn trên mobile, hiện trên desktop */
-@media (max-width: 991.98px) {
-    .header-actions {
-        display: none;
-    }
+.btn-header-cta {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 18px;
+    background-color: var(--color-accent);
+    color: var(--color-primary-dark) !important;
+    font-family: var(--font-primary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: var(--border-radius-pill);
+    transition: var(--transition-smooth);
+    white-space: nowrap;
+    border: none;
 }
 
-@media (min-width: 992px) {
-    .header-actions {
-        display: flex;
-        align-items: center;
-    }
+.btn-header-cta:hover {
+    background-color: var(--color-accent-dark);
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(229, 169, 60, 0.3);
 }
 
-/* ==========================================================================
-   Lookup Button (header action)
-   ========================================================================== */
+.nav-link-cta-mobile {
+    color: var(--color-accent-dark) !important;
+    font-weight: 700 !important;
+}
 
+/* Lookup trigger */
 .lookup-btn {
     display: inline-flex;
     align-items: center;
     gap: 7px;
     padding: 8px 16px;
     background-color: var(--color-primary-light);
-    border: 1px solid rgba(42, 89, 68, 0.15);
+    border: var(--border-card);
     border-radius: var(--border-radius-pill);
     font-family: var(--font-primary);
     font-size: 0.85rem;
@@ -228,6 +436,10 @@
     white-space: nowrap;
 }
 
+.lookup-btn::after {
+    display: none !important;
+}
+
 .lookup-btn:hover {
     background-color: var(--color-primary);
     color: #ffffff;
@@ -236,7 +448,6 @@
     box-shadow: 0 4px 12px rgba(42, 89, 68, 0.15);
 }
 
-/* Mobile nav trigger (inside collapse menu) */
 .lookup-nav-trigger {
     background: none;
     border: none;
@@ -254,338 +465,32 @@
     opacity: 1;
 }
 
-
-/* ==========================================================================
-   Lookup Modal
-   ========================================================================== */
-
-.lookup-modal-overlay {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(4px);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.25s ease, visibility 0.25s ease;
+/* View transition — header stays fixed */
+::view-transition-old(site-header),
+::view-transition-new(site-header) {
+    animation: none;
+    mix-blend-mode: normal;
 }
 
-.lookup-modal-overlay.open {
-    opacity: 1;
-    visibility: visible;
+/* ── Responsive header tightening ── */
+
+/* 1100px–1280px: ẩn search bar để tiết kiệm chỗ */
+@media (min-width: 1100px) and (max-width: 1280px) {
+    .search-bar { display: none; }
+    .header-container { padding: 0 20px; }
+    .header-actions { gap: 8px; }
+    .nav-menu a { padding: 6px 7px; font-size: 0.85rem; }
 }
 
-.lookup-modal {
-    background-color: var(--color-bg-white);
-    border-radius: var(--card-border-radius);
-    width: 100%;
-    max-width: 520px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
-    overflow: hidden;
-    transform: translateY(16px) scale(0.98);
-    transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+/* 1280px–1400px: thu nhỏ search bar */
+@media (min-width: 1280px) and (max-width: 1400px) {
+    .search-bar { width: 160px; }
+    .header-container { padding: 0 28px; }
 }
 
-.lookup-modal-overlay.open .lookup-modal {
-    transform: translateY(0) scale(1);
-}
-
-/* Modal header */
-.lookup-modal-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 24px 24px 16px;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.lookup-modal-title-group {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-}
-
-.lookup-modal-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--card-border-radius);
-    background-color: var(--color-primary-light);
-    color: var(--color-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.lookup-modal-title {
-    font-family: var(--font-heading);
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: var(--color-primary-dark);
-    margin: 0 0 2px;
-}
-
-.lookup-modal-subtitle {
-    font-size: 0.82rem;
-    color: var(--color-text-light);
-    margin: 0;
-}
-
-.lookup-modal-close {
-    background: none;
-    border: none;
-    color: var(--color-text-light);
-    cursor: pointer;
-    padding: 4px;
-    border-radius: var(--card-border-radius);
-    transition: var(--transition-smooth);
-    flex-shrink: 0;
-}
-
-.lookup-modal-close:hover {
-    background-color: var(--color-neutral-light);
-    color: var(--color-text-dark);
-}
-
-/* Tabs */
-.lookup-tabs {
-    display: flex;
-    gap: 4px;
-    padding: 16px 24px 0;
-}
-
-.lookup-tab {
-    flex: 1;
-    padding: 8px 12px;
-    background: none;
-    border: 1px solid var(--color-border);
-    border-radius: var(--card-border-radius);
-    font-family: var(--font-primary);
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--color-text-light);
-    cursor: pointer;
-    transition: var(--transition-smooth);
-}
-
-.lookup-tab:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-    background-color: var(--color-primary-light);
-}
-
-.lookup-tab.active {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
-    color: #ffffff;
-}
-
-/* Form area */
-.lookup-form-area {
-    padding: 20px 24px;
-}
-
-.lookup-label {
-    display: block;
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--color-primary-dark);
-    margin-bottom: 8px;
-}
-
-.lookup-input-row {
-    display: flex;
-    gap: 10px;
-}
-
-.lookup-input {
-    flex: 1;
-    padding: 12px 16px;
-    border: 1.5px solid var(--color-border);
-    border-radius: var(--card-border-radius);
-    font-family: var(--font-primary);
-    font-size: 0.95rem;
-    color: var(--color-text-dark);
-    background-color: #ffffff;
-    outline: none;
-    transition: border-color 0.2s ease;
-}
-
-.lookup-input:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(42, 89, 68, 0.08);
-}
-
-.lookup-input::placeholder {
-    color: var(--color-text-faint);
-}
-
-.lookup-submit-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
-    background-color: var(--color-primary);
-    color: #ffffff;
-    border: none;
-    border-radius: var(--card-border-radius);
-    font-family: var(--font-primary);
-    font-size: 0.88rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: var(--transition-smooth);
-    white-space: nowrap;
-}
-
-.lookup-submit-btn:hover {
-    background-color: var(--color-primary-dark);
-    transform: translateY(-1px);
-}
-
-.lookup-hint {
-    font-size: 0.78rem;
-    color: var(--color-text-faint);
-    margin: 8px 0 0;
-}
-
-/* Results area */
-.lookup-results {
-    padding: 0 24px 20px;
-    max-height: 320px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-}
-
-.lookup-results-header {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: var(--color-text-light);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 12px;
-}
-
-.lookup-result-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background-color: var(--color-bg-light);
-    border: 1px solid var(--color-border);
-    border-radius: var(--card-border-radius);
-    margin-bottom: 8px;
-    transition: var(--transition-smooth);
-}
-
-.lookup-result-item:hover {
-    border-color: var(--color-primary);
-    background-color: var(--color-primary-light);
-}
-
-.lookup-result-info {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.lookup-result-id {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--color-primary-dark);
-}
-
-.lookup-result-meta {
-    font-size: 0.78rem;
-    color: var(--color-text-light);
-}
-
-.lookup-result-status {
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: var(--border-radius-pill);
-}
-
-.lookup-status-pending {
-    background-color: var(--color-accent-light);
-    color: var(--color-accent-dark);
-}
-
-.lookup-status-done {
-    background-color: var(--color-success-light);
-    color: var(--color-success);
-}
-
-.lookup-status-cancelled {
-    background-color: var(--color-danger-light);
-    color: var(--color-danger);
-}
-
-.lookup-empty {
-    text-align: center;
-    padding: 32px 0;
-    color: var(--color-text-light);
-    font-size: 0.88rem;
-}
-
-.lookup-empty-icon {
-    font-size: 2rem;
-    margin-bottom: 8px;
-}
-
-/* Modal footer */
-.lookup-modal-footer {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 24px;
-    border-top: 1px solid var(--color-border);
-    background-color: var(--color-bg-light);
-    font-size: 0.82rem;
-    color: var(--color-text-light);
-}
-
-.lookup-modal-footer a {
-    font-weight: 700;
-    color: var(--color-primary);
-}
-
-.lookup-modal-footer a:hover {
-    color: var(--color-accent-dark);
-}
-
-/* Responsive */
-@media (max-width: 640px) {
-    .lookup-modal {
-        border-radius: var(--card-border-radius);
-    }
-
-    .lookup-modal-header {
-        padding: 20px 18px 14px;
-    }
-
-    .lookup-form-area {
-        padding: 16px 18px;
-    }
-
-    .lookup-input-row {
-        flex-direction: column;
-    }
-
-    .lookup-submit-btn {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .lookup-results {
-        padding: 0 18px 16px;
-    }
-
-    .lookup-modal-footer {
-        padding: 12px 18px;
-    }
+/* Ẩn text "Tra đơn hàng / lịch" ở màn hình 1100–1320px — chỉ giữ icon */
+@media (min-width: 1100px) and (max-width: 1320px) {
+    .lookup-btn span { display: none; }
+    .lookup-btn { padding: 8px 10px; }
+    .auth-actions .login-btn span { display: none; }
 }
