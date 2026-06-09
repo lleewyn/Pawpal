@@ -1,5 +1,8 @@
-document.addEventListener('DOMContentLoaded', () => {
-    initMobileNavigation();
+function initApp() {
+    console.log('[main.js] initApp');
+    // Nav functions run after header is injected (async fetch)
+    // initActiveNav & initMobileNavigation are called via headerInjected event from components.js
+    initLookup();
     initPremiumMotion();
     initTimelineTracker();
     initBookingWidget();
@@ -12,7 +15,76 @@ document.addEventListener('DOMContentLoaded', () => {
     initTestimonialsCarousel();
     initExpertsCarousel();
     initInteractivePawPass();
+}
+
+// Run nav init after header is injected by components.js
+document.addEventListener('headerInjected', function () {
+    initActiveNav();
+    initMobileNavigation();
 });
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
+
+function initSharedComponents() {
+    const depth = window.location.pathname
+        .split('/')
+        .filter(Boolean).length;
+    const root = depth <= 1 ? './' : '../'.repeat(depth - 1);
+    const script = document.createElement('script');
+    script.src = root + 'assets/js/shared/components.js';
+    script.defer = true;
+    document.head.appendChild(script);
+}
+
+/**
+ * Active Nav — tự động gắn class "active" vào nav link khớp với URL hiện tại.
+ * Xóa toàn bộ active hardcode trong HTML, JS tự xử lý khi load trang.
+ */
+function initActiveNav() {
+    const nav = document.getElementById('primaryNavigation');
+    if (!nav) return;
+
+    const currentPath = window.location.pathname.toLowerCase();
+    const currentFile = currentPath.split('/').pop() || 'index.html';
+
+    // Chỉ lấy các link nằm trong ul.navbar-nav — không động vào lookup-btn, cart-btn, login-btn
+    const navList = nav.querySelector('ul.navbar-nav');
+    if (!navList) return;
+
+    const links = navList.querySelectorAll('a.nav-link');
+
+    // Xóa hết active cũ
+    links.forEach(link => {
+        link.classList.remove('active');
+        link.removeAttribute('aria-current');
+    });
+
+    let matched = null;
+
+    links.forEach(link => {
+        const href = link.getAttribute('href');
+        if (!href) return;
+        const url      = new URL(href, window.location.href);
+        const linkFile = url.pathname.toLowerCase().split('/').pop();
+        if (currentFile && linkFile && currentFile === linkFile) {
+            matched = link;
+        }
+    });
+
+    // Fallback root → Trang chủ
+    if (!matched && (currentPath === '/' || currentPath.endsWith('index.html'))) {
+        matched = navList.querySelector('a.nav-link[href*="landing.html"]');
+    }
+
+    if (matched) {
+        matched.classList.add('active');
+        matched.setAttribute('aria-current', 'page');
+    }
+}
 
 /**
  * Mobile Navigation — handled by Bootstrap Collapse (data-bs-toggle="collapse")
@@ -1075,3 +1147,180 @@ function initInteractivePawPass() {
     }
 }
 
+
+
+// =============================================================================
+// Lookup — Tra cứu đơn hàng & lịch hẹn (khách vãng lai)
+// Chạy trên mọi page có header. Nếu không có #lookupModal thì tự bỏ qua.
+// TODO: Thay getMockData() bằng fetch('/api/lookup?phone=...') khi có backend.
+// =============================================================================
+
+// Expose ra window vì main.js load dưới dạng type="module" (scoped)
+// → onclick="openLookupModal()" trong HTML cần hàm ở global scope
+window.openLookupModal  = openLookupModal;
+window.closeLookupModal = closeLookupModal;
+window.switchLookupTab  = switchLookupTab;
+window.submitLookup     = submitLookup;
+
+function initLookup() {
+    const overlay = document.getElementById('lookupModal');
+    if (!overlay) return; // Không có modal trên trang này → bỏ qua
+
+    // Đóng khi click ra ngoài modal box
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeLookupModal();
+    });
+
+    // Enter để submit khi đang focus input
+    const phoneInput = document.getElementById('lookupPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') submitLookup();
+        });
+    }
+
+    // Escape đóng modal (chỉ register 1 lần ở đây, không đăng ký global)
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) {
+            closeLookupModal();
+        }
+    });
+}
+
+// ── State (scoped via closure không cần thiết vì app này không module) ────────
+var _lookupCurrentTab = 'orders';
+var _lookupLastResults = { orders: [], bookings: [] };
+
+function openLookupModal() {
+    const overlay = document.getElementById('lookupModal');
+    if (!overlay) return;
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(function () {
+        const input = document.getElementById('lookupPhone');
+        if (input) input.focus();
+    }, 260);
+}
+
+function closeLookupModal() {
+    const overlay = document.getElementById('lookupModal');
+    if (!overlay) return;
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    _resetLookup();
+}
+
+function switchLookupTab(tab, btnEl) {
+    _lookupCurrentTab = tab;
+    document.querySelectorAll('.lookup-tab').forEach(function (b) {
+        b.classList.remove('active');
+    });
+    if (btnEl) btnEl.classList.add('active');
+    if (_lookupLastResults.orders.length > 0 || _lookupLastResults.bookings.length > 0) {
+        _renderLookupResults(_lookupLastResults);
+    }
+}
+
+function submitLookup() {
+    const input = document.getElementById('lookupPhone');
+    const resultsEl = document.getElementById('lookupResults');
+    if (!input || !resultsEl) return;
+
+    const phone = input.value.trim().replace(/\s/g, '');
+
+    if (!phone || phone.length < 9) {
+        input.style.borderColor = 'var(--color-danger)';
+        input.focus();
+        return;
+    }
+    input.style.borderColor = '';
+
+    const btn = document.getElementById('lookupSubmitBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span style="opacity:0.7">Đang tìm...</span>';
+    }
+
+    resultsEl.style.display = 'block';
+    resultsEl.innerHTML = '<div class="lookup-empty"><div class="lookup-empty-icon">🔍</div><p>Đang tìm kiếm...</p></div>';
+
+    // TODO: Thay bằng fetch('/api/lookup?phone=' + encodeURIComponent(phone)).then(...)
+    setTimeout(function () {
+        const data = _getLookupMockData(phone);
+        _lookupLastResults = data;
+        _renderLookupResults(data);
+
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Tra cứu';
+        }
+    }, 700);
+}
+
+function _renderLookupResults(data) {
+    const resultsEl = document.getElementById('lookupResults');
+    if (!resultsEl) return;
+
+    let items = [];
+    if (_lookupCurrentTab === 'orders') items = data.orders;
+    else if (_lookupCurrentTab === 'bookings') items = data.bookings;
+    else items = data.orders.concat(data.bookings);
+
+    if (items.length === 0) {
+        resultsEl.innerHTML =
+            '<div class="lookup-empty">' +
+                '<div class="lookup-empty-icon">📭</div>' +
+                '<p>Không tìm thấy kết quả với số điện thoại này</p>' +
+            '</div>';
+        return;
+    }
+
+    const tabLabel = _lookupCurrentTab === 'orders' ? 'đơn hàng'
+                   : _lookupCurrentTab === 'bookings' ? 'lịch hẹn'
+                   : 'kết quả';
+
+    let html = '<p class="lookup-results-header">Tìm thấy ' + items.length + ' ' + tabLabel + '</p>';
+    items.forEach(function (item) {
+        const sc = item.statusClass || 'lookup-status-pending';
+        html +=
+            '<div class="lookup-result-item">' +
+                '<div class="lookup-result-info">' +
+                    '<span class="lookup-result-id">' + _escLookup(item.id) + '</span>' +
+                    '<span class="lookup-result-meta">' + _escLookup(item.meta) + '</span>' +
+                '</div>' +
+                '<span class="lookup-result-status ' + sc + '">' + _escLookup(item.status) + '</span>' +
+            '</div>';
+    });
+    resultsEl.innerHTML = html;
+}
+
+function _resetLookup() {
+    const input = document.getElementById('lookupPhone');
+    const resultsEl = document.getElementById('lookupResults');
+    if (input) { input.value = ''; input.style.borderColor = ''; }
+    if (resultsEl) { resultsEl.style.display = 'none'; resultsEl.innerHTML = ''; }
+    _lookupLastResults = { orders: [], bookings: [] };
+    switchLookupTab('orders', document.querySelector('.lookup-tab[data-tab="orders"]'));
+}
+
+function _getLookupMockData(phone) {
+    // Mock data — xóa và thay bằng API khi backend sẵn sàng
+    return {
+        orders: [
+            { id: '#DH-20240601', meta: 'Thức ăn Royal Canin · 01/06/2024', status: 'Đã giao', statusClass: 'lookup-status-done' },
+            { id: '#DH-20240520', meta: 'Vòng cổ chống bọ chét · 20/05/2024', status: 'Đang xử lý', statusClass: 'lookup-status-pending' },
+        ],
+        bookings: [
+            { id: '#LH-20240615', meta: 'Spa & Grooming · 15/06/2024 · 09:00', status: 'Xác nhận', statusClass: 'lookup-status-done' },
+            { id: '#LH-20240510', meta: 'Lưu trú Hotel · 10/05/2024', status: 'Đã hoàn thành', statusClass: 'lookup-status-done' },
+        ],
+    };
+}
+
+function _escLookup(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}

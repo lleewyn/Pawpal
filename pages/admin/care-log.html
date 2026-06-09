@@ -1,125 +1,29 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PawPal Admin - Nhật Ký Thú Cưng</title>
+    <meta name="view-transition" content="same-origin">
+    <title>PawPal Admin - Nhật ký chăm sóc</title>
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Custom Style -->
     <link rel="stylesheet" href="../../assets/css/style.css">
-    <link rel="stylesheet" href="../../assets/css/user/dashboard.css">
     <link rel="stylesheet" href="../../assets/css/admin/admin.css">
 </head>
-<body class="admin-page-body">
+<body>
 
-<div class="container-lg py-4 px-3 px-md-4">
-    <!-- Admin Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-opacity-10">
-        <div>
-            <h1 class="admin-title">Nhật Ký Thú Cưng (Care Log)</h1>
-            <p class="admin-subtitle">Cập nhật trạng thái ăn uống, vui chơi của bé cưng gửi tại cửa hàng</p>
-        </div>
-        <div class="d-flex gap-2 align-items-center">
-            <span id="adminWelcome" style="font-size:0.85rem;color:var(--color-text-light);"></span>
-            <button id="adminLogoutBtn" style="padding:8px 16px;border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:10px;font-weight:600;cursor:pointer;font-size:0.85rem;">Đăng xuất</button>
-            <a href="../user/dashboard.html" style="padding:8px 16px;background:var(--color-primary);color:#fff;border-radius:10px;font-weight:600;font-size:0.85rem;text-decoration:none;">← Dashboard</a>
-        </div>
-    </div>
+    <!-- TODO: Admin sidebar / navbar -->
 
-    <!-- Navigation Tabs -->
-    <div class="d-flex gap-2 mb-4 overflow-x-auto pb-2" style="border-bottom: 1px solid rgba(42,89,68,0.08);">
-        <a href="index.html" class="btn btn-sm" style="border: 1px solid var(--color-border); color: var(--color-primary);">Tổng quan</a>
-        <a href="bookings.html" class="btn btn-sm" style="border: 1px solid var(--color-border); color: var(--color-primary);">Đặt lịch dịch vụ</a>
-        <a href="orders.html" class="btn btn-sm" style="border: 1px solid var(--color-border); color: var(--color-primary);">Đơn hàng Shop</a>
-        <a href="care-log.html" class="btn btn-sm btn-primary" style="background: var(--color-primary); border-color: var(--color-primary);">Nhật ký thú cưng</a>
-        <a href="products.html" class="btn btn-sm" style="border: 1px solid var(--color-border); color: var(--color-primary);">Sản phẩm &amp; Dịch vụ</a>
-        <a href="users.html" class="btn btn-sm" style="border: 1px solid var(--color-border); color: var(--color-primary);">Khách hàng</a>
-    </div>
+    <main>
+        <!-- TODO: Care log entries & tracking -->
+    </main>
 
-    <!-- Care Log Content -->
-    <div class="row g-4">
-        <!-- Form cập nhật nhật ký -->
-        <div class="col-12 col-lg-5">
-            <div class="admin-card">
-                <h3 class="admin-card-title">📝 Cập nhật hoạt động mới</h3>
-                <p class="admin-card-desc">Ghi lại hoạt động ăn uống, sức khỏe hay giấc ngủ của bé.</p>
-                <form id="careLogForm">
-                    <div class="mb-3">
-                        <label for="clPetSelect" class="form-label style-label" style="font-size:0.82rem;font-weight:600;">Chọn bé cưng <span style="color:#ef4444">*</span></label>
-                        <select id="clPetSelect" class="form-select" style="border-radius:10px;padding:10px;">
-                            <option value="">-- Chọn thú cưng đang check-in --</option>
-                            <option value="PET-10022">Bé Bông (Poodle) - Chủ: Nguyễn Văn A</option>
-                            <option value="PET-10025">Bé Lu (Corgi) - Chủ: Lê Văn B</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="clActivity" class="form-label style-label" style="font-size:0.82rem;font-weight:600;">Hoạt động <span style="color:#ef4444">*</span></label>
-                        <select id="clActivity" class="form-select" style="border-radius:10px;padding:10px;">
-                            <option value="Ăn uống">🥣 Ăn uống</option>
-                            <option value="Vui chơi">🎾 Vui chơi</option>
-                            <option value="Nghỉ ngơi">💤 Nghỉ ngơi</option>
-                            <option value="Vệ sinh">🚿 Vệ sinh / Spa</option>
-                            <option value="Sức khỏe">🩺 Kiểm tra sức khỏe</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="clImage" class="form-label style-label" style="font-size:0.82rem;font-weight:600;">Đính kèm hình ảnh (URL)</label>
-                        <input type="text" id="clImage" class="form-control" placeholder="https://images.unsplash.com/..." style="border-radius:10px;padding:10px;">
-                    </div>
-                    <div class="mb-3">
-                        <label for="clNote" class="form-label style-label" style="font-size:0.82rem;font-weight:600;">Ghi chú chi tiết <span style="color:#ef4444">*</span></label>
-                        <textarea id="clNote" class="form-control" rows="3" placeholder="Ví dụ: Bé ăn hết suất 150g hạt dinh dưỡng, hoạt bát vui vẻ..." style="border-radius:10px;padding:10px;"></textarea>
-                    </div>
-                    <button type="submit" class="btn-admin-save">💾 Gửi Nhật Ký</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Lịch sử nhật ký vừa cập nhật -->
-        <div class="col-12 col-lg-7">
-            <div class="admin-card">
-                <h3 class="admin-card-title">🕒 Nhật ký vừa cập nhật trong ngày</h3>
-                <p class="admin-card-desc">Lịch sử hoạt động được gửi đến thiết bị của chủ nuôi thời gian thực.</p>
-                <div class="customer-table-wrap">
-                    <table class="customer-table">
-                        <thead>
-                            <tr>
-                                <th>Thời Gian</th>
-                                <th>Bé Cưng</th>
-                                <th>Hoạt Động</th>
-                                <th>Nội Dung</th>
-                                <th>Ảnh</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>08/06 10:30</td>
-                                <td>Bé Bông</td>
-                                <td>🥣 Ăn uống</td>
-                                <td>Bé ăn hết khẩu phần hạt và uống nhiều nước.</td>
-                                <td><span style="color:var(--color-primary);font-weight:600;">Có ảnh</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    const stored = sessionStorage.getItem('pawpal_admin_phone');
-    if (stored) {
-        document.getElementById('adminWelcome').textContent = `Xin chào Admin`;
-    } else {
-        window.location.href = '../public/login.html?tab=admin';
-    }
-    document.getElementById('adminLogoutBtn').addEventListener('click', () => {
-        sessionStorage.removeItem('pawpal_admin_phone');
-        window.location.href = '../public/login.html?tab=admin';
-    });
-</script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
