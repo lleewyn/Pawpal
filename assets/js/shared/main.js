@@ -1,7 +1,5 @@
 function initApp() {
     console.log('[main.js] initApp');
-    // Nav functions run after header is injected (async fetch)
-    // initActiveNav & initMobileNavigation are called via headerInjected event from components.js
     initLookup();
     initPremiumMotion();
     initTimelineTracker();
@@ -16,6 +14,9 @@ function initApp() {
     initExpertsCarousel();
     initInteractivePawPass();
     initProcessTimeline();
+    initServicesGrid();
+    // Gọi lại initActiveNav ở đây để đảm bảo chạy sau khi header đã inject
+    setTimeout(initActiveNav, 50);
 }
 
 // Run nav init after header is injected by components.js
@@ -1559,3 +1560,60 @@ function initFab() {
 document.addEventListener('footerInjected', function () {
     setTimeout(initFab, 100);
 });
+
+/**
+ * Services Grid — click mini card → update featured card
+ */
+function initServicesGrid() {
+    const miniCards = document.querySelectorAll('.svc-mini-item');
+    if (miniCards.length === 0) return;
+
+    const featuredCard  = document.getElementById('svcFeatured');
+    const featuredImg   = document.getElementById('svcFeaturedImgEl');
+    const featuredBadge = document.getElementById('svcFeaturedBadge');
+    const featuredTitle = document.getElementById('svcFeaturedTitle');
+    const featuredDesc  = document.getElementById('svcFeaturedDesc');
+    const featuredPrice = document.getElementById('svcFeaturedPrice');
+    const featuredCta   = document.getElementById('svcFeaturedCta');
+
+    if (!featuredCard) return;
+
+    miniCards.forEach(card => {
+        card.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // Update active state
+            miniCards.forEach(c => c.classList.remove('svc-active'));
+            card.classList.add('svc-active');
+
+            // Get data from clicked card
+            const img   = card.getAttribute('data-img');
+            const badge = card.getAttribute('data-badge');
+            const title = card.getAttribute('data-title');
+            const desc  = card.getAttribute('data-desc');
+            const price = card.getAttribute('data-price');
+            const cta   = card.getAttribute('data-cta') || 'Đặt lịch ngay';
+            const href  = card.getAttribute('data-href');
+
+            // Update featured card with smooth transition
+            featuredCard.style.opacity = '0.6';
+            featuredCard.style.transform = 'scale(0.99)';
+
+            setTimeout(() => {
+                if (featuredImg)   featuredImg.src = img;
+                if (featuredBadge) {
+                    featuredBadge.textContent = badge;
+                    featuredBadge.style.display = badge ? '' : 'none';
+                }
+                if (featuredTitle) featuredTitle.textContent = title;
+                if (featuredDesc)  featuredDesc.textContent  = desc;
+                if (featuredPrice) featuredPrice.textContent = price;
+                if (featuredCta)   featuredCta.textContent   = cta + ' →';
+                if (href) featuredCard.setAttribute('href', href);
+
+                featuredCard.style.opacity = '1';
+                featuredCard.style.transform = 'scale(1)';
+            }, 150);
+        });
+    });
+}

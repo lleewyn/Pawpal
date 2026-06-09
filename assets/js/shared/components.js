@@ -80,7 +80,8 @@
 
         // Try sessionStorage cache first (eliminates layout shift on repeat visits)
         var cacheKey = 'pawpal_component_' + targetId;
-        var cached = sessionStorage.getItem(cacheKey);
+        // Only use cache for non-header components (header has active nav state per page)
+        var cached = targetId !== 'site-header' ? sessionStorage.getItem(cacheKey) : null;
         if (cached) {
             el.outerHTML = cached;
             if (targetId === 'site-header') {

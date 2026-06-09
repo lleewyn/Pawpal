@@ -778,18 +778,18 @@
     margin-top: 40px;
 }
 
-/* Row 1: featured (left, 1.9fr) + stack 3 cards (right, 1fr) */
+/* Row 1: featured full width left + 2 cards stacked right */
 .svc-row-top {
     display: grid;
-    grid-template-columns: 1.9fr 1fr;
+    grid-template-columns: 1.6fr 1fr;
     gap: 12px;
-    align-items: start;
+    align-items: stretch;
 }
 
-/* Row 2: 2 cards equal width */
+/* Row 2: 3 cards equal width */
 .svc-row-bottom {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 12px;
 }
 
@@ -822,13 +822,14 @@
 /* Featured card fills full height of row-top */
 .svc-card--featured {
     height: 100%;
+    transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.35s ease;
 }
 
-/* Stack container - 3 mini cards bên phải */
+/* Stack container - 2 mini cards bên phải, chiều cao bằng featured */
 .svc-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 12px;
     height: 100%;
 }
 

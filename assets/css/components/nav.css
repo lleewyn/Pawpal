@@ -295,12 +295,13 @@
 .nav-menu a.active {
     opacity: 1;
     color: var(--color-accent) !important;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .nav-menu a.active::after {
     transform: scaleX(1);
     background-color: var(--color-accent);
+    height: 2.5px;
 }
 
 /* Header actions */
