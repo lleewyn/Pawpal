@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    PawPal Header & Navigation — SOURCE FILE
    Import qua: assets/css/style.css (@import './components/nav.css')
    ========================================================================== */
@@ -281,7 +281,7 @@
 
 .lookup-modal {
     background-color: var(--color-bg-white);
-    border-radius: var(--border-radius-lg);
+    border-radius: var(--card-border-radius);
     width: 100%;
     max-width: 520px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
@@ -312,7 +312,7 @@
 .lookup-modal-icon {
     width: 40px;
     height: 40px;
-    border-radius: 10px;
+    border-radius: var(--card-border-radius);
     background-color: var(--color-primary-light);
     color: var(--color-primary);
     display: flex;
@@ -341,7 +341,7 @@
     color: var(--color-text-light);
     cursor: pointer;
     padding: 4px;
-    border-radius: 6px;
+    border-radius: var(--card-border-radius);
     transition: var(--transition-smooth);
     flex-shrink: 0;
 }
@@ -363,7 +363,7 @@
     padding: 8px 12px;
     background: none;
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 0.82rem;
     font-weight: 600;
@@ -406,7 +406,7 @@
     flex: 1;
     padding: 12px 16px;
     border: 1.5px solid var(--color-border);
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 0.95rem;
     color: var(--color-text-dark);
@@ -432,7 +432,7 @@
     background-color: var(--color-primary);
     color: #ffffff;
     border: none;
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 0.88rem;
     font-weight: 700;
@@ -476,7 +476,7 @@
     padding: 12px 16px;
     background-color: var(--color-bg-light);
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     margin-bottom: 8px;
     transition: var(--transition-smooth);
 }
@@ -561,7 +561,7 @@
 /* Responsive */
 @media (max-width: 640px) {
     .lookup-modal {
-        border-radius: var(--border-radius-md);
+        border-radius: var(--card-border-radius);
     }
 
     .lookup-modal-header {

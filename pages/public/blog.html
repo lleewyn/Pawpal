@@ -8,168 +8,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
-    <!-- Bootstrap 5 CSS — load trước để custom CSS có thể override -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="../../assets/css/public/blog.css">
 </head>
 <body class="blog-page-body">
 
-    <!-- Header Navigation -->
-        <div id="site-header"></div>
-
-
+    <div id="site-header"></div>
 
     <main>
-        <!-- Hero Section -->
-        <section class="blog-hero-section">
-            <div class="blog-hero-inner">
-                <h1>PawPal <span class="accent-italic">Magazine</span></h1>
-                <p>Khám phá cẩm nang y tế, bí quyết dinh dưỡng và những câu chuyện thú vị để hiểu bé yêu của bạn hơn mỗi ngày.</p>
-                
-                <div class="blog-filter-bar">
-                    <button class="blog-filter-btn active">Tất cả</button>
-                    <button class="blog-filter-btn">Sức khỏe</button>
-                    <button class="blog-filter-btn">Dinh dưỡng</button>
-                    <button class="blog-filter-btn">Huấn luyện</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Masonry Grid -->
-        <section class="blog-masonry-section">
-            <div class="blog-container">
-                <div class="blog-masonry-grid">
-                    
-                    <!-- Article 1 (Tall) -->
-                    <a href="#" class="article-card tall card-reveal">
-                        <div class="article-image-box">
-                            <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=600&q=80" alt="Dog training">
-                        </div>
-                        <div class="article-content">
-                            <div class="article-meta">
-                                <span class="article-category">Huấn luyện</span>
-                                <span class="article-date">22 Th06, 2026</span>
-                            </div>
-                            <h3>Bí quyết để cún cưng không sủa khi có khách lạ</h3>
-                            <p>Phân tích tâm lý học loài chó và 3 bước đơn giản tại nhà để giúp bé bình tĩnh, chào đón khách mà không cần quát mắng.</p>
-                        </div>
-                    </a>
-
-                    <!-- Article 2 (Short) -->
-                    <a href="#" class="article-card short card-reveal">
-                        <div class="article-image-box">
-                            <img src="https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=600&q=80" alt="Cat health">
-                        </div>
-                        <div class="article-content">
-                            <div class="article-meta">
-                                <span class="article-category">Sức khỏe</span>
-                                <span class="article-date">18 Th06, 2026</span>
-                            </div>
-                            <h3>Dấu hiệu Mèo bị sỏi thận bạn không nên phớt lờ</h3>
-                            <p>Mèo rất giỏi che giấu nỗi đau. Đừng bỏ qua những dấu hiệu nhỏ khi bé đi vệ sinh.</p>
-                        </div>
-                    </a>
-
-                    <!-- Article 3 (Medium) -->
-                    <a href="#" class="article-card medium card-reveal">
-                        <div class="article-image-box">
-                            <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=600&q=80" alt="Pet Spa">
-                        </div>
-                        <div class="article-content">
-                            <div class="article-meta">
-                                <span class="article-category">Chăm sóc</span>
-                                <span class="article-date">15 Th06, 2026</span>
-                            </div>
-                            <h3>Tắm bao nhiêu lần một tháng là đủ?</h3>
-                            <p>Tắm quá nhiều có thể làm mất lớp dầu bảo vệ tự nhiên trên da thú cưng. Cùng chuyên gia PawPal tìm hiểu lịch trình phù hợp.</p>
-                        </div>
-                    </a>
-
-                    <!-- Article 4 (Medium) -->
-                    <a href="#" class="article-card medium card-reveal">
-                        <div class="article-image-box">
-                            <img src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=600&q=80" alt="Dog Food">
-                        </div>
-                        <div class="article-content">
-                            <div class="article-meta">
-                                <span class="article-category">Dinh dưỡng</span>
-                                <span class="article-date">10 Th06, 2026</span>
-                            </div>
-                            <h3>Chế độ ăn Raw-food: Có thực sự tốt như lời đồn?</h3>
-                            <p>Sự thật về chế độ ăn thịt sống. Những lợi ích vượt trội và rủi ro tiềm ẩn mà chủ nuôi cần nắm rõ trước khi áp dụng.</p>
-                        </div>
-                    </a>
-
-                    <!-- Article 5 (Tall) -->
-                    <a href="#" class="article-card tall card-reveal">
-                        <div class="article-image-box">
-                            <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=600&q=80" alt="Cat sleeping">
-                        </div>
-                        <div class="article-content">
-                            <div class="article-meta">
-                                <span class="article-category">Tâm lý học</span>
-                                <span class="article-date">05 Th06, 2026</span>
-                            </div>
-                            <h3>Tại sao hoàng thượng lại thích hộp giấy hơn nhà mèo?</h3>
-                            <p>Bạn mua một ngôi nhà mèo đắt tiền, và kết quả bé chỉ nằm trong cái thùng các-tông đựng nó? Đây là lý do khoa học.</p>
-                        </div>
-                    </a>
-
-                    <!-- Article 6 (Short) -->
-                    <a href="#" class="article-card short card-reveal">
-                        <div class="article-image-box">
-                            <img src="https://images.unsplash.com/photo-1527362950785-f487a7c1fe48?auto=format&fit=crop&w=600&q=80" alt="Dog running">
-                        </div>
-                        <div class="article-content">
-                            <div class="article-meta">
-                                <span class="article-category">Sức khỏe</span>
-                                <span class="article-date">01 Th06, 2026</span>
-                            </div>
-                            <h3>5 bài tập duy trì xương khớp dẻo dai</h3>
-                            <p>Bài tập đơn giản mỗi tối giúp hạn chế thoái hóa khớp khi thú cưng bước vào giai đoạn lão hóa.</p>
-                        </div>
-                    </a>
-
-                </div>
-            </div>
-        </section>
+        <!-- TODO: Blog / Magazine content -->
     </main>
 
     <div id="site-footer"></div>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmxc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-        <script src="../../assets/js/shared/components.js" defer></script>
+    <script src="../../assets/js/shared/components.js" defer></script>
     <script type="module" src="../../assets/js/shared/main.js"></script>
-    <script>
-        // Specific GSAP animations for Blog page
-        document.addEventListener('DOMContentLoaded', () => {
-            gsap.registerPlugin(ScrollTrigger);
-            
-            // Staggered reveal for masonry cards
-            const cards = gsap.utils.toArray('.card-reveal');
-            
-            cards.forEach((el, index) => {
-                gsap.from(el, {
-                    scrollTrigger: {
-                        trigger: el,
-                        start: 'top 90%',
-                        toggleActions: 'play none none none',
-                    },
-                    opacity: 0,
-                    y: 60,
-                    duration: 1.0,
-                    ease: 'power4.out',
-                    clearProps: "all",
-                    delay: (index % 3) * 0.1 // pseudo stagger based on column approx
-                });
-            });
-        });
-    </script>
     <script type="module" src="../../assets/js/shared/auth.js"></script>
 </body>
 </html>

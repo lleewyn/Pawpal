@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    PawPal Base Utility Classes
    ========================================================================== */
 
@@ -130,7 +130,7 @@
 .card-base {
     background-color: var(--color-bg-white);
     border: 1px solid rgba(34, 77, 49, 0.1);
-    border-radius: var(--border-radius-md);
+    border-radius: var(--card-border-radius);
     box-shadow: var(--shadow-sm);
 }
 

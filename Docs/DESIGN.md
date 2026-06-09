@@ -1,95 +1,75 @@
-# PawPal — Design System Documentation
+﻿# PawPal — Design System
 
-> Tài liệu này ghi lại toàn bộ các quyết định thiết kế đã được thống nhất và apply vào codebase.
+> Tài liệu quyết định thiết kế đã được thống nhất và apply vào codebase.
 > Cập nhật lần cuối: Tháng 6/2026
 
 ---
 
-## 1. Brand Direction
+## 1. Brand
 
-**Feel:** Warm & Friendly — gần gũi, đáng tin, ấm áp như một người bạn chăm sóc thú cưng. Không quá luxury, không lạnh lẽo tech-startup.
+**Feel:** Warm & Friendly — gần gũi, đáng tin, ấm áp. Không quá luxury, không lạnh lẽo tech-startup.
 
-**Audience:** Các Sen (chủ thú cưng) tại Hà Nội, 22–40 tuổi, yêu thú cưng và coi trọng sự minh bạch, tiện lợi.
+**Audience:** Các Sen (chủ thú cưng) tại TP.HCM, 22–40 tuổi, coi trọng sự minh bạch và tiện lợi.
 
 ---
 
 ## 2. Typography
 
-### 2.1 Font Families
+### Fonts
 
-| Variable | Font | Fallback | Vai trò |
-|----------|------|----------|---------|
-| `--font-heading` | **Lora** | Georgia, serif | Heading, section title, accent italic, display |
-| `--font-body` | **DM Sans** | system-ui, sans-serif | Body text, UI, button, label, nav |
+| Variable | Font | Vai trò |
+|----------|------|---------|
+| `--font-heading` / `--font-display` | **Lora** (serif) | Heading, section title, accent italic |
+| `--font-body` / `--font-primary` | **DM Sans** (sans-serif) | Body text, UI, button, label, nav |
 
-**Lý do chọn:**
-- **Lora** — serif có nguồn gốc calligraphy, warm hơn Playfair Display, được tối ưu cho screen. Italic đẹp, phù hợp accent word (`bằng cả`, `mua sắm`).
-- **DM Sans** — geometric sans-serif với optical size axis (`opsz`), tự điều chỉnh letterform theo size. Thân thiện hơn Plus Jakarta Sans, không có "tech startup" feel.
-
-**Google Fonts Import:**
 ```html
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
 ```
 
-**Legacy aliases (backward compat):**
-- `--font-primary` → alias của `--font-body`
-- `--font-display` → alias của `--font-heading`
+### Type Scale
 
-### 2.2 Type Scale — Modular 1.250 (Major Third)
+| Token | Value | Dùng ở đâu |
+|-------|-------|-----------|
+| `--fs-display` | `clamp(2.8rem, 6.5vw, 5.5rem)` | Hero h1 |
+| `--fs-h2` | `clamp(1.6rem, 3vw, 2.25rem)` | Section titles |
+| `--fs-h3` | `1.25rem` | Card titles |
+| `--fs-h4` | `1.05rem` | Label heading |
+| `--fs-body-lg` | `1rem` | Hero desc, subtitle |
+| `--fs-body` | `0.9375rem` | Card body, general |
+| `--fs-small` | `0.875rem` | Tags, meta |
+| `--fs-caption` | `0.75rem` | Badge, timestamp |
 
-| Token | Value | Line-height | Letter-spacing | Dùng ở đâu |
-|-------|-------|-------------|----------------|-----------|
-| `--fs-display` | `clamp(2.8rem, 6.5vw, 5.5rem)` | 1.05 | -0.03em | Hero h1 |
-| `--fs-h2` | `clamp(1.6rem, 3vw, 2.25rem)` | 1.15 | -0.02em | Section titles |
-| `--fs-h3` | `1.25rem` | 1.3 | -0.01em | Card titles, sub-heading |
-| `--fs-h4` | `1.05rem` | 1.35 | 0 | Label heading |
-| `--fs-body-lg` | `1rem` | 1.7 | 0 | Hero desc, section subtitle |
-| `--fs-body` | `0.9375rem` | 1.65 | 0 | Card body text, general |
-| `--fs-small` | `0.875rem` | 1.5 | 0.01em | Tags, meta info |
-| `--fs-caption` | `0.75rem` | 1.4 | 0.03em | Badge label, timestamp |
-
-**Legacy token mapping:**
-| Token cũ | Map sang |
-|----------|---------|
-| `--fs-hero-title` | `--fs-display` |
-| `--fs-section-title` | `--fs-h2` |
-| `--fs-sub-title` | `--fs-h3` |
-| `--fs-body-semibold` | `--fs-body` |
-| `--fs-body-medium` | `--fs-body-lg` |
-| `--fs-desc-hero` | `--fs-body-lg` |
-
-### 2.3 Font Weight Usage
+### Font Weights
 
 | Weight | Dùng ở đâu |
 |--------|-----------|
-| 400 | Body text, quotes, Lora regular |
-| 500 | Nav links, subtle emphasis |
-| 600 | Heading (Lora), card title |
-| 700 | Button, badge, price, strong emphasis (DM Sans) |
+| 400 | Body text, Lora regular |
+| 500 | Nav links |
+| 600 | Heading (Lora) |
+| 700 | Button, badge, price (DM Sans) |
 
 ---
 
 ## 3. Color Palette
 
 ```css
-/* Brand Core */
+/* Brand */
 --color-primary:       hsl(155, 28%, 35%)   /* Soft Sage Green */
 --color-primary-light: hsl(155, 20%, 96%)
---color-primary-dark:  hsl(155, 30%, 25%)   /* Deep Sage Green */
---color-accent:        hsl(38, 75%, 50%)    /* Amber Gold #E09F1F */
+--color-primary-dark:  hsl(155, 30%, 25%)   /* Deep Sage */
+--color-accent:        hsl(38, 75%, 50%)    /* Amber Gold */
 --color-accent-light:  hsl(38, 50%, 95%)
---color-accent-dark:   hsl(38, 65%, 40%)    /* Deep Amber Gold #9E6B17 */
+--color-accent-dark:   hsl(38, 65%, 40%)
 
 /* Semantic */
---color-danger:        hsl(0, 72%, 51%)     /* #DC2626 — badge KM, error */
+--color-danger:        hsl(0, 72%, 51%)
 --color-danger-light:  hsl(0, 72%, 96%)
---color-info:          hsl(210, 60%, 48%)   /* Blue — thông báo */
---color-info-light:    hsl(210, 60%, 95%)
---color-success:       hsl(142, 50%, 38%)   /* Green nhạt — success state */
+--color-success:       hsl(142, 50%, 38%)
 --color-success-light: hsl(142, 50%, 95%)
---color-neutral:       hsl(156, 8%, 46%)    /* Warm gray */
+--color-info:          hsl(210, 60%, 48%)
+--color-info-light:    hsl(210, 60%, 95%)
+--color-neutral:       hsl(156, 8%, 46%)
 --color-neutral-light: hsl(156, 8%, 96%)
---color-neutral-dark:  hsl(156, 8%, 25%)
 
 /* Base UI */
 --color-text-dark:  #2d3732
@@ -99,447 +79,361 @@
 --color-bg-light:   #FAF9F6   /* Warm Cream */
 ```
 
-### Thay đổi so với palette cũ
+### Background Usage
 
-| Token | Cũ | Mới | Lý do |
-|-------|----|-----|-------|
-| `--color-primary` | `hsl(156,36%,26%)` | `hsl(156,38%,28%)` | Sáng nhẹ, dễ đọc hơn trên cream |
-| `--color-primary-dark` | `hsl(156,36%,16%)` | `hsl(156,40%,12%)` | Tối hơn, contrast rõ với primary |
-| `--color-primary-light` | `hsl(156,36%,95%)` | `hsl(156,30%,94%)` | Giảm saturation, bớt cartoon |
-| `--color-accent` | `hsl(38,77%,57%)` | `hsl(36,65%,52%)` | Giảm saturation 77→65%, ấm hơn, bớt chói |
-| `--color-accent-dark` | `hsl(38,77%,45%)` | `hsl(36,68%,40%)` | Contrast tốt hơn trên nền trắng |
-| `--color-accent-light` | `hsl(38,77%,95%)` | `hsl(36,50%,95%)` | Nhẹ hơn cho badge background |
-| Thêm mới | — | `--color-danger/info/success/neutral` | Semantic colors cho badge, state UI |
+| Background | Section |
+|-----------|---------|
+| `--color-bg-light` | Header, Services, Tracker, Experts, Process, Membership — mặc định |
+| `--color-bg-white` | Shop, FAQ — tạo contrast với cream |
+| `--color-primary-dark` | Features Strip, Safety, Testimonials, Footer |
+| `--color-primary` | Footer CTA |
 
-### 3.1 Color Usage Rules
+> **Quy tắc xen kẽ:** Các section luân phiên light/dark khi scroll. Không để 2 section cùng tone liền nhau.
 
-**Background — khi nào dùng gì:**
+### Text Usage
 
-| Màu nền | Dùng ở section nào | Ghi chú |
-|---------|--------------------|---------|
-| `--color-bg-light` (#FAF9F6) | Header, Services, Safety, Process, Testimonials | Warm cream — màu nền mặc định |
-| `--color-bg-white` (#ffffff) | Shop, FAQ, Pet ID | Trắng thuần — tạo contrast với cream |
-| `--color-primary` | Footer CTA | Green đậm — section call-to-action |
-| `--color-primary-dark` | Features Strip, Footer | Đậm nhất — tạo nhịp dark/light |
-
-> **Quy tắc xen kẽ:** Các section nên luân phiên background để tạo visual rhythm khi scroll. Không để 2 section `bg-white` liền nhau hoặc 2 section dark liền nhau.
-
-**Text — khi nào dùng gì:**
-
-| Màu chữ | Dùng khi nào |
-|---------|-------------|
+| Màu | Dùng khi nào |
+|-----|-------------|
 | `--color-text-dark` | Body text trên nền sáng |
-| `--color-text-light` | Mô tả phụ, caption, meta info |
-| `--color-primary` | Heading trên nền sáng, link |
-| `--color-accent` | Số thống kê, giá, highlight quan trọng |
-| `#ffffff` | Tất cả text trên nền tối |
+| `--color-text-light` | Mô tả phụ, caption |
+| `--color-primary` | Heading, link trên nền sáng |
+| `--color-accent` | Giá, số thống kê, highlight |
+| `#ffffff` | Text trên nền tối |
 
-**Semantic colors — badge và UI states:**
+### Semantic Badge Colors
 
 | Token | Dùng ở đâu |
 |-------|-----------|
-| `--color-danger` | Badge "Khuyến mãi", giá sale, error message |
-| `--color-danger-light` | Background error, toast lỗi |
-| `--color-success` | Badge xác nhận, trạng thái đặt lịch thành công |
-| `--color-success-light` | Background success notification |
-| `--color-info` | Badge thông báo, link phụ |
-| `--color-neutral` | Text phụ, divider, placeholder |
-| `--color-neutral-light` | Background section phụ, disabled state |
-
-**Badge mapping đã áp dụng:**
-| Badge | Trước (hardcode) | Sau (variable) |
-|-------|-----------------|----------------|
-| "Bán chạy" | `rgba(229,169,60,0.88)` | `var(--color-accent)` |
-| "Khuyến mãi" | `rgba(239,68,68,0.85)` | `var(--color-danger)` |
-| "Hàng mới" | `rgba(42,89,68,0.88)` | `var(--color-primary)` |
-| Price current | `#ef4444` | `var(--color-danger)` |
+| `--color-danger` | Badge "Khuyến mãi", giá sale, error |
+| `--color-success` | Xác nhận đặt lịch thành công |
+| `--color-info` | Thông báo, link phụ |
+| `--color-neutral` | Placeholder, disabled |
 
 ---
 
-## 4. Spacing System
+## 4. Spacing
 
-### 4.1 Base Unit: 8px — 4 cấp rõ ràng
+### Tokens (Base 8px)
 
-Toàn bộ spacing dùng bội số của 8px, chia thành 4 cấp theo vai trò:
+| Token | Value | Dùng ở đâu |
+|-------|-------|-----------|
+| `--space-xs` | `8px` | Gap icon/text, list item |
+| `--space-sm` | `16px` | Card padding nội dung |
+| `--space-md` | `24px` | Card grid gap, component gap |
+| `--space-lg` | `40px` | Section header → content |
+| `--space-xl` | `64px` | Section padding top/bottom |
 
-| Token | Value | Cấp | Dùng ở đâu |
-|-------|-------|-----|-----------|
-| `--space-xs` | `8px` | Cấp 4 — trong component | Gap icon/text, H3→body, list item gap |
-| `--space-sm` | `16px` | Cấp 4 — trong component | Card padding, body→price/action |
-| `--space-md` | `24px` | Cấp 3 — giữa components | Card grid gap, component→component trong section |
-| `--space-lg` | `40px` | Cấp 2 — tiêu đề → nội dung | Section header→content, container padding ngang |
-| `--space-xl` | `64px` | Cấp 1 — section padding | Section padding top/bottom tất cả section |
+### Vertical Rhythm — 4 tầng
 
-### 4.2 Vertical Rhythm — Kế hoạch chiều dọc đầy đủ
+| Tầng | Vị trí | Value |
+|------|--------|-------|
+| 1 | Giữa 2 section | `--space-xl` × 2 = 128px thị giác |
+| 2 | Section header → content | `--space-lg` (40px) qua `margin-bottom` của `.section-header` |
+| 3 | Giữa các content block | `--space-md` (24px) qua `gap` trên parent |
+| 4 | Trong card: element → element | `--space-xs` / `--space-sm` |
 
-#### Nguyên tắc cốt lõi
-> **Một nguồn khoảng cách duy nhất.** Mỗi khoảng trắng giữa 2 thành phần chỉ được tạo bởi 1 property CSS duy nhất — không để 2 margin/padding cộng dồn vô tình.
+> **Quy tắc "một nguồn":** Mỗi khoảng trắng chỉ do 1 property tạo ra. Dùng `margin-bottom` của element trên, **không** dùng `margin-top` của element dưới. Wrapper content không được có `margin-top` thêm vào.
 
----
+### Section Padding
 
-#### Tầng 1 — Giữa các section (ngoài section)
+Tất cả section: `padding: var(--space-xl) 0` = `64px 0`. Không có ngoại lệ.
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ← section trên kết thúc
-          64px  (--space-xl, padding-bottom của section trên)
-          64px  (--space-xl, padding-top của section dưới)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ← section dưới bắt đầu
-```
+| Ngoại lệ | Value | Lý do |
+|----------|-------|-------|
+| Features Strip | `height: 88px`, padding: 0 | Compact stat bar, không phải section nội dung |
+| Hero container | `var(--space-xl) 64px` | Split layout cần padding ngang riêng |
 
-**Quy tắc:** Khoảng giữa 2 section = tổng padding-bottom + padding-top = 128px thị giác. Đây là intentional — tạo ranh giới rõ giữa các chủ đề.
+### Responsive Spacing
 
----
-
-#### Tầng 2 — Trong section: header → content
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ← section bắt đầu (padding-top: 64px)
-  [eyebrow / badge]           ↕ --space-xs (8px)
-  [H2 tiêu đề]                ↕ 12px → subtitle
-  [Subtitle]
-                              ↕ --space-lg (40px) ← section-header margin-bottom DUY NHẤT
-  [Content đầu tiên / Cards]
-```
-
-**Quy tắc quan trọng:** `section-header margin-bottom` là **nguồn khoảng cách duy nhất** giữa header và content. Content wrapper (card grid, carousel...) **không được có** `margin-top` thêm vào — sẽ gây cộng dồn.
-
-**Vấn đề đã phát hiện:** `.services-arched-wrapper` có `margin-top: var(--space-md)` cộng thêm vào `section-header margin-bottom: 40px` → tổng = 64px, trông như khoảng cách giữa 2 section khác nhau. **Cần fix:** bỏ `margin-top` trên wrapper.
+| Token | Desktop | Tablet ≤1024px | Mobile ≤640px |
+|-------|---------|----------------|---------------|
+| `--space-xl` | 64px | 48px | 40px |
+| `--space-lg` | 40px | 32px | 24px |
+| `--space-md` | 24px | 20px | 16px |
+| `--space-sm` | 16px | 14px | 12px |
 
 ---
 
-#### Tầng 3 — Trong section: giữa các content block
-
-```
-  [Content block 1]           ↕ --space-md (24px)
-  [Content block 2]           ↕ --space-md (24px)
-  [Nav / Action button]
-```
-
-Ví dụ Services section:
-```
-  [Hàng card 1 (track-top)]   ↕ --space-xs (8px) ← padding bottom track-top
-  [Hàng card 2 (track-bottom)] ↕ --space-md (24px)
-  [Carousel nav arrows]        ↕ --space-md (24px)
-  [Nút "Xem bảng giá"]
-```
-
----
-
-#### Tầng 4 — Trong một card/component
-
-```
-  ┌─────────────────────────┐
-  │  padding: 16px (--space-sm) tất cả 4 phía
-  │  [Image]
-  │           ↕ 0 (border-radius xử lý)
-  │  [H3 tên]               ↕ --space-xs (8px)
-  │  [Body text]            ↕ --space-sm (16px)
-  │  [Price / CTA]
-  └─────────────────────────┘
-```
-
----
-
-#### Tóm tắt 4 tầng — bảng nhanh
-
-| Tầng | Vị trí | Value | Token | Nguồn duy nhất |
-|------|--------|-------|-------|----------------|
-| 1 | Giữa 2 section | 64px × 2 = 128px thị giác | `--space-xl` | padding section |
-| 2 | Header block → content | 40px | `--space-lg` | `section-header margin-bottom` |
-| 3 | Giữa content blocks | 24px | `--space-md` | `gap` hoặc `margin-bottom` của block trên |
-| 4 | Trong card: H3→body | 8px | `--space-xs` | `margin-bottom` của H3 |
-| 4 | Trong card: body→action | 16px | `--space-sm` | `margin-bottom` của body |
-
-#### ⚠ Quy tắc "một nguồn" — checklist khi viết CSS
-
-- ✅ Dùng `margin-bottom` của element trên, KHÔNG dùng `margin-top` của element dưới
-- ✅ Wrapper/container content: `margin-top: 0` — để section-header tự quyết định khoảng cách
-- ✅ Khoảng giữa 2 rows/blocks: dùng `gap` trên parent flex/grid
-- ❌ Không để 2 margin cùng chiều cộng dồn (ví dụ: `margin-bottom: 40px` + `margin-top: 24px`)
-
-### 4.3 Section Padding Rules
-
-**Quy tắc duy nhất: tất cả section dùng `--space-xl` (64px) cả trên lẫn dưới.**
-
-| Section | Padding | Ghi chú |
-|---------|---------|---------|
-| Tất cả section | `var(--space-xl) 0` = `64px 0` | Không có ngoại lệ |
-| Features Strip | `height: 88px`, padding: 0 | Intentional compact bar, không phải section nội dung |
-| Hero container | `var(--space-xl) 64px` | 64px top/bottom, 64px ngang cho split layout |
-| Hero container tablet | `var(--space-xl) 32px` | Giảm padding ngang |
-| Hero container mobile | `var(--space-xl) 20px` | Giảm padding ngang |
-| Footer CTA banner | `var(--space-xl) var(--container-padding)` | Dùng token, đồng nhất |
-
-> **Lý do chọn đồng nhất hoàn toàn:** Tránh người dùng cảm nhận sự "nhảy" khi scroll qua các section. Mắt người tự nhiên nhận ra nhịp đều — khi một section bỗng dưng to hơn hay nhỏ hơn mà không có lý do visual rõ ràng, nó tạo cảm giác lỗi thiết kế.
-
-### 4.4 Section Header Rules
-
-| Vị trí | Value | Token | Ghi chú |
-|--------|-------|-------|---------|
-| Section header max-width | `640px` | hardcode | |
-| H2 → subtitle gap | `12px` | **hardcode, không có token** — intentionally nhỏ, không cần token riêng | Nếu muốn tokenize: thêm `--space-2xs: 12px` vào `:root` |
-| Header block → content | `40px` | `--space-lg` | |
-| Shop header → banner (exception) | `24px` | `--space-md` | Compact vì có banner ngay dưới |
-| Membership header | `40px` | `--space-lg` | |
-
-### 4.5 Component Spacing Rules
-
-| Component | Property | Value | Token |
-|-----------|----------|-------|-------|
-| Card padding | `padding` | `16px` | `--space-sm` |
-| Card grid gap | `gap` | `24px` | `--space-md` |
-| Services card gap | `gap` | `24px` | `--space-md` |
-| Services card wrapper padding top | `padding-top` | `0` | — | **Lý do top=0:** section-header `margin-bottom: 40px` đã là nguồn duy nhất cho khoảng cách này. Nếu thêm padding-top sẽ cộng dồn. |
-| Services card wrapper padding bottom | `padding-bottom` | `8px` | `--space-xs` | **Lý do bottom≠0:** tạo shadow breathing room cho card hover effect — card scale lên sẽ không bị clipped bởi container. |
-| Services: khoảng giữa 2 hàng track | top/bottom padding mỗi track | `8px` | `--space-xs` |
-| H3 → body text | `margin-bottom` | `8px` | `--space-xs` |
-| Body → price/action | `margin-bottom` | `16px` | `--space-sm` |
-| List item gap | `gap` | `8px` | `--space-xs` |
-| Component → component trong section | `margin-bottom` của block trên | `24px` | `--space-md` |
-| Safety layout wrapper top | `margin-top` | `40px` | `--space-lg` |
-
-### 4.6 Shop Section Internal Spacing
-
-Shop có nhiều lớp nội dung xếp chồng — mỗi lớp cách nhau đồng nhất theo token:
-
-```
-Badge (label)
-  ↓ 12px (hardcode nhỏ — OK)
-H2 (Góc mua sắm)
-  ↓ --space-sm (16px)
-Feature strip (miễn phí vận chuyển...)
-  ↓ --space-md (24px) ← shop-features-inline margin-bottom
-Promo Banner
-  ↓ --space-md (24px)
-Tabs (Sản phẩm mới / Bán chạy / Khuyến mãi)
-  ↓ --space-md (24px) ← tab-bar margin-bottom
-Sub-filter (Thức ăn / Đồ dùng...)
-  ↓ --space-md (24px) ← sub-filters margin-bottom
-Product Grid
-  ↓ --space-lg (40px)
-Action button (Xem tất cả)
-```
-
-### 4.7 Vấn đề đã phát hiện & fix
-
-| Vấn đề | Trước | Sau |
-|--------|-------|-----|
-| `services-section` padding | `40px/45px` lẻ tẻ | `64px` = `--space-xl` |
-| `membership-section` padding | `32px` — quá nhỏ | `64px` = `--space-xl` |
-| `pet-id-section` padding | `96px` | `64px` = `--space-xl` |
-| `experts-section` padding | `96px` | `64px` = `--space-xl` |
-| `safety-section` padding | `70px` — lẻ | `64px` = `--space-xl` |
-| Services card wrapper padding | `30px / 50px` hardcode | `24px` = `--space-md` |
-| Services track gap giữa 2 hàng | `10px / 5px` | `8px` = `--space-xs` (top/bottom của mỗi track) |
-| Services card gap | `30px` | `24px` = `--space-md` |
-| Services bottom track card size | `230px / scale(0.9)` — rời rạc | `290px / scale(0.96)` — đồng nhất với top track |
-| Services `carousel-nav` margin-top | `20px` hardcode | `--space-md` |
-| Services `services-action` margin-top | `50px` inline hardcode | `--space-md` |
-| `safety-layout-wrapper` margin-top | `50px` | `40px` = `--space-lg` |
-| `membership .section-header` margin | `20px` override | `40px` = `--space-lg` |
-| Shop tabs → sub-filter gap | `40px` | `24px` = `--space-md` |
-| Shop sub-filter → grid gap | `-15px / 40px` lẻ | `16px / 24px` = `--space-sm / --space-md` |
-| Shop product grid margin-bottom | `45px` | `40px` = `--space-lg` |
-| Shop promo banner margin-bottom | `24px` hardcode | `var(--space-md)` |
-| Shop features-inline gap | `16px` hardcode | `var(--space-sm)` |
-
-### 4.8 Responsive Spacing
-
-Trên mobile, spacing scale down để tránh lãng phí không gian màn hình nhỏ.
-
-| Token | Desktop | Tablet (≤1024px) | Mobile (≤640px) |
-|-------|---------|-----------------|-----------------|
-| `--space-xl` (section padding) | `64px` | `48px` | `40px` |
-| `--space-lg` (header→content) | `40px` | `32px` | `24px` |
-| `--space-md` (component gap) | `24px` | `20px` | `16px` |
-| `--space-sm` (card padding) | `16px` | `14px` | `12px` |
-| `--space-xs` (inline gap) | `8px` | `8px` | `8px` |
-
-**Hero container** đã có responsive padding riêng (không dùng token vì padding ngang ≠ padding section):
-- Desktop: `var(--space-xl) 64px`
-- Tablet: `var(--space-xl) 32px`
-- Mobile: `var(--space-xl) 20px`
-
-### 4.9 Card Sizing Rules
-
-#### Quy tắc chung & Chống AI Slop
-- **Đồng bộ chiều cao lưới:** Không dùng `height` cố định cứng (ví dụ 500px), nhưng phải thêm `height: 100%` vào card để grid tự động kéo giãn các card bằng nhau trên cùng một hàng.
-- **Cắt text (Line-clamp):** Tiêu đề card (`h3`) phải cố định số dòng (tối đa 2 dòng, `min-height: 2.6em`) bằng `-webkit-line-clamp`. Đủ để hiển thị tên sản phẩm và quy cách nhưng không làm vỡ layout.
-- **Dùng `aspect-ratio`** trên image thay vì `height` cứng — ảnh luôn đúng tỉ lệ dù card rộng hẹp.
-
-| Loại card | Image aspect-ratio | Ghi chú |
-|-----------|-------------------|---------|
-| Service card | `3/2` | Landscape, hiển thị context rõ |
-| Product card | `16/9` | Cinematic Widescreen — ép chiều cao ảnh siêu mỏng, tối đa hóa không gian |
-| Expert card | `4/3` | Portrait nhẹ — hiển thị người |
-| Blog card | `16/9` | Widescreen |
-
-#### Product Grid (Shop)
-
-| Breakpoint | Số cột | Ghi chú |
-|-----------|--------|---------|
-| ≥1400px (container max) | 5 cột | Desktop wide |
-| ≤1200px | 4 cột | Desktop thường |
-| ≤1024px | 3 cột | Tablet |
-| ≤768px | 2 cột | Mobile landscape |
-| ≤480px | 1 cột | Mobile portrait |
-
-#### Expert Card
-
-| Property | Value | Ghi chú |
-|----------|-------|---------|
-| `width` | `300px` fixed | Carousel cần fixed width để tính offset |
-| `height` | `auto` | Tự cao theo content |
-| `image aspect-ratio` | `4/3` | |
-| `info padding` | `20px` | `--space-sm` + extra |
-| `transform` | `scale(0.96)` | Default, hover lên `scale(1.0)` |
-| `opacity` | `0.85` | Default, hover lên `1` |
-| JS `cardWidth` | `300` | Phải đồng bộ với CSS width |
-
-> **⚠ CRITICAL — JS/CSS sync:** Khi thay đổi `width` của expert card trong CSS, **bắt buộc phải đồng bộ** `const cardWidth = 300` trong `assets/js/main.js` hàm `initExpertsCarousel()`.
-> **Hậu quả nếu quên:** carousel tính offset sai → card bị cắt một phần ở cạnh trái/phải, gap giữa các card không đều, card center không đúng vị trí giữa wrapper.
-
----
-
-## 5. Container Width System
+## 5. Container Widths
 
 | Variable | Value | Dùng ở đâu |
 |----------|-------|-----------|
-| `--container-hero` | `1600px` | Hero section — wide editorial split |
-| `--container-xl` | `1400px` | Standard section containers |
-| `--container-md` | `1280px` | Text-heavy sections (tracker, process) |
-| `--container-sm` | `800px` | FAQ, narrow text sections |
-| `--container-padding` | `40px` | Horizontal padding inside containers |
-
-**Quy tắc:** Header container cũng dùng `1400px` để đồng bộ với section containers.
+| `--container-hero` | `1600px` | Hero |
+| `--container-xl` | `1400px` | Standard sections, header |
+| `--container-md` | `1280px` | Text-heavy sections |
+| `--container-sm` | `800px` | FAQ, narrow content |
+| `--container-padding` | `40px` | Padding ngang trong container |
 
 ---
 
 ## 6. Border Radius
 
 ```css
---border-radius-lg:   24px;    /* Large panels, image frames, section cards */
---border-radius-md:   16px;    /* Secondary panels, form groups, nested cards */
---border-radius-sm:   8px;     /* Small badges, tags, inputs */
---border-radius-pill: 100px;   /* Pills, buttons, rounded labels */
---card-border-radius: 10px;    /* Primary semantic radius for main cards */
+--card-border-radius: 10px;    /* Standard — cards, forms, panels */
+--border-radius-pill: 100px;   /* Buttons, badges, tags */
 ```
 
-**Quy tắc dùng:**
+| Element | Value | Ghi chú |
+|---------|-------|---------|
+| Cards, forms, modals, panels | `var(--card-border-radius)` | Token |
+| Buttons, badges, pills | `var(--border-radius-pill)` | Token |
+| Avatars, circles | `50%` | Hardcode |
+| Phone mockup frame | `40px` | Hardcode — skeuomorphic |
+| PawPass virtual card | `20px` | Hardcode — skeuomorphic |
 
-| Element | Token | Dùng khi nào |
-|---------|-------|---------------|
-| Main card wrappers, testimonial cards, product/expert tiles, promo cards | `--card-border-radius` | Mặt card chính, block card có shadow và nền trắng/cream |
-| Large framed surfaces, hero image panels, modal overlays | `--border-radius-lg` | Khi cần bo lớn hơn và tạo cảm giác panel lớn |
-| Secondary panels, form panels, nested content containers | `--border-radius-md` | Các surface phụ và group nội dung |
-| Small badges, chips, input fields | `--border-radius-sm` | Các thành phần cần bo nhẹ |
-| Action buttons, pill labels, rounded avatars | `--border-radius-pill` | Bo tròn viên thuốc/full pill |
-
-> `--card-border-radius` là token semantic riêng cho card. Dùng `--card-border-radius` cho tất cả card chính thay vì `--border-radius-md` trực tiếp, để khi đổi radius card chỉ cần sửa một giá trị.
->
-> **Quy tắc:** Không hardcode `border-radius` cho card. Luôn dùng token phù hợp — `--card-border-radius` cho card chính, `--border-radius-lg/md/sm/pill` cho các surface khác.
+> `--border-radius-lg/md/sm` đã **deprecated**. Không dùng trong code mới.
 
 ---
 
-## 7. Shadow System
+## 7. Shadows
 
 ```css
---shadow-sm: 0 2px 4px rgba(42, 89, 68, 0.04), 0 1px 2px rgba(42, 89, 68, 0.02)
---shadow-md: 0 4px 8px -2px rgba(42, 89, 68, 0.06), 0 2px 4px -2px rgba(42, 89, 68, 0.03)
---shadow-lg: 0 10px 20px -4px rgba(42, 89, 68, 0.08), 0 4px 8px -4px rgba(42, 89, 68, 0.03)
+/* Card elevation — dùng cho tất cả cards, panels, modals */
+--shadow-card:       0 2px 8px rgba(42,89,68,0.05), 0 1px 3px rgba(42,89,68,0.03)
+--shadow-card-hover: 0 8px 24px rgba(42,89,68,0.10), 0 2px 6px rgba(42,89,68,0.05)
+
+/* Legacy — giữ lại cho backward compat, không dùng trong code mới */
+--shadow-sm: 0 2px 4px rgba(42,89,68,0.04), 0 1px 2px rgba(42,89,68,0.02)
+--shadow-md: 0 4px 8px -2px rgba(42,89,68,0.06), 0 2px 4px -2px rgba(42,89,68,0.03)
+--shadow-lg: 0 10px 20px -4px rgba(42,89,68,0.08), 0 4px 8px -4px rgba(42,89,68,0.03)
 ```
 
-Tất cả shadow dùng màu `--color-primary` tinted (green-tinted shadows) thay vì black — tạo cảm giác organic, ấm hơn.
+| Token | Dùng khi nào |
+|-------|-------------|
+| `--shadow-card` | Rest state — cards, panels, modals, form containers |
+| `--shadow-card-hover` | Hover/lifted state — card hover, active state |
+
+**Giữ nguyên hardcode (có mục đích riêng, không thay bằng token):**
+- Focus ring: `0 0 0 3px rgba(42,89,68,0.08)` — input/button focus state
+- Live dot glow: `0 0 8px #4ade80` — status indicator pulse
+- Amber glow: `0 8px 24px rgba(229,169,60,...)` — CTA button, PawPass accent
+- Inset shadow: `inset 0 1px 1px rgba(255,255,255,1)` — form field depth
+
+Shadow dùng màu green-tinted thay vì black thuần — organic, ấm hơn.
 
 ---
 
-## 8. Motion & Animation
+## 8. Motion
 
 ```css
 --transition-smooth: all 0.6s cubic-bezier(0.32, 0.72, 0, 1)
 ```
 
-### 8.1 Khi nào dùng animation
+| Interaction | Duration | Easing |
+|-------------|----------|--------|
+| Hover card, button | `0.3s` | `ease` |
+| Card lift, scale | `0.6s` | `cubic-bezier(0.25, 1, 0.5, 1)` |
+| Carousel slide | `0.5s` | `cubic-bezier(0.25, 1, 0.5, 1)` |
+| Modal open/close | `0.3s` | `ease-out` |
 
-| Loại interaction | Duration | Easing | Ghi chú |
-|-----------------|----------|--------|---------|
-| Hover trên card, button | `0.3s` | `ease` | Nhanh, phản hồi tức thì |
-| Card lift, scale | `0.6s` | `cubic-bezier(0.25, 1, 0.5, 1)` | Smooth deceleration |
-| Nav underline, fade | `0.6s` | `--transition-smooth` | Dùng token |
-| Carousel slide | `0.5s` | `cubic-bezier(0.25, 1, 0.5, 1)` | |
-| Modal open/close | `0.3s` | `ease-out` | |
-| Loader, pulse dot | `2s` | `ease-in-out` | Infinite loop |
+**Quy tắc:** Chỉ animate `transform` và `opacity`. Không animate `width`, `height`, `top`, `left`. Respect `prefers-reduced-motion`.
 
-### 8.2 Quy tắc
+### Code Patterns
 
-- ✅ Chỉ animate `transform` và `opacity` — không animate `width`, `height`, `top`, `left` (gây layout reflow)
-- ✅ Dùng `will-change: transform` cho element có animation phức tạp
-- ❌ Không animate nếu người dùng đã bật `prefers-reduced-motion`
-- ❌ Không dùng animation chỉ để "cho đẹp" nếu không có mục đích UX rõ ràng
+**Card hover:**
+```css
+.my-card {
+    transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.35s ease;
+}
+.my-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 48px rgba(42, 89, 68, 0.14);
+}
+```
 
----
+**Carousel track:**
+```css
+.track {
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    will-change: transform;
+}
+```
 
-## 9. Accessibility
-
-### 9.1 Contrast Ratio (WCAG 2.1 AA)
-
-| Tổ hợp | Ratio yêu cầu | Ghi chú |
-|--------|--------------|---------|
-| Body text trên `bg-light` | ≥ 4.5:1 | `color-text-dark` (#2d3732) trên #FAF9F6 — đạt |
-| Heading trên `bg-light` | ≥ 4.5:1 | `color-primary` trên #FAF9F6 — đạt |
-| White text trên `color-primary` | ≥ 4.5:1 | #fff trên #2A5944 — đạt |
-| Accent text trên white | ≥ 4.5:1 | `color-accent-dark` (#C17F24) trên #fff — ratio ~4.6:1 ✅ đạt AA |
-
-### 9.2 Focus States
-
-- Tất cả interactive element (button, link, input) phải có `:focus-visible` rõ ràng
-- Dùng `outline: 3px solid var(--color-accent)` với `outline-offset: 2px`
-- Không dùng `outline: none` mà không có alternative focus indicator
-
-### 9.3 Touch Targets
-
-- Minimum touch target: **44×44px** (WCAG 2.5.5)
-- Các button icon nhỏ (cart, nav toggle) cần đảm bảo padding đủ để đạt 44px
-
-### 9.4 Semantic HTML
-
-- Mỗi section phải có heading level đúng thứ tự (không nhảy từ H2 → H4)
-- Image decorative dùng `alt=""`, image nội dung phải có `alt` mô tả
-- Button dùng `<button>`, link điều hướng dùng `<a>`
+**Scroll fade-in (GSAP):**
+```js
+gsap.from(element, {
+    opacity: 0, y: 30, duration: 0.6, ease: 'power2.out',
+    scrollTrigger: { trigger: element, start: 'top 85%' }
+});
+```
 
 ---
 
-## 10. Chiến Thuật Phòng Chống AI Slop (Anti-AI Slop)
+## 9. Card Sizing
 
-PawPal cam kết không sử dụng giao diện rập khuôn giá rẻ. Toàn bộ thiết kế phải tuân thủ 4 trụ cột chiến thuật:
+| Loại card | Image ratio | Ghi chú |
+|-----------|------------|---------|
+| Service card | `3/2` | Landscape |
+| Product card | `16/9` | Widescreen |
+| Expert card | `4/3` | Portrait |
 
-1. **Hình học sắc sảo (Geometry):**
-   * Đưa tất cả các loại thẻ (Card), khung tìm kiếm, thanh bộ lọc bên, ô nhập dữ liệu, và cửa sổ pop-up modal về **góc vuông hoàn toàn (`border-radius: 0`)**.
-   * Chỉ sử dụng góc bo tròn cho các trường hợp mô phỏng đồ vật ngoài đời thực (skeuomorphism) như thẻ thành viên nhựa ảo PawPass.
-2. **Bố cục bất đối xứng (Asymmetric Layout):**
-   * Tránh chia đều 50/55 cho tất cả phần hoặc lặp lại cấu trúc một hàng thẳng tắp.
-   * Sử dụng lưới bento không đều (thẻ to thẻ nhỏ xếp xen kẽ) và các tỷ lệ cột lệch (như 45% chữ, 55% hình ảnh trong Hero) để tạo nhịp điệu đọc đa dạng.
-3. **Typography tạp chí (Editorial Typeface):**
-   * Sử dụng sự đối lập rõ nét giữa font tiêu đề Serif cổ điển (`Lora`) và font nội dung Sans-serif hiện đại (`DM Sans`).
-   * Phóng khoáng trong sử dụng khoảng trắng (whitespace) và duy trì `line-height` cao (1.6 - 1.7) giúp trang dễ thở.
-4. **Tương tác co giãn (Elastic Micro-motion):**
-   * Áp dụng đường cong gia tốc bezier cụ thể `cubic-bezier(0.25, 1, 0.5, 1)` cho các hiệu ứng trượt, hover co giãn nhẹ để giao diện góc vuông không bị khô ráp mà đắt tiền, sinh động.
+**⚠ Expert card JS/CSS sync:** `width: 300px` trong CSS phải khớp với `const cardWidth = 300` trong `initExpertsCarousel()` ở `assets/js/shared/main.js`. Nếu đổi một bên mà quên bên kia, carousel tính offset sai.
+
+**Product Grid breakpoints:**
+
+| Breakpoint | Cột |
+|-----------|-----|
+| ≥1400px | 5 |
+| ≤1200px | 4 |
+| ≤1024px | 3 |
+| ≤768px | 2 |
+| ≤480px | 1 |
 
 ---
 
-## 11. Changelog
+## 10. Component Inventory
+
+### Buttons (`components/button.css`)
+
+| Class | Mô tả |
+|-------|-------|
+| `.btn-cta` | Primary CTA — dark green fill, pill |
+| `.btn-green-outline` | Secondary — outline green, pill |
+| `.btn-cta-outline` | Ghost — transparent, border trắng (dùng trên nền tối) |
+| `.carousel-action-btn` | Inline link-button trong carousel caption |
+
+### Cards
+
+| Component | File | Class chính |
+|-----------|------|-------------|
+| Service card featured | `landing.css` | `.svc-card--featured` |
+| Service card mini | `landing.css` | `.svc-card--mini` |
+| Product card | `shop/shop.css` | `.product-card` |
+| Expert card | `landing.css` | `.expert-card` — fixed 300px, JS sync |
+| Testimonial card | `landing.css` | `.testimonial-card` — dark carousel |
+| PawPass tier card | `landing.css` | `.tier-card-interactive` |
+| Blog card | `public/blog.css` | `.blog-card` |
+
+### Modals (`components/modal.css`)
+
+- `.modal-overlay` + `.modal-content` — base modal
+- `.lookup-modal` — tra cứu đặt lịch (landing page)
+
+### Forms (input chuẩn)
+
+```css
+input, select, textarea {
+    border: 1px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    padding: 12px 16px;
+    font-family: var(--font-body);
+}
+input:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+```
+
+### Navigation (`components/nav.css`)
+
+- Header sticky với blur backdrop
+- Mobile: hamburger toggle, slide-in drawer từ phải
+
+---
+
+## 11. CSS File Structure
+
+```
+assets/css/
+├── style.css                  ← Entry point: import tokens + shared base
+├── tokens/
+│   ├── colors.css             ← --color-*
+│   ├── spacing.css            ← --space-*, --border-radius-*, --shadow-*, containers
+│   └── typography.css         ← --font-*, --fs-*
+├── base/
+│   ├── reset.css              ← Box-sizing, margin reset
+│   └── utilities.css          ← .text-center, .accent-italic...
+├── components/                ← Shared UI (dùng ở nhiều trang)
+│   ├── button.css
+│   ├── nav.css
+│   ├── footer.css
+│   ├── modal.css
+│   ├── filter.css
+│   ├── chat.css
+│   └── notification.css
+├── public/                    ← Page-specific (public)
+│   ├── landing.css
+│   ├── login.css
+│   ├── about.css
+│   ├── blog.css
+│   ├── contact.css
+│   ├── help-center.css
+│   └── return-guest.css
+├── services/
+│   ├── services.css
+│   └── booking.css
+├── shop/
+│   ├── shop.css
+│   ├── checkout.css
+│   └── payment-result.css
+├── user/                      ← Authenticated pages
+│   ├── dashboard.css
+│   ├── orders.css
+│   ├── order-detail.css
+│   ├── loyalty.css
+│   ├── pet-archive.css
+│   ├── pet-form.css
+│   ├── return-detail.css
+│   └── support.css
+└── admin/
+    └── admin.css
+```
+
+**Quy tắc khi thêm style mới:**
+- 1 trang → file page-specific tương ứng
+- Nhiều trang → `components/`
+- Variable mới → `tokens/` và sync vào `:root` trong `style.css`
+- Không viết style `inline` trong HTML (trừ giá trị JS-driven)
+
+---
+
+## 12. Landing Page — Section Order
+
+Thứ tự và background của các section. Khi thêm section mới phải giữ nhịp xen kẽ light/dark.
+
+```
+Hero              → --color-primary        (DARK green)
+Features Strip    → --color-primary-dark   (DARK deep green)
+Services          → --color-bg-light       (LIGHT cream)
+Shop              → --color-bg-white       (LIGHT white)
+Tracker           → --color-bg-light       (LIGHT cream)
+Safety            → --color-primary-dark   (DARK)
+Experts           → --color-bg-light       (LIGHT)
+Process           → --color-bg-light       (LIGHT)
+Membership        → --color-bg-light       (LIGHT)
+Testimonials      → --color-primary-dark   (DARK)
+FAQ               → --color-bg-white       (LIGHT)
+Footer            → --color-primary-dark   (DARK)
+```
+
+---
+
+## 13. Accessibility
+
+- **Contrast:** WCAG 2.1 AA — tất cả text/background đạt ≥ 4.5:1
+- **Focus:** `:focus-visible` với `outline: 3px solid var(--color-accent); outline-offset: 2px`
+- **Touch target:** Minimum 44×44px
+- **Semantic HTML:** Heading hierarchy đúng thứ tự, `alt` text cho ảnh, `<button>` cho action, `<a>` cho navigation
+
+---
+
+## 14. Design Principles
+
+1. **Asymmetric Layout** — tránh chia đều 50/50. Dùng lưới bento không đều, tỷ lệ cột lệch (ví dụ: `1.9fr 1fr` cho services grid).
+2. **Editorial Typography** — đối lập Lora serif vs DM Sans sans-serif. Line-height cao (1.6–1.7). Dùng `<em class="accent-italic">` cho accent word trong heading.
+3. **Elastic Micro-motion** — `cubic-bezier(0.25, 1, 0.5, 1)` cho hover/slide. Không animate chỉ để "cho đẹp".
+4. **Token-first** — không hardcode màu, spacing, radius trong component. Chỉ hardcode khi element có intent skeuomorphic rõ ràng (phone mockup, PawPass card).
+
+---
+
+## 15. Changelog
 
 | Ngày | Thay đổi |
 |------|---------|
-| 06/2026 | Khai tử bo góc card mặc định, chuyển các token `--border-radius-lg/md/sm` và `--card-border-radius` về **`0`** |
-| 06/2026 | Bổ sung phần **10. Chiến Thuật Phòng Chống AI Slop** vào tài liệu hệ thống |
-| 06/2026 | Đổi font từ Playfair Display + Plus Jakarta Sans → **Lora + DM Sans** |
-| 06/2026 | Thiết lập Type Scale modular 1.25, thêm legacy token aliases |
-| 06/2026 | Đồng bộ container max-width: 1200px → **1400px** cho tất cả section |
-| 06/2026 | Thiết lập Spacing System base 8px với Vertical Rhythm 4 tầng |
-| 06/2026 | Đồng bộ section padding về **64px** (`--space-xl`), xóa các biến padding dư thừa |
-| 06/2026 | Fix toàn bộ component spacing (Services, Shop, Membership) tuân thủ rule "một nguồn duy nhất" |
-| 06/2026 | Cập nhật Card sizing: đổi Product card về `aspect-ratio: 16/9`, cắt title 2 dòng (`line-clamp: 2`) để hiển thị đủ thông tin quy cách |
-| 06/2026 | Giảm độ đậm của shadow toàn trang (giảm opacity & blur radius) để tạo cảm giác minimalist, sửa lỗi trùng lặp biến `--shadow-lg` |
-| 06/2026 | Tinh chỉnh color palette: thêm semantic colors, cập nhật contrast cho primary dark |
-| 06/2026 | Thêm Media Queries để responsive spacing trên Tablet và Mobile |
+| 06/2026 | Bổ sung Section Order, CSS Structure, Animation Patterns, Component Inventory |
+| 06/2026 | Border radius: deprecated `lg/md/sm`, chuẩn hóa về `--card-border-radius` (10px) và `--border-radius-pill` |
+| 06/2026 | Testimonials section: restore dark navy background + 3-card coverflow carousel |
+| 06/2026 | Đổi font: Playfair Display + Plus Jakarta Sans → **Lora + DM Sans** |
+| 06/2026 | Đồng bộ container max-width → **1400px**, section padding → **64px** (`--space-xl`) |
+| 06/2026 | Thiết lập Spacing System base 8px, Vertical Rhythm 4 tầng |
+| 06/2026 | Thêm semantic colors (danger/success/info/neutral) |

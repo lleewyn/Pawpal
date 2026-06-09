@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    PawPal Design Tokens — Spacing & Layout
    ========================================================================== */
 
@@ -30,6 +30,9 @@
     --shadow-sm: 0 2px 4px rgba(42, 89, 68, 0.04), 0 1px 2px rgba(42, 89, 68, 0.02);
     --shadow-md: 0 4px 8px -2px rgba(42, 89, 68, 0.06), 0 2px 4px -2px rgba(42, 89, 68, 0.03);
     --shadow-lg: 0 10px 20px -4px rgba(42, 89, 68, 0.08), 0 4px 8px -4px rgba(42, 89, 68, 0.03);
+    /* Card elevation — dùng cho tất cả cards, panels, modals */
+    --shadow-card:       0 2px 8px rgba(42, 89, 68, 0.05), 0 1px 3px rgba(42, 89, 68, 0.03);
+    --shadow-card-hover: 0 8px 24px rgba(42, 89, 68, 0.10), 0 2px 6px rgba(42, 89, 68, 0.05);
     
     --border-radius-lg: 24px;
     --border-radius-md: 16px;

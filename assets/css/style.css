@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    PawPal Core Compiled Styles (Do not edit directly above the marker)
    ========================================================================== */
 
@@ -117,6 +117,9 @@
     --shadow-sm: 0 2px 4px rgba(42, 89, 68, 0.04), 0 1px 2px rgba(42, 89, 68, 0.02);
     --shadow-md: 0 4px 8px -2px rgba(42, 89, 68, 0.06), 0 2px 4px -2px rgba(42, 89, 68, 0.03);
     --shadow-lg: 0 10px 20px -4px rgba(42, 89, 68, 0.08), 0 4px 8px -4px rgba(42, 89, 68, 0.03);
+    /* Card elevation — dùng cho tất cả cards, panels, modals */
+    --shadow-card:       0 2px 8px rgba(42, 89, 68, 0.05), 0 1px 3px rgba(42, 89, 68, 0.03);
+    --shadow-card-hover: 0 8px 24px rgba(42, 89, 68, 0.10), 0 2px 6px rgba(42, 89, 68, 0.05);
     
     --border-radius-lg: 24px;
     --border-radius-md: 16px;
@@ -355,7 +358,7 @@ h1, h2, h3, h4, h5, h6 {
 .card-base {
     background-color: var(--color-bg-white);
     border: 1px solid rgba(34, 77, 49, 0.1);
-    border-radius: var(--border-radius-md);
+    border-radius: var(--card-border-radius);
     box-shadow: var(--shadow-sm);
 }
 
@@ -1176,7 +1179,7 @@ h1, h2, h3, h4, h5, h6 {
 .payment-badge {
     background-color: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     padding: 4px 10px;
     font-size: 0.72rem;
     font-weight: 700;
@@ -1373,7 +1376,7 @@ h1, h2, h3, h4, h5, h6 {
     align-items: center;
     gap: 10px;
     padding: 9px 12px;
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     cursor: pointer;
     transition: var(--transition-smooth);
     border: 1px solid transparent;
@@ -1415,7 +1418,7 @@ h1, h2, h3, h4, h5, h6 {
     background: var(--color-border);
     color: var(--color-text-light);
     padding: 2px 7px;
-    border-radius: 20px;
+    border-radius: var(--border-radius-pill);
     min-width: 22px;
     text-align: center;
 }
@@ -1444,7 +1447,7 @@ h1, h2, h3, h4, h5, h6 {
     flex: 1;
     padding: 8px 10px;
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 0.85rem;
     color: var(--color-text-dark);
@@ -1469,7 +1472,7 @@ h1, h2, h3, h4, h5, h6 {
     background: var(--color-primary);
     color: #ffffff;
     border: none;
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 0.85rem;
     font-weight: 600;
@@ -1489,7 +1492,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: 10px;
     background: none;
     border: 1px dashed var(--color-border);
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 0.85rem;
     font-weight: 600;
@@ -1612,7 +1615,7 @@ h1, h2, h3, h4, h5, h6 {
     width: 100%;
     padding: 12px 16px;
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 1rem;
     color: var(--color-text-dark);
@@ -1675,14 +1678,14 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
     position: relative;
     z-index: 1002;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: var(--shadow-card);
 }
 
 .notification-bar strong {
     background-color: var(--color-primary-dark);
     color: var(--color-accent);
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: var(--card-border-radius);
     margin-left: 4px;
 }
 
@@ -1703,7 +1706,7 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--color-primary-dark);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-card);
     border: 1px solid rgba(255, 255, 255, 0.5);
     margin-bottom: 8px;
 }
@@ -1841,7 +1844,7 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 0.95rem;
     color: var(--color-text-light);
     cursor: pointer;
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     transition: var(--transition-smooth);
 }
 
@@ -1986,7 +1989,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .lookup-modal {
     background-color: var(--color-bg-white);
-    border-radius: var(--border-radius-lg);
+    border-radius: var(--card-border-radius);
     width: 100%;
     max-width: 520px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
@@ -2016,7 +2019,7 @@ h1, h2, h3, h4, h5, h6 {
 .lookup-modal-icon {
     width: 40px;
     height: 40px;
-    border-radius: 10px;
+    border-radius: var(--card-border-radius);
     background-color: var(--color-primary-light);
     color: var(--color-primary);
     display: flex;
@@ -2045,7 +2048,7 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--color-text-light);
     cursor: pointer;
     padding: 4px;
-    border-radius: 6px;
+    border-radius: var(--card-border-radius);
     transition: var(--transition-smooth);
     flex-shrink: 0;
 }
@@ -2066,7 +2069,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: 8px 12px;
     background: none;
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 0.82rem;
     font-weight: 600;
@@ -2108,7 +2111,7 @@ h1, h2, h3, h4, h5, h6 {
     flex: 1;
     padding: 12px 16px;
     border: 1.5px solid var(--color-border);
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 0.95rem;
     color: var(--color-text-dark);
@@ -2134,7 +2137,7 @@ h1, h2, h3, h4, h5, h6 {
     background-color: var(--color-primary);
     color: #ffffff;
     border: none;
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 0.88rem;
     font-weight: 700;
@@ -2177,7 +2180,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: 12px 16px;
     background-color: var(--color-bg-light);
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     margin-bottom: 8px;
     transition: var(--transition-smooth);
 }
@@ -2260,7 +2263,7 @@ h1, h2, h3, h4, h5, h6 {
 
 @media (max-width: 640px) {
     .lookup-modal {
-        border-radius: var(--border-radius-md);
+        border-radius: var(--card-border-radius);
     }
     .lookup-modal-header {
         padding: 20px 18px 14px;

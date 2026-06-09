@@ -1,4 +1,4 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    PawPal Filter Sidebar — SOURCE FILE
    Dùng chung cho: pages/services/services.html, pages/shop/shop.html
    ========================================================================== */
@@ -42,7 +42,7 @@
     align-items: center;
     gap: 10px;
     padding: 9px 12px;
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     cursor: pointer;
     transition: var(--transition-smooth);
     border: 1px solid transparent;
@@ -84,7 +84,7 @@
     background: var(--color-border);
     color: var(--color-text-light);
     padding: 2px 7px;
-    border-radius: 20px;
+    border-radius: var(--border-radius-pill);
     min-width: 22px;
     text-align: center;
 }
@@ -113,7 +113,7 @@
     flex: 1;
     padding: 8px 10px;
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 0.85rem;
     color: var(--color-text-dark);
@@ -138,7 +138,7 @@
     background: var(--color-primary);
     color: #ffffff;
     border: none;
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 0.85rem;
     font-weight: 600;
@@ -158,7 +158,7 @@
     padding: 10px;
     background: none;
     border: 1px dashed var(--color-border);
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 0.85rem;
     font-weight: 600;
