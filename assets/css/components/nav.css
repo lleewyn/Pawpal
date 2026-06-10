@@ -2,13 +2,13 @@
    PawPal — Header & Navigation
    ========================================================================== */
 
-/* Force Bootstrap collapse behavior at custom breakpoint 1100px */
+/* Force Bootstrap collapse behavior at custom breakpoint 1250px */
 .navbar-expand-custom .navbar-toggler { display: block; }
 .navbar-expand-custom .navbar-collapse { display: none !important; flex-basis: auto; }
 .navbar-expand-custom .navbar-collapse.show { display: flex !important; }
 
 /* Desktop: nav-menu visible as flex row */
-@media (min-width: 1100px) {
+@media (min-width: 1250px) {
     .navbar-expand-custom .navbar-toggler { display: none !important; }
     .navbar-expand-custom .navbar-collapse { display: flex !important; }
     .nav-menu {
@@ -52,7 +52,7 @@
     justify-content: space-between;
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 1250px) {
     .header-container {
         display: grid;
         grid-template-columns: auto 1fr auto;
@@ -109,7 +109,7 @@
 }
 
 /* Mobile drawer */
-@media (max-width: 1099.98px) {
+@media (max-width: 1249.98px) {
     .main-header {
         padding-top: 0;
         z-index: 1100;
@@ -195,7 +195,7 @@
     .header-actions { display: none !important; }
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 1250px) {
     .header-actions {
         display: flex !important;
         align-items: center;
@@ -475,8 +475,8 @@
 
 /* ── Responsive header tightening ── */
 
-/* Fluid responsiveness for intermediate screens (1100px - 1480px) */
-@media (min-width: 1100px) and (max-width: 1480px) {
+/* Fluid responsiveness for intermediate screens (1250px - 1480px) */
+@media (min-width: 1250px) and (max-width: 1480px) {
     .header-container {
         padding: 0 16px;
         gap: 0 8px;
