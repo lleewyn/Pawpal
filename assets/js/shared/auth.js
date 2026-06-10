@@ -437,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 navLoginBtn.innerHTML = `
                     <div style="display:flex; align-items:center; gap:8px;">
                         <div style="width:28px; height:28px; border-radius:50%; background-color:var(--color-accent); color:var(--color-primary-dark); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;">${initials}</div>
-                        <span style="font-size:0.85rem; font-weight:600; color:#ffffff;">${user.name.split(' ').pop()} | <span style="color:var(--color-accent);">${user.points}P</span></span>
+                        <span style="font-size:0.85rem; font-weight:600; color:var(--color-text-dark);">${user.name.split(' ').pop()} | <span style="color:var(--color-accent-dark);">${user.points}P</span></span>
                     </div>
                 `;
                 return;
