@@ -776,25 +776,42 @@
 
 /* ── Responsive header tightening ── */
 
-/* 1100px–1350px: ẩn search bar để tiết kiệm chỗ */
-@media (min-width: 1100px) and (max-width: 1350px) {
-    .search-bar { display: none; }
-    .header-container { padding: 0 20px; }
-    .header-actions { gap: 8px; }
-    .nav-menu a { padding: 6px 7px; font-size: 0.85rem; }
-}
-
-/* 1350px–1450px: thu nhỏ search bar */
-@media (min-width: 1350px) and (max-width: 1450px) {
-    .search-bar { width: 160px; }
-    .header-container { padding: 0 28px; }
-}
-
-/* Ẩn text "Tra đơn hàng / lịch" ở màn hình 1100–1380px — chỉ giữ icon */
-@media (min-width: 1100px) and (max-width: 1380px) {
-    .lookup-btn span { display: none; }
-    .lookup-btn { padding: 8px 10px; }
-    .auth-actions .login-btn span { display: none; }
+/* Fluid responsiveness for intermediate screens (1100px - 1480px) */
+@media (min-width: 1100px) and (max-width: 1480px) {
+    .header-container {
+        padding: 0 16px;
+        gap: 0 8px;
+    }
+    .search-bar {
+        width: 140px;
+    }
+    .nav-menu a {
+        padding: 6px 6px;
+        font-size: 0.85rem;
+    }
+    .nav-menu ul {
+        gap: 4px;
+    }
+    .header-actions {
+        gap: 6px;
+    }
+    .lookup-btn span {
+        display: none !important;
+    }
+    .lookup-btn {
+        padding: 8px 10px;
+    }
+    .auth-actions .login-btn span {
+        display: none !important;
+    }
+    .btn-signup {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    .btn-header-cta {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
 }
 
 
