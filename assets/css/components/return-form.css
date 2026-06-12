@@ -1,0 +1,392 @@
+/* ===================================
+   RETURN FORM - Slide-out Panel
+   Tuân thủ 100% design.md
+   - NO emoji
+   - Slide từ phải qua
+   - File upload với validation
+   =================================== */
+
+/* Overlay */
+.return-panel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(45, 55, 50, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.return-panel-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Slide-out Panel */
+.return-panel {
+    position: fixed;
+    right: -40%;
+    top: 0;
+    width: 40%;
+    height: 100vh;
+    background: var(--color-bg-white);
+    box-shadow: -4px 0 24px rgba(42, 89, 68, 0.15);
+    z-index: 1001;
+    transition: right 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.return-panel-overlay.active .return-panel {
+    right: 0;
+}
+
+/* Panel Header */
+.return-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: var(--border-card);
+    background: var(--color-bg-light);
+    flex-shrink: 0;
+}
+
+.return-panel-header h2 {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h3);
+    font-weight: 600;
+    color: var(--color-text-dark);
+    margin: 0;
+}
+
+.panel-close-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-bg-white);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-dark);
+}
+
+.panel-close-btn:hover {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+/* Panel Body */
+.return-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-lg);
+}
+
+/* Form Section */
+.form-section {
+    margin-bottom: var(--space-lg);
+}
+
+.form-label {
+    display: block;
+    font-size: var(--fs-body);
+    font-weight: 600;
+    color: var(--color-text-dark);
+    margin-bottom: var(--space-sm);
+}
+
+.required {
+    color: var(--color-danger);
+    margin-left: 4px;
+}
+
+/* Radio Cards */
+.radio-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm);
+}
+
+.radio-card {
+    position: relative;
+    cursor: pointer;
+}
+
+.radio-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.radio-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-md);
+    border: 2px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    background: var(--color-bg-white);
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.radio-card input:checked + .radio-card-content {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+
+.radio-card:hover .radio-card-content {
+    border-color: var(--color-primary);
+}
+
+.radio-icon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.radio-text {
+    font-size: var(--fs-body);
+    font-weight: 500;
+    color: var(--color-text-dark);
+}
+
+/* Products Checklist */
+.products-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.product-checkbox {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.product-checkbox:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+
+.product-checkbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.checkbox-product-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex: 1;
+}
+
+.checkbox-product-info img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: var(--card-border-radius);
+    border: var(--border-card);
+}
+
+.checkbox-product-text h5 {
+    font-size: var(--fs-body);
+    font-weight: 600;
+    color: var(--color-text-dark);
+    margin-bottom: 4px;
+}
+
+.checkbox-product-text p {
+    font-size: var(--fs-small);
+    color: var(--color-text-light);
+}
+
+/* Select and Textarea */
+select,
+textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    font-family: var(--font-body);
+    font-size: var(--fs-body);
+    color: var(--color-text-dark);
+    transition: border-color 0.3s ease;
+}
+
+select:focus,
+textarea:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.char-counter {
+    display: block;
+    text-align: right;
+    font-size: var(--fs-small);
+    color: var(--color-text-light);
+    margin-top: 4px;
+}
+
+/* File Upload Zone */
+.file-upload-zone {
+    border: 2px dashed var(--color-border);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-lg);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--color-bg-light);
+}
+
+.file-upload-zone:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+
+.file-upload-zone.dragging {
+    border-color: var(--color-accent);
+    background: var(--color-accent-light);
+}
+
+.upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: var(--color-text-light);
+}
+
+.upload-placeholder p {
+    font-size: var(--fs-body);
+    color: var(--color-text-dark);
+    margin: 0;
+}
+
+.upload-hint {
+    font-size: var(--fs-small);
+    color: var(--color-text-light);
+}
+
+/* File Preview List */
+.file-preview-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
+}
+
+.file-preview-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--card-border-radius);
+    overflow: hidden;
+    border: var(--border-card);
+}
+
+.file-preview-item img,
+.file-preview-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.remove-file-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-danger);
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.remove-file-btn:hover {
+    background: var(--color-danger-dark);
+    transform: scale(1.1);
+}
+
+/* Error Message */
+.error-message {
+    display: none;
+    color: var(--color-danger);
+    font-size: var(--fs-small);
+    margin-top: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--color-danger-light);
+    border-radius: var(--card-border-radius);
+}
+
+/* Submit Button */
+.btn-submit-return {
+    width: 100%;
+    padding: 14px 24px;
+    margin-top: var(--space-md);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .return-panel {
+        width: 60%;
+        right: -60%;
+    }
+}
+
+@media (max-width: 768px) {
+    .return-panel {
+        width: 90%;
+        right: -90%;
+    }
+    
+    .radio-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .file-preview-list {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .return-panel {
+        width: 100%;
+        right: -100%;
+    }
+    
+    .return-panel-body {
+        padding: var(--space-md);
+    }
+}

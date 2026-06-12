@@ -1,0 +1,20 @@
+[
+  {
+    "id": "standard",
+    "name": "Giao tiêu chuẩn",
+    "description": "3-5 ngày làm việc",
+    "fee": 0,
+    "estimatedDays": [3, 5],
+    "icon": "truck",
+    "available": true
+  },
+  {
+    "id": "express",
+    "name": "Giao nhanh",
+    "description": "1-2 ngày làm việc",
+    "fee": 25000,
+    "estimatedDays": [1, 2],
+    "icon": "fast-delivery",
+    "available": true
+  }
+]

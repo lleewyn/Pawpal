@@ -1,0 +1,162 @@
+[
+    {
+        "id": "ORD-2026-001",
+        "userId": "USER-123",
+        "status": "shipping",
+        "paymentStatus": "unpaid",
+        "paymentMethod": "cod",
+        "createdAt": "2026-06-10T14:30:00",
+        "updatedAt": "2026-06-11T09:00:00",
+        "delivery": {
+            "name": "Nguyễn Văn A",
+            "phone": "0901234567",
+            "address": "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM"
+        },
+        "products": [
+            {
+                "id": "PROD-001",
+                "name": "Thức ăn cho chó Royal Canin Adult 15kg",
+                "image": "https://via.placeholder.com/100x100?text=Dog+Food",
+                "quantity": 2,
+                "price": 225000,
+                "total": 450000
+            },
+            {
+                "id": "PROD-002",
+                "name": "Đồ chơi gặm xương cao su",
+                "image": "https://via.placeholder.com/100x100?text=Toy",
+                "quantity": 1,
+                "price": 400000,
+                "total": 400000
+            }
+        ],
+        "pricing": {
+            "subtotal": 850000,
+            "shippingFee": 30000,
+            "discount": 0,
+            "total": 880000
+        },
+        "timeline": [
+            {
+                "status": "placed",
+                "timestamp": "2026-06-10T14:30:00",
+                "title": "Đơn hàng đã đặt",
+                "description": null
+            },
+            {
+                "status": "confirmed",
+                "timestamp": "2026-06-10T15:00:00",
+                "title": "Đã xác nhận",
+                "description": null
+            },
+            {
+                "status": "shipping",
+                "timestamp": "2026-06-11T09:00:00",
+                "title": "Đang giao hàng",
+                "description": "Đơn vị vận chuyển: J&T Express\nMã vận đơn: JT123456789"
+            }
+        ],
+        "allowedActions": ["confirm_received", "cancel_order"]
+    },
+    {
+        "id": "ORD-2026-002",
+        "userId": "USER-123",
+        "status": "completed",
+        "paymentStatus": "paid",
+        "paymentMethod": "vnpay",
+        "createdAt": "2026-06-05T10:15:00",
+        "updatedAt": "2026-06-08T16:30:00",
+        "delivery": {
+            "name": "Nguyễn Văn A",
+            "phone": "0901234567",
+            "address": "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM"
+        },
+        "products": [
+            {
+                "id": "PROD-010",
+                "name": "Cát vệ sinh cho mèo Catsan 10L",
+                "image": "https://via.placeholder.com/100x100?text=Cat+Litter",
+                "quantity": 3,
+                "price": 180000,
+                "total": 540000
+            }
+        ],
+        "pricing": {
+            "subtotal": 540000,
+            "shippingFee": 30000,
+            "discount": 50000,
+            "total": 520000
+        },
+        "timeline": [
+            {
+                "status": "placed",
+                "timestamp": "2026-06-05T10:15:00",
+                "title": "Đơn hàng đã đặt"
+            },
+            {
+                "status": "confirmed",
+                "timestamp": "2026-06-05T11:00:00",
+                "title": "Đã xác nhận"
+            },
+            {
+                "status": "preparing",
+                "timestamp": "2026-06-06T08:00:00",
+                "title": "Đang chuẩn bị hàng"
+            },
+            {
+                "status": "shipping",
+                "timestamp": "2026-06-07T09:00:00",
+                "title": "Đang giao hàng"
+            },
+            {
+                "status": "delivered",
+                "timestamp": "2026-06-08T14:20:00",
+                "title": "Đã giao hàng"
+            },
+            {
+                "status": "completed",
+                "timestamp": "2026-06-08T16:30:00",
+                "title": "Hoàn thành"
+            }
+        ],
+        "allowedActions": ["write_review", "return_request"]
+    },
+    {
+        "id": "ORD-2026-003",
+        "userId": "USER-123",
+        "status": "pending_payment",
+        "paymentStatus": "unpaid",
+        "paymentMethod": "cod",
+        "createdAt": "2026-06-12T16:45:00",
+        "updatedAt": "2026-06-12T16:45:00",
+        "delivery": {
+            "name": "Nguyễn Văn A",
+            "phone": "0901234567",
+            "address": "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM"
+        },
+        "products": [
+            {
+                "id": "PROD-015",
+                "name": "Balo vận chuyển thú cưng",
+                "image": "https://via.placeholder.com/100x100?text=Backpack",
+                "quantity": 1,
+                "price": 650000,
+                "total": 650000
+            }
+        ],
+        "pricing": {
+            "subtotal": 650000,
+            "shippingFee": 0,
+            "discount": 0,
+            "total": 650000
+        },
+        "timeline": [
+            {
+                "status": "pending_payment",
+                "timestamp": "2026-06-12T16:45:00",
+                "title": "Chờ thanh toán"
+            }
+        ],
+        "allowedActions": ["pay_now", "cancel_order"]
+    }
+]

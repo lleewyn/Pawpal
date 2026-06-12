@@ -1,0 +1,50 @@
+[
+  {
+    "id": "cod",
+    "name": "Thanh toán khi nhận hàng",
+    "shortName": "COD",
+    "description": "Thanh toán bằng tiền mặt khi nhận hàng",
+    "icon": "cash",
+    "fee": 0,
+    "available": true,
+    "requiresInfo": false
+  },
+  {
+    "id": "momo",
+    "name": "Ví điện tử MoMo",
+    "shortName": "MoMo",
+    "description": "Thanh toán qua ví MoMo",
+    "icon": "wallet",
+    "fee": 0,
+    "available": true,
+    "requiresInfo": false,
+    "redirectUrl": "https://payment.momo.vn/pay"
+  },
+  {
+    "id": "vnpay",
+    "name": "Cổng thanh toán VNPay",
+    "shortName": "VNPay",
+    "description": "Thanh toán qua cổng VNPay",
+    "icon": "credit-card",
+    "fee": 0,
+    "available": true,
+    "requiresInfo": false,
+    "redirectUrl": "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+  },
+  {
+    "id": "bank",
+    "name": "Chuyển khoản ngân hàng",
+    "shortName": "Bank Transfer",
+    "description": "Chuyển khoản qua Internet Banking",
+    "icon": "bank",
+    "fee": 0,
+    "available": true,
+    "requiresInfo": true,
+    "bankInfo": {
+      "bankName": "Ngân hàng Vietcombank",
+      "accountNumber": "0123456789",
+      "accountName": "CÔNG TY PAWPAL",
+      "branch": "Chi nhánh TP.HCM"
+    }
+  }
+]

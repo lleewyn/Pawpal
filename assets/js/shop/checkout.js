@@ -1,412 +1,706 @@
-/* ==========================================================================
-   checkout.js — Xử lý trang thanh toán PawPal
-   ========================================================================== */
+/**
+ * Checkout Page JavaScript
+ * Handles checkout flow, order summary, vouchers, points, etc.
+ */
 
-const VALID_COUPONS = {
-    'PAWPAL10': { type: 'percent',  value: 10, desc: 'Giảm 10%' },
-    'MEMBER15': { type: 'percent',  value: 15, desc: 'Giảm 15%' },
-    'SUMMER20': { type: 'percent',  value: 20, desc: 'Giảm 20%' },
-    'FREESHIP': { type: 'shipping', value: 0,  desc: 'Miễn phí vận chuyển' },
+// ============================================================================
+// Global State
+// ============================================================================
+const checkoutState = {
+    cart: [],
+    user: null,
+    deliveryOptions: [],
+    paymentMethods: [],
+    selectedDelivery: 'standard',
+    selectedPayment: 'cod',
+    vouchers: [],
+    appliedVoucher: null,
+    pointsUsed: 0,
+    totals: {
+        subtotal: 0,
+        shippingFee: 0,
+        pointsDiscount: 0,
+        voucherDiscount: 0,
+        grandTotal: 0
+    }
 };
 
-let cart = [];
-let appliedCoupon = null;
-let orderData = {};
-let paymentLock = false;
+// ============================================================================
+// Initialize
+// ============================================================================
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Load user data
+        checkoutState.user = JSON.parse(localStorage.getItem('pawpal_user') || 'null');
+        
+        // Check if this is a "buy now" checkout
+        const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
+        
+        if (isBuyNow) {
+            // Load cart from sessionStorage (buy now cart)
+            checkoutState.cart = JSON.parse(sessionStorage.getItem('pawpal_buynow_cart') || '[]');
+            
+            if (checkoutState.cart.length === 0) {
+                window.location.href = '/pages/shop/shop.html';
+                return;
+            }
+        } else {
+            // Load cart from localStorage (normal cart)
+            checkoutState.cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+            
+            if (checkoutState.cart.length === 0) {
+                window.location.href = '/pages/shop/cart.html';
+                return;
+            }
+        }
+        
+        // Load data
+        await loadData();
+        
+        // Initialize UI
+        initializeShippingForm();
+        renderDeliveryOptions();
+        renderPaymentMethods();
+        renderOrderSummary();
+        
+        // Show PawPoints section if user logged in
+        if (checkoutState.user && checkoutState.user.pawPoints) {
+            initializePawPoints();
+        }
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+    } catch (error) {
+        console.error('Error initializing checkout:', error);
+        showToast('Có lỗi xảy ra khi tải trang', 'error');
+    }
+});
 
-function formatPrice(num) {
-    return num.toLocaleString('vi-VN') + 'đ';
+// ============================================================================
+// Load Data
+// ============================================================================
+async function loadData() {
+    try {
+        // Load delivery options
+        const deliveryResponse = await fetch('/data/delivery-options.json');
+        checkoutState.deliveryOptions = await deliveryResponse.json();
+        
+        // Load payment methods
+        const paymentResponse = await fetch('/data/payment-methods.json');
+        checkoutState.paymentMethods = await paymentResponse.json();
+        
+        // Load vouchers
+        const vouchersResponse = await fetch('/data/vouchers.json');
+        checkoutState.vouchers = await vouchersResponse.json();
+        
+    } catch (error) {
+        console.error('Error loading data:', error);
+    }
 }
 
-function generateOrderCode() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = 'PP-';
-    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-    return code;
-}
-
-function calcTotals(subtotal) {
-    let discount = 0;
-    let shippingCost = subtotal >= 300000 ? 0 : 30000;
-    let discountLabel = '';
-    if (appliedCoupon) {
-        if (appliedCoupon.type === 'percent') {
-            discount = Math.round(subtotal * appliedCoupon.value / 100);
-            discountLabel = `Giảm ${appliedCoupon.value}% (${appliedCoupon.code})`;
-        } else if (appliedCoupon.type === 'shipping') {
-            shippingCost = 0;
-            discountLabel = `Miễn ship (${appliedCoupon.code})`;
+// ============================================================================
+// Shipping Form
+// ============================================================================
+function initializeShippingForm() {
+    if (checkoutState.user) {
+        // Show save address checkbox
+        document.getElementById('save-address-section').style.display = 'block';
+        
+        // Auto-fill user data
+        document.getElementById('fullName').value = checkoutState.user.name || '';
+        document.getElementById('phone').value = checkoutState.user.phone || '';
+        document.getElementById('address').value = checkoutState.user.address || '';
+        
+        // Load saved addresses if exists
+        if (checkoutState.user.addresses && checkoutState.user.addresses.length > 0) {
+            populateSavedAddresses();
         }
     }
-    return { discount, shippingCost, total: Math.max(0, subtotal - discount + shippingCost), discountLabel };
 }
 
-// ── Render order summary ──────────────────────────────────────────────────────
-function renderOrderSummary() {
-    if (cart.length === 0) {
-        window.location.href = 'shop.html';
-        return;
+function populateSavedAddresses() {
+    const dropdown = document.getElementById('address-dropdown');
+    const section = document.getElementById('saved-addresses-section');
+    
+    // Add addresses to dropdown
+    checkoutState.user.addresses.forEach(addr => {
+        const option = document.createElement('option');
+        option.value = addr.id;
+        option.textContent = `${addr.label} - ${addr.name}, ${addr.phone}`;
+        dropdown.appendChild(option);
+    });
+    
+    // Add "new address" option
+    const newOption = document.createElement('option');
+    newOption.value = 'new';
+    newOption.textContent = '+ Thêm địa chỉ mới';
+    dropdown.appendChild(newOption);
+    
+    // Show section
+    section.style.display = 'block';
+    
+    // Set default address
+    const defaultAddr = checkoutState.user.addresses.find(a => a.isDefault);
+    if (defaultAddr) {
+        dropdown.value = defaultAddr.id;
+        fillAddressForm(defaultAddr);
     }
+}
 
-    const itemsEl   = document.getElementById('orderItems');
-    const subtotalEl = document.getElementById('summarySubtotal');
-    const discountRow = document.getElementById('summaryDiscountRow');
-    const discountLabelEl = document.getElementById('summaryDiscountLabel');
-    const discountEl = document.getElementById('summaryDiscount');
-    const shippingEl = document.getElementById('summaryShipping');
-    const totalEl    = document.getElementById('summaryTotal');
-    const pawPtsEl   = document.getElementById('pawPointsEarn');
+function fillAddressForm(address) {
+    document.getElementById('fullName').value = address.name;
+    document.getElementById('phone').value = address.phone;
+    document.getElementById('address').value = address.street;
+    document.getElementById('city').value = address.city;
+    document.getElementById('district').value = address.district;
+    document.getElementById('note').value = address.note || '';
+}
 
-    itemsEl.innerHTML = cart.map(item => `
-        <div class="order-item">
-            <img class="order-item-img" src="${item.img}" alt="${item.name}"
-                 onerror="this.src='https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=52&h=52&fit=crop'">
-            <div class="order-item-info">
-                <p class="order-item-name">${item.name}</p>
-                <p class="order-item-qty">x${item.qty} · ${item.brand || ''}</p>
+// ============================================================================
+// Delivery Options
+// ============================================================================
+function renderDeliveryOptions() {
+    const container = document.getElementById('delivery-options');
+    container.innerHTML = '';
+    
+    checkoutState.deliveryOptions.forEach((option, index) => {
+        const isSelected = option.id === checkoutState.selectedDelivery;
+        
+        const optionDiv = document.createElement('div');
+        optionDiv.className = `delivery-option ${isSelected ? 'selected' : ''}`;
+        optionDiv.innerHTML = `
+            <input type="radio" name="delivery" value="${option.id}" 
+                   id="delivery-${option.id}" ${isSelected ? 'checked' : ''}
+                   data-fee="${option.fee}">
+            <svg class="delivery-icon" viewBox="0 0 24 24">
+                ${option.id === 'standard' ? 
+                    '<path d="M18 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-9H17V12h4.46L19.5 9.5zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM20 8l3 4v5h-2c0 1.66-1.34 3-3 3s-3-1.34-3-3H9c0 1.66-1.34 3-3 3s-3-1.34-3-3H1V6c0-1.11.89-2 2-2h14v4h3zM3 6v9h.76c.55-.61 1.35-1 2.24-1s1.69.39 2.24 1H15V6H3z"/>' :
+                    '<path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm6 9.09c0 4-2.55 7.7-6 8.83-3.45-1.13-6-4.82-6-8.83V6.31l6-2.12 6 2.12v4.78z"/><path d="M10.09 13.75L7.77 11.42l-1.06 1.06 3.38 3.38 5.66-5.66-1.06-1.06z"/>'
+                }
+            </svg>
+            <div class="delivery-info">
+                <h4>${option.name}</h4>
+                <p>${option.description}</p>
             </div>
-            <span class="order-item-price">${formatPrice(item.price * item.qty)}</span>
-        </div>`).join('');
-
-    const subtotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
-    const { discount, shippingCost, total, discountLabel } = calcTotals(subtotal);
-
-    subtotalEl.textContent = formatPrice(subtotal);
-
-    if (discount > 0) {
-        discountRow.style.display = 'flex';
-        discountLabelEl.textContent = discountLabel;
-        discountEl.textContent = `-${formatPrice(discount)}`;
-    } else if (appliedCoupon && appliedCoupon.type === 'shipping') {
-        discountRow.style.display = 'flex';
-        discountLabelEl.textContent = discountLabel;
-        discountEl.textContent = 'Miễn phí 🎉';
-    } else {
-        discountRow.style.display = 'none';
-    }
-
-    shippingEl.textContent = shippingCost === 0 ? 'Miễn phí 🎉' : formatPrice(shippingCost);
-    totalEl.textContent = formatPrice(total);
-    const pawPoints = Math.floor(total / 1000);
-    if (pawPtsEl) pawPtsEl.textContent = pawPoints.toLocaleString('vi-VN');
-}
-
-// ── Form validation ───────────────────────────────────────────────────────────
-function validateField(inputId, errorId, check, message) {
-    const input = document.getElementById(inputId);
-    const err   = document.getElementById(errorId);
-    if (!input) return true;
-    const valid = check(input.value);
-    input.classList.toggle('error', !valid);
-    input.classList.toggle('valid', valid);
-    if (err) err.textContent = valid ? '' : message;
-    return valid;
-}
-
-function validateForm() {
-    const nameOk = validateField('shipName', 'errName',
-        v => v.trim().length >= 2, 'Vui lòng nhập họ và tên hợp lệ');
-    const phoneOk = validateField('shipPhone', 'errPhone',
-        v => /^0\d{9}$/.test(v.trim()), 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0');
-    const provOk = validateField('shipProvince', 'errProvince',
-        v => v !== '', 'Vui lòng chọn Tỉnh/Thành phố');
-    const distOk = validateField('shipDistrict', 'errDistrict',
-        v => v.trim().length >= 2, 'Vui lòng nhập Quận/Huyện');
-    const addrOk = validateField('shipAddress', 'errAddress',
-        v => v.trim().length >= 5, 'Vui lòng nhập địa chỉ chi tiết');
-    return nameOk && phoneOk && provOk && distOk && addrOk;
-}
-
-function getFormData() {
-    return {
-        name:     document.getElementById('shipName').value.trim(),
-        phone:    document.getElementById('shipPhone').value.trim(),
-        province: document.getElementById('shipProvince').value,
-        district: document.getElementById('shipDistrict').value.trim(),
-        ward:     document.getElementById('shipWard').value.trim(),
-        address:  document.getElementById('shipAddress').value.trim(),
-        note:     document.getElementById('shipNote').value.trim(),
-    };
-}
-
-function getSelectedPayment() {
-    const checked = document.querySelector('input[name="payment"]:checked');
-    return checked ? checked.value : 'COD';
-}
-
-function getSelectedOnlineMethod() {
-    const checked = document.querySelector('input[name="onlineMethod"]:checked');
-    return checked ? checked.value : 'QR';
-}
-
-// ── Show / hide pages ─────────────────────────────────────────────────────────
-function showPage(id) {
-    ['checkoutPage', 'processingPage', 'successPage', 'failurePage'].forEach(p => {
-        const el = document.getElementById(p);
-        if (el) el.style.display = p === id ? (p === 'checkoutPage' ? 'block' : 'flex') : 'none';
+            <div class="delivery-fee ${option.fee === 0 ? 'free' : ''}">
+                ${option.fee === 0 ? 'Miễn phí' : formatCurrency(option.fee)}
+            </div>
+        `;
+        
+        optionDiv.addEventListener('click', () => {
+            selectDeliveryOption(option.id, option.fee);
+        });
+        
+        container.appendChild(optionDiv);
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ── Checkout submit ───────────────────────────────────────────────────────────
-function handleCheckout() {
-    if (paymentLock) return;
-    if (!validateForm()) {
-        showToast('Vui lòng điền đầy đủ thông tin giao hàng', 'warning');
-        const firstErr = document.querySelector('.form-input.error');
-        if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+function selectDeliveryOption(deliveryId, fee) {
+    checkoutState.selectedDelivery = deliveryId;
+    checkoutState.totals.shippingFee = fee;
+    
+    // Update UI
+    document.querySelectorAll('.delivery-option').forEach(el => el.classList.remove('selected'));
+    document.querySelector(`#delivery-${deliveryId}`).closest('.delivery-option').classList.add('selected');
+    document.querySelector(`#delivery-${deliveryId}`).checked = true;
+    
+    // Update label in summary
+    const option = checkoutState.deliveryOptions.find(o => o.id === deliveryId);
+    document.getElementById('delivery-label').textContent = `(${option.name})`;
+    
+    updateOrderTotals();
+}
+
+// ============================================================================
+// Payment Methods
+// ============================================================================
+function renderPaymentMethods() {
+    const container = document.getElementById('payment-methods');
+    container.innerHTML = '';
+    
+    checkoutState.paymentMethods.forEach(method => {
+        const isSelected = method.id === checkoutState.selectedPayment;
+        
+        const methodDiv = document.createElement('div');
+        methodDiv.className = `payment-method-card ${isSelected ? 'selected' : ''}`;
+        methodDiv.innerHTML = `
+            <input type="radio" name="payment" value="${method.id}" 
+                   id="payment-${method.id}" ${isSelected ? 'checked' : ''}>
+            <svg class="payment-icon" viewBox="0 0 24 24">
+                ${getPaymentIcon(method.icon)}
+            </svg>
+            <div class="payment-info">
+                <h4>${method.name}</h4>
+                <p>${method.description}</p>
+            </div>
+        `;
+        
+        methodDiv.addEventListener('click', () => {
+            selectPaymentMethod(method.id);
+        });
+        
+        container.appendChild(methodDiv);
+    });
+}
+
+function getPaymentIcon(iconType) {
+    const icons = {
+        cash: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>',
+        wallet: '<path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>',
+        'credit-card': '<path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>',
+        bank: '<path d="M6.5 10h-2v7h2v-7zm6 0h-2v7h2v-7zm8.5 9H2v2h19v-2zm-2.5-9h-2v7h2v-7zm-7-6.74L16.71 6H6.29l5.21-2.74m0-2.26L2 6v2h19V6l-9.5-5z"/>'
+    };
+    return icons[iconType] || icons.cash;
+}
+
+function selectPaymentMethod(methodId) {
+    checkoutState.selectedPayment = methodId;
+    
+    // Update UI
+    document.querySelectorAll('.payment-method-card').forEach(el => el.classList.remove('selected'));
+    document.querySelector(`#payment-${methodId}`).closest('.payment-method-card').classList.add('selected');
+    document.querySelector(`#payment-${methodId}`).checked = true;
+    
+    // Update button text
+    const btnCheckout = document.getElementById('btn-checkout');
+    if (methodId === 'cod') {
+        btnCheckout.textContent = 'Xác nhận đặt hàng (COD)';
+    } else {
+        btnCheckout.textContent = 'Tiến hành thanh toán online';
+    }
+}
+
+// ============================================================================
+// PawPoints
+// ============================================================================
+function initializePawPoints() {
+    const section = document.getElementById('pawpoints-section');
+    section.style.display = 'block';
+    
+    const userPoints = checkoutState.user.pawPoints || 0;
+    const orderTotal = calculateSubtotal();
+    
+    // Set max points (min of user balance or order total / 1000)
+    const maxPoints = Math.min(userPoints, Math.floor(orderTotal / 1000));
+    
+    // Update UI
+    document.getElementById('user-points').textContent = userPoints;
+    document.getElementById('points-value-equivalent').textContent = formatCurrency(userPoints * 1000);
+    document.getElementById('points-max-label').textContent = formatCurrency(maxPoints * 1000);
+    
+    const slider = document.getElementById('points-slider');
+    slider.max = maxPoints;
+    slider.value = 0;
+    
+    // Enable slider when checkbox checked
+    const checkbox = document.getElementById('use-points-checkbox');
+    checkbox.addEventListener('change', (e) => {
+        slider.disabled = !e.target.checked;
+        if (!e.target.checked) {
+            slider.value = 0;
+            updatePointsDisplay(0);
+            checkoutState.pointsUsed = 0;
+            checkoutState.totals.pointsDiscount = 0;
+            updateOrderTotals();
+        }
+    });
+    
+    // Slider input
+    slider.addEventListener('input', (e) => {
+        const points = parseInt(e.target.value);
+        updatePointsDisplay(points);
+        
+        if (checkbox.checked) {
+            checkoutState.pointsUsed = points;
+            checkoutState.totals.pointsDiscount = points * 1000;
+            updateOrderTotals();
+        }
+    });
+}
+
+function updatePointsDisplay(points) {
+    const discount = points * 1000;
+    const remaining = (checkoutState.user.pawPoints || 0) - points;
+    
+    document.getElementById('points-to-use').textContent = points;
+    document.getElementById('points-discount-display').textContent = formatCurrency(discount);
+    document.getElementById('remaining-points').textContent = remaining;
+}
+
+// ============================================================================
+// Order Summary
+// ============================================================================
+function renderOrderSummary() {
+    const container = document.getElementById('order-items');
+    container.innerHTML = '';
+    
+    checkoutState.cart.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'order-item';
+        itemDiv.innerHTML = `
+            <img src="${item.image}" alt="${item.name}" class="order-item-img">
+            <div class="order-item-info">
+                <h4>${item.name}</h4>
+                <p class="order-item-qty">x${item.quantity}</p>
+            </div>
+            <span class="order-item-price">${formatCurrency(item.price * item.quantity)}</span>
+        `;
+        container.appendChild(itemDiv);
+    });
+    
+    updateOrderTotals();
+}
+
+function calculateSubtotal() {
+    return checkoutState.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+}
+
+function updateOrderTotals() {
+    const subtotal = calculateSubtotal();
+    checkoutState.totals.subtotal = subtotal;
+    
+    // Calculate grand total
+    const grandTotal = subtotal 
+        + checkoutState.totals.shippingFee 
+        - checkoutState.totals.pointsDiscount 
+        - checkoutState.totals.voucherDiscount;
+    
+    checkoutState.totals.grandTotal = Math.max(0, grandTotal);
+    
+    // Update UI
+    document.getElementById('subtotal').textContent = formatCurrency(subtotal);
+    document.getElementById('shipping-fee').textContent = 
+        checkoutState.totals.shippingFee === 0 ? 'Miễn phí' : formatCurrency(checkoutState.totals.shippingFee);
+    
+    // Show/hide points row
+    if (checkoutState.totals.pointsDiscount > 0) {
+        document.getElementById('points-row').style.display = 'flex';
+        document.getElementById('points-discount').textContent = `-${formatCurrency(checkoutState.totals.pointsDiscount)}`;
+    } else {
+        document.getElementById('points-row').style.display = 'none';
+    }
+    
+    // Show/hide voucher row
+    if (checkoutState.totals.voucherDiscount > 0) {
+        document.getElementById('voucher-row').style.display = 'flex';
+        document.getElementById('voucher-discount').textContent = `-${formatCurrency(checkoutState.totals.voucherDiscount)}`;
+        document.getElementById('voucher-code-summary').textContent = `(${checkoutState.appliedVoucher.code})`;
+    } else {
+        document.getElementById('voucher-row').style.display = 'none';
+    }
+    
+    document.getElementById('grand-total').textContent = formatCurrency(checkoutState.totals.grandTotal);
+}
+
+// ============================================================================
+// Voucher
+// ============================================================================
+async function applyVoucher() {
+    const input = document.getElementById('voucher-input');
+    const code = input.value.trim().toUpperCase();
+    
+    if (!code) {
+        showToast('Vui lòng nhập mã giảm giá', 'error');
         return;
     }
-
-    paymentLock = true;
-    const submitBtn = document.getElementById('checkoutSubmitBtn');
-    submitBtn.disabled = true;
-    document.getElementById('submitBtnText').textContent = 'Đang xử lý...';
-
-    const form     = getFormData();
-    const method   = getSelectedPayment();
-    const subtotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
-    const { discount, shippingCost, total } = calcTotals(subtotal);
-
-    const paymentStatus = method === 'COD' ? 'Chưa thanh toán' : 'Đã thanh toán';
-    const now = new Date().toISOString();
-
-    orderData = {
-        code:           generateOrderCode(),
-        method,
-        onlineMethod:   method === 'ONLINE' ? getSelectedOnlineMethod() : null,
-        paymentStatus,
-        orderStatus:    'Chờ xác nhận',
-        statusHistory: [
-            {
-                status: 'Chờ xác nhận',
-                note:   'Đơn hàng đã được ghi nhận và đang chờ xử lý.',
-                timestamp: now,
-            }
-        ],
-        form,
-        cart: [...cart],
-        subtotal,
-        discount,
-        shippingCost,
-        total,
-        coupon: appliedCoupon,
-        pawPoints: Math.floor(total / 1000),
-        createdAt: now,
-        updatedAt: now,
-    };
-
-    if (method === 'COD') {
-        setTimeout(() => completeOrder(), 600);
+    
+    // Validate voucher
+    const result = await validateVoucher(code);
+    
+    if (result.valid) {
+        checkoutState.appliedVoucher = result.voucher;
+        checkoutState.totals.voucherDiscount = result.discount;
+        
+        // Show applied badge
+        document.getElementById('applied-voucher').style.display = 'flex';
+        document.getElementById('voucher-code-display').textContent = code;
+        document.getElementById('voucher-amount').textContent = `-${formatCurrency(result.discount)}`;
+        
+        // Clear input
+        input.value = '';
+        
+        // Update totals
+        updateOrderTotals();
+        
+        showToast('Áp dụng mã giảm giá thành công!', 'success');
     } else {
-        // Online payment: show processing screen, then success
-        showPage('processingPage');
-        setTimeout(() => completeOrder(), 3500);
+        showToast(result.message, 'error');
     }
 }
 
-function completeOrder() {
-    // Save order to localStorage history
-    const orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-    orders.unshift(orderData);
+function removeVoucher() {
+    checkoutState.appliedVoucher = null;
+    checkoutState.totals.voucherDiscount = 0;
+    
+    document.getElementById('applied-voucher').style.display = 'none';
+    updateOrderTotals();
+    
+    showToast('Đã xóa mã giảm giá', 'info');
+}
+
+async function validateVoucher(code) {
+    const voucher = checkoutState.vouchers.find(v => v.code === code && v.active);
+    
+    if (!voucher) {
+        return { valid: false, message: 'Mã giảm giá không tồn tại' };
+    }
+    
+    // Check expiry
+    const now = new Date();
+    const expiry = new Date(voucher.validUntil);
+    if (now > expiry) {
+        return { valid: false, message: 'Mã giảm giá đã hết hạn' };
+    }
+    
+    // Check minimum order value
+    const subtotal = checkoutState.totals.subtotal;
+    if (subtotal < voucher.minOrderValue) {
+        return { 
+            valid: false, 
+            message: `Đơn hàng tối thiểu ${formatCurrency(voucher.minOrderValue)}` 
+        };
+    }
+    
+    // Check usage limit
+    if (voucher.usageCount >= voucher.maxUsage) {
+        return { valid: false, message: 'Mã giảm giá đã hết lượt sử dụng' };
+    }
+    
+    // Calculate discount
+    let discount = 0;
+    if (voucher.type === 'fixed') {
+        discount = voucher.value;
+    } else if (voucher.type === 'percentage') {
+        discount = Math.min(
+            Math.floor((subtotal * voucher.value) / 100),
+            voucher.maxDiscount || Infinity
+        );
+    } else if (voucher.type === 'shipping') {
+        discount = Math.min(voucher.value, checkoutState.totals.shippingFee);
+    }
+    
+    return { valid: true, discount, voucher };
+}
+
+// ============================================================================
+// Form Validation
+// ============================================================================
+function validateCheckoutForm() {
+    const form = document.getElementById('shipping-form');
+    
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        showToast('Vui lòng điền đầy đủ thông tin giao hàng', 'error');
+        return false;
+    }
+    
+    // Validate invoice if checked
+    const invoiceChecked = document.getElementById('invoice-checkbox').checked;
+    if (invoiceChecked) {
+        const companyName = document.getElementById('companyName').value;
+        const taxCode = document.getElementById('taxCode').value;
+        
+        if (!companyName || !taxCode) {
+            showToast('Vui lòng điền đầy đủ thông tin hóa đơn', 'error');
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// ============================================================================
+// Checkout
+// ============================================================================
+async function handleCheckout() {
+    if (!validateCheckoutForm()) {
+        return;
+    }
+    
+    const orderData = {
+        orderId: generateOrderId(),
+        userId: checkoutState.user?.id || null,
+        
+        shipping: {
+            name: document.getElementById('fullName').value,
+            phone: document.getElementById('phone').value,
+            address: document.getElementById('address').value,
+            district: document.getElementById('district').value,
+            city: document.getElementById('city').value,
+            note: document.getElementById('note').value,
+            deliveryMethod: checkoutState.selectedDelivery,
+            deliveryFee: checkoutState.totals.shippingFee
+        },
+        
+        items: checkoutState.cart,
+        
+        pricing: checkoutState.totals,
+        
+        payment: {
+            method: checkoutState.selectedPayment,
+            status: 'pending'
+        }
+    };
+    
+    // Add invoice if checked
+    const invoiceChecked = document.getElementById('invoice-checkbox').checked;
+    if (invoiceChecked) {
+        orderData.invoice = {
+            required: true,
+            companyName: document.getElementById('companyName').value,
+            taxCode: document.getElementById('taxCode').value,
+            companyAddress: document.getElementById('companyAddress').value,
+            email: document.getElementById('invoiceEmail').value
+        };
+    }
+    
+    // Save to localStorage (simulate API)
+    localStorage.setItem('pawpal_current_order', JSON.stringify(orderData));
+    
+    // Save to user's orders list
+    saveOrderToUserHistory(orderData);
+    
+    // Check if this is buy now checkout
+    const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
+    
+    // Route based on payment method
+    if (checkoutState.selectedPayment === 'cod') {
+        // COD: Go to success page
+        if (isBuyNow) {
+            // Clear buy now session data
+            sessionStorage.removeItem('pawpal_buynow_cart');
+            sessionStorage.removeItem('pawpal_is_buynow');
+        } else {
+            // Clear normal cart
+            localStorage.removeItem('pawpal_cart');
+        }
+        
+        window.location.href = `/pages/shop/payment-success.html?orderId=${orderData.orderId}`;
+    } else {
+        // Online payment: Simulate redirect
+        showToast('Đang chuyển đến cổng thanh toán...', 'info');
+        setTimeout(() => {
+            // Always success for demo purposes
+            const success = true; // Changed from random to always true
+            
+            if (success) {
+                if (isBuyNow) {
+                    sessionStorage.removeItem('pawpal_buynow_cart');
+                    sessionStorage.removeItem('pawpal_is_buynow');
+                } else {
+                    localStorage.removeItem('pawpal_cart');
+                }
+                window.location.href = `/pages/shop/payment-success.html?orderId=${orderData.orderId}`;
+            } else {
+                window.location.href = `/pages/shop/payment-failed.html?orderId=${orderData.orderId}`;
+            }
+        }, 2000);
+    }
+}
+
+// ============================================================================
+// Event Listeners
+// ============================================================================
+function setupEventListeners() {
+    // Address dropdown
+    const addressDropdown = document.getElementById('address-dropdown');
+    if (addressDropdown) {
+        addressDropdown.addEventListener('change', (e) => {
+            if (e.target.value === 'new') {
+                document.getElementById('shipping-form').reset();
+            } else if (e.target.value) {
+                const address = checkoutState.user.addresses.find(a => a.id === e.target.value);
+                if (address) fillAddressForm(address);
+            }
+        });
+    }
+    
+    // Voucher
+    document.getElementById('apply-voucher-btn').addEventListener('click', applyVoucher);
+    document.getElementById('remove-voucher-btn').addEventListener('click', removeVoucher);
+    document.getElementById('voucher-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            applyVoucher();
+        }
+    });
+    
+    // Invoice checkbox
+    document.getElementById('invoice-checkbox').addEventListener('change', (e) => {
+        const form = document.getElementById('invoice-form');
+        if (e.target.checked) {
+            form.style.display = 'block';
+            form.querySelectorAll('input').forEach(input => {
+                input.setAttribute('required', 'required');
+            });
+        } else {
+            form.style.display = 'none';
+            form.querySelectorAll('input').forEach(input => {
+                input.removeAttribute('required');
+            });
+        }
+    });
+    
+    // Checkout button
+    document.getElementById('btn-checkout').addEventListener('click', handleCheckout);
+}
+
+// ============================================================================
+// Utilities
+// ============================================================================
+function saveOrderToUserHistory(orderData) {
+    // Get existing orders
+    let orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+    
+    // Add new order to beginning of array (newest first)
+    orders.unshift({
+        ...orderData,
+        createdAt: new Date().toISOString(),
+        status: 'pending' // Initial status
+    });
+    
+    // Save back to localStorage
     localStorage.setItem('pawpal_orders', JSON.stringify(orders));
-
-    // Clear cart and coupon
-    localStorage.removeItem('pawpal_cart');
-    localStorage.removeItem('pawpal_coupon');
-
-    // Show success page
-    showPage('successPage');
-    updateStepIndicator();
-    renderSuccessPage();
+    
+    console.log('Order saved to history:', orderData.orderId);
 }
 
-function renderSuccessPage() {
-    document.getElementById('orderCode').textContent = orderData.code;
-
-    const addr = [
-        orderData.form.address,
-        orderData.form.ward,
-        orderData.form.district,
-        orderData.form.province
-    ].filter(Boolean).join(', ');
-
-    const methodLabel = orderData.method === 'COD'
-        ? 'Thanh toán khi nhận hàng (COD)'
-        : `Thanh toán trực tuyến (${orderData.onlineMethod || ''})`;
-
-    document.getElementById('successOrderInfo').innerHTML = `
-        <div class="success-info-row">
-            <span class="success-info-label">Người nhận</span>
-            <span class="success-info-value">${orderData.form.name} · ${orderData.form.phone}</span>
-        </div>
-        <div class="success-info-row">
-            <span class="success-info-label">Địa chỉ giao</span>
-            <span class="success-info-value">${addr}</span>
-        </div>
-        <div class="success-info-row">
-            <span class="success-info-label">Thanh toán</span>
-            <span class="success-info-value">${methodLabel}</span>
-        </div>
-        <div class="success-info-row">
-            <span class="success-info-label">Tổng tiền</span>
-            <span class="success-info-value" style="color:var(--color-primary);font-size:1rem;">${formatPrice(orderData.total)}</span>
-        </div>`;
-
-    // Paw Points
-    if (orderData.pawPoints > 0) {
-        document.getElementById('successPawPoints').style.display = 'flex';
-        document.getElementById('earnedPoints').textContent = orderData.pawPoints.toLocaleString('vi-VN');
-    }
-
-    // Copy order code
-    document.getElementById('copyOrderCode').addEventListener('click', () => {
-        navigator.clipboard.writeText(orderData.code).then(() => {
-            showToast(`✅ Đã sao chép mã đơn hàng ${orderData.code}`);
-        }).catch(() => {
-            showToast('Không thể sao chép — vui lòng sao chép thủ công');
-        });
-    });
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND'
+    }).format(amount);
 }
 
-function updateStepIndicator() {
-    const stepCheckout = document.getElementById('stepCheckout');
-    const stepDone     = document.getElementById('stepDone');
-    if (stepCheckout) {
-        stepCheckout.classList.remove('active');
-        stepCheckout.classList.add('done');
-        stepCheckout.querySelector('.step-dot').textContent = '✓';
-    }
-    if (stepDone) {
-        stepDone.classList.add('active');
-    }
+function generateOrderId() {
+    const date = new Date();
+    const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
+    const random = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+    return `ORD-${dateStr}-${random}`;
 }
 
-// ── Payment method toggle ─────────────────────────────────────────────────────
-function bindPaymentToggle() {
-    document.querySelectorAll('input[name="payment"]').forEach(radio => {
-        radio.addEventListener('change', () => {
-            const isOnline = radio.value === 'ONLINE';
-            const subMethods = document.getElementById('onlineSubMethods');
-            if (subMethods) subMethods.style.display = isOnline ? 'flex' : 'none';
-            const submitText = document.getElementById('submitBtnText');
-            if (submitText) {
-                submitText.textContent = isOnline ? 'Thanh toán ngay →' : 'Đặt hàng ngay →';
-            }
-        });
-    });
-}
-
-// ── Real-time form validation on blur ────────────────────────────────────────
-function bindFormValidation() {
-    const fields = [
-        ['shipName', 'errName', v => v.trim().length >= 2, 'Vui lòng nhập họ và tên'],
-        ['shipPhone', 'errPhone', v => /^0\d{9}$/.test(v.trim()), 'Số điện thoại phải gồm 10 chữ số, bắt đầu bằng 0'],
-        ['shipProvince', 'errProvince', v => v !== '', 'Vui lòng chọn Tỉnh/Thành phố'],
-        ['shipDistrict', 'errDistrict', v => v.trim().length >= 2, 'Vui lòng nhập Quận/Huyện'],
-        ['shipAddress', 'errAddress', v => v.trim().length >= 5, 'Vui lòng nhập địa chỉ chi tiết'],
-    ];
-
-    fields.forEach(([inputId, errorId, check, msg]) => {
-        const input = document.getElementById(inputId);
-        if (!input) return;
-        input.addEventListener('blur', () => validateField(inputId, errorId, check, msg));
-        input.addEventListener('input', () => {
-            if (input.classList.contains('error')) validateField(inputId, errorId, check, msg);
-        });
-    });
-
-    // Phone: only allow digits
-    const phoneInput = document.getElementById('shipPhone');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', () => {
-            phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 10);
-        });
-    }
-}
-
-// ── Cart validation banner ────────────────────────────────────────────────────
-function showCartValidation() {
-    const banner = document.getElementById('cartValidationBanner');
-    if (!banner) return;
-    const issues = [];
-    cart.forEach(item => {
-        if (!item.price || item.price <= 0) issues.push(`"${item.name}" có giá không hợp lệ`);
-        if (item.qty <= 0) issues.push(`"${item.name}" có số lượng không hợp lệ`);
-    });
-    if (issues.length > 0) {
-        banner.style.display = 'block';
-        banner.innerHTML = `⚠️ <strong>Lưu ý:</strong> ${issues.join('; ')}. Vui lòng quay lại <a href="shop.html">giỏ hàng</a> để kiểm tra.`;
-    }
-}
-
-// ── Toast ─────────────────────────────────────────────────────────────────────
-function showToast(msg, type = 'success') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
+function showToast(message, type = 'info') {
+    // Simple toast implementation
     const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = msg;
-    container.appendChild(toast);
-    setTimeout(() => toast.classList.add('show'), 10);
-    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3500);
+    toast.className = `toast-notification toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 9999;
+        animation: slideIn 0.3s ease;
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
-
-// ── Init ──────────────────────────────────────────────────────────────────────
-function init() {
-    cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
-    appliedCoupon = JSON.parse(localStorage.getItem('pawpal_coupon') || 'null');
-
-    if (cart.length === 0) {
-        window.location.href = 'shop.html';
-        return;
-    }
-
-    renderOrderSummary();
-    showCartValidation();
-    bindPaymentToggle();
-    bindFormValidation();
-
-    // Submit
-    const submitBtn = document.getElementById('checkoutSubmitBtn');
-    if (submitBtn) submitBtn.addEventListener('click', handleCheckout);
-
-    // Retry button
-    const retryBtn = document.getElementById('retryPaymentBtn');
-    if (retryBtn) {
-        retryBtn.addEventListener('click', () => {
-            paymentLock = false;
-            const submitBtn2 = document.getElementById('checkoutSubmitBtn');
-            if (submitBtn2) {
-                submitBtn2.disabled = false;
-                const method = getSelectedPayment();
-                document.getElementById('submitBtnText').textContent =
-                    method === 'ONLINE' ? 'Thanh toán ngay →' : 'Đặt hàng ngay →';
-            }
-            showPage('checkoutPage');
-        });
-    }
-
-    // Back to cart
-    const backToCartBtn = document.getElementById('backToCartBtn');
-    if (backToCartBtn) {
-        backToCartBtn.addEventListener('click', () => {
-            window.location.href = 'shop.html';
-        });
-    }
-
-    // Keyboard: Enter on form fields
-    document.querySelectorAll('.form-input').forEach(input => {
-        input.addEventListener('keydown', e => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const all = Array.from(document.querySelectorAll('.form-input'));
-                const next = all[all.indexOf(input) + 1];
-                if (next) next.focus();
-                else handleCheckout();
-            }
-        });
-    });
-}
-
-document.addEventListener('DOMContentLoaded', init);

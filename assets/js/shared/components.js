@@ -80,8 +80,9 @@
 
         // Try sessionStorage cache first (eliminates layout shift on repeat visits)
         var cacheKey = 'pawpal_component_' + targetId;
-        // Only use cache for non-header components (header has active nav state per page)
-        var cached = targetId !== 'site-header' ? sessionStorage.getItem(cacheKey) : null;
+        // Only use cache for non-header, non-sidebar components
+        var isSidebar = targetId === 'user-sidebar';
+        var cached = (targetId !== 'site-header' && !isSidebar) ? sessionStorage.getItem(cacheKey) : null;
         if (cached) {
             el.outerHTML = cached;
             if (targetId === 'site-header') {
@@ -106,10 +107,29 @@
             })
             .then(function (html) {
                 var cleanedHtml = cleanInjectedHtml(html);
-                // Cache for this session
+                console.log('[components.js] injected', targetId);
+
+                if (isSidebar) {
+                    // Use innerHTML for sidebar to keep the container element (preserves #user-sidebar id)
+                    el.innerHTML = cleanedHtml;
+                    // Re-execute <script> tags — innerHTML doesn't run them
+                    el.querySelectorAll('script').forEach(function(oldScript) {
+                        var newScript = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(function(attr) {
+                            newScript.setAttribute(attr.name, attr.value);
+                        });
+                        newScript.textContent = oldScript.textContent;
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+                    // Render icons after sidebar is ready
+                    initLucideIcons();
+                    document.dispatchEvent(new CustomEvent('sidebarInjected'));
+                    return;
+                }
+
+                // Cache for this session (non-sidebar components)
                 try { sessionStorage.setItem(cacheKey, cleanedHtml); } catch(e) {}
                 el.outerHTML = cleanedHtml;
-                console.log('[components.js] injected', targetId);
                 if (targetId === 'site-header') {
                     document.dispatchEvent(new CustomEvent('headerInjected'));
                     if (typeof initActiveNav === 'function') initActiveNav();
@@ -160,9 +180,9 @@
         injectComponent('site-header', root + 'components/header.html');
         injectComponent('site-footer', root + 'components/footer.html');
         injectComponent('site-fab', root + 'components/fab.html');
+        // Inject user sidebar if placeholder exists on the page
+        injectComponent('user-sidebar', root + 'components/user-sidebar.html');
         
-        // Thực thi script của sidebar và khởi tạo Lucide icons
-        executeSidebarScripts();
         initLucideIcons();
     }
 

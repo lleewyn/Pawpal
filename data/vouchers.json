@@ -1,0 +1,44 @@
+[
+  {
+    "code": "PAWFIRST10",
+    "type": "fixed",
+    "value": 50000,
+    "minOrderValue": 200000,
+    "maxDiscount": null,
+    "validFrom": "2026-06-01T00:00:00Z",
+    "validUntil": "2026-06-30T23:59:59Z",
+    "usageCount": 45,
+    "maxUsage": 1000,
+    "applicableFor": ["all"],
+    "description": "Giảm 50.000đ cho đơn hàng đầu tiên",
+    "active": true
+  },
+  {
+    "code": "FREESHIP",
+    "type": "shipping",
+    "value": 25000,
+    "minOrderValue": 200000,
+    "maxDiscount": 25000,
+    "validFrom": "2026-06-01T00:00:00Z",
+    "validUntil": "2026-06-30T23:59:59Z",
+    "usageCount": 120,
+    "maxUsage": 500,
+    "applicableFor": ["all"],
+    "description": "Miễn phí vận chuyển cho đơn từ 200k",
+    "active": true
+  },
+  {
+    "code": "SUMMER50",
+    "type": "percentage",
+    "value": 10,
+    "minOrderValue": 500000,
+    "maxDiscount": 50000,
+    "validFrom": "2026-06-15T00:00:00Z",
+    "validUntil": "2026-07-15T23:59:59Z",
+    "usageCount": 0,
+    "maxUsage": 200,
+    "applicableFor": ["food", "toys"],
+    "description": "Giảm 10% tối đa 50.000đ cho thức ăn và đồ chơi",
+    "active": true
+  }
+]

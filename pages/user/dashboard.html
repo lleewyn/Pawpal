@@ -163,15 +163,7 @@
             }
         })();
         
-        // Load sidebar synchronously
-        (function loadSidebar() {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', '../../components/user-sidebar.html', false);
-            xhr.send();
-            if (xhr.status === 200) {
-                document.getElementById('user-sidebar').innerHTML = xhr.responseText;
-            }
-        })();
+        // Sidebar is injected by components.js (loaded via defer below)
         
         // Handle tab switching based on URL parameter
         (function handleTabs() {

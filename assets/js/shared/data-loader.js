@@ -215,6 +215,47 @@ async function searchProducts(keyword) {
     );
 }
 
+/**
+ * Load an HTML component into a placeholder element.
+ * Re-executes any <script> tags found inside the injected HTML.
+ * @param {string} placeholderId - ID of the element to inject content into
+ * @param {string} componentPath - URL path to the component HTML file
+ */
+async function loadComponent(placeholderId, componentPath) {
+    const el = document.getElementById(placeholderId);
+    if (!el) {
+        console.warn(`[loadComponent] Target not found: #${placeholderId}`);
+        return;
+    }
+    try {
+        const response = await fetch(componentPath);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const html = await response.text();
+        // Use innerHTML so the element itself stays in the DOM (avoids outerHTML ID loss)
+        el.innerHTML = html;
+        // Re-execute <script> tags — innerHTML parsing skips script execution
+        el.querySelectorAll('script').forEach(function(oldScript) {
+            const newScript = document.createElement('script');
+            Array.from(oldScript.attributes).forEach(function(attr) {
+                newScript.setAttribute(attr.name, attr.value);
+            });
+            newScript.textContent = oldScript.textContent;
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+        });
+        // Re-render Lucide icons — retry until library is loaded
+        (function tryLucide() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            } else {
+                setTimeout(tryLucide, 100);
+            }
+        })();
+        console.log(`[loadComponent] Injected: #${placeholderId}`);
+    } catch (err) {
+        console.error(`[loadComponent] Failed to load ${componentPath}:`, err);
+    }
+}
+
 // Export functions for use in other modules
 window.DataLoader = {
     loadProducts,
