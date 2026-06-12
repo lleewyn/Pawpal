@@ -1,0 +1,259 @@
+/* ==========================================================================
+   Booking Detail Page — booking-detail.js
+   US 5-1: Thay đổi lịch (Time check, Error banner)
+   US 6-1, 6-2: Hủy lịch
+   ========================================================================== */
+
+let currentBooking = null;
+let bannerTimeout = null;
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const bookingId = urlParams.get('id');
+    
+    if (!bookingId) {
+        alert('Không tìm thấy thông tin lịch hẹn');
+        window.location.href = 'bookings.html';
+        return;
+    }
+    
+    loadBookingDetail(bookingId);
+});
+
+// Load booking detail from data
+function loadBookingDetail(bookingId) {
+    // Get data from bookings.js
+    const bookingsData = window.BookingsData;
+    if (!bookingsData) {
+        console.error('BookingsData not found');
+        return;
+    }
+    
+    // Find booking by ID
+    currentBooking = bookingsData.mockBookings.find(b => b.id === bookingId);
+    
+    if (!currentBooking) {
+        alert('Không tìm thấy lịch hẹn này');
+        window.location.href = 'bookings.html';
+        return;
+    }
+    
+    // Render booking detail
+    renderBookingDetail(currentBooking, bookingsData);
+    
+    // Check if booking can be modified (US 5-1)
+    checkBookingModifiability(currentBooking);
+}
+
+// Render booking detail to page
+function renderBookingDetail(booking, bookingsData) {
+    // Header status badge
+    const headerStatusBadge = document.getElementById('headerStatusBadge');
+    headerStatusBadge.className = `badge-status badge-${booking.status}`;
+    headerStatusBadge.textContent = bookingsData.statusLabels[booking.status];
+    
+    // Summary card
+    document.getElementById('bookingCode').textContent = booking.id;
+    document.getElementById('bannerBookingCode').textContent = booking.id;
+    
+    const petBreed = booking.petBreed || 'Poodle';
+    const petWeight = booking.petWeight || '5kg';
+    document.getElementById('petInfo').innerHTML = `${booking.petEmoji} ${booking.petName} (${petBreed}, ${petWeight})`;
+    
+    const servicePackage = booking.package ? ` - ${booking.package}` : '';
+    document.getElementById('serviceInfo').textContent = `${booking.service}${servicePackage}`;
+    
+    // Date/time
+    let dateTimeText = bookingsData.formatDate(booking.date);
+    if (booking.timeStart) {
+        dateTimeText += ` | ${booking.timeStart} - ${booking.timeEnd}`;
+    } else if (booking.dateEnd) {
+        dateTimeText = `${dateTimeText} - ${bookingsData.formatDate(booking.dateEnd)}`;
+    }
+    document.getElementById('dateTimeInfo').textContent = dateTimeText;
+    
+    // Staff
+    if (booking.staff) {
+        document.getElementById('staffInfo').innerHTML = `👤 ${booking.staff}`;
+    } else {
+        document.getElementById('staffInfo').textContent = 'Chưa phân công';
+    }
+    
+    // Price
+    document.getElementById('priceInfo').textContent = `💰 ${bookingsData.formatPrice(booking.price)}`;
+    
+    // Note
+    if (booking.note) {
+        document.getElementById('noteRow').style.display = 'flex';
+        document.getElementById('noteInfo').textContent = booking.note;
+    }
+}
+
+
+// US 5-1: Check if booking can be modified
+function checkBookingModifiability(booking) {
+    const btnChangeSchedule = document.getElementById('btnChangeSchedule');
+    const btnCancelBooking = document.getElementById('btnCancelBooking');
+    
+    // Calculate time difference
+    const now = new Date();
+    let bookingDateTime;
+    
+    if (booking.timeStart) {
+        // Parse date and time
+        const [year, month, day] = booking.date.split('-');
+        const [hours, minutes] = booking.timeStart.split(':');
+        bookingDateTime = new Date(year, month - 1, day, hours, minutes);
+    } else {
+        // For hotel bookings without specific time, use start of day
+        bookingDateTime = new Date(booking.date);
+        bookingDateTime.setHours(9, 0, 0, 0); // Assume 9:00 AM check-in
+    }
+    
+    const diffMinutes = (bookingDateTime - now) / (1000 * 60);
+    
+    // US 5-1: Khóa nút "Thay đổi lịch" nếu < 120 phút HOẶC đang thực hiện
+    const canModify = diffMinutes >= 120 && booking.status !== 'in-progress';
+    
+    if (!canModify) {
+        btnChangeSchedule.disabled = true;
+        btnChangeSchedule.title = 'Đã quá thời gian thay đổi lịch trực tuyến. Vui lòng liên hệ hotline.';
+    }
+    
+    // Disable cancel button for completed or cancelled bookings
+    if (booking.status === 'completed' || booking.status === 'cancelled') {
+        btnCancelBooking.disabled = true;
+        btnCancelBooking.title = 'Không thể hủy lịch hẹn này';
+    }
+    
+    // Disable cancel button if too close to appointment time
+    if (diffMinutes < 1440 && booking.status !== 'pending') { // 24 hours
+        btnCancelBooking.disabled = true;
+        btnCancelBooking.title = 'Đã quá thời gian hủy miễn phí. Vui lòng liên hệ hotline.';
+    }
+}
+
+// Handle change schedule button click
+function handleChangeSchedule() {
+    const btnChangeSchedule = document.getElementById('btnChangeSchedule');
+    
+    // US 5-1: If button is disabled, show error banner
+    if (btnChangeSchedule.disabled) {
+        showErrorBanner();
+        return;
+    }
+    
+    // Navigate to change schedule page (to be implemented)
+    alert('Tính năng thay đổi lịch đang được phát triển');
+    // window.location.href = `booking-change.html?id=${currentBooking.id}`;
+}
+
+// US 5-1: Show error banner
+function showErrorBanner() {
+    const banner = document.getElementById('errorBanner');
+    
+    // Clear any existing timeout
+    if (bannerTimeout) {
+        clearTimeout(bannerTimeout);
+    }
+    
+    // Show banner
+    banner.style.display = 'block';
+    banner.classList.remove('hiding');
+    
+    // Auto hide after 7 seconds (US 5-1 requirement)
+    bannerTimeout = setTimeout(() => {
+        closeErrorBanner();
+    }, 7000);
+}
+
+// Close error banner
+function closeErrorBanner() {
+    const banner = document.getElementById('errorBanner');
+    banner.classList.add('hiding');
+    
+    // Hide completely after animation
+    setTimeout(() => {
+        banner.style.display = 'none';
+    }, 300);
+}
+
+// Make closeErrorBanner globally accessible
+window.closeErrorBanner = closeErrorBanner;
+
+
+// US 6-1: Handle cancel booking button click
+function handleCancelBooking() {
+    const btnCancelBooking = document.getElementById('btnCancelBooking');
+    
+    // If button is disabled, do nothing
+    if (btnCancelBooking.disabled) {
+        return;
+    }
+    
+    // Show confirmation modal
+    const cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
+    document.getElementById('modalBookingCode').textContent = currentBooking.id;
+    cancelModal.show();
+    
+    // Handle confirm cancel button
+    document.getElementById('confirmCancelBtn').onclick = function() {
+        confirmCancelBooking();
+        cancelModal.hide();
+    };
+}
+
+// US 6-2: Confirm cancel booking
+function confirmCancelBooking() {
+    // Update booking status to cancelled
+    currentBooking.status = 'cancelled';
+    
+    // Show success toast
+    showToast('Đã hủy lịch hẹn thành công', 'success');
+    
+    // Redirect back to bookings list after 1.5 seconds
+    setTimeout(() => {
+        window.location.href = 'bookings.html';
+    }, 1500);
+}
+
+// Show toast notification
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast-custom toast-${type}`;
+    toast.innerHTML = `
+        <div class="toast-content">
+            <span class="toast-icon">${type === 'success' ? '✓' : 'ℹ'}</span>
+            <span class="toast-message">${message}</span>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // Show toast
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    // Hide and remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Make functions globally accessible
+window.handleChangeSchedule = handleChangeSchedule;
+window.handleCancelBooking = handleCancelBooking;
+
+// Keyboard accessibility: ESC to close banner
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const banner = document.getElementById('errorBanner');
+        if (banner && banner.style.display !== 'none') {
+            closeErrorBanner();
+        }
+    }
+});

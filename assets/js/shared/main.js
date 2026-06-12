@@ -15,6 +15,7 @@ function initApp() {
     initInteractivePawPass();
     initProcessTimeline();
     initServicesGrid();
+    initFab();
     // Gọi lại initActiveNav ở đây để đảm bảo chạy sau khi header đã inject
     setTimeout(initActiveNav, 50);
 }

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Direct Link</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-link {
+            display: block;
+            padding: 15px 20px;
+            margin: 15px 0;
+            background: #2a5944;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .test-link:hover {
+            background: #1d3f2f;
+            transform: translateX(10px);
+        }
+        .info {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            padding: 15px;
+            border-left: 4px solid #28a745;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Direct Links to Product Detail</h1>
+    
+    <div class="info">
+        <strong>Mục đích:</strong> Click vào các link dưới đây để test trực tiếp điều hướng đến trang product-detail với ID cụ thể.
+    </div>
+
+    <div class="success">
+        <strong>✓ Nếu hoạt động đúng:</strong> Trang product-detail sẽ hiển thị thông tin sản phẩm tương ứng.<br>
+        <strong>✗ Nếu lỗi:</strong> Trang sẽ hiển thị "Không tìm thấy sản phẩm" và redirect về shop.
+    </div>
+
+    <h2>Direct Links (Absolute Path)</h2>
+    <a href="pages/shop/product-detail.html?id=1" class="test-link" target="_blank">
+        ➤ Test Product ID 1 (Royal Canin Mini Adult)
+    </a>
+    <a href="pages/shop/product-detail.html?id=4" class="test-link" target="_blank">
+        ➤ Test Product ID 4 (Kong Classic)
+    </a>
+    <a href="pages/shop/product-detail.html?id=10" class="test-link" target="_blank">
+        ➤ Test Product ID 10 (Frontline Plus)
+    </a>
+    
+    <h2>Test Invalid IDs</h2>
+    <a href="pages/shop/product-detail.html?id=999" class="test-link" target="_blank">
+        ➤ Test Product ID 999 (Không tồn tại - should redirect)
+    </a>
+    <a href="pages/shop/product-detail.html" class="test-link" target="_blank">
+        ➤ Test No ID (should redirect)
+    </a>
+    <a href="pages/shop/product-detail.html?id=abc" class="test-link" target="_blank">
+        ➤ Test Invalid ID (abc - should redirect)
+    </a>
+
+    <hr style="margin: 40px 0;">
+
+    <h2>JavaScript Generated Links</h2>
+    <div id="dynamicLinks"></div>
+
+    <script>
+        const products = [
+            { id: 1, name: 'Royal Canin Mini Adult' },
+            { id: 2, name: 'Pedigree Adult' },
+            { id: 3, name: 'Me-O Tuna' },
+            { id: 4, name: 'Kong Classic' },
+            { id: 5, name: 'Whiskas Pouch' },
+        ];
+
+        const container = document.getElementById('dynamicLinks');
+        container.innerHTML = products.map(p => `
+            <a href="pages/shop/product-detail.html?id=${p.id}" class="test-link" target="_blank" onclick="logClick(${p.id}, '${p.name}')">
+                ➤ Product ID ${p.id}: ${p.name}
+            </a>
+        `).join('');
+
+        function logClick(id, name) {
+            console.log(`Clicking product: ID=${id}, Name="${name}"`);
+            console.log(`Target URL: pages/shop/product-detail.html?id=${id}`);
+        }
+    </script>
+</body>
+</html>

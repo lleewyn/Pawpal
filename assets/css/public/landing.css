@@ -191,6 +191,11 @@
     margin: 0;
 }
 
+/* accent-italic trên nền tối Hero dùng amber sáng */
+.hero-title .accent-italic {
+    color: var(--color-accent);
+}
+
 .hero-desc {
     font-family: var(--font-primary);
     font-size: clamp(1rem, 1.5vw, 1.15rem);
@@ -778,10 +783,10 @@
     margin-top: 40px;
 }
 
-/* Row 1: featured full width left + 2 cards stacked right */
+/* Row 1: 2 featured cards bằng nhau */
 .svc-row-top {
     display: grid;
-    grid-template-columns: 1.6fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 12px;
     align-items: stretch;
 }
@@ -793,30 +798,13 @@
     gap: 12px;
 }
 
-/* Row 2 cards — giống hệt stack cards về kích thước */
-.svc-row-bottom .svc-card--mini {
-    flex-direction: row;
-    align-items: stretch;
+/* Card dọc row 2 — ảnh trên, text dưới */
+.svc-card--vert {
+    flex-direction: column;
 }
 
-.svc-row-bottom .svc-card--mini .svc-card-img {
-    width: 90px;
-    min-width: 90px;
-    height: auto;
-}
-
-.svc-row-bottom .svc-card--mini .svc-card-body {
-    padding: 10px 14px;
-    gap: 4px;
-}
-
-.svc-row-bottom .svc-card--mini .svc-title {
-    font-size: 0.9rem;
-}
-
-.svc-row-bottom .svc-card--mini .svc-desc {
-    font-size: 0.8rem;
-    -webkit-line-clamp: 2;
+.svc-card--vert .svc-card-img {
+    height: 140px;
 }
 
 /* Featured card fills full height of row-top */
@@ -883,7 +871,7 @@
 
 /* Featured card image */
 .svc-card--featured .svc-card-img {
-    height: 200px;
+    height: 160px;
 }
 
 /* Mini card image — short */
@@ -946,7 +934,7 @@
 .svc-card--featured .svc-card-body {
     padding: 16px 20px;
     gap: 8px;
-    justify-content: flex-start;
+    justify-content: space-between;
 }
 
 .svc-card-top {
@@ -975,12 +963,13 @@
 }
 
 .svc-card--featured .svc-title {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
 }
 
 .svc-card--mini .svc-title,
-.svc-card--wide .svc-title {
-    font-size: 1rem;
+.svc-card--wide .svc-title,
+.svc-card--vert .svc-title {
+    font-size: 0.95rem;
 }
 
 .svc-desc {
@@ -998,6 +987,14 @@
 .svc-card--featured .svc-desc {
     font-size: 0.95rem;
     -webkit-line-clamp: 3;
+}
+
+.svc-meta {
+    font-family: var(--font-primary);
+    font-size: 0.8rem;
+    color: var(--color-accent-dark);
+    margin: 0;
+    font-weight: 600;
 }
 
 .svc-price {
@@ -1067,8 +1064,8 @@
 }
 
 .svc-badge--hot {
-    background: var(--color-danger, #e53e3e);
-    color: #ffffff;
+    background: var(--color-accent);
+    color: var(--color-primary-dark);
 }
 
 .svc-badge:empty {
@@ -1090,50 +1087,23 @@
         gap: 12px;
     }
 
-    /* Row 1: chuyển thành single column */
+    /* Row 1: 2 featured → 1 cột */
     .svc-row-top {
         grid-template-columns: 1fr;
         gap: 16px;
     }
 
-    /* Stack bên phải chuyển thành horizontal scroll */
-    .svc-stack {
-        flex-direction: row;
-        overflow-x: auto;
-        gap: 12px;
-        padding-bottom: 8px;
-    }
-
-    .svc-stack .svc-card--mini {
-        flex: 0 0 240px;
-        flex-direction: column;
-    }
-
-    .svc-stack .svc-card--mini .svc-card-img {
-        width: 100%;
-        height: 120px;
-    }
-
-    /* Row 2: giữ nguyên 2 cột nhưng responsive */
+    /* Row 2: 3 → 2 cột */
     .svc-row-bottom {
         grid-template-columns: 1fr 1fr;
-    }
-
-    .svc-row-bottom .svc-card--mini {
-        flex-direction: column;
-    }
-
-    .svc-row-bottom .svc-card--mini .svc-card-img {
-        width: 100%;
-        height: 120px;
     }
 }
 
 @media (max-width: 600px) {
     .services-container { padding: 0 16px; }
-    
+
     .svc-card--featured .svc-card-img { height: 200px; }
-    
+
     /* Row 2: single column trên mobile nhỏ */
     .svc-row-bottom {
         grid-template-columns: 1fr;
@@ -1146,214 +1116,195 @@
 
 
 /* ==========================================================================
-   Experts Section
+   Experts Section — Bento Grid (3 người, ảnh & text xen kẽ)
    ========================================================================== */
 
 .experts-section {
     background-color: var(--color-bg-light);
-    padding: var(--space-xl) 0;
+    padding: var(--space-lg) 0;
 }
 
 .experts-section .section-header {
     text-align: center !important;
     max-width: 900px;
-    margin: 0 auto 50px;
+    margin: 0 auto var(--space-lg);
 }
 
 .experts-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 40px;
+    padding: 0 var(--container-padding);
 }
 
-.experts-carousel-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    margin-top: 40px;
-    gap: 20px;
+/* --- Bento: 3 cột đều, mỗi cột flex column --- */
+.experts-bento {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--space-md);
+    align-items: start;
 }
 
-.experts-carousel-wrapper {
-    overflow: hidden;
-    width: 1080px;
-    max-width: 100%;
-    padding: 32px 0;
-    margin: -16px 0;
-}
-
-.experts-carousel-track {
-    display: flex;
-    gap: 30px;
-    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-    will-change: transform;
-}
-
-.expert-card {
-    flex: 0 0 300px;
-    width: 300px;
-    box-sizing: border-box;
-    background-color: var(--color-bg-white);
-    border-radius: var(--card-border-radius);
-    overflow: hidden;
-    box-shadow: var(--shadow-card);
-    border: var(--border-card);
-    transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.35s ease, opacity 0.35s ease;
+/* Col chung */
+.exp-cell {
     display: flex;
     flex-direction: column;
-    transform: scale(0.96);
-    opacity: 0.8;
+    gap: var(--space-sm);
 }
 
-.expert-card:hover,
-.expert-card.highlighted-expert {
-    transform: scale(1.0) translateY(-4px);
-    opacity: 1;
-    box-shadow: var(--shadow-card-hover);
+/* Col 2: text ở trên, ảnh ở dưới — đẩy ảnh xuống cuối */
+.exp-cell--text-top {
+    justify-content: space-between;
 }
 
-.expert-card.highlighted-expert {
-    border-color: var(--color-primary);
-    border-width: 2px;
-}
-
-.experts-nav-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background-color: var(--color-bg-white);
-    border: var(--border-card);
-    color: var(--color-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.25s ease;
+/* --- Ảnh variants — mỗi col tỉ lệ khác nhau --- */
+.exp-img {
+    overflow: hidden;
     flex-shrink: 0;
 }
 
-.experts-nav-btn:hover {
-    background-color: var(--color-primary);
-    color: #ffffff;
-    border-color: var(--color-primary);
-}
-
-.expert-image-box {
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-    aspect-ratio: 4/3;
-}
-
-.expert-image-box img {
+.exp-img img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
+    display: block;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.expert-card:hover .expert-image-box img {
-    transform: scale(1.05);
+.exp-cell:hover .exp-img img {
+    transform: scale(1.04);
 }
 
-.expert-info {
-    padding: 20px;
+/* Col 1: landscape ngang */
+.exp-img--landscape {
+    width: 100%;
+    height: 240px;
+}
+
+/* Col 2: vuông */
+.exp-img--square {
+    width: 100%;
+    height: 200px;
+}
+
+/* Col 3: cùng tầm với col 1 */
+.exp-img--portrait {
+    width: 100%;
+    height: 240px;
+}
+
+/* --- Info block --- */
+.exp-info {
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
-    gap: 10px;
+    gap: 6px;
 }
 
-.expert-header {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.expert-name {
-    font-family: var(--font-primary);
-    font-size: 1.1rem;
-    font-weight: 700;
+.exp-name {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h3);
+    font-weight: 600;
     color: var(--color-primary-dark);
     margin: 0;
+    line-height: 1.2;
 }
 
-.expert-title {
+.exp-role {
     font-size: var(--fs-small);
-    color: var(--color-primary);
-    font-weight: 500;
-}
-
-.expert-exp {
-    font-size: var(--fs-caption);
     color: var(--color-text-light);
+    font-family: var(--font-body);
 }
 
-.cert-badge {
+.exp-quote {
+    font-family: var(--font-heading);
+    font-size: 0.875rem;
+    font-style: italic;
+    color: var(--color-text-light);
+    margin: 2px 0 0;
+    line-height: 1.55;
+}
+
+/* --- Stats capsules --- */
+.exp-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.exp-stat-item {
     display: inline-flex;
     align-items: center;
     gap: 4px;
     font-size: var(--fs-caption);
     font-weight: 700;
-    color: var(--color-primary-dark);
-    background: var(--color-primary-light);
-    border: 1px solid rgba(42, 89, 68, 0.25);
+    font-family: var(--font-body);
     padding: 3px 10px;
     border-radius: var(--border-radius-pill);
-    width: fit-content;
+    border: 1px solid transparent;
 }
 
-.expert-quote {
-    font-family: var(--font-heading);
-    font-size: 0.9rem;
-    font-style: italic;
-    color: var(--color-text-light);
-    margin: 0;
-    line-height: 1.5;
-    flex-grow: 1;
+.exp-stat-item em {
+    font-style: normal;
+    font-weight: 400;
+    opacity: 0.75;
 }
 
-.expert-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: auto;
-    padding-top: 12px;
-    border-top: 1px solid var(--color-border);
-}
-
-.expert-stat {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.stat-num {
-    font-family: var(--font-primary);
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--color-primary-dark);
-}
-
-/* Rating stat — amber */
-.expert-stat:first-child .stat-num {
+.exp-stat--rating {
+    background-color: var(--color-accent-light);
     color: var(--color-accent-dark);
+    border-color: rgba(229, 169, 60, 0.15);
 }
 
-/* Count stat — green */
-.expert-stat:last-child .stat-num {
-    color: var(--color-primary);
+.exp-stat--count {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary-dark);
+    border-color: rgba(42, 89, 68, 0.08);
 }
 
-.stat-sub {
-    font-size: var(--fs-caption);
-    color: var(--color-text-light);
-}
-
+/* --- CTA --- */
 .experts-cta {
-    margin-top: var(--space-md);
+    margin-top: var(--space-lg);
+}
+
+/* --- Responsive --- */
+@media (max-width: 1024px) {
+    .experts-bento {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-sm);
+    }
+
+    /* Trên tablet: col 3 span full width */
+    .exp-cell:last-child {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        gap: var(--space-sm);
+    }
+
+    .exp-cell:last-child .exp-img--portrait {
+        aspect-ratio: 1/1;
+        width: 240px;
+        flex-shrink: 0;
+    }
+}
+
+@media (max-width: 640px) {
+    .experts-bento {
+        grid-template-columns: 1fr;
+    }
+
+    .exp-cell--text-top {
+        flex-direction: column-reverse;
+    }
+
+    .exp-cell:last-child {
+        grid-column: unset;
+        flex-direction: column;
+    }
+
+    .exp-cell:last-child .exp-img--portrait {
+        width: 100%;
+        aspect-ratio: 4/3;
+    }
 }
 /* ==========================================================================
    Process Section (Light Cream Background)
@@ -1907,6 +1858,10 @@
 
 .testimonials-section .section-header h2 {
     color: #ffffff;
+}
+
+.testimonials-section .section-header .accent-italic {
+    color: var(--color-accent);
 }
 
 .testimonials-section .section-header .section-subtitle {
@@ -3507,28 +3462,19 @@
     }
 
     .experts-carousel-wrapper {
-        width: 100%;
-        padding: 10px 0;
-        margin: 0;
+        /* removed — carousel replaced with editorial grid */
     }
     .experts-carousel-track {
-        flex-direction: column;
-        align-items: center;
-        gap: 24px;
-        transform: none !important;
+        /* removed — carousel replaced with editorial grid */
     }
     .experts-carousel-track .expert-card {
-        width: 100%;
-        max-width: 450px;
-        flex: 0 0 auto;
-        height: auto;
+        /* removed */
     }
     .expert-card, .expert-card.highlighted-expert {
-        transform: none !important;
-        opacity: 1 !important;
+        /* removed */
     }
     .experts-nav-btn {
-        display: none !important;
+        /* removed */
     }
 }
 
@@ -3569,58 +3515,9 @@
 }
 
 
-/* ==========================================================================
-   Expert Stats Updates (Horizontal Capsules)
-   ========================================================================== */
 
-.expert-stats {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px;
-    border-top: none;
-    padding-top: 8px;
-    margin-top: auto;
-}
 
-.expert-stat-item {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 12px;
-    border-radius: var(--border-radius-pill);
-    font-size: 0.8rem;
-    line-height: 1.2;
-    transition: var(--transition-smooth);
-    border: 1px solid;
-}
 
-/* Rating capsule: Warm Gold tone */
-.expert-stats .expert-stat-item:first-child {
-    background-color: var(--color-accent-light);
-    border-color: rgba(229, 169, 60, 0.15);
-    color: var(--color-accent-dark);
-}
-
-/* Count capsule: Forest Green tone */
-.expert-stats .expert-stat-item:last-child {
-    background-color: var(--color-primary-light);
-    border-color: rgba(42, 89, 68, 0.08);
-    color: var(--color-primary-dark);
-}
-
-.expert-stat-item .stat-label {
-    display: none; /* Hide the key labels for minimalist look */
-}
-
-.expert-stat-item .stat-value {
-    font-weight: 700;
-}
-
-.expert-stat-item .stat-count {
-    font-weight: 500;
-    opacity: 0.8;
-    margin-left: 2px;
-}
 
 
 /* Safety & Commitment Section */

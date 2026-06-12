@@ -34,21 +34,9 @@ Dự án được chia thành 4 phân hệ chính tương ứng với cấu trú
 
 ---
 
-## 🎨 3. Quy Chuẩn Thiết Kế & Giao Diện (Design System Rules)
+## 🎨 3. Quy Chuẩn Thiết Kế (Design System)
 
-### 📐 Thiết kế góc vuông (Square corners) - RẤT QUAN TRỌNG
-* Chủ dự án đã thống nhất chuyển toàn bộ Card, Button, Form Input sang **thiết kế góc vuông hoàn toàn để tạo cảm giác tối giản & cao cấp**.
-* **Nguyên tắc:** Thiết lập `border-radius: 0;` cho tất cả thẻ card hoặc khối nội dung mới.
-* *Ngoại lệ:* Chỉ những icon tròn hoặc badge dạng pill đã có sẵn token toàn cục mới giữ bo tròn.
-
-### 🎨 Sử dụng Design Tokens (Biến CSS)
-* **Không dùng mã màu tự do:** Cấm sử dụng trực tiếp các mã màu như `#1a4332` hay `#FAF9F6` trong các file CSS riêng.
-* **Bắt buộc dùng biến:** Sử dụng các biến CSS đã khai báo sẵn trong `assets/css/tokens/colors.css`:
-  - `var(--color-primary)` (Xanh lá đậm thương hiệu)
-  - `var(--color-primary-dark)` (Xanh lá đậm sâu)
-  - `var(--color-accent)` (Vàng Gold làm điểm nhấn)
-  - `var(--color-bg-light)` (Màu kem ấm áp làm nền)
-  - `var(--color-bg-white)` (Trắng tinh khiết cho thẻ nổi)
+Tất cả các thành viên phát triển giao diện bắt buộc tuân thủ tài liệu thiết kế chi tiết tại [DESIGN.md](../../Docs/DESIGN.md). Hãy sử dụng đúng các biến CSS (Tokens) về màu sắc, font chữ, khoảng cách và độ bo góc đã được quy định trong đó.
 
 ---
 

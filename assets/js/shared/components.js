@@ -127,12 +127,43 @@
             });
     }
 
+    function initLucideIcons() {
+        if (typeof lucide === 'undefined') {
+            var script = document.createElement('script');
+            script.src = 'https://unpkg.com/lucide@latest';
+            script.onload = function() {
+                lucide.createIcons();
+            };
+            document.head.appendChild(script);
+        } else {
+            lucide.createIcons();
+        }
+    }
+
+    function executeSidebarScripts() {
+        var sidebarContainer = document.getElementById('user-sidebar');
+        if (sidebarContainer) {
+            sidebarContainer.querySelectorAll('script').forEach(function(oldScript) {
+                var newScript = document.createElement('script');
+                Array.from(oldScript.attributes).forEach(function(attr) {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+        }
+    }
+
     function initComponents() {
         var root = getRootPath();
         console.log('[components.js] root detected:', root);
         injectComponent('site-header', root + 'components/header.html');
         injectComponent('site-footer', root + 'components/footer.html');
         injectComponent('site-fab', root + 'components/fab.html');
+        
+        // Thực thi script của sidebar và khởi tạo Lucide icons
+        executeSidebarScripts();
+        initLucideIcons();
     }
 
     if (document.readyState === 'loading') {

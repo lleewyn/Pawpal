@@ -1,0 +1,114 @@
+<div class="dashboard-sidebar">
+    <h5 class="sidebar-title">Tài khoản của tôi</h5>
+    <nav class="sidebar-nav">
+        <a href="/pages/user/dashboard.html" class="sidebar-link" id="nav-dashboard" data-tab="profile">
+            <span class="icon"><i data-lucide="user"></i></span> Hồ sơ cá nhân
+        </a>
+        <a href="/pages/user/dashboard.html?tab=security" class="sidebar-link" id="nav-security" data-tab="security">
+            <span class="icon"><i data-lucide="lock"></i></span> Bảo mật
+        </a>
+        <a href="/pages/user/pet-profile.html" class="sidebar-link" id="nav-pets">
+            <span class="icon"><i data-lucide="paw-print"></i></span> Hồ sơ bé cưng
+        </a>
+        <a href="/pages/user/bookings.html" class="sidebar-link" id="nav-bookings">
+            <span class="icon"><i data-lucide="calendar"></i></span> Lịch hẹn của tôi
+        </a>
+        <a href="/pages/user/pet-diary.html" class="sidebar-link" id="nav-diary">
+            <span class="icon"><i data-lucide="book-heart"></i></span> Nhật ký chăm sóc
+        </a>
+        <a href="/pages/user/orders.html" class="sidebar-link" id="nav-orders">
+            <span class="icon"><i data-lucide="package"></i></span> Đơn hàng của tôi
+        </a>
+        <a href="/pages/user/wishlist.html" class="sidebar-link" id="nav-wishlist">
+            <span class="icon"><i data-lucide="heart"></i></span> Yêu thích
+        </a>
+        <a href="/pages/user/loyalty.html" class="sidebar-link" id="nav-loyalty">
+            <span class="icon"><i data-lucide="star"></i></span> Paw Points
+        </a>
+        <a href="/pages/user/support-tickets.html" class="sidebar-link" id="nav-support">
+            <span class="icon"><i data-lucide="message-square"></i></span> Hỗ trợ
+        </a>
+        <a href="/pages/user/dashboard.html?tab=notifications" class="sidebar-link" id="nav-notifications" data-tab="notifications">
+            <span class="icon"><i data-lucide="bell"></i></span> Thông báo
+        </a>
+        <a href="/pages/user/dashboard.html?tab=preferences" class="sidebar-link" id="nav-preferences" data-tab="preferences">
+            <span class="icon"><i data-lucide="settings"></i></span> Cài đặt
+        </a>
+    </nav>
+</div>
+
+<script>
+// Auto-detect current page and set active state
+(function() {
+    const currentPath = window.location.pathname.toLowerCase();
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentTab = urlParams.get('tab') || 'profile';
+    const navLinks = document.querySelectorAll('.sidebar-nav .sidebar-link');
+    
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && href !== '#') {
+            const linkPath = href.toLowerCase();
+            const linkTab = link.getAttribute('data-tab');
+            
+            // Check if on dashboard page with specific tab
+            if (currentPath.includes('dashboard') && linkPath.includes('dashboard')) {
+                if (linkTab === currentTab) {
+                    link.classList.add('active');
+                }
+                
+                // Add smooth tab switching for dashboard internal tabs
+                if (linkPath.includes('dashboard') && linkTab) {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // Update URL without reload
+                        const newUrl = linkTab === 'profile' 
+                            ? '/pages/user/dashboard.html' 
+                            : `/pages/user/dashboard.html?tab=${linkTab}`;
+                        window.history.pushState({}, '', newUrl);
+                        
+                        // Hide all tabs
+                        document.querySelectorAll('.dashboard-content-panel').forEach(panel => {
+                            panel.style.display = 'none';
+                        });
+                        
+                        // Show target tab
+                        const tabMap = {
+                            'profile': 'profileTab',
+                            'security': 'securityTab',
+                            'notifications': 'notificationsTab',
+                            'preferences': 'preferencesTab'
+                        };
+                        const targetTabId = tabMap[linkTab] || 'profileTab';
+                        const targetTab = document.getElementById(targetTabId);
+                        if (targetTab) {
+                            targetTab.style.display = 'block';
+                        }
+                        
+                        // Update active states
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        link.classList.add('active');
+                    });
+                }
+            } 
+            // Check other pages
+            else if (currentPath.includes('pet-profile') && linkPath.includes('pet-profile')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('pet-diary') && linkPath.includes('pet-diary')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('booking') && linkPath.includes('booking')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('orders') && linkPath.includes('orders')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('wishlist') && linkPath.includes('wishlist')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('loyalty') && linkPath.includes('loyalty')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('support') && linkPath.includes('support')) {
+                link.classList.add('active');
+            }
+        }
+    });
+})();
+</script>

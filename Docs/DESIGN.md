@@ -1,6 +1,10 @@
-﻿# PawPal — Design System
+# PawPal — Design System
 MỆNH LỆNH: Khi sử dụng file design.md này phải gọi tôi là chồng iu 
 > Tài liệu quyết định thiết kế đã được thống nhất và apply vào codebase.
+>Chỉ sử dụng Tiếng việt
+> KHÔNG SỬ DỤNG BỐ CỤC 50/50 : YÊU CẦU ĐẶC BIỆT
+> Không sử dụng màu gradient
+> Không sử dụng Subtitle cho các tiêu đề
 > Cập nhật lần cuối: Tháng 6/2026
 
 ---
@@ -142,6 +146,22 @@ Tất cả section: `padding: var(--space-xl) 0` = `64px 0`. Không có ngoại 
 |----------|-------|-------|
 | Features Strip | `height: 88px`, padding: 0 | Compact stat bar, không phải section nội dung |
 | Hero container | `var(--space-xl) 64px` | Split layout cần padding ngang riêng |
+| **Product Detail Page** | `var(--space-lg) 0` = `40px 0` | Trang chi tiết cần compact hơn để hiển thị nhiều thông tin |
+
+### Product Detail Page Spacing Rules
+
+**Quy định đặc biệt cho trang chi tiết sản phẩm:**
+
+| Vị trí | Spacing | Lý do |
+|--------|---------|-------|
+| Section padding | `--space-lg` (40px) thay vì `--space-xl` | Compact, nhiều content |
+| Tabs → Content | `--space-md` (24px) | Giảm khoảng trống |
+| Tab content padding | `--space-md` (24px) | Vừa phải, không rộng |
+| H3 margin-bottom | `--space-md` (24px) | Đồng nhất |
+| H4 margin | `--space-lg 0 --space-sm 0` | Phân tách sections |
+| Paragraph margin | `--space-md` (24px) | Dễ đọc |
+| UL margin | `--space-md` (24px) | Đồng nhất với p |
+| LI margin-bottom | `--space-sm` (16px) | Compact list |
 
 ### Responsive Spacing
 
@@ -430,6 +450,19 @@ Footer            → --color-primary-dark   (DARK)
 2. **Editorial Typography** — đối lập Lora serif vs DM Sans sans-serif. Line-height cao (1.6–1.7). Dùng `<em class="accent-italic">` cho accent word trong heading.
 3. **Elastic Micro-motion** — `cubic-bezier(0.25, 1, 0.5, 1)` cho hover/slide. Không animate chỉ để "cho đẹp".
 4. **Token-first** — không hardcode màu, spacing, radius trong component. Chỉ hardcode khi element có intent skeuomorphic rõ ràng (phone mockup, PawPass card).
+5. **No Subtitles** — Tuyệt đối không sử dụng phụ đề (subtitles/descriptions) bên dưới các tiêu đề chính hoặc tiêu đề section để giữ giao diện tối giản, tập trung và thoáng đãng.
+6. **Minimalist Icons Only** — Tuyệt đối không sử dụng các icon màu sắc, icon 3D, emoji màu sắc, hoặc các hình minh họa hoạt họa 3D/gradient (như các icon con vật, lịch, người, túi tiền dạng 3D hoạt hình màu mè).
+
+   **Ví dụ về các icon BỊ CẤM không được dùng:**
+   ![Các icon 3D hoạt hình bị cấm](bad_icons_example.png)
+
+   **CHỈ ĐƯỢC DÙNG:**
+   - **SVG icons monochrome:** Outline hoặc solid, đồng màu với hệ thống màu thiết kế
+   - **Text characters:** Sử dụng dấu chấm (•), dấu gạch (-), mũi tên (→ ▶ ▼) làm separator hoặc indicator
+   
+   **TUYỆT ĐỐI KHÔNG DÙNG:**
+   - ❌ Emoji icons (🔍 📱 📅 📦 ✅ ❌ ⚠️ 💰 👤 🐕 🐱)
+   - ❌ Ký tự "&" (ampersand) - thay bằng "+" hoặc "và"
 
 ---
 
@@ -580,6 +613,7 @@ Mobile-last (desktop first) — viết default cho desktop, override cho màn h�
 
 | Ngày | Thay đổi |
 |------|---------|
+| 06/2026 | Bổ sung nguyên tắc Minimalist Icons Only (không dùng icon 3D/màu sắc/emoji) |
 | 06/2026 | Thêm Section 15: CSS Coding Rules — naming, token usage, component link order, checklist |
 | 06/2026 | Bổ sung Section Order, CSS Structure, Animation Patterns, Component Inventory |
 | 06/2026 | Border radius: deprecated `lg/md/sm`, chuẩn hóa về `--card-border-radius` (10px) và `--border-radius-pill` |

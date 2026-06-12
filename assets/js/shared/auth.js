@@ -1,1842 +1,1053 @@
-/* ==========================================================================
-   PawPal Frontend Multi-Page Auth & Data Simulation Engine
-   ========================================================================== */
+/**
+ * auth.js — Logic xác thực, đăng ký, OTP và tài khoản tạm thời của PawPal.
+ * Quản lý kho lưu trữ giả lập qua localStorage.
+ */
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Initial Data & LocalStorage Setup
-    const DEFAULT_USER = {
-        phone: '0987654321',
-        name: 'Nguyễn Văn A',
-        password: 'Pawpal@123', // meets complex requirements (number + special char + length >= 8)
-        points: 50,
-        membership: 'Hạng Bạc',
-        isTemporary: false,
-        bookings: [
-            { id: 'BK-1082', service: 'Spa & Grooming', date: '24/05/2026', time: '15:00', status: 'Đã xác nhận' }
-        ]
-    };
+// --- 1. MOCK DATABASE SETUP ---
+const PAWPAL_USERS_KEY = 'pawpal_users_db';
+const CURRENT_USER_KEY = 'pawpal_current_user';
+const TEMP_TOKENS_KEY = 'pawpal_temp_tokens';
 
-    // Load users from localStorage or initialize default
-    if (!localStorage.getItem('pawpal_users')) {
-        localStorage.setItem('pawpal_users', JSON.stringify([DEFAULT_USER]));
-    }
-
-    // State Variables
-    let currentOtp = null;
-    let otpTimerInterval = null;
-    let resendTimerInterval = null;
-    let lockTimerInterval = null;
-    let loginFailedCount = {};
-
-    // Page Detection
-    const loginFormContainer = document.getElementById('loginFormContainer');
-    const isLoginPage = !!loginFormContainer;
-    const isDashboardPage = !!document.getElementById('dashBookingsList');
-    const isHomePage = !isLoginPage && !isDashboardPage;
-
-    // Path resolution based on current page location
-    // Detect which subdir we're in to compute correct relative paths
-    const _path = window.location.pathname;
-    const _isRoot       = !_path.includes('/pages/');
-    const _isPublicDir  = _path.includes('/pages/public/');
-    const _isUserDir    = _path.includes('/pages/user/');
-    const _isServicesDir = _path.includes('/pages/services/');
-    const _isShopDir    = _path.includes('/pages/shop/');
-    const _isAdminDir   = _path.includes('/pages/admin/');
-    const _isInPagesSubdir = !_isRoot; // any pages/* dir
-
-    // Helper: build correct URL from any page to a known named destination
-    function _url(dest) {
-        // dest options: 'root', 'login', 'dashboard', 'admin', 'booking', 'shop'
-        if (_isRoot) {
-            const map = {
-                root:      'pages/public/landing.html',
-                login:     'pages/public/login.html',
-                dashboard: 'pages/user/dashboard.html',
-                admin:     'pages/admin/index.html',
-                booking:   'pages/services/booking.html',
-                shop:      'pages/shop/shop.html',
-            };
-            return map[dest] || dest;
-        }
-        if (_isPublicDir) {
-            const map = {
-                root:      'landing.html',
-                login:     'login.html',
-                dashboard: '../user/dashboard.html',
-                admin:     '../admin/index.html',
-                booking:   '../services/booking.html',
-                shop:      '../shop/shop.html',
-            };
-            return map[dest] || dest;
-        }
-        if (_isUserDir) {
-            const map = {
-                root:      '../public/landing.html',
-                login:     '../public/login.html',
-                dashboard: 'dashboard.html',
-                admin:     '../admin/index.html',
-                booking:   '../services/booking.html',
-                shop:      '../shop/shop.html',
-            };
-            return map[dest] || dest;
-        }
-        if (_isServicesDir) {
-            const map = {
-                root:      '../public/landing.html',
-                login:     '../public/login.html',
-                dashboard: '../user/dashboard.html',
-                admin:     '../admin/index.html',
-                booking:   'booking.html',
-                shop:      '../shop/shop.html',
-            };
-            return map[dest] || dest;
-        }
-        if (_isShopDir) {
-            const map = {
-                root:      '../public/landing.html',
-                login:     '../public/login.html',
-                dashboard: '../user/dashboard.html',
-                admin:     '../admin/index.html',
-                booking:   '../services/booking.html',
-                shop:      'shop.html',
-            };
-            return map[dest] || dest;
-        }
-        if (_isAdminDir) {
-            const map = {
-                root:      '../public/landing.html',
-                login:     '../public/login.html',
-                dashboard: '../user/dashboard.html',
-                admin:     'index.html',
-                booking:   '../services/booking.html',
-                shop:      '../shop/shop.html',
-            };
-            return map[dest] || dest;
-        }
-        // fallback
-        return dest;
-    }
-
-    // Legacy aliases kept for any remaining code that uses them
-    const pathPrefix = _isRoot ? '' : '../../';
-    const pagePrefix = _isRoot ? 'pages/' : '';
-
-    // Booking change state and hold helpers
-    const BOOKING_SLOTS = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'];
-    const BOOKING_BUSY_SLOTS = ['09:00','10:30','14:00','15:30'];
-    const STAFF_MEMBERS = [
-        { id: 'NV01', name: 'Thảo', role: 'Chăm sóc Spa' },
-        { id: 'NV02', name: 'Hưng', role: 'Chuyên viên Grooming' },
-        { id: 'NV03', name: 'Linh', role: 'Chăm sóc Pet Hotel' },
-        { id: 'NV04', name: 'Minh', role: 'Bảo mẫu VIP' }
-    ];
-    const HOLD_STORAGE_KEY = 'pawpal_booking_holds';
-    const CURRENT_CHANGE_HOLD_KEY = 'pawpal_current_change_hold';
-    let changeBookingState = null;
-
-    // Toast Container
-    const toastContainer = document.getElementById('toastContainer');
-
-    // Ensure a safe global opener exists early so dashboard can call it before auth module
-    window._queuedChangeBookingRequests = window._queuedChangeBookingRequests || [];
-    window._actualOpenChangeBookingModal = window._actualOpenChangeBookingModal || null;
-    window.openChangeBookingModal = function(booking) {
-        if (typeof window._actualOpenChangeBookingModal === 'function') {
-            return window._actualOpenChangeBookingModal(booking);
-        }
-        console.log('auth: queueing openChangeBookingModal request until actual handler is ready', booking);
-        window._queuedChangeBookingRequests.push(booking);
-    };
-
-    // Safe helper to bind event listeners
-    function safeBind(el, event, handler) {
-        if (el) el.addEventListener(event, handler);
-    }
-
-    // ==========================================================================
-    // Global State Core Helpers
-    // ==========================================================================
-
-    function getUsersList() {
-        return JSON.parse(localStorage.getItem('pawpal_users')) || [];
-    }
-
-    function saveUsersList(users) {
-        localStorage.setItem('pawpal_users', JSON.stringify(users));
-    }
-
-    function getLoggedInUser() {
-        return localStorage.getItem('pawpal_logged_in_user');
-    }
-
-    function getBookingHolds() {
-        try {
-            const raw = localStorage.getItem(HOLD_STORAGE_KEY);
-            return raw ? JSON.parse(raw) : [];
-        } catch {
-            return [];
-        }
-    }
-
-    function saveBookingHolds(holds) {
-        const valid = holds.filter(h => !isHoldExpired(h));
-        localStorage.setItem(HOLD_STORAGE_KEY, JSON.stringify(valid));
-    }
-
-    function isHoldExpired(hold) {
-        return new Date(hold.expiresAt) <= new Date();
-    }
-
-    function cleanupExpiredHolds() {
-        const holds = getBookingHolds();
-        const active = holds.filter(h => !isHoldExpired(h));
-        if (active.length !== holds.length) saveBookingHolds(active);
-    }
-
-    function getActiveHolds() {
-        cleanupExpiredHolds();
-        return getBookingHolds().filter(h => !isHoldExpired(h));
-    }
-
-    function getChangeHoldKey(bookingId, date, slot) {
-        return `${bookingId}|${date}|${slot}`;
-    }
-
-    function releaseCurrentChangeHold() {
-        if (!changeBookingState?.currentHoldId) return;
-        const holds = getActiveHolds().filter(h => h.id !== changeBookingState.currentHoldId);
-        saveBookingHolds(holds);
-        localStorage.removeItem(CURRENT_CHANGE_HOLD_KEY);
-        changeBookingState.currentHoldId = null;
-    }
-
-    function startChangeHoldCountdown() {
-        if (!changeBookingState?.currentHoldId) return;
-        if (changeBookingState.holdTimer) return;
-        changeBookingState.holdTimer = setInterval(() => {
-            const hold = getActiveHolds().find(h => h.id === changeBookingState.currentHoldId);
-            if (!hold) {
-                updateChangeBookingHoldBanner();
-                clearInterval(changeBookingState.holdTimer);
-                changeBookingState.holdTimer = null;
-                return;
+// Initialize default users if not exists
+function initMockDatabase() {
+    if (!localStorage.getItem(PAWPAL_USERS_KEY)) {
+        const defaultUsers = [
+            {
+                name: "Admin PawPal",
+                phone: "0900000000",
+                password: "adminpassword",
+                role: "admin",
+                is_temporary: false,
+                points: 100
+            },
+            {
+                name: "Nguyễn Văn A",
+                phone: "0912345678",
+                password: "password123",
+                role: "customer",
+                is_temporary: false,
+                points: 120
+            },
+            // Một tài khoản tạm đã có sẵn để demo
+            {
+                name: "Khách Vãng Lai Demo",
+                phone: "0987654321",
+                role: "customer",
+                is_temporary: true,
+                points: 0
             }
-            updateChangeBookingHoldBanner();
-        }, 1000);
+        ];
+        localStorage.setItem(PAWPAL_USERS_KEY, JSON.stringify(defaultUsers));
     }
 
-    function stopChangeHoldCountdown() {
-        if (changeBookingState?.holdTimer) {
-            clearInterval(changeBookingState.holdTimer);
-            changeBookingState.holdTimer = null;
-        }
+    if (!localStorage.getItem(TEMP_TOKENS_KEY)) {
+        // Token kích hoạt demo
+        const defaultTokens = [
+            {
+                token: "token-hop-le-48h",
+                phone: "0987654321",
+                createdAt: Date.now() // Vừa tạo, còn hạn
+            },
+            {
+                token: "token-het-han-48h",
+                phone: "0911111111",
+                createdAt: Date.now() - (50 * 60 * 60 * 1000) // Quá 48 tiếng
+            }
+        ];
+        localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(defaultTokens));
+    }
+}
+
+// Lấy danh sách users
+function getUsers() {
+    return JSON.parse(localStorage.getItem(PAWPAL_USERS_KEY)) || [];
+}
+
+// Lưu danh sách users
+function saveUsers(users) {
+    localStorage.setItem(PAWPAL_USERS_KEY, JSON.stringify(users));
+}
+
+// Lấy user hiện tại đang đăng nhập
+function getCurrentUser() {
+    return JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || null;
+}
+
+// Đăng nhập user
+function setCurrentUser(user) {
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    // Dispatch event để cập nhật giao diện
+    document.dispatchEvent(new CustomEvent('auth_state_changed', { detail: user }));
+}
+
+// Đăng xuất
+function logout() {
+    localStorage.removeItem(CURRENT_USER_KEY);
+    window.location.href = '/pages/public/landing.html';
+}
+
+// --- TOAST NOTIFICATION SYSTEM ---
+function showToast(type, message, duration = 5000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) {
+        console.warn('Toast container not found');
+        return;
     }
 
-    function getCurrentUser() {
-        const loggedInPhone = getLoggedInUser();
-        if (!loggedInPhone) return null;
-        const users = getUsersList();
-        return users.find(u => u.phone === loggedInPhone) || null;
-    }
+    const toastId = 'toast-' + Date.now();
+    const icons = {
+        success: '✓',
+        error: '✕',
+        info: 'ℹ',
+        warning: '⚠'
+    };
 
-    function saveCurrentUser(user) {
-        const users = getUsersList();
-        const idx = users.findIndex(u => u.phone === user.phone);
-        if (idx >= 0) {
-            users[idx] = user;
-        } else {
-            users.push(user);
-        }
-        saveUsersList(users);
-    }
+    const titles = {
+        success: 'Thành công',
+        error: 'Lỗi',
+        info: 'Thông báo',
+        warning: 'Cảnh báo'
+    };
 
-    function parseBookingDateTime(dateString, timeString) {
-        if (!dateString) return null;
-        const parts = dateString.split('/').map(p => p.trim());
-        if (parts.length !== 3) return null;
-        const [day, month, year] = parts;
-        return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timeString || '00:00'}:00`);
-    }
-
-    function formatBookingDate(dateString) {
-        if (!dateString) return '';
-        const d = parseBookingDateTime(dateString, '00:00');
-        if (!d || isNaN(d)) return dateString;
-        return d.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
-    }
-
-    function getMinutesUntilBooking(booking) {
-        const dt = parseBookingDateTime(booking.date, booking.time);
-        if (!dt) return Infinity;
-        return Math.round((dt - new Date()) / 60000);
-    }
-
-    function canModifyBooking(booking) {
-        if (!booking || !booking.status) return false;
-        if (['Đang thực hiện','Đã tiếp nhận','Hoàn thành','Đã hủy'].includes(booking.status)) return false;
-        const minutes = getMinutesUntilBooking(booking);
-        return minutes > 120;
-    }
-
-    function canCancelBooking(booking) {
-        if (!booking || !booking.status) return false;
-        if (['Đang thực hiện','Đã tiếp nhận','Hoàn thành','Đã hủy'].includes(booking.status)) return false;
-        const minutes = getMinutesUntilBooking(booking);
-        return minutes > 120;
-    }
-
-    function recordBookingAudit(booking, action, note) {
-        if (!booking) return;
-        booking.auditTrail = booking.auditTrail || [];
-        booking.auditTrail.push({
-            action,
-            note,
-            actor: getCurrentUser()?.phone || 'guest',
-            timestamp: new Date().toISOString(),
-        });
-    }
-
-    function getServiceCategory(booking) {
-        if (!booking?.service) return 'spa';
-        return booking.service.toLowerCase().includes('hotel') ? 'hotel' : 'spa';
-    }
-
-    function getBookingCategoryLabel(booking) {
-        return getServiceCategory(booking) === 'hotel' ? 'Pet Hotel' : 'Spa & Grooming';
-    }
-
-    function loadBookingServiceForChange(booking) {
-        if (!booking) return null;
-        const category = getServiceCategory(booking);
-        return STATE_SERVICES ? STATE_SERVICES.find(s => s.isHotel === (category === 'hotel')) : null;
-    }
-
-    function setLoggedInUser(phone) {
-        localStorage.setItem('pawpal_logged_in_user', phone);
-    }
-
-    function logoutUser() {
-        localStorage.removeItem('pawpal_logged_in_user');
-        updateHeaderState();
-        alert('Đã đăng xuất tài khoản.');
-        window.location.href = _url('root');
-    }
-
-    function formatPhone(phone) {
-        if (!phone) return '';
-        return phone.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
-    }
-
-    // Password strength calculation
-    function getPasswordStrength(password) {
-        if (!password) return 0;
-        let score = 0;
-        if (password.length >= 8) score++;
-        if (/\d/.test(password)) score++;
-        if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) score++;
-        return score; // 0, 1, 2, or 3
-    }
-
-    function updateStrengthBar(bar, label, score) {
-        if (!bar || !label) return;
-        bar.className = 'strength-bar';
-        if (score === 0) {
-            bar.style.width = '0%';
-            label.textContent = 'Yếu';
-            label.style.color = '#ef4444';
-        } else if (score === 1) {
-            bar.style.width = '33%';
-            bar.style.backgroundColor = '#ef4444'; // Red
-            label.textContent = 'Yếu';
-            label.style.color = '#ef4444';
-        } else if (score === 2) {
-            bar.style.width = '66%';
-            bar.style.backgroundColor = '#f97316'; // Orange
-            label.textContent = 'Trung bình';
-            label.style.color = '#f97316';
-        } else if (score === 3) {
-            bar.style.width = '100%';
-            bar.style.backgroundColor = '#22c55e'; // Green
-            label.textContent = 'Mạnh';
-            label.style.color = '#22c55e';
-        }
-    }
-
-    // Show Toast Zalo/SMS Message
-    function showSmsToast(header, message, actionText = null, actionCallback = null) {
-        if (!toastContainer) return;
-        const toast = document.createElement('div');
-        toast.className = 'toast-message';
-        
-        let actionHtml = '';
-        if (actionText && actionText !== '') {
-            actionHtml = `<p><a href="#" class="toast-action">${actionText}</a></p>`;
-        }
-
-        toast.innerHTML = `
-            <div class="toast-header">💬 SMS GATEWAY • ${header}</div>
-            <div class="toast-body">
-                <p>${message}</p>
-                ${actionHtml}
+    const toastHtml = `
+        <div id="${toastId}" class="toast-custom toast-${type}">
+            <span class="toast-icon">${icons[type] || 'ℹ'}</span>
+            <div class="toast-content">
+                <div class="toast-title">${titles[type] || 'Thông báo'}</div>
+                <p class="toast-message">${message}</p>
             </div>
-        `;
-        
-        toastContainer.appendChild(toast);
+            <button type="button" class="toast-close" aria-label="Đóng">&times;</button>
+        </div>
+    `;
 
-        // Click Action callback
-        if (actionCallback) {
-            const actionLink = toast.querySelector('.toast-action');
-            if (actionLink) {
-                actionLink.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    actionCallback();
-                    toast.remove();
-                });
-            }
+    container.insertAdjacentHTML('beforeend', toastHtml);
+    const toastElement = document.getElementById(toastId);
+
+    // Close button
+    toastElement.querySelector('.toast-close').addEventListener('click', () => {
+        removeToast(toastElement);
+    });
+
+    // Auto remove
+    setTimeout(() => {
+        removeToast(toastElement);
+    }, duration);
+}
+
+function removeToast(toastElement) {
+    toastElement.style.opacity = '0';
+    toastElement.style.transform = 'translateX(100%)';
+    setTimeout(() => {
+        toastElement.remove();
+    }, 300);
+}
+
+// --- ERROR BANNER DISPLAY ---
+function showErrorBanner(message, parentForm) {
+    // Remove existing banner
+    const existingBanner = parentForm.querySelector('.auth-error-banner');
+    if (existingBanner) {
+        existingBanner.remove();
+    }
+
+    const banner = document.createElement('div');
+    banner.className = 'auth-error-banner';
+    banner.innerHTML = message;
+    
+    parentForm.insertBefore(banner, parentForm.firstChild);
+
+    // Auto remove after 7 seconds
+    setTimeout(() => {
+        banner.style.opacity = '0';
+        setTimeout(() => banner.remove(), 300);
+    }, 7000);
+}
+
+// --- 2. XỬ LÝ LỌC TRANG VÀ KHÓA TÀI KHOẢN TẠM (US 1-2) ---
+function enforceTemporaryAccountLock() {
+    const currentUser = getCurrentUser();
+    const isTemp = currentUser && currentUser.is_temporary;
+    
+    // Nếu là tài khoản tạm và đang truy cập trực tiếp vào trang User cá nhân -> Đẩy ra ngoài
+    const currentPath = window.location.pathname.toLowerCase();
+    const isUserPage = currentPath.includes('/pages/user/');
+    
+    if (isTemp && isUserPage) {
+        // Chặn trực tiếp và chuyển hướng về trang thiết lập mật khẩu kèm token
+        const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
+        let tokenObj = tokens.find(t => t.phone === currentUser.phone);
+        if (!tokenObj) {
+            tokenObj = { token: 'token-dynamic-' + Math.random().toString(36).substr(2, 9), phone: currentUser.phone, createdAt: Date.now() };
+            tokens.push(tokenObj);
+            localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
         }
-
-        // Auto remove toast after 10 seconds
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(50px)';
-            setTimeout(() => toast.remove(), 400);
-        }, 10000);
+        window.location.href = `/pages/public/login.html?action=setup-password&token=${tokenObj.token}`;
+        return;
     }
 
-    // Show success toast (green, non-SMS)
-    function showToastSuccess(message) {
-        if (!toastContainer) return;
-        const toast = document.createElement('div');
-        toast.className = 'toast-message toast-success';
-        toast.innerHTML = `
-            <div class="toast-header" style="background:linear-gradient(135deg,#16a34a,#15803d);">✅ THÀNH CÔNG</div>
-            <div class="toast-body"><p>${message}</p></div>
-        `;
-        toastContainer.appendChild(toast);
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(50px)';
-            setTimeout(() => toast.remove(), 400);
-        }, 4000);
-    }
+    // Đợi Header được load xong để kiểm soát các click liên kết
+    document.addEventListener('headerInjected', () => {
+        applyLockingUI(isTemp);
+    });
+    // Chạy thêm một lượt phòng hờ Header đã inject trước đó
+    applyLockingUI(isTemp);
+}
 
-    // Update Header states
-    function updateHeaderState() {
-        const loggedInPhone = getLoggedInUser();
-        const navLoginBtn = document.querySelector('.login-btn');
-        
-        if (!navLoginBtn) return;
+function applyLockingUI(isTemp) {
+    if (!isTemp) return;
 
-        if (loggedInPhone) {
-            const users = getUsersList();
-            const user = users.find(u => u.phone === loggedInPhone);
-            if (user) {
-                const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                navLoginBtn.href = _url('dashboard');
-                navLoginBtn.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <div style="width:28px; height:28px; border-radius:50%; background-color:var(--color-accent); color:var(--color-primary-dark); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;">${initials}</div>
-                        <span style="font-size:0.85rem; font-weight:600; color:var(--color-text-dark);">${user.name.split(' ').pop()} | <span style="color:var(--color-accent-dark);">${user.points}P</span></span>
-                    </div>
-                `;
-                return;
-            }
-        }
-        
-        // Return to standard login button pointing to login page
-        navLoginBtn.href = _url('login');
-        navLoginBtn.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            <span>Đăng nhập</span>
-        `;
-    }
+    // Tìm các thẻ menu hoặc liên kết dẫn tới trang cá nhân / admin
+    const navLinks = document.querySelectorAll('.nav-menu a, .navbar-nav a, .auth-actions a, .header-actions a');
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (!href) return;
 
-    // Run header state check on all pages
-    updateHeaderState();
+        // Chỉ cho phép đi các trang công khai: landing, services, booking, shop, about, blog, contact
+        const isPublicPage = href.includes('landing.html') || 
+                             href.includes('services.html') || 
+                             href.includes('booking.html') || 
+                             href.includes('shop.html') ||
+                             href.includes('about.html') ||
+                             href.includes('blog.html') ||
+                             href.includes('contact.html') ||
+                             href.includes('login.html');
 
-    // ==========================================================================
-    // 1. HOME PAGE SPECIFIC LOGIC (index.html)
-    // ==========================================================================
-    if (isHomePage) {
-        const bookingForm = document.getElementById('bookingForm');
-        if (bookingForm) {
-            bookingForm.addEventListener('submit', (e) => {
+        if (!isPublicPage && (href.includes('/user/') || href.includes('/admin/'))) {
+            // Thiết lập trạng thái khóa
+            link.classList.add('nav-link-locked');
+            
+            // Chặn click
+            link.addEventListener('click', (e) => {
                 e.preventDefault();
-                
-                const phone = document.getElementById('bookingPhone').value.trim();
-                const name = document.getElementById('bookingName').value.trim();
-                const service = document.getElementById('bookingService').value;
+                showLockedTooltip(link);
+            });
+        }
+    });
+}
 
-                if (!phone || !name) return;
+// Hiển thị tooltip cảnh báo khóa tài khoản tạm thời
+let currentTooltip = null;
+function showLockedTooltip(targetElement) {
+    if (currentTooltip) {
+        currentTooltip.remove();
+    }
 
-                const users = getUsersList();
+    const tooltip = document.createElement('div');
+    tooltip.className = 'locked-tooltip-custom';
+    tooltip.textContent = 'Hãy thiết lập mật khẩu ngay để trở thành thành viên của Pawpal, mở khóa ngay các tính năng thú vị!';
+    document.body.appendChild(tooltip);
+    currentTooltip = tooltip;
+
+    // Định vị tooltip
+    const rect = targetElement.getBoundingClientRect();
+    tooltip.style.left = `${rect.left + rect.width / 2 + window.scrollX}px`;
+    tooltip.style.top = `${rect.top + window.scrollY}px`;
+
+    // Tự động ẩn sau 4 giây
+    setTimeout(() => {
+        if (currentTooltip === tooltip) {
+            tooltip.style.opacity = '0';
+            tooltip.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => tooltip.remove(), 300);
+        }
+    }, 4000);
+}
+
+// --- 3. ĐIỀU HƯỚNG STATE TRÊN TRANG LOGIN.HTML ---
+function handleLoginRouting() {
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash;
+    
+    let action = params.get('action');
+    let token = params.get('token');
+
+    // Hỗ trợ fallback từ hash nếu redirect server làm mất query parameters
+    if (!action && hash) {
+        const hashClean = hash.substring(1); // Bỏ dấu '#'
+        if (hashClean === 'register' || hashClean === 'login') {
+            action = hashClean;
+        } else if (hashClean.startsWith('setup-password')) {
+            action = 'setup-password';
+            // Parse token từ hash dạng setup-password?token=xyz hoặc setup-password&token=xyz
+            const tokenMatch = hashClean.match(/token=([^&]+)/);
+            if (tokenMatch) {
+                token = tokenMatch[1];
+            }
+        }
+    }
+
+    // Ẩn tất cả các sections
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const otpSection = document.getElementById('otpSection');
+    const congratsSection = document.getElementById('congratsSection');
+    const setupPasswordSection = document.getElementById('setupPasswordSection');
+    const setupExpiredSection = document.getElementById('setupExpiredSection');
+    const authTabs = document.getElementById('authTabs');
+
+    if (!loginForm) return; // Không nằm trên trang login.html
+
+    // Reset default view
+    loginForm.classList.remove('active-form');
+    registerForm.classList.remove('active-form');
+    otpSection.classList.add('d-none');
+    congratsSection.classList.add('d-none');
+    setupPasswordSection.classList.add('d-none');
+    setupExpiredSection.classList.add('d-none');
+    authTabs.style.display = 'flex';
+
+    if (action === 'register') {
+        registerForm.classList.add('active-form');
+        document.getElementById('tabRegister').classList.add('active');
+        document.getElementById('tabLogin').classList.remove('active');
+    } else if (action === 'setup-password' && token) {
+        authTabs.style.display = 'none';
+        
+        // Kiểm tra tính hợp lệ của token
+        const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
+        const tokenData = tokens.find(t => t.token === token);
+
+        if (tokenData) {
+            const timeElapsed = Date.now() - tokenData.createdAt;
+            const limit = 48 * 60 * 60 * 1000; // 48 tiếng
+
+            if (timeElapsed <= limit) {
+                // Hợp lệ
+                setupPasswordSection.classList.remove('d-none');
+                setupPasswordSection.dataset.phone = tokenData.phone;
+                setupPasswordSection.dataset.token = token;
+            } else {
+                // Quá hạn
+                setupExpiredSection.classList.remove('d-none');
+            }
+        } else {
+            // Không tìm thấy token -> coi như hết hạn/lỗi
+            setupExpiredSection.classList.remove('d-none');
+        }
+    } else {
+        // Mặc định là login
+        loginForm.classList.add('active-form');
+        document.getElementById('tabLogin').classList.add('active');
+        document.getElementById('tabRegister').classList.remove('active');
+    }
+}
+
+// --- 4. FORM VALIDATION & INTERACTION ON LOGIN/REGISTER ---
+function initAuthForms() {
+    const loginForm = document.getElementById('loginForm');
+    if (!loginForm) return;
+
+    // --- TỔNG HỢP TOGGLE ĐĂNG NHẬP / ĐĂNG KÝ ---
+    const tabLogin = document.getElementById('tabLogin');
+    const tabRegister = document.getElementById('tabRegister');
+    const registerForm = document.getElementById('registerForm');
+
+    tabLogin.addEventListener('click', () => {
+        window.history.pushState({}, '', '?action=login');
+        handleLoginRouting();
+    });
+
+    tabRegister.addEventListener('click', () => {
+        window.history.pushState({}, '', '?action=register');
+        handleLoginRouting();
+    });
+
+    // --- AN/HIỆN MẬT KHẨU ---
+    document.querySelectorAll('.btn-toggle-password').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const input = btn.previousElementSibling;
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerHTML = `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+            } else {
+                input.type = 'password';
+                btn.innerHTML = `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+            }
+        });
+    });
+
+    // --- PHƯƠNG THỨC ĐĂNG NHẬP (PASSWORD VS SMS) ---
+    const methodPassword = document.getElementById('methodPassword');
+    const methodSMS = document.getElementById('methodSMS');
+    const loginPasswordField = document.getElementById('loginPasswordField');
+    const loginSMSField = document.getElementById('loginSMSField');
+
+    methodPassword.addEventListener('click', () => {
+        methodPassword.classList.add('active');
+        methodSMS.classList.remove('active');
+        loginPasswordField.classList.remove('d-none');
+        loginSMSField.classList.add('d-none');
+    });
+
+    methodSMS.addEventListener('click', () => {
+        methodSMS.classList.add('active');
+        methodPassword.classList.remove('active');
+        loginPasswordField.classList.add('d-none');
+        loginSMSField.classList.remove('d-none');
+    });
+
+    // Nhận mã đăng nhập nhanh SMS (Giả lập)
+    const btnRequestLoginSMS = document.getElementById('btnRequestLoginSMS');
+    btnRequestLoginSMS.addEventListener('click', () => {
+        const phone = document.getElementById('loginPhone').value;
+        if (!/^[0-9]{10}$/.test(phone)) {
+            showToast('error', 'Vui lòng nhập số điện thoại 10 số trước.');
+            return;
+        }
+        btnRequestLoginSMS.disabled = true;
+        btnRequestLoginSMS.textContent = 'Đã gửi (60s)';
+        showToast('info', 'Mã OTP truy cập nhanh đã gửi về điện thoại: 123456');
+        
+        let seconds = 60;
+        const interval = setInterval(() => {
+            seconds--;
+            if (seconds <= 0) {
+                clearInterval(interval);
+                btnRequestLoginSMS.disabled = false;
+                btnRequestLoginSMS.textContent = 'Nhận mã';
+            } else {
+                btnRequestLoginSMS.textContent = `Đã gửi (${seconds}s)`;
+            }
+        }, 1000);
+    });
+
+    // --- FORM SUBMIT LOGIN (US 2-1) ---
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const phone = document.getElementById('loginPhone').value;
+        const users = getUsers();
+
+        if (methodSMS.classList.contains('active')) {
+            const code = document.getElementById('loginSMSCode').value;
+            if (code === '123456') {
                 let user = users.find(u => u.phone === phone);
-                
-                const newBooking = {
-                    id: 'BK-' + Math.floor(1000 + Math.random() * 9000),
-                    service: service,
-                    date: new Date().toLocaleDateString('vi-VN'),
-                    time: '10:00 (Hôm nay)',
-                    status: 'Đã xác nhận'
-                };
-
                 if (!user) {
-                    // Create temporary guest profile
-                    user = {
-                        phone: phone,
-                        name: name,
-                        password: '', // blank password until activation
-                        points: 0,
-                        membership: 'Hạng Bạc',
-                        isTemporary: true,
-                        bookings: [newBooking]
-                    };
+                    // Nếu chưa có user thì ngầm tạo tài khoản thường
+                    user = { name: "Khách SMS " + phone.substring(6), phone: phone, role: "customer", is_temporary: false, points: 50 };
                     users.push(user);
-                    saveUsersList(users);
-
-                    // Send SMS Toast notification with Activation URL Link
-                    setTimeout(() => {
-                        showSmsToast('CHÀO MỪNG KHÁCH MỚI', `Cảm ơn bạn đã đặt lịch tại PawPal. Nhấn vào đây để thiết lập mật khẩu, kích hoạt tài khoản chính thức và nhận ngay <strong>50 Paw Points</strong>.`, 'Thiết lập mật khẩu ngay', () => {
-                            window.location.href = _url('login') + `?activate=${phone}`;
-                        });
-                    }, 2000);
-
-                } else {
-                    // Add booking to existing user
-                    user.bookings.push(newBooking);
-                    saveUsersList(users);
+                    saveUsers(users);
                 }
-
-                alert('Đặt lịch thành công! PawPal sẽ gửi xác nhận qua SMS/Zalo sau vài giây.');
-                bookingForm.reset();
-                const bookingWidget = document.getElementById('booking');
-                if (bookingWidget) {
-                    bookingWidget.classList.remove('open');
-                }
-            });
-        }
-    }
-
-    // ==========================================================================
-    // 2. LOGIN PAGE SPECIFIC LOGIC (login.html)
-    // ==========================================================================
-    if (isLoginPage) {
-        // --- GUARD: Nếu đã đăng nhập thì redirect thẳng về dashboard ---
-        if (getLoggedInUser()) {
-            window.location.href = _url('dashboard');
-            return;
-        }
-
-        const tabLoginBtn = document.getElementById('tabLoginBtn');
-        const tabRegisterBtn = document.getElementById('tabRegisterBtn');
-        const registerFormContainer = document.getElementById('registerFormContainer');
-        const forgetPassContainer = document.getElementById('forgetPassContainer');
-        const forgetPassBtn = document.getElementById('forgetPassBtn');
-        const backToLoginBtn = document.getElementById('backToLoginBtn');
-        const authPageTabs = document.getElementById('authPageTabs');
-        const activationFormContainer = document.getElementById('activationFormContainer');
-
-        const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        const forgetPassForm = document.getElementById('forgetPassForm');
-        const activationForm = document.getElementById('activationForm');
-
-        // Form switching
-        safeBind(tabLoginBtn, 'click', showLoginForm);
-        safeBind(tabRegisterBtn, 'click', showRegisterForm);
-        safeBind(forgetPassBtn, 'click', showForgetPassForm);
-        safeBind(backToLoginBtn, 'click', showLoginForm);
-
-        // Tab Admin
-        const tabAdminBtn = document.getElementById('tabAdminBtn');
-        const adminFormContainer = document.getElementById('adminFormContainer');
-        safeBind(tabAdminBtn, 'click', showAdminLoginForm);
-
-        function showAdminLoginForm() {
-            if (tabLoginBtn) tabLoginBtn.classList.remove('active');
-            if (tabRegisterBtn) tabRegisterBtn.classList.remove('active');
-            if (tabAdminBtn) tabAdminBtn.classList.add('active');
-            if (loginFormContainer) loginFormContainer.classList.remove('active');
-            if (registerFormContainer) registerFormContainer.classList.remove('active');
-            if (forgetPassContainer) forgetPassContainer.classList.remove('active');
-            if (activationFormContainer) activationFormContainer.classList.remove('active');
-            if (adminFormContainer) adminFormContainer.classList.add('active');
-            if (authPageTabs) authPageTabs.style.display = 'flex';
-            setTimeout(() => document.getElementById('adminPhone')?.focus(), 100);
-        }
-
-        function showLoginForm() {
-            if (tabLoginBtn) tabLoginBtn.classList.add('active');
-            if (tabRegisterBtn) tabRegisterBtn.classList.remove('active');
-            if (loginFormContainer) loginFormContainer.classList.add('active');
-            if (registerFormContainer) registerFormContainer.classList.remove('active');
-            if (forgetPassContainer) forgetPassContainer.classList.remove('active');
-            if (activationFormContainer) activationFormContainer.classList.remove('active');
-            if (authPageTabs) authPageTabs.style.display = 'flex';
-        }
-
-        function showRegisterForm() {
-            if (tabLoginBtn) tabLoginBtn.classList.remove('active');
-            if (tabRegisterBtn) tabRegisterBtn.classList.add('active');
-            if (loginFormContainer) loginFormContainer.classList.remove('active');
-            if (registerFormContainer) registerFormContainer.classList.add('active');
-            if (forgetPassContainer) forgetPassContainer.classList.remove('active');
-            if (activationFormContainer) activationFormContainer.classList.remove('active');
-            if (authPageTabs) authPageTabs.style.display = 'flex';
-        }
-
-        function showForgetPassForm() {
-            if (loginFormContainer) loginFormContainer.classList.remove('active');
-            if (registerFormContainer) registerFormContainer.classList.remove('active');
-            if (forgetPassContainer) forgetPassContainer.classList.add('active');
-            if (activationFormContainer) activationFormContainer.classList.remove('active');
-            if (authPageTabs) authPageTabs.style.display = 'none';
-        }
-
-        function showActivationForm(phone, name) {
-            if (loginFormContainer) loginFormContainer.classList.remove('active');
-            if (registerFormContainer) registerFormContainer.classList.remove('active');
-            if (forgetPassContainer) forgetPassContainer.classList.remove('active');
-            if (activationFormContainer) activationFormContainer.classList.add('active');
-            if (authPageTabs) authPageTabs.style.display = 'none';
-
-            const activationName = document.getElementById('activationName');
-            if (activationName) activationName.textContent = name;
-            if (activationForm) activationForm.dataset.phone = phone;
-        }
-
-        // --- Form validations ---
-        const registerPhone = document.getElementById('registerPhone');
-        const registerPassword = document.getElementById('registerPassword');
-        const registerConfirmPassword = document.getElementById('registerConfirmPassword');
-        const registerSubmitBtn = document.getElementById('registerSubmitBtn');
-        const registerPhoneError = document.getElementById('registerPhoneError');
-        const registerPasswordError = document.getElementById('registerPasswordError');
-
-        if (registerForm) {
-            registerPhone.addEventListener('input', validateRegisterForm);
-            registerPassword.addEventListener('input', validateRegisterForm);
-            registerConfirmPassword.addEventListener('input', validateRegisterForm);
-        }
-
-        function validateRegisterForm() {
-            const phone = registerPhone.value.trim();
-            const pass = registerPassword.value;
-            const confirmPass = registerConfirmPassword.value;
-            
-            let phoneValid = false;
-            let passMatch = false;
-
-            if (phone.length > 0) {
-                const phoneRegex = /^(0[3|5|7|8|9])[0-9]{8}$/;
-                if (phoneRegex.test(phone)) {
-                    registerPhoneError.style.display = 'none';
-                    phoneValid = true;
-                } else {
-                    registerPhoneError.style.display = 'block';
-                    phoneValid = false;
-                }
-            } else {
-                registerPhoneError.style.display = 'none';
-            }
-
-            if (confirmPass.length > 0) {
-                if (pass === confirmPass) {
-                    registerPasswordError.style.display = 'none';
-                    passMatch = true;
-                } else {
-                    registerPasswordError.style.display = 'block';
-                    passMatch = false;
-                }
-            } else {
-                registerPasswordError.style.display = 'none';
-            }
-
-            if (phoneValid && passMatch && pass.length >= 8 && document.getElementById('registerName').value.trim() !== '') {
-                registerSubmitBtn.removeAttribute('disabled');
-            } else {
-                registerSubmitBtn.setAttribute('disabled', 'true');
-            }
-        }
-
-        // --- Activation password check ---
-        const activationPassword = document.getElementById('activationPassword');
-        const activationConfirmPassword = document.getElementById('activationConfirmPassword');
-        const activationStrengthBar = document.getElementById('activationStrengthBar');
-        const activationStrengthLabel = document.getElementById('activationStrengthLabel');
-        const activationSubmitBtn = document.getElementById('activationSubmitBtn');
-        const activationPasswordError = document.getElementById('activationPasswordError');
-
-        if (activationPassword) {
-            activationPassword.addEventListener('input', () => {
-                const val = activationPassword.value;
-                const strength = getPasswordStrength(val);
-                updateStrengthBar(activationStrengthBar, activationStrengthLabel, strength);
-                validateActivationForm();
-            });
-            activationConfirmPassword.addEventListener('input', validateActivationForm);
-        }
-
-        function validateActivationForm() {
-            const pass = activationPassword.value;
-            const confirmPass = activationConfirmPassword.value;
-            const strength = getPasswordStrength(pass);
-
-            let match = false;
-            if (confirmPass.length > 0) {
-                if (pass === confirmPass) {
-                    activationPasswordError.style.display = 'none';
-                    match = true;
-                } else {
-                    activationPasswordError.style.display = 'block';
-                    match = false;
-                }
-            } else {
-                activationPasswordError.style.display = 'none';
-            }
-
-            if (match && strength >= 2 && pass.length >= 8) {
-                activationSubmitBtn.removeAttribute('disabled');
-            } else {
-                activationSubmitBtn.setAttribute('disabled', 'true');
-            }
-        }
-
-        // --- OTP Dialog handler ---
-        const otpVerifyModal = document.getElementById('otpVerifyModal');
-        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
-        const resendOtpBtn = document.getElementById('resendOtpBtn');
-        const otpSingleInput = document.getElementById('otpSingleInput');
-        const otpTimerText = document.getElementById('otpTimerText');
-        const resendCountdown = document.getElementById('resendCountdown');
-        const cancelOtpBtn = document.getElementById('cancelOtpBtn');
-        let otpFailCount = 0;
-
-        safeBind(cancelOtpBtn, 'click', () => {
-            otpVerifyModal.classList.remove('open');
-            currentOtp = null;
-            otpFailCount = 0;
-        });
-
-        function launchOtpVerification(phone, mode) {
-            currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
-            otpFailCount = 0;
-
-            // Gửi SMS toast — click để auto-fill
-            setTimeout(() => {
-                showSmsToast('XÁC THỰC OTP', `Mã OTP của bạn là: <strong style="font-size:1.15rem; color:var(--color-accent);">${currentOtp}</strong> (hiệu lực 5 phút).`, 'Nhập nhanh OTP', () => {
-                    if (otpSingleInput) {
-                        otpSingleInput.value = currentOtp;
-                        otpSingleInput.classList.add('is-valid');
-                        verifyOtpBtn.removeAttribute('disabled');
-                    }
-                });
-            }, 800);
-
-            // Reset input
-            if (otpSingleInput) {
-                otpSingleInput.value = '';
-                otpSingleInput.classList.remove('is-valid', 'is-error');
-            }
-            verifyOtpBtn.setAttribute('disabled', 'true');
-            otpVerifyModal.classList.add('open');
-            setTimeout(() => otpSingleInput?.focus(), 300);
-
-            // Live validate khi gõ
-            if (otpSingleInput) {
-                otpSingleInput.oninput = () => {
-                    const val = otpSingleInput.value.replace(/\D/g, '').slice(0, 6);
-                    otpSingleInput.value = val;
-                    otpSingleInput.classList.remove('is-valid', 'is-error');
-                    if (val.length === 6) {
-                        verifyOtpBtn.removeAttribute('disabled');
+                setCurrentUser(user);
+                showToast('success', 'Đăng nhập thành công!', 2000);
+                setTimeout(() => {
+                    // Điều hướng theo role
+                    if (user.role === 'admin') {
+                        window.location.href = '/pages/admin/index.html';
                     } else {
-                        verifyOtpBtn.setAttribute('disabled', 'true');
+                        window.location.href = '/pages/user/dashboard.html';
                     }
-                };
-                // Enter = submit
-                otpSingleInput.onkeydown = (e) => {
-                    if (e.key === 'Enter' && otpSingleInput.value.length === 6) {
-                        verifyOtpBtn.click();
-                    }
-                };
-            }
-
-            // 5 mins countdown
-            let totalSeconds = 300;
-            clearInterval(otpTimerInterval);
-            if (otpTimerText) otpTimerText.textContent = '05:00';
-            otpTimerInterval = setInterval(() => {
-                totalSeconds--;
-                const mins = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-                const secs = (totalSeconds % 60).toString().padStart(2, '0');
-                if (otpTimerText) otpTimerText.textContent = `${mins}:${secs}`;
-                
-                if (totalSeconds <= 0) {
-                    clearInterval(otpTimerInterval);
-                    currentOtp = null;
-                    if (otpSingleInput) {
-                        otpSingleInput.value = '';
-                        otpSingleInput.classList.remove('is-valid', 'is-error');
-                    }
-                    verifyOtpBtn.setAttribute('disabled', 'true');
-                    otpVerifyModal.classList.remove('open');
-                    showSmsToast('OTP HẾT HẠN', 'Mã OTP đã hết hiệu lực. Vui lòng nhấn "Gửi lại mã" để nhận mã mới.');
-                }
-            }, 1000);
-
-            // 60s resend lock
-            let resendSeconds = 60;
-            resendOtpBtn.setAttribute('disabled', 'true');
-            if (resendCountdown) resendCountdown.textContent = '60';
-            resendOtpBtn.textContent = `Gửi lại mã (60s)`;
-            clearInterval(resendTimerInterval);
-            
-            resendTimerInterval = setInterval(() => {
-                resendSeconds--;
-                if (resendCountdown) resendCountdown.textContent = resendSeconds;
-                resendOtpBtn.textContent = `Gửi lại mã (${resendSeconds}s)`;
-                if (resendSeconds <= 0) {
-                    clearInterval(resendTimerInterval);
-                    resendOtpBtn.removeAttribute('disabled');
-                    resendOtpBtn.textContent = 'Gửi lại mã';
-                }
-            }, 1000);
-
-            resendOtpBtn.onclick = () => launchOtpVerification(phone, mode);
-
-            verifyOtpBtn.onclick = () => {
-                const enteredOtp = otpSingleInput ? otpSingleInput.value.trim() : '';
-
-                // Lock sau 3 lần sai — theo quy trình 3.1.2
-                if (otpFailCount >= 3) {
-                    showSmsToast('TÀI KHOẢN TẠM KHÓA', 'Bạn đã nhập sai OTP quá 3 lần. Vui lòng thử lại sau 15 phút.');
-                    otpVerifyModal.classList.remove('open');
-                    currentOtp = null;
-                    return;
-                }
-
-                if (enteredOtp === currentOtp) {
-                    clearInterval(otpTimerInterval);
-                    clearInterval(resendTimerInterval);
-                    if (otpSingleInput) otpSingleInput.classList.add('is-valid');
-                    otpFailCount = 0;
-
-                    setTimeout(() => {
-                        otpVerifyModal.classList.remove('open');
-                    }, 400);
-                    
-                    if (mode === 'register') {
-                        const newUser = {
-                            phone: registerPhone.value.trim(),
-                            name: document.getElementById('registerName').value.trim(),
-                            password: registerPassword.value,
-                            points: 50,
-                            membership: 'Hạng Bạc',
-                            isTemporary: false,
-                            bookings: []
-                        };
-                        const users = getUsersList();
-                        users.push(newUser);
-                        saveUsersList(users);
-
-                        setLoggedInUser(newUser.phone);
-                        const welcomeGiftModal = document.getElementById('welcomeGiftModal');
-                        if (welcomeGiftModal) welcomeGiftModal.classList.add('open');
-                    } else if (mode === 'loginOtp') {
-                        const phoneVal = document.getElementById('loginPhone').value.trim();
-                        let users = getUsersList();
-                        let user = users.find(u => u.phone === phoneVal);
-                        
-                        if (!user) {
-                            user = {
-                                phone: phoneVal,
-                                name: 'Khách hàng',
-                                password: '',
-                                points: 0,
-                                membership: 'Hạng Bạc',
-                                isTemporary: true,
-                                bookings: []
-                            };
-                            users.push(user);
-                            saveUsersList(users);
-                        }
-                        
-                        setLoggedInUser(phoneVal);
-                        showToastSuccess('Đăng nhập thành công! Đang chuyển hướng...');
-                        setTimeout(() => { window.location.href = _url('dashboard'); }, 1200);
-                    }
-                } else {
-                    otpFailCount++;
-                    if (otpSingleInput) {
-                        otpSingleInput.classList.add('is-error');
-                        otpSingleInput.value = '';
-                        setTimeout(() => {
-                            otpSingleInput.classList.remove('is-error');
-                            otpSingleInput.focus();
-                        }, 600);
-                    }
-                    const remaining = 3 - otpFailCount;
-                    if (remaining > 0) {
-                        showSmsToast('OTP SAI', `Mã OTP không chính xác. Còn ${remaining} lần thử.`);
-                    }
-                }
-            };
-        }
-
-        // --- Register submit ---
-        registerForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const phone = registerPhone.value.trim();
-            const users = getUsersList();
-            if (users.find(u => u.phone === phone)) {
-                alert('Số điện thoại đăng ký đã tồn tại trong hệ thống.');
-                return;
-            }
-            launchOtpVerification(phone, 'register');
-        });
-
-        // --- Login Toggle and Submit ---
-        const toggleLoginMethodBtn = document.getElementById('toggleLoginMethodBtn');
-        const loginPasswordGroup = document.getElementById('loginPasswordGroup');
-        const loginOtpGroup = document.getElementById('loginOtpGroup');
-        const sendOtpLoginBtn = document.getElementById('sendOtpLoginBtn');
-        let isOtpLogin = false;
-
-        safeBind(toggleLoginMethodBtn, 'click', () => {
-            isOtpLogin = !isOtpLogin;
-            if (isOtpLogin) {
-                loginPasswordGroup.style.display = 'none';
-                loginOtpGroup.style.display = 'block';
-                toggleLoginMethodBtn.textContent = 'Đăng nhập bằng mật khẩu';
+                }, 2000);
             } else {
-                loginPasswordGroup.style.display = 'block';
-                loginOtpGroup.style.display = 'none';
-                toggleLoginMethodBtn.textContent = 'Đăng nhập bằng OTP';
+                showErrorBanner('Mã OTP không đúng. Vui lòng nhập <strong>123456</strong> để thử nghiệm.', loginForm);
             }
-        });
-
-        safeBind(sendOtpLoginBtn, 'click', () => {
-            const phone = document.getElementById('loginPhone').value.trim();
-            if (!phone || phone.length < 10) {
-                alert('Vui lòng nhập số điện thoại hợp lệ.');
-                return;
-            }
-            launchOtpVerification(phone, 'loginOtp');
-        });
-
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const phone = document.getElementById('loginPhone').value.trim();
-            const loginPhoneError = document.getElementById('loginPhoneError');
-            const loginPasswordError = document.getElementById('loginPasswordError');
-
-            if (isCurrentlyLocked()) {
-                alert('Tài khoản hiện đang bị khóa tạm thời.');
-                return;
-            }
-
-            const users = getUsersList();
-            const user = users.find(u => u.phone === phone);
-
-            if (!user) {
-                loginPhoneError.textContent = 'Số điện thoại chưa được đăng ký.';
-                loginPhoneError.style.display = 'block';
-                // Hiện nút "Đăng ký ngay"
-                const registerPrompt = document.getElementById('registerPrompt');
-                if (registerPrompt) registerPrompt.style.display = 'flex';
-                return;
-            } else {
-                loginPhoneError.style.display = 'none';
-                const registerPrompt = document.getElementById('registerPrompt');
-                if (registerPrompt) registerPrompt.style.display = 'none';
-            }
-
-            if (isOtpLogin) {
-                alert('Vui lòng click nút "Gửi OTP" và điền mã để hoàn thành.');
-                return;
-            }
-
-            // Xác thực mật khẩu
-            if (user.password === document.getElementById('loginPassword').value) {
-                loginFailedCount[phone] = 0;
-
-                // Kiểm tra thiết bị lạ (suspicious login)
-                const knownDeviceKey = `pawpal_known_device_${phone}`;
-                const deviceFingerprint = `${navigator.userAgent}|${screen.width}x${screen.height}`;
-                const knownDevice = localStorage.getItem(knownDeviceKey);
-                if (!knownDevice) {
-                    localStorage.setItem(knownDeviceKey, deviceFingerprint);
-                } else if (knownDevice !== deviceFingerprint) {
-                    sessionStorage.setItem('pawpal_suspicious_login', '1');
-                    showSmsToast('CẢNH BÁO BẢO MẬT', `Phát hiện đăng nhập bất thường vào tài khoản PawPal của bạn từ thiết bị mới. Nếu không phải bạn, hãy đổi mật khẩu ngay.`);
-                    localStorage.setItem(knownDeviceKey, deviceFingerprint);
-                }
-
-                setLoggedInUser(phone);
-                // Ghi nhận lịch sử đăng nhập
-                const users2 = getUsersList();
-                const u2 = users2.find(usr => usr.phone === phone);
-                if (u2) {
-                    u2.loginHistory = u2.loginHistory || [];
-                    u2.loginHistory.push({
-                        time: new Date().toLocaleString('vi-VN'),
-                        device: navigator.userAgent.includes('Mobile') ? 'Thiết bị di động' : 'Máy tính',
-                        location: 'Việt Nam',
-                        suspicious: sessionStorage.getItem('pawpal_suspicious_login') === '1',
-                    });
-                    if (u2.loginHistory.length > 10) u2.loginHistory = u2.loginHistory.slice(-10);
-                    saveUsersList(users2);
-                }
-
-                showToastSuccess('Đăng nhập thành công! Đang chuyển hướng...');
-                setTimeout(() => { window.location.href = _url('dashboard'); }, 1200);
-            } else {
-                loginFailedCount[phone] = (loginFailedCount[phone] || 0) + 1;
-                if (loginFailedCount[phone] >= 5) {
-                    lockAccount(phone);
-                } else {
-                    loginPasswordError.textContent = `Mật khẩu không chính xác. (Sai ${loginFailedCount[phone]}/5 lần)`;
-                    loginPasswordError.style.display = 'block';
-                }
-            }
-        });
-
-        // --- Password Recovery Submit ---
-        forgetPassForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const phone = document.getElementById('forgetPhone').value.trim();
-            const forgetPhoneErrEl = document.getElementById('forgetPhoneError');
-            const users = getUsersList();
-            const user = users.find(u => u.phone === phone);
-
-            if (!user) {
-                if (forgetPhoneErrEl) {
-                    forgetPhoneErrEl.textContent = 'Số điện thoại này chưa có tài khoản trong hệ thống.';
-                    forgetPhoneErrEl.style.display = 'block';
-                }
-                return;
-            }
-
-            if (forgetPhoneErrEl) forgetPhoneErrEl.style.display = 'none';
-
-            setTimeout(() => {
-                showSmsToast('KHÔI PHỤC MẬT KHẨU', `Yêu cầu lấy lại mật khẩu. Click vào link này để đặt mật khẩu mới: ${_url('login')}?activate=${phone}`, 'Khôi phục mật khẩu ngay', () => {
-                    showActivationForm(phone, user.name);
-                });
-            }, 1200);
-
-            showToastSuccess('Liên kết khôi phục đã được gửi qua SMS. Vui lòng kiểm tra điện thoại.');
-        });
-
-        // --- Activation Submit (Set password first time) ---
-        activationForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const phone = activationForm.dataset.phone;
-            const pass = activationPassword.value;
-
-            let users = getUsersList();
-            let user = users.find(u => u.phone === phone);
-
+        } else {
+            const password = document.getElementById('loginPassword').value;
+            const user = users.find(u => u.phone === phone && u.password === password);
             if (user) {
-                user.password = pass;
-                user.isTemporary = false;
-                user.points = user.points + 50;
-                saveUsersList(users);
-
-                setLoggedInUser(phone);
-                const welcomeGiftModal = document.getElementById('welcomeGiftModal');
-                if (welcomeGiftModal) welcomeGiftModal.classList.add('open');
-            }
-        });
-
-        // Close Welcome Gift redirection
-        const closeGiftBtn = document.getElementById('closeGiftBtn');
-        safeBind(closeGiftBtn, 'click', () => {
-            window.location.href = _url('dashboard');
-        });
-
-        // --- Admin Login Form Submit ---
-        const adminLoginForm = document.getElementById('adminLoginForm');
-        if (adminLoginForm) {
-            adminLoginForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const phone = document.getElementById('adminPhone').value.trim();
-                const pass  = document.getElementById('adminPassword').value;
-                const phoneErr = document.getElementById('adminPhoneError');
-                const passErr  = document.getElementById('adminPasswordError');
-
-                phoneErr.style.display = 'none';
-                passErr.style.display  = 'none';
-
-                const users = getUsersList();
-                const user  = users.find(u => u.phone === phone);
-
-                if (!user) {
-                    phoneErr.textContent = 'Số điện thoại chưa được đăng ký.';
-                    phoneErr.style.display = 'block';
-                    return;
-                }
-                if (user.password !== pass) {
-                    passErr.textContent = 'Mật khẩu không chính xác.';
-                    passErr.style.display = 'block';
-                    return;
-                }
-
-                // Lưu session admin và redirect
-                sessionStorage.setItem('pawpal_admin_phone', phone);
-                window.location.href = _url('admin');
-            });
-        }
-
-        // Lock state helpers
-        function lockAccount(phone) {
-            const lockUntil = Date.now() + 30 * 60 * 1000;
-            localStorage.setItem('pawpal_lock_until', lockUntil.toString());
-            localStorage.setItem('pawpal_locked_phone', phone);
-            const lockOverlay = document.getElementById('lockOverlay');
-            if (lockOverlay) lockOverlay.classList.add('open');
-            startLockCountdown(lockUntil);
-        }
-
-        function checkLockState() {
-            const lockUntil = localStorage.getItem('pawpal_lock_until');
-            if (lockUntil) {
-                const timeRemaining = parseInt(lockUntil) - Date.now();
-                const lockOverlay = document.getElementById('lockOverlay');
-                if (timeRemaining > 0) {
-                    if (lockOverlay) lockOverlay.classList.add('open');
-                    startLockCountdown(parseInt(lockUntil));
+                setCurrentUser(user);
+                showToast('success', 'Đăng nhập thành công!', 2000);
+                setTimeout(() => {
+                    // Điều hướng theo role
+                    if (user.role === 'admin') {
+                        window.location.href = '/pages/admin/index.html';
+                    } else {
+                        window.location.href = '/pages/user/dashboard.html';
+                    }
+                }, 2000);
+            } else {
+                // AC2.1.1 - Show error banner instead of alert
+                const userExists = users.find(u => u.phone === phone);
+                if (!userExists) {
+                    showErrorBanner(
+                        'Số điện thoại chưa được đăng ký. Vui lòng <a href="?action=register" class="text-decoration-underline fw-bold" style="color: var(--color-danger);">Đăng ký ngay</a>',
+                        loginForm
+                    );
                 } else {
-                    localStorage.removeItem('pawpal_lock_until');
-                    localStorage.removeItem('pawpal_locked_phone');
-                    if (lockOverlay) lockOverlay.classList.remove('open');
-                }
-            }
-        }
-
-        function isCurrentlyLocked() {
-            const lockUntil = localStorage.getItem('pawpal_lock_until');
-            if (lockUntil) {
-                return (parseInt(lockUntil) - Date.now()) > 0;
-            }
-            return false;
-        }
-
-        function startLockCountdown(untilTime) {
-            const lockTimerText = document.getElementById('lockTimerText');
-            clearInterval(lockTimerInterval);
-            
-            const updateTimer = () => {
-                const remaining = untilTime - Date.now();
-                if (remaining <= 0) {
-                    clearInterval(lockTimerInterval);
-                    localStorage.removeItem('pawpal_lock_until');
-                    localStorage.removeItem('pawpal_locked_phone');
-                    const lockOverlay = document.getElementById('lockOverlay');
-                    if (lockOverlay) lockOverlay.classList.remove('open');
-                } else {
-                    const totalSecs = Math.floor(remaining / 1000);
-                    const mins = Math.floor(totalSecs / 60).toString().padStart(2, '0');
-                    const secs = (totalSecs % 60).toString().padStart(2, '0');
-                    if (lockTimerText) lockTimerText.textContent = `${mins}:${secs}`;
-                }
-            };
-
-            updateTimer();
-            lockTimerInterval = setInterval(updateTimer, 1000);
-        }
-
-        // --- URL Parameter Action checks ---
-        function checkUrlParams() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const activatePhone = urlParams.get('activate');
-            if (activatePhone) {
-                const users = getUsersList();
-                const user = users.find(u => u.phone === activatePhone);
-                if (user) {
-                    // Hiện form activation cho cả tài khoản tạm lẫn tài khoản quên mật khẩu
+                    showErrorBanner('Mật khẩu không đúng. Vui lòng thử lại hoặc <a href="#" id="inlineForgotLink" class="text-decoration-underline fw-bold" style="color: var(--color-danger);">quên mật khẩu?</a>', loginForm);
+                    
+                    // Add click handler for inline forgot link
                     setTimeout(() => {
-                        showActivationForm(user.phone, user.name);
-                    }, 500);
+                        const inlineForgotLink = document.getElementById('inlineForgotLink');
+                        if (inlineForgotLink) {
+                            inlineForgotLink.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                document.getElementById('triggerForgot').click();
+                            });
+                        }
+                    }, 100);
                 }
+                document.getElementById('loginPhone').classList.add('is-invalid');
             }
         }
+    });
 
-        checkLockState();
-        checkUrlParams();
+    // --- XÁC THỰC TRÊN FORM ĐĂNG KÝ (US 1-1 / AC1.1.1) ---
+    const regName = document.getElementById('registerName');
+    const regPhone = document.getElementById('registerPhone');
+    const regPassword = document.getElementById('registerPassword');
+    const regConfirmPassword = document.getElementById('registerConfirmPassword');
+    const btnRegisterSubmit = document.getElementById('btnRegisterSubmit');
 
-        // Tự động mở tab Admin nếu có ?tab=admin trong URL
-        const urlTabParam = new URLSearchParams(window.location.search).get('tab');
-        if (urlTabParam === 'admin') {
-            showAdminLoginForm();
+    // US 2-1: Enhanced phone validation on blur
+    const loginPhone = document.getElementById('loginPhone');
+    loginPhone.addEventListener('blur', () => {
+        const phoneValue = loginPhone.value.trim();
+        const feedback = document.getElementById('loginPhoneFeedback');
+        
+        if (phoneValue.length > 0 && !/^0[0-9]{9}$/.test(phoneValue)) {
+            loginPhone.classList.add('is-invalid');
+            feedback.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
+        } else {
+            loginPhone.classList.remove('is-invalid');
         }
+    });
 
-        // ── "Đăng ký ngay" button trong register prompt ──────────────────────
-        const registerNowBtn = document.getElementById('registerNowBtn');
-        safeBind(registerNowBtn, 'click', () => {
-            // Prefill SĐT vào form đăng ký nếu đã nhập
-            const phoneVal = document.getElementById('loginPhone').value.trim();
-            showRegisterForm();
-            if (phoneVal) {
-                const regPhone = document.getElementById('registerPhone');
-                if (regPhone) {
-                    regPhone.value = phoneVal;
-                    validateRegisterForm();
-                }
+    loginPhone.addEventListener('input', () => {
+        loginPhone.classList.remove('is-invalid');
+    });
+
+    // --- US 2-2: FORGOT PASSWORD FLOW ---
+    const triggerForgot = document.getElementById('triggerForgot');
+    const forgotSection = document.getElementById('forgotPasswordSection');
+    const btnBackToLogin = document.getElementById('btnBackToLogin');
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    const forgotPhone = document.getElementById('forgotPhone');
+
+    if (triggerForgot && forgotSection) {
+        triggerForgot.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Chuyển cảnh mượt mà (AC2.2.1)
+            loginForm.style.opacity = '0';
+            loginForm.style.transition = 'opacity 0.3s ease';
+            
+            setTimeout(() => {
+                loginForm.classList.remove('active-form');
+                authTabs.style.display = 'none';
+                forgotSection.classList.remove('d-none');
+                forgotSection.style.opacity = '0';
+                forgotSection.style.transition = 'opacity 0.3s ease';
+                
+                setTimeout(() => {
+                    forgotSection.style.opacity = '1';
+                    forgotPhone.focus();
+                }, 50);
+            }, 300);
+        });
+
+        btnBackToLogin.addEventListener('click', () => {
+            forgotSection.style.opacity = '0';
+            
+            setTimeout(() => {
+                forgotSection.classList.add('d-none');
+                authTabs.style.display = 'flex';
+                loginForm.classList.add('active-form');
+                loginForm.style.opacity = '0';
+                
+                setTimeout(() => {
+                    loginForm.style.opacity = '1';
+                }, 50);
+            }, 300);
+        });
+
+        // Validate forgot password phone input
+        forgotPhone.addEventListener('blur', () => {
+            const phoneValue = forgotPhone.value.trim();
+            
+            if (phoneValue.length > 0 && !/^0[0-9]{9}$/.test(phoneValue)) {
+                forgotPhone.classList.add('is-invalid');
+            } else {
+                forgotPhone.classList.remove('is-invalid');
             }
         });
 
-        // ── Validation form quên mật khẩu ────────────────────────────────────
-        const forgetPhoneInput = document.getElementById('forgetPhone');
-        const forgetPhoneError = document.getElementById('forgetPhoneError');
-        const forgetPassSubmitBtn = document.getElementById('forgetPassSubmitBtn');
+        forgotPhone.addEventListener('input', () => {
+            forgotPhone.classList.remove('is-invalid');
+        });
 
-        if (forgetPhoneInput) {
-            forgetPhoneInput.addEventListener('input', () => {
-                const val = forgetPhoneInput.value.trim();
-                const phoneRegex = /^(0[3|5|7|8|9])[0-9]{8}$/;
-                if (val.length === 0) {
-                    forgetPhoneError.style.display = 'none';
-                    if (forgetPassSubmitBtn) forgetPassSubmitBtn.setAttribute('disabled', 'true');
-                } else if (!phoneRegex.test(val)) {
-                    forgetPhoneError.textContent = 'Số điện thoại không đúng định dạng Việt Nam (10 số, bắt đầu 03/05/07/08/09).';
-                    forgetPhoneError.style.display = 'block';
-                    if (forgetPassSubmitBtn) forgetPassSubmitBtn.setAttribute('disabled', 'true');
-                } else {
-                    forgetPhoneError.style.display = 'none';
-                    if (forgetPassSubmitBtn) forgetPassSubmitBtn.removeAttribute('disabled');
-                }
+        // Form submit
+        forgotPasswordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const phone = forgotPhone.value.trim();
+            
+            if (!/^0[0-9]{9}$/.test(phone)) {
+                forgotPhone.classList.add('is-invalid');
+                return;
+            }
+
+            // Check if phone exists
+            const users = getUsers();
+            const userExists = users.find(u => u.phone === phone);
+            
+            if (!userExists) {
+                showErrorBanner(
+                    'Số điện thoại chưa được đăng ký trong hệ thống. Vui lòng kiểm tra lại hoặc <a href="?action=register" class="text-decoration-underline fw-bold" style="color: var(--color-danger);">đăng ký tài khoản mới</a>.',
+                    forgotPasswordForm
+                );
+                return;
+            }
+            
+            // Tạo token khôi phục (48h validity)
+            const resetToken = 'reset-' + Math.random().toString(36).substr(2, 9);
+            const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
+            tokens.push({
+                token: resetToken,
+                phone: phone,
+                type: 'password_reset',
+                createdAt: Date.now()
             });
+            localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
+            
+            // Hiển thị Toast thành công (AC2.2.1)
+            const toastMessage = 'Đã gửi link đặt lại mật khẩu thành công về số điện thoại của bạn, liên kết có hiệu lực trong 48h';
+            showToast('success', toastMessage, 8000);
+            
+            // Simulate SMS link - Hiển thị alert để user nhìn thấy
+            const resetLink = `${window.location.origin}/pages/public/login.html?action=reset-password&token=${resetToken}`;
+            console.log(`[SMS Simulation] Reset password link: ${resetLink}`);
+            
+            // Show alert with link for demo purpose
+            setTimeout(() => {
+                alert(`✅ ĐÃ GỬI LINK KHÔI PHỤC!\n\nMô phỏng SMS:\n${resetLink}\n\n(Link này được log trong Console để test)`);
+            }, 500);
+            
+            // Reset form and go back after 5 seconds (give time to see toast)
+            forgotPasswordForm.reset();
+            setTimeout(() => btnBackToLogin.click(), 5000);
+        });
+    }
+
+    // --- XÁC THỰC TRÊN FORM ĐĂNG KÝ (US 1-1 / AC1.1.1) ---
+
+    function validateRegisterForm() {
+        const isNameValid = regName.value.trim().length > 0;
+        
+        // Regex số điện thoại VN 10 số (bắt đầu bằng 0)
+        const isPhoneValid = /^0[0-9]{9}$/.test(regPhone.value.trim());
+        if (regPhone.value.trim().length > 0 && !isPhoneValid) {
+            regPhone.classList.add('is-invalid');
+        } else {
+            regPhone.classList.remove('is-invalid');
         }
 
-        // ── Suspicious Login Banner ───────────────────────────────────────────
-        function checkSuspiciousLogin() {
-            const flag = sessionStorage.getItem('pawpal_suspicious_login');
-            if (flag === '1') {
-                const banner = document.getElementById('suspiciousBanner');
-                if (banner) {
-                    banner.style.display = 'block';
-                    sessionStorage.removeItem('pawpal_suspicious_login');
-                }
-            }
+        const isPasswordValid = regPassword.value.length >= 6;
+        
+        const isConfirmValid = regConfirmPassword.value === regPassword.value;
+        if (regConfirmPassword.value.length > 0 && !isConfirmValid) {
+            regConfirmPassword.classList.add('is-invalid');
+        } else {
+            regConfirmPassword.classList.remove('is-invalid');
         }
 
-        const dismissBannerBtn = document.getElementById('dismissBannerBtn');
-        safeBind(dismissBannerBtn, 'click', () => {
-            const banner = document.getElementById('suspiciousBanner');
-            if (banner) {
-                banner.style.animation = 'bannerSlideOut 0.3s ease forwards';
-                setTimeout(() => { banner.style.display = 'none'; }, 300);
-            }
-        });
+        // Kích hoạt/Vô hiệu hoá nút Đăng ký
+        if (isNameValid && isPhoneValid && isPasswordValid && isConfirmValid) {
+            btnRegisterSubmit.disabled = false;
+        } else {
+            btnRegisterSubmit.disabled = true;
+        }
+    }
 
-        const changePassFromBannerBtn = document.getElementById('changePassFromBannerBtn');
-        safeBind(changePassFromBannerBtn, 'click', () => {
-            window.location.href = _url('dashboard') + '?tab=security';
-        });
+    [regName, regPhone, regPassword, regConfirmPassword].forEach(input => {
+        input.addEventListener('input', validateRegisterForm);
+        input.addEventListener('blur', validateRegisterForm);
+    });
 
-        checkSuspiciousLogin();
+    // --- CHUYỂN FORM SANG KHUNG NHẬP OTP (US 1-1 / AC1.1.2) ---
+    const otpSection = document.getElementById('otpSection');
+    const authTabs = document.getElementById('authTabs');
+    const otpTimer = document.getElementById('otpTimer');
+    const btnResendOtp = document.getElementById('btnResendOtp');
+    const otpInputs = document.querySelectorAll('.otp-input');
+    
+    let otpCountdownInterval = null;
 
-    } // end if (isLoginPage)
-
-    // ==========================================================================
-    // 3. DASHBOARD PAGE SPECIFIC LOGIC (dashboard.html)
-    // ==========================================================================
-    if (isDashboardPage) {
-        // --- ROUTE GUARD ---
-        const loggedInPhone = getLoggedInUser();
-        if (!loggedInPhone) {
-            window.location.href = _url('login');
+    registerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        // Check trùng SĐT trong database
+        const users = getUsers();
+        const existing = users.find(u => u.phone === regPhone.value.trim());
+        if (existing && !existing.is_temporary) {
+            showToast('error', 'Số điện thoại này đã được đăng ký tài khoản chính thức!');
             return;
         }
 
-        // Get user profile
-        const users = getUsersList();
-        const user = users.find(u => u.phone === loggedInPhone);
+        // Chuyển cảnh sang OTP mượt mà
+        registerForm.style.opacity = '0';
+        registerForm.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => {
+            registerForm.classList.remove('active-form');
+            authTabs.style.display = 'none';
+            otpSection.classList.remove('d-none');
+            otpSection.style.opacity = '1';
+            
+            // Focus vào ô OTP đầu tiên
+            otpInputs[0].focus();
+            
+            // Toast thay vì Alert
+            showToast('info', 'Mã OTP xác thực đã gửi về SMS: 555666', 6000);
+            
+            startOtpTimer();
+        }, 300);
+    });
 
-        // Bind logout
-        const dashboardLogoutBtn = document.getElementById('dashboardLogoutBtn');
-        safeBind(dashboardLogoutBtn, 'click', logoutUser);
+    // Logic nhập liệu 6 ô OTP độc lập
+    otpInputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+            const val = e.target.value;
+            // Chỉ nhận số
+            if (!/^[0-9]$/.test(val)) {
+                e.target.value = '';
+                return;
+            }
 
-        // Tab switches
-        const dashTabBtns = document.querySelectorAll('.dash-tab-btn');
-        const dashTabContents = document.querySelectorAll('.dash-tab-content');
-
-        dashTabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const tabId = btn.getAttribute('data-dash-tab');
-                dashTabBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                dashTabContents.forEach(c => c.classList.remove('active'));
-                const contentEl = document.getElementById(tabId);
-                if (contentEl) contentEl.classList.add('active');
-            });
+            // Nhảy focus sang ô tiếp theo
+            if (index < otpInputs.length - 1) {
+                otpInputs[index + 1].disabled = false;
+                otpInputs[index + 1].focus();
+            } else {
+                // Ô cuối cùng gõ xong thì tự động gọi lệnh kiểm tra
+                checkOtpSubmission();
+            }
         });
 
-        // Render profile fields
-        if (user) {
-            const dashNames = document.querySelectorAll('#dashName');
-            const dashPhones = document.querySelectorAll('#dashPhone');
-            const dashPoints = document.querySelectorAll('#dashPoints');
-            const dashBadges = document.querySelectorAll('#dashBadge');
-            const dashAvatars = document.querySelectorAll('#dashAvatar');
-
-            dashNames.forEach(el => { el.textContent = user.name; });
-            dashPhones.forEach(el => { el.textContent = formatPhone(user.phone); });
-            dashPoints.forEach(el => { el.textContent = `${user.points} Points`; });
-            dashBadges.forEach(el => { el.textContent = user.membership; });
-            dashAvatars.forEach(el => { el.textContent = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(); });
-
-            // Handle temporary restrictions
-            const redeemPointsBtns = document.querySelectorAll('#redeemPointsBtn');
-            const redeemRestrictedNotes = document.querySelectorAll('#redeemRestrictedNote');
-            const oldPasswordGroup = document.getElementById('oldPasswordGroup');
-            const securityTabTitle = document.getElementById('securityTabTitle');
-
-            if (user.isTemporary) {
-                redeemPointsBtns.forEach(btn => { btn.setAttribute('disabled', 'true'); });
-                redeemRestrictedNotes.forEach(note => { note.style.display = 'block'; });
-                if (securityTabTitle) securityTabTitle.textContent = 'Thiết lập mật khẩu lần đầu';
-                if (oldPasswordGroup) oldPasswordGroup.style.display = 'none';
-            } else {
-                redeemPointsBtns.forEach(btn => { btn.removeAttribute('disabled'); });
-                redeemRestrictedNotes.forEach(note => { note.style.display = 'none'; });
-                if (securityTabTitle) securityTabTitle.textContent = 'Cấu hình mật khẩu';
-                if (oldPasswordGroup) oldPasswordGroup.style.display = 'block';
-            }
-
-            renderDashboardBookings(user.bookings);
-        }
-
-        // Change password strength inside Dashboard
-        const newPassword = document.getElementById('newPassword');
-        const confirmNewPassword = document.getElementById('confirmNewPassword');
-        const newPasswordStrengthBar = document.getElementById('newPasswordStrengthBar');
-        const newPasswordStrengthLabel = document.getElementById('newPasswordStrengthLabel');
-        const newPasswordError = document.getElementById('newPasswordError');
-        const changePasswordSubmitBtn = document.getElementById('changePasswordSubmitBtn');
-
-        if (newPassword) {
-            newPassword.addEventListener('input', () => {
-                const val = newPassword.value;
-                const strength = getPasswordStrength(val);
-                updateStrengthBar(newPasswordStrengthBar, newPasswordStrengthLabel, strength);
-                validateChangePasswordForm();
-            });
-            confirmNewPassword.addEventListener('input', validateChangePasswordForm);
-        }
-
-        function validateChangePasswordForm() {
-            const pass = newPassword.value;
-            const confirmPass = confirmNewPassword.value;
-            const strength = getPasswordStrength(pass);
-
-            let match = false;
-            if (confirmPass.length > 0) {
-                if (pass === confirmPass) {
-                    newPasswordError.style.display = 'none';
-                    match = true;
-                } else {
-                    newPasswordError.style.display = 'block';
-                    match = false;
-                }
-            } else {
-                newPasswordError.style.display = 'none';
-            }
-
-            if (match && strength >= 2 && pass.length >= 8) {
-                changePasswordSubmitBtn.removeAttribute('disabled');
-            } else {
-                changePasswordSubmitBtn.setAttribute('disabled', 'true');
-            }
-        }
-
-        // Change Password form submit
-        const changePasswordForm = document.getElementById('changePasswordForm');
-        if (changePasswordForm) {
-            changePasswordForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                let users = getUsersList();
-                let u = users.find(usr => usr.phone === loggedInPhone);
-                if (!u) return;
-
-                const oldPassVal = document.getElementById('oldPassword').value;
-                const newPassVal = newPassword.value;
-
-                if (u.isTemporary) {
-                    u.password = newPassVal;
-                    u.isTemporary = false;
-                    u.points = u.points + 50;
-                    saveUsersList(users);
-                    alert('Thiết lập mật khẩu thành công! Nhận quà chào mừng 50 Points.');
-                    window.location.reload();
-                } else {
-                    if (u.password !== oldPassVal) {
-                        alert('Mật khẩu cũ không chính xác.');
-                        return;
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace') {
+                if (input.value === '') {
+                    // Lùi về ô trước
+                    if (index > 0) {
+                        otpInputs[index - 1].focus();
+                        otpInputs[index].disabled = true;
                     }
-                    u.password = newPassVal;
-                    saveUsersList(users);
-                    alert('Thay đổi mật khẩu thành công!');
-                    changePasswordForm.reset();
-                    updateStrengthBar(newPasswordStrengthBar, newPasswordStrengthLabel, 0);
+                } else {
+                    input.value = '';
                 }
-            });
-        }
-
-        // Send OTP button in security tab
-        const sendOtpSecurityBtn = document.getElementById('sendOtpSecurityBtn');
-        safeBind(sendOtpSecurityBtn, 'click', () => {
-            const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-            showSmsToast('OTP ĐỔI MẬT KHẨU', `Mã OTP đổi mật khẩu là: <strong style="font-size:1.1rem; color:var(--color-accent);">${otpCode}</strong>.`, 'Sử dụng OTP', () => {
-                document.getElementById('oldPassword').value = user.password; // fill correct pass
-                alert('Mã OTP xác thực thành công.');
-            });
+            }
         });
+    });
 
-        // Booking management
-        function renderDashboardBookings(bookings) {
-            const dashBookingsList = document.getElementById('dashBookingsList');
-            const bookingEmpty = document.getElementById('bookingEmpty');
-            if (!dashBookingsList) return;
-            dashBookingsList.innerHTML = '';
+    function startOtpTimer() {
+        if (otpCountdownInterval) clearInterval(otpCountdownInterval);
+        let duration = 5 * 60; // 5 phút
+        btnResendOtp.disabled = true;
 
-            if (!bookings || bookings.length === 0) {
-                if (bookingEmpty) dashBookingsList.appendChild(bookingEmpty);
-                return;
+        otpCountdownInterval = setInterval(() => {
+            let minutes = Math.floor(duration / 60);
+            let seconds = duration % 60;
+            
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            seconds = seconds < 10 ? '0' + seconds : seconds;
+            
+            otpTimer.textContent = `${minutes}:${seconds}`;
+
+            if (duration <= 0) {
+                clearInterval(otpCountdownInterval);
+                btnResendOtp.disabled = false;
             }
-
-            bookings.forEach((bk, index) => {
-                const canChange = canModifyBooking(bk) && !user.isTemporary && (bk.changeCount || 0) < 2;
-                const canCancel = canCancelBooking(bk) && !user.isTemporary;
-                const changeLabel = (bk.changeCount || 0) >= 2 ? 'Đã đạt giới hạn thay đổi' : 'Thay đổi lịch';
-
-                const card = document.createElement('div');
-                card.className = 'dash-booking-card';
-                card.innerHTML = `
-                    <div class="booking-card-info">
-                        <h5 style="margin: 0 0 4px 0; font-family: var(--font-primary); font-size: 1rem; color: var(--color-primary-dark); font-weight: 700;">${bk.service || 'Chưa có dịch vụ'}</h5>
-                        <p style="margin: 0; font-size: 0.85rem; color: var(--color-text-light);">📅 Ngày: ${bk.date || '—'} | ⏰ Khung giờ: ${bk.time || '—'}</p>
-                        <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--color-text-light);">Trạng thái: <strong style="color:var(--color-primary);">${bk.status}</strong></p>
-                        ${bk.changeCount ? `<p style="margin: 4px 0 0 0; font-size: 0.8rem; color:#79797a;">Đã thay đổi ${bk.changeCount} lần</p>` : ''}
-                    </div>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;">
-                        <button class="btn-change-booking-dash" data-index="${index}" ${canChange ? '' : 'disabled'}>${changeLabel}</button>
-                        ${canCancel ? `<button class="btn-cancel-booking-dash" data-index="${index}">Hủy lịch</button>` : `<span style="font-size:0.78rem;color:#a3a3a3;">Không thể hủy</span>`}
-                    </div>
-                `;
-
-                if (canChange) {
-                    card.querySelector('.btn-change-booking-dash').addEventListener('click', () => {
-                        openChangeBookingModal(bk);
-                    });
-                }
-
-                const cancelBtn = card.querySelector('.btn-cancel-booking-dash');
-                if (cancelBtn) {
-                    cancelBtn.addEventListener('click', () => {
-                        if (user.isTemporary) {
-                            alert('Bạn phải thiết lập mật khẩu bảo mật trong tab Bảo mật trước khi tiến hành hủy lịch.');
-                            return;
-                        }
-                        const confirmPass = prompt('Nhập mật khẩu tài khoản để xác nhận hủy lịch hẹn:');
-                        if (confirmPass === user.password) {
-                            if (!canCancel) {
-                                alert('Quá thời gian cho phép hủy trực tuyến. Vui lòng liên hệ Admin để được hỗ trợ.');
-                                return;
-                            }
-                            if (confirm('Bạn chắc chắn muốn hủy lịch hẹn chăm sóc này?')) {
-                                bk.status = 'Đã hủy';
-                                recordBookingAudit(bk, 'cancel', 'Hủy lịch trực tuyến');
-                                saveCurrentUser(user);
-                                renderDashboardBookings(user.bookings);
-                                alert('Đã hủy lịch hẹn thành công.');
-                            }
-                        } else if (confirmPass !== null) {
-                            alert('Mật khẩu không chính xác. Thao tác hủy lịch bị chặn.');
-                        }
-                    });
-                }
-
-                dashBookingsList.appendChild(card);
-            });
-        }
-
-        function openChangeBookingModal(booking) {
-            if (!booking) return;
-            changeBookingState = {
-                originalBooking: booking,
-                selectedDate: null,
-                selectedSlot: null,
-                selectedStaffId: null,
-                selectedStaffName: null,
-                currentHoldId: null,
-                holdTimer: null,
-            };
-
-            const modal = document.getElementById('bookingChangeModal');
-            const overlay = document.getElementById('bookingChangeOverlay');
-            const note = document.getElementById('changeBookingNote');
-            const summary = document.getElementById('changeBookingSummary');
-            const dateInput = document.getElementById('changeBookingDate');
-            const confirmBtn = document.getElementById('changeBookingConfirmBtn');
-
-            if (note) note.textContent = 'Lưu ý: khung giờ mới sẽ được giữ trong 15 phút. Nếu không xác nhận, lịch cũ sẽ vẫn được giữ nguyên.';
-            if (summary) {
-                summary.innerHTML = `
-                    <div style="margin-bottom:12px;padding:14px;background:#f8fafc;border:1px solid #d1d5db;border-radius:12px;">
-                        <strong>Thông tin lịch cũ</strong><br>
-                        ${booking.service} — ${booking.date} lúc ${booking.time}<br>
-                        Trạng thái: <strong>${booking.status}</strong>
-                    </div>
-                `;
-            }
-            if (dateInput) {
-                const today = new Date().toISOString().split('T')[0];
-                dateInput.min = today;
-                dateInput.value = booking.date.split('/').reverse().join('-');
-                changeBookingState.selectedDate = dateInput.value;
-            }
-            if (confirmBtn) {
-                confirmBtn.disabled = true;
-                confirmBtn.textContent = 'Xác nhận thay đổi';
-            }
-            renderChangeTimeslotGrid();
-            renderChangeStaffList();
-            if (overlay) overlay.addEventListener('click', closeChangeBookingModal);
-            document.getElementById('changeBookingCloseBtn').addEventListener('click', closeChangeBookingModal);
-            document.getElementById('changeBookingCancelBtn').addEventListener('click', closeChangeBookingModal);
-            if (dateInput) {
-                dateInput.addEventListener('change', () => {
-                    changeBookingState.selectedDate = dateInput.value;
-                    releaseCurrentChangeHold();
-                    renderChangeTimeslotGrid();
-                    updateChangeBookingHoldBanner();
-                });
-            }
-            if (modal) {
-                modal.classList.add('open');
-                document.body.style.overflow = 'hidden';
-            }
-        }
-
-        function closeChangeBookingModal() {
-            if (!changeBookingState) return;
-            releaseCurrentChangeHold();
-            stopChangeHoldCountdown();
-            const modal = document.getElementById('bookingChangeModal');
-            if (modal) modal.classList.remove('open');
-            document.body.style.overflow = '';
-            changeBookingState = null;
-        }
-
-        window._actualOpenChangeBookingModal = openChangeBookingModal;
-        console.log('auth: actual openChangeBookingModal handler is ready');
-        if (Array.isArray(window._queuedChangeBookingRequests) && window._queuedChangeBookingRequests.length) {
-            console.log('auth: flushing queued change booking requests', window._queuedChangeBookingRequests.length);
-            window._queuedChangeBookingRequests.forEach(q => {
-                try { window._actualOpenChangeBookingModal(q); } catch (e) { console.error('auth: queued change booking request failed', e); }
-            });
-            window._queuedChangeBookingRequests = [];
-        }
-
-        function renderChangeTimeslotGrid() {
-            const grid = document.getElementById('changeTimeslotGrid');
-            if (!grid || !changeBookingState) return;
-            grid.innerHTML = BOOKING_SLOTS.map(slot => {
-                const busy = BOOKING_BUSY_SLOTS.includes(slot);
-                const hold = getActiveHolds().find(h => h.date === changeBookingState.selectedDate && h.slot === slot && h.bookingId !== changeBookingState.originalBooking.id);
-                const heldByOther = hold && hold.id !== changeBookingState.currentHoldId;
-                const selected = changeBookingState.selectedSlot === slot;
-                return `
-                    <button class="timeslot-btn ${selected ? 'selected' : ''} ${heldByOther ? 'held' : ''}" type="button" data-slot="${slot}" ${busy || heldByOther ? 'disabled' : ''}>
-                        ${slot}${busy ? '<br><small>Đầy</small>' : heldByOther ? '<br><small>Đang chờ</small>' : ''}
-                    </button>`;
-            }).join('');
-
-            grid.querySelectorAll('.timeslot-btn:not(:disabled)').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    changeBookingState.selectedSlot = btn.dataset.slot;
-                    renderChangeTimeslotGrid();
-                    updateChangeBookingHoldBanner();
-                    maybeCreateChangeHold();
-                });
-            });
-        }
-
-        function renderChangeStaffList() {
-            const list = document.getElementById('changeStaffList');
-            if (!list || !changeBookingState) return;
-            list.innerHTML = STAFF_MEMBERS.map(member => {
-                const selected = changeBookingState.selectedStaffId === member.id;
-                return `
-                    <div class="staff-card ${selected ? 'selected' : ''}" data-id="${member.id}" role="button" tabindex="0">
-                        <div class="staff-card-avatar">${member.name.slice(0, 1)}</div>
-                        <div class="staff-card-info">
-                            <h4>${member.name}</h4>
-                            <p>${member.role}</p>
-                        </div>
-                        <div class="staff-card-status">${selected ? 'Đã chọn' : 'Chọn'}</div>
-                    </div>`;
-            }).join('');
-            list.querySelectorAll('.staff-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    const id = card.dataset.id;
-                    const staff = STAFF_MEMBERS.find(s => s.id === id);
-                    if (!staff) return;
-                    changeBookingState.selectedStaffId = staff.id;
-                    changeBookingState.selectedStaffName = staff.name;
-                    renderChangeStaffList();
-                    maybeCreateChangeHold();
-                });
-            });
-        }
-
-        function maybeCreateChangeHold() {
-            if (!changeBookingState) return;
-            if (!changeBookingState.selectedDate || !changeBookingState.selectedSlot || !changeBookingState.selectedStaffId) return;
-            const key = getChangeHoldKey(changeBookingState.originalBooking.id, changeBookingState.selectedDate, changeBookingState.selectedSlot);
-            const existing = getActiveHolds().find(h => h.key === key);
-            if (existing && existing.id !== changeBookingState.currentHoldId) {
-                alert('Khung giờ này đang được giữ bởi khách khác. Vui lòng chọn lịch khác.');
-                return;
-            }
-            if (changeBookingState.currentHoldId) {
-                const current = getActiveHolds().find(h => h.id === changeBookingState.currentHoldId);
-                if (current && current.key !== key) {
-                    releaseCurrentChangeHold();
-                }
-            }
-            if (changeBookingState.currentHoldId) {
-                const current = getActiveHolds().find(h => h.id === changeBookingState.currentHoldId);
-                if (current) {
-                    current.date = changeBookingState.selectedDate;
-                    current.slot = changeBookingState.selectedSlot;
-                    current.staffId = changeBookingState.selectedStaffId;
-                    current.staffName = changeBookingState.selectedStaffName;
-                    current.expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-                    current.key = key;
-                    saveBookingHolds(getActiveHolds().map(h => h.id === current.id ? current : h));
-                    updateChangeBookingHoldBanner();
-                    return;
-                }
-            }
-            const hold = {
-                id: 'HOLD-' + Math.floor(100000 + Math.random() * 900000),
-                bookingId: changeBookingState.originalBooking.id,
-                service: changeBookingState.originalBooking.service,
-                date: changeBookingState.selectedDate,
-                slot: changeBookingState.selectedSlot,
-                staffId: changeBookingState.selectedStaffId,
-                staffName: changeBookingState.selectedStaffName,
-                expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-                key,
-            };
-            const holds = getActiveHolds();
-            holds.push(hold);
-            saveBookingHolds(holds);
-            localStorage.setItem(CURRENT_CHANGE_HOLD_KEY, hold.id);
-            changeBookingState.currentHoldId = hold.id;
-            updateChangeBookingHoldBanner();
-        }
-
-        function updateChangeBookingHoldBanner() {
-            const banner = document.getElementById('changeBookingHoldBanner');
-            if (!banner || !changeBookingState) return;
-            const hold = getActiveHolds().find(h => h.id === changeBookingState.currentHoldId);
-            if (hold) {
-                const diff = Math.max(0, new Date(hold.expiresAt) - new Date());
-                if (diff <= 0) {
-                    banner.style.display = 'none';
-                    stopChangeHoldCountdown();
-                    return;
-                }
-                const minutes = Math.floor(diff / 60000);
-                const seconds = Math.floor((diff % 60000) / 1000);
-                const timeText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                banner.innerHTML = `
-                    <div class="booking-hold-banner-row">
-                        <div class="booking-hold-banner-text">
-                            🛡️ Bạn đang giữ chỗ ${hold.date} lúc ${hold.slot} với nhân viên <strong>${hold.staffName}</strong>.
-                        </div>
-                        <div class="booking-hold-countdown">Còn lại <strong>${timeText}</strong></div>
-                    </div>`;
-                banner.style.display = 'block';
-                startChangeHoldCountdown();
-                document.getElementById('changeBookingConfirmBtn').disabled = false;
-            } else {
-                banner.style.display = 'none';
-                document.getElementById('changeBookingConfirmBtn').disabled = true;
-            }
-        }
-
-        function confirmChangeBooking() {
-            if (!changeBookingState || !changeBookingState.originalBooking) return;
-            if (!changeBookingState.selectedDate || !changeBookingState.selectedSlot || !changeBookingState.selectedStaffId) {
-                alert('Vui lòng chọn ngày, giờ và nhân viên mới.');
-                return;
-            }
-            const booking = changeBookingState.originalBooking;
-            if (!canModifyBooking(booking)) {
-                alert('Quá thời gian để thay đổi lịch trực tuyến. Vui lòng liên hệ Hotline.');
-                return;
-            }
-            booking.previousSchedule = { date: booking.date, time: booking.time };
-            booking.date = changeBookingState.selectedDate.split('-').reverse().join('/');
-            booking.time = changeBookingState.selectedSlot;
-            booking.staff = changeBookingState.selectedStaffName;
-            booking.status = 'Đã đặt';
-            booking.changeCount = (booking.changeCount || 0) + 1;
-            recordBookingAudit(booking, 'change', `Chuyển từ ${booking.previousSchedule?.date || ''} ${booking.previousSchedule?.time || ''} sang ${booking.date} ${booking.time}`);
-            saveCurrentUser(user);
-            releaseCurrentChangeHold();
-            closeChangeBookingModal();
-            renderDashboardBookings(user.bookings);
-            alert('Thay đổi lịch hẹn thành công. Lịch cũ đã được giải phóng và lịch mới đã được cập nhật.');
-        }
-
-        document.getElementById('changeBookingConfirmBtn')?.addEventListener('click', confirmChangeBooking);
-
-        // ── Lịch sử đăng nhập (User Story 2c) ──────────────────────────────
-        function renderLoginHistory() {
-            const container = document.getElementById('loginHistoryList');
-            if (!container) return;
-            const history = user.loginHistory || [];
-            if (history.length === 0) {
-                container.innerHTML = '<p style="color:var(--color-text-light);font-size:0.85rem;">Chưa có lịch sử đăng nhập nào được ghi nhận.</p>';
-                return;
-            }
-            container.innerHTML = history.slice().reverse().slice(0, 5).map(entry => `
-                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid rgba(42,89,68,0.08);border-radius:10px;margin-bottom:8px;background:#f8fafc;">
-                    <div>
-                        <p style="margin:0;font-size:0.88rem;font-weight:600;color:var(--color-primary-dark);">${entry.device || 'Trình duyệt Web'}</p>
-                        <p style="margin:2px 0 0 0;font-size:0.78rem;color:var(--color-text-light);">${entry.location || 'Việt Nam'} · ${entry.time || ''}</p>
-                    </div>
-                    <span style="font-size:0.75rem;padding:3px 10px;border-radius:20px;background:${entry.suspicious ? '#fee2e2' : '#dcfce7'};color:${entry.suspicious ? '#dc2626' : '#16a34a'};font-weight:600;">${entry.suspicious ? '⚠️ Bất thường' : '✓ Bình thường'}</span>
-                </div>
-            `).join('');
-        }
-
-        // Ghi nhận lần đăng nhập hiện tại
-        function recordCurrentLogin() {
-            const users = getUsersList();
-            const u = users.find(usr => usr.phone === loggedInPhone);
-            if (!u) return;
-            u.loginHistory = u.loginHistory || [];
-            const now = new Date();
-            const entry = {
-                time: now.toLocaleString('vi-VN'),
-                device: navigator.userAgent.includes('Mobile') ? 'Thiết bị di động' : 'Máy tính',
-                location: 'Việt Nam',
-                suspicious: false,
-            };
-            u.loginHistory.push(entry);
-            if (u.loginHistory.length > 10) u.loginHistory = u.loginHistory.slice(-10);
-            saveUsersList(users);
-        }
-
-        recordCurrentLogin();
-        renderLoginHistory();
-    }
-
-    // ==========================================================================
-    // SESSION TIMEOUT — User Story 2c (áp dụng mọi trang khi đã đăng nhập)
-    // ==========================================================================
-    function getLoggedInUserForSession() {
-        return localStorage.getItem('pawpal_logged_in_user');
-    }
-
-    if (getLoggedInUserForSession()) {
-        const SESSION_WARN_MS  = 55 * 60 * 1000; // 55 phút
-        const SESSION_LIMIT_MS = 60 * 60 * 1000; // 60 phút
-        const SESSION_KEY = 'pawpal_session_last_activity';
-
-        function refreshActivity() {
-            localStorage.setItem(SESSION_KEY, Date.now().toString());
-        }
-
-        function getIdleMs() {
-            const last = parseInt(localStorage.getItem(SESSION_KEY) || '0');
-            return last ? Date.now() - last : 0;
-        }
-
-        // Khởi tạo activity nếu chưa có
-        if (!localStorage.getItem(SESSION_KEY)) refreshActivity();
-
-        // Reset timer khi có tương tác
-        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
-            document.addEventListener(evt, refreshActivity, { passive: true });
-        });
-
-        // Popup cảnh báo session
-        let sessionWarnShown = false;
-        let sessionCheckInterval = null;
-
-        function createSessionWarningPopup() {
-            if (document.getElementById('sessionWarnPopup')) return;
-            const popup = document.createElement('div');
-            popup.id = 'sessionWarnPopup';
-            popup.style.cssText = `
-                position:fixed;bottom:24px;right:24px;z-index:9999;
-                background:#fff;border:1px solid #f97316;border-radius:16px;
-                box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:20px 24px;
-                max-width:320px;font-family:var(--font-primary,sans-serif);
-            `;
-            popup.innerHTML = `
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                    <span style="font-size:1.4rem;">⏰</span>
-                    <strong style="color:#c2410c;font-size:0.95rem;">Phiên đăng nhập sắp hết hạn</strong>
-                </div>
-                <p style="margin:0 0 14px 0;font-size:0.85rem;color:#555;">Bạn không có thao tác trong một thời gian. Phiên sẽ kết thúc sau <strong id="sessionCountdownText">5:00</strong>.</p>
-                <button id="sessionExtendBtn" style="width:100%;padding:10px;background:var(--color-primary,#2a5944);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.9rem;">Tiếp tục đăng nhập</button>
-            `;
-            document.body.appendChild(popup);
-
-            document.getElementById('sessionExtendBtn').addEventListener('click', () => {
-                refreshActivity();
-                sessionWarnShown = false;
-                popup.remove();
-            });
-        }
-
-        function updateSessionCountdown() {
-            const idleMs = getIdleMs();
-            const remaining = SESSION_LIMIT_MS - idleMs;
-            const text = document.getElementById('sessionCountdownText');
-            if (text) {
-                const mins = Math.floor(remaining / 60000);
-                const secs = Math.floor((remaining % 60000) / 1000);
-                text.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-            }
-        }
-
-        sessionCheckInterval = setInterval(() => {
-            const idleMs = getIdleMs();
-
-            if (idleMs >= SESSION_LIMIT_MS) {
-                // Hết phiên — đăng xuất
-                clearInterval(sessionCheckInterval);
-                localStorage.removeItem('pawpal_logged_in_user');
-                localStorage.removeItem(SESSION_KEY);
-                alert('Phiên đăng nhập đã kết thúc, vui lòng đăng nhập lại!');
-                window.location.href = _url('login');
-                return;
-            }
-
-            if (idleMs >= SESSION_WARN_MS && !sessionWarnShown) {
-                sessionWarnShown = true;
-                createSessionWarningPopup();
-            }
-
-            if (sessionWarnShown) {
-                updateSessionCountdown();
-            }
+            duration--;
         }, 1000);
     }
 
-});
+    btnResendOtp.addEventListener('click', () => {
+        showToast('info', 'Mã OTP xác thực mới đã gửi lại: 555666', 6000);
+        startOtpTimer();
+    });
 
+    function checkOtpSubmission() {
+        let otpCode = '';
+        otpInputs.forEach(input => otpCode += input.value);
 
+        if (otpCode.length === 6) {
+            if (otpCode === '555666') {
+                // Xác thực thành công!
+                clearInterval(otpCountdownInterval);
+                showRegisterSuccess();
+            } else {
+                showToast('error', 'Mã OTP chưa chính xác. Vui lòng nhập 555666 để test');
+                // Clear inputs
+                otpInputs.forEach((input, idx) => {
+                    input.value = '';
+                    if (idx > 0) input.disabled = true;
+                });
+                otpInputs[0].focus();
+            }
+        }
+    }
+
+    function showRegisterSuccess() {
+        otpSection.classList.add('d-none');
+        const congratsSection = document.getElementById('congratsSection');
+        congratsSection.classList.remove('d-none');
+
+        // Lưu user mới vào localStorage database
+        const users = getUsers();
+        
+        // Nếu trước đó là tài khoản tạm thì chuyển đổi sang tài khoản chính thức
+        let userIdx = users.findIndex(u => u.phone === regPhone.value.trim());
+        const newUserObj = {
+            name: regName.value.trim(),
+            phone: regPhone.value.trim(),
+            password: regPassword.value,
+            role: "customer",
+            is_temporary: false,
+            points: 50 // Kích hoạt nhận 50 Paw Points
+        };
+
+        if (userIdx !== -1) {
+            users[userIdx] = newUserObj;
+        } else {
+            users.push(newUserObj);
+        }
+        
+        saveUsers(users);
+        setCurrentUser(newUserObj);
+
+        // Hiệu ứng tăng số điểm thưởng động (Points Counter Animation)
+        const counterEl = document.getElementById('pointsCounter');
+        let currentPoints = 0;
+        const targetPoints = 50;
+        const duration = 1500; // 1.5s
+        const stepTime = Math.abs(Math.floor(duration / targetPoints));
+        
+        const timer = setInterval(() => {
+            currentPoints += 1;
+            counterEl.textContent = currentPoints;
+            if (currentPoints >= targetPoints) {
+                clearInterval(timer);
+                
+                // Tự động chuyển hướng về trang chủ sau 2 giây nữa
+                setTimeout(() => {
+                    window.location.href = '/pages/public/landing.html';
+                }, 2000);
+            }
+        }, stepTime);
+    }
+
+    // --- THIẾT LẬP MẬT KHẨU TỪ SMS LINK (US 1-2 / AC1.2.2) ---
+    const setupPasswordForm = document.getElementById('setupPasswordForm');
+    const setupPass = document.getElementById('setupPassword');
+    const setupConfirm = document.getElementById('setupConfirmPassword');
+    const btnSetupSubmit = document.getElementById('btnSetupSubmit');
+
+    function validateSetupForm() {
+        const isPassValid = setupPass.value.length >= 6;
+        const isConfirmValid = setupConfirm.value === setupPass.value;
+
+        if (setupConfirm.value.length > 0 && !isConfirmValid) {
+            setupConfirm.classList.add('is-invalid');
+        } else {
+            setupConfirm.classList.remove('is-invalid');
+        }
+
+        if (isPassValid && isConfirmValid) {
+            btnSetupSubmit.disabled = false;
+        } else {
+            btnSetupSubmit.disabled = true;
+        }
+    }
+
+    if (setupPasswordForm) {
+        setupPass.addEventListener('input', validateSetupForm);
+        setupConfirm.addEventListener('input', validateSetupForm);
+
+        setupPasswordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const phone = document.getElementById('setupPasswordSection').dataset.phone;
+            const token = document.getElementById('setupPasswordSection').dataset.token;
+            
+            const users = getUsers();
+            const userIdx = users.findIndex(u => u.phone === phone);
+            
+            if (userIdx !== -1) {
+                users[userIdx].password = setupPass.value;
+                users[userIdx].is_temporary = false; // Chuyển thành chính thức
+                users[userIdx].points += 50; // Thưởng 50 Paw Points kích hoạt thành viên
+                saveUsers(users);
+                
+                // Đăng nhập luôn
+                setCurrentUser(users[userIdx]);
+                
+                // Xoá token đã dùng
+                const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
+                const updatedTokens = tokens.filter(t => t.token !== token);
+                localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(updatedTokens));
+
+                showToast('success', 'Kích hoạt tài khoản thành viên thành công! Bạn nhận thêm 50 điểm thưởng chào mừng.');
+                setTimeout(() => {
+                    window.location.href = '/pages/public/landing.html';
+                }, 2000);
+            }
+        });
+    }
+
+    // Gửi lại link xác thực mới
+    const btnRequestNewLink = document.getElementById('btnRequestNewLink');
+    if (btnRequestNewLink) {
+        btnRequestNewLink.addEventListener('click', () => {
+            const phone = document.getElementById('expiredPhone').value;
+            if (!/^[0-9]{10}$/.test(phone)) {
+                showToast('error', 'Vui lòng nhập số điện thoại hợp lệ.');
+                return;
+            }
+
+            // Tạo token mới
+            const token = 'token-dynamic-' + Math.random().toString(36).substr(2, 9);
+            const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
+            tokens.push({
+                token: token,
+                phone: phone,
+                createdAt: Date.now()
+            });
+            localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
+
+            showToast('success', 'Đã gửi link mới qua SMS. Vui lòng kiểm tra điện thoại của bạn.', 6000);
+            console.log(`[SMS Simulation] Setup password link: ${window.location.origin}/pages/public/login.html?action=setup-password&token=${token}`);
+        });
+    }
+}
+
+// --- 5. ADMIN QUICK ADD CUSTOMER FORM INTEGRATION (US 1-3) ---
+function initAdminQuickAddCustomer() {
+    const btnQuickAdd = document.getElementById('btnAdminQuickAddCustomer');
+    if (!btnQuickAdd) return;
+
+    btnQuickAdd.addEventListener('click', () => {
+        // Mở popup modal
+        const modalEl = document.getElementById('adminQuickAddModal');
+        if (modalEl) {
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+    });
+
+    const formQuickAdd = document.getElementById('adminQuickAddForm');
+    if (formQuickAdd) {
+        formQuickAdd.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('qaName').value;
+            const phone = document.getElementById('qaPhone').value;
+            const petName = document.getElementById('qaPetName').value;
+            const submitBtn = formQuickAdd.querySelector('button[type="submit"]');
+
+            if (!name || !/^[0-9]{10}$/.test(phone)) {
+                alert('Họ tên và Số điện thoại 10 số là bắt buộc.');
+                return;
+            }
+
+            // Show Spinner và chặn click đúp (AC1.3.1)
+            const origContent = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang lưu...`;
+
+            setTimeout(() => {
+                // Tạo tài khoản tạm trong database
+                const users = getUsers();
+                const existing = users.find(u => u.phone === phone);
+                
+                if (!existing) {
+                    users.push({
+                        name: name,
+                        phone: phone,
+                        role: "customer",
+                        is_temporary: true,
+                        points: 0,
+                        pet: {
+                            name: petName,
+                            species: document.getElementById('qaPetSpecies').value,
+                            weight: document.getElementById('qaPetWeight').value
+                        }
+                    });
+                    saveUsers(users);
+                }
+
+                // Tạo Token thiết lập mật khẩu mới
+                const token = 'token-dynamic-' + Math.random().toString(36).substr(2, 9);
+                const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
+                tokens.push({
+                    token: token,
+                    phone: phone,
+                    createdAt: Date.now()
+                });
+                localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
+
+                // Phản hồi Toast thành công
+                showAdminToast(`Đã khởi tạo tài khoản tạm và gửi link SMS kích hoạt mật khẩu cho khách thành công!<br><a href="/pages/public/login.html?action=setup-password&token=${token}" target="_blank" style="color:var(--color-accent); font-weight:bold;">Mở liên kết kích hoạt (Simulated SMS Link)</a>`);
+
+                // Reset button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origContent;
+
+                // Close Modal
+                const modalInstance = bootstrap.Modal.getInstance(document.getElementById('adminQuickAddModal'));
+                if (modalInstance) modalInstance.hide();
+                formQuickAdd.reset();
+
+                // Refresh Admin User List if function exists
+                if (typeof renderAdminUsersList === 'function') renderAdminUsersList();
+
+            }, 1000); // 1s simulation delay
+        });
+    }
+}
+
+function showAdminToast(message) {
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(toastContainer);
+    }
+
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    const toastEl = document.getElementById(toastId);
+    const bsToast = new bootstrap.Toast(toastEl, { delay: 6000 });
+    bsToast.show();
+
+    toastEl.addEventListener('hidden.bs.toast', () => {
+        toastEl.remove();
+    });
+}
+
+function initAuth() {
+    initMockDatabase();
+    enforceTemporaryAccountLock();
+    handleLoginRouting();
+    initAuthForms();
+    initAdminQuickAddCustomer();
+
+    // Lắng nghe click vào bất kỳ link nào trỏ tới login.html khi đang ở chính trang login.html
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (!link) return;
+        const href = link.getAttribute('href');
+        if (!href) return;
+
+        if (href.includes('login.html') && window.location.pathname.includes('login.html')) {
+            e.preventDefault();
+            // Đẩy state mới vào history và chạy lại router
+            window.history.pushState({}, '', href);
+            handleLoginRouting();
+        }
+    });
+}
+
+// --- INITIALIZE ALL ON LOAD ---
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAuth);
+} else {
+    initAuth();
+}
+window.addEventListener('popstate', handleLoginRouting);

@@ -43,8 +43,6 @@ const cssFilesToConcat = [
     path.join(baseDir, 'assets', 'css', 'tokens', 'colors.css'),
     path.join(baseDir, 'assets', 'css', 'tokens', 'typography.css'),
     path.join(baseDir, 'assets', 'css', 'tokens', 'spacing.css'),
-    path.join(baseDir, 'assets', 'css', 'base', 'reset.css'),
-    path.join(baseDir, 'assets', 'css', 'base', 'utilities.css'),
     path.join(baseDir, 'assets', 'css', 'components', 'button.css'),
     path.join(baseDir, 'assets', 'css', 'components', 'nav.css'),
     path.join(baseDir, 'assets', 'css', 'components', 'footer.css'),

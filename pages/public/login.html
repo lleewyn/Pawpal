@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="view-transition" content="same-origin">
-    <title>PawPal - Đăng nhập & Đăng ký thành viên</title>
+    <title>Đăng ký & Đăng nhập - PawPal</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,232 +25,251 @@
     <!-- Page Specific Style -->
     <link rel="stylesheet" href="../../assets/css/public/login.css">
 </head>
-<body class="auth-page-body">
+<body class="login-page-body">
 
-    <div class="auth-page-container container-fluid p-0">
-        <div class="row m-0 min-vh-100 align-items-stretch">
-        <!-- Left panel: Brand Showcase & Member Benefits -->
-        <div class="auth-showcase-panel col-12 col-lg-5 d-none d-lg-flex flex-column p-0">
-            <div class="auth-showcase-overlay"></div>
-            <div class="auth-showcase-content">
-                <a href="landing.html" class="auth-logo">
-                    <img src="../../assets/images/Logo_pawpal.png" alt="PawPal" style="height: 80px; width: auto; object-fit: contain;">
-                </a>
-                <div class="auth-showcase-text">
-                    <h2 class="showcase-title">Thế giới <span class="accent-italic">an tâm</span><br>của bé cưng.</h2>
-                    <p class="showcase-desc">Đăng ký thành viên PawPal để sở hữu Pet ID số độc bản, tích lũy điểm thưởng đổi quà và theo dõi tiến trình chăm sóc trực quan.</p>
-                </div>
-                <div class="auth-benefits-list">
-                    <div class="benefit-item">
-                        <span class="benefit-icon">🆔</span>
-                        <div class="benefit-text">
-                            <h5>Hồ Sơ Số Pet ID</h5>
-                            <p>Lưu giữ thông tin, thói quen và lịch trình y tế của bé.</p>
-                        </div>
-                    </div>
-                    <div class="benefit-item">
-                        <span class="benefit-icon">📹</span>
-                        <div class="benefit-text">
-                            <h5>Nhật Ký Real-time</h5>
-                            <p>Theo dõi hình ảnh buổi chăm sóc theo từng cột mốc.</p>
-                        </div>
-                    </div>
-                    <div class="benefit-item">
-                        <span class="benefit-icon">🎁</span>
-                        <div class="benefit-text">
-                            <h5>Tích Điểm Nhận Quà</h5>
-                            <p>Nhận ngay 50 Paw Points khi kích hoạt tài khoản.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div id="site-header" style="min-height:110px;background:var(--color-bg-light);"></div>
 
-        <!-- Right panel: Interactive Forms Container -->
-        <div class="auth-form-panel col-12 col-lg-7 d-flex align-items-center justify-content-center p-0">
-            <div class="auth-form-wrapper glass-panel">
-                <div class="auth-form-header">
-                    <a href="landing.html" class="btn-back-home">← Quay về Trang chủ</a>
-                </div>
-
-                <!-- Tab toggles (only shown in normal Login/Register mode) -->
-                <div class="auth-page-tabs" id="authPageTabs">
-                    <button class="auth-tab-btn active" id="tabLoginBtn">Đăng nhập</button>
-                    <button class="auth-tab-btn" id="tabRegisterBtn">Đăng ký</button>
-                </div>
-
-                <!-- Form Đăng nhập -->
-                <div class="auth-form-container active" id="loginFormContainer">
-                    <form id="loginForm" class="auth-form">
-                        <div class="form-group">
-                            <label for="loginPhone">Số điện thoại</label>
-                            <input type="tel" id="loginPhone" required placeholder="Nhập số điện thoại...">
-                            <span class="input-error-msg" id="loginPhoneError" style="display: none; color: #ef4444; font-size: 0.78rem; font-weight: 500; margin-top: 4px;"></span>
-                        </div>
+    <main class="login-main-container">
+        <div class="container-md py-5">
+            <div class="row justify-content-center align-items-center min-vh-75">
+                
+                <!-- Center Column: Interactive Card Form -->
+                <div class="col-lg-5 col-md-8 col-sm-10">
+                    <div class="auth-card-wrapper glassmorphic-panel">
                         
-                        <div class="form-group" id="loginPasswordGroup">
-                            <label for="loginPassword">Mật khẩu</label>
-                            <input type="password" id="loginPassword" placeholder="Nhập mật khẩu...">
-                            <span class="input-error-msg" id="loginPasswordError" style="display: none; color: #ef4444; font-size: 0.78rem; font-weight: 500; margin-top: 4px;"></span>
+                        <!-- Toggle Form Tabs -->
+                        <div class="auth-tabs" id="authTabs">
+                            <button class="auth-tab-btn active" id="tabLogin" data-target="loginForm">Đăng nhập</button>
+                            <button class="auth-tab-btn" id="tabRegister" data-target="registerForm">Đăng ký</button>
                         </div>
 
-                        <div class="form-group" id="loginOtpGroup" style="display: none;">
-                            <label for="loginOtpInput">Nhập mã OTP</label>
-                            <div class="otp-input-wrapper">
-                                <input type="text" id="loginOtpInput" maxlength="6" placeholder="Mã OTP 6 số...">
-                                <button type="button" class="btn-send-otp-login" id="sendOtpLoginBtn">Gửi OTP</button>
+                        <!-- 1. LOGIN FORM -->
+                        <form id="loginForm" class="auth-form active-form" novalidate>
+                            <h3 class="form-title">Chào mừng trở lại!</h3>
+                            <p class="form-subtitle">Đăng nhập để tiếp tục đồng hành cùng boss cưng.</p>
+                            
+                            <!-- Tab Login Sub-methods: Password vs OTP -->
+                            <div class="login-method-toggle">
+                                <button type="button" class="method-btn active" id="methodPassword">Mật khẩu</button>
+                                <button type="button" class="method-btn" id="methodSMS">Mã SMS</button>
                             </div>
-                        </div>
 
-                        <div class="form-actions-inline">
-                            <button type="button" class="btn-toggle-login-method" id="toggleLoginMethodBtn">Đăng nhập bằng OTP</button>
-                            <button type="button" class="btn-forget-pass" id="forgetPassBtn">Quên mật khẩu?</button>
-                        </div>
+                            <div class="form-group mb-3">
+                                <label for="loginPhone" class="form-label">Số điện thoại</label>
+                                <input type="tel" id="loginPhone" class="form-control" placeholder="Nhập số điện thoại (10 chữ số)" required>
+                                <div class="invalid-feedback" id="loginPhoneFeedback">SĐT không hợp lệ</div>
+                            </div>
 
-                        <button type="submit" class="btn-submit-auth">Xác nhận đăng nhập</button>
-                    </form>
-                </div>
-
-                <!-- Form Đăng ký -->
-                <div class="auth-form-container" id="registerFormContainer">
-                    <form id="registerForm" class="auth-form">
-                        <div class="form-group">
-                            <label for="registerName">Họ và tên</label>
-                            <input type="text" id="registerName" required placeholder="Nhập họ và tên...">
-                        </div>
-                        <div class="form-group">
-                            <label for="registerPhone">Số điện thoại</label>
-                            <input type="tel" id="registerPhone" required placeholder="Nhập số điện thoại...">
-                            <span class="input-error-msg" id="registerPhoneError" style="display: none; color: #ef4444; font-size: 0.78rem; font-weight: 500; margin-top: 4px;">Số điện thoại không đúng định dạng Việt Nam.</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="registerPassword">Mật khẩu</label>
-                            <input type="password" id="registerPassword" required placeholder="Nhập mật khẩu (tối thiểu 8 ký tự)...">
-                        </div>
-                        <div class="form-group">
-                            <label for="registerConfirmPassword">Xác nhận mật khẩu</label>
-                            <input type="password" id="registerConfirmPassword" required placeholder="Xác nhận lại mật khẩu...">
-                            <span class="input-error-msg" id="registerPasswordError" style="display: none; color: #ef4444; font-size: 0.78rem; font-weight: 500; margin-top: 4px;">Mật khẩu xác nhận không trùng khớp.</span>
-                        </div>
-                        <button type="submit" class="btn-submit-auth" id="registerSubmitBtn" disabled>Xác nhận đăng ký</button>
-                    </form>
-                </div>
-
-                <!-- Form Quên Mật Khẩu -->
-                <div class="auth-form-container" id="forgetPassContainer">
-                    <div class="forget-pass-header">
-                        <h4>Khôi phục mật khẩu</h4>
-                        <p>Nhập số điện thoại đã đăng ký để nhận liên kết khôi phục.</p>
-                    </div>
-                    <form id="forgetPassForm" class="auth-form">
-                        <div class="form-group">
-                            <label for="forgetPhone">Số điện thoại</label>
-                            <input type="tel" id="forgetPhone" required placeholder="Nhập số điện thoại...">
-                        </div>
-                        <div class="form-actions-stacked">
-                            <button type="submit" class="btn-submit-auth">Gửi liên kết khôi phục</button>
-                            <button type="button" class="btn-back-to-login" id="backToLoginBtn">Quay lại đăng nhập</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Form Kích hoạt tài khoản / Đặt mật khẩu lần đầu (dành cho tài khoản tạm) -->
-                <div class="auth-form-container" id="activationFormContainer">
-                    <div class="gift-banner">
-                        <span class="gift-icon">🎁</span>
-                        <h3>Thiết lập mật khẩu</h3>
-                        <p>Chúc mừng <strong id="activationName">Khách hàng</strong>! Thiết lập mật khẩu để kích hoạt thành viên chính thức và nhận ngay <strong>50 điểm Paw Points</strong>.</p>
-                    </div>
-                    <form id="activationForm" class="activation-form">
-                        <div class="form-group">
-                            <label for="activationPassword">Mật khẩu mới</label>
-                            <input type="password" id="activationPassword" required placeholder="Nhập mật khẩu mới (tối thiểu 8 ký tự)...">
-                            <div class="password-strength-container">
-                                <div class="strength-bar-wrapper">
-                                    <div class="strength-bar" id="activationStrengthBar"></div>
+                            <div class="form-group mb-4" id="loginPasswordField">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="loginPassword" class="form-label mb-0">Mật khẩu</label>
+                                    <a href="#" class="forgot-pass-link" id="triggerForgot">Quên mật khẩu?</a>
                                 </div>
-                                <span class="strength-label" id="activationStrengthLabel">Yêu</span>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="loginPassword" class="form-control" placeholder="Nhập mật khẩu của bạn" required>
+                                    <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
+                                        <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-4 d-none" id="loginSMSField">
+                                <label for="loginSMSCode" class="form-label">Mã truy cập SMS</label>
+                                <div class="input-group">
+                                    <input type="text" id="loginSMSCode" class="form-control" placeholder="Mã 6 chữ số">
+                                    <button class="btn btn-outline-secondary" type="button" id="btnRequestLoginSMS">Nhận mã</button>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-cta w-100" id="btnLoginSubmit">
+                                <span>Đăng nhập</span>
+                            </button>
+                        </form>
+
+                        <!-- 2. REGISTER FORM -->
+                        <form id="registerForm" class="auth-form" novalidate>
+                            <h3 class="form-title">Tạo tài khoản mới</h3>
+                            <p class="form-subtitle">Nhận ngay 50 điểm thưởng sau khi kích hoạt thành công.</p>
+
+                            <div class="form-group mb-3">
+                                <label for="registerName" class="form-label">Họ và tên <span class="required-star">*</span></label>
+                                <input type="text" id="registerName" class="form-control" placeholder="Nhập họ tên đầy đủ" required>
+                                <div class="invalid-feedback">Vui lòng nhập họ tên</div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="registerPhone" class="form-label">Số điện thoại <span class="required-star">*</span></label>
+                                <input type="tel" id="registerPhone" class="form-control" placeholder="Ví dụ: 0912345678" required>
+                                <div class="invalid-feedback" id="registerPhoneFeedback">Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0</div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="registerPassword" class="form-label">Mật khẩu <span class="required-star">*</span></label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="registerPassword" class="form-control" placeholder="Ít nhất 6 ký tự" required>
+                                    <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
+                                        <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-4">
+                                <label for="registerConfirmPassword" class="form-label">Xác nhận mật khẩu <span class="required-star">*</span></label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="registerConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu" required>
+                                    <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
+                                        <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback" id="registerConfirmFeedback">Mật khẩu chưa khớp</div>
+                            </div>
+
+                            <button type="submit" class="btn-cta w-100" id="btnRegisterSubmit" disabled>
+                                <span>Đăng ký tài khoản</span>
+                            </button>
+                            
+                            <p class="form-note-footer text-center mt-3">
+                                Thông tin của bạn sẽ được lưu trữ bảo mật để tích lũy điểm thưởng khi trở thành thành viên chính thức
+                            </p>
+                        </form>
+
+                        <!-- 3. INLINE OTP FORM -->
+                        <div id="otpSection" class="auth-step-section d-none">
+                            <h3 class="form-title text-center">Xác thực OTP</h3>
+                            <p class="form-subtitle text-center">Một mã xác thực 6 số đã được gửi đến SĐT của bạn.</p>
+
+                            <div class="otp-inputs-wrapper mb-4">
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required disabled>
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required disabled>
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required disabled>
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required disabled>
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required disabled>
+                            </div>
+
+                            <div class="otp-timer-container text-center mb-3">
+                                <span class="timer-label">Mã OTP hết hiệu lực sau:</span>
+                                <span class="timer-countdown" id="otpTimer">05:00</span>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="button" class="btn-link" id="btnResendOtp" disabled>Gửi lại mã</button>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="activationConfirmPassword">Xác nhận mật khẩu</label>
-                            <input type="password" id="activationConfirmPassword" required placeholder="Xác nhận lại mật khẩu...">
-                            <span class="input-error-msg" id="activationPasswordError" style="display: none; color: #ef4444; font-size: 0.78rem; font-weight: 500; margin-top: 4px;">Mật khẩu xác nhận không trùng khớp.</span>
+
+                        <!-- 4. CONGRATULATIONS / SUCCESS SCREEN -->
+                        <div id="congratsSection" class="auth-step-section d-none text-center">
+                            <div class="congrats-animation-wrapper">
+                                <div class="sparkles">✨ 🎉 ✨</div>
+                                <div class="paw-badge">🐾</div>
+                            </div>
+                            <h3 class="form-title mt-3">Đăng ký thành công!</h3>
+                            <p class="form-subtitle">Chào mừng thành viên mới đến với gia đình PawPal!</p>
+                            
+                            <div class="points-reward-box my-4">
+                                <span class="points-label">Điểm Thưởng Nhận Được</span>
+                                <div class="points-counter" id="pointsCounter">0</div>
+                            </div>
+
+                            <p class="redirect-hint text-muted">Đang tự động chuyển hướng về trang chủ sau vài giây...</p>
+                            <a href="landing.html" class="btn-cta mt-2">Về trang chủ ngay</a>
                         </div>
-                        <button type="submit" class="btn-submit-activation" id="activationSubmitBtn" disabled>Hoàn tất & Nhận 50 Points</button>
-                    </form>
+
+                        <!-- 5. SETUP PASSWORD (FOR TEMPORARY ACCOUNTS) -->
+                        <div id="setupPasswordSection" class="auth-step-section d-none">
+                            <h3 class="form-title">Thiết lập mật khẩu</h3>
+                            <p class="form-subtitle">Tạo mật khẩu cho tài khoản tạm để kích hoạt đầy đủ đặc quyền thành viên PawPal.</p>
+
+                            <form id="setupPasswordForm" novalidate>
+                                <div class="form-group mb-3">
+                                    <label for="setupPassword" class="form-label">Mật khẩu mới <span class="required-star">*</span></label>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" id="setupPassword" class="form-control" placeholder="Ít nhất 6 ký tự" required>
+                                        <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
+                                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group mb-4">
+                                    <label for="setupConfirmPassword" class="form-label">Xác nhận mật khẩu mới <span class="required-star">*</span></label>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" id="setupConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu mới" required>
+                                        <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
+                                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="invalid-feedback" id="setupConfirmFeedback">Mật khẩu chưa khớp</div>
+                                </div>
+
+                                <button type="submit" class="btn-cta w-100" id="btnSetupSubmit" disabled>
+                                    <span>Kích hoạt tài khoản thành viên</span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- 6. SETUP PASSWORD EXPIRED ERROR SCREEN -->
+                        <div id="setupExpiredSection" class="auth-step-section d-none text-center">
+                            <div class="expired-icon-wrapper my-3">
+                                <span class="error-emoji">⚠️</span>
+                            </div>
+                            <h3 class="form-title text-danger">Liên kết đã hết hạn</h3>
+                            <p class="form-subtitle">Đường dẫn thiết lập mật khẩu bảo mật của bạn đã hết hạn (giới hạn 48 giờ).</p>
+                            
+                            <div class="my-4">
+                                <p class="text-muted">Vui lòng cung cấp số điện thoại để chúng tôi gửi lại liên kết xác thực mới qua SMS.</p>
+                                <div class="form-group max-width-350 mx-auto">
+                                    <input type="tel" id="expiredPhone" class="form-control text-center" placeholder="Nhập số điện thoại của bạn">
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn-cta" id="btnRequestNewLink">
+                                <span>Gửi lại link xác thực mới</span>
+                            </button>
+                        </div>
+
+                        <!-- 7. FORGOT PASSWORD INLINE FORM (US 2-2) -->
+                        <div id="forgotPasswordSection" class="auth-step-section d-none">
+                            <button type="button" class="btn-back-link mb-3" id="btnBackToLogin">
+                                ← Quay lại đăng nhập
+                            </button>
+                            
+                            <h3 class="form-title">Quên mật khẩu?</h3>
+                            <p class="form-subtitle">Nhập số điện thoại để nhận link khôi phục qua SMS</p>
+
+                            <form id="forgotPasswordForm" novalidate>
+                                <div class="form-group mb-4">
+                                    <label for="forgotPhone" class="form-label">Số điện thoại <span class="required-star">*</span></label>
+                                    <input type="tel" id="forgotPhone" class="form-control" placeholder="Nhập số điện thoại của bạn" required>
+                                    <div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ (10 chữ số)</div>
+                                </div>
+
+                                <button type="submit" class="btn-cta w-100">
+                                    <span>Gửi link khôi phục</span>
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
                 </div>
 
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- OTP Verification Modal (Overlay inside login page) -->
-    <div id="otpVerifyModal" class="otp-verify-modal">
-        <div class="otp-verify-overlay" id="otpVerifyOverlay"></div>
-        <div class="otp-verify-content glass-panel">
-            <h3>Xác thực số điện thoại</h3>
-            <p>Mã OTP đã được gửi về số điện thoại của bạn. Vui lòng nhập mã để hoàn tất.</p>
-            
-            <div class="otp-single-input-wrapper">
-                <input
-                    type="text"
-                    id="otpSingleInput"
-                    class="otp-single-input"
-                    maxlength="6"
-                    pattern="[0-9]*"
-                    inputmode="numeric"
-                    autocomplete="one-time-code"
-                    placeholder="_ _ _ _ _ _"
-                >
-            </div>
-            
-            <div class="otp-meta">
-                <span class="otp-timer">Mã có hiệu lực trong: <strong id="otpTimerText">05:00</strong></span>
-                <button class="btn-resend-otp" id="resendOtpBtn" disabled>Gửi lại mã (<span id="resendCountdown">60</span>s)</button>
-            </div>
-            
-            <div class="otp-actions">
-                <button class="btn-verify-otp" id="verifyOtpBtn" disabled>Xác thực</button>
-                <button class="btn-cancel-otp" id="cancelOtpBtn">Hủy bỏ</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Lock Overlay (Account Locked) -->
-    <div id="lockOverlay" class="lock-overlay">
-        <div class="lock-overlay-content">
-            <div class="lock-icon-box">🔓</div>
-            <h3>Tài khoản tạm khóa</h3>
-            <p>Bạn đã nhập sai mật khẩu quá 5 lần. Vui lòng quay lại sau:</p>
-            <div class="lock-timer" id="lockTimerText">30:00</div>
-            
-            <div class="lock-actions">
-                <a href="tel:0987654321" class="btn-call-hotline">Gọi Hotline Hỗ Trợ</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Welcome Gift Popup Modal (For registration success) -->
-    <div id="welcomeGiftModal" class="welcome-gift-modal">
-        <div class="welcome-gift-overlay" id="welcomeGiftOverlay"></div>
-        <div class="welcome-gift-content glass-panel">
-            <div class="gift-announcement-icon">🎁</div>
-            <h3>Chào mừng thành viên mới!</h3>
-            <p>Tài khoản của bạn đã kích hoạt thành công. Ví của bạn đã được cộng <strong>+50 Paw Points</strong> đầu tiên.</p>
-            <button class="btn-close-gift" id="closeGiftBtn">Bắt đầu trải nghiệm ngay</button>
-        </div>
-    </div>
-
-    
-
-    <!-- Scripts -->
     <div id="site-footer"></div>
 
+    <!-- Toast Container -->
+    <div class="toast-container-custom" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmxc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <script type="module" src="../../assets/js/shared/auth.js"></script>
-        <script src="../../assets/js/shared/components.js" defer></script>
+    <script src="../../assets/js/shared/components.js" defer></script>
     <script type="module" src="../../assets/js/shared/main.js"></script>
+    <script type="module" src="../../assets/js/shared/auth.js"></script>
     <div id="site-fab"></div>
 </body>
 </html>

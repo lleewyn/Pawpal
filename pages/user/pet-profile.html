@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="view-transition" content="same-origin">
+    <title>Hồ sơ bé cưng - PawPal</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <!-- Components -->
+    <link rel="stylesheet" href="../../assets/css/components/button.css">
+    <link rel="stylesheet" href="../../assets/css/components/nav.css">
+    <link rel="stylesheet" href="../../assets/css/components/footer.css">
+    <link rel="stylesheet" href="../../assets/css/components/modal.css">
+    <link rel="stylesheet" href="../../assets/css/components/notification.css">
+    <link rel="stylesheet" href="../../assets/css/components/chat.css">
+    <link rel="stylesheet" href="../../assets/css/components/fab.css">
+    <!-- Page Specific Style -->
+    <link rel="stylesheet" href="../../assets/css/user/dashboard.css">
+    <link rel="stylesheet" href="../../assets/css/user/pet-form.css">
+</head>
+<body>
+    <div id="site-header"></div>
+
+    <main class="pet-profile-main">
+        <div class="container-xl py-5">
+            <div class="row g-4">
+                <!-- Sidebar Navigation -->
+                <div class="col-lg-3">
+                    <div id="user-sidebar">
+                        <!-- Sidebar will be loaded here -->
+                        <div class="dashboard-sidebar" style="min-height: 300px;">
+                            <p style="text-align: center; padding: 20px; color: #999;">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Main Content -->
+                <div class="col-lg-9">
+                    <!-- Page Header -->
+                    <section class="pet-profile-header-section">
+                        <div class="header-content">
+                            <div>
+                                <h1 class="page-title">Hồ sơ bé cưng</h1>
+                            </div>
+                            <button class="btn-cta" id="btnAddPet">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                Thêm bé mới
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Tabs Navigation -->
+                    <section class="pet-profile-tabs-section">
+                        <div class="tabs-wrapper">
+                            <button class="tab-btn active" data-tab="active">
+                                Danh sách hoạt động
+                            </button>
+                            <button class="tab-btn" data-tab="archive">
+                                Kho lưu trữ
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Pet Cards Grid - Active -->
+                    <section class="pet-cards-section" id="activeTab">
+                        <div class="pet-cards-grid" id="activePetGrid">
+                            <!-- Active pet cards will be rendered here -->
+                        </div>
+                        <!-- Empty State -->
+                        <div class="empty-state" id="emptyStateActive">
+                            <div class="empty-state-icon">🐾</div>
+                            <h3 class="empty-state-title">Chưa có bé cưng nào</h3>
+                            <p class="empty-state-desc">Thêm hồ sơ bé cưng đầu tiên để bắt đầu sử dụng dịch vụ của PawPal</p>
+                            <button class="btn-cta" onclick="document.getElementById('btnAddPet').click()">
+                                Thêm bé mới
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Pet Cards Grid - Archive -->
+                    <section class="pet-cards-section" id="archiveTab" style="display:none;">
+                        <div class="pet-cards-grid" id="archivePetGrid">
+                            <!-- Archived pet cards will be rendered here -->
+                        </div>
+                        <!-- Empty State -->
+                        <div class="empty-state" id="emptyStateArchive" style="display:none;">
+                            <div class="empty-state-icon">📦</div>
+                            <h3 class="empty-state-title">Kho lưu trữ trống</h3>
+                            <p class="empty-state-desc">Các hồ sơ bé cưng đã xóa sẽ được lưu ở đây trong 30 ngày</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Pet Modal -->
+    <div class="modal-overlay" id="petFormModal">
+        <div class="modal-content modal-content-large">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Thêm bé cưng mới</h3>
+                <button class="modal-close" id="btnCloseModal" aria-label="Đóng">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="petForm">
+                    <!-- Avatar Upload -->
+                    <div class="form-group-avatar">
+                        <label class="form-label">Ảnh đại diện</label>
+                        <div class="avatar-upload-wrapper">
+                            <div class="avatar-preview" id="avatarPreview">
+                                <img id="avatarImg" src="" alt="Avatar preview" style="display:none;">
+                                <div class="avatar-placeholder" id="avatarPlaceholder">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="avatar-upload-controls">
+                                <button type="button" class="btn-green-outline btn-upload" id="btnUploadPhoto">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    Tải ảnh lên
+                                </button>
+                                <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                                <p class="upload-hint">JPG, PNG, WEBP • Tối đa 5MB</p>
+                                <p class="upload-error" id="uploadError" style="display:none;"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Basic Information -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="petName" class="form-label">Tên bé cưng <span class="required-star">*</span></label>
+                                <input type="text" class="form-control" id="petName" required placeholder="Ví dụ: Milu">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="petSpecies" class="form-label">Giống loài <span class="required-star">*</span></label>
+                                <select class="form-control" id="petSpecies" required>
+                                    <option value="">-- Chọn giống loài --</option>
+                                    <option value="Chó">Chó</option>
+                                    <option value="Mèo">Mèo</option>
+                                    <option value="Hamster">Hamster</option>
+                                    <option value="Thỏ">Thỏ</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="petBreed" class="form-label">Giống cụ thể</label>
+                                <input type="text" class="form-control" id="petBreed" placeholder="Ví dụ: Poodle, Anh lông ngắn">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="petWeight" class="form-label">Cân nặng (kg) <span class="required-star">*</span></label>
+                                <input type="number" class="form-control" id="petWeight" required step="0.1" min="0.1" placeholder="Ví dụ: 5.5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="petBirthday" class="form-label">Ngày sinh</label>
+                                <input type="date" class="form-control" id="petBirthday">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="petGender" class="form-label">Giới tính</label>
+                                <select class="form-control" id="petGender">
+                                    <option value="">-- Chọn giới tính --</option>
+                                    <option value="Đực">Đực</option>
+                                    <option value="Cái">Cái</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medical History -->
+                    <div class="form-group">
+                        <label for="petMedicalHistory" class="form-label">Tiền sử y tế / Dị ứng</label>
+                        <textarea class="form-control form-textarea" id="petMedicalHistory" rows="4" placeholder="Ghi chú về tiêm phòng, bệnh lý, dị ứng thực phẩm hoặc thuốc..."></textarea>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="form-group">
+                        <label for="petNotes" class="form-label">Lưu ý khác</label>
+                        <textarea class="form-control form-textarea" id="petNotes" rows="3" placeholder="Thói quen, sở thích, tính cách..."></textarea>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-green-outline" id="btnCancelForm">Hủy</button>
+                        <button type="submit" class="btn-cta" id="btnSavePet" disabled>
+                            <span class="btn-text">Lưu hồ sơ</span>
+                            <span class="btn-spinner" style="display:none;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" opacity="0.25"/>
+                                    <path d="M12 2 A10 10 0 0 1 22 12" opacity="0.75">
+                                        <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+                                    </path>
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteConfirmModal">
+        <div class="modal-content modal-content-small">
+            <div class="modal-header">
+                <h3 class="modal-title">Xác nhận xóa hồ sơ</h3>
+                <button class="modal-close" onclick="closeDeleteModal()" aria-label="Đóng">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc muốn xóa hồ sơ của <strong id="deletePetName"></strong>?</p>
+                <p class="text-muted" style="font-size: 0.875rem;">Hồ sơ sẽ được chuyển vào Kho lưu trữ và tự động xóa sau 30 ngày.</p>
+                <div class="form-actions">
+                    <button class="btn-green-outline" onclick="closeDeleteModal()">Hủy</button>
+                    <button class="btn-danger" id="btnConfirmDelete">Xóa hồ sơ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Animation Overlay -->
+    <div class="success-overlay" id="successOverlay" style="display:none;">
+        <div class="success-animation">
+            <div class="animal-sprite" id="animalSprite">🐕</div>
+            <p class="success-message">Lưu thông tin bé thành công! 🎉</p>
+        </div>
+    </div>
+
+    <div id="site-footer"></div>
+
+    <!-- Toast Container -->
+    <div class="toast-container-custom" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/shared/auth.js"></script>
+    <script>
+        // Authentication Guard - Require login to access pet profile page
+        (function() {
+            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
+            if (!currentUser) {
+                console.warn('⚠️ No user logged in, redirecting to login page...');
+                alert('Vui lòng đăng nhập để truy cập trang Hồ sơ bé cưng');
+                window.location.href = '/pages/public/login.html';
+                return;
+            }
+            console.log('✅ User authenticated:', currentUser.name);
+        })();
+        
+        // Load sidebar synchronously
+        (function loadSidebar() {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '../../components/user-sidebar.html', false); // synchronous
+            xhr.send();
+            if (xhr.status === 200) {
+                document.getElementById('user-sidebar').innerHTML = xhr.responseText;
+                console.log('✅ Sidebar loaded');
+            } else {
+                console.error('❌ Failed to load sidebar');
+            }
+        })();
+    </script>
+    <script src="../../assets/js/shared/components.js" defer></script>
+    <script src="../../assets/js/shared/header-auth.js" defer></script>
+    <script type="module" src="../../assets/js/shared/main.js"></script>
+    <script type="module" src="../../assets/js/user/pet-profile.js"></script>
+    <script type="module">
+        import { initPetProfilePage } from '../../assets/js/user/pet-profile-page.js';
+        
+        // Wait for DOM and all modules to load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('🚀 DOM loaded, initializing pet profile page...');
+                initPetProfilePage();
+            });
+        } else {
+            console.log('🚀 DOM already loaded, initializing pet profile page...');
+            initPetProfilePage();
+        }
+    </script>
+    <div id="site-fab"></div>
+</body>
+</html>

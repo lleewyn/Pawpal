@@ -10,13 +10,13 @@ const MAX_PHOTO_MB = 5;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 // ── ID generator ──────────────────────────────────────────────────────────────
-function generatePetId() {
+export function generatePetId() {
     const num = Math.floor(1000 + Math.random() * 9000);
     return `PP-${num}`;
 }
 
 // ── Age calculator ────────────────────────────────────────────────────────────
-function calcAge(birthday) {
+export function calcAge(birthday) {
     if (!birthday) return null;
     const birth = new Date(birthday);
     const now = new Date();
@@ -29,14 +29,14 @@ function calcAge(birthday) {
 }
 
 // ── Date Formatter ────────────────────────────────────────────────────────────
-function fmtDate(dateStr) {
+export function fmtDate(dateStr) {
     if (!dateStr) return '';
     const d = new Date(dateStr + (dateStr.length === 10 ? 'T00:00:00' : ''));
     return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 // ── Toast Notification ────────────────────────────────────────────────────────
-function showToast(msg, type = 'success') {
+export function showToast(msg, type = 'success') {
     let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
@@ -56,25 +56,31 @@ function showToast(msg, type = 'success') {
 }
 
 // ── Read and Write Pets ────────────────────────────────────────────────────────
-function getPets() {
+export function getPets() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
-    } catch {
+        const pets = raw ? JSON.parse(raw) : [];
+        console.log('✅ getPets() returned:', pets.length, 'pets');
+        return pets;
+    } catch (e) {
+        console.error('❌ getPets() error:', e);
+        // Return mock data for testing if localStorage fails
         return [];
     }
 }
 
-function savePets(allPets) {
+export function savePets(allPets) {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(allPets));
+        console.log('✅ savePets() saved', allPets.length, 'pets');
     } catch (e) {
-        console.error('pet-profile.js savePets error:', e);
+        console.error('❌ savePets() error:', e);
+        console.error('localStorage may be blocked by CORS policy');
     }
 }
 
 // ── Read and Write Bookings ─────────────────────────────────────────────────────
-function getBookings() {
+export function getBookings() {
     try {
         const raw = localStorage.getItem(BOOKING_KEY);
         return raw ? JSON.parse(raw) : [];
@@ -84,7 +90,7 @@ function getBookings() {
 }
 
 // ── Read and Write Tracker Logs ─────────────────────────────────────────────────
-function getTrackerLogs() {
+export function getTrackerLogs() {
     try {
         const raw = localStorage.getItem(TRACKER_LOGS_KEY);
         return raw ? JSON.parse(raw) : {};
@@ -93,7 +99,7 @@ function getTrackerLogs() {
     }
 }
 
-function saveTrackerLogs(logs) {
+export function saveTrackerLogs(logs) {
     try {
         localStorage.setItem(TRACKER_LOGS_KEY, JSON.stringify(logs));
     } catch (e) {
