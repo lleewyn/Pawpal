@@ -46,7 +46,7 @@
                     <div class="pet-diary-content">
                         <!-- Page Header -->
                         <div class="pet-diary-header mb-4">
-                            <h3 class="pet-diary-page-title">📖 Nhật ký chăm sóc</h3>
+                            <h3 class="pet-diary-page-title">Nhật ký chăm sóc</h3>
                             <p class="pet-diary-subtitle">Theo dõi toàn bộ quá trình chăm sóc bé cưng của bạn</p>
                         </div>
 
@@ -61,7 +61,11 @@
 
                         <!-- Empty State (shown initially) -->
                         <div class="empty-state-diary" id="emptyState">
-                            <div class="empty-icon">🐾</div>
+                            <div class="empty-icon" style="color: var(--color-primary-light); display: inline-flex; justify-content: center; margin-bottom: var(--space-sm);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                            </div>
                             <h4 class="empty-title">Chọn bé cưng để xem nhật ký</h4>
                             <p class="empty-desc">Vui lòng chọn một bé cưng từ danh sách trên để xem lịch sử chăm sóc</p>
                         </div>
@@ -124,7 +128,14 @@
 
                                     <!-- Empty Timeline -->
                                     <div class="empty-timeline" id="emptyTimeline" style="display:none;">
-                                        <div class="empty-icon">📋</div>
+                                        <div class="empty-icon" style="color: var(--color-primary-light);">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                                <line x1="9" y1="9" x2="15" y2="9"></line>
+                                                <line x1="9" y1="13" x2="15" y2="13"></line>
+                                                <line x1="9" y1="17" x2="15" y2="17"></line>
+                                            </svg>
+                                        </div>
                                         <p class="empty-desc">Chưa có nhật ký chăm sóc nào</p>
                                     </div>
                                 </div>
@@ -132,7 +143,7 @@
                                 <!-- History Sidebar -->
                                 <div class="col-lg-4">
                                     <div class="history-sidebar">
-                                        <h4 class="sidebar-title">📚 Lịch sử dịch vụ</h4>
+                                        <h4 class="sidebar-title">Lịch sử dịch vụ</h4>
                                         <div class="history-list" id="historyList">
                                             <!-- History items will be rendered here -->
                                         </div>

@@ -150,6 +150,36 @@ function createOrderCard(order) {
                </a>`
         : '';
 
+    // Calculate if return is allowed (completed status and completed within 7 days)
+    const completedDate = new Date(order.updatedAt || order.createdAt);
+    const now = new Date();
+    const diffMs = now - completedDate;
+    const diffHours = diffMs / (1000 * 60 * 60);
+    const returnAllowed = isCompleted && (diffHours <= 168); // 7 days = 168 hours
+    
+    // Check if order has already requested return
+    const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
+    const alreadyReturned = returnsList.some(r => r.orderId === order.id);
+
+    let returnActionHTML = '';
+
+    if (returnAllowed) {
+        if (alreadyReturned) {
+            returnActionHTML = `
+                <a href="/pages/user/return-detail.html?orderId=${order.id}" class="btn-track-order" style="text-decoration: none;">
+                    &#10003; Chi tiết đổi trả
+                </a>
+            `;
+        } else {
+            const diffDays = Math.max(0, 7 - Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+            returnActionHTML = `
+                <button class="btn-track-order" onclick="openRMADrawer('${order.id}')">
+                    &#8634; Yêu cầu Đổi trả (Còn ${diffDays} ngày)
+                </button>
+            `;
+        }
+    }
+
     return `
         <article class="order-card" data-order-id="${order.id}">
             <div class="order-card-header">
@@ -179,10 +209,11 @@ function createOrderCard(order) {
                     <span class="summary-value">${formatCurrency(order.pricing.total)}</span>
                 </div>
             </div>
-            <div class="order-card-footer">
+            <div class="order-card-footer" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                 <a href="/pages/user/order-detail.html?id=${order.id}" 
                    class="btn-view-detail">Xem chi tiết</a>
                 ${reviewActionHTML}
+                ${returnActionHTML}
                 <button class="btn-track-order" onclick="trackOrder('${order.id}')">
                     Theo dõi đơn hàng
                 </button>

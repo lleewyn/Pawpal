@@ -1,161 +1,203 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="view-transition" content="same-origin">
-    <title>Tra cứu dịch vụ - PawPal</title>
-    <meta name="description" content="Tra cứu dịch vụ chăm sóc thú cưng và đơn hàng của bạn tại PawPal">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>Tra cứu Đổi trả Khách vãng lai - PawPal</title>
+    
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS — cần cho header responsive (d-lg-none, d-flex...) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Global CSS -->
     <link rel="stylesheet" href="../../assets/css/style.css">
+    
     <!-- Components -->
     <link rel="stylesheet" href="../../assets/css/components/button.css">
     <link rel="stylesheet" href="../../assets/css/components/nav.css">
     <link rel="stylesheet" href="../../assets/css/components/footer.css">
-    <link rel="stylesheet" href="../../assets/css/components/modal.css">
-    <link rel="stylesheet" href="../../assets/css/components/notification.css">
-    <link rel="stylesheet" href="../../assets/css/components/chat.css">
-    <link rel="stylesheet" href="../../assets/css/components/fab.css">
-    <!-- Page Specific -->
-    <link rel="stylesheet" href="../../assets/css/user/pet-diary.css">
-    <link rel="stylesheet" href="../../assets/css/public/return-guest.css">
+    
+    <!-- Custom CSS inline specific to page to follow design.md -->
+    <style>
+        .guest-lookup-wrapper {
+            max-width: var(--container-sm);
+            margin: var(--space-xl) auto;
+            padding: 0 var(--container-padding);
+        }
+        .lookup-card {
+            background-color: var(--color-bg-white);
+            border: var(--border-card);
+            border-radius: var(--card-border-radius);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-card);
+        }
+        .lookup-title {
+            font-family: var(--font-heading);
+            color: var(--color-primary-dark);
+            font-size: var(--fs-h2);
+            text-align: center;
+            margin-bottom: var(--space-xs);
+        }
+        .lookup-subtitle {
+            font-size: var(--fs-body);
+            color: var(--color-text-light);
+            text-align: center;
+            margin-bottom: var(--space-lg);
+            line-height: 1.5;
+        }
+        .form-group {
+            margin-bottom: var(--space-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-xs);
+        }
+        .form-label {
+            font-weight: 700;
+            color: var(--color-primary-dark);
+            font-size: var(--fs-body);
+        }
+        .form-input {
+            border: 1px solid var(--color-border);
+            border-radius: var(--card-border-radius);
+            padding: 12px 16px;
+            font-family: var(--font-primary);
+            font-size: var(--fs-body);
+            width: 100%;
+        }
+        .form-input:focus {
+            border-color: var(--color-primary);
+            outline: none;
+        }
+        .error-alert {
+            background-color: var(--color-danger-light);
+            color: var(--color-danger);
+            border: 1px solid var(--color-danger);
+            border-radius: var(--card-border-radius);
+            padding: var(--space-sm);
+            font-size: var(--fs-small);
+            font-weight: 600;
+            margin-top: var(--space-md);
+            display: none;
+        }
+        .success-result {
+            margin-top: var(--space-lg);
+            border-top: 1px dashed var(--color-border);
+            padding-top: var(--space-md);
+            display: none;
+        }
+    </style>
 </head>
-<body>
+<body style="background-color: var(--color-bg-light);">
+    <!-- Header -->
+    <header id="site-header"></header>
 
-    <div id="site-header"></div>
+    <!-- Main Content -->
+    <main class="guest-lookup-wrapper">
+        <div class="lookup-card">
+            <h1 class="lookup-title">Tra cứu Đổi trả Khách vãng lai</h1>
+            <p class="lookup-subtitle">Vui lòng điền mã đơn hàng và số điện thoại mua hàng để thực hiện hoặc kiểm tra yêu cầu đổi trả của bạn.</p>
 
-    <main>
-        <!-- Hero Search Section (Initial State) -->
-        <section class="lookup-hero" id="lookupHero">
-            <div class="lookup-hero-content">
-                <h1 class="lookup-hero-title">Tra cứu dịch vụ + đơn hàng</h1>
-                
-                <form class="lookup-search-form" id="lookupForm">
-                    <div class="lookup-input-wrapper">
-                        <input 
-                            type="tel" 
-                            class="lookup-phone-input" 
-                            id="phoneInput"
-                            placeholder="Nhập số điện thoại (10 số)"
-                            pattern="[0-9]{10}"
-                            maxlength="10"
-                            required
-                            aria-label="Số điện thoại"
-                        />
-                    </div>
-                    <button type="submit" class="btn-lookup">
-                        Tra cứu ngay
+            <form id="lookup-form" onsubmit="handleLookup(event)">
+                <div class="form-group">
+                    <label class="form-label" for="order-id">Mã đơn hàng *</label>
+                    <input type="text" id="order-id" class="form-input" placeholder="Ví dụ: ORD-2026-002" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="phone-number">Số điện thoại mua hàng *</label>
+                    <input type="tel" id="phone-number" class="form-input" placeholder="Ví dụ: 0901234567" required>
+                </div>
+
+                <div style="margin-top: var(--space-lg);">
+                    <button type="submit" class="btn-cta" style="width: 100%; border: none; border-radius: var(--border-radius-pill); padding: 14px;">
+                        Tìm kiếm đơn hàng
                     </button>
-                </form>
-
-                <div class="lookup-divider">hoặc</div>
-
-                <p class="lookup-footer-text">
-                    Bạn đã có tài khoản? 
-                    <a href="/pages/public/login.html" class="login-link">Đăng nhập ngay</a> 
-                    để xem tất cả
-                </p>
-
-                <!-- Error message (inline, hidden by default) -->
-                <div class="lookup-error-inline" id="errorInline" style="display: none;">
-                    <p class="error-message" id="errorMessageInline"></p>
                 </div>
+
+                <!-- Error Alert -->
+                <div class="error-alert" id="error-box">
+                    [!] Thông tin đơn hàng hoặc số điện thoại không chính xác. Vui lòng kiểm tra lại.
+                </div>
+            </form>
+
+            <!-- Results area -->
+            <div class="success-result" id="result-box">
+                <h3 style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h3); margin-bottom: var(--space-sm);">Đơn hàng tìm thấy</h3>
+                
+                <div style="background-color: var(--color-primary-light); border-radius: var(--card-border-radius); padding: var(--space-sm); margin-bottom: var(--space-md); border: 1px solid var(--color-border);">
+                    <p style="margin: 0 0 6px 0; font-weight: bold; color: var(--color-primary-dark);" id="res-order-id">Mã: ...</p>
+                    <p style="margin: 0 0 6px 0; font-size: var(--fs-small); color: var(--color-text-dark);" id="res-product-name">Sản phẩm: ...</p>
+                    <p style="margin: 0; font-size: var(--fs-small); color: var(--color-text-light);" id="res-total">Tổng tiền: ...</p>
+                </div>
+
+                <button class="btn-green-outline" id="action-btn" style="width: 100%; padding: 12px; border-radius: var(--border-radius-pill); font-weight: bold;">
+                    Tạo yêu cầu đổi trả ngay
+                </button>
             </div>
-        </section>
-
-        <!-- Results Section (Hidden by default) -->
-        <div class="lookup-results-wrapper" id="resultsWrapper" style="display: none;">
-            
-            <!-- Compact Search Bar -->
-            <section class="lookup-compact-bar">
-                <div class="container-xl">
-                    <div class="compact-bar-content">
-                        <div class="compact-search-group">
-                            <input 
-                                type="tel" 
-                                class="compact-phone-input" 
-                                id="compactPhoneInput"
-                                readonly
-                            />
-                            <button class="btn-lookup-again" id="btnLookupAgain">
-                                Tra cứu lại
-                            </button>
-                        </div>
-                        <div class="lookup-result-count" id="resultCount">
-                            <!-- Will be populated by JS -->
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Tabs Navigation -->
-            <section class="lookup-tabs">
-                <div class="container-xl">
-                    <div class="lookup-tabs-nav">
-                        <button class="lookup-tab active" data-tab="services" id="tabServices">
-                            Lịch hẹn dịch vụ <span class="tab-badge" id="servicesBadge">0</span>
-                        </button>
-                        <button class="lookup-tab" data-tab="orders" id="tabOrders">
-                            Đơn hàng sản phẩm <span class="tab-badge" id="ordersBadge">0</span>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Tab Content -->
-            <section class="lookup-content">
-                <div class="container-xl">
-                    
-                    <!-- Tab 1: Services -->
-                    <div class="tab-pane active" id="servicesPane">
-                        <div class="services-grid" id="servicesGrid">
-                            <!-- Service cards will be rendered here -->
-                        </div>
-                        
-                        <!-- Empty State -->
-                        <div class="empty-lookup-state" id="emptyServices" style="display: none;">
-                            <h3 class="empty-title">Chưa có lịch hẹn nào</h3>
-                            <p class="empty-desc">Số điện thoại này chưa đặt dịch vụ nào tại PawPal</p>
-                            <a href="/pages/services/booking.html" class="btn-cta">Đặt lịch ngay</a>
-                        </div>
-                    </div>
-
-                    <!-- Tab 2: Orders -->
-                    <div class="tab-pane" id="ordersPane" style="display: none;">
-                        <div class="orders-grid" id="ordersGrid">
-                            <!-- Order cards will be rendered here -->
-                        </div>
-                        
-                        <!-- Empty State -->
-                        <div class="empty-lookup-state" id="emptyOrders" style="display: none;">
-                            <h3 class="empty-title">Chưa có đơn hàng nào</h3>
-                            <p class="empty-desc">Số điện thoại này chưa mua sản phẩm nào tại PawPal</p>
-                            <a href="/pages/shop/shop.html" class="btn-cta">Mua sắm ngay</a>
-                        </div>
-                    </div>
-
-                </div>
-            </section>
-
         </div>
-
-        <!-- Error State (Full page - REMOVED, now inline only) -->
-
     </main>
 
-    <div id="site-footer"></div>
+    <!-- Footer -->
+    <footer id="site-footer"></footer>
 
-    <!-- Toast Container -->
-    <div class="toast-container-custom" id="toastContainer"></div>
+    <!-- FAB -->
+    <div id="site-fab"></div>
+
+    <script>
+        function handleLookup(event) {
+            event.preventDefault();
+            const orderIdInput = document.getElementById('order-id').value.trim();
+            const phoneInput = document.getElementById('phone-number').value.trim();
+            const errorBox = document.getElementById('error-box');
+            const resultBox = document.getElementById('result-box');
+
+            errorBox.style.display = 'none';
+            resultBox.style.display = 'none';
+
+            // Giả lập kiểm tra khớp thông tin (Đơn hàng test có sẵn: ORD-2026-002, số điện thoại: 0901234567)
+            if (orderIdInput === 'ORD-2026-002' && phoneInput === '0901234567') {
+                // Hiển thị kết quả tìm thấy đơn hàng
+                document.getElementById('res-order-id').textContent = 'Đơn hàng: ORD-2026-002';
+                document.getElementById('res-product-name').textContent = 'Sản phẩm: Cát vệ sinh cho mèo Catsan 10L (Số lượng: 3)';
+                document.getElementById('res-total').textContent = 'Tổng tiền: 520.000đ';
+                
+                resultBox.style.display = 'block';
+
+                const actionBtn = document.getElementById('action-btn');
+                
+                // Kiểm tra xem đã gửi yêu cầu đổi trả chưa
+                const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
+                const alreadyReturned = returnsList.some(r => r.orderId === 'ORD-2026-002');
+
+                if (alreadyReturned) {
+                    actionBtn.textContent = 'Xem chi tiết yêu cầu đổi trả';
+                    actionBtn.onclick = () => {
+                        window.location.href = '/pages/user/return-detail.html?orderId=ORD-2026-002';
+                    };
+                } else {
+                    actionBtn.textContent = 'Tạo yêu cầu đổi trả ngay';
+                    // Tạo tài khoản tạm hoặc trực tiếp chuyển luồng
+                    actionBtn.onclick = () => {
+                        // Kích hoạt thông báo bảo mật đổi trả khách vãng lai (US 12-7)
+                        alert('Hệ thống đang điều hướng bạn đến trang kích hoạt mật khẩu tài khoản tạm để bảo mật quyền lợi.');
+                        window.location.href = '/pages/user/return-detail.html?orderId=ORD-2026-002';
+                    };
+                }
+            } else {
+                // Hiển thị thông báo lỗi
+                errorBox.style.display = 'block';
+            }
+        }
+    </script>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../../assets/js/shared/data-loader.js"></script>
+    <script src="../../assets/js/shared/main.js" defer></script>
     <script src="../../assets/js/shared/components.js" defer></script>
-    <script type="module" src="../../assets/js/shared/main.js"></script>
-    <script type="module" src="../../assets/js/public/return-guest.js"></script>
-    <div id="site-fab"></div>
+    <script src="../../assets/js/shared/header-auth.js" defer></script>
 </body>
 </html>

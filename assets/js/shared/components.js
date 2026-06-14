@@ -71,12 +71,24 @@
     }
 
     function ensureHeaderAuth() {
+        var rootPath = getRootPath();
         if (!document.querySelector('script[src*="header-auth.js"]')) {
-            var rootPath = getRootPath();
             var authScript = document.createElement('script');
             authScript.src = rootPath + 'assets/js/shared/header-auth.js';
             authScript.defer = true;
             document.head.appendChild(authScript);
+        }
+        if (!document.querySelector('script[src*="notifications-handler.js"]')) {
+            var notiScript = document.createElement('script');
+            notiScript.src = rootPath + 'assets/js/user/notifications-handler.js';
+            notiScript.defer = true;
+            document.head.appendChild(notiScript);
+        }
+        if (!document.querySelector('script[src*="support-handler.js"]')) {
+            var supportScript = document.createElement('script');
+            supportScript.src = rootPath + 'assets/js/user/support-handler.js';
+            supportScript.defer = true;
+            document.head.appendChild(supportScript);
         }
     }
 
@@ -88,11 +100,10 @@
             return;
         }
 
-        // Try sessionStorage cache first (eliminates layout shift on repeat visits)
         var cacheKey = 'pawpal_component_' + targetId;
-        // Only use cache for non-header, non-sidebar components
+        // Only use cache for non-header, non-fab, non-sidebar components
         var isSidebar = targetId === 'user-sidebar';
-        var cached = (targetId !== 'site-header' && !isSidebar) ? sessionStorage.getItem(cacheKey) : null;
+        var cached = (targetId !== 'site-header' && targetId !== 'site-fab' && !isSidebar) ? sessionStorage.getItem(cacheKey) : null;
         if (cached) {
             el.outerHTML = cached;
             if (targetId === 'site-header') {

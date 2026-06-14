@@ -1,4 +1,503 @@
 /* ==========================================================================
-   Loyalty & Membership
+   PawPal — Loyalty & Membership Styles (Quy trình 3.1.13)
    ========================================================================== */
 
+/* Warning Expiring Points Banner */
+.loyalty-warning-banner {
+    display: none;
+    background-color: var(--color-accent-light);
+    border: 1px solid var(--color-accent);
+    padding: var(--space-sm);
+    border-radius: var(--card-border-radius);
+    margin-bottom: var(--space-md);
+}
+
+.warning-banner-content {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--color-accent-dark);
+    font-size: var(--fs-body);
+    font-weight: 500;
+}
+
+.warning-banner-content strong {
+    font-weight: 700;
+}
+
+.warning-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+/* Virtual Loyalty Card */
+.pawpass-card-wrapper {
+    position: relative;
+    width: 340px;
+    max-width: 100%;
+}
+
+.pawpass-virtual-card {
+    position: relative;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1.7/1;
+    border-radius: 20px;
+    padding: 18px 24px;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.card-shimmer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(
+        115deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0) 40%,
+        rgba(255, 255, 255, 0.3) 50%,
+        rgba(255, 255, 255, 0) 60%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: translateX(-50%) translateZ(10px);
+    transition: transform 0.8s ease;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.pawpass-virtual-card:hover .card-shimmer {
+    transform: translateX(20%) translateZ(10px);
+}
+
+.card-glow-element {
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    filter: blur(50px);
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 1;
+    transition: all 0.5s ease;
+}
+
+/* Metallic Themes */
+.pawpass-virtual-card.tier-silver {
+    background: linear-gradient(135deg, #94a3b8 0%, #cbd5e1 45%, #f1f5f9 65%, #64748b 100%);
+    color: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+.pawpass-virtual-card.tier-silver .card-glow-element {
+    background-color: #cbd5e1;
+    top: -50px;
+    right: -50px;
+}
+.pawpass-virtual-card.tier-silver .brand-name,
+.pawpass-virtual-card.tier-silver .card-tier-label,
+.pawpass-virtual-card.tier-silver .pet-name,
+.pawpass-virtual-card.tier-silver .owner-name,
+.pawpass-virtual-card.tier-silver .m-val {
+    color: #1e293b;
+}
+.pawpass-virtual-card.tier-silver .card-chip {
+    background: linear-gradient(135deg, #475569 0%, #94a3b8 100%);
+}
+.pawpass-virtual-card.tier-silver .m-label {
+    color: #475569;
+}
+
+.pawpass-virtual-card.tier-gold {
+    background: linear-gradient(135deg, #d97706 0%, #fbbf24 45%, #fef08a 65%, #b45309 100%);
+    color: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+}
+.pawpass-virtual-card.tier-gold .brand-name,
+.pawpass-virtual-card.tier-gold .card-tier-label,
+.pawpass-virtual-card.tier-gold .pet-name,
+.pawpass-virtual-card.tier-gold .owner-name,
+.pawpass-virtual-card.tier-gold .m-val {
+    color: #1e293b;
+}
+.pawpass-virtual-card.tier-gold .card-glow-element {
+    background-color: #fef08a;
+    bottom: -50px;
+    left: -50px;
+    opacity: 0.5;
+}
+.pawpass-virtual-card.tier-gold .card-chip {
+    background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+}
+.pawpass-virtual-card.tier-gold .m-label {
+    color: #78350f;
+}
+
+.pawpass-virtual-card.tier-diamond {
+    background: linear-gradient(135deg, #090d16 0%, #172554 50%, #030712 100%);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+}
+.pawpass-virtual-card.tier-diamond::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.08) 50%, transparent 55%);
+    background-size: 200% 200%;
+    animation: shine-sweep 6s infinite linear;
+    z-index: 1;
+    pointer-events: none;
+}
+.pawpass-virtual-card.tier-diamond .card-glow-element {
+    background-color: #3b82f6;
+    top: -50px;
+    left: -50px;
+}
+.pawpass-virtual-card.tier-diamond .card-tier-label {
+    background: linear-gradient(90deg, #93c5fd, #60a5fa, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 900;
+}
+.pawpass-virtual-card.tier-diamond .card-chip {
+    background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+}
+
+@keyframes shine-sweep {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.card-header-brand {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transform: translateZ(25px);
+    z-index: 3;
+}
+
+.brand-name {
+    font-family: var(--font-primary);
+    font-size: 0.95rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+}
+
+.brand-name strong {
+    font-weight: 800;
+}
+
+.card-chip {
+    width: 36px;
+    height: 26px;
+    border-radius: var(--card-border-radius);
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.2);
+}
+
+.card-body-info {
+    transform: translateZ(35px);
+    z-index: 3;
+    margin-top: 10px;
+}
+
+.card-tier-label {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.pet-owner-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.pet-name {
+    font-size: 0.65rem;
+    font-weight: 800;
+    opacity: 0.7;
+    letter-spacing: 0.1em;
+}
+
+.owner-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.card-footer-metrics {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    transform: translateZ(25px);
+    z-index: 3;
+}
+
+.metric-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.m-label {
+    font-size: 0.55rem;
+    font-weight: 800;
+    opacity: 0.6;
+    letter-spacing: 0.08em;
+}
+
+.m-val {
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+
+.card-logo-watermark {
+    position: absolute;
+    bottom: -15px;
+    right: -10px;
+    font-size: 8rem;
+    opacity: 0.06;
+    pointer-events: none;
+    z-index: 0;
+    line-height: 1;
+}
+
+/* Details Panel below Virtual Card */
+.loyalty-card-details-panel {
+    background-color: var(--color-primary-light);
+    border: 1px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-sm);
+    margin-bottom: var(--space-lg);
+    font-family: var(--font-primary);
+}
+
+.progress-upgrade-label {
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.progress-upgrade-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: 6px;
+}
+
+.progress-bar-container {
+    flex-grow: 1;
+    height: 8px;
+    background-color: rgba(0, 0, 0, 0.06);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease-out;
+}
+
+.progress-stats {
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.upgrade-remaining-desc {
+    font-size: var(--fs-caption);
+    opacity: 0.8;
+    margin: 0;
+    font-style: italic;
+}
+
+/* Voucher Cards Grid */
+.vouchers-section-title {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h2);
+    color: var(--color-primary-dark);
+    margin-bottom: var(--space-md);
+    font-weight: 600;
+}
+
+.vouchers-grid-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-md);
+}
+
+.voucher-card {
+    background-color: var(--color-bg-white);
+    border: 2px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 240px;
+    transition: all 0.3s ease;
+}
+
+.voucher-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    border-color: var(--color-primary);
+}
+
+.voucher-card-body {
+    position: relative;
+}
+
+.points-tag {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: var(--color-primary-light);
+    color: var(--color-primary-dark);
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.voucher-name {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h3);
+    color: var(--color-primary-dark);
+    margin-top: 0;
+    margin-bottom: 8px;
+    padding-right: 70px; /* Tránh đè lên points-tag */
+}
+
+.voucher-value {
+    color: var(--color-accent);
+    font-weight: 700;
+    font-size: var(--fs-body);
+    margin-bottom: 8px;
+}
+
+.voucher-terms {
+    font-size: var(--fs-caption);
+    color: var(--color-text-light);
+    margin: 0;
+}
+
+.voucher-card-footer {
+    margin-top: var(--space-sm);
+}
+
+/* Voucher status labels */
+.voucher-status-label {
+    text-align: center;
+    padding: 8px;
+    border-radius: var(--border-radius-pill);
+    font-size: var(--fs-small);
+    font-weight: 700;
+}
+
+.voucher-status-label.locked-label {
+    background-color: var(--color-neutral-light);
+    color: var(--color-neutral);
+    border: 1px dashed var(--color-border);
+}
+
+.voucher-status-label.out-of-stock-label {
+    background-color: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+/* Slide to Redeem horizontal bar */
+.slider-container {
+    position: relative;
+    height: 40px;
+    background-color: var(--color-primary-light);
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-primary);
+    cursor: pointer;
+}
+
+.slider-text {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    z-index: 1;
+    pointer-events: none;
+    transition: opacity 0.1s ease;
+}
+
+.slider-handle {
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    width: 36px;
+    height: 36px;
+    background-color: var(--color-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.slider-handle:active {
+    cursor: grabbing;
+}
+
+.slider-handle .arrow-icon {
+    color: #ffffff;
+    font-size: 0.8rem;
+    pointer-events: none;
+}
+
+/* Redeem Success Button */
+.redeem-success-btn {
+    text-align: center;
+    background-color: var(--color-success);
+    color: #ffffff;
+    padding: 8px;
+    border-radius: 20px;
+    font-size: var(--fs-small);
+    font-weight: 700;
+    animation: success-bounce 0.3s ease;
+}
+
+@keyframes success-bounce {
+    0% { transform: scale(0.9); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Grayscale state for out of stock */
+.voucher-card.out-of-stock {
+    filter: grayscale(100%);
+    opacity: 0.6;
+}
+
+/* General Layout adjustments */
+.dashboard-content-panel {
+    background-color: var(--color-bg-white);
+    border: 2px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-md);
+}
+
+.panel-title {
+    font-family: var(--font-heading);
+    color: var(--color-primary-dark);
+    font-size: var(--fs-h2);
+    margin-bottom: var(--space-sm);
+    font-weight: 600;
+}

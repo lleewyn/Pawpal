@@ -34,7 +34,7 @@
     <div class="error-banner" id="errorBanner" role="alert" aria-live="assertive" style="display: none;">
         <div class="container-xl">
             <div class="error-banner-content">
-                <span class="error-icon" aria-hidden="true">⚠️</span>
+                <span class="error-icon" aria-hidden="true" style="color: var(--color-danger); font-size: 1.25rem;">!</span>
                 <div class="error-text">
                     <strong>Đã quá thời gian tự thay đổi lịch tự động</strong>
                     <p>Mã đơn: <strong id="bannerBookingCode">-</strong> | Vui lòng gọi Hotline: <strong>0987 654 321</strong> để được hỗ trợ trực tiếp</p>
@@ -76,7 +76,7 @@
 
                         <!-- Summary Card -->
                         <div class="booking-summary-card">
-                            <h4 class="summary-card-title">📋 THÔNG TIN LỊCH HẸN</h4>
+                            <h4 class="summary-card-title">THÔNG TIN LỊCH HẸN</h4>
                             <hr class="summary-divider">
                             
                             <div class="summary-row">
@@ -134,7 +134,13 @@
 
                         <!-- Policy Note -->
                         <div class="policy-note">
-                            <div class="policy-icon">💡</div>
+                            <div class="policy-icon" style="color: var(--color-accent);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                            </div>
                             <div class="policy-content">
                                 <strong>Lưu ý:</strong>
                                 <ul>

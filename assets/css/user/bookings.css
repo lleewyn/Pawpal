@@ -9,9 +9,9 @@
 
 .bookings-container,
 .booking-detail-container {
-    padding: var(--space-xl) 0; /* 64px top/bottom */
+    padding: 20px 0; /* 20px top/bottom */
     background: var(--color-bg-light);
-    min-height: 100vh;
+    min-height: 60vh;
 }
 
 /* ══════════════════════════════════════════════════════════════

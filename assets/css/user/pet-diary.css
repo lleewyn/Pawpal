@@ -4,9 +4,9 @@
 
 /* ── Page Container ──────────────────────────────────────────────────── */
 .pet-diary-container {
-    padding: var(--space-xl) 0;
+    padding: 20px 0;
     background: var(--color-bg-light);
-    min-height: 100vh;
+    min-height: 60vh;
 }
 
 /* ── Page Header ──────────────────────────────────────────────────────── */

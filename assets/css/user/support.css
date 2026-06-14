@@ -1,3 +1,366 @@
 /* ==========================================================================
-   Support Tickets
+   PawPal — Customer Support & Help Center CSS
+   Tuân thủ 100% DESIGN.md: Không gradient, dùng token color, spacing & radius
    ========================================================================== */
+
+/* Bento Grid FAQ Topics */
+.bento-grid-faq {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.bento-card-topic {
+    background-color: var(--color-bg-white);
+    border: var(--border-card);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-md);
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease, border-color 0.2s ease;
+    text-decoration: none;
+    color: var(--color-text-dark);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.bento-card-topic:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: var(--color-primary);
+}
+
+.bento-card-topic .topic-icon {
+    width: 48px;
+    height: 48px;
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--space-xs);
+}
+
+.bento-card-topic .topic-title {
+    font-weight: 700;
+    font-size: var(--fs-h3);
+    color: var(--color-primary-dark);
+    margin: 0;
+}
+
+.bento-card-topic .topic-desc {
+    font-size: var(--fs-small);
+    color: var(--color-text-light);
+    margin: 0;
+}
+
+/* Accordion FAQ */
+.faq-accordion-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.faq-accordion-item {
+    background-color: var(--color-bg-white);
+    border: var(--border-card);
+    border-radius: var(--card-border-radius);
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+
+.faq-accordion-item:hover {
+    border-color: var(--color-primary);
+}
+
+.faq-accordion-header {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: var(--space-sm) var(--space-md);
+    text-align: left;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.faq-accordion-header svg {
+    transition: transform 0.3s ease;
+    color: var(--color-text-light);
+    flex-shrink: 0;
+}
+
+.faq-accordion-item.active .faq-accordion-header svg {
+    transform: rotate(180deg);
+    color: var(--color-primary);
+}
+
+.faq-accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    background-color: var(--color-primary-light);
+}
+
+.faq-accordion-body {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--fs-body);
+    color: var(--color-text-dark);
+    line-height: 1.6;
+}
+
+/* Floating Chat Button */
+.chat-floating-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 999;
+    width: 56px;
+    height: 56px;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(42, 89, 68, 0.3);
+    cursor: pointer;
+    border: 2px solid var(--color-bg-white);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.chat-floating-btn:hover {
+    transform: scale(1.08);
+    background-color: var(--color-primary-dark);
+}
+
+/* Chat Drawer Panel */
+.chat-drawer {
+    position: fixed;
+    top: 0;
+    right: -380px;
+    width: 360px;
+    height: 100vh;
+    background-color: var(--color-bg-white);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+    z-index: 10050;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.chat-drawer.open {
+    right: 0;
+}
+
+.chat-drawer-header {
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--color-primary-dark);
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-drawer-header .chat-title {
+    font-weight: 700;
+    font-size: var(--fs-body);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chat-drawer-header .btn-close-drawer {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+.chat-messages-area {
+    flex-grow: 1;
+    padding: var(--space-sm);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    background-color: var(--color-bg-light);
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: var(--card-border-radius);
+    font-size: var(--fs-body);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.chat-bubble.bot {
+    background-color: var(--color-bg-white);
+    color: var(--color-text-dark);
+    align-self: flex-start;
+    border: 1px solid var(--color-border);
+}
+
+.chat-bubble.user {
+    background-color: var(--color-primary);
+    color: #ffffff;
+    align-self: flex-end;
+}
+
+.chat-bubble.system-error {
+    background-color: var(--color-danger-light);
+    color: var(--color-danger);
+    align-self: center;
+    max-width: 90%;
+    font-size: var(--fs-small);
+    border: 1px solid rgba(220, 38, 38, 0.15);
+    text-align: center;
+}
+
+.chat-quick-replies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: var(--space-xs) var(--space-sm);
+    background-color: var(--color-bg-light);
+}
+
+.btn-quick-reply {
+    background-color: var(--color-bg-white);
+    border: 1.5px solid var(--color-border);
+    color: var(--color-primary);
+    border-radius: var(--border-radius-pill);
+    padding: 6px 12px;
+    font-size: var(--fs-small);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-quick-reply:hover {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-light);
+}
+
+.chat-input-area {
+    padding: var(--space-xs) var(--space-sm);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    gap: var(--space-xs);
+    align-items: center;
+}
+
+.chat-input-area input {
+    flex-grow: 1;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--border-radius-pill);
+    padding: 8px 16px;
+    font-size: var(--fs-body);
+}
+
+.chat-input-area input:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+.chat-input-area .btn-send-chat {
+    background-color: var(--color-primary);
+    color: #ffffff;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.chat-input-area .btn-send-chat:hover {
+    background-color: var(--color-primary-dark);
+}
+
+/* Ticket Timeline view */
+.ticket-timeline-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+}
+
+.ticket-timeline-item {
+    background-color: var(--color-bg-white);
+    border: var(--border-card);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-md);
+}
+
+.ticket-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xs);
+}
+
+.ticket-cskh-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--color-accent);
+    color: var(--color-primary-dark);
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-small);
+}
+
+/* Star rating system inside ticket detail */
+.star-rating-holder {
+    display: flex;
+    gap: var(--space-xs);
+    margin: var(--space-sm) 0;
+}
+
+.star-btn {
+    background: none;
+    border: none;
+    font-size: var(--fs-h2);
+    color: var(--color-neutral-light);
+    cursor: pointer;
+    padding: 0;
+}
+
+.star-btn.active {
+    color: var(--color-accent);
+}
+
+@media (max-width: 1024px) {
+    .bento-grid-faq {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .bento-grid-faq {
+        grid-template-columns: 1fr;
+    }
+    
+    .chat-drawer {
+        width: 100%;
+        right: -100%;
+    }
+}

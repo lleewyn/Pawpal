@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="view-transition" content="same-origin">
+    <title>Cài đặt riêng tư & Thông báo - PawPal</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <!-- Components -->
+    <link rel="stylesheet" href="../../assets/css/components/button.css">
+    <link rel="stylesheet" href="../../assets/css/components/nav.css">
+    <link rel="stylesheet" href="../../assets/css/components/footer.css">
+    <link rel="stylesheet" href="../../assets/css/components/modal.css">
+    <link rel="stylesheet" href="../../assets/css/components/notification.css">
+    <link rel="stylesheet" href="../../assets/css/components/chat.css">
+    <link rel="stylesheet" href="../../assets/css/components/fab.css">
+    <!-- Page Specific Style -->
+    <link rel="stylesheet" href="../../assets/css/user/dashboard.css">
+</head>
+<body>
+    <div id="site-header"></div>
+
+    <main class="dashboard-container">
+        <div class="container-xl py-5">
+            <div class="row g-4">
+                <!-- Sidebar Navigation -->
+                <div class="col-lg-3">
+                    <div id="user-sidebar">
+                        <div class="dashboard-sidebar" style="min-height: 300px;">
+                            <p style="text-align: center; padding: 20px; color: #999;">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Area -->
+                <div class="col-lg-9">
+                    <div class="dashboard-content-panel notifications-page-container">
+                        <!-- Page Header -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h3 class="panel-title mb-1">Cài đặt riêng tư & Thông báo</h3>
+                                <p class="text-muted small">Quản lý danh sách thông báo và tùy chỉnh cài đặt riêng tư của chồng iu</p>
+                            </div>
+                            <button class="btn-cta btn-mark-all-read-page" id="btnPageMarkAllRead" style="font-size: var(--fs-small); padding: 8px 16px;">Đọc tất cả</button>
+                        </div>
+
+                        <!-- Tab Header -->
+                        <div class="notifications-tabs">
+                            <button class="notifications-tab-btn active" data-target="panelList">Danh sách thông báo</button>
+                            <button class="notifications-tab-btn" data-target="panelSettings">Cấu hình riêng tư</button>
+                        </div>
+
+                        <!-- Tab 1: Danh sách thông báo -->
+                        <div class="notification-panel active" id="panelList">
+                            <div id="pageNotificationsList">
+                                <!-- Renders items here -->
+                            </div>
+                            <div class="text-center py-5 text-muted" id="emptyNotificationsMessage" style="display: none;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mb-3 text-muted">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                </svg>
+                                <h4>Không có thông báo nào</h4>
+                                <p>Hộp thư của chồng iu hiện đang trống.</p>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: Cài đặt riêng tư -->
+                        <div class="notification-panel" id="panelSettings">
+                            <div class="card p-4 border-2">
+                                <h4 class="mb-3" style="font-weight: 700; color: var(--color-primary-dark);">Tùy chọn nhận tin nhắn</h4>
+                                <p class="text-muted small mb-4">Chồng iu hãy thiết lập các kênh và nội dung truyền thông mong muốn nhận từ PawPal dưới đây nhé:</p>
+                                
+                                <div class="setting-item-row">
+                                    <div class="setting-info">
+                                        <p class="setting-title">Nhận thông báo Lịch hẹn và Dịch vụ của bé cưng</p>
+                                        <p class="setting-desc">Cập nhật tiến độ tắm rửa, sấy lông, lịch đặt chỗ (Bắt buộc để theo dõi tiến độ chăm sóc bé cưng).</p>
+                                    </div>
+                                    <label class="custom-switch">
+                                        <input type="checkbox" id="prefService" checked disabled>
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="setting-item-row">
+                                    <div class="setting-info">
+                                        <p class="setting-title">Nhận thông báo Mua sắm & Đơn hàng</p>
+                                        <p class="setting-desc">Cập nhật trạng thái chuẩn bị hàng, đóng gói và đơn vị vận chuyển đang giao hàng.</p>
+                                    </div>
+                                    <label class="custom-switch">
+                                        <input type="checkbox" id="prefOrder">
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="setting-item-row">
+                                    <div class="setting-info">
+                                        <p class="setting-title">Nhận thông báo Khuyến mãi & Ưu đãi</p>
+                                        <p class="setting-desc">Quà tặng sinh nhật bé cưng, mã giảm giá đặc quyền và các chương trình tri ân thành viên.</p>
+                                    </div>
+                                    <label class="custom-switch">
+                                        <input type="checkbox" id="prefPromo">
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="setting-item-row">
+                                    <div class="setting-info">
+                                        <p class="setting-title">Nhận tin nhắn khẩn cấp qua SMS</p>
+                                        <p class="setting-desc">Gửi tin nhắn khẩn cấp tới số điện thoại nếu chồng iu chưa đọc thông báo sức khỏe bé sau 15 phút.</p>
+                                    </div>
+                                    <label class="custom-switch">
+                                        <input type="checkbox" id="prefSms">
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+                                    <button class="btn-cta" id="btnSaveConfig">Lưu cấu hình</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="site-footer"></div>
+    <div id="site-fab"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/shared/auth.js"></script>
+    <script>
+        // Authentication Guard
+        (function() {
+            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
+            if (!currentUser) {
+                alert('Vui lòng đăng nhập để truy cập trang này');
+                window.location.href = '/pages/public/login.html';
+                return;
+            }
+        })();
+    </script>
+    <script src="../../assets/js/shared/components.js" defer></script>
+    <script src="../../assets/js/shared/header-auth.js" defer></script>
+    <script type="module" src="../../assets/js/shared/main.js"></script>
+    <script src="../../assets/js/user/notifications.js" defer></script>
+</body>
+</html>

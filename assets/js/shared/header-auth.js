@@ -69,6 +69,27 @@
             const userInitial = userName.charAt(0).toUpperCase();
             
             authActions.innerHTML = `
+                <div class="notification-menu-wrapper me-3">
+                    <button class="notification-btn position-relative" id="headerNotificationBtn" title="Thông báo" style="background: none; border: none; display: flex; align-items: center; justify-content: center; color: var(--color-text-dark); padding: 0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span class="notification-badge" id="notificationBadge" style="position: absolute; top: -5px; right: -5px; background: var(--color-danger); color: white; border-radius: 50%; min-width: 16px; height: 16px; padding: 0 4px; font-size: 10px; display: none; align-items: center; justify-content: center; font-weight: 700; border: 1.5px solid var(--color-bg-white); line-height: 1;">0</span>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-dropdown-header">
+                            <span>Thông báo</span>
+                            <button class="btn-mark-all-read" id="btnMarkAllRead">Đọc tất cả</button>
+                        </div>
+                        <div class="dropdown-divider" style="margin: 0;"></div>
+                        <div class="notification-list" id="headerNotificationList">
+                            <!-- JS render notifications here -->
+                        </div>
+                        <div class="dropdown-divider" style="margin: 0;"></div>
+                        <a href="${root}pages/user/notifications.html" class="view-all-notifications">Xem tất cả thông báo</a>
+                    </div>
+                </div>
                 <a href="${root}pages/shop/cart.html" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi" style="display: flex; align-items: center; justify-content: center; color: var(--color-text-dark); transition: var(--transition-smooth);">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="9" cy="21" r="1"></circle>
@@ -200,19 +221,33 @@
     function setupUserDropdown() {
         const toggle = document.getElementById('userMenuToggle');
         const dropdown = document.getElementById('userDropdown');
+        const notiToggle = document.getElementById('headerNotificationBtn');
+        const notiDropdown = document.getElementById('notificationDropdown');
         
-        if (!toggle || !dropdown) return;
-        
-        // Toggle dropdown
-        toggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdown.classList.toggle('show');
-        });
+        if (toggle && dropdown) {
+            // Toggle dropdown
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('show');
+                if (notiDropdown) notiDropdown.classList.remove('show');
+            });
+        }
+
+        if (notiToggle && notiDropdown) {
+            notiToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                notiDropdown.classList.toggle('show');
+                if (dropdown) dropdown.classList.remove('show');
+            });
+        }
         
         // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.user-menu-wrapper')) {
+            if (dropdown && !e.target.closest('.user-menu-wrapper')) {
                 dropdown.classList.remove('show');
+            }
+            if (notiDropdown && !e.target.closest('.notification-menu-wrapper')) {
+                notiDropdown.classList.remove('show');
             }
         });
         

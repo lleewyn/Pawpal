@@ -133,7 +133,7 @@ async function loadProducts() {
     
     try {
         console.log('Loading products from CSV...');
-        const response = await fetch('../../data/sanpham.csv');
+        const response = await fetch('/data/sanpham.csv');
         
         if (!response.ok) {
             throw new Error(`Failed to load products: ${response.status} ${response.statusText}`);
@@ -256,13 +256,96 @@ async function loadComponent(placeholderId, componentPath) {
     }
 }
 
+/**
+ * Transform raw CSV service data to app format
+ * @param {Array<Object>} rawData - Parsed CSV data
+ * @returns {Array<Object>} - Transformed service objects
+ */
+function transformServiceData(rawData) {
+    return rawData.map((item, index) => {
+        const rawCategory = item['Phân loại'] || '';
+        let category = 'other';
+        if (rawCategory.includes('Spa & Grooming')) {
+            category = 'spa';
+        } else if (rawCategory.includes('Pet Hotel')) {
+            category = 'hotel';
+        } else if (rawCategory.includes('Pet Taxi')) {
+            category = 'taxi';
+        }
+
+        const price = parseInt(item['Giá niêm yết (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
+        const rating = parseFloat(item['Đánh giá (Rating)'] || '4.8');
+        const reviewCount = parseInt(item['Lượt đánh giá (Review Count)'] || '0', 10);
+
+        return {
+            id: index + 1,
+            serviceId: item['Mã dịch vụ (Service ID)'] || `SVC-${index + 1}`,
+            name: item['Tên dịch vụ'] || 'Dịch vụ',
+            category: category,
+            rawCategory: rawCategory,
+            petType: item['Loại thú cưng'] || 'Tất cả',
+            weightClass: item['Phân khúc cân nặng'] || 'Tất cả',
+            price: price,
+            priceDisplay: item['Giá niêm yết (VNĐ)'] || 'Liên hệ',
+            memberPrice: item['Giá ưu đãi thành viên (VNĐ)'] || '',
+            duration: item['Thời gian thực hiện (Duration)'] || '',
+            rating: rating,
+            reviewCount: reviewCount,
+            description: item['Mô tả chi tiết (Description)'] || '',
+            benefits: item['Lợi ích chính (Key Benefits)'] || '',
+            checklist: item['Quy trình thực hiện (Checklist)'] || '',
+            amenities: item['Tiện ích / Cơ sở vật chất (Amenities)'] || '',
+            groomerLevel: item['Cấp độ nhân viên thực hiện (Groomer Level)'] || '',
+            image: item['Hình ảnh'] || 'assets/images/services/spa-intro.jpg',
+            status: item['Trạng thái kinh doanh'] || 'Đang phục vụ'
+        };
+    });
+}
+
+/**
+ * Load services from CSV file
+ * @returns {Promise<Array<Object>>} - Promise resolving to services array
+ */
+async function loadServices() {
+    if (dataCache.services) {
+        console.log('✓ Using cached services data');
+        return dataCache.services;
+    }
+    
+    try {
+        console.log('Loading services from CSV...');
+        const response = await fetch('/data/dichvu.csv');
+        
+        if (!response.ok) {
+            throw new Error(`Failed to load services: ${response.status} ${response.statusText}`);
+        }
+        
+        const csvText = await response.text();
+        console.log(`✓ Services CSV loaded: ${csvText.length} characters`);
+        
+        const rawData = parseCSV(csvText);
+        console.log(`✓ Parsed ${rawData.length} raw services`);
+        
+        const services = transformServiceData(rawData);
+        console.log(`✓ Transformed ${services.length} services`);
+        
+        dataCache.services = services;
+        return services;
+    } catch (error) {
+        console.error('❌ Error loading services:', error);
+        return [];
+    }
+}
+
 // Export functions for use in other modules
 window.DataLoader = {
     loadProducts,
     getProductById,
     getProductsByCategory,
     getProductsByBrand,
-    searchProducts
+    searchProducts,
+    loadServices
 };
 
 console.log('✓ DataLoader module initialized');
+

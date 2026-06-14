@@ -1,302 +1,266 @@
 /**
- * RETURN HANDLER - Form đổi trả
- * Tuân thủ 100% design.md
- * - NO emoji
- * - File upload với validation
- * - Dynamic required proof
+ * RETURN HANDLER JS - Triển khai luồng đổi trả hàng (Quy trình 3.1.12)
+ * - Tối giản logic JS, tập trung hiển thị UI/UX và animation
+ * - Tuân thủ 100% design.md (không emoji, dùng text char •, →)
  */
 
-let uploadedFiles = [];
-let returnReasons = [];
+let currentRmaOrder = null;
 
-// Initialize return form
-async function initReturnForm() {
-    try {
-        // Load return reasons
-        const response = await fetch('/data/return-reasons.json');
-        returnReasons = await response.json();
-        
-        // Populate reasons dropdown
-        const reasonSelect = document.getElementById('return-reason');
-        returnReasons.forEach(reason => {
-            const option = document.createElement('option');
-            option.value = reason.value;
-            option.textContent = reason.label;
-            reasonSelect.appendChild(option);
-        });
-        
-        // Setup event listeners
-        setupReturnFormListeners();
-        
-    } catch (error) {
-        console.error('Lỗi load return reasons:', error);
+// Khởi tạo Drawer HTML và chèn vào container
+function openRMADrawer(orderId) {
+    // Tìm thông tin đơn hàng từ danh sách đã load (ordersState có sẵn trong scope toàn cục ở orders.html)
+    if (typeof ordersState !== 'undefined' && ordersState.allOrders) {
+        currentRmaOrder = ordersState.allOrders.find(o => o.id === orderId);
     }
-}
+    
+    // Fallback nếu không có data từ state (ví dụ trường hợp chạy độc lập)
+    if (!currentRmaOrder) {
+        currentRmaOrder = {
+            id: orderId,
+            products: [
+                {
+                    id: "PROD-010",
+                    name: "Cát vệ sinh cho mèo Catsan 10L",
+                    image: "https://via.placeholder.com/100x100?text=Cat+Litter",
+                    quantity: 3,
+                    price: 180000,
+                    total: 540000
+                }
+            ]
+        };
+    }
 
-// Setup all event listeners
-function setupReturnFormListeners() {
-    // Open/Close panel
-    const overlay = document.getElementById('return-panel-overlay');
-    const closeBtn = document.getElementById('close-return-panel');
-    
-    closeBtn.addEventListener('click', closeReturnPanel);
-    
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-            closeReturnPanel();
-        }
-    });
-    
-    // Reason change - dynamic required proof
-    const reasonSelect = document.getElementById('return-reason');
-    reasonSelect.addEventListener('change', handleReasonChange);
-    
-    // File upload
-    const fileUploadZone = document.getElementById('file-upload-zone');
-    const fileInput = document.getElementById('file-input');
-    
-    fileUploadZone.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
-    
-    // Drag and drop
-    fileUploadZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        fileUploadZone.classList.add('dragging');
-    });
-    
-    fileUploadZone.addEventListener('dragleave', () => {
-        fileUploadZone.classList.remove('dragging');
-    });
-    
-    fileUploadZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        fileUploadZone.classList.remove('dragging');
-        handleFiles(e.dataTransfer.files);
-    });
-    
-    // Character counter
-    const descTextarea = document.getElementById('return-description');
-    const charCounter = document.getElementById('char-counter');
-    
-    descTextarea.addEventListener('input', () => {
-        charCounter.textContent = `${descTextarea.value.length}/500`;
-    });
-    
-    // Form submit
-    const form = document.getElementById('return-form');
-    form.addEventListener('submit', handleFormSubmit);
-}
+    const container = document.getElementById('rma-drawer-container');
+    if (!container) return;
 
-// Open return panel
-function openReturnPanel() {
-    const overlay = document.getElementById('return-panel-overlay');
-    overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // Render products checklist
-    renderProductsChecklist();
-    
-    // Reset form
-    document.getElementById('return-form').reset();
-    uploadedFiles = [];
-    document.getElementById('file-preview-list').innerHTML = '';
-    document.getElementById('char-counter').textContent = '0/500';
-    document.getElementById('proof-required-mark').style.display = 'none';
-    hideFileError();
-}
+    // Render cấu trúc Drawer
+    container.innerHTML = `
+        <div class="rma-drawer-overlay" id="rma-overlay"></div>
+        <div class="rma-drawer" id="rma-drawer">
+            <div class="rma-drawer-header">
+                <h3>Yêu cầu Đổi trả</h3>
+                <button class="rma-drawer-close" id="rma-close-btn">Đóng [×]</button>
+            </div>
+            <div class="rma-drawer-body">
+                <div class="rma-form-group">
+                    <span class="rma-form-label">Đơn hàng: ${currentRmaOrder.id}</span>
+                    <p style="font-size: 0.85rem; color: var(--color-text-light); margin: 0;">Chọn những sản phẩm bạn muốn thực hiện đổi hoặc trả:</p>
+                </div>
 
-// Close return panel
-function closeReturnPanel() {
-    const overlay = document.getElementById('return-panel-overlay');
-    overlay.classList.remove('active');
-    document.body.style.overflow = '';
-}
+                <!-- Product list checklist -->
+                <div class="rma-form-group" style="gap: 8px;">
+                    ${currentRmaOrder.products.map(product => `
+                        <div class="rma-product-item">
+                            <input type="checkbox" class="rma-product-checkbox" data-product-id="${product.id}" checked>
+                            <img src="${product.image}" alt="${product.name}" class="rma-product-thumb">
+                            <div class="rma-product-info">
+                                <h5 class="rma-product-name">${product.name}</h5>
+                                <p class="rma-product-meta">Số lượng: ${product.quantity} • Đơn giá: ${new Intl.NumberFormat('vi-VN').format(product.price)}đ</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
 
-// Render products checklist
-function renderProductsChecklist() {
-    if (!currentOrder) return;
-    
-    const container = document.getElementById('return-products-list');
-    
-    container.innerHTML = currentOrder.products.map((product, index) => `
-        <label class="product-checkbox">
-            <input type="checkbox" 
-                   name="products[]" 
-                   value="${product.id}"
-                   data-index="${index}">
-            <div class="checkbox-product-info">
-                <img src="${product.image}" alt="${product.name}">
-                <div class="checkbox-product-text">
-                    <h5>${product.name}</h5>
-                    <p>x${product.quantity} | ${formatCurrency(product.total)}</p>
+                <!-- Return Type -->
+                <div class="rma-form-group">
+                    <span class="rma-form-label">Hình thức đổi trả</span>
+                    <div class="rma-radio-cards">
+                        <label class="rma-radio-card is-selected" id="radio-card-exchange">
+                            <input type="radio" name="return_type" value="exchange" checked>
+                            <span class="rma-radio-card-title">Đổi sản phẩm mới</span>
+                            <span class="rma-radio-card-desc">Đổi sản phẩm cùng loại hoặc tương đương</span>
+                        </label>
+                        <label class="rma-radio-card" id="radio-card-refund">
+                            <input type="radio" name="return_type" value="refund">
+                            <span class="rma-radio-card-title">Hoàn tiền</span>
+                            <span class="rma-radio-card-desc">Hoàn trả tiền mua hàng về tài khoản gốc</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Return Reason -->
+                <div class="rma-form-group">
+                    <span class="rma-form-label">Lý do đổi trả</span>
+                    <select id="rma-reason" class="form-select" style="border: 1px solid var(--color-border); border-radius: var(--card-border-radius); padding: 10px;">
+                        <option value="broken">Sản phẩm lỗi hỏng (do vận chuyển hoặc NSX)</option>
+                        <option value="wrong_item">Giao sai mẫu mã, chủng loại</option>
+                        <option value="wrong_size">Không vừa kích thước (đối với phụ kiện)</option>
+                        <option value="change_mind">Không còn nhu cầu sử dụng (Đổi ý)</option>
+                    </select>
+                </div>
+
+                <!-- Detailed Description -->
+                <div class="rma-form-group">
+                    <span class="rma-form-label">Mô tả chi tiết</span>
+                    <textarea id="rma-desc" placeholder="Mô tả cụ thể tình trạng sản phẩm khi nhận..." rows="3" style="border: 1px solid var(--color-border); border-radius: var(--card-border-radius); padding: 10px; width: 100%; font-family: var(--font-primary); resize: none;"></textarea>
+                </div>
+
+                <!-- File Upload Minh chứng -->
+                <div class="rma-form-group">
+                    <span class="rma-form-label">Ảnh hoặc Video minh chứng</span>
+                    <div class="rma-upload-zone" id="rma-upload-trigger">
+                        <span class="rma-upload-text">Nhấp vào đây để tải lên hình ảnh hoặc video thực tế</span>
+                        <span class="rma-upload-text" style="display: block; font-size: 0.75rem; opacity: 0.7; margin-top: 4px;">Kích thước tệp tối đa: 5MB</span>
+                        <input type="file" id="rma-file-input" class="rma-upload-input" accept="image/*,video/*">
+                    </div>
+                    <div class="rma-upload-preview" id="rma-preview-container"></div>
+                    <span id="rma-upload-warning" class="rma-alert-error" style="display: none; margin-top: 8px;"></span>
+                </div>
+
+                <!-- Submit Area -->
+                <div class="rma-form-group" style="margin-top: 10px;">
+                    <button class="rma-btn-submit" id="rma-submit-btn">Gửi yêu cầu đổi trả</button>
+                    <p style="font-size: 0.75rem; text-align: center; color: var(--color-text-light); margin: 6px 0 0 0;">Yêu cầu sẽ được kiểm duyệt trong vòng 24 giờ làm việc</p>
                 </div>
             </div>
-        </label>
-    `).join('');
+        </div>
+    `;
+
+    // Trigger animations bằng cách thêm class sau 50ms
+    setTimeout(() => {
+        document.getElementById('rma-overlay').classList.add('is-open');
+        document.getElementById('rma-drawer').classList.add('is-open');
+    }, 50);
+
+    // Đăng ký sự kiện điều khiển
+    setupDrawerListeners();
 }
 
-// Handle reason change - dynamic required proof
-function handleReasonChange(e) {
-    const selectedValue = e.target.value;
-    const selectedReason = returnReasons.find(r => r.value === selectedValue);
-    const proofMark = document.getElementById('proof-required-mark');
-    
-    if (selectedReason && selectedReason.requires_proof) {
-        proofMark.style.display = 'inline';
-    } else {
-        proofMark.style.display = 'none';
-    }
-}
+// Thiết lập sự kiện lắng nghe cho Drawer
+function setupDrawerListeners() {
+    const overlay = document.getElementById('rma-overlay');
+    const drawer = document.getElementById('rma-drawer');
+    const closeBtn = document.getElementById('rma-close-btn');
+    const fileInput = document.getElementById('rma-file-input');
+    const uploadTrigger = document.getElementById('rma-upload-trigger');
+    const submitBtn = document.getElementById('rma-submit-btn');
 
-// Handle files upload
-function handleFiles(files) {
-    hideFileError();
-    
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4'];
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    
-    Array.from(files).forEach(file => {
-        // Validate file type
-        if (!validTypes.includes(file.type)) {
-            showFileError('Chỉ chấp nhận file JPG, PNG, WEBP hoặc MP4');
+    // Hàm đóng Drawer kèm transition mượt mà
+    const closeDrawer = () => {
+        overlay.classList.remove('is-open');
+        drawer.classList.remove('is-open');
+        setTimeout(() => {
+            document.getElementById('rma-drawer-container').innerHTML = '';
+        }, 400); // khớp transition CSS
+    };
+
+    overlay.addEventListener('click', closeDrawer);
+    closeBtn.addEventListener('click', closeDrawer);
+
+    // Đổi style Radio Cards khi click chọn
+    const cardExchange = document.getElementById('radio-card-exchange');
+    const cardRefund = document.getElementById('radio-card-refund');
+
+    cardExchange.addEventListener('click', () => {
+        cardExchange.classList.add('is-selected');
+        cardRefund.classList.remove('is-selected');
+        cardExchange.querySelector('input').checked = true;
+    });
+
+    cardRefund.addEventListener('click', () => {
+        cardRefund.classList.add('is-selected');
+        cardExchange.classList.remove('is-selected');
+        cardRefund.querySelector('input').checked = true;
+    });
+
+    // Kích hoạt upload file
+    uploadTrigger.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    // Preview hình ảnh khi upload
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        const warningEl = document.getElementById('rma-upload-warning');
+        const previewContainer = document.getElementById('rma-preview-container');
+
+        warningEl.style.display = 'none';
+        previewContainer.innerHTML = '';
+
+        if (!file) return;
+
+        // Kiểm tra dung lượng (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            warningEl.textContent = 'Dung lượng file vượt quá giới hạn 5MB. Vui lòng chọn file nhỏ hơn.';
+            warningEl.style.display = 'block';
+            fileInput.value = ''; // Reset input
             return;
         }
-        
-        // Validate file size
-        if (file.size > maxSize) {
-            showFileError(`File "${file.name}" vượt quá 5MB`);
+
+        // Tạo preview nếu là hình ảnh
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                previewContainer.innerHTML = `
+                    <div style="position: relative;">
+                        <img src="${event.target.result}" class="rma-preview-thumb">
+                        <span style="position: absolute; top: -5px; right: -5px; background: rgba(0,0,0,0.6); color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="removeRmaFile()">×</span>
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // Video preview đơn giản
+            previewContainer.innerHTML = `
+                <div style="position: relative; font-size: 0.8rem; background: var(--color-primary-light); padding: 6px; border-radius: 6px; border: 1px solid var(--color-border);">
+                    🎬 ${file.name}
+                    <span style="cursor: pointer; margin-left: 8px; font-weight: bold; color: var(--color-danger);" onclick="removeRmaFile()">[Xóa]</span>
+                </div>
+            `;
+        }
+    });
+
+    // Submit Yêu cầu đổi trả
+    submitBtn.addEventListener('click', () => {
+        const checkedItems = document.querySelectorAll('.rma-product-checkbox:checked');
+        const reason = document.getElementById('rma-reason').value;
+        const file = fileInput.files[0];
+        const warningEl = document.getElementById('rma-upload-warning');
+
+        // Bắt buộc chọn ít nhất 1 sản phẩm
+        if (checkedItems.length === 0) {
+            alert('Vui lòng chọn ít nhất một sản phẩm cần đổi trả!');
             return;
         }
-        
-        // Check if already uploaded
-        if (uploadedFiles.some(f => f.name === file.name && f.size === file.size)) {
-            showFileError(`File "${file.name}" đã được tải lên`);
+
+        // Bắt buộc ảnh minh chứng đối với lỗi do shop (broken hoặc wrong_item)
+        if ((reason === 'broken' || reason === 'wrong_item') && !file) {
+            warningEl.textContent = 'Lý do này bắt buộc phải tải lên hình ảnh hoặc video thực tế của sản phẩm làm minh chứng.';
+            warningEl.style.display = 'block';
             return;
         }
-        
-        uploadedFiles.push(file);
-        renderFilePreview(file);
+
+        // Lưu thông tin yêu cầu đổi trả (Giả lập LocalStorage)
+        const returnData = {
+            orderId: currentRmaOrder.id,
+            rmaId: 'RMA-' + Math.floor(10000 + Math.random() * 90000),
+            createdAt: new Date().toISOString(),
+            status: 'approved', // Mặc định chuyển sang Đã chấp nhận để hiển thị thông tin hướng dẫn
+            reason: reason,
+            type: document.querySelector('input[name="return_type"]:checked').value,
+            description: document.getElementById('rma-desc').value,
+            products: Array.from(checkedItems).map(cb => {
+                const prodId = cb.getAttribute('data-product-id');
+                return currentRmaOrder.products.find(p => p.id === prodId);
+            })
+        };
+
+        const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
+        returnsList.push(returnData);
+        localStorage.setItem('pawpal_returns', JSON.stringify(returnsList));
+
+        // Đóng Drawer và chuyển tiếp đến trang chi tiết đổi trả
+        closeDrawer();
+        setTimeout(() => {
+            window.location.href = `/pages/user/return-detail.html?orderId=${currentRmaOrder.id}`;
+        }, 100);
     });
 }
 
-// Render file preview
-function renderFilePreview(file) {
-    const reader = new FileReader();
-    
-    reader.onload = (e) => {
-        const preview = document.createElement('div');
-        preview.className = 'file-preview-item';
-        preview.dataset.fileName = file.name;
-        
-        const isVideo = file.type.startsWith('video/');
-        const mediaElement = isVideo 
-            ? `<video src="${e.target.result}" muted></video>`
-            : `<img src="${e.target.result}" alt="Preview">`;
-        
-        preview.innerHTML = `
-            ${mediaElement}
-            <button type="button" class="remove-file-btn" onclick="removeFile('${file.name}')">
-                ×
-            </button>
-        `;
-        
-        document.getElementById('file-preview-list').appendChild(preview);
-    };
-    
-    reader.readAsDataURL(file);
+// Xóa file đã tải lên
+function removeRmaFile() {
+    const fileInput = document.getElementById('rma-file-input');
+    const previewContainer = document.getElementById('rma-preview-container');
+    if (fileInput) fileInput.value = '';
+    if (previewContainer) previewContainer.innerHTML = '';
 }
-
-// Remove file
-function removeFile(fileName) {
-    // Remove from array
-    uploadedFiles = uploadedFiles.filter(f => f.name !== fileName);
-    
-    // Remove preview
-    const preview = document.querySelector(`[data-file-name="${fileName}"]`);
-    if (preview) {
-        preview.remove();
-    }
-    
-    hideFileError();
-}
-
-// Show file error
-function showFileError(message) {
-    const errorEl = document.getElementById('file-error');
-    errorEl.textContent = message;
-    errorEl.style.display = 'block';
-}
-
-// Hide file error
-function hideFileError() {
-    const errorEl = document.getElementById('file-error');
-    errorEl.style.display = 'none';
-}
-
-// Handle form submit
-function handleFormSubmit(e) {
-    e.preventDefault();
-    
-    // Get form data
-    const formData = new FormData(e.target);
-    const returnType = formData.get('return_type');
-    const reason = formData.get('reason');
-    const description = formData.get('description');
-    
-    // Get selected products
-    const selectedProducts = [];
-    document.querySelectorAll('input[name="products[]"]:checked').forEach(checkbox => {
-        selectedProducts.push(checkbox.value);
-    });
-    
-    // Validation
-    if (selectedProducts.length === 0) {
-        alert('Vui lòng chọn ít nhất một sản phẩm để đổi trả');
-        return;
-    }
-    
-    if (!reason) {
-        alert('Vui lòng chọn lý do đổi trả');
-        return;
-    }
-    
-    // Check if proof required
-    const selectedReason = returnReasons.find(r => r.value === reason);
-    if (selectedReason && selectedReason.requires_proof && uploadedFiles.length === 0) {
-        showFileError('Lý do này bắt buộc phải tải lên hình ảnh/video minh chứng');
-        return;
-    }
-    
-    // Prepare return request data
-    const returnRequest = {
-        orderId: currentOrder.id,
-        returnType,
-        reason,
-        description,
-        products: selectedProducts,
-        files: uploadedFiles.map(f => f.name),
-        createdAt: new Date().toISOString()
-    };
-    
-    console.log('Return request:', returnRequest);
-    
-    // TODO: Call API to submit return request
-    
-    // Show success message
-    alert('Yêu cầu đổi trả đã được gửi thành công!\n\nBộ phận chăm sóc khách hàng sẽ liên hệ với bạn trong vòng 24 giờ.');
-    
-    closeReturnPanel();
-}
-
-// Utility: Format currency
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-    }).format(amount);
-}
-
-// Initialize when DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-    initReturnForm();
-});

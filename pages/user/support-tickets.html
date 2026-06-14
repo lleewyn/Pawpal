@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="view-transition" content="same-origin">
-    <title>PawPal - Yêu cầu hỗ trợ của tôi</title>
+    <title>Yêu cầu hỗ trợ của tôi - PawPal</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,24 +18,22 @@
     <link rel="stylesheet" href="../../assets/css/components/nav.css">
     <link rel="stylesheet" href="../../assets/css/components/footer.css">
     <link rel="stylesheet" href="../../assets/css/components/modal.css">
-    <link rel="stylesheet" href="../../assets/css/components/filter.css">
     <link rel="stylesheet" href="../../assets/css/components/notification.css">
     <link rel="stylesheet" href="../../assets/css/components/chat.css">
     <link rel="stylesheet" href="../../assets/css/components/fab.css">
+    <!-- Page Specific Style -->
     <link rel="stylesheet" href="../../assets/css/user/dashboard.css">
     <link rel="stylesheet" href="../../assets/css/user/support.css">
 </head>
 <body>
-
     <div id="site-header"></div>
 
     <main class="dashboard-container">
-        <div class="container-xl py-5">
+        <div class="container-xl">
             <div class="row g-4">
                 <!-- Sidebar Navigation -->
                 <div class="col-lg-3">
                     <div id="user-sidebar">
-                        <!-- Sidebar will be loaded here -->
                         <div class="dashboard-sidebar" style="min-height: 300px;">
                             <p style="text-align: center; padding: 20px; color: #999;">Loading...</p>
                         </div>
@@ -47,23 +45,70 @@
                     <div class="dashboard-content-panel">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div>
-                                <h3 class="panel-title">Yêu cầu hỗ trợ</h3>
+                                <h3 class="panel-title mb-1">Phiếu yêu cầu hỗ trợ</h3>
+                                <p class="text-muted small">Theo dõi tiến trình giải quyết sự cố của chồng iu nhé.</p>
                             </div>
-                            <a href="support-create.html" class="btn-cta">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
-                                Gửi yêu cầu mới
-                            </a>
+                            <a href="support-create.html" class="btn-cta" style="padding: 8px 18px; font-size: var(--fs-small);">Gửi yêu cầu mới</a>
                         </div>
-                        
-                        <div class="mt-4 text-center text-muted">
-                            <div style="font-size: 3rem; margin-bottom: 1rem;">💬</div>
-                            <h4>Chưa có yêu cầu hỗ trợ nào</h4>
-                            <p>Các yêu cầu hỗ trợ của bạn sẽ hiển thị ở đây</p>
-                            <a href="support-create.html" class="btn-cta mt-3">Gửi yêu cầu hỗ trợ</a>
+
+                        <!-- Danh sách Ticket -->
+                        <div class="table-responsive mb-4" id="ticketsTableArea">
+                            <table class="table align-middle" style="border: 2px solid var(--color-border); border-radius: var(--card-border-radius); overflow: hidden;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col" style="padding: 12px;">Mã Ticket</th>
+                                        <th scope="col">Chủ đề</th>
+                                        <th scope="col">Trạng thái</th>
+                                        <th scope="col">Độ ưu tiên</th>
+                                        <th scope="col" style="padding: 12px; text-align: right;">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ticketsListTableBody">
+                                    <!-- JS render tickets list here -->
+                                </tbody>
+                            </table>
                         </div>
+
+                        <!-- Panel xem chi tiết hội thoại Ticket (ẩn ban đầu) -->
+                        <div class="card p-4 border-2" id="ticketDetailPanel" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                <h4 id="detailTicketTitle" style="font-weight: 700; color: var(--color-primary-dark); margin: 0;">#Mã - Tiêu đề</h4>
+                                <button class="btn-close-panel" id="btnCloseDetailPanel" style="background:none; border:none; font-size: 1.2rem; cursor:pointer;">&times;</button>
+                            </div>
+
+                            <div class="ticket-timeline-wrapper" id="ticketTimelineMessages" style="max-height: 350px; overflow-y: auto; padding-right: 10px; margin-bottom: 20px;">
+                                <!-- JS renders timeline chat messages here -->
+                            </div>
+
+                            <!-- Nhập phản hồi -->
+                            <div class="reply-editor-area" id="replyEditorArea">
+                                <div class="form-group mb-3">
+                                    <textarea id="replyTextarea" class="form-control" rows="3" placeholder="Nhập tin nhắn trả lời của chồng iu..."></textarea>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <button class="btn-green-outline" id="btnActionCloseTicket" style="border-radius: var(--border-radius-pill); font-weight: 700; padding: 8px 20px;">Đóng hỗ trợ</button>
+                                    <button class="btn-cta" id="btnSendReply" style="padding: 8px 24px;">Gửi phản hồi</button>
+                                </div>
+                            </div>
+
+                            <!-- Khung đánh giá sau khi đóng (ẩn ban đầu) -->
+                            <div class="rating-feedback-area mt-3 p-3 bg-light rounded" id="ratingFeedbackArea" style="display: none;">
+                                <h5 style="font-weight: 700; color: var(--color-primary-dark); margin-bottom: 8px;">Đánh giá chất lượng hỗ trợ</h5>
+                                <p class="text-muted small">Ý kiến đóng góp của chồng iu sẽ giúp em cải thiện dịch vụ tốt hơn ạ!</p>
+                                <div class="star-rating-holder" id="starRatingHolder">
+                                    <button class="star-btn" data-value="1">★</button>
+                                    <button class="star-btn" data-value="2">★</button>
+                                    <button class="star-btn" data-value="3">★</button>
+                                    <button class="star-btn" data-value="4">★</button>
+                                    <button class="star-btn" data-value="5">★</button>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <input type="text" id="ratingComment" class="form-control" placeholder="Nhận xét ngắn về chất lượng tư vấn của nhân viên...">
+                                </div>
+                                <button class="btn-cta" id="btnSubmitRating" style="padding: 6px 18px; font-size: var(--fs-small);">Gửi đánh giá</button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -71,34 +116,160 @@
     </main>
 
     <div id="site-footer"></div>
+    <div id="site-fab"></div>
 
-    <!-- Bootstrap JS -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../assets/js/shared/auth.js"></script>
-    <script>
-        // Authentication Guard
-        (function() {
-            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
-            if (!currentUser) {
-                alert('Vui lòng đăng nhập để truy cập trang này');
-                window.location.href = '/pages/public/login.html';
-                return;
-            }
-        })();
-        
-        // Load sidebar synchronously
-        (function loadSidebar() {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', '../../components/user-sidebar.html', false);
-            xhr.send();
-            if (xhr.status === 200) {
-                document.getElementById('user-sidebar').innerHTML = xhr.responseText;
-            }
-        })();
-    </script>
     <script src="../../assets/js/shared/components.js" defer></script>
     <script src="../../assets/js/shared/header-auth.js" defer></script>
     <script type="module" src="../../assets/js/shared/main.js"></script>
-    <div id="site-fab"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let activeTicketId = null;
+            let currentSelectedRating = 5;
+
+            function renderTable() {
+                const tickets = window.PawPalSupport.getTickets();
+                const tbody = document.getElementById('ticketsListTableBody');
+                tbody.innerHTML = '';
+
+                if (tickets.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Chồng iu chưa gửi phiếu hỗ trợ nào.</td></tr>';
+                    return;
+                }
+
+                tickets.forEach(ticket => {
+                    let statusLabel = 'Chờ xử lý';
+                    let statusClass = 'bg-secondary';
+                    if (ticket.status === 'processing') {
+                        statusLabel = 'Đang giải quyết';
+                        statusClass = 'bg-warning text-dark';
+                    } else if (ticket.status === 'completed') {
+                        statusLabel = 'Hoàn tất';
+                        statusClass = 'bg-success';
+                    }
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="padding: 12px; font-weight: 700;">#${ticket.id}</td>
+                        <td>${ticket.title}</td>
+                        <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+                        <td><span class="badge ${ticket.priority === 'Cao' ? 'bg-danger' : 'bg-info'}">${ticket.priority}</span></td>
+                        <td style="padding: 12px; text-align: right;">
+                            <button class="btn-green-outline btn-view-ticket" data-id="${ticket.id}" style="font-size: var(--fs-small); padding: 4px 12px; border-radius: var(--border-radius-pill);">Chi tiết</button>
+                        </td>
+                    `;
+
+                    row.querySelector('.btn-view-ticket').addEventListener('click', () => {
+                        showTicketDetail(ticket.id);
+                    });
+
+                    tbody.appendChild(row);
+                });
+            }
+
+            function showTicketDetail(ticketId) {
+                const tickets = window.PawPalSupport.getTickets();
+                const ticket = tickets.find(t => t.id === ticketId);
+                if (!ticket) return;
+
+                activeTicketId = ticketId;
+                document.getElementById('detailTicketTitle').textContent = `#${ticket.id} - ${ticket.title}`;
+                
+                const messagesContainer = document.getElementById('ticketTimelineMessages');
+                messagesContainer.innerHTML = '';
+
+                ticket.messages.forEach(msg => {
+                    const item = document.createElement('div');
+                    item.className = 'ticket-timeline-item mb-3';
+                    
+                    const timeStr = new Date(msg.time).toLocaleString('vi-VN');
+                    let senderName = 'Chồng iu';
+                    let isCskh = msg.sender === 'cskh';
+
+                    if (isCskh) {
+                        senderName = `Tư vấn viên - ${msg.agent}`;
+                    }
+
+                    item.innerHTML = `
+                        <div class="ticket-header-row">
+                            <span style="font-weight: 700; color: ${isCskh ? 'var(--color-primary)' : 'var(--color-text-dark)'};">
+                                ${isCskh ? '<span class="ticket-cskh-avatar me-2">CS</span>' : ''} ${senderName}
+                            </span>
+                            <span class="text-muted small">${timeStr}</span>
+                        </div>
+                        <p style="margin: 0; line-height: 1.5; color: var(--color-text-dark);">${msg.text}</p>
+                    `;
+                    messagesContainer.appendChild(item);
+                });
+
+                // Cập nhật trạng thái hiển thị panel
+                document.getElementById('ticketDetailPanel').style.display = 'block';
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                // Ẩn/hiện editor dựa theo trạng thái
+                if (ticket.status === 'completed') {
+                    document.getElementById('replyEditorArea').style.display = 'none';
+                    document.getElementById('ratingFeedbackArea').style.display = ticket.rating === null ? 'block' : 'none';
+                } else {
+                    document.getElementById('replyEditorArea').style.display = 'block';
+                    document.getElementById('ratingFeedbackArea').style.display = 'none';
+                }
+            }
+
+            // Gửi phản hồi
+            document.getElementById('btnSendReply').addEventListener('click', () => {
+                const textarea = document.getElementById('replyTextarea');
+                const text = textarea.value;
+                if (!text.trim()) return;
+
+                window.PawPalSupport.sendTicketReply(activeTicketId, text);
+                textarea.value = '';
+                showTicketDetail(activeTicketId);
+            });
+
+            // Nhấn Đóng hỗ trợ
+            document.getElementById('btnActionCloseTicket').addEventListener('click', () => {
+                document.getElementById('replyEditorArea').style.display = 'none';
+                document.getElementById('ratingFeedbackArea').style.display = 'block';
+            });
+
+            // Rating Stars click
+            const stars = document.querySelectorAll('.star-btn');
+            stars.forEach(star => {
+                star.addEventListener('click', () => {
+                    currentSelectedRating = parseInt(star.getAttribute('data-value'));
+                    stars.forEach(s => {
+                        const val = parseInt(s.getAttribute('data-value'));
+                        s.classList.toggle('active', val <= currentSelectedRating);
+                    });
+                });
+            });
+
+            // Gửi Đánh Giá cuối
+            document.getElementById('btnSubmitRating').addEventListener('click', () => {
+                const comment = document.getElementById('ratingComment').value;
+                window.PawPalSupport.closeAndRateTicket(activeTicketId, currentSelectedRating, comment);
+                alert('PawPal cảm ơn đánh giá của chồng iu rất nhiều ạ!');
+                document.getElementById('ticketDetailPanel').style.display = 'none';
+                renderTable();
+            });
+
+            document.getElementById('btnCloseDetailPanel').addEventListener('click', () => {
+                document.getElementById('ticketDetailPanel').style.display = 'none';
+            });
+
+            // Event listener để re-render
+            document.addEventListener('tickets_updated', () => {
+                renderTable();
+                if (activeTicketId) {
+                    showTicketDetail(activeTicketId);
+                }
+            });
+
+            renderTable();
+        });
+    </script>
 </body>
 </html>

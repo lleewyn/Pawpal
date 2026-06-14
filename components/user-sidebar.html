@@ -28,7 +28,7 @@
         <a href="/pages/user/support-tickets.html" class="sidebar-link" id="nav-support">
             <span class="icon"><i data-lucide="message-square"></i></span> Hỗ trợ
         </a>
-        <a href="/pages/user/dashboard.html?tab=notifications" class="sidebar-link" id="nav-notifications" data-tab="notifications">
+        <a href="/pages/user/notifications.html" class="sidebar-link" id="nav-notifications">
             <span class="icon"><i data-lucide="bell"></i></span> Thông báo
         </a>
         <a href="/pages/user/dashboard.html?tab=preferences" class="sidebar-link" id="nav-preferences" data-tab="preferences">
@@ -106,6 +106,8 @@
             } else if (currentPath.includes('loyalty') && linkPath.includes('loyalty')) {
                 link.classList.add('active');
             } else if (currentPath.includes('support') && linkPath.includes('support')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('notifications') && linkPath.includes('notifications')) {
                 link.classList.add('active');
             }
         }

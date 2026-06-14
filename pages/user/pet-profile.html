@@ -29,7 +29,7 @@
     <div id="site-header"></div>
 
     <main class="pet-profile-main">
-        <div class="container-xl py-5">
+        <div class="container-xl">
             <div class="row g-4">
                 <!-- Sidebar Navigation -->
                 <div class="col-lg-3">
@@ -78,7 +78,11 @@
                         </div>
                         <!-- Empty State -->
                         <div class="empty-state" id="emptyStateActive">
-                            <div class="empty-state-icon">🐾</div>
+                            <div class="empty-state-icon" style="color: var(--color-primary-light); display: inline-flex; justify-content: center; margin-bottom: var(--space-sm);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                            </div>
                             <h3 class="empty-state-title">Chưa có bé cưng nào</h3>
                             <p class="empty-state-desc">Thêm hồ sơ bé cưng đầu tiên để bắt đầu sử dụng dịch vụ của PawPal</p>
                             <button class="btn-cta" onclick="document.getElementById('btnAddPet').click()">
@@ -94,7 +98,13 @@
                         </div>
                         <!-- Empty State -->
                         <div class="empty-state" id="emptyStateArchive" style="display:none;">
-                            <div class="empty-state-icon">📦</div>
+                            <div class="empty-state-icon" style="color: var(--color-primary-light); display: inline-flex; justify-content: center; margin-bottom: var(--space-sm);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                </svg>
+                            </div>
                             <h3 class="empty-state-title">Kho lưu trữ trống</h3>
                             <p class="empty-state-desc">Các hồ sơ bé cưng đã xóa sẽ được lưu ở đây trong 30 ngày</p>
                         </div>
@@ -261,8 +271,13 @@
     <!-- Success Animation Overlay -->
     <div class="success-overlay" id="successOverlay" style="display:none;">
         <div class="success-animation">
-            <div class="animal-sprite" id="animalSprite">🐕</div>
-            <p class="success-message">Lưu thông tin bé thành công! 🎉</p>
+            <div class="animal-sprite" id="animalSprite" style="color: var(--color-primary); display: flex; justify-content: center; margin-bottom: var(--space-sm);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <p class="success-message">Lưu thông tin bé thành công!</p>
         </div>
     </div>
 

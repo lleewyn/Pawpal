@@ -600,6 +600,7 @@ Mobile-last (desktop first) — viết default cho desktop, override cho màn h�
 ### 15.6 — Checklist Trước Khi Commit CSS
 
 - [ ] Không có `border-radius` hardcode trên cards/panels (trừ skeuomorphic)
+- [ ] Không sử dụng loại viền một bên (như border-left dày) kết hợp với border-radius để tránh lỗi hiển thị viền bị bo cong dị dạng (hình dấu ngoặc đơn). Luôn dùng viền toàn phần (border 1px) hoặc không viền.
 - [ ] Không có màu hardcode — dùng `var(--color-*)`
 - [ ] Không có spacing hardcode — dùng `var(--space-*)`
 - [ ] Không có `box-shadow` hardcode trên elevation — dùng `var(--shadow-card)`
@@ -609,10 +610,22 @@ Mobile-last (desktop first) — viết default cho desktop, override cho màn h�
 
 ---
 
+### 15.7 — Tách biệt Code JavaScript Khỏi HTML
+
+Tuyệt đối không chèn trực tiếp (inline) các đoạn mã script JavaScript dài, logic điều khiển tương tác hoặc xử lý sự kiện vào bên trong các tệp HTML tĩnh.
+
+**Quy định:**
+- Tất cả mã logic, tương tác UI, render danh sách, sự kiện click phức tạp phải được tổ chức thành các tệp `.js` riêng biệt đặt tại các thư mục chức năng (`assets/js/...`) và nạp thông qua thẻ `<script src="..." defer></script>`.
+- Các tệp HTML chỉ được phép giữ lại các script siêu ngắn tối giản (chẳng hạn như kiểm tra đăng nhập Auth Guard hoặc nạp layout đồng bộ XMLHttpRequest).
+
+---
+
 ## 16. Changelog
 
 | Ngày | Thay đổi |
 |------|---------|
+| 06/2026 | Bổ sung quy tắc 15.7 nghiêm cấm nhúng trực tiếp code JavaScript dài vào file HTML tĩnh |
+| 06/2026 | Cấm sử dụng viền một bên dày kết hợp với border-radius gây lỗi hiển thị hình dấu ngoặc đơn |
 | 06/2026 | Bổ sung nguyên tắc Minimalist Icons Only (không dùng icon 3D/màu sắc/emoji) |
 | 06/2026 | Thêm Section 15: CSS Coding Rules — naming, token usage, component link order, checklist |
 | 06/2026 | Bổ sung Section Order, CSS Structure, Animation Patterns, Component Inventory |
