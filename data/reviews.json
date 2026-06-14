@@ -1,0 +1,17 @@
+[
+    {
+        "id": "REV-001",
+        "orderId": "ORD-2026-002",
+        "productId": "PROD-010",
+        "userId": "USER-123",
+        "userName": "Nguyễn Lệ Q***n",
+        "rating": 5,
+        "comment": "Sản phẩm chất lượng tốt, mèo nhà mình rất thích! Giao hàng nhanh, đóng gói cẩn thận.",
+        "media": [],
+        "verified": true,
+        "status": "published",
+        "createdAt": "2026-06-09T10:00:00",
+        "helpful": 3,
+        "shopReply": null
+    }
+]

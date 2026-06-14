@@ -70,6 +70,16 @@
         return (doc.body || doc.documentElement).innerHTML.trim();
     }
 
+    function ensureHeaderAuth() {
+        if (!document.querySelector('script[src*="header-auth.js"]')) {
+            var rootPath = getRootPath();
+            var authScript = document.createElement('script');
+            authScript.src = rootPath + 'assets/js/shared/header-auth.js';
+            authScript.defer = true;
+            document.head.appendChild(authScript);
+        }
+    }
+
     function injectComponent(targetId, componentPath) {
         console.log('[components.js] injectComponent', targetId, componentPath);
         var el = document.getElementById(targetId);
@@ -86,6 +96,7 @@
         if (cached) {
             el.outerHTML = cached;
             if (targetId === 'site-header') {
+                ensureHeaderAuth();
                 document.dispatchEvent(new CustomEvent('headerInjected'));
                 if (typeof initActiveNav === 'function') initActiveNav();
                 if (typeof initMobileNavigation === 'function') initMobileNavigation();
@@ -131,6 +142,7 @@
                 try { sessionStorage.setItem(cacheKey, cleanedHtml); } catch(e) {}
                 el.outerHTML = cleanedHtml;
                 if (targetId === 'site-header') {
+                    ensureHeaderAuth();
                     document.dispatchEvent(new CustomEvent('headerInjected'));
                     if (typeof initActiveNav === 'function') initActiveNav();
                     if (typeof initMobileNavigation === 'function') initMobileNavigation();

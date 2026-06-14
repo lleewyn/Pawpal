@@ -230,14 +230,14 @@ Mô tả quy trình nghiệp vụ
 Quy trình đánh giá được thiết kế để lắng nghe phản hồi thực tế của khách hàng về chất lượng sản phẩm và dịch vụ. Ngay khi một giao dịch mua hàng hoặc dịch vụ Spa/Hotel chuyển sang trạng thái "Hoàn thành", Pawpal tự động gửi thông báo đến tài khoản khách hàng kèm đường dẫn trực tiếp đến form phản hồi. Khách hàng có thể chủ động vào "Lịch hẹn cho bé" (đối với dịch vụ) hoặc "Đơn hàng của tôi" (đối với sản phẩm Shop) trên trang cá nhân. Tại đây, khách hàng thấy danh sách các giao dịch đã hoàn thành nhưng chưa được đánh giá, kèm nút "Viết đánh giá" ngay bên cạnh.
 Khi khách hàng nhấn vào thông báo hoặc chọn giao dịch từ danh sách, Pawpal hiển thị chính xác tên sản phẩm và hình ảnh minh họa hoặc tên dịch vụ tương ứng mà khách hàng không cần tự tìm lại. Đồng thời, Pawpal xác minh ngầm rằng đây đúng là giao dịch của khách hàng, nhằm đảm bảo mỗi lần mua hàng chỉ được đánh giá đúng một lần và không có phản hồi ảo.
 Sau khi xác thực, khách hàng thấy form đánh giá gồm: chọn số sao từ 1 đến 5, viết nhận xét và tùy chọn đính kèm ảnh hoặc video thực tế.
-Trước khi lưu, Pawpal hỏi xác nhận: "Bạn có chắc chắn muốn công khai phản hồi này không?". Nếu chọn "Hủy", toàn bộ nội dung đã nhập vẫn được giữ nguyên để chỉnh sửa tiếp. Nếu chọn "Xác nhận", đánh giá được lưu lại và tự động gắn nhãn "Người mua thực".
+Khi khách hàng hoàn tất điền form và nhấn "Gửi đánh giá", hệ thống sẽ lập tức lưu đánh giá vào cơ sở dữ liệu và tự động gắn nhãn "Người mua thực" (form hiển thị sẵn dòng lưu ý tĩnh về việc công khai thông tin để khách hàng biết trước).
 Ngay sau khi lưu thành công, Pawpal xử lý hiển thị dựa trên mức hài lòng: đánh giá từ 4 sao trở lên được công khai ngay trên trang sản phẩm/dịch vụ tương ứng. Với các đánh giá dưới 4 sao vẫn được hiển thị công khai trên trang sản phẩm/dịch vụ, đồng thời trạng thái phản hồi được xác lập là “Đang chờ hỗ trợ” để Pawpal chủ động kích hoạt các bước hậu mãi bảo vệ quyền lợi khách hàng. Ngay sau đó, Pawpal cộng điểm thưởng Paw Points vào tài khoản như lời cảm ơn chân thành, chính thức kết thúc quy trình đánh giá.
 Quy tắc nghiệp vụ
 Khách hàng chỉ thấy nút "Viết đánh giá" sau khi đã nhận hàng hoặc Check-out và thanh toán đầy đủ đảm bảo phản hồi dựa trên trải nghiệm thực tế.
 Mỗi đơn hàng hoặc lịch hẹn chỉ được đánh giá một lần để đảm bảo tính khách quan.
 Khách hàng cần chọn số sao; phần nhận xét và hình ảnh là tùy chọn linh hoạt theo mức độ muốn chia sẻ.
 Tất cả đánh giá qua quy trình này được gắn nhãn tự động, giúp cộng đồng tin tưởng vào độ xác thực.
-Paw Points được cộng ngay sau khi khách hàng nhấn "Xác nhận" thành công.
+Hệ thống áp dụng cơ chế cộng điểm Paw Points theo chất lượng đánh giá nhằm khuyến khích khách hàng phản hồi chân thật: Đánh giá tiêu chuẩn (chỉ có số sao và chữ nhận xét) được cộng +1 Paw Point; Đánh giá chất lượng cao (có đính kèm hình ảnh hoặc video thực tế) được cộng +5 Paw Points. Điểm được tự động cộng vào ví tài khoản ngay sau khi khách hàng nhấn nút "Gửi đánh giá" thành công.
 Pawpal tự động phát hiện và ẩn các đánh giá chứa từ ngữ xúc phạm hoặc vi phạm tiêu chuẩn cộng đồng thông qua bộ lọc từ khóa tích hợp.
 Tình huống ngoại lệ
 Người dùng cố tình truy cập đánh giá của người khác thì Pawpal kiểm tra quyền truy cập và thông báo rõ ràng, sau đó hướng khách hàng về trang cá nhân của mình.
@@ -306,8 +306,8 @@ Hoạt động
 Điểm thưởng
 Đăng ký tài khoản lần đầu
 +50 điểm
-Viết đánh giá kèm hình ảnh thực tế
-+5 điểm/lần
+Viết đánh giá tiêu chuẩn (chỉ có số sao và chữ nhận xét) | +1 điểm/lần
+Viết đánh giá chất lượng cao (kèm hình ảnh/video thực tế) | +5 điểm/lần
 Sinh nhật thú cưng
 +20 điểm/ năm
 Giới thiệu bạn bè đăng ký thành công

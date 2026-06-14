@@ -407,3 +407,36 @@
         height: 60px;
     }
 }
+
+/* ==========================================================================
+   Review Integration — order-detail page (US 11-1, 11-2)
+   ========================================================================== */
+
+/* Wrapper dưới mỗi product-item chứa nút + accordion */
+.product-review-zone {
+    padding-left: calc(80px + var(--space-sm)); /* align với text (sau ảnh) */
+}
+
+/* Section heading cho phần reviews của completed orders */
+.order-reviews-heading {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h3);
+    font-weight: 600;
+    color: var(--color-text-dark);
+    margin-top: var(--space-lg);
+    margin-bottom: var(--space-md);
+    padding-top: var(--space-lg);
+    border-top: 2px solid var(--color-border);
+}
+
+/* Khi product-item có review bên dưới, bỏ border-bottom */
+.product-item.has-review {
+    border-bottom: none;
+}
+
+/* Responsive: ≤640px */
+@media (max-width: 640px) {
+    .product-review-zone {
+        padding-left: 0;
+    }
+}

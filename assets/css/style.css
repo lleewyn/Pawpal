@@ -129,7 +129,7 @@
 
     /* Container Widths */
     --container-hero: 1600px;       /* Hero section — wide editorial split */
-    --container-xl: 90%;            /* Standard section containers - 90% width */
+    --container-xl: 1400px;         /* Standard section containers */
     --container-md: 1280px;         /* Text-heavy sections (tracker, process) */
     --container-sm: 800px;          /* FAQ, narrow text sections */
     --container-padding: 40px;      /* Horizontal padding inside containers */

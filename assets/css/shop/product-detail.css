@@ -1375,3 +1375,52 @@
         transition: none;
     }
 }
+
+/* ==========================================================================
+   Review enhancements — US 11-7 (added June 2026)
+   Verified badge + media thumbnails
+   ========================================================================== */
+
+/* Verified buyer badge */
+.review-verified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    color: var(--color-success);
+    background: var(--color-success-light);
+    border-radius: var(--border-radius-pill);
+    padding: 2px 8px;
+    margin-bottom: 4px;
+}
+
+/* Reviewer meta: stack avatar + name + badge + stars */
+.reviewer-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Media list inside review item */
+.review-media-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin: var(--space-sm) 0;
+}
+
+.review-photo {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: var(--card-border-radius);
+    border: var(--border-card);
+    cursor: zoom-in;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.review-photo:hover {
+    transform: scale(1.06);
+    box-shadow: var(--shadow-card-hover);
+}

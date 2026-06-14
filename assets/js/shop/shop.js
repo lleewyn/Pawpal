@@ -715,7 +715,7 @@ function toggleWishlist(productId) {
 // ══════════════════════════════════════════════════════════════════════════
 
 function addToCart(productId) {
-    const product = mockProducts.find(p => p.id === productId);
+    const product = state.products.find(p => p.id === productId);
     if (!product || !product.inStock) return;
     
     // Get cart from localStorage

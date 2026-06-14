@@ -47,6 +47,16 @@ async function loadOrderDetail() {
         renderTimeline();
         renderActions();
         
+        // Inject review buttons/forms for completed orders (US 11-1, 11-2)
+        if ((currentOrder.status === 'completed') && typeof ReviewHandler !== 'undefined') {
+            const deliveredEntry = currentOrder.timeline.find(t => t.status === 'delivered' || t.status === 'completed');
+            const deliveredDate  = deliveredEntry
+                ? new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(deliveredEntry.timestamp))
+                : '';
+            const products = currentOrder.products.map(p => ({ ...p, deliveredDate }));
+            ReviewHandler.init(currentOrder.id, products);
+        }
+        
     } catch (error) {
         console.error('Lỗi load đơn hàng:', error);
         showError('Không thể tải thông tin đơn hàng');
@@ -232,9 +242,6 @@ function renderActions() {
             
         case 'completed':
             buttons.push(`
-                <button class="btn-green-outline" onclick="writeReview()">
-                    Viết đánh giá
-                </button>
                 <button class="btn-green-outline" onclick="requestReturn()">
                     Yêu cầu đổi trả
                 </button>
@@ -277,8 +284,8 @@ function confirmReceived() {
 }
 
 function writeReview() {
-    alert('Chuyển đến trang đánh giá sản phẩm');
-    // TODO: Open review modal or redirect
+    // Handled by ReviewHandler.init — this is a fallback no-op
+    console.log('[order-detail] writeReview called — ReviewHandler manages inline forms');
 }
 
 function requestReturn() {

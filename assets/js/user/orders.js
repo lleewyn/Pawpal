@@ -132,7 +132,24 @@ function createOrderCard(order) {
     const firstProduct = order.products[0];
     const remainingCount = order.products.length - 1;
     const statusLabel = getStatusLabel(order.status);
-    
+    const isCompleted = order.status === 'completed';
+
+    // Check if all products already reviewed
+    const reviewed = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
+    const allReviewed = isCompleted && order.products.every(p =>
+        reviewed.some(r => r.orderId === order.id && r.productId === p.id)
+    );
+
+    const reviewActionHTML = isCompleted
+        ? allReviewed
+            ? `<span class="reviewed-label" aria-label="Đã đánh giá tất cả sản phẩm">&#10003; Đã đánh giá</span>`
+            : `<a href="/pages/user/order-detail.html?id=${order.id}#reviews"
+                  class="btn-write-review"
+                  aria-label="Viết đánh giá đơn hàng ${order.id}">
+                   &#9998; Viết đánh giá
+               </a>`
+        : '';
+
     return `
         <article class="order-card" data-order-id="${order.id}">
             <div class="order-card-header">
@@ -165,6 +182,7 @@ function createOrderCard(order) {
             <div class="order-card-footer">
                 <a href="/pages/user/order-detail.html?id=${order.id}" 
                    class="btn-view-detail">Xem chi tiết</a>
+                ${reviewActionHTML}
                 <button class="btn-track-order" onclick="trackOrder('${order.id}')">
                     Theo dõi đơn hàng
                 </button>

@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             checkoutState.cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
             
             if (checkoutState.cart.length === 0) {
-                window.location.href = '/pages/shop/cart.html';
+                window.location.href = '/pages/shop/shop.html';
                 return;
             }
         }
