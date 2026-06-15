@@ -118,6 +118,21 @@
     transform: translateY(-2px);
 }
 
+/* ── Disabled state: tất cả btn-cta ── */
+.btn-cta:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none !important;
+    pointer-events: auto; /* giữ cursor not-allowed hiển thị */
+}
+
+.btn-cta:disabled:hover {
+    background-color: var(--color-accent);
+    transform: none !important;
+    box-shadow: none;
+}
+
 .btn-link {
     display: inline-block;
     font-weight: 700;

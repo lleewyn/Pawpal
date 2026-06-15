@@ -77,7 +77,7 @@
                             <!-- Active pet cards will be rendered here -->
                         </div>
                         <!-- Empty State -->
-                        <div class="empty-state" id="emptyStateActive">
+                        <div class="empty-state" id="emptyStateActive" style="display:none;">
                             <div class="empty-state-icon" style="color: var(--color-primary-light); display: inline-flex; justify-content: center; margin-bottom: var(--space-sm);">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
@@ -270,15 +270,8 @@
 
     <!-- Success Animation Overlay -->
     <div class="success-overlay" id="successOverlay" style="display:none;">
-        <div class="success-animation">
-            <div class="animal-sprite" id="animalSprite" style="color: var(--color-primary); display: flex; justify-content: center; margin-bottom: var(--space-sm);">
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-            </div>
-            <p class="success-message">Lưu thông tin bé thành công!</p>
-        </div>
+        <p class="success-message">Lưu thông tin bé thành công!</p>
+        <div class="animal-sprite" id="animalSprite" style="color: var(--color-primary);"></div>
     </div>
 
     <div id="site-footer"></div>
@@ -288,18 +281,14 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../../assets/js/shared/auth.js"></script>
     <script>
         // Authentication Guard - Require login to access pet profile page
         (function() {
             const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
             if (!currentUser) {
-                console.warn('⚠️ No user logged in, redirecting to login page...');
-                alert('Vui lòng đăng nhập để truy cập trang Hồ sơ bé cưng');
-                window.location.href = '/pages/public/login.html';
+                window.location.replace('../../pages/public/login.html?redirect=pet-profile');
                 return;
             }
-            console.log('✅ User authenticated:', currentUser.name);
         })();
         
         // Load sidebar synchronously

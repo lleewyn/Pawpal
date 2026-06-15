@@ -1,8 +1,7 @@
-3.1.Mô tả quy trình nghiệp vụ và Sơ đồ BPMN
 3.1.1. Quy trình đăng ký
 Mô tả quy trình 
 Đối với Đăng ký chủ động, quy trình bắt đầu khi người dùng chọn chức năng "Đăng ký" trên giao diện Pawpal và cung cấp các thông tin gồm Họ tên, Số điện thoại và Mật khẩu. Ngay lập tức, Pawpal gửi một mã xác nhận (OTP) về số điện thoại để đảm bảo tài khoản thuộc về đúng chủ nhân. Sau khi nhập mã thành công, tài khoản được kích hoạt ngay lập tức và người dùng có thể đăng nhập, Pawpal điều hướng người dùng vào Trang chủ. Khách hàng được chào đón bằng thông báo chào mừng và nhận ngay 50 điểm thưởng Paw Points để bắt đầu hành trình chăm sóc thú cưng.
-Đối với Định danh lũy tiến dành cho khách hàng vãng lai, Khi khách hàng đặt lịch hoặc mua sắm lần đầu, Pawpal chỉ yêu cầu những thông tin cần thiết cho giao dịch bao gồm Họ tên, Số điện thoại, thông tin cơ bản của bé cưng hoặc Địa chỉ giao nhận sản phẩm. Sau khi xác nhận thông tin, hệ thống sẽ ngầm khởi tạo một "Tài khoản tạm" gắn với số điện thoại khách hàng cung cấp. Khách hàng không cần gián đoạn để tạo tài khoản, giao dịch được ưu tiên hoàn tất trước. Sau khi giao dịch hoàn tất, Pawpal gửi một tin nhắn SMS với nội dung chào mừng, kèm theo đường dẫn thiết lập mật khẩu có hiệu lực trong 48 giờ và thông báo tặng ngay 50 điểm thưởng Paw Points để khuyến khích khách hàng kích hoạt tài khoản. Quy trình chính thức hoàn tất khi khách hàng nhấn vào liên kết, thiết lập mật khẩu, toàn bộ lịch sử đặt lịch và đơn hàng sẽ tự động hiển thị trong tài khoản mới, không cần nhập lại bất cứ thông tin nào.
+Đối với Định danh lũy tiến dành cho khách hàng vãng lai, Khi khách hàng đặt lịch hoặc mua sắm lần đầu, Pawpal chỉ yêu cầu những thông tin cần thiết cho giao dịch bao gồm Họ tên, Số điện thoại, thông tin cơ bản của bé cưng hoặc Địa chỉ giao nhận sản phẩm. Khách hàng không cần gián đoạn để tạo tài khoản, giao dịch được ưu tiên hoàn tất trước. Sau khi giao dịch hoàn tất, Pawpal sẽ ngầm khởi tạo một "Tài khoản tạm" gắn với số điện thoại khách hàng cung cấp và đồng thời gửi một tin nhắn SMS với nội dung chào mừng, kèm theo đường dẫn thiết lập mật khẩu có hiệu lực trong 48 giờ và thông báo tặng ngay 50 điểm thưởng Paw Points để khuyến khích khách hàng kích hoạt tài khoản. Quy trình chính thức hoàn tất khi khách hàng nhấn vào liên kết, thiết lập mật khẩu, toàn bộ lịch sử đặt lịch và đơn hàng sẽ tự động hiển thị trong tài khoản mới, không cần nhập lại bất cứ thông tin nào.
 Ngoài ra, trong trường hợp khách hàng trực tiếp đến cơ sở, Admin có thể hỗ trợ thực hiện quy trình đăng ký nhanh tại quầy chỉ với Họ tên và Số điện thoại để giúp khách hàng sở hữu tài khoản định danh ngay lập tức. Sau đó, Pawpal tự động gửi đường dẫn thiết lập mật khẩu về điện thoại khách hàng để họ hoàn tất kích hoạt khi thuận tiện.
 Quy tắc nghiệp vụ 
 Mỗi số điện thoại chỉ tương ứng với một tài khoản duy nhất trên Pawpal, và phải đúng định dạng nhà mạng Việt Nam.
@@ -24,8 +23,9 @@ Nếu OTP sai thì người dùng chọn “Gửi lại mã” và mã OTP mới
 3.1.2. Quy trình đăng nhập và bảo mật
 Mô tả quy trình 
 Quy trình đăng nhập bắt đầu khi người dùng chọn chức năng “Đăng nhập” trên giao diện Pawpal. Tại đây, người dùng thực hiện nhập Số điện thoại, Pawpal nhận diện loại tài khoản và hướng dẫn bước tiếp theo phù hợp. 
-Đối với Thành viên chính thức Pawpal yêu cầu Mật khẩu cá nhân, sau đó nhấn nút “Đăng nhập” để gửi yêu cầu truy cập. Nếu quên mật khẩu, khách hàng chọn "Quên mật khẩu" và nhập lại số điện thoại, Pawpal gửi ngay một OTP định danh về số điện thoại để đảm bảo tài khoản thuộc về đúng chủ nhân. Sau khi nhập mã thành công,  Pawpal đưa người dùng đến trang thiết lập mật khẩu mới, sau khi tạo mật khẩu thành công, khách hàng đăng nhập bình thường. Trong trường hợp Pawpal không tìm thấy số điện thoại tương ứng, Pawpal hiển thị thông báo lỗi và hướng người dùng về trang Đăng ký.
-Đối với Khách vãng lai có tài khoản tạm chưa có mật khẩu, Pawpal sẽ điều hướng người dùng đến trang Thiết lập mật khẩu. Tại biểu mẫu bắt buộc này, người dùng phải thiết lập mật khẩu cá nhân để mở khóa lại lịch sử giao dịch và bảo vệ quyền riêng tư cho Nhật ký chăm sóc của bé cưng, khách hàng bắt buộc phải thực hiện đồng thời hai thao tác Thiết lập mật khẩu cá nhân mới và Tick chọn đồng ý với Chính sách & Điều khoản vận hành của cửa hàng. Giao diện khóa hoàn toàn mọi tính năng ẩn hoặc nút bấm bỏ qua, nút "Xác nhận kích hoạt" chỉ chuyển sang trạng thái khả dụng khi cả hai điều kiện trên được thỏa mãn hoàn toàn. Sau khi người dùng nhấn xác nhận thành công, Pawpal mới chính thức chuyển đổi tài khoản tạm sang tài khoản thành viên chính thức và điều hướng về trang cá nhân.
+Đối với Thành viên chính thức Pawpal yêu cầu Mật khẩu cá nhân, sau đó nhấn nút “Đăng nhập” để gửi yêu cầu truy cập. Nếu quên mật khẩu, khách hàng chọn "Quên mật khẩu" và nhập lại số điện thoại, Pawpal gửi ngay một OTP định danh về số điện thoại để đảm bảo tài khoản thuộc về đúng chủ nhân. Sau khi nhập mã thành công,  Pawpal đưa người dùng đến trang thiết lập mật khẩu mới, sau khi tạo mật khẩu thành công, khách hàng đăng nhập bình thường. 
+Đối với Khách vãng lai có tài khoản tạm chưa có mật khẩu, Pawpal sẽ điều hướng người dùng đến trang Thiết lập mật khẩu. Tại biểu mẫu bắt buộc này, người dùng phải thiết lập mật khẩu cá nhân để mở khóa lại lịch sử giao dịch và bảo vệ quyền riêng tư cho tài khoản, khách hàng bắt buộc phải thực hiện đồng thời hai thao tác Thiết lập mật khẩu cá nhân mới và Tick chọn đồng ý với Chính sách & Điều khoản vận hành của cửa hàng. Giao diện khóa hoàn toàn mọi tính năng ẩn hoặc nút bấm bỏ qua, nút "Xác nhận kích hoạt" chỉ chuyển sang trạng thái khả dụng khi cả hai điều kiện trên được thỏa mãn hoàn toàn. Sau khi người dùng nhấn xác nhận thành công, Pawpal mới chính thức chuyển đổi tài khoản tạm sang tài khoản thành viên chính thức và điều hướng về trang cá nhân.
+Trong trường hợp Pawpal không tìm thấy số điện thoại tương ứng, Pawpal hiển thị thông báo lỗi và hướng người dùng về trang Đăng ký.
 Sau khi đăng nhập thành công, Pawpal điều hướng về trang cá nhân và chào mừng khách hàng. Nếu khách hàng trước đây từng sử dụng dịch vụ với tư cách vãng lai, toàn bộ lịch sử được gộp tự động vào tài khoản, không có gì bị mất.
 Nhằm tăng cường tính an toàn cho tài khoản, trong quá trình sử dụng, người dùng có thể truy cập vào mục “Cấu hình tài khoản” để thay đổi mật khẩu hoặc cập nhật các lớp bảo mật nâng cao. Để bảo vệ tài khoản, Pawpal bắt buộc yêu cầu xác nhận mật khẩu cũ hoặc người dùng chọn “Quên mật khẩu” và nhập SĐT, Pawpal sẽ gửi ngay mã OTP định danh để thiết lập mật khẩu mới để đảm bảo thao tác do chính chủ thực hiện trước khi cập nhật dữ liệu mới vào CSDL. 
 Quy trình kết thúc khi người dùng truy cập thành công vào hệ thống hoặc sau khi hệ thống hiển thị các thông báo lỗi yêu cầu người dùng xử lý lại.
@@ -37,6 +37,7 @@ Khách hàng bắt buộc phải hoàn tất bước thiết lập mật khẩu 
 Nhật ký chăm sóc chỉ hiển thị sau khi đăng nhập, đảm bảo thông tin của bé cưng được bảo mật.
 Tình huống ngoại lệ
 Hệ thống gửi cảnh báo "Phát hiện đăng nhập bất thường" qua tin nhắn để khách hàng chủ động kiểm tra và thực hiện đổi mật khẩu nếu cần.
+Trong trường hợp Pawpal không tìm thấy số điện thoại tương ứng, Pawpal hiển thị thông báo lỗi và hướng người dùng về trang Đăng ký.
 3.1.3. Quản lý hồ sơ bé cưng
 Mô tả quy trình 
 Quy trình quản lý hồ sơ bé cưng khởi đầu sau khi người dùng đăng nhập thành công và truy cập vào mục "Hồ sơ của bé" trên Trang chủ. Tại giao diện này, Pawpal cho phép người dùng khởi tạo và duy trì Pet ID cho các bé cưng của mình thông qua các thao tác cụ thể
@@ -57,6 +58,7 @@ Hệ thống hiển thị thông báo "Dung lượng ảnh vượt quá 5MB" ho�
 Nếu khách hàng chọn một Pet ID thiếu thông tin để đặt dịch vụ, hệ thống sẽ tự động điều hướng về trang chỉnh sửa hồ sơ kèm thông báo: "Vui lòng cập nhật thông tin bé cưng".
 Pawpal yêu cầu người dùng thêm một số điểm phân biệt như màu lông, màu mắt nếu phát hiện tên thú cưng mới trùng với tên thú cưng đã có trong cùng một tài khoản khách hàng.
 Trường hợp thông tin Pet ID bị khách hàng khai báo sai, Admin có quyền hiệu chỉnh lại dữ liệu dưới sự xác nhận của khách hàng ngay tại thời điểm tiếp nhận dịch vụ.
+
 3.1.4. Đặt lịch hẹn
 Mô tả quy trình 
 Bản mới viết theo quy trình 4 bước ở trên giao diện:
@@ -153,6 +155,7 @@ Nếu mất kết nối khi đang cập nhật, Pawpal tự động lưu tạm n
 Pawpal gửi thông báo và mời khách hàng thử lại sau nếu không tải được nhật ký, thay vì hiển thị màn hình trống.
 Khi nhiều nhân viên cùng cập nhật một lúc, Pawpal giữ bản mới nhất và lưu lịch sử chỉnh sửa để đối chiếu nếu cần.
 Nếu khách hàng thoát web rồi vào lại, Pawpal tự động đồng bộ toàn bộ nhật ký mới nhất để khách hàng không bỏ lỡ bất kỳ cập nhật nào.
+
 3.1.8. Mua sắm
 Mô tả quy trình
 Khi khách hàng truy cập vào trang "Cửa hàng" trên PawPal để tìm kiếm và lựa chọn các sản phẩm dành cho thú cưng như thức ăn, phụ kiện, đồ chơi, quần áo hoặc sản phẩm chăm sóc sức khỏe, PawPal sẽ hiển thị danh sách sản phẩm theo nhiều nhóm phân loại như danh mục, thương hiệu, sản phẩm bán chạy, khoảng giá và tình trạng còn hàng, giúp khách hàng dễ dàng tìm thấy sản phẩm phù hợp với nhu cầu của thú cưng. 
