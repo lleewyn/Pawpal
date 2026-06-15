@@ -16,6 +16,9 @@
         <a href="/pages/user/pet-diary.html" class="sidebar-link" id="nav-diary">
             <span class="icon"><i data-lucide="book-heart"></i></span> Nhật ký chăm sóc
         </a>
+        <a href="/pages/user/care-history.html" class="sidebar-link" id="nav-care-history">
+            <span class="icon"><i data-lucide="history"></i></span> Lịch sử chăm sóc
+        </a>
         <a href="/pages/user/orders.html" class="sidebar-link" id="nav-orders">
             <span class="icon"><i data-lucide="package"></i></span> Đơn hàng của tôi
         </a>
@@ -96,6 +99,8 @@
             else if (currentPath.includes('pet-profile') && linkPath.includes('pet-profile')) {
                 link.classList.add('active');
             } else if (currentPath.includes('pet-diary') && linkPath.includes('pet-diary')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('care-history') && linkPath.includes('care-history')) {
                 link.classList.add('active');
             } else if (currentPath.includes('booking') && linkPath.includes('booking')) {
                 link.classList.add('active');

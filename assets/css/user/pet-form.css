@@ -54,8 +54,6 @@
     border-bottom: 1px solid var(--color-border);
     margin-bottom: var(--space-md);
     border-radius: var(--card-border-radius);
-    display: block !important;
-    visibility: visible !important;
 }
 
 .header-content {
@@ -86,8 +84,6 @@
     margin-bottom: var(--space-md);
     border-radius: var(--card-border-radius) var(--card-border-radius) 0 0;
     padding: 0 var(--space-md);
-    display: block !important;
-    visibility: visible !important;
 }
 
 .tabs-wrapper {
@@ -127,8 +123,6 @@
     background: var(--color-bg-white);
     border-radius: var(--card-border-radius);
     min-height: 400px;
-    display: block !important;
-    visibility: visible !important;
 }
 
 .pet-cards-grid {
@@ -178,7 +172,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    color: var(--color-primary);
     flex-shrink: 0;
 }
 
@@ -214,6 +208,17 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
+}
+
+.pet-gender-badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: var(--border-radius-pill);
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    line-height: 1.5;
 }
 
 .pet-card-body {
@@ -275,41 +280,46 @@
 
 /* ── Archived Pet Card ──────────────────────────────────────────────────── */
 .pet-card-archived {
-    filter: grayscale(1);
-    opacity: 0.7;
+    opacity: 0.82;
+    border-color: var(--color-border);
+    box-shadow: none;
 }
 
 .pet-card-archived::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.5);
+    inset: 0;
+    background: rgba(210, 210, 210, 0.35);
     border-radius: var(--card-border-radius);
+    z-index: 0;
     pointer-events: none;
 }
 
+/* Keep card content above the gray overlay */
+.pet-card-archived .pet-card-header,
+.pet-card-archived .pet-card-body,
+.pet-card-archived .pet-card-actions,
+.pet-card-archived .archive-countdown {
+    position: relative;
+    z-index: 1;
+}
+
 .archive-countdown {
-    position: absolute;
-    top: var(--space-sm);
-    right: var(--space-sm);
+    display: inline-flex;
+    align-items: center;
     background: var(--color-accent-light);
     color: var(--color-accent-dark);
     padding: 4px 12px;
     border-radius: var(--border-radius-pill);
     font-size: var(--fs-caption);
     font-weight: 700;
-    z-index: 1;
+    margin-bottom: var(--space-sm);
 }
 
 /* ── Empty State ──────────────────────────────────────────────────────────── */
 .empty-state {
     text-align: center;
     padding: var(--space-xl) var(--space-md);
-    display: block !important;
-    visibility: visible !important;
 }
 
 .empty-state-icon {
@@ -465,39 +475,47 @@
 /* ── Success Animation ──────────────────────────────────────────────────────── */
 .success-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: rgba(255, 255, 255, 0.95);
     z-index: 10000;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-direction: column;
-}
-
-.success-animation {
-    text-align: center;
 }
 
 .animal-sprite {
-    font-size: 5rem;
-    animation: slideAcross 2s ease-in-out;
+    position: absolute;
+    top: 50%;
+    color: var(--color-primary);
+    display: flex;
+    line-height: 0;
+    animation: walkAcross 2.3s cubic-bezier(0.45, 0, 0.55, 1);
+    animation-fill-mode: forwards;
 }
 
-@keyframes slideAcross {
-    0% { transform: translateX(-100vw); }
-    50% { transform: translateX(0); }
-    100% { transform: translateX(100vw); }
+@keyframes walkAcross {
+    0%   { transform: translateY(-50%) translateX(-110vw); }
+    30%  { transform: translateY(-50%) translateX(-40px); }
+    70%  { transform: translateY(-50%) translateX(40px); }
+    100% { transform: translateY(-50%) translateX(110vw); }
 }
 
 .success-message {
     font-family: var(--font-heading);
     font-size: var(--fs-h3);
-    color: var(--color-success);
-    margin-top: var(--space-md);
+    color: var(--color-primary);
     font-weight: 600;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    animation: fadeInMsg 0.6s ease 0.4s forwards;
+}
+
+@keyframes fadeInMsg {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ── Danger Button ──────────────────────────────────────────────────────────── */
@@ -518,6 +536,88 @@
     background: var(--color-danger);
     filter: brightness(0.9);
     transform: translateY(-2px);
+}
+
+/* ── Modal Overlay (generic, used by pet-form modals) ────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px;
+    background: rgba(42, 89, 68, 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    overflow-y: auto;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    position: relative;
+    background: var(--color-bg-white);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--shadow-card-hover);
+    width: 100%;
+    margin: auto;
+    z-index: 2001;
+    transform: scale(0.93) translateY(14px);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.modal-title {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h3);
+    color: var(--color-text-dark);
+    margin: 0;
+    font-weight: 600;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-light);
+    padding: 6px;
+    border-radius: var(--border-radius-sm);
+    transition: background 0.2s ease, color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+}
+
+.modal-close:hover {
+    background: var(--color-bg-light);
+    color: var(--color-text-dark);
+}
+
+.modal-body {
+    padding: var(--space-lg);
+}
+
+/* Avatar upload error state */
+.avatar-upload-wrapper.has-error .avatar-preview {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────────── */

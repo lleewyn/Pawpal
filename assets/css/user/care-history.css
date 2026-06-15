@@ -1,0 +1,242 @@
+/* ==========================================================================
+   care-history.css — Lịch sử chăm sóc Page Styles (US 7-3)
+   ========================================================================== */
+
+/* ── Page Container ──────────────────────────────────────────────────────── */
+.care-history-container {
+    padding: 20px 0;
+    background: var(--color-bg-light);
+    min-height: 60vh;
+}
+
+/* ── Page Header ─────────────────────────────────────────────────────────── */
+.care-history-header {
+    margin-bottom: var(--space-md);
+}
+
+.care-history-page-title {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h2);
+    color: var(--color-primary);
+    margin: 0;
+}
+
+/* ── Session List Header ─────────────────────────────────────────────────── */
+.session-list-header {
+    margin-bottom: var(--space-md);
+}
+
+.session-list-title {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h3);
+    color: var(--color-primary);
+    margin: 0;
+}
+
+/* ── Session List ────────────────────────────────────────────────────────── */
+.session-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+/* ── Session Card ────────────────────────────────────────────────────────── */
+.session-card {
+    background: var(--color-bg-white);
+    border: var(--border-card);
+    border-radius: var(--card-border-radius);
+    overflow: hidden;
+    transition: box-shadow 0.25s ease;
+}
+
+.session-card:hover {
+    box-shadow: var(--shadow-card-hover);
+}
+
+.session-card.open {
+    box-shadow: var(--shadow-card-hover);
+}
+
+/* ── Session Card Header ─────────────────────────────────────────────────── */
+.session-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md);
+    cursor: pointer;
+    user-select: none;
+    gap: var(--space-sm);
+}
+
+.session-card-header:hover {
+    background: var(--color-bg-light);
+}
+
+.session-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.session-card-top {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+}
+
+.session-date {
+    font-size: var(--fs-small);
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.session-code {
+    font-size: var(--fs-caption);
+    color: var(--color-text-light);
+    font-family: monospace;
+}
+
+.session-service-name {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h4);
+    color: var(--color-text-dark);
+    margin: 0 0 6px 0;
+}
+
+.session-card-bottom {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+}
+
+.session-staff-name {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--fs-small);
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    padding: 3px 10px;
+    border-radius: var(--border-radius-pill);
+}
+
+.session-status-badge {
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: var(--border-radius-pill);
+}
+
+.session-status-badge.status-done {
+    background: var(--color-success-light, #f0fdf4);
+    color: var(--color-success);
+}
+
+/* ── Expand Icon ─────────────────────────────────────────────────────────── */
+.session-expand-icon {
+    flex-shrink: 0;
+    color: var(--color-text-light);
+    display: flex;
+    align-items: center;
+    transition: transform 0.25s ease;
+}
+
+.session-card.open .session-expand-icon {
+    transform: rotate(180deg);
+}
+
+/* ── Session Card Body (accordion) ──────────────────────────────────────── */
+.session-card-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+    border-top: 1px solid transparent;
+}
+
+.session-card.open .session-card-body {
+    border-top-color: var(--color-border);
+}
+
+.session-card-body > * {
+    margin-left: var(--space-md);
+    margin-right: var(--space-md);
+}
+
+.session-timeline-label {
+    font-family: var(--font-heading);
+    font-size: var(--fs-body);
+    font-weight: 600;
+    color: var(--color-primary);
+    padding: var(--space-md) 0 var(--space-sm) 0;
+    margin-left: var(--space-md);
+    margin-right: var(--space-md);
+}
+
+.session-timeline-wrapper {
+    margin-bottom: var(--space-md);
+}
+
+/* ── Empty States ────────────────────────────────────────────────────────── */
+.session-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xl);
+    background: var(--color-bg-white);
+    border: var(--border-card);
+    border-radius: var(--card-border-radius);
+    text-align: center;
+    color: var(--color-text-light);
+}
+
+.session-empty svg {
+    color: var(--color-primary-light);
+}
+
+.session-empty p {
+    font-size: var(--fs-small);
+    margin: 0;
+    max-width: 360px;
+}
+
+.timeline-no-data {
+    font-size: var(--fs-small);
+    color: var(--color-text-light);
+    text-align: center;
+    padding: var(--space-md) 0;
+    margin: 0;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .care-history-container {
+        padding: var(--space-md) 0;
+    }
+
+    .session-card-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .pet-info-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .pet-info-meta {
+        justify-content: center;
+    }
+}
+
+/* ── Accessibility ───────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .session-card,
+    .session-expand-icon,
+    .session-card-body {
+        transition: none;
+    }
+}

@@ -73,9 +73,11 @@ export function savePets(allPets) {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(allPets));
         console.log('✅ savePets() saved', allPets.length, 'pets');
+        return true;
     } catch (e) {
         console.error('❌ savePets() error:', e);
-        console.error('localStorage may be blocked by CORS policy');
+        showToast('Không thể lưu hồ sơ. Vui lòng thử xóa bớt ảnh hoặc hồ sơ cũ.', 'error');
+        return false;
     }
 }
 

@@ -122,16 +122,17 @@ function resetForm() {
     const form = document.getElementById('petForm');
     form.reset();
     uploadedPhotoBase64 = null;
-    
+
     // Reset avatar preview
     const avatarImg = document.getElementById('avatarImg');
     const avatarPlaceholder = document.getElementById('avatarPlaceholder');
     avatarImg.style.display = 'none';
     avatarPlaceholder.style.display = 'flex';
-    
-    // Reset error messages
+
+    // Reset error states
     document.getElementById('uploadError').style.display = 'none';
-    
+    document.querySelector('.avatar-upload-wrapper')?.classList.remove('has-error');
+
     // Disable save button
     document.getElementById('btnSavePet').disabled = true;
 }
@@ -150,12 +151,15 @@ function setupAvatarUpload() {
         const file = e.target.files[0];
         if (!file) return;
 
+        const wrapper = document.querySelector('.avatar-upload-wrapper');
         uploadError.style.display = 'none';
+        wrapper.classList.remove('has-error');
 
         // AC3.1.1: Validate file type
         if (!ALLOWED_TYPES.includes(file.type)) {
             uploadError.textContent = 'Chỉ chấp nhận file JPG, PNG hoặc WEBP';
             uploadError.style.display = 'block';
+            wrapper.classList.add('has-error');
             avatarInput.value = '';
             return;
         }
@@ -165,20 +169,36 @@ function setupAvatarUpload() {
         if (fileSizeMB > MAX_PHOTO_MB) {
             uploadError.textContent = `Dung lượng file không được vượt quá ${MAX_PHOTO_MB}MB`;
             uploadError.style.display = 'block';
+            wrapper.classList.add('has-error');
             avatarInput.value = '';
             return;
         }
 
-        // AC3.1.2: Preview image
+        // AC3.1.2: Preview image — compress before storing to avoid localStorage quota overflow
         const reader = new FileReader();
         reader.onload = (event) => {
-            uploadedPhotoBase64 = event.target.result;
-            const avatarImg = document.getElementById('avatarImg');
-            const avatarPlaceholder = document.getElementById('avatarPlaceholder');
-            
-            avatarImg.src = uploadedPhotoBase64;
-            avatarImg.style.display = 'block';
-            avatarPlaceholder.style.display = 'none';
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_DIM = 480;
+                let { width, height } = img;
+                if (width >= height) {
+                    if (width > MAX_DIM) { height = Math.round(height * MAX_DIM / width); width = MAX_DIM; }
+                } else {
+                    if (height > MAX_DIM) { width = Math.round(width * MAX_DIM / height); height = MAX_DIM; }
+                }
+                canvas.width = width;
+                canvas.height = height;
+                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                uploadedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.75);
+
+                const avatarImg = document.getElementById('avatarImg');
+                const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+                avatarImg.src = uploadedPhotoBase64;
+                avatarImg.style.display = 'block';
+                avatarPlaceholder.style.display = 'none';
+            };
+            img.src = event.target.result;
         };
         reader.readAsDataURL(file);
     });
@@ -223,49 +243,52 @@ async function savePetData() {
     } else {
         allPets.push(petData);
     }
-    savePets(allPets);
-    
+    const saved = savePets(allPets);
+
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 800));
-    
+
     // Hide loading state
     btnText.style.display = 'inline';
     btnSpinner.style.display = 'none';
     btnSavePet.disabled = false;
+
+    if (!saved) return; // savePets already showed an error toast
     
     // Close modal
     document.getElementById('petFormModal').classList.remove('active');
     document.body.style.overflow = '';
-    
+
+    // Re-render cards immediately so they're ready when animation ends
+    renderPetCards();
+
     // Show success animation (AC3.1.2 requirement)
-    showSuccessAnimation(petData.species);
-    
-    // Re-render cards
-    setTimeout(() => {
-        renderPetCards();
-    }, 2500);
+    showSuccessAnimation();
 }
 
 // ── Success Animation (AC3.1.2) ───────────────────────────────────────────────
-function showSuccessAnimation(species) {
+function showSuccessAnimation() {
     const overlay = document.getElementById('successOverlay');
     const sprite = document.getElementById('animalSprite');
-    
-    // Choose emoji based on species
-    const emojis = {
-        'Chó': '🐕',
-        'Mèo': '🐈',
-        'Hamster': '🐹',
-        'Thỏ': '🐰',
-        'Khác': '🐾'
-    };
-    sprite.textContent = emojis[species] || '🐾';
-    
+
+    sprite.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 100 100" fill="currentColor">
+        <ellipse cx="50" cy="62" rx="20" ry="16"/>
+        <ellipse cx="28" cy="43" rx="9.5" ry="7.5" transform="rotate(-15 28 43)"/>
+        <ellipse cx="44" cy="33" rx="9.5" ry="7.5" transform="rotate(-5 44 33)"/>
+        <ellipse cx="62" cy="33" rx="9.5" ry="7.5" transform="rotate(5 62 33)"/>
+        <ellipse cx="76" cy="44" rx="9.5" ry="7.5" transform="rotate(15 76 44)"/>
+    </svg>`;
+
+    /* re-trigger animation each call */
+    sprite.style.animation = 'none';
+    sprite.offsetWidth; /* reflow */
+    sprite.style.animation = '';
+
     overlay.style.display = 'flex';
-    
+
     setTimeout(() => {
         overlay.style.display = 'none';
-    }, 2500);
+    }, 2600);
 }
 
 // ── Render Pet Cards ──────────────────────────────────────────────────────────
@@ -342,19 +365,27 @@ function renderArchivedPets(pets) {
     });
 }
 
+const PAW_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 100 100" fill="currentColor">
+    <ellipse cx="50" cy="62" rx="20" ry="16"/>
+    <ellipse cx="28" cy="43" rx="9.5" ry="7.5" transform="rotate(-15 28 43)"/>
+    <ellipse cx="44" cy="33" rx="9.5" ry="7.5" transform="rotate(-5 44 33)"/>
+    <ellipse cx="62" cy="33" rx="9.5" ry="7.5" transform="rotate(5 62 33)"/>
+    <ellipse cx="76" cy="44" rx="9.5" ry="7.5" transform="rotate(15 76 44)"/>
+</svg>`;
+
 // ── Create Pet Card HTML ──────────────────────────────────────────────────────
 function createPetCard(pet, isArchived) {
     const age = calcAge(pet.birthday);
     const ageDisplay = age || 'Chưa rõ';
-    const genderIcon = pet.gender === 'Đực' ? '♂' : pet.gender === 'Cái' ? '♀' : '';
-    const avatarHTML = pet.photo 
+    const genderLabel = pet.gender ? `<span class="pet-gender-badge">${pet.gender}</span>` : '';
+    const avatarHTML = pet.photo
         ? `<img src="${pet.photo}" alt="${pet.name}" class="pet-avatar">`
-        : `<div class="pet-avatar-placeholder">${getSpeciesEmoji(pet.species)}</div>`;
+        : `<div class="pet-avatar-placeholder">${PAW_SVG}</div>`;
     
     let countdownHTML = '';
     if (isArchived && pet.archivedAt) {
         const daysLeft = calculateDaysLeft(pet.archivedAt);
-        countdownHTML = `<div class="archive-countdown">Còn ${daysLeft} ngày</div>`;
+        countdownHTML = `<div class="archive-countdown">Còn ${daysLeft} ngày để khôi phục</div>`;
     }
     
     const cardClass = isArchived ? 'pet-card pet-card-archived' : 'pet-card';
@@ -405,7 +436,7 @@ function createPetCard(pet, isArchived) {
                     <div class="pet-id">${pet.id}</div>
                     <div class="pet-meta">
                         <span>${pet.species}${pet.breed ? ` • ${pet.breed}` : ''}</span>
-                        <span>${genderIcon} ${ageDisplay}</span>
+                        <span>${genderLabel}${genderLabel ? ' ' : ''}${ageDisplay}</span>
                     </div>
                 </div>
             </div>
@@ -423,17 +454,6 @@ function createPetCard(pet, isArchived) {
             ${actionsHTML}
         </div>
     `;
-}
-
-function getSpeciesEmoji(species) {
-    const emojis = {
-        'Chó': '🐕',
-        'Mèo': '🐈',
-        'Hamster': '🐹',
-        'Thỏ': '🐰',
-        'Khác': '🐾'
-    };
-    return emojis[species] || '🐾';
 }
 
 // ── Calculate Days Left ───────────────────────────────────────────────────────
