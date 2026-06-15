@@ -337,6 +337,24 @@ async function loadServices() {
     }
 }
 
+/**
+ * Get a single service by Service ID
+ * @param {string} serviceId - Service ID (e.g. SPA01)
+ * @returns {Promise<Object|null>} - Promise resolving to service object or null
+ */
+async function getServiceById(serviceId) {
+    const services = await loadServices();
+    const service = services.find(s => s.serviceId === serviceId);
+    
+    if (!service) {
+        console.error(`❌ Service not found: ID ${serviceId}`);
+        return null;
+    }
+    
+    console.log(`✓ Found service:`, service.name);
+    return service;
+}
+
 // Export functions for use in other modules
 window.DataLoader = {
     loadProducts,
@@ -344,7 +362,8 @@ window.DataLoader = {
     getProductsByCategory,
     getProductsByBrand,
     searchProducts,
-    loadServices
+    loadServices,
+    getServiceById
 };
 
 console.log('✓ DataLoader module initialized');

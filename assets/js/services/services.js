@@ -101,7 +101,7 @@ function renderServices() {
 
         return `
             <div class="service-card" data-id="${service.serviceId}">
-                <div class="service-card-link">
+                <a href="service-detail.html?id=${service.serviceId}" class="service-card-link">
                     <div class="service-image-wrapper">
                         <span class="service-category-badge">${displayCategory}</span>
                         <img src="../../${service.image}" alt="${sanitizedName}" class="service-image" loading="lazy" onerror="this.src='../../assets/images/services/spa-intro.jpg'">
@@ -135,7 +135,7 @@ function renderServices() {
                             <span class="service-card-price">${formattedPrice} VNĐ<span class="service-card-price-unit">${priceUnit}</span></span>
                         </div>
                     </div>
-                </div>
+                </a>
                 <div class="service-card-actions">
                     <a href="booking.html?service=${service.serviceId}" class="service-btn-book">Đặt lịch ngay</a>
                 </div>
