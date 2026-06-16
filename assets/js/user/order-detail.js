@@ -224,10 +224,20 @@ function renderActions() {
             break;
             
         case 'preparing':
-        case 'shipping':
             buttons.push(`
+                <button class="btn-green-outline" onclick="contactHotline()">
+                    Liên hệ hotline
+                </button>
                 <button class="btn-danger-outline" onclick="cancelOrder()">
                     Hủy đơn hàng
+                </button>
+            `);
+            break;
+            
+        case 'shipping':
+            buttons.push(`
+                <button class="btn-green-outline" onclick="contactHotline()">
+                    Liên hệ hotline
                 </button>
             `);
             break;
@@ -241,9 +251,41 @@ function renderActions() {
             break;
             
         case 'completed':
+            // 1. Return logic
+            const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
+            const alreadyReturned = returnsList.some(r => r.orderId === currentOrder.id);
+
+            if (alreadyReturned) {
+                buttons.push(`
+                    <a href="/pages/user/return-detail.html?orderId=${currentOrder.id}" class="btn-track-order" style="text-decoration: none;">
+                        Chi tiết đổi trả
+                    </a>
+                `);
+            } else {
+                buttons.push(`
+                    <button class="btn-track-order" onclick="openRMADrawer('${currentOrder.id}')">
+                        Yêu cầu trả hàng/hoàn tiền
+                    </button>
+                `);
+            }
+
+            // 2. Review logic
+            const reviewed = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
+            const allReviewed = currentOrder.products.every(p =>
+                reviewed.some(r => r.orderId === currentOrder.id && r.productId === p.id)
+            );
+            if (allReviewed) {
+                 buttons.push(`
+                    <button class="btn-review" onclick="showOrderReviewsModal('${currentOrder.id}')" style="border: none;">
+                        Xem đánh giá
+                    </button>
+                `);
+            }
+
+            // 3. Reorder
             buttons.push(`
-                <button class="btn-green-outline" onclick="requestReturn()">
-                    Yêu cầu đổi trả
+                <button class="btn-view-detail" onclick="reorder('${currentOrder.id}')" style="border: none;">
+                    Mua lại
                 </button>
             `);
             break;
@@ -267,6 +309,11 @@ function cancelOrder() {
     }
 }
 
+function contactHotline() {
+    alert('Đang kết nối đến tổng đài CSKH: 1900 xxxx...');
+    // TODO: Initiate call or show hotline modal
+}
+
 function confirmReceived() {
     if (confirm('Xác nhận bạn đã nhận được hàng?')) {
         currentOrder.status = 'completed';
@@ -283,13 +330,42 @@ function confirmReceived() {
     }
 }
 
-function writeReview() {
-    // Handled by ReviewHandler.init — this is a fallback no-op
-    console.log('[order-detail] writeReview called — ReviewHandler manages inline forms');
+function showOrderReviewsModal(orderId) {
+    const allReviews = JSON.parse(localStorage.getItem('pawpal_reviews') || '[]');
+    const myReviews = allReviews.filter(r => r.orderId === orderId);
+    
+    if (myReviews.length === 0) {
+        alert('Bạn chưa viết đánh giá nào cho đơn hàng này.');
+        return;
+    }
+
+    let reviewItems = myReviews.map(r => {
+        let stars = '&#9733;'.repeat(r.rating) + '&#9734;'.repeat(5 - r.rating);
+        return `
+            <div style="border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px;">
+                <div style="color: #f59e0b; font-size: 1.2rem; margin-bottom: 8px;">${stars}</div>
+                <p style="margin: 0; font-size: 0.95rem; color: #333;">${r.comment || '<i>Không có nhận xét</i>'}</p>
+            </div>
+        `;
+    }).join('');
+
+    // Create a simple modal
+    const modalHtml = `
+        <div id="review-modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px;">
+            <div style="background: #fff; width: 100%; max-width: 500px; border-radius: 12px; padding: 24px; position: relative;">
+                <button onclick="document.getElementById('review-modal-overlay').remove()" style="position: absolute; top: 12px; right: 16px; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
+                <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1.2rem; color: var(--color-primary-dark);">Đánh giá của bạn</h3>
+                <div style="max-height: 60vh; overflow-y: auto;">
+                    ${reviewItems}
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
-function requestReturn() {
-    openReturnPanel();
+function reorder(orderId) {
+    alert(`Đã thêm các sản phẩm của đơn hàng ${orderId} vào giỏ hàng`);
 }
 
 // Show error

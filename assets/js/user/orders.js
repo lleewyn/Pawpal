@@ -142,11 +142,15 @@ function createOrderCard(order) {
 
     const reviewActionHTML = isCompleted
         ? allReviewed
-            ? `<span class="reviewed-label" aria-label="Đã đánh giá tất cả sản phẩm">&#10003; Đã đánh giá</span>`
+            ? `<a href="/pages/user/order-detail.html?id=${order.id}#reviews"
+                  class="btn-track-order" style="text-decoration: none;"
+                  aria-label="Xem đánh giá đơn hàng ${order.id}">
+                   Xem đánh giá
+               </a>`
             : `<a href="/pages/user/order-detail.html?id=${order.id}#reviews"
-                  class="btn-write-review"
-                  aria-label="Viết đánh giá đơn hàng ${order.id}">
-                   &#9998; Viết đánh giá
+                  class="btn-review" style="text-decoration: none;"
+                  aria-label="Đánh giá đơn hàng ${order.id}">
+                   Đánh giá
                </a>`
         : '';
 
@@ -155,7 +159,7 @@ function createOrderCard(order) {
     const now = new Date();
     const diffMs = now - completedDate;
     const diffHours = diffMs / (1000 * 60 * 60);
-    const returnAllowed = isCompleted && (diffHours <= 168); // 7 days = 168 hours
+    const returnAllowed = isCompleted; // Luôn hiển thị nút đổi trả cho đơn hoàn thành (giống trang chi tiết)
     
     // Check if order has already requested return
     const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
@@ -167,17 +171,46 @@ function createOrderCard(order) {
         if (alreadyReturned) {
             returnActionHTML = `
                 <a href="/pages/user/return-detail.html?orderId=${order.id}" class="btn-track-order" style="text-decoration: none;">
-                    &#10003; Chi tiết đổi trả
+                    Chi tiết đổi trả
                 </a>
             `;
         } else {
             const diffDays = Math.max(0, 7 - Math.floor(diffMs / (1000 * 60 * 60 * 24)));
             returnActionHTML = `
                 <button class="btn-track-order" onclick="openRMADrawer('${order.id}')">
-                    &#8634; Yêu cầu Đổi trả (Còn ${diffDays} ngày)
+                    Yêu cầu trả hàng/hoàn tiền
                 </button>
             `;
         }
+    }
+
+    const reorderActionHTML = isCompleted 
+        ? `<button class="btn-view-detail" onclick="reorder('${order.id}')" style="border: none;">Mua lại</button>`
+        : '';
+
+    let footerButtonsHTML = '';
+    
+    if (order.status === 'shipping') {
+        footerButtonsHTML = `
+            <button class="btn-track-order" onclick="contactHotline('${order.id}')">
+                Liên hệ hotline
+            </button>
+        `;
+    } else if (order.status === 'pending_payment' || order.status === 'preparing') {
+        footerButtonsHTML = `
+            <button class="btn-track-order" onclick="contactHotline('${order.id}')">
+                Liên hệ hotline
+            </button>
+            <button class="btn-track-order" onclick="cancelOrder('${order.id}')" style="color: var(--color-danger); border-color: var(--color-danger);">
+                Hủy đơn hàng
+            </button>
+        `;
+    } else if (order.status === 'completed') {
+        footerButtonsHTML = `
+            ${returnActionHTML}
+            ${reviewActionHTML}
+            ${reorderActionHTML}
+        `;
     }
 
     return `
@@ -191,7 +224,7 @@ function createOrderCard(order) {
                     ${statusLabel}
                 </span>
             </div>
-            <div class="order-card-body">
+            <div class="order-card-body" onclick="window.location.href='/pages/user/order-detail.html?id=${order.id}'" style="cursor: pointer;" title="Nhấn để xem chi tiết đơn hàng">
                 <div class="product-preview">
                     <img src="${firstProduct.image}" 
                          alt="${firstProduct.name}" 
@@ -209,14 +242,8 @@ function createOrderCard(order) {
                     <span class="summary-value">${formatCurrency(order.pricing.total)}</span>
                 </div>
             </div>
-            <div class="order-card-footer" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                <a href="/pages/user/order-detail.html?id=${order.id}" 
-                   class="btn-view-detail">Xem chi tiết</a>
-                ${reviewActionHTML}
-                ${returnActionHTML}
-                <button class="btn-track-order" onclick="trackOrder('${order.id}')">
-                    Theo dõi đơn hàng
-                </button>
+            <div class="order-card-footer" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+                ${footerButtonsHTML}
             </div>
         </article>
     `;
@@ -274,9 +301,19 @@ function goToPage(page) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Track order (placeholder)
-function trackOrder(orderId) {
-    alert(`Chức năng theo dõi đơn hàng ${orderId} đang được phát triển`);
+// Action Handlers
+function contactHotline(orderId) {
+    alert(`Gọi hotline hỗ trợ cho đơn hàng ${orderId}: 1900 1234`);
+}
+
+function cancelOrder(orderId) {
+    if (confirm(`Bạn có chắc chắn muốn hủy đơn hàng ${orderId}?`)) {
+        alert(`Đã gửi yêu cầu hủy đơn hàng ${orderId}`);
+    }
+}
+
+function reorder(orderId) {
+    alert(`Đã thêm các sản phẩm của đơn hàng ${orderId} vào giỏ hàng`);
 }
 
 // Utility: Format currency

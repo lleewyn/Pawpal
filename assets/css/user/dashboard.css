@@ -4,6 +4,38 @@
    =================================================================== */
 
 /* Container */
+/* ── Breadcrumb ───────────────────────────────────────────────────────── */
+.breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 var(--space-lg) 0;
+    padding: 0;
+    list-style: none;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    color: var(--color-text-light);
+    margin-right: 8px;
+}
+
+.breadcrumb-item a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: var(--fs-body);
+}
+
+.breadcrumb-item a:hover {
+    color: var(--color-primary-dark);
+    text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+    color: var(--color-text-light);
+    font-size: var(--fs-body);
+}
 .dashboard-container {
     background-color: var(--color-bg-light);
     min-height: 60vh;

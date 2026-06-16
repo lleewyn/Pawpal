@@ -41,12 +41,13 @@
         <!-- Main Content -->
         <main class="order-detail-main">
             <!-- Breadcrumb -->
-            <nav class="breadcrumb">
-                <a href="/pages/user/dashboard.html">Trang cá nhân</a>
-                <span>→</span>
-                <a href="/pages/user/orders.html">Đơn hàng</a>
-                <span>→</span>
-                <span id="order-id-breadcrumb">...</span>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/pages/public/index.html">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="/pages/user/dashboard.html">Trang cá nhân</a></li>
+                    <li class="breadcrumb-item"><a href="/pages/user/orders.html">Đơn hàng của tôi</a></li>
+                    <li class="breadcrumb-item active" aria-current="page" id="order-id-breadcrumb">...</li>
+                </ol>
             </nav>
 
             <!-- Order Header -->

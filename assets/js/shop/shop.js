@@ -453,6 +453,17 @@ function renderProducts() {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 e.preventDefault();
+
+                // Check if user is logged in
+                const user = JSON.parse(localStorage.getItem('pawpal_user') || 'null');
+                if (!user) {
+                    showToast('Vui lòng đăng nhập để mua hàng', 'warning');
+                    setTimeout(() => {
+                        window.location.href = '/pages/public/login.html';
+                    }, 1500);
+                    return;
+                }
+
                 const productId = parseInt(btn.dataset.productId);
                 const product = state.products.find(p => p.id === productId);
                 if (product && product.inStock) {
@@ -781,6 +792,16 @@ function toggleWishlist(productId) {
 // ══════════════════════════════════════════════════════════════════════════
 
 function addToCart(productId) {
+    // Check if user is logged in
+    const user = JSON.parse(localStorage.getItem('pawpal_user') || 'null');
+    if (!user) {
+        showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
+        setTimeout(() => {
+            window.location.href = '/pages/public/login.html';
+        }, 1500);
+        return;
+    }
+
     const product = state.products.find(p => p.id === productId);
     if (!product || !product.inStock) return;
     

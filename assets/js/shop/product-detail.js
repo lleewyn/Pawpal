@@ -75,6 +75,16 @@ document.addEventListener('DOMContentLoaded', async () => {
  * Handle Add to Cart - Add product to cart and stay on page
  */
 function handleAddToCart() {
+    // Check if user is logged in
+    const user = JSON.parse(localStorage.getItem('pawpal_user') || 'null');
+    if (!user) {
+        showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
+        setTimeout(() => {
+            window.location.href = '/pages/public/login.html';
+        }, 1500);
+        return;
+    }
+
     const product = getCurrentProduct();
     const quantity = parseInt(document.getElementById('quantity').value) || 1;
     
@@ -108,6 +118,16 @@ function handleAddToCart() {
  * Handle Buy Now - Add product to cart and redirect to checkout
  */
 function handleBuyNow() {
+    // Check if user is logged in
+    const user = JSON.parse(localStorage.getItem('pawpal_user') || 'null');
+    if (!user) {
+        showToast('Vui lòng đăng nhập để mua hàng', 'warning');
+        setTimeout(() => {
+            window.location.href = '/pages/public/login.html';
+        }, 1500);
+        return;
+    }
+
     const product = getCurrentProduct();
     const quantity = parseInt(document.getElementById('quantity').value) || 1;
     

@@ -20,27 +20,7 @@
     min-width: 0;
 }
 
-/* ── Breadcrumb ───────────────────────────────────────────────────────── */
-.breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    margin-bottom: var(--space-lg);
-    font-size: var(--fs-body);
-    color: var(--color-text-light);
-}
-
-.breadcrumb a {
-    color: var(--color-primary);
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.breadcrumb a:hover {
-    color: var(--color-primary-dark);
-}
-
-/* ── Quick Stats ──────────────────────────────────────────────────────── */
+/* ── Breadcrumb removed to dashboard.css ── *//* ── Quick Stats ──────────────────────────────────────────────────────── */
 .orders-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -300,7 +280,8 @@
 }
 
 .summary-label {
-    font-size: var(--fs-body);
+    font-size: var(--fs-h4);
+    font-weight: 700;
     color: var(--color-text-light);
 }
 
@@ -320,42 +301,7 @@
     align-items: center;
 }
 
-.btn-view-detail,
-.btn-track-order {
-    padding: 10px 20px;
-    border-radius: var(--border-radius-pill);
-    font-family: var(--font-body);
-    font-size: var(--fs-body);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none;
-    text-align: center;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-view-detail {
-    background: var(--color-primary);
-    color: #fff;
-    border: none;
-}
-
-.btn-view-detail:hover {
-    background: var(--color-primary-dark);
-    color: #fff;
-}
-
-.btn-track-order {
-    background: transparent;
-    color: var(--color-primary);
-    border: 2px solid var(--color-primary);
-}
-
-.btn-track-order:hover {
-    background: var(--color-primary-light);
-}
+/* Button classes removed (migrated to button.css) */
 
 /* ── Pagination ───────────────────────────────────────────────────────── */
 .pagination {
