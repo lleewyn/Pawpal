@@ -1,4 +1,4 @@
-# PawPal Product & Brand Specifications
+# PawPal Product & Brand Specification
 
 Tài liệu này lưu trữ các định hướng chiến lược về thương hiệu và ngôn ngữ thiết kế của PawPal, đóng vai trò làm kim chỉ nam (anchor) cho mọi quyết định nâng cấp giao diện, đảm bảo tính nhất quán và loại bỏ hoàn toàn các lỗi thiết kế đại trà (AI-generated tropes).
 
