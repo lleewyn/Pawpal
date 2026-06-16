@@ -56,15 +56,23 @@ function parseCSV(csvText) {
  */
 function transformProductData(rawData) {
     return rawData.map((item, index) => {
-        // Extract category slug from SKU or map from Vietnamese name
+        // Map from Vietnamese category name in CSV to category slug
         const categoryMap = {
-            'Thực phẩm': 'food',
-            'Đồ dùng': 'accessories',
+            'Thức ăn khô': 'food-dry',
+            'Thức ăn ướt': 'food-wet',
+            'Xương gặm': 'bones',
+            'Sức khỏe': 'health',
+            'Đồ chơi': 'toys',
+            'Quần áo': 'clothes',
             'Vệ sinh': 'hygiene',
-            'Phụ kiện': 'accessories'
+            'Bát ăn': 'bowls',
+            'Chăm sóc': 'grooming',
+            'Phụ kiện': 'accessories',
+            'Nội thất': 'furniture',
+            'Khác': 'other'
         };
         
-        const category = categoryMap[item['Phân loại']] || 'other';
+        const category = categoryMap[item['Danh mục (Category)']] || 'other';
         
         // Parse prices
         const price = parseInt(item['Giá sau tích điểm']?.replace(/\./g, '').replace(/[^\d]/g, '') || item['Giá bán lẻ']?.replace(/\./g, '').replace(/[^\d]/g, '') || '0');
@@ -94,6 +102,9 @@ function transformProductData(rawData) {
             name: item['Tên sản phẩm'] || 'Sản phẩm không tên',
             brand: item['Thương hiệu (Brand)'] || 'Chưa xác định',
             category: category,
+            categoryName: item['Danh mục (Category)'] || 'Khác',
+            description: item['Công dụng'] || item['Thành phần'] || '',
+            origin: item['Xuất xứ'] || 'Chưa rõ',
             price: price,
             originalPrice: sale ? originalPrice : null,
             oldPrice: sale ? originalPrice : null,

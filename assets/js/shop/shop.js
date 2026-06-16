@@ -169,6 +169,10 @@ function initFilters() {
         { value: 'grooming', label: 'Chăm sóc' },
         { value: 'accessories', label: 'Phụ kiện' },
         { value: 'hygiene', label: 'Vệ sinh' },
+        { value: 'clothes', label: 'Quần áo' },
+        { value: 'bowls', label: 'Bát ăn' },
+        { value: 'furniture', label: 'Nội thất' },
+        { value: 'other', label: 'Khác' }
     ];
     
     categoryFilters.innerHTML = categories.map(cat => {
@@ -441,6 +445,30 @@ function renderProducts() {
                 e.stopPropagation();
                 e.preventDefault();
                 addToCart(parseInt(btn.dataset.productId));
+            });
+        });
+
+        // Attach buy now listeners
+        grid.querySelectorAll('.product-buy-now').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const productId = parseInt(btn.dataset.productId);
+                const product = state.products.find(p => p.id === productId);
+                if (product && product.inStock) {
+                    // Create temporary cart with this product only
+                    const buyNowCart = [{
+                        ...product,
+                        quantity: 1
+                    }];
+                    
+                    // Save to sessionStorage
+                    sessionStorage.setItem('pawpal_buynow_cart', JSON.stringify(buyNowCart));
+                    sessionStorage.setItem('pawpal_is_buynow', 'true');
+                    
+                    // Redirect to checkout
+                    window.location.href = '../shop/checkout.html?buynow=true';
+                }
             });
         });
     }
@@ -763,8 +791,15 @@ function addToCart(productId) {
     const existingItem = cart.find(item => item.id === productId);
     if (existingItem) {
         existingItem.quantity++;
+        // Fix for previously broken cart items that only had id and quantity
+        if (!existingItem.name) {
+            Object.assign(existingItem, product);
+        }
     } else {
-        cart.push({ id: productId, quantity: 1 });
+        cart.push({ 
+            ...product, 
+            quantity: 1 
+        });
     }
     
     localStorage.setItem('pawpal_cart', JSON.stringify(cart));

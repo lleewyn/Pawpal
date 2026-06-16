@@ -129,6 +129,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Cập nhật lại giỏ hàng chính chỉ gồm các sản phẩm được chọn để trang checkout xử lý
                 localStorage.setItem('pawpal_cart', JSON.stringify(selectedItems));
                 
+                // Clear any lingering "buy now" state so checkout loads the normal cart
+                sessionStorage.removeItem('pawpal_is_buynow');
+                sessionStorage.removeItem('pawpal_buynow_cart');
+                
                 // Nếu có mã giảm giá đã áp dụng, lưu vào localStorage để checkout.html tự nhận diện
                 if (appliedVoucher) {
                     localStorage.setItem('pawpal_applied_voucher_code', appliedVoucher.code);
