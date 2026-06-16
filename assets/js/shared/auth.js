@@ -366,118 +366,222 @@ function initAuthForms() {
         });
     });
 
-    // --- PHƯƠNG THỨC ĐĂNG NHẬP (PASSWORD VS SMS) ---
-    const methodPassword = document.getElementById('methodPassword');
-    const methodSMS = document.getElementById('methodSMS');
-    const loginPasswordField = document.getElementById('loginPasswordField');
-    const loginSMSField = document.getElementById('loginSMSField');
+    // --- PHƯƠNG THỨC ĐĂNG NHẬP (MULTI-STEP & SMS IN NEW LAYOUT) ---
+    const btnLoginContinue = document.getElementById('btnLoginContinue');
+    const loginStepPhone = document.getElementById('loginStepPhone');
+    const loginStepPassword = document.getElementById('loginStepPassword');
+    const loginPhone = document.getElementById('loginPhone');
+    const loginPhoneDisplay = document.getElementById('loginPhoneDisplay');
+    const btnChangePhone = document.getElementById('btnChangePhone');
+    const loginPassword = document.getElementById('loginPassword');
+    const btnLoginBySMS = document.getElementById('btnLoginBySMS');
+    const loginSmsCodeArea = document.getElementById('loginSmsCodeArea');
+    const loginSmsTimer = document.getElementById('loginSmsTimer');
+    const btnResendLoginSms = document.getElementById('btnResendLoginSms');
+    const loginOtpInputs = document.querySelectorAll('.login-otp-input');
+    const btnLoginSubmit = document.getElementById('btnLoginSubmit');
 
-    methodPassword.addEventListener('click', () => {
-        methodPassword.classList.add('active');
-        methodSMS.classList.remove('active');
-        loginPasswordField.classList.remove('d-none');
-        loginSMSField.classList.add('d-none');
-    });
+    let loginSmsInterval = null;
 
-    methodSMS.addEventListener('click', () => {
-        methodSMS.classList.add('active');
-        methodPassword.classList.remove('active');
-        loginPasswordField.classList.add('d-none');
-        loginSMSField.classList.remove('d-none');
-    });
-
-    // Nhận mã đăng nhập nhanh SMS (Giả lập)
-    const btnRequestLoginSMS = document.getElementById('btnRequestLoginSMS');
-    btnRequestLoginSMS.addEventListener('click', () => {
-        const phone = document.getElementById('loginPhone').value;
-        if (!/^[0-9]{10}$/.test(phone)) {
-            showToast('error', 'Vui lòng nhập số điện thoại 10 số trước.');
-            return;
-        }
-        btnRequestLoginSMS.disabled = true;
-        btnRequestLoginSMS.textContent = 'Đã gửi (60s)';
-        showToast('info', 'Mã OTP truy cập nhanh đã gửi về điện thoại: 123456');
-        
-        let seconds = 60;
-        const interval = setInterval(() => {
-            seconds--;
-            if (seconds <= 0) {
-                clearInterval(interval);
-                btnRequestLoginSMS.disabled = false;
-                btnRequestLoginSMS.textContent = 'Nhận mã';
-            } else {
-                btnRequestLoginSMS.textContent = `Đã gửi (${seconds}s)`;
+    // Handle "Continue" button in Step 1 of Login
+    if (btnLoginContinue) {
+        btnLoginContinue.addEventListener('click', (e) => {
+            e.preventDefault();
+            const phoneVal = loginPhone.value.trim();
+            const feedback = document.getElementById('loginPhoneFeedback');
+            
+            if (!/^0[0-9]{9}$/.test(phoneVal)) {
+                loginPhone.classList.add('is-invalid');
+                if (feedback) feedback.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
+                return;
             }
-        }, 1000);
-    });
+            loginPhone.classList.remove('is-invalid');
 
-    // --- FORM SUBMIT LOGIN (US 2-1) ---
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const phone = document.getElementById('loginPhone').value;
-        const users = getUsers();
+            const users = getUsers();
+            const user = users.find(u => u.phone === phoneVal);
 
-        if (methodSMS.classList.contains('active')) {
-            const code = document.getElementById('loginSMSCode').value;
-            if (code === '123456') {
-                let user = users.find(u => u.phone === phone);
-                if (!user) {
-                    // Nếu chưa có user thì ngầm tạo tài khoản thường
-                    user = { name: "Khách SMS " + phone.substring(6), phone: phone, role: "customer", is_temporary: false, points: 50 };
-                    users.push(user);
-                    saveUsers(users);
+            if (!user) {
+                // SĐT chưa tồn tại
+                showErrorBanner(
+                    'Số điện thoại chưa được đăng ký. Vui lòng <a href="?action=register" class="text-decoration-underline fw-bold" style="color: var(--color-danger);">Đăng ký ngay</a>',
+                    loginForm
+                );
+            } else if (user.is_temporary) {
+                // Tài khoản tạm của khách vãng lai -> Chuyển sang thiết lập mật khẩu
+                showToast('info', 'Tài khoản của bạn đang là tài khoản tạm thời. Hệ thống sẽ chuyển hướng bạn thiết lập mật khẩu.');
+                const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
+                let tokenObj = tokens.find(t => t.phone === user.phone);
+                if (!tokenObj) {
+                    tokenObj = { token: 'token-dynamic-' + Math.random().toString(36).substr(2, 9), phone: user.phone, createdAt: Date.now() };
+                    tokens.push(tokenObj);
+                    localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
                 }
-                setCurrentUser(user);
-                showToast('success', 'Đăng nhập thành công!', 2000);
                 setTimeout(() => {
-                    // Điều hướng theo role
-                    if (user.role === 'admin') {
-                        window.location.href = '/pages/admin/index.html';
-                    } else {
-                        window.location.href = '/pages/user/dashboard.html';
-                    }
-                }, 2000);
+                    window.location.href = `/pages/public/login.html?action=setup-password&token=${tokenObj.token}`;
+                }, 1500);
             } else {
-                showErrorBanner('Mã OTP không đúng. Vui lòng nhập <strong>123456</strong> để thử nghiệm.', loginForm);
+                // Thành viên chính thức -> Cho nhập mật khẩu
+                loginStepPhone.classList.add('d-none');
+                loginStepPassword.classList.remove('d-none');
+                if (loginPhoneDisplay) loginPhoneDisplay.textContent = phoneVal;
+                if (loginPassword) loginPassword.focus();
             }
-        } else {
-            const password = document.getElementById('loginPassword').value;
-            const user = users.find(u => u.phone === phone && u.password === password);
+        });
+    }
+
+    // Handle change phone click in Step 2 of Login
+    if (btnChangePhone) {
+        btnChangePhone.addEventListener('click', () => {
+            loginStepPassword.classList.add('d-none');
+            loginStepPhone.classList.remove('d-none');
+            if (loginPassword) loginPassword.value = '';
+            if (loginSmsCodeArea) loginSmsCodeArea.classList.add('d-none');
+            loginOtpInputs.forEach(input => input.value = '');
+            if (loginSmsInterval) clearInterval(loginSmsInterval);
+        });
+    }
+
+    // Handle Login by SMS option
+    if (btnLoginBySMS) {
+        btnLoginBySMS.addEventListener('click', () => {
+            loginSmsCodeArea.classList.remove('d-none');
+            loginOtpInputs[0].focus();
+            showToast('info', 'Mã OTP đăng nhập nhanh đã được gửi: 123456');
+            
+            // Start SMS timer
+            if (loginSmsInterval) clearInterval(loginSmsInterval);
+            let seconds = 300; // 5 mins
+            if (btnResendLoginSms) btnResendLoginSms.disabled = true;
+
+            loginSmsInterval = setInterval(() => {
+                seconds--;
+                let m = Math.floor(seconds / 60);
+                let s = seconds % 60;
+                loginSmsTimer.textContent = `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
+                if (seconds <= 0) {
+                    clearInterval(loginSmsInterval);
+                    if (btnResendLoginSms) btnResendLoginSms.disabled = false;
+                }
+            }, 1000);
+        });
+    }
+
+    // OTP SMS Inputs Logic for Login
+    loginOtpInputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+            const val = e.target.value;
+            if (!/^[0-9]$/.test(val)) {
+                e.target.value = '';
+                return;
+            }
+            if (index < loginOtpInputs.length - 1) {
+                loginOtpInputs[index + 1].disabled = false;
+                loginOtpInputs[index + 1].focus();
+            } else {
+                // Auto trigger login when last digit is filled
+                triggerSmsLogin();
+            }
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace') {
+                if (input.value === '') {
+                    if (index > 0) {
+                        loginOtpInputs[index - 1].focus();
+                        loginOtpInputs[index].disabled = true;
+                    }
+                } else {
+                    input.value = '';
+                }
+            }
+        });
+    });
+
+    if (btnResendLoginSms) {
+        btnResendLoginSms.addEventListener('click', () => {
+            showToast('info', 'Mã OTP đăng nhập nhanh đã gửi lại: 123456');
+            // Reset timer
+            let seconds = 300;
+            btnResendLoginSms.disabled = true;
+            if (loginSmsInterval) clearInterval(loginSmsInterval);
+            loginSmsInterval = setInterval(() => {
+                seconds--;
+                let m = Math.floor(seconds / 60);
+                let s = seconds % 60;
+                loginSmsTimer.textContent = `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
+                if (seconds <= 0) {
+                    clearInterval(loginSmsInterval);
+                    btnResendLoginSms.disabled = false;
+                }
+            }, 1000);
+        });
+    }
+
+    function triggerSmsLogin() {
+        let code = '';
+        loginOtpInputs.forEach(input => code += input.value);
+        if (code === '123456') {
+            const phone = loginPhone.value.trim();
+            const users = getUsers();
+            let user = users.find(u => u.phone === phone);
             if (user) {
                 setCurrentUser(user);
                 showToast('success', 'Đăng nhập thành công!', 2000);
                 setTimeout(() => {
-                    // Điều hướng theo role
                     if (user.role === 'admin') {
                         window.location.href = '/pages/admin/index.html';
                     } else {
                         window.location.href = '/pages/user/dashboard.html';
                     }
                 }, 2000);
-            } else {
-                // AC2.1.1 - Show error banner instead of alert
-                const userExists = users.find(u => u.phone === phone);
-                if (!userExists) {
-                    showErrorBanner(
-                        'Số điện thoại chưa được đăng ký. Vui lòng <a href="?action=register" class="text-decoration-underline fw-bold" style="color: var(--color-danger);">Đăng ký ngay</a>',
-                        loginForm
-                    );
-                } else {
-                    showErrorBanner('Mật khẩu không đúng. Vui lòng thử lại hoặc <a href="#" id="inlineForgotLink" class="text-decoration-underline fw-bold" style="color: var(--color-danger);">quên mật khẩu?</a>', loginForm);
-                    
-                    // Add click handler for inline forgot link
-                    setTimeout(() => {
-                        const inlineForgotLink = document.getElementById('inlineForgotLink');
-                        if (inlineForgotLink) {
-                            inlineForgotLink.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                document.getElementById('triggerForgot').click();
-                            });
-                        }
-                    }, 100);
-                }
-                document.getElementById('loginPhone').classList.add('is-invalid');
             }
+        } else {
+            showErrorBanner('Mã OTP không đúng. Vui lòng nhập <strong>123456</strong> để thử nghiệm.', loginForm);
+            loginOtpInputs.forEach((input, idx) => {
+                input.value = '';
+                if (idx > 0) input.disabled = true;
+            });
+            loginOtpInputs[0].focus();
+        }
+    }
+
+    // --- FORM SUBMIT LOGIN (US 2-1) ---
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        // If SMS login area is visible and filled, try SMS login
+        if (loginSmsCodeArea && !loginSmsCodeArea.classList.contains('d-none')) {
+            triggerSmsLogin();
+            return;
+        }
+
+        const phone = loginPhone.value.trim();
+        const password = loginPassword.value;
+        const users = getUsers();
+        const user = users.find(u => u.phone === phone && u.password === password);
+
+        if (user) {
+            setCurrentUser(user);
+            showToast('success', 'Đăng nhập thành công!', 2000);
+            setTimeout(() => {
+                if (user.role === 'admin') {
+                    window.location.href = '/pages/admin/index.html';
+                } else {
+                    window.location.href = '/pages/user/dashboard.html';
+                }
+            }, 2000);
+        } else {
+            showErrorBanner('Mật khẩu không đúng. Vui lòng thử lại hoặc <a href="#" id="inlineForgotLink" class="text-decoration-underline fw-bold" style="color: var(--color-danger);">quên mật khẩu?</a>', loginForm);
+            setTimeout(() => {
+                const inlineForgotLink = document.getElementById('inlineForgotLink');
+                if (inlineForgotLink) {
+                    inlineForgotLink.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        const triggerForgot = document.getElementById('triggerForgot');
+                        if (triggerForgot) triggerForgot.click();
+                    });
+                }
+            }, 100);
         }
     });
 
@@ -488,59 +592,71 @@ function initAuthForms() {
     const regConfirmPassword = document.getElementById('registerConfirmPassword');
     const btnRegisterSubmit = document.getElementById('btnRegisterSubmit');
 
-    // US 2-1: Enhanced phone validation on blur
-    const loginPhone = document.getElementById('loginPhone');
-    loginPhone.addEventListener('blur', () => {
-        const phoneValue = loginPhone.value.trim();
-        const feedback = document.getElementById('loginPhoneFeedback');
-        
-        if (phoneValue.length > 0 && !/^0[0-9]{9}$/.test(phoneValue)) {
-            loginPhone.classList.add('is-invalid');
-            feedback.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
-        } else {
-            loginPhone.classList.remove('is-invalid');
-        }
-    });
-
-    loginPhone.addEventListener('input', () => {
-        loginPhone.classList.remove('is-invalid');
-    });
+    // US 2-1: Enhanced phone validation on blur for signup
+    if (regPhone) {
+        regPhone.addEventListener('blur', () => {
+            const phoneValue = regPhone.value.trim();
+            const feedback = document.getElementById('registerPhoneFeedback');
+            if (phoneValue.length > 0 && !/^0[0-9]{9}$/.test(phoneValue)) {
+                regPhone.classList.add('is-invalid');
+                if (feedback) feedback.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
+            } else {
+                regPhone.classList.remove('is-invalid');
+            }
+        });
+        regPhone.addEventListener('input', () => {
+            regPhone.classList.remove('is-invalid');
+        });
+    }
 
     // --- US 2-2: FORGOT PASSWORD FLOW ---
     const triggerForgot = document.getElementById('triggerForgot');
-    const forgotSection = document.getElementById('forgotPasswordSection');
-    const btnBackToLogin = document.getElementById('btnBackToLogin');
-    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    const forgotPhoneSection = document.getElementById('forgotPhoneSection');
+    const btnForgotBackToLogin = document.getElementById('btnForgotBackToLogin');
+    const forgotPhoneForm = document.getElementById('forgotPhoneForm');
     const forgotPhone = document.getElementById('forgotPhone');
+    
+    const forgotOtpSection = document.getElementById('forgotOtpSection');
+    const btnForgotOtpBack = document.getElementById('btnForgotOtpBack');
+    const forgotOtpTimer = document.getElementById('forgotOtpTimer');
+    const btnForgotResendOtp = document.getElementById('btnForgotResendOtp');
+    const forgotOtpInputs = document.querySelectorAll('.forgot-otp-input');
+    
+    const forgotNewPasswordSection = document.getElementById('forgotNewPasswordSection');
+    const forgotNewPasswordForm = document.getElementById('forgotNewPasswordForm');
+    const forgotNewPassword = document.getElementById('forgotNewPassword');
+    const forgotConfirmNewPassword = document.getElementById('forgotConfirmNewPassword');
+    const btnForgotNewPasswordSubmit = document.getElementById('btnForgotNewPasswordSubmit');
 
-    if (triggerForgot && forgotSection) {
+    let forgotOtpInterval = null;
+
+    if (triggerForgot && forgotPhoneSection) {
         triggerForgot.addEventListener('click', (e) => {
             e.preventDefault();
             
-            // Chuyển cảnh mượt mà (AC2.2.1)
             loginForm.style.opacity = '0';
             loginForm.style.transition = 'opacity 0.3s ease';
             
             setTimeout(() => {
                 loginForm.classList.remove('active-form');
-                authTabs.style.display = 'none';
-                forgotSection.classList.remove('d-none');
-                forgotSection.style.opacity = '0';
-                forgotSection.style.transition = 'opacity 0.3s ease';
+                if (authTabs) authTabs.style.display = 'none';
+                forgotPhoneSection.classList.remove('d-none');
+                forgotPhoneSection.style.opacity = '0';
+                forgotPhoneSection.style.transition = 'opacity 0.3s ease';
                 
                 setTimeout(() => {
-                    forgotSection.style.opacity = '1';
+                    forgotPhoneSection.style.opacity = '1';
                     forgotPhone.focus();
                 }, 50);
             }, 300);
         });
 
-        btnBackToLogin.addEventListener('click', () => {
-            forgotSection.style.opacity = '0';
+        btnForgotBackToLogin.addEventListener('click', () => {
+            forgotPhoneSection.style.opacity = '0';
             
             setTimeout(() => {
-                forgotSection.classList.add('d-none');
-                authTabs.style.display = 'flex';
+                forgotPhoneSection.classList.add('d-none');
+                if (authTabs) authTabs.style.display = 'flex';
                 loginForm.classList.add('active-form');
                 loginForm.style.opacity = '0';
                 
@@ -553,7 +669,6 @@ function initAuthForms() {
         // Validate forgot password phone input
         forgotPhone.addEventListener('blur', () => {
             const phoneValue = forgotPhone.value.trim();
-            
             if (phoneValue.length > 0 && !/^0[0-9]{9}$/.test(phoneValue)) {
                 forgotPhone.classList.add('is-invalid');
             } else {
@@ -565,8 +680,8 @@ function initAuthForms() {
             forgotPhone.classList.remove('is-invalid');
         });
 
-        // Form submit
-        forgotPasswordForm.addEventListener('submit', (e) => {
+        // Form submit - Step 1: Send OTP code
+        forgotPhoneForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const phone = forgotPhone.value.trim();
             
@@ -575,45 +690,160 @@ function initAuthForms() {
                 return;
             }
 
-            // Check if phone exists
             const users = getUsers();
             const userExists = users.find(u => u.phone === phone);
             
             if (!userExists) {
                 showErrorBanner(
                     'Số điện thoại chưa được đăng ký trong hệ thống. Vui lòng kiểm tra lại hoặc <a href="?action=register" class="text-decoration-underline fw-bold" style="color: var(--color-danger);">đăng ký tài khoản mới</a>.',
-                    forgotPasswordForm
+                    forgotPhoneForm
                 );
                 return;
             }
             
-            // Tạo token khôi phục (48h validity)
-            const resetToken = 'reset-' + Math.random().toString(36).substr(2, 9);
-            const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
-            tokens.push({
-                token: resetToken,
-                phone: phone,
-                type: 'password_reset',
-                createdAt: Date.now()
+            // Switch to OTP section
+            forgotPhoneSection.classList.add('d-none');
+            forgotOtpSection.classList.remove('d-none');
+            
+            forgotOtpInputs.forEach((input, idx) => {
+                input.value = '';
+                input.disabled = (idx > 0);
             });
-            localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
+            forgotOtpInputs[0].focus();
             
-            // Hiển thị Toast thành công (AC2.2.1)
-            const toastMessage = 'Đã gửi link đặt lại mật khẩu thành công về số điện thoại của bạn, liên kết có hiệu lực trong 48h';
-            showToast('success', toastMessage, 8000);
+            showToast('info', 'Mã OTP xác thực đã được gửi về SMS: 555666', 6000);
+            startForgotOtpTimer();
+        });
+
+        // Back from OTP to phone input
+        btnForgotOtpBack.addEventListener('click', () => {
+            forgotOtpSection.classList.add('d-none');
+            forgotPhoneSection.classList.remove('d-none');
+            if (forgotOtpInterval) clearInterval(forgotOtpInterval);
+        });
+
+        // Handle OTP input digits
+        forgotOtpInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                const val = e.target.value;
+                if (!/^[0-9]$/.test(val)) {
+                    e.target.value = '';
+                    return;
+                }
+                if (index < forgotOtpInputs.length - 1) {
+                    forgotOtpInputs[index + 1].disabled = false;
+                    forgotOtpInputs[index + 1].focus();
+                } else {
+                    checkForgotOtpSubmission();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace') {
+                    if (input.value === '') {
+                        if (index > 0) {
+                            forgotOtpInputs[index - 1].focus();
+                            forgotOtpInputs[index].disabled = true;
+                        }
+                    } else {
+                        input.value = '';
+                    }
+                }
+            });
+        });
+
+        function startForgotOtpTimer() {
+            if (forgotOtpInterval) clearInterval(forgotOtpInterval);
+            let duration = 300; // 5 mins
+            btnForgotResendOtp.disabled = true;
+
+            forgotOtpInterval = setInterval(() => {
+                let minutes = Math.floor(duration / 60);
+                let seconds = duration % 60;
+                forgotOtpTimer.textContent = `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+
+                if (duration <= 0) {
+                    clearInterval(forgotOtpInterval);
+                    btnForgotResendOtp.disabled = false;
+                }
+                duration--;
+            }, 1000);
+        }
+
+        if (btnForgotResendOtp) {
+            btnForgotResendOtp.addEventListener('click', () => {
+                showToast('info', 'Mã OTP xác thực mới đã gửi lại: 555666', 6000);
+                startForgotOtpTimer();
+                
+                forgotOtpInputs.forEach((input, idx) => {
+                    input.value = '';
+                    input.disabled = (idx > 0);
+                });
+                forgotOtpInputs[0].focus();
+            });
+        }
+
+        function checkForgotOtpSubmission() {
+            let code = '';
+            forgotOtpInputs.forEach(input => code += input.value);
+            if (code === '555666') {
+                clearInterval(forgotOtpInterval);
+                forgotOtpSection.classList.add('d-none');
+                forgotNewPasswordSection.classList.remove('d-none');
+                forgotNewPassword.focus();
+            } else {
+                showToast('error', 'Mã OTP chưa chính xác. Vui lòng nhập 555666 để test');
+                forgotOtpInputs.forEach((input, idx) => {
+                    input.value = '';
+                    if (idx > 0) input.disabled = true;
+                });
+                forgotOtpInputs[0].focus();
+            }
+        }
+
+        // New password formulation validation
+        function validateForgotNewPasswordForm() {
+            const isPassValid = forgotNewPassword.value.length >= 6;
+            const isConfirmValid = forgotConfirmNewPassword.value === forgotNewPassword.value;
             
-            // Simulate SMS link - Hiển thị alert để user nhìn thấy
-            const resetLink = `${window.location.origin}/pages/public/login.html?action=reset-password&token=${resetToken}`;
-            console.log(`[SMS Simulation] Reset password link: ${resetLink}`);
-            
-            // Show alert with link for demo purpose
-            setTimeout(() => {
-                alert(`✅ ĐÃ GỬI LINK KHÔI PHỤC!\n\nMô phỏng SMS:\n${resetLink}\n\n(Link này được log trong Console để test)`);
-            }, 500);
-            
-            // Reset form and go back after 5 seconds (give time to see toast)
-            forgotPasswordForm.reset();
-            setTimeout(() => btnBackToLogin.click(), 5000);
+            if (forgotConfirmNewPassword.value.length > 0 && !isConfirmValid) {
+                document.getElementById('forgotConfirmFeedback').textContent = 'Mật khẩu chưa khớp';
+                forgotConfirmNewPassword.classList.add('is-invalid');
+            } else {
+                forgotConfirmNewPassword.classList.remove('is-invalid');
+            }
+
+            btnForgotNewPasswordSubmit.disabled = !(isPassValid && isConfirmValid);
+        }
+
+        forgotNewPassword.addEventListener('input', validateForgotNewPasswordForm);
+        forgotConfirmNewPassword.addEventListener('input', validateForgotNewPasswordForm);
+
+        forgotNewPasswordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const phone = forgotPhone.value.trim();
+            const users = getUsers();
+            const userIdx = users.findIndex(u => u.phone === phone);
+
+            if (userIdx !== -1) {
+                users[userIdx].password = forgotNewPassword.value;
+                saveUsers(users);
+                
+                showToast('success', 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.');
+                setTimeout(() => {
+                    // Reset to login form step 1
+                    forgotNewPasswordSection.classList.add('d-none');
+                    if (authTabs) authTabs.style.display = 'flex';
+                    loginForm.classList.add('active-form');
+                    loginStepPassword.classList.add('d-none');
+                    loginStepPhone.classList.remove('d-none');
+                    loginPhone.value = phone;
+                    loginPassword.value = '';
+                    loginForm.reset();
+                    forgotPhoneForm.reset();
+                    forgotNewPasswordForm.reset();
+                }, 2000);
+            }
         });
     }
 
@@ -657,7 +887,7 @@ function initAuthForms() {
     const authTabs = document.getElementById('authTabs');
     const otpTimer = document.getElementById('otpTimer');
     const btnResendOtp = document.getElementById('btnResendOtp');
-    const otpInputs = document.querySelectorAll('.otp-input');
+    const otpInputs = document.querySelectorAll('#otpSection .otp-input');
     
     let otpCountdownInterval = null;
 
@@ -681,7 +911,11 @@ function initAuthForms() {
             otpSection.classList.remove('d-none');
             otpSection.style.opacity = '1';
             
-            // Focus vào ô OTP đầu tiên
+            // Focus và reset ô OTP
+            otpInputs.forEach((input, idx) => {
+                input.value = '';
+                input.disabled = (idx > 0);
+            });
             otpInputs[0].focus();
             
             // Toast thay vì Alert
@@ -751,6 +985,12 @@ function initAuthForms() {
     btnResendOtp.addEventListener('click', () => {
         showToast('info', 'Mã OTP xác thực mới đã gửi lại: 555666', 6000);
         startOtpTimer();
+        
+        otpInputs.forEach((input, idx) => {
+            input.value = '';
+            input.disabled = (idx > 0);
+        });
+        otpInputs[0].focus();
     });
 
     function checkOtpSubmission() {
