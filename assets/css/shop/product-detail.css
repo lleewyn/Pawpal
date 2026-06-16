@@ -23,7 +23,7 @@
     font-size: var(--fs-small);
 }
 
-.breadcrumb-item + .breadcrumb-item::before {
+.breadcrumb-item+.breadcrumb-item::before {
     content: "›";
     padding: 0 var(--space-xs);
     color: var(--color-text-light);
@@ -331,6 +331,17 @@
     font-size: var(--fs-body);
     color: var(--color-text-dark);
     outline: none;
+}
+
+/* Remove default spin buttons for number input */
+.quantity-controls input::-webkit-outer-spin-button,
+.quantity-controls input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.quantity-controls input[type="number"] {
+    -moz-appearance: textfield;
 }
 
 .btn-add-to-cart {
@@ -784,7 +795,7 @@
 }
 
 .progress-label {
-    color: rgba(0,0,0,0.54);
+    color: rgba(0, 0, 0, 0.54);
     text-align: right;
 }
 
@@ -803,7 +814,7 @@
 }
 
 .progress-count {
-    color: rgba(0,0,0,0.54);
+    color: rgba(0, 0, 0, 0.54);
     text-align: left;
 }
 
@@ -819,11 +830,11 @@
 .filter-tab {
     padding: 10px 20px;
     background: #ffffff;
-    border: 1px solid rgba(0,0,0,0.09);
+    border: 1px solid rgba(0, 0, 0, 0.09);
     border-radius: 2px;
     font-family: var(--font-body);
     font-size: 14px;
-    color: rgba(0,0,0,0.8);
+    color: rgba(0, 0, 0, 0.8);
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
@@ -884,7 +895,7 @@
 .reviewer-name {
     font-weight: 400;
     font-size: 14px;
-    color: rgba(0,0,0,0.87);
+    color: rgba(0, 0, 0, 0.87);
     margin-bottom: 6px;
 }
 
@@ -908,15 +919,15 @@
     align-items: center;
     gap: 8px;
     font-size: 12px;
-    color: rgba(0,0,0,0.54);
+    color: rgba(0, 0, 0, 0.54);
 }
 
 .review-separator {
-    color: rgba(0,0,0,0.26);
+    color: rgba(0, 0, 0, 0.26);
 }
 
 .review-category {
-    color: rgba(0,0,0,0.54);
+    color: rgba(0, 0, 0, 0.54);
 }
 
 .review-content {
@@ -925,7 +936,7 @@
 
 .review-content p {
     font-size: 14px;
-    color: rgba(0,0,0,0.87);
+    color: rgba(0, 0, 0, 0.87);
     line-height: 1.6;
     margin: 0;
 }
@@ -941,13 +952,13 @@
 .seller-reply-title {
     font-size: 12px;
     font-weight: 600;
-    color: rgba(0,0,0,0.87);
+    color: rgba(0, 0, 0, 0.87);
     margin-bottom: 8px;
 }
 
 .seller-reply-content {
     font-size: 14px;
-    color: rgba(0,0,0,0.65);
+    color: rgba(0, 0, 0, 0.65);
     line-height: 1.6;
 }
 
@@ -964,11 +975,11 @@
     gap: 6px;
     padding: 4px 12px;
     background: transparent;
-    border: 1px solid rgba(0,0,0,0.09);
+    border: 1px solid rgba(0, 0, 0, 0.09);
     border-radius: 2px;
     font-family: var(--font-body);
     font-size: 12px;
-    color: rgba(0,0,0,0.54);
+    color: rgba(0, 0, 0, 0.54);
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -1001,11 +1012,11 @@
     gap: 8px;
     padding: 12px 32px;
     background: #ffffff;
-    border: 1px solid rgba(0,0,0,0.09);
+    border: 1px solid rgba(0, 0, 0, 0.09);
     border-radius: 2px;
     font-family: var(--font-body);
     font-size: 14px;
-    color: rgba(0,0,0,0.87);
+    color: rgba(0, 0, 0, 0.87);
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -1028,7 +1039,7 @@
 
 .reviews-showing-text {
     font-size: 12px;
-    color: rgba(0,0,0,0.54);
+    color: rgba(0, 0, 0, 0.54);
 }
 
 /* ── Related Products Section ──────────────────────────────────────────── */
@@ -1269,6 +1280,7 @@
 
 /* Responsive */
 @media (max-width: 1400px) {
+
     .related-products-grid,
     .you-may-like-grid,
     .recently-viewed-grid {
@@ -1277,6 +1289,7 @@
 }
 
 @media (max-width: 1024px) {
+
     .related-products-grid,
     .you-may-like-grid,
     .recently-viewed-grid {
@@ -1285,6 +1298,7 @@
 }
 
 @media (max-width: 768px) {
+
     .related-products-grid,
     .you-may-like-grid,
     .recently-viewed-grid {
@@ -1293,6 +1307,7 @@
 }
 
 @media (max-width: 480px) {
+
     .related-products-grid,
     .you-may-like-grid,
     .recently-viewed-grid {
@@ -1368,6 +1383,7 @@
 
 /* ── Accessibility ─────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+
     .product-wishlist-btn-large,
     .quantity-btn,
     .btn-add-to-cart,

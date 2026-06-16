@@ -97,11 +97,11 @@ function transformProductData(rawData) {
             price: price,
             originalPrice: sale ? originalPrice : null,
             oldPrice: sale ? originalPrice : null,
-            image: item['Hình ảnh'] || 'assets/images/products/placeholder.webp',
+            image: item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/shop/products/placeholder.webp',
             images: [
-                item['Hình ảnh'] || 'assets/images/products/placeholder.webp',
-                item['Hình ảnh'] || 'assets/images/products/placeholder.webp',
-                item['Hình ảnh'] || 'assets/images/products/placeholder.webp'
+                item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/shop/products/placeholder.webp',
+                item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/shop/products/placeholder.webp',
+                item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/shop/products/placeholder.webp'
             ],
             inStock: inStock,
             stock: stock,
@@ -296,7 +296,7 @@ function transformServiceData(rawData) {
             checklist: item['Quy trình thực hiện (Checklist)'] || '',
             amenities: item['Tiện ích / Cơ sở vật chất (Amenities)'] || '',
             groomerLevel: item['Cấp độ nhân viên thực hiện (Groomer Level)'] || '',
-            image: item['Hình ảnh'] || 'assets/images/services/spa-intro.jpg',
+            image: item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/services/spa-intro.jpg',
             status: item['Trạng thái kinh doanh'] || 'Đang phục vụ'
         };
     });

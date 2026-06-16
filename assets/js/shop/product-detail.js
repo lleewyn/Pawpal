@@ -18,6 +18,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (buyNowBtn) {
         buyNowBtn.addEventListener('click', handleBuyNow);
     }
+
+    // Quantity controls
+    const decreaseQtyBtn = document.getElementById('decreaseQty');
+    const increaseQtyBtn = document.getElementById('increaseQty');
+
+    if (decreaseQtyBtn && quantityInput) {
+        decreaseQtyBtn.addEventListener('click', () => {
+            let val = parseInt(quantityInput.value) || 1;
+            if (val > 1) {
+                quantityInput.value = val - 1;
+            }
+        });
+    }
+
+    if (increaseQtyBtn && quantityInput) {
+        increaseQtyBtn.addEventListener('click', () => {
+            let val = parseInt(quantityInput.value) || 1;
+            let max = parseInt(quantityInput.getAttribute('max')) || 99;
+            if (val < max) {
+                quantityInput.value = val + 1;
+            }
+        });
+    }
+
+    // Update breadcrumb
+    setTimeout(() => {
+        const product = getCurrentProduct();
+        const breadcrumbProduct = document.getElementById('breadcrumbProduct');
+        if (breadcrumbProduct && product && product.name) {
+            breadcrumbProduct.textContent = product.name;
+        }
+    }, 100);
 });
 
 /**

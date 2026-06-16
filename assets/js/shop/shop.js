@@ -11,18 +11,18 @@
 const mockProducts = [];
 
 const mockBrands = [
-    { id: 1, name: 'Royal Canin', logo: 'https://via.placeholder.com/150x100?text=Royal+Canin', slug: 'royal-canin' },
-    { id: 2, name: 'Pedigree', logo: 'https://via.placeholder.com/150x100?text=Pedigree', slug: 'pedigree' },
-    { id: 3, name: 'Me-O', logo: 'https://via.placeholder.com/150x100?text=Me-O', slug: 'me-o' },
-    { id: 4, name: 'Whiskas', logo: 'https://via.placeholder.com/150x100?text=Whiskas', slug: 'whiskas' },
-    { id: 5, name: 'Hill\'s', logo: 'https://via.placeholder.com/150x100?text=Hills', slug: 'hills' },
-    { id: 6, name: 'Purina', logo: 'https://via.placeholder.com/150x100?text=Purina', slug: 'purina' },
-    { id: 7, name: 'Kong', logo: 'https://via.placeholder.com/150x100?text=Kong', slug: 'kong' },
-    { id: 8, name: 'Taste of the Wild', logo: 'https://via.placeholder.com/150x100?text=TOTW', slug: 'taste-of-the-wild' },
-    { id: 9, name: 'Frontline', logo: 'https://via.placeholder.com/150x100?text=Frontline', slug: 'frontline' },
-    { id: 10, name: 'Furminator', logo: 'https://via.placeholder.com/150x100?text=Furminator', slug: 'furminator' },
-    { id: 11, name: 'Nylabone', logo: 'https://via.placeholder.com/150x100?text=Nylabone', slug: 'nylabone' },
-    { id: 12, name: 'Hartz', logo: 'https://via.placeholder.com/150x100?text=Hartz', slug: 'hartz' },
+    { id: 1, name: 'Royal Canin', logo: '../../assets/images/shop/brand/royal-canin.png', slug: 'royal-canin' },
+    { id: 2, name: 'Pedigree', logo: '../../assets/images/shop/brand/Pedigree.png', slug: 'pedigree' },
+    { id: 3, name: 'Me-O', logo: '../../assets/images/shop/brand/me-o.png', slug: 'me-o' },
+    { id: 4, name: 'Whiskas', logo: '../../assets/images/shop/brand/Whiskas.png', slug: 'whiskas' },
+    { id: 5, name: 'Hill\'s', logo: '../../assets/images/shop/brand/Hills.png', slug: 'hills' },
+    { id: 6, name: 'Purina', logo: '../../assets/images/shop/brand/Purina.png', slug: 'purina' },
+    { id: 7, name: 'Kong', logo: '../../assets/images/shop/brand/Kong.png', slug: 'kong' },
+    { id: 8, name: 'Taste of the Wild', logo: '../../assets/images/shop/brand/Taste-of-the-wild.png', slug: 'taste-of-the-wild' },
+    { id: 9, name: 'Frontline', logo: '../../assets/images/shop/brand/frontline-plus.png', slug: 'frontline' },
+    { id: 10, name: 'Furminator', logo: '../../assets/images/shop/brand/FURminator.png', slug: 'furminator' },
+    { id: 11, name: 'Nylabone', logo: '../../assets/images/shop/brand/Nylabone.png', slug: 'nylabone' },
+    { id: 12, name: 'Hartz', logo: '../../assets/images/shop/brand/Hartz.png', slug: 'hartz' },
 ];
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -33,7 +33,7 @@ let state = {
     products: [],
     filteredProducts: [],
     currentPage: 1,
-    itemsPerPage: 12,
+    itemsPerPage: 20,
     filters: {
         category: 'all',
         brands: [],
@@ -452,13 +452,42 @@ function renderProducts() {
 function createProductCardHTML(product) {
     const isInWishlist = state.wishlist.includes(product.id);
     
-    // Debug: Log product ID and link
-    console.log('Creating product card:', { id: product.id, name: product.name, link: `product-detail.html?id=${product.id}` });
+    // Create rating stars
+    const rating = product.rating || 5.0;
+    const reviewCount = product.reviewCount || 0;
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+    let starsHTML = '';
     
+    for (let i = 0; i < 5; i++) {
+        if (i < fullStars) {
+            starsHTML += '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#FFB800" stroke="#FFB800" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+        } else if (i === fullStars && hasHalfStar) {
+            starsHTML += '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFB800" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+        } else {
+            starsHTML += '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e0e0e0" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+        }
+    }
+    
+    // Badge mapping
+    let badgeHTML = '';
+    if (product.badge) {
+        const badgeClass = product.badge === 'best' ? 'badge-best' : product.badge === 'new' ? 'badge-new' : 'badge-hot';
+        const badgeText = product.badge === 'best' ? 'Bán chạy' : product.badge === 'new' ? 'Mới' : 'Hot';
+        badgeHTML = `<div class="product-badge ${badgeClass}">${badgeText}</div>`;
+    }
+
+    // Stock mapping
+    let stockHTML = '';
+    if (product.inStock && product.stock > 0 && product.stock <= 10) {
+        stockHTML = `<div class="product-stock-warning">Chỉ còn ${product.stock} SP!</div>`;
+    }
+
     return `
         <div class="product-card" data-product-id="${product.id}">
             <a href="product-detail.html?id=${product.id}" class="product-card-link">
                 <div class="product-image-wrapper">
+                    ${badgeHTML}
                     ${product.sale ? '<div class="product-sale-badge">-' + Math.round((1 - product.price / product.oldPrice) * 100) + '%</div>' : ''}
                     ${!product.inStock ? '<div class="product-out-of-stock-overlay">Tạm hết hàng</div>' : ''}
                     <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
@@ -466,10 +495,17 @@ function createProductCardHTML(product) {
                 <div class="product-info">
                     <div class="product-brand">${product.brand}</div>
                     <h3 class="product-name">${product.name}</h3>
+                    
+                    <div class="product-rating-wrapper">
+                        <div class="product-rating-stars">${starsHTML}</div>
+                        <span class="product-rating-count">(${reviewCount})</span>
+                    </div>
+
                     <div class="product-price-wrapper">
                         <span class="product-price">${formatPrice(product.price)}</span>
                         ${product.oldPrice ? `<span class="product-price-old">${formatPrice(product.oldPrice)}</span>` : ''}
                     </div>
+                    ${stockHTML}
                 </div>
             </a>
             <button class="product-wishlist-btn ${isInWishlist ? 'active' : ''}" data-product-id="${product.id}" aria-label="Thêm vào yêu thích">
@@ -478,13 +514,15 @@ function createProductCardHTML(product) {
                 </svg>
             </button>
             <div class="product-card-actions">
-                <button class="product-quick-add" data-product-id="${product.id}" ${!product.inStock ? 'disabled' : ''}>
+                <button class="product-quick-add" data-product-id="${product.id}" ${!product.inStock ? 'disabled' : ''} aria-label="Thêm vào giỏ">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="9" cy="21" r="1"></circle>
                         <circle cx="20" cy="21" r="1"></circle>
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                     </svg>
-                    Thêm vào giỏ
+                </button>
+                <button class="product-buy-now" data-product-id="${product.id}" ${!product.inStock ? 'disabled' : ''}>
+                    Mua ngay
                 </button>
             </div>
         </div>

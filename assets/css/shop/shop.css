@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    shop.css — Shop Page Styles (US 8-1)
    ========================================================================== */
 
@@ -76,7 +76,7 @@
 .category-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: var(--space-xs);
+    gap: var(--space-md);
 }
 
 .category-card {
@@ -84,8 +84,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 10px 8px;
+    gap: 8px;
+    padding: 12px;
     background: var(--color-bg-white);
     border: var(--border-card);
     border-radius: var(--card-border-radius);
@@ -100,8 +100,8 @@
 }
 
 .category-card-icon-wrapper {
-    width: 40px;
-    height: 40px;
+    width: 56px;
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -125,12 +125,24 @@
     stroke: var(--color-accent);
 }
 
+.category-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.category-card:hover .category-card-image {
+    transform: scale(1.1);
+}
+
 .category-card-label {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--color-text-dark);
     text-align: center;
-    line-height: 1.2;
+    line-height: 1.4;
 }
 
 /* ── Main Shop Section (Sidebar + Products) ──────────────────────────── */
@@ -141,8 +153,8 @@
 
 .shop-layout {
     display: grid;
-    grid-template-columns: 240px 1fr 260px;
-    gap: var(--space-lg);
+    grid-template-columns: 240px 1fr 280px;
+    gap: var(--space-md);
 }
 
 /* ── Sidebar Filters ──────────────────────────────────────────────────── */
@@ -270,6 +282,8 @@
 /* ── Shop Content Area ────────────────────────────────────────────────── */
 .shop-content {
     min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 /* ── Toolbar ──────────────────────────────────────────────────────────── */
@@ -378,7 +392,7 @@
 /* ── Products Grid ────────────────────────────────────────────────────── */
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: var(--space-md);
     margin-bottom: var(--space-lg);
 }
@@ -484,6 +498,23 @@
     pointer-events: none;
 }
 
+.product-badge {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: white;
+    z-index: 2;
+    pointer-events: none;
+}
+.badge-best { background: #FF9800; }
+.badge-new { background: #4CAF50; }
+.badge-hot { background: #E91E63; }
+
 .product-out-of-stock-overlay {
     position: absolute;
     inset: 0;
@@ -545,15 +576,44 @@
     text-decoration: line-through;
 }
 
+.product-rating-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.product-rating-stars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.product-rating-count {
+    font-size: 10px;
+    color: var(--color-text-light);
+}
+
+.product-stock-warning {
+    font-size: 11px;
+    color: var(--color-danger);
+    font-weight: 600;
+    margin-top: auto;
+}
+
 .product-card-actions {
     padding: 0 12px 12px 12px;
     position: relative;
     z-index: 5;
+    display: flex;
+    gap: 8px;
 }
 
 .product-quick-add {
-    width: 100%;
-    padding: 7px;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    padding: 0;
     background: var(--color-primary);
     color: #ffffff;
     border: none;
@@ -566,7 +626,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
     position: relative;
     z-index: 5;
 }
@@ -576,8 +635,34 @@
 }
 
 .product-quick-add:disabled {
-    background: var(--color-neutral-light);
-    color: var(--color-neutral);
+    background: var(--color-border);
+    cursor: not-allowed;
+}
+
+.product-buy-now {
+    flex: 1;
+    height: 36px;
+    background: var(--color-accent);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--border-radius-pill);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+}
+
+.product-buy-now:hover {
+    background: #d68b00; /* slightly darker accent */
+}
+
+.product-buy-now:disabled {
+    background: var(--color-border);
     cursor: not-allowed;
 }
 
@@ -613,7 +698,8 @@
 
 /* ── Pagination ───────────────────────────────────────────────────────── */
 .pagination-wrapper {
-    margin-top: var(--space-lg);
+    margin-top: auto;
+    padding-top: var(--space-lg);
 }
 
 .pagination {
@@ -711,21 +797,34 @@
     border-radius: var(--card-border-radius);
     padding: var(--space-sm);
     text-decoration: none;
-    filter: grayscale(1);
     transition: all 0.3s ease;
 }
 
 .brand-card:hover {
-    filter: grayscale(0);
     box-shadow: var(--shadow-card-hover);
     transform: scale(1.05);
 }
 
 .brand-logo {
     width: 100%;
-    height: auto;
-    max-height: 40px;
+    height: 100%;
+    max-height: 64px;
     object-fit: contain;
+}
+
+/* Phóng to riêng các logo bị nhỏ do dư nhiều khoảng trống trong ảnh gốc */
+.brand-card[data-brand="Me-O"] .brand-logo,
+.brand-card[data-brand="Royal Canin"] .brand-logo {
+    transform: scale(1.6);
+}
+
+.brand-card[data-brand="Taste of the Wild"] .brand-logo,
+.brand-card[data-brand="Kong"] .brand-logo {
+    transform: scale(1.8);
+}
+
+.brand-card[data-brand="Furminator"] .brand-logo {
+    transform: scale(2.0);
 }
 
 /* ── Suggestions Sidebar (Right) ─────────────────────────────────────── */
@@ -736,7 +835,7 @@
     background: var(--color-bg-light);
     border: var(--border-card);
     border-radius: var(--card-border-radius);
-    padding: var(--space-md);
+    padding: var(--space-sm);
     height: fit-content;
     overflow: visible;
 }
@@ -756,8 +855,8 @@
 
 .suggestion-card {
     display: flex;
-    gap: var(--space-sm);
-    padding: var(--space-sm);
+    gap: 12px;
+    padding: 12px;
     background: var(--color-bg-white);
     border: var(--border-card);
     border-radius: var(--card-border-radius);
@@ -771,8 +870,8 @@
 }
 
 .suggestion-image-wrapper {
-    width: 70px;
-    height: 70px;
+    width: 60px;
+    height: 60px;
     flex-shrink: 0;
     background: var(--color-bg-light);
     border-radius: var(--card-border-radius);
@@ -916,7 +1015,7 @@
 /* ── Responsive Breakpoints ───────────────────────────────────────────── */
 @media (max-width: 1400px) {
     .shop-layout {
-        grid-template-columns: 220px 1fr 240px;
+        grid-template-columns: 220px 1fr 280px;
     }
     
     .products-grid {
