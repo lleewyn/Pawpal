@@ -8,6 +8,10 @@ let selectedWeight = 'Dưới 5kg';
 let selectedGroomer = 'junior';
 let currentLikedState = false;
 
+let galleryImages = [];
+let currentImageIndex = 0;
+let autoSlideTimer = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Parse URL ID
     const urlParams = new URLSearchParams(window.location.search);
@@ -30,7 +34,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Populate Details
             populateServiceInfo();
             setupGallery();
-            setupConfigurator();
             setupTimelineAndBenefits();
             setupAmenities();
             setupFAQs();
@@ -76,14 +79,24 @@ function populateServiceInfo() {
     
     const statusEl = document.getElementById('detailStatus');
     statusEl.textContent = serviceData.status;
+
+    const btnPanelBook = document.getElementById('btnPanelBook');
+    if (btnPanelBook) {
+        btnPanelBook.href = `booking.html?service=${serviceData.serviceId}`;
+    }
+
     if (serviceData.status !== 'Đang phục vụ') {
         statusEl.style.color = 'var(--color-danger)';
-        // Disable sticky button
         const stickyBtn = document.getElementById('btnStickyBookAction');
         if (stickyBtn) {
             stickyBtn.textContent = 'Tạm dừng nhận lịch';
             stickyBtn.style.background = 'var(--color-neutral)';
             stickyBtn.style.pointerEvents = 'none';
+        }
+        if (btnPanelBook) {
+            btnPanelBook.textContent = 'Tạm dừng nhận lịch';
+            btnPanelBook.style.background = 'var(--color-neutral)';
+            btnPanelBook.style.pointerEvents = 'none';
         }
     }
 }
@@ -96,42 +109,81 @@ function setupGallery() {
         this.src = '../../assets/images/services/' + (serviceData.category === 'hotel' ? 'hotel.png' : 'spa.png');
     };
     mainImg.src = '../../' + serviceData.image;
-    
+
     const thumbsContainer = document.getElementById('galleryThumbnails');
     if (!thumbsContainer) return;
-    
-    // Create 3 thumbnails (1 main + 2 fallback variations)
-    const images = [
+
+    // Build image list (main service image + 2 fallback shots)
+    const rawImages = [
         serviceData.image,
         'assets/images/services/spa.png',
         'assets/images/services/hotel.png'
     ];
-    
-    thumbsContainer.innerHTML = images.map((imgUrl, index) => `
-        <div class="gallery-thumb ${index === 0 ? 'active' : ''}" data-img="../../${imgUrl}">
+    galleryImages = rawImages.map(url => '../../' + url);
+    currentImageIndex = 0;
+
+    thumbsContainer.innerHTML = rawImages.map((imgUrl, index) => `
+        <div class="gallery-thumb ${index === 0 ? 'active' : ''}" data-index="${index}">
             <img src="../../${imgUrl}" alt="Ảnh chi tiết ${index + 1}" class="gallery-thumb-img" onerror="this.onerror=null; this.src='../../assets/images/services/spa.png'">
         </div>
     `).join('');
-    
-    // Thumbnail click interaction
+
     thumbsContainer.querySelectorAll('.gallery-thumb').forEach(thumb => {
         thumb.addEventListener('click', () => {
-            thumbsContainer.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
-            thumb.classList.add('active');
-            
-            const newSrc = thumb.getAttribute('data-img');
-            
-            // GSAP smooth image swap fade
-            gsap.to(mainImg, {
-                opacity: 0.1,
-                duration: 0.15,
-                onComplete: () => {
-                    mainImg.src = newSrc;
-                    gsap.to(mainImg, { opacity: 1, duration: 0.25 });
-                }
-            });
+            const idx = parseInt(thumb.getAttribute('data-index'), 10);
+            currentImageIndex = idx;
+            updateMainImage(currentImageIndex);
+            resetAutoSlide();
         });
     });
+
+    // Arrow navigation
+    const prevBtn = document.getElementById('galleryPrev');
+    const nextBtn = document.getElementById('galleryNext');
+    if (prevBtn) prevBtn.addEventListener('click', () => navigateGallery(-1));
+    if (nextBtn) nextBtn.addEventListener('click', () => navigateGallery(1));
+
+    startAutoSlide();
+}
+
+function updateMainImage(index) {
+    const mainImg = document.getElementById('mainShowcaseImg');
+    const thumbsContainer = document.getElementById('galleryThumbnails');
+    if (!mainImg) return;
+
+    thumbsContainer.querySelectorAll('.gallery-thumb').forEach((t, i) => {
+        t.classList.toggle('active', i === index);
+    });
+
+    gsap.to(mainImg, {
+        opacity: 0.1,
+        duration: 0.15,
+        onComplete: () => {
+            mainImg.src = galleryImages[index];
+            gsap.to(mainImg, { opacity: 1, duration: 0.25 });
+        }
+    });
+}
+
+function navigateGallery(direction) {
+    if (galleryImages.length === 0) return;
+    currentImageIndex = (currentImageIndex + direction + galleryImages.length) % galleryImages.length;
+    updateMainImage(currentImageIndex);
+    resetAutoSlide();
+}
+
+function startAutoSlide() {
+    autoSlideTimer = setInterval(() => {
+        if (galleryImages.length > 1) {
+            currentImageIndex = (currentImageIndex + 1) % galleryImages.length;
+            updateMainImage(currentImageIndex);
+        }
+    }, 4000);
+}
+
+function resetAutoSlide() {
+    if (autoSlideTimer) clearInterval(autoSlideTimer);
+    startAutoSlide();
 }
 
 // 3. Set up configuration selection pill buttons

@@ -41,6 +41,16 @@
                 <div class="gallery-container">
                     <div class="gallery-main-wrapper">
                         <img id="mainShowcaseImg" src="" alt="Dịch vụ PawPal" class="gallery-main-img">
+                        <button class="gallery-nav-btn gallery-nav-prev" id="galleryPrev" aria-label="Ảnh trước">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </button>
+                        <button class="gallery-nav-btn gallery-nav-next" id="galleryNext" aria-label="Ảnh sau">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
                     </div>
                     <div class="gallery-thumbnails" id="galleryThumbnails">
                         <!-- Thumbnails populated by JS -->
@@ -69,7 +79,7 @@
                 <div class="summary-panel">
                     <span class="detail-service-id" id="detailServiceId"></span>
                     <h1 class="detail-service-title" id="detailServiceTitle"></h1>
-                    
+
                     <div class="detail-rating-row">
                         <span class="stars-row">★</span>
                         <span class="detail-rating-score" id="detailRatingScore"></span>
@@ -78,7 +88,7 @@
 
                     <div class="detail-meta-list">
                         <div class="detail-meta-item">
-                            <span class="detail-meta-label">Thú cưng:</span>
+                            <span class="detail-meta-label">Bé cưng:</span>
                             <span id="detailPetType"></span>
                         </div>
                         <div class="detail-meta-item">
@@ -95,63 +105,13 @@
                         </div>
                     </div>
 
-                    <div class="detail-price-box">
-                        <div class="detail-price-label">Giá niêm yết tạm tính:</div>
-                        <div class="detail-price-value" id="detailBasePrice"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. Config & Member Price Bento Grid -->
-            <div class="config-bento-grid">
-                <!-- Config Card Left -->
-                <div class="config-card">
-                    <h2 class="bento-title">Chọn cấu hình dịch vụ của chồng</h2>
-                    
-                    <div class="config-group" id="petTypeGroup" style="display: none;">
-                        <div class="config-label">Cưng muốn đặt cho loại thú cưng nào?</div>
-                        <div class="config-options-row" id="petTypeOptions">
-                            <!-- Populated by JS -->
+                    <div class="summary-panel-footer">
+                        <div class="detail-price-box">
+                            <div class="detail-price-label">Giá niêm yết tạm tính:</div>
+                            <div class="detail-price-value" id="detailBasePrice"></div>
                         </div>
+                        <a href="#" id="btnPanelBook" class="btn-panel-book">Đặt lịch ngay</a>
                     </div>
-
-                    <div class="config-group">
-                        <div class="config-label">Hạng cân thực tế của bé cưng</div>
-                        <div class="config-options-row" id="weightClassOptions">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
-
-                    <div class="config-group" id="groomerGroup" style="display: none;">
-                        <div class="config-label">Cấp độ nhân viên thực hiện</div>
-                        <div class="config-options-row" id="groomerOptions">
-                            <button class="config-pill-btn active" data-level="junior">Junior (Cơ bản)</button>
-                            <button class="config-pill-btn" data-level="senior">Senior (+50.000 VNĐ)</button>
-                            <button class="config-pill-btn" data-level="master">Master (+100.000 VNĐ)</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Member Tier Comparison Right -->
-                <div class="member-tier-card">
-                    <div>
-                        <h2 class="bento-title">Giá ưu đãi theo hạng thành viên</h2>
-                        <div class="tier-price-list">
-                            <div class="tier-price-item">
-                                <span class="tier-name tier-name-silver">Hội viên Bạc (Giảm 5%)</span>
-                                <span class="tier-price-val" id="priceTierSilver"></span>
-                            </div>
-                            <div class="tier-price-item">
-                                <span class="tier-name tier-name-gold">Hội viên Vàng (Giảm 10%)</span>
-                                <span class="tier-price-val" id="priceTierGold"></span>
-                            </div>
-                            <div class="tier-price-item">
-                                <span class="tier-name tier-name-diamond">Hội viên Kim Cương (Giảm 15%)</span>
-                                <span class="tier-price-val" id="priceTierDiamond"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="../user/loyalty.html" class="btn-member-join">Đăng ký nâng hạng hội viên ngay</a>
                 </div>
             </div>
 

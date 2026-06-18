@@ -47,7 +47,8 @@ window.applyFilters = function() {
     const categoryFilter = document.querySelector('input[name="categoryFilter"]:checked')?.value || 'all';
     const petFilter = document.querySelector('input[name="petFilter"]:checked')?.value || 'all';
     const priceBucketFilter = document.querySelector('input[name="priceBucketFilter"]:checked')?.value || 'all';
-    const ratingFilter = document.querySelector('input[name="ratingFilter"]:checked')?.value || 'all';
+    const ratingAllChecked = document.getElementById('ratingAll')?.checked ?? true;
+    const selectedRatings = [...document.querySelectorAll('.rating-star-check:checked')].map(c => parseInt(c.value));
 
     filteredServices = allServices.filter(service => {
         // 0. Search text filter
@@ -69,8 +70,10 @@ window.applyFilters = function() {
                 matchesPet = petType.includes('chó') || petType.includes('cún');
             } else if (petFilter === 'cat') {
                 matchesPet = petType.includes('mèo');
+            } else if (petFilter === 'rabbit') {
+                matchesPet = petType.includes('thỏ');
             } else if (petFilter === 'small') {
-                matchesPet = petType.includes('thỏ') || petType.includes('bọ') || petType.includes('hamster') || petType.includes('thú nhỏ');
+                matchesPet = petType.includes('bọ') || petType.includes('hamster') || petType.includes('thú nhỏ');
             }
         }
 
@@ -84,19 +87,17 @@ window.applyFilters = function() {
             matchesPrice = service.price > 300000;
         }
         
-        // 3. Rating filter
+        // 3. Rating filter (multi-select checkbox)
         let matchesRating = true;
-        if (ratingFilter === '5') {
-            matchesRating = service.rating === 5;
-        } else if (ratingFilter === '4') {
-            matchesRating = service.rating >= 4;
+        if (!ratingAllChecked && selectedRatings.length > 0) {
+            matchesRating = selectedRatings.some(star => Math.floor(service.rating) === star);
         }
 
         return matchesSearch && matchesCategory && matchesPet && matchesPrice && matchesRating;
     });
 
     // Handle sorting before rendering
-    const sortBy = document.getElementById('sortBySelect')?.value || 'default';
+    const sortBy = document.querySelector('input[name="sortFilter"]:checked')?.value || 'default';
     if (sortBy === 'price-asc') {
         filteredServices.sort((a, b) => a.price - b.price);
     } else if (sortBy === 'price-desc') {
@@ -218,11 +219,12 @@ window.clearFilters = function() {
     const priceAll = document.querySelector('input[name="priceBucketFilter"][value="all"]');
     if (priceAll) priceAll.checked = true;
 
-    const ratingAll = document.querySelector('input[name="ratingFilter"][value="all"]');
+    const ratingAll = document.getElementById('ratingAll');
     if (ratingAll) ratingAll.checked = true;
+    document.querySelectorAll('.rating-star-check').forEach(c => c.checked = false);
 
-    const sortBy = document.getElementById('sortBySelect');
-    if (sortBy) sortBy.value = 'default';
+    const sortDefault = document.querySelector('input[name="sortFilter"][value="default"]');
+    if (sortDefault) sortDefault.checked = true;
 
     applyFilters();
 };
@@ -235,7 +237,25 @@ window.updatePriceDisplay = function(val) {
     }
 };
 
-// 5. Accordion Toggle Logic
+// 5. Rating checkbox handlers
+window.handleRatingAllChange = function(checkbox) {
+    if (checkbox.checked) {
+        document.querySelectorAll('.rating-star-check').forEach(c => c.checked = false);
+    } else {
+        // Không cho bỏ chọn "Tất cả" khi không có sao nào được chọn
+        checkbox.checked = true;
+    }
+    applyFilters();
+};
+
+window.handleRatingStarChange = function() {
+    const anyStarChecked = [...document.querySelectorAll('.rating-star-check')].some(c => c.checked);
+    const ratingAll = document.getElementById('ratingAll');
+    if (ratingAll) ratingAll.checked = !anyStarChecked;
+    applyFilters();
+};
+
+// 6. Accordion Toggle Logic
 window.toggleAccordion = function(id) {
     const accordion = document.getElementById(id);
     if (!accordion) return;
