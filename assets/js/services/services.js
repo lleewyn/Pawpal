@@ -43,18 +43,48 @@ function showErrorMessage() {
 
 // 1. Filter Logic
 window.applyFilters = function() {
+    const searchVal = document.getElementById('searchServiceInput')?.value.trim().toLowerCase() || '';
     const categoryFilter = document.querySelector('input[name="categoryFilter"]:checked')?.value || 'all';
-    const maxPrice = parseInt(document.getElementById('priceRange')?.value || '1000000', 10);
+    const petFilter = document.querySelector('input[name="petFilter"]:checked')?.value || 'all';
+    const priceBucketFilter = document.querySelector('input[name="priceBucketFilter"]:checked')?.value || 'all';
     const ratingFilter = document.querySelector('input[name="ratingFilter"]:checked')?.value || 'all';
 
     filteredServices = allServices.filter(service => {
-        // Category filter
+        // 0. Search text filter
+        let matchesSearch = true;
+        if (searchVal) {
+            const nameMatch = service.name.toLowerCase().includes(searchVal);
+            const descMatch = service.description.toLowerCase().includes(searchVal);
+            matchesSearch = nameMatch || descMatch;
+        }
+
+        // 1. Category filter
         const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter;
         
-        // Price filter
-        const matchesPrice = service.price <= maxPrice;
+        // 1.5. Pet type filter
+        let matchesPet = true;
+        if (petFilter !== 'all') {
+            const petType = service.petType.toLowerCase();
+            if (petFilter === 'dog') {
+                matchesPet = petType.includes('chó') || petType.includes('cún');
+            } else if (petFilter === 'cat') {
+                matchesPet = petType.includes('mèo');
+            } else if (petFilter === 'small') {
+                matchesPet = petType.includes('thỏ') || petType.includes('bọ') || petType.includes('hamster') || petType.includes('thú nhỏ');
+            }
+        }
+
+        // 2. Price bucket filter
+        let matchesPrice = true;
+        if (priceBucketFilter === 'under-150') {
+            matchesPrice = service.price < 150000;
+        } else if (priceBucketFilter === '150-300') {
+            matchesPrice = service.price >= 150000 && service.price <= 300000;
+        } else if (priceBucketFilter === 'over-300') {
+            matchesPrice = service.price > 300000;
+        }
         
-        // Rating filter
+        // 3. Rating filter
         let matchesRating = true;
         if (ratingFilter === '5') {
             matchesRating = service.rating === 5;
@@ -62,8 +92,18 @@ window.applyFilters = function() {
             matchesRating = service.rating >= 4;
         }
 
-        return matchesCategory && matchesPrice && matchesRating;
+        return matchesSearch && matchesCategory && matchesPet && matchesPrice && matchesRating;
     });
+
+    // Handle sorting before rendering
+    const sortBy = document.getElementById('sortBySelect')?.value || 'default';
+    if (sortBy === 'price-asc') {
+        filteredServices.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price-desc') {
+        filteredServices.sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'rating-desc') {
+        filteredServices.sort((a, b) => b.rating - a.rating);
+    }
 
     renderServices();
 };
@@ -91,9 +131,13 @@ function renderServices() {
         else if (service.category === 'hotel') displayCategory = 'Khách sạn thú cưng';
         else if (service.category === 'taxi') displayCategory = 'Taxi đưa đón';
 
-        // Format price
+        // Format prices
         const formattedPrice = service.price.toLocaleString('vi-VN');
         const priceUnit = service.priceDisplay.includes('đêm') ? ' / đêm' : '';
+
+        // Member price (Silver 5% discount)
+        const memberPrice = Math.round(service.price * 0.95);
+        const formattedMemberPrice = memberPrice.toLocaleString('vi-VN');
 
         // Safely replace ampersand in descriptions or benefits
         const sanitizedDesc = service.description.replace(/&/g, 'và');
@@ -104,7 +148,7 @@ function renderServices() {
                 <a href="service-detail.html?id=${service.serviceId}" class="service-card-link">
                     <div class="service-image-wrapper">
                         <span class="service-category-badge">${displayCategory}</span>
-                        <img src="../../${service.image}" alt="${sanitizedName}" class="service-image" loading="lazy" onerror="this.src='../../assets/images/services/spa-intro.jpg'">
+                        <img src="../../${service.image}" alt="${sanitizedName}" class="service-image" loading="lazy" onerror="this.onerror=null; this.src='../../assets/images/services/${service.category === 'hotel' ? 'hotel.png' : 'spa.png'}'">
                     </div>
                     <div class="service-card-info">
                         <div class="service-card-header">
@@ -134,6 +178,13 @@ function renderServices() {
                             <span class="price-label">Giá niêm yết:</span>
                             <span class="service-card-price">${formattedPrice} VNĐ<span class="service-card-price-unit">${priceUnit}</span></span>
                         </div>
+                        <div class="service-card-member-price-row">
+                            <span class="member-price-label">Thành viên:</span>
+                            <span class="service-card-member-price">
+                                <span>${formattedMemberPrice} VNĐ<span class="service-card-price-unit">${priceUnit}</span></span>
+                                <span class="member-badge">PawPass Bạc (-5%)</span>
+                            </span>
+                        </div>
                     </div>
                 </a>
                 <div class="service-card-actions">
@@ -155,17 +206,23 @@ function renderServices() {
 
 // 3. Clear Filters
 window.clearFilters = function() {
-    const radioAll = document.querySelector('input[name="categoryFilter"][value="all"]');
-    if (radioAll) radioAll.checked = true;
-    
-    const priceRange = document.getElementById('priceRange');
-    if (priceRange) {
-        priceRange.value = 1000000;
-        updatePriceDisplay(1000000);
-    }
+    const searchInput = document.getElementById('searchServiceInput');
+    if (searchInput) searchInput.value = '';
+
+    const categoryAll = document.querySelector('input[name="categoryFilter"][value="all"]');
+    if (categoryAll) categoryAll.checked = true;
+
+    const petAll = document.querySelector('input[name="petFilter"][value="all"]');
+    if (petAll) petAll.checked = true;
+
+    const priceAll = document.querySelector('input[name="priceBucketFilter"][value="all"]');
+    if (priceAll) priceAll.checked = true;
 
     const ratingAll = document.querySelector('input[name="ratingFilter"][value="all"]');
     if (ratingAll) ratingAll.checked = true;
+
+    const sortBy = document.getElementById('sortBySelect');
+    if (sortBy) sortBy.value = 'default';
 
     applyFilters();
 };

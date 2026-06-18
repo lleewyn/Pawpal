@@ -307,7 +307,7 @@ function transformServiceData(rawData) {
             checklist: item['Quy trình thực hiện (Checklist)'] || '',
             amenities: item['Tiện ích / Cơ sở vật chất (Amenities)'] || '',
             groomerLevel: item['Cấp độ nhân viên thực hiện (Groomer Level)'] || '',
-            image: item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/services/spa-intro.jpg',
+            image: item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/services/spa.png',
             status: item['Trạng thái kinh doanh'] || 'Đang phục vụ'
         };
     });

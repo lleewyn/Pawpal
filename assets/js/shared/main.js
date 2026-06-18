@@ -52,9 +52,7 @@ function initActiveNav() {
     if (!nav) return;
 
     const currentPath = window.location.pathname.toLowerCase();
-    const currentFile = currentPath.split('/').pop() || 'index.html';
 
-    // Chỉ lấy các link nằm trong ul.navbar-nav — không động vào lookup-btn, cart-btn, login-btn
     const navList = nav.querySelector('ul.navbar-nav');
     if (!navList) return;
 
@@ -68,24 +66,27 @@ function initActiveNav() {
 
     let matched = null;
 
-    links.forEach(link => {
-        const href = link.getAttribute('href');
-        if (!href) return;
-        const url      = new URL(href, window.location.href);
-        const linkFile = url.pathname.toLowerCase().split('/').pop();
-        if (currentFile && linkFile && currentFile === linkFile) {
-            matched = link;
-        }
-    });
-
-    // Fallback root → Trang chủ
-    if (!matched && (currentPath === '/' || currentPath.endsWith('index.html'))) {
+    // Logic mới: So khớp linh hoạt cho toàn bộ các trang con
+    if (currentPath === '/' || currentPath.includes('index.html') || currentPath.includes('landing.html')) {
         matched = navList.querySelector('a.nav-link[href*="landing.html"]');
+    } else if (currentPath.includes('services') || currentPath.includes('service-detail') || currentPath.includes('booking')) {
+        matched = navList.querySelector('a.nav-link[href*="services.html"]');
+    } else if (currentPath.includes('shop') || currentPath.includes('product') || currentPath.includes('cart') || currentPath.includes('checkout')) {
+        matched = navList.querySelector('a.nav-link[href*="shop.html"]');
+    } else if (currentPath.includes('blog') || currentPath.includes('cam-nang')) {
+        matched = navList.querySelector('a.nav-link[href*="blog.html"]');
+    } else if (currentPath.includes('contact') || currentPath.includes('lien-he')) {
+        matched = navList.querySelector('a.nav-link[href*="contact.html"]');
+    } else if (currentPath.includes('about') || currentPath.includes('ve-chung-toi')) {
+        matched = navList.querySelector('a.nav-link[href*="about.html"]');
     }
 
     if (matched) {
         matched.classList.add('active');
         matched.setAttribute('aria-current', 'page');
+        // Force style just in case CSS isn't applying correctly (fallback)
+        matched.style.color = 'var(--color-accent)';
+        matched.style.fontWeight = '700';
     }
 }
 

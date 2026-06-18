@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -26,7 +26,93 @@
     <div id="site-header" style="min-height:110px;background:var(--color-bg-light);"></div>
 
     <main>
-        <!-- TODO: Contact page content -->
+        <!-- Hero Section -->
+        <section class="contact-hero">
+            <div class="container-xl text-center">
+                <h1 class="contact-title">Hãy trò chuyện với chúng tôi</h1>
+                <p class="contact-subtitle">PawPal luôn sẵn sàng lắng nghe và đồng hành cùng bạn 24/7</p>
+            </div>
+        </section>
+
+        <!-- Main Content (2 Columns) -->
+        <section class="contact-main">
+            <div class="container-xl">
+                <div class="contact-grid">
+                    
+                    <!-- Left Column: Contact Info -->
+                    <div class="contact-info">
+                        <div class="info-block">
+                            <h3>📍 Hệ thống cơ sở</h3>
+                            <ul class="info-list">
+                                <li><strong>Trụ sở chính:</strong> 123 Đường Nguyễn Văn Linh, Quận 7, TP.HCM</li>
+                                <li><strong>Cơ sở 2:</strong> 456 Đường Thảo Điền, Quận 2, TP.HCM</li>
+                                <li><strong>Cơ sở 3:</strong> 789 Đường Sư Vạn Hạnh, Quận 10, TP.HCM</li>
+                            </ul>
+                        </div>
+
+                        <div class="info-block">
+                            <h3>📞 Hotline Hỗ trợ (24/7)</h3>
+                            <ul class="info-list">
+                                <li><strong>Cấp cứu y tế:</strong> <a href="tel:19001234">1900 1234</a></li>
+                                <li><strong>Đặt lịch Spa/Khách sạn:</strong> <a href="tel:0901234567">090 123 4567</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="info-block">
+                            <h3>✉️ Email Liên hệ</h3>
+                            <ul class="info-list">
+                                <li><strong>Chăm sóc khách hàng:</strong> <a href="mailto:cskh@pawpal.vn">cskh@pawpal.vn</a></li>
+                                <li><strong>Hợp tác doanh nghiệp:</strong> <a href="mailto:hoptac@pawpal.vn">hoptac@pawpal.vn</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Contact Form -->
+                    <div class="contact-form-wrapper">
+                        <form class="contact-form">
+                            <div class="form-group">
+                                <label for="fullName">Họ và Tên</label>
+                                <input type="text" id="fullName" placeholder="Nhập tên của bạn">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phoneNumber">Số điện thoại</label>
+                                <input type="tel" id="phoneNumber" placeholder="Nhập số điện thoại">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="serviceInterest">Dịch vụ quan tâm</label>
+                                <select id="serviceInterest">
+                                    <option value="" disabled selected>Chọn dịch vụ (Tùy chọn)</option>
+                                    <option value="spa">Spa & Grooming</option>
+                                    <option value="hotel">Khách sạn thú cưng</option>
+                                    <option value="clinic">Phòng khám thú y</option>
+                                    <option value="other">Khác</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="message">Lời nhắn của bạn</label>
+                                <textarea id="message" rows="4" placeholder="Nhập nội dung cần hỗ trợ..."></textarea>
+                            </div>
+
+                            <button type="button" class="btn-submit">Gửi Tin Nhắn Cho PawPal</button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Map Section -->
+        <section class="contact-map">
+            <div class="container-xl">
+                <div class="map-wrapper">
+                    <!-- Google Maps Embed -->
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.6697263161514!2d106.6662705148007!3d10.759917092332677!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f9023a3a85d%3A0x9329e81c870487d5!2zUXXhuq1uIDUsIEjhu5MgQ2jDrSBNaW5oLCBWaeG7h3QgTmFt!5e0!3m2!1svi!2s!4v1684489375525!5m2!1svi!2s" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </div>
+        </section>
     </main>
 
     <div id="site-footer"></div>

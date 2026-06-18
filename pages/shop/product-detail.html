@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="../../assets/css/components/chat.css">
     <link rel="stylesheet" href="../../assets/css/components/fab.css">
     <link rel="stylesheet" href="../../assets/css/components/review-form.css">
+    <link rel="stylesheet" href="../../assets/css/components/reviews.css">
     <link rel="stylesheet" href="../../assets/css/shop/product-detail.css">
 </head>
 <body>
@@ -258,70 +259,64 @@
             <div class="container-xl">
                 <h2 class="section-title">Đánh giá sản phẩm</h2>
                 
-                <!-- Review Summary Header -->
-                <div class="review-summary-header">
-                    <div class="review-score-display">
-                        <div class="score-large">4.0</div>
-                        <div class="score-label">trên 5</div>
-                        <div class="score-stars-display">
-                            <span class="star-large filled">★</span>
-                            <span class="star-large filled">★</span>
-                            <span class="star-large filled">★</span>
-                            <span class="star-large filled">★</span>
-                            <span class="star-large">★</span>
-                        </div>
+                <div class="reviews-summary-block">
+                    <!-- Summary Score Left -->
+                    <div class="rating-average-box">
+                        <div class="average-score-huge" id="averageScore">4.0</div>
+                        <div class="stars-row">★★★★☆</div>
+                        <div class="total-reviews-count" id="totalReviewsCount">Dựa trên 156 đánh giá</div>
                     </div>
                     
-                    <!-- Progress Bars -->
-                    <div class="review-progress-bars">
-                        <div class="progress-row">
-                            <span class="progress-label">5 ★</span>
-                            <div class="progress-bar-bg">
-                                <div class="progress-bar-fill" style="width: 65%"></div>
+                    <!-- Progress Bar Right -->
+                    <div class="stars-distribution">
+                        <div class="distribution-row">
+                            <span class="distribution-label">5 Sao</span>
+                            <div class="distribution-bar-bg">
+                                <div class="distribution-bar-fill" style="width: 65%;"></div>
                             </div>
-                            <span class="progress-count">102</span>
+                            <span class="distribution-percent">65%</span>
                         </div>
-                        <div class="progress-row">
-                            <span class="progress-label">4 ★</span>
-                            <div class="progress-bar-bg">
-                                <div class="progress-bar-fill" style="width: 20%"></div>
+                        <div class="distribution-row">
+                            <span class="distribution-label">4 Sao</span>
+                            <div class="distribution-bar-bg">
+                                <div class="distribution-bar-fill" style="width: 20%;"></div>
                             </div>
-                            <span class="progress-count">31</span>
+                            <span class="distribution-percent">20%</span>
                         </div>
-                        <div class="progress-row">
-                            <span class="progress-label">3 ★</span>
-                            <div class="progress-bar-bg">
-                                <div class="progress-bar-fill" style="width: 10%"></div>
+                        <div class="distribution-row">
+                            <span class="distribution-label">3 Sao</span>
+                            <div class="distribution-bar-bg">
+                                <div class="distribution-bar-fill" style="width: 10%;"></div>
                             </div>
-                            <span class="progress-count">16</span>
+                            <span class="distribution-percent">10%</span>
                         </div>
-                        <div class="progress-row">
-                            <span class="progress-label">2 ★</span>
-                            <div class="progress-bar-bg">
-                                <div class="progress-bar-fill" style="width: 3%"></div>
+                        <div class="distribution-row">
+                            <span class="distribution-label">2 Sao</span>
+                            <div class="distribution-bar-bg">
+                                <div class="distribution-bar-fill" style="width: 3%;"></div>
                             </div>
-                            <span class="progress-count">5</span>
+                            <span class="distribution-percent">3%</span>
                         </div>
-                        <div class="progress-row">
-                            <span class="progress-label">1 ★</span>
-                            <div class="progress-bar-bg">
-                                <div class="progress-bar-fill" style="width: 2%"></div>
+                        <div class="distribution-row">
+                            <span class="distribution-label">1 Sao</span>
+                            <div class="distribution-bar-bg">
+                                <div class="distribution-bar-fill" style="width: 2%;"></div>
                             </div>
-                            <span class="progress-count">2</span>
+                            <span class="distribution-percent">2%</span>
                         </div>
                     </div>
-                    
-                    <!-- Filter Tabs -->
-                    <div class="review-filter-tabs">
-                        <button class="filter-tab active" data-filter="all">Tất cả</button>
-                        <button class="filter-tab" data-filter="5">5 Sao (102)</button>
-                        <button class="filter-tab" data-filter="4">4 Sao (31)</button>
-                        <button class="filter-tab" data-filter="3">3 Sao (16)</button>
-                        <button class="filter-tab" data-filter="2">2 Sao (5)</button>
-                        <button class="filter-tab" data-filter="1">1 Sao (2)</button>
-                        <button class="filter-tab" data-filter="media">Có Hình Ảnh / Video (24)</button>
-                        <button class="filter-tab" data-filter="replied">Có Bình Luận (18)</button>
-                    </div>
+                </div>
+
+                <!-- Chips Filter -->
+                <div class="review-chips-wrapper">
+                    <button class="review-filter-chip active" data-filter="all">Tất cả</button>
+                    <button class="review-filter-chip" data-filter="5">5 Sao (102)</button>
+                    <button class="review-filter-chip" data-filter="4">4 Sao (31)</button>
+                    <button class="review-filter-chip" data-filter="3">3 Sao (16)</button>
+                    <button class="review-filter-chip" data-filter="2">2 Sao (5)</button>
+                    <button class="review-filter-chip" data-filter="1">1 Sao (2)</button>
+                    <button class="review-filter-chip" data-filter="media">Có Hình Ảnh / Video (24)</button>
+                    <button class="review-filter-chip" data-filter="replied">Có Bình Luận (18)</button>
                 </div>
                 
                 <!-- Reviews List -->

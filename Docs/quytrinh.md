@@ -11,8 +11,7 @@ Tài khoản tạm được hệ thống tự động khởi tạo ngay khi khá
 Đường dẫn thiết lập mật khẩu được gửi qua SMS Gateway có thời hạn sử dụng tối đa là 48 giờ.
 Sau khi nhập SĐT, khách hàng được cấp quyền truy cập ngay dưới dạng tài khoản chưa kích hoạt hoàn toàn để trải nghiệm dịch vụ.
 Hệ thống bắt buộc khách hàng phải thiết lập mật khẩu trước khi có thể thực hiện quy trình Đổi điểm thưởng hoặc Thay đổi lịch, Hủy lịch hẹn. 
-Sau khi thiết lập mật khẩu, khách hàng mở khóa toàn bộ tính năng đổi điểm Paw Points, quản lý lịch hẹn, và xem nhật ký chăm sóc của thú cưng.
-Tài khoản tạm được khởi tạo ở lần đặt dịch vụ đầu tiên, nếu muốn đăng nhập lại, Pawpal buộc khách hàng phải thiết lập mật khẩu và đồng ý với chính sách của cửa hàng
+Sau khi thiết lập mật khẩu, khách hàng mở khóa toàn bộ tính năng đổi điểm Paw Points, quản lý lịch hẹn, và xem nhật ký chăm sóc của thú cưng
 Admin có quyền tạo tài khoản cho khách chỉ với Họ tên và SĐT, quy trình gửi link xác thực mật khẩu diễn ra tương tự đăng ký trực tuyến.
 Tình huống ngoại lệ
 Pawpal từ chối đăng ký và hiển thị thông báo lỗi: "Số điện thoại đã tồn tại. Vui lòng đăng nhập hoặc khôi phục mật khẩu!" và hướng khách hàng đến trang đăng nhập hoặc khôi phục mật khẩu.
@@ -62,12 +61,12 @@ Trường hợp thông tin Pet ID bị khách hàng khai báo sai, Admin có quy
 3.1.4. Đặt lịch hẹn
 Mô tả quy trình 
 Bản mới viết theo quy trình 4 bước ở trên giao diện:
-Quy trình đặt lịch hẹn trực tuyến trên hệ thống Pawpal trải qua quy trình 4 bước. Ngay khi người dùng nhấn nút "Đặt lịch ngay" trên giao diện Trang chủ hoặc mục Dịch vụ, Pawpal sẽ lập tức kiểm tra trạng thái đăng nhập để điều hướng luồng xử lý tại “Bước 01: Thông tin bé”.
-Nếu khách hàng đã đăng nhập tài khoản thành viên, Pawpal hiển thị màn hình "Thông tin bé" dưới với các trường thông tin bắt buộc đã được điền sẵn theo Pet ID khởi tạo trước đó. Ngược lại, nếu khách hàng chưa đăng nhập, biểu mẫu sẽ hiện ra yêu cầu nhập Số điện thoại, khi người dùng vừa nhập xong Số điện thoại, Pawpal sẽ kiểm tra dữ liệu thực tế, nếu phát hiện SĐT đã tồn tại dưới tư cách thành viên chính thức, Pawpal sẽ hiển thị nút "Đăng nhập" nổi bật kèm cảnh báo đỏ thông báo SĐT đã được đăng ký và yêu cầu đăng nhập. Người dùng sẽ được đưa tới trang Đăng nhập, và sau khi tài khoản được xác thực Pawpal sẽ điều hướng tiếp tục về trang Đặt lịch mà không gây ra gián đoạn gì. Trong trường hợp Pawpal kiểm tra SĐT hoàn toàn mới, Pawpal sẽ yêu cầu người dùng nhập đầy đủ các trường thông tin bắt buộc ở trang “Thông tin bé”. Nút "Tiếp tục" chỉ sáng lên khi các dữ liệu đầu vào hoàn toàn hợp lệ.
+Quy trình đặt lịch hẹn trực tuyến trên hệ thống Pawpal trải qua quy trình 4 bước. Ngay khi người dùng nhấn nút "Đặt lịch ngay" trên giao diện Trang chủ hoặc mục Dịch vụ, Pawpal sẽ điều hướng khách hàng đến “Bước 01: Thông tin bé”.
+Nếu khách hàng đã đăng nhập tài khoản thành viên, Pawpal hiển thị màn hình "Thông tin bé" dưới với các trường thông tin bắt buộc đã được điền sẵn theo Pet ID khởi tạo trước đó. Trong trường hợp Khách vãng lai đã có Tài khoản tạm hoặc đặt lịch lần đầu, Pawpal hiển thị màn hình "Thông tin bé" và yêu cầu người dùng nhập đầy đủ các trường thông tin bắt buộc bao gồm Họ tên, Số điện thoại, thông tin cơ bản của bé cưng. Khách hàng không cần gián đoạn để tạo tài khoản, giao dịch được ưu tiên hoàn tất trước. Nút "Tiếp tục" chỉ sáng lên khi các dữ liệu đầu vào hoàn toàn hợp lệ. 
 Sau khi hoàn tất thông tin bé cưng, khách hàng bấm chuyển sang “Bước 02: Chọn dịch vụ”. Dựa trên chỉ số cân nặng và giống loài đã ghi nhận từ Bước 1, Pawpal tự động truy xuất ma trận giá niêm yết từ hệ thống để thực hiện cơ chế áp giá động. Lúc này, giao diện hiển thị các thẻ dịch vụ với mức giá chính xác tương ứng với hạng cân của bé. 
 Khi khách hàng chọn gói dịch vụ mong muốn, thẻ đó sẽ đổi màu viền và mở khóa cho phép chuyển tiếp sang “Bước 03: Chọn lịch & Nhân viên”. Tại đây, bảng lịch sẽ hiển thị các ô giờ trống theo thời gian thực và danh sách nhân viên. Khách hàng có thể tùy chọn đích danh nhân viên yêu thích hoặc chọn phân bổ ngẫu nhiên. Ngay khi người dùng nhấp chuột vào một ô giờ và nhân viên cụ thể, một dải băng đếm ok ngược "Giữ chỗ tạm thời" trong vòng 15 phút. Ô lịch này sẽ chuyển sang màu xám và bị khóa đối với tất cả người dùng khác trên hệ thống. 
 Bước cuối cùng trong tiến trình đặt lịch là “Bước 04: Xác nhận”, Pawpal hiển thị một tờ hóa đơn chi tiết dịch vụ và chi phí trên giao diện. Vì Pawpal áp dụng chính sách không thu bất kỳ khoản phí đặt cọc nào trước, trường dữ liệu "Chi phí đặt cọc" sẽ được hiển thị in đậm nổi bật với con số 0 VNĐ. Nhằm đảm bảo tính minh bạch và tránh các hiểu lầm về mặt tài chính, một dòng thông báo cảnh báo sẽ được chèn ngay dưới tổng tiền, nhắc nhở khách hàng rằng mức giá hiện tại chỉ là dự kiến dựa trên số cân nặng tự khai báo và nhân viên sẽ tiến hành cân lại thực tế tại quầy để áp giá chuẩn nhất theo quy định. Khi khách hàng bấm nút "Xác nhận đặt lịch", nút này sẽ lập tức chuyển sang trạng thái khóa mờ và hiển thị icon Loading Spinner. Pawpal hiển thị một hiệu ứng chúc mừng, mã đặt lịch được cấp, đồng thời thông tin cuộc hẹn tự động đồng bộ lên mục "Lịch hẹn của bé" trên Dashboard cá nhân và lịch vận hành chung của cửa hàng. 
-Đối với Khách hàng vãng lai, sau khi giao dịch hoàn tất, Pawpal gửi một tin nhắn SMS với nội dung chào mừng, kèm theo đường dẫn thiết lập mật khẩu có hiệu lực trong 48 giờ và thông báo tặng ngay 50 điểm thưởng Paw Points để khuyến khích khách hàng kích hoạt tài khoản.
+Sau khi giao dịch hoàn tất, đối với Khách hàng vãng lai, Pawpal sẽ gửi một tin nhắn SMS với nội dung chào mừng, kèm theo đường dẫn thiết lập mật khẩu có hiệu lực trong 48 giờ và thông báo tặng ngay 50 điểm thưởng Paw Points để khuyến khích khách hàng kích hoạt tài khoản.
 Quy tắc nghiệp vụ
 Trạng thái "Giữ chỗ tạm thời" bắt đầu ngay từ thời điểm khách hàng nhấn chọn vào ô lịch và nhân viên
 Khách hàng phải đặt lịch trước ít nhất 2 tiếng so với thời điểm dịch vụ bắt đầu.
@@ -88,13 +87,11 @@ Nếu khách hàng chọn khung giờ vừa mới trôi qua thời gian thực, 
 Hệ thống yêu cầu khách hàng cập nhật nhanh thông tin tại bước chọn Pet rồi mới cho phép đi tiếp.
 3.1.5. Thay đổi lịch hẹn
 Mô tả quy trình 
-Quy trình thay đổi lịch hẹn trực tuyến trên hệ thống Pawpal được kích hoạt từ hai cổng tiếp cận linh hoạt trên giao diện, cổng thứ nhất dành riêng cho Khách hàng thành viên đã đăng nhập thông qua phân mục “Lịch hẹn chăm sóc” tại trang cá nhân, cổng thứ hai là tính năng “Tra cứu dịch vụ” hiển thị công khai ngay trên Trang chủ, cho phép mọi đối tượng khách hàng chỉ cần nhập Số điện thoại là có thể tra cứu toàn bộ danh sách đơn hàng và lịch hẹn đã đặt. 
-Đối với Khách hàng thành viên đã đăng nhập, hệ thống cấp quyền tối đa cho phép họ chủ động thao tác trên cả hai giao diện phân mục “Lịch hẹn chăm sóc” tại trang cá nhân hoặc tính năng “Tra cứu dịch vụ” công khai trên Landing Page. Khi thành viên tìm đến một lịch hẹn có trạng thái "Đã xác nhận" và nhấn nút "Thay đổi lịch" với điều kiện thời gian cách giờ hẹn tối thiểu 2 tiếng, Pawpal điều hướng thẳng người dùng đến màn hình “Chọn lịch mới" mà không cần yêu cầu xác thực thêm bất kỳ bước nào.
-Đối với Người dùng chưa đăng nhập, Pawpal giới hạn quyền truy cập khi họ chỉ có thể xem danh sách đơn hàng và lịch hẹn bằng cách nhập SĐT tại trang “Tra cứu dịch vụ” công khai trên Trang chủ. Khi người dùng này tiến hành nhấp chuột vào chức năng "Thay đổi lịch", Pawpal sẽ lập tức yêu cầu người dùng nhập Số điện thoại trước. Ngay khi SĐT được xác nhận, Pawpal sẽ xác định loại tài khoản để phân nhánh đối tượng
-Trường hợp SĐT thuộc về Khách hàng thành viên, trang "Nhập mật khẩu" sẽ lập tức xuất hiện ngay tại chỗ để yêu cầu người dùng đăng nhập tài khoản. Sau khi xác thực mật khẩu chính xác, hệ thống mới mở khóa quyền và chuyển hướng họ sang trang “Chọn lịch mới".
-Trường hợp Pawpal nhận diện đây là SĐT tài khoản tạm, PawPal sẽ lập tức hiển thị giao diện chứa 2 lựa chọn hành động Thiết lập mật khẩu hoặc Liên hệ Hotline. Nếu khách hàng chọn Thiết lập mật khẩu, Pawpal dẫn vào giao diện trang tạo mật khẩu mới và tích chọn đồng ý với chính sách của cửa hàng. Khi hoàn tất, tài khoản tạm được nâng cấp thành thành viên chính thức và hệ thống tự động mở màn hình “Chọn lịch mới" Nếu khách hàng không muốn tạo tài khoản mật khẩu trên Pawpal, họ bắt buộc phải chọn Liên hệ Hotline để lấy số cửa hàng và gọi điện cho nhân viên hỗ trợ điều chỉnh thủ công trên hệ thống nội bộ.
+Quy trình thay đổi lịch hẹn trực tuyến trên hệ thống Pawpal được kích hoạt từ hai cổng tiếp cận linh hoạt trên giao diện, cổng thứ nhất dành riêng cho Khách hàng thành viên đã đăng nhập thông qua phân mục “Lịch hẹn chăm sóc” tại trang cá nhân, cổng thứ hai là tính năng “Tra cứu dịch vụ” hiển thị công khai ngay trên Trang chủ, hỗ trợ khách hàng vãng lai chỉ cần nhập Số điện thoại là có thể tra cứu toàn bộ danh sách đơn hàng và lịch hẹn đã đặt. 
+Đối với Khách hàng thành viên đã đăng nhập, người dùng truy cập trực tiếp vào phân mục “Lịch hẹn chăm sóc” tại Dashboard trang cá nhân của mình. Khi thành viên tìm đến một lịch hẹn có trạng thái "Đã xác nhận" và nhấn nút "Thay đổi lịch" với điều kiện thời gian cách giờ bắt đầu dịch vụ tối thiểu 2 tiếng, Pawpal điều hướng thẳng người dùng đến màn hình “Chọn lịch mới" mà không cần yêu cầu xác thực thêm bất kỳ bước nào.
+Đối với Khách hàng vãng lai, Pawpal cung cấp tính năng “Tra cứu dịch vụ” hiển thị công khai ngay trên Trang chủ. Khách hàng chỉ cần nhập Số điện thoại và Pawpal sẽ hiển thị danh sách đơn hàng, lịch hẹn của họ ngay trên giao diện tra cứu. Khi khách hàng chọn một lịch hẹn có trạng thái "Đã xác nhận và nhấn nút "Thay đổi lịch", PawPal sẽ lập tức hiển thị giao diện chứa 2 lựa chọn hành động là Thiết lập mật khẩu hoặc Liên hệ Hotline. Nếu khách hàng chọn Thiết lập mật khẩu, Pawpal dẫn vào giao diện trang tạo mật khẩu mới và tích chọn đồng ý với chính sách của cửa hàng. Khi hoàn tất, tài khoản tạm được nâng cấp thành thành viên chính thức và hệ thống tự động mở màn hình “Chọn lịch mới". Nếu khách hàng không muốn tạo tài khoản mật khẩu trên Pawpal, họ bắt buộc phải chọn Liên hệ Hotline để lấy số cửa hàng và gọi điện cho nhân viên hỗ trợ điều chỉnh thủ công trên hệ thống nội bộ.
 Tại màn hình “Chọn lịch mới". Tại đây, Pawpal hiển thị các khung giờ trống theo thời gian thực và danh sách nhân viên chăm sóc đang sẵn sàng. Tương tự như quy trình đặt lịch ban đầu, ngay khi khách hàng nhấn chọn vào một ô lịch mới, màn hình sẽ hiển thị đồng hồ đếm ngược "Giữ chỗ tạm thời" cho khung giờ đó trong vòng 15 phút và chuyển trạng thái ô lịch sang "Đang chờ". Đồng thời, Pawpal vẫn giữ nguyên trạng thái ô lịch cũ của khách hàng cho đến khi thao tác thay đổi được xác nhận thành công.
-Sau khi chọn giờ và nhân viên mới, khách hàng tiến hành kiểm tra lại thông tin tại màn hình xác nhận. Nếu có sự chênh lệch về giá, Pawpal sẽ hiển thị bảng kê chi tiết số tiền cần bù hoặc số tiền dư ra để minh bạch giá cả. Sau đó, khách hàng nhấn "Xác nhận thay đổi" tại màn hình “Xác nhận thông tin dịch vụ”". Lúc này, hệ thống Pawpal sẽ hiển thị trên màn hình chuyển trạng thái lịch hẹn mới thành "Đã xác nhận". Đồng thời, Pawpal lập tức giải phóng ô lịch cũ, người dùng sẽ thấy ô lịch chuyển về trạng thái "Trống" cho người dùng khác.
+Sau khi chọn giờ và nhân viên mới, khách hàng tiến hành kiểm tra lại thông tin tại màn hình xác nhận. Nếu có sự chênh lệch về giá, Pawpal sẽ hiển thị bảng kê chi tiết số tiền cần bù hoặc số tiền dư ra để minh bạch giá cả. Sau đó, khách hàng nhấn "Xác nhận thay đổi" tại màn hình “Xác nhận thông tin dịch vụ”". Ngay lập tức, Pawpal gửi một OTP về số điện thoại để đảm bảo tài khoản thuộc về đúng chủ nhân, sau khi nhập mã thành công Pawpal sẽ hiển thị trên màn hình chuyển trạng thái lịch hẹn mới thành "Đã xác nhận". Đồng thời, Pawpal lập tức giải phóng ô lịch cũ, người dùng sẽ thấy ô lịch chuyển về trạng thái "Trống" cho người dùng khác.
 Quy trình hoàn tất khi khách hàng nhấn nút "Xác nhận thay đổi", hệ thống hiển thị thông báo "Thay đổi lịch hẹn thành công" và thông tin được đồng bộ lên lịch vận hành của cửa hàng. 
 Quy tắc nghiệp vụ 
 Khách hàng chỉ được phép thay đổi lịch hẹn trước giờ bắt đầu dịch vụ tối thiểu 2 tiếng.
@@ -102,11 +99,12 @@ Khách hàng chỉ được phép thay đổi lịch hẹn trước giờ bắt 
 Khung giờ ban đầu sẽ chỉ được giải phóng trên hệ thống sau khi việc thay đổi lịch hẹn mới đã được xác nhận thành công.
 Mỗi lịch hẹn chỉ được phép thay đổi trực tuyến tối đa 02 lần. Sau giới hạn này, nút "Thay đổi" sẽ bị ẩn và khách hàng bắt buộc phải liên hệ Hotline để được Admin hỗ trợ thủ công.
 Khách hàng không được phép thay đổi loại dịch vụ chính từ Spa sang Hotel trong quy trình này. Mọi thay đổi về loại dịch vụ bắt buộc phải thực hiện thông qua quy trình Hủy lịch và Đặt lịch mới.
-Đối với tài khoản tạm, hệ thống yêu cầu khách hàng phải thiết lập mật khẩu mới có quyền thực hiện thay đổi lịch hẹn.
+Đối với tài khoản tạm, hệ thống yêu cầu khách hàng phải thiết lập mật khẩu mới có quyền thao tác thay đổi lịch hẹn trên hệ thống.
 Mọi thao tác thay đổi lịch phải ghi nhận rõ ID người thực hiện, thời gian thay đổi vào nhật ký hệ thống.
+Tính năng "Tra cứu dịch vụ" ngoài Trang chủ chỉ áp dụng cho Khách hàng vãng lai tra cứu bằng SĐT. Khách hàng thành viên phải đăng nhập để xem và quản lý lịch hẹn trong Dashboard cá nhân, hệ thống không hỗ trợ luồng tra cứu thành viên ngoài trang chủ.
 Tình huống ngoại lệ
 Nếu thời gian còn lại dưới 2 tiếng, nút "Thay đổi" sẽ bị vô hiệu hóa, hệ thống hiển thị thông báo "Đã quá thời gian tự thay đổi lịch tự động, vui lòng gọi Hotline để nhân viên hỗ trợ bạn trực tiếp".
-Nếu thú cưng đã ở cửa hàng và trạng thái là "Đang thực hiện", chức năng thay đổi lịch trên website sẽ bị khóa hoàn toàn. Mọi thay đổi về thời gian đón bé phải trao đổi trực tiếp với Lễ tân.
+Nếu bé cưng đã ở cửa hàng và trạng thái là "Đang thực hiện", chức năng thay đổi lịch trên website sẽ bị khóa hoàn toàn. Mọi thay đổi về thời gian đón bé phải trao đổi trực tiếp với Lễ tân.
 Nếu khách hàng để máy chờ quá 15 phút mà không nhấn xác nhận, hệ thống sẽ tự động hủy lệnh thay đổi, giải phóng ô lịch mới và giữ nguyên lịch hẹn cũ cho khách hàng.
 3.1.6. Hủy lịch
 Mô tả quy trình
@@ -129,34 +127,9 @@ Nếu khách hàng vãng lai chưa thiết lập mật khẩu nhưng thực hi�
 Trong trường hợp xảy ra lỗi đồng bộ dữ liệu khi cập nhật trạng thái lịch hẹn, PawPal khôi phục giao dịch và giữ nguyên trạng thái cũ.
 Nếu khách hàng thoát trang hoặc mất kết nối internet trước khi xác nhận thao tác cuối cùng, PawPal sẽ không ghi nhận yêu cầu hủy lịch.
 Nếu không thể truy cập CSDL Đặt lịch tại thời điểm xử lý, PawPal phải hiển thị thông báo: “PawPal đang bận, vui lòng thử lại sau.”
-3.1.7. Theo dõi dịch vụ
-Mô tả quy trình
-Quy trình theo dõi dịch vụ bắt đầu khi khách hàng đưa thú cưng đến cửa hàng PawPal theo lịch hẹn đã đặt trước. Sau khi tiếp nhận, nhân viên xác nhận thông tin lịch hẹn, đối chiếu hồ sơ thú cưng và cập nhật trạng thái "Đã tiếp nhận". PawPal đồng thời khởi tạo phiên theo dõi trải nghiệm dịch vụ tương ứng với lịch hẹn hiện tại để ghi nhận toàn bộ quá trình chăm sóc. Trong thời gian sử dụng dịch vụ, khách hàng có thể truy cập mục "Nhật ký bé cưng" để theo dõi tình trạng thú cưng theo thời gian thực. Đối với khách hàng thành viên đã đăng nhập, PawPal hiển thị trực tiếp nhật ký chăm sóc từ hồ sơ thú cưng tương ứng. Đối với khách hàng vãng lai, PawPal hỗ trợ chức năng tra cứu dịch vụ bằng số điện thoại đã sử dụng khi đặt lịch tại trang “Tra cứu dịch vụ”, cho phép khách hàng theo dõi tiến trình chăm sóc và các cập nhật liên quan mà không cần đăng nhập tài khoản.
-PawPal liên tục hiển thị các cột mốc chăm sóc được cập nhật trong quá trình phục vụ như "Đã tiếp nhận", "Đang tắm", "Đang sấy lông", "Đang nghỉ ngơi", "Đã cho ăn", "Đã uống thuốc" hoặc "Hoàn tất chăm sóc". Mỗi cập nhật đều đi kèm thời gian ghi nhận nhằm giúp khách hàng nắm bắt chính xác tiến độ dịch vụ của bé cưng.
-Trong trường hợp phát sinh các tình huống đặc biệt như thú cưng có dấu hiệu căng thẳng, bỏ ăn, dị ứng sản phẩm hoặc cần được theo dõi sức khỏe bổ sung, PawPal sẽ gửi tin nhắn SMS đến khách hàng và hiển thị thông báo đỏ tại màn hình nhật ký cũng như trung tâm thông báo trên website. Đồng thời, nhân viên phụ trách sẽ chủ động liên hệ với khách hàng để trao đổi tình trạng thực tế và thống nhất phương án xử lý nếu cần thiết.
-Sau khi hoàn tất toàn bộ quá trình chăm sóc, nhân viên cập nhật trạng thái "Hoàn tất chăm sóc". Tại thời điểm này, PawPal tự động tổng hợp các dịch vụ đã thực hiện và hiển thị hóa đơn dự kiến cho khách hàng thông qua website. Hóa đơn bao gồm thông tin dịch vụ đã sử dụng, các khoản phát sinh (nếu có) và tổng chi phí cần thanh toán.
-Khi khách hàng đến nhận thú cưng, nhân viên tiến hành bàn giao thú cưng và thực hiện thanh toán trực tiếp tại quầy. Sau khi khách hàng hoàn tất thanh toán, nhân viên xác nhận giao dịch trên PawPal bằng chức năng "Xác nhận đã thanh toán". Lúc này, trạng thái dịch vụ được cập nhật từ "Hoàn tất chăm sóc" sang "Hoàn thành", đánh dấu việc kết thúc toàn bộ quá trình cung cấp dịch vụ.
-Ngay sau khi dịch vụ chuyển sang trạng thái "Hoàn thành", PawPal tự động cộng điểm thưởng Paw Points vào tài khoản khách hàng, gửi hóa đơn điện tử và mở biểu mẫu đánh giá dịch vụ. Khách hàng có thể gửi phản hồi về chất lượng chăm sóc, thái độ phục vụ và trải nghiệm tổng thể nhằm giúp PawPal cải thiện chất lượng dịch vụ trong tương lai.
-Toàn bộ dữ liệu trong phiên chăm sóc sẽ được chuyển sang khu vực lưu trữ lịch sử. Thông qua mục "Lịch sử chăm sóc", khách hàng có thể tra cứu các lần sử dụng dịch vụ trước đây của thú cưng, bao gồm hình ảnh, ghi chú chăm sóc, hóa đơn dịch vụ và toàn bộ dòng thời gian trải nghiệm. Dữ liệu này giúp khách hàng theo dõi quá trình phát triển, tình trạng sức khỏe và lịch sử chăm sóc của thú cưng một cách đầy đủ theo thời gian.
-Ngoài chức năng theo dõi dịch vụ, PawPal còn sử dụng dữ liệu lịch sử chăm sóc để cá nhân hóa trải nghiệm khách hàng. Dựa trên các lần sử dụng dịch vụ trước đó, PawPal có thể gợi ý lịch chăm sóc định kỳ, đề xuất các gói dịch vụ phù hợp hoặc gửi nhắc lịch grooming theo chu kỳ nhằm hỗ trợ khách hàng chăm sóc thú cưng hiệu quả hơn. 
-Quy tắc nghiệp vụ
-Mỗi lịch dịch vụ chỉ được phép tồn tại duy nhất một phiên "Theo dõi trải nghiệm dịch vụ" đang hoạt động tại cùng một thời điểm.
-Nếu chưa có dữ liệu mới, PawPal hiển thị trạng thái "Đang chờ cập nhật từ nhân viên".
-Mọi cập nhật trạng thái trên Timeline phải được gắn timestamp nhằm đảm bảo tính minh bạch và khả năng tra soát dữ liệu.
-Hình ảnh hoặc video được tải lên phải liên kết trực tiếp với phiên dịch vụ hiện tại của thú cưng để tránh nhầm lẫn dữ liệu.
-Timeline phải hiển thị dữ liệu theo thứ tự thời gian thực tế từ mới đến cũ nhằm đảm bảo tính liên tục trải nghiệm.
-Khách hàng vãng lai được phép tra cứu nhật ký chăm sóc bằng số điện thoại đã sử dụng khi đặt lịch và chỉ được xem dữ liệu của các phiên dịch vụ thuộc số điện thoại đó. 
-Khi dịch vụ kết thúc, PawPal tự động khóa quyền chỉnh sửa Timeline và chuyển dữ liệu sang chế độ lưu trữ.
-Chỉ chủ sở hữu hợp lệ của thú cưng mới được phép truy cập nhật ký chăm sóc.
-Dịch vụ chỉ được chuyển sang trạng thái “Hoàn thành” sau khi nhân viên xác nhận khách hàng đã thanh toán và nhận lại thú cưng. 
-Mọi thao tác cập nhật trạng thái, hình ảnh hoặc ghi chú phải được ghi nhận vào nhật ký hệ thống nhằm phục vụ kiểm tra nội bộ hoặc xử lý khiếu nại.
-Tình huống ngoại lệ 
-Khi nhân viên tải lên hình ảnh hoặc video không hợp lệ (sai định dạng, vượt dung lượng cho phép), PawPal từ chối upload và hiển thị thông báo lỗi cụ thể.
-Nếu mất kết nối khi đang cập nhật, Pawpal tự động lưu tạm nội dung và cho nhân viên gửi lại khi có mạng trở lại để không mất dữ liệu.
-Pawpal gửi thông báo và mời khách hàng thử lại sau nếu không tải được nhật ký, thay vì hiển thị màn hình trống.
-Khi nhiều nhân viên cùng cập nhật một lúc, Pawpal giữ bản mới nhất và lưu lịch sử chỉnh sửa để đối chiếu nếu cần.
-Nếu khách hàng thoát web rồi vào lại, Pawpal tự động đồng bộ toàn bộ nhật ký mới nhất để khách hàng không bỏ lỡ bất kỳ cập nhật nào.
-3.1.8. Mua sắm
+
+
+3.1.7. Mua sắm
 Mô tả quy trình
 Khi khách hàng truy cập vào trang "Cửa hàng" trên PawPal để tìm kiếm và lựa chọn các sản phẩm dành cho thú cưng như thức ăn, phụ kiện, đồ chơi, quần áo hoặc sản phẩm chăm sóc sức khỏe, PawPal sẽ hiển thị danh sách sản phẩm theo nhiều nhóm phân loại như danh mục, thương hiệu, sản phẩm bán chạy, khoảng giá và tình trạng còn hàng, giúp khách hàng dễ dàng tìm thấy sản phẩm phù hợp với nhu cầu của thú cưng. 
 Trong quá trình mua sắm, khách hàng có thể sử dụng thanh tìm kiếm hoặc các bộ lọc để thu hẹp phạm vi lựa chọn. Khi nhập từ khóa tìm kiếm, PawPal hiển thị các sản phẩm phù hợp dựa trên tên sản phẩm, thương hiệu và các thông tin liên quan. Nếu không tìm thấy sản phẩm phù hợp, PawPal sẽ thông báo kết quả tìm kiếm không khả dụng và gợi ý một số sản phẩm tương tự hoặc sản phẩm nổi bật để khách hàng tiếp tục tham khảo. 
@@ -164,13 +137,12 @@ Khi lựa chọn một sản phẩm cụ thể, khách hàng được chuyển �
 Trong trường hợp muốn lưu lại sản phẩm để xem hoặc mua sau, khách hàng có thể sử dụng chức năng "Danh sách yêu thích". Chức năng này chỉ khả dụng đối với khách hàng đã đăng nhập tài khoản. Khi khách hàng nhấn biểu tượng yêu thích, PawPal sẽ lưu sản phẩm vào danh sách yêu thích cá nhân và đồng bộ trên các thiết bị. Đối với khách vãng lai, khi nhấn chức năng "Yêu thích", hệ thống sẽ hiển thị thông báo yêu cầu đăng nhập hoặc tạo tài khoản để sử dụng tính năng này.
 Khi khách hàng chọn "Thêm vào giỏ hàng", PawPal kiểm tra số lượng tồn kho hiện tại. Nếu số lượng yêu cầu vượt quá mức tồn kho khả dụng, khách hàng sẽ nhận được thông báo điều chỉnh số lượng. Nếu sản phẩm còn đủ hàng, sản phẩm được thêm vào giỏ hàng cùng với các thông tin gồm tên sản phẩm, số lượng, đơn giá và giá trị tạm tính.
 Tại màn hình "Giỏ hàng", khách hàng có thể thay đổi số lượng sản phẩm, xóa sản phẩm khỏi giỏ hàng hoặc áp dụng mã giảm giá nếu có. Sau mỗi thao tác, PawPal tự động cập nhật tổng giá trị đơn hàng để khách hàng dễ dàng theo dõi chi phí mua sắm. Đồng thời, tồn kho sản phẩm vẫn được kiểm tra định kỳ nhằm đảm bảo dữ liệu hiển thị luôn chính xác trước khi chuyển sang bước tiếp theo.
-Nếu khách hàng rời khỏi website khi chưa hoàn tất mua hàng, PawPal sẽ lưu lại trạng thái giỏ hàng để hỗ trợ khôi phục trong lần truy cập tiếp theo. Đối với khách hàng đã đăng nhập, giỏ hàng được đồng bộ với tài khoản cá nhân; đối với khách vãng lai, dữ liệu được lưu tạm trong trình duyệt trong khoảng thời gian cho phép.
+Đối với khách hàng đã đăng nhập, giỏ hàng được đồng bộ với tài khoản cá nhân; đối với khách vãng lai, dữ liệu được lưu tạm trong trình duyệt trong khoảng thời gian cho phép.
 Sau khi hoàn tất việc lựa chọn sản phẩm và kiểm tra lại giỏ hàng, khách hàng nhấn "Tiến hành thanh toán" để chuyển sang quy trình thanh toán. PawPal tiến hành xử lý giao dịch theo phương thức thanh toán mà khách hàng lựa chọn và khởi tạo đơn hàng thành công khi các điều kiện thanh toán được đáp ứng. 
 Sau khi đơn hàng được xác nhận, PawPal cập nhật trạng thái đơn hàng sang "Chờ xác nhận" và tiến hành kiểm tra đơn hàng, xác nhận tồn kho, chuẩn bị sản phẩm và đóng gói hàng hóa, sau đó tiến hành bàn giao cho đơn vị vận chuyển.
 Sau khi đơn vị vận chuyển hoàn tất việc giao hàng đến địa chỉ nhận hàng, PawPal cập nhật trạng thái đơn hàng sang "Đã giao hàng" và gửi thông báo đến khách hàng. Tại thời điểm này, khách hàng có thể kiểm tra sản phẩm thực tế và sử dụng chức năng "Xác nhận đã nhận hàng" trên màn hình chi tiết đơn hàng.
-Khi khách hàng xác nhận đã nhận hàng, PawPal cập nhật trạng thái đơn hàng sang "Hoàn thành", lưu đơn hàng vào lịch sử mua hàng và ghi nhận giao dịch kết thúc thành công. Đối với các đơn hàng thanh toán khi nhận hàng (COD), trạng thái thanh toán cũng được cập nhật sang "Đã thanh toán" sau khi đơn vị vận chuyển hoặc nhân viên giao hàng xác nhận đã thu tiền thành công.
+Khi khách hàng xác nhận đã nhận hàng, PawPal cập nhật trạng thái đơn hàng sang "Hoàn thành", lưu đơn hàng vào lịch sử mua hàng và ghi nhận giao dịch kết thúc thành công. Đối với các đơn hàng thanh toán khi nhận hàng (COD), trạng thái thanh toán cũng được cập nhật sang "Đã thanh toán" sau khi đơn vị vận chuyển xác nhận đã thu tiền thành công.
 Trong trường hợp khách hàng không thực hiện xác nhận trong thời gian quy định, PawPal sẽ tự động cập nhật trạng thái đơn hàng sang "Hoàn thành" sau 03 ngày kể từ thời điểm giao hàng thành công.
-
 Sau khi đơn hàng chuyển sang trạng thái "Hoàn thành", quy trình mua sắm kết thúc.
 Quy tắc nghiệp vụ
 Mỗi sản phẩm phải được liên kết với dữ liệu tồn kho thực tế nhằm đảm bảo tính chính xác khi mua sắm.
@@ -184,7 +156,7 @@ Nếu mã giảm giá không hợp lệ hoặc đã hết hạn, Pawpal giải t
 Khi hệ thống không thể truy cập CSDL Sản phẩm hoặc dữ liệu tồn kho, PawPal hiển thị thông báo: "Hệ thống đang bận, vui lòng thử lại sau."
 Nếu khách hàng mất kết nối trong quá trình mua sắm, dữ liệu giỏ hàng chưa thanh toán phải được lưu tạm để tránh mất thông tin lựa chọn sản phẩm.
 Trong trường hợp nhiều khách hàng cùng đặt mua một sản phẩm với số lượng giới hạn tại cùng thời điểm, PawPal ưu tiên người hoàn tất thao tác trước và cập nhật lại tồn kho theo thời gian thực nhằm tránh phát sinh đơn hàng vượt mức tồn kho.
-3.1.9. Thanh toán
+3.1.8. Thanh toán
 Quy trình thanh toán bắt đầu khi khách hàng hoàn tất việc lựa chọn sản phẩm trong "Giỏ hàng", và nhấn nút "Tiến hành thanh toán" trên trang chi tiết sản phẩm. Trước khi chuyển sang bước thanh toán, PawPal kiểm tra lại thông tin đơn hàng bao gồm danh sách sản phẩm, số lượng, giá bán hiện tại, mã giảm giá đã áp dụng và tình trạng còn hàng nhằm đảm bảo dữ liệu hiển thị cho khách hàng là chính xác nhất.
 Sau khi thông tin đơn hàng hợp lệ, PawPal hiển thị màn hình "Thanh toán đơn hàng". Đối với khách hàng đã đăng nhập, các thông tin nhận hàng đã lưu trước đó như họ tên, số điện thoại và địa chỉ giao hàng sẽ được tự động điền để giúp rút ngắn thời gian thao tác. Đối với khách vãng lai, PawPal yêu cầu cung cấp các thông tin cần thiết trước khi tiếp tục thanh toán.
 Khi hoàn tất thông tin giao hàng, khách hàng lựa chọn phương thức thanh toán phù hợp. PawPal hỗ trợ các hình thức thanh toán như thanh toán khi nhận hàng (COD) hoặc thanh toán trực tuyến thông qua các cổng thanh toán được tích hợp trên website.
@@ -209,13 +181,12 @@ Trong trường hợp khách hàng thanh toán online nhưng mất kết nối i
 Nếu cổng thanh toán phản hồi lỗi hoặc timeout, hệ thống phải cập nhật trạng thái "Thanh toán thất bại" và cho phép người dùng thực hiện lại giao dịch.
 Nếu nhấn thanh toán nhiều lần liên tiếp cho cùng một đơn hàng, Pawpal chỉ ghi nhận một giao dịch thành công duy nhất và hiển thị thông báo thanh toán thành công.
 Nếu khách hàng thoát trang trước khi hoàn tất thanh toán, đơn hàng tạm thời phải được lưu trong thời gian cho phép để hỗ trợ khách tiếp tục thanh toán sau đó mà không cần tạo lại đơn hàng mới.
-3.1.10. Quản lý đơn hàng
+3.1.9. Quản lý đơn hàng
 Mô tả quy trình
 Quy trình quản lý đơn hàng bắt đầu sau khi khách hàng hoàn tất giao dịch mua sắm trên PawPal. Để theo dõi tình trạng xử lý đơn hàng, khách hàng có thể truy cập hệ thống thông qua hai hình thức khác nhau.
 Đối với khách hàng thành viên đã đăng nhập, khách hàng truy cập mục "Đơn hàng của tôi" trong khu vực tài khoản cá nhân. PawPal tự động truy xuất toàn bộ các đơn hàng đã phát sinh theo tài khoản và hiển thị danh sách đơn hàng tương ứng.
-Đối với khách hàng vãng lai hoặc khách hàng thành viên chưa đăng nhập, khách hàng có thể sử dụng chức năng "Tra cứu dịch vụ" được hiển thị công khai trên Trang chủ. Tại đây, khách hàng nhập số điện thoại đã sử dụng khi đặt hàng. PawPal tiến hành kiểm tra tính hợp lệ của dữ liệu và truy xuất danh sách đơn hàng tương ứng với số điện thoại đó.
+Đối với khách hàng vãng lai, khách hàng có thể sử dụng chức năng "Tra cứu dịch vụ" được hiển thị công khai trên Trang chủ. Tại đây, khách hàng nhập số điện thoại đã sử dụng khi đặt hàng. PawPal tiến hành kiểm tra tính hợp lệ của dữ liệu và truy xuất danh sách đơn hàng tương ứng với số điện thoại đó.
 Khi lựa chọn một đơn hàng cụ thể, khách hàng được chuyển đến màn hình "Chi tiết đơn hàng". Tại đây, PawPal hiển thị đầy đủ các thông tin liên quan như danh sách sản phẩm đã mua, số lượng, đơn giá, tổng tiền thanh toán, địa chỉ giao hàng, phương thức thanh toán và lịch sử thay đổi trạng thái đơn hàng. Đồng thời, khách hàng có thể theo dõi tiến trình xử lý thông qua các trạng thái như "Chờ xác nhận", "Đang chuẩn bị hàng", "Đang giao", "Đã giao hàng", "Hoàn thành", "Đã hủy" hoặc "Hoàn trả".
-Khi khách hàng xác nhận đã nhận hàng, PawPal cập nhật trạng thái đơn hàng sang "Hoàn thành", đồng thời lưu trữ đơn hàng vào khu vực "Lịch sử mua hàng" để phục vụ việc tra cứu và các hoạt động hậu mãi sau này. Trong trường hợp khách hàng không thực hiện xác nhận trong thời gian quy định, PawPal sẽ tự động cập nhật trạng thái đơn hàng sang "Hoàn thành" sau 03 ngày kể từ thời điểm giao hàng thành công.
 Trong quá trình sử dụng sản phẩm, nếu khách hàng phát sinh nhu cầu đổi trả hoặc các yêu cầu hậu mãi khác, trạng thái đơn hàng sẽ được cập nhật tương ứng và phản ánh trực tiếp trên màn hình chi tiết đơn hàng. Toàn bộ lịch sử thay đổi trạng thái đều được lưu trữ nhằm đảm bảo tính minh bạch và hỗ trợ công tác tra cứu khi cần thiết.
 Sau khi đơn hàng chuyển sang trạng thái cuối cùng và dữ liệu được lưu vào lịch sử giao dịch, quy trình quản lý đơn hàng kết thúc.
 Quy tắc nghiệp vụ
@@ -233,13 +204,57 @@ Trong trường hợp tồn kho không đủ khi Admin xác nhận đơn hàng, 
 Nếu xảy ra lỗi đồng bộ trạng thái giữa hệ thống PawPal và đơn vị vận chuyển, trạng thái đơn hàng sẽ được chuyển sang “Cần kiểm tra” để tránh hiển thị sai dữ liệu cho khách hàng.
 Nếu khách hàng mất kết nối internet trong lúc theo dõi đơn hàng, hệ thống phải tự động đồng bộ lại trạng thái mới nhất khi người dùng truy cập lại.
 Khi đơn hàng bị hủy hoặc hoàn trả, hệ thống phải cập nhật đồng thời trạng thái đơn hàng và dữ liệu tồn kho nhằm đảm bảo tính nhất quán dữ liệu vận hành.
-3.1.11. Đánh giá
+3.1.10. Quy trình hủy đơn hàng
+Mô tả quy trình
+Quy trình hủy đơn hàng được kích hoạt khi khách hàng không còn nhu cầu mua sản phẩm và muốn chấm dứt giao dịch trước khi đơn hàng được giao thành công.
+Khách hàng có thể truy cập quy trình thông qua hai hình thức. Đối với khách hàng thành viên đã đăng nhập, khách hàng truy cập mục "Đơn hàng của tôi" để xem danh sách các đơn hàng đã đặt. Đối với khách hàng vãng lai, khách hàng có thể sử dụng chức năng "Tra cứu dịch vụ" trên Trang chủ bằng cách nhập số điện thoại đã sử dụng khi đặt hàng để tra cứu đơn hàng tương ứng.
+Khi lựa chọn một đơn hàng cụ thể, khách hàng được chuyển đến màn hình "Chi tiết đơn hàng". Tại đây, PawPal hiển thị đầy đủ thông tin đơn hàng cùng trạng thái xử lý hiện tại. Nếu đơn hàng vẫn còn đủ điều kiện hủy, hệ thống hiển thị nút chức năng "Hủy đơn hàng".
+Khi khách hàng nhấn nút "Hủy đơn hàng", PawPal hiển thị cửa sổ xác nhận nhằm tránh các thao tác nhầm lẫn. Khách hàng có thể lựa chọn xác nhận hủy hoặc quay lại để tiếp tục giữ nguyên đơn hàng. Sau khi khách hàng xác nhận yêu cầu hủy, PawPal kiểm tra trạng thái xử lý của đơn hàng. Nếu đơn hàng chưa được bàn giao cho đơn vị vận chuyển hoặc chưa chuyển sang trạng thái "Đang giao", hệ thống cập nhật trạng thái đơn hàng thành "Đã hủy". Ngay sau khi hủy thành công, PawPal gửi thông báo xác nhận đến khách hàng và đồng thời cập nhật lại số lượng tồn kho tương ứng của các sản phẩm trong đơn hàng nhằm đảm bảo dữ liệu vận hành chính xác.
+Đối với các đơn hàng đã thanh toán trực tuyến, PawPal ghi nhận yêu cầu hoàn tiền và chuyển giao cho quy trình xử lý hoàn tiền theo chính sách của cửa hàng. Trạng thái hoàn tiền được theo dõi riêng và hiển thị trên màn hình chi tiết đơn hàng.
+Mặc dù đơn hàng không còn hiệu lực mua bán, toàn bộ thông tin giao dịch vẫn được lưu trong khu vực lịch sử đơn hàng với trạng thái "Đã hủy" để phục vụ tra cứu và đối soát sau này. Sau khi trạng thái đơn hàng được cập nhật thành công và các dữ liệu liên quan được xử lý hoàn tất, quy trình hủy đơn hàng kết thúc.
+Quy tắc nghiệp vụ
+Khách hàng chỉ được phép hủy đơn hàng khi trạng thái đơn hàng là "Chờ xác nhận" hoặc "Đang chuẩn bị hàng".
+Các đơn hàng đã chuyển sang trạng thái "Đang giao", "Đã giao hàng" hoặc "Hoàn thành" không được phép hủy trực tiếp trên website.
+Mỗi đơn hàng chỉ được phép hủy một lần và không thể khôi phục sau khi xác nhận hủy thành công.
+Khi đơn hàng bị hủy, hệ thống phải tự động hoàn trả số lượng tồn kho đã khóa trước đó.
+Đối với đơn hàng thanh toán trực tuyến, hệ thống phải ghi nhận yêu cầu hoàn tiền và liên kết với quy trình hoàn tiền tương ứng.
+Mọi thao tác hủy đơn hàng phải được ghi nhận vào nhật ký hệ thống bao gồm người thực hiện, thời gian thực hiện và lý do hủy (nếu có).
+Đối với khách hàng vãng lai, hệ thống chỉ cho phép hủy đơn hàng khi khách hàng truy cập thông qua liên kết định danh trong SMS hoặc đã thiết lập mật khẩu tài khoản.
+Tình huống ngoại lệ
+Nếu đơn hàng đã được bàn giao cho đơn vị vận chuyển, PawPal vô hiệu hóa nút "Hủy đơn hàng" và hiển thị nút liên hệ cửa hàng để được hỗ trợ.
+Nếu xảy ra lỗi khi cập nhật trạng thái đơn hàng hoặc hoàn trả tồn kho, hệ thống phải khôi phục giao dịch và giữ nguyên trạng thái đơn hàng ban đầu.
+Nếu khách hàng mất kết nối internet hoặc đóng trình duyệt trước khi xác nhận thao tác cuối cùng, PawPal sẽ không ghi nhận yêu cầu hủy đơn hàng.
+3.1.11. Quy trình đổi trả hàng
+Mô tả quy trình
+Pawpal hỗ trợ đổi trả sản phẩm vật lý trong vòng 7 ngày sau khi nhận hàng. Toàn bộ quy trình được thực hiện trực tuyến để khách hàng không cần đến cửa hàng.
+Khách hàng vào "Đơn hàng của tôi" trên trang cá nhân. Các đơn hàng còn trong thời hạn đổi trả hiển thị nút "Yêu cầu đổi trả" ngay bên cạnh đơn nào hết hạn thì nút tự ẩn để tránh nhầm lẫn.
+Khi khách hàng nhấn vào nút yêu cầu, Pawpal hiển thị form gồm: lựa chọn hình thức (đổi hàng mới hoặc hoàn tiền), lý do chi tiết và đính kèm ảnh/video thực tế của sản phẩm làm minh chứng. Sau khi gửi, Pawpal cấp ngay một mã phiếu hậu mãi để khách hàng theo dõi tiến độ tại "Đơn hàng của tôi" không cần liên hệ hỏi lại.
+Khách hàng có thể theo dõi trạng thái phiếu theo thời gian thực: "Chờ kiểm duyệt", "Đã chấp nhận" hoặc "Cần bổ sung thông tin" trực tiếp tại “Đơn hàng của tôi”. Khi yêu cầu được chấp nhận, Pawpal hướng dẫn chi tiết cách đóng gói và địa chỉ gửi trả. Sau khi hàng trả về được xác nhận:
+Đổi hàng: Pawpal tạo đơn hàng mới với giá trị 0đ khách hàng nhận hàng mà không cần thanh toán thêm (trừ trường hợp đổi sản phẩm giá cao hơn).
+Hoàn tiền: Pawpal thông báo số tiền và phương thức hoàn trả về đúng tài khoản/ví ban đầu.
+Quy trình kết thúc khi phiếu hậu mãi chuyển sang "Hoàn tất"; lúc này Pawpal tự động điều chỉnh lại toàn bộ điểm Paw Points phát sinh từ giao dịch đó, bao gồm cả điểm tích lũy mua sắm và điểm thưởng từ đánh giá (nếu có).     
+Quy tắc nghiệp vụ
+Chỉ áp dụng cho sản phẩm vật lý mua tại Shop (thức ăn, phụ kiện, đồ chơi...). Không áp dụng đổi trả đối với các dịch vụ đã thực hiện xong (Spa, Hotel).
+Yêu cầu phải được gửi trong vòng 07 ngày kể từ ngày đơn hàng chuyển sang trạng thái "Hoàn thành". Quá thời hạn này, nút "Yêu cầu Đổi trả" sẽ tự động ẩn.
+Sản phẩm trả về phải còn nguyên tem mác, bao bì đối với lỗi do khách hàng muốn đổi ý hoặc có hình ảnh minh chứng hư hỏng/sai lệch đối với lỗi do cửa hàng.
+Hoàn lại 100% giá trị thực trả của sản phẩm sau khi trừ mã giảm giá.
+Đổi sang sản phẩm tương đương hoặc cao hơn: Nếu sản phẩm mới có giá cao hơn, khách hàng bù thêm phần chênh lệch.
+Khi phiếu hoàn tiền được xác nhận thành công, điểm tích lũy từ đơn hàng đó sẽ được điều chỉnh lại tương ứng.
+Nếu lỗi do cửa hàng (giao sai, hàng hỏng), Pawpal chịu toàn bộ phí ship. Nếu khách hàng muốn đổi ý, khách hàng chịu phí gửi trả và nhận hàng mới.
+Tình huống ngoại lệ
+Nếu Sản phẩm cần đổi đã hết hàng trong kho thì Pawpal hiển thị cảnh báo cho Nhân viên. Nhân viên liên hệ khách hàng để chuyển sang phương án hoàn tiền hoặc đổi sang sản phẩm tương đương.
+Hàng trả về thực tế không khớp với khai báo: Để giữ trải nghiệm thân thiện, hệ thống không tự động phạt khách. Phiếu đổi trả sẽ chuyển trạng thái sang "Cần hỗ trợ trực tiếp". Nhân viên CSKH sẽ gọi điện/nhắn tin hỗ trợ khách xử lý thủ công.
+Hoàn tiền cho đơn hàng COD thì khách hàng có thể điền Số tài khoản ngân hàng/Số MoMo ngay trên Form đổi trả. Nếu khách không điền, nhân viên CSKH sẽ liên hệ trực tiếp qua điện thoại trong vòng 24 giờ để xin thông tin chuyển khoản và thực hiện hoàn tiền thủ công cho khách.
+Sau khi hoàn tiền thành công, hệ thống tự động cấn trừ số điểm tích lũy của sản phẩm đó trong tài khoản khách (số dư điểm tối thiểu là 0, không bao giờ bị âm). Bài đánh giá cũ của sản phẩm (nếu có) được gắn nhãn "Giao dịch đã hủy".
+Một khi khách hàng đã thực hiện gửi đánh giá cho sản phẩm hoặc dịch vụ, đơn hàng đó sẽ được coi là đã chấp nhận hoàn thành tuyệt đối và hệ thống sẽ tự động ẩn/khóa nút "Yêu cầu đổi trả" của đơn hàng đó nhằm ngăn chặn việc trục lợi điểm thưởng từ đánh giá.
+Khách hàng vãng lai yêu cầu đổi trả: Khách hàng nhập Mã đơn hàng và Số điện thoại mua hàng mà không cần đăng nhập tài khoản. Hai thông tin này đã đủ để xác minh quyền sở hữu đơn hàng, đơn giản hơn cho khách lớn tuổi.
+3.1.12. Đánh giá
 Mô tả quy trình nghiệp vụ
 Quy trình đánh giá được thiết kế để lắng nghe phản hồi thực tế của khách hàng về chất lượng sản phẩm và dịch vụ. Ngay khi một giao dịch mua hàng hoặc dịch vụ Spa/Hotel chuyển sang trạng thái "Hoàn thành", Pawpal tự động gửi thông báo đến tài khoản khách hàng kèm đường dẫn trực tiếp đến form phản hồi. Khách hàng có thể chủ động vào "Lịch hẹn cho bé" (đối với dịch vụ) hoặc "Đơn hàng của tôi" (đối với sản phẩm Shop) trên trang cá nhân. Tại đây, khách hàng thấy danh sách các giao dịch đã hoàn thành nhưng chưa được đánh giá, kèm nút "Viết đánh giá" ngay bên cạnh.
-Khi khách hàng nhấn vào thông báo hoặc chọn giao dịch từ danh sách, Pawpal hiển thị chính xác tên sản phẩm và hình ảnh minh họa hoặc tên dịch vụ tương ứng mà khách hàng không cần tự tìm lại. Đồng thời, Pawpal xác minh ngầm rằng đây đúng là giao dịch của khách hàng, nhằm đảm bảo mỗi lần mua hàng chỉ được đánh giá đúng một lần và không có phản hồi ảo.
+Khi khách hàng nhấn vào thông báo hoặc chọn giao dịch từ danh sách, Pawpal hiển thị chính xác tên sản phẩm và hình ảnh minh họa hoặc tên dịch vụ tương ứng mà khách hàng không cần tự tìm lại. 
 Sau khi xác thực, khách hàng thấy form đánh giá gồm: chọn số sao từ 1 đến 5, viết nhận xét và tùy chọn đính kèm ảnh hoặc video thực tế.
-Khi khách hàng hoàn tất điền form và nhấn "Gửi đánh giá", hệ thống sẽ lập tức lưu đánh giá vào cơ sở dữ liệu và tự động gắn nhãn "Người mua thực" (form hiển thị sẵn dòng lưu ý tĩnh về việc công khai thông tin để khách hàng biết trước).
-Ngay sau khi lưu thành công, Pawpal xử lý hiển thị dựa trên mức hài lòng: đánh giá từ 4 sao trở lên được công khai ngay trên trang sản phẩm/dịch vụ tương ứng. Với các đánh giá dưới 4 sao vẫn được hiển thị công khai trên trang sản phẩm/dịch vụ, đồng thời trạng thái phản hồi được xác lập là “Đang chờ hỗ trợ” để Pawpal chủ động kích hoạt các bước hậu mãi bảo vệ quyền lợi khách hàng. Ngay sau đó, Pawpal cộng điểm thưởng Paw Points vào tài khoản như lời cảm ơn chân thành, chính thức kết thúc quy trình đánh giá.
+Khi khách hàng hoàn tất điền form và nhấn "Gửi đánh giá", hệ thống kiểm tra tính hợp lệ của đánh giá và lưu đánh giá vào cơ sở dữ liệu.
+Ngay sau khi lưu thành công, Tất cả đánh giá sẽ được công khai ngay trên trang sản phẩm/dịch vụ tương ứng. Với các đánh giá dưới 4 sao được gán nhãn “Đang chờ hỗ trợ” để Pawpal chủ động kích hoạt các bước hậu mãi bảo vệ quyền lợi khách hàng. Ngay sau đó, Pawpal cộng điểm thưởng Paw Points vào tài khoản như lời cảm ơn chân thành, chính thức kết thúc quy trình đánh giá.
 Quy tắc nghiệp vụ
 Khách hàng chỉ thấy nút "Viết đánh giá" sau khi đã nhận hàng hoặc Check-out và thanh toán đầy đủ đảm bảo phản hồi dựa trên trải nghiệm thực tế.
 Mỗi đơn hàng hoặc lịch hẹn chỉ được đánh giá một lần để đảm bảo tính khách quan.
@@ -253,32 +268,6 @@ Với giao dịch đã được đánh giá trước đó nút "Viết đánh gi
 Nếu tệp quá dung lượng hoặc sai định dạng, Pawpal báo ngay lý do như sai định dạng hoặc quá dung lượng cho phép chọn lại mà không mất nội dung đã nhập.
 Mất kết nối mạng khi đang gửi thì Pawpal sẽ lưu tạm nội dung và thông báo đang thử kết nối lại khách hàng không cần nhập lại từ đầu
 Người dùng nhấn "Hủy" tại bước xác nhận cuối thì Form sẽ đóng lại, nội dung vẫn được giữ nguyên để khách hàng tiếp tục chỉnh sửa khi sẵn sàng.
-
-3.1.12. Quy trình Đổi trả hàng
-Mô tả quy trình
-Pawpal hỗ trợ đổi trả sản phẩm vật lý trong vòng 7 ngày sau khi nhận hàng. Toàn bộ quy trình được thực hiện trực tuyến để khách hàng không cần đến cửa hàng.
-Khách hàng vào "Đơn hàng của tôi" trên trang cá nhân. Các đơn hàng còn trong thời hạn đổi trả hiển thị nút "Yêu cầu đổi trả" ngay bên cạnh đơn nào hết hạn thì nút tự ẩn để tránh nhầm lẫn.
-Khi khách hàng nhấn vào nút yêu cầu, Pawpal hiển thị form gồm: lựa chọn hình thức (đổi hàng mới hoặc hoàn tiền), lý do chi tiết và đính kèm ảnh/video thực tế của sản phẩm làm minh chứng. Sau khi gửi, Pawpal cấp ngay một mã phiếu hậu mãi để khách hàng theo dõi tiến độ tại "Đơn hàng của tôi" không cần liên hệ hỏi lại.
-Khách hàng có thể theo dõi trạng thái phiếu theo thời gian thực: "Chờ kiểm duyệt", "Đã chấp nhận" hoặc "Cần bổ sung thông tin" trực tiếp tại “Đơn hàng của tôi”. Khi yêu cầu được chấp nhận, Pawpal hướng dẫn chi tiết cách đóng gói và địa chỉ gửi trả. Sau khi hàng trả về được xác nhận:
-Đổi hàng: Pawpal tạo đơn hàng mới với giá trị 0đ khách hàng nhận hàng mà không cần thanh toán thêm (trừ trường hợp đổi sản phẩm giá cao hơn).
-Hoàn tiền: Pawpal thông báo số tiền và phương thức hoàn trả về đúng tài khoản/ví ban đầu.
-Quy trình kết thúc khi phiếu hậu mãi chuyển sang "Hoàn tất"; lúc này Pawpal tự động điều chỉnh lại toàn bộ điểm Paw Points phát sinh từ giao dịch đó, bao gồm cả điểm tích lũy mua sắm và điểm thưởng từ đánh giá (nếu có).     
-
-Quy tắc nghiệp vụ
-Chỉ áp dụng cho sản phẩm vật lý mua tại Shop (thức ăn, phụ kiện, đồ chơi...). Không áp dụng đổi trả đối với các dịch vụ đã thực hiện xong (Spa, Hotel).
-Yêu cầu phải được gửi trong vòng 07 ngày kể từ ngày đơn hàng chuyển sang trạng thái "Hoàn thành". Quá thời hạn này, nút "Yêu cầu Đổi trả" sẽ tự động ẩn.
-Sản phẩm trả về phải còn nguyên tem mác, bao bì đối với lỗi do khách hàng muốn đổi ý hoặc có hình ảnh minh chứng hư hỏng/sai lệch đối với lỗi do cửa hàng.
-Hoàn lại 100% giá trị thực trả của sản phẩm sau khi trừ mã giảm giá.
-Đổi sang sản phẩm tương đương hoặc cao hơn: Nếu sản phẩm mới có giá cao hơn, khách hàng bù thêm phần chênh lệch.
-Khi phiếu hoàn tiền được xác nhận thành công, điểm tích lũy từ đơn hàng đó sẽ được điều chỉnh lại tương ứng.
-Nếu lỗi do cửa hàng (giao sai, hàng hỏng), Pawpal chịu toàn bộ phí ship. Nếu khách hàng muốn đổi ý, khách hàng chịu phí gửi trả và nhận hàng mới.
-Xử lý ngoại lệ
-Nếu Sản phẩm cần đổi đã hết hàng trong kho thì Pawpal hiển thị cảnh báo cho Nhân viên. Nhân viên liên hệ khách hàng để chuyển sang phương án hoàn tiền hoặc đổi sang sản phẩm tương đương.
-Hàng trả về thực tế không khớp với khai báo: Để giữ trải nghiệm thân thiện, hệ thống không tự động phạt khách. Phiếu đổi trả sẽ chuyển trạng thái sang "Cần hỗ trợ trực tiếp". Nhân viên CSKH sẽ gọi điện/nhắn tin hỗ trợ khách xử lý thủ công.
-Hoàn tiền cho đơn hàng COD thì khách hàng có thể điền Số tài khoản ngân hàng/Số MoMo ngay trên Form đổi trả. Nếu khách không điền, nhân viên CSKH sẽ liên hệ trực tiếp qua điện thoại trong vòng 24 giờ để xin thông tin chuyển khoản và thực hiện hoàn tiền thủ công cho khách.
-Sau khi hoàn tiền thành công, hệ thống tự động cấn trừ số điểm tích lũy của sản phẩm đó trong tài khoản khách (số dư điểm tối thiểu là 0, không bao giờ bị âm). Bài đánh giá cũ của sản phẩm (nếu có) được gắn nhãn "Giao dịch đã hủy".
-Một khi khách hàng đã thực hiện gửi đánh giá cho sản phẩm hoặc dịch vụ, đơn hàng đó sẽ được coi là đã chấp nhận hoàn thành tuyệt đối và hệ thống sẽ tự động ẩn/khóa nút "Yêu cầu đổi trả" của đơn hàng đó nhằm ngăn chặn việc trục lợi điểm thưởng từ đánh giá.
-Khách hàng vãng lai yêu cầu đổi trả: Khách hàng nhập Mã đơn hàng và Số điện thoại mua hàng mà không cần đăng nhập tài khoản. Hai thông tin này đã đủ để xác minh quyền sở hữu đơn hàng, đơn giản hơn cho khách lớn tuổi.
 3.1.13. Ưu đãi thành viên
 Mô tả quy trình
 Quy trình bắt đầu khi khách hàng chủ động vào trang "Ưu đãi & Thành viên" trên trang cá nhân. Ngay khi trang tải, Pawpal hiển thị chính xác số dư điểm Paw Points tích lũy và hạng thành viên hiện tại (Bạc, Vàng hoặc Kim Cương). Đồng thời, Pawpal lọc và hiển thị các mã giảm giá hoặc phần thưởng đang khả dụng và phù hợp với cấp bậc của khách hàng giúp khách hàng nắm bắt nhanh quyền lợi của mình và biết cần bao nhiêu điểm nữa để đổi được những ưu đãi mong muốn.
