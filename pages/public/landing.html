@@ -188,110 +188,203 @@
                     <h2>Dịch vụ <span class="accent-italic">PawPal</span></h2>
                 </div>
 
-                <!-- Services Grid -->
-                <div class="svc-grid" id="svcGrid">
+                <!-- Service Category Tab Bar -->
+                <div class="shop-tab-bar" id="svcTabBar">
+                    <button class="shop-tab-btn active" data-category="all">Tất cả</button>
+                    <button class="shop-tab-btn" data-category="spa">Spa & Grooming</button>
+                    <button class="shop-tab-btn" data-category="hotel">Pet Hotel</button>
+                    <button class="shop-tab-btn" data-category="taxi">Pet Taxi</button>
+                </div>
 
-                    <!-- Row 1: 2 featured cards bằng nhau -->
-                    <div class="svc-row-top">
-
-                        <!-- Pet Spa — featured -->
-                        <a href="../../pages/services/booking.html" class="svc-card svc-card--featured">
-                            <div class="svc-card-img">
-                                <img src="../../assets/images/services/spa.png" alt="Spa, Cắt tỉa" loading="eager">
-                                <div class="svc-card-overlay"></div>
-                                <span class="svc-badge svc-badge--hot">Phổ biến nhất</span>
-                            </div>
-                            <div class="svc-card-body">
-                                <div class="svc-card-top">
-                                    <h3 class="svc-title">Spa, Cắt tỉa</h3>
-                                    <p class="svc-meta">⏱ ~90 phút · Chứng chỉ quốc tế</p>
-                                    <p class="svc-desc">Tắm, cắt tỉa, dưỡng lông — hoàn thành trong 90 phút với đội ngũ chứng chỉ quốc tế.</p>
-                                </div>
-                                <div class="svc-card-bottom">
-                                    <span class="svc-price">Từ 120.000đ</span>
-                                    <span class="svc-cta-btn">Đặt lịch ngay</span>
-                                </div>
-                            </div>
-                        </a>
-
-                        <!-- Pet Hotel — featured -->
-                        <a href="../../pages/services/booking.html" class="svc-card svc-card--featured">
-                            <div class="svc-card-img">
-                                <img src="../../assets/images/services/hotel.png" alt="Khách sạn thú cưng" loading="eager">
-                                <div class="svc-card-overlay"></div>
-                            </div>
-                            <div class="svc-card-body">
-                                <div class="svc-card-top">
-                                    <h3 class="svc-title">Khách sạn thú cưng</h3>
-                                    <p class="svc-meta">📅 Theo đêm · Camera 24/7</p>
-                                    <p class="svc-desc">Phòng riêng, camera 24/7 — boss nghỉ dưỡng như ở resort, an tâm gửi gắm cả tuần.</p>
-                                </div>
-                                <div class="svc-card-bottom">
-                                    <span class="svc-price">Từ 180.000đ/đêm</span>
-                                    <span class="svc-cta-btn">Đặt lịch ngay</span>
+                <!-- Services Grid (Product Card Style) -->
+                <div class="product-grid" id="svcLandingGrid" style="margin-top: 30px;">
+                    
+                    <!-- Service 1 -->
+                    <div class="product-card svc-landing-card" data-category="spa">
+                        <div class="product-image-box">
+                            <img src="../../assets/images/services/spa01.webp" alt="Gói Tắm Vệ Sinh Cơ Bản" loading="lazy" onerror="this.src='../../assets/images/services/spa.png'">
+                            <span class="tag-badge tag-banchay">Phổ biến nhất</span>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                                <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">SPA01</span>
+                                <div>
+                                    <span class="rating-stars">★★★★★</span> <span class="rating-score">4.8</span> <span class="sold-count">(154)</span>
                                 </div>
                             </div>
-                        </a>
-
-                    </div><!-- /.svc-row-top -->
-
-                    <!-- Row 2: 3 cards dọc -->
-                    <div class="svc-row-bottom">
-
-                        <!-- Self-Service Wash -->
-                        <a href="../../pages/services/booking.html" class="svc-card svc-card--vert">
-                            <div class="svc-card-img">
-                                <img src="https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=500&q=80" alt="Tự tắm thú cưng" loading="lazy">
-                                <div class="svc-card-overlay"></div>
+                            <h3>Gói Tắm Vệ Sinh Cơ Bản</h3>
+                            <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">Liệu trình tắm làm sạch và khử mùi hôi cơ bản dành cho các bé chó mèo có sức khỏe da lông bình thường, giúp duy trì vệ sinh sạch sẽ định kỳ hàng tuần.</p>
+                            <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                                <span>🐾 Chó / Mèo</span>
+                                <span>⏱ 60 phút</span>
                             </div>
-                            <div class="svc-card-body">
-                                <h3 class="svc-title">Tự tắm thú cưng</h3>
-                                <p class="svc-meta">⏱ Tự do · Máy sấy chuyên dụng</p>
-                                <p class="svc-desc">Bồn tắm, máy sấy chuyên dụng — tự tắm cho boss.</p>
-                                <div class="svc-card-bottom">
-                                    <span class="svc-price">Từ 80.000đ</span>
-                                    <span class="svc-link">Đặt lịch</span>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current" style="font-size: 16px;">120.000đ</span>
+                                </div>
+                                <a href="../../pages/services/booking.html" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                            </div>
+                            <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
+                                TV Bạc: 114.000đ
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service 2 -->
+                    <div class="product-card svc-landing-card" data-category="spa">
+                        <div class="product-image-box">
+                            <img src="../../assets/images/services/spa07.webp" alt="Grooming Tạo Kiểu Cơ Bản" loading="lazy" onerror="this.src='../../assets/images/services/spa.png'">
+                            <span class="tag-badge tag-khuyenmai">Đánh giá cao</span>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                                <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">SPA07</span>
+                                <div>
+                                    <span class="rating-stars">★★★★★</span> <span class="rating-score">4.9</span> <span class="sold-count">(210)</span>
                                 </div>
                             </div>
-                        </a>
-
-                        <!-- Vet Services -->
-                        <a href="../../pages/services/booking.html" class="svc-card svc-card--vert">
-                            <div class="svc-card-img">
-                                <img src="https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=500&q=80" alt="Vet Services" loading="lazy">
-                                <div class="svc-card-overlay"></div>
+                            <h3>Grooming Tạo Kiểu Cơ Bản</h3>
+                            <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">Gói làm đẹp toàn diện bao gồm tắm vệ sinh kỹ lưỡng kết hợp cắt tỉa lông tạo kiểu cơ bản (như cắt tròn mặt Boo, tỉa gọn chân) theo tiêu chuẩn.</p>
+                            <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                                <span>🐾 Chó (Nhỏ/Vừa)</span>
+                                <span>⏱ 150 phút</span>
                             </div>
-                            <div class="svc-card-body">
-                                <h3 class="svc-title">Dịch vụ Thú y</h3>
-                                <p class="svc-meta">🩺 8h–20h · Bác sĩ uy tín</p>
-                                <p class="svc-desc">Khám, tiêm ngừa, tư vấn sức khoẻ — bác sĩ uy tín.</p>
-                                <div class="svc-card-bottom">
-                                    <span class="svc-price">Từ 60.000đ</span>
-                                    <span class="svc-link">Đặt lịch</span>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current" style="font-size: 16px;">350.000đ</span>
+                                </div>
+                                <a href="../../pages/services/booking.html" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                            </div>
+                            <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
+                                TV Bạc: 332.500đ
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service 3 -->
+                    <div class="product-card svc-landing-card" data-category="hotel">
+                        <div class="product-image-box">
+                            <img src="../../assets/images/services/htl01.webp" alt="Phòng Standard" loading="lazy" onerror="this.src='../../assets/images/services/hotel.png'">
+                        </div>
+                        <div class="product-info">
+                            <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                                <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">HTL01</span>
+                                <div>
+                                    <span class="rating-stars">★★★★☆</span> <span class="rating-score">4.7</span> <span class="sold-count">(115)</span>
                                 </div>
                             </div>
-                        </a>
-
-                        <!-- Pet Taxi -->
-                        <a href="../../pages/services/booking.html" class="svc-card svc-card--vert">
-                            <div class="svc-card-img">
-                                <img src="https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?auto=format&fit=crop&w=500&q=80" alt="Đưa đón thú cưng" loading="lazy">
-                                <div class="svc-card-overlay"></div>
+                            <h3>Phòng Standard</h3>
+                            <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">Không gian phòng lưu trú cơ bản tiêu chuẩn sạch sẽ, thoáng mát, thích hợp cho các bé chó mèo nhỏ hướng nội, thích sự yên tĩnh khi vắng chủ.</p>
+                            <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                                <span>🐾 Chó / Mèo</span>
+                                <span>📅 Theo ngày</span>
                             </div>
-                            <div class="svc-card-body">
-                                <h3 class="svc-title">Đưa đón thú cưng</h3>
-                                <p class="svc-meta">🚗 24/7 · Xe điều hoà</p>
-                                <p class="svc-desc">Đón tận nhà, xe chuyên dụng — an toàn 24/7.</p>
-                                <div class="svc-card-bottom">
-                                    <span class="svc-price">Từ 150.000đ</span>
-                                    <span class="svc-link">Đặt lịch</span>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current" style="font-size: 16px;">180.000đ</span>
+                                    <span style="font-size: 11px; color: var(--color-text-light);">/đêm</span>
+                                </div>
+                                <a href="../../pages/services/booking.html" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                            </div>
+                            <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
+                                TV Bạc: 171.000đ/đêm
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service 4 -->
+                    <div class="product-card svc-landing-card" data-category="hotel">
+                        <div class="product-image-box">
+                            <img src="../../assets/images/services/htl03.webp" alt="Phòng Deluxe" loading="lazy" onerror="this.src='../../assets/images/services/hotel.png'">
+                            <span class="tag-badge tag-banchay">Yêu thích</span>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                                <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">HTL03</span>
+                                <div>
+                                    <span class="rating-stars">★★★★★</span> <span class="rating-score">4.9</span> <span class="sold-count">(102)</span>
                                 </div>
                             </div>
-                        </a>
+                            <h3>Phòng Deluxe (Có Camera)</h3>
+                            <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">Hạng phòng lưu trú cao cấp được trang bị Camera IP giám sát 24/7 riêng cho từng phòng giúp chủ nuôi tự theo dõi hình ảnh bé trực tiếp từ xa qua website.</p>
+                            <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                                <span>🐾 Chó / Mèo</span>
+                                <span>📅 Theo ngày</span>
+                            </div>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current" style="font-size: 16px;">380.000đ</span>
+                                    <span style="font-size: 11px; color: var(--color-text-light);">/đêm</span>
+                                </div>
+                                <a href="../../pages/services/booking.html" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                            </div>
+                            <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
+                                TV Bạc: 361.000đ/đêm
+                            </div>
+                        </div>
+                    </div>
 
-                    </div><!-- /.svc-row-bottom -->
+                    <!-- Service 5 -->
+                    <div class="product-card svc-landing-card" data-category="hotel">
+                        <div class="product-image-box">
+                            <img src="../../assets/images/services/htl07.webp" alt="Daycare (Bán trú)" loading="lazy" onerror="this.src='../../assets/images/services/hotel.png'">
+                        </div>
+                        <div class="product-info">
+                            <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                                <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">HTL07</span>
+                                <div>
+                                    <span class="rating-stars">★★★★★</span> <span class="rating-score">4.8</span> <span class="sold-count">(145)</span>
+                                </div>
+                            </div>
+                            <h3>Daycare (Bán trú trong ngày)</h3>
+                            <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">Giải pháp gửi giữ thú cưng theo giờ hoặc trong ngày dành cho chủ nuôi bận rộn đi làm, đảm bảo bé có bạn chơi đùa dưới sự giám sát.</p>
+                            <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                                <span>🐾 Tất cả</span>
+                                <span>⏱ Trong ngày</span>
+                            </div>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current" style="font-size: 16px;">100.000đ</span>
+                                </div>
+                                <a href="../../pages/services/booking.html" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                            </div>
+                            <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
+                                TV Bạc: 95.000đ
+                            </div>
+                        </div>
+                    </div>
 
-                </div><!-- /.svc-grid -->
+                    <!-- Service 6 -->
+                    <div class="product-card svc-landing-card" data-category="taxi">
+                        <div class="product-image-box">
+                            <img src="../../assets/images/services/txi01.webp" alt="Pet Taxi Đưa Đón" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?auto=format&fit=crop&w=500&q=80'">
+                        </div>
+                        <div class="product-info">
+                            <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                                <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">TXI01</span>
+                                <div>
+                                    <span class="rating-stars">★★★★☆</span> <span class="rating-score">4.7</span> <span class="sold-count">(64)</span>
+                                </div>
+                            </div>
+                            <h3>Pet Taxi Đưa Đón Tận Nơi</h3>
+                            <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">Dịch vụ đưa đón thú cưng an toàn tận nhà bằng xe ô tô chuyên dụng có lồng vận chuyển sạch sẽ cách âm, điều hòa mát mẻ.</p>
+                            <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                                <span>🐾 Chó / Mèo</span>
+                                <span>🚗 Theo chuyến</span>
+                            </div>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current" style="font-size: 16px;">150.000đ</span>
+                                </div>
+                                <a href="../../pages/services/booking.html" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                            </div>
+                            <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
+                                TV Bạc: 142.500đ
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /.product-grid -->
 
                 <!-- Action -->
                 <div class="services-action text-center" style="margin-top: var(--space-md);">
@@ -1449,6 +1542,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/shared/data-loader.js"></script>
     <script type="module" src="../../assets/js/shared/auth.js"></script>
     <script src="../../assets/js/shared/components.js" defer></script>
     <script src="../../assets/js/shared/header-auth.js" defer></script>

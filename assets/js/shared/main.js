@@ -364,6 +364,71 @@ function initFaqAccordion() {
 }
 
 function initShopFilter() {
+    // Dynamically load products if grid exists and DataLoader is available
+    const grid = document.getElementById('productGrid');
+    if (!grid) return;
+
+    if (window.DataLoader && typeof window.DataLoader.loadProducts === 'function') {
+        window.DataLoader.loadProducts().then(allProducts => {
+            grid.innerHTML = allProducts.map(product => {
+                // Determine mapped category for tabs (thucan, phukien, vesinh)
+                let mappedCategory = '';
+                if (['food-dry', 'food-wet', 'bones'].includes(product.category)) mappedCategory = 'thucan';
+                else if (['hygiene', 'grooming', 'health'].includes(product.category)) mappedCategory = 'vesinh';
+                else mappedCategory = 'phukien'; // toys, clothes, bowls, accessories, furniture, other
+
+                // Determine marketing tags
+                let marketingTags = [];
+                if (product.badge === 'new') marketingTags.push('hangmoi');
+                if (product.badge === 'best') marketingTags.push('banchay');
+                if (product.sale || product.badge === 'hot') marketingTags.push('khuyenmai');
+                
+                // Determine badge to display (priority: khuyenmai, banchay, hangmoi)
+                let displayBadge = '';
+                if (product.sale) displayBadge = '<span class="tag-badge tag-khuyenmai">Khuyến mãi</span>';
+                else if (product.badge === 'best') displayBadge = '<span class="tag-badge tag-banchay">Bán chạy</span>';
+                else if (product.badge === 'new') displayBadge = '<span class="tag-badge tag-hangmoi">Hàng mới</span>';
+
+                const formattedPrice = product.price.toLocaleString('vi-VN') + 'đ';
+                const formattedOldPrice = product.originalPrice > product.price ? product.originalPrice.toLocaleString('vi-VN') + 'đ' : '';
+                
+                const imgSrc = product.image.startsWith('http') ? product.image : `../../${product.image}`;
+
+                return `
+                    <div class="product-card" data-category="${mappedCategory}" data-marketing="${marketingTags.join(' ')}">
+                        <div class="product-image-box">
+                            <img src="${imgSrc}" alt="${product.name}" loading="lazy" onerror="this.src='../../assets/images/placeholder.jpg'">
+                            ${displayBadge}
+                        </div>
+                        <div class="product-info">
+                            <h3>${product.name}</h3>
+                            <div class="product-meta">
+                                <span class="rating-stars">★★★★★</span> <span class="rating-score">${product.rating}</span> <span class="sold-count">(${product.reviewCount} đã bán)</span>
+                            </div>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current">${formattedPrice}</span>
+                                    ${formattedOldPrice ? `<span class="price-old">${formattedOldPrice}</span>` : ''}
+                                </div>
+                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Call setup logic after rendering
+            setupFilterInteractions();
+        }).catch(err => {
+            console.error('Error loading products for landing:', err);
+            setupFilterInteractions();
+        });
+    } else {
+        setupFilterInteractions();
+    }
+}
+
+function setupFilterInteractions() {
     const mainTabBtns = document.querySelectorAll('.shop-tab-bar .shop-tab-btn');
     const subFilterBtns = document.querySelectorAll('.shop-sub-filters .shop-sub-filter-btn');
     const products = document.querySelectorAll('#productGrid .product-card');
@@ -374,6 +439,8 @@ function initShopFilter() {
     let activeCategory = 'all';        // default to all on page load
 
     function applyFilter() {
+        let count = 0;
+        const maxItems = 10;
         products.forEach(product => {
             const productCategory = product.getAttribute('data-category') || '';
             const productMarketing = product.getAttribute('data-marketing') || '';
@@ -382,12 +449,13 @@ function initShopFilter() {
             const matchesCategory = (activeCategory === 'all' || productCategory === activeCategory);
             const matchesMarketing = (activeMarketingStatus === 'all' || marketingList.includes(activeMarketingStatus));
 
-            if (matchesCategory && matchesMarketing) {
+            if (matchesCategory && matchesMarketing && count < maxItems) {
                 product.style.display = 'flex';
                 setTimeout(() => {
                     product.style.opacity = '1';
                     product.style.transform = 'translateY(0) scale(1)';
                 }, 20);
+                count++;
             } else {
                 product.style.opacity = '0';
                 product.style.transform = 'translateY(10px) scale(0.95)';
@@ -432,7 +500,7 @@ function initShopFilter() {
         });
     });
 
-    // Run initial filter (shows all products since defaults are 'all')
+    // Run initial filter
     applyFilter();
 }
 
@@ -1564,58 +1632,96 @@ document.addEventListener('footerInjected', function () {
 });
 
 /**
- * Services Grid — click mini card → update featured card
+ * Services Grid — Handle category tabs filtering for landing page (Dynamic)
  */
-function initServicesGrid() {
-    const miniCards = document.querySelectorAll('.svc-mini-item');
-    if (miniCards.length === 0) return;
+async function initServicesGrid() {
+    const grid = document.getElementById('svcLandingGrid');
+    if (!grid) return;
 
-    const featuredCard  = document.getElementById('svcFeatured');
-    const featuredImg   = document.getElementById('svcFeaturedImgEl');
-    const featuredBadge = document.getElementById('svcFeaturedBadge');
-    const featuredTitle = document.getElementById('svcFeaturedTitle');
-    const featuredDesc  = document.getElementById('svcFeaturedDesc');
-    const featuredPrice = document.getElementById('svcFeaturedPrice');
-    const featuredCta   = document.getElementById('svcFeaturedCta');
+    // Dynamically load services
+    if (window.DataLoader && typeof window.DataLoader.loadServices === 'function') {
+        try {
+            const allServices = await window.DataLoader.loadServices();
+            
+            grid.innerHTML = allServices.map(service => {
+                const formattedPrice = service.price.toLocaleString('vi-VN') + 'đ';
+                const memberPrice = Math.round(service.price * 0.95).toLocaleString('vi-VN') + 'đ';
+                const priceUnit = service.priceDisplay.includes('đêm') ? '<span style="font-size: 11px; color: var(--color-text-light);">/đêm</span>' : '';
+                const memberPriceUnit = service.priceDisplay.includes('đêm') ? '/đêm' : '';
+                const imgSrc = service.image.startsWith('http') ? service.image : `../../${service.image}`;
+                const fallbackImg = service.category === 'hotel' ? '../../assets/images/services/hotel.png' : '../../assets/images/services/spa.png';
 
-    if (!featuredCard) return;
+                return `
+                    <div class="product-card svc-landing-card" data-category="${service.category}">
+                        <div class="product-image-box">
+                            <img src="${imgSrc}" alt="${service.name}" loading="lazy" onerror="this.src='${fallbackImg}'">
+                            ${service.rating >= 4.8 ? '<span class="tag-badge tag-banchay">Yêu thích</span>' : ''}
+                        </div>
+                        <div class="product-info">
+                            <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                                <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">${service.serviceId}</span>
+                                <div>
+                                    <span class="rating-stars">★★★★★</span> <span class="rating-score">${service.rating.toFixed(1)}</span> <span class="sold-count">(${service.reviewCount})</span>
+                                </div>
+                            </div>
+                            <h3>${service.name}</h3>
+                            <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${service.description}</p>
+                            <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                                <span>🐾 ${service.petType}</span>
+                                <span>⏱ ${service.duration || 'Theo ngày'}</span>
+                            </div>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current" style="font-size: 16px;">${formattedPrice}</span>
+                                    ${priceUnit}
+                                </div>
+                                <a href="../../pages/services/booking.html?service=${service.serviceId}" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                            </div>
+                            <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
+                                TV Bạc: ${memberPrice}${memberPriceUnit}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (err) {
+            console.error('Error loading services for landing:', err);
+        }
+    }
 
-    miniCards.forEach(card => {
-        card.addEventListener('click', (e) => {
-            e.preventDefault();
+    const tabButtons = document.querySelectorAll('#svcTabBar .shop-tab-btn');
+    const serviceCards = document.querySelectorAll('#svcLandingGrid .svc-landing-card');
+    
+    if (tabButtons.length === 0 || serviceCards.length === 0) return;
 
-            // Update active state
-            miniCards.forEach(c => c.classList.remove('svc-active'));
-            card.classList.add('svc-active');
+    let activeCategory = 'all';
 
-            // Get data from clicked card
-            const img   = card.getAttribute('data-img');
-            const badge = card.getAttribute('data-badge');
-            const title = card.getAttribute('data-title');
-            const desc  = card.getAttribute('data-desc');
-            const price = card.getAttribute('data-price');
-            const cta   = card.getAttribute('data-cta') || 'Đặt lịch ngay';
-            const href  = card.getAttribute('data-href');
+    function applyFilter() {
+        let count = 0;
+        const maxItems = 10;
+        serviceCards.forEach(card => {
+            const cardCat = card.getAttribute('data-category');
+            if ((activeCategory === 'all' || cardCat === activeCategory) && count < maxItems) {
+                card.style.display = 'flex';
+                count++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
 
-            // Update featured card with smooth transition
-            featuredCard.style.opacity = '0.6';
-            featuredCard.style.transform = 'scale(0.99)';
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Remove active from all tabs
+            tabButtons.forEach(b => b.classList.remove('active'));
+            // Add active to clicked tab
+            btn.classList.add('active');
 
-            setTimeout(() => {
-                if (featuredImg)   featuredImg.src = img;
-                if (featuredBadge) {
-                    featuredBadge.textContent = badge;
-                    featuredBadge.style.display = badge ? '' : 'none';
-                }
-                if (featuredTitle) featuredTitle.textContent = title;
-                if (featuredDesc)  featuredDesc.textContent  = desc;
-                if (featuredPrice) featuredPrice.textContent = price;
-                if (featuredCta)   featuredCta.textContent   = cta + ' →';
-                if (href) featuredCard.setAttribute('href', href);
-
-                featuredCard.style.opacity = '1';
-                featuredCard.style.transform = 'scale(1)';
-            }, 150);
+            activeCategory = btn.getAttribute('data-category');
+            applyFilter();
         });
     });
+
+    // Initial filter
+    applyFilter();
 }
