@@ -37,6 +37,8 @@
                             <button class="btn-clear-filters" onclick="clearFilters()">Xóa bộ lọc</button>
                         </div>
 
+
+
                         <!-- Filter Group 1: Category -->
                         <div class="filter-group">
                             <h4 class="filter-title">Danh mục</h4>
@@ -60,15 +62,49 @@
                             </div>
                         </div>
 
-                        <!-- Filter Group 2: Price Limit -->
+                        <!-- Filter Group 1.5: Pet Type -->
                         <div class="filter-group">
-                            <h4 class="filter-title">Khoảng giá tối đa</h4>
-                            <div class="price-range-wrapper">
-                                <input type="range" class="form-range" id="priceRange" min="50000" max="1000000" step="50000" value="1000000" oninput="updatePriceDisplay(this.value)" onchange="applyFilters()">
-                                <div class="d-flex justify-content-between mt-2">
-                                    <span class="text-muted" style="font-size: 0.8rem;">50k</span>
-                                    <span class="fw-bold text-accent" id="priceDisplay" style="font-size: 0.9rem;">1.000.000 VNĐ</span>
-                                </div>
+                            <h4 class="filter-title">Dành cho bé cưng</h4>
+                            <div class="filter-options">
+                                <label class="filter-checkbox">
+                                    <input type="radio" name="petFilter" value="all" checked onchange="applyFilters()">
+                                    <span>Tất cả các bé</span>
+                                </label>
+                                <label class="filter-checkbox">
+                                    <input type="radio" name="petFilter" value="dog" onchange="applyFilters()">
+                                    <span>🐶 Chó cún</span>
+                                </label>
+                                <label class="filter-checkbox">
+                                    <input type="radio" name="petFilter" value="cat" onchange="applyFilters()">
+                                    <span>🐱 Mèo con</span>
+                                </label>
+                                <label class="filter-checkbox">
+                                    <input type="radio" name="petFilter" value="small" onchange="applyFilters()">
+                                    <span>🐰 Thú nhỏ khác</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Filter Group 2: Price Buckets -->
+                        <div class="filter-group">
+                            <h4 class="filter-title">Khoảng giá</h4>
+                            <div class="filter-options">
+                                <label class="filter-checkbox">
+                                    <input type="radio" name="priceBucketFilter" value="all" checked onchange="applyFilters()">
+                                    <span>Tất cả khoảng giá</span>
+                                </label>
+                                <label class="filter-checkbox">
+                                    <input type="radio" name="priceBucketFilter" value="under-150" onchange="applyFilters()">
+                                    <span>Dưới 150.000đ</span>
+                                </label>
+                                <label class="filter-checkbox">
+                                    <input type="radio" name="priceBucketFilter" value="150-300" onchange="applyFilters()">
+                                    <span>150.000đ - 300.000đ</span>
+                                </label>
+                                <label class="filter-checkbox">
+                                    <input type="radio" name="priceBucketFilter" value="over-300" onchange="applyFilters()">
+                                    <span>Trên 300.000đ</span>
+                                </label>
                             </div>
                         </div>
 
@@ -95,7 +131,19 @@
                     <!-- Right Content Area -->
                     <div class="services-content">
                         <!-- Toolbar -->
-                        <div class="services-toolbar d-flex justify-content-end align-items-center mb-4">
+                        <div class="services-toolbar d-flex justify-content-between align-items-center mb-1">
+                            <div class="toolbar-left d-flex align-items-center gap-2">
+                                <label for="sortBySelect" class="form-label mb-0 text-muted" style="font-size: var(--fs-small); white-space: nowrap;">Sắp xếp theo:</label>
+                                <select id="sortBySelect" class="form-select form-select-sm" onchange="applyFilters()" style="width: auto; border-radius: var(--border-radius-pill); font-size: var(--fs-small); padding: 6px 30px 6px 12px;">
+                                    <option value="default" selected>Mặc định</option>
+                                    <option value="price-asc">Giá: Thấp đến Cao</option>
+                                    <option value="price-desc">Giá: Cao đến Thấp</option>
+                                    <option value="rating-desc">Đánh giá cao nhất</option>
+                                </select>
+                            </div>
+                            <div class="toolbar-center flex-grow-1 mx-4">
+                                <input type="text" id="searchServiceInput" class="form-control filter-search-input" placeholder="Tìm tên dịch vụ..." oninput="applyFilters()" style="border-radius: var(--border-radius-pill);">
+                            </div>
                             <div class="toolbar-right">
                                 <a href="booking.html" class="btn-cta">Đặt lịch ngay</a>
                             </div>

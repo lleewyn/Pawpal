@@ -3,7 +3,26 @@
  * Handles "Add to Cart" and "Buy Now" functionality
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+let currentLoadedProduct = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // Load dynamic product data if id exists in URL
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+        
+        if (productId && window.DataLoader) {
+            const products = await window.DataLoader.loadProducts();
+            const product = products.find(p => p.id.toString() === productId);
+            if (product) {
+                currentLoadedProduct = product;
+                renderProductDetails(product);
+            }
+        }
+    } catch (e) {
+        console.error('Failed to load product data:', e);
+    }
+
     // Get buttons
     const addToCartBtn = document.getElementById('addToCartBtn');
     const buyNowBtn = document.getElementById('buyNowBtn');
@@ -18,12 +37,54 @@ document.addEventListener('DOMContentLoaded', () => {
     if (buyNowBtn) {
         buyNowBtn.addEventListener('click', handleBuyNow);
     }
+
+    // Quantity controls
+    const decreaseQtyBtn = document.getElementById('decreaseQty');
+    const increaseQtyBtn = document.getElementById('increaseQty');
+
+    if (decreaseQtyBtn && quantityInput) {
+        decreaseQtyBtn.addEventListener('click', () => {
+            let val = parseInt(quantityInput.value) || 1;
+            if (val > 1) {
+                quantityInput.value = val - 1;
+            }
+        });
+    }
+
+    if (increaseQtyBtn && quantityInput) {
+        increaseQtyBtn.addEventListener('click', () => {
+            let val = parseInt(quantityInput.value) || 1;
+            let max = parseInt(quantityInput.getAttribute('max')) || 99;
+            if (val < max) {
+                quantityInput.value = val + 1;
+            }
+        });
+    }
+
+    // Update breadcrumb
+    setTimeout(() => {
+        const product = getCurrentProduct();
+        const breadcrumbProduct = document.getElementById('breadcrumbProduct');
+        if (breadcrumbProduct && product && product.name) {
+            breadcrumbProduct.textContent = product.name;
+        }
+    }, 100);
 });
 
 /**
  * Handle Add to Cart - Add product to cart and stay on page
  */
 function handleAddToCart() {
+    // Check if user is logged in
+    const user = JSON.parse(localStorage.getItem('pawpal_user') || 'null');
+    if (!user) {
+        showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
+        setTimeout(() => {
+            window.location.href = '/pages/public/login.html';
+        }, 1500);
+        return;
+    }
+
     const product = getCurrentProduct();
     const quantity = parseInt(document.getElementById('quantity').value) || 1;
     
@@ -57,6 +118,16 @@ function handleAddToCart() {
  * Handle Buy Now - Add product to cart and redirect to checkout
  */
 function handleBuyNow() {
+    // Check if user is logged in
+    const user = JSON.parse(localStorage.getItem('pawpal_user') || 'null');
+    if (!user) {
+        showToast('Vui lòng đăng nhập để mua hàng', 'warning');
+        setTimeout(() => {
+            window.location.href = '/pages/public/login.html';
+        }, 1500);
+        return;
+    }
+
     const product = getCurrentProduct();
     const quantity = parseInt(document.getElementById('quantity').value) || 1;
     
@@ -108,6 +179,8 @@ function handleBuyNow() {
  * Get current product data from page
  */
 function getCurrentProduct() {
+    if (currentLoadedProduct) return currentLoadedProduct;
+    
     try {
         // Try to get from URL params first
         const urlParams = new URLSearchParams(window.location.search);
@@ -278,3 +351,84 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Render loaded product to the DOM
+function renderProductDetails(product) {
+    // Update Breadcrumb
+    const breadcrumbCategory = document.getElementById('breadcrumbCategory');
+    const breadcrumbProduct = document.getElementById('breadcrumbProduct');
+    if (breadcrumbCategory) breadcrumbCategory.textContent = product.categoryName || 'Sản phẩm';
+    if (breadcrumbProduct) breadcrumbProduct.textContent = product.name;
+
+    // Update Product Info
+    const mainImage = document.getElementById('mainImage');
+    if (mainImage) {
+        mainImage.src = product.image;
+        mainImage.alt = product.name;
+    }
+    
+    const productBrand = document.getElementById('productBrand');
+    if (productBrand) productBrand.textContent = product.brand;
+    
+    const productTitle = document.getElementById('productTitle');
+    if (productTitle) productTitle.textContent = product.name;
+    
+    const productPrice = document.getElementById('productPrice');
+    if (productPrice) productPrice.textContent = new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(product.price).replace('₫', 'đ');
+    
+    const productPriceOld = document.getElementById('productPriceOld');
+    const productDiscount = document.getElementById('productDiscount');
+    if (product.oldPrice && product.oldPrice > product.price) {
+        if (productPriceOld) {
+            productPriceOld.textContent = new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(product.oldPrice).replace('₫', 'đ');
+            productPriceOld.style.display = 'block';
+        }
+        if (productDiscount) {
+            productDiscount.textContent = 'Tiết kiệm ' + new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(product.oldPrice - product.price).replace('₫', 'đ');
+            productDiscount.style.display = 'block';
+        }
+    } else {
+        if (productPriceOld) productPriceOld.style.display = 'none';
+        if (productDiscount) productDiscount.style.display = 'none';
+    }
+
+    const stockStatus = document.getElementById('stockStatus');
+    if (stockStatus) {
+        if (product.stock > 0) {
+            stockStatus.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Còn hàng</span>';
+            stockStatus.style.color = '#2a5944';
+        } else {
+            stockStatus.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg><span>Hết hàng</span>';
+            stockStatus.style.color = '#dc3545';
+        }
+    }
+
+    const stockCountdown = document.getElementById('stockCountdown');
+    const stockRemaining = document.getElementById('stockRemaining');
+    if (product.stock > 0 && product.stock <= 10) {
+        if (stockCountdown) stockCountdown.style.display = 'flex';
+        if (stockRemaining) stockRemaining.textContent = product.stock;
+    } else {
+        if (stockCountdown) stockCountdown.style.display = 'none';
+    }
+
+    const productDescShort = document.getElementById('productDescShort');
+    if (productDescShort) productDescShort.textContent = product.description || '';
+
+    const productSKU = document.getElementById('productSKU');
+    if (productSKU) productSKU.textContent = product.sku || product.id;
+
+    const productCategoryMeta = document.getElementById('productCategory');
+    if (productCategoryMeta) productCategoryMeta.textContent = product.categoryName || 'Sản phẩm';
+
+    const productBrandMeta = document.getElementById('productBrandMeta');
+    if (productBrandMeta) productBrandMeta.textContent = product.brand;
+    
+    // Disable buttons if out of stock
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    const buyNowBtn = document.getElementById('buyNowBtn');
+    if (product.stock <= 0) {
+        if (addToCartBtn) addToCartBtn.disabled = true;
+        if (buyNowBtn) buyNowBtn.disabled = true;
+    }
+}

@@ -214,7 +214,6 @@
 .summary-total {
     font-size: var(--fs-h4);
     padding-top: var(--space-sm);
-    border-top: 2px solid var(--color-border);
 }
 
 .total-price {
@@ -275,17 +274,7 @@
 
 .timeline {
     position: relative;
-    padding-left: var(--space-md);
-}
-
-.timeline::before {
-    content: '';
-    position: absolute;
-    left: 8px;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: var(--color-border);
+    padding-left: 32px;
 }
 
 .timeline-item {
@@ -297,14 +286,26 @@
     padding-bottom: 0;
 }
 
+/* Connecting line for each item except the last one */
+.timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: -25px; /* Center is at -24px */
+    top: 25px; /* Leaves a small gap below the dot (5px top + 16px height + 4px gap) */
+    bottom: -1px; /* Leaves a 4px gap above the next dot (which is at top: 5px) */
+    width: 2px;
+    background: var(--color-border);
+    z-index: 1;
+}
+
 .timeline-dot {
     position: absolute;
-    left: -19px;
-    top: 4px;
-    width: 18px;
-    height: 18px;
+    left: -32px; /* Center is at -24px (-32 + 8) */
+    top: 5px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
-    border: 3px solid var(--color-border);
+    border: 2px solid var(--color-border);
     background: var(--color-bg-white);
     z-index: 2;
 }
@@ -312,6 +313,11 @@
 .timeline-item.completed .timeline-dot {
     background: var(--color-success);
     border-color: var(--color-success);
+}
+
+.timeline-item.completed:not(:last-child)::after {
+    background: var(--color-success);
+    opacity: 0.5; /* Lighter line for completed segments */
 }
 
 .timeline-item.active .timeline-dot {
@@ -336,7 +342,7 @@
 }
 
 .timeline-content {
-    padding-left: var(--space-sm);
+    padding-left: 0;
 }
 
 .timeline-title {

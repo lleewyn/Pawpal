@@ -2087,7 +2087,7 @@ const order = {
       brand: 'Royal Canin',
       price: 250000,
       quantity: 1,
-      image: '/assets/images/products/royal-canin-mini.jpg',
+      image: '/assets/images/shop/products/royal-canin-mini.jpg',
       subtotal: 250000
     },
     {
@@ -2096,7 +2096,7 @@ const order = {
       brand: 'Pedigree',
       price: 180000,
       quantity: 2,
-      image: '/assets/images/products/pedigree-adult.jpg',
+      image: '/assets/images/shop/products/pedigree-adult.jpg',
       subtotal: 360000
     }
   ],

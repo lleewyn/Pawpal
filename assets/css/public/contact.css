@@ -1,4 +1,195 @@
-﻿/* ==========================================================================
-   PawPal — Page Styles
-   TODO: Add styles here
+/* ==========================================================================
+   PawPal — Contact Page Styles
    ========================================================================== */
+
+/* 1. Hero Section */
+.contact-hero {
+    background-color: var(--color-bg-light);
+    padding: 80px 0 60px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.contact-title {
+    font-family: var(--font-heading);
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    margin-bottom: var(--space-sm);
+}
+
+.contact-subtitle {
+    font-size: var(--fs-h4);
+    color: var(--color-text-dark);
+    opacity: 0.8;
+}
+
+/* 2. Main Content Layout */
+.contact-main {
+    background-color: var(--color-bg-white);
+    padding: var(--space-2xl) 0;
+}
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: var(--space-3xl);
+    align-items: start;
+}
+
+/* 2.1 Left Column: Contact Info */
+.contact-info {
+    padding-right: var(--space-xl);
+    border-right: 1px solid rgba(0,0,0,0.1);
+}
+.info-block {
+    margin-bottom: var(--space-xl);
+}
+
+.info-block h3 {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h3);
+    color: var(--color-primary);
+    margin-bottom: var(--space-md);
+}
+
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.info-list li {
+    font-size: var(--fs-body);
+    color: var(--color-text-dark);
+    margin-bottom: var(--space-sm);
+    line-height: 1.6;
+}
+
+.info-list li strong {
+    color: var(--color-primary-dark);
+    font-weight: 600;
+}
+
+.info-list li a {
+    color: var(--color-text-dark);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.info-list li a:hover {
+    color: var(--color-accent);
+}
+
+/* 2.2 Right Column: Contact Form */
+.contact-form-wrapper {
+    background: transparent;
+}
+
+.contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-family: var(--font-body);
+    font-size: var(--fs-small);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-primary-dark);
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 16px 20px;
+    background-color: var(--color-bg-light);
+    border: 1px solid transparent;
+    font-family: var(--font-body);
+    font-size: var(--fs-body);
+    color: var(--color-text-dark);
+    outline: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: var(--color-primary);
+    background-color: var(--color-bg-white);
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+/* Fix select appearance */
+.form-group select {
+    appearance: none;
+    cursor: pointer;
+}
+
+.btn-submit {
+    margin-top: var(--space-md);
+    padding: 18px 32px;
+    background-color: var(--color-primary);
+    color: var(--color-bg-white);
+    border: none;
+    border-radius: 8px;
+    font-family: var(--font-heading);
+    font-size: var(--fs-body-lg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: 100%;
+}
+
+.btn-submit:hover {
+    background-color: var(--color-primary-dark);
+    transform: translateY(-2px);
+}
+
+/* 3. Map Section */
+.contact-map {
+    background-color: var(--color-bg-white);
+    padding-bottom: var(--space-3xl);
+}
+
+.map-wrapper {
+    width: 100%;
+    border-radius: var(--card-border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+/* 4. Responsive */
+@media (max-width: 992px) {
+    .contact-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-2xl);
+    }
+}
+
+@media (max-width: 768px) {
+    .contact-hero {
+        padding: var(--space-xl) 0;
+    }
+    .contact-title {
+        font-size: var(--fs-h2);
+    }
+    .btn-submit {
+        width: 100%;
+        align-self: stretch;
+    }
+}

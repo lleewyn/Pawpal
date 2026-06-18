@@ -129,6 +129,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Cập nhật lại giỏ hàng chính chỉ gồm các sản phẩm được chọn để trang checkout xử lý
                 localStorage.setItem('pawpal_cart', JSON.stringify(selectedItems));
                 
+                // Clear any lingering "buy now" state so checkout loads the normal cart
+                sessionStorage.removeItem('pawpal_is_buynow');
+                sessionStorage.removeItem('pawpal_buynow_cart');
+                
                 // Nếu có mã giảm giá đã áp dụng, lưu vào localStorage để checkout.html tự nhận diện
                 if (appliedVoucher) {
                     localStorage.setItem('pawpal_applied_voucher_code', appliedVoucher.code);
@@ -245,7 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="cart-item-checkbox-wrapper">
                     <input type="checkbox" class="form-check-input item-checkbox" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
                 </div>
-                <img src="../../${item.image}" alt="${item.name}" class="cart-item-img" onerror="this.onerror=null; this.src='../../assets/images/products/placeholder.webp'">
+                <img src="../../${item.image}" alt="${item.name}" class="cart-item-img" onerror="this.onerror=null; this.src='../../assets/images/shop/products/placeholder.webp'">
                 <div class="cart-item-details">
                     <a href="../../pages/shop/product-detail.html?id=${item.id}" class="cart-item-name">${item.name}</a>
                     <div class="cart-item-meta">Thương hiệu: ${item.brand}</div>

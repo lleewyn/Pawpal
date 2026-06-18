@@ -56,15 +56,23 @@ function parseCSV(csvText) {
  */
 function transformProductData(rawData) {
     return rawData.map((item, index) => {
-        // Extract category slug from SKU or map from Vietnamese name
+        // Map from Vietnamese category name in CSV to category slug
         const categoryMap = {
-            'Thực phẩm': 'food',
-            'Đồ dùng': 'accessories',
+            'Thức ăn khô': 'food-dry',
+            'Thức ăn ướt': 'food-wet',
+            'Xương gặm': 'bones',
+            'Sức khỏe': 'health',
+            'Đồ chơi': 'toys',
+            'Quần áo': 'clothes',
             'Vệ sinh': 'hygiene',
-            'Phụ kiện': 'accessories'
+            'Bát ăn': 'bowls',
+            'Chăm sóc': 'grooming',
+            'Phụ kiện': 'accessories',
+            'Nội thất': 'furniture',
+            'Khác': 'other'
         };
         
-        const category = categoryMap[item['Phân loại']] || 'other';
+        const category = categoryMap[item['Danh mục (Category)']] || 'other';
         
         // Parse prices
         const price = parseInt(item['Giá sau tích điểm']?.replace(/\./g, '').replace(/[^\d]/g, '') || item['Giá bán lẻ']?.replace(/\./g, '').replace(/[^\d]/g, '') || '0');
@@ -94,14 +102,17 @@ function transformProductData(rawData) {
             name: item['Tên sản phẩm'] || 'Sản phẩm không tên',
             brand: item['Thương hiệu (Brand)'] || 'Chưa xác định',
             category: category,
+            categoryName: item['Danh mục (Category)'] || 'Khác',
+            description: item['Công dụng'] || item['Thành phần'] || '',
+            origin: item['Xuất xứ'] || 'Chưa rõ',
             price: price,
             originalPrice: sale ? originalPrice : null,
             oldPrice: sale ? originalPrice : null,
-            image: item['Hình ảnh'] || 'assets/images/products/placeholder.webp',
+            image: item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/shop/products/placeholder.webp',
             images: [
-                item['Hình ảnh'] || 'assets/images/products/placeholder.webp',
-                item['Hình ảnh'] || 'assets/images/products/placeholder.webp',
-                item['Hình ảnh'] || 'assets/images/products/placeholder.webp'
+                item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/shop/products/placeholder.webp',
+                item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/shop/products/placeholder.webp',
+                item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/shop/products/placeholder.webp'
             ],
             inStock: inStock,
             stock: stock,
@@ -296,7 +307,7 @@ function transformServiceData(rawData) {
             checklist: item['Quy trình thực hiện (Checklist)'] || '',
             amenities: item['Tiện ích / Cơ sở vật chất (Amenities)'] || '',
             groomerLevel: item['Cấp độ nhân viên thực hiện (Groomer Level)'] || '',
-            image: item['Hình ảnh'] || 'assets/images/services/spa-intro.jpg',
+            image: item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/services/spa.png',
             status: item['Trạng thái kinh doanh'] || 'Đang phục vụ'
         };
     });

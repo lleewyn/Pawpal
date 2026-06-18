@@ -91,6 +91,10 @@ function populateServiceInfo() {
 // 2. Set up gallery & thumbnails
 function setupGallery() {
     const mainImg = document.getElementById('mainShowcaseImg');
+    mainImg.onerror = function() {
+        this.onerror = null;
+        this.src = '../../assets/images/services/' + (serviceData.category === 'hotel' ? 'hotel.png' : 'spa.png');
+    };
     mainImg.src = '../../' + serviceData.image;
     
     const thumbsContainer = document.getElementById('galleryThumbnails');
@@ -99,13 +103,13 @@ function setupGallery() {
     // Create 3 thumbnails (1 main + 2 fallback variations)
     const images = [
         serviceData.image,
-        'assets/images/services/spa-intro.jpg',
-        'assets/images/services/hotel-intro.jpg'
+        'assets/images/services/spa.png',
+        'assets/images/services/hotel.png'
     ];
     
     thumbsContainer.innerHTML = images.map((imgUrl, index) => `
         <div class="gallery-thumb ${index === 0 ? 'active' : ''}" data-img="../../${imgUrl}">
-            <img src="../../${imgUrl}" alt="Ảnh chi tiết ${index + 1}" class="gallery-thumb-img" onerror="this.src='../../assets/images/services/spa-intro.jpg'">
+            <img src="../../${imgUrl}" alt="Ảnh chi tiết ${index + 1}" class="gallery-thumb-img" onerror="this.onerror=null; this.src='../../assets/images/services/spa.png'">
         </div>
     `).join('');
     
@@ -414,9 +418,9 @@ function setupReviews() {
     
     // Generate reviews based on rating and category
     mockReviews = [
-        { name: 'N***A', tier: 'gold', tierName: 'Hội viên Vàng', rating: 5, date: '12/06/2026', text: 'Nhân viên cẩn thận tắm cho bé cún nhà mình rất kỹ, sấy lông phồng thơm mềm mượt lắm. Sẽ tiếp tục đặt lịch.', images: ['assets/images/services/spa-intro.jpg'] },
+        { name: 'N***A', tier: 'gold', tierName: 'Hội viên Vàng', rating: 5, date: '12/06/2026', text: 'Nhân viên cẩn thận tắm cho bé cún nhà mình rất kỹ, sấy lông phồng thơm mềm mượt lắm. Sẽ tiếp tục đặt lịch.', images: ['assets/images/services/spa.png'], sellerReply: 'Cảm ơn chồng iu đã tin tưởng PawPal ạ! Tụi em luôn mong được đón bé tới làm điệu tiếp nhé!' },
         { name: 'M***H', tier: 'silver', tierName: 'Hội viên Bạc', rating: 5, date: '10/06/2026', text: 'Bé mèo nhà mình rất nhát nước nhưng các bạn chuyên viên dỗ dành khéo lắm, tắm khô xong thơm tho sạch sẽ.', images: [] },
-        { name: 'T***V', tier: 'diamond', tierName: 'Hội viên Kim Cương', rating: 4, date: '08/06/2026', text: 'Dịch vụ tốt, cơ sở vật chất phòng tắm ấm áp điều hòa dễ chịu. Đáng tiền lắm cưng.', images: ['assets/images/services/hotel-intro.jpg'] },
+        { name: 'T***V', tier: 'diamond', tierName: 'Hội viên Kim Cương', rating: 4, date: '08/06/2026', text: 'Dịch vụ tốt, cơ sở vật chất phòng tắm ấm áp điều hòa dễ chịu. Đáng tiền lắm cưng.', images: ['assets/images/services/hotel.png'], sellerReply: 'PawPal rất vui vì mang lại trải nghiệm tốt cho bé. Nếu có góp ý gì thêm chồng iu cứ dặn nhé!' },
         { name: 'H***N', tier: 'silver', tierName: 'Hội viên Bạc', rating: 5, date: '05/06/2026', text: 'Phòng lưu trú sạch sẽ cách âm tốt, camera soi 24/7 rõ nét giúp mình đi công tác yên tâm tuyệt đối.', images: [] }
     ];
     
@@ -463,38 +467,47 @@ function renderReviewList(filter) {
     
     container.innerHTML = filtered.map((r, idx) => {
         const initial = r.name.charAt(0);
-        const starsText = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+        const starsText = '<span class="star filled" aria-hidden="true">★</span>'.repeat(r.rating) + '<span class="star" aria-hidden="true">★</span>'.repeat(5 - r.rating);
         
         return `
-            <div class="review-card-item">
-                <div class="review-card-header">
+            <div class="review-item" data-stars="${r.rating}">
+                <div class="review-header">
+                    <div class="reviewer-avatar">${initial}</div>
                     <div class="reviewer-meta">
-                        <div class="reviewer-avatar-circle">${initial}</div>
-                        <div class="reviewer-details">
-                            <span class="reviewer-name">Khách hàng ${r.name}</span>
-                            <span class="reviewer-tier-badge ${r.tier}">${r.tierName}</span>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <div class="reviewer-name" style="margin-bottom: 0;">Khách hàng ${r.name}</div>
+                            <div class="review-stars" aria-label="${r.rating} sao" style="margin-bottom: 0; font-size: 1.15em;">
+                                ${starsText}
+                            </div>
+                        </div>
+                        <span class="reviewer-tier-badge ${r.tier}">${r.tierName}</span>
+                        <div class="review-meta-info">
+                            <span class="review-date">${r.date}</span>
                         </div>
                     </div>
-                    <span class="review-card-date">Ngày ${r.date}</span>
                 </div>
-                
-                <div class="review-card-rating">${starsText}</div>
-                <p class="review-card-text">${r.text}</p>
-                
+                <div class="review-content">
+                    <p>${r.text}</p>
+                </div>
                 ${r.images.length > 0 ? `
-                <div class="review-card-media">
+                <div class="review-media-list">
                     ${r.images.map(img => `
-                    <div class="review-media-thumb" onclick="openLightbox('../../${img}')">
-                        <img src="../../${img}" alt="Ảnh đính kèm" class="review-media-img">
-                    </div>
+                        <img src="../../${img}" alt="Ảnh đính kèm" class="review-photo" onclick="openLightbox('../../${img}')">
                     `).join('')}
                 </div>
                 ` : ''}
-                
-                <div class="review-card-actions">
-                    <button class="btn-helpful" id="helpfulBtn-${filter}-${idx}" onclick="voteHelpful('helpfulBtn-${filter}-${idx}')">
-                        <span>👍</span>
-                        <span>Hữu ích (${Math.floor(Math.random() * 10) + 1})</span>
+                ${r.sellerReply ? `
+                <div class="seller-reply">
+                    <div class="seller-reply-title">Phản hồi của cửa hàng</div>
+                    <div class="seller-reply-content">${r.sellerReply}</div>
+                </div>
+                ` : ''}
+                <div class="review-actions">
+                    <button class="btn-helpful" id="helpfulBtn-${filter}-${idx}" onclick="voteHelpful('helpfulBtn-${filter}-${idx}')" aria-label="Đánh dấu đánh giá này hữu ích">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                        </svg>
+                        Hữu ích (${Math.floor(Math.random() * 10) + 1})
                     </button>
                 </div>
             </div>
@@ -516,16 +529,17 @@ window.voteHelpful = function(btnId) {
     if (!btn) return;
     
     btn.classList.toggle('active');
-    const span = btn.querySelectorAll('span')[1];
-    const match = span.textContent.match(/\d+/);
+    // Using string matching to find and update count, as the structure has text and svg
+    const htmlStr = btn.innerHTML;
+    const match = htmlStr.match(/Hữu ích \((\d+)\)/);
     if (match) {
-        let count = parseInt(match[0], 10);
+        let count = parseInt(match[1], 10);
         if (btn.classList.contains('active')) {
             count++;
         } else {
             count--;
         }
-        span.textContent = `Hữu ích (${count})`;
+        btn.innerHTML = htmlStr.replace(/Hữu ích \(\d+\)/, `Hữu ích (${count})`);
     }
 };
 
