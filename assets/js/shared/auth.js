@@ -374,14 +374,7 @@ function initAuthForms() {
     const loginPhoneDisplay = document.getElementById('loginPhoneDisplay');
     const btnChangePhone = document.getElementById('btnChangePhone');
     const loginPassword = document.getElementById('loginPassword');
-    const btnLoginBySMS = document.getElementById('btnLoginBySMS');
-    const loginSmsCodeArea = document.getElementById('loginSmsCodeArea');
-    const loginSmsTimer = document.getElementById('loginSmsTimer');
-    const btnResendLoginSms = document.getElementById('btnResendLoginSms');
-    const loginOtpInputs = document.querySelectorAll('.login-otp-input');
     const btnLoginSubmit = document.getElementById('btnLoginSubmit');
-
-    let loginSmsInterval = null;
 
     // Handle "Continue" button in Step 1 of Login
     if (btnLoginContinue) {
@@ -435,125 +428,29 @@ function initAuthForms() {
             loginStepPassword.classList.add('d-none');
             loginStepPhone.classList.remove('d-none');
             if (loginPassword) loginPassword.value = '';
-            if (loginSmsCodeArea) loginSmsCodeArea.classList.add('d-none');
-            loginOtpInputs.forEach(input => input.value = '');
-            if (loginSmsInterval) clearInterval(loginSmsInterval);
+            const existingBanner = loginForm.querySelector('.auth-error-banner');
+            if (existingBanner) existingBanner.remove();
         });
     }
 
-    // Handle Login by SMS option
-    if (btnLoginBySMS) {
-        btnLoginBySMS.addEventListener('click', () => {
-            loginSmsCodeArea.classList.remove('d-none');
-            loginOtpInputs[0].focus();
-            showToast('info', 'Mã OTP đăng nhập nhanh đã được gửi: 123456');
-            
-            // Start SMS timer
-            if (loginSmsInterval) clearInterval(loginSmsInterval);
-            let seconds = 300; // 5 mins
-            if (btnResendLoginSms) btnResendLoginSms.disabled = true;
-
-            loginSmsInterval = setInterval(() => {
-                seconds--;
-                let m = Math.floor(seconds / 60);
-                let s = seconds % 60;
-                loginSmsTimer.textContent = `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
-                if (seconds <= 0) {
-                    clearInterval(loginSmsInterval);
-                    if (btnResendLoginSms) btnResendLoginSms.disabled = false;
-                }
-            }, 1000);
+    if (loginPassword) {
+        loginPassword.addEventListener('input', () => {
+            const existingBanner = loginForm.querySelector('.auth-error-banner');
+            if (existingBanner) existingBanner.remove();
         });
     }
-
-    // OTP SMS Inputs Logic for Login
-    loginOtpInputs.forEach((input, index) => {
-        input.addEventListener('input', (e) => {
-            const val = e.target.value;
-            if (!/^[0-9]$/.test(val)) {
-                e.target.value = '';
-                return;
-            }
-            if (index < loginOtpInputs.length - 1) {
-                loginOtpInputs[index + 1].disabled = false;
-                loginOtpInputs[index + 1].focus();
-            } else {
-                // Auto trigger login when last digit is filled
-                triggerSmsLogin();
-            }
+    
+    if (loginPhone) {
+        loginPhone.addEventListener('input', () => {
+            const existingBanner = loginForm.querySelector('.auth-error-banner');
+            if (existingBanner) existingBanner.remove();
+            loginPhone.classList.remove('is-invalid');
         });
-
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace') {
-                if (input.value === '') {
-                    if (index > 0) {
-                        loginOtpInputs[index - 1].focus();
-                        loginOtpInputs[index].disabled = true;
-                    }
-                } else {
-                    input.value = '';
-                }
-            }
-        });
-    });
-
-    if (btnResendLoginSms) {
-        btnResendLoginSms.addEventListener('click', () => {
-            showToast('info', 'Mã OTP đăng nhập nhanh đã gửi lại: 123456');
-            // Reset timer
-            let seconds = 300;
-            btnResendLoginSms.disabled = true;
-            if (loginSmsInterval) clearInterval(loginSmsInterval);
-            loginSmsInterval = setInterval(() => {
-                seconds--;
-                let m = Math.floor(seconds / 60);
-                let s = seconds % 60;
-                loginSmsTimer.textContent = `${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
-                if (seconds <= 0) {
-                    clearInterval(loginSmsInterval);
-                    btnResendLoginSms.disabled = false;
-                }
-            }, 1000);
-        });
-    }
-
-    function triggerSmsLogin() {
-        let code = '';
-        loginOtpInputs.forEach(input => code += input.value);
-        if (code === '123456') {
-            const phone = loginPhone.value.trim();
-            const users = getUsers();
-            let user = users.find(u => u.phone === phone);
-            if (user) {
-                setCurrentUser(user);
-                showToast('success', 'Đăng nhập thành công!', 2000);
-                setTimeout(() => {
-                    if (user.role === 'admin') {
-                        window.location.href = '/pages/admin/index.html';
-                    } else {
-                        window.location.href = '/pages/user/dashboard.html';
-                    }
-                }, 2000);
-            }
-        } else {
-            showErrorBanner('Mã OTP không đúng. Vui lòng nhập <strong>123456</strong> để thử nghiệm.', loginForm);
-            loginOtpInputs.forEach((input, idx) => {
-                input.value = '';
-                if (idx > 0) input.disabled = true;
-            });
-            loginOtpInputs[0].focus();
-        }
     }
 
     // --- FORM SUBMIT LOGIN (US 2-1) ---
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        
-        // If SMS login area is visible and filled, try SMS login
-        if (loginSmsCodeArea && !loginSmsCodeArea.classList.contains('d-none')) {
-            triggerSmsLogin();
-            return;
-        }
 
         const phone = loginPhone.value.trim();
         const password = loginPassword.value;
@@ -1055,9 +952,9 @@ function initAuthForms() {
             if (currentPoints >= targetPoints) {
                 clearInterval(timer);
                 
-                // Tự động chuyển hướng về trang chủ sau 2 giây nữa
+                // Tự động chuyển hướng về trang Dashboard người dùng sau 2 giây nữa
                 setTimeout(() => {
-                    window.location.href = '/pages/public/landing.html';
+                    window.location.href = '/pages/user/dashboard.html';
                 }, 2000);
             }
         }, stepTime);
@@ -1114,7 +1011,7 @@ function initAuthForms() {
 
                 showToast('success', 'Kích hoạt tài khoản thành viên thành công! Bạn nhận thêm 50 điểm thưởng chào mừng.');
                 setTimeout(() => {
-                    window.location.href = '/pages/public/landing.html';
+                    window.location.href = '/pages/user/dashboard.html';
                 }, 2000);
             }
         });

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -25,8 +25,239 @@
 
     <div id="site-header" style="min-height:110px;background:var(--color-bg-light);"></div>
 
-    <main>
-        <!-- TODO: Blog / Magazine content -->
+    <main class="blog-magazine-main pb-5 pt-3">
+        
+        <!-- SECTION 1: FILTER / TAGS -->
+        <section class="blog-filters-section mb-5">
+            <div class="container">
+                <div class="blog-filter-group main-filters mb-3">
+                    <button class="btn-filter-pill active">Kiến thức chăm sóc</button>
+                    <button class="btn-filter-pill">Khuyến mãi</button>
+                    <button class="btn-filter-pill">Tin tức</button>
+                </div>
+                <div class="blog-filter-group sub-filters">
+                    <button class="btn-filter-tag active">Tất cả</button>
+                    <button class="btn-filter-tag">Chó</button>
+                    <button class="btn-filter-tag">Mèo</button>
+                    <button class="btn-filter-tag">Chó con</button>
+                    <button class="btn-filter-tag">Mèo con</button>
+                    <button class="btn-filter-tag">Dinh dưỡng</button>
+                    <button class="btn-filter-tag">Sức khỏe</button>
+                    <button class="btn-filter-tag">Huấn luyện</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: MỚI NHẤT (ASYMMETRIC GRID) -->
+        <section class="blog-latest-section mb-5">
+            <div class="container">
+                <div class="section-header d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="section-title">Kiến thức chăm sóc mới nhất</h2>
+                    <a href="#" class="btn-view-all">Xem tất cả &rarr;</a>
+                </div>
+
+                <div class="latest-grid-wrapper mb-5">
+                    <!-- Khối trái: Bài nổi bật (Featured) -->
+                    <article class="blog-card featured-card">
+                        <a href="#" class="card-img-link">
+                            <div class="img-wrapper">
+                                <img src="https://images.unsplash.com/photo-1544568100-847a948585b9?q=80&w=1200&auto=format&fit=crop" alt="Tắm cho chó" loading="lazy">
+                                <span class="card-badge">Có thể bạn chưa biết</span>
+                            </div>
+                        </a>
+                        <div class="card-content mt-3">
+                            <h3 class="card-title"><a href="#">CÓ NÊN TẮM CHO CHÓ VÀO MÙA MƯA?</a></h3>
+                            <div class="card-meta">
+                                <span class="card-date">24 thg 7, 2026</span>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Khối phải: Danh sách xếp dọc (Stacked) -->
+                    <div class="stacked-cards-list">
+                        <article class="blog-card-small">
+                            <a href="#" class="card-img-link"><img src="https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=400&auto=format&fit=crop" alt="Chó ngủ"></a>
+                            <div class="card-content">
+                                <h4 class="card-title"><a href="#">Chó cào ổ bao lâu thì đẻ?</a></h4>
+                                <span class="card-date">22 thg 7, 2026</span>
+                            </div>
+                        </article>
+                        <article class="blog-card-small">
+                            <a href="#" class="card-img-link"><img src="https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?q=80&w=400&auto=format&fit=crop" alt="Mèo Ragdoll"></a>
+                            <div class="card-content">
+                                <h4 class="card-title"><a href="#">Khám phá giống mèo Ragdoll và cách chăm sóc đúng chuẩn</a></h4>
+                                <span class="card-date">20 thg 7, 2026</span>
+                            </div>
+                        </article>
+                        <article class="blog-card-small">
+                            <a href="#" class="card-img-link"><img src="https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?q=80&w=400&auto=format&fit=crop" alt="Tắm chó"></a>
+                            <div class="card-content">
+                                <h4 class="card-title"><a href="#">Có nên tắm cho chó thường xuyên vào mùa hè?</a></h4>
+                                <span class="card-date">18 thg 7, 2026</span>
+                            </div>
+                        </article>
+                        <article class="blog-card-small">
+                            <a href="#" class="card-img-link"><img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=400&auto=format&fit=crop" alt="Trò chơi"></a>
+                            <div class="card-content">
+                                <h4 class="card-title"><a href="#">Tổng hợp các trò chơi trong nhà cùng chó mèo khi trời mưa</a></h4>
+                                <span class="card-date">15 thg 7, 2026</span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+
+                <!-- Lưới 3 cột ngang -->
+                <div class="row g-4 grid-3-cols">
+                    <div class="col-md-4">
+                        <article class="blog-card standard-card">
+                            <a href="#" class="card-img-link"><img src="https://images.unsplash.com/photo-1589924691995-400dc9ecc119?q=80&w=600&auto=format&fit=crop" alt="Thức ăn"></a>
+                            <div class="card-content mt-3">
+                                <h4 class="card-title"><a href="#">Nên chọn thức ăn cho chó chứa ngũ cốc hay không ngũ cốc?</a></h4>
+                                <span class="card-date">10 thg 7, 2026</span>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="col-md-4">
+                        <article class="blog-card standard-card">
+                            <a href="#" class="card-img-link"><img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=600&auto=format&fit=crop" alt="Chó Shiba"></a>
+                            <div class="card-content mt-3">
+                                <h4 class="card-title"><a href="#">Chó Shiba có phù hợp với bạn không?</a></h4>
+                                <span class="card-date">08 thg 7, 2026</span>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="col-md-4">
+                        <article class="blog-card standard-card">
+                            <a href="#" class="card-img-link"><img src="https://images.unsplash.com/photo-1601758174114-e711c0cbaa69?q=80&w=600&auto=format&fit=crop" alt="Đánh răng"></a>
+                            <div class="card-content mt-3">
+                                <h4 class="card-title"><a href="#">Chó có thể nuốt kem đánh răng được không?</a></h4>
+                                <span class="card-date">05 thg 7, 2026</span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: XEM NHIỀU NHẤT -->
+        <section class="blog-trending-section mb-5 py-5 bg-light-soft">
+            <div class="container">
+                <h2 class="section-title mb-5 text-center">Kiến thức chăm sóc được xem nhiều nhất</h2>
+                
+                <div class="trending-list-wrapper mx-auto">
+                    <article class="trending-item">
+                        <div class="trending-rank">1</div>
+                        <a href="#" class="trending-img"><img src="https://images.unsplash.com/photo-1623387641177-e8a410529390?q=80&w=400&auto=format&fit=crop" alt="Thuốc"></a>
+                        <div class="trending-content">
+                            <h4 class="trending-title"><a href="#">Top 10 các loại thuốc trị ve cho chó tốt nhất hiện nay</a></h4>
+                            <span class="trending-date">24 thg 7, 2023</span>
+                        </div>
+                    </article>
+                    <article class="trending-item">
+                        <div class="trending-rank">2</div>
+                        <a href="#" class="trending-img"><img src="https://images.unsplash.com/photo-1574144611937-0df059b5ef3e?q=80&w=400&auto=format&fit=crop" alt="Pate mèo"></a>
+                        <div class="trending-content">
+                            <h4 class="trending-title"><a href="#">Cách làm Pate cho mèo ngon bổ rẻ tại nhà</a></h4>
+                            <span class="trending-date">10 thg 7, 2024</span>
+                        </div>
+                    </article>
+                    <article class="trending-item">
+                        <div class="trending-rank">3</div>
+                        <a href="#" class="trending-img"><img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=400&auto=format&fit=crop" alt="Chó đẹp"></a>
+                        <div class="trending-content">
+                            <h4 class="trending-title"><a href="#">Top 10 giống chó đẹp nhất thế giới</a></h4>
+                            <span class="trending-date">24 thg 6, 2024</span>
+                        </div>
+                    </article>
+                    <article class="trending-item">
+                        <div class="trending-rank">4</div>
+                        <a href="#" class="trending-img"><img src="https://images.unsplash.com/photo-1537151608804-ea6f11f3d8bc?q=80&w=400&auto=format&fit=crop" alt="Chó thông minh"></a>
+                        <div class="trending-content">
+                            <h4 class="trending-title"><a href="#">Top 10 loài chó thông minh nhất thế giới</a></h4>
+                            <span class="trending-date">29 thg 5, 2023</span>
+                        </div>
+                    </article>
+                    <article class="trending-item">
+                        <div class="trending-rank">5</div>
+                        <a href="#" class="trending-img"><img src="https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?q=80&w=400&auto=format&fit=crop" alt="Sữa tắm"></a>
+                        <div class="trending-content">
+                            <h4 class="trending-title"><a href="#">5 loại sữa tắm cho chó tốt nhất trên thị trường</a></h4>
+                            <span class="trending-date">18 thg 5, 2023</span>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: KHUYẾN MÃI & TIN TỨC (2 CỘT) -->
+        <section class="blog-news-promo-section mb-5">
+            <div class="container">
+                <div class="row g-5">
+                    <!-- Cột trái: Khuyến mãi -->
+                    <div class="col-lg-6">
+                        <div class="section-header d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="section-title">Khuyến Mãi</h2>
+                            <a href="#" class="btn-view-all">Xem tất cả &rarr;</a>
+                        </div>
+                        <div class="news-list">
+                            <article class="news-list-item">
+                                <a href="#" class="news-img"><img src="https://images.unsplash.com/photo-1601758228041-f3b279ce7bec?q=80&w=400&auto=format&fit=crop" alt="Khuyến mãi 1"></a>
+                                <div class="news-content">
+                                    <h4 class="news-title"><a href="#">SĂN VÉ THAM GIA "KHU VƯỜN PATE+" TỪ SNAPPY TOM - SEN ĐÃ BIẾT CHƯA?</a></h4>
+                                    <span class="news-date">12 thg 6, 2026</span>
+                                </div>
+                            </article>
+                            <article class="news-list-item">
+                                <a href="#" class="news-img"><img src="https://images.unsplash.com/photo-1524511751214-b0a384dd9afe?q=80&w=400&auto=format&fit=crop" alt="Khuyến mãi 2"></a>
+                                <div class="news-content">
+                                    <h4 class="news-title"><a href="#">MUA 4 PATE CATIDEA REAL & RAW - TẶNG MUỖNG LIMITED SIÊU CUTE!</a></h4>
+                                    <span class="news-date">08 thg 6, 2026</span>
+                                </div>
+                            </article>
+                            <article class="news-list-item">
+                                <a href="#" class="news-img"><img src="https://images.unsplash.com/photo-1541599540903-216a46ca1dc0?q=80&w=400&auto=format&fit=crop" alt="Khuyến mãi 3"></a>
+                                <div class="news-content">
+                                    <h4 class="news-title"><a href="#">SEN ƠI, DEAL HOT TỪ ROYAL CANIN ĐÃ LÊN KỆ PAWPAL RỒI NÈ!</a></h4>
+                                    <span class="news-date">04 thg 6, 2026</span>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+
+                    <!-- Cột phải: Tin tức -->
+                    <div class="col-lg-6">
+                        <div class="section-header d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="section-title">Tin Tức</h2>
+                            <a href="#" class="btn-view-all">Xem tất cả &rarr;</a>
+                        </div>
+                        <div class="news-list">
+                            <article class="news-list-item">
+                                <a href="#" class="news-img"><img src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=400&auto=format&fit=crop" alt="Tin tức 1"></a>
+                                <div class="news-content">
+                                    <h4 class="news-title"><a href="#">KHAI TRƯƠNG CHI NHÁNH 5: CỬA HÀNG MỚI TOANH - SĂN NHANH DEAL XỊN</a></h4>
+                                    <span class="news-date">21 thg 5, 2026</span>
+                                </div>
+                            </article>
+                            <article class="news-list-item">
+                                <a href="#" class="news-img"><img src="https://images.unsplash.com/photo-1596492784531-6e6eb5ea9993?q=80&w=400&auto=format&fit=crop" alt="Tin tức 2"></a>
+                                <div class="news-content">
+                                    <h4 class="news-title"><a href="#">[THÔNG BÁO] ĐIỀU CHỈNH GIÁ SẢN PHẨM ROYAL CANIN TỪ 1/6/2026</a></h4>
+                                    <span class="news-date">21 thg 5, 2026</span>
+                                </div>
+                            </article>
+                            <article class="news-list-item">
+                                <a href="#" class="news-img"><img src="https://images.unsplash.com/photo-1505628346881-b72b27e84530?q=80&w=400&auto=format&fit=crop" alt="Tin tức 3"></a>
+                                <div class="news-content">
+                                    <h4 class="news-title"><a href="#">SOFT OPENING PAWPAL 17 TÔ HIẾN THÀNH - ƯU ĐÃI 8% CHÀO ĐÓN CỬA HÀNG THỨ 5</a></h4>
+                                    <span class="news-date">11 thg 5, 2026</span>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <div id="site-footer"></div>
@@ -38,6 +269,7 @@
     <script src="../../assets/js/shared/components.js" defer></script>
     <script type="module" src="../../assets/js/shared/main.js"></script>
     <script type="module" src="../../assets/js/shared/auth.js"></script>
+    <script type="module" src="../../assets/js/public/blog.js"></script>
     <div id="site-fab"></div>
 </body>
 </html>

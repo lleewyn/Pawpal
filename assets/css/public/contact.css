@@ -1,195 +1,165 @@
 /* ==========================================================================
-   PawPal — Contact Page Styles
+   contact.css — Liên Hệ (Redesigned)
    ========================================================================== */
 
-/* 1. Hero Section */
+/* --- Hero Section --- */
 .contact-hero {
     background-color: var(--color-bg-light);
-    padding: 80px 0 60px;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding: var(--space-md) 0;
+    text-align: center;
 }
 
 .contact-title {
     font-family: var(--font-heading);
-    font-size: 3.5rem;
-    font-weight: 700;
+    font-size: var(--fs-h2);
     color: var(--color-primary-dark);
-    margin-bottom: var(--space-sm);
+    margin: 0;
+    line-height: 1.2;
 }
 
-.contact-subtitle {
-    font-size: var(--fs-h4);
-    color: var(--color-text-dark);
-    opacity: 0.8;
-}
-
-/* 2. Main Content Layout */
+/* --- Main Layout --- */
 .contact-main {
+    padding: var(--space-xl) 0;
     background-color: var(--color-bg-white);
-    padding: var(--space-2xl) 0;
 }
 
 .contact-grid {
     display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    gap: var(--space-3xl);
-    align-items: start;
+    /* Asymmetric grid: 1fr for info (approx 4 parts), 1.8fr for form (approx 8 parts) */
+    grid-template-columns: 1fr 1.8fr;
+    gap: var(--space-xl);
 }
 
-/* 2.1 Left Column: Contact Info */
+/* --- Left Column: Info --- */
 .contact-info {
-    padding-right: var(--space-xl);
-    border-right: 1px solid rgba(0,0,0,0.1);
-}
-.info-block {
-    margin-bottom: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
 }
 
 .info-block h3 {
     font-family: var(--font-heading);
     font-size: var(--fs-h3);
-    color: var(--color-primary);
-    margin-bottom: var(--space-md);
+    color: var(--color-primary-dark);
+    margin-bottom: var(--space-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.info-block h3 svg {
+    color: var(--color-accent);
 }
 
 .info-list {
     list-style: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
 }
 
 .info-list li {
     font-size: var(--fs-body);
     color: var(--color-text-dark);
-    margin-bottom: var(--space-sm);
     line-height: 1.6;
 }
 
-.info-list li strong {
+.info-list a {
     color: var(--color-primary-dark);
-    font-weight: 600;
-}
-
-.info-list li a {
-    color: var(--color-text-dark);
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
-.info-list li a:hover {
+.info-list a:hover {
     color: var(--color-accent);
 }
 
-/* 2.2 Right Column: Contact Form */
+.map-wrapper {
+    margin-top: var(--space-sm);
+    border-radius: var(--card-border-radius);
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* --- Right Column: Form --- */
 .contact-form-wrapper {
-    background: transparent;
+    background: var(--color-bg-light);
+    padding: var(--space-xl);
+    border-radius: var(--card-border-radius);
 }
 
 .contact-form {
     display: flex;
     flex-direction: column;
-    gap: var(--space-lg);
+    gap: var(--space-md);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-xs);
 }
 
 .form-group label {
-    font-family: var(--font-body);
-    font-size: var(--fs-small);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--color-primary-dark);
     font-weight: 600;
+    color: var(--color-primary-dark);
+    font-size: var(--fs-small);
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
-    width: 100%;
-    padding: 16px 20px;
-    background-color: var(--color-bg-light);
-    border: 1px solid transparent;
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background-color: var(--color-bg-white);
     font-family: var(--font-body);
     font-size: var(--fs-body);
     color: var(--color-text-dark);
-    outline: none;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    transition: border-color 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-    border-color: var(--color-primary);
-    background-color: var(--color-bg-white);
-    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
-}
-
-.form-group input::placeholder,
-.form-group textarea::placeholder {
-    color: rgba(0, 0, 0, 0.4);
-}
-
-/* Fix select appearance */
-.form-group select {
-    appearance: none;
-    cursor: pointer;
+    outline: none;
+    border-color: var(--color-primary-dark);
 }
 
 .btn-submit {
-    margin-top: var(--space-md);
-    padding: 18px 32px;
-    background-color: var(--color-primary);
-    color: var(--color-bg-white);
+    margin-top: var(--space-sm);
+    padding: var(--space-sm) calc(var(--space-md) * 1.5);
+    background-color: var(--color-accent);
+    color: var(--color-text-dark);
     border: none;
-    border-radius: 8px;
-    font-family: var(--font-heading);
-    font-size: var(--fs-body-lg);
+    border-radius: 50px;
     font-weight: 600;
+    font-size: var(--fs-body);
     cursor: pointer;
+    align-self: center; /* Center the button */
     transition: background-color 0.3s ease, transform 0.2s ease;
-    width: 100%;
 }
 
 .btn-submit:hover {
-    background-color: var(--color-primary-dark);
+    background-color: #e6a83a; /* Darker amber */
     transform: translateY(-2px);
 }
 
-/* 3. Map Section */
-.contact-map {
-    background-color: var(--color-bg-white);
-    padding-bottom: var(--space-3xl);
-}
-
-.map-wrapper {
-    width: 100%;
-    border-radius: var(--card-border-radius);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-}
-
-/* 4. Responsive */
-@media (max-width: 992px) {
+/* --- Responsive --- */
+@media (max-width: 1024px) {
     .contact-grid {
         grid-template-columns: 1fr;
-        gap: var(--space-2xl);
     }
-}
-
-@media (max-width: 768px) {
-    .contact-hero {
-        padding: var(--space-xl) 0;
-    }
-    .contact-title {
-        font-size: var(--fs-h2);
-    }
-    .btn-submit {
-        width: 100%;
-        align-self: stretch;
+    
+    .form-row {
+        grid-template-columns: 1fr;
     }
 }
