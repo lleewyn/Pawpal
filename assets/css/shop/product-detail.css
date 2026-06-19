@@ -50,14 +50,12 @@
 
 .product-detail-layout {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-xl);
+    grid-template-columns: 1.5fr 1fr;
+    gap: var(--space-lg);
 }
 
 /* ── Product Images Column ─────────────────────────────────────────────── */
 .product-images-column {
-    position: sticky;
-    top: 140px;
     align-self: start;
 }
 
@@ -644,6 +642,13 @@
 }
 
 /* ── Description Tab ───────────────────────────────────────────────────── */
+.desc-meta-row {
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-sm) 0;
+    margin-bottom: var(--space-lg);
+}
+
 .description-content h3 {
     font-family: var(--font-heading);
     font-size: var(--fs-h3);
@@ -1014,9 +1019,8 @@
         gap: var(--space-lg);
     }
 
-    .product-images-column {
-        position: relative;
-        top: 0;
+    .pd-gallery-card {
+        position: static;
     }
 
     .related-products-grid {
@@ -1085,3 +1089,155 @@
 }
 
 /* Review enhancements removed and unified in assets/css/components/reviews.css */
+
+/* ── Product Detail: Service-style Layout ──────────────────────────────── */
+.pd-gallery-card {
+    background: var(--color-bg-white);
+    border: var(--border-card);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    position: sticky;
+    top: 140px;
+}
+
+.pd-gallery-card .product-main-image {
+    aspect-ratio: 16 / 9;
+    margin-bottom: 0;
+}
+
+.pd-gallery-card .product-thumbnails {
+    display: flex;
+    grid-template-columns: unset;
+    gap: var(--space-xs);
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+}
+
+.pd-gallery-card .product-thumbnails .thumbnail {
+    width: 80px;
+    flex-shrink: 0;
+    aspect-ratio: 16 / 10;
+}
+
+.pd-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.88);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--color-text-dark);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    transition: all 0.2s ease;
+    z-index: 2;
+}
+
+.pd-nav-btn:hover {
+    background: var(--color-primary);
+    color: #ffffff;
+    transform: translateY(-50%) scale(1.05);
+}
+
+.pd-nav-prev { left: 12px; }
+.pd-nav-next { right: 12px; }
+
+.pd-gallery-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--space-xs);
+    border-top: 1px solid var(--color-border);
+}
+
+.product-info-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.pd-summary-card {
+    background: var(--color-bg-white);
+    border: var(--border-card);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.pd-summary-card .product-rating-stock {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+.pd-summary-card .detail-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-sm) 0;
+    margin-bottom: 0;
+}
+
+.pd-summary-card .detail-meta-item {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 1.0rem;
+    color: var(--color-text-dark);
+}
+
+.pd-summary-card .detail-meta-label {
+    font-weight: 600;
+    min-width: 90px;
+    color: var(--color-text-light);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.pd-product-id {
+    font-size: 11px;
+    color: var(--color-text-light);
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--color-bg-light);
+    padding: 4px 10px;
+    border-radius: 4px;
+    width: fit-content;
+    margin-bottom: var(--space-xs);
+    letter-spacing: 0.5px;
+}
+
+.pd-summary-card .product-title {
+    text-align: center;
+}
+
+.pd-summary-card .product-brand-name {
+    text-align: center;
+}
+
+.pd-summary-footer {
+    margin-top: auto;
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-sm);
+}
+
+.pd-summary-footer .product-price-block {
+    text-align: center;
+    margin-bottom: var(--space-sm);
+}
+
+.pd-summary-footer .product-actions {
+    margin-bottom: 0;
+}

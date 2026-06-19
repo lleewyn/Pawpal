@@ -142,55 +142,109 @@
             <div class="container-xl">
                 <div class="shop-layout">
                     <!-- Sidebar Filters -->
-                    <aside class="shop-sidebar" id="shopSidebar">
+                    <aside class="shop-sidebar" id="shopSidebar" data-lenis-prevent>
+                        <!-- Fixed Header -->
                         <div class="sidebar-header">
                             <h3 class="sidebar-title">Bộ lọc</h3>
-                            <button class="btn-clear-filters" id="btnClearFilters">Xóa bộ lọc</button>
                         </div>
 
-                        <!-- Category Filter -->
-                        <div class="filter-group">
-                            <h4 class="filter-title">Danh mục</h4>
-                            <div class="filter-options" id="categoryFilters">
-                                <!-- Will be populated by JS -->
-                            </div>
-                        </div>
+                        <!-- Scrollable Body -->
+                        <div class="sidebar-scroll-body">
 
-                        <!-- Brand Filter -->
-                        <div class="filter-group">
-                            <h4 class="filter-title">Thương hiệu</h4>
-                            <div class="filter-options" id="brandFilters">
-                                <!-- Will be populated by JS -->
-                            </div>
-                        </div>
-
-                        <!-- Price Range Filter -->
-                        <div class="filter-group">
-                            <h4 class="filter-title">Khoảng giá</h4>
-                            <div class="price-range-wrapper">
-                                <div class="price-range-inputs">
-                                    <input type="number" id="priceMin" placeholder="Từ" min="0" max="10000000"
-                                        step="10000" value="0" class="price-input">
-                                    <span class="price-separator">—</span>
-                                    <input type="number" id="priceMax" placeholder="Đến" min="0" max="10000000"
-                                        step="10000" value="10000000" class="price-input">
+                            <!-- Sort Filter -->
+                            <div class="filter-group">
+                                <h4 class="filter-title">Sắp xếp theo</h4>
+                                <div class="filter-options" id="sortFilters">
+                                    <label class="filter-checkbox">
+                                        <input type="radio" name="sortFilter" value="default" checked>
+                                        <span>Mặc định</span>
+                                    </label>
+                                    <label class="filter-checkbox">
+                                        <input type="radio" name="sortFilter" value="price-asc">
+                                        <span>Giá: Thấp đến Cao</span>
+                                    </label>
+                                    <label class="filter-checkbox">
+                                        <input type="radio" name="sortFilter" value="price-desc">
+                                        <span>Giá: Cao đến Thấp</span>
+                                    </label>
+                                    <label class="filter-checkbox">
+                                        <input type="radio" name="sortFilter" value="name-asc">
+                                        <span>Tên: A-Z</span>
+                                    </label>
+                                    <label class="filter-checkbox">
+                                        <input type="radio" name="sortFilter" value="name-desc">
+                                        <span>Tên: Z-A</span>
+                                    </label>
+                                    <label class="filter-checkbox">
+                                        <input type="radio" name="sortFilter" value="newest">
+                                        <span>Mới nhất</span>
+                                    </label>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Stock Status Filter -->
-                        <div class="filter-group">
-                            <h4 class="filter-title">Tình trạng</h4>
-                            <div class="filter-options">
-                                <label class="filter-checkbox">
-                                    <input type="checkbox" id="filterInStock" checked>
-                                    <span>Còn hàng</span>
-                                </label>
-                                <label class="filter-checkbox">
-                                    <input type="checkbox" id="filterOnSale">
-                                    <span>Giảm giá</span>
-                                </label>
+                            <!-- Category Filter -->
+                            <div class="filter-group">
+                                <h4 class="filter-title">Danh mục</h4>
+                                <div class="filter-options" id="categoryFilters">
+                                    <!-- Will be populated by JS -->
+                                </div>
                             </div>
+
+                            <!-- Brand Filter -->
+                            <div class="filter-group">
+                                <h4 class="filter-title">Thương hiệu</h4>
+                                <div class="filter-options" id="brandFilters">
+                                    <!-- Will be populated by JS -->
+                                </div>
+                            </div>
+
+                            <!-- Price Range Filter -->
+                            <div class="filter-group">
+                                <h4 class="filter-title">Khoảng giá</h4>
+                                <div class="filter-options" id="priceFilters">
+                                    <label class="filter-checkbox">
+                                        <input type="radio" name="priceFilter" value="all" checked>
+                                        <span>Tất cả khoảng giá</span>
+                                    </label>
+                                    <label class="filter-checkbox">
+                                        <input type="radio" name="priceFilter" value="under-100k">
+                                        <span>Dưới 100.000đ</span>
+                                    </label>
+                                    <label class="filter-checkbox">
+                                        <input type="radio" name="priceFilter" value="100k-300k">
+                                        <span>100.000đ – 300.000đ</span>
+                                    </label>
+                                    <label class="filter-checkbox">
+                                        <input type="radio" name="priceFilter" value="300k-1m">
+                                        <span>300.000đ – 1.000.000đ</span>
+                                    </label>
+                                    <label class="filter-checkbox">
+                                        <input type="radio" name="priceFilter" value="over-1m">
+                                        <span>Trên 1.000.000đ</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Stock Status Filter -->
+                            <div class="filter-group">
+                                <h4 class="filter-title">Tình trạng</h4>
+                                <div class="filter-options">
+                                    <label class="filter-checkbox">
+                                        <input type="checkbox" id="filterInStock" checked>
+                                        <span>Còn hàng</span>
+                                    </label>
+                                    <label class="filter-checkbox">
+                                        <input type="checkbox" id="filterOnSale">
+                                        <span>Giảm giá</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div><!-- /sidebar-scroll-body -->
+
+                        <!-- Fixed Footer -->
+                        <div class="sidebar-footer">
+                            <button class="btn-clear-filters-full" id="btnClearFilters">Xóa bộ lọc</button>
                         </div>
                     </aside>
 
@@ -222,16 +276,6 @@
                                         class="search-input-shop">
                                 </div>
                                 <div class="result-count" id="resultCount">Hiển thị 12 sản phẩm</div>
-                            </div>
-                            <div class="toolbar-right">
-                                <select id="sortSelect" class="sort-select">
-                                    <option value="default">Mặc định</option>
-                                    <option value="price-asc">Giá: Thấp đến cao</option>
-                                    <option value="price-desc">Giá: Cao đến thấp</option>
-                                    <option value="name-asc">Tên: A-Z</option>
-                                    <option value="name-desc">Tên: Z-A</option>
-                                    <option value="newest">Mới nhất</option>
-                                </select>
                             </div>
                         </div>
 
@@ -276,7 +320,7 @@
 
                     <!-- Suggestions Sidebar (Right) -->
                     <aside class="suggestions-sidebar" id="suggestionsSidebar">
-                        <h3 class="suggestions-sidebar-title">Gợi ý cho bạn</h3>
+                        <h3 class="suggestions-sidebar-title">TOP SẢN PHẨM HOT</h3>
                         <div class="suggestions-list" id="suggestionsList">
                             <!-- Suggestion cards will be rendered by JS -->
                         </div>

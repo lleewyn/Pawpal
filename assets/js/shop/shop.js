@@ -142,9 +142,17 @@ function initCategoryGrid() {
         card.addEventListener('click', (e) => {
             e.preventDefault();
             const category = card.dataset.category;
-            state.filters.category = category;
+            state.filters.category = category === 'all' ? 'all' : [category];
             state.currentPage = 1;
-            
+
+            // Sync sidebar checkboxes
+            const categoryFilters = document.getElementById('categoryFilters');
+            if (categoryFilters) {
+                categoryFilters.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    cb.checked = category === 'all' ? cb.value === 'all' : cb.value === category;
+                });
+            }
+
             applyFilters();
             renderProducts();
             document.getElementById('all-products').scrollIntoView({ behavior: 'smooth' });
@@ -211,7 +219,12 @@ function initFilters() {
                 categoryFilters.querySelector('input[value="all"]').checked = false;
                 const checkedCategories = Array.from(categoryFilters.querySelectorAll('input[type="checkbox"]:checked'))
                     .map(cb => cb.value);
-                state.filters.category = checkedCategories.length > 0 ? checkedCategories[0] : 'all';
+                if (checkedCategories.length === 0) {
+                    categoryFilters.querySelector('input[value="all"]').checked = true;
+                    state.filters.category = 'all';
+                } else {
+                    state.filters.category = checkedCategories;
+                }
             }
             state.currentPage = 1;
             applyFilters();
@@ -230,32 +243,24 @@ function initFilters() {
         });
     });
     
-    // Price range
-    const priceMin = document.getElementById('priceMin');
-    const priceMax = document.getElementById('priceMax');
-    
-    priceMin.addEventListener('change', () => {
-        const minVal = parseInt(priceMin.value) || 0;
-        const maxVal = parseInt(priceMax.value) || 10000000;
-        
-        if (minVal > maxVal) {
-            priceMin.value = maxVal;
-        }
-        
-        state.filters.priceMin = parseInt(priceMin.value) || 0;
-        applyFiltersDebounced();
-    });
-    
-    priceMax.addEventListener('change', () => {
-        const minVal = parseInt(priceMin.value) || 0;
-        const maxVal = parseInt(priceMax.value) || 10000000;
-        
-        if (maxVal < minVal) {
-            priceMax.value = minVal;
-        }
-        
-        state.filters.priceMax = parseInt(priceMax.value) || 10000000;
-        applyFiltersDebounced();
+    // Price range buckets
+    const PRICE_BUCKETS = {
+        'all':        [0, 10000000],
+        'under-100k': [0, 99999],
+        '100k-300k':  [100000, 300000],
+        '300k-1m':    [300000, 1000000],
+        'over-1m':    [1000000, 10000000]
+    };
+
+    document.querySelectorAll('input[name="priceFilter"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const [min, max] = PRICE_BUCKETS[e.target.value] || [0, 10000000];
+            state.filters.priceMin = min;
+            state.filters.priceMax = max;
+            state.currentPage = 1;
+            applyFilters();
+            renderProducts();
+        });
     });
     
     // Stock and sale filters
@@ -273,6 +278,7 @@ function initFilters() {
     
     // Clear filters
     document.getElementById('btnClearFilters').addEventListener('click', () => {
+        state.sort = 'default';
         state.filters = {
             category: 'all',
             brands: [],
@@ -282,20 +288,22 @@ function initFilters() {
             onSale: false,
             search: ''
         };
-        
+
         // Reset UI
+        const defaultSort = document.querySelector('input[name="sortFilter"][value="default"]');
+        if (defaultSort) defaultSort.checked = true;
         categoryFilters.querySelectorAll('input[type="checkbox"]').forEach(cb => {
             cb.checked = cb.value === 'all';
         });
         brandFilters.querySelectorAll('input[type="checkbox"]').forEach(cb => {
             cb.checked = false;
         });
-        priceMin.value = 0;
-        priceMax.value = 10000000;
+        const defaultPrice = document.querySelector('input[name="priceFilter"][value="all"]');
+        if (defaultPrice) defaultPrice.checked = true;
         document.getElementById('filterInStock').checked = true;
         document.getElementById('filterOnSale').checked = false;
         document.getElementById('searchInput').value = '';
-        
+
         applyFilters();
         renderProducts();
     });
@@ -319,7 +327,8 @@ function applyFilters() {
     
     // Category filter
     if (state.filters.category && state.filters.category !== 'all') {
-        filtered = filtered.filter(p => p.category === state.filters.category);
+        const cats = Array.isArray(state.filters.category) ? state.filters.category : [state.filters.category];
+        filtered = filtered.filter(p => cats.includes(p.category));
     }
     
     // Brand filter
@@ -395,11 +404,12 @@ function initToolbar() {
     });
     
     // Sort
-    const sortSelect = document.getElementById('sortSelect');
-    sortSelect.addEventListener('change', (e) => {
-        state.sort = e.target.value;
-        applyFilters();
-        renderProducts();
+    document.querySelectorAll('input[name="sortFilter"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            state.sort = e.target.value;
+            applyFilters();
+            renderProducts();
+        });
     });
 }
 

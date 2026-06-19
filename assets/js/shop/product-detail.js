@@ -69,7 +69,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             breadcrumbProduct.textContent = product.name;
         }
     }, 100);
+
+    // Gallery arrows navigation
+    const galleryPrev = document.getElementById('galleryPrev');
+    const galleryNext = document.getElementById('galleryNext');
+    if (galleryPrev && galleryNext) {
+        galleryPrev.addEventListener('click', () => navigateGallery(-1));
+        galleryNext.addEventListener('click', () => navigateGallery(1));
+    }
 });
+
+let currentGalleryIndex = 0;
+
+function navigateGallery(direction) {
+    const thumbnails = document.querySelectorAll('#thumbnails .thumbnail');
+    if (thumbnails.length <= 1) return;
+    thumbnails[currentGalleryIndex].classList.remove('active');
+    currentGalleryIndex = (currentGalleryIndex + direction + thumbnails.length) % thumbnails.length;
+    thumbnails[currentGalleryIndex].classList.add('active');
+    thumbnails[currentGalleryIndex].click();
+}
 
 /**
  * Handle Add to Cart - Add product to cart and stay on page
@@ -392,24 +411,32 @@ function renderProductDetails(product) {
         if (productDiscount) productDiscount.style.display = 'none';
     }
 
-    const stockStatus = document.getElementById('stockStatus');
-    if (stockStatus) {
+    const productStockStatus = document.getElementById('productStockStatus');
+    if (productStockStatus) {
         if (product.stock > 0) {
-            stockStatus.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Còn hàng</span>';
-            stockStatus.style.color = '#2a5944';
+            productStockStatus.textContent = 'Còn hàng';
+            productStockStatus.style.color = 'var(--color-success)';
         } else {
-            stockStatus.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg><span>Hết hàng</span>';
-            stockStatus.style.color = '#dc3545';
+            productStockStatus.textContent = 'Hết hàng';
+            productStockStatus.style.color = 'var(--color-danger)';
         }
     }
 
-    const stockCountdown = document.getElementById('stockCountdown');
-    const stockRemaining = document.getElementById('stockRemaining');
-    if (product.stock > 0 && product.stock <= 10) {
-        if (stockCountdown) stockCountdown.style.display = 'flex';
-        if (stockRemaining) stockRemaining.textContent = product.stock;
-    } else {
-        if (stockCountdown) stockCountdown.style.display = 'none';
+    const productStockQty = document.getElementById('productStockQty');
+    if (productStockQty) {
+        productStockQty.textContent = product.stock > 0 ? product.stock + ' sản phẩm' : '—';
+    }
+
+    const productPetType = document.getElementById('productPetType');
+    if (productPetType) {
+        const petTypeMap = {
+            'cho': 'Chó',
+            'meo': 'Mèo',
+            'dog': 'Chó',
+            'cat': 'Mèo'
+        };
+        const raw = (product.petType || product.pet_type || '').toLowerCase();
+        productPetType.textContent = petTypeMap[raw] || 'Chó / Mèo';
     }
 
     const productDescShort = document.getElementById('productDescShort');
@@ -417,6 +444,9 @@ function renderProductDetails(product) {
 
     const productSKU = document.getElementById('productSKU');
     if (productSKU) productSKU.textContent = product.sku || product.id;
+
+    const productSKUChip = document.getElementById('productSKUChip');
+    if (productSKUChip) productSKUChip.textContent = product.sku || product.id;
 
     const productCategoryMeta = document.getElementById('productCategory');
     if (productCategoryMeta) productCategoryMeta.textContent = product.categoryName || 'Sản phẩm';
