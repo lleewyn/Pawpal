@@ -333,7 +333,9 @@
     margin-bottom: 12px;
 }
 
-.booking-form .form-group label {
+.booking-form .form-group label,
+.spa-schedule .form-group label,
+.hotel-date-range .form-group label {
     font-size: 0.8rem;
     font-weight: 600;
     color: var(--color-text-dark);
@@ -345,7 +347,9 @@
 
 .booking-form .form-group input,
 .booking-form .form-group select,
-.booking-form .form-group textarea {
+.booking-form .form-group textarea,
+.spa-schedule .form-group input,
+.hotel-date-range .form-group input {
     padding: 8px 12px; /* Reduced vertical padding */
     border: 1px solid rgba(42,89,68,0.15);
     border-radius: var(--card-border-radius);
@@ -361,7 +365,9 @@
 
 .booking-form .form-group input:focus,
 .booking-form .form-group select:focus,
-.booking-form .form-group textarea:focus {
+.booking-form .form-group textarea:focus,
+.spa-schedule .form-group input:focus,
+.hotel-date-range .form-group input:focus {
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(42,89,68,0.08), inset 0 1px 2px rgba(42,89,68,0.05);
     background: #ffffff;
@@ -538,11 +544,11 @@
 }
 
 .timeslot-btn:disabled {
-    background: #f8fafc;
-    color: #cbd5e1;
+    background: #f1f5f9;
+    color: #94a3b8;
     cursor: not-allowed;
-    border-color: #f1f5f9;
-    text-decoration: line-through;
+    border-color: #cbd5e1;
+    text-decoration: none;
 }
 
 /* Slot quá gần giờ hiện tại (< 2 tiếng) */
@@ -718,7 +724,7 @@
 }
 
 .btn-step-next { flex: 1; text-align: center; }
-.btn-step-back { padding: 12px 24px; font-size: 0.9rem; }
+.btn-step-back { padding: 12px 24px; font-size: 0.9rem; white-space: nowrap; flex-shrink: 0; }
 
 .btn-step-next:disabled {
     opacity: 0.45;
@@ -759,7 +765,7 @@
     -webkit-backdrop-filter: blur(16px);
     border-radius: var(--card-border-radius);
     border: none;
-    padding: 24px;
+    padding: 18px 20px;
     box-shadow: var(--shadow-card);
     margin-bottom: 16px;
     position: relative;
@@ -819,11 +825,11 @@
 }
 
 .sum-value {
-    font-size: 0.88rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--color-primary-dark);
     text-align: right;
-    line-height: 1.4;
+    line-height: 1.35;
 }
 
 .summary-divider {

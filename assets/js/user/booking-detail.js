@@ -127,10 +127,10 @@ function checkBookingModifiability(booking) {
         btnCancelBooking.title = 'Không thể hủy lịch hẹn này';
     }
     
-    // Disable cancel button if too close to appointment time
-    if (diffMinutes < 1440 && booking.status !== 'pending') { // 24 hours
+    // US 6-1: Chặn hủy lịch tự động nếu sát giờ hẹn < 2 tiếng (120 phút)
+    if (diffMinutes < 120 && booking.status !== 'pending') {
         btnCancelBooking.disabled = true;
-        btnCancelBooking.title = 'Đã quá thời gian hủy miễn phí. Vui lòng liên hệ hotline.';
+        btnCancelBooking.title = 'Đã quá thời gian hủy trực tuyến. Vui lòng liên hệ hotline.';
     }
 }
 
@@ -192,21 +192,145 @@ function handleCancelBooking() {
         return;
     }
     
-    // Show confirmation modal
-    const cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
-    document.getElementById('modalBookingCode').textContent = currentBooking.id;
-    cancelModal.show();
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
     
-    // Handle confirm cancel button
-    document.getElementById('confirmCancelBtn').onclick = function() {
-        confirmCancelBooking();
-        cancelModal.hide();
+    if (currentUser && currentUser.is_temporary) {
+        // Khách vãng lai: Yêu cầu xác thực OTP trước
+        showGuestCancelOTPFlow(currentUser);
+    } else {
+        // Thành viên bình thường: Hiện modal xác nhận luôn
+        const cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
+        document.getElementById('modalBookingCode').textContent = currentBooking.id;
+        cancelModal.show();
+        
+        // Handle confirm cancel button
+        document.getElementById('confirmCancelBtn').onclick = function() {
+            confirmCancelBooking();
+            cancelModal.hide();
+        };
+    }
+}
+
+// Show OTP flow for Guest Cancellation
+function showGuestCancelOTPFlow(user) {
+    // Generate mock OTP dialog
+    let otpModalEl = document.getElementById('guestOtpModal');
+    if (!otpModalEl) {
+        otpModalEl = document.createElement('div');
+        otpModalEl.id = 'guestOtpModal';
+        otpModalEl.className = 'modal fade';
+        otpModalEl.tabIndex = -1;
+        otpModalEl.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Xác thực SĐT khách hàng</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>PawPal đã gửi mã xác thực (OTP) qua SMS đến số điện thoại <strong>${user.phone}</strong>.</p>
+                        <div class="form-group mb-3">
+                            <label for="cancelOtpInput" class="form-label" style="font-weight:bold;">Nhập mã OTP (Mã test: 555666)</label>
+                            <input type="text" id="cancelOtpInput" class="form-control text-center" style="font-size: 1.5rem; letter-spacing: 0.5rem;" maxlength="6" placeholder="******">
+                            <div class="invalid-feedback" id="cancelOtpError" style="display:none;">Mã OTP không chính xác, chồng iu vui lòng thử lại nhé.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button type="button" class="btn-cta" id="confirmCancelOtpBtn">Xác nhận OTP</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(otpModalEl);
+    }
+
+    const modal = new bootstrap.Modal(otpModalEl);
+    modal.show();
+
+    // Trigger SMS toast
+    showToast('Mã OTP test của chồng iu là: 555666', 'success');
+
+    const otpInput = document.getElementById('cancelOtpInput');
+    const otpError = document.getElementById('cancelOtpError');
+    const confirmOtpBtn = document.getElementById('confirmCancelOtpBtn');
+
+    otpInput.value = '';
+    otpError.style.display = 'none';
+
+    confirmOtpBtn.onclick = () => {
+        if (otpInput.value === '555666') {
+            modal.hide();
+            // Show choices dialog
+            showGuestActionChoices(user);
+        } else {
+            otpError.style.display = 'block';
+        }
+    };
+}
+
+// Show action choices for Guest Cancellation: Setup Password or Call Hotline
+function showGuestActionChoices(user) {
+    let choicesModalEl = document.getElementById('guestChoicesModal');
+    if (!choicesModalEl) {
+        choicesModalEl = document.createElement('div');
+        choicesModalEl.id = 'guestChoicesModal';
+        choicesModalEl.className = 'modal fade';
+        choicesModalEl.tabIndex = -1;
+        choicesModalEl.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Yêu cầu kích hoạt mật khẩu</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <p style="font-size:0.95rem; line-height:1.5;">Để tự hủy lịch trực tuyến trên website, chồng iu vui lòng thiết lập mật khẩu cho tài khoản để bảo vệ thông tin nhé!</p>
+                        <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
+                            <button class="btn-cta" id="choiceSetupPassBtn">🔑 Thiết lập mật khẩu ngay</button>
+                            <a href="tel:0987654321" class="btn-green-outline" style="text-decoration:none;" id="choiceCallHotlineBtn">📞 Gọi Hotline hỗ trợ hủy thủ công</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(choicesModalEl);
+    }
+
+    const modal = new bootstrap.Modal(choicesModalEl);
+    modal.show();
+
+    document.getElementById('choiceSetupPassBtn').onclick = () => {
+        modal.hide();
+        // Lookup temp token or generate a new one
+        const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
+        let tokenObj = tokens.find(t => t.phone === user.phone);
+        if (!tokenObj) {
+            tokenObj = {
+                token: 'token-temp-' + Math.floor(100000 + Math.random() * 900000),
+                phone: user.phone,
+                createdAt: Date.now()
+            };
+            tokens.push(tokenObj);
+            localStorage.setItem('pawpal_temp_tokens', JSON.stringify(tokens));
+        }
+
+        // Redirect to setup password form
+        window.location.href = `/pages/public/login.html#setup-password?token=${tokenObj.token}`;
     };
 }
 
 // US 6-2: Confirm cancel booking
 function confirmCancelBooking() {
-    // Update booking status to cancelled
+    // Update booking status in localStorage bookings database
+    const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+    const index = bookings.findIndex(b => b.id === currentBooking.id);
+    
+    if (index !== -1) {
+        bookings[index].status = 'cancelled';
+        localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
+    }
+    
     currentBooking.status = 'cancelled';
     
     // Show success toast

@@ -245,6 +245,27 @@ function setupDrawerListeners() {
             })
         };
 
+        // Khấu trừ điểm tích lũy Paw Points nếu là Hoàn tiền (refund)
+        if (returnData.type === 'refund') {
+            const returnTotalValue = returnData.products.reduce((sum, p) => sum + (p.total || (p.price * p.quantity)), 0);
+            const pointsToDeduct = Math.floor(returnTotalValue / 10000);
+            
+            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
+            if (currentUser) {
+                currentUser.points = Math.max(0, (currentUser.points || 0) - pointsToDeduct);
+                localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
+                
+                // Cập nhật CSDL users_db
+                const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+                const uIdx = users.findIndex(u => u.phone === currentUser.phone);
+                if (uIdx !== -1) {
+                    users[uIdx].points = currentUser.points;
+                    localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+                }
+                console.log(`[RMA] Deducted ${pointsToDeduct} Paw Points. New balance: ${currentUser.points}`);
+            }
+        }
+
         const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
         returnsList.push(returnData);
         localStorage.setItem('pawpal_returns', JSON.stringify(returnsList));

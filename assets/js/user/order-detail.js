@@ -254,12 +254,22 @@ function renderActions() {
             // 1. Return logic
             const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
             const alreadyReturned = returnsList.some(r => r.orderId === currentOrder.id);
+            
+            // Check if order has any product reviewed to disable return
+            const reviewedList = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
+            const hasAnyReviewed = reviewedList.some(r => r.orderId === currentOrder.id);
 
             if (alreadyReturned) {
                 buttons.push(`
                     <a href="/pages/user/return-detail.html?orderId=${currentOrder.id}" class="btn-track-order" style="text-decoration: none;">
                         Chi tiết đổi trả
                     </a>
+                `);
+            } else if (hasAnyReviewed) {
+                buttons.push(`
+                    <button class="btn-track-order" disabled title="Giao dịch đã được đánh giá, không thể đổi trả.">
+                        Đã đánh giá (Không thể đổi trả)
+                    </button>
                 `);
             } else {
                 buttons.push(`

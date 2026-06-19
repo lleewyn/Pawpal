@@ -164,6 +164,10 @@ function createOrderCard(order) {
     // Check if order has already requested return
     const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
     const alreadyReturned = returnsList.some(r => r.orderId === order.id);
+    
+    // Check if order has any product reviewed to disable return
+    const reviewedList = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
+    const hasAnyReviewed = reviewedList.some(r => r.orderId === order.id);
 
     let returnActionHTML = '';
 
@@ -173,6 +177,12 @@ function createOrderCard(order) {
                 <a href="/pages/user/return-detail.html?orderId=${order.id}" class="btn-track-order" style="text-decoration: none;">
                     Chi tiết đổi trả
                 </a>
+            `;
+        } else if (hasAnyReviewed) {
+            returnActionHTML = `
+                <button class="btn-track-order" disabled title="Giao dịch đã được đánh giá, không thể đổi trả.">
+                    Đã đánh giá (Không thể đổi trả)
+                </button>
             `;
         } else {
             const diffDays = Math.max(0, 7 - Math.floor(diffMs / (1000 * 60 * 60 * 24)));
