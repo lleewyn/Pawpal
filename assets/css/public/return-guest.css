@@ -1,6 +1,12 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    return-guest.css — Service Lookup Page (US 7-2)
    ========================================================================== */
+
+.return-guest-body {
+    background-color: var(--color-bg-light);
+    color: var(--color-text-dark);
+    font-family: var(--font-body);
+}
 
 /* ── Hero Search Section (Initial State) ──────────────────────────────── */
 .lookup-hero {
@@ -574,4 +580,164 @@
     .timeline-accordion {
         transition: none;
     }
+}
+
+/* ── Guest Lookup (Added from HTML) ──────────────────────────────────── */
+.guest-lookup-wrapper {
+    max-width: 900px;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    padding: var(--space-md) var(--container-padding);
+}
+.guest-lookup-wrapper > .lookup-card {
+    width: 100%;
+}
+.lookup-card {
+    background-color: var(--color-bg-white);
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 24px;
+    padding: var(--space-xl);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+}
+.lookup-title {
+    font-family: var(--font-heading);
+    color: var(--color-primary-dark);
+    font-size: var(--fs-h2);
+    text-align: center;
+    margin-bottom: var(--space-xs);
+}
+.lookup-subtitle {
+    font-size: var(--fs-body);
+    color: var(--color-text-light);
+    text-align: center;
+    margin-bottom: var(--space-lg);
+    line-height: 1.5;
+}
+.form-group {
+    margin-bottom: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+.form-label {
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    font-size: var(--fs-body);
+}
+.form-input {
+    border: 1px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    padding: 12px 16px;
+    font-family: var(--font-primary);
+    font-size: var(--fs-body);
+    width: 100%;
+}
+.form-input:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+.error-alert {
+    background-color: var(--color-danger-light);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-sm);
+    font-size: var(--fs-small);
+    font-weight: 600;
+    margin-top: var(--space-md);
+    display: none;
+}
+.success-result {
+    margin-top: var(--space-lg);
+    border-top: 1px dashed var(--color-border);
+    padding-top: var(--space-md);
+    display: none;
+}
+
+/* ── Modern Tabs Filter ── */
+.lookup-tabs-container {
+    display: flex;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    border-bottom: 2px solid var(--color-bg-light);
+    padding-bottom: var(--space-xs);
+}
+.lookup-tab-btn {
+    background: none;
+    border: none;
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--fs-body);
+    font-weight: 600;
+    color: var(--color-text-light);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.3s ease;
+}
+.lookup-tab-btn.active {
+    color: var(--color-primary);
+}
+.lookup-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: calc(-1 * var(--space-xs) - 2px);
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: var(--color-primary);
+    border-radius: 3px 3px 0 0;
+}
+
+/* ── Modern Timeline UI ── */
+.timeline-container {
+    position: relative;
+    padding-left: 24px;
+    margin: var(--space-md) 0 0 0;
+}
+.timeline-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 7px;
+    width: 2px;
+    background: var(--color-border);
+}
+.timeline-item {
+    position: relative;
+    margin-bottom: var(--space-md);
+}
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+.timeline-dot {
+    position: absolute;
+    left: -24px;
+    top: 4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    border: 3px solid var(--color-bg-white);
+    box-shadow: 0 0 0 1px var(--color-border);
+}
+.timeline-time {
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    font-size: var(--fs-small);
+    margin-bottom: 4px;
+}
+.timeline-content {
+    font-size: var(--fs-body);
+    color: var(--color-text-dark);
+    background: var(--color-bg-light);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--card-border-radius);
+    display: inline-block;
+    width: 100%;
+}
+.timeline-accordion .inner-timeline {
+    padding: var(--space-md) 0;
 }

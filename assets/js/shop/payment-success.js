@@ -24,7 +24,20 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Setup copy button
     document.getElementById('btn-copy-order').addEventListener('click', copyOrderId);
+    
+    // Setup tracking link based on user auth status
+    setupTrackingLink(orderData);
 });
+
+function setupTrackingLink(order) {
+    const trackBtns = document.querySelectorAll('a[href="/pages/user/orders.html"]');
+    if (trackBtns.length > 0 && !order.userId) {
+        // If it's a guest order, redirect tracking to guest lookup page
+        trackBtns.forEach(btn => {
+            btn.href = '/pages/public/return-guest.html';
+        });
+    }
+}
 
 function displayOrderInfo(order) {
     // Order ID

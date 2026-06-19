@@ -400,18 +400,30 @@ function initAuthForms() {
                     loginForm
                 );
             } else if (user.is_temporary) {
-                // Tài khoản tạm của khách vãng lai -> Chuyển sang thiết lập mật khẩu
-                showToast('info', 'Tài khoản của bạn đang là tài khoản tạm thời. Hệ thống sẽ chuyển hướng bạn thiết lập mật khẩu.');
-                const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
-                let tokenObj = tokens.find(t => t.phone === user.phone);
-                if (!tokenObj) {
-                    tokenObj = { token: 'token-dynamic-' + Math.random().toString(36).substr(2, 9), phone: user.phone, createdAt: Date.now() };
-                    tokens.push(tokenObj);
-                    localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
-                }
+                // Tài khoản tạm của khách vãng lai -> Chuyển sang xác nhận OTP rồi thiết lập mật khẩu
+                showToast('info', 'Tài khoản của bạn đang là tài khoản tạm thời. Hệ thống sẽ gửi mã OTP để xác thực.');
+                
+                loginForm.style.opacity = '0';
                 setTimeout(() => {
-                    window.location.href = `/pages/public/login.html?action=setup-password&token=${tokenObj.token}`;
-                }, 1500);
+                    loginForm.classList.remove('active-form');
+                    const authTabs = document.getElementById('authTabs');
+                    if (authTabs) authTabs.style.display = 'none';
+                    
+                    const forgotOtpSection = document.getElementById('forgotOtpSection');
+                    forgotOtpSection.classList.remove('d-none');
+                    forgotOtpSection.style.opacity = '1';
+                    
+                    forgotOtpSection.querySelector('.form-title').textContent = 'Xác thực kích hoạt tài khoản';
+                    forgotOtpSection.querySelector('.form-subtitle').textContent = 'Mã xác thực 6 số đã được gửi đến SĐT của bạn.';
+                    
+                    window.isGuestActivationFlow = true;
+                    window.guestActivationPhone = user.phone;
+                    
+                    const btnResend = document.getElementById('btnForgotResendOtp');
+                    if (btnResend) {
+                        btnResend.click(); // Trigger timer and clear inputs
+                    }
+                }, 300);
             } else {
                 // Thành viên chính thức -> Cho nhập mật khẩu
                 loginStepPhone.classList.add('d-none');
@@ -686,8 +698,20 @@ function initAuthForms() {
             if (code === '555666') {
                 clearInterval(forgotOtpInterval);
                 forgotOtpSection.classList.add('d-none');
-                forgotNewPasswordSection.classList.remove('d-none');
-                forgotNewPassword.focus();
+                
+                if (window.isGuestActivationFlow) {
+                    showToast('success', 'Xác thực OTP thành công! Vui lòng thiết lập mật khẩu bảo mật.');
+                    const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
+                    let tokenObj = { token: 'token-dynamic-' + Math.random().toString(36).substr(2, 9), phone: window.guestActivationPhone, createdAt: Date.now() };
+                    tokens.push(tokenObj);
+                    localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
+                    setTimeout(() => {
+                        window.location.href = `/pages/public/login.html?action=setup-password&token=${tokenObj.token}`;
+                    }, 1000);
+                } else {
+                    forgotNewPasswordSection.classList.remove('d-none');
+                    forgotNewPassword.focus();
+                }
             } else {
                 showToast('error', 'Mã OTP chưa chính xác. Vui lòng nhập 555666 để test');
                 forgotOtpInputs.forEach((input, idx) => {

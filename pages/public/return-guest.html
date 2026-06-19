@@ -1,203 +1,186 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tra cứu Đổi trả Khách vãng lai - PawPal</title>
-    
+    <title>Tra cứu Đơn hàng/Lịch - PawPal</title>
+
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap"
+        rel="stylesheet">
+
     <!-- Bootstrap CSS — cần cho header responsive (d-lg-none, d-flex...) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Global CSS -->
     <link rel="stylesheet" href="../../assets/css/style.css">
-    
+
     <!-- Components -->
     <link rel="stylesheet" href="../../assets/css/components/button.css">
     <link rel="stylesheet" href="../../assets/css/components/nav.css">
     <link rel="stylesheet" href="../../assets/css/components/footer.css">
-    
-    <!-- Custom CSS inline specific to page to follow design.md -->
-    <style>
-        .guest-lookup-wrapper {
-            max-width: var(--container-sm);
-            margin: var(--space-xl) auto;
-            padding: 0 var(--container-padding);
-        }
-        .lookup-card {
-            background-color: var(--color-bg-white);
-            border: var(--border-card);
-            border-radius: var(--card-border-radius);
-            padding: var(--space-lg);
-            box-shadow: var(--shadow-card);
-        }
-        .lookup-title {
-            font-family: var(--font-heading);
-            color: var(--color-primary-dark);
-            font-size: var(--fs-h2);
-            text-align: center;
-            margin-bottom: var(--space-xs);
-        }
-        .lookup-subtitle {
-            font-size: var(--fs-body);
-            color: var(--color-text-light);
-            text-align: center;
-            margin-bottom: var(--space-lg);
-            line-height: 1.5;
-        }
-        .form-group {
-            margin-bottom: var(--space-md);
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-xs);
-        }
-        .form-label {
-            font-weight: 700;
-            color: var(--color-primary-dark);
-            font-size: var(--fs-body);
-        }
-        .form-input {
-            border: 1px solid var(--color-border);
-            border-radius: var(--card-border-radius);
-            padding: 12px 16px;
-            font-family: var(--font-primary);
-            font-size: var(--fs-body);
-            width: 100%;
-        }
-        .form-input:focus {
-            border-color: var(--color-primary);
-            outline: none;
-        }
-        .error-alert {
-            background-color: var(--color-danger-light);
-            color: var(--color-danger);
-            border: 1px solid var(--color-danger);
-            border-radius: var(--card-border-radius);
-            padding: var(--space-sm);
-            font-size: var(--fs-small);
-            font-weight: 600;
-            margin-top: var(--space-md);
-            display: none;
-        }
-        .success-result {
-            margin-top: var(--space-lg);
-            border-top: 1px dashed var(--color-border);
-            padding-top: var(--space-md);
-            display: none;
-        }
-    </style>
+
+    <!-- Page Specific CSS -->
+    <link rel="stylesheet" href="../../assets/css/public/return-guest.css">
 </head>
-<body style="background-color: var(--color-bg-light);">
+
+<body class="return-guest-body">
     <!-- Header -->
-    <header id="site-header"></header>
+    <div id="site-header" style="min-height:110px;background:var(--color-bg-light);"></div>
 
     <!-- Main Content -->
     <main class="guest-lookup-wrapper">
         <div class="lookup-card">
-            <h1 class="lookup-title">Tra cứu Đổi trả Khách vãng lai</h1>
-            <p class="lookup-subtitle">Vui lòng điền mã đơn hàng và số điện thoại mua hàng để thực hiện hoặc kiểm tra yêu cầu đổi trả của bạn.</p>
+            <h1 class="lookup-title">Tra cứu lịch dịch vụ/đơn hàng</h1>
+            <p class="lookup-subtitle">Vui lòng điền số điện thoại mua hàng để thực hiện hoặc kiểm tra yêu cầu của bạn.
+            </p>
 
             <form id="lookup-form" onsubmit="handleLookup(event)">
-                <div class="form-group">
-                    <label class="form-label" for="order-id">Mã đơn hàng *</label>
-                    <input type="text" id="order-id" class="form-input" placeholder="Ví dụ: ORD-2026-002" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="phone-number">Số điện thoại mua hàng *</label>
-                    <input type="tel" id="phone-number" class="form-input" placeholder="Ví dụ: 0901234567" required>
-                </div>
-
-                <div style="margin-top: var(--space-lg);">
-                    <button type="submit" class="btn-cta" style="width: 100%; border: none; border-radius: var(--border-radius-pill); padding: 14px;">
-                        Tìm kiếm đơn hàng
+                <label class="form-label" for="phone-number" style="display: block; margin-bottom: var(--space-xs);">Số điện thoại mua hàng *</label>
+                <div style="display: flex; gap: var(--space-md); align-items: stretch; margin-bottom: var(--space-md);">
+                    <input type="tel" id="phone-number" class="form-input" placeholder="Ví dụ: 0901234567" required style="flex: 1; height: 48px;">
+                    <button type="submit" class="btn-cta"
+                        style="border: none; border-radius: var(--border-radius-pill); padding: 0 var(--space-xl); white-space: nowrap; height: 48px; display: flex; align-items: center; justify-content: center;">
+                        Tìm kiếm
                     </button>
                 </div>
 
                 <!-- Error Alert -->
                 <div class="error-alert" id="error-box">
-                    [!] Thông tin đơn hàng hoặc số điện thoại không chính xác. Vui lòng kiểm tra lại.
+                    Tiếc quá, PawPal chưa tìm thấy đơn hàng nào với số điện thoại này. Bạn kiểm tra lại giúp PawPal nha!
                 </div>
             </form>
 
             <!-- Results area -->
             <div class="success-result" id="result-box">
-                <h3 style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h3); margin-bottom: var(--space-sm);">Đơn hàng tìm thấy</h3>
-                
-                <div style="background-color: var(--color-primary-light); border-radius: var(--card-border-radius); padding: var(--space-sm); margin-bottom: var(--space-md); border: 1px solid var(--color-border);">
-                    <p style="margin: 0 0 6px 0; font-weight: bold; color: var(--color-primary-dark);" id="res-order-id">Mã: ...</p>
-                    <p style="margin: 0 0 6px 0; font-size: var(--fs-small); color: var(--color-text-dark);" id="res-product-name">Sản phẩm: ...</p>
-                    <p style="margin: 0; font-size: var(--fs-small); color: var(--color-text-light);" id="res-total">Tổng tiền: ...</p>
+                <h3
+                    style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h3); margin-bottom: var(--space-sm);">
+                    Kết quả tìm thấy</h3>
+
+                <div class="lookup-tabs-container" id="lookupTabs">
+                    <button type="button" class="lookup-tab-btn active" onclick="filterResults('all', this)">Tất cả</button>
+                    <button type="button" class="lookup-tab-btn" onclick="filterResults('service', this)">Dịch vụ (1)</button>
+                    <button type="button" class="lookup-tab-btn" onclick="filterResults('order', this)">Đơn hàng (1)</button>
                 </div>
 
-                <button class="btn-green-outline" id="action-btn" style="width: 100%; padding: 12px; border-radius: var(--border-radius-pill); font-weight: bold;">
-                    Tạo yêu cầu đổi trả ngay
-                </button>
+                <div id="mock-results-container" style="display: flex; flex-direction: column; gap: var(--space-xl);">
+                        <!-- Service Card -->
+                        <div class="service-card result-item item-service" style="display: flex; flex-direction: column; gap: 16px;">
+                            <!-- Top row: Info & Price/Status -->
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+                                <div>
+                                    <h4 style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h4); margin-bottom: 8px; font-weight: 700;">Gói Spa Cắt tỉa (Cho bé cưng)</h4>
+                                    <div style="font-size: var(--fs-small); color: var(--color-text-light); display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                        <span class="random-bk" style="background: var(--color-bg-light); padding: 4px 8px; border-radius: 4px; font-weight: 600; color: var(--color-text-dark);">Lịch hẹn: BK-1234</span>
+                                        <span>•</span>
+                                        <span>Hôm nay, 14:00</span>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 800; color: var(--color-accent); font-size: 1.25rem; margin-bottom: 8px;">350.000đ</div>
+                                    <div class="service-status-badge status-in-progress" style="display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-small); padding: 6px 12px; border-radius: 20px;">
+                                        <span>⚡</span> Đang chăm sóc
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Divider -->
+                            <hr style="border: 0; border-top: 1px dashed var(--color-border); margin: 0;">
+
+                            <!-- Timeline toggle -->
+                            <div>
+                                <button type="button" onclick="this.nextElementSibling.classList.toggle('expanded'); const icon = this.querySelector('.chevron'); icon.style.transform = icon.style.transform === 'rotate(180deg)' ? 'rotate(0)' : 'rotate(180deg)';" style="background: transparent; border: none; color: var(--color-primary); font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 0; font-size: var(--fs-small); transition: color 0.3s ease;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    Xem nhật ký chăm sóc
+                                    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </button>
+                                <div class="timeline-accordion">
+                                    <div class="inner-timeline" style="padding-top: 16px;">
+                                        <div class="timeline-container">
+                                            <div class="timeline-item">
+                                                <div class="timeline-dot" style="background: var(--color-success);"></div>
+                                                <div class="timeline-time">13:00</div>
+                                                <div class="timeline-content">Bé đã đến spa và được đón tiếp chu đáo. Nhân viên đang kiểm tra tình trạng da lông ban đầu.</div>
+                                            </div>
+                                            <div class="timeline-item">
+                                                <div class="timeline-dot" style="background: var(--color-accent);"></div>
+                                                <div class="timeline-time">13:15</div>
+                                                <div class="timeline-content">Đang tắm massage với bọt tuyết chuyên dụng làm sạch sâu.</div>
+                                            </div>
+                                            <div class="timeline-item">
+                                                <div class="timeline-dot" style="background: var(--color-border); box-shadow: none;"></div>
+                                                <div class="timeline-time" style="color: var(--color-text-light);">13:45 (Dự kiến)</div>
+                                                <div class="timeline-content" style="color: var(--color-text-light); background: transparent; padding: 0;">Cắt tỉa tạo kiểu theo yêu cầu của ba mẹ...</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+                                <button type="button" class="btn-green-outline" onclick="alert('Vui lòng thiết lập mật khẩu tài khoản tạm để bảo mật quyền lợi trước khi thực hiện Huỷ/Đổi lịch.'); window.location.href='/pages/public/login.html';" style="padding: 10px 24px; border-radius: var(--border-radius-pill); font-weight: 600; font-size: var(--fs-small);">
+                                    Huỷ lịch / Đổi lịch
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Order Card -->
+                        <div class="order-card result-item item-order" style="display: flex; flex-direction: column; gap: 16px;">
+                            <!-- Top row -->
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+                                <div>
+                                    <h4 class="random-ord" style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h4); margin-bottom: 8px; font-weight: 700;">Đơn hàng: ORD-5678</h4>
+                                    <div style="font-size: var(--fs-small); color: var(--color-text-dark); display: flex; flex-direction: column; gap: 6px;">
+                                        <span style="font-weight: 600;">Sản phẩm: Cát vệ sinh cho mèo Catsan 10L (x3)</span>
+                                        <span style="color: var(--color-text-light); display: flex; align-items: center; gap: 4px;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                            Dự kiến giao: Hôm nay
+                                        </span>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 800; color: var(--color-accent); font-size: 1.25rem; margin-bottom: 8px;">520.000đ</div>
+                                    <div class="order-status-badge order-status-shipping" style="display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-small); padding: 6px 12px; border-radius: 20px;">
+                                        <span>🚚</span> Đang giao hàng
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Divider -->
+                            <hr style="border: 0; border-top: 1px dashed var(--color-border); margin: 0;">
+
+                            <div style="font-size: var(--fs-small); color: var(--color-text-light); background: var(--color-bg-light); padding: 12px 16px; border-radius: var(--card-border-radius); display: flex; gap: 8px; align-items: flex-start;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 2px; color: var(--color-primary); flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                <span style="line-height: 1.5;">Trạng thái: Đơn hàng đã đến trạm trung chuyển Tân Bình lúc 09:30. Shipper đang lấy hàng.</span>
+                            </div>
+
+                            <!-- Actions -->
+                            <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+                                <button type="button" class="btn-green-outline" onclick="alert('Vui lòng thiết lập mật khẩu tài khoản tạm để bảo mật quyền lợi trước khi yêu cầu Đổi trả.'); window.location.href='/pages/public/login.html';" style="padding: 10px 24px; border-radius: var(--border-radius-pill); font-weight: 600; font-size: var(--fs-small);">
+                                    Yêu cầu đổi trả
+                                </button>
+                            </div>
+                        </div>
+                </div>
             </div>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer id="site-footer"></footer>
+    <div id="site-footer"></div>
+    <div class="toast-container-custom" id="toastContainer"></div>
 
-    <!-- FAB -->
-    <div id="site-fab"></div>
-
-    <script>
-        function handleLookup(event) {
-            event.preventDefault();
-            const orderIdInput = document.getElementById('order-id').value.trim();
-            const phoneInput = document.getElementById('phone-number').value.trim();
-            const errorBox = document.getElementById('error-box');
-            const resultBox = document.getElementById('result-box');
-
-            errorBox.style.display = 'none';
-            resultBox.style.display = 'none';
-
-            // Giả lập kiểm tra khớp thông tin (Đơn hàng test có sẵn: ORD-2026-002, số điện thoại: 0901234567)
-            if (orderIdInput === 'ORD-2026-002' && phoneInput === '0901234567') {
-                // Hiển thị kết quả tìm thấy đơn hàng
-                document.getElementById('res-order-id').textContent = 'Đơn hàng: ORD-2026-002';
-                document.getElementById('res-product-name').textContent = 'Sản phẩm: Cát vệ sinh cho mèo Catsan 10L (Số lượng: 3)';
-                document.getElementById('res-total').textContent = 'Tổng tiền: 520.000đ';
-                
-                resultBox.style.display = 'block';
-
-                const actionBtn = document.getElementById('action-btn');
-                
-                // Kiểm tra xem đã gửi yêu cầu đổi trả chưa
-                const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
-                const alreadyReturned = returnsList.some(r => r.orderId === 'ORD-2026-002');
-
-                if (alreadyReturned) {
-                    actionBtn.textContent = 'Xem chi tiết yêu cầu đổi trả';
-                    actionBtn.onclick = () => {
-                        window.location.href = '/pages/user/return-detail.html?orderId=ORD-2026-002';
-                    };
-                } else {
-                    actionBtn.textContent = 'Tạo yêu cầu đổi trả ngay';
-                    // Tạo tài khoản tạm hoặc trực tiếp chuyển luồng
-                    actionBtn.onclick = () => {
-                        // Kích hoạt thông báo bảo mật đổi trả khách vãng lai (US 12-7)
-                        alert('Hệ thống đang điều hướng bạn đến trang kích hoạt mật khẩu tài khoản tạm để bảo mật quyền lợi.');
-                        window.location.href = '/pages/user/return-detail.html?orderId=ORD-2026-002';
-                    };
-                }
-            } else {
-                // Hiển thị thông báo lỗi
-                errorBox.style.display = 'block';
-            }
-        }
-    </script>
-
-    <!-- Scripts -->
+    <!-- JS Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="../../assets/js/shared/data-loader.js"></script>
-    <script src="../../assets/js/shared/main.js" defer></script>
     <script src="../../assets/js/shared/components.js" defer></script>
-    <script src="../../assets/js/shared/header-auth.js" defer></script>
+    <script type="module" src="../../assets/js/shared/main.js"></script>
+    <script type="module" src="../../assets/js/shared/auth.js"></script>
+    <script src="../../assets/js/public/return-guest.js"></script>
+    <div id="site-fab"></div>
 </body>
+
 </html>

@@ -38,6 +38,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         buyNowBtn.addEventListener('click', handleBuyNow);
     }
 
+    // Favorite Product functionality
+    const favoriteProductBtn = document.getElementById('favoriteProductBtn');
+    if (favoriteProductBtn) {
+        favoriteProductBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            if (!user) {
+                showToast('Vui lòng đăng nhập để thêm vào danh sách yêu thích!', 'warning');
+                return;
+            }
+            // Toggle active state
+            favoriteProductBtn.classList.toggle('active');
+            const counter = document.getElementById('favoriteCounter');
+            if (counter) {
+                let current = parseInt(counter.textContent) || 120;
+                if (favoriteProductBtn.classList.contains('active')) {
+                    counter.textContent = `${current + 1} lượt thích`;
+                    showToast('Đã thêm vào danh sách yêu thích', 'success');
+                } else {
+                    counter.textContent = `${current - 1} lượt thích`;
+                    showToast('Đã bỏ khỏi danh sách yêu thích', 'success');
+                }
+            }
+        });
+    }
+
+    // Related products wishlist buttons
+    document.querySelectorAll('.wishlist-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            if (!user) {
+                showToast('Vui lòng đăng nhập để thêm vào danh sách yêu thích!', 'warning');
+                return;
+            }
+            btn.classList.toggle('active');
+            if (btn.classList.contains('active')) {
+                showToast('Đã thêm vào danh sách yêu thích', 'success');
+            } else {
+                showToast('Đã bỏ khỏi danh sách yêu thích', 'success');
+            }
+        });
+    });
+
     // Quantity controls
     const decreaseQtyBtn = document.getElementById('decreaseQty');
     const increaseQtyBtn = document.getElementById('increaseQty');
@@ -95,12 +139,9 @@ function navigateGallery(direction) {
  */
 function handleAddToCart() {
     // Check if user is logged in
-    const user = JSON.parse(localStorage.getItem('pawpal_user') || 'null');
+    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (!user) {
         showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
-        setTimeout(() => {
-            window.location.href = '/pages/public/login.html';
-        }, 1500);
         return;
     }
 
@@ -137,16 +178,6 @@ function handleAddToCart() {
  * Handle Buy Now - Add product to cart and redirect to checkout
  */
 function handleBuyNow() {
-    // Check if user is logged in
-    const user = JSON.parse(localStorage.getItem('pawpal_user') || 'null');
-    if (!user) {
-        showToast('Vui lòng đăng nhập để mua hàng', 'warning');
-        setTimeout(() => {
-            window.location.href = '/pages/public/login.html';
-        }, 1500);
-        return;
-    }
-
     const product = getCurrentProduct();
     const quantity = parseInt(document.getElementById('quantity').value) || 1;
     
@@ -384,6 +415,43 @@ function renderProductDetails(product) {
     if (mainImage) {
         mainImage.src = product.image;
         mainImage.alt = product.name;
+    }
+    
+    // Generate Thumbnails
+    const thumbnailsContainer = document.getElementById('thumbnails');
+    if (thumbnailsContainer && product.image) {
+        thumbnailsContainer.innerHTML = '';
+        // Mock gallery images
+        const gallery = [
+            product.image,
+            product.image,
+            product.image,
+            product.image
+        ];
+        
+        gallery.forEach((imgSrc, index) => {
+            const thumb = document.createElement('div');
+            thumb.className = `thumbnail ${index === 0 ? 'active' : ''}`;
+            
+            const img = document.createElement('img');
+            img.src = imgSrc;
+            img.alt = `${product.name} - Thumbnail ${index + 1}`;
+            
+            thumb.appendChild(img);
+            
+            thumb.addEventListener('click', () => {
+                document.querySelectorAll('#thumbnails .thumbnail').forEach(t => t.classList.remove('active'));
+                thumb.classList.add('active');
+                if (mainImage) {
+                    mainImage.src = imgSrc;
+                }
+                if (typeof currentGalleryIndex !== 'undefined') {
+                    currentGalleryIndex = index;
+                }
+            });
+            
+            thumbnailsContainer.appendChild(thumb);
+        });
     }
     
     const productBrand = document.getElementById('productBrand');

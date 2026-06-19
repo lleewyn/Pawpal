@@ -31,7 +31,7 @@ const checkoutState = {
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Load user data
-        checkoutState.user = JSON.parse(localStorage.getItem('pawpal_user') || 'null');
+        checkoutState.user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         
         // Check if this is a "buy now" checkout
         const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
