@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (found) {
             selectedService = found;
             bookingState.serviceId = preselectedServiceId;
-            
+
             // Set the active category tab
             const tabs = document.querySelectorAll('.svc-type-tab');
             tabs.forEach(tab => {
@@ -88,11 +88,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     tab.classList.remove('active');
                 }
             });
-            
+
             // Enable Step 2's next button
             const step2Next = document.getElementById('step2Next');
             if (step2Next) step2Next.disabled = false;
-            
+
             // Pre-render services list with this category and selection
             renderServices(found.category);
             updateSummary();
@@ -366,7 +366,7 @@ function setupScheduleSelection() {
                     validateStep3();
                     updateSummary();
                 } else {
-                    alert('Ngày check-out phải sau ngày check-in, chồng iu nhé.');
+                    alert('Ngày check-out phải sau ngày check-in.');
                     checkOutInput.value = '';
                     document.getElementById('hotelNightsDisplay').style.display = 'none';
                     validateStep3();

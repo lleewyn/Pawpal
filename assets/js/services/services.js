@@ -9,13 +9,13 @@ let filteredServices = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('=== SERVICES PAGE LOADING ===');
-    
+
     // Load services from CSV using DataLoader
     try {
         if (window.DataLoader && typeof window.DataLoader.loadServices === 'function') {
             allServices = await window.DataLoader.loadServices();
             console.log(`✓ Loaded ${allServices.length} services`);
-            
+
             // Apply initial filters and render
             applyFilters();
         } else {
@@ -35,14 +35,14 @@ function showErrorMessage() {
         grid.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: #fff3cd; border-radius: 8px;">
                 <h3 style="color: #856404; margin-bottom: 10px;">⚠️ Không thể tải dữ liệu dịch vụ</h3>
-                <p style="color: #856404;">Vui lòng kiểm tra kết nối và tải lại trang, chồng iu nhé.</p>
+                <p style="color: #856404;">Vui lòng kiểm tra kết nối và tải lại trang.</p>
             </div>
         `;
     }
 }
 
 // 1. Filter Logic
-window.applyFilters = function() {
+window.applyFilters = function () {
     const searchVal = document.getElementById('searchServiceInput')?.value.trim().toLowerCase() || '';
     const categoryFilter = document.querySelector('input[name="categoryFilter"]:checked')?.value || 'all';
     const petFilter = document.querySelector('input[name="petFilter"]:checked')?.value || 'all';
@@ -61,7 +61,7 @@ window.applyFilters = function() {
 
         // 1. Category filter
         const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter;
-        
+
         // 1.5. Pet type filter
         let matchesPet = true;
         if (petFilter !== 'all') {
@@ -86,7 +86,7 @@ window.applyFilters = function() {
         } else if (priceBucketFilter === 'over-300') {
             matchesPrice = service.price > 300000;
         }
-        
+
         // 3. Rating filter (multi-select checkbox)
         let matchesRating = true;
         if (!ratingAllChecked && selectedRatings.length > 0) {
@@ -119,7 +119,7 @@ function renderServices() {
             <div class="empty-state-services">
                 <div class="empty-icon">🔍</div>
                 <h3 class="empty-title">Không tìm thấy dịch vụ</h3>
-                <p class="empty-desc">Rất tiếc, PawPal không tìm thấy dịch vụ nào phù hợp với bộ lọc của chồng iu.</p>
+                <p class="empty-desc">Rất tiếc, PawPal không tìm thấy dịch vụ nào phù hợp với bộ lọc của bạn.</p>
             </div>
         `;
         return;
@@ -198,15 +198,15 @@ function renderServices() {
     // Trigger GSAP fade-in for dynamic cards
     const cards = grid.querySelectorAll('.service-card');
     if (cards.length > 0 && typeof gsap !== 'undefined') {
-        gsap.fromTo(cards, 
-            { opacity: 0, y: 15 }, 
+        gsap.fromTo(cards,
+            { opacity: 0, y: 15 },
             { opacity: 1, y: 0, duration: 0.4, stagger: 0.08, ease: 'power2.out' }
         );
     }
 }
 
 // 3. Clear Filters
-window.clearFilters = function() {
+window.clearFilters = function () {
     const searchInput = document.getElementById('searchServiceInput');
     if (searchInput) searchInput.value = '';
 
@@ -230,7 +230,7 @@ window.clearFilters = function() {
 };
 
 // 4. Update Price Display Text
-window.updatePriceDisplay = function(val) {
+window.updatePriceDisplay = function (val) {
     const display = document.getElementById('priceDisplay');
     if (display) {
         display.textContent = `${parseInt(val, 10).toLocaleString('vi-VN')} VNĐ`;
@@ -238,7 +238,7 @@ window.updatePriceDisplay = function(val) {
 };
 
 // 5. Rating checkbox handlers
-window.handleRatingAllChange = function(checkbox) {
+window.handleRatingAllChange = function (checkbox) {
     if (checkbox.checked) {
         document.querySelectorAll('.rating-star-check').forEach(c => c.checked = false);
     } else {
@@ -248,7 +248,7 @@ window.handleRatingAllChange = function(checkbox) {
     applyFilters();
 };
 
-window.handleRatingStarChange = function() {
+window.handleRatingStarChange = function () {
     const anyStarChecked = [...document.querySelectorAll('.rating-star-check')].some(c => c.checked);
     const ratingAll = document.getElementById('ratingAll');
     if (ratingAll) ratingAll.checked = !anyStarChecked;
@@ -256,7 +256,7 @@ window.handleRatingStarChange = function() {
 };
 
 // 6. Accordion Toggle Logic
-window.toggleAccordion = function(id) {
+window.toggleAccordion = function (id) {
     const accordion = document.getElementById(id);
     if (!accordion) return;
     const trigger = accordion.previousElementSibling;

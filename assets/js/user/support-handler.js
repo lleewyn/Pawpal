@@ -11,13 +11,13 @@
             id: 'faq-1',
             category: 'account',
             title: 'Làm thế nào để thay đổi mật khẩu của tài khoản?',
-            content: 'Chồng iu vui lòng truy cập trang Trang cá nhân => Tab Bảo mật => Nhập mật khẩu hiện tại và Mật khẩu mới rồi bấm Cập nhật bảo mật nhé.'
+            content: 'Bạn vui lòng truy cập trang Trang cá nhân => Tab Bảo mật => Nhập mật khẩu hiện tại và Mật khẩu mới rồi bấm Cập nhật bảo mật nhé.'
         },
         {
             id: 'faq-2',
             category: 'booking',
             title: 'Tôi muốn thay đổi/hủy lịch tắm cho bé cưng phải làm thế nào?',
-            content: 'Nhà mình hoàn toàn có thể tự đổi hoặc huỷ lịch trực tuyến miễn phí trước giờ hẹn ít nhất 2 tiếng tại trang Lịch hẹn của tôi. Sau 2 tiếng chồng iu vui lòng gọi Hotline để nhân viên trợ giúp nha.'
+            content: 'Nhà mình hoàn toàn có thể tự đổi hoặc huỷ lịch trực tuyến miễn phí trước giờ hẹn ít nhất 2 tiếng tại trang Lịch hẹn của tôi. Sau 2 tiếng bạn vui lòng gọi Hotline để nhân viên trợ giúp nha.'
         },
         {
             id: 'faq-3',
@@ -43,7 +43,7 @@
                 {
                     sender: 'cskh',
                     agent: 'Nguyễn Văn B',
-                    text: 'PawPal xin lỗi chồng iu vì sự cố này ạ. Em đã chuyển thông tin giao dịch sang bộ phận Kỹ thuật kiểm soát đối chiếu dòng tiền. Chồng iu đợi em 5 phút ạ!',
+                    text: 'PawPal xin lỗi bạn vì sự cố này ạ. Chúng tôi đã chuyển thông tin giao dịch sang bộ phận Kỹ thuật kiểm soát đối chiếu dòng tiền. Bạn đợi chúng tôi 5 phút ạ!',
                     time: new Date(Date.now() - 600000).toISOString()
                 }
             ],
@@ -143,7 +143,7 @@
         ticket.messages.push({
             sender: 'cskh',
             agent: 'Nguyễn Văn B',
-            text: 'Em đã nhận được phản hồi từ chồng iu rồi ạ. Em đang giải quyết gấp nhé!',
+            text: 'PawPal đã nhận được phản hồi từ bạn rồi ạ. Chúng tôi đang giải quyết gấp nhé!',
             time: new Date().toISOString()
         });
         saveTickets(tickets);
@@ -188,24 +188,24 @@
                 badWordsViolationCount = 0;
                 return {
                     error: true,
-                    text: 'Tài khoản của chồng iu bị khóa chat 15 phút do vi phạm quy tắc ứng xử.'
+                    text: 'Tài khoản của bạn bị khóa chat 15 phút do vi phạm quy tắc ứng xử.'
                 };
             }
             return {
                 error: true,
-                text: 'Vui lòng sử dụng ngôn từ lịch sự khi giao tiếp với em nha chồng iu!'
+                text: 'Vui lòng sử dụng ngôn từ lịch sự khi giao tiếp với chúng tôi nha!'
             };
         }
 
         // Tạo câu trả lời AI giả lập
         setTimeout(() => {
-            let replyText = 'Em nghe đây chồng iu. Hiện tại câu hỏi này em sẽ gửi cho CSKH giải đáp ngay nhé!';
+            let replyText = 'PawPal nghe đây ạ. Hiện tại câu hỏi này chúng tôi sẽ gửi cho CSKH giải đáp ngay nhé!';
             const query = userInput.toLowerCase();
 
             if (query.includes('lịch hẹn') || query.includes('bông')) {
-                replyText = 'Lịch hẹn tắm của bé Bông lúc 14:00 hôm nay đã được xác nhận thành công rồi đó chồng iu.';
+                replyText = 'Lịch hẹn tắm của bé Bông lúc 14:00 hôm nay đã được xác nhận thành công rồi đó ạ.';
             } else if (query.includes('đơn hàng') || query.includes('2026')) {
-                replyText = 'Đơn hàng #ORD-2026 của chồng iu đang được đơn vị giao hàng vận chuyển rồi ạ.';
+                replyText = 'Đơn hàng #ORD-2026 của bạn đang được đơn vị giao hàng vận chuyển rồi ạ.';
             }
 
             onReplyCallback(replyText);

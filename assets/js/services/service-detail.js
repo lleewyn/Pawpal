@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. Parse URL ID
     const urlParams = new URLSearchParams(window.location.search);
     const serviceId = urlParams.get('id');
-    
+
     if (!serviceId) {
         window.location.href = 'services.html';
         return;
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showNotFound();
                 return;
             }
-            
+
             // Populate Details
             populateServiceInfo();
             setupGallery();
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             setupReviews();
             setupStickyBarTrigger();
             setupWishlistAndShare();
-            
+
             // Initial Price Recalculation
             recalculatePrice();
         } else {
@@ -60,7 +60,7 @@ function showNotFound() {
         main.innerHTML = `
             <div class="container-xl text-center" style="padding: 100px 20px;">
                 <h2 style="color: var(--color-primary); font-family: var(--font-heading); margin-bottom: 20px;">Không tìm thấy dịch vụ</h2>
-                <p style="color: var(--color-text-light); margin-bottom: var(--space-md);">Dịch vụ này không tồn tại hoặc đã tạm dừng hoạt động, chồng iu nhé.</p>
+                <p style="color: var(--color-text-light); margin-bottom: var(--space-md);">Dịch vụ này không tồn tại hoặc đã tạm dừng hoạt động.</p>
                 <a href="services.html" class="btn-cta">Quay lại danh sách dịch vụ</a>
             </div>
         `;
@@ -76,7 +76,7 @@ function populateServiceInfo() {
     document.getElementById('detailPetType').textContent = serviceData.petType;
     document.getElementById('detailWeightClass').textContent = serviceData.weightClass.replace(/&/g, 'và');
     document.getElementById('detailDuration').textContent = serviceData.duration || 'Đang cập nhật';
-    
+
     const statusEl = document.getElementById('detailStatus');
     statusEl.textContent = serviceData.status;
 
@@ -104,7 +104,7 @@ function populateServiceInfo() {
 // 2. Set up gallery & thumbnails
 function setupGallery() {
     const mainImg = document.getElementById('mainShowcaseImg');
-    mainImg.onerror = function() {
+    mainImg.onerror = function () {
         this.onerror = null;
         this.src = '../../assets/images/services/' + (serviceData.category === 'hotel' ? 'hotel.png' : 'spa.png');
     };
@@ -191,7 +191,7 @@ function setupConfigurator() {
     // A. Pet Type Option
     const petGroup = document.getElementById('petTypeGroup');
     const petOptions = document.getElementById('petTypeOptions');
-    
+
     const rawPet = serviceData.petType;
     if (rawPet.includes('/') || rawPet.toLowerCase().includes('và')) {
         // Both dog and cat supported
@@ -211,24 +211,24 @@ function setupConfigurator() {
     } else {
         selectedPetType = rawPet.includes('Chó') ? 'Chó' : (rawPet.includes('Mèo') ? 'Mèo' : 'Tất cả');
     }
-    
+
     // B. Weight Class Options
     const weightOptions = document.getElementById('weightClassOptions');
     const rawWeight = serviceData.weightClass;
-    
+
     let weightList = ['Dưới 5kg', '5kg - 10kg', 'Trên 10kg']; // Default choices
     if (rawWeight.includes('/') || rawWeight.includes('–')) {
         weightList = rawWeight.split(/[\/–]/).map(w => w.trim());
     } else if (rawWeight !== 'Tất cả' && !rawWeight.includes('Tất cả')) {
         weightList = [rawWeight];
     }
-    
+
     weightOptions.innerHTML = weightList.map((w, idx) => `
         <button class="config-pill-btn ${idx === 0 ? 'active' : ''}" data-val="${w}">${w.replace(/&/g, 'và')}</button>
     `).join('');
-    
+
     selectedWeight = weightList[0];
-    
+
     weightOptions.querySelectorAll('.config-pill-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             weightOptions.querySelectorAll('.config-pill-btn').forEach(b => b.classList.remove('active'));
@@ -237,7 +237,7 @@ function setupConfigurator() {
             recalculatePrice();
         });
     });
-    
+
     // C. Groomer Selection Level (Only for Spa Category)
     const groomerGroup = document.getElementById('groomerGroup');
     if (serviceData.category === 'spa') {
@@ -257,7 +257,7 @@ function setupConfigurator() {
 // 4. Calculate prices with weight and staff surcharge
 function recalculatePrice() {
     let finalPrice = serviceData.price;
-    
+
     // A. Staff level surcharge
     if (serviceData.category === 'spa') {
         if (selectedGroomer === 'senior') {
@@ -266,7 +266,7 @@ function recalculatePrice() {
             finalPrice += 100000;
         }
     }
-    
+
     // B. Weight level surcharge
     // If user picks heavier weight options, we add a logical 40,000 phụ thu per level
     const weightOptions = Array.from(document.querySelectorAll('#weightClassOptions .config-pill-btn'));
@@ -274,19 +274,19 @@ function recalculatePrice() {
     if (selectedIdx > 0) {
         finalPrice += (selectedIdx * 40000);
     }
-    
+
     // C. Calculate member tier prices
     const silverPrice = Math.round(finalPrice * 0.95);
     const goldPrice = Math.round(finalPrice * 0.90);
     const diamondPrice = Math.round(finalPrice * 0.85);
-    
+
     // D. Update UI
     animatePriceChange('detailBasePrice', finalPrice);
     animatePriceChange('priceTierSilver', silverPrice);
     animatePriceChange('priceTierGold', goldPrice);
     animatePriceChange('priceTierDiamond', diamondPrice);
     animatePriceChange('stickyPriceVal', finalPrice);
-    
+
     // E. Update booking URLs
     const bookingParams = new URLSearchParams({
         service: serviceData.serviceId,
@@ -295,7 +295,7 @@ function recalculatePrice() {
         groomer: selectedGroomer,
         price: finalPrice
     });
-    
+
     const bookingUrl = `booking.html?${bookingParams.toString()}`;
     const stickyBookAction = document.getElementById('btnStickyBookAction');
     if (stickyBookAction) {
@@ -320,13 +320,13 @@ function setupTimelineAndBenefits() {
         'Khử mùi hôi cơ thể triệt để, giữ hương thơm lên đến 7 ngày',
         'Cắt móng và mài dũa an toàn chống cào xước'
     ];
-    
+
     if (serviceData.benefits) {
         benefits = serviceData.benefits.split(/[;.\n]/).map(b => b.trim()).filter(b => b.length > 0);
     }
-    
+
     benefitsList.innerHTML = benefits.map(b => `<li>${b.replace(/&/g, 'và')}</li>`).join('');
-    
+
     // Timeline
     const timeline = document.getElementById('checklistTimeline');
     let checklist = [
@@ -339,7 +339,7 @@ function setupTimelineAndBenefits() {
         { step: 'Sấy khô tạo phồng', desc: 'Sấy bằng luồng khí ấm chuyên dụng kết hợp chải tơi lông' },
         { step: 'Chải lông hoàn thiện', desc: 'Xịt dưỡng chất thơm thiên nhiên bảo vệ lông da hoàn chỉnh' }
     ];
-    
+
     if (serviceData.checklist) {
         const rawSteps = serviceData.checklist.split(/[;.\n]/).map(s => s.trim()).filter(s => s.length > 0);
         if (rawSteps.length > 0) {
@@ -351,7 +351,7 @@ function setupTimelineAndBenefits() {
             });
         }
     }
-    
+
     timeline.innerHTML = checklist.map((item, idx) => `
         <div class="timeline-step-item" id="timelineStep-${idx}">
             <div class="timeline-bullet"></div>
@@ -361,7 +361,7 @@ function setupTimelineAndBenefits() {
             </div>
         </div>
     `).join('');
-    
+
     // GSAP ScrollTrigger to activate steps on scroll
     setTimeout(() => {
         if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
@@ -385,16 +385,16 @@ function setupTimelineAndBenefits() {
 function setupAmenities() {
     const container = document.getElementById('amenitiesGrid');
     if (!container) return;
-    
+
     let amenities = [];
     if (serviceData.amenities) {
         amenities = serviceData.amenities.split(/[,;\n]/).map(a => a.trim()).filter(a => a.length > 0);
     }
-    
+
     if (amenities.length === 0) {
         amenities = ['Phòng điều hòa 26 độ C', 'Máy sấy giảm tiếng ồn', 'Dầu tắm thảo dược dịu nhẹ'];
     }
-    
+
     container.innerHTML = amenities.map(amenity => `
         <div class="amenity-card-item">
             <div class="amenity-icon-wrapper">
@@ -413,13 +413,13 @@ function setupAmenities() {
 function setupFAQs() {
     const container = document.getElementById('faqList');
     if (!container) return;
-    
+
     const faqs = [
-        { q: 'Gói dịch vụ này có phát sinh thêm phụ phí nào khác không?', a: 'Giá dịch vụ sẽ dựa trên cấu hình cân nặng và cấp bậc nhân viên do chồng iu chọn ở trên. PawPal cam kết không tự ý thu thêm bất kỳ khoản phí ngoài nào nếu không có sự đồng ý trước của gia đình.' },
+        { q: 'Gói dịch vụ này có phát sinh thêm phụ phí nào khác không?', a: 'Giá dịch vụ sẽ dựa trên cấu hình cân nặng và cấp bậc nhân viên do bạn chọn ở trên. PawPal cam kết không tự ý thu thêm bất kỳ khoản phí ngoài nào nếu không có sự đồng ý trước của gia đình.' },
         { q: 'Quy trình sấy khô có làm bé cưng bị hoảng sợ hay bỏng không?', a: 'Dạ hoàn toàn không ạ! PawPal sử dụng máy sấy luồng gió ấm chuyên dụng giảm tiếng ồn xuống mức thấp nhất, kết hợp với các kỹ thuật trấn an giúp bé thư giãn, không làm bé bị giật mình hay bỏng rát.' },
-        { q: 'Tôi có cần đặt lịch trước bao lâu?', a: 'PawPal khuyến khích chồng iu đặt lịch trước ít nhất 1 ngày để chúng em có thể sắp xếp chuyên viên phù hợp và chuẩn bị chu đáo nhất đón bé ạ.' }
+        { q: 'Tôi có cần đặt lịch trước bao lâu?', a: 'PawPal khuyến khích bạn đặt lịch trước ít nhất 1 ngày để chúng em có thể sắp xếp chuyên viên phù hợp và chuẩn bị chu đáo nhất đón bé ạ.' }
     ];
-    
+
     container.innerHTML = faqs.map((faq, idx) => `
         <div class="faq-accordion-item">
             <button class="faq-accordion-trigger" onclick="toggleFaqAccordion('faqAcc-${idx}')">
@@ -431,12 +431,12 @@ function setupFAQs() {
             </div>
         </div>
     `).join('');
-    
+
     // Register global toggle function
-    window.toggleFaqAccordion = function(id) {
+    window.toggleFaqAccordion = function (id) {
         const panel = document.getElementById(id);
         const trigger = panel.previousElementSibling;
-        
+
         if (panel.style.display === 'none') {
             trigger.classList.add('active');
             gsap.set(panel, { display: 'block', height: 0, opacity: 0 });
@@ -467,17 +467,17 @@ function setupReviews() {
     // Populate score block
     document.getElementById('averageScore').textContent = serviceData.rating.toFixed(1);
     document.getElementById('totalReviewsCount').textContent = `Dựa trên ${serviceData.reviewCount} lượt đánh giá thực tế`;
-    
+
     // Generate reviews based on rating and category
     mockReviews = [
-        { name: 'N***A', tier: 'gold', tierName: 'Hội viên Vàng', rating: 5, date: '12/06/2026', text: 'Nhân viên cẩn thận tắm cho bé cún nhà mình rất kỹ, sấy lông phồng thơm mềm mượt lắm. Sẽ tiếp tục đặt lịch.', images: ['assets/images/services/spa.png'], sellerReply: 'Cảm ơn chồng iu đã tin tưởng PawPal ạ! Tụi em luôn mong được đón bé tới làm điệu tiếp nhé!' },
+        { name: 'N***A', tier: 'gold', tierName: 'Hội viên Vàng', rating: 5, date: '12/06/2026', text: 'Nhân viên cẩn thận tắm cho bé cún nhà mình rất kỹ, sấy lông phồng thơm mềm mượt lắm. Sẽ tiếp tục đặt lịch.', images: ['assets/images/services/spa.png'], sellerReply: 'Cảm ơn bạn đã tin tưởng PawPal ạ! Tụi em luôn mong được đón bé tới làm điệu tiếp nhé!' },
         { name: 'M***H', tier: 'silver', tierName: 'Hội viên Bạc', rating: 5, date: '10/06/2026', text: 'Bé mèo nhà mình rất nhát nước nhưng các bạn chuyên viên dỗ dành khéo lắm, tắm khô xong thơm tho sạch sẽ.', images: [] },
-        { name: 'T***V', tier: 'diamond', tierName: 'Hội viên Kim Cương', rating: 4, date: '08/06/2026', text: 'Dịch vụ tốt, cơ sở vật chất phòng tắm ấm áp điều hòa dễ chịu. Đáng tiền lắm cưng.', images: ['assets/images/services/hotel.png'], sellerReply: 'PawPal rất vui vì mang lại trải nghiệm tốt cho bé. Nếu có góp ý gì thêm chồng iu cứ dặn nhé!' },
+        { name: 'T***V', tier: 'diamond', tierName: 'Hội viên Kim Cương', rating: 4, date: '08/06/2026', text: 'Dịch vụ tốt, cơ sở vật chất phòng tắm ấm áp điều hòa dễ chịu. Đáng tiền lắm cưng.', images: ['assets/images/services/hotel.png'], sellerReply: 'PawPal rất vui vì mang lại trải nghiệm tốt cho bé. Nếu có góp ý gì thêm bạn cứ dặn nhé!' },
         { name: 'H***N', tier: 'silver', tierName: 'Hội viên Bạc', rating: 5, date: '05/06/2026', text: 'Phòng lưu trú sạch sẽ cách âm tốt, camera soi 24/7 rõ nét giúp mình đi công tác yên tâm tuyệt đối.', images: [] }
     ];
-    
+
     renderReviewList('all');
-    
+
     // Set up filter clickers
     const chips = document.querySelectorAll('.review-filter-chip');
     chips.forEach(chip => {
@@ -487,7 +487,7 @@ function setupReviews() {
             renderReviewList(chip.getAttribute('data-filter'));
         });
     });
-    
+
     // Setup Lightbox Close
     document.getElementById('btnLightboxClose').addEventListener('click', () => {
         document.getElementById('lightboxModal').style.display = 'none';
@@ -502,7 +502,7 @@ function setupReviews() {
 function renderReviewList(filter) {
     const container = document.getElementById('reviewsContainer');
     if (!container) return;
-    
+
     let filtered = [...mockReviews];
     if (filter === '5') {
         filtered = mockReviews.filter(r => r.rating === 5);
@@ -511,16 +511,16 @@ function renderReviewList(filter) {
     } else if (filter === 'media') {
         filtered = mockReviews.filter(r => r.images.length > 0);
     }
-    
+
     if (filtered.length === 0) {
         container.innerHTML = '<p style="text-align:center;color:var(--color-text-light);padding:20px;">Chưa có đánh giá phù hợp bộ lọc này.</p>';
         return;
     }
-    
+
     container.innerHTML = filtered.map((r, idx) => {
         const initial = r.name.charAt(0);
         const starsText = '<span class="star filled" aria-hidden="true">★</span>'.repeat(r.rating) + '<span class="star" aria-hidden="true">★</span>'.repeat(5 - r.rating);
-        
+
         return `
             <div class="review-item" data-stars="${r.rating}">
                 <div class="review-header">
@@ -568,7 +568,7 @@ function renderReviewList(filter) {
 }
 
 // Open Lightbox
-window.openLightbox = function(src) {
+window.openLightbox = function (src) {
     const modal = document.getElementById('lightboxModal');
     const img = document.getElementById('lightboxImg');
     img.src = src;
@@ -576,10 +576,10 @@ window.openLightbox = function(src) {
 };
 
 // Vote Helpful click
-window.voteHelpful = function(btnId) {
+window.voteHelpful = function (btnId) {
     const btn = document.getElementById(btnId);
     if (!btn) return;
-    
+
     btn.classList.toggle('active');
     // Using string matching to find and update count, as the structure has text and svg
     const htmlStr = btn.innerHTML;
@@ -599,7 +599,7 @@ window.voteHelpful = function(btnId) {
 function setupStickyBarTrigger() {
     const bar = document.getElementById('stickyBookingBar');
     if (!bar) return;
-    
+
     window.addEventListener('scroll', () => {
         if (window.scrollY > 300) {
             bar.classList.add('show');
@@ -613,13 +613,13 @@ function setupStickyBarTrigger() {
 function setupWishlistAndShare() {
     const likeBtn = document.getElementById('btnLikeService');
     const shareBtn = document.getElementById('btnShareService');
-    
+
     // Check if liked in localStorage
     const savedWishlist = JSON.parse(localStorage.getItem('pawpal_wishlist_services') || '[]');
     currentLikedState = savedWishlist.includes(serviceData.serviceId);
-    
+
     updateLikeButtonUI();
-    
+
     likeBtn.addEventListener('click', () => {
         let list = JSON.parse(localStorage.getItem('pawpal_wishlist_services') || '[]');
         if (currentLikedState) {
@@ -629,12 +629,12 @@ function setupWishlistAndShare() {
         } else {
             list.push(serviceData.serviceId);
             currentLikedState = true;
-            showToast('Đã lưu dịch vụ vào danh sách yêu thích của chồng iu!');
+            showToast('Đã lưu dịch vụ vào danh sách yêu thích!');
         }
         localStorage.setItem('pawpal_wishlist_services', JSON.stringify(list));
         updateLikeButtonUI();
     });
-    
+
     shareBtn.addEventListener('click', () => {
         // Copy current page URL to clipboard
         navigator.clipboard.writeText(window.location.href).then(() => {
@@ -648,7 +648,7 @@ function setupWishlistAndShare() {
 function updateLikeButtonUI() {
     const likeBtn = document.getElementById('btnLikeService');
     const likeText = document.getElementById('likeText');
-    
+
     if (currentLikedState) {
         likeBtn.classList.add('liked');
         likeText.textContent = 'Đã lưu yêu thích';
@@ -662,7 +662,7 @@ function updateLikeButtonUI() {
 function showToast(message) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
-    
+
     const toast = document.createElement('div');
     toast.className = 'toast-custom toast-success';
     toast.innerHTML = `
@@ -671,16 +671,16 @@ function showToast(message) {
             <span class="toast-custom-message">${message}</span>
         </div>
     `;
-    
+
     container.appendChild(toast);
-    
+
     if (typeof gsap !== 'undefined') {
-        gsap.fromTo(toast, 
+        gsap.fromTo(toast,
             { opacity: 0, y: 50, scale: 0.9 },
             { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: 'back.out(1.7)' }
         );
     }
-    
+
     setTimeout(() => {
         if (typeof gsap !== 'undefined') {
             gsap.to(toast, {

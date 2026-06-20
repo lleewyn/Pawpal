@@ -4,85 +4,86 @@
    US 6-1, 6-2: Hủy lịch
    ========================================================================== */
 
+import { mockBookings, statusLabels, formatDate, formatPrice } from './bookings.js';
+
 let currentBooking = null;
 let bannerTimeout = null;
 
 // Initialize page
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const urlParams = new URLSearchParams(window.location.search);
     const bookingId = urlParams.get('id');
-    
+
     if (!bookingId) {
         alert('Không tìm thấy thông tin lịch hẹn');
         window.location.href = 'bookings.html';
         return;
     }
-    
+
     loadBookingDetail(bookingId);
 });
 
 // Load booking detail from data
 function loadBookingDetail(bookingId) {
-    // Get data from bookings.js
-    const bookingsData = window.BookingsData;
-    if (!bookingsData) {
-        console.error('BookingsData not found');
-        return;
-    }
-    
     // Find booking by ID
-    currentBooking = bookingsData.mockBookings.find(b => b.id === bookingId);
-    
+    currentBooking = mockBookings.find(b => b.id === bookingId);
+
     if (!currentBooking) {
         alert('Không tìm thấy lịch hẹn này');
         window.location.href = 'bookings.html';
         return;
     }
-    
+
     // Render booking detail
-    renderBookingDetail(currentBooking, bookingsData);
-    
+    renderBookingDetail(currentBooking);
+
     // Check if booking can be modified (US 5-1)
     checkBookingModifiability(currentBooking);
 }
 
 // Render booking detail to page
-function renderBookingDetail(booking, bookingsData) {
+function renderBookingDetail(booking) {
     // Header status badge
     const headerStatusBadge = document.getElementById('headerStatusBadge');
     headerStatusBadge.className = `badge-status badge-${booking.status}`;
-    headerStatusBadge.textContent = bookingsData.statusLabels[booking.status];
-    
+    headerStatusBadge.textContent = statusLabels[booking.status];
+
+    // Status info in summary card
+    const statusInfo = document.getElementById('statusInfo');
+    if (statusInfo) {
+        statusInfo.innerHTML = `<span class="badge-status badge-${booking.status}">${statusLabels[booking.status]}</span>`;
+    }
+
     // Summary card
     document.getElementById('bookingCode').textContent = booking.id;
     document.getElementById('bannerBookingCode').textContent = booking.id;
-    
+
     const petBreed = booking.petBreed || 'Poodle';
     const petWeight = booking.petWeight || '5kg';
     document.getElementById('petInfo').innerHTML = `${booking.petEmoji} ${booking.petName} (${petBreed}, ${petWeight})`;
-    
+
     const servicePackage = booking.package ? ` - ${booking.package}` : '';
     document.getElementById('serviceInfo').textContent = `${booking.service}${servicePackage}`;
-    
+
     // Date/time
-    let dateTimeText = bookingsData.formatDate(booking.date);
+    let dateTimeText = formatDate(booking.date);
     if (booking.timeStart) {
         dateTimeText += ` | ${booking.timeStart} - ${booking.timeEnd}`;
     } else if (booking.dateEnd) {
-        dateTimeText = `${dateTimeText} - ${bookingsData.formatDate(booking.dateEnd)}`;
+        dateTimeText = `${dateTimeText} - ${formatDate(booking.dateEnd)}`;
     }
     document.getElementById('dateTimeInfo').textContent = dateTimeText;
-    
+
     // Staff
     if (booking.staff) {
         document.getElementById('staffInfo').innerHTML = `👤 ${booking.staff}`;
     } else {
         document.getElementById('staffInfo').textContent = 'Chưa phân công';
     }
-    
+
     // Price
-    document.getElementById('priceInfo').textContent = `💰 ${bookingsData.formatPrice(booking.price)}`;
-    
+    document.getElementById('priceInfo').textContent = `💰 ${formatPrice(booking.price)}`;
+
     // Note
     if (booking.note) {
         document.getElementById('noteRow').style.display = 'flex';
@@ -95,11 +96,11 @@ function renderBookingDetail(booking, bookingsData) {
 function checkBookingModifiability(booking) {
     const btnChangeSchedule = document.getElementById('btnChangeSchedule');
     const btnCancelBooking = document.getElementById('btnCancelBooking');
-    
+
     // Calculate time difference
     const now = new Date();
     let bookingDateTime;
-    
+
     if (booking.timeStart) {
         // Parse date and time
         const [year, month, day] = booking.date.split('-');
@@ -110,40 +111,38 @@ function checkBookingModifiability(booking) {
         bookingDateTime = new Date(booking.date);
         bookingDateTime.setHours(9, 0, 0, 0); // Assume 9:00 AM check-in
     }
-    
+
     const diffMinutes = (bookingDateTime - now) / (1000 * 60);
-    
-    // US 5-1: Khóa nút "Thay đổi lịch" nếu < 120 phút HOẶC đang thực hiện
-    const canModify = diffMinutes >= 120 && booking.status !== 'in-progress';
-    
+
+    // US 5-1: Ẩn nút "Thay đổi lịch" nếu < 120 phút (2 tiếng) HOẶC đang thực hiện/hoàn thành/đã hủy
+    const canModify = diffMinutes >= 120 && booking.status !== 'in-progress' && booking.status !== 'completed' && booking.status !== 'cancelled';
+
     if (!canModify) {
-        btnChangeSchedule.disabled = true;
-        btnChangeSchedule.title = 'Đã quá thời gian thay đổi lịch trực tuyến. Vui lòng liên hệ hotline.';
+        btnChangeSchedule.style.display = 'none';
+    } else {
+        btnChangeSchedule.style.display = 'inline-flex';
     }
-    
-    // Disable cancel button for completed or cancelled bookings
-    if (booking.status === 'completed' || booking.status === 'cancelled') {
-        btnCancelBooking.disabled = true;
-        btnCancelBooking.title = 'Không thể hủy lịch hẹn này';
-    }
-    
-    // US 6-1: Chặn hủy lịch tự động nếu sát giờ hẹn < 2 tiếng (120 phút)
-    if (diffMinutes < 120 && booking.status !== 'pending') {
-        btnCancelBooking.disabled = true;
-        btnCancelBooking.title = 'Đã quá thời gian hủy trực tuyến. Vui lòng liên hệ hotline.';
+
+    // US 6-1: Ẩn nút "Hủy lịch hẹn" nếu < 1440 phút (24 tiếng) HOẶC không phải là pending/confirmed
+    const canCancel = diffMinutes >= 1440 && (booking.status === 'pending' || booking.status === 'confirmed');
+
+    if (!canCancel) {
+        btnCancelBooking.style.display = 'none';
+    } else {
+        btnCancelBooking.style.display = 'inline-flex';
     }
 }
 
 // Handle change schedule button click
 function handleChangeSchedule() {
     const btnChangeSchedule = document.getElementById('btnChangeSchedule');
-    
+
     // US 5-1: If button is disabled, show error banner
     if (btnChangeSchedule.disabled) {
         showErrorBanner();
         return;
     }
-    
+
     // Navigate to change schedule page (to be implemented)
     alert('Tính năng thay đổi lịch đang được phát triển');
     // window.location.href = `booking-change.html?id=${currentBooking.id}`;
@@ -152,16 +151,16 @@ function handleChangeSchedule() {
 // US 5-1: Show error banner
 function showErrorBanner() {
     const banner = document.getElementById('errorBanner');
-    
+
     // Clear any existing timeout
     if (bannerTimeout) {
         clearTimeout(bannerTimeout);
     }
-    
+
     // Show banner
     banner.style.display = 'block';
     banner.classList.remove('hiding');
-    
+
     // Auto hide after 7 seconds (US 5-1 requirement)
     bannerTimeout = setTimeout(() => {
         closeErrorBanner();
@@ -172,7 +171,7 @@ function showErrorBanner() {
 function closeErrorBanner() {
     const banner = document.getElementById('errorBanner');
     banner.classList.add('hiding');
-    
+
     // Hide completely after animation
     setTimeout(() => {
         banner.style.display = 'none';
@@ -186,14 +185,14 @@ window.closeErrorBanner = closeErrorBanner;
 // US 6-1: Handle cancel booking button click
 function handleCancelBooking() {
     const btnCancelBooking = document.getElementById('btnCancelBooking');
-    
+
     // If button is disabled, do nothing
     if (btnCancelBooking.disabled) {
         return;
     }
-    
+
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-    
+
     if (currentUser && currentUser.is_temporary) {
         // Khách vãng lai: Yêu cầu xác thực OTP trước
         showGuestCancelOTPFlow(currentUser);
@@ -202,9 +201,9 @@ function handleCancelBooking() {
         const cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
         document.getElementById('modalBookingCode').textContent = currentBooking.id;
         cancelModal.show();
-        
+
         // Handle confirm cancel button
-        document.getElementById('confirmCancelBtn').onclick = function() {
+        document.getElementById('confirmCancelBtn').onclick = function () {
             confirmCancelBooking();
             cancelModal.hide();
         };
@@ -232,7 +231,7 @@ function showGuestCancelOTPFlow(user) {
                         <div class="form-group mb-3">
                             <label for="cancelOtpInput" class="form-label" style="font-weight:bold;">Nhập mã OTP (Mã test: 555666)</label>
                             <input type="text" id="cancelOtpInput" class="form-control text-center" style="font-size: 1.5rem; letter-spacing: 0.5rem;" maxlength="6" placeholder="******">
-                            <div class="invalid-feedback" id="cancelOtpError" style="display:none;">Mã OTP không chính xác, chồng iu vui lòng thử lại nhé.</div>
+                            <div class="invalid-feedback" id="cancelOtpError" style="display:none;">Mã OTP không chính xác, vui lòng thử lại.</div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -249,7 +248,7 @@ function showGuestCancelOTPFlow(user) {
     modal.show();
 
     // Trigger SMS toast
-    showToast('Mã OTP test của chồng iu là: 555666', 'success');
+    showToast('Mã OTP test của bạn là: 555666', 'success');
 
     const otpInput = document.getElementById('cancelOtpInput');
     const otpError = document.getElementById('cancelOtpError');
@@ -285,7 +284,7 @@ function showGuestActionChoices(user) {
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body text-center">
-                        <p style="font-size:0.95rem; line-height:1.5;">Để tự hủy lịch trực tuyến trên website, chồng iu vui lòng thiết lập mật khẩu cho tài khoản để bảo vệ thông tin nhé!</p>
+                        <p style="font-size:0.95rem; line-height:1.5;">Để tự hủy lịch trực tuyến trên website, bạn vui lòng thiết lập mật khẩu cho tài khoản để bảo vệ thông tin nhé!</p>
                         <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
                             <button class="btn-cta" id="choiceSetupPassBtn">🔑 Thiết lập mật khẩu ngay</button>
                             <a href="tel:0987654321" class="btn-green-outline" style="text-decoration:none;" id="choiceCallHotlineBtn">📞 Gọi Hotline hỗ trợ hủy thủ công</a>
@@ -325,17 +324,17 @@ function confirmCancelBooking() {
     // Update booking status in localStorage bookings database
     const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
     const index = bookings.findIndex(b => b.id === currentBooking.id);
-    
+
     if (index !== -1) {
         bookings[index].status = 'cancelled';
         localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
     }
-    
+
     currentBooking.status = 'cancelled';
-    
+
     // Show success toast
     showToast('Đã hủy lịch hẹn thành công', 'success');
-    
+
     // Redirect back to bookings list after 1.5 seconds
     setTimeout(() => {
         window.location.href = 'bookings.html';
@@ -346,7 +345,7 @@ function confirmCancelBooking() {
 function showToast(message, type = 'info') {
     const toastContainer = document.getElementById('toastContainer');
     if (!toastContainer) return;
-    
+
     const toast = document.createElement('div');
     toast.className = `toast-custom toast-${type}`;
     toast.innerHTML = `
@@ -355,12 +354,12 @@ function showToast(message, type = 'info') {
             <span class="toast-message">${message}</span>
         </div>
     `;
-    
+
     toastContainer.appendChild(toast);
-    
+
     // Show toast
     setTimeout(() => toast.classList.add('show'), 10);
-    
+
     // Hide and remove after 3 seconds
     setTimeout(() => {
         toast.classList.remove('show');
@@ -373,7 +372,7 @@ window.handleChangeSchedule = handleChangeSchedule;
 window.handleCancelBooking = handleCancelBooking;
 
 // Keyboard accessibility: ESC to close banner
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
         const banner = document.getElementById('errorBanner');
         if (banner && banner.style.display !== 'none') {

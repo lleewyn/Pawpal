@@ -1,6 +1,5 @@
-/**
- * notifications.js — Quản lý tương tác UI trên trang cài đặt thông báo của chồng iu
- */
+ * notifications.js — Quản lý tương tác UI trên trang cài đặt thông báo của khách hàng
+    */
 
 document.addEventListener('DOMContentLoaded', () => {
     let deletedQueue = null; // Hàng đợi lưu thông báo vừa xóa để Undo
@@ -36,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sms: document.getElementById('prefSms').checked
         };
         window.PawPalNotifications.saveConfig(newConfig);
-        
+
         // Show toast thông báo lưu thành công
         showNotificationPageToast('Đã lưu cấu hình riêng tư thành công!');
     });

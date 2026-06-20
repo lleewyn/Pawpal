@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,9 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap"
+        rel="stylesheet">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom Style -->
@@ -25,6 +28,7 @@
     <link rel="stylesheet" href="../../assets/css/user/dashboard.css">
     <link rel="stylesheet" href="../../assets/css/user/support.css">
 </head>
+
 <body>
     <div id="site-header"></div>
 
@@ -46,14 +50,16 @@
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div>
                                 <h3 class="panel-title mb-1">Phiếu yêu cầu hỗ trợ</h3>
-                                <p class="text-muted small">Theo dõi tiến trình giải quyết sự cố của chồng iu nhé.</p>
+                                <p class="text-muted small">Theo dõi tiến trình giải quyết sự cố của bạn.</p>
                             </div>
-                            <a href="support-create.html" class="btn-cta" style="padding: 8px 18px; font-size: var(--fs-small);">Gửi yêu cầu mới</a>
+                            <a href="support-create.html" class="btn-cta"
+                                style="padding: 8px 18px; font-size: var(--fs-small);">Gửi yêu cầu mới</a>
                         </div>
 
                         <!-- Danh sách Ticket -->
                         <div class="table-responsive mb-4" id="ticketsTableArea">
-                            <table class="table align-middle" style="border: 2px solid var(--color-border); border-radius: var(--card-border-radius); overflow: hidden;">
+                            <table class="table align-middle"
+                                style="border: 2px solid var(--color-border); border-radius: var(--card-border-radius); overflow: hidden;">
                                 <thead class="table-light">
                                     <tr>
                                         <th scope="col" style="padding: 12px;">Mã Ticket</th>
@@ -72,29 +78,40 @@
                         <!-- Panel xem chi tiết hội thoại Ticket (ẩn ban đầu) -->
                         <div class="card p-4 border-2" id="ticketDetailPanel" style="display: none;">
                             <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                                <h4 id="detailTicketTitle" style="font-weight: 700; color: var(--color-primary-dark); margin: 0;">#Mã - Tiêu đề</h4>
-                                <button class="btn-close-panel" id="btnCloseDetailPanel" style="background:none; border:none; font-size: 1.2rem; cursor:pointer;">&times;</button>
+                                <h4 id="detailTicketTitle"
+                                    style="font-weight: 700; color: var(--color-primary-dark); margin: 0;">#Mã - Tiêu đề
+                                </h4>
+                                <button class="btn-close-panel" id="btnCloseDetailPanel"
+                                    style="background:none; border:none; font-size: 1.2rem; cursor:pointer;">&times;</button>
                             </div>
 
-                            <div class="ticket-timeline-wrapper" id="ticketTimelineMessages" style="max-height: 350px; overflow-y: auto; padding-right: 10px; margin-bottom: 20px;">
+                            <div class="ticket-timeline-wrapper" id="ticketTimelineMessages"
+                                style="max-height: 350px; overflow-y: auto; padding-right: 10px; margin-bottom: 20px;">
                                 <!-- JS renders timeline chat messages here -->
                             </div>
 
                             <!-- Nhập phản hồi -->
                             <div class="reply-editor-area" id="replyEditorArea">
                                 <div class="form-group mb-3">
-                                    <textarea id="replyTextarea" class="form-control" rows="3" placeholder="Nhập tin nhắn trả lời của chồng iu..."></textarea>
+                                    <textarea id="replyTextarea" class="form-control" rows="3"
+                                        placeholder="Nhập tin nhắn trả lời của bạn..."></textarea>
                                 </div>
                                 <div class="d-flex justify-content-between">
-                                    <button class="btn-green-outline" id="btnActionCloseTicket" style="border-radius: var(--border-radius-pill); font-weight: 700; padding: 8px 20px;">Đóng hỗ trợ</button>
-                                    <button class="btn-cta" id="btnSendReply" style="padding: 8px 24px;">Gửi phản hồi</button>
+                                    <button class="btn-green-outline" id="btnActionCloseTicket"
+                                        style="border-radius: var(--border-radius-pill); font-weight: 700; padding: 8px 20px;">Đóng
+                                        hỗ trợ</button>
+                                    <button class="btn-cta" id="btnSendReply" style="padding: 8px 24px;">Gửi phản
+                                        hồi</button>
                                 </div>
                             </div>
 
                             <!-- Khung đánh giá sau khi đóng (ẩn ban đầu) -->
-                            <div class="rating-feedback-area mt-3 p-3 bg-light rounded" id="ratingFeedbackArea" style="display: none;">
-                                <h5 style="font-weight: 700; color: var(--color-primary-dark); margin-bottom: 8px;">Đánh giá chất lượng hỗ trợ</h5>
-                                <p class="text-muted small">Ý kiến đóng góp của chồng iu sẽ giúp em cải thiện dịch vụ tốt hơn ạ!</p>
+                            <div class="rating-feedback-area mt-3 p-3 bg-light rounded" id="ratingFeedbackArea"
+                                style="display: none;">
+                                <h5 style="font-weight: 700; color: var(--color-primary-dark); margin-bottom: 8px;">Đánh
+                                    giá chất lượng hỗ trợ</h5>
+                                <p class="text-muted small">Ý kiến đóng góp của bạn sẽ giúp chúng tôi cải thiện dịch vụ
+                                    tốt hơn ạ!</p>
                                 <div class="star-rating-holder" id="starRatingHolder">
                                     <button class="star-btn" data-value="1">★</button>
                                     <button class="star-btn" data-value="2">★</button>
@@ -103,9 +120,11 @@
                                     <button class="star-btn" data-value="5">★</button>
                                 </div>
                                 <div class="form-group mb-3">
-                                    <input type="text" id="ratingComment" class="form-control" placeholder="Nhận xét ngắn về chất lượng tư vấn của nhân viên...">
+                                    <input type="text" id="ratingComment" class="form-control"
+                                        placeholder="Nhận xét ngắn về chất lượng tư vấn của nhân viên...">
                                 </div>
-                                <button class="btn-cta" id="btnSubmitRating" style="padding: 6px 18px; font-size: var(--fs-small);">Gửi đánh giá</button>
+                                <button class="btn-cta" id="btnSubmitRating"
+                                    style="padding: 6px 18px; font-size: var(--fs-small);">Gửi đánh giá</button>
                             </div>
                         </div>
 
@@ -135,7 +154,7 @@
                 tbody.innerHTML = '';
 
                 if (tickets.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Chồng iu chưa gửi phiếu hỗ trợ nào.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">bạn chưa gửi phiếu hỗ trợ nào.</td></tr>';
                     return;
                 }
 
@@ -176,16 +195,16 @@
 
                 activeTicketId = ticketId;
                 document.getElementById('detailTicketTitle').textContent = `#${ticket.id} - ${ticket.title}`;
-                
+
                 const messagesContainer = document.getElementById('ticketTimelineMessages');
                 messagesContainer.innerHTML = '';
 
                 ticket.messages.forEach(msg => {
                     const item = document.createElement('div');
                     item.className = 'ticket-timeline-item mb-3';
-                    
+
                     const timeStr = new Date(msg.time).toLocaleString('vi-VN');
-                    let senderName = 'Chồng iu';
+                    let senderName = 'bạn';
                     let isCskh = msg.sender === 'cskh';
 
                     if (isCskh) {
@@ -251,7 +270,7 @@
             document.getElementById('btnSubmitRating').addEventListener('click', () => {
                 const comment = document.getElementById('ratingComment').value;
                 window.PawPalSupport.closeAndRateTicket(activeTicketId, currentSelectedRating, comment);
-                alert('PawPal cảm ơn đánh giá của chồng iu rất nhiều ạ!');
+                alert('PawPal cảm ơn đánh giá của bạn rất nhiều ạ!');
                 document.getElementById('ticketDetailPanel').style.display = 'none';
                 renderTable();
             });
@@ -272,4 +291,5 @@
         });
     </script>
 </body>
+
 </html>

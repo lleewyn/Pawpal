@@ -3,7 +3,7 @@
    ========================================================================== */
 
 // Mock data for development
-const mockBookings = [
+export const mockBookings = [
     {
         id: 'BP-123456',
         petName: 'Bé Bông',
@@ -61,7 +61,7 @@ const mockBookings = [
 ];
 
 // Status labels
-const statusLabels = {
+export const statusLabels = {
     'pending': 'Chờ xác nhận',
     'confirmed': 'Đã xác nhận',
     'in-progress': 'Đang thực hiện',
@@ -70,27 +70,34 @@ const statusLabels = {
 };
 
 // Initialize page
-document.addEventListener('DOMContentLoaded', function() {
+function init() {
+    if (!document.getElementById('bookingsList')) return;
     initFilterTabs();
     loadBookings('all');
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
 
 // Initialize filter tabs
 function initFilterTabs() {
     const tabs = document.querySelectorAll('.filter-tab');
-    
+
     tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
+        tab.addEventListener('click', function () {
             // Remove active class from all tabs
             tabs.forEach(t => {
                 t.classList.remove('active');
                 t.setAttribute('aria-selected', 'false');
             });
-            
+
             // Add active class to clicked tab
             this.classList.add('active');
             this.setAttribute('aria-selected', 'true');
-            
+
             // Load bookings for selected status
             const status = this.dataset.status;
             loadBookings(status);
@@ -102,25 +109,30 @@ function initFilterTabs() {
 function loadBookings(status) {
     const bookingsList = document.getElementById('bookingsList');
     const emptyState = document.getElementById('emptyState');
-    
-    // Filter bookings
-    let filteredBookings = mockBookings;
+
+    // Filter and sort bookings
+    let filteredBookings = [...mockBookings];
     if (status !== 'all') {
-        filteredBookings = mockBookings.filter(booking => booking.status === status);
+        filteredBookings = filteredBookings.filter(booking => booking.status === status);
+    } else {
+        // Sort by status for 'all' tab
+        const statusOrder = { 'pending': 1, 'confirmed': 2, 'in-progress': 3, 'completed': 4, 'cancelled': 5 };
+        filteredBookings.sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
     }
-    
-    // Clear current list
-    bookingsList.innerHTML = '';
-    
+
+    // Clear current cards only, preserve emptyState
+    const currentCards = bookingsList.querySelectorAll('.booking-card');
+    currentCards.forEach(card => card.remove());
+
     // Show empty state if no bookings
     if (filteredBookings.length === 0) {
         emptyState.style.display = 'block';
         return;
     }
-    
+
     // Hide empty state
     emptyState.style.display = 'none';
-    
+
     // Render booking cards
     filteredBookings.forEach(booking => {
         const card = createBookingCard(booking);
@@ -134,7 +146,7 @@ function createBookingCard(booking) {
     const card = document.createElement('div');
     card.className = `booking-card status-${booking.status}`;
     card.onclick = () => window.location.href = `booking-detail.html?id=${booking.id}`;
-    
+
     // Format date and time
     let dateTimeText = formatDate(booking.date);
     if (booking.timeStart) {
@@ -143,7 +155,7 @@ function createBookingCard(booking) {
         const nights = calculateNights(booking.date, booking.dateEnd);
         dateTimeText += ` - ${formatDate(booking.dateEnd)} (${nights} đêm)`;
     }
-    
+
     // Card HTML
     card.innerHTML = `
         <div class="booking-card-header">
@@ -160,17 +172,14 @@ function createBookingCard(booking) {
         </div>
         <div class="booking-card-footer">
             <div class="booking-card-price">💰 ${formatPrice(booking.price)}</div>
-            <a href="booking-detail.html?id=${booking.id}" class="booking-card-link" onclick="event.stopPropagation()">
-                Xem chi tiết →
-            </a>
         </div>
     `;
-    
+
     return card;
 }
 
 // Format date (DD/MM/YYYY)
-function formatDate(dateString) {
+export function formatDate(dateString) {
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -188,7 +197,7 @@ function calculateNights(startDate, endDate) {
 }
 
 // Format price (Vietnamese currency)
-function formatPrice(price) {
+export function formatPrice(price) {
     return new Intl.NumberFormat('vi-VN', {
         style: 'currency',
         currency: 'VND'

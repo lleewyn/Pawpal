@@ -2,7 +2,7 @@
  * notifications-handler.js — Quản lý dữ liệu thông báo và sự kiện thời gian thực
  */
 
-(function() {
+(function () {
     const NOTI_KEY = 'pawpal_notifications';
     const CONFIG_KEY = 'pawpal_notification_config';
 
@@ -12,7 +12,7 @@
             id: 'noti-1',
             type: 'service', // service, order, promo
             title: 'Dịch vụ của bé',
-            content: 'Bé Bông đã tắm xong và đang chơi ở khu vực chờ nhé chồng iu!',
+            content: 'Bé Bông đã tắm xong và đang chơi ở khu vực chờ nhé!',
             time: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 phút trước
             read: false,
             link: '/pages/user/pet-diary.html'
@@ -21,7 +21,7 @@
             id: 'noti-2',
             type: 'order',
             title: 'Cập nhật đơn hàng',
-            content: 'Đơn hàng #ORD-2026 của chồng iu đã được bàn giao cho đơn vị vận chuyển.',
+            content: 'Đơn hàng #ORD-2026 của bạn đã được bàn giao cho đơn vị vận chuyển.',
             time: new Date(Date.now() - 15 * 60 * 1000).toISOString(), // 15 phút trước
             read: false,
             link: '/pages/user/orders.html'
@@ -30,7 +30,7 @@
             id: 'noti-3',
             type: 'promo',
             title: 'Ưu đãi đặc quyền',
-            content: 'PawPal gửi tặng chồng iu mã giảm giá 15% dịch vụ Hotel nhân dịp sinh nhật bé cưng!',
+            content: 'PawPal gửi tặng bạn mã giảm giá 15% dịch vụ Hotel nhân dịp sinh nhật bé cưng!',
             time: new Date(Date.now() - 3600 * 1000).toISOString(), // 1 giờ trước
             read: true,
             link: '/pages/user/loyalty.html'
@@ -77,7 +77,7 @@
             if (pets && pets.length > 0) {
                 return pets[0].name;
             }
-        } catch (e) {}
+        } catch (e) { }
         return null;
     }
 
@@ -85,7 +85,7 @@
     function updateHeaderDropdown() {
         const notis = getNotifications();
         const unreadCount = notis.filter(n => !n.read).length;
-        
+
         const badge = document.getElementById('notificationBadge');
         if (badge) {
             if (unreadCount > 0) {
@@ -102,7 +102,7 @@
             if (notis.length === 0) {
                 listContainer.innerHTML = `
                     <div style="padding: var(--space-md); text-align: center; color: var(--color-text-light); font-size: var(--fs-small);">
-                        Chồng iu không có thông báo mới nào.
+                        Bạn không có thông báo mới nào.
                     </div>
                 `;
                 return;
@@ -115,7 +115,7 @@
                 const item = document.createElement('a');
                 item.href = noti.link || '#';
                 item.className = `notification-item-dropdown ${noti.read ? '' : 'unread'}`;
-                
+
                 // SVG Icons tối giản tùy theo phân loại
                 let iconSvg = '';
                 if (noti.type === 'service') {
@@ -181,11 +181,11 @@
         const container = ensureToastContainer();
         const toast = document.createElement('div');
         toast.className = 'toast show';
-        
+
         let borderLeftColor = 'var(--color-success)';
         if (noti.type === 'service') borderLeftColor = 'var(--color-primary)';
         if (noti.type === 'promo') borderLeftColor = 'var(--color-accent)';
-        
+
         toast.style.borderLeft = `4px solid ${borderLeftColor}`;
 
         toast.innerHTML = `
@@ -222,7 +222,7 @@
     // Thêm thông báo mới với các ràng buộc nghiệp vụ
     function addNotification(type, title, content, link = '#') {
         const config = getConfig();
-        
+
         // 1. Kiểm tra cấu hình riêng tư (US 14-4 Chặn thông báo Marketing)
         if (type === 'promo' && !config.promo) {
             console.log('Chặn thông báo tiếp thị do cấu hình riêng tư.');
@@ -290,7 +290,7 @@
         // Mock gửi SMS dự phòng dưới 160 ký tự không dấu
         const cleanText = content.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
         const smsContent = `[PawPal SMS] ${cleanText.substring(0, 130)}...`;
-        console.log(`[SMS SỰ CỐ / DỰ PHÒNG] Đang gửi SMS tới SĐT chồng iu: "${smsContent}"`);
+        console.log(`[SMS SỰ CỐ / DỰ PHÒNG] Đang gửi SMS tới SĐT khách hàng: "${smsContent}"`);
     }
 
     // Đánh dấu đọc tất cả
@@ -300,15 +300,15 @@
         saveNotifications(notis);
     }
 
-    // Giả lập phát sinh thông báo đẩy ngẫu nhiên khi đang lướt web để chồng iu kiểm tra tính năng
+    // Giả lập phát sinh thông báo đẩy ngẫu nhiên khi đang lướt web để kiểm tra tính năng
     function setupMockNotificationSimulator() {
-        // Gửi 1 thông báo sau 20 giây để chồng iu test thời gian thực
+        // Gửi 1 thông báo sau 20 giây để test thời gian thực
         setTimeout(() => {
             const petName = getPetName() || 'Bé cưng';
             addNotification(
                 'service',
                 'Trạng thái Spa',
-                `[Tên Bé] đã hoàn thành xong liệu trình sấy lông mượt mà rồi đó chồng iu!`,
+                `[Tên Bé] đã hoàn thành xong liệu trình sấy lông mượt mà rồi đó!`,
                 '/pages/user/pet-diary.html'
             );
         }, 15000);
