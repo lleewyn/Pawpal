@@ -18,12 +18,7 @@
    Bookings List Page
    ══════════════════════════════════════════════════════════════ */
 
-.bookings-page-title {
-    font-family: var(--font-heading); /* Lora serif */
-    font-size: var(--fs-h2);
-    color: var(--color-primary);
-    margin-bottom: var(--space-xs);
-}
+
 
 .bookings-header .text-muted {
     font-family: var(--font-primary);
@@ -241,12 +236,7 @@
    Booking Detail Page
    ══════════════════════════════════════════════════════════════ */
 
-.booking-detail-title {
-    font-family: var(--font-heading); /* Lora serif */
-    font-size: var(--fs-h2);
-    color: var(--color-primary);
-    margin: 0;
-}
+
 
 .booking-detail-header {
     margin-bottom: var(--space-lg);

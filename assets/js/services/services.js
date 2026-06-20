@@ -16,6 +16,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             allServices = await window.DataLoader.loadServices();
             console.log(`✓ Loaded ${allServices.length} services`);
 
+            // Apply URL filter if present
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryParam = urlParams.get('category');
+            if (categoryParam) {
+                const catRadio = document.querySelector(`input[name="categoryFilter"][value="${categoryParam}"]`);
+                if (catRadio) catRadio.checked = true;
+            }
+
             // Apply initial filters and render
             applyFilters();
         } else {

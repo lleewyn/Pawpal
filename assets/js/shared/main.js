@@ -24,6 +24,16 @@ function initApp() {
 document.addEventListener('headerInjected', function () {
     initActiveNav();
     initMobileNavigation();
+
+    // Cho phép bấm trực tiếp vào mục cha (Desktop) để chuyển trang
+    document.querySelectorAll('.nav-item.dropdown > .nav-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Trên Desktop (>1250px), click thẳng vào link sẽ chuyển trang luôn
+            if (window.innerWidth >= 1250 && this.href && !this.href.endsWith('#')) {
+                window.location.href = this.href;
+            }
+        });
+    });
 });
 
 if (document.readyState === 'loading') {
@@ -108,9 +118,11 @@ function initMobileNavigation() {
         }
     });
 
-    // Close when nav link clicked
+    // Close when nav link clicked (trừ dropdown toggle)
     nav.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', closeDrawer);
+        if (!link.classList.contains('dropdown-toggle')) {
+            link.addEventListener('click', closeDrawer);
+        }
     });
 
     // Close on overlay click (click outside drawer)

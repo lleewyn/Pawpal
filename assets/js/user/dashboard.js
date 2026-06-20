@@ -85,8 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Load user profile data
+    // Load user profile data and dashboard widgets
     loadProfileData(currentUser);
+    loadUpcomingBookings(currentUser);
+    loadMyPets(currentUser);
+    loadRecentOrders(currentUser);
 
     // Password Strength Meter (US 2-3 AC2.3.1)
     initPasswordStrengthMeter();
@@ -108,12 +111,88 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Load Profile Data
 function loadProfileData(user) {
+    // Basic info
     document.getElementById('profileName').textContent = user.name || '-';
     document.getElementById('profilePhone').textContent = user.phone || '-';
-    document.getElementById('profilePoints').textContent = (user.points || 0) + ' Paw Points';
     
-    const accountType = user.is_temporary ? 'Tài khoản tạm' : 'Thành viên chính thức';
-    document.getElementById('profileAccountType').textContent = accountType;
+    // Dashboard Stats & Welcome
+    document.getElementById('welcomeName').textContent = user.name ? user.name.split(' ').pop() : 'bạn';
+    document.getElementById('statPoints').textContent = user.points || 0;
+    
+    const accountType = user.is_temporary ? 'Tài khoản tạm' : 'Thành viên';
+    document.getElementById('statAccountType').textContent = accountType;
+}
+
+// Load Upcoming Bookings
+function loadUpcomingBookings(user) {
+    const container = document.getElementById('upcomingBookingsContainer');
+    const allBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+    // Filter bookings for current user, sort by date/time (assuming upcoming)
+    const userBookings = allBookings.filter(b => b.phone === user.phone);
+    
+    if (userBookings.length === 0) {
+        container.innerHTML = '<p class="text-muted">Chưa có lịch hẹn nào sắp tới.</p>';
+        return;
+    }
+    
+    // Just show the first 2 for dashboard
+    const displayBookings = userBookings.slice(0, 2);
+    let html = '';
+    displayBookings.forEach(booking => {
+        html += `
+            <div class="widget-list-item">
+                <div class="widget-list-item-title">• ${booking.date} - ${booking.time}</div>
+                <p class="widget-list-item-desc">${booking.petName || 'Bé cưng'} (${booking.serviceName || 'Dịch vụ'})</p>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// Load My Pets
+function loadMyPets(user) {
+    const container = document.getElementById('myPetsContainer');
+    const allPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+    const userPets = allPets.filter(p => p.ownerPhone === user.phone);
+    
+    // Update stats
+    document.getElementById('statPetsCount').textContent = userPets.length;
+    
+    if (userPets.length === 0) {
+        container.innerHTML = '<p class="text-muted">Chưa có hồ sơ bé cưng.</p>';
+        return;
+    }
+    
+    const displayPets = userPets.slice(0, 3);
+    let html = '';
+    displayPets.forEach(pet => {
+        html += `
+            <div class="widget-list-item">
+                <div class="widget-list-item-title">• ${pet.name}</div>
+                <p class="widget-list-item-desc">${pet.breed || 'Chưa rõ giống'} - ${pet.age || '?'} tuổi</p>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// Load Recent Orders
+function loadRecentOrders(user) {
+    const container = document.getElementById('recentOrdersContainer');
+    // Using mock data for orders since there's no actual orders DB yet
+    const hasOrders = false; // Toggle to true to see mock orders
+    
+    if (!hasOrders) {
+        container.innerHTML = '<p class="text-muted">Chưa có đơn hàng nào.</p>';
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="widget-list-item">
+            <div class="widget-list-item-title">Đơn #PP-10294</div>
+            <p class="widget-list-item-desc">Trạng thái: Đang giao hàng</p>
+        </div>
+    `;
 }
 
 // Tab Navigation - Removed, handled by URL parameters in inline script

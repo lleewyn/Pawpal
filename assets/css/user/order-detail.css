@@ -26,8 +26,11 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: var(--space-lg);
-    padding-bottom: var(--space-md);
-    border-bottom: 2px solid var(--color-border);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--color-bg-white);
+    border-radius: var(--card-border-radius);
+    border: var(--border-card);
+    box-shadow: var(--shadow-card);
 }
 
 .order-header-left {
@@ -110,6 +113,21 @@
     background: var(--color-danger-light);
     color: var(--color-danger);
 }
+
+/* Status Badge */
+.status-badge {
+    padding: 6px 14px;
+    border-radius: var(--border-radius-pill);
+    font-size: var(--fs-small);
+    font-weight: 700;
+    font-family: var(--font-body);
+}
+
+.status-pending_payment { background: var(--color-neutral-light); color: var(--color-neutral); }
+.status-preparing { background: var(--color-info-light); color: var(--color-info); }
+.status-shipping { background: var(--color-accent-light); color: var(--color-accent-dark); }
+.status-delivered, .status-completed { background: var(--color-success-light); color: var(--color-success); }
+.status-cancelled { background: var(--color-danger-light); color: var(--color-danger); }
 
 /* 2-Column Grid: 65/35 Split */
 .detail-grid {

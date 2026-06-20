@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             setupReviews();
             setupStickyBarTrigger();
             setupWishlistAndShare();
+            setupRelatedServices();
 
             // Initial Price Recalculation
             recalculatePrice();
@@ -693,4 +694,94 @@ function showToast(message) {
             toast.remove();
         }
     }, 3000);
+}
+
+// 11. Related Services
+async function setupRelatedServices() {
+    const container = document.getElementById('relatedServicesGrid');
+    if (!container) return;
+
+    if (typeof window.DataLoader === 'undefined' || typeof window.DataLoader.loadServices !== 'function') return;
+
+    const allServices = await window.DataLoader.loadServices();
+    
+    let related = allServices.filter(s => s.category === serviceData.category && s.serviceId !== serviceData.serviceId);
+    
+    if (related.length < 4) {
+        const others = allServices.filter(s => s.category !== serviceData.category && s.serviceId !== serviceData.serviceId);
+        related = related.concat(others);
+    }
+    
+    related = related.slice(0, 4);
+
+    if (related.length === 0) {
+        container.parentElement.style.display = 'none';
+        return;
+    }
+
+    container.innerHTML = related.map(service => {
+        let displayCategory = 'Dịch vụ';
+        if (service.category === 'spa') displayCategory = 'Spa và Làm đẹp';
+        else if (service.category === 'hotel') displayCategory = 'Khách sạn thú cưng';
+        else if (service.category === 'taxi') displayCategory = 'Taxi đưa đón';
+
+        const formattedPrice = service.price.toLocaleString('vi-VN');
+        const priceUnit = service.priceDisplay.includes('đêm') ? ' / đêm' : '';
+
+        const memberPrice = Math.round(service.price * 0.95);
+        const formattedMemberPrice = memberPrice.toLocaleString('vi-VN');
+
+        const sanitizedDesc = service.description.replace(/&/g, 'và');
+        const sanitizedName = service.name.replace(/&/g, 'và');
+
+        return `
+            <div class="service-card" data-id="${service.serviceId}">
+                <a href="service-detail.html?id=${service.serviceId}" class="service-card-link">
+                    <div class="service-image-wrapper">
+                        <span class="service-category-badge">${displayCategory}</span>
+                        <img src="../../${service.image}" alt="${sanitizedName}" class="service-image" loading="lazy" onerror="this.onerror=null; this.src='../../assets/images/services/${service.category === 'hotel' ? 'hotel.png' : 'spa.png'}'">
+                    </div>
+                    <div class="service-card-info">
+                        <div class="service-card-header">
+                            <span class="service-card-id">${service.serviceId}</span>
+                            <div class="service-card-rating">
+                                <span>★</span>
+                                <span>${service.rating.toFixed(1)} (${service.reviewCount})</span>
+                            </div>
+                        </div>
+                        <h3 class="service-card-title">${sanitizedName}</h3>
+                        <p class="service-card-desc">${sanitizedDesc}</p>
+                        
+                        <div class="service-card-meta">
+                            <div class="service-meta-item">
+                                <span>🐾</span>
+                                <span>${service.petType} (${service.weightClass.replace(/&/g, 'và')})</span>
+                            </div>
+                            ${service.duration ? `
+                            <div class="service-meta-item">
+                                <span>⏱</span>
+                                <span>${service.duration}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="service-card-price-row">
+                            <span class="price-label">Giá niêm yết:</span>
+                            <span class="service-card-price">${formattedPrice} VNĐ<span class="service-card-price-unit">${priceUnit}</span></span>
+                        </div>
+                        <div class="service-card-member-price-row">
+                            <span class="member-price-label">Thành viên:</span>
+                            <span class="service-card-member-price">
+                                <span>${formattedMemberPrice} VNĐ<span class="service-card-price-unit">${priceUnit}</span></span>
+                                <span class="member-badge">PawPass Bạc (-5%)</span>
+                            </span>
+                        </div>
+                    </div>
+                </a>
+                <div class="service-card-actions">
+                    <a href="booking.html?service=${service.serviceId}" class="service-btn-book">Đặt lịch ngay</a>
+                </div>
+            </div>
+        `;
+    }).join('');
 }

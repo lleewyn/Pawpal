@@ -494,10 +494,4 @@
     padding: var(--space-md);
 }
 
-.panel-title {
-    font-family: var(--font-heading);
-    color: var(--color-primary-dark);
-    font-size: var(--fs-h2);
-    margin-bottom: var(--space-sm);
-    font-weight: 600;
-}
+

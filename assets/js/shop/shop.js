@@ -66,6 +66,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         initSuggestionsSidebar();
         initCategoryGrid();
         initFilters();
+        
+        // --- Parse URL parameters ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const categoryParam = urlParams.get('category');
+        if (categoryParam) {
+            let selectedCats = [categoryParam];
+            if (categoryParam === 'food') selectedCats = ['food-dry', 'food-wet', 'bones'];
+            else if (categoryParam === 'care') selectedCats = ['health', 'grooming', 'hygiene'];
+            else if (categoryParam === 'toys') selectedCats = ['toys', 'accessories', 'clothes', 'bowls'];
+            else if (categoryParam === 'other') selectedCats = ['furniture', 'other'];
+
+            state.filters.category = selectedCats;
+            
+            // Update checkbox UI
+            const categoryFilters = document.getElementById('categoryFilters');
+            if (categoryFilters) {
+                categoryFilters.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    if (cb.value === 'all') cb.checked = false;
+                    else cb.checked = selectedCats.includes(cb.value);
+                });
+                
+                // If nothing was checked, fallback to all
+                const checked = categoryFilters.querySelectorAll('input[type="checkbox"]:checked');
+                if (checked.length === 0) {
+                    categoryFilters.querySelector('input[value="all"]').checked = true;
+                    state.filters.category = 'all';
+                }
+            }
+        }
+        // -----------------------------
+
         initToolbar();
         initBrands();
         initMobileFilter();

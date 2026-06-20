@@ -14,12 +14,7 @@
     margin-bottom: var(--space-md);
 }
 
-.care-history-page-title {
-    font-family: var(--font-heading);
-    font-size: var(--fs-h2);
-    color: var(--color-primary);
-    margin: 0;
-}
+
 
 /* ── Session List Header ─────────────────────────────────────────────────── */
 .session-list-header {

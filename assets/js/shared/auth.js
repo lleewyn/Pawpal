@@ -401,8 +401,6 @@ function initAuthForms() {
                 );
             } else if (user.is_temporary) {
                 // Tài khoản tạm của khách vãng lai -> Chuyển sang xác nhận OTP rồi thiết lập mật khẩu
-                showToast('info', 'Tài khoản của bạn đang là tài khoản tạm thời. Hệ thống sẽ gửi mã OTP để xác thực.');
-                
                 loginForm.style.opacity = '0';
                 setTimeout(() => {
                     loginForm.classList.remove('active-form');
@@ -414,14 +412,23 @@ function initAuthForms() {
                     forgotOtpSection.style.opacity = '1';
                     
                     forgotOtpSection.querySelector('.form-title').textContent = 'Xác thực kích hoạt tài khoản';
-                    forgotOtpSection.querySelector('.form-subtitle').textContent = 'Mã xác thực 6 số đã được gửi đến SĐT của bạn.';
+                    forgotOtpSection.querySelector('.form-subtitle').textContent = 'Mã xác thực 6 số đã được gửi đến SĐT của bạn để kích hoạt tài khoản tạm.';
                     
                     window.isGuestActivationFlow = true;
                     window.guestActivationPhone = user.phone;
                     
-                    const btnResend = document.getElementById('btnForgotResendOtp');
-                    if (btnResend) {
-                        btnResend.click(); // Trigger timer and clear inputs
+                    showToast('info', 'Tài khoản của bạn là tài khoản tạm. Mã OTP xác thực: 555666', 6000);
+                    
+                    // Reset and start timer for OTP
+                    const forgotOtpInputs = document.querySelectorAll('.forgot-otp-input');
+                    forgotOtpInputs.forEach((input, idx) => {
+                        input.value = '';
+                        input.disabled = (idx > 0);
+                    });
+                    forgotOtpInputs[0].focus();
+                    
+                    if (typeof window.startForgotOtpTimerFn === 'function') {
+                        window.startForgotOtpTimerFn();
                     }
                 }, 300);
             } else {
@@ -614,6 +621,11 @@ function initAuthForms() {
             forgotPhoneSection.classList.add('d-none');
             forgotOtpSection.classList.remove('d-none');
             
+            // Reset title and subtitle just in case it was changed by guest flow
+            forgotOtpSection.querySelector('.form-title').textContent = 'Nhập mã xác thực';
+            forgotOtpSection.querySelector('.form-subtitle').textContent = 'Mã OTP 6 số đã được gửi đến SĐT của bạn.';
+            window.isGuestActivationFlow = false;
+            
             forgotOtpInputs.forEach((input, idx) => {
                 input.value = '';
                 input.disabled = (idx > 0);
@@ -621,7 +633,9 @@ function initAuthForms() {
             forgotOtpInputs[0].focus();
             
             showToast('info', 'Mã OTP xác thực đã được gửi về SMS: 555666', 6000);
-            startForgotOtpTimer();
+            if (typeof window.startForgotOtpTimerFn === 'function') {
+                window.startForgotOtpTimerFn();
+            }
         });
 
         // Back from OTP to phone input
@@ -678,11 +692,16 @@ function initAuthForms() {
                 duration--;
             }, 1000);
         }
+        
+        // Expose to window so step 1 can call it without clicking the resend button
+        window.startForgotOtpTimerFn = startForgotOtpTimer;
 
         if (btnForgotResendOtp) {
             btnForgotResendOtp.addEventListener('click', () => {
                 showToast('info', 'Mã OTP xác thực mới đã gửi lại: 555666', 6000);
-                startForgotOtpTimer();
+                if (typeof window.startForgotOtpTimerFn === 'function') {
+                    window.startForgotOtpTimerFn();
+                }
                 
                 forgotOtpInputs.forEach((input, idx) => {
                     input.value = '';

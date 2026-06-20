@@ -2,7 +2,7 @@
 3.1.1. Quy trình đăng ký
 Mô tả quy trình 
 Đối với Đăng ký chủ động, quy trình bắt đầu khi người dùng chọn chức năng "Đăng ký" trên giao diện Pawpal và cung cấp các thông tin gồm Họ tên, Số điện thoại và Mật khẩu. Ngay lập tức, Pawpal gửi một mã xác nhận (OTP) về số điện thoại để đảm bảo tài khoản thuộc về đúng chủ nhân. Sau khi nhập mã thành công, tài khoản được kích hoạt ngay lập tức và người dùng có thể đăng nhập, Pawpal điều hướng người dùng vào Trang chủ. Khách hàng được chào đón bằng thông báo chào mừng và nhận ngay 50 điểm thưởng Paw Points để bắt đầu hành trình chăm sóc thú cưng.
-Đối với Định danh lũy tiến dành cho khách hàng vãng lai, Khi khách hàng đặt lịch hoặc mua sắm lần đầu, Pawpal chỉ yêu cầu những thông tin cần thiết cho giao dịch bao gồm Họ tên, Số điện thoại, thông tin cơ bản của bé cưng hoặc Địa chỉ giao nhận sản phẩm. Khách hàng không cần gián đoạn để tạo tài khoản, giao dịch được ưu tiên hoàn tất trước. Sau khi giao dịch hoàn tất, Pawpal sẽ ngầm khởi tạo một "Tài khoản tạm" gắn với số điện thoại khách hàng cung cấp và đồng thời gửi một tin nhắn SMS với nội dung chào mừng, kèm theo đường dẫn thiết lập mật khẩu có hiệu lực trong 48 giờ và thông báo tặng ngay 50 điểm thưởng Paw Points để khuyến khích khách hàng kích hoạt tài khoản. Quy trình chính thức hoàn tất khi khách hàng nhấn vào liên kết, thiết lập mật khẩu, toàn bộ lịch sử đặt lịch và đơn hàng sẽ tự động hiển thị trong tài khoản mới, không cần nhập lại bất cứ thông tin nào.
+Đối với Định danh lũy tiến dành cho khách hàng vãng lai, Khi khách hàng đặt lịch hoặc mua sắm lần đầu, Pawpal chỉ yêu cầu những thông tin cần thiết cho giao dịch bao gồm Họ tên, Số điện thoại, thông tin cơ bản của bé cưng hoặc Địa chỉ giao nhận sản phẩm. Khách hàng không cần gián đoạn để tạo tài khoản, giao dịch được ưu tiên hoàn tt trước. Sau khi giao dịch hoàn tất, Pawpal sẽ ngầm khởi tạo một "Tài khoản tạm" gắn với số điện thoại khách hàng cung cấp và đồng thời gửi một tin nhắn SMS với nội dung chào mừng, kèm theo đường dẫn thiết lập mật khẩu có hiệu lực trong 48 giờ và thông báo tặng ngay 50 điểm thưởng Paw Points để khuyến khích khách hàng kích hoạt tài khoản. Quy trình chính thức hoàn tất khi khách hàng nhấn vào liên kết, thiết lập mật khẩu, toàn bộ lịch sử đặt lịch và đơn hàng sẽ tự động hiển thị trong tài khoản mới, không cần nhập lại bất cứ thông tin nào.
 Ngoài ra, trong trường hợp khách hàng trực tiếp đến cơ sở, Admin có thể hỗ trợ thực hiện quy trình đăng ký nhanh tại quầy chỉ với Họ tên và Số điện thoại để giúp khách hàng sở hữu tài khoản định danh ngay lập tức. Sau đó, Pawpal tự động gửi đường dẫn thiết lập mật khẩu về điện thoại khách hàng để họ hoàn tất kích hoạt khi thuận tiện.
 Quy tắc nghiệp vụ 
 Mỗi số điện thoại chỉ tương ứng với một tài khoản duy nhất trên Pawpal, và phải đúng định dạng nhà mạng Việt Nam.
@@ -340,21 +340,16 @@ Nếu thú cưng chưa có tên trong hồ sơ, Pawpal dùng cụm từ thay th�
 Pawpal kiểm tra trong vòng 5 phút; nếu có 2 thông báo giống nhau gửi cho cùng một khách hàng, thông báo thứ hai tự động bị hủy khách hàng không bị làm phiền nhiều lần.
 3.1.15. Hỗ trợ khách hàng
 Mô tả quy trình
-Quy trình bắt đầu khi khách hàng vào trang "Trung tâm trợ giúp" hoặc nhấn biểu tượng Chat trực tuyến tích hợp trên website. Ngay khi trang tải, Pawpal hiển thị danh sách câu hỏi thường gặp (FAQ) được phân loại rõ ràng theo từng chủ đề: tài khoản, đặt lịch và chính sách. Khách hàng có thể tự tìm câu trả lời qua thanh tìm kiếm thông minh mà không cần đợi nhân viên hỗ trợ.
-Trong trường hợp cần hỗ trợ chuyên sâu hơn, khách hàng chat qua khung chat để kết nối với Pawpal AI. AI tự tra cứu thông tin từ "Lịch hẹn cho bé", "Nhật ký chăm sóc" và "Đơn hàng của tôi" để trả lời cá nhân hóa ngay lập tức khách hàng không cần cung cấp lại mã đơn hàng hay tên thú cưng. Nếu câu trả lời của AI đáp ứng được nhu cầu, khách hàng nhấn "Hài lòng" để kết thúc. Ngược lại, Pawpal hiển thị tùy chọn "Kết nối với nhân viên".
-Khi khách hàng chọn kết nối nhân viên, Pawpal kiểm tra trạng thái sẵn sàng của tư vấn viên; nếu trong giờ làm việc, khách hàng được chuyển sang giao diện Chat trực tiếp ngay lập tức.
-Nếu yêu cầu phát sinh ngoài giờ làm việc hoặc khách hàng muốn gửi khiếu nại bằng văn bản, Pawpal cung cấp form tạo phiếu hỗ trợ. Khách hàng nhập tiêu đề, mô tả chi tiết sự cố và tùy chọn đính kèm ảnh/video minh chứng. Sau khi nhấn "Gửi yêu cầu", Pawpal hiển thị xác nhận kèm mã Ticket riêng. Khách hàng theo dõi tiến độ xử lý, xem phản hồi và gửi thêm thông tin tại màn hình "Yêu cầu của tôi" trên trang cá nhân.
-Quy trình phân nhánh ở giai đoạn kết thúc: sau khi nhận được phản hồi giải quyết từ cửa hàng, khách hàng có thể chọn "Tiếp tục trao đổi" nếu chưa thỏa đáng, hoặc nhấn "Đóng hỗ trợ" để hoàn tất. Ngay khi đóng, Pawpal hiển thị form đánh giá ngắn để khách hàng cho điểm chất lượng hỗ trợ. Quy trình khép lại khi phản hồi được ghi nhận và Pawpal gửi thông báo cảm ơn đến khách hàng.
-
+Quy trình được kích hoạt khi khách hàng nhấn vào biểu tượng Chat trực tuyến tích hợp sẵn trên giao diện website. Toàn bộ quy trình hỗ trợ được tự động hóa hoàn toàn thông qua Pawpal AI.
+Ngay khi khách hàng mở khung Chat và gửi câu hỏi, hệ thống Pawpal sẽ tự động tiếp nhận và định danh tài khoản. Sau đó, Pawpal trích xuất các ngữ cảnh dữ liệu liên quan và đóng gói cùng câu hỏi của khách hàng để gửi yêu cầu sang Nền tảng AI.
+Nền tảng AI bên thứ ba tiếp nhận luồng dữ liệu, tiến hành phân tích và nhận diện ý định của người dùng để tính toán câu trả lời. Sau khi xử lý xong, Nền tảng AI trả kết quả phản hồi về lại cho máy chủ Pawpal. Ngay lập tức, Pawpal hiển thị câu trả lời cá nhân hóa lên khung chat cho khách hàng.
+  
+Khi thắc mắc đã được giải đáp, khách hàng nhấn nút "Kết thúc chat". Quy trình kết thúc khi hệ thống ghi nhận đánh giá.
 Quy tắc nghiệp vụ
-Các yêu cầu hỗ trợ liên quan đến sự cố sức khỏe bé cưng tại Hotel hoặc lỗi thanh toán trực tuyến bắt buộc phải được gắn nhãn "Ưu tiên cao" và xử lý trong vòng 15 phút.
-Trong giờ làm việc (08:00 - 22:00), các Ticket thông thường phải được phản hồi trong tối đa 60 phút. Ngoài giờ làm việc, Pawpal tự động gửi thông báo hẹn thời gian xử lý vào đầu giờ sáng hôm sau.
-Chatbot bắt buộc phải truy xuất được tên bé từ Hồ sơ bé cưng và mã vận đơn từ Đơn hàng của tôi để đưa ra câu trả lời chính xác, tránh bắt khách hàng phải cung cấp lại mã đơn hàng nhiều lần.
-Nhân viên CSKH chỉ được quyền xem và xử lý các Ticket được phân phối cho mình hoặc của nhóm mình phụ trách.
-Toàn bộ lịch sử hỗ trợ và Ticket phải được lưu trữ trong hồ sơ khách hàng để phục vụ công tác tra soát và cải thiện dịch vụ tại module CRM.
+AI bắt buộc phải truy xuất được tên bé cưng và mã đơn hàng từ cơ sở dữ liệu để trò chuyện một cách tự nhiên và chính xác.
+Tính năng hỗ trợ khách hàng luôn sẵn sàng đáp ứng mọi lúc, không phụ thuộc vào giờ hành chính.
+Toàn bộ lịch sử trò chuyện với AI đều được lưu trữ vào hồ sơ khách hàng tại CRM để cửa hàng đối soát và cải thiện chất lượng AI.
 Tình huống ngoại lệ
-Nhân viên hỗ trợ đang bận hoặc offline hết: Chatbot tự động gửi thông báo: : Pawpal thông báo ngay: "Hiện tại các tư vấn viên đều đang bận, bạn vui lòng để lại lời nhắn, chúng tôi sẽ phản hồi sớm nhất trong vòng 1 giờ", khách hàng không bị bỏ rơi mà không nhận được phản hồi nào.
-Khách hàng vãng lai yêu cầu hỗ trợ: Khách vãng lai có thể gửi Ticket chỉ với họ tên, số điện thoại và mô tả vấn đề không cần tài khoản. Pawpal dùng số điện thoại để liên hệ phản hồi và đối chiếu với đơn hàng liên quan."
-Người dùng sử dụng từ ngữ không phù hợp trong Chat Pawpal tự động kích hoạt bộ lọc nội dung, cảnh báo người dùng và có quyền tự động ngắt phiên chat nếu vi phạm nhiều lần.
-Nếu tệp không đúng định dạng hoặc quá dung lượng, Pawpal hiển thị cảnh báo và hướng dẫn khách hàng gửi ảnh qua link Zalo chính thức của PawPal.
-Pawpal tự động kích hoạt lệnh nhắc nhở gửi đến Quản lý cơ sở để yêu cầu kiểm tra và xử lý ngay lập tức.
+Khách hàng vãng lai vẫn có thể sử dụng Chatbot để hỏi các chính sách chung. Nếu muốn tra cứu một đơn hàng cụ thể, AI sẽ yêu cầu khách cung cấp số điện thoại mua hàng ngay trong chat để truy xuất thông tin.
+Nếu phát hiện khách hàng sử dụng từ ngữ xúc phạm, AI sẽ tự động đưa ra lời nhắc nhở và có quyền ngắt phiên chat ngay lập tức nếu vi phạm nhiều lần.
+Chatbot có thể cung cấp số Hotline của cửa hàng cho khách, đồng thời lưu lại toàn bộ đoạn chat và gửi cảnh báo về hệ thống quản lý nội bộ.

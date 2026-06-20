@@ -585,11 +585,12 @@
 /* ── Guest Lookup (Added from HTML) ──────────────────────────────────── */
 .guest-lookup-wrapper {
     max-width: 900px;
-    min-height: 80vh;
+    min-height: 60vh;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    margin: 40px auto;
     padding: var(--space-md) var(--container-padding);
 }
 .guest-lookup-wrapper > .lookup-card {

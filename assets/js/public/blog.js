@@ -24,4 +24,24 @@ document.addEventListener('DOMContentLoaded', () => {
             // TODO: Call API or filter posts logic here
         });
     });
+
+    // --- Parse URL parameters ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryParam = urlParams.get('category');
+    if (categoryParam) {
+        const filterMap = {
+            'dog': 'Chó',
+            'cat': 'Mèo',
+            'tips': 'Kiến thức chăm sóc',
+            'events': 'Khuyến mãi'
+        };
+        const targetFilterText = filterMap[categoryParam];
+        if (targetFilterText) {
+            [...mainFilters, ...subFilters].forEach(btn => {
+                if (btn.textContent.trim() === targetFilterText) {
+                    btn.click();
+                }
+            });
+        }
+    }
 });

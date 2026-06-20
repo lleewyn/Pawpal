@@ -1,0 +1,309 @@
+/* ── Pet Add Page Styling ── */
+:root {
+    --green-dark:   hsl(155, 30%, 22%);
+    --green-mid:    hsl(155, 28%, 35%);
+    --green-light:  hsl(155, 20%, 96%);
+    --gold:         hsl(38, 75%, 50%);
+    --gold-dark:    hsl(38, 65%, 38%);
+    --cream:        #FAF9F6;
+    --border:       #dde5e0;
+    --text-dark:    #2d3732;
+    --text-mid:     #5a6b62;
+    --text-light:   #8fa398;
+    --danger:       #dc2626;
+    --font-heading: 'Lora', Georgia, serif;
+    --font-body:    'DM Sans', system-ui, sans-serif;
+    --radius-sm:    8px;
+    --radius-md:    12px;
+    --radius-pill:  100px;
+}
+
+.pet-add-page {
+    font-family: var(--font-body);
+    background: var(--cream);
+    color: var(--text-dark);
+    min-height: calc(100vh - 110px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 16px 80px;
+}
+
+/* ── Page wrapper ── */
+.pet-add-page .page-wrap {
+    width: 100%;
+    max-width: 850px;
+}
+
+/* ── Back link ── */
+.pet-add-page .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    text-decoration: none;
+    margin-bottom: 28px;
+    transition: color .2s;
+}
+.pet-add-page .back-link:hover { color: var(--green-dark); }
+.pet-add-page .back-link svg { transition: transform .2s; }
+.pet-add-page .back-link:hover svg { transform: translateX(-3px); }
+
+/* ── Page title ── */
+.pet-add-page .page-title {
+    font-family: var(--font-heading);
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--green-dark);
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+.pet-add-page .page-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-mid);
+    margin-bottom: 36px;
+}
+
+/* ── Avatar upload ── */
+.pet-add-page .avatar-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 40px;
+}
+.pet-add-page .avatar-circle {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: var(--green-light);
+    border: 2px dashed var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+    overflow: hidden;
+}
+.pet-add-page .avatar-circle:hover {
+    border-color: var(--green-mid);
+    background: hsl(155, 20%, 92%);
+}
+.pet-add-page .avatar-circle svg { color: var(--green-mid); }
+.pet-add-page .avatar-circle img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: none;
+}
+.pet-add-page .avatar-circle.has-image img { display: block; }
+.pet-add-page .avatar-circle.has-image svg { display: none; }
+.pet-add-page .avatar-hint {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+.pet-add-page .avatar-hint a {
+    color: var(--green-mid);
+    text-decoration: none;
+    font-weight: 600;
+}
+.pet-add-page #avatar-input { display: none; }
+
+/* ── Section label ── */
+.pet-add-page .form-section {
+    margin-bottom: 32px;
+}
+.pet-add-page .section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+/* ── Grid ── */
+.pet-add-page .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+}
+.pet-add-page .form-grid .full { grid-column: 1 / -1; }
+
+/* ── Field ── */
+.pet-add-page .field { display: flex; flex-direction: column; gap: 6px; }
+.pet-add-page .field label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+.pet-add-page .field label .req { color: var(--gold-dark); margin-left: 2px; }
+
+.pet-add-page .field input,
+.pet-add-page .field select,
+.pet-add-page .field textarea {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    width: 100%;
+}
+.pet-add-page .field input::placeholder,
+.pet-add-page .field textarea::placeholder { color: var(--text-light); }
+.pet-add-page .field input:focus,
+.pet-add-page .field select:focus,
+.pet-add-page .field textarea:focus {
+    border-color: var(--green-mid);
+    box-shadow: 0 0 0 3px hsl(155, 28%, 35%, .1);
+}
+.pet-add-page .field input.error { border-color: var(--danger); }
+.pet-add-page .field .error-msg {
+    font-size: 0.75rem;
+    color: var(--danger);
+    display: none;
+}
+.pet-add-page .field input.error + .error-msg { display: block; }
+
+.pet-add-page .field textarea { resize: vertical; min-height: 80px; }
+.pet-add-page .field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235a6b62' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; cursor: pointer; }
+
+/* ── Chip selector (loài, giới tính) ── */
+.pet-add-page .chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.pet-add-page .chip-group input[type="radio"] { display: none; }
+.pet-add-page .chip-group label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--border);
+    background: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    cursor: pointer;
+    transition: border-color .2s, color .2s, background .2s;
+    user-select: none;
+}
+.pet-add-page .chip-group label:hover {
+    border-color: var(--green-mid);
+    color: var(--green-dark);
+}
+.pet-add-page .chip-group input[type="radio"]:checked + label {
+    border-color: var(--green-dark);
+    background: var(--green-light);
+    color: var(--green-dark);
+}
+
+/* ── Vaccine toggle ── */
+.pet-add-page .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+.pet-add-page .toggle-info { display: flex; flex-direction: column; gap: 2px; }
+.pet-add-page .toggle-info span:first-child { font-size: 0.88rem; font-weight: 600; color: var(--text-dark); }
+.pet-add-page .toggle-info span:last-child { font-size: 0.75rem; color: var(--text-light); }
+
+.pet-add-page .toggle-switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+}
+.pet-add-page .toggle-switch input { opacity: 0; width: 0; height: 0; }
+.pet-add-page .toggle-track {
+    position: absolute; inset: 0;
+    background: var(--border);
+    border-radius: 99px;
+    cursor: pointer;
+    transition: background .2s;
+}
+.pet-add-page .toggle-track::before {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    left: 3px; top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform .2s;
+}
+.pet-add-page .toggle-switch input:checked + .toggle-track { background: var(--green-mid); }
+.pet-add-page .toggle-switch input:checked + .toggle-track::before { transform: translateX(18px); }
+
+/* ── Hint text ── */
+.pet-add-page .field-hint {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin-top: 2px;
+}
+
+/* ── Actions ── */
+.pet-add-page .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+}
+
+.pet-add-page .btn-cancel {
+    padding: 10px 24px;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--border);
+    background: transparent;
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    cursor: pointer;
+    transition: border-color .2s, color .2s;
+}
+.pet-add-page .btn-cancel:hover { border-color: var(--text-mid); color: var(--text-dark); }
+
+.pet-add-page .btn-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 28px;
+    border-radius: var(--radius-pill);
+    border: none;
+    background: var(--gold);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--green-dark);
+    cursor: pointer;
+    transition: background .2s, transform .15s;
+    box-shadow: 0 4px 16px hsl(38, 75%, 50%, .25);
+}
+.pet-add-page .btn-save:hover { background: var(--gold-dark); color: #fff; transform: translateY(-1px); }
+.pet-add-page .btn-save:active { transform: translateY(0); }
+
+/* ── Responsive ── */
+@media (max-width: 560px) {
+    .pet-add-page .form-grid { grid-template-columns: 1fr; }
+    .pet-add-page .form-grid .full { grid-column: 1; }
+    .pet-add-page .form-actions { flex-direction: column-reverse; }
+    .pet-add-page .btn-cancel, .pet-add-page .btn-save { width: 100%; justify-content: center; }
+}

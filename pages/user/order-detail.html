@@ -40,112 +40,113 @@
 
         <!-- Main Content -->
         <main class="order-detail-main">
-            <!-- Breadcrumb -->
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/pages/public/index.html">Trang chủ</a></li>
-                    <li class="breadcrumb-item"><a href="/pages/user/dashboard.html">Trang cá nhân</a></li>
-                    <li class="breadcrumb-item"><a href="/pages/user/orders.html">Đơn hàng của tôi</a></li>
-                    <li class="breadcrumb-item active" aria-current="page" id="order-id-breadcrumb">...</li>
-                </ol>
-            </nav>
+            <!-- Back link -->
+            <div style="margin-bottom: var(--space-md);">
+                <a href="/pages/user/orders.html" style="color: var(--color-primary); text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">
+                    ← Quay lại danh sách đơn hàng
+                </a>
+            </div>
 
             <!-- Order Header -->
             <header class="order-detail-header">
                 <div class="order-header-left">
-                    <h1 class="order-title">
-                        Đơn hàng <span id="order-id">...</span>
-                    </h1>
+                    <h4 class="order-title" style="margin-bottom: 4px; font-size: 1.25rem;">
+                        Mã đơn: <span id="order-id">...</span>
+                    </h4>
                     <p class="order-date" id="order-created-date">...</p>
                 </div>
                 <span class="status-badge" id="order-status-badge">...</span>
             </header>
 
-            <!-- Thông tin giao nhận -->
-            <section class="info-card delivery-info">
-                <h3>Thông tin giao nhận</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">Người nhận:</span>
-                        <span class="info-value" id="receiver-name">...</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Số điện thoại:</span>
-                        <span class="info-value" id="receiver-phone">...</span>
-                    </div>
-                    <div class="info-item full-width">
-                        <span class="info-label">Địa chỉ:</span>
-                        <span class="info-value" id="receiver-address">...</span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Phương thức thanh toán -->
-            <section class="info-card payment-info">
-                <h3>Phương thức thanh toán</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">Loại:</span>
-                        <span class="info-value" id="payment-method">...</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Trạng thái:</span>
-                        <span class="payment-status" id="payment-status">...</span>
-                    </div>
-                </div>
-            </section>
-
             <!-- 2 Column Layout: Products + Timeline -->
             <div class="detail-grid">
-                <!-- Left: Products & Summary (65%) -->
-                <section class="products-section">
-                    <h3>Sản phẩm</h3>
-                    <div class="products-list" id="products-list">
-                        <!-- Products rendered by JS -->
-                    </div>
+                <!-- Left: Delivery, Payment, Products & Summary (65%) -->
+                <div class="order-main-content">
+                    
+                    <!-- Thông tin giao nhận -->
+                    <section class="info-card delivery-info">
+                        <h3 style="display: flex; align-items: center; gap: 8px;"><i data-lucide="map-pin" style="width: 20px; height: 20px; color: var(--color-primary);"></i> Thông tin giao nhận</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Người nhận:</span>
+                                <span class="info-value" id="receiver-name">...</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Số điện thoại:</span>
+                                <span class="info-value" id="receiver-phone">...</span>
+                            </div>
+                            <div class="info-item full-width">
+                                <span class="info-label">Địa chỉ:</span>
+                                <span class="info-value" id="receiver-address">...</span>
+                            </div>
+                        </div>
+                    </section>
 
-                    <!-- Order Summary -->
-                    <div class="order-summary-box">
-                        <div class="summary-row">
-                            <span>Tạm tính:</span>
-                            <span id="subtotal">...</span>
+                    <!-- Phương thức thanh toán -->
+                    <section class="info-card payment-info">
+                        <h3 style="display: flex; align-items: center; gap: 8px;"><i data-lucide="credit-card" style="width: 20px; height: 20px; color: var(--color-primary);"></i> Phương thức thanh toán</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Loại:</span>
+                                <span class="info-value" id="payment-method">...</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Trạng thái:</span>
+                                <span class="payment-status" id="payment-status">...</span>
+                            </div>
                         </div>
-                        <div class="summary-row">
-                            <span>Phí vận chuyển:</span>
-                            <span id="shipping-fee">...</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>Giảm giá:</span>
-                            <span id="discount" class="text-danger">...</span>
-                        </div>
-                        <div class="summary-divider"></div>
-                        <div class="summary-row summary-total">
-                            <span>Tổng cộng:</span>
-                            <span id="total" class="total-price">...</span>
-                        </div>
-                    </div>
+                    </section>
 
-                    <!-- Action Buttons -->
-                    <div class="order-actions" id="order-actions">
-                        <!-- Buttons rendered by JS based on status -->
-                    </div>
-
-                    <!-- Guest Notice Banner -->
-                    <div class="guest-notice-banner" id="guest-notice">
-                        <div class="notice-content">
-                            <p><strong>Bạn đang xem với quyền hạn hạn chế</strong></p>
-                            <p>Để thực hiện các thao tác với đơn hàng, vui lòng đăng nhập 
-                               hoặc kích hoạt tài khoản thành viên.</p>
+                    <section class="info-card products-section">
+                        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: var(--space-md);"><i data-lucide="package" style="width: 20px; height: 20px; color: var(--color-primary);"></i> Thông tin sản phẩm</h3>
+                        
+                        <div class="products-list" id="products-list" style="border: none; padding: 0; box-shadow: none; margin-bottom: var(--space-lg);">
+                            <!-- Products rendered by JS -->
                         </div>
-                        <a href="/pages/public/login.html" class="btn-cta-outline">
-                            Đăng nhập ngay
-                        </a>
-                    </div>
-                </section>
+
+                        <!-- Order Summary -->
+                        <div class="order-summary-box" style="background: transparent; padding: 0; margin-bottom: var(--space-lg);">
+                            <div class="summary-row">
+                                <span>Tạm tính:</span>
+                                <span id="subtotal">...</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Phí vận chuyển:</span>
+                                <span id="shipping-fee">...</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Giảm giá:</span>
+                                <span id="discount" class="text-danger">...</span>
+                            </div>
+                            <div class="summary-divider"></div>
+                            <div class="summary-row summary-total">
+                                <span>Tổng cộng:</span>
+                                <span id="total" class="total-price">...</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="order-actions" id="order-actions" style="border-top: 1px solid var(--color-border); padding-top: var(--space-lg);">
+                            <!-- Buttons rendered by JS based on status -->
+                        </div>
+
+                        <!-- Guest Notice Banner -->
+                        <div class="guest-notice-banner" id="guest-notice">
+                            <div class="notice-content">
+                                <p><strong>Bạn đang xem với quyền hạn hạn chế</strong></p>
+                                <p>Để thực hiện các thao tác với đơn hàng, vui lòng đăng nhập 
+                                   hoặc kích hoạt tài khoản thành viên.</p>
+                            </div>
+                            <a href="/pages/public/login.html" class="btn-cta-outline">
+                                Đăng nhập ngay
+                            </a>
+                        </div>
+                    </section>
+                </div>
 
                 <!-- Right: Timeline (35%) -->
-                <aside class="timeline-section">
-                    <h3>Lịch sử trạng thái</h3>
+                <aside class="timeline-section info-card">
+                    <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: var(--space-md);"><i data-lucide="clock" style="width: 20px; height: 20px; color: var(--color-primary);"></i> Lịch sử trạng thái</h3>
                     <div class="timeline" id="order-timeline">
                         <!-- Timeline rendered by JS -->
                     </div>

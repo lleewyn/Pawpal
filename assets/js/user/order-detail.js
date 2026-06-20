@@ -90,7 +90,6 @@ function checkAutoComplete() {
 // Render order header
 function renderOrderHeader() {
     document.getElementById('order-id').textContent = currentOrder.id;
-    document.getElementById('order-id-breadcrumb').textContent = currentOrder.id;
     document.getElementById('order-created-date').textContent = 
         'Đặt ngày ' + formatDate(currentOrder.createdAt);
     

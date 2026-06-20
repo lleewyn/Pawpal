@@ -14,12 +14,7 @@
     margin-bottom: var(--space-md);
 }
 
-.pet-diary-page-title {
-    font-family: var(--font-heading);
-    font-size: var(--fs-h2);
-    color: var(--color-primary);
-    margin: 0 0 var(--space-xs) 0;
-}
+
 
 .pet-diary-subtitle {
     font-size: var(--fs-small);

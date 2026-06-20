@@ -44,33 +44,108 @@
                 <!-- Content Area -->
                 <div class="col-lg-9">
                     
-                    <!-- Tab: Hồ sơ cá nhân -->
+                    <!-- Tab: Tổng quan (Dashboard) -->
                     <div class="dashboard-content-panel" id="profileTab">
-                        <h3 class="panel-title">Hồ sơ cá nhân</h3>
+                        <!-- Welcome Section -->
+                        <div class="dashboard-welcome">
+                            <h2 class="welcome-text">Chào Sen, <span id="welcomeName"></span>!</h2>
+                        </div>
                         
-                        <div class="profile-info-section mt-4">
-                            <div class="info-row">
-                                <span class="info-label">Họ và tên:</span>
-                                <span class="info-value" id="profileName">-</span>
+                        <!-- Stats Bar -->
+                        <div class="dashboard-stats mb-4">
+                            <div class="stat-item">
+                                <span class="stat-value" id="statPoints">0</span>
+                                <span class="stat-label">Paw Points</span>
                             </div>
-                            <div class="info-row">
-                                <span class="info-label">Số điện thoại:</span>
-                                <span class="info-value" id="profilePhone">-</span>
+                            <div class="stat-item">
+                                <span class="stat-value" id="statAccountType">-</span>
+                                <span class="stat-label">Loại tài khoản</span>
                             </div>
-                            <div class="info-row">
-                                <span class="info-label">Điểm thưởng:</span>
-                                <span class="info-value info-value-accent" id="profilePoints">0 Paw Points</span>
+                            <div class="stat-item">
+                                <span class="stat-value" id="statPetsCount">0</span>
+                                <span class="stat-label">Bé cưng</span>
                             </div>
-                            <div class="info-row">
-                                <span class="info-label">Loại tài khoản:</span>
-                                <span class="info-value" id="profileAccountType">-</span>
+                        </div>
+                        
+                        <!-- Grid Layout 2fr 1fr -->
+                        <div class="dashboard-grid">
+                            <!-- CỘT TRÁI (2fr) -->
+                            <div class="dashboard-col-main">
+                                
+                                <!-- Widget: Thông tin cá nhân -->
+                                <div class="dashboard-widget">
+                                    <div class="widget-header">
+                                        <h3 class="widget-title">Thông tin cá nhân</h3>
+                                    </div>
+                                    <div class="profile-info-section mt-2">
+                                        <div class="info-row">
+                                            <span class="info-label">Họ và tên:</span>
+                                            <span class="info-value" id="profileName">-</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Số điện thoại:</span>
+                                            <span class="info-value" id="profilePhone">-</span>
+                                        </div>
+                                        <div class="widget-action mt-3">
+                                            <a href="#" class="widget-link">Cập nhật thông tin</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Widget: Lịch hẹn sắp tới -->
+                                <div class="dashboard-widget mt-4">
+                                    <div class="widget-header">
+                                        <h3 class="widget-title">Lịch hẹn sắp tới</h3>
+                                    </div>
+                                    <div class="widget-content mt-3" id="upcomingBookingsContainer">
+                                        <!-- Javascript will render bookings here -->
+                                        <p class="text-muted">Chưa có lịch hẹn nào sắp tới.</p>
+                                    </div>
+                                    <div class="widget-action mt-3">
+                                        <a href="orders.html?tab=booking" class="widget-link">Xem tất cả lịch hẹn</a>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            
+                            <!-- CỘT PHẢI (1fr) -->
+                            <div class="dashboard-col-side">
+                                
+                                <!-- Widget: Bé cưng của tôi -->
+                                <div class="dashboard-widget">
+                                    <div class="widget-header">
+                                        <h3 class="widget-title">Bé cưng của tôi</h3>
+                                    </div>
+                                    <div class="widget-content mt-3" id="myPetsContainer">
+                                        <!-- Javascript will render pets here -->
+                                        <p class="text-muted">Chưa có hồ sơ bé cưng.</p>
+                                    </div>
+                                    <div class="widget-action mt-3">
+                                        <a href="pet-profile.html" class="widget-link">Thêm bé cưng</a>
+                                    </div>
+                                </div>
+                                
+                                <!-- Widget: Đơn hàng gần đây -->
+                                <div class="dashboard-widget mt-4">
+                                    <div class="widget-header">
+                                        <h3 class="widget-title">Đơn hàng gần đây</h3>
+                                    </div>
+                                    <div class="widget-content mt-3" id="recentOrdersContainer">
+                                        <!-- Javascript will render orders here -->
+                                        <p class="text-muted">Chưa có đơn hàng nào.</p>
+                                    </div>
+                                    <div class="widget-action mt-3">
+                                        <a href="orders.html?tab=shop" class="widget-link">Xem tất cả đơn hàng</a>
+                                    </div>
+                                </div>
+                                
                             </div>
                         </div>
                     </div>
 
                     <!-- Tab: Bảo mật (US 2-3) -->
                     <div class="dashboard-content-panel" id="securityTab" style="display:none;">
-                        <h3 class="panel-title">Bảo mật tài khoản</h3>
+
                         
                         <!-- Warning Banner cho tài khoản tạm (US 2-3 Requirement) -->
                         <div class="alert-warning-custom mb-4" id="tempAccountWarning" style="display:none;">
@@ -120,21 +195,7 @@
                         </form>
                     </div>
 
-                    <!-- Tab: Thông báo -->
-                    <div class="dashboard-content-panel" id="notificationsTab" style="display:none;">
-                        <h3 class="panel-title">Cài đặt thông báo</h3>
-                        <div class="mt-4 text-center text-muted">
-                            Tính năng đang được phát triển 🚧
-                        </div>
-                    </div>
 
-                    <!-- Tab: Cài đặt -->
-                    <div class="dashboard-content-panel" id="preferencesTab" style="display:none;">
-                        <h3 class="panel-title">Cài đặt chung</h3>
-                        <div class="mt-4 text-center text-muted">
-                            Tính năng đang được phát triển 🚧
-                        </div>
-                    </div>
 
                 </div>
             </div>
@@ -178,9 +239,7 @@
             // Show current tab
             const tabMap = {
                 'profile': 'profileTab',
-                'security': 'securityTab',
-                'notifications': 'notificationsTab',
-                'preferences': 'preferencesTab'
+                'security': 'securityTab'
             };
             
             const activeTabId = tabMap[currentTab] || 'profileTab';

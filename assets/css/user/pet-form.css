@@ -377,7 +377,7 @@
 }
 
 .modal-content-large {
-    max-width: 700px;
+    max-width: 850px;
     max-height: 90vh;
     overflow-y: auto;
 }
@@ -425,68 +425,7 @@
     padding-top: var(--space-xs);
 }
 
-/* ── Avatar Upload ──────────────────────────────────────────────────────────── */
-.form-group-avatar {
-    margin-bottom: var(--space-md);
-}
 
-.avatar-upload-wrapper {
-    display: flex;
-    gap: var(--space-md);
-    align-items: flex-start;
-}
-
-.avatar-preview {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 2px solid var(--color-border);
-    flex-shrink: 0;
-    background: var(--color-primary-light);
-}
-
-.avatar-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.avatar-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-primary);
-}
-
-.avatar-upload-controls {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-}
-
-.btn-upload {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-xs);
-    justify-content: center;
-    width: fit-content;
-}
-
-.upload-hint {
-    font-size: var(--fs-small);
-    color: var(--color-text-light);
-    margin: 0;
-}
-
-.upload-error {
-    font-size: var(--fs-small);
-    color: var(--color-danger);
-    margin: 0;
-}
 
 /* ── Form Styles ──────────────────────────────────────────────────────────── */
 .form-group {

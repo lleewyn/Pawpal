@@ -219,23 +219,10 @@
                     <strong>50 Paw Points</strong> thưởng tích lũy cho lần sau.
                 </p>
 
-                <form id="setupPasswordForm" novalidate>
-                    <div class="form-group">
-                        <label for="newPassword">Mật khẩu mới</label>
-                        <input type="password" id="newPassword" placeholder="Tối thiểu 6 ký tự..." required>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPassword">Xác nhận mật khẩu</label>
-                        <input type="password" id="confirmPassword" placeholder="Nhập lại mật khẩu..." required>
-                    </div>
-                    <span id="setupError"
-                        style="color: #ef4444; font-size: 0.8rem; display: none; margin-bottom: 12px;"></span>
-
-                    <div class="setup-actions">
-                        <button type="submit" class="btn-cta btn-setup-submit">Tạo mật khẩu & Nhận điểm</button>
-                        <a href="../../index.html" class="btn-green-outline btn-setup-skip">Bỏ qua</a>
-                    </div>
-                </form>
+                <div class="setup-actions" style="display: flex; gap: 12px; margin-top: 16px;">
+                    <a href="../public/login.html" class="btn-cta" style="flex: 2; text-decoration: none; text-align: center; padding: 12px;">Thiết lập mật khẩu ngay</a>
+                    <a href="../../index.html" class="btn-green-outline btn-setup-skip" style="flex: 1; text-decoration: none; text-align: center; padding: 12px;">Bỏ qua</a>
+                </div>
             </div>
 
             <!-- Thành viên: Xem lịch hẹn hoặc trang chủ -->
@@ -285,49 +272,7 @@
                 document.getElementById('passwordSetupCard').style.display = 'block';
                 document.getElementById('memberActions').style.display = 'none';
 
-                // Handle password submission
-                const form = document.getElementById('setupPasswordForm');
-                const errSpan = document.getElementById('setupError');
-
-                form.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    errSpan.style.display = 'none';
-
-                    const newPassword = document.getElementById('newPassword').value;
-                    const confirmPassword = document.getElementById('confirmPassword').value;
-
-                    if (newPassword.length < 6) {
-                        errSpan.textContent = '⚠️ Mật khẩu phải dài tối thiểu 6 ký tự!';
-                        errSpan.style.display = 'block';
-                        return;
-                    }
-
-                    if (newPassword !== confirmPassword) {
-                        errSpan.textContent = '⚠️ Hai mật khẩu không khớp nhau!';
-                        errSpan.style.display = 'block';
-                        return;
-                    }
-
-                    // Upgrade guest to full member
-                    const usersDb = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
-                    const userIdx = usersDb.findIndex(u => u.phone === targetUser.phone);
-
-                    if (userIdx !== -1) {
-                        usersDb[userIdx].password = newPassword;
-                        usersDb[userIdx].is_temporary = false;
-                        usersDb[userIdx].points = (usersDb[userIdx].points || 0) + 50; // Give 50 loyalty points reward
-
-                        localStorage.setItem('pawpal_users_db', JSON.stringify(usersDb));
-
-                        // Log user in automatically as full user
-                        const loggedUser = { ...usersDb[userIdx] };
-                        delete loggedUser.password;
-                        localStorage.setItem('pawpal_current_user', JSON.stringify(loggedUser));
-
-                        alert('Chúc mừng bạn! Thiết lập mật khẩu thành công và nhận được 50 điểm thưởng Paw Points. Hệ thống sẽ chuyển về Trang Cá Nhân.');
-                        window.location.href = '../user/dashboard.html';
-                    }
-                });
+                // Display logic is enough, logic for password is now handled in login.js
             } else {
                 // Already a member
                 document.getElementById('passwordSetupCard').style.display = 'none';
