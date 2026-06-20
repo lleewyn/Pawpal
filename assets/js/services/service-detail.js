@@ -114,12 +114,30 @@ function setupGallery() {
     const thumbsContainer = document.getElementById('galleryThumbnails');
     if (!thumbsContainer) return;
 
-    // Build image list (main service image + 2 fallback shots)
-    const rawImages = [
-        serviceData.image,
-        'assets/images/services/spa.png',
-        'assets/images/services/hotel.png'
-    ];
+    // Build image list based on category
+    let rawImages = [serviceData.image];
+    
+    if (serviceData.category && serviceData.category.toLowerCase().includes('hotel')) {
+        rawImages.push(
+            'assets/images/services/hotel/htl-deluxe.jpg',
+            'assets/images/services/hotel/htl-luxury.jpg',
+            'assets/images/services/hotel/htl-standard-plus.jpg',
+            'assets/images/services/hotel/htl-standard.jpg'
+        );
+    } else {
+        // Spa / Grooming
+        rawImages.push(
+            'assets/images/services/spa/process/process_tam_cho.jpg',
+            'assets/images/services/spa/process/process_say_long1.jpg',
+            'assets/images/services/spa/process/process_cat_long1.jpg',
+            'assets/images/services/spa/process/process_massage.jpg',
+            'assets/images/services/spa/gallery/cust1_dang_tam.jpg'
+        );
+    }
+
+    // Unique images only
+    rawImages = [...new Set(rawImages)];
+
     galleryImages = rawImages.map(url => '../../' + url);
     currentImageIndex = 0;
 
