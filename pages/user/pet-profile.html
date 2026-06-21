@@ -76,7 +76,7 @@
                                 </svg>
                             </div>
                             <h3 class="empty-state-title">Chưa có bé cưng nào</h3>
-                            <p class="empty-state-desc">Thêm hồ sơ bé cưng đầu tiên để bắt đầu sử dụng dịch vụ của PawPal</p>
+                            <p class="empty-state-desc">Thêm hồ sơ bé cưng để bắt đầu sử dụng dịch vụ của PawPal nhé!</p>
                             <button class="btn-cta" onclick="document.getElementById('petFormModal').classList.add('active');">
                                 Thêm bé mới
                             </button>
@@ -120,7 +120,7 @@
                     </button>
 
                     <h1 class="page-title">Thêm bé cưng mới</h1>
-                    <p class="page-subtitle">Điền thông tin để PawPal chăm sóc bé tốt nhất.</p>
+                    <p class="page-subtitle">Điền thông tin cần thiết để PawPal có thể chăm sóc thật tốt cho bé cưng của bạn.</p>
 
                     <!-- Avatar -->
                     <div class="avatar-upload">
@@ -150,13 +150,13 @@
                                     <label>Loài <span class="req">*</span></label>
                                     <div class="chip-group" style="flex-wrap: nowrap;">
                                         <input type="radio" name="species" id="dog" value="dog">
-                                        <label for="dog" style="padding: 8px 12px; font-size: 0.8rem;">🐶 Chó</label>
+                                        <label for="dog" style="padding: 8px 12px; font-size: 0.8rem;">Chó</label>
                                         <input type="radio" name="species" id="cat" value="cat">
-                                        <label for="cat" style="padding: 8px 12px; font-size: 0.8rem;">🐱 Mèo</label>
+                                        <label for="cat" style="padding: 8px 12px; font-size: 0.8rem;">Mèo</label>
                                         <input type="radio" name="species" id="rabbit" value="rabbit">
-                                        <label for="rabbit" style="padding: 8px 12px; font-size: 0.8rem;">🐰 Thỏ</label>
+                                        <label for="rabbit" style="padding: 8px 12px; font-size: 0.8rem;">Thỏ</label>
                                         <input type="radio" name="species" id="other" value="other">
-                                        <label for="other" style="padding: 8px 12px; font-size: 0.8rem;">🐾 Khác</label>
+                                        <label for="other" style="padding: 8px 12px; font-size: 0.8rem;">Khác</label>
                                     </div>
                                     <div id="otherSpeciesWrap" style="display:none; margin-top: 10px;">
                                         <input type="text" id="otherSpecies" placeholder="Ví dụ: Hamster, Rùa, Chim...">
@@ -182,7 +182,7 @@
 
                         <!-- Thể chất & Y tế -->
                         <div class="form-section">
-                            <div class="section-label">Thể chất &amp; Y tế</div>
+                            <div class="section-label">Thể chất và Y tế</div>
                             <div class="form-grid">
                                 <div class="field">
                                     <label for="weight">Cân nặng (kg) <span class="req">*</span></label>
@@ -197,7 +197,7 @@
                                 </div>
 
                                 <div class="field full">
-                                    <label for="color">Màu lông / đặc điểm nhận dạng</label>
+                                    <label for="color">Màu lông hoặc đặc điểm nhận dạng</label>
                                     <input type="text" id="color" placeholder="Ví dụ: Vàng kem, có đốm trắng ở trán...">
                                 </div>
 
@@ -205,7 +205,7 @@
                                     <div class="toggle-row">
                                         <div class="toggle-info">
                                             <span>Đã tiêm vaccine đầy đủ</span>
-                                            <span>Cần thiết để sử dụng dịch vụ Hotel &amp; Spa</span>
+                                            <span>Thông tin cần thiết để sử dụng dịch vụ Hotel và Spa</span>
                                         </div>
                                         <label class="toggle-switch">
                                             <input type="checkbox" id="vaccinated">
@@ -227,7 +227,7 @@
                             <div class="section-label">Ghi chú chăm sóc</div>
                             <div class="form-grid">
                                 <div class="field full">
-                                    <label for="notes">Thói quen &amp; điều cần lưu ý</label>
+                                    <label for="notes">Thói quen và những lưu ý đặc biệt</label>
                                     <textarea id="notes" placeholder="Ví dụ: Bé sợ tiếng ồn lớn, thích được chải lông mỗi sáng, không ăn được thức ăn khô..."></textarea>
                                 </div>
                             </div>
@@ -260,7 +260,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p>Bạn có chắc muốn xóa hồ sơ của <strong id="deletePetName"></strong>?</p>
+                <p>Bạn có chắc muốn xóa hồ sơ của <strong id="deletePetName"></strong> không?</p>
                 <p class="text-muted" style="font-size: 0.875rem;">Hồ sơ sẽ được chuyển vào Kho lưu trữ và tự động xóa sau 30 ngày.</p>
                 <div class="form-actions">
                     <button class="btn-green-outline" onclick="closeDeleteModal()">Hủy</button>
@@ -300,9 +300,9 @@
             xhr.send();
             if (xhr.status === 200) {
                 document.getElementById('user-sidebar').innerHTML = xhr.responseText;
-                console.log('✅ Sidebar loaded');
+                console.log('Sidebar loaded');
             } else {
-                console.error('❌ Failed to load sidebar');
+                console.error('Failed to load sidebar');
             }
         })();
     </script>
@@ -317,11 +317,11 @@
         // Wait for DOM and all modules to load
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
-                console.log('🚀 DOM loaded, initializing pet profile page...');
+                console.log('DOM loaded, initializing pet profile page...');
                 initPetProfilePage();
             });
         } else {
-            console.log('🚀 DOM already loaded, initializing pet profile page...');
+            console.log('DOM already loaded, initializing pet profile page...');
             initPetProfilePage();
         }
     </script>

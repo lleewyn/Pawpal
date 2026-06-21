@@ -679,3 +679,99 @@
         width: 100%;
     }
 }
+
+/* ── Delete Confirmation Modal ───────────────────────────────────── */
+#deleteConfirmModal .modal-content-small {
+    max-width: 420px;
+    padding: 0;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+#deleteConfirmModal .modal-header {
+    padding: 20px 24px 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+#deleteConfirmModal .modal-title {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: #2d3732;
+    margin: 0;
+}
+
+#deleteConfirmModal .modal-body {
+    padding: 16px 24px 20px;
+    text-align: left;
+    line-height: 1.65;
+}
+
+#deleteConfirmModal .modal-body p:first-child {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    color: #2d3732;
+}
+
+#deleteConfirmModal .modal-body strong {
+    font-weight: 750;
+    color: #1f2a24;
+    font-size: 1.08rem;
+}
+
+#deleteConfirmModal .text-muted {
+    font-size: 0.95rem;
+    color: #6b7e75;
+    margin-bottom: 24px;
+}
+/* Căn giữa đẹp 2 nút */
+#deleteConfirmModal .form-actions {
+    padding: 0 24px 24px;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 0;
+}
+
+#deleteConfirmModal .btn-green-outline,
+#deleteConfirmModal .btn-danger {
+    padding: 11px 32px;
+    font-size: 0.98rem;
+    font-weight: 600;
+    border-radius: 50px;
+    min-width: 130px;           
+}
+
+#deleteConfirmModal .btn-green-outline {
+    border: 2px solid #2d8a6d;
+    color: #2d8a6d;
+    background: transparent;
+}
+
+#deleteConfirmModal .btn-danger {
+    background: #cb133b;
+    border: none;
+    color: white;
+}
+
+/* Hover */
+#deleteConfirmModal .btn-green-outline:hover {
+    background: #2d8a6d;
+    color: white;
+}
+
+#deleteConfirmModal .btn-danger:hover {
+    background: #be123c;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    #deleteConfirmModal .modal-content-small {
+        margin: 12px;
+        max-width: none;
+    }
+    #deleteConfirmModal .modal-header,
+    #deleteConfirmModal .modal-body {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}

@@ -1,6 +1,5 @@
 /* ==========================================================================
-   pet-diary.js — Pet Diary & Service Tracking (US 7-1, 7-2, 7-3)
-   Data source: pawpal_pets + pawpal_tracker_logs in localStorage
+   pet-diary.js — Pet Diary & Service Tracking (ĐÃ SỬA)
    ========================================================================== */
 
 import { getPets, getTrackerLogs, saveTrackerLogs, calcAge, fmtDate, showToast } from './pet-profile.js';
@@ -12,7 +11,6 @@ let currentPetId = null;
 let currentSessionId = null;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-
 export function initPetDiary() {
     populatePetSelector();
 
@@ -31,25 +29,36 @@ export function initPetDiary() {
 }
 
 // ── Pet Selector ──────────────────────────────────────────────────────────────
-
 function populatePetSelector() {
     const selector = document.getElementById('petSelector');
     if (!selector) return;
 
-    const pets = getPets().filter(p => !p.archived);
+    const pets = getPets().filter(p => !p.isArchived);
 
     while (selector.options.length > 1) selector.remove(1);
 
     pets.forEach(pet => {
         const option = document.createElement('option');
         option.value = pet.id;
-        const label = [pet.name, pet.species, pet.breed ? `(${pet.breed})` : '']
-            .filter(Boolean).join(' ');
+        
+        const speciesName = getSpeciesDisplay(pet);
+        const label = `${pet.name} - ${speciesName}${pet.breed ? ` (${pet.breed})` : ''}`;
+        
         option.textContent = label;
         selector.appendChild(option);
     });
 }
 
+function getSpeciesDisplay(pet) {
+    if (!pet) return 'Thú cưng';
+    if (pet.species === 'other' && pet.otherSpecies && pet.otherSpecies.trim() !== '') {
+        return pet.otherSpecies.trim();
+    }
+    const map = { dog: 'Chó', cat: 'Mèo', rabbit: 'Thỏ' };
+    return map[pet.species] || 'Thú cưng';
+}
+
+// ── Handle Pet Change ─────────────────────────────────────────────────────────
 function handlePetChange(e) {
     const petId = e.target.value;
     const emptyState = document.getElementById('emptyState');
@@ -69,7 +78,6 @@ function handlePetChange(e) {
 }
 
 // ── Load Diary ────────────────────────────────────────────────────────────────
-
 function loadPetDiary(petId) {
     const pets = getPets();
     const pet = pets.find(p => p.id === petId);
@@ -83,10 +91,10 @@ function loadPetDiary(petId) {
     const logs = getOrSeedTrackerLogs(pet);
     const { currentSession, history = [] } = logs;
 
-    // Build session list for sidebar: current first, then history newest→oldest
     const allSessions = [];
     if (currentSession) allSessions.push({ ...currentSession, isCurrent: true });
     [...history].reverse().forEach(s => allSessions.push({ ...s, isCurrent: false }));
+
     renderHistorySidebar(allSessions);
 
     if (currentSession) {
@@ -99,7 +107,6 @@ function loadPetDiary(petId) {
 }
 
 // ── Tracker Logs ──────────────────────────────────────────────────────────────
-
 function getOrSeedTrackerLogs(pet) {
     const allLogs = getTrackerLogs();
     if (allLogs[pet.id]) return allLogs[pet.id];
@@ -137,7 +144,7 @@ function seedDemoLogs(pet) {
                     id: 2,
                     status: 'Đang tắm',
                     timestamp: ago(45),
-                    description: `${pet.name} đang được tắm sạch với sữa tắm chuyên dụng cho da nhạy cảm.`,
+                    description: `${pet.name} đang được tắm sạch với sữa tắm chuyên dụng phù hợp cho da của bé.`,
                     staff: DEMO_STAFF_PRIMARY,
                     type: 'in_progress'
                 },
@@ -145,7 +152,7 @@ function seedDemoLogs(pet) {
                     id: 1,
                     status: 'Đã tiếp nhận',
                     timestamp: ago(60),
-                    description: `${pet.name} đã được tiếp nhận tại PawPal. Mã hồ sơ: ${pet.id}. Chúng em sẽ bắt đầu quy trình ngay.`,
+                    description: `${pet.name} đã được tiếp nhận tại PawPal. Mã hồ sơ: ${pet.id}. Nhân viên sẽ bắt đầu quy trình ngay.`,
                     staff: DEMO_STAFF_RECEPTION,
                     type: 'check_in'
                 }
@@ -201,16 +208,15 @@ function seedDemoLogs(pet) {
     };
 }
 
-// ── Render: Pet Info Card ─────────────────────────────────────────────────────
-
+// ── Render: Pet Info Card (ĐÃ SỬA) ───────────────────────────────────────────
 function renderPetInfoCard(pet) {
     const container = document.getElementById('petInfoCard');
     if (!container) return;
 
-    const age = calcAge(pet.birthday);
+    const age = calcAge(pet.dob);
 
-    const avatarHtml = pet.photo
-        ? `<img src="${pet.photo}" alt="${escapeHtml(pet.name)}" class="pet-info-avatar">`
+    const avatarHtml = pet.avatar
+        ? `<img src="${pet.avatar}" alt="${pet.name}" class="pet-info-avatar">`
         : `<div class="pet-info-avatar-placeholder">
                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                    <circle cx="12" cy="8" r="4"/>
@@ -221,23 +227,17 @@ function renderPetInfoCard(pet) {
     container.innerHTML = `
         ${avatarHtml}
         <div class="pet-info-details">
-            <h4>${escapeHtml(pet.name)}</h4>
+            <h4>${pet.name}</h4>
             <div class="pet-info-meta">
-                <span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-                    </svg>
-                    ${escapeHtml(pet.id)}
-                </span>
-                ${pet.species ? `<span>${escapeHtml(pet.species)}</span>` : ''}
-                ${pet.breed ? `<span>${escapeHtml(pet.breed)}</span>` : ''}
-                ${pet.weight ? `<span>${escapeHtml(String(pet.weight))} kg</span>` : ''}
-                ${age ? `<span>${escapeHtml(age)}</span>` : ''}
+                <span>${pet.id}</span>
+                <span>${getSpeciesDisplay(pet)}</span>
+                ${pet.breed ? `<span>${pet.breed}</span>` : ''}
+                ${pet.weight ? `<span>${pet.weight} kg</span>` : ''}
+                ${age ? `<span>${age}</span>` : ''}
             </div>
         </div>
     `;
 }
-
 // ── Render: Timeline ──────────────────────────────────────────────────────────
 
 function renderTimeline(timeline) {
