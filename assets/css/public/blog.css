@@ -6,11 +6,22 @@
 .blog-magazine-main {
     background-color: var(--color-bg-light);
     font-family: var(--font-body);
+    padding-top: var(--space-lg);
+}
+
+.blog-page-hero {
+    background-color: var(--color-bg-light);
+    padding: var(--space-lg) 0;
+}
+
+.blog-page-hero .section-title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    margin-bottom: 0;
 }
 
 .section-title {
     font-family: var(--font-heading);
-    font-size: 2rem;
+    font-size: var(--fs-h2);
     font-weight: 600;
     color: var(--color-primary-dark);
     margin-bottom: 0;
