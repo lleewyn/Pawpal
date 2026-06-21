@@ -150,6 +150,19 @@ function initMobileNavigation() {
         toggleBtn.setAttribute('aria-expanded', 'false');
         document.body.style.overflow = '';
     }
+
+    // Rotate caret icons for any dropdown toggles when they expand/collapse
+    const dropdownToggles = nav.querySelectorAll('.dropdown-toggle');
+    dropdownToggles.forEach(dt => {
+        dt.addEventListener('click', (e) => {
+            // after bootstrap or custom toggle behavior, flip the SVG
+            setTimeout(() => {
+                const expanded = dt.getAttribute('aria-expanded') === 'true' || dt.classList.contains('show');
+                const svg = dt.querySelector('svg');
+                if (svg) svg.style.transform = expanded ? 'rotate(180deg)' : 'rotate(0deg)';
+            }, 40);
+        });
+    });
 }
 
 /**
