@@ -519,6 +519,58 @@ function renderProductDetails(product) {
     const productBrandMeta = document.getElementById('productBrandMeta');
     if (productBrandMeta) productBrandMeta.textContent = product.brand;
     
+    // Dynamic Description block
+    const dynamicDetailsContainer = document.getElementById('dynamicProductDetails');
+    if (dynamicDetailsContainer) {
+        let detailsHtml = '';
+        if (product.description && product.description !== 'Thông tin sản phẩm đang được cập nhật.') {
+            detailsHtml += `<p>${product.description}</p>`;
+        }
+        
+        if (product.benefits) {
+            detailsHtml += `<h4>Đặc điểm nổi bật:</h4><p>${product.benefits}</p>`;
+        }
+        
+        if (product.ingredients) {
+            detailsHtml += `<h4>Thành phần:</h4><p>${product.ingredients}</p>`;
+        }
+        
+        if (product.usage) {
+            detailsHtml += `<h4>Hướng dẫn sử dụng:</h4><p>${product.usage}</p>`;
+        }
+
+        if (product.specs || product.origin) {
+            detailsHtml += `<h4>Thông số kỹ thuật:</h4>
+                            <div class="specifications-table">
+                                <table>`;
+            if (product.origin) {
+                detailsHtml += `<tr><th>Xuất xứ</th><td>${product.origin}</td></tr>`;
+            }
+            if (product.specs) {
+                detailsHtml += `<tr><th>Quy cách / Khác</th><td>${product.specs}</td></tr>`;
+            }
+            detailsHtml += `</table></div>`;
+        }
+        
+        if (!detailsHtml) {
+            detailsHtml = '<p>Thông tin sản phẩm đang được cập nhật.</p>';
+        }
+        
+        dynamicDetailsContainer.innerHTML = detailsHtml;
+    }
+    
+    // Dynamic Reviews block
+    const averageScore = document.getElementById('averageScore');
+    const totalReviewsCount = document.getElementById('totalReviewsCount');
+    
+    if (averageScore) {
+        averageScore.textContent = product.rating ? product.rating.toFixed(1) : '4.5';
+    }
+    
+    if (totalReviewsCount) {
+        totalReviewsCount.textContent = `Dựa trên ${product.reviewCount || 0} đánh giá`;
+    }
+    
     // Disable buttons if out of stock
     const addToCartBtn = document.getElementById('addToCartBtn');
     const buyNowBtn = document.getElementById('buyNowBtn');
