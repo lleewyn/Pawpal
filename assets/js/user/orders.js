@@ -1,7 +1,7 @@
 /**
  * ORDERS PAGE - Tuân thủ 100% design.md
  * - NO emoji trong code
- * - Dùng text characters: → • ▶
+ * - Dùng text characters: -> • ▶
  */
 
 // State Management

@@ -75,7 +75,7 @@ data/payment-methods.json
 │                    HEADER (Nav)                         │
 ├─────────────────────────────────────────────────────────┤
 │  CHECKOUT STEPS INDICATOR                               │
-│  ● Giỏ hàng  →  ● Thanh toán  →  ○ Hoàn tất           │
+│  ● Giỏ hàng  ->  ● Thanh toán  ->  ○ Hoàn tất           │
 ├──────────────────────────┬──────────────────────────────┤
 │                          │                              │
 │  LEFT SECTION (60%)      │  RIGHT SECTION (40%)         │

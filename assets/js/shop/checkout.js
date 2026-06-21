@@ -8,6 +8,7 @@
 // ============================================================================
 const checkoutState = {
     cart: [],
+    products: [],
     user: null,
     deliveryOptions: [],
     paymentMethods: [],
@@ -56,6 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Load data
         await loadData();
+        await loadProducts();
         
         // Initialize UI
         initializeShippingForm();
@@ -97,6 +99,111 @@ async function loadData() {
     } catch (error) {
         console.error('Error loading data:', error);
     }
+}
+
+async function loadProducts() {
+    try {
+        if (window.DataLoader && typeof window.DataLoader.loadProducts === 'function') {
+            checkoutState.products = await window.DataLoader.loadProducts();
+        } else {
+            console.warn('DataLoader không có sẵn, không thể tải sản phẩm');
+            checkoutState.products = [];
+        }
+    } catch (error) {
+        console.error('Error loading products:', error);
+        checkoutState.products = [];
+    }
+}
+
+function validateCheckoutCart() {
+    if (!checkoutState.products || checkoutState.products.length === 0) {
+        return { valid: false, message: 'Không thể kiểm tra giỏ hàng vì dữ liệu sản phẩm chưa sẵn sàng.' };
+    }
+
+    const subtotal = calculateSubtotal();
+    for (const item of checkoutState.cart) {
+        const product = checkoutState.products.find(p => Number(p.id) === Number(item.id));
+        if (!product) {
+            return { valid: false, message: `Sản phẩm với mã ${item.id} không còn tồn tại. Vui lòng cập nhật giỏ hàng.` };
+        }
+
+        if (!product.inStock || Number(item.quantity) > Number(product.stock)) {
+            const remaining = product.stock || 0;
+            return { valid: false, message: `Sản phẩm "${product.name}" chỉ còn ${remaining} trong kho. Vui lòng điều chỉnh số lượng.` };
+        }
+
+        if (Number(item.price) !== Number(product.price)) {
+            return { valid: false, message: `Giá sản phẩm "${product.name}" đã thay đổi. Vui lòng kiểm tra lại giỏ hàng.` };
+        }
+    }
+
+    if (checkoutState.appliedVoucher) {
+        const validation = validateVoucher(checkoutState.appliedVoucher.code, false);
+        if (!validation.valid) {
+            return { valid: false, message: `Mã giảm giá hiện tại không hợp lệ: ${validation.message}.` };
+        }
+    }
+
+    // Recalculate totals using latest product prices and voucher eligibility
+    updateOrderTotals();
+    if (checkoutState.totals.grandTotal <= 0) {
+        return { valid: false, message: 'Tổng thanh toán không hợp lệ. Vui lòng kiểm tra lại đơn hàng.' };
+    }
+
+    return { valid: true };
+}
+
+function validateVoucher(code, showMessage = true) {
+    const voucher = checkoutState.vouchers.find(v => v.code === code && v.active);
+    
+    if (!voucher) {
+        return { valid: false, message: 'Mã giảm giá không tồn tại' };
+    }
+    
+    // Check expiry
+    const now = new Date();
+    const expiry = new Date(voucher.validUntil);
+    if (now > expiry) {
+        return { valid: false, message: 'Mã giảm giá đã hết hạn' };
+    }
+    
+    // Check minimum order value
+    const subtotal = calculateSubtotal();
+    if (subtotal < voucher.minOrderValue) {
+        return { 
+            valid: false, 
+            message: `Đơn hàng tối thiểu ${formatCurrency(voucher.minOrderValue)} để áp dụng mã này` 
+        };
+    }
+    
+    // Check usage limit
+    if (voucher.usageCount >= voucher.maxUsage) {
+        return { valid: false, message: 'Mã giảm giá đã hết lượt sử dụng' };
+    }
+
+    // Check applicability by category
+    if (voucher.applicableFor && !voucher.applicableFor.includes('all')) {
+        const cartCategories = checkoutState.cart.map(item => item.category).filter(Boolean);
+        const hasMatchingCategory = cartCategories.some(category => voucher.applicableFor.includes(category));
+        if (!hasMatchingCategory) {
+            return { valid: false, message: 'Mã giảm giá không áp dụng cho sản phẩm trong giỏ hàng hiện tại' };
+        }
+    }
+    
+    // Calculate discount
+    let discount = 0;
+    if (voucher.type === 'fixed') {
+        discount = voucher.value;
+    } else if (voucher.type === 'percentage') {
+        discount = Math.min(
+            Math.floor((subtotal * voucher.value) / 100),
+            voucher.maxDiscount || Infinity
+        );
+    } else if (voucher.type === 'shipping') {
+        discount = Math.min(voucher.value, checkoutState.totals.shippingFee);
+    }
+    
+    return { valid: true, discount, voucher };
 }
 
 // ============================================================================
@@ -218,31 +325,74 @@ function selectDeliveryOption(deliveryId, fee) {
 function renderPaymentMethods() {
     const container = document.getElementById('payment-methods');
     container.innerHTML = '';
-    
+
+    const groupedMethods = {
+        offline: [],
+        online: [],
+        bank: []
+    };
+
     checkoutState.paymentMethods.forEach(method => {
-        const isSelected = method.id === checkoutState.selectedPayment;
-        
-        const methodDiv = document.createElement('div');
-        methodDiv.className = `payment-method-card ${isSelected ? 'selected' : ''}`;
-        methodDiv.innerHTML = `
-            <input type="radio" name="payment" value="${method.id}" 
-                   id="payment-${method.id}" ${isSelected ? 'checked' : ''}>
-            ${['momo', 'vnpay', 'vietqr'].includes(method.id) 
-                ? `<img src="../../assets/images/shared/payment_${method.id === 'vietqr' ? 'VietQR' : method.id}.png" class="payment-icon" style="object-fit: contain; width: 32px; height: 32px; border-radius: 4px;">`
-                : `<svg class="payment-icon" viewBox="0 0 24 24">${getPaymentIcon(method.icon)}</svg>`
-            }
-            <div class="payment-info">
-                <h4>${method.name}</h4>
-                <p>${method.description}</p>
-            </div>
-        `;
-        
-        methodDiv.addEventListener('click', () => {
-            selectPaymentMethod(method.id);
-        });
-        
-        container.appendChild(methodDiv);
+        if (method.id === 'cod') {
+            groupedMethods.offline.push(method);
+        } else if (method.id === 'bank') {
+            groupedMethods.bank.push(method);
+        } else {
+            groupedMethods.online.push(method);
+        }
     });
+
+    const groupLabels = {
+        offline: 'Thanh toán khi nhận hàng',
+        online: 'Thanh toán trực tuyến',
+        bank: 'Chuyển khoản ngân hàng'
+    };
+
+    Object.entries(groupedMethods).forEach(([group, methods]) => {
+        if (!methods.length) return;
+
+        const groupWrapper = document.createElement('div');
+        groupWrapper.className = 'payment-method-group';
+
+        const groupTitle = document.createElement('div');
+        groupTitle.className = 'payment-method-group-title';
+        groupTitle.textContent = groupLabels[group];
+        groupWrapper.appendChild(groupTitle);
+
+        const groupList = document.createElement('div');
+        groupList.className = 'payment-method-group-list';
+
+        methods.forEach(method => {
+            groupList.appendChild(renderPaymentMethodCard(method));
+        });
+
+        groupWrapper.appendChild(groupList);
+        container.appendChild(groupWrapper);
+    });
+}
+
+function renderPaymentMethodCard(method) {
+    const isSelected = method.id === checkoutState.selectedPayment;
+    const methodDiv = document.createElement('div');
+    methodDiv.className = `payment-method-card ${isSelected ? 'selected' : ''}`;
+    methodDiv.innerHTML = `
+        <input type="radio" name="payment" value="${method.id}" 
+               id="payment-${method.id}" ${isSelected ? 'checked' : ''}>
+        ${['momo', 'vnpay', 'vietqr'].includes(method.id) 
+            ? `<img src="../../assets/images/shared/payment_${method.id === 'vietqr' ? 'VietQR' : method.id}.png" class="payment-icon" style="object-fit: contain; width: 32px; height: 32px; border-radius: 4px;">`
+            : `<svg class="payment-icon" viewBox="0 0 24 24">${getPaymentIcon(method.icon)}</svg>`
+        }
+        <div class="payment-info">
+            <h4>${method.name}</h4>
+            <p>${method.description}</p>
+        </div>
+    `;
+
+    methodDiv.addEventListener('click', () => {
+        selectPaymentMethod(method.id);
+    });
+
+    return methodDiv;
 }
 
 function getPaymentIcon(iconType) {
@@ -407,7 +557,7 @@ async function applyVoucher() {
     }
     
     // Validate voucher
-    const result = await validateVoucher(code);
+    const result = validateVoucher(code);
     
     if (result.valid) {
         checkoutState.appliedVoucher = result.voucher;
@@ -424,7 +574,7 @@ async function applyVoucher() {
         // Update totals
         updateOrderTotals();
         
-        showToast('Áp dụng mã giảm giá thành công!', 'success');
+        showToast(`Áp dụng mã ${code} thành công! Tiết kiệm ${formatCurrency(result.discount)}.`, 'success');
     } else {
         showToast(result.message, 'error');
     }
@@ -438,50 +588,6 @@ function removeVoucher() {
     updateOrderTotals();
     
     showToast('Đã xóa mã giảm giá', 'info');
-}
-
-async function validateVoucher(code) {
-    const voucher = checkoutState.vouchers.find(v => v.code === code && v.active);
-    
-    if (!voucher) {
-        return { valid: false, message: 'Mã giảm giá không tồn tại' };
-    }
-    
-    // Check expiry
-    const now = new Date();
-    const expiry = new Date(voucher.validUntil);
-    if (now > expiry) {
-        return { valid: false, message: 'Mã giảm giá đã hết hạn' };
-    }
-    
-    // Check minimum order value
-    const subtotal = checkoutState.totals.subtotal;
-    if (subtotal < voucher.minOrderValue) {
-        return { 
-            valid: false, 
-            message: `Đơn hàng tối thiểu ${formatCurrency(voucher.minOrderValue)}` 
-        };
-    }
-    
-    // Check usage limit
-    if (voucher.usageCount >= voucher.maxUsage) {
-        return { valid: false, message: 'Mã giảm giá đã hết lượt sử dụng' };
-    }
-    
-    // Calculate discount
-    let discount = 0;
-    if (voucher.type === 'fixed') {
-        discount = voucher.value;
-    } else if (voucher.type === 'percentage') {
-        discount = Math.min(
-            Math.floor((subtotal * voucher.value) / 100),
-            voucher.maxDiscount || Infinity
-        );
-    } else if (voucher.type === 'shipping') {
-        discount = Math.min(voucher.value, checkoutState.totals.shippingFee);
-    }
-    
-    return { valid: true, discount, voucher };
 }
 
 // ============================================================================
@@ -559,6 +665,15 @@ async function handleCheckout() {
     // Save to localStorage (simulate API)
     localStorage.setItem('pawpal_current_order', JSON.stringify(orderData));
     
+    // Validate cart and voucher again before committing order
+    const validation = validateCheckoutCart();
+    if (!validation.valid) {
+        showToast(validation.message, 'error');
+        // redirect back to checkout form area if needed
+        document.getElementById('shipping-form').scrollIntoView({ behavior: 'smooth' });
+        return;
+    }
+
     // Save to user's orders list
     saveOrderToUserHistory(orderData);
     
@@ -566,17 +681,19 @@ async function handleCheckout() {
     const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
     
     // Route based on payment method
-    if (checkoutState.selectedPayment === 'cod') {
-        // COD: Go to success page
+    function clearCheckoutStateAfterOrder() {
+        localStorage.removeItem('pawpal_cart_unselected_backup');
         if (isBuyNow) {
-            // Clear buy now session data
             sessionStorage.removeItem('pawpal_buynow_cart');
             sessionStorage.removeItem('pawpal_is_buynow');
         } else {
-            // Clear normal cart
             localStorage.removeItem('pawpal_cart');
         }
-        
+    }
+
+    if (checkoutState.selectedPayment === 'cod') {
+        // COD: Go to success page
+        clearCheckoutStateAfterOrder();
         window.location.href = `/pages/shop/payment-success.html?orderId=${orderData.orderId}`;
     } else {
         // Online payment: Simulate redirect
@@ -586,12 +703,7 @@ async function handleCheckout() {
             const success = true; // Changed from random to always true
             
             if (success) {
-                if (isBuyNow) {
-                    sessionStorage.removeItem('pawpal_buynow_cart');
-                    sessionStorage.removeItem('pawpal_is_buynow');
-                } else {
-                    localStorage.removeItem('pawpal_cart');
-                }
+                clearCheckoutStateAfterOrder();
                 window.location.href = `/pages/shop/payment-success.html?orderId=${orderData.orderId}`;
             } else {
                 window.location.href = `/pages/shop/payment-failed.html?orderId=${orderData.orderId}`;

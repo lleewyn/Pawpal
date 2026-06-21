@@ -15,6 +15,82 @@ export function initPetProfilePage() {
     setupDeleteModal();
 }
 
+let editingPetId = null;
+
+function openPetFormModal(petId = null) {
+    const modal = document.getElementById('petFormModal');
+    const petFormTitle = document.getElementById('petFormTitle');
+    const petIdInput = document.getElementById('petId');
+
+    if (!modal || !petFormTitle || !petIdInput) return;
+
+    editingPetId = petId;
+    if (petId) {
+        const pet = getPets().find(p => p.id === petId);
+        if (pet) {
+            petFormTitle.textContent = 'Cập nhật hồ sơ bé cưng';
+            petIdInput.value = pet.id;
+            populatePetForm(pet);
+        }
+    } else {
+        petFormTitle.textContent = 'Thêm bé cưng mới';
+        petIdInput.value = '';
+        resetPetForm();
+    }
+
+    modal.classList.add('active');
+}
+
+function populatePetForm(pet) {
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value;
+    };
+    const setChecked = (selector, value) => {
+        document.querySelectorAll(selector).forEach(r => { if (r.value === value) r.checked = true; });
+    };
+
+    setValue('petName', pet.name || '');
+    setChecked('input[name="species"]', pet.species);
+
+    const otherWrap = document.getElementById('otherSpeciesWrap');
+    if (pet.species === 'other' && otherWrap) {
+        otherWrap.style.display = 'block';
+        setValue('otherSpecies', pet.otherSpecies || '');
+    } else {
+        if (otherWrap) otherWrap.style.display = 'none';
+        setValue('otherSpecies', '');
+    }
+
+    setValue('breed', pet.breed || '');
+    setChecked('input[name="gender"]', pet.gender);
+    setValue('weight', pet.weight || '');
+    setValue('dob', pet.dob || '');
+    setValue('color', pet.color || '');
+    const vaccinatedEl = document.getElementById('vaccinated');
+    if (vaccinatedEl) vaccinatedEl.checked = pet.vaccinated || false;
+    setValue('allergies', pet.allergies || '');
+    const notesEl = document.getElementById('notes');
+    if (notesEl) notesEl.value = pet.notes || '';
+    const avatarPreview = document.getElementById('avatarPreview');
+    if (avatarPreview) {
+        avatarPreview.src = pet.avatar || '';
+    }
+}
+
+function resetPetForm() {
+    const form = document.getElementById('petForm');
+    if (form) form.reset();
+    editingPetId = null;
+    const petIdInput = document.getElementById('petId');
+    if (petIdInput) petIdInput.value = '';
+    const otherSpeciesWrap = document.getElementById('otherSpeciesWrap');
+    if (otherSpeciesWrap) otherSpeciesWrap.style.display = 'none';
+    const avatarPreview = document.getElementById('avatarPreview');
+    if (avatarPreview) avatarPreview.src = '';
+    document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
+}
+
 // Render danh sách
 function renderPetGrids() {
     const pets = getPets();
@@ -126,37 +202,105 @@ function setupForm() {
     form.addEventListener('submit', (e) => {
         e.preventDefault();
 
-        const petData = {
-            id: generatePetId(),
-            name: document.getElementById('petName').value.trim(),
-            species: document.querySelector('input[name="species"]:checked')?.value,
-            otherSpecies: document.getElementById('otherSpecies').value.trim(),
-            breed: document.getElementById('breed').value.trim(),
-            gender: document.querySelector('input[name="gender"]:checked')?.value,
-            weight: parseFloat(document.getElementById('weight').value),
-            dob: document.getElementById('dob').value,
-            color: document.getElementById('color').value.trim(),
-            vaccinated: document.getElementById('vaccinated').checked,
-            allergies: document.getElementById('allergies').value.trim(),
-            notes: document.getElementById('notes').value.trim(),
-            avatar: document.getElementById('avatarPreview').src || '',
-            isArchived: false,
-            createdAt: new Date().toISOString()
-        };
+        const petNameField = document.getElementById('petName');
+        const petName = petNameField?.value.trim() || '';
+        const species = document.querySelector('input[name="species"]:checked')?.value;
+        const otherSpecies = document.getElementById('otherSpecies')?.value.trim() || '';
+        const breedField = document.getElementById('breed');
+        const breed = breedField ? breedField.value.trim() : '';
+        const gender = document.querySelector('input[name="gender"]:checked')?.value;
+        const weight = parseFloat(document.getElementById('weight')?.value || '');
+        const dob = document.getElementById('dob')?.value || '';
+        const color = document.getElementById('color')?.value.trim() || '';
+        const vaccinated = document.getElementById('vaccinated')?.checked || false;
+        const allergies = document.getElementById('allergies')?.value.trim() || '';
+        const notes = document.getElementById('notes')?.value.trim() || '';
+        const avatarPreview = document.getElementById('avatarPreview');
+        const avatar = avatarPreview?.src || '';
+        const petId = document.getElementById('petId')?.value || null;
 
-        if (!petData.name || !petData.species || isNaN(petData.weight)) {
-            showToast('Vui lòng nhập đầy đủ thông tin bắt buộc!', 'error');
+        const errors = [];
+        const nameField = document.getElementById('petName');
+        const weightField = document.getElementById('weight');
+        const speciesField = document.querySelector('input[name="species"]')?.closest('.field');
+        const speciesError = speciesField?.querySelector('.error-msg');
+
+        document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
+
+        if (!petName) {
+            errors.push('name');
+            nameField.nextElementSibling.style.display = 'block';
+        }
+
+        if (!species) {
+            errors.push('species');
+            if (speciesError) speciesError.style.display = 'block';
+            showToast('Vui lòng chọn loài thú cưng.', 'error');
+        }
+
+        if (species === 'other' && !otherSpecies) {
+            errors.push('otherSpecies');
+            const otherSpeciesError = document.querySelector('#otherSpeciesWrap .error-msg');
+            if (otherSpeciesError) otherSpeciesError.style.display = 'block';
+            showToast('Vui lòng nhập loài khác.', 'error');
+        }
+
+        if (isNaN(weight) || weight <= 0) {
+            errors.push('weight');
+            weightField.nextElementSibling.style.display = 'block';
+        }
+
+        const avatarInput = document.getElementById('avatar-input');
+        if (avatarInput && avatarInput.files && avatarInput.files[0]) {
+            const file = avatarInput.files[0];
+            const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                showToast('Ảnh phải là JPG, PNG hoặc WEBP.', 'error');
+                errors.push('avatar');
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Ảnh không được lớn hơn 5MB.', 'error');
+                errors.push('avatar');
+            }
+        }
+
+        if (errors.length > 0) {
+            if (!errors.includes('name') && !errors.includes('weight')) {
+                showToast('Vui lòng kiểm tra lại thông tin hồ sơ bé cưng.', 'error');
+            }
             return;
         }
 
-        const allPets = getPets();
-        allPets.unshift(petData);           
-        savePets(allPets);
+        const petData = {
+            id: petId || generatePetId(),
+            name: petName,
+            species,
+            otherSpecies,
+            breed,
+            gender,
+            weight,
+            dob,
+            color,
+            vaccinated,
+            allergies,
+            notes,
+            avatar,
+            isArchived: false,
+            createdAt: petId ? getPets().find(p => p.id === petId)?.createdAt || new Date().toISOString() : new Date().toISOString()
+        };
 
-        showToast('Thêm bé cưng thành công!');
+        let allPets = getPets();
+        if (petId) {
+            allPets = allPets.map(p => p.id === petId ? { ...p, ...petData } : p);
+            showToast('Cập nhật hồ sơ bé cưng thành công!');
+        } else {
+            allPets.unshift(petData);
+            showToast('Thêm bé cưng thành công!');
+        }
+
+        savePets(allPets);
         document.getElementById('petFormModal').classList.remove('active');
-        form.reset();
-        document.getElementById('avatarPreview').src = '';
+        resetPetForm();
         renderPetGrids();
     });
 }
@@ -180,7 +324,9 @@ function setupSpeciesToggle() {
     const otherWrap = document.getElementById('otherSpeciesWrap');
     document.querySelectorAll('input[name="species"]').forEach(radio => {
         radio.addEventListener('change', () => {
-            otherWrap.style.display = radio.value === 'other' ? 'block' : 'none';
+            if (otherWrap) {
+                otherWrap.style.display = radio.value === 'other' ? 'block' : 'none';
+            }
         });
     });
 }
@@ -195,6 +341,11 @@ function setupTabs() {
             document.getElementById('archiveTab').style.display = btn.dataset.tab === 'archive' ? 'block' : 'none';
         });
     });
+
+    const addPetBtn = document.getElementById('btnAddPet');
+    if (addPetBtn) {
+        addPetBtn.addEventListener('click', () => openPetFormModal());
+    }
 }
 
 
@@ -264,6 +415,8 @@ window.restorePet = function(id) {
     renderPetGrids();
 };
 
+window.openPetFormModal = openPetFormModal;
+window.resetPetForm = resetPetForm;
 window.editPet = function(id) {
-    showToast('Chức năng sửa sẽ được cập nhật sau', 'info');
+    openPetFormModal(id);
 };

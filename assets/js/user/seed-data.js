@@ -914,9 +914,9 @@
     localStorage.setItem('pawpal_seeded_' + currentUserPhone.replace(/\s+/g, ''), 'v6');
 
     console.log('%c[PawPal Seed] ✅ Dữ liệu demo đã được inject vào localStorage.', 'color:#2A5944;font-weight:bold;');
-    console.log('  → pawpal_pets:',          JSON.parse(localStorage.getItem('pawpal_pets')).length, 'bé');
-    console.log('  → pawpal_bookings:',      JSON.parse(localStorage.getItem('pawpal_bookings')).length, 'lịch hẹn');
-    console.log('  → pawpal_tracker_logs:',  Object.keys(JSON.parse(localStorage.getItem('pawpal_tracker_logs'))).length, 'nhật ký');
-    console.log('  → pawpal_orders:',        JSON.parse(localStorage.getItem('pawpal_orders')).length, 'đơn hàng');
+    console.log('  -> pawpal_pets:',          JSON.parse(localStorage.getItem('pawpal_pets')).length, 'bé');
+    console.log('  -> pawpal_bookings:',      JSON.parse(localStorage.getItem('pawpal_bookings')).length, 'lịch hẹn');
+    console.log('  -> pawpal_tracker_logs:',  Object.keys(JSON.parse(localStorage.getItem('pawpal_tracker_logs'))).length, 'nhật ký');
+    console.log('  -> pawpal_orders:',        JSON.parse(localStorage.getItem('pawpal_orders')).length, 'đơn hàng');
 
 })();

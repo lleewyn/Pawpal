@@ -8,11 +8,24 @@ const PAWPAL_USERS_KEY = 'pawpal_users_db';
 const CURRENT_USER_KEY = 'pawpal_current_user';
 const TEMP_TOKENS_KEY = 'pawpal_temp_tokens';
 
+// Generate a stable user ID for authenticated users
+function generateUserId() {
+    return `USER-${Math.random().toString(36).slice(2, 10)}-${Date.now()}`;
+}
+
+function ensureUserId(user) {
+    if (!user.id) {
+        user.id = generateUserId();
+    }
+    return user;
+}
+
 // Initialize default users if not exists
 function initMockDatabase() {
     if (!localStorage.getItem(PAWPAL_USERS_KEY)) {
         const defaultUsers = [
             {
+                id: 'USER-ADMIN',
                 name: "Admin PawPal",
                 phone: "0900000000",
                 password: "adminpassword",
@@ -21,6 +34,7 @@ function initMockDatabase() {
                 points: 100
             },
             {
+                id: 'USER-001',
                 name: "Nguyễn Văn A",
                 phone: "0912345678",
                 password: "password123",
@@ -30,6 +44,7 @@ function initMockDatabase() {
             },
             // Một tài khoản tạm đã có sẵn để demo
             {
+                id: 'USER-GUEST-DEMO',
                 name: "Khách Vãng Lai Demo",
                 phone: "0987654321",
                 role: "customer",
@@ -60,7 +75,21 @@ function initMockDatabase() {
 
 // Lấy danh sách users
 function getUsers() {
-    return JSON.parse(localStorage.getItem(PAWPAL_USERS_KEY)) || [];
+    const users = JSON.parse(localStorage.getItem(PAWPAL_USERS_KEY)) || [];
+    let updated = false;
+
+    users.forEach(user => {
+        if (!user.id) {
+            user.id = generateUserId();
+            updated = true;
+        }
+    });
+
+    if (updated) {
+        saveUsers(users);
+    }
+
+    return users;
 }
 
 // Lưu danh sách users
@@ -70,7 +99,19 @@ function saveUsers(users) {
 
 // Lấy user hiện tại đang đăng nhập
 function getCurrentUser() {
-    return JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || null;
+    const user = JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || null;
+    if (user && !user.id) {
+        user.id = generateUserId();
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+
+        const users = getUsers();
+        const idx = users.findIndex(u => u.phone === user.phone);
+        if (idx !== -1) {
+            users[idx] = user;
+            saveUsers(users);
+        }
+    }
+    return user;
 }
 
 // Đăng nhập user
@@ -330,6 +371,55 @@ function handleLoginRouting() {
         document.getElementById('tabLogin').classList.add('active');
         document.getElementById('tabRegister').classList.remove('active');
     }
+
+    // Guest activation entry point: show OTP flow prefilled with phone
+    if (action === 'guest-activate') {
+        const phoneParam = params.get('phone') || null;
+        if (phoneParam && loginForm) {
+            // Hide normal auth tabs and show OTP section for guest activation
+            if (authTabs) authTabs.style.display = 'none';
+
+            const forgotOtpSection = document.getElementById('forgotOtpSection');
+            const forgotPhoneSection = document.getElementById('forgotPhoneSection');
+            // Hide phone-entry and login steps so user sees only OTP
+            const loginStepPhone = document.getElementById('loginStepPhone');
+            const loginStepPassword = document.getElementById('loginStepPassword');
+            if (loginStepPhone) loginStepPhone.style.display = 'none';
+            if (loginStepPassword) loginStepPassword.style.display = 'none';
+            if (forgotPhoneSection) forgotPhoneSection.classList.add('d-none');
+
+            if (forgotOtpSection) {
+                forgotOtpSection.classList.remove('d-none');
+                forgotOtpSection.style.opacity = '1';
+                // Set guest activation flow flags
+                window.isGuestActivationFlow = true;
+                window.guestActivationPhone = phoneParam;
+
+                // Prefill phone input in the forgot flow if present
+                const forgotPhoneInput = document.getElementById('forgotPhone');
+                if (forgotPhoneInput) forgotPhoneInput.value = phoneParam;
+
+                // Update titles/descriptions
+                forgotOtpSection.querySelector('.form-title').textContent = 'Xác thực kích hoạt tài khoản';
+                forgotOtpSection.querySelector('.form-subtitle').textContent = 'Mã xác thực 6 số đã được gửi đến SĐT của bạn để kích hoạt tài khoản tạm.';
+
+                // Simulate sending OTP and start timer
+                showToast('info', 'Mã OTP kích hoạt đã gửi về SMS: 555666', 6000);
+                if (typeof window.startForgotOtpTimerFn === 'function') {
+                    window.startForgotOtpTimerFn();
+                }
+                // Reset OTP inputs and focus first one
+                const forgotOtpInputs = document.querySelectorAll('.forgot-otp-input');
+                if (forgotOtpInputs && forgotOtpInputs.length) {
+                    forgotOtpInputs.forEach((input, idx) => {
+                        input.value = '';
+                        input.disabled = idx > 0;
+                    });
+                    forgotOtpInputs[0].focus();
+                }
+            }
+        }
+    }
 }
 
 // --- 4. FORM VALIDATION & INTERACTION ON LOGIN/REGISTER ---
@@ -477,7 +567,9 @@ function initAuthForms() {
         const user = users.find(u => u.phone === phone && u.password === password);
 
         if (user) {
+            ensureUserId(user);
             setCurrentUser(user);
+            saveUsers(getUsers().map(u => u.phone === user.phone ? user : u));
             showToast('success', 'Đăng nhập thành công!', 2000);
             setTimeout(() => {
                 if (user.role === 'admin') {
@@ -743,9 +835,17 @@ function initAuthForms() {
 
         // New password formulation validation
         function validateForgotNewPasswordForm() {
-            const isPassValid = forgotNewPassword.value.length >= 6;
-            const isConfirmValid = forgotConfirmNewPassword.value === forgotNewPassword.value;
-            
+const passwordPolicy = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+        const isPassValid = passwordPolicy.test(forgotNewPassword.value);
+        const isConfirmValid = forgotConfirmNewPassword.value === forgotNewPassword.value;
+        
+        if (forgotNewPassword.value.length > 0 && !isPassValid) {
+            document.getElementById('forgotPasswordFeedback').textContent = 'Mật khẩu phải ít nhất 8 ký tự, bao gồm một chữ số và một ký tự đặc biệt';
+            forgotNewPassword.classList.add('is-invalid');
+        } else {
+            forgotNewPassword.classList.remove('is-invalid');
+        }
+
             if (forgotConfirmNewPassword.value.length > 0 && !isConfirmValid) {
                 document.getElementById('forgotConfirmFeedback').textContent = 'Mật khẩu chưa khớp';
                 forgotConfirmNewPassword.classList.add('is-invalid');
@@ -800,7 +900,13 @@ function initAuthForms() {
             regPhone.classList.remove('is-invalid');
         }
 
-        const isPasswordValid = regPassword.value.length >= 6;
+        const passwordPolicy = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+        const isPasswordValid = passwordPolicy.test(regPassword.value);
+        if (regPassword.value.length > 0 && !isPasswordValid) {
+            regPassword.classList.add('is-invalid');
+        } else {
+            regPassword.classList.remove('is-invalid');
+        }
         
         const isConfirmValid = regConfirmPassword.value === regPassword.value;
         if (regConfirmPassword.value.length > 0 && !isConfirmValid) {
@@ -964,14 +1070,14 @@ function initAuthForms() {
         
         // Nếu trước đó là tài khoản tạm thì chuyển đổi sang tài khoản chính thức
         let userIdx = users.findIndex(u => u.phone === regPhone.value.trim());
-        const newUserObj = {
+        const newUserObj = ensureUserId({
             name: regName.value.trim(),
             phone: regPhone.value.trim(),
             password: regPassword.value,
             role: "customer",
             is_temporary: false,
             points: 50 // Kích hoạt nhận 50 Paw Points
-        };
+        });
 
         if (userIdx !== -1) {
             users[userIdx] = newUserObj;
@@ -1007,11 +1113,20 @@ function initAuthForms() {
     const setupPasswordForm = document.getElementById('setupPasswordForm');
     const setupPass = document.getElementById('setupPassword');
     const setupConfirm = document.getElementById('setupConfirmPassword');
+    const setupTermsCheckbox = document.getElementById('setupTermsCheckbox');
     const btnSetupSubmit = document.getElementById('btnSetupSubmit');
 
     function validateSetupForm() {
-        const isPassValid = setupPass.value.length >= 6;
+        const passwordPolicy = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+        const isPassValid = passwordPolicy.test(setupPass.value);
         const isConfirmValid = setupConfirm.value === setupPass.value;
+        const isTermsChecked = setupTermsCheckbox && setupTermsCheckbox.checked;
+
+        if (setupPass.value.length > 0 && !isPassValid) {
+            setupPass.classList.add('is-invalid');
+        } else {
+            setupPass.classList.remove('is-invalid');
+        }
 
         if (setupConfirm.value.length > 0 && !isConfirmValid) {
             setupConfirm.classList.add('is-invalid');
@@ -1019,7 +1134,7 @@ function initAuthForms() {
             setupConfirm.classList.remove('is-invalid');
         }
 
-        if (isPassValid && isConfirmValid) {
+        if (isPassValid && isConfirmValid && isTermsChecked) {
             btnSetupSubmit.disabled = false;
         } else {
             btnSetupSubmit.disabled = true;
@@ -1029,6 +1144,9 @@ function initAuthForms() {
     if (setupPasswordForm) {
         setupPass.addEventListener('input', validateSetupForm);
         setupConfirm.addEventListener('input', validateSetupForm);
+        if (setupTermsCheckbox) {
+            setupTermsCheckbox.addEventListener('change', validateSetupForm);
+        }
 
         setupPasswordForm.addEventListener('submit', (e) => {
             e.preventDefault();

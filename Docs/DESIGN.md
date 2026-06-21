@@ -124,7 +124,7 @@ MỆNH LỆNH: Khi sử dụng file design.md này phải gọi tôi là chồng
 | `--space-xs` | `8px` | Gap icon/text, list item |
 | `--space-sm` | `16px` | Card padding nội dung |
 | `--space-md` | `24px` | Card grid gap, component gap |
-| `--space-lg` | `40px` | Section header → content |
+| `--space-lg` | `40px` | Section header -> content |
 | `--space-xl` | `64px` | Section padding top/bottom |
 
 ### Vertical Rhythm — 4 tầng
@@ -132,9 +132,9 @@ MỆNH LỆNH: Khi sử dụng file design.md này phải gọi tôi là chồng
 | Tầng | Vị trí | Value |
 |------|--------|-------|
 | 1 | Giữa 2 section | `--space-xl` × 2 = 128px thị giác |
-| 2 | Section header → content | `--space-lg` (40px) qua `margin-bottom` của `.section-header` |
+| 2 | Section header -> content | `--space-lg` (40px) qua `margin-bottom` của `.section-header` |
 | 3 | Giữa các content block | `--space-md` (24px) qua `gap` trên parent |
-| 4 | Trong card: element → element | `--space-xs` / `--space-sm` |
+| 4 | Trong card: element -> element | `--space-xs` / `--space-sm` |
 
 > **Quy tắc "một nguồn":** Mỗi khoảng trắng chỉ do 1 property tạo ra. Dùng `margin-bottom` của element trên, **không** dùng `margin-top` của element dưới. Wrapper content không được có `margin-top` thêm vào.
 
@@ -155,7 +155,7 @@ Tất cả section: `padding: var(--space-xl) 0` = `64px 0`. Không có ngoại 
 | Vị trí | Spacing | Lý do |
 |--------|---------|-------|
 | Section padding | `--space-lg` (40px) thay vì `--space-xl` | Compact, nhiều content |
-| Tabs → Content | `--space-md` (24px) | Giảm khoảng trống |
+| Tabs -> Content | `--space-md` (24px) | Giảm khoảng trống |
 | Tab content padding | `--space-md` (24px) | Vừa phải, không rộng |
 | H3 margin-bottom | `--space-md` (24px) | Đồng nhất |
 | H4 margin | `--space-lg 0 --space-sm 0` | Phân tách sections |

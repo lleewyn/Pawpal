@@ -1308,7 +1308,7 @@ function initInteractivePawPass() {
 // =============================================================================
 
 // Expose ra window vì main.js load dưới dạng type="module" (scoped)
-// → onclick="openLookupModal()" trong HTML cần hàm ở global scope
+// -> onclick="openLookupModal()" trong HTML cần hàm ở global scope
 window.openLookupModal  = openLookupModal;
 window.closeLookupModal = closeLookupModal;
 window.switchLookupTab  = switchLookupTab;
@@ -1316,7 +1316,7 @@ window.submitLookup     = submitLookup;
 
 function initLookup() {
     const overlay = document.getElementById('lookupModal');
-    if (!overlay) return; // Không có modal trên trang này → bỏ qua
+    if (!overlay) return; // Không có modal trên trang này -> bỏ qua
 
     // Đóng khi click ra ngoài modal box
     overlay.addEventListener('click', function (e) {

@@ -5,15 +5,28 @@
 (function() {
     'use strict';
 
+    function getCurrentUser() {
+        try {
+            return JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+        } catch {
+            return null;
+        }
+    }
+
+    function getWishlistStorageKey() {
+        const user = getCurrentUser();
+        return user && user.phone ? `pawpal_wishlist_${user.phone}` : 'pawpal_wishlist_guest';
+    }
+
     // Get wishlist from localStorage
     function getWishlist() {
-        const wishlist = localStorage.getItem('pawpal_wishlist');
+        const wishlist = localStorage.getItem(getWishlistStorageKey());
         return wishlist ? JSON.parse(wishlist) : [];
     }
 
     // Save wishlist to localStorage
     function saveWishlist(wishlist) {
-        localStorage.setItem('pawpal_wishlist', JSON.stringify(wishlist));
+        localStorage.setItem(getWishlistStorageKey(), JSON.stringify(wishlist));
     }
 
     // Format price

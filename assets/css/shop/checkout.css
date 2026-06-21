@@ -158,6 +158,24 @@
 .payment-methods {
   display: flex;
   flex-direction: column;
+  gap: var(--space-md);
+}
+
+.payment-method-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.payment-method-group-title {
+  font-size: var(--fs-body);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.payment-method-group-list {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-sm);
 }
 

@@ -47,8 +47,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Tải sản phẩm từ CSV
             products = await window.DataLoader.loadProducts();
             
-            // Lấy giỏ hàng từ localStorage
-            cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+            // Lấy giỏ hàng từ localStorage và phục hồi nếu có backup
+            cart = restoreCartFromBackup(JSON.parse(localStorage.getItem('pawpal_cart') || '[]'));
             
             // Mặc định chọn tất cả sản phẩm
             cart.forEach(item => {
@@ -417,6 +417,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                 renderCart();
             }
         });
+    }
+
+    function restoreCartFromBackup(currentCart) {
+        const backupJson = localStorage.getItem('pawpal_cart_unselected_backup');
+        if (!backupJson) {
+            return currentCart;
+        }
+
+        let backupItems = [];
+        try {
+            backupItems = JSON.parse(backupJson);
+        } catch (err) {
+            console.error('❌ Lỗi đọc backup giỏ hàng:', err);
+            localStorage.removeItem('pawpal_cart_unselected_backup');
+            return currentCart;
+        }
+
+        const mergedCart = [...currentCart];
+        backupItems.forEach(backupItem => {
+            const existing = mergedCart.find(item => Number(item.id) === Number(backupItem.id));
+            if (existing) {
+                existing.quantity += Number(backupItem.quantity || 0);
+            } else {
+                mergedCart.push(backupItem);
+            }
+        });
+
+        localStorage.setItem('pawpal_cart', JSON.stringify(mergedCart));
+        localStorage.removeItem('pawpal_cart_unselected_backup');
+        return mergedCart;
     }
 
     // Khởi tạo

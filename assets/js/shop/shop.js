@@ -44,7 +44,7 @@ let state = {
         search: ''
     },
     sort: 'default',
-    wishlist: JSON.parse(localStorage.getItem('pawpal_wishlist') || '[]'),
+    wishlist: [],
     isLoading: true
 };
 
@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.products = await window.DataLoader.loadProducts();
         console.log(`✓ Loaded ${state.products.length} products`);
         state.isLoading = false;
+        state.wishlist = loadWishlist();
         
         // Initialize UI after data loaded
         initSuggestionsSidebar();
@@ -464,8 +465,13 @@ function renderProducts() {
     // Render products or empty state
     if (paginatedProducts.length === 0) {
         grid.style.display = 'none';
+        renderNoResultsSuggestions();
         emptyState.style.display = 'block';
     } else {
+        const emptyRecommendations = document.getElementById('emptyRecommendations');
+        if (emptyRecommendations) {
+            emptyRecommendations.style.display = 'none';
+        }
         grid.style.display = 'grid';
         emptyState.style.display = 'none';
         grid.innerHTML = paginatedProducts.map(product => createProductCardHTML(product)).join('');
@@ -475,11 +481,6 @@ function renderProducts() {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-                if (!user) {
-                    showToast('Vui lòng đăng nhập để thêm vào danh sách yêu thích!', 'warning');
-                    return;
-                }
                 toggleWishlist(parseInt(btn.dataset.productId));
                 btn.classList.toggle('active');
             });
@@ -811,6 +812,24 @@ function attachFilterListenersToDrawer() {
 // Wishlist Management
 // ══════════════════════════════════════════════════════════════════════════
 
+function getWishlistStorageKey() {
+    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    return user && user.phone ? `pawpal_wishlist_${user.phone}` : 'pawpal_wishlist_guest';
+}
+
+function loadWishlist() {
+    try {
+        return JSON.parse(localStorage.getItem(getWishlistStorageKey()) || '[]');
+    } catch (e) {
+        console.error('Failed to load wishlist', e);
+        return [];
+    }
+}
+
+function saveWishlist() {
+    localStorage.setItem(getWishlistStorageKey(), JSON.stringify(state.wishlist));
+}
+
 function toggleWishlist(productId) {
     const index = state.wishlist.indexOf(productId);
     if (index > -1) {
@@ -820,7 +839,7 @@ function toggleWishlist(productId) {
         state.wishlist.push(productId);
         showToast('Đã thêm vào danh sách yêu thích', 'success');
     }
-    localStorage.setItem('pawpal_wishlist', JSON.stringify(state.wishlist));
+    saveWishlist();
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -882,6 +901,40 @@ function formatPrice(price) {
         style: 'currency',
         currency: 'VND'
     }).format(price).replace('₫', 'đ');
+}
+
+function renderNoResultsSuggestions() {
+    const recommendations = document.getElementById('emptyRecommendations');
+    if (!recommendations) return;
+
+    const suggestionProducts = state.products
+        .filter(p => p.inStock)
+        .sort((a, b) => (b.sale ? 1 : 0) - (a.sale ? 1 : 0))
+        .slice(0, 4);
+
+    if (!suggestionProducts.length) {
+        recommendations.style.display = 'none';
+        return;
+    }
+
+    recommendations.style.display = 'grid';
+    recommendations.innerHTML = `
+        <div class="suggestions-header">
+            <h4>Các sản phẩm gợi ý cho bạn</h4>
+            <p>Thông tin này được tổng hợp từ các sản phẩm đang bán chạy.</p>
+        </div>
+        <div class="suggestions-grid">
+            ${suggestionProducts.map(product => `
+                <a href="product-detail.html?id=${product.id}" class="suggestion-card-empty">
+                    <img src="${product.image}" alt="${product.name}" loading="lazy">
+                    <div class="suggestion-card-info">
+                        <strong>${product.name}</strong>
+                        <span>${formatPrice(product.price)}</span>
+                    </div>
+                </a>
+            `).join('')}
+        </div>
+    `;
 }
 
 function showToast(message, type = 'info') {

@@ -2,8 +2,8 @@
  * components.js — Inject shared header & footer vào tất cả page
  *
  * Cách dùng trong HTML:
- *   <div id="site-header"></div>   ← header inject vào đây
- *   <div id="site-footer"></div>   ← footer inject vào đây
+ *   <div id="site-header"></div>   <- header inject vào đây
+ *   <div id="site-footer"></div>   <- footer inject vào đây
  *
  * Dùng absolute path /components/ để hoạt động đúng trên cả Vite
  * lẫn Live Server (miễn là cả hai đều serve từ root của project).
@@ -14,7 +14,7 @@
     /**
      * Tìm root path của project bằng cách đọc src của chính script này.
      * Ví dụ: src = "/assets/js/shared/components.js"
-     *        → root = "/"  (absolute, luôn đúng)
+     *        -> root = "/"  (absolute, luôn đúng)
      * Fallback về relative nếu không detect được.
      */
     function getRootPath() {
@@ -35,7 +35,7 @@
                     return detectedRoot + '/';
                 }
             }
-            // Không tìm được → dùng absolute root '/'
+            // Không tìm được -> dùng absolute root '/'
             return '/';
         }
 

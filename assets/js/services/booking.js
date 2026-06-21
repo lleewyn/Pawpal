@@ -962,6 +962,12 @@ function processBookingSubmit() {
                 createdAt: Date.now()
             });
             localStorage.setItem('pawpal_temp_tokens', JSON.stringify(tokens));
+            // Show simulated SMS / activation toast that leads to OTP activation flow
+            try {
+                showTempAccountActivationToast(bookingState.ownerPhone, generatedToken);
+            } catch (err) {
+                console.warn('showTempAccountActivationToast not available', err);
+            }
         }
     }
 
@@ -991,7 +997,9 @@ function showTempAccountActivationToast(phone, token) {
     toast.className = 'toast-custom toast-success';
     toast.style.minWidth = '320px';
 
-    const setupUrl = `http://localhost:3000/pages/public/login.html#setup-password?token=${token}`;
+    // For guest activation flow, point to login with guest-activate action so user receives OTP first
+    const origin = window.location.origin || 'http://localhost:3000';
+    const setupUrl = `${origin}/pages/public/login.html?action=guest-activate&phone=${encodeURIComponent(phone)}`;
 
     toast.innerHTML = `
         <div class="toast-content" style="flex-direction: column; align-items: flex-start; gap: 8px;">

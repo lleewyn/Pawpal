@@ -1,7 +1,7 @@
 /**
  * RETURN HANDLER JS - Triển khai luồng đổi trả hàng (Quy trình 3.1.12)
  * - Tối giản logic JS, tập trung hiển thị UI/UX và animation
- * - Tuân thủ 100% design.md (không emoji, dùng text char •, →)
+ * - Tuân thủ 100% design.md (không emoji, dùng text char •, ->)
  */
 
 let currentRmaOrder = null;

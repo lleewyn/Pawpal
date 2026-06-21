@@ -31,12 +31,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function setupTrackingLink(order) {
     const trackBtns = document.querySelectorAll('a[href="/pages/user/orders.html"]');
-    if (trackBtns.length > 0 && !order.userId) {
-        // If it's a guest order, redirect tracking to guest lookup page
-        trackBtns.forEach(btn => {
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    const isLoggedInUser = Boolean(currentUser && (currentUser.id || currentUser.phone));
+    const isSamePhone = currentUser && order.shipping && currentUser.phone === order.shipping.phone;
+
+    trackBtns.forEach(btn => {
+        if (isLoggedInUser && currentUser.id && order.userId === currentUser.id) {
+            btn.href = `/pages/user/order-detail.html?id=${order.orderId}`;
+        } else if (isLoggedInUser && isSamePhone) {
+            btn.href = '/pages/user/orders.html';
+        } else {
             btn.href = '/pages/public/return-guest.html';
-        });
-    }
+        }
+    });
 }
 
 function displayOrderInfo(order) {

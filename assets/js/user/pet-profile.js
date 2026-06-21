@@ -3,6 +3,7 @@
    ========================================================================== */
 
 const STORAGE_KEY = 'pawpal_pets';
+const TRACKER_LOGS_KEY = 'pawpal_pet_tracker_logs';
 
 export function generatePetId() {
     const num = Math.floor(1000 + Math.random() * 9000);

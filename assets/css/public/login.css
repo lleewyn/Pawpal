@@ -372,6 +372,8 @@
 /* ========== Setup Password / Terms Checkbox ========== */
 .setup-terms-check {
     padding: var(--space-sm) var(--space-md);
+    /* Tăng khoảng cách bên trái để checkbox không quá sát viền */
+    padding-left: calc(var(--space-md) + 8px);
     background-color: var(--color-primary-light);
     border-radius: var(--card-border-radius);
 }

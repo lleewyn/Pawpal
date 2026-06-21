@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-export function resetPetForm() {
+function resetPetForm() {
     const form = document.getElementById('petForm');
     if (form) form.reset();
     

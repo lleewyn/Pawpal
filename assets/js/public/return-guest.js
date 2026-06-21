@@ -23,6 +23,8 @@ function filterResults(type, btnElement) {
     });
 }
 
+let currentLookupPhone = '';
+
 function handleLookup(event) {
     event.preventDefault();
     const phoneInput = document.getElementById('phone-number').value.trim();
@@ -31,6 +33,7 @@ function handleLookup(event) {
 
     errorBox.style.display = 'none';
     resultBox.style.display = 'none';
+    currentLookupPhone = '';
 
     // Chấp nhận mọi số điện thoại hợp lệ (>= 8 số)
     if (phoneInput.length >= 8) {
@@ -54,10 +57,22 @@ function handleLookup(event) {
         const randomOrd = document.querySelector('.random-ord');
         if (randomOrd) randomOrd.textContent = 'Đơn hàng: ORD-' + (Math.floor(Math.random() * 9000) + 1000);
 
+        currentLookupPhone = phoneInput;
+        updateGuestLookupActions(phoneInput);
+
         resultBox.style.display = 'block';
         filterResults('all', null);
     } else {
         // Hiển thị thông báo lỗi
         errorBox.style.display = 'block';
     }
+}
+
+function updateGuestLookupActions(phone) {
+    const actionButtons = document.querySelectorAll('.guest-lookup-action');
+    actionButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            window.location.href = `/pages/public/login.html?action=guest-activate&phone=${encodeURIComponent(phone)}`;
+        });
+    });
 }

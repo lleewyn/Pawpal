@@ -93,7 +93,7 @@
     margin-left: 2px;
 }
 
-/* Row-reverse: leftmost DOM star = highest value, hover sáng trái→phải */
+/* Row-reverse: leftmost DOM star = highest value, hover sáng trái->phải */
 .star-picker {
     display: flex;
     flex-direction: row-reverse;
