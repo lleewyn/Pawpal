@@ -108,8 +108,9 @@ function initMobileNavigation() {
     const nav = document.getElementById('primaryNavigation');
     if (!toggleBtn || !nav) return;
 
-    // Toggle open/close
-    toggleBtn.addEventListener('click', () => {
+    // Toggle open/close (stop propagation so document click doesn't immediately close it)
+    toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const isOpen = nav.classList.contains('show');
         if (isOpen) {
             closeDrawer();
@@ -126,13 +127,33 @@ function initMobileNavigation() {
     });
 
     // Close on overlay click (click outside drawer)
-    document.addEventListener('click', (e) => {
-        if (nav.classList.contains('show') &&
-            !nav.contains(e.target) &&
-            !toggleBtn.contains(e.target)) {
-            closeDrawer();
-        }
-    });
+    // We'll create an overlay element when opening the drawer and remove it on close.
+    let mobileOverlay = null;
+    function createOverlay() {
+        if (mobileOverlay) return;
+        mobileOverlay = document.createElement('div');
+        mobileOverlay.className = 'mobile-nav-overlay';
+        mobileOverlay.style.position = 'fixed';
+        mobileOverlay.style.inset = '0';
+        mobileOverlay.style.background = 'rgba(0,0,0,0.35)';
+        mobileOverlay.style.zIndex = '1099';
+        mobileOverlay.style.opacity = '0';
+        mobileOverlay.style.transition = 'opacity 220ms ease';
+        document.body.appendChild(mobileOverlay);
+        // clicking overlay closes drawer
+        mobileOverlay.addEventListener('click', closeDrawer);
+        // small delay to allow transition
+        requestAnimationFrame(() => mobileOverlay.style.opacity = '1');
+    }
+
+    function removeOverlay() {
+        if (!mobileOverlay) return;
+        mobileOverlay.style.opacity = '0';
+        setTimeout(() => {
+            if (mobileOverlay && mobileOverlay.parentNode) mobileOverlay.parentNode.removeChild(mobileOverlay);
+            mobileOverlay = null;
+        }, 240);
+    }
 
     // Close on ESC
     document.addEventListener('keydown', (e) => {
@@ -143,12 +164,18 @@ function initMobileNavigation() {
         nav.classList.add('show');
         toggleBtn.setAttribute('aria-expanded', 'true');
         document.body.style.overflow = 'hidden';
+        createOverlay();
+        // reset carets when opening
+        nav.querySelectorAll('.dropdown-toggle svg').forEach(svg => svg.style.transform = 'rotate(0deg)');
     }
 
     function closeDrawer() {
         nav.classList.remove('show');
         toggleBtn.setAttribute('aria-expanded', 'false');
         document.body.style.overflow = '';
+        removeOverlay();
+        // reset carets when closing
+        nav.querySelectorAll('.dropdown-toggle svg').forEach(svg => svg.style.transform = 'rotate(0deg)');
     }
 
     // Rotate caret icons for any dropdown toggles when they expand/collapse

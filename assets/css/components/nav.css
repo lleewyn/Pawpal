@@ -230,11 +230,16 @@
 
     /* Mobile Dropdown styles */
     .nav-item.dropdown .dropdown-menu {
+        display: none;
         background: transparent;
         border: none;
         padding: 8px 0 8px 16px;
         margin: 0;
         box-shadow: none;
+    }
+
+    .nav-item.dropdown .dropdown-menu.show {
+        display: block;
     }
 
     .nav-item.dropdown .dropdown-item {
