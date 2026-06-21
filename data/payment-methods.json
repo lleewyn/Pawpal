@@ -46,5 +46,15 @@
       "accountName": "CÔNG TY PAWPAL",
       "branch": "Chi nhánh TP.HCM"
     }
+  },
+  {
+    "id": "vietqr",
+    "name": "Quét mã VietQR",
+    "shortName": "VietQR",
+    "description": "Quét mã QR qua ứng dụng ngân hàng",
+    "icon": "qrcode",
+    "fee": 0,
+    "available": true,
+    "requiresInfo": false
   }
 ]

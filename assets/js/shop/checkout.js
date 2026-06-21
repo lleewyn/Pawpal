@@ -227,9 +227,10 @@ function renderPaymentMethods() {
         methodDiv.innerHTML = `
             <input type="radio" name="payment" value="${method.id}" 
                    id="payment-${method.id}" ${isSelected ? 'checked' : ''}>
-            <svg class="payment-icon" viewBox="0 0 24 24">
-                ${getPaymentIcon(method.icon)}
-            </svg>
+            ${['momo', 'vnpay', 'vietqr'].includes(method.id) 
+                ? `<img src="../../assets/images/shared/payment_${method.id === 'vietqr' ? 'VietQR' : method.id}.png" class="payment-icon" style="object-fit: contain; width: 32px; height: 32px; border-radius: 4px;">`
+                : `<svg class="payment-icon" viewBox="0 0 24 24">${getPaymentIcon(method.icon)}</svg>`
+            }
             <div class="payment-info">
                 <h4>${method.name}</h4>
                 <p>${method.description}</p>
