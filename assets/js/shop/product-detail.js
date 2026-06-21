@@ -421,13 +421,10 @@ function renderProductDetails(product) {
     const thumbnailsContainer = document.getElementById('thumbnails');
     if (thumbnailsContainer && product.image) {
         thumbnailsContainer.innerHTML = '';
-        // Mock gallery images
-        const gallery = [
-            product.image,
-            product.image,
-            product.image,
-            product.image
-        ];
+        // Use product.images or fallback to single image
+        const gallery = (product.images && product.images.length > 0) 
+            ? product.images 
+            : [product.image];
         
         gallery.forEach((imgSrc, index) => {
             const thumb = document.createElement('div');
