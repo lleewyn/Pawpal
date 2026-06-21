@@ -6,7 +6,7 @@
 .blog-magazine-main {
     background-color: var(--color-bg-light);
     font-family: var(--font-body);
-    padding-top: var(--space-lg);
+    padding-top: 0;
 }
 
 .section-title {
@@ -38,7 +38,7 @@
 
 /* ---------- 2. Filter Tags ---------- */
 .blog-filters-section {
-    padding: var(--space-lg) 0;
+    padding: var(--space-md) 0;
 }
 
 .blog-filter-group {
