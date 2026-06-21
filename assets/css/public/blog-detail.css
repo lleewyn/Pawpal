@@ -74,13 +74,34 @@
     font-family: 'Lora', serif;
     font-size: 1.3rem;
     font-style: italic;
-    color: var(--primary-color, #2E5C50);
-    border-left: 5px solid var(--accent-color, #F2A900);
-    background-color: rgba(242, 169, 0, 0.05);
+    color: var(--color-primary, #2E5C50);
+    background-color: rgba(46, 92, 80, 0.05);
     padding: 1.5rem 2rem;
     margin: 2.5rem 0;
-    border-radius: 0 1rem 1rem 0;
+    border-radius: 1rem;
     position: relative;
+    text-align: center;
+}
+
+/* Bootstrap Overrides for Blog Detail */
+.text-primary {
+    color: var(--color-primary, #2E5C50) !important;
+}
+.bg-primary {
+    background-color: var(--color-primary, #2E5C50) !important;
+}
+.border-primary {
+    border-color: var(--color-primary, #2E5C50) !important;
+}
+.btn-primary {
+    background-color: var(--color-primary, #2E5C50);
+    border-color: var(--color-primary, #2E5C50);
+    color: #fff;
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+    background-color: var(--color-primary-dark, #1b3d34);
+    border-color: var(--color-primary-dark, #1b3d34);
+    color: #fff;
 }
 
 /* Product Box inside article */

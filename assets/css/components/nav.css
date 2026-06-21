@@ -332,6 +332,29 @@
     color: #99aab0;
 }
 
+/* ------------------------------------------------------------------
+   Mobile drawer overrides (append-only to avoid conflicts)
+   ------------------------------------------------------------------ */
+@media (max-width: 1249.98px) {
+    .nav-menu a:hover,
+    .nav-menu .nav-link:hover { color: #ffffff; padding-left: 0; }
+
+    .nav-menu .nav-link {
+        border: none;
+        background: transparent;
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+
+    .nav-menu .dropdown-toggle:focus,
+    .nav-menu .dropdown-toggle:active {
+        outline: none;
+        box-shadow: none;
+    }
+
+    .nav-item.dropdown .dropdown-menu .dropdown-divider { display: none; }
+}
+
 .search-bar input:focus {
     border-color: var(--color-accent);
     background-color: #ffffff;
