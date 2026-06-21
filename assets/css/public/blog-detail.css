@@ -1,0 +1,162 @@
+/* ==========================================================================
+   BLOG DETAIL SPECIFIC STYLES
+   ========================================================================== */
+
+/* Typography & Spacing for Article Content */
+.blog-article-content {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: var(--text-color, #333);
+}
+
+.blog-article-content .lead {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--secondary-color, #666);
+    margin-bottom: 2rem;
+    line-height: 1.7;
+}
+
+.blog-article-content h2 {
+    font-family: 'Lora', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary-color, #2E5C50);
+    margin-top: 3rem;
+    margin-bottom: 1.25rem;
+}
+
+.blog-article-content p {
+    margin-bottom: 1.5rem;
+}
+
+.blog-article-content ul, 
+.blog-article-content ol {
+    margin-bottom: 1.5rem;
+    padding-left: 1.5rem;
+}
+
+.blog-article-content li {
+    margin-bottom: 0.75rem;
+}
+
+/* Blockquote */
+.blog-article-content .blog-quote {
+    font-family: 'Lora', serif;
+    font-size: 1.3rem;
+    font-style: italic;
+    color: var(--primary-color, #2E5C50);
+    border-left: 5px solid var(--accent-color, #F2A900);
+    background-color: rgba(242, 169, 0, 0.05);
+    padding: 1.5rem 2rem;
+    margin: 2.5rem 0;
+    border-radius: 0 1rem 1rem 0;
+    position: relative;
+}
+
+/* Product Box inside article */
+.blog-product-box {
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    background-color: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.blog-product-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+}
+
+.blog-product-box img {
+    max-height: 120px;
+    object-fit: cover;
+}
+
+/* Tags */
+.blog-tags .btn-filter-tag {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 2rem;
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.blog-tags .btn-filter-tag:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+/* Sidebar TOC */
+.toc-widget .nav-link {
+    border-left: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.toc-widget .nav-link:hover {
+    color: var(--primary-color) !important;
+}
+
+.toc-widget .nav-link.active {
+    color: var(--primary-color) !important;
+    border-left-color: var(--primary-color);
+    font-weight: 600;
+    background-color: rgba(46, 92, 80, 0.05);
+}
+
+/* Comments */
+.comment-form-wrapper {
+    background-color: #f8f9fa;
+}
+
+.comment-form-wrapper input,
+.comment-form-wrapper textarea {
+    border: 1px solid #ced4da;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+}
+
+.comment-form-wrapper input:focus,
+.comment-form-wrapper textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(46, 92, 80, 0.25);
+}
+
+.btn-share {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-share:hover {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+/* Responsive spacing */
+@media (max-width: 991.98px) {
+    .blog-article-content h2 {
+        margin-top: 2rem;
+    }
+    
+    .blog-hero-title {
+        font-size: 2rem;
+    }
+}
