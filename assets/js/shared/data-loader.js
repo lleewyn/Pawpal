@@ -96,24 +96,21 @@ function transformProductData(rawData) {
         const rating = parseFloat(item['Đánh giá (Rating)'] || '4.5');
         const reviewCount = parseInt(item['Lượt đánh giá (Review Count)'] || '0');
         
-        return {
-            id: index + 1,
-            sku: item['Mã sản phẩm (SKU)'] || `PROD-${index + 1}`,
-            name: item['Tên sản phẩm'] || 'Sản phẩm không tên',
-            brand: item['Thương hiệu (Brand)'] || 'Chưa xác định',
-            category: category,
-            categoryName: item['Danh mục (Category)'] || 'Khác',
-            description: item['Công dụng'] || item['Thành phần'] || '',
-            origin: item['Xuất xứ'] || 'Chưa rõ',
-            price: price,
-            originalPrice: sale ? originalPrice : null,
-            oldPrice: sale ? originalPrice : null,
-            image: item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/shop/products/placeholder.webp',
-            images: [
-                item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/shop/products/placeholder.webp',
-                item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/shop/products/placeholder.webp',
-                item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/shop/products/placeholder.webp'
-            ],
+            let rawImagesStr = item['Hình ảnh'] || '';
+            let parsedImages = rawImagesStr ? rawImagesStr.split(',').map(s => `/${s.trim()}`) : ['/assets/images/shop/products/placeholder.webp'];
+
+            return {
+                id: index + 1,
+                sku: item['Mã sản phẩm (SKU)'] || `PROD-${index + 1}`,
+                name: item['Tên sản phẩm'] || 'Sản phẩm không tên',
+                brand: item['Thương hiệu (Brand)'] || 'Chưa xác định',
+                category: category,
+                categoryName: item['Danh mục (Category)'] || 'Khác',
+                price: price,
+                originalPrice: sale ? originalPrice : null,
+                oldPrice: sale ? originalPrice : null,
+                image: parsedImages[0],
+                images: parsedImages,
             inStock: inStock,
             stock: stock,
             sale: sale,
