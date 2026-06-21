@@ -3,12 +3,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainFilters = document.querySelectorAll('.main-filters .btn-filter-pill');
     mainFilters.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Xóa class active của tất cả các nút cùng nhóm
             mainFilters.forEach(f => f.classList.remove('active'));
-            // Thêm class active cho nút vừa click
             btn.classList.add('active');
             
-            // TODO: Call API or filter posts logic here
+            const text = btn.textContent.trim();
+            if (text === 'Kiến thức chăm sóc') {
+                document.querySelector('.blog-latest-section')?.scrollIntoView({ behavior: 'smooth' });
+            } else if (text === 'Khuyến mãi') {
+                document.querySelector('.blog-news-promo-section')?.scrollIntoView({ behavior: 'smooth' });
+            } else if (text === 'Tin tức') {
+                document.querySelector('.blog-news-promo-section')?.scrollIntoView({ behavior: 'smooth' });
+            }
         });
     });
 
@@ -16,12 +21,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const subFilters = document.querySelectorAll('.sub-filters .btn-filter-tag');
     subFilters.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Xóa class active của tất cả các thẻ tag cùng nhóm
             subFilters.forEach(f => f.classList.remove('active'));
-            // Thêm class active cho thẻ tag vừa click
             btn.classList.add('active');
             
-            // TODO: Call API or filter posts logic here
+            const filterKeyword = btn.textContent.trim().toLowerCase();
+            const allArticles = document.querySelectorAll('.blog-latest-section article');
+            
+            allArticles.forEach(article => {
+                const titleElement = article.querySelector('.card-title');
+                if (!titleElement) return;
+                
+                const title = titleElement.textContent.toLowerCase();
+                if (filterKeyword === 'tất cả') {
+                    article.style.display = '';
+                } else {
+                    // Filter based on keyword match
+                    if (title.includes(filterKeyword) || 
+                       (filterKeyword === 'chó' && title.includes('chó')) || 
+                       (filterKeyword === 'mèo' && (title.includes('mèo') || title.includes('pate'))) ||
+                       (filterKeyword === 'sức khỏe' && (title.includes('thuốc') || title.includes('tắm'))) ||
+                       (filterKeyword === 'dinh dưỡng' && (title.includes('thức ăn') || title.includes('pate')))
+                    ) {
+                        article.style.display = '';
+                    } else {
+                        article.style.display = 'none';
+                    }
+                }
+            });
         });
     });
 
