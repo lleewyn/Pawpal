@@ -103,7 +103,7 @@
         var cacheKey = 'pawpal_component_' + targetId;
         // Only use cache for non-header, non-fab, non-sidebar components
         var isSidebar = targetId === 'user-sidebar';
-        var cached = (targetId !== 'site-header' && targetId !== 'site-fab' && !isSidebar) ? sessionStorage.getItem(cacheKey) : null;
+        var cached = (targetId !== 'site-header' && targetId !== 'site-fab' && targetId !== 'site-footer' && !isSidebar) ? sessionStorage.getItem(cacheKey) : null;
         if (cached) {
             el.outerHTML = cached;
             if (targetId === 'site-header') {
