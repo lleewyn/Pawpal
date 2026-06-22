@@ -177,7 +177,6 @@
 }
 
 .service-item-block:hover {
-    box-shadow: var(--shadow-card-hover);
 }
 
 .service-asymmetric-grid {
@@ -260,7 +259,6 @@
 }
 
 .service-item-block:hover .service-showcase-img {
-    transform: scale(1.05);
 }
 
 /* Accordion price section */
@@ -360,8 +358,6 @@
 }
 
 .service-card:hover {
-    box-shadow: var(--shadow-card-hover);
-    transform: translateY(-6px);
 }
 
 .service-card-link {
@@ -387,7 +383,6 @@
 }
 
 .service-card-link:hover .service-image {
-    transform: scale(1.06);
 }
 
 .service-category-badge {

@@ -191,8 +191,6 @@
 }
 
 .payment-method-card:hover {
-  border-color: var(--color-primary);
-  background: var(--color-bg-light);
 }
 
 .payment-method-card.selected {

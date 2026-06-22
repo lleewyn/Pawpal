@@ -677,39 +677,244 @@ async function handleCheckout() {
     // Save to user's orders list
     saveOrderToUserHistory(orderData);
     
-    // Check if this is buy now checkout
-    const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
-    
     // Route based on payment method
-    function clearCheckoutStateAfterOrder() {
+    if (checkoutState.selectedPayment === 'cod') {
+        // COD: Clear checkout state and go to success page
         localStorage.removeItem('pawpal_cart_unselected_backup');
+        const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
         if (isBuyNow) {
             sessionStorage.removeItem('pawpal_buynow_cart');
             sessionStorage.removeItem('pawpal_is_buynow');
         } else {
             localStorage.removeItem('pawpal_cart');
         }
-    }
-
-    if (checkoutState.selectedPayment === 'cod') {
-        // COD: Go to success page
-        clearCheckoutStateAfterOrder();
         window.location.href = `/pages/shop/payment-success.html?orderId=${orderData.orderId}`;
+    } else if (['momo', 'vnpay', 'zalopay', 'vietqr'].includes(checkoutState.selectedPayment)) {
+        // Online QR payment: Show QR modal
+        showQRPaymentModal(orderData);
     } else {
-        // Online payment: Simulate redirect
-        showToast('Đang chuyển đến cổng thanh toán...', 'info');
-        setTimeout(() => {
-            // Always success for demo purposes
-            const success = true; // Changed from random to always true
-            
-            if (success) {
-                clearCheckoutStateAfterOrder();
-                window.location.href = `/pages/shop/payment-success.html?orderId=${orderData.orderId}`;
-            } else {
-                window.location.href = `/pages/shop/payment-failed.html?orderId=${orderData.orderId}`;
-            }
-        }, 2000);
+        // Bank transfer: Clear checkout state and go to success page
+        localStorage.removeItem('pawpal_cart_unselected_backup');
+        const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
+        if (isBuyNow) {
+            sessionStorage.removeItem('pawpal_buynow_cart');
+            sessionStorage.removeItem('pawpal_is_buynow');
+        } else {
+            localStorage.removeItem('pawpal_cart');
+        }
+        window.location.href = `/pages/shop/payment-success.html?orderId=${orderData.orderId}`;
     }
+}
+
+// ============================================================================
+// QR Payment Modal
+// ============================================================================
+let qrPaymentState = {
+    orderData: null,
+    timerInterval: null,
+    timeRemaining: 900, // 15 minutes in seconds
+    paymentVerified: false
+};
+
+const paymentMethodConfig = {
+    momo: {
+        name: 'Ví điện tử MoMo',
+        color: '#A72930',
+        instruction: 'Quét mã QR bằng ứng dụng MoMo',
+        timeout: 900 // 15 minutes
+    },
+    vnpay: {
+        name: 'Cổng thanh toán VNPay',
+        color: '#0066CC',
+        instruction: 'Quét mã QR qua ứng dụng Ngân hàng của bạn',
+        timeout: 900
+    },
+    zalopay: {
+        name: 'Thanh toán qua ZaloPay',
+        color: '#0084FF',
+        instruction: 'Quét mã QR bằng ứng dụng Zalo hoặc ZaloPay',
+        timeout: 600 // 10 minutes
+    },
+    vietqr: {
+        name: 'Quét mã VietQR',
+        color: '#2A5944',
+        instruction: 'Quét mã QR qua ứng dụng Mobile Banking của ngân hàng',
+        timeout: 1200 // 20 minutes
+    }
+};
+
+function generateMockQRCode(orderId, amount) {
+    // Generate a data URL for a mock QR code image
+    // In production, this would use a QR code library like qrcode.js
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 200;
+    const ctx = canvas.getContext('2d');
+    
+    // Draw a simple pattern to simulate QR code
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, 200, 200);
+    
+    ctx.fillStyle = '#000000';
+    
+    // Position detection patterns (3 corners)
+    const patterns = [
+        [0, 0], [150, 0], [0, 150]
+    ];
+    
+    patterns.forEach(([x, y]) => {
+        // Outer square
+        ctx.fillRect(x, y, 50, 50);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(x + 10, y + 10, 30, 30);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(x + 15, y + 15, 20, 20);
+    });
+    
+    // Random data pattern
+    ctx.fillStyle = '#000000';
+    for (let i = 0; i < 100; i++) {
+        const x = Math.random() * 100 + 50;
+        const y = Math.random() * 100 + 50;
+        if (Math.random() > 0.5) {
+            ctx.fillRect(x, y, 2, 2);
+        }
+    }
+    
+    return canvas.toDataURL('image/png');
+}
+
+function showQRPaymentModal(orderData) {
+    qrPaymentState.orderData = orderData;
+    qrPaymentState.timeRemaining = paymentMethodConfig[orderData.payment.method].timeout;
+    qrPaymentState.paymentVerified = false;
+    
+    const methodId = orderData.payment.method;
+    const config = paymentMethodConfig[methodId];
+    
+    // Update modal content
+    document.getElementById('qr-method-name').textContent = config.name;
+    document.getElementById('qr-method-desc').textContent = `Đơn hàng #${orderData.orderId}`;
+    document.getElementById('qr-instruction').textContent = config.instruction;
+    
+    // Set logo
+    const qrLogo = document.getElementById('qr-logo');
+    qrLogo.className = `qr-logo ${methodId}`;
+    qrLogo.src = `../../assets/images/shared/payment_${methodId === 'vietqr' ? 'VietQR' : methodId}.png`;
+    qrLogo.onerror = () => {
+        qrLogo.style.display = 'none';
+    };
+    
+    // Generate and display QR code
+    const qrCode = generateMockQRCode(orderData.orderId, orderData.pricing.grandTotal);
+    document.getElementById('qr-code-image').src = qrCode;
+    
+    // Enable confirm button
+    document.getElementById('btn-confirm-payment').disabled = false;
+    
+    // Clear any previous status messages
+    const statusMsg = document.getElementById('payment-status-message');
+    statusMsg.className = 'payment-status-message';
+    statusMsg.textContent = '';
+    
+    // Show modal
+    document.getElementById('qr-backdrop').classList.add('show');
+    document.getElementById('payment-qr-modal').classList.add('show');
+    
+    // Start timer
+    startQRTimer();
+}
+
+function startQRTimer() {
+    if (qrPaymentState.timerInterval) {
+        clearInterval(qrPaymentState.timerInterval);
+    }
+    
+    const timerElement = document.getElementById('qr-timer');
+    
+    qrPaymentState.timerInterval = setInterval(() => {
+        qrPaymentState.timeRemaining--;
+        
+        const minutes = Math.floor(qrPaymentState.timeRemaining / 60);
+        const seconds = qrPaymentState.timeRemaining % 60;
+        const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        timerElement.textContent = timeStr;
+        
+        if (qrPaymentState.timeRemaining <= 60) {
+            timerElement.style.color = 'var(--color-danger)';
+        }
+        
+        if (qrPaymentState.timeRemaining <= 0) {
+            clearInterval(qrPaymentState.timerInterval);
+            timerElement.textContent = '00:00';
+            handleQRExpired();
+        }
+    }, 1000);
+}
+
+function hideQRPaymentModal() {
+    document.getElementById('qr-backdrop').classList.remove('show');
+    document.getElementById('payment-qr-modal').classList.remove('show');
+    
+    if (qrPaymentState.timerInterval) {
+        clearInterval(qrPaymentState.timerInterval);
+    }
+}
+
+function handleQRExpired() {
+    const statusMsg = document.getElementById('payment-status-message');
+    statusMsg.className = 'payment-status-message show error';
+    statusMsg.textContent = 'Hết thời hạn thanh toán. Vui lòng thử lại.';
+    
+    document.getElementById('btn-confirm-payment').disabled = true;
+    
+    setTimeout(() => {
+        hideQRPaymentModal();
+    }, 3000);
+}
+
+function mockPaymentVerification() {
+    // Simulate payment verification with random success/failure
+    // In demo, let's make it 80% success rate after 2-5 seconds
+    const willSucceed = Math.random() < 0.8;
+    const delay = Math.random() * 3000 + 2000; // 2-5 seconds
+    
+    const statusMsg = document.getElementById('payment-status-message');
+    statusMsg.className = 'payment-status-message show loading';
+    statusMsg.innerHTML = '<div class="payment-verification-spinner"></div> Đang xác nhận thanh toán...';
+    
+    return new Promise(resolve => {
+        setTimeout(() => {
+            if (willSucceed) {
+                qrPaymentState.paymentVerified = true;
+                statusMsg.className = 'payment-status-message show success';
+                statusMsg.innerHTML = '✓ Thanh toán thành công!';
+                
+                // Clear checkout state
+                localStorage.removeItem('pawpal_cart_unselected_backup');
+                const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
+                if (isBuyNow) {
+                    sessionStorage.removeItem('pawpal_buynow_cart');
+                    sessionStorage.removeItem('pawpal_is_buynow');
+                } else {
+                    localStorage.removeItem('pawpal_cart');
+                }
+                
+                setTimeout(() => {
+                    window.location.href = `/pages/shop/payment-success.html?orderId=${qrPaymentState.orderData.orderId}`;
+                }, 1500);
+            } else {
+                statusMsg.className = 'payment-status-message show error';
+                statusMsg.textContent = '✗ Thanh toán thất bại. Vui lòng thử lại.';
+                
+                setTimeout(() => {
+                    hideQRPaymentModal();
+                }, 2000);
+            }
+            resolve(willSucceed);
+        }, delay);
+    });
 }
 
 // ============================================================================
@@ -757,6 +962,16 @@ function setupEventListeners() {
     
     // Checkout button
     document.getElementById('btn-checkout').addEventListener('click', handleCheckout);
+    
+    // QR Payment Modal
+    document.getElementById('btn-close-qr').addEventListener('click', hideQRPaymentModal);
+    document.getElementById('btn-cancel-qr').addEventListener('click', hideQRPaymentModal);
+    document.getElementById('qr-backdrop').addEventListener('click', hideQRPaymentModal);
+    
+    document.getElementById('btn-confirm-payment').addEventListener('click', async () => {
+        document.getElementById('btn-confirm-payment').disabled = true;
+        await mockPaymentVerification();
+    });
 }
 
 // ============================================================================

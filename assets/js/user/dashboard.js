@@ -20,6 +20,16 @@ function saveUsers(users) {
     localStorage.setItem(PAWPAL_USERS_KEY, JSON.stringify(users));
 }
 
+function updateCurrentUserRecord(updatedUser) {
+    const users = getUsers();
+    const userIndex = users.findIndex(u => String(u.phone) === String(updatedUser.phone) || u.id && u.id === updatedUser.id);
+    if (userIndex !== -1) {
+        users[userIndex] = { ...users[userIndex], ...updatedUser };
+        saveUsers(users);
+    }
+    setCurrentUser(updatedUser);
+}
+
 // Toast function - reuse from auth.js pattern
 function showToast(type, message, duration = 5000) {
     const container = document.getElementById('toastContainer');
@@ -107,6 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
             warning.style.display = 'block';
         }
     }
+
+    // Initialize profile edit controls
+    initProfileEditForm(currentUser);
+    initNotificationSettings(currentUser);
 });
 
 // Load Profile Data
@@ -114,6 +128,7 @@ function loadProfileData(user) {
     // Basic info
     document.getElementById('profileName').textContent = user.name || '-';
     document.getElementById('profilePhone').textContent = user.phone || '-';
+    document.getElementById('profileAddress').textContent = user.address || 'Chưa tạo';
     
     // Dashboard Stats & Welcome
     document.getElementById('welcomeName').textContent = user.name ? user.name.split(' ').pop() : 'bạn';
@@ -121,6 +136,104 @@ function loadProfileData(user) {
     
     const accountType = user.is_temporary ? 'Tài khoản tạm' : 'Thành viên';
     document.getElementById('statAccountType').textContent = accountType;
+}
+
+function initProfileEditForm(user) {
+    const editButton = document.getElementById('btnEditProfile');
+    const cancelButton = document.getElementById('btnCancelProfileEdit');
+    const form = document.getElementById('profileUpdateForm');
+
+    const nameInput = document.getElementById('profileNameInput');
+    const phoneInput = document.getElementById('profilePhoneInput');
+    const addressInput = document.getElementById('profileAddressInput');
+    const editSection = document.getElementById('profileEditSection');
+
+    if (!editButton || !cancelButton || !form || !nameInput || !phoneInput || !addressInput || !editSection) return;
+
+    function openEditForm() {
+        nameInput.value = user.name || '';
+        phoneInput.value = user.phone || '';
+        addressInput.value = user.address || '';
+        editSection.style.display = 'block';
+        editButton.style.display = 'none';
+    }
+
+    function closeEditForm() {
+        editSection.style.display = 'none';
+        editButton.style.display = 'inline-block';
+    }
+
+    editButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        openEditForm();
+    });
+
+    cancelButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeEditForm();
+    });
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const updatedName = nameInput.value.trim();
+        const updatedPhone = phoneInput.value.trim();
+        const updatedAddress = addressInput.value.trim();
+
+        if (!updatedName || !updatedPhone) {
+            showToast('warning', 'Vui lòng nhập tên và số điện thoại.');
+            return;
+        }
+
+        const users = getUsers();
+        const currentPhone = user.phone;
+        const updatedUser = {
+            ...user,
+            name: updatedName,
+            phone: updatedPhone,
+            address: updatedAddress,
+        };
+
+        const userIndex = users.findIndex(u => String(u.phone) === String(currentPhone));
+        if (userIndex !== -1) {
+            users[userIndex] = { ...users[userIndex], ...updatedUser };
+            saveUsers(users);
+        }
+
+        updateCurrentUserRecord(updatedUser);
+        loadProfileData(updatedUser);
+        showToast('success', 'Thông tin cá nhân đã được cập nhật.');
+        closeEditForm();
+    });
+}
+
+function initNotificationSettings(user) {
+    const form = document.getElementById('notificationSettingsForm');
+    const emailCheckbox = document.getElementById('notifyEmail');
+    const smsCheckbox = document.getElementById('notifySMS');
+
+    if (!form || !emailCheckbox || !smsCheckbox) return;
+
+    const settings = user.notificationPreferences || { email: true, sms: false };
+    emailCheckbox.checked = Boolean(settings.email);
+    smsCheckbox.checked = Boolean(settings.sms);
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const updatedPreferences = {
+            email: emailCheckbox.checked,
+            sms: smsCheckbox.checked,
+        };
+
+        const updatedUser = {
+            ...user,
+            notificationPreferences: updatedPreferences,
+        };
+
+        updateCurrentUserRecord(updatedUser);
+        showToast('success', 'Cài đặt thông báo của bạn đã được lưu.');
+    });
 }
 
 // Load Upcoming Bookings

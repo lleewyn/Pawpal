@@ -95,8 +95,6 @@
 }
 
 .category-card:hover {
-    box-shadow: var(--shadow-card-hover);
-    transform: scale(1.05);
 }
 
 .category-card-icon-wrapper {
@@ -111,7 +109,6 @@
 }
 
 .category-card:hover .category-card-icon-wrapper {
-    background: var(--color-accent-light);
 }
 
 .category-card-icon {
@@ -122,7 +119,6 @@
 }
 
 .category-card:hover .category-card-icon {
-    stroke: var(--color-accent);
 }
 
 .category-card-image {
@@ -134,7 +130,6 @@
 }
 
 .category-card:hover .category-card-image {
-    transform: scale(1.1);
 }
 
 .category-card-label {
@@ -371,12 +366,9 @@
 }
 
 .product-card:hover {
-    box-shadow: var(--shadow-card-hover);
-    transform: translateY(-6px);
 }
 
 .product-card-link {
-    display: flex;
     flex-direction: column;
     flex: 1;
     text-decoration: none;
@@ -443,7 +435,6 @@
 }
 
 .product-card-link:hover .product-image {
-    transform: scale(1.1);
 }
 
 .product-sale-badge {
@@ -763,8 +754,6 @@
 }
 
 .brand-card:hover {
-    box-shadow: var(--shadow-card-hover);
-    transform: scale(1.05);
 }
 
 .brand-logo {
@@ -830,8 +819,6 @@
 }
 
 .suggestion-card:hover {
-    box-shadow: var(--shadow-card-hover);
-    transform: translateX(4px);
 }
 
 .suggestion-image-wrapper {

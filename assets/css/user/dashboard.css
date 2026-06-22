@@ -240,12 +240,7 @@
     border-radius: var(--card-border-radius);
     padding: var(--space-md);
     box-shadow: var(--shadow-card);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.dashboard-widget:hover {
-    box-shadow: var(--shadow-card-hover);
-    transform: translateY(-2px);
+    transition: none;
 }
 
 .widget-header {
@@ -296,7 +291,53 @@
     margin: 0;
 }
 
+/* Settings Card */
+.settings-card {
+    background: var(--color-bg-white);
+    border: var(--border-card);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--shadow-card);
+    padding: var(--space-lg);
+}
+
+.settings-card + .settings-card {
+    margin-top: var(--space-lg);
+}
+
+.settings-card-header {
+    margin-bottom: var(--space-md);
+}
+
+.settings-card-title {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h4);
+    font-weight: 700;
+    margin-bottom: var(--space-xxs);
+    color: var(--color-primary-dark);
+}
+
+.settings-card-desc {
+    margin: 0;
+    color: var(--color-text-light);
+    line-height: 1.6;
+    font-size: var(--fs-body);
+}
+
+.settings-form {
+    display: grid;
+    gap: var(--space-md);
+    max-width: 560px;
+}
+
+.settings-form .form-check {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    background-color: var(--color-bg-light);
+}
+
 /* Security Form */
+.settings-form .form-label,
 .security-form .form-label {
     font-weight: 600;
     color: var(--color-text-dark);
@@ -304,6 +345,7 @@
     margin-bottom: var(--space-xs);
 }
 
+.settings-form .form-control,
 .security-form .form-control {
     border: 1px solid var(--color-border);
     border-radius: var(--card-border-radius);
@@ -312,6 +354,12 @@
     color: var(--color-text-dark);
     background-color: var(--color-bg-white);
     transition: all 0.3s ease;
+}
+
+.settings-form .btn-cta,
+.security-form .btn-cta {
+    width: fit-content;
+    margin-top: var(--space-md);
 }
 
 .security-form .form-control:focus {

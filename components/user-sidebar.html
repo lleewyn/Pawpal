@@ -1,5 +1,4 @@
 <div class="dashboard-sidebar">
-    <h5 class="sidebar-title">Tài khoản của tôi</h5>
     <nav class="sidebar-nav">
         <div class="sidebar-group">
             <div class="sidebar-category">Tài khoản</div>
@@ -46,9 +45,6 @@
 
         <div class="sidebar-group">
             <div class="sidebar-category">Hỗ trợ</div>
-            <a href="/pages/user/notifications.html" class="sidebar-link" id="nav-notifications">
-                <span class="icon"><i data-lucide="bell"></i></span> Thông báo
-            </a>
             <a href="/pages/user/support-tickets.html" class="sidebar-link" id="nav-support">
                 <span class="icon"><i data-lucide="message-square"></i></span> Hỗ trợ
             </a>
@@ -125,8 +121,6 @@
             } else if (currentPath.includes('loyalty') && linkPath.includes('loyalty')) {
                 link.classList.add('active');
             } else if (currentPath.includes('support') && linkPath.includes('support')) {
-                link.classList.add('active');
-            } else if (currentPath.includes('notifications') && linkPath.includes('notifications')) {
                 link.classList.add('active');
             }
         }

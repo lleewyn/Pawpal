@@ -211,9 +211,6 @@
 }
 
 .svc-select-card:hover {
-    border-color: rgba(42,89,68,0.2);
-    transform: scale(0.98);
-    box-shadow: var(--shadow-card-hover);
 }
 
 .svc-select-card.selected {
@@ -484,8 +481,6 @@
 }
 
 .staff-card:hover {
-    border-color: rgba(42,89,68,0.3);
-    transform: scale(0.98);
 }
 
 .staff-card.selected {
@@ -1143,9 +1138,6 @@
 }
 
 .pet-select-card:hover {
-    border-color: rgba(43, 142, 102, 0.4);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .pet-select-card.selected {
@@ -1223,9 +1215,6 @@
 }
 
 .btn-add-pet-card:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-    background: rgba(43, 142, 102, 0.02);
 }
 
 .btn-add-pet-card .icon-add {

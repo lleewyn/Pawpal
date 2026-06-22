@@ -313,8 +313,6 @@
 }
 
 .service-card:hover {
-    box-shadow: var(--shadow-card-hover);
-    transform: translateY(-2px);
 }
 
 .service-card-header {
@@ -422,8 +420,6 @@
 }
 
 .order-card:hover {
-    box-shadow: var(--shadow-card-hover);
-    transform: translateY(-2px);
 }
 
 .order-card-header {

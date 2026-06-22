@@ -322,27 +322,27 @@
 /* Voucher Cards Grid */
 .vouchers-section-title {
     font-family: var(--font-heading);
-    font-size: var(--fs-h2);
+    font-size: var(--fs-h3);
     color: var(--color-primary-dark);
-    margin-bottom: var(--space-md);
+    margin-bottom: calc(var(--space-sm) * 0.8);
     font-weight: 600;
 }
 
 .vouchers-grid-wrapper {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: var(--space-md);
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: calc(var(--space-sm) * 0.9);
 }
 
 .voucher-card {
     background-color: var(--color-bg-white);
     border: 2px solid var(--color-border);
     border-radius: var(--card-border-radius);
-    padding: var(--space-sm);
+    padding: calc(var(--space-xs) * 2);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 240px;
+    min-height: 180px;
     transition: all 0.3s ease;
 }
 
@@ -478,6 +478,86 @@
     0% { transform: scale(0.9); }
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
+}
+
+/* My Vouchers */
+.my-vouchers-title {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h2);
+    color: var(--color-primary-dark);
+    margin-top: var(--space-lg);
+    margin-bottom: var(--space-md);
+    font-weight: 600;
+}
+
+.my-vouchers-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.my-voucher-card {
+    background-color: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 180px;
+    transition: box-shadow 0.25s ease;
+}
+
+.my-voucher-card:hover {
+    box-shadow: var(--shadow-card-hover);
+}
+
+.my-voucher-card-body {
+    gap: 0.35rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.my-voucher-code {
+    font-size: var(--fs-small);
+    font-weight: 700;
+    color: var(--color-primary);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.35rem;
+}
+
+.my-voucher-name {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h5);
+    color: var(--color-text-dark);
+    margin-bottom: 0.35rem;
+}
+
+.my-voucher-meta {
+    font-size: var(--fs-caption);
+    color: var(--color-text-light);
+    margin: 0;
+}
+
+.my-voucher-status {
+    margin-top: var(--space-sm);
+    padding: 10px 12px;
+    border-radius: var(--border-radius-pill);
+    background-color: var(--color-primary-light);
+    color: var(--color-primary-dark);
+    font-size: var(--fs-small);
+    font-weight: 700;
+    text-align: center;
+}
+
+.no-my-vouchers {
+    border: 1px dashed var(--color-border);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-md);
+    text-align: center;
+    color: var(--color-text-light);
+    background: var(--color-bg-muted);
 }
 
 /* Grayscale state for out of stock */

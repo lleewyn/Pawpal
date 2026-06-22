@@ -86,8 +86,6 @@
                         <div class="notification-list" id="headerNotificationList">
                             <!-- JS render notifications here -->
                         </div>
-                        <div class="dropdown-divider" style="margin: 0;"></div>
-                        <a href="${root}pages/user/notifications.html" class="view-all-notifications">Xem tất cả thông báo</a>
                     </div>
                 </div>
                 <a href="${root}pages/shop/cart.html" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi" style="display: flex; align-items: center; justify-content: center; color: var(--color-text-dark); transition: var(--transition-smooth);">

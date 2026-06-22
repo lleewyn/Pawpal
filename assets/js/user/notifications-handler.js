@@ -4,7 +4,6 @@
 
 (function () {
     const NOTI_KEY = 'pawpal_notifications';
-    const CONFIG_KEY = 'pawpal_notification_config';
 
     // Dữ liệu mẫu ban đầu nếu localStorage chưa có
     const initialNotifications = [
@@ -34,21 +33,56 @@
             time: new Date(Date.now() - 3600 * 1000).toISOString(), // 1 giờ trước
             read: true,
             link: '/pages/user/loyalty.html'
+        },
+        {
+            id: 'noti-4',
+            type: 'service',
+            title: 'Cập nhật lịch chăm sóc',
+            content: '[Tên Bé] đã được xác nhận lịch hẹn Spa vào ngày mai lúc 10:00.',
+            time: new Date(Date.now() - 2 * 3600 * 1000).toISOString(), // 2 giờ trước
+            read: false,
+            link: '/pages/services/booking.html'
+        },
+        {
+            id: 'noti-5',
+            type: 'promo',
+            title: 'Khuyến mãi Shop',
+            content: 'Nhận ngay voucher giảm 20% cho đơn hàng phụ kiện thú cưng khi mua từ 500k.',
+            time: new Date(Date.now() - 6 * 3600 * 1000).toISOString(), // 6 giờ trước
+            read: true,
+            link: '/pages/user/loyalty.html'
+        },
+        {
+            id: 'noti-6',
+            type: 'order',
+            title: 'Thông báo hoàn tiền',
+            content: 'Yêu cầu hoàn tiền #ORD-2025 của bạn đã được duyệt. Số tiền đã được cộng về ví.',
+            time: new Date(Date.now() - 24 * 3600 * 1000).toISOString(), // 1 ngày trước
+            read: false,
+            link: '/pages/user/orders.html'
         }
     ];
 
-    const defaultConfig = {
-        service: true,
-        order: true,
-        promo: true,
-        sms: true
-    };
-
     function getNotifications() {
         try {
-            return JSON.parse(localStorage.getItem(NOTI_KEY)) || initialNotifications;
+            const stored = JSON.parse(localStorage.getItem(NOTI_KEY));
+            if (Array.isArray(stored) && stored.length > 0) {
+                return stored;
+            }
+            // Nếu chưa có dữ liệu hoặc dữ liệu rỗng thì khởi tạo mẫu
+            const seeded = initialNotifications.map(noti => ({
+                ...noti,
+                content: personalizeText(noti.content)
+            }));
+            localStorage.setItem(NOTI_KEY, JSON.stringify(seeded));
+            return seeded;
         } catch {
-            return initialNotifications;
+            const seeded = initialNotifications.map(noti => ({
+                ...noti,
+                content: personalizeText(noti.content)
+            }));
+            localStorage.setItem(NOTI_KEY, JSON.stringify(seeded));
+            return seeded;
         }
     }
 
@@ -56,18 +90,6 @@
         localStorage.setItem(NOTI_KEY, JSON.stringify(notis));
         // Phát sự kiện toàn cục để cập nhật UI trên các trang khác
         document.dispatchEvent(new CustomEvent('notifications_updated'));
-    }
-
-    function getConfig() {
-        try {
-            return JSON.parse(localStorage.getItem(CONFIG_KEY)) || defaultConfig;
-        } catch {
-            return defaultConfig;
-        }
-    }
-
-    function saveConfig(config) {
-        localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
     }
 
     // Lấy tên bé cưng hiện tại của user để cá nhân hóa
@@ -79,6 +101,11 @@
             }
         } catch (e) { }
         return null;
+    }
+
+    function personalizeText(text) {
+        const petName = getPetName() || 'Bé yêu của bạn';
+        return text.replace(/\[Tên Bé\]/g, petName);
     }
 
     // Cập nhật số lượng Badge & UI Dropdown ở Header
@@ -136,7 +163,8 @@
                     ${noti.read ? '' : '<span class="unread-dot"></span>'}
                     <span class="item-icon" style="color: var(--color-primary);">${iconSvg}</span>
                     <span class="item-content">
-                        <span class="item-text" style="font-weight: ${noti.read ? '500' : '700'};">${noti.content}</span>
+                        <span class="item-title">${noti.title}</span>
+                        <span class="item-text">${noti.content}</span>
                         <span class="item-time">${relativeTime}</span>
                     </span>
                 `;
@@ -219,27 +247,9 @@
         }, 5000);
     }
 
-    // Thêm thông báo mới với các ràng buộc nghiệp vụ
+    // Thêm thông báo mới
     function addNotification(type, title, content, link = '#') {
-        const config = getConfig();
-
-        // 1. Kiểm tra cấu hình riêng tư (US 14-4 Chặn thông báo Marketing)
-        if (type === 'promo' && !config.promo) {
-            console.log('Chặn thông báo tiếp thị do cấu hình riêng tư.');
-            return;
-        }
-
-        // 2. Chặn thông báo tiếp thị ngoài giờ vàng (08:00 - 21:00) (US 14-5 / AC5.2)
-        if (type === 'promo') {
-            const currentHour = new Date().getHours();
-            if (currentHour < 8 || currentHour >= 21) {
-                console.log('Ngoài khung giờ vàng (08:00 - 21:00). Trì hoãn thông báo tiếp thị.');
-                // Giả lập lưu vào queue gửi lại vào 8h sáng hôm sau
-                return;
-            }
-        }
-
-        // 3. Chặn trùng lặp nội dung trong vòng 5 phút (US 14-5 / AC5.3)
+        // Chặn trùng lặp nội dung trong vòng 5 phút
         const notis = getNotifications();
         const duplicate = notis.find(n => {
             const timeDiff = Date.now() - new Date(n.time).getTime();
@@ -251,7 +261,7 @@
             return;
         }
 
-        // 4. Cá nhân hóa tên bé cưng hoặc fallback (US 14-1)
+        // Cá nhân hóa tên bé cưng hoặc fallback
         let finalContent = content;
         const petName = getPetName();
         if (content.includes('[Tên Bé]')) {
@@ -273,24 +283,6 @@
 
         // Hiển thị Toast thông báo đẩy thời gian thực
         showPushToast(newNoti);
-
-        // 5. Kích hoạt SMS dự phòng sau 15 phút nếu vẫn chưa đọc (US 14-5 / AC5.1)
-        if (type === 'service' && config.sms) {
-            setTimeout(() => {
-                const refreshedNotis = getNotifications();
-                const target = refreshedNotis.find(n => n.id === newNoti.id);
-                if (target && !target.read) {
-                    showSmsBackup(target.content);
-                }
-            }, 15 * 60 * 1000); // 15 phút
-        }
-    }
-
-    function showSmsBackup(content) {
-        // Mock gửi SMS dự phòng dưới 160 ký tự không dấu
-        const cleanText = content.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
-        const smsContent = `[PawPal SMS] ${cleanText.substring(0, 130)}...`;
-        console.log(`[SMS SỰ CỐ / DỰ PHÒNG] Đang gửi SMS tới SĐT khách hàng: "${smsContent}"`);
     }
 
     // Đánh dấu đọc tất cả
@@ -318,27 +310,41 @@
     window.PawPalNotifications = {
         get: getNotifications,
         save: saveNotifications,
-        getConfig: getConfig,
-        saveConfig: saveConfig,
         add: addNotification,
         markAllAsRead: markAllAsRead,
         updateHeaderDropdown: updateHeaderDropdown
     };
+    window.PawPalNotificationsReady = true;
 
-    // Khởi động
-    document.addEventListener('DOMContentLoaded', () => {
+    // Thông báo sẵn sàng để các script khác có thể dùng
+    document.dispatchEvent(new CustomEvent('notifications_ready'));
+
+    function attachHeaderHandlers() {
         updateHeaderDropdown();
-        setupMockNotificationSimulator();
-
         const btnMarkAll = document.getElementById('btnMarkAllRead');
-        if (btnMarkAll) {
+        if (btnMarkAll && !btnMarkAll.dataset.notificationsBound) {
+            btnMarkAll.dataset.notificationsBound = 'true';
             btnMarkAll.addEventListener('click', (e) => {
                 e.preventDefault();
                 markAllAsRead();
             });
         }
+    }
+
+    function onDocumentReady(callback) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', callback);
+        } else {
+            callback();
+        }
+    }
+
+    onDocumentReady(() => {
+        attachHeaderHandlers();
+        setupMockNotificationSimulator();
     });
 
+    document.addEventListener('headerInjected', attachHeaderHandlers);
     document.addEventListener('notifications_updated', () => {
         updateHeaderDropdown();
     });

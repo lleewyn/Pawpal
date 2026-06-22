@@ -3457,26 +3457,7 @@
         padding: 40px 30px;
     }
     
-    .footer-container {
-        /* Bootstrap handles responsive stacking */
-    }
 
-    .experts-carousel-wrapper {
-        /* removed — carousel replaced with editorial grid */
-    }
-    .experts-carousel-track {
-        /* removed — carousel replaced with editorial grid */
-    }
-    .experts-carousel-track .expert-card {
-        /* removed */
-    }
-    .expert-card, .expert-card.highlighted-expert {
-        /* removed */
-    }
-    .experts-nav-btn {
-        /* removed */
-    }
-}
 
 @media (max-width: 768px) {
     /* Mobile drawer header rules moved to shared style.css (.nav-menu drawer @ 991.98px) */

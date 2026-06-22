@@ -29,17 +29,78 @@
         localStorage.setItem(getWishlistStorageKey(), JSON.stringify(wishlist));
     }
 
+    function isWishlistItemObject(item) {
+        return item && typeof item === 'object' && item.id !== undefined;
+    }
+
+    async function getWishlistItems() {
+        const rawWishlist = getWishlist();
+        const allProducts = window.DataLoader && typeof window.DataLoader.loadProducts === 'function'
+            ? await window.DataLoader.loadProducts()
+            : [];
+
+        if (!rawWishlist || rawWishlist.length === 0) {
+            return [];
+        }
+
+        return rawWishlist.map(item => {
+            if (isWishlistItemObject(item)) {
+                const productId = Number(item.id);
+                const matchedProduct = allProducts.find(p => p.id === productId);
+                const baseProduct = matchedProduct || {};
+
+                return {
+                    id: productId,
+                    image: item.image || baseProduct.image || '/assets/images/shop/products/placeholder.webp',
+                    brand: item.brand || baseProduct.brand || 'Chưa xác định',
+                    name: item.name || baseProduct.name || `Sản phẩm #${productId}`,
+                    price: Number(item.price ?? baseProduct.price ?? 0) || 0,
+                    originalPrice: Number(item.originalPrice ?? item.oldPrice ?? baseProduct.originalPrice ?? baseProduct.oldPrice ?? null) || null,
+                    inStock: typeof item.inStock === 'boolean' ? item.inStock : (baseProduct.inStock !== undefined ? baseProduct.inStock : true),
+                    addedAt: item.addedAt || baseProduct.addedAt || new Date().toISOString(),
+                };
+            }
+
+            const productId = Number(item);
+            if (!Number.isFinite(productId)) {
+                return null;
+            }
+
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) {
+                return {
+                    id: productId,
+                    image: '/assets/images/shop/products/placeholder.webp',
+                    brand: 'Chưa xác định',
+                    name: `Sản phẩm #${productId}`,
+                    price: 0,
+                    originalPrice: null,
+                    inStock: true,
+                    addedAt: new Date().toISOString(),
+                };
+            }
+
+            return {
+                ...product,
+                addedAt: product.addedAt || new Date().toISOString(),
+            };
+        }).filter(Boolean);
+    }
+
     // Format price
     function formatPrice(price) {
+        const numericPrice = Number(price) || 0;
         return new Intl.NumberFormat('vi-VN', {
             style: 'currency',
             currency: 'VND'
-        }).format(price);
+        }).format(numericPrice);
     }
 
     // Format date
     function formatDate(dateString) {
         const date = new Date(dateString);
+        if (isNaN(date)) return 'vừa xong';
+
         const now = new Date();
         const diffTime = Math.abs(now - date);
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -53,9 +114,15 @@
 
     // Remove from wishlist
     function removeFromWishlist(productId) {
-        let wishlist = getWishlist();
-        wishlist = wishlist.filter(item => item.id !== productId);
-        saveWishlist(wishlist);
+        const rawWishlist = getWishlist();
+        const filteredWishlist = rawWishlist.filter(item => {
+            if (isWishlistItemObject(item)) {
+                return String(item.id) !== String(productId);
+            }
+            return String(item) !== String(productId);
+        });
+
+        saveWishlist(filteredWishlist);
         renderWishlist();
         
         // Show notification
@@ -120,15 +187,16 @@
     }
 
     // Render wishlist
-    function renderWishlist() {
-        const wishlist = getWishlist();
+    async function renderWishlist() {
+        const wishlistItems = await getWishlistItems();
+        const rawWishlist = getWishlist();
         const emptyState = document.getElementById('emptyWishlist');
         const grid = document.getElementById('wishlistGrid');
         const countSpan = document.getElementById('wishlistCount');
         
-        countSpan.textContent = wishlist.length;
+        countSpan.textContent = rawWishlist.length;
         
-        if (wishlist.length === 0) {
+        if (wishlistItems.length === 0) {
             emptyState.style.display = 'block';
             grid.style.display = 'none';
             return;
@@ -137,7 +205,7 @@
         emptyState.style.display = 'none';
         grid.style.display = 'grid';
         
-        grid.innerHTML = wishlist.map(product => {
+        grid.innerHTML = wishlistItems.map(product => {
             const hasDiscount = product.originalPrice && product.originalPrice > product.price;
             const discountPercent = hasDiscount 
                 ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -195,9 +263,9 @@
     // Global functions for onclick handlers
     window.removeFromWishlist = removeFromWishlist;
     
-    window.addToCartFromWishlist = function(productId) {
-        const wishlist = getWishlist();
-        const product = wishlist.find(item => item.id === productId);
+    window.addToCartFromWishlist = async function(productId) {
+        const wishlistItems = await getWishlistItems();
+        const product = wishlistItems.find(item => String(item.id) === String(productId));
         if (product) {
             addToCart(product);
         }

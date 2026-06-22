@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="../../assets/css/components/notification.css">
     <link rel="stylesheet" href="../../assets/css/components/chat.css">
     <link rel="stylesheet" href="../../assets/css/components/fab.css">
+    <link rel="stylesheet" href="../../assets/css/components/payment-qr.css">
     <link rel="stylesheet" href="../../assets/css/shop/checkout.css">
 </head>
 
@@ -338,6 +339,42 @@
             </div>
 
         </div>
+
+        <!-- QR Payment Modal -->
+        <div class="payment-qr-backdrop" id="qr-backdrop"></div>
+        <div class="payment-qr-modal" id="payment-qr-modal">
+            <button type="button" class="btn-close-qr" id="btn-close-qr">&times;</button>
+            
+            <div class="qr-modal-header">
+                <img id="qr-logo" class="qr-logo" src="" alt="Payment method logo">
+                <div class="qr-header-info">
+                    <h3 id="qr-method-name">Thanh toán QR</h3>
+                    <p id="qr-method-desc">Quét mã QR để thanh toán</p>
+                </div>
+            </div>
+
+            <div class="qr-modal-body">
+                <div class="qr-code-wrapper" id="qr-code-wrapper">
+                    <img id="qr-code-image" src="" alt="QR Code">
+                </div>
+
+                <p class="qr-instruction" id="qr-instruction">Quét mã QR bằng ứng dụng</p>
+                <p class="qr-instruction-sub">hoặc ứng dụng Ngân hàng di động của bạn</p>
+
+                <div class="qr-timer-section">
+                    <div class="qr-timer-label">Hết hạn trong</div>
+                    <div class="qr-timer" id="qr-timer">15:00</div>
+                </div>
+
+                <div class="payment-status-message" id="payment-status-message"></div>
+            </div>
+
+            <div class="qr-modal-footer">
+                <button type="button" class="btn-cancel" id="btn-cancel-qr">Hủy</button>
+                <button type="button" class="btn-confirm" id="btn-confirm-payment" disabled>Đã thanh toán</button>
+            </div>
+        </div>
+
     </main>
 
     <!-- Bootstrap JS -->

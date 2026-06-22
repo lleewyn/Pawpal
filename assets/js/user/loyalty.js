@@ -66,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Cập nhật giao diện
     renderLoyaltyPage(currentUser, vouchersMock);
+    renderMyVouchers(currentUser);
 
     // Kiểm tra xem có quà nào đang chờ khôi phục luồng đổi quà không (US 13-3)
     checkPendingRedeem(currentUser);
@@ -193,6 +194,45 @@ function renderLoyaltyPage(user, vouchers) {
             }
         });
     }
+}
+
+function renderMyVouchers(user) {
+    const container = document.getElementById('my-vouchers-list');
+    if (!container) return;
+
+    const myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]')
+        .filter(v => v.ownerPhone === user.phone);
+
+    if (!myVouchers.length) {
+        container.innerHTML = `
+            <div class="no-my-vouchers">
+                <p>Bạn chưa có voucher nào. Đổi điểm ngay để nhận voucher hấp dẫn!</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = myVouchers.map(v => renderMyVoucherCard(v)).join('');
+}
+
+function renderMyVoucherCard(voucher) {
+    const createdDate = new Date(voucher.createdAt);
+    const expiresAt = new Date(createdDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const createdLabel = createdDate.toLocaleDateString('vi-VN');
+    const expiryLabel = expiresAt.toLocaleDateString('vi-VN');
+
+    return `
+        <div class="my-voucher-card">
+            <div class="my-voucher-card-body">
+                <div class="my-voucher-code">${voucher.code}</div>
+                <div class="my-voucher-name">${voucher.name}</div>
+                <div class="my-voucher-meta">Đổi: ${voucher.pointsCost} Points</div>
+                <div class="my-voucher-meta">Ngày đổi: ${createdLabel}</div>
+                <div class="my-voucher-meta">Hạn dùng: ${expiryLabel}</div>
+            </div>
+            <div class="my-voucher-status">Chưa sử dụng</div>
+        </div>
+    `;
 }
 
 // Render từng voucher card
@@ -359,6 +399,7 @@ function triggerRedeem(voucherId, user, sliderContainer) {
             const voucherCode = 'PAWPAL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
             const myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]');
             myVouchers.push({
+                ownerPhone: user.phone,
                 code: voucherCode,
                 name: voucherInfo.name,
                 pointsCost: voucherInfo.cost,
