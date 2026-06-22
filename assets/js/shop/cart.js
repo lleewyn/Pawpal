@@ -245,8 +245,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        cartEmptyState.style.display = 'none';
-        cartContentRow.style.display = '';
+        cartEmptyState.classList.add('d-none');
+        cartContentRow.classList.remove('d-none');
 
         cartItemsList.innerHTML = '';
         
@@ -369,11 +369,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (discount > 0) {
-            rowDiscount.style.display = 'flex';
+            rowDiscount.classList.replace('d-none', 'd-flex');
             discountCodeLabel.textContent = appliedVoucher.code;
             cartDiscount.textContent = `-${formatPrice(discount)}`;
         } else {
-            rowDiscount.style.display = 'none';
+            rowDiscount.classList.replace('d-flex', 'd-none');
         }
 
         const grandTotal = Math.max(0, subtotal - discount);
@@ -387,8 +387,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Hiển thị trạng thái trống
     function showEmptyState() {
-        cartContentRow.style.display = 'none';
-        cartEmptyState.style.display = 'block';
+        cartContentRow.classList.add('d-none');
+        cartEmptyState.classList.remove('d-none');
         if (typeof window.updateCartBadge === 'function') {
             window.updateCartBadge();
         }
