@@ -88,7 +88,7 @@ function renderBookingDetail(booking) {
 
     // Note
     if (booking.note) {
-        document.getElementById('noteRow').style.display = 'flex';
+        document.getElementById('noteRow').classList.remove('d-none');
         document.getElementById('noteInfo').textContent = booking.note;
     }
 }
@@ -120,7 +120,7 @@ function checkBookingModifiability(booking) {
     const canModify = diffMinutes >= 120 && booking.status !== 'in-progress' && booking.status !== 'completed' && booking.status !== 'cancelled';
 
     if (!canModify) {
-        btnChangeSchedule.style.display = 'none';
+        btnChangeSchedule.classList.add('d-none');
     } else {
         btnChangeSchedule.style.display = 'inline-flex';
     }
@@ -129,7 +129,7 @@ function checkBookingModifiability(booking) {
     const canCancel = diffMinutes >= 1440 && (booking.status === 'pending' || booking.status === 'confirmed');
 
     if (!canCancel) {
-        btnCancelBooking.style.display = 'none';
+        btnCancelBooking.classList.add('d-none');
     } else {
         btnCancelBooking.style.display = 'inline-flex';
     }
@@ -160,7 +160,7 @@ function showErrorBanner() {
     }
 
     // Show banner
-    banner.style.display = 'block';
+    banner.classList.remove('d-none');
     banner.classList.remove('hiding');
 
     // Auto hide after 7 seconds (US 5-1 requirement)
@@ -176,7 +176,7 @@ function closeErrorBanner() {
 
     // Hide completely after animation
     setTimeout(() => {
-        banner.style.display = 'none';
+        banner.classList.add('d-none');
     }, 300);
 }
 
@@ -233,7 +233,7 @@ function showGuestCancelOTPFlow(user) {
                         <div class="form-group mb-3">
                             <label for="cancelOtpInput" class="form-label" style="font-weight:bold;">Nhập mã OTP (Mã test: 555666)</label>
                             <input type="text" id="cancelOtpInput" class="form-control text-center" style="font-size: 1.5rem; letter-spacing: 0.5rem;" maxlength="6" placeholder="******">
-                            <div class="invalid-feedback" id="cancelOtpError" style="display:none;">Mã OTP không chính xác, vui lòng thử lại.</div>
+                            <div class="invalid-feedback d-none" id="cancelOtpError">Mã OTP không chính xác, vui lòng thử lại.</div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -257,7 +257,7 @@ function showGuestCancelOTPFlow(user) {
     const confirmOtpBtn = document.getElementById('confirmCancelOtpBtn');
 
     otpInput.value = '';
-    otpError.style.display = 'none';
+    otpError.classList.add('d-none');
 
     confirmOtpBtn.onclick = () => {
         if (otpInput.value === '555666') {
@@ -265,7 +265,7 @@ function showGuestCancelOTPFlow(user) {
             // Show choices dialog
             showGuestActionChoices(user);
         } else {
-            otpError.style.display = 'block';
+            otpError.classList.remove('d-none');
         }
     };
 }

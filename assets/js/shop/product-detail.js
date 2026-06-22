@@ -431,7 +431,7 @@ function updateCartBadge() {
     if (cartBadge) {
         cartBadge.textContent = totalItems;
         if (totalItems > 0) {
-            cartBadge.style.display = 'flex';
+            cartBadge.classList.remove('d-none');
         }
     }
 }
@@ -570,15 +570,15 @@ function renderProductDetails(product) {
     if (product.oldPrice && product.oldPrice > product.price) {
         if (productPriceOld) {
             productPriceOld.textContent = new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(product.oldPrice).replace('₫', 'đ');
-            productPriceOld.style.display = 'block';
+            productPriceOld.classList.remove('d-none');
         }
         if (productDiscount) {
             productDiscount.textContent = 'Tiết kiệm ' + new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(product.oldPrice - product.price).replace('₫', 'đ');
-            productDiscount.style.display = 'block';
+            productDiscount.classList.remove('d-none');
         }
     } else {
-        if (productPriceOld) productPriceOld.style.display = 'none';
-        if (productDiscount) productDiscount.style.display = 'none';
+        if (productPriceOld) productPriceOld.classList.add('d-none');
+        if (productDiscount) productDiscount.classList.add('d-none');
     }
 
     const productStockStatus = document.getElementById('productStockStatus');

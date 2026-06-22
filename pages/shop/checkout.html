@@ -37,7 +37,7 @@
 
 <body>
 
-    <div id="site-header" style="min-height:110px;background:var(--color-bg-light);"></div>
+    <div id="site-header" style="min-height:110px;background:#f4faf7;"></div>
 
 
     <main class="checkout-page">
@@ -70,7 +70,7 @@
                         <h2 class="section-title">Địa chỉ giao hàng</h2>
 
                         <!-- Saved Addresses Dropdown (for logged-in users) -->
-                        <div id="saved-addresses-section" class="mb-3" style="display: none;">
+                        <div id="saved-addresses-section" class="mb-3 d-none">
                             <label class="form-label">Chọn từ địa chỉ đã lưu</label>
                             <select id="address-dropdown" class="form-select">
                                 <option value="">-- Chọn địa chỉ --</option>
@@ -126,7 +126,7 @@
                                     <textarea class="form-control" id="note" name="note" rows="2"
                                         placeholder="Ví dụ: Giao vào buổi chiều"></textarea>
                                 </div>
-                                <div class="col-12" id="save-address-section" style="display: none;">
+                                <div class="col-12 d-none" id="save-address-section">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="saveAddress">
                                         <label class="form-check-label" for="saveAddress">
@@ -147,7 +147,7 @@
                     </div>
 
                     <!-- PawPoints Section (for logged-in members) -->
-                    <div id="pawpoints-section" class="checkout-section mb-4" style="display: none;">
+                    <div id="pawpoints-section" class="checkout-section mb-4 d-none">
                         <h2 class="section-title">Sử dụng PawPoints</h2>
                         <div class="pawpoints-content">
                             <p class="points-balance mb-3">Bạn có: <strong id="user-points">0</strong> điểm (≈ <span
@@ -200,7 +200,7 @@
                             </label>
                         </div>
 
-                        <div id="invoice-form" style="display: none;">
+                        <div id="invoice-form" class="d-none">
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label for="companyName" class="form-label">Tên công ty <span
@@ -225,7 +225,7 @@
                                     <input type="email" class="form-control" id="invoiceEmail" name="invoiceEmail">
                                 </div>
                                 <div class="col-12">
-                                    <p class="small text-info mb-0">ℹ️ Hóa đơn VAT sẽ được gửi trong vòng 3 ngày làm
+                                    <p class="small text-info mb-0">Hóa đơn VAT sẽ được gửi trong vòng 3 ngày làm
                                         việc</p>
                                 </div>
                             </div>
@@ -291,7 +291,7 @@
                                 </datalist>
 
                                 <!-- Applied Voucher Badge -->
-                                <div id="applied-voucher" class="applied-voucher mt-2" style="display: none;">
+                                <div id="applied-voucher" class="applied-voucher mt-2 d-none">
                                     <span class="voucher-code" id="voucher-code-display"></span>
                                     <span class="voucher-amount" id="voucher-amount"></span>
                                     <button type="button" class="btn-remove-voucher" id="remove-voucher-btn">×</button>
@@ -309,11 +309,11 @@
                                             chuẩn)</span>:</span>
                                     <span id="shipping-fee" class="text-success">Miễn phí</span>
                                 </div>
-                                <div class="total-row" id="points-row" style="display: none;">
+                                <div class="total-row d-none" id="points-row">
                                     <span>Dùng PawPoints:</span>
                                     <span id="points-discount" class="text-danger">-0đ</span>
                                 </div>
-                                <div class="total-row" id="voucher-row" style="display: none;">
+                                <div class="total-row d-none" id="voucher-row">
                                     <span>Voucher <span class="small" id="voucher-code-summary"></span>:</span>
                                     <span id="voucher-discount" class="text-danger">-0đ</span>
                                 </div>

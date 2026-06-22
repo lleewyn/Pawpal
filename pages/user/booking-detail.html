@@ -36,27 +36,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
     <script src="../../assets/js/shared/auth.js" defer></script>
-    <script>
-        // Authentication Guard
-        (function () {
-            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
-            if (!currentUser) {
-                alert('Vui lòng đăng nhập để truy cập trang này');
-                window.location.href = '/pages/public/login.html';
-                return;
-            }
-        })();
-
-        // Load sidebar synchronously
-        (function loadSidebar() {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', '../../components/user-sidebar.html', false);
-            xhr.send();
-            if (xhr.status === 200) {
-                document.getElementById('user-sidebar').innerHTML = xhr.responseText;
-            }
-        })();
-    </script>
+    <script src="../../assets/js/user/dashboard-init.js"></script>
     <script src="../../assets/js/shared/components.js" defer></script>
     <script src="../../assets/js/shared/header-auth.js" defer></script>
     <script type="module" src="../../assets/js/shared/main.js"></script>
@@ -68,7 +48,7 @@
     <div id="site-header"></div>
 
     <!-- Error Banner (US 5-1 - shown when clicking disabled button) -->
-    <div class="error-banner" id="errorBanner" role="alert" aria-live="assertive" style="display: none;">
+    <div class="error-banner d-none" id="errorBanner" role="alert" aria-live="assertive">
         <div class="container-xl">
             <div class="error-banner-content">
                 <span class="error-icon" aria-hidden="true"
@@ -154,7 +134,7 @@
                                 <span class="summary-value price" id="priceInfo">-</span>
                             </div>
 
-                            <div class="summary-row" id="noteRow" style="display: none;">
+                            <div class="summary-row d-none" id="noteRow">
                                 <span class="summary-label">Ghi chú:</span>
                                 <span class="summary-value" id="noteInfo">-</span>
                             </div>

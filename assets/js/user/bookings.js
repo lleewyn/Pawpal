@@ -126,12 +126,12 @@ function loadBookings(status) {
 
     // Show empty state if no bookings
     if (filteredBookings.length === 0) {
-        emptyState.style.display = 'block';
+        emptyState.classList.remove('d-none');
         return;
     }
 
     // Hide empty state
-    emptyState.style.display = 'none';
+    emptyState.classList.add('d-none');
 
     // Render booking cards
     filteredBookings.forEach(booking => {

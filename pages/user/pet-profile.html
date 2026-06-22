@@ -28,29 +28,7 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
-    <script>
-        // Authentication Guard - Require login to access pet profile page
-        (function() {
-            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
-            if (!currentUser) {
-                window.location.replace('../../pages/public/login.html?redirect=pet-profile');
-                return;
-            }
-        })();
-        
-        // Load sidebar synchronously
-        (function loadSidebar() {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', '../../components/user-sidebar.html', false); // synchronous
-            xhr.send();
-            if (xhr.status === 200) {
-                document.getElementById('user-sidebar').innerHTML = xhr.responseText;
-                console.log('Sidebar loaded');
-            } else {
-                console.error('Failed to load sidebar');
-            }
-        })();
-    </script>
+    <script src="../../assets/js/user/dashboard-init.js"></script>
     <script src="../../assets/js/shared/components.js" defer></script>
     <script src="../../assets/js/shared/header-auth.js" defer></script>
     <script type="module" src="../../assets/js/shared/main.js"></script>

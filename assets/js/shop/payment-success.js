@@ -116,13 +116,13 @@ function displayOrderInfo(order) {
     
     // Points discount (conditional)
     if (order.pricing.pointsDiscount > 0) {
-        document.getElementById('points-row').style.display = 'flex';
+        document.getElementById('points-row').classList.remove('d-none');
         document.getElementById('points-discount').textContent = `-${formatCurrency(order.pricing.pointsDiscount)}`;
     }
     
     // Voucher discount (conditional)
     if (order.pricing.voucherDiscount > 0) {
-        document.getElementById('voucher-row').style.display = 'flex';
+        document.getElementById('voucher-row').classList.remove('d-none');
         document.getElementById('voucher-discount').textContent = `-${formatCurrency(order.pricing.voucherDiscount)}`;
     }
     

@@ -32,7 +32,7 @@
 </head>
 <body>
 
-    <div id="site-header" style="min-height:110px;background:var(--color-bg-light);"></div>
+    <div id="site-header" style="min-height:110px;background:#f4faf7;"></div>
 
     <main class="product-detail-page">
         <!-- Breadcrumb -->
@@ -58,13 +58,13 @@
                         <div class="pd-gallery-card">
                             <div class="product-main-image">
                                 <img id="mainImage" src="../../assets/images/publics/dog.jpg" alt="Product" class="main-image">
-                                <div class="image-zoom-overlay" id="zoomOverlay" style="display: none;"></div>
+                                <div class="image-zoom-overlay d-none" id="zoomOverlay"></div>
                                 <button class="product-wishlist-btn-large" id="wishlistBtn">
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                                     </svg>
                                 </button>
-                                <div class="product-badge-overlay" id="badgeOverlay" style="display: none;">
+                                <div class="product-badge-overlay d-none" id="badgeOverlay">
                                     <span class="badge-sale">-20%</span>
                                 </div>
                                 <button class="pd-nav-btn pd-nav-prev" id="galleryPrev" aria-label="Ảnh trước">
@@ -155,8 +155,8 @@
                             <div class="pd-summary-footer">
                                 <div class="product-price-block">
                                     <div class="price-main" id="productPrice">250.000₫</div>
-                                    <div class="price-old" id="productPriceOld" style="display: none;">320.000₫</div>
-                                    <div class="price-discount" id="productDiscount" style="display: none;">Tiết kiệm 70.000₫</div>
+                                    <div class="price-old d-none" id="productPriceOld">320.000₫</div>
+                                    <div class="price-discount d-none" id="productDiscount">Tiết kiệm 70.000₫</div>
                                 </div>
                                 <div class="product-actions">
                                     <div class="quantity-selector">
@@ -212,7 +212,7 @@
                                 <span class="meta-label">Thương hiệu:</span>
                                 <span class="meta-value" id="productBrandMeta">Royal Canin</span>
                             </div>
-                            <div class="meta-item" id="deliveryEstimate" style="display: none;">
+                            <div class="meta-item d-none" id="deliveryEstimate">
                                 <span class="meta-label">Giao hàng:</span>
                                 <span class="meta-value meta-delivery">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -752,7 +752,7 @@
         </section>
 
         <!-- Recently Viewed Section -->
-        <section class="recently-viewed-section" id="recentlyViewedSection" style="display: none;">
+        <section class="recently-viewed-section d-none" id="recentlyViewedSection">
             <div class="container-xl">
                 <h2 class="section-title">Sản phẩm đã xem gần đây</h2>
                 <div class="recently-viewed-grid" id="recentlyViewedProducts">

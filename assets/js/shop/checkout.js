@@ -245,13 +245,13 @@ function renderAppliedVoucherUI() {
 
     if (!checkoutState.appliedVoucher) {
         if (appliedVoucherElement) {
-            appliedVoucherElement.style.display = 'none';
+            appliedVoucherElement.classList.add('d-none');
         }
         return;
     }
 
     if (appliedVoucherElement) {
-        appliedVoucherElement.style.display = 'flex';
+        appliedVoucherElement.classList.remove('d-none');
     }
     if (voucherCodeDisplay) {
         voucherCodeDisplay.textContent = checkoutState.appliedVoucher.code;
@@ -283,7 +283,7 @@ function loadPersistedVoucher() {
 function initializeShippingForm() {
     if (checkoutState.user) {
         // Show save address checkbox
-        document.getElementById('save-address-section').style.display = 'block';
+        document.getElementById('save-address-section').classList.remove('d-none');
         
         // Auto-fill user data
         document.getElementById('fullName').value = checkoutState.user.name || '';
@@ -316,7 +316,7 @@ function populateSavedAddresses() {
     dropdown.appendChild(newOption);
     
     // Show section
-    section.style.display = 'block';
+    section.classList.remove('d-none');
     
     // Set default address
     const defaultAddr = checkoutState.user.addresses.find(a => a.isDefault);
@@ -498,7 +498,7 @@ function selectPaymentMethod(methodId) {
 // ============================================================================
 function initializePawPoints() {
     const section = document.getElementById('pawpoints-section');
-    section.style.display = 'block';
+    section.classList.remove('d-none');
     
     const userPoints = checkoutState.user.pawPoints || 0;
     const orderTotal = calculateSubtotal();
@@ -598,19 +598,19 @@ function updateOrderTotals() {
     
     // Show/hide points row
     if (checkoutState.totals.pointsDiscount > 0) {
-        document.getElementById('points-row').style.display = 'flex';
+        document.getElementById('points-row').classList.remove('d-none');
         document.getElementById('points-discount').textContent = `-${formatCurrency(checkoutState.totals.pointsDiscount)}`;
     } else {
-        document.getElementById('points-row').style.display = 'none';
+        document.getElementById('points-row').classList.add('d-none');
     }
     
     // Show/hide voucher row
     if (checkoutState.totals.voucherDiscount > 0) {
-        document.getElementById('voucher-row').style.display = 'flex';
+        document.getElementById('voucher-row').classList.remove('d-none');
         document.getElementById('voucher-discount').textContent = `-${formatCurrency(checkoutState.totals.voucherDiscount)}`;
         document.getElementById('voucher-code-summary').textContent = `(${checkoutState.appliedVoucher.code})`;
     } else {
-        document.getElementById('voucher-row').style.display = 'none';
+        document.getElementById('voucher-row').classList.add('d-none');
     }
     
     document.getElementById('grand-total').textContent = formatCurrency(checkoutState.totals.grandTotal);
@@ -656,7 +656,7 @@ function removeVoucher() {
     checkoutState.totals.voucherDiscount = 0;
     localStorage.removeItem('pawpal_applied_voucher_code');
     
-    document.getElementById('applied-voucher').style.display = 'none';
+    document.getElementById('applied-voucher').classList.add('d-none');
     updateOrderTotals();
     
     showToast('Đã xóa mã giảm giá', 'info');
@@ -882,7 +882,7 @@ function showQRPaymentModal(orderData) {
     qrLogo.className = `qr-logo ${methodId}`;
     qrLogo.src = `../../assets/images/shared/payment_${methodId === 'vietqr' ? 'VietQR' : methodId}.png`;
     qrLogo.onerror = () => {
-        qrLogo.style.display = 'none';
+        qrLogo.classList.add('d-none');
     };
     
     // Generate and display QR code
@@ -1028,12 +1028,12 @@ function setupEventListeners() {
     document.getElementById('invoice-checkbox').addEventListener('change', (e) => {
         const form = document.getElementById('invoice-form');
         if (e.target.checked) {
-            form.style.display = 'block';
+            form.classList.remove('d-none');
             form.querySelectorAll('input').forEach(input => {
                 input.setAttribute('required', 'required');
             });
         } else {
-            form.style.display = 'none';
+            form.classList.add('d-none');
             form.querySelectorAll('input').forEach(input => {
                 input.removeAttribute('required');
             });

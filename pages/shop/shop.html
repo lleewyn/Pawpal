@@ -36,7 +36,7 @@
 
 <body>
 
-    <div id="site-header" style="min-height:110px;background:var(--color-bg-light);"></div>
+    <div id="site-header" style="min-height:110px;background:#f4faf7;"></div>
 
 
     <main class="shop-page">
@@ -290,7 +290,7 @@
                         </div>
 
                         <!-- Empty State -->
-                        <div class="empty-state-products" id="emptyState" style="display:none;">
+                        <div class="empty-state-products d-none" id="emptyState">
                             <div class="empty-icon">
                                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
@@ -301,7 +301,7 @@
                             <h3 class="empty-title">Không tìm thấy sản phẩm</h3>
                             <p class="empty-desc">Rất tiếc! PawPal không tìm thấy sản phẩm nào phù hợp với bộ lọc của bạn.</p>
                         </div>
-                        <div class="empty-recommendations" id="emptyRecommendations" style="display:none;"></div>
+                        <div class="empty-recommendations d-none" id="emptyRecommendations"></div>
 
                         <!-- Pagination -->
                         <div class="pagination-wrapper" id="paginationWrapper">
@@ -354,8 +354,8 @@
         </section>
 
         <!-- Mobile Filter Drawer -->
-        <div class="mobile-filter-overlay" id="mobileFilterOverlay"></div>
-        <div class="mobile-filter-drawer" id="mobileFilterDrawer">
+        <div class="mobile-filter-overlay d-none" id="mobileFilterOverlay"></div>
+        <div class="mobile-filter-drawer d-none" id="mobileFilterDrawer">
             <div class="drawer-header">
                 <h3 class="drawer-title">Bộ lọc</h3>
                 <button class="drawer-close" id="drawerClose" aria-label="Đóng">

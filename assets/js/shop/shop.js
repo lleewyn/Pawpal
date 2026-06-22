@@ -464,16 +464,16 @@ function renderProducts() {
     
     // Render products or empty state
     if (paginatedProducts.length === 0) {
-        grid.style.display = 'none';
+        grid.classList.add('d-none');
         renderNoResultsSuggestions();
-        emptyState.style.display = 'block';
+        emptyState.classList.remove('d-none');
     } else {
         const emptyRecommendations = document.getElementById('emptyRecommendations');
         if (emptyRecommendations) {
-            emptyRecommendations.style.display = 'none';
+            emptyRecommendations.classList.add('d-none');
         }
-        grid.style.display = 'grid';
-        emptyState.style.display = 'none';
+        grid.classList.remove('d-none');
+        emptyState.classList.add('d-none');
         grid.innerHTML = paginatedProducts.map(product => createProductCardHTML(product)).join('');
         
         // Attach wishlist button listeners
@@ -617,11 +617,11 @@ function renderPagination() {
     const paginationWrapper = document.getElementById('paginationWrapper');
     
     if (totalPages <= 1) {
-        paginationWrapper.style.display = 'none';
+        paginationWrapper.classList.add('d-none');
         return;
     }
     
-    paginationWrapper.style.display = 'block';
+    paginationWrapper.classList.remove('d-none');
     
     // Prev/Next buttons
     pagePrev.disabled = state.currentPage === 1;
@@ -745,8 +745,8 @@ function initMobileFilter() {
         // Re-attach listeners to cloned elements
         attachFilterListenersToDrawer();
         
-        mobileFilterOverlay.style.display = 'block';
-        mobileFilterDrawer.style.display = 'flex';
+        mobileFilterOverlay.classList.remove('d-none');
+        mobileFilterDrawer.classList.remove('d-none');
         setTimeout(() => {
             mobileFilterOverlay.classList.add('show');
             mobileFilterDrawer.classList.add('show');
@@ -758,8 +758,8 @@ function initMobileFilter() {
         mobileFilterOverlay.classList.remove('show');
         mobileFilterDrawer.classList.remove('show');
         setTimeout(() => {
-            mobileFilterOverlay.style.display = 'none';
-            mobileFilterDrawer.style.display = 'none';
+            mobileFilterOverlay.classList.add('d-none');
+            mobileFilterDrawer.classList.add('d-none');
             document.body.style.overflow = '';
         }, 350);
     }
@@ -913,7 +913,7 @@ function renderNoResultsSuggestions() {
         .slice(0, 4);
 
     if (!suggestionProducts.length) {
-        recommendations.style.display = 'none';
+        recommendations.classList.add('d-none');
         return;
     }
 

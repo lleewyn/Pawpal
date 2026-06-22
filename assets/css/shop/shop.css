@@ -421,7 +421,7 @@
 .product-image-wrapper {
     position: relative;
     aspect-ratio: 4/3;
-    background: var(--color-bg-light);
+    background: #f4faf7;
     overflow: hidden;
     pointer-events: auto;
 }
@@ -623,7 +623,7 @@
 .empty-state-products {
     text-align: center;
     padding: var(--space-xl) var(--space-md);
-    background: var(--color-bg-light);
+    background: #f4faf7;
     border: var(--border-card);
     border-radius: var(--card-border-radius);
 }
@@ -731,7 +731,7 @@
 /* ── Brands Section ───────────────────────────────────────────────────── */
 .brands-section {
     padding: var(--space-xl) 0;
-    background: var(--color-bg-light);
+    background: #f4faf7;
 }
 
 .brands-grid {
@@ -783,7 +783,7 @@
     position: sticky;
     top: 120px;
     align-self: start;
-    background: var(--color-bg-light);
+    background: #f4faf7;
     border: var(--border-card);
     border-radius: var(--card-border-radius);
     padding: var(--space-sm);
@@ -825,7 +825,7 @@
     width: 60px;
     height: 60px;
     flex-shrink: 0;
-    background: var(--color-bg-light);
+    background: #f4faf7;
     border-radius: var(--card-border-radius);
     overflow: hidden;
 }
@@ -871,7 +871,7 @@
 
 /* ── Mobile Filter Drawer ─────────────────────────────────────────────── */
 .mobile-filter-overlay {
-    display: none;
+    display: block;
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.5);
@@ -885,7 +885,7 @@
 }
 
 .mobile-filter-drawer {
-    display: none;
+    display: flex;
     position: fixed;
     right: -100%;
     top: 0;
