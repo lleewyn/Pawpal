@@ -330,116 +330,171 @@
 
 .vouchers-grid-wrapper {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: calc(var(--space-sm) * 0.9);
+    /* Fixed two columns layout on desktop */
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
 }
 
-.voucher-card {
-    background-color: var(--color-bg-white);
-    border: 2px solid var(--color-border);
-    border-radius: var(--card-border-radius);
-    padding: calc(var(--space-xs) * 2);
+@media (max-width: 900px) {
+    .vouchers-grid-wrapper {
+        grid-template-columns: 1fr; /* collapse to 1 column on narrower screens */
+    }
+}
+
+/* Shopee-style horizontal voucher card */
+.voucher-card-shopee {
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 180px;
-    transition: all 0.3s ease;
+    align-items: center;
+    background-color: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 12px;
+    gap: 12px;
+    transition: all 0.22s ease;
+    overflow: hidden;
 }
 
-.voucher-card:hover {
-    box-shadow: var(--shadow-card-hover);
+.voucher-card-shopee:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border-color: var(--color-primary);
 }
 
-.voucher-card-body {
-    position: relative;
+.voucher-card-shopee.out-of-stock {
+    opacity: 0.6;
+    background-color: rgba(255, 255, 255, 0.7);
 }
 
-.points-tag {
-    position: absolute;
-    top: 0;
-    right: 0;
+.voucher-card-shopee.insufficient {
+    opacity: 0.65;
+    background-color: rgba(255, 255, 255, 0.75);
+}
+
+.voucher-icon {
+    font-size: 2rem;
+    min-width: 50px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.voucher-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.voucher-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.voucher-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.voucher-points {
+    display: inline-block;
     background-color: var(--color-primary-light);
     color: var(--color-primary-dark);
-    font-size: var(--fs-caption);
+    font-size: 0.75rem;
     font-weight: 700;
-    padding: 2px 8px;
+    padding: 2px 6px;
     border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.voucher-name {
-    font-family: var(--font-heading);
-    font-size: var(--fs-h3);
-    color: var(--color-primary-dark);
-    margin-top: 0;
-    margin-bottom: 8px;
-    padding-right: 70px; /* Tránh đè lên points-tag */
-}
-
-.voucher-value {
+.voucher-subtitle {
+    font-size: 0.85rem;
     color: var(--color-accent);
-    font-weight: 700;
-    font-size: var(--fs-body);
-    margin-bottom: 8px;
-}
-
-.voucher-terms {
-    font-size: var(--fs-caption);
-    color: var(--color-text-light);
+    font-weight: 600;
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.voucher-card-footer {
-    margin-top: var(--space-sm);
+.voucher-action {
+    flex-shrink: 0;
+    min-width: max-content;
 }
 
-/* Voucher status labels */
+/* Voucher status labels (for old voucher-card, keeping for compatibility) */
 .voucher-status-label {
+    display: block;
     text-align: center;
-    padding: 8px;
+    padding: 8px 14px;
     border-radius: var(--border-radius-pill);
-    font-size: var(--fs-small);
+    font-size: 0.8rem;
     font-weight: 700;
+    transition: all 0.2s ease;
 }
 
 .voucher-status-label.locked-label {
     background-color: var(--color-neutral-light);
-    color: var(--color-neutral);
-    border: 1px dashed var(--color-border);
+    color: var(--color-neutral-dark);
+    border: 1px solid var(--color-neutral);
+    font-weight: 600;
 }
 
 .voucher-status-label.out-of-stock-label {
     background-color: var(--color-danger-light);
     color: var(--color-danger);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    font-weight: 600;
 }
 
 /* Slide to Redeem horizontal bar */
 .slider-container {
     position: relative;
-    height: 40px;
+    height: 44px;
     background-color: var(--color-primary-light);
-    border-radius: 20px;
+    border-radius: 22px;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--color-primary);
+    border: 2px solid var(--color-primary);
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.slider-container:hover {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary-dark);
+}
+
+.slider-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(79, 122, 104, 0.05);
+    z-index: 0;
 }
 
 .slider-text {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 700;
     color: var(--color-primary-dark);
     z-index: 1;
     pointer-events: none;
-    transition: opacity 0.1s ease;
+    transition: opacity 0.15s ease;
+    letter-spacing: 0.3px;
 }
 
 .slider-handle {
     position: absolute;
-    left: 2px;
-    top: 2px;
+    left: 4px;
+    top: 4px;
     width: 36px;
     height: 36px;
     background-color: var(--color-primary);
@@ -449,7 +504,12 @@
     justify-content: center;
     cursor: grab;
     z-index: 2;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(79, 122, 104, 0.25);
+    transition: box-shadow 0.2s ease;
+}
+
+.slider-handle:hover {
+    box-shadow: 0 4px 12px rgba(79, 122, 104, 0.35);
 }
 
 .slider-handle:active {
@@ -458,8 +518,37 @@
 
 .slider-handle .arrow-icon {
     color: #ffffff;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     pointer-events: none;
+    font-weight: bold;
+}
+
+/* Redeem button (replacement for slider) */
+.redeem-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 2px solid var(--color-primary);
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+    white-space: nowrap;
+}
+
+.redeem-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 122, 104, 0.25);
+}
+
+.redeem-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* Redeem Success Button */
@@ -467,11 +556,12 @@
     text-align: center;
     background-color: var(--color-success);
     color: #ffffff;
-    padding: 8px;
-    border-radius: 20px;
+    padding: 8px 16px;
+    border-radius: 22px;
     font-size: var(--fs-small);
     font-weight: 700;
     animation: success-bounce 0.3s ease;
+    border: 2px solid var(--color-success);
 }
 
 @keyframes success-bounce {

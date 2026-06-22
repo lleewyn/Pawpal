@@ -53,15 +53,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
     if (currentUser && !currentUser.is_temporary) {
         // Logged in member
-        document.getElementById('memberFlow').style.display = 'block';
-        document.getElementById('guestFlow').style.display = 'none';
-        document.getElementById('guestInfoNote').style.display = 'none';
+        document.getElementById('memberFlow').classList.remove('d-none');
+        document.getElementById('guestFlow').classList.add('d-none');
+        document.getElementById('guestInfoNote').classList.add('d-none');
         loadMemberPets(currentUser);
     } else {
         // Guest flow
-        document.getElementById('memberFlow').style.display = 'none';
-        document.getElementById('guestFlow').style.display = 'block';
-        document.getElementById('guestInfoNote').style.display = 'block';
+        document.getElementById('memberFlow').classList.add('d-none');
+        document.getElementById('guestFlow').classList.remove('d-none');
+        document.getElementById('guestInfoNote').classList.remove('d-none');
         setupGuestValidation();
     }
 
@@ -235,11 +235,11 @@ function validateGuestInput(id) {
     if (!isValid) {
         el.classList.add('is-invalid');
         errEl.textContent = errMsg;
-        errEl.style.display = 'block';
+        errEl.classList.remove('d-none');
     } else {
         el.classList.remove('is-invalid');
         errEl.textContent = '';
-        errEl.style.display = 'none';
+        errEl.classList.add('d-none');
     }
 
     return isValid;
@@ -397,7 +397,7 @@ function setupScheduleSelection() {
                     bookingState.checkOutDate = outDate;
                     bookingState.nights = nights;
 
-                    document.getElementById('hotelNightsDisplay').style.display = 'flex';
+                    document.getElementById('hotelNightsDisplay').classList.remove('d-none');
                     document.getElementById('hotelNightsText').textContent = `${nights} đêm`;
 
                     const calculatedPrice = calculateDynamicPrice(selectedService, bookingState.petWeight);
@@ -409,7 +409,7 @@ function setupScheduleSelection() {
                 } else {
                     alert('Ngày check-out phải sau ngày check-in.');
                     checkOutInput.value = '';
-                    document.getElementById('hotelNightsDisplay').style.display = 'none';
+                    document.getElementById('hotelNightsDisplay').classList.add('d-none');
                     validateStep3();
                 }
             }
@@ -435,7 +435,7 @@ function setupScheduleSelection() {
             chk.addEventListener('change', () => {
                 const qtyCtrl = document.getElementById(`qty${id.replace('addon', '')}Ctrl`);
                 if (qtyCtrl) {
-                    qtyCtrl.style.display = chk.checked ? 'inline-flex' : 'none';
+                    chk.checked ? qtyCtrl.classList.remove('d-none') : qtyCtrl.classList.add('d-none');
                 }
                 updateAddons();
                 updateSummary();
@@ -545,7 +545,7 @@ function startHoldTimer(slot) {
     }
 
     const holdBanner = document.getElementById('bookingHoldBanner');
-    holdBanner.style.display = 'block';
+    holdBanner.classList.remove('d-none');
 
     // Set 15 minutes hold time
     const duration = 15 * 60;
@@ -684,13 +684,13 @@ function setupStepActions() {
             renderServices(categoryToRender);
         } else if (targetStep === 3) {
             if (selectedService.category === 'hotel') {
-                document.getElementById('hotelDateRange').style.display = 'block';
-                document.getElementById('hotelAddonsSection').style.display = 'block';
-                document.getElementById('spaSchedule').style.display = 'none';
+                document.getElementById('hotelDateRange').classList.remove('d-none');
+                document.getElementById('hotelAddonsSection').classList.remove('d-none');
+                document.getElementById('spaSchedule').classList.add('d-none');
             } else {
-                document.getElementById('hotelDateRange').style.display = 'none';
-                document.getElementById('hotelAddonsSection').style.display = 'none';
-                document.getElementById('spaSchedule').style.display = 'block';
+                document.getElementById('hotelDateRange').classList.add('d-none');
+                document.getElementById('hotelAddonsSection').classList.add('d-none');
+                document.getElementById('spaSchedule').classList.remove('d-none');
                 renderTimeslots();
                 renderStaff();
             }
@@ -740,13 +740,13 @@ function updateSummary() {
     const summaryContent = document.getElementById('summaryContent');
 
     if (!selectedService) {
-        summaryEmpty.style.display = 'block';
-        summaryContent.style.display = 'none';
+        summaryEmpty.classList.remove('d-none');
+        summaryContent.classList.add('d-none');
         return;
     }
 
-    summaryEmpty.style.display = 'none';
-    summaryContent.style.display = 'block';
+    summaryEmpty.classList.add('d-none');
+    summaryContent.classList.remove('d-none');
 
     // Set details
     const sumService = document.getElementById('sumService');
@@ -756,36 +756,36 @@ function updateSummary() {
     const sumDate = document.getElementById('sumDate');
 
     // Service
-    sumService.style.display = 'flex';
+    sumService.classList.remove('d-none');
     document.getElementById('sumServiceVal').textContent = selectedService.name;
 
     // Pet
     if (bookingState.petName) {
-        sumPet.style.display = 'flex';
+        sumPet.classList.remove('d-none');
         document.getElementById('sumPetVal').textContent = `${bookingState.petName} (${bookingState.petWeight}kg)`;
     } else {
-        sumPet.style.display = 'none';
+        sumPet.classList.add('d-none');
     }
 
     // Owner
     if (bookingState.ownerName) {
-        sumOwner.style.display = 'flex';
+        sumOwner.classList.remove('d-none');
         document.getElementById('sumOwnerVal').textContent = `${bookingState.ownerName} • ${bookingState.ownerPhone}`;
     } else {
-        sumOwner.style.display = 'none';
+        sumOwner.classList.add('d-none');
     }
 
     // Staff
     if (selectedService.category === 'spa' && bookingState.staff) {
-        sumStaff.style.display = 'flex';
+        sumStaff.classList.remove('d-none');
         document.getElementById('sumStaffVal').textContent = bookingState.staff;
     } else {
-        sumStaff.style.display = 'none';
+        sumStaff.classList.add('d-none');
     }
 
     // Date
     if (bookingState.date) {
-        sumDate.style.display = 'flex';
+        sumDate.classList.remove('d-none');
         let dateText = formatDate(bookingState.date);
         if (selectedService.category === 'hotel' && bookingState.checkOutDate) {
             dateText += ` $\\rightarrow$ ${formatDate(bookingState.checkOutDate)} (${bookingState.nights} đêm)`;
@@ -794,7 +794,7 @@ function updateSummary() {
         }
         document.getElementById('sumDateVal').textContent = dateText;
     } else {
-        sumDate.style.display = 'none';
+        sumDate.classList.add('d-none');
     }
 
     // Price
@@ -821,9 +821,9 @@ function updateSummary() {
 
     const sumMemberNote = document.getElementById('sumMemberNote');
     if (isMember) {
-        sumMemberNote.style.display = 'block';
+        sumMemberNote.classList.remove('d-none');
     } else {
-        sumMemberNote.style.display = 'none';
+        sumMemberNote.classList.add('d-none');
     }
 }
 

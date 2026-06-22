@@ -272,10 +272,15 @@
     background: var(--color-primary-light);
 }
 
+.btn-card-action.btn-danger {
+    background: #cb133b !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
 .btn-card-action.btn-danger:hover {
-    border-color: var(--color-danger);
-    color: var(--color-danger);
-    background: var(--color-danger-light);
+    background: #a80f30 !important;
+    color: #ffffff !important;
 }
 
 /* ── Archived Pet Card ──────────────────────────────────────────────────── */

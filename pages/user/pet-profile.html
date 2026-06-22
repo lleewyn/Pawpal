@@ -90,16 +90,8 @@
                 
                 <!-- Main Content -->
                 <div class="col-lg-9">
-                    <!-- Tabs Navigation -->
-                    <section class="pet-profile-tabs-section" style="display: flex; justify-content: space-between; align-items: center; padding-right: 16px;">
-                        <div class="tabs-wrapper">
-                            <button class="tab-btn active" data-tab="active">
-                                Danh sách hoạt động
-                            </button>
-                            <button class="tab-btn" data-tab="archive">
-                                Kho lưu trữ
-                            </button>
-                        </div>
+                    <!-- Add Pet Button -->
+                    <section class="pet-profile-action-section" style="display: flex; justify-content: flex-end; padding-right: 16px; margin-bottom: 24px;">
                         <button class="btn-cta" id="btnAddPet" style="padding: 8px 16px; font-size: 0.85rem;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -110,7 +102,7 @@
                     </section>
 
                     <!-- Pet Cards Grid - Active -->
-                    <section class="pet-cards-section" id="activeTab">
+                    <div id="activeTab">
                         <div class="pet-cards-grid" id="activePetGrid">
                             <!-- Active pet cards will be rendered here -->
                         </div>
@@ -127,26 +119,44 @@
                                 Thêm bé mới
                             </button>
                         </div>
-                    </section>
+                    </div>
 
-                    <!-- Pet Cards Grid - Archive -->
-                    <section class="pet-cards-section" id="archiveTab" style="display:none;">
-                        <div class="pet-cards-grid" id="archivePetGrid">
-                            <!-- Archived pet cards will be rendered here -->
-                        </div>
-                        <!-- Empty State -->
-                        <div class="empty-state" id="emptyStateArchive" style="display:none;">
-                            <div class="empty-state-icon" style="color: var(--color-primary-light); display: inline-flex; justify-content: center; margin-bottom: var(--space-sm);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                                </svg>
+                    <!-- Bottom Grid for Offers and Reminders -->
+                    <div class="pet-profile-bottom-grid mt-5">
+                        <div class="row g-4">
+                            <!-- Left: Offers -->
+                            <div class="col-md-7">
+                                <div class="pet-offer-card" style="background-color: #fef9c3; border: 1px solid #fef08a; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: var(--shadow-card);">
+                                    <div>
+                                        <h3 style="font-family: var(--font-heading); font-size: 1.3rem; color: #713f12; font-weight: 700; margin-bottom: 12px;">Ưu đãi hôm nay dành cho bé</h3>
+                                        <p style="font-size: 0.9rem; color: #854d0e; line-height: 1.5; margin-bottom: 24px;">Giảm 20% cho tất cả dịch vụ spa và làm đẹp khi đặt lịch qua ứng dụng PawPal.</p>
+                                    </div>
+                                    <a href="/pages/services/booking.html" class="btn" style="background-color: #064e3b; color: #fff; border: none; border-radius: 20px; padding: 10px 24px; font-weight: 700; display: inline-block; width: max-content; font-size: 0.85rem; text-decoration: none; align-self: flex-end;">Đặt ngay</a>
+                                </div>
                             </div>
-                            <h3 class="empty-state-title">Kho lưu trữ trống</h3>
-                            <p class="empty-state-desc">Các hồ sơ bé cưng đã xóa sẽ được lưu ở đây trong 30 ngày</p>
+                            <!-- Right: Reminders -->
+                            <div class="col-md-5">
+                                <div class="pet-reminder-card" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; height: 100%; box-shadow: var(--shadow-card); display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                        <h3 style="font-family: var(--font-heading); font-size: 1.25rem; color: var(--color-text-dark); font-weight: 700; margin-bottom: 16px;">Nhắc nhở</h3>
+                                        <div class="reminder-list" style="display: flex; gap: 12px; width: 100%;">
+                                            <div class="reminder-item" style="flex: 1; background-color: #fef9c3; border: 1px solid #fef08a; border-radius: 12px; padding: 12px 16px;">
+                                                <div style="font-weight: 700; font-size: 0.85rem; color: #713f12;">Tiêm phòng Milu</div>
+                                                <div style="font-size: 0.75rem; color: #854d0e; margin-top: 2px;">Trong 2 ngày tới</div>
+                                            </div>
+                                            <div class="reminder-item" style="flex: 1; background-color: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 12px; padding: 12px 16px;">
+                                                <div style="font-weight: 700; font-size: 0.85rem; color: #1b5e20;">Cắt tỉa lông LALA</div>
+                                                <div style="font-size: 0.75rem; color: #2e7d32; margin-top: 2px;">Chủ nhật này</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <a href="/pages/user/bookings.html" style="font-size: 0.85rem; font-weight: 700; color: var(--color-primary); text-decoration: none; display: block; text-align: center; margin-top: 16px;">Xem tất cả lịch hẹn</a>
+                                </div>
+                            </div>
                         </div>
-                    </section>
+                    </div>
+
+
                 </div>
             </div>
         </div>
@@ -155,18 +165,15 @@
     <!-- Add/Edit Pet Modal -->
     <div class="modal-overlay" id="petFormModal">
         <div class="modal-content modal-content-large" style="padding: 0; background: transparent; border: none; box-shadow: none;">
-            <div class="pet-add-page" style="border-radius: 16px; overflow: hidden; background: var(--cream);">
-                <div class="page-wrap" style="padding: 30px; max-height: 85vh; overflow-y: auto; position: relative;">
-                    <!-- Close Button -->
-                    <button class="modal-close" style="position: absolute; top: 24px; right: 24px;" onclick="document.getElementById('petFormModal').classList.remove('active'); return false;" aria-label="Đóng">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </button>
-
-                    <h1 class="page-title" id="petFormTitle">Thêm bé cưng mới</h1>
-                    <p class="page-subtitle">Điền thông tin cần thiết để PawPal có thể chăm sóc thật tốt cho bé cưng của bạn.</p>
+            <div class="pet-add-page" style="border-radius: 16px; overflow: hidden; background: var(--cream); position: relative;">
+                <!-- Close Button -->
+                <button class="modal-close" style="position: absolute; top: 24px; right: 24px; z-index: 100;" onclick="document.getElementById('petFormModal').classList.remove('active'); return false;" aria-label="Đóng">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="page-wrap" style="padding: 30px; max-height: 85vh; overflow-y: auto;">
                     <input type="hidden" id="petId" value="">
 
                     <!-- Avatar -->

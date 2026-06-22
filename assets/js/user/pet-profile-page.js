@@ -19,21 +19,18 @@ let editingPetId = null;
 
 function openPetFormModal(petId = null) {
     const modal = document.getElementById('petFormModal');
-    const petFormTitle = document.getElementById('petFormTitle');
     const petIdInput = document.getElementById('petId');
 
-    if (!modal || !petFormTitle || !petIdInput) return;
+    if (!modal || !petIdInput) return;
 
     editingPetId = petId;
     if (petId) {
         const pet = getPets().find(p => p.id === petId);
         if (pet) {
-            petFormTitle.textContent = 'Cập nhật hồ sơ bé cưng';
             petIdInput.value = pet.id;
             populatePetForm(pet);
         }
     } else {
-        petFormTitle.textContent = 'Thêm bé cưng mới';
         petIdInput.value = '';
         resetPetForm();
     }
@@ -73,8 +70,14 @@ function populatePetForm(pet) {
     const notesEl = document.getElementById('notes');
     if (notesEl) notesEl.value = pet.notes || '';
     const avatarPreview = document.getElementById('avatarPreview');
+    const avatarCircle = document.getElementById('avatarCircle');
     if (avatarPreview) {
         avatarPreview.src = pet.avatar || '';
+        if (pet.avatar && avatarCircle) {
+            avatarCircle.classList.add('has-image');
+        } else if (avatarCircle) {
+            avatarCircle.classList.remove('has-image');
+        }
     }
 }
 
@@ -87,7 +90,13 @@ function resetPetForm() {
     const otherSpeciesWrap = document.getElementById('otherSpeciesWrap');
     if (otherSpeciesWrap) otherSpeciesWrap.style.display = 'none';
     const avatarPreview = document.getElementById('avatarPreview');
-    if (avatarPreview) avatarPreview.src = '';
+    const avatarCircle = document.getElementById('avatarCircle');
+    if (avatarPreview) {
+        avatarPreview.src = '';
+        if (avatarCircle) {
+            avatarCircle.classList.remove('has-image');
+        }
+    }
     document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
 }
 
@@ -108,6 +117,32 @@ function renderPetGrids() {
         } else {
             document.getElementById('emptyStateActive').style.display = 'none';
             activePets.forEach(pet => activeGrid.appendChild(createPetCard(pet)));
+            
+            // Append the "Thêm bé mới" action card at the end of active grid
+            const addCard = document.createElement('div');
+            addCard.className = 'pet-card pet-card-add-new';
+            addCard.style.border = '2px dashed #cbd5e1';
+            addCard.style.display = 'flex';
+            addCard.style.flexDirection = 'column';
+            addCard.style.alignItems = 'center';
+            addCard.style.justifyContent = 'center';
+            addCard.style.textAlign = 'center';
+            addCard.style.padding = '32px 24px';
+            addCard.style.minHeight = '300px';
+            addCard.style.background = '#f8fafc';
+            addCard.style.cursor = 'pointer';
+            
+            addCard.innerHTML = `
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #475569;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </div>
+                <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 600; color: var(--color-text-dark); margin-bottom: 8px;">Thêm bé mới</h3>
+                <p style="font-size: 0.8rem; color: var(--color-text-light); line-height: 1.5; margin: 0;">Nhấn để đăng ký hồ sơ cho thành viên mới của gia đình.</p>
+            `;
+            addCard.addEventListener('click', () => {
+                openPetFormModal();
+            });
+            activeGrid.appendChild(addCard);
         }
     }
 
@@ -308,12 +343,16 @@ function setupForm() {
 function setupAvatar() {
     const input = document.getElementById('avatar-input');
     const preview = document.getElementById('avatarPreview');
+    const circle = document.getElementById('avatarCircle');
     if (input && preview) {
         input.addEventListener('change', e => {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = ev => preview.src = ev.target.result;
+                reader.onload = ev => {
+                    preview.src = ev.target.result;
+                    if (circle) circle.classList.add('has-image');
+                };
                 reader.readAsDataURL(file);
             }
         });

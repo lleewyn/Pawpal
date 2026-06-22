@@ -44,28 +44,7 @@
         
         // Sidebar is injected by components.js (loaded via defer below)
         
-        // Handle tab switching based on URL parameter
-        (function handleTabs() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const currentTab = urlParams.get('tab') || 'profile';
-            
-            // Hide all tabs
-            document.querySelectorAll('.dashboard-content-panel').forEach(panel => {
-                panel.style.display = 'none';
-            });
-            
-            // Show current tab
-            const tabMap = {
-                'profile': 'profileTab',
-                'security': 'securityTab'
-            };
-            
-            const activeTabId = tabMap[currentTab] || 'profileTab';
-            const activeTab = document.getElementById(activeTabId);
-            if (activeTab) {
-                activeTab.style.display = 'block';
-            }
-        })();
+
     </script>
     <script src="../../assets/js/shared/components.js" defer></script>
     <script src="../../assets/js/shared/header-auth.js" defer></script>
@@ -94,327 +73,143 @@
                     
                     <!-- Tab: Tổng quan (Dashboard) -->
                     <div class="dashboard-content-panel" id="profileTab">
-                        <!-- Welcome Section -->
-                        <div class="dashboard-welcome">
-                            <h2 class="welcome-text">Chào Sen, <span id="welcomeName"></span>!</h2>
+                        <!-- Welcome & Stats Banner -->
+                        <div class="dashboard-welcome-banner mb-4">
+                            <div class="welcome-banner-content">
+                                <h2 class="welcome-title-custom">Xin chào Sen <span id="welcomeName">bạn</span> 👋</h2>
+                                <div class="welcome-banner-stats">
+                                    <div class="welcome-stat-card">
+                                        <span class="welcome-stat-value" id="statPoints">0</span>
+                                        <span class="welcome-stat-label">PAW POINTS</span>
+                                    </div>
+                                    <div class="welcome-stat-card">
+                                        <span class="welcome-stat-value" id="statAccountType">-</span>
+                                        <span class="welcome-stat-label">HẠNG THÀNH VIÊN</span>
+                                    </div>
+                                    <div class="welcome-stat-card">
+                                        <span class="welcome-stat-value" id="statPetsCount">0</span>
+                                        <span class="welcome-stat-label">BÉ CƯNG CỦA BẠN</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <!-- Stats Bar -->
-                        <div class="dashboard-stats mb-4">
-                            <div class="stat-item">
-                                <span class="stat-value" id="statPoints">0</span>
-                                <span class="stat-label">Paw Points</span>
+
+                        <!-- Section: Bé cưng của bạn -->
+                        <div class="dashboard-section-wrapper mb-4">
+                            <div class="section-header-row mb-3">
+                                <h3 class="section-title-custom">Bé cưng của bạn</h3>
+                                <a href="pet-profile.html" class="section-link-custom">Xem tất cả hồ sơ &rarr;</a>
                             </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="statAccountType">-</span>
-                                <span class="stat-label">Loại tài khoản</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="statPetsCount">0</span>
-                                <span class="stat-label">Bé cưng</span>
+                            <div class="horizontal-scroll-card-custom">
+                                <div class="pets-horizontal-list" id="myPetsContainerHorizontal">
+                                    <!-- Javascript will render pets horizontally here -->
+                                    <p class="text-muted p-3">Đang tải...</p>
+                                </div>
                             </div>
                         </div>
-                        
-                        <!-- Grid Layout 2fr 1fr -->
-                        <div class="dashboard-grid">
-                            <!-- CỘT TRÁI (2fr) -->
-                            <div class="dashboard-col-main">
-                                
-                                <!-- Widget: Thông tin cá nhân -->
-                                <div class="dashboard-widget">
-                                    <div class="widget-header">
-                                        <h3 class="widget-title">Thông tin cá nhân</h3>
-                                    </div>
-                                    <div class="profile-info-section mt-2" id="profileDisplaySection">
-                                        <div class="profile-grid-display">
-                                            <div class="info-row">
-                                                <span class="info-label">Họ và tên:</span>
-                                                <span class="info-value" id="profileName">-</span>
-                                            </div>
-                                            <div class="info-row">
-                                                <span class="info-label">Email:</span>
-                                                <span class="info-value" id="profileEmail">Chưa cập nhật</span>
-                                            </div>
-                                            <div class="info-row">
-                                                <span class="info-label">Số điện thoại:</span>
-                                                <span class="info-value" id="profilePhone">-</span>
-                                            </div>
-                                            <div class="info-row">
-                                                <span class="info-label">Giới tính:</span>
-                                                <span class="info-value" id="profileGender">Chưa cập nhật</span>
-                                            </div>
-                                            <div class="info-row">
-                                                <span class="info-label">Ngày sinh:</span>
-                                                <span class="info-value" id="profileDob">Chưa cập nhật</span>
-                                            </div>
-                                        </div>
-                                        <div class="widget-action mt-3">
-                                            <button id="btnEditProfile" type="button" class="btn-green-outline">Cập nhật thông tin</button>
-                                        </div>
-                                    </div>
-                                    <div id="profileEditSection" class="profile-edit-section" style="display:none; margin-top: 16px;">
-                                        <form id="profileUpdateForm" class="profile-update-form">
-                                            <div class="form-grid-2col">
-                                                <div class="form-group mb-3">
-                                                    <label for="profileNameInput" class="form-label">Họ và tên</label>
-                                                    <input type="text" class="form-control" id="profileNameInput" placeholder="Nhập tên của bạn" required>
-                                                </div>
-                                                <div class="form-group mb-3">
-                                                    <label for="profileEmailInput" class="form-label">Email</label>
-                                                    <input type="email" class="form-control" id="profileEmailInput" placeholder="Nhập địa chỉ email">
-                                                </div>
-                                                <div class="form-group mb-3">
-                                                    <label for="profilePhoneInput" class="form-label">Số điện thoại</label>
-                                                    <input type="tel" class="form-control" id="profilePhoneInput" placeholder="0xxxxxxxxx" required>
-                                                </div>
-                                                <div class="form-group mb-3">
-                                                    <label for="profileGenderInput" class="form-label">Giới tính</label>
-                                                    <select class="form-select form-control" id="profileGenderInput">
-                                                        <option value="">Chọn giới tính</option>
-                                                        <option value="male">Nam</option>
-                                                        <option value="female">Nữ</option>
-                                                        <option value="other">Khác</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group mb-3" style="grid-column: span 2;">
-                                                    <label for="profileDobInput" class="form-label">Ngày sinh</label>
-                                                    <input type="date" class="form-control" id="profileDobInput">
-                                                </div>
-                                            </div>
-                                            <div class="form-action-group" style="display:flex; gap:12px; flex-wrap:wrap; margin-top: 8px;">
-                                                <button type="submit" class="btn-cta accent-bg">Lưu thông tin</button>
-                                                <button type="button" id="btnCancelProfileEdit" class="btn-cta-outline">Hủy</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                                
-                                <!-- Widget: Sổ địa chỉ -->
-                                <div class="dashboard-widget mt-4">
-                                    <div class="widget-header">
-                                        <h3 class="widget-title">Sổ địa chỉ</h3>
-                                    </div>
-                                    <div class="address-book-section mt-3">
-                                        <div class="address-card" id="addressCardView">
-                                            <div class="address-card-header">
-                                                <span class="address-tag">Mặc định</span>
-                                                <button type="button" class="btn-link" id="btnEditAddress" style="font-size: var(--fs-small); color: var(--color-primary); cursor: pointer; border: none; background: none;">Sửa</button>
-                                            </div>
-                                            <div class="address-card-body">
-                                                <p class="address-text" id="profileAddress">Chưa thiết lập địa chỉ mặc định</p>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Form Edit Address -->
-                                        <div class="address-card" id="addressCardEdit" style="display:none;">
-                                            <div class="address-card-header">
-                                                <span class="address-tag">Cập nhật địa chỉ</span>
-                                            </div>
-                                            <div class="address-card-body">
-                                                <div class="form-group mb-2">
-                                                    <textarea class="form-control" id="profileAddressInput" rows="2" placeholder="Nhập địa chỉ của bạn..."></textarea>
-                                                </div>
-                                                <div style="display:flex; gap: 8px;">
-                                                    <button type="button" class="btn-cta btn-sm" id="btnSaveAddress">Lưu</button>
-                                                    <button type="button" class="btn-cta-outline btn-sm" id="btnCancelAddress">Huỷ</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
+
+                        <!-- Section: Lịch hẹn sắp tới -->
+                        <div class="dashboard-section-wrapper mb-4">
+                            <div class="section-header-row mb-3">
+                                <h3 class="section-title-custom">Lịch hẹn sắp tới</h3>
                             </div>
-                            
-                            <!-- CỘT PHẢI (1fr) -->
-                            <div class="dashboard-col-side">
-                                
-                                <!-- Widget: Bé cưng của tôi -->
-                                <div class="dashboard-widget">
-                                    <div class="widget-header">
-                                        <h3 class="widget-title">Bé cưng của tôi</h3>
-                                    </div>
-                                    <div class="widget-content mt-3" id="myPetsContainer">
-                                        <!-- Javascript will render pets here -->
-                                        <p class="text-muted">Chưa có hồ sơ bé cưng.</p>
-                                    </div>
-                                    <div class="widget-action mt-3">
-                                        <a href="pet-profile.html" class="widget-link">Thêm bé cưng</a>
-                                    </div>
+                            <div id="upcomingBookingCardContainer">
+                                <!-- Javascript will render next upcoming booking here -->
+                                <p class="text-muted p-3">Đang tải...</p>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Grid Layout: 2 Columns -->
+                        <div class="dashboard-bottom-grid">
+                            <!-- Left Column: Thông tin cá nhân -->
+                            <div class="dashboard-bottom-card">
+                                <div class="bottom-card-header mb-3">
+                                    <h3 class="bottom-card-title-custom">Thông tin cá nhân</h3>
+                                    <button id="btnEditProfile" type="button" class="btn-edit-link-custom">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="margin-right: 4px; vertical-align: -2px;"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Chỉnh sửa
+                                    </button>
                                 </div>
                                 
-                                <!-- Widget: Lịch hẹn sắp tới -->
-                                <div class="dashboard-widget mt-4">
-                                    <div class="widget-header">
-                                        <h3 class="widget-title">Lịch hẹn sắp tới</h3>
+                                <div class="profile-info-section-custom" id="profileDisplaySection">
+                                    <div class="info-row-custom">
+                                        <span class="info-label-custom">Họ và tên</span>
+                                        <span class="info-value-custom" id="profileName">-</span>
                                     </div>
-                                    <div class="widget-content mt-3" id="upcomingBookingsContainer">
-                                        <!-- Javascript will render bookings here -->
-                                        <p class="text-muted">Chưa có lịch hẹn nào sắp tới.</p>
+                                    <div class="info-row-custom">
+                                        <span class="info-label-custom">Email</span>
+                                        <span class="info-value-custom" id="profileEmail">Chưa cập nhật</span>
                                     </div>
-                                    <div class="widget-action mt-3">
-                                        <a href="orders.html?tab=booking" class="widget-link">Xem tất cả lịch hẹn</a>
+                                    <div class="info-row-custom">
+                                        <span class="info-label-custom">Số điện thoại</span>
+                                        <span class="info-value-custom" id="profilePhone">-</span>
+                                    </div>
+                                    <div class="info-row-custom">
+                                        <span class="info-label-custom">Địa chỉ chính</span>
+                                        <span class="info-value-custom text-end" id="profileAddress">Chưa thiết lập địa chỉ mặc định</span>
+                                    </div>
+                                    <!-- Keep hidden values/elements to prevent js errors if any script looks for them -->
+                                    <div style="display:none;">
+                                        <span id="profileGender">-</span>
+                                        <span id="profileDob">-</span>
+                                        <button id="btnEditAddress">Sửa</button>
+                                        <div id="addressCardView"></div>
+                                        <div id="addressCardEdit">
+                                            <textarea id="profileAddressInput"></textarea>
+                                            <button id="btnSaveAddress">Lưu</button>
+                                            <button id="btnCancelAddress">Huỷ</button>
+                                        </div>
                                     </div>
                                 </div>
-                                
-                                <!-- Widget: Đơn hàng gần đây -->
-                                <div class="dashboard-widget mt-4">
-                                    <div class="widget-header">
-                                        <h3 class="widget-title">Đơn hàng gần đây</h3>
-                                    </div>
-                                    <div class="widget-content mt-3" id="recentOrdersContainer">
-                                        <!-- Javascript will render orders here -->
-                                        <p class="text-muted">Chưa có đơn hàng nào.</p>
-                                    </div>
-                                    <div class="widget-action mt-3">
-                                        <a href="orders.html?tab=shop" class="widget-link">Xem tất cả đơn hàng</a>
-                                    </div>
+
+                                <!-- Form Edit Profile -->
+                                <div id="profileEditSection" class="profile-edit-section" style="display:none; margin-top: 16px;">
+                                    <form id="profileUpdateForm" class="profile-update-form">
+                                        <div class="form-grid-2col">
+                                            <div class="form-group mb-3">
+                                                <label for="profileNameInput" class="form-label">Họ và tên</label>
+                                                <input type="text" class="form-control" id="profileNameInput" placeholder="Nhập tên của bạn" required>
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label for="profileEmailInput" class="form-label">Email</label>
+                                                <input type="email" class="form-control" id="profileEmailInput" placeholder="Nhập địa chỉ email">
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label for="profilePhoneInput" class="form-label">Số điện thoại</label>
+                                                <input type="tel" class="form-control" id="profilePhoneInput" placeholder="0xxxxxxxxx" required>
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label for="profileAddressInputEdit" class="form-label">Địa chỉ</label>
+                                                <input type="text" class="form-control" id="profileAddressInputEdit" placeholder="Nhập địa chỉ của bạn">
+                                            </div>
+                                            <!-- Hidden fields for compatibility -->
+                                            <input type="hidden" id="profileGenderInput" value="">
+                                            <input type="hidden" id="profileDobInput" value="">
+                                        </div>
+                                        <div class="form-action-group" style="display:flex; gap:12px; flex-wrap:wrap; margin-top: 8px;">
+                                            <button type="submit" class="btn-cta accent-bg">Lưu thông tin</button>
+                                            <button type="button" id="btnCancelProfileEdit" class="btn-cta-outline">Hủy</button>
+                                        </div>
+                                    </form>
                                 </div>
-                                
+                            </div>
+
+                            <!-- Right Column: Đơn hàng gần đây -->
+                            <div class="dashboard-bottom-card">
+                                <div class="bottom-card-header mb-3">
+                                    <h3 class="bottom-card-title-custom">Đơn hàng gần đây</h3>
+                                    <a href="orders.html?tab=shop" class="section-link-custom">Xem tất cả</a>
+                                </div>
+                                <div class="recent-orders-list-custom" id="recentOrdersContainer">
+                                    <!-- Javascript will render recent orders here -->
+                                    <p class="text-muted p-3">Chưa có đơn hàng nào.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Tab: Bảo mật (US 2-3) -->
-                    <div class="dashboard-content-panel" id="securityTab" style="display:none;">
+                    
 
-                        <!-- Warning Banner cho tài khoản tạm (US 2-3 Requirement) -->
-                        <div class="alert-warning-custom mb-4" id="tempAccountWarning" style="display:none;">
-                            <strong>Cảnh báo:</strong> Bạn bắt buộc phải thiết lập mật khẩu cá nhân để mở khóa tính năng đổi điểm thưởng và bảo mật thông tin bé cưng.
-                        </div>
-
-                        <div class="settings-card mb-4">
-                            <div class="settings-card-header">
-                                <div class="settings-card-title">Cài đặt thông báo</div>
-                                <p class="settings-card-desc">Chọn loại thông báo bạn muốn nhận từ PawPal.</p>
-                            </div>
-                            <div class="settings-card-body">
-                                <form id="notificationSettingsForm" class="settings-form">
-                                    <div class="settings-toggle-item mb-3">
-                                        <div class="toggle-info">
-                                            <label class="toggle-label" for="notifyEmail">Nhận thông báo qua email</label>
-                                            <span class="toggle-desc">Khuyến mãi, cập nhật lịch hẹn và điểm thưởng.</span>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="notifyEmail">
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </div>
-                                    <div class="settings-toggle-item mb-4">
-                                        <div class="toggle-info">
-                                            <label class="toggle-label" for="notifySMS">Nhận thông báo qua SMS</label>
-                                            <span class="toggle-desc">Chỉ cập nhật trạng thái đơn hàng và lịch đón trả bé cưng.</span>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="notifySMS">
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </div>
-                                    <button type="submit" class="btn-cta btn-sm">Lưu cài đặt thông báo</button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div class="settings-card mb-4">
-                            <div class="settings-card-header">
-                                <div class="settings-card-title">Liên kết mạng xã hội</div>
-                                <p class="settings-card-desc">Liên kết tài khoản để đăng nhập nhanh chóng và bảo mật hơn.</p>
-                            </div>
-                            <div class="settings-card-body">
-                                <div class="social-links-list">
-                                    <div class="social-link-item">
-                                        <div class="social-link-info">
-                                            <div class="social-icon google">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81z"/></svg>
-                                            </div>
-                                            <div class="social-link-text">
-                                                <span class="social-name">Google</span>
-                                                <span class="social-status connected" id="googleLinkStatus">quyen@gmail.com</span>
-                                            </div>
-                                        </div>
-                                        <button class="btn-social-disconnect">Huỷ liên kết</button>
-                                    </div>
-                                    <div class="social-link-item">
-                                        <div class="social-link-info">
-                                            <div class="social-icon facebook">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z"/></svg>
-                                            </div>
-                                            <div class="social-link-text">
-                                                <span class="social-name">Facebook</span>
-                                                <span class="social-status">Chưa liên kết</span>
-                                            </div>
-                                        </div>
-                                        <button class="btn-social-connect">Liên kết</button>
-                                    </div>
-                                    <div class="social-link-item">
-                                        <div class="social-link-info">
-                                            <div class="social-icon apple">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17.05 20.28c-.98.68-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 13.25 3.51 5.96 9.05 5.68c1.3.07 2.45.68 3.11.68.68 0 1.9-.76 3.42-.64 1.35.05 2.6.53 3.48 1.43-3.06 1.83-2.58 6.02.43 7.2-1.02 2.76-2.34 5.3-3.44 5.93zM12.03 5.36c-.14-2.14 1.63-4.08 3.73-4.36.27 2.2-1.8 4.2-3.73 4.36z"/></svg>
-                                            </div>
-                                            <div class="social-link-text">
-                                                <span class="social-name">Apple</span>
-                                                <span class="social-status">Chưa liên kết</span>
-                                            </div>
-                                        </div>
-                                        <button class="btn-social-connect">Liên kết</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="settings-card">
-                            <div class="settings-card-header" id="togglePasswordBtn" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <div class="settings-card-title">Đổi mật khẩu</div>
-                                    <p class="settings-card-desc">Cập nhật mật khẩu để bảo vệ tài khoản và thông tin cá nhân.</p>
-                                </div>
-                                <svg id="passwordToggleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                            </div>
-                            <div class="settings-card-body" id="passwordFormContainer" style="display: none; padding-top: var(--space-md); border-top: 1px solid var(--color-border); margin-top: var(--space-sm);">
-                                <form id="changePasswordForm" class="settings-form">
-                            <div class="form-group mb-3">
-                                <label for="currentPassword" class="form-label">Mật khẩu hiện tại <span class="required-star">*</span></label>
-                                <div class="password-input-wrapper">
-                                    <input type="password" id="currentPassword" class="form-control" required>
-                                    <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
-                                        <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <label for="newPassword" class="form-label">Mật khẩu mới <span class="required-star">*</span></label>
-                                <div class="password-input-wrapper">
-                                    <input type="password" id="newPassword" class="form-control" required>
-                                    <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
-                                        <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    </button>
-                                </div>
-                                <!-- AC2.3.1: Password Strength Bar -->
-                                <div class="password-strength-bar mt-2">
-                                    <div class="strength-bar-fill" id="strengthBarFill"></div>
-                                </div>
-                                <p class="strength-label" id="strengthLabel">Độ mạnh: <span>Chưa nhập</span></p>
-                            </div>
-
-                            <div class="form-group mb-4">
-                                <label for="confirmNewPassword" class="form-label">Xác nhận mật khẩu mới <span class="required-star">*</span></label>
-                                <div class="password-input-wrapper">
-                                    <input type="password" id="confirmNewPassword" class="form-control" required>
-                                    <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
-                                        <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    </button>
-                                </div>
-                                <div class="invalid-feedback">Mật khẩu chưa khớp</div>
-                            </div>
-
-                            <button type="submit" class="btn-cta" id="btnUpdateSecurity" disabled>
-                                Cập nhật bảo mật
-                            </button>
-                        </form>
-                            </div>
-                        </div>
-
-
+                    </div>
 
                 </div>
             </div>

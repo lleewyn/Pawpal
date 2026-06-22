@@ -23,22 +23,22 @@ function ensureSupportReady(callback) {
 
                 tickets.forEach(ticket => {
                     let statusLabel = 'Chờ xử lý';
-                    let statusClass = 'bg-secondary';
+                    let statusClass = 'badge-status-pending';
                     if (ticket.status === 'processing') {
                         statusLabel = 'Đang giải quyết';
-                        statusClass = 'bg-warning text-dark';
+                        statusClass = 'badge-status-processing';
                     } else if (ticket.status === 'completed') {
                         statusLabel = 'Hoàn tất';
-                        statusClass = 'bg-success';
+                        statusClass = 'badge-status-completed';
                     }
 
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td style="padding: 12px; font-weight: 700;">#${ticket.id}</td>
+                        <td style="font-weight: 700;">#${ticket.id}</td>
                         <td>${ticket.title}</td>
-                        <td><span class="badge ${statusClass}">${statusLabel}</span></td>
-                        <td><span class="badge ${ticket.priority === 'Cao' ? 'bg-danger' : 'bg-info'}">${ticket.priority}</span></td>
-                        <td style="padding: 12px; text-align: right;">
+                        <td style="text-align: center;"><span class="badge-status ${statusClass}">${statusLabel}</span></td>
+                        <td style="text-align: center;"><span class="badge-priority ${ticket.priority === 'Cao' ? 'badge-priority-high' : 'badge-priority-normal'}">${ticket.priority}</span></td>
+                        <td style="text-align: center;">
                             <button class="btn-green-outline btn-view-ticket" data-id="${ticket.id}" style="font-size: var(--fs-small); padding: 4px 12px; border-radius: var(--border-radius-pill);">Chi tiết</button>
                         </td>
                     `;
@@ -60,15 +60,15 @@ function ensureSupportReady(callback) {
                 document.getElementById('detailTicketTitle').textContent = `#${ticket.id} - ${ticket.title}`;
                 
                 let statusLabel = 'Chờ xử lý';
-                let statusClass = 'bg-secondary';
+                let statusClass = 'badge-status-pending';
                 if (ticket.status === 'processing') {
                     statusLabel = 'Đang giải quyết';
-                    statusClass = 'bg-warning text-dark';
+                    statusClass = 'badge-status-processing';
                 } else if (ticket.status === 'completed') {
                     statusLabel = 'Hoàn tất';
-                    statusClass = 'bg-success';
+                    statusClass = 'badge-status-completed';
                 }
-                document.getElementById('detailTicketStatus').innerHTML = `Trạng thái: <span class="badge ${statusClass}">${statusLabel}</span>`;
+                document.getElementById('detailTicketStatus').innerHTML = `Trạng thái: <span class="badge-status ${statusClass}">${statusLabel}</span>`;
 
                 const messagesContainer = document.getElementById('ticketTimelineMessages');
                 messagesContainer.innerHTML = '';

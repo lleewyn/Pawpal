@@ -2,7 +2,7 @@
  * loyalty.js — Xử lý nghiệp vụ Ưu đãi và Thành viên (Quy trình 3.1.13)
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // 1. Tải thông tin người dùng từ localStorage
     let currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
     
@@ -28,41 +28,76 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
     }
 
-    // Mock danh sách voucher đổi điểm
-    const vouchersMock = [
-        {
-            id: 'VOUCHER-SPA-50K',
-            name: 'Voucher Giảm giá dịch vụ Spa 50k',
-            value: '50.000đ',
-            pointsCost: 100,
-            quantity: 15,
-            terms: 'Áp dụng cho mọi dịch vụ tắm rửa và cắt tỉa lông.'
-        },
-        {
-            id: 'VOUCHER-PETSHOP-10',
-            name: 'Voucher Mua sắm hạt hạt 10%',
-            value: 'Giảm 10% (Tối đa 100k)',
-            pointsCost: 150,
-            quantity: 3,
-            terms: 'Áp dụng cho đơn hàng phụ kiện và thức ăn thú cưng.'
-        },
-        {
-            id: 'VOUCHER-HOTEL-FREE',
-            name: 'Voucher Miễn phí 1 đêm lưu trú Hotel',
-            value: 'Lưu trú miễn phí',
-            pointsCost: 300,
-            quantity: 5,
-            terms: 'Áp dụng cho phòng tiêu chuẩn Standard.'
-        },
-        {
-            id: 'VOUCHER-OUT-OF-STOCK',
-            name: 'Voucher Cắt tỉa lông chuyên nghiệp',
-            value: '100.000đ',
-            pointsCost: 200,
-            quantity: 0, // Hết quà
-            terms: 'Hạn dùng trong vòng 30 ngày kể từ lúc đổi.'
+    // Tải vouchers từ JSON file
+    let vouchersMock = [];
+    try {
+        // Thử fetch từ absolute path
+        const response = await fetch('/data/vouchers.json');
+        console.log('Fetch vouchers.json:', response.status, response.ok);
+        
+        if (response.ok) {
+            const vouchersData = await response.json();
+            console.log('Loaded vouchers data:', vouchersData.length, 'items');
+            
+            // Transform từ format JSON sang format UI
+            vouchersMock = vouchersData
+                .filter(v => v.active) // Chỉ lấy những vouchers đang hoạt động
+                .map((v, idx) => ({
+                    id: `VOUCHER-${idx}`,
+                    name: v.description.split(' - ')[0] || v.code,
+                    value: v.type === 'fixed' 
+                        ? `${new Intl.NumberFormat('vi-VN').format(v.value)}đ`
+                        : v.type === 'percentage'
+                        ? `Giảm ${v.value}% (Tối đa ${new Intl.NumberFormat('vi-VN').format(v.maxDiscount || 0)})`
+                        : v.description,
+                    pointsCost: Math.ceil(v.value / 1000) * 50, // Tính điểm từ giá trị
+                    quantity: v.maxUsage - v.usageCount,
+                    terms: v.description
+                }));
+            
+            console.log('Transformed vouchers:', vouchersMock.length, 'items');
+        } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-    ];
+    } catch (error) {
+        console.error('Lỗi tải vouchers từ JSON:', error);
+        // Fallback nếu không load được JSON
+        console.log('Sử dụng fallback mock data');
+        vouchersMock = [
+            {
+                id: 'VOUCHER-SPA-50K',
+                name: 'Voucher Giảm giá dịch vụ Spa 50k',
+                value: '50.000đ',
+                pointsCost: 100,
+                quantity: 15,
+                terms: 'Áp dụng cho mọi dịch vụ tắm rửa và cắt tỉa lông.'
+            },
+            {
+                id: 'VOUCHER-PETSHOP-10',
+                name: 'Voucher Mua sắm hạt hạt 10%',
+                value: 'Giảm 10% (Tối đa 100k)',
+                pointsCost: 150,
+                quantity: 3,
+                terms: 'Áp dụng cho đơn hàng phụ kiện và thức ăn thú cưng.'
+            },
+            {
+                id: 'VOUCHER-HOTEL-FREE',
+                name: 'Voucher Miễn phí 1 đêm lưu trú Hotel',
+                value: 'Lưu trú miễn phí',
+                pointsCost: 300,
+                quantity: 5,
+                terms: 'Áp dụng cho phòng tiêu chuẩn Standard.'
+            },
+            {
+                id: 'VOUCHER-OUT-OF-STOCK',
+                name: 'Voucher Cắt tỉa lông chuyên nghiệp',
+                value: '100.000đ',
+                pointsCost: 200,
+                quantity: 0,
+                terms: 'Hạn dùng trong vòng 30 ngày kể từ lúc đổi.'
+            }
+        ];
+    }
 
     // Cập nhật giao diện
     renderLoyaltyPage(currentUser, vouchersMock);
@@ -187,10 +222,19 @@ function renderLoyaltyPage(user, vouchers) {
     if (gridEl) {
         gridEl.innerHTML = vouchers.map(v => renderVoucherCard(v, user)).join('');
         
-        // Gắn sự kiện drag/slider cho từng voucher khả dụng
+        // Gắn sự kiện click cho các nút Đổi (nếu đủ điểm)
         vouchers.forEach(v => {
             if (v.quantity > 0 && user.points >= v.pointsCost) {
-                initSlider(v.id, user);
+                const btn = document.querySelector(`.voucher-card[data-id="${v.id}"] .redeem-btn`);
+                if (btn) {
+                    btn.addEventListener('click', (e) => {
+                        // Disable button to prevent double submit
+                        btn.disabled = true;
+                        const voucherCard = btn.closest('.voucher-card');
+                        const footer = voucherCard ? voucherCard.querySelector('.voucher-card-footer') : null;
+                        triggerRedeem(v.id, user, footer || btn);
+                    });
+                }
             }
         });
     }
@@ -255,25 +299,21 @@ function renderVoucherCard(voucher, user) {
         `;
     } else {
         actionHtml = `
-            <div class="slider-container" id="slider-${voucher.id}">
-                <div class="slider-bg"></div>
-                <div class="slider-text">Trượt sang phải để đổi voucher</div>
-                <div class="slider-handle">
-                    <span class="arrow-icon"></span>
-                </div>
-            </div>
+            <button class="redeem-btn" data-id="${voucher.id}">Đổi ngay</button>
         `;
     }
 
     return `
-        <div class="voucher-card ${statusClass}" data-id="${voucher.id}">
-            <div class="voucher-card-body">
-                <span class="points-tag">${voucher.pointsCost} Points</span>
-                <h4 class="voucher-name">${voucher.name}</h4>
-                <p class="voucher-value">Trị giá: ${voucher.value}</p>
-                <p class="voucher-terms">${voucher.terms}</p>
+        <div class="voucher-card-shopee ${statusClass}" data-id="${voucher.id}">
+            <div class="voucher-icon">🎁</div>
+            <div class="voucher-content">
+                <div class="voucher-header">
+                    <h4 class="voucher-title">${voucher.name}</h4>
+                    <span class="voucher-points">${voucher.pointsCost} pts</span>
+                </div>
+                <p class="voucher-subtitle">${voucher.value}</p>
             </div>
-            <div class="voucher-card-footer">
+            <div class="voucher-action">
                 ${actionHtml}
             </div>
         </div>
@@ -346,14 +386,32 @@ function initSlider(voucherId, user) {
 
 // Hàm xử lý đổi quà
 function triggerRedeem(voucherId, user, sliderContainer) {
+    // helper to reset UI (slider or button)
+    const resetUI = () => {
+        try {
+            const handle = sliderContainer && sliderContainer.querySelector && sliderContainer.querySelector('.slider-handle');
+            const text = sliderContainer && sliderContainer.querySelector && sliderContainer.querySelector('.slider-text');
+            if (handle) {
+                handle.style.transform = 'translateX(0px)';
+            }
+            if (text) {
+                text.style.opacity = '1';
+            }
+            // if sliderContainer itself is a button element
+            if (sliderContainer && sliderContainer.classList && sliderContainer.classList.contains('redeem-btn')) {
+                sliderContainer.disabled = false;
+            } else if (sliderContainer) {
+                const btn = sliderContainer.querySelector && sliderContainer.querySelector('.redeem-btn');
+                if (btn) btn.disabled = false;
+            }
+        } catch (e) {
+            // ignore
+        }
+    };
+
     // 1. Kiểm tra tài khoản tạm (US 13-3)
     if (user.is_temporary) {
-        // Reset slider
-        const handle = sliderContainer.querySelector('.slider-handle');
-        const text = sliderContainer.querySelector('.slider-text');
-        handle.style.transform = 'translateX(0px)';
-        text.style.opacity = '1';
-
+        resetUI();
         // Mở popup bảo mật tài khoản
         showSecurityModal(voucherId);
         return;
@@ -362,12 +420,7 @@ function triggerRedeem(voucherId, user, sliderContainer) {
     // 2. Mô phỏng 5% lỗi hệ thống để kiểm thử Rollback (US 13-4)
     const isSystemError = Math.random() < 0.05;
     if (isSystemError) {
-        // Reset slider
-        const handle = sliderContainer.querySelector('.slider-handle');
-        const text = sliderContainer.querySelector('.slider-text');
-        handle.style.transform = 'translateX(0px)';
-        text.style.opacity = '1';
-
+        resetUI();
         showToast('error', 'Hệ thống bận, vui lòng thử lại sau. Điểm của bạn đã được giữ an toàn.');
         return;
     }
@@ -440,8 +493,14 @@ function triggerRedeem(voucherId, user, sliderContainer) {
             localStorage.setItem('pawpal_my_vouchers', JSON.stringify(myVouchers));
             localStorage.setItem('pawpal_applied_voucher_code', voucherCode);
 
-            // Hiển thị giao diện thành công tại thanh trượt
-            sliderContainer.innerHTML = `<div class="redeem-success-btn">Đã đổi thành công!</div>`;
+            // Hiển thị giao diện thành công (button or footer)
+            try {
+                if (sliderContainer) {
+                    sliderContainer.innerHTML = `<div class="redeem-success-btn">Đã đổi thành công!</div>`;
+                }
+            } catch (e) {
+                // ignore
+            }
             
             // Cập nhật số điểm hiển thị
             const pointsDisplay = document.getElementById('current-points-display');
