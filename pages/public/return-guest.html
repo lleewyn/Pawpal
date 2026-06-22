@@ -24,7 +24,13 @@
 
     <!-- Page Specific CSS -->
     <link rel="stylesheet" href="../../assets/css/public/return-guest.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>\n    <script src="https://unpkg.com/lucide@latest" defer></script>\n    <script src="../../assets/js/shared/components.js" defer></script>\n    <script type="module" src="../../assets/js/shared/main.js"></script>\n    <script type="module" src="../../assets/js/shared/auth.js"></script>\n    <script src="../../assets/js/public/return-guest.js" defer></script>\n</head>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <script src="../../assets/js/shared/components.js" defer></script>
+    <script type="module" src="../../assets/js/shared/main.js"></script>
+    <script type="module" src="../../assets/js/shared/auth.js"></script>
+    <script src="../../assets/js/public/return-guest.js" defer></script>
+</head>
 
 <body class="return-guest-body">
     <!-- Header -->
@@ -39,10 +45,9 @@
 
             <form id="lookup-form" onsubmit="handleLookup(event)">
                 <label class="form-label" for="phone-number" style="display: block; margin-bottom: var(--space-xs);">Số điện thoại mua hàng *</label>
-                <div style="display: flex; gap: var(--space-md); align-items: stretch; margin-bottom: var(--space-md);">
+                <div class="d-flex" style="gap: var(--space-md); align-items: stretch; margin-bottom: var(--space-md)">
                     <input type="tel" id="phone-number" class="form-input" placeholder="Ví dụ: 0901234567" required style="flex: 1; height: 48px;">
-                    <button type="submit" class="btn-cta"
-                        style="border: none; border-radius: var(--border-radius-pill); padding: 0 var(--space-xl); white-space: nowrap; height: 48px; display: flex; align-items: center; justify-content: center;">
+                    <button type="submit" class="btn-cta border-0 rounded-pill d-flex align-items-center justify-content-center" style="padding: 0 var(--space-xl); white-space: nowrap; height: 48px">
                         Tìm kiếm
                     </button>
                 </div>
@@ -55,8 +60,7 @@
 
             <!-- Results area -->
             <div class="success-result" id="result-box">
-                <h3
-                    style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h3); margin-bottom: var(--space-sm);">
+                <h3 class="font-heading text-primary-dark fs-h3 mb-2">
                     Kết quả tìm thấy</h3>
 
                 <div class="lookup-tabs-container" id="lookupTabs">
@@ -65,54 +69,54 @@
                     <button type="button" class="lookup-tab-btn" onclick="filterResults('order', this)">Đơn hàng (1)</button>
                 </div>
 
-                <div id="mock-results-container" style="display: flex; flex-direction: column; gap: 24px;">
+                <div id="mock-results-container" class="d-flex flex-column gap-4">
                         <!-- Service Card -->
-                        <div class="service-card result-item item-service" style="display: flex; flex-direction: column; gap: 20px; padding: 24px;">
+                        <div class="service-card result-item item-service d-flex flex-column gap-3 p-4">
                             <!-- Top row: Info và Price/Status -->
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
                                 <div>
-                                    <h4 style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h4); margin-bottom: 8px; font-weight: 700;">Gói Spa Cắt tỉa (Cho bé cưng)</h4>
-                                    <div style="font-size: var(--fs-small); color: var(--color-text-light); display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                                        <span class="random-bk" style="background: var(--color-bg-light); padding: 4px 8px; border-radius: 4px; font-weight: 600; color: var(--color-text-dark);">Lịch hẹn: BK-1234</span>
+                                    <h4 class="font-heading text-primary-dark fs-h4 mb-2 fw-bold">Gói Spa Cắt tỉa (Cho bé cưng)</h4>
+                                    <div class="fs-small text-secondary d-flex gap-2 align-items-center flex-wrap">
+                                        <span class="random-bk bg-bg-light px-2 py-1 rounded-1 fw-semibold text-dark">Lịch hẹn: BK-1234</span>
                                         <span>•</span>
                                         <span>Hôm nay, 14:00</span>
                                     </div>
                                 </div>
-                                <div style="text-align: right;">
-                                    <div style="font-weight: 800; color: var(--color-accent); font-size: 1.25rem; margin-bottom: 8px;">350.000đ</div>
-                                    <div class="service-status-badge status-in-progress" style="display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-small); padding: 6px 12px; border-radius: 20px;">
+                                <div class="text-end">
+                                    <div class="fw-bolder text-accent fs-5 mb-2">350.000đ</div>
+                                    <div class="service-status-badge status-in-progress d-inline-flex align-items-center gap-1 fs-small px-3 py-1 rounded-pill">
                                         <span></span> Đang chăm sóc
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Divider -->
-                            <hr style="border: 0; border-top: 1px dashed var(--color-border); margin: 0;">
+                            <hr class="border-0 border-top border-dashed m-0">
 
                             <!-- Timeline toggle -->
                             <div>
-                                <button type="button" onclick="this.nextElementSibling.classList.toggle('expanded'); const icon = this.querySelector('.chevron'); icon.style.transform = icon.style.transform === 'rotate(180deg)' ? 'rotate(0)' : 'rotate(180deg)';" style="background: transparent; border: none; color: var(--color-primary); font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 0; font-size: var(--fs-small); transition: color 0.3s ease;">
+                                <button type="button" onclick="this.nextElementSibling.classList.toggle('expanded'); const icon = this.querySelector('.chevron'); icon.style.transform = icon.style.transform === 'rotate(180deg)' ? 'rotate(0)' : 'rotate(180deg)';" class="bg-transparent border-0 text-primary fw-bold cursor-pointer d-inline-flex align-items-center gap-1 p-0 fs-small transition-color">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                                     Xem nhật ký chăm sóc
-                                    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                    <svg class="chevron transition-transform" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                 </button>
                                 <div class="timeline-accordion">
-                                    <div class="inner-timeline" style="padding-top: 16px;">
-                                        <div class="timeline-container" style="margin-top: 8px;">
-                                            <div class="timeline-item" style="margin-bottom: 20px;">
-                                                <div class="timeline-dot" style="background: var(--color-success);"></div>
+                                    <div class="inner-timeline pt-3">
+                                        <div class="timeline-container mt-2">
+                                            <div class="timeline-item mb-3">
+                                                <div class="timeline-dot bg-success"></div>
                                                 <div class="timeline-time">13:00</div>
                                                 <div class="timeline-content">Bé đã đến spa và được đón tiếp chu đáo. Nhân viên đang kiểm tra tình trạng da lông ban đầu.</div>
                                             </div>
-                                            <div class="timeline-item" style="margin-bottom: 20px;">
-                                                <div class="timeline-dot" style="background: var(--color-accent);"></div>
+                                            <div class="timeline-item mb-3">
+                                                <div class="timeline-dot bg-accent"></div>
                                                 <div class="timeline-time">13:15</div>
                                                 <div class="timeline-content">Đang tắm massage với bọt tuyết chuyên dụng làm sạch sâu.</div>
                                             </div>
                                             <div class="timeline-item">
-                                                <div class="timeline-dot" style="background: var(--color-border); box-shadow: none;"></div>
-                                                <div class="timeline-time" style="color: var(--color-text-light);">13:45 (Dự kiến)</div>
-                                                <div class="timeline-content" style="color: var(--color-text-light); background: transparent; padding: 0;">Cắt tỉa tạo kiểu theo yêu cầu của ba mẹ...</div>
+                                                <div class="timeline-dot bg-border shadow-none"></div>
+                                                <div class="timeline-time text-secondary">13:45 (Dự kiến)</div>
+                                                <div class="timeline-content text-secondary bg-transparent p-0">Cắt tỉa tạo kiểu theo yêu cầu của ba mẹ...</div>
                                             </div>
                                         </div>
                                     </div>
@@ -120,46 +124,46 @@
                             </div>
 
                             <!-- Actions -->
-                            <div style="display: flex; justify-content: flex-end; margin-top: 0;">
-                                <button type="button" class="btn-green-outline guest-lookup-action" data-action="cancel-change" style="padding: 10px 24px; border-radius: var(--border-radius-pill); font-weight: 600; font-size: var(--fs-small);">
+                            <div class="d-flex justify-content-end mt-0">
+                                <button type="button" class="btn-green-outline guest-lookup-action px-4 py-2 rounded-pill fw-semibold fs-small" data-action="cancel-change">
                                     Huỷ lịch / Đổi lịch
                                 </button>
                             </div>
                         </div>
 
                         <!-- Order Card -->
-                        <div class="order-card result-item item-order" style="display: flex; flex-direction: column; gap: 20px; padding: 24px;">
+                        <div class="order-card result-item item-order d-flex flex-column gap-3 p-4">
                             <!-- Top row -->
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
                                 <div>
-                                    <h4 class="random-ord" style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h4); margin-bottom: 8px; font-weight: 700;">Đơn hàng: ORD-5678</h4>
-                                    <div style="font-size: var(--fs-small); color: var(--color-text-dark); display: flex; flex-direction: column; gap: 6px;">
-                                        <span style="font-weight: 600;">Sản phẩm: Cát vệ sinh cho mèo Catsan 10L (x3)</span>
-                                        <span style="color: var(--color-text-light); display: flex; align-items: center; gap: 4px;">
+                                    <h4 class="random-ord font-heading text-primary-dark fs-h4 mb-2 fw-bold">Đơn hàng: ORD-5678</h4>
+                                    <div class="fs-small text-dark d-flex flex-column gap-1">
+                                        <span class="fw-semibold">Sản phẩm: Cát vệ sinh cho mèo Catsan 10L (x3)</span>
+                                        <span class="text-secondary d-flex align-items-center gap-1">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                                             Dự kiến giao: Hôm nay
                                         </span>
                                     </div>
                                 </div>
-                                <div style="text-align: right;">
-                                    <div style="font-weight: 800; color: var(--color-accent); font-size: 1.25rem; margin-bottom: 8px;">520.000đ</div>
-                                    <div class="order-status-badge order-status-shipping" style="display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-small); padding: 6px 12px; border-radius: 20px;">
+                                <div class="text-end">
+                                    <div class="fw-bolder text-accent fs-5 mb-2">520.000đ</div>
+                                    <div class="order-status-badge order-status-shipping d-inline-flex align-items-center gap-1 fs-small px-3 py-1 rounded-pill">
                                         <span></span> Đang giao hàng
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Divider -->
-                            <hr style="border: 0; border-top: 1px dashed var(--color-border); margin: 0;">
+                            <hr class="border-0 border-top border-dashed m-0">
 
-                            <div style="font-size: var(--fs-small); color: var(--color-text-light); background: var(--color-bg-light); padding: 12px 16px; border-radius: var(--card-border-radius); display: flex; gap: 8px; align-items: flex-start;">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 2px; color: var(--color-primary); flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                <span style="line-height: 1.5;">Trạng thái: Đơn hàng đã đến trạm trung chuyển Tân Bình lúc 09:30. Shipper đang lấy hàng.</span>
+                            <div class="fs-small text-secondary bg-bg-light py-2 px-3 rounded-card-border-radius d-flex gap-2 align-items-start">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-1 text-primary flex-shrink-0"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                <span class="lh-base">Trạng thái: Đơn hàng đã đến trạm trung chuyển Tân Bình lúc 09:30. Shipper đang lấy hàng.</span>
                             </div>
 
                             <!-- Actions -->
-                            <div style="display: flex; justify-content: flex-end; margin-top: 0;">
-                                <button type="button" class="btn-green-outline guest-lookup-action" data-action="return-request" style="padding: 10px 24px; border-radius: var(--border-radius-pill); font-weight: 600; font-size: var(--fs-small);">
+                            <div class="d-flex justify-content-end mt-0">
+                                <button type="button" class="btn-green-outline guest-lookup-action px-4 py-2 rounded-pill fw-semibold fs-small" data-action="return-request">
                                     Yêu cầu đổi trả
                                 </button>
                             </div>

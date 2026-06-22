@@ -757,7 +757,7 @@
    ========================================================================== */
 
 .services-section {
-    background-color: var(--color-bg-light);
+    background-color: #f4faf7;
     padding: var(--space-xl) 0;
     position: relative;
     overflow: hidden;
@@ -1120,7 +1120,7 @@
    ========================================================================== */
 
 .experts-section {
-    background-color: var(--color-bg-light);
+    background-color: #f4faf7;
     padding: var(--space-xl) 0;
 }
 
@@ -1351,7 +1351,7 @@
    ========================================================================== */
 
 .process-section {
-    background-color: var(--color-bg-white);
+    background-color: #f4faf7;
     color: var(--color-text-dark);
     padding: var(--space-xl) 0;
 }
@@ -1492,7 +1492,7 @@
    ========================================================================== */
 
 .shop-section {
-    background-color: var(--color-bg-white);
+    background-color: #f4faf7;
     padding: var(--space-xl) 0;
 }
 
@@ -1511,7 +1511,7 @@
 }
 
 .shop-section-wrapper {
-    background-color: #FDFAF5;
+    background-color: #f4faf7;
     margin: 0;
     padding: 0;
 }
@@ -2118,7 +2118,7 @@
    ========================================================================== */
 
 .pet-id-showcase-section {
-    background-color: var(--color-bg-white);
+    background-color: #f4faf7;
     padding: var(--space-xl) 0;
     border-bottom: 1px solid var(--color-border);
     position: relative;
@@ -2426,7 +2426,7 @@
    ========================================================================== */
 
 .tracker-section {
-    background-color: var(--color-bg-light);
+    background-color: #f4faf7;
     padding: var(--space-xl) 0;
     border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
@@ -2819,7 +2819,7 @@
    ========================================================================== */
 
 .membership-section {
-    background-color: var(--color-bg-light); /* Warm cream bg */
+    background-color: #f4faf7;
     padding: var(--space-xl) 0;
     border-top: 1px solid var(--color-border);
 }
@@ -3859,7 +3859,7 @@
    ========================================================================== */
 
 .faq-section {
-    background-color: var(--color-bg-white);
+    background-color: #f4faf7;
     padding: var(--space-xl) 0;
 }
 

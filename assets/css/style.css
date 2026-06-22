@@ -2973,3 +2973,15 @@ h1, h2, h3, h4, h5, h6 {
 
 ::view-transition-old(root) { animation: 180ms ease-out both vt-fade-out; }
 ::view-transition-new(root) { animation: 280ms ease-out both vt-slide-in; }
+\n/* Extracted Inline Styles Utility Classes */\n.rounded-lg { border-radius: var(--border-radius-lg) !important; }\n.text-primary { color: var(--color-primary) !important; }\n.rounded-pill { border-radius: var(--border-radius-pill) !important; }\n.font-heading { font-family: var(--font-heading) !important; }\n.text-primary-dark { color: var(--color-primary-dark) !important; }\n.fs-h3 { font-size: var(--fs-h3) !important; }\n.fs-h4 { font-size: var(--fs-h4) !important; }\n.fs-small { font-size: var(--fs-small) !important; }\n.bg-bg-light { background-color: var(--color-bg-light) !important; }\n.text-accent { color: var(--color-accent) !important; }\n.bg-success { background-color: var(--color-success) !important; }\n.bg-accent { background-color: var(--color-accent) !important; }\n.bg-border { background-color: var(--color-border) !important; }\n.rounded-card-border-radius { border-radius: var(--card-border-radius) !important; }\n.text-success { color: var(--color-success) !important; }\n.bg-bg-white { background-color: var(--color-bg-white) !important; }\n.fs-h2 { font-size: var(--fs-h2) !important; }\n.fs-body { font-size: var(--fs-body) !important; }\n
+/* Custom Utilities for return-guest */
+.h-48px { height: 48px !important; }
+.border-dashed { border-style: dashed !important; border-color: var(--color-border) !important; }
+.cursor-pointer { cursor: pointer !important; }
+.transition-color { transition: color 0.3s ease !important; }
+.transition-transform { transition: transform 0.3s ease !important; }
+\n/* Custom utilities extracted */\n.rounded-pill { border-radius: var(--border-radius-pill) !important; }\n.font-heading { font-family: var(--font-heading) !important; }\n.text-primary-dark { color: var(--color-primary-dark) !important; }\n.fs-h3 { font-size: var(--fs-h3) !important; }\n.fs-h4 { font-size: var(--fs-h4) !important; }\n.fs-small { font-size: var(--fs-small) !important; }\n.bg-bg-light { background-color: var(--color-bg-light) !important; }\n.text-accent { color: var(--color-accent) !important; }\n.text-primary { color: var(--color-primary) !important; }\n.bg-success { background-color: var(--color-success) !important; }\n.bg-accent { background-color: var(--color-accent) !important; }\n.bg-border { background-color: var(--color-border) !important; }\n.rounded-card-border-radius { border-radius: var(--card-border-radius) !important; }\n
+.border-dashed { border-style: dashed !important; border-color: var(--color-border) !important; }
+.cursor-pointer { cursor: pointer !important; }
+.transition-color { transition: color 0.3s ease !important; }
+.transition-transform { transition: transform 0.3s ease !important; }

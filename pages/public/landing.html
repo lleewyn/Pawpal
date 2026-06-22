@@ -27,164 +27,20 @@
     <link rel="stylesheet" href="../../assets/css/components/fab.css">
     <!-- Page Specific Style -->
     <link rel="stylesheet" href="../../assets/css/public/landing.css">
-    <script>\ndocument.addEventListener('DOMContentLoaded', function() {\n
-        window._pageLoadStart = Date.now();
-        var _loaderThreshold = 300; // ms
-        var _loaderTimeout = setTimeout(function () {
-            var loader = document.getElementById('cute-loader');
-            if (loader) loader.style.display = 'flex';
-        }, _loaderThreshold);
-    \n});\n</script>\n    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>\n    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>\n    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>\n    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>\n    <script src="../../assets/js/shared/data-loader.js" defer></script>\n    <script type="module" src="../../assets/js/shared/auth.js"></script>\n    <script src="../../assets/js/shared/components.js" defer></script>\n    <script src="../../assets/js/shared/header-auth.js" defer></script>\n    <script type="module" src="../../assets/js/shared/main.js"></script>\n    <script>\ndocument.addEventListener('DOMContentLoaded', function() {\n
-        // Smart Loader: hide as soon as DOM is ready, cancel show-timer if fast enough
-        (function () {
-            function hideLoader() {
-                clearTimeout(window._loaderTimeout);
-                var loader = document.getElementById('cute-loader');
-                if (!loader) return;
-                if (loader.style.display === 'none') return; // Never shown, do nothing
-                loader.style.opacity = '0';
-                loader.style.transition = 'opacity 0.3s ease';
-                setTimeout(function () { loader.style.display = 'none'; }, 300);
-            }
-            if (document.readyState === 'complete') {
-                hideLoader();
-            } else {
-                window.addEventListener('load', hideLoader);
-            }
-        })();
-    \n});\n</script>\n    <script>\ndocument.addEventListener('DOMContentLoaded', function() {\n
-        (function () {
-            // Update Hero Availability
-            function updateHeroAvailability() {
-                const el = document.getElementById('heroAvailability');
-                if (!el) return;
-
-                const spaSlots = Math.floor(Math.random() * 5) + 1;
-                const hotelRooms = Math.floor(Math.random() * 4) + 1;
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-
-                el.innerHTML = `Hôm nay còn trống: <strong style="color:#ffffff; font-weight:700;">${spaSlots} slot Spa</strong> | <strong style="color:#ffffff; font-weight:700;">${hotelRooms} phòng Hotel</strong> <span style="opacity:0.6">(Cập nhật ${timeStr})</span>`;
-            }
-
-            // Update Footer CTA Urgency
-            function updateCtaUrgency() {
-                const el = document.getElementById('ctaUrgency');
-                if (!el) return;
-
-                const totalSlots = Math.floor(Math.random() * 8) + 3; // 3-10 slots
-                el.innerHTML = `<span class="urgency-dot"></span><span>Hôm nay còn <strong>${totalSlots} slot</strong> trống — Đặt ngay!</span>`;
-            }
-
-            // Init và auto-update
-            updateHeroAvailability();
-            updateCtaUrgency();
-            setInterval(updateHeroAvailability, 300000); // 5 phút
-            setInterval(updateCtaUrgency, 180000); // 3 phút
-
-            // ── Service Featured Swap ──────────────────────────────────────
-            (function initSvcSwap() {
-                const featured   = document.getElementById('svcFeatured');
-                const miniItems  = document.querySelectorAll('.svc-mini-item');
-                if (!featured || !miniItems.length) return;
-
-                function swapFeatured(el) {
-                    const d = el.dataset;
-                    if (!d.id || d.id === featured.dataset.id) return;
-
-                    // Animate out
-                    featured.style.transition = 'opacity 0.2s ease';
-                    featured.style.opacity = '0';
-
-                    setTimeout(function () {
-                        // Update featured content
-                        document.getElementById('svcFeaturedImgEl').src = d.img;
-                        document.getElementById('svcFeaturedImgEl').alt = d.title;
-                        document.getElementById('svcFeaturedTitle').innerHTML = d.title;
-                        document.getElementById('svcFeaturedDesc').textContent = d.desc;
-                        document.getElementById('svcFeaturedPrice').textContent = d.price;
-                        document.getElementById('svcFeaturedCta').textContent = d.cta;
-
-                        var badge = document.getElementById('svcFeaturedBadge');
-                        if (d.badge) {
-                            badge.textContent = d.badge;
-                            badge.style.display = '';
-                        } else {
-                            badge.style.display = 'none';
-                        }
-
-                        // Update href
-                        featured.href = d.href || '#';
-                        featured.dataset.id = d.id;
-
-                        // Active state on mini cards — highlight the one now in stack that matches featured
-                        miniItems.forEach(function(m) {
-                            m.classList.remove('svc-active');
-                            // Show all mini cards
-                            m.style.display = '';
-                        });
-                        el.classList.add('svc-active');
-
-                        // Animate in
-                        featured.style.opacity = '1';
-                    }, 200);
-                }
-
-                miniItems.forEach(function(item) {
-                    item.style.cursor = 'pointer';
-                    item.addEventListener('click', function(e) {
-                        // Only swap, don't navigate (navigation handled by featured card)
-                        e.preventDefault();
-                        swapFeatured(item);
-                    });
-                });
-            })();
-            // ─────────────────────────────────────────────────────────────────
-
-        })();
-    \n});\n</script>\n    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log('--- DIAGNOSTICS START ---');
-            console.log('Bootstrap available:', typeof bootstrap !== 'undefined');
-
-            const carousel = document.getElementById('heroCarousel');
-            if (carousel) {
-                console.log('Found #heroCarousel element');
-
-                // Track transition events
-                carousel.addEventListener('slide.bs.carousel', function (e) {
-                    console.log('Carousel slide event triggered. Moving to index:', e.to);
-                });
-
-                // Check images inside carousel
-                const images = carousel.querySelectorAll('img');
-                console.log('Number of images in carousel:', images.length);
-                images.forEach((img, i) => {
-                    console.log(`Image ${i + 1} src:`, img.src);
-
-                    // Check if already loaded
-                    if (img.complete) {
-                        if (img.naturalWidth === 0) {
-                            console.error(`Image ${i + 1} (${img.src}) failed to load (naturalWidth is 0)`);
-                        } else {
-                            console.log(`Image ${i + 1} loaded successfully`);
-                        }
-                    }
-
-                    // Error listener
-                    img.addEventListener('error', function () {
-                        console.error(`Image ${i + 1} (${img.src}) failed to load`);
-                    });
-                    img.addEventListener('load', function () {
-                        console.log(`Image ${i + 1} loaded successfully`);
-                    });
-                });
-            } else {
-                console.error('Could not find #heroCarousel element');
-            }
-            console.log('--- DIAGNOSTICS END ---');
-        });
-    </script>\n</head>
+    
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="../../assets/js/shared/data-loader.js" defer></script>
+    <script type="module" src="../../assets/js/shared/auth.js"></script>
+    <script src="../../assets/js/shared/components.js" defer></script>
+    <script src="../../assets/js/shared/header-auth.js" defer></script>
+    <script type="module" src="../../assets/js/shared/main.js"></script>
+    
+    
+    
+    <script src="../../assets/js/public/landing.js" defer></script>\n</head>
 
 <body>
     <!-- Smart Loader: only shows if page load takes > 300ms -->
@@ -221,21 +77,21 @@
 
                 <!-- 2. Carousel ảnh -->
                 <div class="hero-visual">
-                    <div id="heroCarousel" class="carousel slide hero-visual-frame" data-bs-ride="carousel" style="max-width: 1000px; margin: 0 auto;">
-                        <div class="carousel-inner" style="border-radius: var(--border-radius-lg); overflow: hidden; box-shadow: 0 32px 64px rgba(0,0,0,0.35); border: 2px solid rgba(255,255,255,0.12);">
+                    <div id="heroCarousel" class="carousel slide hero-visual-frame mx-auto" data-bs-ride="carousel" style="max-width: 1000px">
+                        <div class="carousel-inner rounded-lg" style="overflow: hidden; box-shadow: 0 32px 64px rgba(0,0,0,0.35); border: 2px solid rgba(255,255,255,0.12)">
                             <div class="carousel-item active">
                                 <a href="../../pages/services/services.html">
-                                    <img src="../../assets/images/banners/banner_taxi_banner.webp" class="d-block w-100" style="width: 100%; height: auto; aspect-ratio: 12/5; object-fit: cover;" alt="Pet Taxi" loading="eager">
+                                    <img src="../../assets/images/banners/banner_taxi_banner.webp" class="d-block w-100" alt="Pet Taxi" loading="eager" style="height: auto; aspect-ratio: 12/5; object-fit: cover">
                                 </a>
                             </div>
                             <div class="carousel-item">
                                 <a href="../../pages/services/services.html">
-                                    <img src="../../assets/images/banners/banner_spa_banner.webp" class="d-block w-100" style="width: 100%; height: auto; aspect-ratio: 12/5; object-fit: cover;" alt="Spa và Hotel" loading="lazy">
+                                    <img src="../../assets/images/banners/banner_spa_banner.webp" class="d-block w-100" alt="Spa và Hotel" loading="lazy" style="height: auto; aspect-ratio: 12/5; object-fit: cover">
                                 </a>
                             </div>
                             <div class="carousel-item">
                                 <a href="../../pages/shop/shop.html">
-                                    <img src="../../assets/images/banners/banner_hotel_banner.webp" class="d-block w-100" style="width: 100%; height: auto; aspect-ratio: 12/5; object-fit: cover;" alt="Pet Hotel" loading="lazy">
+                                    <img src="../../assets/images/banners/banner_hotel_banner.webp" class="d-block w-100" alt="Pet Hotel" loading="lazy" style="height: auto; aspect-ratio: 12/5; object-fit: cover">
                                 </a>
                             </div>
                         </div>
@@ -330,7 +186,7 @@
                 </div>
 
                 <!-- Services Grid (Product Card Style) -->
-                <div class="product-grid" id="svcLandingGrid" style="margin-top: 30px;">
+                <div class="product-grid mt-4" id="svcLandingGrid">
                     
                     <!-- Service 1 -->
                     <div class="product-card svc-landing-card" data-category="spa">
@@ -339,7 +195,7 @@
                             <span class="tag-badge tag-banchay">Phổ biến nhất</span>
                         </div>
                         <div class="product-info">
-                            <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                            <div class="product-meta justify-content-between mb-1">
                                 <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">SPA01</span>
                                 <div>
                                     <span class="rating-stars"></span> <span class="rating-score">4.8</span> <span class="sold-count">(154)</span>
@@ -347,7 +203,7 @@
                             </div>
                             <h3>Gói Tắm Vệ Sinh Cơ Bản</h3>
                             <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">Liệu trình tắm làm sạch và khử mùi hôi cơ bản dành cho các bé chó mèo có sức khỏe da lông bình thường, giúp duy trì vệ sinh sạch sẽ định kỳ hàng tuần.</p>
-                            <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                            <div class="fw-medium" style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px">
                                 <span> Chó / Mèo</span>
                                 <span>⏱ 60 phút</span>
                             </div>
@@ -355,7 +211,7 @@
                                 <div class="product-price">
                                     <span class="price-current" style="font-size: 16px;">120.000đ</span>
                                 </div>
-                                <a href="../../pages/services/booking.html" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                                <a href="../../pages/services/booking.html" class="add-to-cart-btn px-3 py-2" style="text-decoration:none; text-align:center">Đặt lịch</a>
                             </div>
                             <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
                                 TV Bạc: 114.000đ
@@ -370,7 +226,7 @@
                             <span class="tag-badge tag-khuyenmai">Đánh giá cao</span>
                         </div>
                         <div class="product-info">
-                            <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                            <div class="product-meta justify-content-between mb-1">
                                 <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">SPA07</span>
                                 <div>
                                     <span class="rating-stars"></span> <span class="rating-score">4.9</span> <span class="sold-count">(210)</span>
@@ -378,7 +234,7 @@
                             </div>
                             <h3>Grooming Tạo Kiểu Cơ Bản</h3>
                             <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">Gói làm đẹp toàn diện bao gồm tắm vệ sinh kỹ lưỡng kết hợp cắt tỉa lông tạo kiểu cơ bản (như cắt tròn mặt Boo, tỉa gọn chân) theo tiêu chuẩn.</p>
-                            <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                            <div class="fw-medium" style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px">
                                 <span> Chó (Nhỏ/Vừa)</span>
                                 <span>⏱ 150 phút</span>
                             </div>
@@ -386,7 +242,7 @@
                                 <div class="product-price">
                                     <span class="price-current" style="font-size: 16px;">350.000đ</span>
                                 </div>
-                                <a href="../../pages/services/booking.html" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                                <a href="../../pages/services/booking.html" class="add-to-cart-btn px-3 py-2" style="text-decoration:none; text-align:center">Đặt lịch</a>
                             </div>
                             <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
                                 TV Bạc: 332.500đ
@@ -400,7 +256,7 @@
                             <img src="../../assets/images/services/htl01.webp" alt="Phòng Standard" loading="lazy" onerror="this.src='../../assets/images/services/hotel.png'">
                         </div>
                         <div class="product-info">
-                            <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                            <div class="product-meta justify-content-between mb-1">
                                 <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">HTL01</span>
                                 <div>
                                     <span class="rating-stars"></span> <span class="rating-score">4.7</span> <span class="sold-count">(115)</span>
@@ -408,16 +264,16 @@
                             </div>
                             <h3>Phòng Standard</h3>
                             <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">Không gian phòng lưu trú cơ bản tiêu chuẩn sạch sẽ, thoáng mát, thích hợp cho các bé chó mèo nhỏ hướng nội, thích sự yên tĩnh khi vắng chủ.</p>
-                            <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                            <div class="fw-medium" style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px">
                                 <span> Chó / Mèo</span>
                                 <span> Theo ngày</span>
                             </div>
                             <div class="product-info-footer">
                                 <div class="product-price">
                                     <span class="price-current" style="font-size: 16px;">180.000đ</span>
-                                    <span style="font-size: 11px; color: var(--color-text-light);">/đêm</span>
+                                    <span class="text-secondary" style="font-size: 11px">/đêm</span>
                                 </div>
-                                <a href="../../pages/services/booking.html" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                                <a href="../../pages/services/booking.html" class="add-to-cart-btn px-3 py-2" style="text-decoration:none; text-align:center">Đặt lịch</a>
                             </div>
                             <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
                                 TV Bạc: 171.000đ/đêm
@@ -432,7 +288,7 @@
                             <span class="tag-badge tag-banchay">Yêu thích</span>
                         </div>
                         <div class="product-info">
-                            <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                            <div class="product-meta justify-content-between mb-1">
                                 <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">HTL03</span>
                                 <div>
                                     <span class="rating-stars"></span> <span class="rating-score">4.9</span> <span class="sold-count">(102)</span>
@@ -440,16 +296,16 @@
                             </div>
                             <h3>Phòng Deluxe (Có Camera)</h3>
                             <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">Hạng phòng lưu trú cao cấp được trang bị Camera IP giám sát 24/7 riêng cho từng phòng giúp chủ nuôi tự theo dõi hình ảnh bé trực tiếp từ xa qua website.</p>
-                            <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                            <div class="fw-medium" style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px">
                                 <span> Chó / Mèo</span>
                                 <span> Theo ngày</span>
                             </div>
                             <div class="product-info-footer">
                                 <div class="product-price">
                                     <span class="price-current" style="font-size: 16px;">380.000đ</span>
-                                    <span style="font-size: 11px; color: var(--color-text-light);">/đêm</span>
+                                    <span class="text-secondary" style="font-size: 11px">/đêm</span>
                                 </div>
-                                <a href="../../pages/services/booking.html" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                                <a href="../../pages/services/booking.html" class="add-to-cart-btn px-3 py-2" style="text-decoration:none; text-align:center">Đặt lịch</a>
                             </div>
                             <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
                                 TV Bạc: 361.000đ/đêm
@@ -463,7 +319,7 @@
                             <img src="../../assets/images/services/htl07.webp" alt="Daycare (Bán trú)" loading="lazy" onerror="this.src='../../assets/images/services/hotel.png'">
                         </div>
                         <div class="product-info">
-                            <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                            <div class="product-meta justify-content-between mb-1">
                                 <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">HTL07</span>
                                 <div>
                                     <span class="rating-stars"></span> <span class="rating-score">4.8</span> <span class="sold-count">(145)</span>
@@ -471,7 +327,7 @@
                             </div>
                             <h3>Daycare (Bán trú trong ngày)</h3>
                             <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">Giải pháp gửi giữ thú cưng theo giờ hoặc trong ngày dành cho chủ nuôi bận rộn đi làm, đảm bảo bé có bạn chơi đùa dưới sự giám sát.</p>
-                            <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                            <div class="fw-medium" style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px">
                                 <span> Tất cả</span>
                                 <span>⏱ Trong ngày</span>
                             </div>
@@ -479,7 +335,7 @@
                                 <div class="product-price">
                                     <span class="price-current" style="font-size: 16px;">100.000đ</span>
                                 </div>
-                                <a href="../../pages/services/booking.html" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                                <a href="../../pages/services/booking.html" class="add-to-cart-btn px-3 py-2" style="text-decoration:none; text-align:center">Đặt lịch</a>
                             </div>
                             <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
                                 TV Bạc: 95.000đ
@@ -493,7 +349,7 @@
                             <img src="../../assets/images/services/txi01.webp" alt="Pet Taxi Đưa Đón" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?auto=format&fit=crop&w=500&q=80'">
                         </div>
                         <div class="product-info">
-                            <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                            <div class="product-meta justify-content-between mb-1">
                                 <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">TXI01</span>
                                 <div>
                                     <span class="rating-stars"></span> <span class="rating-score">4.7</span> <span class="sold-count">(64)</span>
@@ -501,7 +357,7 @@
                             </div>
                             <h3>Pet Taxi Đưa Đón Tận Nơi</h3>
                             <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">Dịch vụ đưa đón thú cưng an toàn tận nhà bằng xe ô tô chuyên dụng có lồng vận chuyển sạch sẽ cách âm, điều hòa mát mẻ.</p>
-                            <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                            <div class="fw-medium" style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px">
                                 <span> Chó / Mèo</span>
                                 <span> Theo chuyến</span>
                             </div>
@@ -509,7 +365,7 @@
                                 <div class="product-price">
                                     <span class="price-current" style="font-size: 16px;">150.000đ</span>
                                 </div>
-                                <a href="../../pages/services/booking.html" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                                <a href="../../pages/services/booking.html" class="add-to-cart-btn px-3 py-2" style="text-decoration:none; text-align:center">Đặt lịch</a>
                             </div>
                             <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
                                 TV Bạc: 142.500đ
@@ -535,9 +391,7 @@
                     <h2>Góc <span class="accent-italic">mua sắm</span></h2>
                     <div class="shop-features-inline">
                         <span class="sf-inline-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2.5" width="14" height="14"
-                                style="margin-right: 5px; vertical-align: -2px; color: var(--color-primary);">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="14" height="14" class="text-primary" style="margin-right: 5px; vertical-align: -2px">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125a1.125 1.125 0 0 0 1.125-1.125V9.75M3.75 12h14.25M3.75 15h14.25m-15-6h15a1.5 1.5 0 0 1 1.5 1.5v5.25a1.5 1.5 0 0 1-1.5 1.5H3.75a1.5 1.5 0 0 1-1.5-1.5V10.5A1.5 1.5 0 0 1 3.75 9Z" />
                             </svg>
@@ -545,9 +399,7 @@
                         </span>
                         <span class="sf-inline-divider">•</span>
                         <span class="sf-inline-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2.5" width="14" height="14"
-                                style="margin-right: 5px; vertical-align: -2px; color: var(--color-primary);">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="14" height="14" class="text-primary" style="margin-right: 5px; vertical-align: -2px">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
                             </svg>
@@ -555,9 +407,7 @@
                         </span>
                         <span class="sf-inline-divider">•</span>
                         <span class="sf-inline-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2.5" width="14" height="14"
-                                style="margin-right: 5px; vertical-align: -2px; color: var(--color-primary);">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="14" height="14" class="text-primary" style="margin-right: 5px; vertical-align: -2px">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-5.25-12h13.5A2.25 2.25 0 0 1 21.75 4.5V19.5A2.25 2.25 0 0 1 19.5 21.75H4.5A2.25 2.25 0 0 1 2.25 19.5V4.5A2.25 2.25 0 0 1 4.5 2.25Z" />
                             </svg>
@@ -565,9 +415,7 @@
                         </span>
                         <span class="sf-inline-divider">•</span>
                         <span class="sf-inline-item">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2.5" width="14" height="14"
-                                style="margin-right: 5px; vertical-align: -2px; color: var(--color-primary);">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="14" height="14" class="text-primary" style="margin-right: 5px; vertical-align: -2px">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M14.25 9.75v-4.5m0 4.5h4.5m-4.5 0 6-6m-3 18c-4.97 0-9-4.03-9-9s4.03-9 9-9 9 4.03 9 9-4.03 9-9 9Zm0-3.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" />
                             </svg>
@@ -1430,8 +1278,7 @@
                     </div>
                 </div>
                 <div class="pricing-modal-footer">
-                    <a href="../../pages/services/booking.html" class="btn-cta text-center" id="pricingBookBtn"
-                        style="width: 100%; display: block; box-sizing: border-box;">Đặt lịch chăm sóc ngay</a>
+                    <a href="../../pages/services/booking.html" class="btn-cta text-center w-100" id="pricingBookBtn" style="display: block; box-sizing: border-box">Đặt lịch chăm sóc ngay</a>
                 </div>
             </div>
         </div>

@@ -25,7 +25,14 @@
     <link rel="stylesheet" href="../../assets/css/components/chat.css">
     <link rel="stylesheet" href="../../assets/css/components/fab.css">
     <link rel="stylesheet" href="../../assets/css/components/notification.css">
-    <script src="../../assets/js/user/return-detail.js" defer></script>\n    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>\n    <script src="https://unpkg.com/lucide@latest" defer></script>\n    <script src="../../assets/js/shared/data-loader.js" defer></script>\n    <script src="../../assets/js/shared/main.js" defer></script>\n    <script src="../../assets/js/shared/components.js" defer></script>\n    <script src="../../assets/js/shared/header-auth.js" defer></script>\n</head>
+    <script src="../../assets/js/user/return-detail.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <script src="../../assets/js/shared/data-loader.js" defer></script>
+    <script src="../../assets/js/shared/main.js" defer></script>
+    <script src="../../assets/js/shared/components.js" defer></script>
+    <script src="../../assets/js/shared/header-auth.js" defer></script>
+</head>
 <body>
     <!-- Header -->
     <header id="site-header"></header>
@@ -44,46 +51,46 @@
 
             <!-- Back link -->
             <div style="margin-bottom: var(--space-md);">
-                <a href="/pages/user/orders.html" style="color: var(--color-primary); text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">
+                <a href="/pages/user/orders.html" class="text-primary text-decoration-none d-inline-flex align-items-center gap-1" style="font-weight: bold">
                     Quay lại danh sách đơn hàng
                 </a>
             </div>
 
             <!-- RMA Main Info -->
-            <div class="info-card" style="margin-bottom: var(--space-md); border-radius: var(--card-border-radius); border: var(--border-card); background: var(--color-bg-white); padding: var(--space-md);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-sm);">
+            <div class="info-card rounded-card-border-radius bg-bg-white" style="margin-bottom: var(--space-md); border: var(--border-card); padding: var(--space-md)">
+                <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap: var(--space-sm)">
                     <div>
-                        <h2 style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h2); margin: 0 0 var(--space-xs) 0;" id="rma-id-title">Yêu cầu Đổi trả ...</h2>
-                        <p style="font-size: var(--fs-small); color: var(--color-text-light); margin: 0;" id="rma-date">Ngày tạo: ...</p>
+                        <h2 id="rma-id-title" class="font-heading text-primary-dark fs-h2" style="margin: 0 0 var(--space-xs) 0">Yêu cầu Đổi trả ...</h2>
+                        <p id="rma-date" class="fs-small text-secondary m-0">Ngày tạo: ...</p>
                     </div>
-                    <span class="status-badge" style="background-color: var(--color-accent); color: var(--color-primary-dark); font-weight: 700; padding: 6px 16px; border-radius: var(--border-radius-pill); font-size: var(--fs-small);" id="rma-status-badge">Đang xử lý</span>
+                    <span class="status-badge bg-accent text-primary-dark fw-bold rounded-pill fs-small" id="rma-status-badge" style="padding: 6px 16px">Đang xử lý</span>
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); align-items: start; margin-bottom: var(--space-md);">
                 <!-- Left: Products + Details -->
-                <div style="display: flex; flex-direction: column; gap: var(--space-md);">
-                    <section class="info-card" style="border-radius: var(--card-border-radius); border: var(--border-card); background: var(--color-bg-white); padding: var(--space-md);">
-                        <h3 style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h3); margin-top: 0; margin-bottom: var(--space-sm);">Sản phẩm đổi trả</h3>
-                        <div id="rma-products-list" style="display: flex; flex-direction: column; gap: var(--space-sm);">
+                <div class="d-flex flex-column" style="gap: var(--space-md)">
+                    <section class="info-card rounded-card-border-radius bg-bg-white" style="border: var(--border-card); padding: var(--space-md)">
+                        <h3 class="font-heading text-primary-dark fs-h3" style="margin-top: 0; margin-bottom: var(--space-sm)">Sản phẩm đổi trả</h3>
+                        <div id="rma-products-list" class="d-flex flex-column" style="gap: var(--space-sm)">
                             <!-- Rendered by JS -->
                         </div>
                     </section>
 
-                    <section class="info-card" style="border-radius: var(--card-border-radius); border: var(--border-card); background: var(--color-bg-white); padding: var(--space-md);">
-                        <h3 style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h3); margin-top: 0; margin-bottom: var(--space-sm);">Chi tiết lý do</h3>
-                        <p style="font-size: var(--fs-body); color: var(--color-text-dark); margin-bottom: var(--space-xs); font-weight: bold;">
+                    <section class="info-card rounded-card-border-radius bg-bg-white" style="border: var(--border-card); padding: var(--space-md)">
+                        <h3 class="font-heading text-primary-dark fs-h3" style="margin-top: 0; margin-bottom: var(--space-sm)">Chi tiết lý do</h3>
+                        <p class="fs-body text-dark" style="margin-bottom: var(--space-xs); font-weight: bold">
                             Lý do: <span id="rma-reason-text" style="font-weight: normal;">...</span>
                         </p>
-                        <p style="font-size: var(--fs-body); color: var(--color-text-light); margin: 0; line-height: 1.5;" id="rma-description-text">
+                        <p id="rma-description-text" class="fs-body text-secondary m-0" style="line-height: 1.5">
                             Không có mô tả chi tiết.
                         </p>
                     </section>
                 </div>
 
                 <!-- Right: Timeline progress -->
-                <section class="info-card" style="border-radius: var(--card-border-radius); border: var(--border-card); background: var(--color-bg-white); padding: var(--space-md);">
-                    <h3 style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h3); margin-top: 0; margin-bottom: var(--space-sm);">Tiến độ xử lý</h3>
+                <section class="info-card rounded-card-border-radius bg-bg-white" style="border: var(--border-card); padding: var(--space-md)">
+                    <h3 class="font-heading text-primary-dark fs-h3" style="margin-top: 0; margin-bottom: var(--space-sm)">Tiến độ xử lý</h3>
                     <div class="rma-timeline" id="rma-timeline">
                         <!-- Timeline rendered by JS -->
                     </div>
@@ -105,11 +112,11 @@
             </div>
 
             <!-- Contact options -->
-            <div style="display: flex; gap: var(--space-sm); justify-content: center; margin-top: var(--space-lg);">
-                <button class="btn-green-outline" onclick="window.open('https://zalo.me/pawpal', '_blank')" style="display: inline-flex; align-items: center; gap: 8px;">
+            <div class="d-flex justify-content-center" style="gap: var(--space-sm); margin-top: var(--space-lg)">
+                <button class="btn-green-outline d-inline-flex align-items-center gap-2" onclick="window.open('https://zalo.me/pawpal', '_blank')">
                     Nhắn tin qua Zalo hỗ trợ
                 </button>
-                <a href="tel:0901234567" class="btn-green-outline" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <a href="tel:0901234567" class="btn-green-outline text-decoration-none d-inline-flex align-items-center gap-2">
                     Gọi Hotline: 0901 234 567
                 </a>
             </div>
