@@ -15,6 +15,7 @@ const checkoutState = {
     selectedDelivery: 'standard',
     selectedPayment: 'cod',
     vouchers: [],
+    myVouchers: [],
     appliedVoucher: null,
     pointsUsed: 0,
     totals: {
@@ -58,11 +59,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Load data
         await loadData();
         await loadProducts();
+
+        // Load loyalty vouchers for current user
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        checkoutState.user = checkoutState.user || currentUser;
+        checkoutState.myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]')
+            .filter(v => currentUser && v.ownerPhone === currentUser.phone);
         
         // Initialize UI
         initializeShippingForm();
         renderDeliveryOptions();
         renderPaymentMethods();
+        loadPersistedVoucher();
         renderOrderSummary();
         
         // Show PawPoints section if user logged in
@@ -154,8 +162,11 @@ function validateCheckoutCart() {
 }
 
 function validateVoucher(code, showMessage = true) {
-    const voucher = checkoutState.vouchers.find(v => v.code === code && v.active);
-    
+    let voucher = checkoutState.vouchers.find(v => v.code === code && v.active);
+    if (!voucher) {
+        voucher = checkoutState.myVouchers.find(v => v.code === code);
+    }
+
     if (!voucher) {
         return { valid: false, message: 'Mã giảm giá không tồn tại' };
     }
@@ -183,7 +194,11 @@ function validateVoucher(code, showMessage = true) {
 
     // Check applicability by category
     if (voucher.applicableFor && !voucher.applicableFor.includes('all')) {
-        const cartCategories = checkoutState.cart.map(item => item.category).filter(Boolean);
+        const cartCategories = checkoutState.cart.map(item => {
+            const product = checkoutState.products.find(p => Number(p.id) === Number(item.id));
+            return product ? product.category : null;
+        }).filter(Boolean);
+
         const hasMatchingCategory = cartCategories.some(category => voucher.applicableFor.includes(category));
         if (!hasMatchingCategory) {
             return { valid: false, message: 'Mã giảm giá không áp dụng cho sản phẩm trong giỏ hàng hiện tại' };
@@ -204,6 +219,62 @@ function validateVoucher(code, showMessage = true) {
     }
     
     return { valid: true, discount, voucher };
+}
+
+function calculateVoucherDiscount() {
+    if (!checkoutState.appliedVoucher) {
+        return 0;
+    }
+
+    const validation = validateVoucher(checkoutState.appliedVoucher.code, false);
+    if (!validation.valid) {
+        checkoutState.appliedVoucher = null;
+        localStorage.removeItem('pawpal_applied_voucher_code');
+        renderAppliedVoucherUI();
+        return 0;
+    }
+
+    checkoutState.appliedVoucher = validation.voucher;
+    return validation.discount || 0;
+}
+
+function renderAppliedVoucherUI() {
+    const appliedVoucherElement = document.getElementById('applied-voucher');
+    const voucherCodeDisplay = document.getElementById('voucher-code-display');
+    const voucherAmount = document.getElementById('voucher-amount');
+
+    if (!checkoutState.appliedVoucher) {
+        if (appliedVoucherElement) {
+            appliedVoucherElement.style.display = 'none';
+        }
+        return;
+    }
+
+    if (appliedVoucherElement) {
+        appliedVoucherElement.style.display = 'flex';
+    }
+    if (voucherCodeDisplay) {
+        voucherCodeDisplay.textContent = checkoutState.appliedVoucher.code;
+    }
+    if (voucherAmount) {
+        voucherAmount.textContent = `-${formatCurrency(checkoutState.totals.voucherDiscount)}`;
+    }
+}
+
+function loadPersistedVoucher() {
+    const code = localStorage.getItem('pawpal_applied_voucher_code');
+    if (!code) {
+        return;
+    }
+
+    const result = validateVoucher(code, false);
+    if (result.valid) {
+        checkoutState.appliedVoucher = result.voucher;
+        checkoutState.totals.voucherDiscount = result.discount;
+        renderAppliedVoucherUI();
+    } else {
+        localStorage.removeItem('pawpal_applied_voucher_code');
+    }
 }
 
 // ============================================================================
@@ -510,6 +581,7 @@ function calculateSubtotal() {
 function updateOrderTotals() {
     const subtotal = calculateSubtotal();
     checkoutState.totals.subtotal = subtotal;
+    checkoutState.totals.voucherDiscount = calculateVoucherDiscount();
     
     // Calculate grand total
     const grandTotal = subtotal 
@@ -562,11 +634,10 @@ async function applyVoucher() {
     if (result.valid) {
         checkoutState.appliedVoucher = result.voucher;
         checkoutState.totals.voucherDiscount = result.discount;
+        localStorage.setItem('pawpal_applied_voucher_code', code);
         
         // Show applied badge
-        document.getElementById('applied-voucher').style.display = 'flex';
-        document.getElementById('voucher-code-display').textContent = code;
-        document.getElementById('voucher-amount').textContent = `-${formatCurrency(result.discount)}`;
+        renderAppliedVoucherUI();
         
         // Clear input
         input.value = '';
@@ -583,6 +654,7 @@ async function applyVoucher() {
 function removeVoucher() {
     checkoutState.appliedVoucher = null;
     checkoutState.totals.voucherDiscount = 0;
+    localStorage.removeItem('pawpal_applied_voucher_code');
     
     document.getElementById('applied-voucher').style.display = 'none';
     updateOrderTotals();
@@ -662,10 +734,8 @@ async function handleCheckout() {
         };
     }
     
-    // Save to localStorage (simulate API)
-    localStorage.setItem('pawpal_current_order', JSON.stringify(orderData));
-    
     // Validate cart and voucher again before committing order
+    updateOrderTotals();
     const validation = validateCheckoutCart();
     if (!validation.valid) {
         showToast(validation.message, 'error');
@@ -674,6 +744,9 @@ async function handleCheckout() {
         return;
     }
 
+    // Save current order to localStorage (simulate API)
+    localStorage.setItem('pawpal_current_order', JSON.stringify(orderData));
+
     // Save to user's orders list
     saveOrderToUserHistory(orderData);
     
@@ -681,6 +754,7 @@ async function handleCheckout() {
     if (checkoutState.selectedPayment === 'cod') {
         // COD: Clear checkout state and go to success page
         localStorage.removeItem('pawpal_cart_unselected_backup');
+        localStorage.removeItem('pawpal_applied_voucher_code');
         const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
         if (isBuyNow) {
             sessionStorage.removeItem('pawpal_buynow_cart');
@@ -695,6 +769,7 @@ async function handleCheckout() {
     } else {
         // Bank transfer: Clear checkout state and go to success page
         localStorage.removeItem('pawpal_cart_unselected_backup');
+        localStorage.removeItem('pawpal_applied_voucher_code');
         const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
         if (isBuyNow) {
             sessionStorage.removeItem('pawpal_buynow_cart');
@@ -889,7 +964,7 @@ function mockPaymentVerification() {
             if (willSucceed) {
                 qrPaymentState.paymentVerified = true;
                 statusMsg.className = 'payment-status-message show success';
-                statusMsg.innerHTML = '✓ Thanh toán thành công!';
+                statusMsg.innerHTML = ' Thanh toán thành công!';
                 
                 // Clear checkout state
                 localStorage.removeItem('pawpal_cart_unselected_backup');
@@ -906,7 +981,7 @@ function mockPaymentVerification() {
                 }, 1500);
             } else {
                 statusMsg.className = 'payment-status-message show error';
-                statusMsg.textContent = '✗ Thanh toán thất bại. Vui lòng thử lại.';
+                statusMsg.textContent = ' Thanh toán thất bại. Vui lòng thử lại.';
                 
                 setTimeout(() => {
                     hideQRPaymentModal();

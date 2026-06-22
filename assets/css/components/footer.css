@@ -90,7 +90,7 @@
 
 .footer-cta-banner .btn-cta:hover {
     background-color: var(--color-cta-darker);
-    transform: translateY(-3px);
+    
 }
 
 /* Main Footer */
@@ -149,7 +149,7 @@
 .social-links a:hover {
     background-color: var(--color-accent);
     color: var(--color-primary-dark);
-    transform: translateY(-2px);
+    
 }
 
 .footer-col ul {
@@ -231,7 +231,7 @@
 .footer-newsletter-form button:hover {
     background-color: var(--color-accent-dark);
     color: #ffffff;
-    transform: translateY(-1px);
+    
 }
 
 .payment-methods {
@@ -289,7 +289,7 @@
 }
 
 .map-capsule-wrapper:hover {
-    transform: translateY(-4px);
+    
     box-shadow: 0 -15px 35px rgba(0, 0, 0, 0.25);
 }
 

@@ -108,7 +108,7 @@
         return text.replace(/\[Tên Bé\]/g, petName);
     }
 
-    // Cập nhật số lượng Badge & UI Dropdown ở Header
+    // Cập nhật số lượng Badge và UI Dropdown ở Header
     function updateHeaderDropdown() {
         const notis = getNotifications();
         const unreadCount = notis.filter(n => !n.read).length;
@@ -316,9 +316,6 @@
     };
     window.PawPalNotificationsReady = true;
 
-    // Thông báo sẵn sàng để các script khác có thể dùng
-    document.dispatchEvent(new CustomEvent('notifications_ready'));
-
     function attachHeaderHandlers() {
         updateHeaderDropdown();
         const btnMarkAll = document.getElementById('btnMarkAllRead');
@@ -348,5 +345,6 @@
     document.addEventListener('notifications_updated', () => {
         updateHeaderDropdown();
     });
+    document.addEventListener('notifications_ready', attachHeaderHandlers);
 
 })();

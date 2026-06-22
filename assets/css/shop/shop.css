@@ -398,7 +398,7 @@
 
 .product-wishlist-btn:hover {
     background: var(--color-danger-light);
-    transform: scale(1.1);
+    
 }
 
 .product-wishlist-btn.active {

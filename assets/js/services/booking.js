@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.DataLoader && typeof window.DataLoader.loadServices === 'function') {
             allServices = await window.DataLoader.loadServices();
             initDiagnostics = `DataLoader found. Loaded ${allServices.length} services.`;
-            console.log(`✓ Loaded ${allServices.length} services via DataLoader`);
+            console.log(` Loaded ${allServices.length} services via DataLoader`);
             if (allServices.length === 0) {
                 console.log('DataLoader returned empty, attempting direct load...');
                 allServices = await loadServicesDirectly();
@@ -100,10 +100,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Load member's pets
 function loadMemberPets(user) {
+    const mNameInput = document.getElementById('memberOwnerName');
+    const mPhoneInput = document.getElementById('memberOwnerPhone');
+    
+    if (mNameInput) mNameInput.value = user.name;
+    if (mPhoneInput) mPhoneInput.value = user.phone;
+
     bookingState.ownerName = user.name;
     bookingState.ownerPhone = user.phone;
+
+    // Attach validation listeners
+    ['memberOwnerName', 'memberOwnerPhone'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', () => {
+                validateGuestInput(id);
+                validateStep1();
+            });
+            el.addEventListener('blur', () => {
+                validateGuestInput(id);
+                validateStep1();
+            });
+        }
+    });
 
     // Get pets from local storage
     const allPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
@@ -121,9 +141,9 @@ function loadMemberPets(user) {
     }
 
     listContainer.innerHTML = activePets.map(pet => `
-        <div class="pet-card-select" data-pet-id="${pet.id}" data-name="${pet.name}" data-type="${pet.species}" data-breed="${pet.breed}" data-weight="${pet.weight}" tabindex="0" role="button">
+        <div class="pet-select-card" data-pet-id="${pet.id}" data-name="${pet.name}" data-type="${pet.species}" data-breed="${pet.breed}" data-weight="${pet.weight}" tabindex="0" role="button">
             <div class="pet-avatar-placeholder" style="font-size: 1.5rem; width: 44px; height: 44px;">
-                ${pet.species === 'Mèo' ? '🐱' : (pet.species === 'Chó' ? '🐶' : (pet.species === 'Thỏ' ? '🐰' : (pet.species === 'Chuột Hamster' ? '🐹' : '🐾')))}
+                ${pet.species === 'Mèo' ? '' : (pet.species === 'Chó' ? '' : (pet.species === 'Thỏ' ? '' : (pet.species === 'Chuột Hamster' ? '' : '')))}
             </div>
             <div class="pet-select-details">
                 <span class="pet-select-name">${pet.name}</span>
@@ -133,9 +153,9 @@ function loadMemberPets(user) {
     `).join('');
 
     // Attach click events
-    listContainer.querySelectorAll('.pet-card-select').forEach(card => {
+    listContainer.querySelectorAll('.pet-select-card').forEach(card => {
         card.addEventListener('click', () => {
-            listContainer.querySelectorAll('.pet-card-select').forEach(c => c.classList.remove('selected'));
+            listContainer.querySelectorAll('.pet-select-card').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
 
             bookingState.petId = card.dataset.petId;
@@ -183,10 +203,10 @@ function validateGuestInput(id) {
 
     const val = el.value.trim();
 
-    if (id === 'ownerName' && !val) {
+    if ((id === 'ownerName' || id === 'memberOwnerName') && !val) {
         isValid = false;
         errMsg = 'Vui lòng nhập họ và tên';
-    } else if (id === 'ownerPhone') {
+    } else if (id === 'ownerPhone' || id === 'memberOwnerPhone') {
         const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
         if (!val) {
             isValid = false;
@@ -230,7 +250,11 @@ function validateStep1() {
     let isValid = false;
 
     if (currentUser && !currentUser.is_temporary) {
-        isValid = bookingState.petId !== null;
+        const mName = document.getElementById('memberOwnerName')?.value.trim() || '';
+        const mPhone = document.getElementById('memberOwnerPhone')?.value.trim() || '';
+        const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+        
+        isValid = bookingState.petId !== null && mName && mPhone && phoneRegex.test(mPhone);
     } else {
         const ownerName = document.getElementById('ownerName').value.trim();
         const ownerPhone = document.getElementById('ownerPhone').value.trim();
@@ -249,28 +273,45 @@ function validateStep1() {
 function setupServiceSelection() {
     const listContainer = document.getElementById('svcSelectList');
     const tabs = document.querySelectorAll('.svc-type-tab');
+    const searchInput = document.getElementById('svcSearchInput');
 
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             tabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
+            if (searchInput) searchInput.value = ''; // Reset search
             renderServices(tab.dataset.type);
         });
     });
+
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const activeTab = document.querySelector('.svc-type-tab.active');
+            const type = activeTab ? activeTab.dataset.type : 'spa';
+            renderServices(type, e.target.value);
+        });
+    }
 }
 
-function renderServices(type) {
+function renderServices(type, searchQuery = '') {
     const listContainer = document.getElementById('svcSelectList');
     if (!listContainer) return;
 
     // Filter services by category type (spa vs hotel)
-    const filtered = allServices.filter(s => s.category === type);
+    let filtered = allServices.filter(s => s.category === type);
+
+    if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(s => 
+            s.name.toLowerCase().includes(query) || 
+            s.description.toLowerCase().includes(query)
+        );
+    }
 
     if (filtered.length === 0) {
         listContainer.innerHTML = `
             <p style="text-align: center; color: var(--text-light); padding: 20px;">
-                Không tìm thấy dịch vụ nào cho loại thú cưng này.<br>
-                <small style="color:#d9534f; display:block; margin-top:8px; font-family:monospace;">Diagnostic: ${initDiagnostics || "No diagnostics available. allServices count: " + allServices.length + ", type: " + type}</small>
+                Không tìm thấy dịch vụ nào phù hợp với tìm kiếm của bạn.
             </p>
         `;
         return;
@@ -329,7 +370,7 @@ function calculateDynamicPrice(service, weight) {
     return price;
 }
 
-// Step 3: Date & Staff selection
+// Step 3: Date và Staff selection
 function setupScheduleSelection() {
     // Check-in and check-out dates for Hotel
     const checkInInput = document.getElementById('checkInDate');
@@ -513,7 +554,7 @@ function startHoldTimer(slot) {
     const updateTimerDisplay = () => {
         const mins = Math.floor(timeRemaining / 60);
         const secs = timeRemaining % 60;
-        holdBanner.innerHTML = `⚠️ <strong>Đang giữ chỗ tạm thời:</strong> Khung giờ <strong>${slot}</strong> đã được khóa riêng cho bạn. Vui lòng xác nhận trong <strong>${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}</strong>.`;
+        holdBanner.innerHTML = `️ <strong>Đang giữ chỗ tạm thời:</strong> Khung giờ <strong>${slot}</strong> đã được khóa riêng cho bạn. Vui lòng xác nhận trong <strong>${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}</strong>.`;
     };
 
     updateTimerDisplay();
@@ -522,7 +563,7 @@ function startHoldTimer(slot) {
         timeRemaining--;
         if (timeRemaining <= 0) {
             clearInterval(holdTimerInterval);
-            holdBanner.innerHTML = `❌ <strong>Hết thời gian giữ chỗ!</strong> Khung giờ <strong>${slot}</strong> đã tự động giải phóng. Vui lòng chọn lại.`;
+            holdBanner.innerHTML = ` <strong>Hết thời gian giữ chỗ!</strong> Khung giờ <strong>${slot}</strong> đã tự động giải phóng. Vui lòng chọn lại.`;
             holdBanner.style.color = '#856404';
             holdBanner.style.background = '#fff3cd';
             holdBanner.style.borderColor = '#ffeeba';
@@ -551,7 +592,7 @@ function renderStaff() {
 
     listContainer.innerHTML = staffs.map(staff => {
         const isSelected = bookingState.staff === staff.name ? 'selected' : '';
-        const initials = staff.name === 'Phân bổ ngẫu nhiên' ? '🎲' : staff.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+        const initials = staff.name === 'Phân bổ ngẫu nhiên' ? '' : staff.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
         return `
             <div class="staff-card ${isSelected}" data-name="${staff.name}" tabindex="0" role="button">
                 <div class="staff-card-avatar" style="font-size: 1.1rem;">${initials}</div>
@@ -673,6 +714,10 @@ function setupStepActions() {
             bookingState.petWeight = parseFloat(document.getElementById('petWeight').value);
             bookingState.petNote = document.getElementById('petNote').value.trim();
         } else {
+            const mName = document.getElementById('memberOwnerName')?.value.trim();
+            const mPhone = document.getElementById('memberOwnerPhone')?.value.trim();
+            if (mName) bookingState.ownerName = mName;
+            if (mPhone) bookingState.ownerPhone = mPhone;
             bookingState.petNote = '';
         }
         goToStep(2);
@@ -864,7 +909,7 @@ function renderStep4Confirm() {
             </div>
 
             <div class="alert-bill-note" style="margin-top: 15px; padding: 12px; border: 1px dashed #e67e22; background: rgba(230,126,34,0.08); border-radius: 8px; font-size: 0.85rem; color: #d35400; line-height: 1.5;">
-                ⚠️ <strong>Cảnh báo:</strong> Mức giá hiện tại chỉ là dự kiến dựa trên số cân nặng tự khai báo (${bookingState.petWeight}kg). Nhân viên sẽ tiến hành cân lại thực tế tại quầy để áp giá chuẩn nhất theo quy định.
+                ️ <strong>Cảnh báo:</strong> Mức giá hiện tại chỉ là dự kiến dựa trên số cân nặng tự khai báo (${bookingState.petWeight}kg). Nhân viên sẽ tiến hành cân lại thực tế tại quầy để áp giá chuẩn nhất theo quy định.
             </div>
         </div>
     `;
@@ -917,9 +962,9 @@ function processBookingSubmit() {
         ownerName: bookingState.ownerName,
         ownerPhone: bookingState.ownerPhone,
         petName: bookingState.petName,
-        petEmoji: bookingState.petType === 'Mèo' ? '🐱' : (bookingState.petType === 'Chó' ? '🐶' : (bookingState.petType === 'Thỏ' ? '🐰' : (bookingState.petType === 'Chuột Hamster' ? '🐹' : '🐾'))),
+        petEmoji: bookingState.petType === 'Mèo' ? '' : (bookingState.petType === 'Chó' ? '' : (bookingState.petType === 'Thỏ' ? '' : (bookingState.petType === 'Chuột Hamster' ? '' : ''))),
         petWeight: bookingState.petWeight,
-        service: selectedService.category === 'hotel' ? 'Pet Hotel' : 'Spa & Grooming',
+        service: selectedService.category === 'hotel' ? 'Pet Hotel' : 'Spa và Grooming',
         package: selectedService.name,
         date: bookingState.date,
         dateEnd: selectedService.category === 'hotel' ? bookingState.checkOutDate : null,
@@ -978,7 +1023,7 @@ function processBookingSubmit() {
 
     // Simulate API request delay
     setTimeout(() => {
-        confirmBtn.innerHTML = `✅ Đặt lịch thành công!`;
+        confirmBtn.innerHTML = ` Đặt lịch thành công!`;
         window.location.href = `booking-success.html?code=${newBookingId}`;
     }, 1200);
 }
@@ -1004,7 +1049,7 @@ function showTempAccountActivationToast(phone, token) {
     toast.innerHTML = `
         <div class="toast-content" style="flex-direction: column; align-items: flex-start; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="toast-icon">💬</span>
+                <span class="toast-icon"></span>
                 <strong>[SMS Gateway] Gửi đến ${phone}:</strong>
             </div>
             <div style="font-size: 0.85rem; line-height: 1.4; color: rgba(255,255,255,0.95);">
@@ -1073,7 +1118,7 @@ function transformServiceDataDirectly(rawData) {
     return rawData.map((item, index) => {
         const rawCategory = item['Phân loại'] || '';
         let category = 'other';
-        if (rawCategory.includes('Spa & Grooming')) {
+        if (rawCategory.includes('Spa và Grooming')) {
             category = 'spa';
         } else if (rawCategory.includes('Pet Hotel')) {
             category = 'hotel';

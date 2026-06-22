@@ -25,8 +25,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Load booking detail from data
 function loadBookingDetail(bookingId) {
-    // Find booking by ID
-    currentBooking = mockBookings.find(b => b.id === bookingId);
+    const storedBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+    currentBooking = Array.isArray(storedBookings)
+        ? storedBookings.find(b => b.id === bookingId) || mockBookings.find(b => b.id === bookingId)
+        : mockBookings.find(b => b.id === bookingId);
 
     if (!currentBooking) {
         alert('Không tìm thấy lịch hẹn này');
@@ -76,13 +78,13 @@ function renderBookingDetail(booking) {
 
     // Staff
     if (booking.staff) {
-        document.getElementById('staffInfo').innerHTML = `👤 ${booking.staff}`;
+        document.getElementById('staffInfo').innerHTML = ` ${booking.staff}`;
     } else {
         document.getElementById('staffInfo').textContent = 'Chưa phân công';
     }
 
     // Price
-    document.getElementById('priceInfo').textContent = `💰 ${formatPrice(booking.price)}`;
+    document.getElementById('priceInfo').textContent = ` ${formatPrice(booking.price)}`;
 
     // Note
     if (booking.note) {
@@ -286,8 +288,8 @@ function showGuestActionChoices(user) {
                     <div class="modal-body text-center">
                         <p style="font-size:0.95rem; line-height:1.5;">Để tự hủy lịch trực tuyến trên website, bạn vui lòng thiết lập mật khẩu cho tài khoản để bảo vệ thông tin nhé!</p>
                         <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
-                            <button class="btn-cta" id="choiceSetupPassBtn">🔑 Thiết lập mật khẩu ngay</button>
-                            <a href="tel:0987654321" class="btn-green-outline" style="text-decoration:none;" id="choiceCallHotlineBtn">📞 Gọi Hotline hỗ trợ hủy thủ công</a>
+                            <button class="btn-cta" id="choiceSetupPassBtn"> Thiết lập mật khẩu ngay</button>
+                            <a href="tel:0987654321" class="btn-green-outline" style="text-decoration:none;" id="choiceCallHotlineBtn"> Gọi Hotline hỗ trợ hủy thủ công</a>
                         </div>
                     </div>
                 </div>
@@ -350,7 +352,7 @@ function showToast(message, type = 'info') {
     toast.className = `toast-custom toast-${type}`;
     toast.innerHTML = `
         <div class="toast-content">
-            <span class="toast-icon">${type === 'success' ? '✓' : 'ℹ'}</span>
+            <span class="toast-icon">${type === 'success' ? '' : 'ℹ'}</span>
             <span class="toast-message">${message}</span>
         </div>
     `;

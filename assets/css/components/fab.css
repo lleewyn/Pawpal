@@ -31,7 +31,7 @@
 }
 
 .fab-item:hover {
-    transform: scale(1.12) translateX(-4px);
+    translateX(-4px);
     box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
@@ -57,7 +57,7 @@
 
 .fab-item:hover .fab-tooltip {
     opacity: 1;
-    transform: translateY(-50%) translateX(0);
+    translateX(0);
 }
 
 /* Colors */
@@ -101,7 +101,7 @@
 
 .fab-item--booking:hover {
     background: var(--color-primary-dark);
-    transform: scale(1.12) translateX(-4px);
+    translateX(-4px);
 }
 
 /* ==========================================================================
@@ -319,7 +319,7 @@
 
 .fab-chat-send:hover {
     background: #6d28d9;
-    transform: scale(1.08);
+    
 }
 
 /* Mobile */

@@ -1,5 +1,5 @@
 /**
- * Navigation Test & Debug Helper
+ * Navigation Test và Debug Helper
  * Kiểm tra và debug navigation flow trong User Dashboard
  * 
  * Usage:
@@ -15,7 +15,7 @@ window.NavTest = {
      * Run all navigation tests
      */
     run() {
-        console.log('%c🧪 Navigation Test Suite', 'font-size: 16px; font-weight: bold; color: #667eea;');
+        console.log('%c Navigation Test Suite', 'font-size: 16px; font-weight: bold; color: #667eea;');
         console.log('Version:', this.version);
         console.log('---');
         
@@ -26,14 +26,14 @@ window.NavTest = {
         this.testAuthentication();
         
         console.log('---');
-        console.log('%c✅ Test Complete', 'color: green; font-weight: bold;');
+        console.log('%c Test Complete', 'color: green; font-weight: bold;');
     },
     
     /**
      * Test 1: Current page detection
      */
     testCurrentPage() {
-        console.log('%c📍 Test 1: Current Page Detection', 'color: #667eea; font-weight: bold;');
+        console.log('%c Test 1: Current Page Detection', 'color: #667eea; font-weight: bold;');
         
         const currentPath = window.location.pathname;
         const urlParams = new URLSearchParams(window.location.search);
@@ -43,16 +43,16 @@ window.NavTest = {
         console.log('Current Tab Param:', currentTab || 'none');
         
         if (currentPath.includes('dashboard')) {
-            console.log('✓ On Dashboard page');
+            console.log(' On Dashboard page');
             console.log('  Active Tab:', currentTab || 'profile (default)');
         } else if (currentPath.includes('pet-profile')) {
-            console.log('✓ On Pet Profile page');
+            console.log(' On Pet Profile page');
         } else if (currentPath.includes('orders')) {
-            console.log('✓ On Orders page');
+            console.log(' On Orders page');
         } else if (currentPath.includes('loyalty')) {
-            console.log('✓ On Loyalty page');
+            console.log(' On Loyalty page');
         } else {
-            console.log('⚠️ Unknown page');
+            console.log('️ Unknown page');
         }
     },
     
@@ -60,46 +60,46 @@ window.NavTest = {
      * Test 2: Sidebar component loaded
      */
     testSidebarLoaded() {
-        console.log('%c📂 Test 2: Sidebar Component', 'color: #667eea; font-weight: bold;');
+        console.log('%c Test 2: Sidebar Component', 'color: #667eea; font-weight: bold;');
         
         const sidebarContainer = document.getElementById('user-sidebar');
         const sidebar = document.querySelector('.dashboard-sidebar');
         const navLinks = document.querySelectorAll('.sidebar-nav .sidebar-link');
         
         if (!sidebarContainer) {
-            console.error('❌ #user-sidebar container NOT FOUND');
+            console.error(' #user-sidebar container NOT FOUND');
             return;
         }
-        console.log('✓ Sidebar container found');
+        console.log(' Sidebar container found');
         
         if (!sidebar) {
-            console.error('❌ .dashboard-sidebar NOT FOUND - Component failed to load');
+            console.error(' .dashboard-sidebar NOT FOUND - Component failed to load');
             return;
         }
-        console.log('✓ Sidebar component loaded');
+        console.log(' Sidebar component loaded');
         
         if (navLinks.length === 0) {
-            console.error('❌ No navigation links found');
+            console.error(' No navigation links found');
             return;
         }
-        console.log(`✓ Found ${navLinks.length} navigation links`);
+        console.log(` Found ${navLinks.length} navigation links`);
     },
     
     /**
      * Test 3: Active state detection
      */
     testActiveStates() {
-        console.log('%c🎯 Test 3: Active States', 'color: #667eea; font-weight: bold;');
+        console.log('%c Test 3: Active States', 'color: #667eea; font-weight: bold;');
         
         const activeLinks = document.querySelectorAll('.sidebar-link.active');
         
         if (activeLinks.length === 0) {
-            console.warn('⚠️ No active links detected - Active state script may not be running');
+            console.warn('️ No active links detected - Active state script may not be running');
         } else if (activeLinks.length === 1) {
-            console.log('✓ Exactly 1 active link (correct)');
+            console.log(' Exactly 1 active link (correct)');
             console.log('  Active:', activeLinks[0].textContent.trim());
         } else {
-            console.error(`❌ Multiple active links (${activeLinks.length}) - Should be only 1`);
+            console.error(` Multiple active links (${activeLinks.length}) - Should be only 1`);
             activeLinks.forEach((link, i) => {
                 console.log(`  ${i + 1}:`, link.textContent.trim());
             });
@@ -110,7 +110,7 @@ window.NavTest = {
      * Test 4: All navigation links
      */
     testAllLinks() {
-        console.log('%c🔗 Test 4: Navigation Links', 'color: #667eea; font-weight: bold;');
+        console.log('%c Test 4: Navigation Links', 'color: #667eea; font-weight: bold;');
         
         const navLinks = document.querySelectorAll('.sidebar-nav .sidebar-link');
         const linkData = [];
@@ -135,9 +135,9 @@ window.NavTest = {
         // Validate
         const invalidLinks = linkData.filter(l => !l.isValid);
         if (invalidLinks.length > 0) {
-            console.error(`❌ Found ${invalidLinks.length} invalid links (href is '#' or empty)`);
+            console.error(` Found ${invalidLinks.length} invalid links (href is '#' or empty)`);
         } else {
-            console.log('✓ All links have valid hrefs');
+            console.log(' All links have valid hrefs');
         }
     },
     
@@ -145,24 +145,24 @@ window.NavTest = {
      * Test 5: Authentication state
      */
     testAuthentication() {
-        console.log('%c🔐 Test 5: Authentication', 'color: #667eea; font-weight: bold;');
+        console.log('%c Test 5: Authentication', 'color: #667eea; font-weight: bold;');
         
         const currentUser = localStorage.getItem('pawpal_current_user');
         
         if (!currentUser) {
-            console.warn('⚠️ No user logged in - Pages may redirect to login');
+            console.warn('️ No user logged in - Pages may redirect to login');
             return;
         }
         
         try {
             const user = JSON.parse(currentUser);
-            console.log('✓ User authenticated');
+            console.log(' User authenticated');
             console.log('  Name:', user.name);
             console.log('  Phone:', user.phone);
             console.log('  Is Temporary:', user.is_temporary || false);
             console.log('  Points:', user.points || 0);
         } catch (e) {
-            console.error('❌ Failed to parse user data:', e);
+            console.error(' Failed to parse user data:', e);
         }
     },
     
@@ -194,7 +194,7 @@ window.NavTest = {
         const map = this.getNavigationMap();
         
         if (!map[page]) {
-            console.error(`❌ Unknown page: ${page}`);
+            console.error(` Unknown page: ${page}`);
             console.log('Available pages:', Object.keys(map));
             return;
         }
@@ -204,7 +204,7 @@ window.NavTest = {
             url += `?tab=${tab}`;
         }
         
-        console.log(`🚀 Navigating to: ${url}`);
+        console.log(` Navigating to: ${url}`);
         window.location.href = url;
     },
     
@@ -212,7 +212,7 @@ window.NavTest = {
      * Helper: Show navigation help
      */
     help() {
-        console.log('%c📚 Navigation Test Helper', 'font-size: 14px; font-weight: bold; color: #667eea;');
+        console.log('%c Navigation Test Helper', 'font-size: 14px; font-weight: bold; color: #667eea;');
         console.log('');
         console.log('Available commands:');
         console.log('  NavTest.run()                    - Run all tests');
@@ -239,10 +239,10 @@ window.NavTest = {
 window.addEventListener('DOMContentLoaded', () => {
     // Only run if explicitly enabled
     if (window.localStorage.getItem('navtest_auto_run') === 'true') {
-        console.log('🔧 NavTest auto-run enabled');
+        console.log(' NavTest auto-run enabled');
         setTimeout(() => NavTest.run(), 1000);
     } else {
-        console.log('💡 Type NavTest.help() for navigation testing commands');
+        console.log(' Type NavTest.help() for navigation testing commands');
     }
 });
 

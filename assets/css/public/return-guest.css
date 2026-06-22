@@ -80,7 +80,7 @@
 
 .btn-lookup:hover {
     background: var(--color-primary-dark);
-    transform: translateY(-2px);
+    
     box-shadow: 0 8px 16px rgba(42, 89, 68, 0.2);
 }
 

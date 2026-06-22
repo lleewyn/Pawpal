@@ -115,7 +115,7 @@
 }
 
 .blog-product-box:hover {
-    transform: translateY(-3px);
+    
     box-shadow: 0 8px 25px rgba(0,0,0,0.06);
 }
 
@@ -157,7 +157,7 @@
 
 .toc-widget .nav-link.active {
     color: var(--primary-color) !important;
-    border-left-color: var(--primary-color);
+    border-color: var(--primary-color);
     font-weight: 600;
     background-color: rgba(46, 92, 80, 0.05);
 }

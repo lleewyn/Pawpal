@@ -47,9 +47,47 @@ export function showToast(msg, type = 'success') {
     }, 3000);
 }
 
+function seedDefaultPets() {
+    const demoPets = [
+        {
+            id: 'PP-1001',
+            name: 'Bông',
+            species: 'Chó',
+            breed: 'Poodle',
+            weight: 4.2,
+            dob: '2022-03-10',
+            allergies: 'Dị ứng lúa mì, tránh thức ăn có gluten',
+            notes: 'Thích được vuốt ve, sợ tiếng ồn lớn.',
+            photo: '',
+            deleted: false,
+            createdAt: '2025-01-15T08:00:00.000Z',
+            updatedAt: '2025-01-15T08:00:00.000Z'
+        },
+        {
+            id: 'PP-1002',
+            name: 'Miu',
+            species: 'Mèo',
+            breed: 'Mèo Anh lông ngắn',
+            weight: 3.8,
+            dob: '2021-07-22',
+            allergies: '',
+            notes: 'Tính cách độc lập, không thích bị bế lâu.',
+            photo: '',
+            deleted: false,
+            createdAt: '2025-02-01T09:00:00.000Z',
+            updatedAt: '2025-02-01T09:00:00.000Z'
+        }
+    ];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(demoPets));
+}
+
 export function getPets() {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        let raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+            seedDefaultPets();
+            raw = localStorage.getItem(STORAGE_KEY);
+        }
         return raw ? JSON.parse(raw) : [];
     } catch (e) {
         console.error('getPets error:', e);
@@ -60,7 +98,7 @@ export function getPets() {
 export function savePets(pets) {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(pets));
-        console.log('💾 Đã lưu', pets.length, 'bé cưng');
+        console.log(' Đã lưu', pets.length, 'bé cưng');
         return true;
     } catch (e) {
         console.error('savePets error:', e);

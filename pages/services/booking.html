@@ -35,7 +35,7 @@
             <div class="row g-4">
 
                 <!-- ── LEFT: Stepper + Form ── -->
-                <div class="col-12 col-lg-8 booking-form-col">
+                <div class="col-12 col-lg-7 booking-form-col">
 
                     <!-- Progress Stepper -->
                     <div class="booking-stepper" id="bookingStepper">
@@ -51,7 +51,7 @@
                         <div class="step-line"></div>
                         <div class="step" data-step="3" tabindex="0" role="button">
                             <div class="step-circle">3</div>
-                            <span class="step-label">Chọn lịch & nhân viên</span>
+                            <span class="step-label">Chọn lịch và nhân viên</span>
                         </div>
                         <div class="step-line"></div>
                         <div class="step" data-step="4" tabindex="0" role="button">
@@ -60,16 +60,30 @@
                         </div>
                     </div>
 
-                    <!-- ══ STEP 1: Thông tin bé & chủ ══ -->
+                    <!-- ══ STEP 1: Thông tin bé và chủ ══ -->
                     <div class="booking-step-panel active" id="step1">
                         <div class="step-header">
                             <h2>Thông tin <span class="accent-italic">bé cưng</span></h2>
                         </div>
 
                         <!-- Luồng Thành viên (Member Flow) -->
-                        <div id="memberFlow" style="display: none;">
-                            <p style="margin-bottom: 15px; color: var(--text-light);">Chọn bé cưng của bạn để đặt lịch
-                                nhanh chóng:</p>
+                        <div id="memberFlow" class="booking-form" style="display: none;">
+                            <div class="form-section-title" style="margin-top: 0;">Thông tin liên hệ</div>
+                            <div class="form-row" style="margin-bottom: 24px;">
+                                <div class="form-group">
+                                    <label for="memberOwnerName">Họ và tên <span class="required">*</span></label>
+                                    <input type="text" id="memberOwnerName" placeholder="Nhập tên liên hệ" required>
+                                    <div class="field-error" id="memberOwnerNameErr"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="memberOwnerPhone">Số điện thoại <span class="required">*</span></label>
+                                    <input type="tel" id="memberOwnerPhone" placeholder="Nhập SĐT liên hệ" required>
+                                    <div class="field-error" id="memberOwnerPhoneErr"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-section-title">Chọn bé cưng</div>
+                            <p style="margin-bottom: 15px; color: var(--color-text-light); font-size: 0.9rem;">Chọn bé cưng của bạn để đặt lịch nhanh chóng:</p>
                             <div class="pet-cards-grid" id="memberPetList">
                                 <!-- Pet cards will be injected here -->
                             </div>
@@ -103,11 +117,11 @@
                                         <label for="petType">Loài <span class="required">*</span></label>
                                         <select id="petType" required>
                                             <option value="">-- Chọn loài --</option>
-                                            <option value="Chó">🐶 Chó</option>
-                                            <option value="Mèo">🐱 Mèo</option>
-                                            <option value="Thỏ">🐰 Thỏ</option>
-                                            <option value="Chuột Hamster">🐹 Chuột Hamster</option>
-                                            <option value="Khác">🐾 Loài khác</option>
+                                            <option value="Chó"> Chó</option>
+                                            <option value="Mèo"> Mèo</option>
+                                            <option value="Thỏ"> Thỏ</option>
+                                            <option value="Chuột Hamster"> Chuột Hamster</option>
+                                            <option value="Khác"> Loài khác</option>
                                         </select>
                                         <span class="field-error" id="petTypeErr"></span>
                                     </div>
@@ -133,7 +147,7 @@
                             </form>
                         </div>
 
-                        <p class="guest-info-note" id="guestInfoNote">💡 Thông tin của bạn sẽ được lưu giữ để tích điểm
+                        <p class="guest-info-note" id="guestInfoNote"> Thông tin của bạn sẽ được lưu giữ để tích điểm
                             thưởng cho lần sau.</p>
 
                         <div class="step-actions">
@@ -149,9 +163,17 @@
 
                         <!-- Service type tabs -->
                         <div class="svc-type-tabs" id="svcTypeTabs">
-                            <button class="svc-type-tab active" data-type="spa">✂️ Spa & Grooming</button>
-                            <button class="svc-type-tab" data-type="hotel">🏨 Pet Hotel</button>
-                            <button class="svc-type-tab" data-type="taxi">🚕 Pet Taxi</button>
+                            <button class="svc-type-tab active" data-type="spa">️ Spa và Grooming</button>
+                            <button class="svc-type-tab" data-type="hotel"> Pet Hotel</button>
+                            <button class="svc-type-tab" data-type="taxi"> Pet Taxi</button>
+                        </div>
+
+                        <!-- Service Search -->
+                        <div class="booking-form" style="margin-bottom: 16px;">
+                            <div class="form-group" style="position: relative;">
+                                <input type="text" id="svcSearchInput" placeholder="Tìm kiếm dịch vụ (vd: Tắm dưỡng, Khử mùi...)" style="width: 100%; padding-left: 36px; box-sizing: border-box;">
+                                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.9rem;"></span>
+                            </div>
                         </div>
 
                         <!-- Service cards list -->
@@ -165,10 +187,10 @@
                         </div>
                     </div>
 
-                    <!-- ══ STEP 3: Chọn ngày & giờ ══ -->
+                    <!-- ══ STEP 3: Chọn ngày và giờ ══ -->
                     <div class="booking-step-panel" id="step3">
                         <div class="step-header">
-                            <h2>Chọn <span class="accent-italic">lịch & nhân viên</span></h2>
+                            <h2>Chọn <span class="accent-italic">lịch và nhân viên</span></h2>
                         </div>
 
                         <!-- Hotel: check-in / check-out -->
@@ -184,7 +206,7 @@
                                 </div>
                             </div>
                             <div class="hotel-nights-display" id="hotelNightsDisplay" style="display:none;">
-                                <span class="nights-icon">🌙</span>
+                                <span class="nights-icon"></span>
                                 <span id="hotelNightsText">0 đêm</span>
                                 <span id="hotelTotalPrice" class="nights-price"></span>
                             </div>
@@ -196,7 +218,7 @@
                                 <label class="addon-item">
                                     <input type="checkbox" id="addonMeal" class="addon-checkbox">
                                     <div class="addon-info">
-                                        <span class="addon-name">🥩 Chăm sóc dinh dưỡng riêng</span>
+                                        <span class="addon-name"> Chăm sóc dinh dưỡng riêng</span>
                                         <span class="addon-desc">Khách tự chuẩn bị hạt, pate đặc trị</span>
                                     </div>
                                     <span class="addon-price">30.000đ/ngày</span>
@@ -205,7 +227,7 @@
                                 <label class="addon-item" for="addonWalk">
                                     <input type="checkbox" id="addonWalk" class="addon-checkbox">
                                     <div class="addon-info">
-                                        <span class="addon-name">🦮 Dắt đi dạo ngoài trời (30p)</span>
+                                        <span class="addon-name"> Dắt đi dạo ngoài trời (30p)</span>
                                         <span class="addon-desc">Tối đa 2 lượt/ngày</span>
                                     </div>
                                     <div class="addon-qty-control" id="qtyWalkCtrl" style="display:none;">
@@ -222,7 +244,7 @@
                                 <label class="addon-item" for="addonPlay">
                                     <input type="checkbox" id="addonPlay" class="addon-checkbox">
                                     <div class="addon-info">
-                                        <span class="addon-name">🎾 Chơi tương tác với bảo mẫu</span>
+                                        <span class="addon-name"> Chơi tương tác với bảo mẫu</span>
                                         <span class="addon-desc">20 phút tương tác riêng</span>
                                     </div>
                                     <div class="addon-qty-control" id="qtyPlayCtrl" style="display:none;">
@@ -239,7 +261,7 @@
                                 <label class="addon-item" for="addonBath">
                                     <input type="checkbox" id="addonBath" class="addon-checkbox">
                                     <div class="addon-info">
-                                        <span class="addon-name">🛁 Tắm vệ sinh lưu trú</span>
+                                        <span class="addon-name"> Tắm vệ sinh lưu trú</span>
                                         <span class="addon-desc">Giảm 20% giá Spa cơ bản</span>
                                     </div>
                                     <div class="addon-qty-control" id="qtyBathCtrl" style="display:none;">
@@ -311,12 +333,12 @@
                                 </label>
                             </div>
 
-                            <p class="guest-info-note">💡 Thông tin của bạn sẽ được lưu giữ để tích điểm thưởng cho lần
+                            <p class="guest-info-note"> Thông tin của bạn sẽ được lưu giữ để tích điểm thưởng cho lần
                                 sau.</p>
 
                             <div class="step-actions">
                                 <button class="btn-step-back btn-green-outline" id="step4Back">Quay lại</button>
-                                <button class="btn-cta confirm-btn" id="confirmBookingBtn" disabled>✅ Xác nhận đặt
+                                <button class="btn-cta confirm-btn" id="confirmBookingBtn" disabled> Xác nhận đặt
                                     lịch</button>
                             </div>
                         </div>
@@ -324,12 +346,12 @@
                     </div>
 
                     <!-- ── RIGHT: Summary Sidebar ── -->
-                    <aside class="col-12 col-lg-4 booking-summary-col" id="bookingSummary">
+                    <aside class="col-12 col-lg-5 booking-summary-col" id="bookingSummary">
                         <div class="summary-card">
                             <h4 class="summary-title">Tóm tắt đặt lịch</h4>
 
                             <div class="summary-empty" id="summaryEmpty">
-                                <span>🐾</span>
+                                <span></span>
                                 <p>Chưa có thông tin</p>
                             </div>
 
@@ -360,7 +382,7 @@
                                     <span class="sum-value price-val" id="sumPriceVal">—</span>
                                 </div>
                                 <div class="summary-member-note" id="sumMemberNote" style="display:none;">
-                                    <span>🎁 Thành viên được giảm thêm</span>
+                                    <span> Thành viên được giảm thêm</span>
                                 </div>
                             </div>
                         </div>
@@ -368,15 +390,12 @@
                         <!-- Trust badges -->
                         <div class="trust-badges">
                             <div class="trust-item">
-                                <span class="trust-icon">🔒</span>
                                 <span>Thông tin được bảo mật</span>
                             </div>
                             <div class="trust-item">
-                                <span class="trust-icon">↩️</span>
                                 <span>Hủy miễn phí trước 24h</span>
                             </div>
                             <div class="trust-item">
-                                <span class="trust-icon">📹</span>
                                 <span>Nhật ký chăm sóc real-time</span>
                             </div>
                         </div>
@@ -384,7 +403,7 @@
                         <!-- Hotline -->
                         <div class="booking-hotline">
                             <p>Cần hỗ trợ?</p>
-                            <a href="tel:0987654321" class="hotline-link">📞 0987 654 321</a>
+                            <a href="tel:0987654321" class="hotline-link"> 0987 654 321</a>
                         </div>
                     </aside>
                 </div>
@@ -395,7 +414,7 @@
         <div class="success-modal-overlay"></div>
         <div class="success-modal-content">
             <div class="success-icon-wrapper">
-                <div class="success-icon">🎉</div>
+                <div class="success-icon"></div>
             </div>
             <h3>Đặt lịch thành công!</h3>
             <p>PawPal đã nhận được yêu cầu của bạn. Chúng tôi sẽ gửi xác nhận qua <strong>SMS/Zalo</strong> trong vài

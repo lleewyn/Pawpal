@@ -40,10 +40,10 @@ function showToast(type, message, duration = 5000) {
 
     const toastId = 'toast-' + Date.now();
     const icons = {
-        success: '✓',
-        error: '✕',
+        success: '',
+        error: '',
         info: 'ℹ',
-        warning: '⚠'
+        warning: ''
     };
 
     const titles = {
@@ -120,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize profile edit controls
     initProfileEditForm(currentUser);
+    initAddressEditForm(currentUser);
     initNotificationSettings(currentUser);
 });
 
@@ -127,15 +128,35 @@ document.addEventListener('DOMContentLoaded', () => {
 function loadProfileData(user) {
     // Basic info
     document.getElementById('profileName').textContent = user.name || '-';
+    document.getElementById('profileEmail').textContent = user.email || 'Chưa cập nhật';
     document.getElementById('profilePhone').textContent = user.phone || '-';
-    document.getElementById('profileAddress').textContent = user.address || 'Chưa tạo';
     
-    // Dashboard Stats & Welcome
+    // Gender
+    let genderText = 'Chưa cập nhật';
+    if (user.gender === 'male') genderText = 'Nam';
+    else if (user.gender === 'female') genderText = 'Nữ';
+    else if (user.gender === 'other') genderText = 'Khác';
+    document.getElementById('profileGender').textContent = genderText;
+
+    // DOB
+    document.getElementById('profileDob').textContent = user.dob ? formatDateDisplay(user.dob) : 'Chưa cập nhật';
+    
+    // Default Address
+    document.getElementById('profileAddress').textContent = user.address || 'Chưa thiết lập địa chỉ mặc định';
+    
+    // Dashboard Stats và Welcome
     document.getElementById('welcomeName').textContent = user.name ? user.name.split(' ').pop() : 'bạn';
     document.getElementById('statPoints').textContent = user.points || 0;
     
     const accountType = user.is_temporary ? 'Tài khoản tạm' : 'Thành viên';
     document.getElementById('statAccountType').textContent = accountType;
+}
+
+function formatDateDisplay(isoString) {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return isoString;
+    return date.toLocaleDateString('vi-VN');
 }
 
 function initProfileEditForm(user) {
@@ -144,22 +165,30 @@ function initProfileEditForm(user) {
     const form = document.getElementById('profileUpdateForm');
 
     const nameInput = document.getElementById('profileNameInput');
+    const emailInput = document.getElementById('profileEmailInput');
     const phoneInput = document.getElementById('profilePhoneInput');
-    const addressInput = document.getElementById('profileAddressInput');
+    const genderInput = document.getElementById('profileGenderInput');
+    const dobInput = document.getElementById('profileDobInput');
     const editSection = document.getElementById('profileEditSection');
+    const displaySection = document.getElementById('profileDisplaySection');
 
-    if (!editButton || !cancelButton || !form || !nameInput || !phoneInput || !addressInput || !editSection) return;
+    if (!editButton || !cancelButton || !form || !nameInput || !phoneInput || !editSection) return;
 
     function openEditForm() {
         nameInput.value = user.name || '';
+        if(emailInput) emailInput.value = user.email || '';
         phoneInput.value = user.phone || '';
-        addressInput.value = user.address || '';
+        if(genderInput) genderInput.value = user.gender || '';
+        if(dobInput) dobInput.value = user.dob || '';
+        
         editSection.style.display = 'block';
+        if(displaySection) displaySection.style.display = 'none';
         editButton.style.display = 'none';
     }
 
     function closeEditForm() {
         editSection.style.display = 'none';
+        if(displaySection) displaySection.style.display = 'flex';
         editButton.style.display = 'inline-block';
     }
 
@@ -175,35 +204,72 @@ function initProfileEditForm(user) {
 
     form.addEventListener('submit', (e) => {
         e.preventDefault();
-
+        
         const updatedName = nameInput.value.trim();
+        const updatedEmail = emailInput ? emailInput.value.trim() : '';
         const updatedPhone = phoneInput.value.trim();
-        const updatedAddress = addressInput.value.trim();
+        const updatedGender = genderInput ? genderInput.value : '';
+        const updatedDob = dobInput ? dobInput.value : '';
 
         if (!updatedName || !updatedPhone) {
             showToast('warning', 'Vui lòng nhập tên và số điện thoại.');
             return;
         }
 
-        const users = getUsers();
-        const currentPhone = user.phone;
         const updatedUser = {
             ...user,
             name: updatedName,
+            email: updatedEmail,
             phone: updatedPhone,
-            address: updatedAddress,
+            gender: updatedGender,
+            dob: updatedDob,
         };
-
-        const userIndex = users.findIndex(u => String(u.phone) === String(currentPhone));
-        if (userIndex !== -1) {
-            users[userIndex] = { ...users[userIndex], ...updatedUser };
-            saveUsers(users);
-        }
 
         updateCurrentUserRecord(updatedUser);
         loadProfileData(updatedUser);
-        showToast('success', 'Thông tin cá nhân đã được cập nhật.');
+        
+        // Update welcome name
+        document.getElementById('welcomeName').textContent = updatedUser.name ? updatedUser.name.split(' ').pop() : 'bạn';
+        
         closeEditForm();
+        showToast('success', 'Đã cập nhật thông tin thành công!');
+    });
+}
+
+function initAddressEditForm(user) {
+    const btnEdit = document.getElementById('btnEditAddress');
+    const btnSave = document.getElementById('btnSaveAddress');
+    const btnCancel = document.getElementById('btnCancelAddress');
+    const viewCard = document.getElementById('addressCardView');
+    const editCard = document.getElementById('addressCardEdit');
+    const addressInput = document.getElementById('profileAddressInput');
+
+    if (!btnEdit || !viewCard || !editCard) return;
+
+    btnEdit.addEventListener('click', () => {
+        addressInput.value = user.address || '';
+        viewCard.style.display = 'none';
+        editCard.style.display = 'block';
+    });
+
+    btnCancel.addEventListener('click', () => {
+        editCard.style.display = 'none';
+        viewCard.style.display = 'block';
+    });
+
+    btnSave.addEventListener('click', () => {
+        const updatedAddress = addressInput.value.trim();
+        const updatedUser = { ...user, address: updatedAddress };
+        
+        updateCurrentUserRecord(updatedUser);
+        loadProfileData(updatedUser);
+        
+        editCard.style.display = 'none';
+        viewCard.style.display = 'block';
+        showToast('success', 'Đã cập nhật địa chỉ thành công!');
+        
+        // Cần update biến user trong closure nếu muốn edit tiếp đúng data (mặc dù updateCurrentUserRecord đã làm)
+        user.address = updatedAddress;
     });
 }
 
@@ -458,3 +524,23 @@ function initPasswordToggles() {
         });
     });
 }
+
+
+// Toggle password form
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('togglePasswordBtn');
+    const formContainer = document.getElementById('passwordFormContainer');
+    const icon = document.getElementById('passwordToggleIcon');
+    
+    if (toggleBtn && formContainer && icon) {
+        toggleBtn.addEventListener('click', () => {
+            if (formContainer.style.display === 'none') {
+                formContainer.style.display = 'block';
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                formContainer.style.display = 'none';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        });
+    }
+});

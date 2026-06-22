@@ -28,7 +28,7 @@
 }
 
 .bento-card-topic:hover {
-    transform: translateY(-4px);
+    
     box-shadow: var(--shadow-card-hover);
     border-color: var(--color-primary);
 }
@@ -137,7 +137,7 @@
 }
 
 .chat-floating-btn:hover {
-    transform: scale(1.08);
+    
     background-color: var(--color-primary-dark);
 }
 

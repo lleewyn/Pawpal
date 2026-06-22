@@ -32,7 +32,7 @@ function populatePetSelector() {
     const selector = document.getElementById('petSelector');
     if (!selector) return;
 
-    const pets = getPets().filter(p => !p.archived);
+    const pets = getPets().filter(p => !p.isArchived);
     while (selector.options.length > 1) selector.remove(1);
 
     pets.forEach(pet => {
@@ -106,7 +106,7 @@ function renderPetInfoCard(pet) {
     const container = document.getElementById('petInfoCard');
     if (!container) return;
 
-    const age = calcAge(pet.birthday);
+    const age = calcAge(pet.dob);
 
     const avatarHtml = pet.photo
         ? `<img src="${pet.photo}" alt="${escapeHtml(pet.name)}" class="pet-info-avatar">`

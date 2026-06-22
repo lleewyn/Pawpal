@@ -1,5 +1,5 @@
 /**
- * loyalty.js — Xử lý nghiệp vụ Ưu đãi & Thành viên (Quy trình 3.1.13)
+ * loyalty.js — Xử lý nghiệp vụ Ưu đãi và Thành viên (Quy trình 3.1.13)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
             value: '50.000đ',
             pointsCost: 100,
             quantity: 15,
-            terms: 'Áp dụng cho mọi dịch vụ tắm rửa & cắt tỉa lông.'
+            terms: 'Áp dụng cho mọi dịch vụ tắm rửa và cắt tỉa lông.'
         },
         {
             id: 'VOUCHER-PETSHOP-10',
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             value: 'Giảm 10% (Tối đa 100k)',
             pointsCost: 150,
             quantity: 3,
-            terms: 'Áp dụng cho đơn hàng phụ kiện & thức ăn thú cưng.'
+            terms: 'Áp dụng cho đơn hàng phụ kiện và thức ăn thú cưng.'
         },
         {
             id: 'VOUCHER-HOTEL-FREE',
@@ -102,7 +102,7 @@ function renderLoyaltyPage(user, vouchers) {
             warningBanner.style.display = 'block';
             warningBanner.innerHTML = `
                 <div class="warning-banner-content">
-                    <span class="warning-icon">⚠</span>
+                    <span class="warning-icon"></span>
                     <span>Bạn có <strong>50</strong> điểm Paw Points sắp hết hạn sử dụng vào ngày 15/07/2026. Hãy đổi ưu đãi ngay nhé!</span>
                 </div>
             `;
@@ -111,7 +111,7 @@ function renderLoyaltyPage(user, vouchers) {
         }
     }
 
-    // 3. Render Virtual Card & Progress
+    // 3. Render Virtual Card và Progress
     const cardEl = document.getElementById('loyalty-card-wrapper');
     if (cardEl) {
         const progressPercent = Math.min((currentSpend / nextTierLimit) * 100, 100);
@@ -122,7 +122,7 @@ function renderLoyaltyPage(user, vouchers) {
             upgradeText = 'Bạn đã đạt cấp bậc cao nhất của PawPal!';
         }
 
-        // Multipliers & Perks mapping
+        // Multipliers và Perks mapping
         let pointsMultiplier = "1x Points";
         let mainPerk = "Cập nhật Care-Log";
         if (tierClass === 'tier-gold') {
@@ -160,7 +160,7 @@ function renderLoyaltyPage(user, vouchers) {
                                 <span class="m-val" id="virtualCardPerk">${mainPerk}</span>
                             </div>
                         </div>
-                        <div class="card-logo-watermark">🐾</div>
+                        <div class="card-logo-watermark"></div>
                     </div>
                 </div>
 
@@ -259,7 +259,7 @@ function renderVoucherCard(voucher, user) {
                 <div class="slider-bg"></div>
                 <div class="slider-text">Trượt sang phải để đổi voucher</div>
                 <div class="slider-handle">
-                    <span class="arrow-icon">▶</span>
+                    <span class="arrow-icon"></span>
                 </div>
             </div>
         `;
@@ -374,9 +374,33 @@ function triggerRedeem(voucherId, user, sliderContainer) {
 
     // 3. Tiến hành đổi điểm thành công
     const vouchersList = {
-        'VOUCHER-SPA-50K': { cost: 100, name: 'Voucher Giảm giá dịch vụ Spa 50k' },
-        'VOUCHER-PETSHOP-10': { cost: 150, name: 'Voucher Mua sắm hạt hạt 10%' },
-        'VOUCHER-HOTEL-FREE': { cost: 300, name: 'Voucher Miễn phí 1 đêm lưu trú Hotel' }
+        'VOUCHER-SPA-50K': {
+            cost: 100,
+            name: 'Voucher Giảm giá dịch vụ Spa 50k',
+            type: 'fixed',
+            value: 50000,
+            minOrderValue: 0,
+            maxDiscount: null,
+            applicableFor: ['all']
+        },
+        'VOUCHER-PETSHOP-10': {
+            cost: 150,
+            name: 'Voucher Mua sắm hạt hạt 10%',
+            type: 'percentage',
+            value: 10,
+            minOrderValue: 200000,
+            maxDiscount: 100000,
+            applicableFor: ['all']
+        },
+        'VOUCHER-HOTEL-FREE': {
+            cost: 300,
+            name: 'Voucher Miễn phí 1 đêm lưu trú Hotel',
+            type: 'fixed',
+            value: 100000,
+            minOrderValue: 0,
+            maxDiscount: null,
+            applicableFor: ['all']
+        }
     };
 
     const voucherInfo = vouchersList[voucherId];
@@ -398,14 +422,23 @@ function triggerRedeem(voucherId, user, sliderContainer) {
             // Sinh mã voucher đưa vào "Voucher của tôi"
             const voucherCode = 'PAWPAL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
             const myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]');
+            const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
             myVouchers.push({
                 ownerPhone: user.phone,
                 code: voucherCode,
                 name: voucherInfo.name,
                 pointsCost: voucherInfo.cost,
-                createdAt: new Date().toISOString()
+                type: voucherInfo.type,
+                value: voucherInfo.value,
+                minOrderValue: voucherInfo.minOrderValue,
+                maxDiscount: voucherInfo.maxDiscount,
+                applicableFor: voucherInfo.applicableFor,
+                validUntil: expiryDate,
+                createdAt: new Date().toISOString(),
+                source: 'loyalty'
             });
             localStorage.setItem('pawpal_my_vouchers', JSON.stringify(myVouchers));
+            localStorage.setItem('pawpal_applied_voucher_code', voucherCode);
 
             // Hiển thị giao diện thành công tại thanh trượt
             sliderContainer.innerHTML = `<div class="redeem-success-btn">Đã đổi thành công!</div>`;

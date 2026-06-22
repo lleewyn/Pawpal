@@ -96,10 +96,10 @@ function showToast(type, message, duration = 5000) {
 
     const toastId = 'toast-' + Date.now();
     const icons = {
-        success: '✓',
-        error: '✕',
+        success: '',
+        error: '',
         info: 'ℹ',
-        warning: '⚠'
+        warning: ''
     };
 
     const titles = {
@@ -332,7 +332,7 @@ function handleLoginRouting() {
     }
 }
 
-// --- 4. FORM VALIDATION & INTERACTION ON LOGIN/REGISTER ---
+// --- 4. FORM VALIDATION và INTERACTION ON LOGIN/REGISTER ---
 function initAuthForms() {
     const loginForm = document.getElementById('loginForm');
     if (!loginForm) return;

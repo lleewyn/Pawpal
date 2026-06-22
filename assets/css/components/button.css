@@ -28,7 +28,7 @@
     background-color: var(--color-accent-dark);
     color: #ffffff !important;
     box-shadow: 0 12px 32px rgba(229, 169, 60, 0.4);
-    transform: translateY(-2px);
+    
 }
 
 .btn-cta:active {
@@ -90,7 +90,7 @@
     background-color: rgba(255, 255, 255, 0.18);
     border-color: #ffffff;
     color: #ffffff !important;
-    transform: translateY(-2px);
+    
     box-shadow: 0 10px 24px rgba(255, 255, 255, 0.1);
 }
 
@@ -115,7 +115,7 @@
 .btn-green-outline:hover {
     background-color: var(--color-primary);
     color: #ffffff;
-    transform: translateY(-2px);
+    
 }
 
 .btn-danger-outline {
@@ -139,7 +139,7 @@
 .btn-danger-outline:hover {
     background-color: var(--color-danger);
     color: #ffffff;
-    transform: translateY(-2px);
+    
     box-shadow: 0 8px 24px rgba(220, 38, 38, 0.25);
 }
 

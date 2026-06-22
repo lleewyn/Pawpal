@@ -232,7 +232,7 @@
 
 .pet-tag:hover {
     background: rgba(255, 255, 255, 0.22);
-    transform: translateY(-1px);
+    
     border-color: rgba(255,255,255,0.4);
 }
 
@@ -262,7 +262,7 @@
 
 .btn-cta.main-cta-btn:hover {
     background-color: var(--color-cta-darker);
-    transform: translateY(-2px);
+    
     box-shadow: 0 14px 32px rgba(180, 120, 0, 0.50);
 }
 
@@ -522,7 +522,7 @@
     background-color: #ffffff;
     color: var(--color-primary-dark) !important;
     box-shadow: 0 6px 16px rgba(255, 255, 255, 0.25);
-    transform: translateY(-1px) scale(1.02);
+    
 }
 
 .carousel-action-btn svg {
@@ -605,12 +605,12 @@
 
 .hero-carousel-prev:hover {
     background: rgba(255, 255, 255, 0.32);
-    transform: translateY(-50%) scale(1.08);
+    
 }
 
 .hero-carousel-next:hover {
     background: rgba(255, 255, 255, 0.32);
-    transform: translateY(-50%) scale(1.08);
+    
 }
 
 /* Pulse animations */
@@ -838,7 +838,7 @@
 }
 
 .svc-card:hover {
-    transform: translateY(-6px);
+    
     box-shadow: var(--shadow-card-hover);
     border-color: rgba(42, 89, 68, 0.2);
 }
@@ -859,7 +859,7 @@
 }
 
 .svc-card:hover .svc-card-img img {
-    transform: scale(1.05);
+    
 }
 
 .svc-card-overlay {
@@ -1171,7 +1171,7 @@
 }
 
 .exp-cell:hover .exp-img img {
-    transform: scale(1.04);
+    
 }
 
 /* Col 1: landscape ngang */
@@ -1377,7 +1377,7 @@
 }
 
 .process-step:hover .process-step-img {
-    transform: translateY(-4px);
+    
     box-shadow: var(--shadow-card-hover);
 }
 
@@ -1389,7 +1389,7 @@
 }
 
 .process-step:hover .process-step-img img {
-    transform: scale(1.05);
+    
 }
 
 /* Dot với số */
@@ -1654,7 +1654,7 @@
 }
 
 .product-card:hover {
-    transform: translateY(-8px);
+    
     box-shadow: var(--shadow-lg);
 }
 
@@ -1672,7 +1672,7 @@
 }
 
 .product-card:hover .product-image-box img {
-    transform: scale(1.05);
+    
 }
 
 /* Glassmorphism Badges */
@@ -1812,7 +1812,7 @@
 .add-to-cart-btn:hover {
     background-color: var(--color-primary);
     color: #ffffff;
-    transform: translateY(-2px);
+    
     box-shadow: var(--shadow-md);
 }
 
@@ -1944,7 +1944,7 @@
 .testimonials-nav-btn:hover {
     background-color: var(--color-accent);
     border-color: var(--color-accent);
-    transform: scale(1.1);
+    
 }
 
 .testimonials-nav-btn svg {
@@ -2513,7 +2513,7 @@
 .timeline-indicator-item.active .indicator-thumb,
 .timeline-indicator-item:hover .indicator-thumb {
     opacity: 1;
-    transform: scale(1.04);
+    
 }
 
 /* Active / Hover card elevations and border colors */
@@ -2841,7 +2841,7 @@
 }
 
 .membership-step-item:hover .membership-step-num {
-    transform: scale(1.1);
+    
 }
 
 .membership-step-label {
@@ -3143,7 +3143,7 @@
 }
 
 .pawpass-card-wrapper:hover .card-shadow-reflection {
-    transform: scale(0.9);
+    
     opacity: 0.6;
 }
 
@@ -3171,7 +3171,7 @@
 }
 
 .tier-card-interactive:hover {
-    transform: translateY(-4px);
+    
     box-shadow: var(--shadow-card);
 }
 
@@ -3197,7 +3197,7 @@
 /* Dim down other cards when one card is hovered */
 .pawpass-right-selection:hover .tier-card-interactive:not(:hover) {
     opacity: 0.65;
-    transform: scale(0.98);
+    
 }
 
 .tab-popular-tag {
@@ -3339,7 +3339,7 @@
 
 .btn-points-start:hover {
     background-color: var(--color-primary-dark);
-    transform: translateY(-2px);
+    
     box-shadow: var(--shadow-card-hover);
     color: #ffffff;
 }
@@ -3438,7 +3438,7 @@
     }
     
     .arched-card:hover {
-        transform: translateY(-8px) !important;
+        
     }
 
 
@@ -3457,7 +3457,26 @@
         padding: 40px 30px;
     }
     
+    .footer-container {
+        /* Bootstrap handles responsive stacking */
+    }
 
+    .experts-carousel-wrapper {
+        /* removed — carousel replaced with editorial grid */
+    }
+    .experts-carousel-track {
+        /* removed — carousel replaced with editorial grid */
+    }
+    .experts-carousel-track .expert-card {
+        /* removed */
+    }
+    .expert-card, .expert-card.highlighted-expert {
+        /* removed */
+    }
+    .experts-nav-btn {
+        /* removed */
+    }
+}
 
 @media (max-width: 768px) {
     /* Mobile drawer header rules moved to shared style.css (.nav-menu drawer @ 991.98px) */
@@ -3704,7 +3723,7 @@
 .sf-inline-item:hover {
     background-color: var(--color-primary);
     color: #ffffff;
-    transform: translateY(-1px);
+    
     box-shadow: var(--shadow-card);
 }
 

@@ -83,7 +83,7 @@
 .booking-modal-close:hover,
 .pricing-modal-close:hover {
     color: var(--color-accent-dark);
-    transform: scale(1.1);
+    
 }
 
 .booking-form .form-group {
@@ -142,7 +142,7 @@
 
 .btn-submit-booking:hover {
     background-color: var(--color-accent-dark);
-    transform: translateY(-2px);
+    
 }
 
 /* ── Pricing Modal ── */
@@ -435,7 +435,7 @@
 
 .lookup-submit-btn:hover {
     background-color: var(--color-primary-dark);
-    transform: translateY(-1px);
+    
 }
 
 .lookup-hint {

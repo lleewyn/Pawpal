@@ -203,7 +203,7 @@ function setupDrawerListeners() {
             // Video preview đơn giản
             previewContainer.innerHTML = `
                 <div style="position: relative; font-size: 0.8rem; background: var(--color-primary-light); padding: 6px; border-radius: 6px; border: 1px solid var(--color-border);">
-                    🎬 ${file.name}
+                     ${file.name}
                     <span style="cursor: pointer; margin-left: 8px; font-weight: bold; color: var(--color-danger);" onclick="removeRmaFile()">[Xóa]</span>
                 </div>
             `;

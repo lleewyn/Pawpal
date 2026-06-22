@@ -193,7 +193,7 @@ function initMobileNavigation() {
 }
 
 /**
- * Timeline Tracker & Phone Mockup Linkage
+ * Timeline Tracker và Phone Mockup Linkage
  */
 function initTimelineTracker() {
     const indicators = document.querySelectorAll('.timeline-indicator-item');
@@ -299,7 +299,7 @@ function initBookingWidget() {
 }
 
 /**
- * Pricing Modal Tab-switching & Pop-up Interaction
+ * Pricing Modal Tab-switching và Pop-up Interaction
  */
 function initPricingModal() {
     const pricingModal = document.getElementById('pricingModal');
@@ -455,7 +455,7 @@ function initShopFilter() {
                         <div class="product-info">
                             <h3>${product.name}</h3>
                             <div class="product-meta">
-                                <span class="rating-stars">★★★★★</span> <span class="rating-score">${product.rating}</span> <span class="sold-count">(${product.reviewCount} đã bán)</span>
+                                <span class="rating-stars"></span> <span class="rating-score">${product.rating}</span> <span class="sold-count">(${product.reviewCount} đã bán)</span>
                             </div>
                             <div class="product-info-footer">
                                 <div class="product-price">
@@ -901,7 +901,7 @@ function initExpertsCarousel() {
 }
 
 /**
- * Premium Motion System (Lenis Smooth Scroll & GSAP ScrollTrigger)
+ * Premium Motion System (Lenis Smooth Scroll và GSAP ScrollTrigger)
  */
 function initPremiumMotion() {
     // 1. Initialize Lenis if library is available
@@ -1136,12 +1136,12 @@ function initPremiumMotion() {
                 const sectionTopInParent = sectionRect.top - parentRect.top;
                 const sectionBottomInParent = sectionRect.bottom - parentRect.top;
                 
-                // Constrain top & bottom
+                // Constrain top và bottom
                 const minTop = sectionTopInParent;
                 const maxTop = sectionBottomInParent - guardianRect.height;
                 top = Math.max(minTop, Math.min(top, maxTop));
                 
-                // Constrain left & right (can be moved anywhere horizontally within viewport section boundary)
+                // Constrain left và right (can be moved anywhere horizontally within viewport section boundary)
                 const minLeft = sectionRect.left - parentRect.left;
                 const maxLeft = sectionRect.right - parentRect.left - guardianRect.width;
                 left = Math.max(minLeft, Math.min(left, maxLeft));
@@ -1302,7 +1302,7 @@ function initInteractivePawPass() {
 
 
 // =============================================================================
-// Lookup — Tra cứu đơn hàng & lịch hẹn (khách vãng lai)
+// Lookup — Tra cứu đơn hàng và lịch hẹn (khách vãng lai)
 // Chạy trên mọi page có header. Nếu không có #lookupModal thì tự bỏ qua.
 // TODO: Thay getMockData() bằng fetch('/api/lookup?phone=...') khi có backend.
 // =============================================================================
@@ -1394,7 +1394,7 @@ function submitLookup() {
     }
 
     resultsEl.style.display = 'block';
-    resultsEl.innerHTML = '<div class="lookup-empty"><div class="lookup-empty-icon">🔍</div><p>Đang tìm kiếm...</p></div>';
+    resultsEl.innerHTML = '<div class="lookup-empty"><div class="lookup-empty-icon"></div><p>Đang tìm kiếm...</p></div>';
 
     // TODO: Thay bằng fetch('/api/lookup?phone=' + encodeURIComponent(phone)).then(...)
     setTimeout(function () {
@@ -1421,7 +1421,7 @@ function _renderLookupResults(data) {
     if (items.length === 0) {
         resultsEl.innerHTML =
             '<div class="lookup-empty">' +
-                '<div class="lookup-empty-icon">📭</div>' +
+                '<div class="lookup-empty-icon"></div>' +
                 '<p>Không tìm thấy kết quả với số điện thoại này</p>' +
             '</div>';
         return;
@@ -1463,7 +1463,7 @@ function _getLookupMockData(phone) {
             { id: '#DH-20240520', meta: 'Vòng cổ chống bọ chét · 20/05/2024', status: 'Đang xử lý', statusClass: 'lookup-status-pending' },
         ],
         bookings: [
-            { id: '#LH-20240615', meta: 'Spa & Grooming · 15/06/2024 · 09:00', status: 'Xác nhận', statusClass: 'lookup-status-done' },
+            { id: '#LH-20240615', meta: 'Spa và Grooming · 15/06/2024 · 09:00', status: 'Xác nhận', statusClass: 'lookup-status-done' },
             { id: '#LH-20240510', meta: 'Lưu trú Hotel · 10/05/2024', status: 'Đã hoàn thành', statusClass: 'lookup-status-done' },
         ],
     };
@@ -1663,7 +1663,7 @@ function initFab() {
     function getBotReply(text) {
         const t = text.toLowerCase();
         if (t.match(/spa|grooming|tắm|cắt/))
-            return 'Dịch vụ Spa & Grooming của PawPal bao gồm tắm, cắt tỉa, vệ sinh tai & móng. Giá từ <strong>120.000đ</strong>. Bạn muốn đặt lịch không?';
+            return 'Dịch vụ Spa và Grooming của PawPal bao gồm tắm, cắt tỉa, vệ sinh tai và móng. Giá từ <strong>120.000đ</strong>. Bạn muốn đặt lịch không?';
         if (t.match(/hotel|lưu trú|gửi/))
             return 'Pet Hotel có phòng riêng, điều hòa, camera 24/7. Giá từ <strong>180.000đ/đêm</strong>. Yêu cầu vaccine đầy đủ.';
         if (t.match(/giá|bao nhiêu|phí/))
@@ -1674,7 +1674,7 @@ function initFab() {
             return 'Bạn có thể đặt lịch ngay tại <a href="pages/services/booking.html" style="color:#7c3aed">trang đặt lịch</a> — xác nhận tức thì qua SMS/Zalo.';
         if (t.match(/giờ|mở cửa|thời gian/))
             return 'PawPal mở cửa <strong>8:00–20:00</strong> mỗi ngày. Pet Hotel hoạt động 24/7.';
-        return 'Cảm ơn bạn đã nhắn tin! 🐾 Để được tư vấn chi tiết hơn, bạn có thể gọi hotline <strong>0774 561 496</strong> hoặc chat Zalo nhé.';
+        return 'Cảm ơn bạn đã nhắn tin!  Để được tư vấn chi tiết hơn, bạn có thể gọi hotline <strong>0774 561 496</strong> hoặc chat Zalo nhé.';
     }
 }
 
@@ -1713,13 +1713,13 @@ async function initServicesGrid() {
                             <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
                                 <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">${service.serviceId}</span>
                                 <div>
-                                    <span class="rating-stars">★★★★★</span> <span class="rating-score">${service.rating.toFixed(1)}</span> <span class="sold-count">(${service.reviewCount})</span>
+                                    <span class="rating-stars"></span> <span class="rating-score">${service.rating.toFixed(1)}</span> <span class="sold-count">(${service.reviewCount})</span>
                                 </div>
                             </div>
                             <h3>${service.name}</h3>
                             <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${service.description}</p>
                             <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
-                                <span>🐾 ${service.petType}</span>
+                                <span> ${service.petType}</span>
                                 <span>⏱ ${service.duration || 'Theo ngày'}</span>
                             </div>
                             <div class="product-info-footer">

@@ -1,5 +1,5 @@
 /**
- * components.js — Inject shared header & footer vào tất cả page
+ * components.js — Inject shared header và footer vào tất cả page
  *
  * Cách dùng trong HTML:
  *   <div id="site-header"></div>   <- header inject vào đây
@@ -18,7 +18,7 @@
      * Fallback về relative nếu không detect được.
      */
     function getRootPath() {
-        // Ưu tiên: dùng absolute path nếu server hỗ trợ (Vite & Live Server đều hỗ trợ)
+        // Ưu tiên: dùng absolute path nếu server hỗ trợ (Vite và Live Server đều hỗ trợ)
         // Detect xem URL có dạng http/https không (tức là đang chạy qua server)
         if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
             // Tìm script tag hiện tại để biết prefix root

@@ -135,7 +135,7 @@ function transformProductData(rawData) {
 async function loadProducts() {
     // Return cached data if available
     if (dataCache.products) {
-        console.log('✓ Using cached products data');
+        console.log(' Using cached products data');
         return dataCache.products;
     }
     
@@ -148,23 +148,23 @@ async function loadProducts() {
         }
         
         const csvText = await response.text();
-        console.log(`✓ CSV loaded: ${csvText.length} characters`);
+        console.log(` CSV loaded: ${csvText.length} characters`);
         
         const rawData = parseCSV(csvText);
-        console.log(`✓ Parsed ${rawData.length} raw products`);
+        console.log(` Parsed ${rawData.length} raw products`);
         
         const products = transformProductData(rawData);
-        console.log(`✓ Transformed ${products.length} products`);
+        console.log(` Transformed ${products.length} products`);
         
         // Cache the data
         dataCache.products = products;
         
         return products;
     } catch (error) {
-        console.error('❌ Error loading products:', error);
+        console.error(' Error loading products:', error);
         
         // Return empty array as fallback
-        console.warn('⚠️ Using fallback: empty products array');
+        console.warn('️ Using fallback: empty products array');
         return [];
     }
 }
@@ -179,11 +179,11 @@ async function getProductById(productId) {
     const product = products.find(p => p.id === productId);
     
     if (!product) {
-        console.error(`❌ Product not found: ID ${productId}`);
+        console.error(` Product not found: ID ${productId}`);
         return null;
     }
     
-    console.log(`✓ Found product:`, product.name);
+    console.log(` Found product:`, product.name);
     return product;
 }
 
@@ -273,7 +273,7 @@ function transformServiceData(rawData) {
     return rawData.map((item, index) => {
         const rawCategory = item['Phân loại'] || '';
         let category = 'other';
-        if (rawCategory.includes('Spa & Grooming')) {
+        if (rawCategory.includes('Spa và Grooming')) {
             category = 'spa';
         } else if (rawCategory.includes('Pet Hotel')) {
             category = 'hotel';
@@ -317,7 +317,7 @@ function transformServiceData(rawData) {
  */
 async function loadServices() {
     if (dataCache.services) {
-        console.log('✓ Using cached services data');
+        console.log(' Using cached services data');
         return dataCache.services;
     }
     
@@ -330,18 +330,18 @@ async function loadServices() {
         }
         
         const csvText = await response.text();
-        console.log(`✓ Services CSV loaded: ${csvText.length} characters`);
+        console.log(` Services CSV loaded: ${csvText.length} characters`);
         
         const rawData = parseCSV(csvText);
-        console.log(`✓ Parsed ${rawData.length} raw services`);
+        console.log(` Parsed ${rawData.length} raw services`);
         
         const services = transformServiceData(rawData);
-        console.log(`✓ Transformed ${services.length} services`);
+        console.log(` Transformed ${services.length} services`);
         
         dataCache.services = services;
         return services;
     } catch (error) {
-        console.error('❌ Error loading services:', error);
+        console.error(' Error loading services:', error);
         return [];
     }
 }
@@ -356,11 +356,11 @@ async function getServiceById(serviceId) {
     const service = services.find(s => s.serviceId === serviceId);
     
     if (!service) {
-        console.error(`❌ Service not found: ID ${serviceId}`);
+        console.error(` Service not found: ID ${serviceId}`);
         return null;
     }
     
-    console.log(`✓ Found service:`, service.name);
+    console.log(` Found service:`, service.name);
     return service;
 }
 
@@ -375,5 +375,5 @@ window.DataLoader = {
     getServiceById
 };
 
-console.log('✓ DataLoader module initialized');
+console.log(' DataLoader module initialized');
 

@@ -299,7 +299,7 @@
     transition: background .2s, transform .15s;
     box-shadow: 0 4px 16px hsl(38, 75%, 50%, .25);
 }
-.pet-add-page .btn-save:hover { background: var(--gold-dark); color: #fff; transform: translateY(-1px); }
+.pet-add-page .btn-save:hover { background: var(--gold-dark); color: #fff;  }
 .pet-add-page .btn-save:active { transform: translateY(0); }
 
 /* ── Responsive ── */

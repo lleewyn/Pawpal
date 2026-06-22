@@ -168,7 +168,7 @@
 .standard-card:hover img,
 .news-list-item:hover img,
 .trending-item:hover img {
-    transform: scale(1.03);
+    
 }
 
 .card-badge {

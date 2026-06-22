@@ -12,6 +12,7 @@ let currentSessionId = null;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 export function initPetDiary() {
+    localStorage.removeItem('pawpal_tracker_db');
     populatePetSelector();
 
     const petSelector = document.getElementById('petSelector');
@@ -138,7 +139,8 @@ function seedDemoLogs(pet) {
                     timestamp: ago(10),
                     description: `${pet.name} đang được sấy lông với nhiệt độ phù hợp. Bé rất ngoan và hợp tác.`,
                     staff: DEMO_STAFF_PRIMARY,
-                    type: 'in_progress'
+                    type: 'in_progress',
+                    image: '../../assets/images/tracker/belu-1.png'
                 },
                 {
                     id: 2,
@@ -146,7 +148,8 @@ function seedDemoLogs(pet) {
                     timestamp: ago(45),
                     description: `${pet.name} đang được tắm sạch với sữa tắm chuyên dụng phù hợp cho da của bé.`,
                     staff: DEMO_STAFF_PRIMARY,
-                    type: 'in_progress'
+                    type: 'in_progress',
+                    image: '../../assets/images/tracker/belu-2.png'
                 },
                 {
                     id: 1,
@@ -154,7 +157,8 @@ function seedDemoLogs(pet) {
                     timestamp: ago(60),
                     description: `${pet.name} đã được tiếp nhận tại PawPal. Mã hồ sơ: ${pet.id}. Nhân viên sẽ bắt đầu quy trình ngay.`,
                     staff: DEMO_STAFF_RECEPTION,
-                    type: 'check_in'
+                    type: 'check_in',
+                    image: '../../assets/images/tracker/belu-3.png'
                 }
             ],
             invoice: null
@@ -186,7 +190,8 @@ function seedDemoLogs(pet) {
                         timestamp: pastAgo(90),
                         description: `Đang thực hiện cắt tỉa lông cho ${pet.name}.`,
                         staff: DEMO_STAFF_PRIMARY,
-                        type: 'in_progress'
+                        type: 'in_progress',
+                        image: '../../assets/images/tracker/belu-2.png'
                     },
                     {
                         id: 1,
@@ -194,7 +199,8 @@ function seedDemoLogs(pet) {
                         timestamp: pastAgo(120),
                         description: `${pet.name} đã được tiếp nhận. Mã hồ sơ: ${pet.id}.`,
                         staff: DEMO_STAFF_RECEPTION,
-                        type: 'check_in'
+                        type: 'check_in',
+                        image: '../../assets/images/tracker/belu-3.png'
                     }
                 ],
                 invoice: {
@@ -270,33 +276,53 @@ function buildTimelineItemHtml(item) {
     const isUrgent = item.urgent || item.type === 'urgent';
     const isCompleted = item.type === 'completed';
     const timeStr = formatTimestamp(item.timestamp);
+    const imageUrl = resolveTimelineImageUrl(item);
 
     return `
         <div class="timeline-item ${isUrgent ? 'timeline-item-urgent' : ''}">
             <div class="timeline-dot"></div>
-            <div class="timeline-content">
-                ${isUrgent ? `
-                <div class="timeline-urgent-badge">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                    </svg>
-                    GHI CHÚ KHẨN
-                </div>` : ''}
-                <div class="timeline-time">${timeStr}</div>
-                <h4 class="timeline-status">${escapeHtml(item.status)}</h4>
-                <p class="timeline-description">${escapeHtml(item.description)}</p>
-                <div class="timeline-staff">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-                    </svg>
-                    <span>${escapeHtml(item.staff)}</span>
+            <div class="timeline-content timeline-content-with-image">
+                <div class="timeline-item-main">
+                    ${isUrgent ? `
+                    <div class="timeline-urgent-badge">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        GHI CHÚ KHẨN
+                    </div>` : ''}
+                    <div class="timeline-time">${timeStr}</div>
+                    <h4 class="timeline-status">${escapeHtml(item.status)}</h4>
+                    <p class="timeline-description">${escapeHtml(item.description)}</p>
+                    <div class="timeline-staff">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                        </svg>
+                        <span>${escapeHtml(item.staff)}</span>
+                    </div>
+                    ${isUrgent ? buildChatBoxHtml(item.id) : ''}
+                    ${isCompleted && item.invoice ? buildInvoiceBlockHtml(item.invoice) : ''}
                 </div>
-                ${isUrgent ? buildChatBoxHtml(item.id) : ''}
-                ${isCompleted && item.invoice ? buildInvoiceBlockHtml(item.invoice) : ''}
+                ${imageUrl ? `
+                <div class="timeline-photo">
+                    <img src="${imageUrl}" alt="${escapeHtml(item.status)}" class="timeline-item-image" />
+                </div>
+                ` : ''}
             </div>
         </div>
     `;
+}
+
+function resolveTimelineImageUrl(item) {
+    const rawImage = item.image || item.photo || item.imageUrl || item.photoUrl || '';
+    if (!rawImage) return '';
+
+    try {
+        const url = new URL(rawImage, window.location.href);
+        return url.href;
+    } catch (err) {
+        return rawImage;
+    }
 }
 
 // ── Chat Box ──────────────────────────────────────────────────────────────────

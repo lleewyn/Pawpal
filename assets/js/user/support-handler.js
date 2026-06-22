@@ -266,7 +266,7 @@
         saveTickets(tickets);
     }
 
-    // 5. Bộ lọc chat AI & khoá chat 15 phút (US 15-2)
+    // 5. Bộ lọc chat AI và khoá chat 15 phút (US 15-2)
     let badWordsViolationCount = 0;
     let chatBlockedUntil = null;
 

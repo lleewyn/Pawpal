@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         console.log('Loading products from DataLoader...');
         state.products = await window.DataLoader.loadProducts();
-        console.log(`✓ Loaded ${state.products.length} products`);
+        console.log(` Loaded ${state.products.length} products`);
         state.isLoading = false;
         state.wishlist = loadWishlist();
         
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         console.log('=== SHOP PAGE READY ===');
     } catch (error) {
-        console.error('❌ Error loading products:', error);
+        console.error(' Error loading products:', error);
         state.isLoading = false;
         
         // Show error message
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (grid) {
             grid.innerHTML = `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: #fff3cd; border-radius: 8px;">
-                    <h3 style="color: #856404; margin-bottom: 10px;">⚠️ Không thể tải dữ liệu sản phẩm</h3>
+                    <h3 style="color: #856404; margin-bottom: 10px;">️ Không thể tải dữ liệu sản phẩm</h3>
                     <p style="color: #856404;">Vui lòng kiểm tra kết nối và thử lại.</p>
                     <button onclick="location.reload()" style="margin-top: 15px; padding: 10px 20px; background: #2a5944; color: white; border: none; border-radius: 6px; cursor: pointer;">
                         Tải lại trang

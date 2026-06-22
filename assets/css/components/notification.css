@@ -43,7 +43,8 @@
     opacity: 0;
     transform: translateX(100%);
     transition: all 0.3s ease;
-    border-left: 4px solid var(--color-success);
+    border: 1px solid var(--color-success);
+    border-radius: var(--card-border-radius);
     pointer-events: auto;
 }
 
@@ -57,7 +58,7 @@
 /* Notification Bell & Dropdown on Header */
 .notification-menu-wrapper { position: relative; display: inline-block; }
 .notification-btn { transition: transform 0.2s ease, opacity 0.2s ease; }
-.notification-btn:hover { transform: scale(1.05); opacity: 0.85; }
+.notification-btn:hover {  opacity: 0.85; }
 
 .notification-dropdown {
     position: absolute; top: 100%; right: 0; margin-top: 10px;

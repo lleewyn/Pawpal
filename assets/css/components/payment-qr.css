@@ -187,7 +187,8 @@
     padding: 16px;
     background: var(--color-bg-light);
     border-radius: 8px;
-    border-left: 4px solid var(--color-accent);
+    border: 1px solid var(--color-accent);
+    border-radius: var(--card-border-radius);
 }
 
 .qr-timer-label {

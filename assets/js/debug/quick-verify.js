@@ -7,7 +7,7 @@
 
 (function quickVerify() {
     console.clear();
-    console.log('%c🚀 Quick Navigation Verification', 'font-size: 18px; font-weight: bold; color: #667eea; background: #f0f0f0; padding: 10px; border-radius: 5px;');
+    console.log('%c Quick Navigation Verification', 'font-size: 18px; font-weight: bold; color: #667eea; background: #f0f0f0; padding: 10px; border-radius: 5px;');
     console.log('');
     
     const checks = [];
@@ -26,7 +26,7 @@
     addCheck(
         'Sidebar Container',
         !!sidebarContainer,
-        sidebarContainer ? '✓ #user-sidebar found' : '✗ #user-sidebar NOT FOUND'
+        sidebarContainer ? ' #user-sidebar found' : ' #user-sidebar NOT FOUND'
     );
     
     // Check 2: Sidebar component loaded
@@ -34,7 +34,7 @@
     addCheck(
         'Sidebar Component',
         !!sidebar,
-        sidebar ? '✓ .dashboard-sidebar loaded' : '✗ Component failed to load'
+        sidebar ? ' .dashboard-sidebar loaded' : ' Component failed to load'
     );
     
     // Check 3: Navigation links exist
@@ -50,7 +50,7 @@
     addCheck(
         'Active State',
         activeLinks.length === 1,
-        activeLinks.length === 1 ? `✓ Exactly 1 active (${activeLinks[0]?.textContent.trim()})` : `✗ Found ${activeLinks.length} active links`
+        activeLinks.length === 1 ? ` Exactly 1 active (${activeLinks[0]?.textContent.trim()})` : ` Found ${activeLinks.length} active links`
     );
     
     // Check 5: All links have valid hrefs
@@ -62,7 +62,7 @@
     addCheck(
         'Valid Link Hrefs',
         invalidLinks === 0,
-        invalidLinks === 0 ? '✓ All links valid' : `✗ ${invalidLinks} invalid links`
+        invalidLinks === 0 ? ' All links valid' : ` ${invalidLinks} invalid links`
     );
     
     // Check 6: Authentication
@@ -77,7 +77,7 @@
     addCheck(
         'User Authentication',
         userValid,
-        userValid ? '✓ User logged in' : '⚠️  No user (will redirect to login)'
+        userValid ? ' User logged in' : '️  No user (will redirect to login)'
     );
     
     // Check 7: Page detection
@@ -106,7 +106,7 @@
     addCheck(
         'Page Detection',
         pageDetected,
-        pageDetected ? `✓ Detected: ${pageName}` : '✗ Unknown page'
+        pageDetected ? ` Detected: ${pageName}` : ' Unknown page'
     );
     
     // Check 8: CSS loaded
@@ -116,16 +116,16 @@
     addCheck(
         'Dashboard CSS',
         dashboardCSS,
-        dashboardCSS ? '✓ dashboard.css loaded' : '⚠️  dashboard.css not found'
+        dashboardCSS ? ' dashboard.css loaded' : '️  dashboard.css not found'
     );
     
     // Print results
     console.log('');
-    console.log('%c📊 Results:', 'font-weight: bold; font-size: 14px;');
+    console.log('%c Results:', 'font-weight: bold; font-size: 14px;');
     console.log('');
     
     checks.forEach(check => {
-        const icon = check.passed ? '✅' : '❌';
+        const icon = check.passed ? '' : '';
         const color = check.passed ? 'color: green;' : 'color: red;';
         console.log(`${icon} %c${check.name}`, color, '\n   ' + check.details);
     });
@@ -139,13 +139,13 @@
     const passRate = ((passCount / totalChecks) * 100).toFixed(0);
     
     if (failCount === 0) {
-        console.log('%c🎉 ALL CHECKS PASSED!', 'font-size: 16px; font-weight: bold; color: white; background: green; padding: 10px; border-radius: 5px;');
+        console.log('%c ALL CHECKS PASSED!', 'font-size: 16px; font-weight: bold; color: white; background: green; padding: 10px; border-radius: 5px;');
         console.log(`   ${passCount}/${totalChecks} checks successful (${passRate}%)`);
     } else if (failCount <= 2) {
-        console.log('%c⚠️  MINOR ISSUES DETECTED', 'font-size: 16px; font-weight: bold; color: #333; background: orange; padding: 10px; border-radius: 5px;');
+        console.log('%c️  MINOR ISSUES DETECTED', 'font-size: 16px; font-weight: bold; color: #333; background: orange; padding: 10px; border-radius: 5px;');
         console.log(`   ${passCount}/${totalChecks} checks passed, ${failCount} failed (${passRate}%)`);
     } else {
-        console.log('%c❌ CRITICAL ISSUES FOUND', 'font-size: 16px; font-weight: bold; color: white; background: red; padding: 10px; border-radius: 5px;');
+        console.log('%c CRITICAL ISSUES FOUND', 'font-size: 16px; font-weight: bold; color: white; background: red; padding: 10px; border-radius: 5px;');
         console.log(`   ${passCount}/${totalChecks} checks passed, ${failCount} failed (${passRate}%)`);
     }
     
@@ -153,7 +153,7 @@
     
     // Recommendations
     if (failCount > 0) {
-        console.log('%c💡 Recommendations:', 'font-weight: bold;');
+        console.log('%c Recommendations:', 'font-weight: bold;');
         console.log('');
         
         if (!sidebarContainer) {

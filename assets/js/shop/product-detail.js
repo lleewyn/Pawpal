@@ -38,9 +38,102 @@ document.addEventListener('DOMContentLoaded', async () => {
         buyNowBtn.addEventListener('click', handleBuyNow);
     }
 
+    function getWishlistStorageKey() {
+        const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        return user && user.phone ? `pawpal_wishlist_${user.phone}` : 'pawpal_wishlist_guest';
+    }
+
+    function loadWishlistIds() {
+        try {
+            return JSON.parse(localStorage.getItem(getWishlistStorageKey()) || '[]');
+        } catch {
+            return [];
+        }
+    }
+
+    function saveWishlistIds(ids) {
+        localStorage.setItem(getWishlistStorageKey(), JSON.stringify(Array.isArray(ids) ? ids : []));
+    }
+
+    function isProductInWishlist(productId) {
+        const wishlist = loadWishlistIds();
+        return wishlist.some(item => {
+            if (item && typeof item === 'object' && item.id !== undefined) {
+                return String(item.id) === String(productId);
+            }
+            return String(item) === String(productId);
+        });
+    }
+
+    function updateWishlistButtonState(btn, productId) {
+        if (!btn || !productId) return;
+        if (isProductInWishlist(productId)) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    }
+
+    function toggleWishlistItem(productId) {
+        const currentWishlist = loadWishlistIds();
+        const idString = String(productId);
+        const filtered = currentWishlist.filter(item => {
+            if (item && typeof item === 'object' && item.id !== undefined) {
+                return String(item.id) !== idString;
+            }
+            return String(item) !== idString;
+        });
+
+        const added = filtered.length === currentWishlist.length;
+        if (added) {
+            filtered.push(productId);
+        }
+        saveWishlistIds(filtered);
+        return added;
+    }
+
+    function ensureWishlistButtons() {
+        document.querySelectorAll('.wishlist-btn').forEach(btn => {
+            const productId = btn.dataset.productId;
+            if (!productId) return;
+            updateWishlistButtonState(btn, productId);
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+                if (!user) {
+                    showToast('Vui lòng đăng nhập để thêm vào danh sách yêu thích!', 'warning');
+                    return;
+                }
+
+                const added = toggleWishlistItem(productId);
+                btn.classList.toggle('active', added);
+                showToast(added ? 'Đã thêm vào danh sách yêu thích' : 'Đã bỏ khỏi danh sách yêu thích', 'success');
+            });
+        });
+    }
+
     // Favorite Product functionality
     const favoriteProductBtn = document.getElementById('favoriteProductBtn');
+    const wishlistBtn = document.getElementById('wishlistBtn');
+
+    function refreshProductWishlistButtons() {
+        const productId = currentLoadedProduct?.id;
+        if (!productId) return;
+
+        const isWishlisted = isProductInWishlist(productId);
+        if (favoriteProductBtn) {
+            favoriteProductBtn.classList.toggle('active', isWishlisted);
+        }
+        if (wishlistBtn) {
+            wishlistBtn.classList.toggle('active', isWishlisted);
+        }
+    }
+
     if (favoriteProductBtn) {
+        if (currentLoadedProduct && isProductInWishlist(currentLoadedProduct.id)) {
+            favoriteProductBtn.classList.add('active');
+        }
+
         favoriteProductBtn.addEventListener('click', (e) => {
             e.preventDefault();
             const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
@@ -48,39 +141,51 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showToast('Vui lòng đăng nhập để thêm vào danh sách yêu thích!', 'warning');
                 return;
             }
-            // Toggle active state
-            favoriteProductBtn.classList.toggle('active');
+
+            const productId = currentLoadedProduct?.id;
+            if (!productId) {
+                showToast('Không thể xác định sản phẩm yêu thích', 'error');
+                return;
+            }
+
+            const added = toggleWishlistItem(productId);
+            refreshProductWishlistButtons();
             const counter = document.getElementById('favoriteCounter');
             if (counter) {
                 let current = parseInt(counter.textContent) || 120;
-                if (favoriteProductBtn.classList.contains('active')) {
-                    counter.textContent = `${current + 1} lượt thích`;
-                    showToast('Đã thêm vào danh sách yêu thích', 'success');
-                } else {
-                    counter.textContent = `${current - 1} lượt thích`;
-                    showToast('Đã bỏ khỏi danh sách yêu thích', 'success');
-                }
+                counter.textContent = added ? `${current + 1} lượt thích` : `${Math.max(0, current - 1)} lượt thích`;
             }
+            showToast(added ? 'Đã thêm vào danh sách yêu thích' : 'Đã bỏ khỏi danh sách yêu thích', 'success');
         });
     }
 
-    // Related products wishlist buttons
-    document.querySelectorAll('.wishlist-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+    if (wishlistBtn) {
+        if (currentLoadedProduct && isProductInWishlist(currentLoadedProduct.id)) {
+            wishlistBtn.classList.add('active');
+        }
+
+        wishlistBtn.addEventListener('click', (e) => {
             e.preventDefault();
             const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
             if (!user) {
                 showToast('Vui lòng đăng nhập để thêm vào danh sách yêu thích!', 'warning');
                 return;
             }
-            btn.classList.toggle('active');
-            if (btn.classList.contains('active')) {
-                showToast('Đã thêm vào danh sách yêu thích', 'success');
-            } else {
-                showToast('Đã bỏ khỏi danh sách yêu thích', 'success');
+
+            const productId = currentLoadedProduct?.id;
+            if (!productId) {
+                showToast('Không thể xác định sản phẩm yêu thích', 'error');
+                return;
             }
+
+            const added = toggleWishlistItem(productId);
+            refreshProductWishlistButtons();
+            showToast(added ? 'Đã thêm vào danh sách yêu thích' : 'Đã bỏ khỏi danh sách yêu thích', 'success');
         });
-    });
+    }
+
+    // Related products wishlist buttons
+    ensureWishlistButtons();
 
     // Quantity controls
     const decreaseQtyBtn = document.getElementById('decreaseQty');

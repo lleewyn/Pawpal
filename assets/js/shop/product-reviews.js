@@ -90,7 +90,7 @@
         bindHelpful();
     }
 
-    // ── Filter tabs (US 11-7 AC7.1 & AC7.2) ────────────────────────────────
+    // ── Filter tabs (US 11-7 AC7.1 và AC7.2) ────────────────────────────────
     function bindFilterTabs() {
         const tabs = document.querySelectorAll('.filter-tab[data-filter]');
         tabs.forEach(tab => {

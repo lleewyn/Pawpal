@@ -117,7 +117,7 @@
 .star-picker label:hover,
 .star-picker label:hover ~ label {
     color: var(--color-accent);
-    transform: scale(1.15);
+    
 }
 
 .star-picker input[type="radio"]:checked ~ label {

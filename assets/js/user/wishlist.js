@@ -13,20 +13,70 @@
         }
     }
 
-    function getWishlistStorageKey() {
-        const user = getCurrentUser();
+    function getWishlistStorageKey(user = getCurrentUser()) {
         return user && user.phone ? `pawpal_wishlist_${user.phone}` : 'pawpal_wishlist_guest';
+    }
+
+    function migrateGuestWishlistToUser(user) {
+        const guestKey = 'pawpal_wishlist_guest';
+        const targetKey = getWishlistStorageKey(user);
+        if (!user || !user.phone || guestKey === targetKey) {
+            return;
+        }
+
+        let guestWishlist = [];
+        try {
+            guestWishlist = JSON.parse(localStorage.getItem(guestKey) || '[]');
+        } catch (e) {
+            guestWishlist = [];
+        }
+
+        if (!Array.isArray(guestWishlist) || guestWishlist.length === 0) {
+            return;
+        }
+
+        let targetWishlist = [];
+        try {
+            targetWishlist = JSON.parse(localStorage.getItem(targetKey) || '[]');
+        } catch (e) {
+            targetWishlist = [];
+        }
+
+        const merged = [...targetWishlist];
+        const existingIds = new Set(merged.map(item => (typeof item === 'object' && item !== null && item.id !== undefined) ? String(item.id) : String(item)));
+
+        guestWishlist.forEach(item => {
+            const id = (typeof item === 'object' && item !== null && item.id !== undefined) ? String(item.id) : String(item);
+            if (!existingIds.has(id)) {
+                merged.push(item);
+                existingIds.add(id);
+            }
+        });
+
+        localStorage.setItem(targetKey, JSON.stringify(merged));
+        localStorage.removeItem(guestKey);
     }
 
     // Get wishlist from localStorage
     function getWishlist() {
-        const wishlist = localStorage.getItem(getWishlistStorageKey());
-        return wishlist ? JSON.parse(wishlist) : [];
+        const user = getCurrentUser();
+        const storageKey = getWishlistStorageKey(user);
+
+        if (user && user.phone) {
+            migrateGuestWishlistToUser(user);
+        }
+
+        const wishlist = localStorage.getItem(storageKey);
+        try {
+            return wishlist ? JSON.parse(wishlist) : [];
+        } catch (e) {
+            return [];
+        }
     }
 
     // Save wishlist to localStorage
     function saveWishlist(wishlist) {
-        localStorage.setItem(getWishlistStorageKey(), JSON.stringify(wishlist));
+        localStorage.setItem(getWishlistStorageKey(), JSON.stringify(Array.isArray(wishlist) ? wishlist : []));
     }
 
     function isWishlistItemObject(item) {

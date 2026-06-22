@@ -137,10 +137,10 @@ function showToast(type, message, duration = 5000) {
 
     const toastId = 'toast-' + Date.now();
     const icons = {
-        success: '✓',
-        error: '✕',
+        success: '',
+        error: '',
         info: 'ℹ',
-        warning: '⚠'
+        warning: ''
     };
 
     const titles = {
@@ -422,7 +422,7 @@ function handleLoginRouting() {
     }
 }
 
-// --- 4. FORM VALIDATION & INTERACTION ON LOGIN/REGISTER ---
+// --- 4. FORM VALIDATION và INTERACTION ON LOGIN/REGISTER ---
 function initAuthForms() {
     const loginForm = document.getElementById('loginForm');
     if (!loginForm) return;
@@ -456,7 +456,7 @@ function initAuthForms() {
         });
     });
 
-    // --- PHƯƠNG THỨC ĐĂNG NHẬP (MULTI-STEP & SMS IN NEW LAYOUT) ---
+    // --- PHƯƠNG THỨC ĐĂNG NHẬP (MULTI-STEP và SMS IN NEW LAYOUT) ---
     const btnLoginContinue = document.getElementById('btnLoginContinue');
     const loginStepPhone = document.getElementById('loginStepPhone');
     const loginStepPassword = document.getElementById('loginStepPassword');

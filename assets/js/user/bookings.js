@@ -7,8 +7,8 @@ export const mockBookings = [
     {
         id: 'BP-123456',
         petName: 'Bé Bông',
-        petEmoji: '🐕',
-        service: 'Spa & Grooming',
+        petEmoji: '',
+        service: 'Spa và Grooming',
         package: 'Gói Premium',
         date: '2026-06-15',
         timeStart: '10:00',
@@ -21,7 +21,7 @@ export const mockBookings = [
     {
         id: 'BP-234567',
         petName: 'Miu',
-        petEmoji: '🐱',
+        petEmoji: '',
         service: 'Pet Hotel',
         package: '3 đêm',
         date: '2026-06-20',
@@ -33,7 +33,7 @@ export const mockBookings = [
     {
         id: 'BP-345678',
         petName: 'Lucky',
-        petEmoji: '🐕',
+        petEmoji: '',
         service: 'Khám sức khỏe',
         package: 'Khám tổng quát',
         date: '2026-06-18',
@@ -47,7 +47,7 @@ export const mockBookings = [
     {
         id: 'BP-456789',
         petName: 'Milo',
-        petEmoji: '🐕',
+        petEmoji: '',
         service: 'Grooming',
         package: 'Cắt tỉa lông',
         date: '2026-05-10',
@@ -110,8 +110,20 @@ function loadBookings(status) {
     const bookingsList = document.getElementById('bookingsList');
     const emptyState = document.getElementById('emptyState');
 
+    const storedBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    let bookings = Array.isArray(storedBookings) ? storedBookings : [];
+
+    if (currentUser && currentUser.phone) {
+        bookings = bookings.filter(b => b.ownerPhone === currentUser.phone);
+    }
+
+    if (bookings.length === 0) {
+        bookings = [...mockBookings];
+    }
+
     // Filter and sort bookings
-    let filteredBookings = [...mockBookings];
+    let filteredBookings = [...bookings];
     if (status !== 'all') {
         filteredBookings = filteredBookings.filter(booking => booking.status === status);
     } else {
@@ -164,14 +176,14 @@ function createBookingCard(booking) {
                     ${booking.petEmoji} ${booking.petName} • ${booking.service}
                 </div>
                 <div class="booking-card-datetime">
-                    📅 ${dateTimeText}
+                     ${dateTimeText}
                 </div>
-                ${booking.staff ? `<div class="booking-card-staff">👤 Nhân viên: ${booking.staff}</div>` : ''}
+                ${booking.staff ? `<div class="booking-card-staff"> Nhân viên: ${booking.staff}</div>` : ''}
             </div>
             <span class="badge-status badge-${booking.status}">${statusLabels[booking.status]}</span>
         </div>
         <div class="booking-card-footer">
-            <div class="booking-card-price">💰 ${formatPrice(booking.price)}</div>
+            <div class="booking-card-price"> ${formatPrice(booking.price)}</div>
         </div>
     `;
 

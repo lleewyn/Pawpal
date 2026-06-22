@@ -94,7 +94,7 @@
 
 .product-wishlist-btn-large:hover {
     background: var(--color-danger-light);
-    transform: scale(1.1);
+    
 }
 
 .product-wishlist-btn-large.active {
@@ -384,7 +384,7 @@
 
 .btn-add-to-cart:hover {
     background: var(--color-primary-dark);
-    transform: translateY(-2px);
+    
     box-shadow: var(--shadow-card-hover);
 }
 
@@ -422,7 +422,7 @@
 .btn-buy-now:hover {
     background: var(--color-accent-dark);
     border-color: var(--color-accent-dark);
-    transform: translateY(-2px);
+    
     box-shadow: var(--shadow-card-hover);
 }
 
@@ -507,7 +507,7 @@
 }
 
 .share-btn:hover {
-    transform: translateY(-2px);
+    
     box-shadow: var(--shadow-card);
 }
 
@@ -812,7 +812,7 @@
 }
 
 .product-card:hover {
-    transform: translateY(-4px);
+    
     box-shadow: var(--shadow-card-hover);
     border-color: var(--color-accent);
 }
@@ -832,7 +832,7 @@
 }
 
 .product-card:hover .product-card-image img {
-    transform: scale(1.05);
+    
 }
 
 /* Product Card Badges */
@@ -890,7 +890,7 @@
 
 .product-card .wishlist-btn:hover {
     background: var(--color-danger-light);
-    transform: scale(1.1);
+    
 }
 
 .product-card .wishlist-btn svg {
@@ -1207,7 +1207,7 @@
 .pd-nav-btn:hover {
     background: var(--color-primary);
     color: #ffffff;
-    transform: translateY(-50%) scale(1.05);
+    
 }
 
 .pd-nav-prev { left: 12px; }

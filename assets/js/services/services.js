@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         if (window.DataLoader && typeof window.DataLoader.loadServices === 'function') {
             allServices = await window.DataLoader.loadServices();
-            console.log(`✓ Loaded ${allServices.length} services`);
+            console.log(` Loaded ${allServices.length} services`);
 
             // Apply URL filter if present
             const urlParams = new URLSearchParams(window.location.search);
@@ -42,7 +42,7 @@ function showErrorMessage() {
     if (grid) {
         grid.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: #fff3cd; border-radius: 8px;">
-                <h3 style="color: #856404; margin-bottom: 10px;">⚠️ Không thể tải dữ liệu dịch vụ</h3>
+                <h3 style="color: #856404; margin-bottom: 10px;">️ Không thể tải dữ liệu dịch vụ</h3>
                 <p style="color: #856404;">Vui lòng kiểm tra kết nối và tải lại trang.</p>
             </div>
         `;
@@ -125,7 +125,7 @@ function renderServices() {
     if (filteredServices.length === 0) {
         grid.innerHTML = `
             <div class="empty-state-services">
-                <div class="empty-icon">🔍</div>
+                <div class="empty-icon"></div>
                 <h3 class="empty-title">Không tìm thấy dịch vụ</h3>
                 <p class="empty-desc">Rất tiếc, PawPal không tìm thấy dịch vụ nào phù hợp với bộ lọc của bạn.</p>
             </div>
@@ -163,7 +163,7 @@ function renderServices() {
                         <div class="service-card-header">
                             <span class="service-card-id">${service.serviceId}</span>
                             <div class="service-card-rating">
-                                <span>★</span>
+                                <span></span>
                                 <span>${service.rating.toFixed(1)} (${service.reviewCount})</span>
                             </div>
                         </div>
@@ -172,7 +172,7 @@ function renderServices() {
                         
                         <div class="service-card-meta">
                             <div class="service-meta-item">
-                                <span>🐾</span>
+                                <span></span>
                                 <span>${service.petType} (${service.weightClass.replace(/&/g, 'và')})</span>
                             </div>
                             ${service.duration ? `

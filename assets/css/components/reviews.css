@@ -267,7 +267,7 @@
 }
 
 .review-photo:hover {
-    transform: scale(1.06);
+    
     box-shadow: var(--shadow-card-hover);
 }
 
@@ -276,7 +276,8 @@
     margin: 12px 0 12px 52px;
     padding: 12px 16px;
     background: var(--color-bg-light);
-    border-left: 3px solid var(--color-accent);
+    border: 1px solid var(--color-accent);
+    border-radius: var(--card-border-radius);
     border-radius: 2px 8px 8px 2px;
 }
 
@@ -370,7 +371,7 @@
 }
 
 .btn-load-more:hover svg {
-    transform: translateY(2px);
+    
 }
 
 .reviews-showing-text {

@@ -375,7 +375,7 @@
 .btn-to-checkout:hover {
     background-color: var(--color-accent-dark);
     color: #ffffff !important;
-    transform: translateY(-2px);
+    
     box-shadow: 0 8px 20px rgba(229, 169, 60, 0.25);
 }
 

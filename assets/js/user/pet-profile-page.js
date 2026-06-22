@@ -5,7 +5,7 @@
 import { getPets, savePets, generatePetId, calcAge, showToast } from './pet-profile.js';
 
 export function initPetProfilePage() {
-    console.log('🚀 Pet Profile Page init...');
+    console.log(' Pet Profile Page init...');
     
     renderPetGrids();
     setupForm();
@@ -131,14 +131,14 @@ function createPetCard(pet, isArchived = false) {
         <div class="pet-card-header">
             ${pet.avatar ? 
                 `<img src="${pet.avatar}" class="pet-avatar" alt="${pet.name}">` : 
-                `<div class="pet-avatar-placeholder">🐾</div>`
+                `<div class="pet-avatar-placeholder"></div>`
             }
             <div class="pet-card-info">
                 <h3 class="pet-name">${pet.name}</h3>
                 <div class="pet-id">${pet.id}</div>
                 <div class="pet-meta">
                     <span>${getSpeciesName(pet)}</span>
-                    <span class="pet-gender-badge">${pet.gender === 'male' ? '♂ Đực' : '♀ Cái'}</span>
+                    <span class="pet-gender-badge">${pet.gender === 'male' ? ' Đực' : ' Cái'}</span>
                 </div>
             </div>
         </div>

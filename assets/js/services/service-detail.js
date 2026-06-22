@@ -102,7 +102,7 @@ function populateServiceInfo() {
     }
 }
 
-// 2. Set up gallery & thumbnails
+// 2. Set up gallery và thumbnails
 function setupGallery() {
     const mainImg = document.getElementById('mainShowcaseImg');
     mainImg.onerror = function () {
@@ -538,7 +538,7 @@ function renderReviewList(filter) {
 
     container.innerHTML = filtered.map((r, idx) => {
         const initial = r.name.charAt(0);
-        const starsText = '<span class="star filled" aria-hidden="true">★</span>'.repeat(r.rating) + '<span class="star" aria-hidden="true">★</span>'.repeat(5 - r.rating);
+        const starsText = '<span class="star filled" aria-hidden="true"></span>'.repeat(r.rating) + '<span class="star" aria-hidden="true"></span>'.repeat(5 - r.rating);
 
         return `
             <div class="review-item" data-stars="${r.rating}">
@@ -686,7 +686,7 @@ function showToast(message) {
     toast.className = 'toast-custom toast-success';
     toast.innerHTML = `
         <div class="toast-custom-content">
-            <span class="toast-custom-icon">✓</span>
+            <span class="toast-custom-icon"></span>
             <span class="toast-custom-message">${message}</span>
         </div>
     `;
@@ -763,7 +763,7 @@ async function setupRelatedServices() {
                         <div class="service-card-header">
                             <span class="service-card-id">${service.serviceId}</span>
                             <div class="service-card-rating">
-                                <span>★</span>
+                                <span></span>
                                 <span>${service.rating.toFixed(1)} (${service.reviewCount})</span>
                             </div>
                         </div>
@@ -772,7 +772,7 @@ async function setupRelatedServices() {
                         
                         <div class="service-card-meta">
                             <div class="service-meta-item">
-                                <span>🐾</span>
+                                <span></span>
                                 <span>${service.petType} (${service.weightClass.replace(/&/g, 'và')})</span>
                             </div>
                             ${service.duration ? `
