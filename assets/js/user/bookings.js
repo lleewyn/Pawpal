@@ -18,18 +18,7 @@ export const mockBookings = [
         status: 'confirmed',
         note: 'Bé sợ tiếng ồn, cần nhẹ nhàng'
     },
-    {
-        id: 'BP-234567',
-        petName: 'Miu',
-        petEmoji: '',
-        service: 'Pet Hotel',
-        package: '3 đêm',
-        date: '2026-06-20',
-        dateEnd: '2026-06-23',
-        price: 450000,
-        status: 'pending',
-        note: null
-    },
+
     {
         id: 'BP-345678',
         petName: 'Lucky',
@@ -62,7 +51,6 @@ export const mockBookings = [
 
 // Status labels
 export const statusLabels = {
-    'pending': 'Chờ xác nhận',
     'confirmed': 'Đã xác nhận',
     'in-progress': 'Đang thực hiện',
     'completed': 'Hoàn thành',
@@ -128,7 +116,7 @@ function loadBookings(status) {
         filteredBookings = filteredBookings.filter(booking => booking.status === status);
     } else {
         // Sort by status for 'all' tab
-        const statusOrder = { 'pending': 1, 'confirmed': 2, 'in-progress': 3, 'completed': 4, 'cancelled': 5 };
+        const statusOrder = { 'confirmed': 1, 'in-progress': 2, 'completed': 3, 'cancelled': 4 };
         filteredBookings.sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
     }
 

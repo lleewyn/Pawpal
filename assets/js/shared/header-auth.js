@@ -83,7 +83,7 @@
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
-                        <span class="notification-badge" id="notificationBadge" style="position: absolute; top: -5px; right: -5px; background: var(--color-danger); color: white; border-radius: 50%; min-width: 16px; height: 16px; padding: 0 4px; font-size: 10px; display: none; align-items: center; justify-content: center; font-weight: 700; border: 1.5px solid var(--color-bg-white); line-height: 1;">0</span>
+                        <span class="notification-badge" id="notificationBadge">0</span>
                     </button>
                     <div class="notification-dropdown" id="notificationDropdown">
                         <div class="notification-dropdown-header">
@@ -102,7 +102,7 @@
                         <circle cx="20" cy="21" r="1"></circle>
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                     </svg>
-                    <span class="cart-badge" style="position: absolute; top: -5px; right: -5px; background: var(--color-danger); color: white; border-radius: 50%; min-width: 16px; height: 16px; padding: 0 4px; font-size: 10px; display: none; align-items: center; justify-content: center; font-weight: 700; border: 1.5px solid var(--color-bg-white); line-height: 1;">0</span>
+                    <span class="cart-badge">0</span>
                 </a>
                 <div class="user-menu-wrapper">
                     <button class="user-menu-toggle" id="userMenuToggle">

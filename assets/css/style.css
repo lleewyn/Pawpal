@@ -2514,6 +2514,32 @@
 .notification-btn { transition: transform 0.2s ease, opacity 0.2s ease; }
 .notification-btn:hover {  opacity: 0.85; }
 
+.notification-badge,
+.cart-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--color-danger);
+    color: #ffffff;
+    border-radius: 50%;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 10px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    border: 1.5px solid var(--color-bg-white);
+    line-height: 1;
+}
+
+.notification-menu-wrapper .notification-badge {
+    top: -5px;
+    right: -5px;
+    transform: translate(0, 0);
+}
+
 .notification-dropdown {
     position: absolute; top: 100%; right: 0; margin-top: 10px;
     width: 320px; background-color: var(--color-bg-white);
