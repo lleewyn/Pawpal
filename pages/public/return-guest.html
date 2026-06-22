@@ -43,7 +43,7 @@
             <p class="lookup-subtitle">Vui lòng điền số điện thoại mua hàng để thực hiện hoặc kiểm tra yêu cầu của bạn.
             </p>
 
-            <form id="lookup-form" onsubmit="handleLookup(event)">
+            <form id="lookup-form">
                 <label class="form-label d-block mb-1" for="phone-number">Số điện thoại mua hàng *</label>
                 <div class="d-flex gap-3 align-items-stretch mb-3">
                     <input type="tel" id="phone-number" class="form-input flex-fill h-48px" placeholder="Ví dụ: 0901234567" required>
@@ -64,9 +64,9 @@
                     Kết quả tìm thấy</h3>
 
                 <div class="lookup-tabs-container" id="lookupTabs">
-                    <button type="button" class="lookup-tab-btn active" onclick="filterResults('all', this)">Tất cả</button>
-                    <button type="button" class="lookup-tab-btn" onclick="filterResults('service', this)">Dịch vụ (1)</button>
-                    <button type="button" class="lookup-tab-btn" onclick="filterResults('order', this)">Đơn hàng (1)</button>
+                    <button type="button" class="lookup-tab-btn active" data-filter="all">Tất cả</button>
+                    <button type="button" class="lookup-tab-btn" data-filter="service">Dịch vụ (1)</button>
+                    <button type="button" class="lookup-tab-btn" data-filter="order">Đơn hàng (1)</button>
                 </div>
 
                 <div id="mock-results-container" class="d-flex flex-column gap-4">
@@ -95,7 +95,7 @@
 
                             <!-- Timeline toggle -->
                             <div>
-                                <button type="button" onclick="this.nextElementSibling.classList.toggle('expanded'); const icon = this.querySelector('.chevron'); icon.style.transform = icon.style.transform === 'rotate(180deg)' ? 'rotate(0)' : 'rotate(180deg)';" class="bg-transparent border-0 text-primary fw-bold cursor-pointer d-inline-flex align-items-center gap-1 p-0 fs-small transition-color">
+                                <button type="button" class="timeline-toggle-btn bg-transparent border-0 text-primary fw-bold cursor-pointer d-inline-flex align-items-center gap-1 p-0 fs-small transition-color">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                                     Xem nhật ký chăm sóc
                                     <svg class="chevron transition-transform" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -176,13 +176,6 @@
     <!-- Footer -->
     <div id="site-footer"></div>
     <div class="toast-container-custom" id="toastContainer"></div>
-
-    
-    
-    
-    
-    
-    
     
     <div id="site-fab"></div>
 </body>

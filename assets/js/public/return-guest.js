@@ -76,3 +76,33 @@ function updateGuestLookupActions(phone) {
         });
     });
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Gắn sự kiện submit cho form
+    const lookupForm = document.getElementById('lookup-form');
+    if (lookupForm) {
+        lookupForm.addEventListener('submit', handleLookup);
+    }
+
+    // 2. Gắn sự kiện cho các tab lọc kết quả
+    document.querySelectorAll('.lookup-tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterResults(this.getAttribute('data-filter'), this);
+        });
+    });
+
+    // 3. Gắn sự kiện cho nút xổ ra timeline
+    document.querySelectorAll('.timeline-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const nextElem = this.nextElementSibling;
+            if (nextElem) {
+                nextElem.classList.toggle('expanded');
+            }
+            const icon = this.querySelector('.chevron');
+            if (icon) {
+                icon.style.transform = icon.style.transform === 'rotate(180deg)' ? 'rotate(0)' : 'rotate(180deg)';
+            }
+        });
+    });
+});
+
