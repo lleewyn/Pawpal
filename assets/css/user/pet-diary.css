@@ -3,9 +3,14 @@
    ========================================================================== */
 
 /* ── Page Container ──────────────────────────────────────────────────── */
+.pet-diary-body,
+body {
+    background-color: #f4faf7;
+}
+
 .pet-diary-container {
     padding: 20px 0;
-    background: var(--color-bg-light);
+    background: #f4faf7;
     min-height: 60vh;
 }
 
