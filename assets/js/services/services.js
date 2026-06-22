@@ -269,7 +269,7 @@ window.toggleAccordion = function (id) {
     if (!accordion) return;
     const trigger = accordion.previousElementSibling;
 
-    const isHidden = accordion.classList.contains('d-none') || accordion.style.display === 'none' || !accordion.style.display;
+    const isHidden = accordion.classList.contains('d-none') || accordion.style.display === 'none';
 
     if (isHidden) {
         accordion.classList.remove('d-none');
@@ -289,7 +289,8 @@ window.toggleAccordion = function (id) {
             duration: 0.25,
             ease: 'power2.in',
             onComplete: () => {
-                accordion.style.display = 'none';
+                accordion.classList.add('d-none');
+                accordion.style.display = '';
             }
         });
     }

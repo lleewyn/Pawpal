@@ -372,7 +372,7 @@
 .service-image-wrapper {
     position: relative;
     aspect-ratio: 16/10;
-    background: var(--color-bg-light);
+    background: #f4faf7;
     overflow: hidden;
 }
 
@@ -421,7 +421,7 @@
     color: var(--color-text-light);
     font-weight: 700;
     text-transform: uppercase;
-    background: var(--color-bg-light);
+    background: #f4faf7;
     padding: 2px 6px;
     border-radius: 4px;
 }
@@ -595,7 +595,7 @@
     padding: 10px 14px;
     font-family: var(--font-body);
     font-size: var(--fs-body);
-    background-color: var(--color-bg-light);
+    background-color: #f4faf7;
     width: 100%;
     transition: all 0.3s ease;
 }
