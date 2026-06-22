@@ -179,23 +179,22 @@
     display: flex;
     gap: var(--space-md);
     align-items: flex-start;
-    flex-wrap: wrap;
+    justify-content: space-between;
 }
 
 .timeline-item-main {
-    flex: 1 1 360px;
+    flex: 1 1 auto;
     min-width: 240px;
 }
 
 .timeline-photo {
-    width: 180px;
-    height: 180px;
-    border-radius: 16px;
+    width: 172px;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--card-border-radius);
     overflow: hidden;
     flex-shrink: 0;
     background: var(--color-bg-light);
-    border: 1px solid var(--color-border);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    border: var(--border-card);
 }
 
 .timeline-item-image {
@@ -605,6 +604,14 @@
     
     .pet-info-meta {
         justify-content: center;
+    }
+
+    .timeline-content.timeline-content-with-image {
+        flex-direction: column;
+    }
+
+    .timeline-photo {
+        width: 100%;
     }
 }
 

@@ -6,6 +6,14 @@ import { getPets, getTrackerLogs, saveTrackerLogs, calcAge, fmtDate, showToast }
 
 const DEMO_STAFF_PRIMARY = 'Nguyễn Thị Mai';
 const DEMO_STAFF_RECEPTION = 'Trần Văn Nam';
+const TIMELINE_FALLBACK_IMAGES = {
+    dry: '../../assets/images/tracker/belu-1.png',
+    bath: '../../assets/images/tracker/belu-2.png',
+    receive: '../../assets/images/tracker/belu-3.png',
+    trim: '../../assets/images/services/spa/gallery/cust_khach_1_dang_chai_long.jpg',
+    complete: '../../assets/images/services/spa/gallery/cust_khach_1_dang_nghi_ngoi.jpg',
+    default: '../../assets/images/services/spa/gallery/cust_khach_1_dang_tam.jpg'
+};
 
 let currentPetId = null;
 let currentSessionId = null;
@@ -314,8 +322,35 @@ function buildTimelineItemHtml(item) {
 }
 
 function resolveTimelineImageUrl(item) {
-    const rawImage = item.image || item.photo || item.imageUrl || item.photoUrl || '';
-    if (!rawImage) return '';
+    if (!item || typeof item !== 'object') return '';
+
+    const candidates = [
+        item.image,
+        item.photo,
+        item.imageUrl,
+        item.photoUrl,
+        item.imageSrc,
+        item.photoSrc,
+        item.thumbnail,
+        item.thumbnailUrl,
+        item.src,
+        item.url,
+        item.media?.[0]?.src,
+        item.media?.[0]?.image,
+        item.media?.[0]?.photo,
+        item.media?.[0]?.url,
+        item.image?.src,
+        item.photo?.src,
+        item.image?.url,
+        item.photo?.url,
+        item.media?.src,
+        item.media?.image,
+        item.media?.photo,
+        item.media?.url
+    ];
+
+    const rawImage = candidates.find(value => typeof value === 'string' && value.trim() !== '')
+        || getTimelineFallbackImage(item);
 
     try {
         const url = new URL(rawImage, window.location.href);
@@ -323,6 +358,20 @@ function resolveTimelineImageUrl(item) {
     } catch (err) {
         return rawImage;
     }
+}
+
+function getTimelineFallbackImage(item) {
+    const status = `${item.status || ''} ${item.description || ''}`.toLowerCase();
+
+    if (status.includes('sấy')) return TIMELINE_FALLBACK_IMAGES.dry;
+    if (status.includes('tắm')) return TIMELINE_FALLBACK_IMAGES.bath;
+    if (status.includes('tiếp nhận')) return TIMELINE_FALLBACK_IMAGES.receive;
+    if (status.includes('cắt') || status.includes('tỉa') || status.includes('chải')) {
+        return TIMELINE_FALLBACK_IMAGES.trim;
+    }
+    if (status.includes('hoàn thành')) return TIMELINE_FALLBACK_IMAGES.complete;
+
+    return TIMELINE_FALLBACK_IMAGES.default;
 }
 
 // ── Chat Box ──────────────────────────────────────────────────────────────────
