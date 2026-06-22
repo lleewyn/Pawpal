@@ -749,6 +749,11 @@ async function handleCheckout() {
 
     // Save to user's orders list
     saveOrderToUserHistory(orderData);
+
+    // Create a temporary guest user record when a guest checks out
+    if (!checkoutState.user) {
+        createGuestTempUserForOrder(orderData);
+    }
     
     // Route based on payment method
     if (checkoutState.selectedPayment === 'cod') {
@@ -1067,6 +1072,35 @@ function saveOrderToUserHistory(orderData) {
     localStorage.setItem('pawpal_orders', JSON.stringify(orders));
     
     console.log('Order saved to history:', orderData.orderId);
+}
+
+function createGuestTempUserForOrder(orderData) {
+    const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+    let tempUser = users.find(u => u.phone === orderData.shipping.phone && u.is_temporary);
+
+    if (!tempUser) {
+        tempUser = {
+            name: orderData.shipping.name,
+            phone: orderData.shipping.phone,
+            role: 'customer',
+            is_temporary: true,
+            points: 0
+        };
+        users.push(tempUser);
+        localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+    }
+
+    const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
+    const hasToken = tokens.some(t => t.phone === orderData.shipping.phone);
+    if (!hasToken) {
+        const token = `token-temp-${Math.floor(100000 + Math.random() * 900000)}`;
+        tokens.push({
+            token,
+            phone: orderData.shipping.phone,
+            createdAt: Date.now()
+        });
+        localStorage.setItem('pawpal_temp_tokens', JSON.stringify(tokens));
+    }
 }
 
 function formatCurrency(amount) {

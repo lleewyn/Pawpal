@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Display order info
     displayOrderInfo(orderData);
+    setupGuestActivationCard(orderData);
     
     // Setup copy button
     document.getElementById('btn-copy-order').addEventListener('click', copyOrderId);
@@ -28,6 +29,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup tracking link based on user auth status
     setupTrackingLink(orderData);
 });
+
+function setupGuestActivationCard(order) {
+    const card = document.getElementById('guestActivationCard');
+    const phoneDisplay = document.getElementById('guestPhoneDisplay');
+    const activateLink = document.getElementById('btn-guest-activate');
+
+    if (!card || !phoneDisplay || !activateLink) {
+        return;
+    }
+
+    const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+    const tempUser = users.find(u => u.phone === order.shipping.phone && u.is_temporary);
+    if (!tempUser) {
+        card.classList.add('d-none');
+        return;
+    }
+
+    card.classList.remove('d-none');
+    phoneDisplay.textContent = tempUser.phone;
+    activateLink.href = `../public/login.html?action=guest-activate&phone=${encodeURIComponent(tempUser.phone)}`;
+}
 
 function setupTrackingLink(order) {
     const trackBtns = document.querySelectorAll('a[href="/pages/user/orders.html"]');

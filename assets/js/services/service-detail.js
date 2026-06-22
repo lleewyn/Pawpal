@@ -235,7 +235,7 @@ function setupConfigurator() {
     const rawPet = serviceData.petType;
     if (rawPet.includes('/') || rawPet.toLowerCase().includes('và')) {
         // Both dog and cat supported
-        petGroup.style.display = 'block';
+        petGroup.classList.remove('d-none');
         petOptions.innerHTML = `
             <button class="config-pill-btn active" data-val="Chó">Chó cún</button>
             <button class="config-pill-btn" data-val="Mèo">Mèo con</button>
@@ -281,7 +281,7 @@ function setupConfigurator() {
     // C. Groomer Selection Level (Only for Spa Category)
     const groomerGroup = document.getElementById('groomerGroup');
     if (serviceData.category === 'spa') {
-        groomerGroup.style.display = 'block';
+        groomerGroup.classList.remove('d-none');
         const groomerOpts = document.getElementById('groomerOptions');
         groomerOpts.querySelectorAll('.config-pill-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -466,7 +466,7 @@ function setupFAQs() {
                 <span>${faq.q}</span>
                 <span class="faq-accordion-icon">▼</span>
             </button>
-            <div class="faq-accordion-panel" id="faqAcc-${idx}" style="display: none;">
+            <div class="faq-accordion-panel" id="faqAcc-${idx}" class="d-none">
                 <p style="margin:0;">${faq.a}</p>
             </div>
         </div>
@@ -477,7 +477,9 @@ function setupFAQs() {
         const panel = document.getElementById(id);
         const trigger = panel.previousElementSibling;
 
-        if (panel.style.display === 'none') {
+        const isHidden = panel.classList.contains('d-none') || panel.style.display === 'none';
+        if (isHidden) {
+            panel.classList.remove('d-none');
             trigger.classList.add('active');
             gsap.set(panel, { display: 'block', height: 0, opacity: 0 });
             gsap.to(panel, {
@@ -494,7 +496,8 @@ function setupFAQs() {
                 duration: 0.25,
                 ease: 'power2.in',
                 onComplete: () => {
-                    panel.style.display = 'none';
+                    panel.classList.add('d-none');
+                    panel.style.display = '';
                 }
             });
         }
@@ -530,11 +533,11 @@ function setupReviews() {
 
     // Setup Lightbox Close
     document.getElementById('btnLightboxClose').addEventListener('click', () => {
-        document.getElementById('lightboxModal').style.display = 'none';
+        document.getElementById('lightboxModal').classList.add('d-none');
     });
     document.getElementById('lightboxModal').addEventListener('click', (e) => {
         if (e.target === document.getElementById('lightboxModal')) {
-            document.getElementById('lightboxModal').style.display = 'none';
+            document.getElementById('lightboxModal').classList.add('d-none');
         }
     });
 }
@@ -612,7 +615,7 @@ window.openLightbox = function (src) {
     const modal = document.getElementById('lightboxModal');
     const img = document.getElementById('lightboxImg');
     img.src = src;
-    modal.style.display = 'flex';
+    modal.classList.remove('d-none');
 };
 
 // Vote Helpful click
@@ -754,7 +757,7 @@ async function setupRelatedServices() {
     related = related.slice(0, 4);
 
     if (related.length === 0) {
-        container.parentElement.style.display = 'none';
+        container.parentElement.classList.add('d-none');
         return;
     }
 
