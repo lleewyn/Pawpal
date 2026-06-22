@@ -269,7 +269,10 @@ window.toggleAccordion = function (id) {
     if (!accordion) return;
     const trigger = accordion.previousElementSibling;
 
-    if (accordion.style.display === 'none' || !accordion.style.display) {
+    const isHidden = accordion.classList.contains('d-none') || accordion.style.display === 'none' || !accordion.style.display;
+
+    if (isHidden) {
+        accordion.classList.remove('d-none');
         if (trigger) trigger.classList.add('active');
         gsap.set(accordion, { display: 'block', height: 0, opacity: 0 });
         gsap.to(accordion, {
