@@ -2985,3 +2985,19 @@ h1, h2, h3, h4, h5, h6 {
 .cursor-pointer { cursor: pointer !important; }
 .transition-color { transition: color 0.3s ease !important; }
 .transition-transform { transition: transform 0.3s ease !important; }
+
+/* Additional custom utilities */
+.text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.align-baseline-custom { vertical-align: -2px !important; }
+.min-h-110px { min-height: 110px !important; }
+.fs-16px { font-size: 16px !important; }
+.fs-11px { font-size: 11px !important; }
+
+.fs-10px { font-size: 10px !important; }
+.fs-11px { font-size: 11px !important; }
+.fs-12px { font-size: 12px !important; }
+.fs-13px { font-size: 13px !important; }
+.fs-16px { font-size: 16px !important; }
+
+.max-w-1000px { max-width: 1000px !important; }
+.hero-carousel-inner { box-shadow: 0 32px 64px rgba(0,0,0,0.35) !important; border: 2px solid rgba(255,255,255,0.12) !important; }
