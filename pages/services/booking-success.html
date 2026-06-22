@@ -194,7 +194,7 @@
             text-decoration: none;
         }
     </style>
-</head>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>\n    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>\n    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>\n    <script src="../../assets/js/shared/components.js" defer></script>\n    <script type="module" src="../../assets/js/shared/main.js"></script>\n    <script type="module" src="../../assets/js/shared/auth.js"></script>\n    <script src="../../assets/js/services/booking-success.js" defer></script>\n</head>
 
 <body style="background-color: var(--color-bg-light);">
 
@@ -238,54 +238,14 @@
     <!-- Toast Container -->
     <div class="toast-container-custom" id="toastContainer"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../../assets/js/shared/components.js" defer></script>
-    <script type="module" src="../../assets/js/shared/main.js"></script>
-    <script type="module" src="../../assets/js/shared/auth.js"></script>
+    
+    
+    
+    
+    
+    
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const bookingCode = urlParams.get('code');
-            document.getElementById('displayBookingCode').textContent = bookingCode || 'PP-000000';
-
-            // Find if there's a temporary guest user account waiting for password setup
-            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-
-            // Check if this booking belongs to a temporary user
-            const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-            const currentBooking = bookings.find(b => b.id === bookingCode);
-
-            const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
-            let targetUser = null;
-
-            if (currentBooking) {
-                targetUser = users.find(u => u.phone === currentBooking.ownerPhone && u.is_temporary);
-            } else if (currentUser && currentUser.is_temporary) {
-                targetUser = currentUser;
-            }
-
-            if (targetUser) {
-                // Show password setup card for guest
-                document.getElementById('passwordSetupCard').style.display = 'block';
-                document.getElementById('memberActions').style.display = 'none';
-
-                // Update the setup link to start guest activation (OTP) flow on the login page
-                const setupLink = document.querySelector('#passwordSetupCard a.btn-cta');
-                if (setupLink) {
-                    setupLink.href = `../public/login.html?action=guest-activate&phone=${encodeURIComponent(targetUser.phone)}`;
-                }
-
-                // Display logic is enough, logic for OTP and password setup handled in login.js
-            } else {
-                // Already a member
-                document.getElementById('passwordSetupCard').style.display = 'none';
-                document.getElementById('memberActions').style.display = 'block';
-            }
-        });
-    </script>
+    
 </body>
 
 </html>

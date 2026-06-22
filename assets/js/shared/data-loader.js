@@ -273,7 +273,7 @@ function transformServiceData(rawData) {
     return rawData.map((item, index) => {
         const rawCategory = item['Phân loại'] || '';
         let category = 'other';
-        if (rawCategory.includes('Spa và Grooming')) {
+        if (rawCategory.includes('Spa và Grooming') || rawCategory.includes('Spa & Grooming')) {
             category = 'spa';
         } else if (rawCategory.includes('Pet Hotel')) {
             category = 'hotel';

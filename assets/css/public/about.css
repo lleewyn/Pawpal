@@ -3,6 +3,10 @@
    ========================================================================== */
 
 /* --- Utils --- */
+.about-page {
+    background-color: #f4faf7;
+}
+
 .section-label {
     display: inline-block;
     font-size: var(--fs-small);
@@ -26,7 +30,7 @@
     background-size: cover;
     background-position: right center;
     background-repeat: no-repeat;
-    background-color: var(--color-bg-light);
+    background-color: #f4faf7;
     padding: var(--space-md) 0;
     display: flex;
     align-items: center;
@@ -58,7 +62,7 @@
 
 /* --- 2. Story Section --- */
 .about-story {
-    background-color: var(--color-bg-white);
+    background-color: #f4faf7;
     padding: var(--space-xl) 0;
 }
 

@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // Populate Details
+            updateBreadcrumb();
             populateServiceInfo();
             setupGallery();
             setupTimelineAndBenefits();
@@ -65,6 +66,26 @@ function showNotFound() {
                 <a href="services.html" class="btn-cta">Quay lại danh sách dịch vụ</a>
             </div>
         `;
+    }
+}
+
+function getServiceCategoryLabel(category) {
+    if (category === 'spa') return 'Spa và Làm đẹp';
+    if (category === 'hotel') return 'Khách sạn thú cưng';
+    if (category === 'taxi') return 'Taxi đưa đón';
+    return 'Dịch vụ';
+}
+
+function updateBreadcrumb() {
+    const categoryEl = document.getElementById('breadcrumbServiceCategory');
+    const nameEl = document.getElementById('breadcrumbServiceName');
+
+    if (categoryEl) {
+        categoryEl.textContent = getServiceCategoryLabel(serviceData.category);
+    }
+
+    if (nameEl) {
+        nameEl.textContent = serviceData.name.replace(/&/g, 'và');
     }
 }
 

@@ -4,7 +4,7 @@
 
 /* ── Shop Page Container ────────────────────────────────────────────── */
 .shop-page {
-    background: var(--color-bg-white);
+    background: #f4faf7;
     min-height: 100vh;
 }
 
@@ -47,7 +47,7 @@
 /* ── Shop by Category Grid ──────────────────────────────────────────── */
 .shop-by-category-section {
     padding: var(--space-md) 0;
-    background: var(--color-bg-white);
+    background: #f4faf7;
 }
 
 .section-header-shop {
@@ -143,7 +143,7 @@
 /* ── Main Shop Section (Sidebar + Products) ──────────────────────────── */
 .main-shop-section {
     padding: var(--space-md) 0 var(--space-xl) 0;
-    background: var(--color-bg-white);
+    background: #f4faf7;
 }
 
 .shop-layout {
@@ -263,8 +263,8 @@
     gap: var(--space-md);
     margin-bottom: var(--space-lg);
     padding: var(--space-sm);
-    background: var(--color-bg-light);
-    border: var(--border-card);
+    background: #eef7f2;
+    border: 1px solid rgba(79, 122, 104, 0.16);
     border-radius: var(--card-border-radius);
     flex-wrap: wrap;
 }

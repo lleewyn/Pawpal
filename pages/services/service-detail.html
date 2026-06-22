@@ -20,12 +20,25 @@
     <link rel="stylesheet" href="../../assets/css/components/reviews.css">
     <link rel="stylesheet" href="../../assets/css/services/services.css">
     <link rel="stylesheet" href="../../assets/css/services/service-detail.css">
-</head>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>\n    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>\n    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>\n    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>\n    <script src="../../assets/js/shared/data-loader.js" defer></script>\n    <script src="../../assets/js/shared/components.js" defer></script>\n    <script type="module" src="../../assets/js/shared/main.js"></script>\n    <script type="module" src="../../assets/js/services/service-detail.js"></script>\n    <script type="module" src="../../assets/js/shared/auth.js"></script>\n</head>
 <body class="service-detail-page-body">
 
     <div id="site-header" style="min-height:110px;background:var(--color-bg-light);"></div>
 
     <main class="service-detail-main">
+        <section class="service-breadcrumb-section">
+            <div class="container-xl">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb service-breadcrumb">
+                        <li class="breadcrumb-item"><a href="../../index.html">Trang chủ</a></li>
+                        <li class="breadcrumb-item"><a href="services.html">Dịch vụ</a></li>
+                        <li class="breadcrumb-item active" id="breadcrumbServiceCategory">Đang tải...</li>
+                        <li class="breadcrumb-item active" aria-current="page" id="breadcrumbServiceName">Đang tải...</li>
+                    </ol>
+                </nav>
+            </div>
+        </section>
+
         <div class="container-xl">
             <!-- Back Button -->
             <a href="services.html" class="btn-back-link">
@@ -239,15 +252,15 @@
     <!-- Toast Container -->
     <div class="toast-container-custom" id="toastContainer"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../../assets/js/shared/data-loader.js"></script>
-    <script src="../../assets/js/shared/components.js" defer></script>
-    <script type="module" src="../../assets/js/shared/main.js"></script>
-    <script type="module" src="../../assets/js/services/service-detail.js"></script>
-    <script type="module" src="../../assets/js/shared/auth.js"></script>
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <div id="site-fab"></div>
 </body>
 </html>

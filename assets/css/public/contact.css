@@ -2,9 +2,13 @@
    contact.css — Liên Hệ (Redesigned)
    ========================================================================== */
 
+.contact-page-body {
+    background-color: #f4faf7;
+}
+
 /* --- Hero Section --- */
 .contact-hero {
-    background-color: var(--color-bg-light);
+    background-color: #f4faf7;
     padding: var(--space-md) 0;
     text-align: center;
 }
@@ -20,7 +24,7 @@
 /* --- Main Layout --- */
 .contact-main {
     padding: var(--space-xl) 0;
-    background-color: var(--color-bg-white);
+    background-color: #f4faf7;
 }
 
 .contact-grid {
@@ -85,9 +89,10 @@
 
 /* --- Right Column: Form --- */
 .contact-form-wrapper {
-    background: var(--color-bg-light);
+    background: #eef7f2;
     padding: var(--space-xl);
     border-radius: var(--card-border-radius);
+    border: 1px solid rgba(79, 122, 104, 0.16);
 }
 
 .contact-form {

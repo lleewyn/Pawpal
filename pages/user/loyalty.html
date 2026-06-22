@@ -24,7 +24,27 @@
     <link rel="stylesheet" href="../../assets/css/components/fab.css">
     <link rel="stylesheet" href="../../assets/css/user/dashboard.css">
     <link rel="stylesheet" href="../../assets/css/user/loyalty.css">
-</head>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>\n    <script src="../../assets/js/shared/auth.js" defer></script>\n    <script src="../../assets/js/user/loyalty.js" defer></script>\n    <script>
+        // Authentication Guard
+        (function() {
+            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
+            if (!currentUser) {
+                alert('Vui lòng đăng nhập để truy cập trang này');
+                window.location.href = '/pages/public/login.html';
+                return;
+            }
+        })();
+        
+        // Load sidebar synchronously
+        (function loadSidebar() {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '../../components/user-sidebar.html', false);
+            xhr.send();
+            if (xhr.status === 200) {
+                document.getElementById('user-sidebar').innerHTML = xhr.responseText;
+            }
+        })();
+    </script>\n    <script src="../../assets/js/shared/components.js" defer></script>\n    <script src="../../assets/js/shared/header-auth.js" defer></script>\n    <script type="module" src="../../assets/js/shared/main.js"></script>\n</head>
 <body>
 
     <div id="site-header" style="min-height:110px;background:var(--color-bg-light);"></div>
@@ -75,34 +95,14 @@
 
     <div id="site-footer"></div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../../assets/js/shared/auth.js"></script>
-    <script src="../../assets/js/user/loyalty.js"></script>
-    <script>
-        // Authentication Guard
-        (function() {
-            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
-            if (!currentUser) {
-                alert('Vui lòng đăng nhập để truy cập trang này');
-                window.location.href = '/pages/public/login.html';
-                return;
-            }
-        })();
-        
-        // Load sidebar synchronously
-        (function loadSidebar() {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', '../../components/user-sidebar.html', false);
-            xhr.send();
-            if (xhr.status === 200) {
-                document.getElementById('user-sidebar').innerHTML = xhr.responseText;
-            }
-        })();
-    </script>
-    <script src="../../assets/js/shared/components.js" defer></script>
-    <script src="../../assets/js/shared/header-auth.js" defer></script>
-    <script type="module" src="../../assets/js/shared/main.js"></script>
+    
+    
+    
+    
+    
+    
+    
+    
     <div id="site-fab"></div>
 </body>
 </html>

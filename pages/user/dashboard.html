@@ -24,7 +24,53 @@
     <link rel="stylesheet" href="../../assets/css/components/fab.css">
     <!-- Page Specific Style -->
     <link rel="stylesheet" href="../../assets/css/user/dashboard.css">
-</head>
+\n    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="../../assets/js/shared/auth.js" defer></script>
+    <script>
+        // Authentication Guard
+        (function() {
+            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
+            if (!currentUser) {
+                alert('Vui lòng đăng nhập để truy cập trang này');
+                window.location.href = '/pages/public/login.html';
+                return;
+            }
+        })();
+        
+        // Sidebar is injected by components.js (loaded via defer below)
+        
+        // Handle tab switching based on URL parameter
+        (function handleTabs() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentTab = urlParams.get('tab') || 'profile';
+            
+            // Hide all tabs
+            document.querySelectorAll('.dashboard-content-panel').forEach(panel => {
+                panel.style.display = 'none';
+            });
+            
+            // Show current tab
+            const tabMap = {
+                'profile': 'profileTab',
+                'security': 'securityTab'
+            };
+            
+            const activeTabId = tabMap[currentTab] || 'profileTab';
+            const activeTab = document.getElementById(activeTabId);
+            if (activeTab) {
+                activeTab.style.display = 'block';
+            }
+        })();
+    </script>
+    <script src="../../assets/js/shared/components.js" defer></script>
+    <script src="../../assets/js/shared/header-auth.js" defer></script>
+    <script type="module" src="../../assets/js/shared/main.js"></script>
+    <script type="module" src="../../assets/js/user/dashboard.js"></script>
+    <div id="site-fab"></div>\n</head>
 <body>
     <div id="site-header"></div>
 
@@ -378,52 +424,5 @@
     <!-- Toast Container -->
     <div class="toast-container-custom" id="toastContainer"></div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../../assets/js/shared/auth.js"></script>
-    <script>
-        // Authentication Guard
-        (function() {
-            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
-            if (!currentUser) {
-                alert('Vui lòng đăng nhập để truy cập trang này');
-                window.location.href = '/pages/public/login.html';
-                return;
-            }
-        })();
-        
-        // Sidebar is injected by components.js (loaded via defer below)
-        
-        // Handle tab switching based on URL parameter
-        (function handleTabs() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const currentTab = urlParams.get('tab') || 'profile';
-            
-            // Hide all tabs
-            document.querySelectorAll('.dashboard-content-panel').forEach(panel => {
-                panel.style.display = 'none';
-            });
-            
-            // Show current tab
-            const tabMap = {
-                'profile': 'profileTab',
-                'security': 'securityTab'
-            };
-            
-            const activeTabId = tabMap[currentTab] || 'profileTab';
-            const activeTab = document.getElementById(activeTabId);
-            if (activeTab) {
-                activeTab.style.display = 'block';
-            }
-        })();
-    </script>
-    <script src="../../assets/js/shared/components.js" defer></script>
-    <script src="../../assets/js/shared/header-auth.js" defer></script>
-    <script type="module" src="../../assets/js/shared/main.js"></script>
-    <script type="module" src="../../assets/js/user/dashboard.js"></script>
-    <div id="site-fab"></div>
-</body>
+    </body>
 </html>
