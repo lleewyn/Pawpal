@@ -200,7 +200,7 @@
 
 /* Order Summary Box */
 .order-summary-box {
-    background: var(--color-bg-light);
+    background: #f4faf7;
     border-radius: var(--card-border-radius);
     padding: var(--space-md);
     margin-bottom: var(--space-md);

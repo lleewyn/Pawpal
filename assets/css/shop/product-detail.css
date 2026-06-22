@@ -4,7 +4,7 @@
 
 /* ── Product Detail Page Container ─────────────────────────────────────── */
 .product-detail-page {
-    background: var(--color-bg-white);
+    background: #f4faf7;
     min-height: 100vh;
 }
 

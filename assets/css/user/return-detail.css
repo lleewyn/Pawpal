@@ -154,7 +154,7 @@
     text-align: center;
     cursor: pointer;
     transition: var(--transition-smooth);
-    background-color: var(--color-bg-light);
+    background-color: #f4faf7;
 }
 
 .rma-upload-zone:hover {

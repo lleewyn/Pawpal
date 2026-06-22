@@ -3,14 +3,14 @@
    ========================================================================== */
 
 .return-guest-body {
-    background-color: var(--color-bg-light);
+    background-color: #f4faf7;
     color: var(--color-text-dark);
     font-family: var(--font-body);
 }
 
 /* ── Hero Search Section (Initial State) ──────────────────────────────── */
 .lookup-hero {
-    background: var(--color-bg-light);
+    background: #f4faf7;
     padding: calc(var(--space-xl) * 2) 0;
     min-height: 70vh;
     display: flex;

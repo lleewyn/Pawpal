@@ -3,7 +3,7 @@
    ========================================================================== */
 
 .login-page-body {
-    background-color: var(--color-bg-light);
+    background-color: #f4faf7;
     color: var(--color-text-dark);
     font-family: var(--font-body);
 }

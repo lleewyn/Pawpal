@@ -4,7 +4,7 @@
 
 /* ── Page Structure ────────────────────────────────────────────────────── */
 .pet-profile-main {
-    background: var(--color-bg-light);
+    background: #f4faf7;
     min-height: 60vh;
     padding: 20px 0;
 }

@@ -2,7 +2,7 @@
    Booking Page — booking.css
    ========================================================================== */
 
-.booking-page-body { background-color: var(--color-bg-light); }
+.booking-page-body { background-color: #f4faf7; }
 
 /* ── Layout ── */
 .booking-main { padding: 32px 20px 60px; }

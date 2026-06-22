@@ -10,7 +10,7 @@
 .bookings-container,
 .booking-detail-container {
     padding: 20px 0; /* 20px top/bottom */
-    background: var(--color-bg-light);
+    background: #f4faf7;
     min-height: 60vh;
 }
 

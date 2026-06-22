@@ -91,7 +91,7 @@
 
 .delivery-option:hover {
   border-color: var(--color-primary);
-  background: var(--color-bg-light);
+  background: #f4faf7;
 }
 
 .delivery-option.selected {

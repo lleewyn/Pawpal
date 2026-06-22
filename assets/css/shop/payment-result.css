@@ -188,7 +188,7 @@
   display: flex;
   gap: var(--space-sm);
   padding: var(--space-sm);
-  background: var(--color-bg-light);
+  background: #f4faf7;
   border-radius: 8px;
 }
 

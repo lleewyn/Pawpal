@@ -17,7 +17,7 @@
 .empty-wishlist {
     text-align: center;
     padding: var(--space-xl) var(--space-md);
-    background: var(--color-bg-light);
+    background: #f4faf7;
     border: var(--border-card);
     border-radius: var(--card-border-radius);
 }
