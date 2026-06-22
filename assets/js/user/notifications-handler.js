@@ -5,6 +5,24 @@
 (function () {
     const NOTI_KEY = 'pawpal_notifications';
 
+    function getCurrentUser() {
+        try {
+            return JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        } catch {
+            return null;
+        }
+    }
+
+    function canUseNotifications() {
+        const user = getCurrentUser();
+        return Boolean(user && !user.is_temporary);
+    }
+
+    if (!canUseNotifications()) {
+        window.PawPalNotificationsReady = false;
+        return;
+    }
+
     // Dữ liệu mẫu ban đầu nếu localStorage chưa có
     const initialNotifications = [
         {

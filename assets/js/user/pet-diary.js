@@ -34,6 +34,10 @@ export function initPetDiary() {
     if (petIdFromUrl && petSelector) {
         petSelector.value = petIdFromUrl;
         handlePetChange({ target: petSelector });
+    } else {
+        if (typeof renderActiveServicesDashboard === 'function') {
+            renderActiveServicesDashboard();
+        }
     }
 }
 
@@ -74,11 +78,17 @@ function handlePetChange(e) {
     const diaryContent = document.getElementById('diaryContent');
 
     if (!petId) {
-        if (emptyState) emptyState.style.display = 'block';
+        const dashboardState = document.getElementById('dashboardState');
+        if (dashboardState) dashboardState.style.display = 'block';
+        if (typeof renderActiveServicesDashboard === 'function') {
+            renderActiveServicesDashboard();
+        }
         if (diaryContent) diaryContent.style.display = 'none';
         return;
     }
 
+    const dashboardState = document.getElementById('dashboardState');
+    if (dashboardState) dashboardState.style.display = 'none';
     if (emptyState) emptyState.style.display = 'none';
     if (diaryContent) diaryContent.style.display = 'block';
 
@@ -586,4 +596,65 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = String(text ?? '');
     return div.innerHTML;
+}
+
+
+function renderActiveServicesDashboard() {
+    const dashboardState = document.getElementById('dashboardState');
+    const emptyState = document.getElementById('emptyState');
+    const activeContainer = document.getElementById('activeServicesContainer');
+    const grid = document.getElementById('activeServicesGrid');
+    const template = document.getElementById('activeServiceCardTemplate');
+
+    if (!dashboardState || !emptyState || !activeContainer || !grid || !template) return;
+
+    const pets = getPets().filter(p => !p.isArchived);
+    const activeSessions = [];
+
+    pets.forEach(pet => {
+        const logs = getOrSeedTrackerLogs(pet);
+        if (logs && logs.currentSession) {
+            activeSessions.push({ pet, session: logs.currentSession });
+        }
+    });
+
+    if (activeSessions.length === 0) {
+        dashboardState.style.display = 'block';
+        emptyState.style.display = 'block';
+        activeContainer.style.display = 'none';
+        return;
+    }
+
+    // Has active services
+    dashboardState.style.display = 'block';
+    emptyState.style.display = 'none';
+    activeContainer.style.display = 'block';
+    grid.innerHTML = '';
+
+    activeSessions.forEach(item => {
+        const latestEvent = item.session.timeline && item.session.timeline.length > 0 ? item.session.timeline[0] : null;
+        const statusText = latestEvent ? latestEvent.status : item.session.status;
+        const petImage = item.pet.avatar || '../../assets/images/shared/default-pet.png';
+
+        const clone = template.content.cloneNode(true);
+        
+        const img = clone.querySelector('.active-service-avatar');
+        img.src = petImage;
+        img.alt = item.pet.name;
+
+        clone.querySelector('.active-service-name').textContent = item.pet.name;
+        clone.querySelector('.active-service-type').textContent = item.session.service;
+        clone.querySelector('.active-service-badge').textContent = statusText;
+
+        const btn = clone.querySelector('.active-service-btn');
+        btn.addEventListener('click', () => {
+            const selector = document.getElementById('petSelector');
+            if (selector) {
+                selector.value = item.pet.id;
+                selector.dispatchEvent(new Event('change'));
+            }
+        });
+
+        grid.appendChild(clone);
+    });
 }

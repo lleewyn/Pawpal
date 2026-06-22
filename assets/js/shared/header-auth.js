@@ -53,6 +53,14 @@
         const mobileGuestOnly = document.querySelectorAll('.mobile-guest-only');
         const mobileUserOnly = document.querySelectorAll('.mobile-user-only');
         const mobileTempOnly = document.querySelectorAll('.mobile-temp-only');
+        document
+            .querySelectorAll('#primaryNavigation .mobile-guest-only, #primaryNavigation .mobile-user-only, #primaryNavigation .mobile-temp-only, #primaryNavigation .nav-link-cta-mobile')
+            .forEach(el => {
+                const item = el.closest('.nav-item');
+                if (!item) return;
+                item.classList.remove('d-lg-none');
+                item.classList.add('mobile-drawer-only');
+            });
         
         if (!authActions) return; // Header chưa load
         

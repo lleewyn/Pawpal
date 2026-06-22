@@ -72,13 +72,19 @@
 
     function ensureHeaderAuth() {
         var rootPath = getRootPath();
+        var currentUser = null;
+        try {
+            currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        } catch (e) {
+            currentUser = null;
+        }
         if (!document.querySelector('script[src*="header-auth.js"]')) {
             var authScript = document.createElement('script');
             authScript.src = rootPath + 'assets/js/shared/header-auth.js';
             authScript.defer = true;
             document.head.appendChild(authScript);
         }
-        if (!document.querySelector('script[src*="notifications-handler.js"]')) {
+        if (currentUser && !currentUser.is_temporary && !document.querySelector('script[src*="notifications-handler.js"]')) {
             var notiScript = document.createElement('script');
             notiScript.src = rootPath + 'assets/js/user/notifications-handler.js';
             notiScript.defer = true;

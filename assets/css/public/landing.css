@@ -1121,7 +1121,7 @@
 
 .experts-section {
     background-color: var(--color-bg-light);
-    padding: var(--space-lg) 0;
+    padding: var(--space-xl) 0;
 }
 
 .experts-section .section-header {
@@ -1131,7 +1131,7 @@
 }
 
 .experts-container {
-    max-width: 1400px;
+    max-width: 1240px;
     margin: 0 auto;
     padding: 0 var(--container-padding);
 }
@@ -1139,27 +1139,33 @@
 /* --- Bento: 3 cột đều, mỗi cột flex column --- */
 .experts-bento {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1.12fr 1fr;
     gap: var(--space-md);
-    align-items: start;
+    align-items: stretch;
 }
 
 /* Col chung */
 .exp-cell {
     display: flex;
     flex-direction: column;
-    gap: var(--space-sm);
+    background: var(--color-bg-white);
+    border: var(--border-card);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.35s ease;
 }
 
 /* Col 2: text ở trên, ảnh ở dưới — đẩy ảnh xuống cuối */
 .exp-cell--text-top {
-    justify-content: space-between;
+    justify-content: stretch;
 }
 
 /* --- Ảnh variants — mỗi col tỉ lệ khác nhau --- */
 .exp-img {
     overflow: hidden;
     flex-shrink: 0;
+    background: var(--color-primary-light);
 }
 
 .exp-img img {
@@ -1174,22 +1180,34 @@
     
 }
 
+.exp-cell:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-card-hover);
+}
+
+.exp-cell--text-top:hover {
+    transform: translateY(-6px);
+}
+
 /* Col 1: landscape ngang */
 .exp-img--landscape {
     width: 100%;
-    height: 240px;
+    aspect-ratio: 4 / 3;
+    height: auto;
 }
 
 /* Col 2: vuông */
 .exp-img--square {
     width: 100%;
-    height: 200px;
+    aspect-ratio: 2 / 1;
+    height: auto;
 }
 
 /* Col 3: cùng tầm với col 1 */
 .exp-img--portrait {
     width: 100%;
-    height: 240px;
+    aspect-ratio: 4 / 3;
+    height: auto;
 }
 
 /* --- Info block --- */
@@ -1197,6 +1215,12 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    padding: var(--space-md);
+    flex: 1;
+}
+
+.exp-cell--text-top .exp-info {
+    padding-bottom: var(--space-sm);
 }
 
 .exp-name {
@@ -1228,7 +1252,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-top: 4px;
+    margin-top: var(--space-xs);
 }
 
 .exp-stat-item {
@@ -1263,7 +1287,7 @@
 
 /* --- CTA --- */
 .experts-cta {
-    margin-top: var(--space-lg);
+    margin-top: calc(var(--space-xl) + var(--space-sm));
 }
 
 /* --- Responsive --- */
@@ -1271,6 +1295,14 @@
     .experts-bento {
         grid-template-columns: 1fr 1fr;
         gap: var(--space-sm);
+    }
+
+    .exp-cell--text-top {
+        transform: none;
+    }
+
+    .exp-cell--text-top:hover {
+        transform: translateY(-6px);
     }
 
     /* Trên tablet: col 3 span full width */
@@ -1284,6 +1316,10 @@
         aspect-ratio: 1/1;
         width: 240px;
         flex-shrink: 0;
+    }
+
+    .exp-cell:last-child .exp-info {
+        justify-content: center;
     }
 }
 
@@ -1304,6 +1340,10 @@
     .exp-cell:last-child .exp-img--portrait {
         width: 100%;
         aspect-ratio: 4/3;
+    }
+
+    .exp-info {
+        padding: var(--space-sm);
     }
 }
 /* ==========================================================================
@@ -1557,6 +1597,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center 42%;
 }
 
 @media (max-width: 1024px) {
@@ -1569,7 +1610,20 @@
     }
     .promo-banner-image {
         width: 100%;
-        height: 200px;
+        flex: 0 0 150px;
+        height: 150px;
+        min-height: 0;
+    }
+}
+
+@media (max-width: 640px) {
+    .promo-banner-content {
+        padding: var(--space-md);
+    }
+
+    .promo-banner-image {
+        flex-basis: 120px;
+        height: 120px;
     }
 }
 
@@ -1656,6 +1710,17 @@
 .product-card:hover {
     
     box-shadow: var(--shadow-lg);
+}
+
+.svc-landing-card-link {
+    color: inherit;
+    text-decoration: none;
+    display: block;
+}
+
+.svc-landing-card-link:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
 }
 
 .product-image-box {

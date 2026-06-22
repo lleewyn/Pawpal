@@ -1702,26 +1702,31 @@ async function initServicesGrid() {
                 const memberPriceUnit = service.priceDisplay.includes('đêm') ? '/đêm' : '';
                 const imgSrc = service.image.startsWith('http') ? service.image : `../../${service.image}`;
                 const fallbackImg = service.category === 'hotel' ? '../../assets/images/services/hotel.png' : '../../assets/images/services/spa.png';
+                const detailUrl = `../../pages/services/service-detail.html?id=${encodeURIComponent(service.serviceId)}`;
 
                 return `
                     <div class="product-card svc-landing-card" data-category="${service.category}">
-                        <div class="product-image-box">
-                            <img src="${imgSrc}" alt="${service.name}" loading="lazy" onerror="this.src='${fallbackImg}'">
-                            ${service.rating >= 4.8 ? '<span class="tag-badge tag-banchay">Yêu thích</span>' : ''}
-                        </div>
+                        <a href="${detailUrl}" class="svc-landing-card-link" aria-label="Xem chi tiết ${service.name}">
+                            <div class="product-image-box">
+                                <img src="${imgSrc}" alt="${service.name}" loading="lazy" onerror="this.src='${fallbackImg}'">
+                                ${service.rating >= 4.8 ? '<span class="tag-badge tag-banchay">Yêu thích</span>' : ''}
+                            </div>
+                        </a>
                         <div class="product-info">
-                            <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
-                                <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">${service.serviceId}</span>
-                                <div>
-                                    <span class="rating-stars"></span> <span class="rating-score">${service.rating.toFixed(1)}</span> <span class="sold-count">(${service.reviewCount})</span>
+                            <a href="${detailUrl}" class="svc-landing-card-link" aria-label="Xem chi tiết ${service.name}">
+                                <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                                    <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">${service.serviceId}</span>
+                                    <div>
+                                        <span class="rating-stars"></span> <span class="rating-score">${service.rating.toFixed(1)}</span> <span class="sold-count">(${service.reviewCount})</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <h3>${service.name}</h3>
-                            <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${service.description}</p>
-                            <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
-                                <span> ${service.petType}</span>
-                                <span>⏱ ${service.duration || 'Theo ngày'}</span>
-                            </div>
+                                <h3>${service.name}</h3>
+                                <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${service.description}</p>
+                                <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                                    <span> ${service.petType}</span>
+                                    <span>${service.duration || 'Theo ngày'}</span>
+                                </div>
+                            </a>
                             <div class="product-info-footer">
                                 <div class="product-price">
                                     <span class="price-current" style="font-size: 16px;">${formattedPrice}</span>

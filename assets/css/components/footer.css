@@ -320,26 +320,52 @@
 }
 
 @media (max-width: 768px) {
+    .main-footer {
+        padding-top: var(--space-lg);
+    }
+
     .footer-container {
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
+        grid-template-columns: 1fr;
+        gap: var(--space-lg);
+        padding: 0 var(--space-md);
+    }
+
+    .footer-col h4 {
+        margin-bottom: var(--space-sm);
+    }
+
+    .brand-description {
+        max-width: 34rem;
+    }
+
+    .footer-newsletter-form {
+        flex-direction: column;
+        max-width: 360px;
+    }
+
+    .footer-newsletter-form input,
+    .footer-newsletter-form button {
+        width: 100%;
+    }
+
+    .payment-methods {
+        align-items: center;
     }
 
     .map-capsule-wrapper {
-        border-radius: 30px 30px 0 0;
-        height: 160px;
+        border-radius: var(--card-border-radius);
+        height: 180px;
         border-width: 4px;
+        border-bottom: 4px solid var(--color-accent);
     }
 
     .map-badge {
-        font-size: 2rem;
-        padding: 2px 18px;
+        font-size: 1.6rem;
+        padding: 2px 16px;
         border-width: 3px;
     }
-}
 
-@media (max-width: 480px) {
-    .footer-container {
-        grid-template-columns: 1fr;
+    .footer-bottom {
+        padding: var(--space-sm) var(--space-md) 0;
     }
 }
