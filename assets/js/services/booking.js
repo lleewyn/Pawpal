@@ -1171,3 +1171,16 @@ async function loadServicesDirectly() {
         return transformServiceDataDirectly(rawData);
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.addon-qty-control button').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = this.getAttribute('data-target');
+            const delta = parseInt(this.getAttribute('data-delta'), 10);
+            if (target && !isNaN(delta)) {
+                updateAddonQty(target, delta);
+            }
+        });
+    });
+});

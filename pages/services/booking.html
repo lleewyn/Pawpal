@@ -38,7 +38,7 @@
 
 <body class="booking-page-body">
 
-    <div id="site-header" style="min-height:110px;background:var(--color-bg-light);"></div>
+    <div id="site-header" class="min-h-110px bg-bg-light"></div>
 
     <main class="booking-main">
         <div class="container booking-layout">
@@ -181,8 +181,8 @@
                         <!-- Service Search -->
                         <div class="booking-form mb-3">
                             <div class="form-group" style="position: relative;">
-                                <input type="text" id="svcSearchInput" placeholder="Tìm kiếm dịch vụ (vd: Tắm dưỡng, Khử mùi...)" class="w-100" style="padding-left: 36px; box-sizing: border-box">
-                                <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.9rem;"></span>
+                                <input type="text" id="svcSearchInput" placeholder="Tìm kiếm dịch vụ (vd: Tắm dưỡng, Khử mùi...)" class="w-100" class="ps-4">
+                                <span class="input-icon-left"></span>
                             </div>
                         </div>
 
@@ -242,11 +242,11 @@
                                     </div>
                                     <div class="addon-qty-control" id="qtyWalkCtrl" style="display:none;">
                                         <button type="button" class="qty-btn"
-                                            onclick="updateAddonQty('addonWalkQty', -1); event.preventDefault();">-</button>
+                                            data-target="addonWalkQty" data-delta="-1">-</button>
                                         <input type="number" id="addonWalkQty" class="qty-input" value="1" min="1"
                                             readonly>
                                         <button type="button" class="qty-btn"
-                                            onclick="updateAddonQty('addonWalkQty', 1); event.preventDefault();">+</button>
+                                            data-target="addonWalkQty" data-delta="1">+</button>
                                     </div>
                                     <span class="addon-price">40.000đ/lượt</span>
                                 </label>
@@ -259,11 +259,11 @@
                                     </div>
                                     <div class="addon-qty-control" id="qtyPlayCtrl" style="display:none;">
                                         <button type="button" class="qty-btn"
-                                            onclick="updateAddonQty('addonPlayQty', -1); event.preventDefault();">-</button>
+                                            data-target="addonPlayQty" data-delta="-1">-</button>
                                         <input type="number" id="addonPlayQty" class="qty-input" value="1" min="1"
                                             readonly>
                                         <button type="button" class="qty-btn"
-                                            onclick="updateAddonQty('addonPlayQty', 1); event.preventDefault();">+</button>
+                                            data-target="addonPlayQty" data-delta="1">+</button>
                                     </div>
                                     <span class="addon-price">20.000đ/lượt</span>
                                 </label>
@@ -276,11 +276,11 @@
                                     </div>
                                     <div class="addon-qty-control" id="qtyBathCtrl" style="display:none;">
                                         <button type="button" class="qty-btn"
-                                            onclick="updateAddonQty('addonBathQty', -1); event.preventDefault();">-</button>
+                                            data-target="addonBathQty" data-delta="-1">-</button>
                                         <input type="number" id="addonBathQty" class="qty-input" value="1" min="1"
                                             readonly>
                                         <button type="button" class="qty-btn"
-                                            onclick="updateAddonQty('addonBathQty', 1); event.preventDefault();">+</button>
+                                            data-target="addonBathQty" data-delta="1">+</button>
                                     </div>
                                     <span class="addon-price" id="addonBathPriceText">Tuỳ hạng cân</span>
                                 </label>
@@ -298,9 +298,9 @@
                                 <p class="timeslot-label">Chọn khung giờ <span class="required">*</span></p>
                                 <div class="timeslot-availability">
                                     <span class="avail-dot avail-open"></span> Còn trống
-                                    <span class="avail-dot avail-busy" style="margin-left:16px;"></span> Đã đầy
-                                    <span class="avail-dot avail-held" style="margin-left:16px;"></span> Đang giữ chỗ
-                                    <span class="avail-dot avail-soon" style="margin-left:16px;"></span> Quá gần (< 2
+                                    <span class="avail-dot avail-busy" class="ms-3"></span> Đã đầy
+                                    <span class="avail-dot avail-held" class="ms-3"></span> Đang giữ chỗ
+                                    <span class="avail-dot avail-soon" class="ms-3"></span> Quá gần (< 2
                                         tiếng) </div>
                                         <div class="timeslot-grid" id="timeslotGrid">
                                             <!-- Injected by JS -->
@@ -308,7 +308,7 @@
                                 </div>
 
                                 <div class="booking-hold-banner" id="bookingHoldBanner"
-                                    style="display:none; margin: 16px 0; padding:14px; border:1px solid #f9c74f; background:rgba(249,199,79,0.12); border-radius:12px; color:#665200;">
+                                    class="booking-warning-box" style="display:none;">
                                 </div>
 
                                 <div class="staff-selection" id="staffSelection">

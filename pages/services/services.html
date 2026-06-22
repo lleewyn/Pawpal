@@ -32,7 +32,7 @@
 </head>
 <body class="services-page-body">
 
-    <div id="site-header" style="min-height:110px;background:var(--color-bg-light);"></div>
+    <div id="site-header" class="min-h-110px bg-bg-light"></div>
 
     <main class="services-main">
         <!-- Main Layout with Sidebar + Services -->
@@ -54,19 +54,19 @@
                             <h4 class="filter-title">Sắp xếp theo</h4>
                             <div class="filter-options">
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="sortFilter" value="default" checked onchange="applyFilters()">
+                                    <input type="radio" name="sortFilter" value="default" checked>
                                     <span>Mặc định</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="sortFilter" value="price-asc" onchange="applyFilters()">
+                                    <input type="radio" name="sortFilter" value="price-asc">
                                     <span>Giá: Thấp đến Cao</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="sortFilter" value="price-desc" onchange="applyFilters()">
+                                    <input type="radio" name="sortFilter" value="price-desc">
                                     <span>Giá: Cao đến Thấp</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="sortFilter" value="rating-desc" onchange="applyFilters()">
+                                    <input type="radio" name="sortFilter" value="rating-desc">
                                     <span>Đánh giá cao nhất</span>
                                 </label>
                             </div>
@@ -77,19 +77,19 @@
                             <h4 class="filter-title">Danh mục</h4>
                             <div class="filter-options">
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="categoryFilter" value="all" checked onchange="applyFilters()">
+                                    <input type="radio" name="categoryFilter" value="all" checked>
                                     <span>Tất cả dịch vụ</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="categoryFilter" value="spa" onchange="applyFilters()">
+                                    <input type="radio" name="categoryFilter" value="spa">
                                     <span>Pet Spa + Grooming</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="categoryFilter" value="hotel" onchange="applyFilters()">
+                                    <input type="radio" name="categoryFilter" value="hotel">
                                     <span>Pet Hotel</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="categoryFilter" value="taxi" onchange="applyFilters()">
+                                    <input type="radio" name="categoryFilter" value="taxi">
                                     <span>Pet Taxi</span>
                                 </label>
                             </div>
@@ -100,23 +100,23 @@
                             <h4 class="filter-title">Dành cho bé cưng</h4>
                             <div class="filter-options">
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="petFilter" value="all" checked onchange="applyFilters()">
+                                    <input type="radio" name="petFilter" value="all" checked>
                                     <span>Tất cả các bé</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="petFilter" value="dog" onchange="applyFilters()">
+                                    <input type="radio" name="petFilter" value="dog">
                                     <span>Chó</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="petFilter" value="cat" onchange="applyFilters()">
+                                    <input type="radio" name="petFilter" value="cat">
                                     <span>Mèo</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="petFilter" value="rabbit" onchange="applyFilters()">
+                                    <input type="radio" name="petFilter" value="rabbit">
                                     <span>Thỏ</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="petFilter" value="small" onchange="applyFilters()">
+                                    <input type="radio" name="petFilter" value="small">
                                     <span>Thú nhỏ khác</span>
                                 </label>
                             </div>
@@ -127,19 +127,19 @@
                             <h4 class="filter-title">Khoảng giá</h4>
                             <div class="filter-options">
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="priceBucketFilter" value="all" checked onchange="applyFilters()">
+                                    <input type="radio" name="priceBucketFilter" value="all" checked>
                                     <span>Tất cả khoảng giá</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="priceBucketFilter" value="under-150" onchange="applyFilters()">
+                                    <input type="radio" name="priceBucketFilter" value="under-150">
                                     <span>Dưới 150.000đ</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="priceBucketFilter" value="150-300" onchange="applyFilters()">
+                                    <input type="radio" name="priceBucketFilter" value="150-300">
                                     <span>150.000đ - 300.000đ</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="radio" name="priceBucketFilter" value="over-300" onchange="applyFilters()">
+                                    <input type="radio" name="priceBucketFilter" value="over-300">
                                     <span>Trên 300.000đ</span>
                                 </label>
                             </div>
@@ -150,27 +150,27 @@
                             <h4 class="filter-title">Số sao đánh giá</h4>
                             <div class="filter-options">
                                 <label class="filter-checkbox">
-                                    <input type="checkbox" id="ratingAll" checked onchange="handleRatingAllChange(this)">
+                                    <input type="checkbox" id="ratingAll" checked>
                                     <span>Tất cả</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="checkbox" class="rating-star-check" value="5" onchange="handleRatingStarChange()">
+                                    <input type="checkbox" class="rating-star-check" value="5">
                                     <span>5 sao</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="checkbox" class="rating-star-check" value="4" onchange="handleRatingStarChange()">
+                                    <input type="checkbox" class="rating-star-check" value="4">
                                     <span>4 sao</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="checkbox" class="rating-star-check" value="3" onchange="handleRatingStarChange()">
+                                    <input type="checkbox" class="rating-star-check" value="3">
                                     <span>3 sao</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="checkbox" class="rating-star-check" value="2" onchange="handleRatingStarChange()">
+                                    <input type="checkbox" class="rating-star-check" value="2">
                                     <span>2 sao</span>
                                 </label>
                                 <label class="filter-checkbox">
-                                    <input type="checkbox" class="rating-star-check" value="1" onchange="handleRatingStarChange()">
+                                    <input type="checkbox" class="rating-star-check" value="1">
                                     <span>1 sao</span>
                                 </label>
                             </div>
@@ -180,7 +180,7 @@
 
                         <!-- Fixed Footer -->
                         <div class="sidebar-footer">
-                            <button class="btn-clear-filters-full" onclick="clearFilters()">Xóa bộ lọc</button>
+                            <button class="btn-clear-filters-full">Xóa bộ lọc</button>
                         </div>
                     </aside>
 
@@ -193,7 +193,7 @@
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                                 </svg>
-                                <input type="text" id="searchServiceInput" class="toolbar-search" placeholder="Tìm tên dịch vụ..." oninput="applyFilters()">
+                                <input type="text" id="searchServiceInput" class="toolbar-search" placeholder="Tìm tên dịch vụ...">
                             </div>
                         </div>
 
@@ -207,7 +207,7 @@
                             <h3 class="section-subtitle-display">Bảng giá chi tiết dịch vụ</h3>
                             
                             <div class="accordion-item-custom">
-                                <button class="accordion-trigger" onclick="toggleAccordion('spa-accordion')">
+                                <button class="accordion-trigger">
                                     <span>Bảng giá dịch vụ Spa và Làm đẹp theo cân nặng</span>
                                     <span class="accordion-icon">▼</span>
                                 </button>
@@ -254,7 +254,7 @@
                             </div>
 
                             <div class="accordion-item-custom mt-3">
-                                <button class="accordion-trigger" onclick="toggleAccordion('hotel-accordion')">
+                                <button class="accordion-trigger">
                                     <span>Bảng giá dịch vụ Khách sạn lưu trú (Tính theo ngày)</span>
                                     <span class="accordion-icon">▼</span>
                                 </button>
