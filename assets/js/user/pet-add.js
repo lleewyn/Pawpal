@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (otherRadio) {
         otherRadio.addEventListener('change', () => {
-            otherWrap.style.display = otherRadio.checked ? 'block' : 'none';
+            if (otherRadio.checked) otherWrap.classList.remove('d-none'); else otherWrap.classList.add('d-none');
         });
     }
 
@@ -28,5 +28,5 @@ function resetPetForm() {
     if (form) form.reset();
     
     document.getElementById('avatarPreview').src = '';
-    document.getElementById('otherSpeciesWrap').style.display = 'none';
+    document.getElementById('otherSpeciesWrap').classList.add('d-none');
 }

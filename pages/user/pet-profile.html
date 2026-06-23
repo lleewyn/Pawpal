@@ -60,8 +60,8 @@
                 <div class="col-lg-3">
                     <div id="user-sidebar">
                         <!-- Sidebar will be loaded here -->
-                        <div class="dashboard-sidebar" style="min-height: 300px;">
-                            <p style="text-align: center; padding: 20px; color: #999;">Loading...</p>
+                        <div class="dashboard-sidebar">
+                            <p class="text-center p-4 text-muted">Loading...</p>
                         </div>
                     </div>
                 </div>
@@ -182,16 +182,16 @@
                                     <label>Loài <span class="req">*</span></label>
                                     <div class="chip-group" style="flex-wrap: nowrap;">
                                         <input type="radio" name="species" id="dog" value="dog">
-                                        <label for="dog" style="padding: 8px 12px; font-size: 0.8rem;">Chó</label>
+                                        <label for="dog" >Chó</label>
                                         <input type="radio" name="species" id="cat" value="cat">
-                                        <label for="cat" style="padding: 8px 12px; font-size: 0.8rem;">Mèo</label>
+                                        <label for="cat" >Mèo</label>
                                         <input type="radio" name="species" id="rabbit" value="rabbit">
-                                        <label for="rabbit" style="padding: 8px 12px; font-size: 0.8rem;">Thỏ</label>
+                                        <label for="rabbit" >Thỏ</label>
                                         <input type="radio" name="species" id="other" value="other">
-                                        <label for="other" style="padding: 8px 12px; font-size: 0.8rem;">Khác</label>
+                                        <label for="other" >Khác</label>
                                     </div>
                                     <span class="error-msg">Vui lòng chọn loài thú cưng.</span>
-                                    <div id="otherSpeciesWrap" style="display:none; margin-top: 10px;">
+                                    <div id="otherSpeciesWrap" class="mt-2 d-none">
                                         <input type="text" id="otherSpecies" placeholder="Ví dụ: Hamster, Rùa, Chim...">
                                         <span class="error-msg">Vui lòng nhập loài khác.</span>
                                     </div>

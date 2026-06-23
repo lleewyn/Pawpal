@@ -64,6 +64,9 @@ body {
 .empty-state-diary .empty-icon {
     font-size: 4rem;
     margin-bottom: var(--space-sm);
+    color: var(--color-primary-light);
+    display: inline-flex;
+    justify-content: center;
 }
 
 .empty-state-diary .empty-title {
@@ -620,6 +623,7 @@ body {
 .empty-timeline .empty-icon {
     font-size: 4rem;
     margin-bottom: var(--space-sm);
+    color: var(--color-primary-light);
 }
 
 .empty-timeline .empty-desc {

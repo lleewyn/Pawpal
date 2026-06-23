@@ -309,3 +309,97 @@
     .pet-add-page .form-actions { flex-direction: column-reverse; }
     .pet-add-page .btn-cancel, .pet-add-page .btn-save { width: 100%; justify-content: center; }
 }
+
+/* Extracted from inline styles pet-profile */
+.pet-profile-action-section {
+    display: flex; justify-content: flex-end; padding-right: 16px; margin-bottom: 24px;
+}
+.btn-add-pet-header {
+    padding: 8px 16px; font-size: 0.85rem;
+}
+.empty-state-icon {
+    color: var(--color-primary-light);
+    display: inline-flex;
+    justify-content: center;
+    margin-bottom: var(--space-sm);
+}
+
+/* Pet Offer Card */
+.pet-offer-card {
+    background-color: #fef9c3; border: 1px solid #fef08a; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: var(--shadow-card);
+}
+.pet-offer-card h3 {
+    font-family: var(--font-heading); font-size: 1.3rem; color: #713f12; font-weight: 700; margin-bottom: 12px;
+}
+.pet-offer-card p {
+    font-size: 0.9rem; color: #854d0e; line-height: 1.5; margin-bottom: 24px;
+}
+.pet-offer-card .btn-offer-cta {
+    background-color: #064e3b; color: #fff; border: none; border-radius: 20px; padding: 10px 24px; font-weight: 700; display: inline-block; width: max-content; font-size: 0.85rem; text-decoration: none; align-self: flex-end;
+}
+
+/* Pet Reminder Card */
+.pet-reminder-card {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; height: 100%; box-shadow: var(--shadow-card); display: flex; flex-direction: column; justify-content: space-between;
+}
+.pet-reminder-card h3 {
+    font-family: var(--font-heading); font-size: 1.25rem; color: var(--color-text-dark); font-weight: 700; margin-bottom: 16px;
+}
+.pet-reminder-card .reminder-list {
+    display: flex; gap: 12px; width: 100%;
+}
+.pet-reminder-card .reminder-item {
+    flex: 1; border-radius: 12px; padding: 12px 16px;
+}
+.pet-reminder-card .reminder-item.yellow {
+    background-color: #fef9c3; border: 1px solid #fef08a;
+}
+.pet-reminder-card .reminder-item.green {
+    background-color: #e8f5e9; border: 1px solid #c8e6c9;
+}
+.pet-reminder-card .reminder-item .title {
+    font-weight: 700; font-size: 0.85rem;
+}
+.pet-reminder-card .reminder-item.yellow .title { color: #713f12; }
+.pet-reminder-card .reminder-item.green .title { color: #1b5e20; }
+
+.pet-reminder-card .reminder-item .time {
+    font-size: 0.75rem; margin-top: 2px;
+}
+.pet-reminder-card .reminder-item.yellow .time { color: #854d0e; }
+.pet-reminder-card .reminder-item.green .time { color: #2e7d32; }
+
+.pet-reminder-card .link-view-all {
+    font-size: 0.85rem; font-weight: 700; color: var(--color-primary); text-decoration: none; display: block; text-align: center; margin-top: 16px;
+}
+
+/* Modal Cleanups */
+.modal-content-large.clean {
+    padding: 0; background: transparent; border: none; box-shadow: none;
+}
+.pet-add-page {
+    border-radius: 16px; overflow: hidden; background: var(--cream); position: relative;
+}
+.modal-close.abs-top-right {
+    position: absolute; top: 24px; right: 24px; z-index: 100;
+}
+.page-wrap {
+    padding: 30px; max-height: 85vh; overflow-y: auto;
+}
+.sm-label {
+    padding: 8px 12px; font-size: 0.8rem;
+}
+.fs-sm {
+    font-size: 0.875rem;
+}
+
+/* JS Add Card */
+.add-card-icon {
+    width: 48px; height: 48px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #475569;
+}
+.pet-add-card h3 {
+    font-family: var(--font-heading); font-size: 1.25rem; font-weight: 600; color: var(--color-text-dark); margin-bottom: 8px;
+}
+.pet-add-card p {
+    font-size: 0.8rem; color: var(--color-text-light); line-height: 1.5; margin: 0;
+}

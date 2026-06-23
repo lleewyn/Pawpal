@@ -134,7 +134,7 @@ function renderLoyaltyPage(user, vouchers) {
     if (warningBanner) {
         if (user.points >= 50) {
             // Giả lập điểm sắp hết hạn trong 30 ngày tới
-            warningBanner.style.display = 'block';
+            warningBanner.classList.remove('d-none');
             warningBanner.innerHTML = `
                 <div class="warning-banner-content">
                     <span class="warning-icon"></span>
@@ -142,7 +142,7 @@ function renderLoyaltyPage(user, vouchers) {
                 </div>
             `;
         } else {
-            warningBanner.style.display = 'none';
+            warningBanner.classList.add('d-none');
         }
     }
 
@@ -169,8 +169,8 @@ function renderLoyaltyPage(user, vouchers) {
         }
 
         cardEl.innerHTML = `
-            <div class="loyalty-top-flex" style="display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: stretch; margin-bottom: var(--space-lg);">
-                <div class="pawpass-card-wrapper" style="width: 340px; max-width: 100%; flex-shrink: 0;">
+            <div class="loyalty-top-flex">
+                <div class="pawpass-card-wrapper">
                     <div id="pawpassVirtualCard" class="pawpass-virtual-card ${tierClass}">
                         <div class="card-shimmer"></div>
                         <div class="card-glow-element"></div>
@@ -199,19 +199,19 @@ function renderLoyaltyPage(user, vouchers) {
                     </div>
                 </div>
 
-                <div class="loyalty-card-details-panel" style="flex: 1; min-width: 280px; display: flex; flex-direction: column; justify-content: center; margin-bottom: 0; padding: var(--space-md);">
-                    <div class="points-balance-summary" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-sm); margin-bottom: var(--space-sm);">
-                        <span class="label" style="font-weight: 600; color: var(--color-text-dark);">Điểm tích lũy hiện tại:</span>
-                        <strong id="current-points-display" style="font-size: 1.6rem; color: var(--color-primary-dark);">${user.points} Paw Points</strong>
+                <div class="loyalty-card-details-panel">
+                    <div class="points-balance-summary">
+                        <span class="label">Điểm tích lũy hiện tại:</span>
+                        <strong id="current-points-display">${user.points} Paw Points</strong>
                     </div>
-                    <div class="progress-upgrade-label" style="font-weight: 600; font-size: var(--fs-small); margin-bottom: 8px;">Tiến trình nâng hạng:</div>
-                    <div class="progress-upgrade-wrapper" style="margin-bottom: 8px;">
+                    <div class="progress-upgrade-label">Tiến trình nâng hạng:</div>
+                    <div class="progress-upgrade-wrapper">
                         <div class="progress-bar-container">
                             <div class="progress-bar-fill" style="width: ${progressPercent}%"></div>
                         </div>
-                        <span class="progress-stats" style="font-size: var(--fs-small); font-weight: 700;">${new Intl.NumberFormat('vi-VN').format(currentSpend)}đ / ${new Intl.NumberFormat('vi-VN').format(nextTierLimit)}đ</span>
+                        <span class="progress-stats">${new Intl.NumberFormat('vi-VN').format(currentSpend)}đ / ${new Intl.NumberFormat('vi-VN').format(nextTierLimit)}đ</span>
                     </div>
-                    <p class="upgrade-remaining-desc" style="margin: 0; font-size: var(--fs-small); font-style: italic; opacity: 0.85;">${upgradeText}</p>
+                    <p class="upgrade-remaining-desc">${upgradeText}</p>
                 </div>
             </div>
         `;
@@ -527,21 +527,21 @@ function showSecurityModal(voucherId) {
         const modalHtml = `
             <div class="modal fade" id="security-auth-modal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content" style="border: none; border-radius: var(--card-border-radius); box-shadow: var(--shadow-card-hover);">
-                        <div class="modal-header" style="border: none; padding: var(--space-md) var(--space-md) 0 var(--space-md);">
-                            <h5 class="modal-title fw-bold" style="color: var(--color-primary-dark); font-family: var(--font-heading); font-size: var(--fs-h3);">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold">
                                 Bảo mật tài khoản
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body" style="padding: var(--space-md);">
-                            <p style="color: var(--color-text-dark); font-size: var(--fs-body); margin: 0;">
+                        <div class="modal-body">
+                            <p>
                                 Bạn cần thiết lập mật khẩu tài khoản để sử dụng tính năng đổi điểm thưởng Paw Points.
                             </p>
                         </div>
-                        <div class="modal-footer" style="border: none; padding: 0 var(--space-md) var(--space-md) var(--space-md); gap: 8px;">
-                            <button type="button" class="btn-gray" data-bs-dismiss="modal" style="margin: 0;">Để sau</button>
-                            <button type="button" class="btn-orange" id="btn-redirect-setup-pwd" style="margin: 0;">Thiết lập mật khẩu ngay</button>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-gray" data-bs-dismiss="modal">Để sau</button>
+                            <button type="button" class="btn-orange" id="btn-redirect-setup-pwd">Thiết lập mật khẩu ngay</button>
                         </div>
                     </div>
                 </div>

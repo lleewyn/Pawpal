@@ -202,8 +202,8 @@ function renderActions() {
     
     if (isGuest) {
         // Guest mode - hide actions, show notice
-        actionsContainer.style.display = 'none';
-        guestNotice.style.display = 'flex';
+        actionsContainer.classList.add('d-none');
+        guestNotice.classList.remove('d-none');
         return;
     }
     
@@ -260,7 +260,7 @@ function renderActions() {
 
             if (alreadyReturned) {
                 buttons.push(`
-                    <a href="/pages/user/return-detail.html?orderId=${currentOrder.id}" class="btn-track-order" style="text-decoration: none;">
+                    <a href="/pages/user/return-detail.html?orderId=${currentOrder.id}" class="btn-track-order text-decoration-none">
                         Chi tiết đổi trả
                     </a>
                 `);
@@ -285,7 +285,7 @@ function renderActions() {
             );
             if (allReviewed) {
                  buttons.push(`
-                    <button class="btn-review" onclick="showOrderReviewsModal('${currentOrder.id}')" style="border: none;">
+                    <button class="btn-review border-0" onclick="showOrderReviewsModal('${currentOrder.id}')">
                         Xem đánh giá
                     </button>
                 `);
@@ -293,7 +293,7 @@ function renderActions() {
 
             // 3. Reorder
             buttons.push(`
-                <button class="btn-view-detail" onclick="reorder('${currentOrder.id}')" style="border: none;">
+                <button class="btn-view-detail border-0" onclick="reorder('${currentOrder.id}')">
                     Mua lại
                 </button>
             `);
@@ -312,8 +312,15 @@ function payNow() {
 
 function cancelOrder() {
     if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
-        alert('Đơn hàng đã được hủy');
-        // TODO: Call API to cancel order
+        currentOrder.status = 'cancelled';
+        currentOrder.timeline.push({
+            status: 'cancelled',
+            timestamp: new Date().toISOString(),
+            title: 'Đã hủy',
+            description: 'Khách hàng đã hủy đơn hàng'
+        });
+        saveOrderToLocalStorage(currentOrder);
+        alert('Đơn hàng đã được hủy.');
         window.location.href = '/pages/user/orders.html';
     }
 }
@@ -332,10 +339,18 @@ function confirmReceived() {
             title: 'Hoàn thành',
             description: 'Khách hàng xác nhận đã nhận hàng'
         });
-        
+        saveOrderToLocalStorage(currentOrder);
         alert('Cảm ơn bạn! Đơn hàng đã hoàn thành.');
-        // TODO: Call API to update order
         location.reload();
+    }
+}
+
+function saveOrderToLocalStorage(order) {
+    const allOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+    const index = allOrders.findIndex(o => o.id === order.id);
+    if (index !== -1) {
+        allOrders[index] = order;
+        localStorage.setItem('pawpal_orders', JSON.stringify(allOrders));
     }
 }
 
@@ -351,20 +366,20 @@ function showOrderReviewsModal(orderId) {
     let reviewItems = myReviews.map(r => {
         let stars = '&#9733;'.repeat(r.rating) + '&#9734;'.repeat(5 - r.rating);
         return `
-            <div style="border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px;">
-                <div style="color: #f59e0b; font-size: 1.2rem; margin-bottom: 8px;">${stars}</div>
-                <p style="margin: 0; font-size: 0.95rem; color: #333;">${r.comment || '<i>Không có nhận xét</i>'}</p>
+            <div class="review-item">
+                <div class="review-stars">${stars}</div>
+                <p class="review-comment">${r.comment || '<i>Không có nhận xét</i>'}</p>
             </div>
         `;
     }).join('');
 
     // Create a simple modal
     const modalHtml = `
-        <div id="review-modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px;">
-            <div style="background: #fff; width: 100%; max-width: 500px; border-radius: 12px; padding: 24px; position: relative;">
-                <button onclick="document.getElementById('review-modal-overlay').remove()" style="position: absolute; top: 12px; right: 16px; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
+        <div id="review-modal-overlay" class="review-modal-overlay">
+            <div class="review-modal-content">
+                <button onclick="document.getElementById('review-modal-overlay').remove()" class="review-modal-close">&times;</button>
                 <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1.2rem; color: var(--color-primary-dark);">Đánh giá của bạn</h3>
-                <div style="max-height: 60vh; overflow-y: auto;">
+                <div class="review-modal-body">
                     ${reviewItems}
                 </div>
             </div>
@@ -383,7 +398,7 @@ function showError(message) {
         <div class="empty-state">
             <div class="empty-state-icon">•</div>
             <p class="empty-state-text">${message}</p>
-            <a href="/pages/user/orders.html" class="btn-cta" style="margin-top: var(--space-md)">
+            <a href="/pages/user/orders.html" class="btn-cta mt-4">
                 Quay lại danh sách đơn hàng
             </a>
         </div>

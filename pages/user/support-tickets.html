@@ -2,6 +2,7 @@
 <html lang="vi">
 
 <head>
+    <script src="../../assets/js/user/dashboard-init.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="view-transition" content="same-origin">
@@ -28,6 +29,13 @@
     <link rel="stylesheet" href="../../assets/css/user/dashboard.css">
     <link rel="stylesheet" href="../../assets/css/user/support.css">
     <script src="../../assets/js/user/support-tickets.js" defer></script>
+    <!-- Global Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="../../assets/js/shared/auth.js" defer></script>
+    <script src="../../assets/js/shared/components.js" defer></script>
+    <script src="../../assets/js/shared/header-auth.js" defer></script>
+    <script type="module" src="../../assets/js/shared/main.js"></script>
+    
 </head>
 
 <body>
@@ -39,8 +47,8 @@
                 <!-- Sidebar Navigation -->
                 <div class="col-lg-3">
                     <div id="user-sidebar">
-                        <div class="dashboard-sidebar" style="min-height: 300px;">
-                            <p style="text-align: center; padding: 20px; color: #999;">Loading...</p>
+                        <div class="dashboard-sidebar">
+                            <p class="text-center p-4 text-muted">Loading...</p>
                         </div>
                     </div>
                 </div>
@@ -51,19 +59,19 @@
                         <!-- Header Section -->
                         <div class="support-header mb-5" style="display: flex; justify-content: space-between; align-items: center;">
                             <h3 style="font-weight: 700; color: var(--color-primary-dark); margin: 0;">Yêu cầu hỗ trợ của bạn</h3>
-                            <a href="support-create.html" class="btn-cta" style="padding: 10px 24px; font-size: var(--fs-small); white-space: nowrap;">Gửi yêu cầu mới</a>
+                            <a href="support-create.html" class="btn-cta btn-new-ticket">Gửi yêu cầu mới</a>
                         </div>
 
                         <!-- Tickets Table -->
                         <div class="table-responsive tickets-table-container" id="ticketsTableArea">
-                            <table class="table align-middle" style="border: 1px solid var(--color-border); border-radius: var(--card-border-radius); overflow: hidden;">
+                            <table class="table align-middle table-tickets-wrapper">
                                 <thead>
                                     <tr>
                                         <th scope="col">Mã Ticket</th>
                                         <th scope="col">Chủ đề</th>
-                                        <th scope="col" style="text-align: center;">Trạng thái</th>
-                                        <th scope="col" style="text-align: center;">Độ ưu tiên</th>
-                                        <th scope="col" style="text-align: center;">Hành động</th>
+                                        <th scope="col" class="text-center">Trạng thái</th>
+                                        <th scope="col" class="text-center">Độ ưu tiên</th>
+                                        <th scope="col" class="text-center">Hành động</th>
                                     </tr>
                                 </thead>
                                 <tbody id="ticketsListTableBody">
@@ -73,48 +81,48 @@
                         </div>
 
                         <!-- Ticket Detail Panel -->
-                        <div class="ticket-detail-modal mt-5" id="ticketDetailPanel" style="display: none; border: 1px solid var(--color-border); border-radius: var(--card-border-radius); padding: 24px; background: var(--color-bg-white);">
+                        <div class="ticket-detail-modal mt-5 d-none" id="ticketDetailPanel">
                             <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                                 <div>
-                                    <h4 id="detailTicketTitle" style="font-weight: 700; color: var(--color-primary-dark); margin: 0;">#Mã - Tiêu đề</h4>
-                                    <p class="text-muted small mb-0" id="detailTicketStatus" style="margin-top: 4px;">Trạng thái: ...</p>
+                                    <h4 id="detailTicketTitle" class="detail-ticket-title">#Mã - Tiêu đề</h4>
+                                    <p class="text-muted small mb-0 mt-1" id="detailTicketStatus">Trạng thái: ...</p>
                                 </div>
-                                <button class="btn-close-panel" id="btnCloseDetailPanel" style="background:none; border:none; font-size: 1.5rem; cursor:pointer; color: var(--color-text-light);">&times;</button>
+                                <button class="btn-close-panel" id="btnCloseDetailPanel">&times;</button>
                             </div>
 
                             <!-- Messages Timeline -->
-                            <div class="ticket-timeline-wrapper" id="ticketTimelineMessages" style="max-height: 400px; overflow-y: auto; padding: 16px; margin-bottom: 24px; background: var(--color-neutral-light); border-radius: 8px;">
+                            <div class="ticket-timeline-wrapper" id="ticketTimelineMessages">
                                 <!-- JS renders timeline chat messages here -->
                             </div>
 
                             <!-- Reply Editor -->
                             <div class="reply-editor-area" id="replyEditorArea">
                                 <div class="form-group mb-3">
-                                    <label style="font-weight: 600; margin-bottom: 8px; display: block; color: var(--color-primary-dark);">Nhập phản hồi của bạn</label>
-                                    <textarea id="replyTextarea" class="form-control" rows="3" placeholder="Nhập tin nhắn trả lời..." style="border: 1px solid var(--color-border); border-radius: 8px;"></textarea>
+                                    <label class="reply-label">Nhập phản hồi của bạn</label>
+                                    <textarea id="replyTextarea" class="form-control reply-textarea" rows="3" placeholder="Nhập tin nhắn trả lời..."></textarea>
                                 </div>
                                 <div class="d-flex gap-2 justify-content-end">
-                                    <button class="btn-green-outline" id="btnActionCloseTicket" style="border-radius: var(--border-radius-pill); font-weight: 700; padding: 10px 20px;">Đóng hỗ trợ</button>
-                                    <button class="btn-cta" id="btnSendReply" style="padding: 10px 24px;">Gửi phản hồi</button>
+                                    <button class="btn-green-outline btn-close-ticket" id="btnActionCloseTicket">Đóng hỗ trợ</button>
+                                    <button class="btn-cta btn-send-reply" id="btnSendReply">Gửi phản hồi</button>
                                 </div>
                             </div>
 
                             <!-- Rating Area (shown when ticket is completed) -->
-                            <div class="rating-feedback-area mt-4 p-4 bg-light rounded" id="ratingFeedbackArea" style="display: none; border: 1px solid var(--color-border);">
-                                <h5 style="font-weight: 700; color: var(--color-primary-dark); margin-bottom: 12px;">Đánh giá chất lượng hỗ trợ</h5>
+                            <div class="rating-feedback-area mt-4 p-4 bg-light rounded d-none" id="ratingFeedbackArea">
+                                <h5 class="rating-title">Đánh giá chất lượng hỗ trợ</h5>
                                 <p class="text-muted small mb-3">Ý kiến của bạn giúp PawPal cải thiện dịch vụ!</p>
-                                <div class="star-rating-holder mb-3" id="starRatingHolder" style="display: flex; gap: 8px;">
-                                    <button class="star-btn" data-value="1" style="background:none; border:none; font-size: 1.5rem; color: var(--color-border); cursor: pointer; transition: all 0.2s;"></button>
-                                    <button class="star-btn" data-value="2" style="background:none; border:none; font-size: 1.5rem; color: var(--color-border); cursor: pointer; transition: all 0.2s;"></button>
-                                    <button class="star-btn" data-value="3" style="background:none; border:none; font-size: 1.5rem; color: var(--color-border); cursor: pointer; transition: all 0.2s;"></button>
-                                    <button class="star-btn" data-value="4" style="background:none; border:none; font-size: 1.5rem; color: var(--color-border); cursor: pointer; transition: all 0.2s;"></button>
-                                    <button class="star-btn" data-value="5" style="background:none; border:none; font-size: 1.5rem; color: var(--color-border); cursor: pointer; transition: all 0.2s;"></button>
+                                <div class="star-rating-holder mb-3 d-flex gap-2" id="starRatingHolder">
+                                    <button class="star-btn" data-value="1"></button>
+                                    <button class="star-btn" data-value="2"></button>
+                                    <button class="star-btn" data-value="3"></button>
+                                    <button class="star-btn" data-value="4"></button>
+                                    <button class="star-btn" data-value="5"></button>
                                 </div>
                                 <div class="form-group mb-3">
-                                    <label style="font-weight: 600; margin-bottom: 8px; display: block; color: var(--color-primary-dark); font-size: var(--fs-small);">Nhận xét ngắn (tùy chọn)</label>
-                                    <input type="text" id="ratingComment" class="form-control" placeholder="Chia sẻ ý kiến của bạn..." style="border: 1px solid var(--color-border); border-radius: 8px;">
+                                    <label class="rating-comment-label">Nhận xét ngắn (tùy chọn)</label>
+                                    <input type="text" id="ratingComment" class="form-control rating-comment" placeholder="Chia sẻ ý kiến của bạn...">
                                 </div>
-                                <button class="btn-cta" id="btnSubmitRating" style="padding: 8px 20px; font-size: var(--fs-small);">Gửi đánh giá</button>
+                                <button class="btn-cta btn-submit-rating" id="btnSubmitRating">Gửi đánh giá</button>
                             </div>
                         </div>
 
@@ -127,12 +135,6 @@
     <div id="site-footer"></div>
     <div id="site-fab"></div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../../assets/js/shared/auth.js"></script>
-    <script src="../../assets/js/shared/components.js" defer></script>
-    <script src="../../assets/js/shared/header-auth.js" defer></script>
-    <script type="module" src="../../assets/js/shared/main.js"></script>
     </body>
 
 </html>

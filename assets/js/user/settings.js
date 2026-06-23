@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentUser.is_temporary) {
         const warning = document.getElementById('tempAccountWarning');
         if (warning) {
-            warning.style.display = 'block';
+            warning.classList.remove('d-none');
         }
     }
 
@@ -215,7 +215,7 @@ function initChangePasswordForm() {
                 users[userIdx].is_temporary = false;
                 currentUser.is_temporary = false;
                 const warning = document.getElementById('tempAccountWarning');
-                if (warning) warning.style.display = 'none';
+                if (warning) warning.classList.add('d-none');
             }
             saveUsers(users);
             
@@ -293,10 +293,10 @@ function initPasswordAccordion() {
     if (toggleBtn && formContainer && icon) {
         toggleBtn.addEventListener('click', () => {
             if (formContainer.style.display === 'none') {
-                formContainer.style.display = 'block';
+                formContainer.classList.remove('d-none');
                 icon.style.transform = 'rotate(180deg)';
             } else {
-                formContainer.style.display = 'none';
+                formContainer.classList.add('d-none');
                 icon.style.transform = 'rotate(0deg)';
             }
         });

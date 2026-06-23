@@ -665,3 +665,90 @@
 }
 
 
+
+/* Replaced from inline styles */
+.loyalty-top-flex {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    align-items: stretch;
+    margin-bottom: var(--space-lg);
+}
+.pawpass-card-wrapper {
+    width: 340px;
+    max-width: 100%;
+    flex-shrink: 0;
+}
+.loyalty-card-details-panel {
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-bottom: 0;
+    padding: var(--space-md);
+}
+.points-balance-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+.points-balance-summary .label {
+    font-weight: 600;
+    color: var(--color-text-dark);
+}
+.points-balance-summary #current-points-display {
+    font-size: 1.6rem;
+    color: var(--color-primary-dark);
+}
+.progress-upgrade-label {
+    font-weight: 600;
+    font-size: var(--fs-small);
+    margin-bottom: 8px;
+}
+.progress-upgrade-wrapper {
+    margin-bottom: 8px;
+}
+.progress-upgrade-wrapper .progress-stats {
+    font-size: var(--fs-small);
+    font-weight: 700;
+}
+.upgrade-remaining-desc {
+    margin: 0;
+    font-size: var(--fs-small);
+    font-style: italic;
+    opacity: 0.85;
+}
+#security-auth-modal .modal-content {
+    border: none;
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--shadow-card-hover);
+}
+#security-auth-modal .modal-header {
+    border: none;
+    padding: var(--space-md) var(--space-md) 0 var(--space-md);
+}
+#security-auth-modal .modal-title {
+    color: var(--color-primary-dark);
+    font-family: var(--font-heading);
+    font-size: var(--fs-h3);
+}
+#security-auth-modal .modal-body {
+    padding: var(--space-md);
+}
+#security-auth-modal .modal-body p {
+    color: var(--color-text-dark);
+    font-size: var(--fs-body);
+    margin: 0;
+}
+#security-auth-modal .modal-footer {
+    border: none;
+    padding: 0 var(--space-md) var(--space-md) var(--space-md);
+    gap: 8px;
+}
+#security-auth-modal .modal-footer button {
+    margin: 0;
+}

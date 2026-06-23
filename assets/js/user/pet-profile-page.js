@@ -52,10 +52,10 @@ function populatePetForm(pet) {
 
     const otherWrap = document.getElementById('otherSpeciesWrap');
     if (pet.species === 'other' && otherWrap) {
-        otherWrap.style.display = 'block';
+        otherWrap.classList.remove('d-none');
         setValue('otherSpecies', pet.otherSpecies || '');
     } else {
-        if (otherWrap) otherWrap.style.display = 'none';
+        if (otherWrap) otherWrap.classList.add('d-none');
         setValue('otherSpecies', '');
     }
 
@@ -88,7 +88,7 @@ function resetPetForm() {
     const petIdInput = document.getElementById('petId');
     if (petIdInput) petIdInput.value = '';
     const otherSpeciesWrap = document.getElementById('otherSpeciesWrap');
-    if (otherSpeciesWrap) otherSpeciesWrap.style.display = 'none';
+    if (otherSpeciesWrap) otherSpeciesWrap.classList.add('d-none');
     const avatarPreview = document.getElementById('avatarPreview');
     const avatarCircle = document.getElementById('avatarCircle');
     if (avatarPreview) {
@@ -97,7 +97,7 @@ function resetPetForm() {
             avatarCircle.classList.remove('has-image');
         }
     }
-    document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.error-msg').forEach(el => el.classList.add('d-none'));
 }
 
 // Render danh sách
@@ -113,16 +113,16 @@ function renderPetGrids() {
     if (activeGrid) {
         activeGrid.innerHTML = '';
         if (activePets.length === 0) {
-            document.getElementById('emptyStateActive').style.display = 'block';
+            document.getElementById('emptyStateActive').classList.remove('d-none');
         } else {
-            document.getElementById('emptyStateActive').style.display = 'none';
+            document.getElementById('emptyStateActive').classList.add('d-none');
             activePets.forEach(pet => activeGrid.appendChild(createPetCard(pet)));
             
             // Append the "Thêm bé mới" action card at the end of active grid
             const addCard = document.createElement('div');
             addCard.className = 'pet-card pet-card-add-new';
             addCard.style.border = '2px dashed #cbd5e1';
-            addCard.style.display = 'flex';
+            addCard.classList.remove('d-none');
             addCard.style.flexDirection = 'column';
             addCard.style.alignItems = 'center';
             addCard.style.justifyContent = 'center';
@@ -133,11 +133,11 @@ function renderPetGrids() {
             addCard.style.cursor = 'pointer';
             
             addCard.innerHTML = `
-                <div style="width: 48px; height: 48px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #475569;">
+                <div class="add-card-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </div>
-                <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 600; color: var(--color-text-dark); margin-bottom: 8px;">Thêm bé mới</h3>
-                <p style="font-size: 0.8rem; color: var(--color-text-light); line-height: 1.5; margin: 0;">Nhấn để đăng ký hồ sơ cho thành viên mới của gia đình.</p>
+                <h3>Thêm bé mới</h3>
+                <p>Nhấn để đăng ký hồ sơ cho thành viên mới của gia đình.</p>
             `;
             addCard.addEventListener('click', () => {
                 openPetFormModal();
@@ -150,9 +150,9 @@ function renderPetGrids() {
     if (archiveGrid) {
         archiveGrid.innerHTML = '';
         if (archivedPets.length === 0) {
-            document.getElementById('emptyStateArchive').style.display = 'block';
+            document.getElementById('emptyStateArchive').classList.remove('d-none');
         } else {
-            document.getElementById('emptyStateArchive').style.display = 'none';
+            document.getElementById('emptyStateArchive').classList.add('d-none');
             archivedPets.forEach(pet => archiveGrid.appendChild(createPetCard(pet, true)));
         }
     }
@@ -260,29 +260,29 @@ function setupForm() {
         const speciesField = document.querySelector('input[name="species"]')?.closest('.field');
         const speciesError = speciesField?.querySelector('.error-msg');
 
-        document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.error-msg').forEach(el => el.classList.add('d-none'));
 
         if (!petName) {
             errors.push('name');
-            nameField.nextElementSibling.style.display = 'block';
+            nameField.nextElementSibling.classList.remove('d-none');
         }
 
         if (!species) {
             errors.push('species');
-            if (speciesError) speciesError.style.display = 'block';
+            if (speciesError) speciesError.classList.remove('d-none');
             showToast('Vui lòng chọn loài thú cưng.', 'error');
         }
 
         if (species === 'other' && !otherSpecies) {
             errors.push('otherSpecies');
             const otherSpeciesError = document.querySelector('#otherSpeciesWrap .error-msg');
-            if (otherSpeciesError) otherSpeciesError.style.display = 'block';
+            if (otherSpeciesError) otherSpeciesError.classList.remove('d-none');
             showToast('Vui lòng nhập loài khác.', 'error');
         }
 
         if (isNaN(weight) || weight <= 0) {
             errors.push('weight');
-            weightField.nextElementSibling.style.display = 'block';
+            weightField.nextElementSibling.classList.remove('d-none');
         }
 
         const avatarInput = document.getElementById('avatar-input');

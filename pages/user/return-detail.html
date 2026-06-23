@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+    <script src="../../assets/js/user/dashboard-init.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết yêu cầu đổi trả - PawPal</title>
@@ -35,8 +36,8 @@
     <div class="orders-page-wrapper">
         <!-- User Sidebar -->
         <div id="user-sidebar">
-            <div class="dashboard-sidebar" style="min-height:300px;">
-                <p style="text-align:center;padding:20px;color:#999;">Loading...</p>
+            <div class="dashboard-sidebar">
+                <p class="text-center p-4 text-muted">Loading...</p>
             </div>
         </div>
 
@@ -44,47 +45,47 @@
         <main class="orders-main-content">
 
             <!-- Back link -->
-            <div style="margin-bottom: var(--space-md);">
-                <a href="/pages/user/orders.html" style="color: var(--color-primary); text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">
+            <div class="mb-4">
+                <a href="/pages/user/orders.html" class="rma-back-link">
                     Quay lại danh sách đơn hàng
                 </a>
             </div>
 
             <!-- RMA Main Info -->
-            <div class="info-card" style="margin-bottom: var(--space-md); border-radius: var(--card-border-radius); border: var(--border-card); background: var(--color-bg-white); padding: var(--space-md);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-sm);">
+            <div class="info-card" class="mb-4">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                     <div>
-                        <h2 style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h2); margin: 0 0 var(--space-xs) 0;" id="rma-id-title">Yêu cầu Đổi trả ...</h2>
-                        <p style="font-size: var(--fs-small); color: var(--color-text-light); margin: 0;" id="rma-date">Ngày tạo: ...</p>
+                        <h2 class="rma-title" id="rma-id-title">Yêu cầu Đổi trả ...</h2>
+                        <p class="rma-date" id="rma-date">Ngày tạo: ...</p>
                     </div>
-                    <span class="status-badge" style="background-color: var(--color-accent); color: var(--color-primary-dark); font-weight: 700; padding: 6px 16px; border-radius: var(--border-radius-pill); font-size: var(--fs-small);" id="rma-status-badge">Đang xử lý</span>
+                    <span class="status-badge rma-status-badge" id="rma-status-badge">Đang xử lý</span>
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); align-items: start; margin-bottom: var(--space-md);">
+            <div class="rma-grid">
                 <!-- Left: Products + Details -->
-                <div style="display: flex; flex-direction: column; gap: var(--space-md);">
-                    <section class="info-card" style="border-radius: var(--card-border-radius); border: var(--border-card); background: var(--color-bg-white); padding: var(--space-md);">
-                        <h3 style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h3); margin-top: 0; margin-bottom: var(--space-sm);">Sản phẩm đổi trả</h3>
-                        <div id="rma-products-list" style="display: flex; flex-direction: column; gap: var(--space-sm);">
+                <div class="d-flex flex-column gap-3">
+                    <section class="info-card" >
+                        <h3 class="rma-section-title">Sản phẩm đổi trả</h3>
+                        <div id="rma-products-list" class="d-flex flex-column gap-2">
                             <!-- Rendered by JS -->
                         </div>
                     </section>
 
-                    <section class="info-card" style="border-radius: var(--card-border-radius); border: var(--border-card); background: var(--color-bg-white); padding: var(--space-md);">
-                        <h3 style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h3); margin-top: 0; margin-bottom: var(--space-sm);">Chi tiết lý do</h3>
-                        <p style="font-size: var(--fs-body); color: var(--color-text-dark); margin-bottom: var(--space-xs); font-weight: bold;">
-                            Lý do: <span id="rma-reason-text" style="font-weight: normal;">...</span>
+                    <section class="info-card" >
+                        <h3 class="rma-section-title">Chi tiết lý do</h3>
+                        <p class="rma-reason-label">
+                            Lý do: <span id="rma-reason-text" class="fw-normal">...</span>
                         </p>
-                        <p style="font-size: var(--fs-body); color: var(--color-text-light); margin: 0; line-height: 1.5;" id="rma-description-text">
+                        <p class="rma-desc" id="rma-description-text">
                             Không có mô tả chi tiết.
                         </p>
                     </section>
                 </div>
 
                 <!-- Right: Timeline progress -->
-                <section class="info-card" style="border-radius: var(--card-border-radius); border: var(--border-card); background: var(--color-bg-white); padding: var(--space-md);">
-                    <h3 style="font-family: var(--font-heading); color: var(--color-primary-dark); font-size: var(--fs-h3); margin-top: 0; margin-bottom: var(--space-sm);">Tiến độ xử lý</h3>
+                <section class="info-card" >
+                    <h3 class="rma-section-title">Tiến độ xử lý</h3>
                     <div class="rma-timeline" id="rma-timeline">
                         <!-- Timeline rendered by JS -->
                     </div>
@@ -92,7 +93,7 @@
             </div>
 
             <!-- Shipping Instruction Box (Shown based on state) -->
-            <div class="rma-instruction-box" id="rma-shipping-box" style="display: none; margin-bottom: var(--space-md);">
+            <div class="rma-instruction-box d-none mb-4" id="rma-shipping-box">
                 <h4 class="rma-instruction-title">Hướng dẫn gửi hàng trả</h4>
                 <div class="rma-instruction-content">
                     <p>Quý khách vui lòng đóng gói sản phẩm nguyên vẹn vào hộp, ghi mã phiếu <strong id="rma-code-bold">RMA-XXXXX</strong> bên ngoài vỏ hộp và gửi về địa chỉ sau:</p>
@@ -101,16 +102,16 @@
                         <li><strong>Số điện thoại:</strong> 0901 234 567</li>
                         <li><strong>Địa chỉ:</strong> 123 Đường số 4, Phường Thảo Điền, TP. Thủ Đức</li>
                     </ul>
-                    <p style="margin-bottom: 0;">• <strong>Chi phí vận chuyển:</strong> <span id="rma-shipping-fee-policy">PawPal chịu 100% phí ship (do lỗi từ phía cửa hàng)</span>.</p>
+                    <p class="mb-0">• <strong>Chi phí vận chuyển:</strong> <span id="rma-shipping-fee-policy">PawPal chịu 100% phí ship (do lỗi từ phía cửa hàng)</span>.</p>
                 </div>
             </div>
 
             <!-- Contact options -->
-            <div style="display: flex; gap: var(--space-sm); justify-content: center; margin-top: var(--space-lg);">
-                <button class="btn-green-outline" onclick="window.open('https://zalo.me/pawpal', '_blank')" style="display: inline-flex; align-items: center; gap: 8px;">
+            <div class="d-flex justify-content-center gap-2 mt-5">
+                <button class="btn-green-outline" onclick="window.open('https://zalo.me/pawpal', '_blank')" class="d-inline-flex align-items-center gap-2">
                     Nhắn tin qua Zalo hỗ trợ
                 </button>
-                <a href="tel:0901234567" class="btn-green-outline" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <a href="tel:0901234567" class="btn-green-outline" class="text-decoration-none d-inline-flex align-items-center gap-2">
                     Gọi Hotline: 0901 234 567
                 </a>
             </div>

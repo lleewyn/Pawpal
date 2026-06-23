@@ -231,8 +231,8 @@ function showGuestCancelOTPFlow(user) {
                     <div class="modal-body">
                         <p>PawPal đã gửi mã xác thực (OTP) qua SMS đến số điện thoại <strong>${user.phone}</strong>.</p>
                         <div class="form-group mb-3">
-                            <label for="cancelOtpInput" class="form-label" style="font-weight:bold;">Nhập mã OTP (Mã test: 555666)</label>
-                            <input type="text" id="cancelOtpInput" class="form-control text-center" style="font-size: 1.5rem; letter-spacing: 0.5rem;" maxlength="6" placeholder="******">
+                            <label for="cancelOtpInput" class="form-label" class="fw-bold">Nhập mã OTP (Mã test: 555666)</label>
+                            <input type="text" id="cancelOtpInput" class="form-control text-center" class="otp-input" maxlength="6" placeholder="******">
                             <div class="invalid-feedback d-none" id="cancelOtpError">Mã OTP không chính xác, vui lòng thử lại.</div>
                         </div>
                     </div>
@@ -286,10 +286,10 @@ function showGuestActionChoices(user) {
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body text-center">
-                        <p style="font-size:0.95rem; line-height:1.5;">Để tự hủy lịch trực tuyến trên website, bạn vui lòng thiết lập mật khẩu cho tài khoản để bảo vệ thông tin nhé!</p>
-                        <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
+                        <p class="cancel-desc">Để tự hủy lịch trực tuyến trên website, bạn vui lòng thiết lập mật khẩu cho tài khoản để bảo vệ thông tin nhé!</p>
+                        <div class="d-flex flex-column gap-2 mt-4">
                             <button class="btn-cta" id="choiceSetupPassBtn"> Thiết lập mật khẩu ngay</button>
-                            <a href="tel:0987654321" class="btn-green-outline" style="text-decoration:none;" id="choiceCallHotlineBtn"> Gọi Hotline hỗ trợ hủy thủ công</a>
+                            <a href="tel:0987654321" class="btn-green-outline" class="text-decoration-none" id="choiceCallHotlineBtn"> Gọi Hotline hỗ trợ hủy thủ công</a>
                         </div>
                     </div>
                 </div>

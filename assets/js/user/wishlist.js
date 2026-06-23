@@ -247,13 +247,13 @@
         countSpan.textContent = rawWishlist.length;
         
         if (wishlistItems.length === 0) {
-            emptyState.style.display = 'block';
-            grid.style.display = 'none';
+            emptyState.classList.remove('d-none');
+            grid.classList.add('d-none');
             return;
         }
         
-        emptyState.style.display = 'none';
-        grid.style.display = 'grid';
+        emptyState.classList.add('d-none');
+        grid.classList.remove('d-none');
         
         grid.innerHTML = wishlistItems.map(product => {
             const hasDiscount = product.originalPrice && product.originalPrice > product.price;

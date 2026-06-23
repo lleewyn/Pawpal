@@ -64,7 +64,7 @@
 }
 
 .session-card-header:hover {
-    background: var(--color-bg-light);
+    background: #f4faf7;
 }
 
 .session-card-info {
@@ -234,4 +234,11 @@
     .session-card-body {
         transition: none;
     }
+}
+
+.empty-state-diary .empty-icon {
+    color: var(--color-primary-light);
+    display: inline-flex;
+    justify-content: center;
+    margin-bottom: var(--space-sm);
 }

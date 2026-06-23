@@ -214,6 +214,7 @@
 }
 
 .empty-icon {
+    color: var(--color-primary-light);
     font-size: 4rem;
     margin-bottom: var(--space-md);
 }

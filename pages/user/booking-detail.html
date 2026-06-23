@@ -42,6 +42,7 @@
     <script type="module" src="../../assets/js/shared/main.js"></script>
     <script type="module" src="../../assets/js/user/booking-detail.js"></script>
     <div id="site-fab"></div>
+    <link rel="stylesheet" href="../../assets/css/user/booking-detail.css">
 </head>
 
 <body>
@@ -52,7 +53,7 @@
         <div class="container-xl">
             <div class="error-banner-content">
                 <span class="error-icon" aria-hidden="true"
-                    style="color: var(--color-danger); font-size: 1.25rem;">!</span>
+                    class="text-danger fs-5">!</span>
                 <div class="error-text">
                     <strong>Đã quá thời gian tự thay đổi lịch tự động</strong>
                     <p>Mã đơn: <strong id="bannerBookingCode">-</strong> | Vui lòng gọi Hotline: <strong>0987 654
@@ -70,8 +71,8 @@
                 <div class="col-lg-3">
                     <div id="user-sidebar">
                         <!-- Sidebar will be loaded here -->
-                        <div class="dashboard-sidebar" style="min-height: 300px;">
-                            <p style="text-align: center; padding: 20px; color: #999;">Loading...</p>
+                        <div class="dashboard-sidebar">
+                            <p class="text-center p-4 text-muted">Loading...</p>
                         </div>
                     </div>
                 </div>
@@ -165,7 +166,7 @@
 
                         <!-- Policy Note -->
                         <div class="policy-note">
-                            <div class="policy-icon" style="color: var(--color-accent);">
+                            <div class="policy-icon text-accent">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round">
@@ -201,7 +202,7 @@
                 </div>
                 <div class="modal-body">
                     <p>Bạn có chắc chắn muốn hủy lịch hẹn này không?</p>
-                    <p class="text-muted" style="font-size: 0.875rem;">Mã đặt lịch: <strong
+                    <p class="text-muted fs-sm">Mã đặt lịch: <strong
                             id="modalBookingCode">-</strong></p>
                 </div>
                 <div class="modal-footer">

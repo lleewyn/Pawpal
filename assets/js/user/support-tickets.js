@@ -34,12 +34,12 @@ function ensureSupportReady(callback) {
 
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td style="font-weight: 700;">#${ticket.id}</td>
+                        <td class="fw-bold">#${ticket.id}</td>
                         <td>${ticket.title}</td>
-                        <td style="text-align: center;"><span class="badge-status ${statusClass}">${statusLabel}</span></td>
-                        <td style="text-align: center;"><span class="badge-priority ${ticket.priority === 'Cao' ? 'badge-priority-high' : 'badge-priority-normal'}">${ticket.priority}</span></td>
-                        <td style="text-align: center;">
-                            <button class="btn-green-outline btn-view-ticket" data-id="${ticket.id}" style="font-size: var(--fs-small); padding: 4px 12px; border-radius: var(--border-radius-pill);">Chi tiết</button>
+                        <td class="text-center"><span class="badge-status ${statusClass}">${statusLabel}</span></td>
+                        <td class="text-center"><span class="badge-priority ${ticket.priority === 'Cao' ? 'badge-priority-high' : 'badge-priority-normal'}">${ticket.priority}</span></td>
+                        <td class="text-center">
+                            <button class="btn-green-outline btn-view-ticket" data-id="${ticket.id}">Chi tiết</button>
                         </td>
                     `;
 
@@ -86,24 +86,24 @@ function ensureSupportReady(callback) {
                     }
 
                     item.innerHTML = `
-                        <div style="margin-bottom: 8px;">
-                            <span style="font-weight: 700; color: ${isCskh ? 'var(--color-primary)' : 'var(--color-text-dark)'};">
+                        <div class="mb-2">
+                            <span class="fw-bold ${isCskh ? 'text-primary' : 'text-dark'}">
                                 ${senderName}
                             </span>
-                            <span class="text-muted small" style="margin-left: 12px;">${timeStr}</span>
+                            <span class="text-muted small ms-2">${timeStr}</span>
                         </div>
-                        <p style="margin: 0; padding: 8px 12px; background: ${isCskh ? 'var(--color-bg-white)' : 'rgba(48,121,227,0.08)'}; border-radius: 6px; border-left: 3px solid ${isCskh ? 'var(--color-primary)' : 'var(--color-border)'}; color: var(--color-text-dark);">${msg.text}</p>
+                        <p class="ticket-msg-bubble ${isCskh ? 'cskh' : 'user'}">${msg.text}</p>
                     `;
                     messagesContainer.appendChild(item);
                 });
 
                 // Cập nhật trạng thái hiển thị panel
-                document.getElementById('ticketDetailPanel').style.display = 'block';
+                document.getElementById('ticketDetailPanel').classList.remove('d-none');
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
                 // Ẩn/hiện editor dựa theo trạng thái
                 if (ticket.status === 'completed') {
-                    document.getElementById('replyEditorArea').style.display = 'none';
+                    document.getElementById('replyEditorArea').classList.add('d-none');
                     document.getElementById('ratingFeedbackArea').style.display = ticket.rating === null ? 'block' : 'none';
                     // Hiển thị rating hiện tại nếu đã có
                     if (ticket.rating) {
@@ -114,8 +114,8 @@ function ensureSupportReady(callback) {
                         });
                     }
                 } else {
-                    document.getElementById('replyEditorArea').style.display = 'block';
-                    document.getElementById('ratingFeedbackArea').style.display = 'none';
+                    document.getElementById('replyEditorArea').classList.remove('d-none');
+                    document.getElementById('ratingFeedbackArea').classList.add('d-none');
                 }
             }
 
@@ -132,8 +132,8 @@ function ensureSupportReady(callback) {
 
             // Nhấn Đóng hỗ trợ
             document.getElementById('btnActionCloseTicket').addEventListener('click', () => {
-                document.getElementById('replyEditorArea').style.display = 'none';
-                document.getElementById('ratingFeedbackArea').style.display = 'block';
+                document.getElementById('replyEditorArea').classList.add('d-none');
+                document.getElementById('ratingFeedbackArea').classList.remove('d-none');
             });
 
             // Rating Stars click
@@ -153,12 +153,12 @@ function ensureSupportReady(callback) {
                 const comment = document.getElementById('ratingComment').value;
                 window.PawPalSupport.closeAndRateTicket(activeTicketId, currentSelectedRating, comment);
                 alert('PawPal cảm ơn đánh giá của bạn rất nhiều ạ!');
-                document.getElementById('ticketDetailPanel').style.display = 'none';
+                document.getElementById('ticketDetailPanel').classList.add('d-none');
                 renderTable();
             });
 
             document.getElementById('btnCloseDetailPanel').addEventListener('click', () => {
-                document.getElementById('ticketDetailPanel').style.display = 'none';
+                document.getElementById('ticketDetailPanel').classList.add('d-none');
             });
 
             // Event listener để re-render

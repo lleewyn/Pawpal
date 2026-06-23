@@ -411,3 +411,15 @@
         width: 100%;
     }
 }
+
+/* Appended rules from inline styles */
+.order-card-body {
+    cursor: pointer;
+}
+.order-card-footer {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}

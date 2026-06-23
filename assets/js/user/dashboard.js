@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentUser.is_temporary) {
         const warning = document.getElementById('tempAccountWarning');
         if (warning) {
-            warning.style.display = 'block';
+            warning.classList.remove('d-none');
         }
     }
 
@@ -176,14 +176,14 @@ function initProfileEditForm(user) {
         if(dobInput) dobInput.value = user.dob || '';
         if(addressInputEdit) addressInputEdit.value = user.address || '';
         
-        editSection.style.display = 'block';
-        if(displaySection) displaySection.style.display = 'none';
-        editButton.style.display = 'none';
+        editSection.classList.remove('d-none');
+        if(displaySection) displaySection.classList.add('d-none');
+        editButton.classList.add('d-none');
     }
 
     function closeEditForm() {
-        editSection.style.display = 'none';
-        if(displaySection) displaySection.style.display = 'flex';
+        editSection.classList.add('d-none');
+        if(displaySection) displaySection.classList.remove('d-none');
         editButton.style.display = 'inline-block';
     }
 
@@ -245,13 +245,13 @@ function initAddressEditForm(user) {
 
     btnEdit.addEventListener('click', () => {
         addressInput.value = user.address || '';
-        viewCard.style.display = 'none';
-        editCard.style.display = 'block';
+        viewCard.classList.add('d-none');
+        editCard.classList.remove('d-none');
     });
 
     btnCancel.addEventListener('click', () => {
-        editCard.style.display = 'none';
-        viewCard.style.display = 'block';
+        editCard.classList.add('d-none');
+        viewCard.classList.remove('d-none');
     });
 
     btnSave.addEventListener('click', () => {
@@ -261,8 +261,8 @@ function initAddressEditForm(user) {
         updateCurrentUserRecord(updatedUser);
         loadProfileData(updatedUser);
         
-        editCard.style.display = 'none';
-        viewCard.style.display = 'block';
+        editCard.classList.add('d-none');
+        viewCard.classList.remove('d-none');
         showToast('success', 'Đã cập nhật địa chỉ thành công!');
         
         // Cần update biến user trong closure nếu muốn edit tiếp đúng data (mặc dù updateCurrentUserRecord đã làm)

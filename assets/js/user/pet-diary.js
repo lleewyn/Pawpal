@@ -79,18 +79,18 @@ function handlePetChange(e) {
 
     if (!petId) {
         const dashboardState = document.getElementById('dashboardState');
-        if (dashboardState) dashboardState.style.display = 'block';
+        if (dashboardState) dashboardState.classList.remove('d-none');
         if (typeof renderActiveServicesDashboard === 'function') {
             renderActiveServicesDashboard();
         }
-        if (diaryContent) diaryContent.style.display = 'none';
+        if (diaryContent) diaryContent.classList.add('d-none');
         return;
     }
 
     const dashboardState = document.getElementById('dashboardState');
-    if (dashboardState) dashboardState.style.display = 'none';
-    if (emptyState) emptyState.style.display = 'none';
-    if (diaryContent) diaryContent.style.display = 'block';
+    if (dashboardState) dashboardState.classList.add('d-none');
+    if (emptyState) emptyState.classList.add('d-none');
+    if (diaryContent) diaryContent.classList.remove('d-none');
 
     currentPetId = petId;
     loadPetDiary(petId);
@@ -271,11 +271,11 @@ function renderTimeline(timeline) {
 
     if (!timeline || timeline.length === 0) {
         wrapper.innerHTML = '';
-        if (emptyTimeline) emptyTimeline.style.display = 'block';
+        if (emptyTimeline) emptyTimeline.classList.remove('d-none');
         return;
     }
 
-    if (emptyTimeline) emptyTimeline.style.display = 'none';
+    if (emptyTimeline) emptyTimeline.classList.add('d-none');
 
     // Sort newest-to-oldest (AC3.2.1)
     const sorted = [...timeline].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -619,16 +619,16 @@ function renderActiveServicesDashboard() {
     });
 
     if (activeSessions.length === 0) {
-        dashboardState.style.display = 'block';
-        emptyState.style.display = 'block';
-        activeContainer.style.display = 'none';
+        dashboardState.classList.remove('d-none');
+        emptyState.classList.remove('d-none');
+        activeContainer.classList.add('d-none');
         return;
     }
 
     // Has active services
-    dashboardState.style.display = 'block';
-    emptyState.style.display = 'none';
-    activeContainer.style.display = 'block';
+    dashboardState.classList.remove('d-none');
+    emptyState.classList.add('d-none');
+    activeContainer.classList.remove('d-none');
     grid.innerHTML = '';
 
     activeSessions.forEach(item => {

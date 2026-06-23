@@ -42,10 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Render Products
             const prodContainer = document.getElementById('rma-products-list');
             prodContainer.innerHTML = rmaData.products.map(p => `
-                <div class="rma-product-item" style="border: none; padding: 0;">
-                    <img src="${p.image}" alt="${p.name}" class="rma-product-thumb" style="width: 60px; height: 60px;">
+                <div class="rma-product-item border-0 p-0">
+                    <img src="${p.image}" alt="${p.name}" class="rma-product-thumb">
                     <div class="rma-product-info">
-                        <h5 class="rma-product-name" style="font-size: 0.95rem;">${p.name}</h5>
+                        <h5 class="rma-product-name">${p.name}</h5>
                         <p class="rma-product-meta">Số lượng: ${p.quantity} • Đơn giá: ${new Intl.NumberFormat('vi-VN').format(p.price)}đ</p>
                     </div>
                 </div>
@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     policySpan.innerHTML = 'PawPal chịu 100% phí ship (do lỗi hỏng hoặc sai sót của cửa hàng)';
                 }
                 
-                shippingBox.style.display = 'block';
+                shippingBox.classList.remove('d-none');
             }
         });
 

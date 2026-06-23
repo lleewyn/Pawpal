@@ -17,8 +17,12 @@ const ordersState = {
 // Load orders data
 async function loadOrders() {
     try {
-        const response = await fetch('/data/orders.json');
-        const orders = await response.json();
+        let orders = JSON.parse(localStorage.getItem('pawpal_orders') || 'null');
+        if (!Array.isArray(orders) || orders.length === 0) {
+            const response = await fetch('/data/orders.json');
+            orders = await response.json();
+            localStorage.setItem('pawpal_orders', JSON.stringify(orders));
+        }
         
         // Giả sử user hiện tại là USER-123
         ordersState.allOrders = orders.filter(order => order.userId === 'USER-123');
@@ -143,12 +147,12 @@ function createOrderCard(order) {
     const reviewActionHTML = isCompleted
         ? allReviewed
             ? `<a href="/pages/user/order-detail.html?id=${order.id}#reviews"
-                  class="btn-track-order" style="text-decoration: none;"
+                  class="btn-track-order" class="text-decoration-none"
                   aria-label="Xem đánh giá đơn hàng ${order.id}">
                    Xem đánh giá
                </a>`
             : `<a href="/pages/user/order-detail.html?id=${order.id}#reviews"
-                  class="btn-review" style="text-decoration: none;"
+                  class="btn-review" class="text-decoration-none"
                   aria-label="Đánh giá đơn hàng ${order.id}">
                    Đánh giá
                </a>`
@@ -174,7 +178,7 @@ function createOrderCard(order) {
     if (returnAllowed) {
         if (alreadyReturned) {
             returnActionHTML = `
-                <a href="/pages/user/return-detail.html?orderId=${order.id}" class="btn-track-order" style="text-decoration: none;">
+                <a href="/pages/user/return-detail.html?orderId=${order.id}" class="btn-track-order" class="text-decoration-none">
                     Chi tiết đổi trả
                 </a>
             `;
@@ -195,7 +199,7 @@ function createOrderCard(order) {
     }
 
     const reorderActionHTML = isCompleted 
-        ? `<button class="btn-view-detail" onclick="reorder('${order.id}')" style="border: none;">Mua lại</button>`
+        ? `<button class="btn-view-detail border-0" onclick="reorder('${order.id}')">Mua lại</button>`
         : '';
 
     let footerButtonsHTML = '';
@@ -211,7 +215,7 @@ function createOrderCard(order) {
             <button class="btn-track-order" onclick="contactHotline('${order.id}')">
                 Liên hệ hotline
             </button>
-            <button class="btn-track-order" onclick="cancelOrder('${order.id}')" style="color: var(--color-danger); border-color: var(--color-danger);">
+            <button class="btn-track-order text-danger border-danger" onclick="cancelOrder('${order.id}')">
                 Hủy đơn hàng
             </button>
         `;
@@ -234,7 +238,7 @@ function createOrderCard(order) {
                     ${statusLabel}
                 </span>
             </div>
-            <div class="order-card-body" onclick="window.location.href='/pages/user/order-detail.html?id=${order.id}'" style="cursor: pointer;" title="Nhấn để xem chi tiết đơn hàng">
+            <div class="order-card-body" onclick="window.location.href='/pages/user/order-detail.html?id=${order.id}'" title="Nhấn để xem chi tiết đơn hàng">
                 <div class="product-preview">
                     <img src="${firstProduct.image}" 
                          alt="${firstProduct.name}" 
@@ -252,7 +256,7 @@ function createOrderCard(order) {
                     <span class="summary-value">${formatCurrency(order.pricing.total)}</span>
                 </div>
             </div>
-            <div class="order-card-footer" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+            <div class="order-card-footer">
                 ${footerButtonsHTML}
             </div>
         </article>
@@ -268,7 +272,7 @@ function showEmptyState(message) {
             <p class="empty-state-text">${message}</p>
         </div>
     `;
-    document.getElementById('pagination').style.display = 'none';
+    document.getElementById('pagination').classList.add('d-none');
 }
 
 // Render pagination
@@ -276,11 +280,11 @@ function renderPagination() {
     const totalPages = Math.ceil(ordersState.filteredOrders.length / ordersState.ordersPerPage);
     
     if (totalPages <= 1) {
-        document.getElementById('pagination').style.display = 'none';
+        document.getElementById('pagination').classList.add('d-none');
         return;
     }
     
-    document.getElementById('pagination').style.display = 'flex';
+    document.getElementById('pagination').classList.remove('d-none');
     
     const prevBtn = document.getElementById('prev-page');
     const nextBtn = document.getElementById('next-page');
@@ -318,7 +322,20 @@ function contactHotline(orderId) {
 
 function cancelOrder(orderId) {
     if (confirm(`Bạn có chắc chắn muốn hủy đơn hàng ${orderId}?`)) {
-        alert(`Đã gửi yêu cầu hủy đơn hàng ${orderId}`);
+        const order = ordersState.allOrders.find(o => o.id === orderId);
+        if (!order) {
+            alert('Không tìm thấy đơn hàng để hủy.');
+            return;
+        }
+
+        order.status = 'cancelled';
+        order.updatedAt = new Date().toISOString();
+        saveOrderToLocalStorage(order);
+
+        updateTabCounts();
+        applyFilters();
+
+        alert(`Đơn hàng ${orderId} đã được chuyển sang trạng thái Đã hủy.`);
     }
 }
 
@@ -344,6 +361,15 @@ function formatDate(dateString) {
         hour: '2-digit',
         minute: '2-digit'
     }).format(date);
+}
+
+function saveOrderToLocalStorage(order) {
+    const allOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+    const index = allOrders.findIndex(o => o.id === order.id);
+    if (index !== -1) {
+        allOrders[index] = order;
+        localStorage.setItem('pawpal_orders', JSON.stringify(allOrders));
+    }
 }
 
 // Utility: Get status label

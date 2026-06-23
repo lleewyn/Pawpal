@@ -50,13 +50,13 @@ function handlePetChange(e) {
     const historyContent = document.getElementById('historyContent');
 
     if (!petId) {
-        if (emptyState) emptyState.style.display = 'block';
-        if (historyContent) historyContent.style.display = 'none';
+        if (emptyState) emptyState.classList.remove('d-none');
+        if (historyContent) historyContent.classList.add('d-none');
         return;
     }
 
-    if (emptyState) emptyState.style.display = 'none';
-    if (historyContent) historyContent.style.display = 'block';
+    if (emptyState) emptyState.classList.add('d-none');
+    if (historyContent) historyContent.classList.remove('d-none');
 
     currentPetId = petId;
     loadCareHistory(petId);
