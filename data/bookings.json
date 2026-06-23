@@ -1,0 +1,35 @@
+[
+  {
+    "id": "BKG-1001",
+    "userId": "USER-001",
+    "petId": "PET-001",
+    "serviceName": "Tắm sấy trọn gói",
+    "date": "2026-06-25",
+    "time": "14:00",
+    "status": "upcoming",
+    "price": 250000,
+    "branch": "PawPal Chi nhánh Quận 1"
+  },
+  {
+    "id": "BKG-1002",
+    "userId": "USER-001",
+    "petId": "PET-002",
+    "serviceName": "Khám sức khỏe tổng quát",
+    "date": "2026-06-10",
+    "time": "09:30",
+    "status": "completed",
+    "price": 500000,
+    "branch": "PawPal Chi nhánh Quận 10"
+  },
+  {
+    "id": "BKG-1003",
+    "userId": "USER-ADMIN",
+    "petId": "PET-003",
+    "serviceName": "Khách sạn thú cưng (3 ngày)",
+    "date": "2026-07-01",
+    "time": "08:00",
+    "status": "upcoming",
+    "price": 1200000,
+    "branch": "PawPal Chi nhánh Quận 1"
+  }
+]

@@ -17,7 +17,7 @@
         for (const term of searchTerms) {
             const idx = pathname.toLowerCase().indexOf(term);
             if (idx !== -1) {
-                const subPath = pathname.substring(idx + 1); // "pages/public/landing.html"
+                const subPath = pathname.substring(idx + 1); // "pages/public/landing/landing.html"
                 const depth = subPath.split('/').length - 1;
                 return '../'.repeat(depth) || './';
             }
@@ -96,7 +96,7 @@
                         </div>
                     </div>
                 </div>
-                <a href="${root}pages/shop/cart.html" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi" style="display: flex; align-items: center; justify-content: center; color: var(--color-text-dark); transition: var(--transition-smooth);">
+                <a href="${root}pages/shop/cart/cart.html" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi" style="display: flex; align-items: center; justify-content: center; color: var(--color-text-dark); transition: var(--transition-smooth);">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="9" cy="21" r="1"></circle>
                         <circle cx="20" cy="21" r="1"></circle>
@@ -122,21 +122,21 @@
                             </div>
                         </div>
                         <div class="dropdown-divider"></div>
-                        <a href="${root}pages/user/dashboard.html" class="dropdown-item">
+                        <a href="${root}pages/user/dashboard/dashboard.html" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="12" cy="7" r="4"></circle>
                             </svg>
                             Tài khoản của tôi
                         </a>
-                        <a href="${root}pages/user/pet-profile.html" class="dropdown-item">
+                        <a href="${root}pages/user/pet-profile/pet-profile.html" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="10" r="3"/>
                                 <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/>
                             </svg>
                             Hồ sơ bé cưng
                         </a>
-                        <a href="${root}pages/user/bookings.html" class="dropdown-item">
+                        <a href="${root}pages/user/bookings/bookings.html" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                                 <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -145,7 +145,7 @@
                             </svg>
                             Lịch hẹn của tôi
                         </a>
-                        <a href="${root}pages/user/orders.html" class="dropdown-item">
+                        <a href="${root}pages/user/orders/orders.html" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                                 <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -153,14 +153,14 @@
                             </svg>
                             Đơn hàng của tôi
                         </a>
-                        <a href="${root}pages/user/pet-diary.html" class="dropdown-item">
+                        <a href="${root}pages/user/pet-diary/pet-diary.html" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
                                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
                             </svg>
                             Nhật ký chăm sóc
                         </a>
-                        <a href="${root}pages/user/loyalty.html" class="dropdown-item">
+                        <a href="${root}pages/user/loyalty/loyalty.html" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                             </svg>
@@ -201,7 +201,7 @@
                     </svg>
                     <span>Tài khoản tạm</span>
                 </div>
-                <a href="${root}pages/public/login.html?action=setup-password" class="btn-signup">Kích hoạt tài khoản</a>
+                <a href="${root}pages/public/login/login.html?action=setup-password" class="btn-signup">Kích hoạt tài khoản</a>
             `;
             
             // Cập nhật Mobile Nav
@@ -219,7 +219,7 @@
             
             // Khôi phục nút Đăng nhập / Đăng ký mặc định trên desktop
             authActions.innerHTML = `
-                <a href="${root}pages/public/login.html" class="login-btn">
+                <a href="${root}pages/public/login/login.html" class="login-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -227,7 +227,7 @@
                     </svg>
                     <span>Đăng nhập</span>
                 </a>
-                <a href="${root}pages/public/login.html#register" class="btn-signup">Đăng ký</a>
+                <a href="${root}pages/public/login/login.html#register" class="btn-signup">Đăng ký</a>
             `;
             
             // Cập nhật Mobile Nav
@@ -287,7 +287,7 @@
                 e.preventDefault();
                 if (confirm('Bạn có chắc muốn đăng xuất?')) {
                     localStorage.removeItem('pawpal_current_user');
-                    window.location.href = '/pages/public/landing.html';
+                    window.location.href = '/pages/public/landing/landing.html';
                 }
             });
         });

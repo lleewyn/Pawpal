@@ -44,8 +44,19 @@
         return depth <= 1 ? './' : '../'.repeat(depth - 1);
     }
 
+    // Expose globally for other scripts
+    window.pawpalGetRootPath = getRootPath;
+
     function cleanInjectedHtml(html) {
         // Dùng DOMParser để an toàn hơn — tránh regex xoá nhầm nội dung HTML
+        var rootPath = getRootPath();
+        
+        // Convert absolute paths inside components to proper relative paths
+        html = html.replace(/(src|href)="\/([^"]*)"/g, function(match, attr, p1) {
+            if (p1.startsWith('/') || p1.startsWith('http') || p1.startsWith('data:')) return match;
+            return attr + '="' + rootPath + p1 + '"';
+        });
+
         var parser = new DOMParser();
         var doc = parser.parseFromString(html, 'text/html');
 
@@ -206,11 +217,11 @@
     function initComponents() {
         var root = getRootPath();
         console.log('[components.js] root detected:', root);
-        injectComponent('site-header', root + 'components/header.html');
-        injectComponent('site-footer', root + 'components/footer.html');
-        injectComponent('site-fab', root + 'components/fab.html');
+        injectComponent('site-header', root + 'components/header/header.html');
+        injectComponent('site-footer', root + 'components/footer/footer.html');
+        injectComponent('site-fab', root + 'components/fab/fab.html');
         // Inject user sidebar if placeholder exists on the page
-        injectComponent('user-sidebar', root + 'components/user-sidebar.html');
+        injectComponent('user-sidebar', root + 'components/user-sidebar/user-sidebar.html');
         
         initLucideIcons();
     }

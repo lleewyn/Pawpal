@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="view-transition" content="same-origin">
+    <title>PawPal - Thanh toán thất bại</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="../../../assets/css/style.css">
+    <!-- Components -->
+    <link rel="stylesheet" href="../payment-result.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="../../../assets/js/shared/components.js" defer></script>
+    <script type="module" src="../../../assets/js/shared/main.js"></script>
+    <script type="module" src="payment-failed.js"></script>
+</head>
+<body>
+
+    <div id="site-header" style="min-height:110px;background:#f4faf7;"></div>
+
+
+    <main class="payment-result-page">
+        <div class="container-lg py-5">
+            
+            <!-- Error Icon Animation -->
+            <div class="result-icon-container text-center mb-4">
+                <svg class="result-icon error-icon" width="100" height="100" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+                    <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+            
+            <!-- Error Message -->
+            <div class="text-center mb-5">
+                <h1 class="result-title text-danger mb-3">Giao dịch không thành công!</h1>
+                <p class="result-subtitle text-muted">
+                    Rất tiếc, thanh toán của bạn không được xử lý thành công.
+                </p>
+            </div>
+            
+            <!-- Error Info Card -->
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-8">
+                    <div class="info-card">
+                        <h2 class="card-title">Thông tin lỗi</h2>
+                        <div class="info-rows">
+                            <div class="info-row">
+                                <span class="info-label">Mã đơn hàng:</span>
+                                <span class="info-value">
+                                    <strong id="order-id">...</strong>
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Trạng thái thanh toán:</span>
+                                <span class="info-value">
+                                    <span class="status-badge status-failed">
+                                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/>
+                                        </svg>
+                                        THẤT BẠI
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Lý do:</span>
+                                <span class="info-value text-danger" id="error-reason">
+                                    Tài khoản không đủ số dư hoặc người dùng đã hủy thao tác thanh toán
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Thời gian:</span>
+                                <span class="info-value" id="error-time">...</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Mã giao dịch:</span>
+                                <span class="info-value" id="transaction-id">...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="text-center">
+                <button type="button" class="btn btn-primary btn-lg me-2 mb-2" id="btn-retry">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style="vertical-align: text-top;">
+                        <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                    </svg>
+                    Thử thanh toán lại
+                </button>
+                <a href="../../../pages/shop/checkout/checkout.html" class="btn btn-outline-primary btn-lg mb-2">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style="vertical-align: text-top;">
+                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                    </svg>
+                    Quay về thanh toán
+                </a>
+            </div>
+            
+            <div class="text-center mt-4">
+                <p class="text-muted">
+                    Hoặc liên hệ hỗ trợ: 
+                    <a href="tel:1900xxxx" class="text-primary">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="vertical-align: text-top;">
+                            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                        </svg>
+                        1900 xxxx
+                    </a>
+                </p>
+            </div>
+            
+        </div>
+    </main>
+
+    
+    <div id="site-footer"></div>
+
+    
+    
+    
+    
+    <div id="site-fab"></div>
+</body>
+</html>

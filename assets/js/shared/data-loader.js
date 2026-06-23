@@ -97,7 +97,8 @@ function transformProductData(rawData) {
         const reviewCount = parseInt(item['Lượt đánh giá (Review Count)'] || '0');
         
             let rawImagesStr = item['Hình ảnh'] || '';
-            let parsedImages = rawImagesStr ? rawImagesStr.split(',').map(s => `/${s.trim()}`) : ['/assets/images/shop/products/placeholder.webp'];
+            const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
+            let parsedImages = rawImagesStr ? rawImagesStr.split(',').map(s => rootPath + s.trim()) : [rootPath + 'assets/images/shop/products/placeholder.webp'];
 
             return {
                 id: index + 1,
@@ -141,7 +142,8 @@ async function loadProducts() {
     
     try {
         console.log('Loading products from CSV...');
-        const response = await fetch('/data/sanpham.csv');
+        const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
+        const response = await fetch(rootPath + 'data/sanpham.csv');
         
         if (!response.ok) {
             throw new Error(`Failed to load products: ${response.status} ${response.statusText}`);

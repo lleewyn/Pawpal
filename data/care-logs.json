@@ -1,0 +1,476 @@
+{
+  "PET-001": {
+    "currentSession": {
+      "id": "SVC-PET-001-006",
+      "service": "Spa & Grooming Premium",
+      "date": "2026-06-23",
+      "status": "Dang thuc hien",
+      "timeline": [
+        {
+          "id": 4,
+          "status": "Dang say long",
+          "timestamp": "2026-06-23T14:35:00",
+          "description": "Milu dang duoc say long o muc nhiet nhe. Be hop tac tot va da bot cang thang.",
+          "staff": "Nguyen Thi Mai",
+          "type": "in_progress",
+          "image": "../../assets/images/tracker/belu-1.png"
+        },
+        {
+          "id": 3,
+          "status": "Tam sach voi sua tam diu nhe",
+          "timestamp": "2026-06-23T14:05:00",
+          "description": "Da tam bang sua tam danh cho da nhay cam, tranh vung be co tien su di ung.",
+          "staff": "Nguyen Thi Mai",
+          "type": "in_progress",
+          "image": "../../assets/images/tracker/belu-2.png"
+        },
+        {
+          "id": 2,
+          "status": "Kiem tra da va long",
+          "timestamp": "2026-06-23T13:50:00",
+          "description": "Nhan vien kiem tra tai, mong, da bung va long truoc khi bat dau dich vu.",
+          "staff": "Le Hoang An",
+          "type": "checkup",
+          "image": "../../assets/images/services/spa/gallery/cust_khach_1_dang_chai_long.jpg"
+        },
+        {
+          "id": 1,
+          "status": "Da tiep nhan",
+          "timestamp": "2026-06-23T13:30:00",
+          "description": "Milu da duoc tiep nhan tai chi nhanh Quan 1. Chu co ghi chu be nhat nguoi la.",
+          "staff": "Tran Van Nam",
+          "type": "check_in",
+          "image": "../../assets/images/tracker/belu-3.png"
+        }
+      ]
+    },
+    "history": [
+      {
+        "id": "SVC-PET-001-005",
+        "service": "Tam say tron goi",
+        "date": "2026-06-10",
+        "status": "Hoan thanh",
+        "timeline": [
+          {
+            "id": 4,
+            "status": "Hoan thanh",
+            "timestamp": "2026-06-10T11:20:00",
+            "description": "Milu hoan thanh dich vu, long kho mem va da duoc xit khu mui nhe.",
+            "staff": "Nguyen Thi Mai",
+            "type": "completed",
+            "invoice": {
+              "code": "HD-PET-001-005",
+              "items": [
+                { "name": "Tam say tron goi", "price": 250000 },
+                { "name": "Xit khu mui diu nhe", "price": 40000 }
+              ],
+              "total": 290000,
+              "paid": true
+            }
+          },
+          {
+            "id": 3,
+            "status": "Say va chai long",
+            "timestamp": "2026-06-10T10:45:00",
+            "description": "Say long ky phan bung va chan, chai long roi nhe.",
+            "staff": "Nguyen Thi Mai",
+            "type": "in_progress",
+            "image": "../../assets/images/tracker/belu-1.png"
+          },
+          {
+            "id": 2,
+            "status": "Tam sach",
+            "timestamp": "2026-06-10T10:10:00",
+            "description": "Tam voi sua tam cho cho long ngan, luu y tranh mat va tai.",
+            "staff": "Nguyen Thi Mai",
+            "type": "in_progress",
+            "image": "../../assets/images/tracker/belu-2.png"
+          },
+          {
+            "id": 1,
+            "status": "Da tiep nhan",
+            "timestamp": "2026-06-10T09:50:00",
+            "description": "Kiem tra can nang 8.5kg va tinh trang da long truoc dich vu.",
+            "staff": "Tran Van Nam",
+            "type": "check_in",
+            "image": "../../assets/images/tracker/belu-3.png"
+          }
+        ],
+        "invoice": {
+          "code": "HD-PET-001-005",
+          "items": [
+            { "name": "Tam say tron goi", "price": 250000 },
+            { "name": "Xit khu mui diu nhe", "price": 40000 }
+          ],
+          "total": 290000,
+          "paid": true
+        }
+      },
+      {
+        "id": "SVC-PET-001-004",
+        "service": "Cat tia long ve sinh",
+        "date": "2026-05-18",
+        "status": "Hoan thanh",
+        "timeline": [
+          {
+            "id": 3,
+            "status": "Hoan thanh",
+            "timestamp": "2026-05-18T16:10:00",
+            "description": "Da cat tia gon phan long chan, bung va quanh duoi. Be sach se va thoai mai.",
+            "staff": "Pham Bao Chau",
+            "type": "completed",
+            "invoice": {
+              "code": "HD-PET-001-004",
+              "items": [
+                { "name": "Cat tia long ve sinh", "price": 180000 },
+                { "name": "Ve sinh tai", "price": 50000 },
+                { "name": "Cat mong", "price": 40000 }
+              ],
+              "total": 270000,
+              "paid": true
+            }
+          },
+          {
+            "id": 2,
+            "status": "Cat tia va ve sinh tai",
+            "timestamp": "2026-05-18T15:20:00",
+            "description": "Cat tia theo form gon gang, ve sinh tai bang dung dich chuyen dung.",
+            "staff": "Pham Bao Chau",
+            "type": "in_progress",
+            "image": "../../assets/images/services/spa/gallery/cust_khach_1_dang_chai_long.jpg"
+          },
+          {
+            "id": 1,
+            "status": "Da tiep nhan",
+            "timestamp": "2026-05-18T15:00:00",
+            "description": "Tiep nhan Milu, chu yeu cau cat gon nhung khong cao sat.",
+            "staff": "Tran Van Nam",
+            "type": "check_in",
+            "image": "../../assets/images/tracker/belu-3.png"
+          }
+        ],
+        "invoice": {
+          "code": "HD-PET-001-004",
+          "items": [
+            { "name": "Cat tia long ve sinh", "price": 180000 },
+            { "name": "Ve sinh tai", "price": 50000 },
+            { "name": "Cat mong", "price": 40000 }
+          ],
+          "total": 270000,
+          "paid": true
+        }
+      },
+      {
+        "id": "SVC-PET-001-003",
+        "service": "Kiem tra suc khoe tong quat",
+        "date": "2026-04-22",
+        "status": "Hoan thanh",
+        "timeline": [
+          {
+            "id": 3,
+            "status": "Hoan thanh",
+            "timestamp": "2026-04-22T10:40:00",
+            "description": "Nhip tim va than nhiet binh thuong. Khuyen nghi theo doi che do an do be hoi tang can.",
+            "staff": "BS. Hoang Thao",
+            "type": "completed",
+            "invoice": {
+              "code": "HD-PET-001-003",
+              "items": [
+                { "name": "Kiem tra suc khoe tong quat", "price": 500000 }
+              ],
+              "total": 500000,
+              "paid": true
+            }
+          },
+          {
+            "id": 2,
+            "status": "Kiem tra lam sang",
+            "timestamp": "2026-04-22T10:05:00",
+            "description": "Kiem tra rang mieng, tai, mat, da long va can nang.",
+            "staff": "BS. Hoang Thao",
+            "type": "checkup"
+          },
+          {
+            "id": 1,
+            "status": "Da tiep nhan",
+            "timestamp": "2026-04-22T09:50:00",
+            "description": "Tiep nhan ho so suc khoe cua Milu tai quay le tan.",
+            "staff": "Tran Van Nam",
+            "type": "check_in"
+          }
+        ],
+        "invoice": {
+          "code": "HD-PET-001-003",
+          "items": [
+            { "name": "Kiem tra suc khoe tong quat", "price": 500000 }
+          ],
+          "total": 500000,
+          "paid": true
+        }
+      }
+    ],
+    "chatMessages": {}
+  },
+  "PET-002": {
+    "currentSession": null,
+    "history": [
+      {
+        "id": "SVC-PET-002-004",
+        "service": "Grooming cho meo long ngan",
+        "date": "2026-06-12",
+        "status": "Hoan thanh",
+        "timeline": [
+          {
+            "id": 4,
+            "status": "Hoan thanh",
+            "timestamp": "2026-06-12T17:05:00",
+            "description": "Mimi hoan thanh grooming. Be hoi nhay cam luc say nen nhan vien da nghi giai lao ngan.",
+            "staff": "Le Hoang An",
+            "type": "completed",
+            "invoice": {
+              "code": "HD-PET-002-004",
+              "items": [
+                { "name": "Grooming meo long ngan", "price": 220000 },
+                { "name": "Cat mong", "price": 40000 }
+              ],
+              "total": 260000,
+              "paid": true
+            }
+          },
+          {
+            "id": 3,
+            "status": "Say long va cham soc mong",
+            "timestamp": "2026-06-12T16:30:00",
+            "description": "Say bang gio am nhe, cat mong va lau sach dem chan.",
+            "staff": "Le Hoang An",
+            "type": "in_progress",
+            "image": "../../assets/images/services/spa/process/process_say_say_long.jpg"
+          },
+          {
+            "id": 2,
+            "status": "Tam kho va chai long",
+            "timestamp": "2026-06-12T16:00:00",
+            "description": "Mimi duoc tam kho va chai long de giam rung long.",
+            "staff": "Le Hoang An",
+            "type": "in_progress",
+            "image": "../../assets/images/services/spa/gallery/cust_khach_2_say_long.jpg"
+          },
+          {
+            "id": 1,
+            "status": "Da tiep nhan",
+            "timestamp": "2026-06-12T15:40:00",
+            "description": "Tiep nhan Mimi, chu luu y be khong thich tieng may say lon.",
+            "staff": "Tran Van Nam",
+            "type": "check_in",
+            "image": "../../assets/images/tracker/belu-3.png"
+          }
+        ],
+        "invoice": {
+          "code": "HD-PET-002-004",
+          "items": [
+            { "name": "Grooming meo long ngan", "price": 220000 },
+            { "name": "Cat mong", "price": 40000 }
+          ],
+          "total": 260000,
+          "paid": true
+        }
+      },
+      {
+        "id": "SVC-PET-002-003",
+        "service": "Ve sinh tai va mat",
+        "date": "2026-05-30",
+        "status": "Hoan thanh",
+        "timeline": [
+          {
+            "id": 3,
+            "status": "Hoan thanh",
+            "timestamp": "2026-05-30T11:35:00",
+            "description": "Da ve sinh tai, lau mat va kiem tra vung long quanh mat. Khong ghi nhan dau hieu bat thuong.",
+            "staff": "Pham Bao Chau",
+            "type": "completed",
+            "invoice": {
+              "code": "HD-PET-002-003",
+              "items": [
+                { "name": "Ve sinh tai va mat", "price": 90000 }
+              ],
+              "total": 90000,
+              "paid": true
+            }
+          },
+          {
+            "id": 2,
+            "status": "Dang ve sinh",
+            "timestamp": "2026-05-30T11:10:00",
+            "description": "Lau sach mat va ve sinh tai nhe nhang, Mimi hop tac tot.",
+            "staff": "Pham Bao Chau",
+            "type": "in_progress"
+          },
+          {
+            "id": 1,
+            "status": "Da tiep nhan",
+            "timestamp": "2026-05-30T11:00:00",
+            "description": "Tiep nhan Mimi cho dich vu ve sinh nhanh.",
+            "staff": "Tran Van Nam",
+            "type": "check_in"
+          }
+        ],
+        "invoice": {
+          "code": "HD-PET-002-003",
+          "items": [
+            { "name": "Ve sinh tai va mat", "price": 90000 }
+          ],
+          "total": 90000,
+          "paid": true
+        }
+      },
+      {
+        "id": "SVC-PET-002-002",
+        "service": "Khach san thu cung 1 dem",
+        "date": "2026-05-08",
+        "status": "Hoan thanh",
+        "timeline": [
+          {
+            "id": 4,
+            "status": "Hoan thanh",
+            "timestamp": "2026-05-09T09:00:00",
+            "description": "Mimi da duoc ban giao lai cho chu. Be an tot va ngu on dinh trong dem.",
+            "staff": "Dang Thu Ha",
+            "type": "completed",
+            "invoice": {
+              "code": "HD-PET-002-002",
+              "items": [
+                { "name": "Khach san meo 1 dem", "price": 350000 },
+                { "name": "Bua an pate ga", "price": 45000 }
+              ],
+              "total": 395000,
+              "paid": true
+            }
+          },
+          {
+            "id": 3,
+            "status": "Cap nhat buoi toi",
+            "timestamp": "2026-05-08T20:30:00",
+            "description": "Mimi an het 80% khau phan, da dung khay cat va nghi trong phong yen tinh.",
+            "staff": "Dang Thu Ha",
+            "type": "in_progress"
+          },
+          {
+            "id": 2,
+            "status": "Nhan phong",
+            "timestamp": "2026-05-08T17:20:00",
+            "description": "Mimi duoc dua vao phong meo rieng, co dem nam va khay cat moi.",
+            "staff": "Dang Thu Ha",
+            "type": "check_in"
+          },
+          {
+            "id": 1,
+            "status": "Da tiep nhan",
+            "timestamp": "2026-05-08T17:00:00",
+            "description": "Tiep nhan Mimi luu tru qua dem theo lich dat truoc.",
+            "staff": "Tran Van Nam",
+            "type": "check_in"
+          }
+        ],
+        "invoice": {
+          "code": "HD-PET-002-002",
+          "items": [
+            { "name": "Khach san meo 1 dem", "price": 350000 },
+            { "name": "Bua an pate ga", "price": 45000 }
+          ],
+          "total": 395000,
+          "paid": true
+        }
+      }
+    ],
+    "chatMessages": {}
+  },
+  "PET-003": {
+    "currentSession": {
+      "id": "SVC-PET-003-004",
+      "service": "Khach san thu cung 3 ngay",
+      "date": "2026-06-23",
+      "status": "Dang luu tru",
+      "timeline": [
+        {
+          "id": 3,
+          "status": "Cap nhat buoi trua",
+          "timestamp": "2026-06-23T12:20:00",
+          "description": "Boss an het khau phan, choi 20 phut tai san choi va uong nuoc tot.",
+          "staff": "Dang Thu Ha",
+          "type": "in_progress"
+        },
+        {
+          "id": 2,
+          "status": "Di dao va lam quen phong",
+          "timestamp": "2026-06-23T09:30:00",
+          "description": "Boss duoc di dao nhe va lam quen khu luu tru. Be vui ve, nang dong.",
+          "staff": "Dang Thu Ha",
+          "type": "in_progress"
+        },
+        {
+          "id": 1,
+          "status": "Da tiep nhan",
+          "timestamp": "2026-06-23T08:10:00",
+          "description": "Boss duoc tiep nhan cho goi khach san 3 ngay tai chi nhanh Quan 1.",
+          "staff": "Tran Van Nam",
+          "type": "check_in"
+        }
+      ]
+    },
+    "history": [
+      {
+        "id": "SVC-PET-003-003",
+        "service": "Tam say cho lon",
+        "date": "2026-06-01",
+        "status": "Hoan thanh",
+        "timeline": [
+          {
+            "id": 3,
+            "status": "Hoan thanh",
+            "timestamp": "2026-06-01T10:45:00",
+            "description": "Boss hoan thanh tam say, long kho hoan toan va duoc chai long ky.",
+            "staff": "Nguyen Thi Mai",
+            "type": "completed",
+            "invoice": {
+              "code": "HD-PET-003-003",
+              "items": [
+                { "name": "Tam say cho lon", "price": 320000 },
+                { "name": "Chai long giam rung", "price": 60000 }
+              ],
+              "total": 380000,
+              "paid": true
+            }
+          },
+          {
+            "id": 2,
+            "status": "Tam va say long",
+            "timestamp": "2026-06-01T09:40:00",
+            "description": "Tam bang sua tam khu mui, say long theo tung lop vi long Boss day.",
+            "staff": "Nguyen Thi Mai",
+            "type": "in_progress",
+            "image": "../../assets/images/tracker/belu-2.png"
+          },
+          {
+            "id": 1,
+            "status": "Da tiep nhan",
+            "timestamp": "2026-06-01T09:15:00",
+            "description": "Tiep nhan Boss, kiem tra can nang 25kg va tinh trang long.",
+            "staff": "Tran Van Nam",
+            "type": "check_in",
+            "image": "../../assets/images/tracker/belu-3.png"
+          }
+        ],
+        "invoice": {
+          "code": "HD-PET-003-003",
+          "items": [
+            { "name": "Tam say cho lon", "price": 320000 },
+            { "name": "Chai long giam rung", "price": 60000 }
+          ],
+          "total": 380000,
+          "paid": true
+        }
+      }
+    ],
+    "chatMessages": {}
+  }
+}

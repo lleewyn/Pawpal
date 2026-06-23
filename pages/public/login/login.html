@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="view-transition" content="same-origin">
+    <title>Đăng ký + Đăng nhập - PawPal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="../../../assets/css/style.css">
+    <link rel="stylesheet" href="login.css">
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="../../../assets/js/shared/components.js" defer></script>
+    <script type="module" src="../../../assets/js/shared/main.js"></script>
+    <script type="module" src="../../../assets/js/shared/auth.js"></script>
+</head>
+<body class="login-page-body">
+
+    <div id="site-header" class="min-h-110px bg-bg-light"></div>
+
+    <main class="login-main-container">
+        <div class="container-md py-5">
+            <div class="row justify-content-center align-items-center min-vh-75">
+                <div class="col-lg-5 col-md-8 col-sm-10">
+                    <div class="auth-card-wrapper glassmorphic-panel">
+
+                        <!-- Tabs Đăng nhập / Đăng ký -->
+                        <div class="auth-tabs" id="authTabs">
+                            <button class="auth-tab-btn active" id="tabLogin">Đăng nhập</button>
+                            <button class="auth-tab-btn" id="tabRegister">Đăng ký</button>
+                        </div>
+
+                        <!-- ====================================================
+                             1. ĐĂNG NHẬP (US 2-1)
+                             Bước 1: Nhập SĐT — Bước 2: Nhập mật khẩu (ẩn ban đầu)
+                        ==================================================== -->
+                        <form id="loginForm" class="auth-form active-form" novalidate>
+                            <h3 class="form-title">Chào mừng trở lại!</h3>
+
+                            <!-- Bước 1: SĐT + nút Tiếp tục -->
+                            <div id="loginStepPhone">
+                                <div class="form-group mb-4">
+                                    <label for="loginPhone" class="form-label">Số điện thoại</label>
+                                    <input type="tel" id="loginPhone" class="form-control" placeholder="Nhập số điện thoại (10 chữ số)" autocomplete="tel">
+                                    <div class="invalid-feedback" id="loginPhoneFeedback">Số điện thoại không đúng định dạng</div>
+                                </div>
+                                <button type="button" class="btn-cta w-100" id="btnLoginContinue">
+                                    <span>Tiếp tục</span>
+                                </button>
+                            </div>
+
+                            <!-- Bước 2: Mật khẩu (hiện sau khi xác nhận SĐT là thành viên) -->
+                            <div id="loginStepPassword" class="d-none">
+                                <div class="login-phone-display mb-4">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.16 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.36 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.34 1.85.573 2.81.7A2 2 0 0122 14.92v2z"/></svg>
+                                    <span id="loginPhoneDisplay" class="login-phone-number"></span>
+                                    <button type="button" class="btn-change-phone" id="btnChangePhone">Đổi số</button>
+                                </div>
+
+                                <div class="form-group mb-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label for="loginPassword" class="form-label mb-0">Mật khẩu</label>
+                                        <a href="#" class="forgot-pass-link" id="triggerForgot">Quên mật khẩu?</a>
+                                    </div>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" id="loginPassword" class="form-control" placeholder="Nhập mật khẩu của bạn" autocomplete="current-password">
+                                        <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
+                                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+
+
+                                <button type="submit" class="btn-cta w-100" id="btnLoginSubmit">
+                                    <span>Đăng nhập</span>
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- ====================================================
+                             2. ĐĂNG KÝ (US 1-1)
+                        ==================================================== -->
+                        <form id="registerForm" class="auth-form" novalidate>
+                            <h3 class="form-title">Tạo tài khoản mới</h3>
+
+                            <div class="form-group mb-3">
+                                <label for="registerName" class="form-label">Họ và tên <span class="required-star">*</span></label>
+                                <input type="text" id="registerName" class="form-control" placeholder="Nhập họ tên đầy đủ" autocomplete="name">
+                                <div class="invalid-feedback">Vui lòng nhập họ tên</div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="registerPhone" class="form-label">Số điện thoại <span class="required-star">*</span></label>
+                                <input type="tel" id="registerPhone" class="form-control" placeholder="Ví dụ: 0912345678" autocomplete="tel">
+                                <div class="invalid-feedback" id="registerPhoneFeedback">Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0</div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="registerPassword" class="form-label">Mật khẩu <span class="required-star">*</span></label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="registerPassword" class="form-control" placeholder="Tối thiểu 8 ký tự, 1 chữ số, 1 ký tự đặc biệt" autocomplete="new-password">
+                                    <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
+                                        <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback" id="registerPasswordFeedback">Mật khẩu phải ít nhất 8 ký tự, bao gồm một chữ số và một ký tự đặc biệt</div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="registerConfirmPassword" class="form-label">Nhập lại mật khẩu <span class="required-star">*</span></label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="registerConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu" autocomplete="new-password">
+                                    <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
+                                        <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    </button>
+                                </div>
+                                <div class="invalid-feedback" id="registerConfirmFeedback">Mật khẩu chưa khớp</div>
+                            </div>
+
+                            <button type="submit" class="btn-cta w-100" id="btnRegisterSubmit" disabled>
+                                <span>Đăng ký tài khoản</span>
+                            </button>
+
+                            <p class="form-note-footer text-center mt-3">
+                                Thông tin của bạn sẽ được lưu trữ bảo mật để tích lũy điểm thưởng khi trở thành thành viên chính thức
+                            </p>
+                        </form>
+
+                        <!-- ====================================================
+                             3. OTP XÁC THỰC ĐĂNG KÝ (US 1-1 / AC1.1.2)
+                        ==================================================== -->
+                        <div id="otpSection" class="auth-step-section d-none">
+                            <h3 class="form-title text-center">Xác thực OTP</h3>
+                            <p class="form-subtitle text-center">Mã xác thực 6 số đã được gửi đến SĐT của bạn.</p>
+
+                            <div class="otp-inputs-wrapper mb-4">
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" disabled>
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" disabled>
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" disabled>
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" disabled>
+                                <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" disabled>
+                            </div>
+
+                            <div class="otp-timer-container text-center mb-3">
+                                <span class="timer-label">Mã OTP hết hiệu lực sau: </span>
+                                <span class="timer-countdown" id="otpTimer">05:00</span>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="button" class="btn-link" id="btnResendOtp" disabled>Gửi lại mã</button>
+                            </div>
+                        </div>
+
+                        <!-- ====================================================
+                             4. CHÚC MỪNG ĐĂNG KÝ THÀNH CÔNG (US 1-1)
+                        ==================================================== -->
+                        <div id="congratsSection" class="auth-step-section d-none text-center">
+                            <div class="congrats-icon-wrapper">
+                                <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <circle cx="36" cy="36" r="36" fill="var(--color-primary-light)"/>
+                                    <path d="M22 37l10 10 18-20" stroke="var(--color-primary)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h3 class="form-title mt-4">Đăng ký thành công!</h3>
+                            <p class="form-subtitle">Chào mừng thành viên mới đến với gia đình PawPal!</p>
+
+                            <div class="points-reward-box my-4">
+                                <span class="points-label">Điểm Thưởng Nhận Được</span>
+                                <div class="points-counter" id="pointsCounter">0</div>
+                            </div>
+
+                            <p class="redirect-hint">Đang tự động chuyển hướng về trang chủ...</p>
+                        </div>
+
+                        <!-- ====================================================
+                             5. THIẾT LẬP MẬT KHẨU — TÀI KHOẢN TẠM (US 2-4 / US 1-2)
+                        ==================================================== -->
+                        <div id="setupPasswordSection" class="auth-step-section d-none">
+                            <h3 class="form-title text-center">Kích hoạt tài khoản thành viên</h3>
+                            <p class="form-subtitle text-center mb-4">Thiết lập mật khẩu để bảo mật thông tin chăm sóc và lịch trình của bé cưng.</p>
+
+                            <form id="setupPasswordForm" novalidate>
+                                <div class="form-group mb-3">
+                                    <label for="setupPassword" class="form-label">Mật khẩu mới <span class="required-star">*</span></label>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" id="setupPassword" class="form-control" placeholder="Tối thiểu 8 ký tự, 1 chữ số, 1 ký tự đặc biệt" autocomplete="new-password">
+                                        <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
+                                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="invalid-feedback" id="setupPasswordFeedback">Mật khẩu phải ít nhất 8 ký tự, bao gồm một chữ số và một ký tự đặc biệt</div>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="setupConfirmPassword" class="form-label">Xác nhận mật khẩu mới <span class="required-star">*</span></label>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" id="setupConfirmPassword" class="form-control" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password">
+                                        <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
+                                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="invalid-feedback" id="setupConfirmFeedback">Mật khẩu chưa khớp</div>
+                                </div>
+
+                                <div class="form-check setup-terms-check mb-4">
+                                    <input class="form-check-input" type="checkbox" id="setupTermsCheckbox">
+                                    <label class="form-check-label" for="setupTermsCheckbox">
+                                        Tôi đồng ý với <a href="#" class="terms-link" onclick="return false;">Chính sách + Điều khoản</a> vận hành của cửa hàng
+                                    </label>
+                                </div>
+
+                                <button type="submit" class="btn-cta w-100" id="btnSetupSubmit" disabled>
+                                    <span>Xác nhận kích hoạt</span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- ====================================================
+                             6. LINK THIẾT LẬP MẬT KHẨU HẾT HẠN (US 1-2)
+                        ==================================================== -->
+                        <div id="setupExpiredSection" class="auth-step-section d-none text-center">
+                            <div class="expired-icon-wrapper my-3">
+                                <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <circle cx="32" cy="32" r="32" fill="var(--color-danger-light)"/>
+                                    <path d="M32 18v17M32 42v2" stroke="var(--color-danger)" stroke-width="3.5" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <h3 class="form-title text-danger">Liên kết đã hết hạn</h3>
+                            <p class="form-subtitle">Đường dẫn thiết lập mật khẩu bảo mật của bạn đã hết hạn (giới hạn 48 giờ).</p>
+
+                            <div class="my-4">
+                                <p class="small text-secondary">Vui lòng cung cấp số điện thoại để chúng tôi gửi lại liên kết xác thực mới qua SMS.</p>
+                                <div class="form-group">
+                                    <input type="tel" id="expiredPhone" class="form-control text-center" placeholder="Nhập số điện thoại của bạn" autocomplete="tel">
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn-cta" id="btnRequestNewLink">
+                                <span>Gửi lại link xác thực mới</span>
+                            </button>
+                        </div>
+
+                        <!-- ====================================================
+                             7. QUÊN MẬT KHẨU — Bước 1: Nhập SĐT (US 2-2)
+                        ==================================================== -->
+                        <div id="forgotPhoneSection" class="auth-step-section d-none">
+                            <button type="button" class="btn-back-link mb-4" id="btnForgotBackToLogin">
+                                Quay lại đăng nhập
+                            </button>
+                            <h3 class="form-title">Quên mật khẩu?</h3>
+
+                            <form id="forgotPhoneForm" novalidate>
+                                <div class="form-group mb-4">
+                                    <label for="forgotPhone" class="form-label">Số điện thoại <span class="required-star">*</span></label>
+                                    <input type="tel" id="forgotPhone" class="form-control" placeholder="Nhập số điện thoại đã đăng ký" autocomplete="tel">
+                                    <div class="invalid-feedback">Vui lòng nhập số điện thoại hợp lệ (10 chữ số)</div>
+                                </div>
+                                <button type="submit" class="btn-cta w-100">
+                                    <span>Gửi mã xác thực</span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- ====================================================
+                             8. QUÊN MẬT KHẨU — Bước 2: Nhập OTP (US 2-2)
+                        ==================================================== -->
+                        <div id="forgotOtpSection" class="auth-step-section d-none">
+                            <button type="button" class="btn-back-link mb-4" id="btnForgotOtpBack">
+                                Đổi số điện thoại
+                            </button>
+                            <h3 class="form-title text-center">Nhập mã xác thực</h3>
+                            <p class="form-subtitle text-center">Mã OTP 6 số đã được gửi đến SĐT của bạn.</p>
+
+                            <div class="otp-inputs-wrapper mb-4">
+                                <input type="text" class="otp-input forgot-otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                                <input type="text" class="otp-input forgot-otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" disabled>
+                                <input type="text" class="otp-input forgot-otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" disabled>
+                                <input type="text" class="otp-input forgot-otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" disabled>
+                                <input type="text" class="otp-input forgot-otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" disabled>
+                                <input type="text" class="otp-input forgot-otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" disabled>
+                            </div>
+
+                            <div class="otp-timer-container text-center mb-3">
+                                <span class="timer-label">Hiệu lực trong: </span>
+                                <span class="timer-countdown" id="forgotOtpTimer">05:00</span>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="button" class="btn-link" id="btnForgotResendOtp" disabled>Gửi lại mã</button>
+                            </div>
+                        </div>
+
+                        <!-- ====================================================
+                             9. QUÊN MẬT KHẨU — Bước 3: Mật khẩu mới (US 2-2)
+                        ==================================================== -->
+                        <div id="forgotNewPasswordSection" class="auth-step-section d-none">
+                            <h3 class="form-title">Thiết lập mật khẩu mới</h3>
+
+                            <form id="forgotNewPasswordForm" novalidate>
+                                <div class="form-group mb-3">
+                                    <label for="forgotNewPassword" class="form-label">Mật khẩu mới <span class="required-star">*</span></label>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" id="forgotNewPassword" class="form-control" placeholder="Tối thiểu 8 ký tự, 1 chữ số, 1 ký tự đặc biệt" autocomplete="new-password">
+                                        <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
+                                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="invalid-feedback" id="forgotPasswordFeedback">Mật khẩu phải ít nhất 8 ký tự, bao gồm một chữ số và một ký tự đặc biệt</div>
+                                </div>
+
+                                <div class="form-group mb-4">
+                                    <label for="forgotConfirmNewPassword" class="form-label">Xác nhận mật khẩu mới <span class="required-star">*</span></label>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" id="forgotConfirmNewPassword" class="form-control" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password">
+                                        <button type="button" class="btn-toggle-password" aria-label="Hiện mật khẩu">
+                                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="invalid-feedback" id="forgotConfirmFeedback">Mật khẩu chưa khớp</div>
+                                </div>
+
+                                <button type="submit" class="btn-cta w-100" id="btnForgotNewPasswordSubmit" disabled>
+                                    <span>Xác nhận tạo mật khẩu mới</span>
+                                </button>
+                            </form>
+                        </div>
+
+                    </div><!-- /.auth-card-wrapper -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="site-footer"></div>
+    <div class="toast-container-custom" id="toastContainer"></div>
+
+    <div id="site-fab"></div>
+</body>
+</html>

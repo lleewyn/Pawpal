@@ -1671,7 +1671,7 @@ function initFab() {
         if (t.match(/chuẩn bị|mang gì|cần gì/))
             return 'Cần mang: sổ tiêm phòng, đồ ăn riêng (nếu có), đồ chơi yêu thích của bé. Chúng tôi lo phần còn lại!';
         if (t.match(/đặt lịch|booking/))
-            return 'Bạn có thể đặt lịch ngay tại <a href="pages/services/booking.html" style="color:#7c3aed">trang đặt lịch</a> — xác nhận tức thì qua SMS/Zalo.';
+            return 'Bạn có thể đặt lịch ngay tại <a href="pages/services/booking/booking.html" style="color:#7c3aed">trang đặt lịch</a> — xác nhận tức thì qua SMS/Zalo.';
         if (t.match(/giờ|mở cửa|thời gian/))
             return 'PawPal mở cửa <strong>8:00–20:00</strong> mỗi ngày. Pet Hotel hoạt động 24/7.';
         return 'Cảm ơn bạn đã nhắn tin!  Để được tư vấn chi tiết hơn, bạn có thể gọi hotline <strong>0774 561 496</strong> hoặc chat Zalo nhé.';
@@ -1702,7 +1702,7 @@ async function initServicesGrid() {
                 const memberPriceUnit = service.priceDisplay.includes('đêm') ? '/đêm' : '';
                 const imgSrc = service.image.startsWith('http') ? service.image : `../../${service.image}`;
                 const fallbackImg = service.category === 'hotel' ? '../../assets/images/services/hotel.png' : '../../assets/images/services/spa.png';
-                const detailUrl = `../../pages/services/service-detail.html?id=${encodeURIComponent(service.serviceId)}`;
+                const detailUrl = `/pages/services/service-detail/service-detail.html?id=${encodeURIComponent(service.serviceId)}`;
 
                 return `
                     <div class="product-card svc-landing-card" data-category="${service.category}">
@@ -1732,7 +1732,7 @@ async function initServicesGrid() {
                                     <span class="price-current" style="font-size: 16px;">${formattedPrice}</span>
                                     ${priceUnit}
                                 </div>
-                                <a href="../../pages/services/booking.html?service=${service.serviceId}" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                                <a href="../../pages/services/booking/booking.html?service=${service.serviceId}" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
                             </div>
                             <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
                                 TV Bạc: ${memberPrice}${memberPriceUnit}

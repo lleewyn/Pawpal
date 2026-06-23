@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <script src="../../../pages/user/dashboard-init.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn hàng của tôi - PawPal</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS — cần cho header responsive (d-lg-none, d-flex...) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="../../../assets/css/style.css">
+    
+    <!-- Components -->
+    <!-- Page-specific -->
+    <link rel="stylesheet" href="../../../pages/user/dashboard/dashboard.css">
+    <link rel="stylesheet" href="orders.css">
+    <link rel="stylesheet" href="../../../assets/css/user/return-detail.css">
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <script src="../../../assets/js/shared/data-loader.js" defer></script>
+    <script src="../../../assets/js/shared/main.js" defer></script>
+    <script src="../../../assets/js/shared/components.js" defer></script>
+    <script src="../../../assets/js/shared/header-auth.js" defer></script>
+    <script src="../return-handler.js" defer></script>
+    <script type="module" src="orders.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header id="site-header"></header>
+
+    <!-- Main Content -->
+    <div class="orders-page-wrapper">
+        <!-- User Sidebar -->
+        <div id="user-sidebar">
+            <div class="dashboard-sidebar" style="min-height:300px;">
+                <p style="text-align:center;padding:20px;color:#999;">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="orders-main-content">
+
+            <!-- Quick Stats -->
+            <section class="orders-stats">
+                <div class="stat-card">
+                    <span class="stat-number" id="processing-count">0</span>
+                    <span class="stat-label">Đang xử lý</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="completed-count">0</span>
+                    <span class="stat-label">Hoàn thành</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="total-spent">0đ</span>
+                    <span class="stat-label">Tổng chi tiêu</span>
+                </div>
+            </section>
+
+            <!-- Search Bar -->
+            <div class="orders-search">
+                <input type="text" id="order-search" 
+                       placeholder="Tìm kiếm theo mã đơn hàng hoặc tên sản phẩm..."
+                       class="search-input">
+                <button class="search-btn" id="search-btn">Tìm kiếm</button>
+            </div>
+
+            <!-- Tab Filters -->
+            <nav class="orders-tabs" id="orders-tabs">
+                <button class="tab-btn active" data-status="all">
+                    Tất cả <span class="tab-count" id="count-all">(0)</span>
+                </button>
+                <button class="tab-btn" data-status="pending_payment">
+                    Chờ thanh toán <span class="tab-count" id="count-pending_payment">(0)</span>
+                </button>
+                <button class="tab-btn" data-status="preparing">
+                    Đang chuẩn bị <span class="tab-count" id="count-preparing">(0)</span>
+                </button>
+                <button class="tab-btn" data-status="shipping">
+                    Đang giao <span class="tab-count" id="count-shipping">(0)</span>
+                </button>
+                <button class="tab-btn" data-status="delivered">
+                    Đã giao <span class="tab-count" id="count-delivered">(0)</span>
+                </button>
+                <button class="tab-btn" data-status="completed">
+                    Hoàn thành <span class="tab-count" id="count-completed">(0)</span>
+                </button>
+                <button class="tab-btn" data-status="cancelled">
+                    Đã hủy <span class="tab-count" id="count-cancelled">(0)</span>
+                </button>
+            </nav>
+
+            <!-- Orders List -->
+            <div class="orders-list" id="orders-list">
+                <!-- Orders rendered by JS -->
+            </div>
+
+            <!-- Pagination -->
+            <nav class="pagination" id="pagination" style="display: none;">
+                <button class="page-btn" id="prev-page">Trước</button>
+                <div id="page-numbers"></div>
+                <button class="page-btn" id="next-page">Tiếp</button>
+            </nav>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer id="site-footer"></footer>
+
+    <!-- FAB -->
+    <!-- RMA Drawer Overlay + Container -->
+    <div id="rma-drawer-container"></div>
+
+    <div id="site-fab"></div>
+</body>
+</html>

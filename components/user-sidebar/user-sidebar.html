@@ -1,0 +1,129 @@
+<div class="dashboard-sidebar">
+    <nav class="sidebar-nav">
+        <div class="sidebar-group">
+            <div class="sidebar-category">Tài khoản</div>
+            <a href="/pages/user/dashboard/dashboard.html" class="sidebar-link" id="nav-dashboard" data-tab="profile">
+                <span class="icon"><i data-lucide="user"></i></span> Hồ sơ cá nhân
+            </a>
+            <a href="/pages/user/settings/settings.html" class="sidebar-link" id="nav-security">
+                <span class="icon"><i data-lucide="settings"></i></span> Cài đặt
+            </a>
+        </div>
+
+        <div class="sidebar-group">
+            <div class="sidebar-category">Bé cưng</div>
+            <a href="/pages/user/pet-profile/pet-profile.html" class="sidebar-link" id="nav-pets">
+                <span class="icon"><i data-lucide="paw-print"></i></span> Hồ sơ bé cưng
+            </a>
+            <a href="/pages/user/pet-diary/pet-diary.html" class="sidebar-link" id="nav-diary">
+                <span class="icon"><i data-lucide="book-heart"></i></span> Nhật ký chăm sóc
+            </a>
+        </div>
+
+        <div class="sidebar-group">
+            <div class="sidebar-category">Dịch vụ và Mua sắm</div>
+            <a href="/pages/user/bookings/bookings.html" class="sidebar-link" id="nav-bookings">
+                <span class="icon"><i data-lucide="calendar"></i></span> Lịch hẹn của tôi
+            </a>
+            <a href="/pages/user/care-history/care-history.html" class="sidebar-link" id="nav-care-history">
+                <span class="icon"><i data-lucide="history"></i></span> Lịch sử chăm sóc
+            </a>
+            <a href="/pages/user/orders/orders.html" class="sidebar-link" id="nav-orders">
+                <span class="icon"><i data-lucide="package"></i></span> Đơn hàng của tôi
+            </a>
+        </div>
+
+        <div class="sidebar-group">
+            <div class="sidebar-category">Tiện ích</div>
+            <a href="/pages/user/wishlist/wishlist.html" class="sidebar-link" id="nav-wishlist">
+                <span class="icon"><i data-lucide="heart"></i></span> Yêu thích
+            </a>
+            <a href="/pages/user/loyalty/loyalty.html" class="sidebar-link" id="nav-loyalty">
+                <span class="icon"><i data-lucide="star"></i></span> Paw Points
+            </a>
+        </div>
+
+        <div class="sidebar-group">
+            <div class="sidebar-category">Hỗ trợ</div>
+            <a href="/pages/user/support-tickets/support-tickets.html" class="sidebar-link" id="nav-support">
+                <span class="icon"><i data-lucide="message-square"></i></span> Hỗ trợ
+            </a>
+        </div>
+    </nav>
+</div>
+
+<script>
+// Auto-detect current page and set active state
+(function() {
+    const currentPath = window.location.pathname.toLowerCase();
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentTab = urlParams.get('tab') || 'profile';
+    const navLinks = document.querySelectorAll('.sidebar-nav .sidebar-link');
+    
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && href !== '#') {
+            const linkPath = href.toLowerCase();
+            const linkTab = link.getAttribute('data-tab');
+            
+            // Check if on dashboard page with specific tab
+            if (currentPath.includes('dashboard') && linkPath.includes('dashboard')) {
+                if (linkTab === currentTab) {
+                    link.classList.add('active');
+                }
+                
+                // Add smooth tab switching for dashboard internal tabs
+                if (linkPath.includes('dashboard') && linkTab) {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // Update URL without reload
+                        const newUrl = linkTab === 'profile' 
+                            ? '/pages/user/dashboard.html' 
+                            : `/pages/user/dashboard.html?tab=${linkTab}`;
+                        window.history.pushState({}, '', newUrl);
+                        
+                        // Hide all tabs
+                        document.querySelectorAll('.dashboard-content-panel').forEach(panel => {
+                            panel.style.display = 'none';
+                        });
+                        
+                        // Show target tab
+                        const tabMap = {
+                            'profile': 'profileTab',
+                            'security': 'securityTab'
+                        };
+                        const targetTabId = tabMap[linkTab] || 'profileTab';
+                        const targetTab = document.getElementById(targetTabId);
+                        if (targetTab) {
+                            targetTab.style.display = 'block';
+                        }
+                        
+                        // Update active states
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        link.classList.add('active');
+                    });
+                }
+            } 
+            // Check other pages
+            else if (currentPath.includes('pet-profile') && linkPath.includes('pet-profile')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('pet-diary') && linkPath.includes('pet-diary')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('care-history') && linkPath.includes('care-history')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('booking') && linkPath.includes('booking')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('orders') && linkPath.includes('orders')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('wishlist') && linkPath.includes('wishlist')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('loyalty') && linkPath.includes('loyalty')) {
+                link.classList.add('active');
+            } else if (currentPath.includes('support') && linkPath.includes('support')) {
+                link.classList.add('active');
+            }
+        }
+    });
+})();
+</script>

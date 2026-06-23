@@ -1,0 +1,1143 @@
+/**
+ * Checkout Page JavaScript
+ * Handles checkout flow, order summary, vouchers, points, etc.
+ */
+
+// ============================================================================
+// Global State
+// ============================================================================
+const checkoutState = {
+    cart: [],
+    products: [],
+    user: null,
+    deliveryOptions: [],
+    paymentMethods: [],
+    selectedDelivery: 'standard',
+    selectedPayment: 'cod',
+    vouchers: [],
+    myVouchers: [],
+    appliedVoucher: null,
+    pointsUsed: 0,
+    totals: {
+        subtotal: 0,
+        shippingFee: 0,
+        pointsDiscount: 0,
+        voucherDiscount: 0,
+        grandTotal: 0
+    }
+};
+
+// ============================================================================
+// Initialize
+// ============================================================================
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Load user data
+        checkoutState.user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        
+        // Check if this is a "buy now" checkout
+        const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
+        
+        if (isBuyNow) {
+            // Load cart from sessionStorage (buy now cart)
+            checkoutState.cart = JSON.parse(sessionStorage.getItem('pawpal_buynow_cart') || '[]');
+            
+            if (checkoutState.cart.length === 0) {
+                window.location.href = '/pages/shop/shop.html';
+                return;
+            }
+        } else {
+            // Load cart from localStorage (normal cart)
+            checkoutState.cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+            
+            if (checkoutState.cart.length === 0) {
+                window.location.href = '/pages/shop/shop.html';
+                return;
+            }
+        }
+        
+        // Load data
+        await loadData();
+        await loadProducts();
+
+        // Load loyalty vouchers for current user
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        checkoutState.user = checkoutState.user || currentUser;
+        checkoutState.myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]')
+            .filter(v => currentUser && v.ownerPhone === currentUser.phone);
+        
+        // Initialize UI
+        initializeShippingForm();
+        renderDeliveryOptions();
+        renderPaymentMethods();
+        loadPersistedVoucher();
+        renderOrderSummary();
+        
+        // Show PawPoints section if user logged in
+        if (checkoutState.user && checkoutState.user.pawPoints) {
+            initializePawPoints();
+        }
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+    } catch (error) {
+        console.error('Error initializing checkout:', error);
+        showToast('Có lỗi xảy ra khi tải trang', 'error');
+    }
+});
+
+// ============================================================================
+// Load Data
+// ============================================================================
+async function loadData() {
+    try {
+        // Load delivery options
+        const deliveryResponse = await fetch('/data/delivery-options.json');
+        checkoutState.deliveryOptions = await deliveryResponse.json();
+        
+        // Load payment methods
+        const paymentResponse = await fetch('/data/payment-methods.json');
+        checkoutState.paymentMethods = await paymentResponse.json();
+        
+        // Load vouchers
+        const vouchersResponse = await fetch('/data/vouchers.json');
+        checkoutState.vouchers = await vouchersResponse.json();
+        
+    } catch (error) {
+        console.error('Error loading data:', error);
+    }
+}
+
+async function loadProducts() {
+    try {
+        if (window.DataLoader && typeof window.DataLoader.loadProducts === 'function') {
+            checkoutState.products = await window.DataLoader.loadProducts();
+        } else {
+            console.warn('DataLoader không có sẵn, không thể tải sản phẩm');
+            checkoutState.products = [];
+        }
+    } catch (error) {
+        console.error('Error loading products:', error);
+        checkoutState.products = [];
+    }
+}
+
+function validateCheckoutCart() {
+    if (!checkoutState.products || checkoutState.products.length === 0) {
+        return { valid: false, message: 'Không thể kiểm tra giỏ hàng vì dữ liệu sản phẩm chưa sẵn sàng.' };
+    }
+
+    const subtotal = calculateSubtotal();
+    for (const item of checkoutState.cart) {
+        const product = checkoutState.products.find(p => Number(p.id) === Number(item.id));
+        if (!product) {
+            return { valid: false, message: `Sản phẩm với mã ${item.id} không còn tồn tại. Vui lòng cập nhật giỏ hàng.` };
+        }
+
+        if (!product.inStock || Number(item.quantity) > Number(product.stock)) {
+            const remaining = product.stock || 0;
+            return { valid: false, message: `Sản phẩm "${product.name}" chỉ còn ${remaining} trong kho. Vui lòng điều chỉnh số lượng.` };
+        }
+
+        if (Number(item.price) !== Number(product.price)) {
+            return { valid: false, message: `Giá sản phẩm "${product.name}" đã thay đổi. Vui lòng kiểm tra lại giỏ hàng.` };
+        }
+    }
+
+    if (checkoutState.appliedVoucher) {
+        const validation = validateVoucher(checkoutState.appliedVoucher.code, false);
+        if (!validation.valid) {
+            return { valid: false, message: `Mã giảm giá hiện tại không hợp lệ: ${validation.message}.` };
+        }
+    }
+
+    // Recalculate totals using latest product prices and voucher eligibility
+    updateOrderTotals();
+    if (checkoutState.totals.grandTotal <= 0) {
+        return { valid: false, message: 'Tổng thanh toán không hợp lệ. Vui lòng kiểm tra lại đơn hàng.' };
+    }
+
+    return { valid: true };
+}
+
+function validateVoucher(code, showMessage = true) {
+    let voucher = checkoutState.vouchers.find(v => v.code === code && v.active);
+    if (!voucher) {
+        voucher = checkoutState.myVouchers.find(v => v.code === code);
+    }
+
+    if (!voucher) {
+        return { valid: false, message: 'Mã giảm giá không tồn tại' };
+    }
+    
+    // Check expiry
+    const now = new Date();
+    const expiry = new Date(voucher.validUntil);
+    if (now > expiry) {
+        return { valid: false, message: 'Mã giảm giá đã hết hạn' };
+    }
+    
+    // Check minimum order value
+    const subtotal = calculateSubtotal();
+    if (subtotal < voucher.minOrderValue) {
+        return { 
+            valid: false, 
+            message: `Đơn hàng tối thiểu ${formatCurrency(voucher.minOrderValue)} để áp dụng mã này` 
+        };
+    }
+    
+    // Check usage limit
+    if (voucher.usageCount >= voucher.maxUsage) {
+        return { valid: false, message: 'Mã giảm giá đã hết lượt sử dụng' };
+    }
+
+    // Check applicability by category
+    if (voucher.applicableFor && !voucher.applicableFor.includes('all')) {
+        const cartCategories = checkoutState.cart.map(item => {
+            const product = checkoutState.products.find(p => Number(p.id) === Number(item.id));
+            return product ? product.category : null;
+        }).filter(Boolean);
+
+        const hasMatchingCategory = cartCategories.some(category => voucher.applicableFor.includes(category));
+        if (!hasMatchingCategory) {
+            return { valid: false, message: 'Mã giảm giá không áp dụng cho sản phẩm trong giỏ hàng hiện tại' };
+        }
+    }
+    
+    // Calculate discount
+    let discount = 0;
+    if (voucher.type === 'fixed') {
+        discount = voucher.value;
+    } else if (voucher.type === 'percentage') {
+        discount = Math.min(
+            Math.floor((subtotal * voucher.value) / 100),
+            voucher.maxDiscount || Infinity
+        );
+    } else if (voucher.type === 'shipping') {
+        discount = Math.min(voucher.value, checkoutState.totals.shippingFee);
+    }
+    
+    return { valid: true, discount, voucher };
+}
+
+function calculateVoucherDiscount() {
+    if (!checkoutState.appliedVoucher) {
+        return 0;
+    }
+
+    const validation = validateVoucher(checkoutState.appliedVoucher.code, false);
+    if (!validation.valid) {
+        checkoutState.appliedVoucher = null;
+        localStorage.removeItem('pawpal_applied_voucher_code');
+        renderAppliedVoucherUI();
+        return 0;
+    }
+
+    checkoutState.appliedVoucher = validation.voucher;
+    return validation.discount || 0;
+}
+
+function renderAppliedVoucherUI() {
+    const appliedVoucherElement = document.getElementById('applied-voucher');
+    const voucherCodeDisplay = document.getElementById('voucher-code-display');
+    const voucherAmount = document.getElementById('voucher-amount');
+
+    if (!checkoutState.appliedVoucher) {
+        if (appliedVoucherElement) {
+            appliedVoucherElement.classList.add('d-none');
+        }
+        return;
+    }
+
+    if (appliedVoucherElement) {
+        appliedVoucherElement.classList.remove('d-none');
+    }
+    if (voucherCodeDisplay) {
+        voucherCodeDisplay.textContent = checkoutState.appliedVoucher.code;
+    }
+    if (voucherAmount) {
+        voucherAmount.textContent = `-${formatCurrency(checkoutState.totals.voucherDiscount)}`;
+    }
+}
+
+function loadPersistedVoucher() {
+    const code = localStorage.getItem('pawpal_applied_voucher_code');
+    if (!code) {
+        return;
+    }
+
+    const result = validateVoucher(code, false);
+    if (result.valid) {
+        checkoutState.appliedVoucher = result.voucher;
+        checkoutState.totals.voucherDiscount = result.discount;
+        renderAppliedVoucherUI();
+    } else {
+        localStorage.removeItem('pawpal_applied_voucher_code');
+    }
+}
+
+// ============================================================================
+// Shipping Form
+// ============================================================================
+function initializeShippingForm() {
+    if (checkoutState.user) {
+        // Show save address checkbox
+        document.getElementById('save-address-section').classList.remove('d-none');
+        
+        // Auto-fill user data
+        document.getElementById('fullName').value = checkoutState.user.name || '';
+        document.getElementById('phone').value = checkoutState.user.phone || '';
+        document.getElementById('address').value = checkoutState.user.address || '';
+        
+        // Load saved addresses if exists
+        if (checkoutState.user.addresses && checkoutState.user.addresses.length > 0) {
+            populateSavedAddresses();
+        }
+    }
+}
+
+function populateSavedAddresses() {
+    const dropdown = document.getElementById('address-dropdown');
+    const section = document.getElementById('saved-addresses-section');
+    
+    // Add addresses to dropdown
+    checkoutState.user.addresses.forEach(addr => {
+        const option = document.createElement('option');
+        option.value = addr.id;
+        option.textContent = `${addr.label} - ${addr.name}, ${addr.phone}`;
+        dropdown.appendChild(option);
+    });
+    
+    // Add "new address" option
+    const newOption = document.createElement('option');
+    newOption.value = 'new';
+    newOption.textContent = '+ Thêm địa chỉ mới';
+    dropdown.appendChild(newOption);
+    
+    // Show section
+    section.classList.remove('d-none');
+    
+    // Set default address
+    const defaultAddr = checkoutState.user.addresses.find(a => a.isDefault);
+    if (defaultAddr) {
+        dropdown.value = defaultAddr.id;
+        fillAddressForm(defaultAddr);
+    }
+}
+
+function fillAddressForm(address) {
+    document.getElementById('fullName').value = address.name;
+    document.getElementById('phone').value = address.phone;
+    document.getElementById('address').value = address.street;
+    document.getElementById('city').value = address.city;
+    document.getElementById('district').value = address.district;
+    document.getElementById('note').value = address.note || '';
+}
+
+// ============================================================================
+// Delivery Options
+// ============================================================================
+function renderDeliveryOptions() {
+    const container = document.getElementById('delivery-options');
+    container.innerHTML = '';
+    
+    checkoutState.deliveryOptions.forEach((option, index) => {
+        const isSelected = option.id === checkoutState.selectedDelivery;
+        
+        const optionDiv = document.createElement('div');
+        optionDiv.className = `delivery-option ${isSelected ? 'selected' : ''}`;
+        optionDiv.innerHTML = `
+            <input type="radio" name="delivery" value="${option.id}" 
+                   id="delivery-${option.id}" ${isSelected ? 'checked' : ''}
+                   data-fee="${option.fee}">
+            <svg class="delivery-icon" viewBox="0 0 24 24">
+                ${option.id === 'standard' ? 
+                    '<path d="M18 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-9H17V12h4.46L19.5 9.5zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM20 8l3 4v5h-2c0 1.66-1.34 3-3 3s-3-1.34-3-3H9c0 1.66-1.34 3-3 3s-3-1.34-3-3H1V6c0-1.11.89-2 2-2h14v4h3zM3 6v9h.76c.55-.61 1.35-1 2.24-1s1.69.39 2.24 1H15V6H3z"/>' :
+                    '<path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm6 9.09c0 4-2.55 7.7-6 8.83-3.45-1.13-6-4.82-6-8.83V6.31l6-2.12 6 2.12v4.78z"/><path d="M10.09 13.75L7.77 11.42l-1.06 1.06 3.38 3.38 5.66-5.66-1.06-1.06z"/>'
+                }
+            </svg>
+            <div class="delivery-info">
+                <h4>${option.name}</h4>
+                <p>${option.description}</p>
+            </div>
+            <div class="delivery-fee ${option.fee === 0 ? 'free' : ''}">
+                ${option.fee === 0 ? 'Miễn phí' : formatCurrency(option.fee)}
+            </div>
+        `;
+        
+        optionDiv.addEventListener('click', () => {
+            selectDeliveryOption(option.id, option.fee);
+        });
+        
+        container.appendChild(optionDiv);
+    });
+}
+
+function selectDeliveryOption(deliveryId, fee) {
+    checkoutState.selectedDelivery = deliveryId;
+    checkoutState.totals.shippingFee = fee;
+    
+    // Update UI
+    document.querySelectorAll('.delivery-option').forEach(el => el.classList.remove('selected'));
+    document.querySelector(`#delivery-${deliveryId}`).closest('.delivery-option').classList.add('selected');
+    document.querySelector(`#delivery-${deliveryId}`).checked = true;
+    
+    // Update label in summary
+    const option = checkoutState.deliveryOptions.find(o => o.id === deliveryId);
+    document.getElementById('delivery-label').textContent = `(${option.name})`;
+    
+    updateOrderTotals();
+}
+
+// ============================================================================
+// Payment Methods
+// ============================================================================
+function renderPaymentMethods() {
+    const container = document.getElementById('payment-methods');
+    container.innerHTML = '';
+
+    const groupedMethods = {
+        offline: [],
+        online: [],
+        bank: []
+    };
+
+    checkoutState.paymentMethods.forEach(method => {
+        if (method.id === 'cod') {
+            groupedMethods.offline.push(method);
+        } else if (method.id === 'bank') {
+            groupedMethods.bank.push(method);
+        } else {
+            groupedMethods.online.push(method);
+        }
+    });
+
+    const groupLabels = {
+        offline: 'Thanh toán khi nhận hàng',
+        online: 'Thanh toán trực tuyến',
+        bank: 'Chuyển khoản ngân hàng'
+    };
+
+    Object.entries(groupedMethods).forEach(([group, methods]) => {
+        if (!methods.length) return;
+
+        const groupWrapper = document.createElement('div');
+        groupWrapper.className = 'payment-method-group';
+
+        const groupTitle = document.createElement('div');
+        groupTitle.className = 'payment-method-group-title';
+        groupTitle.textContent = groupLabels[group];
+        groupWrapper.appendChild(groupTitle);
+
+        const groupList = document.createElement('div');
+        groupList.className = 'payment-method-group-list';
+
+        methods.forEach(method => {
+            groupList.appendChild(renderPaymentMethodCard(method));
+        });
+
+        groupWrapper.appendChild(groupList);
+        container.appendChild(groupWrapper);
+    });
+}
+
+function renderPaymentMethodCard(method) {
+    const isSelected = method.id === checkoutState.selectedPayment;
+    const methodDiv = document.createElement('div');
+    methodDiv.className = `payment-method-card ${isSelected ? 'selected' : ''}`;
+    methodDiv.innerHTML = `
+        <input type="radio" name="payment" value="${method.id}" 
+               id="payment-${method.id}" ${isSelected ? 'checked' : ''}>
+        ${['momo', 'vnpay', 'vietqr'].includes(method.id) 
+            ? `<img src="/assets/images/shared/payment_${method.id === 'vietqr' ? 'VietQR' : method.id}.png" class="payment-icon" style="object-fit: contain; width: 32px; height: 32px; border-radius: 4px;">`
+            : `<svg class="payment-icon" viewBox="0 0 24 24">${getPaymentIcon(method.icon)}</svg>`
+        }
+        <div class="payment-info">
+            <h4>${method.name}</h4>
+            <p>${method.description}</p>
+        </div>
+    `;
+
+    methodDiv.addEventListener('click', () => {
+        selectPaymentMethod(method.id);
+    });
+
+    return methodDiv;
+}
+
+function getPaymentIcon(iconType) {
+    const icons = {
+        cash: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>',
+        wallet: '<path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>',
+        'credit-card': '<path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>',
+        bank: '<path d="M6.5 10h-2v7h2v-7zm6 0h-2v7h2v-7zm8.5 9H2v2h19v-2zm-2.5-9h-2v7h2v-7zm-7-6.74L16.71 6H6.29l5.21-2.74m0-2.26L2 6v2h19V6l-9.5-5z"/>'
+    };
+    return icons[iconType] || icons.cash;
+}
+
+function selectPaymentMethod(methodId) {
+    checkoutState.selectedPayment = methodId;
+    
+    // Update UI
+    document.querySelectorAll('.payment-method-card').forEach(el => el.classList.remove('selected'));
+    document.querySelector(`#payment-${methodId}`).closest('.payment-method-card').classList.add('selected');
+    document.querySelector(`#payment-${methodId}`).checked = true;
+    
+    // Update button text
+    const btnCheckout = document.getElementById('btn-checkout');
+    if (methodId === 'cod') {
+        btnCheckout.textContent = 'Xác nhận đặt hàng (COD)';
+    } else {
+        btnCheckout.textContent = 'Tiến hành thanh toán online';
+    }
+}
+
+// ============================================================================
+// PawPoints
+// ============================================================================
+function initializePawPoints() {
+    const section = document.getElementById('pawpoints-section');
+    section.classList.remove('d-none');
+    
+    const userPoints = checkoutState.user.pawPoints || 0;
+    const orderTotal = calculateSubtotal();
+    
+    // Set max points (min of user balance or order total / 1000)
+    const maxPoints = Math.min(userPoints, Math.floor(orderTotal / 1000));
+    
+    // Update UI
+    document.getElementById('user-points').textContent = userPoints;
+    document.getElementById('points-value-equivalent').textContent = formatCurrency(userPoints * 1000);
+    document.getElementById('points-max-label').textContent = formatCurrency(maxPoints * 1000);
+    
+    const slider = document.getElementById('points-slider');
+    slider.max = maxPoints;
+    slider.value = 0;
+    
+    // Enable slider when checkbox checked
+    const checkbox = document.getElementById('use-points-checkbox');
+    checkbox.addEventListener('change', (e) => {
+        slider.disabled = !e.target.checked;
+        if (!e.target.checked) {
+            slider.value = 0;
+            updatePointsDisplay(0);
+            checkoutState.pointsUsed = 0;
+            checkoutState.totals.pointsDiscount = 0;
+            updateOrderTotals();
+        }
+    });
+    
+    // Slider input
+    slider.addEventListener('input', (e) => {
+        const points = parseInt(e.target.value);
+        updatePointsDisplay(points);
+        
+        if (checkbox.checked) {
+            checkoutState.pointsUsed = points;
+            checkoutState.totals.pointsDiscount = points * 1000;
+            updateOrderTotals();
+        }
+    });
+}
+
+function updatePointsDisplay(points) {
+    const discount = points * 1000;
+    const remaining = (checkoutState.user.pawPoints || 0) - points;
+    
+    document.getElementById('points-to-use').textContent = points;
+    document.getElementById('points-discount-display').textContent = formatCurrency(discount);
+    document.getElementById('remaining-points').textContent = remaining;
+}
+
+// ============================================================================
+// Order Summary
+// ============================================================================
+function renderOrderSummary() {
+    const container = document.getElementById('order-items');
+    container.innerHTML = '';
+    
+    checkoutState.cart.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'order-item';
+        itemDiv.innerHTML = `
+            <img src="${item.image}" alt="${item.name}" class="order-item-img">
+            <div class="order-item-info">
+                <h4>${item.name}</h4>
+                <p class="order-item-qty">x${item.quantity}</p>
+            </div>
+            <span class="order-item-price">${formatCurrency(item.price * item.quantity)}</span>
+        `;
+        container.appendChild(itemDiv);
+    });
+    
+    updateOrderTotals();
+}
+
+function calculateSubtotal() {
+    return checkoutState.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+}
+
+function updateOrderTotals() {
+    const subtotal = calculateSubtotal();
+    checkoutState.totals.subtotal = subtotal;
+    checkoutState.totals.voucherDiscount = calculateVoucherDiscount();
+    
+    // Calculate grand total
+    const grandTotal = subtotal 
+        + checkoutState.totals.shippingFee 
+        - checkoutState.totals.pointsDiscount 
+        - checkoutState.totals.voucherDiscount;
+    
+    checkoutState.totals.grandTotal = Math.max(0, grandTotal);
+    
+    // Update UI
+    document.getElementById('subtotal').textContent = formatCurrency(subtotal);
+    document.getElementById('shipping-fee').textContent = 
+        checkoutState.totals.shippingFee === 0 ? 'Miễn phí' : formatCurrency(checkoutState.totals.shippingFee);
+    
+    // Show/hide points row
+    if (checkoutState.totals.pointsDiscount > 0) {
+        document.getElementById('points-row').classList.remove('d-none');
+        document.getElementById('points-discount').textContent = `-${formatCurrency(checkoutState.totals.pointsDiscount)}`;
+    } else {
+        document.getElementById('points-row').classList.add('d-none');
+    }
+    
+    // Show/hide voucher row
+    if (checkoutState.totals.voucherDiscount > 0) {
+        document.getElementById('voucher-row').classList.remove('d-none');
+        document.getElementById('voucher-discount').textContent = `-${formatCurrency(checkoutState.totals.voucherDiscount)}`;
+        document.getElementById('voucher-code-summary').textContent = `(${checkoutState.appliedVoucher.code})`;
+    } else {
+        document.getElementById('voucher-row').classList.add('d-none');
+    }
+    
+    document.getElementById('grand-total').textContent = formatCurrency(checkoutState.totals.grandTotal);
+}
+
+// ============================================================================
+// Voucher
+// ============================================================================
+async function applyVoucher() {
+    const input = document.getElementById('voucher-input');
+    const code = input.value.trim().toUpperCase();
+    
+    if (!code) {
+        showToast('Vui lòng nhập mã giảm giá', 'error');
+        return;
+    }
+    
+    // Validate voucher
+    const result = validateVoucher(code);
+    
+    if (result.valid) {
+        checkoutState.appliedVoucher = result.voucher;
+        checkoutState.totals.voucherDiscount = result.discount;
+        localStorage.setItem('pawpal_applied_voucher_code', code);
+        
+        // Show applied badge
+        renderAppliedVoucherUI();
+        
+        // Clear input
+        input.value = '';
+        
+        // Update totals
+        updateOrderTotals();
+        
+        showToast(`Áp dụng mã ${code} thành công! Tiết kiệm ${formatCurrency(result.discount)}.`, 'success');
+    } else {
+        showToast(result.message, 'error');
+    }
+}
+
+function removeVoucher() {
+    checkoutState.appliedVoucher = null;
+    checkoutState.totals.voucherDiscount = 0;
+    localStorage.removeItem('pawpal_applied_voucher_code');
+    
+    document.getElementById('applied-voucher').classList.add('d-none');
+    updateOrderTotals();
+    
+    showToast('Đã xóa mã giảm giá', 'info');
+}
+
+// ============================================================================
+// Form Validation
+// ============================================================================
+function validateCheckoutForm() {
+    const form = document.getElementById('shipping-form');
+    
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        showToast('Vui lòng điền đầy đủ thông tin giao hàng', 'error');
+        return false;
+    }
+    
+    // Validate invoice if checked
+    const invoiceChecked = document.getElementById('invoice-checkbox').checked;
+    if (invoiceChecked) {
+        const companyName = document.getElementById('companyName').value;
+        const taxCode = document.getElementById('taxCode').value;
+        
+        if (!companyName || !taxCode) {
+            showToast('Vui lòng điền đầy đủ thông tin hóa đơn', 'error');
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// ============================================================================
+// Checkout
+// ============================================================================
+async function handleCheckout() {
+    if (!validateCheckoutForm()) {
+        return;
+    }
+    
+    const orderData = {
+        orderId: generateOrderId(),
+        userId: checkoutState.user?.id || null,
+        
+        shipping: {
+            name: document.getElementById('fullName').value,
+            phone: document.getElementById('phone').value,
+            address: document.getElementById('address').value,
+            district: document.getElementById('district').value,
+            city: document.getElementById('city').value,
+            note: document.getElementById('note').value,
+            deliveryMethod: checkoutState.selectedDelivery,
+            deliveryFee: checkoutState.totals.shippingFee
+        },
+        
+        items: checkoutState.cart,
+        
+        pricing: checkoutState.totals,
+        
+        payment: {
+            method: checkoutState.selectedPayment,
+            status: 'pending'
+        }
+    };
+    
+    // Add invoice if checked
+    const invoiceChecked = document.getElementById('invoice-checkbox').checked;
+    if (invoiceChecked) {
+        orderData.invoice = {
+            required: true,
+            companyName: document.getElementById('companyName').value,
+            taxCode: document.getElementById('taxCode').value,
+            companyAddress: document.getElementById('companyAddress').value,
+            email: document.getElementById('invoiceEmail').value
+        };
+    }
+    
+    // Validate cart and voucher again before committing order
+    updateOrderTotals();
+    const validation = validateCheckoutCart();
+    if (!validation.valid) {
+        showToast(validation.message, 'error');
+        // redirect back to checkout form area if needed
+        document.getElementById('shipping-form').scrollIntoView({ behavior: 'smooth' });
+        return;
+    }
+
+    // Save current order to localStorage (simulate API)
+    localStorage.setItem('pawpal_current_order', JSON.stringify(orderData));
+
+    // Save to user's orders list
+    saveOrderToUserHistory(orderData);
+
+    // Create a temporary guest user record when a guest checks out
+    if (!checkoutState.user) {
+        createGuestTempUserForOrder(orderData);
+    }
+    
+    // Route based on payment method
+    if (checkoutState.selectedPayment === 'cod') {
+        // COD: Clear checkout state and go to success page
+        localStorage.removeItem('pawpal_cart_unselected_backup');
+        localStorage.removeItem('pawpal_applied_voucher_code');
+        const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
+        if (isBuyNow) {
+            sessionStorage.removeItem('pawpal_buynow_cart');
+            sessionStorage.removeItem('pawpal_is_buynow');
+        } else {
+            localStorage.removeItem('pawpal_cart');
+        }
+        window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${orderData.orderId}`;
+    } else if (['momo', 'vnpay', 'zalopay', 'vietqr'].includes(checkoutState.selectedPayment)) {
+        // Online QR payment: Show QR modal
+        showQRPaymentModal(orderData);
+    } else {
+        // Bank transfer: Clear checkout state and go to success page
+        localStorage.removeItem('pawpal_cart_unselected_backup');
+        localStorage.removeItem('pawpal_applied_voucher_code');
+        const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
+        if (isBuyNow) {
+            sessionStorage.removeItem('pawpal_buynow_cart');
+            sessionStorage.removeItem('pawpal_is_buynow');
+        } else {
+            localStorage.removeItem('pawpal_cart');
+        }
+        window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${orderData.orderId}`;
+    }
+}
+
+// ============================================================================
+// QR Payment Modal
+// ============================================================================
+let qrPaymentState = {
+    orderData: null,
+    timerInterval: null,
+    timeRemaining: 900, // 15 minutes in seconds
+    paymentVerified: false
+};
+
+const paymentMethodConfig = {
+    momo: {
+        name: 'Ví điện tử MoMo',
+        color: '#A72930',
+        instruction: 'Quét mã QR bằng ứng dụng MoMo',
+        timeout: 900 // 15 minutes
+    },
+    vnpay: {
+        name: 'Cổng thanh toán VNPay',
+        color: '#0066CC',
+        instruction: 'Quét mã QR qua ứng dụng Ngân hàng của bạn',
+        timeout: 900
+    },
+    zalopay: {
+        name: 'Thanh toán qua ZaloPay',
+        color: '#0084FF',
+        instruction: 'Quét mã QR bằng ứng dụng Zalo hoặc ZaloPay',
+        timeout: 600 // 10 minutes
+    },
+    vietqr: {
+        name: 'Quét mã VietQR',
+        color: '#2A5944',
+        instruction: 'Quét mã QR qua ứng dụng Mobile Banking của ngân hàng',
+        timeout: 1200 // 20 minutes
+    }
+};
+
+function generateMockQRCode(orderId, amount) {
+    // Generate a data URL for a mock QR code image
+    // In production, this would use a QR code library like qrcode.js
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 200;
+    const ctx = canvas.getContext('2d');
+    
+    // Draw a simple pattern to simulate QR code
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, 200, 200);
+    
+    ctx.fillStyle = '#000000';
+    
+    // Position detection patterns (3 corners)
+    const patterns = [
+        [0, 0], [150, 0], [0, 150]
+    ];
+    
+    patterns.forEach(([x, y]) => {
+        // Outer square
+        ctx.fillRect(x, y, 50, 50);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(x + 10, y + 10, 30, 30);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(x + 15, y + 15, 20, 20);
+    });
+    
+    // Random data pattern
+    ctx.fillStyle = '#000000';
+    for (let i = 0; i < 100; i++) {
+        const x = Math.random() * 100 + 50;
+        const y = Math.random() * 100 + 50;
+        if (Math.random() > 0.5) {
+            ctx.fillRect(x, y, 2, 2);
+        }
+    }
+    
+    return canvas.toDataURL('image/png');
+}
+
+function showQRPaymentModal(orderData) {
+    qrPaymentState.orderData = orderData;
+    qrPaymentState.timeRemaining = paymentMethodConfig[orderData.payment.method].timeout;
+    qrPaymentState.paymentVerified = false;
+    
+    const methodId = orderData.payment.method;
+    const config = paymentMethodConfig[methodId];
+    
+    // Update modal content
+    document.getElementById('qr-method-name').textContent = config.name;
+    document.getElementById('qr-method-desc').textContent = `Đơn hàng #${orderData.orderId}`;
+    document.getElementById('qr-instruction').textContent = config.instruction;
+    
+    // Set logo
+    const qrLogo = document.getElementById('qr-logo');
+    qrLogo.className = `qr-logo ${methodId}`;
+    qrLogo.src = `/assets/images/shared/payment_${methodId === 'vietqr' ? 'VietQR' : methodId}.png`;
+    qrLogo.onerror = () => {
+        qrLogo.classList.add('d-none');
+    };
+    
+    // Generate and display QR code
+    const qrCode = generateMockQRCode(orderData.orderId, orderData.pricing.grandTotal);
+    document.getElementById('qr-code-image').src = qrCode;
+    
+    // Enable confirm button
+    document.getElementById('btn-confirm-payment').disabled = false;
+    
+    // Clear any previous status messages
+    const statusMsg = document.getElementById('payment-status-message');
+    statusMsg.className = 'payment-status-message';
+    statusMsg.textContent = '';
+    
+    // Show modal
+    document.getElementById('qr-backdrop').classList.add('show');
+    document.getElementById('payment-qr-modal').classList.add('show');
+    
+    // Start timer
+    startQRTimer();
+}
+
+function startQRTimer() {
+    if (qrPaymentState.timerInterval) {
+        clearInterval(qrPaymentState.timerInterval);
+    }
+    
+    const timerElement = document.getElementById('qr-timer');
+    
+    qrPaymentState.timerInterval = setInterval(() => {
+        qrPaymentState.timeRemaining--;
+        
+        const minutes = Math.floor(qrPaymentState.timeRemaining / 60);
+        const seconds = qrPaymentState.timeRemaining % 60;
+        const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        timerElement.textContent = timeStr;
+        
+        if (qrPaymentState.timeRemaining <= 60) {
+            timerElement.style.color = 'var(--color-danger)';
+        }
+        
+        if (qrPaymentState.timeRemaining <= 0) {
+            clearInterval(qrPaymentState.timerInterval);
+            timerElement.textContent = '00:00';
+            handleQRExpired();
+        }
+    }, 1000);
+}
+
+function hideQRPaymentModal() {
+    document.getElementById('qr-backdrop').classList.remove('show');
+    document.getElementById('payment-qr-modal').classList.remove('show');
+    
+    if (qrPaymentState.timerInterval) {
+        clearInterval(qrPaymentState.timerInterval);
+    }
+}
+
+function handleQRExpired() {
+    const statusMsg = document.getElementById('payment-status-message');
+    statusMsg.className = 'payment-status-message show error';
+    statusMsg.textContent = 'Hết thời hạn thanh toán. Vui lòng thử lại.';
+    
+    document.getElementById('btn-confirm-payment').disabled = true;
+    
+    setTimeout(() => {
+        hideQRPaymentModal();
+    }, 3000);
+}
+
+function mockPaymentVerification() {
+    // Simulate payment verification with random success/failure
+    // In demo, let's make it 80% success rate after 2-5 seconds
+    const willSucceed = Math.random() < 0.8;
+    const delay = Math.random() * 3000 + 2000; // 2-5 seconds
+    
+    const statusMsg = document.getElementById('payment-status-message');
+    statusMsg.className = 'payment-status-message show loading';
+    statusMsg.innerHTML = '<div class="payment-verification-spinner"></div> Đang xác nhận thanh toán...';
+    
+    return new Promise(resolve => {
+        setTimeout(() => {
+            if (willSucceed) {
+                qrPaymentState.paymentVerified = true;
+                statusMsg.className = 'payment-status-message show success';
+                statusMsg.innerHTML = ' Thanh toán thành công!';
+                
+                // Clear checkout state
+                localStorage.removeItem('pawpal_cart_unselected_backup');
+                const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
+                if (isBuyNow) {
+                    sessionStorage.removeItem('pawpal_buynow_cart');
+                    sessionStorage.removeItem('pawpal_is_buynow');
+                } else {
+                    localStorage.removeItem('pawpal_cart');
+                }
+                
+                setTimeout(() => {
+                    window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${qrPaymentState.orderData.orderId}`;
+                }, 1500);
+            } else {
+                statusMsg.className = 'payment-status-message show error';
+                statusMsg.textContent = ' Thanh toán thất bại. Vui lòng thử lại.';
+                
+                setTimeout(() => {
+                    hideQRPaymentModal();
+                }, 2000);
+            }
+            resolve(willSucceed);
+        }, delay);
+    });
+}
+
+// ============================================================================
+// Event Listeners
+// ============================================================================
+function setupEventListeners() {
+    // Address dropdown
+    const addressDropdown = document.getElementById('address-dropdown');
+    if (addressDropdown) {
+        addressDropdown.addEventListener('change', (e) => {
+            if (e.target.value === 'new') {
+                document.getElementById('shipping-form').reset();
+            } else if (e.target.value) {
+                const address = checkoutState.user.addresses.find(a => a.id === e.target.value);
+                if (address) fillAddressForm(address);
+            }
+        });
+    }
+    
+    // Voucher
+    document.getElementById('apply-voucher-btn').addEventListener('click', applyVoucher);
+    document.getElementById('remove-voucher-btn').addEventListener('click', removeVoucher);
+    document.getElementById('voucher-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            applyVoucher();
+        }
+    });
+    
+    // Invoice checkbox
+    document.getElementById('invoice-checkbox').addEventListener('change', (e) => {
+        const form = document.getElementById('invoice-form');
+        if (e.target.checked) {
+            form.classList.remove('d-none');
+            form.querySelectorAll('input').forEach(input => {
+                input.setAttribute('required', 'required');
+            });
+        } else {
+            form.classList.add('d-none');
+            form.querySelectorAll('input').forEach(input => {
+                input.removeAttribute('required');
+            });
+        }
+    });
+    
+    // Checkout button
+    document.getElementById('btn-checkout').addEventListener('click', handleCheckout);
+    
+    // QR Payment Modal
+    document.getElementById('btn-close-qr').addEventListener('click', hideQRPaymentModal);
+    document.getElementById('btn-cancel-qr').addEventListener('click', hideQRPaymentModal);
+    document.getElementById('qr-backdrop').addEventListener('click', hideQRPaymentModal);
+    
+    document.getElementById('btn-confirm-payment').addEventListener('click', async () => {
+        document.getElementById('btn-confirm-payment').disabled = true;
+        await mockPaymentVerification();
+    });
+}
+
+// ============================================================================
+// Utilities
+// ============================================================================
+function saveOrderToUserHistory(orderData) {
+    // Get existing orders
+    let orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+    
+    // Add new order to beginning of array (newest first)
+    orders.unshift({
+        ...orderData,
+        createdAt: new Date().toISOString(),
+        status: 'pending' // Initial status
+    });
+    
+    // Save back to localStorage
+    localStorage.setItem('pawpal_orders', JSON.stringify(orders));
+    
+    console.log('Order saved to history:', orderData.orderId);
+}
+
+function createGuestTempUserForOrder(orderData) {
+    const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+    let tempUser = users.find(u => u.phone === orderData.shipping.phone && u.is_temporary);
+
+    if (!tempUser) {
+        tempUser = {
+            name: orderData.shipping.name,
+            phone: orderData.shipping.phone,
+            role: 'customer',
+            is_temporary: true,
+            points: 0
+        };
+        users.push(tempUser);
+        localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+    }
+
+    const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
+    const hasToken = tokens.some(t => t.phone === orderData.shipping.phone);
+    if (!hasToken) {
+        const token = `token-temp-${Math.floor(100000 + Math.random() * 900000)}`;
+        tokens.push({
+            token,
+            phone: orderData.shipping.phone,
+            createdAt: Date.now()
+        });
+        localStorage.setItem('pawpal_temp_tokens', JSON.stringify(tokens));
+    }
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND'
+    }).format(amount);
+}
+
+function generateOrderId() {
+    const date = new Date();
+    const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
+    const random = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+    return `ORD-${dateStr}-${random}`;
+}
+
+function showToast(message, type = 'info') {
+    // Simple toast implementation
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 9999;
+        animation: slideIn 0.3s ease;
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}

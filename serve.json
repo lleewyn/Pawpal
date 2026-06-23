@@ -1,28 +1,92 @@
 {
   "cleanUrls": false,
   "redirects": [
-    { "source": "/", "destination": "/pages/public/landing.html", "type": 302 }
+    {
+      "source": "/",
+      "destination": "/pages/public/landing/landing.html",
+      "type": 302
+    }
   ],
   "rewrites": [
-    { "source": "/pages/public/landing", "destination": "/pages/public/landing.html" },
-    { "source": "/pages/shop/shop", "destination": "/pages/shop/shop.html" },
-    { "source": "/pages/shop/product-detail", "destination": "/pages/shop/product-detail.html" },
-    { "source": "/pages/services/booking", "destination": "/pages/services/booking.html" },
-    { "source": "/pages/services/services", "destination": "/pages/services/services.html" },
-    { "source": "/pages/public/about", "destination": "/pages/public/about.html" },
-    { "source": "/pages/public/blog", "destination": "/pages/public/blog.html" },
-    { "source": "/pages/public/contact", "destination": "/pages/public/contact.html" },
-    { "source": "/pages/public/login", "destination": "/pages/public/login.html" },
-    { "source": "/pages/public/return-guest", "destination": "/pages/public/return-guest.html" },
-    { "source": "/pages/user/dashboard", "destination": "/pages/user/dashboard.html" },
-    { "source": "/pages/user/bookings", "destination": "/pages/user/bookings.html" },
-    { "source": "/pages/user/booking-detail", "destination": "/pages/user/booking-detail.html" },
-    { "source": "/pages/user/orders", "destination": "/pages/user/orders.html" },
-    { "source": "/pages/user/order-detail", "destination": "/pages/user/order-detail.html" },
-    { "source": "/pages/user/pet-profile", "destination": "/pages/user/pet-profile.html" },
-    { "source": "/pages/user/pet-diary", "destination": "/pages/user/pet-diary.html" },
-    { "source": "/pages/user/wishlist", "destination": "/pages/user/wishlist.html" },
-    { "source": "/pages/user/loyalty", "destination": "/pages/user/loyalty.html" },
-    { "source": "/pages/user/support-tickets", "destination": "/pages/user/support-tickets.html" }
+    {
+      "source": "/pages/public/landing",
+      "destination": "/pages/public/landing/landing.html"
+    },
+    {
+      "source": "/pages/shop/shop",
+      "destination": "/pages/shop/shop.html"
+    },
+    {
+      "source": "/pages/shop/product-detail",
+      "destination": "/pages/shop/product-detail/product-detail.html"
+    },
+    {
+      "source": "/pages/services/booking",
+      "destination": "/pages/services/booking/booking.html"
+    },
+    {
+      "source": "/pages/services/services",
+      "destination": "/pages/services/services.html"
+    },
+    {
+      "source": "/pages/public/about",
+      "destination": "/pages/public/about/about.html"
+    },
+    {
+      "source": "/pages/public/blog",
+      "destination": "/pages/public/blog/blog.html"
+    },
+    {
+      "source": "/pages/public/contact",
+      "destination": "/pages/public/contact/contact.html"
+    },
+    {
+      "source": "/pages/public/login",
+      "destination": "/pages/public/login/login.html"
+    },
+    {
+      "source": "/pages/public/return-guest",
+      "destination": "/pages/public/return-guest/return-guest.html"
+    },
+    {
+      "source": "/pages/user/dashboard",
+      "destination": "/pages/user/dashboard/dashboard.html"
+    },
+    {
+      "source": "/pages/user/bookings",
+      "destination": "/pages/user/bookings/bookings.html"
+    },
+    {
+      "source": "/pages/user/booking-detail",
+      "destination": "/pages/user/booking-detail/booking-detail.html"
+    },
+    {
+      "source": "/pages/user/orders",
+      "destination": "/pages/user/orders/orders.html"
+    },
+    {
+      "source": "/pages/user/order-detail",
+      "destination": "/pages/user/order-detail/order-detail.html"
+    },
+    {
+      "source": "/pages/user/pet-profile",
+      "destination": "/pages/user/pet-profile/pet-profile.html"
+    },
+    {
+      "source": "/pages/user/pet-diary",
+      "destination": "/pages/user/pet-diary/pet-diary.html"
+    },
+    {
+      "source": "/pages/user/wishlist",
+      "destination": "/pages/user/wishlist/wishlist.html"
+    },
+    {
+      "source": "/pages/user/loyalty",
+      "destination": "/pages/user/loyalty/loyalty.html"
+    },
+    {
+      "source": "/pages/user/support-tickets",
+      "destination": "/pages/user/support-tickets/support-tickets.html"
+    }
   ]
 }

@@ -1,0 +1,77 @@
+[
+  {
+    "id": "USER-ADMIN",
+    "name": "Admin PawPal",
+    "phone": "0900000000",
+    "email": "admin@pawpal.vn",
+    "password": "adminpassword",
+    "role": "admin",
+    "is_temporary": false,
+    "points": 5000,
+    "accountType": "Kim Cương",
+    "address": "123 Đường Sư Vạn Hạnh, Phường 12, Quận 10, TP. Hồ Chí Minh",
+    "settings": {
+      "language": "vi",
+      "weightUnit": "kg"
+    },
+    "notifications": {
+      "email": true,
+      "sms": true
+    },
+    "socialLinks": {
+      "google": "admin@gmail.com",
+      "facebook": null
+    },
+    "avatar": "/assets/images/avatars/admin.jpg"
+  },
+  {
+    "id": "USER-001",
+    "name": "Nguyễn Văn A",
+    "phone": "0912345678",
+    "email": "nguyenvana@gmail.com",
+    "password": "password123",
+    "role": "customer",
+    "is_temporary": false,
+    "points": 1250,
+    "accountType": "Bạc",
+    "address": "456 Đường Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
+    "settings": {
+      "language": "vi",
+      "weightUnit": "kg"
+    },
+    "notifications": {
+      "email": true,
+      "sms": false
+    },
+    "socialLinks": {
+      "google": "nguyenvana@gmail.com",
+      "facebook": null
+    },
+    "avatar": "/assets/images/avatars/user1.jpg"
+  },
+  {
+    "id": "USER-GUEST-DEMO",
+    "name": "Khách Vãng Lai Demo",
+    "phone": "0987654321",
+    "email": null,
+    "password": null,
+    "role": "customer",
+    "is_temporary": true,
+    "points": 0,
+    "accountType": "Thành viên Mới",
+    "address": "Chưa thiết lập",
+    "settings": {
+      "language": "vi",
+      "weightUnit": "kg"
+    },
+    "notifications": {
+      "email": false,
+      "sms": true
+    },
+    "socialLinks": {
+      "google": null,
+      "facebook": null
+    },
+    "avatar": "/assets/images/avatars/default.jpg"
+  }
+]

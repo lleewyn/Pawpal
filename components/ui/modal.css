@@ -1,0 +1,541 @@
+﻿/* ==========================================================================
+   PawPal — Modal Components
+   Gồm: Booking Modal, Pricing Modal, Lookup Modal
+   ========================================================================== */
+
+/* ── Shared overlay pattern ── */
+.booking-modal,
+.pricing-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.booking-modal.open,
+.pricing-modal.open {
+    display: flex;
+}
+
+.booking-modal-overlay,
+.pricing-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(42, 89, 68, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* ── Booking Modal ── */
+.booking-modal-content {
+    position: relative;
+    background: var(--color-bg-white);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--shadow-card-hover);
+    max-width: 500px;
+    width: 100%;
+    padding: 36px;
+    z-index: 2001;
+    transform: scale(0.9);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+}
+
+.booking-modal.open .booking-modal-content {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.booking-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 16px;
+}
+
+.booking-modal-header h3 {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    color: var(--color-primary);
+    font-weight: 500;
+    margin: 0;
+}
+
+.booking-modal-close,
+.pricing-modal-close {
+    background: none;
+    border: none;
+    font-size: 2.2rem;
+    color: var(--color-text-light);
+    cursor: pointer;
+    line-height: 1;
+    transition: var(--transition-smooth);
+}
+
+.booking-modal-close:hover,
+.pricing-modal-close:hover {
+    color: var(--color-accent-dark);
+    
+}
+
+.booking-form .form-group {
+    margin-bottom: 20px;
+}
+
+.booking-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--color-primary-dark);
+}
+
+.booking-form input,
+.booking-form select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    font-family: var(--font-primary);
+    font-size: 1rem;
+    color: var(--color-text-dark);
+    background-color: var(--color-bg-light);
+    outline: none;
+    transition: var(--transition-smooth);
+}
+
+.booking-form input::placeholder {
+    color: #a0aec0;
+}
+
+.booking-form input:focus,
+.booking-form select:focus {
+    border-color: var(--color-accent);
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(229, 169, 60, 0.25);
+}
+
+.btn-submit-booking {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background-color: var(--color-accent);
+    color: #ffffff;
+    font-family: var(--font-primary);
+    font-weight: 700;
+    font-size: 1.05rem;
+    border: none;
+    border-radius: var(--border-radius-pill);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    margin-top: 10px;
+}
+
+.btn-submit-booking:hover {
+    background-color: var(--color-accent-dark);
+    
+}
+
+/* ── Pricing Modal ── */
+.pricing-modal-content {
+    position: relative;
+    background: var(--color-bg-white);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--shadow-card-hover);
+    max-width: 650px;
+    width: 100%;
+    padding: 36px;
+    z-index: 2001;
+    transform: scale(0.9);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.pricing-modal.open .pricing-modal-content {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.pricing-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 16px;
+}
+
+.pricing-modal-header h3 {
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    color: var(--color-primary);
+    font-weight: 500;
+    margin: 0;
+}
+
+.pricing-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--color-border);
+    padding-bottom: 10px;
+}
+
+.pricing-tab-btn {
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--color-text-light);
+    cursor: pointer;
+    border-radius: var(--card-border-radius);
+    transition: var(--transition-smooth);
+}
+
+.pricing-tab-btn:hover {
+    color: var(--color-primary);
+    background-color: var(--color-bg-light);
+}
+
+.pricing-tab-btn.active {
+    color: #ffffff;
+    background-color: var(--color-primary);
+}
+
+.pricing-tab-content { display: none; }
+.pricing-tab-content.active { display: block; }
+
+.pricing-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-family: var(--font-primary);
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.pricing-table th,
+.pricing-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.pricing-table th {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary-dark);
+    font-weight: 700;
+}
+
+.pricing-table td { color: var(--color-text-dark); }
+
+.pricing-table tbody tr:hover { background-color: var(--color-bg-light); }
+
+.pricing-note {
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--color-text-light);
+    margin-bottom: 24px;
+}
+
+.pricing-modal-footer {
+    border-top: 1px solid var(--color-border);
+    padding-top: 20px;
+}
+
+/* ── Lookup Modal ── */
+.lookup-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.lookup-modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.lookup-modal {
+    background-color: var(--color-bg-white);
+    border-radius: var(--card-border-radius);
+    width: 100%;
+    max-width: 520px;
+    box-shadow: var(--shadow-card-hover);
+    overflow: hidden;
+    transform: translateY(16px) scale(0.98);
+    transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.lookup-modal-overlay.open .lookup-modal {
+    transform: translateY(0) scale(1);
+}
+
+.lookup-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.lookup-modal-title-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.lookup-modal-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--card-border-radius);
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.lookup-modal-title {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+    margin: 0 0 2px;
+}
+
+.lookup-modal-subtitle {
+    font-size: 0.82rem;
+    color: var(--color-text-light);
+    margin: 0;
+}
+
+.lookup-modal-close {
+    background: none;
+    border: none;
+    color: var(--color-text-light);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--card-border-radius);
+    transition: var(--transition-smooth);
+    flex-shrink: 0;
+}
+
+.lookup-modal-close:hover {
+    background-color: var(--color-neutral-light);
+    color: var(--color-text-dark);
+}
+
+.lookup-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 16px 24px 0;
+}
+
+.lookup-tab {
+    flex: 1;
+    padding: 8px 12px;
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    font-family: var(--font-primary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-light);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.lookup-tab:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background-color: var(--color-primary-light);
+}
+
+.lookup-tab.active {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+}
+
+.lookup-form-area {
+    padding: 20px 24px;
+}
+
+.lookup-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    margin-bottom: 8px;
+}
+
+.lookup-input-row {
+    display: flex;
+    gap: 10px;
+}
+
+.lookup-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    font-family: var(--font-primary);
+    font-size: 0.95rem;
+    color: var(--color-text-dark);
+    background-color: #ffffff;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.lookup-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(42, 89, 68, 0.08);
+}
+
+.lookup-input::placeholder { color: var(--color-text-faint); }
+
+.lookup-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--card-border-radius);
+    font-family: var(--font-primary);
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    white-space: nowrap;
+}
+
+.lookup-submit-btn:hover {
+    background-color: var(--color-primary-dark);
+    
+}
+
+.lookup-hint {
+    font-size: 0.78rem;
+    color: var(--color-text-faint);
+    margin: 8px 0 0;
+}
+
+.lookup-results {
+    padding: 0 24px 20px;
+    max-height: 320px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.lookup-results-header {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+}
+
+.lookup-result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: var(--color-bg-light);
+    border: 1px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    margin-bottom: 8px;
+    transition: var(--transition-smooth);
+}
+
+.lookup-result-item:hover {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-light);
+}
+
+.lookup-result-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.lookup-result-id {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+}
+
+.lookup-result-meta {
+    font-size: 0.78rem;
+    color: var(--color-text-light);
+}
+
+.lookup-result-status {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: var(--border-radius-pill);
+}
+
+.lookup-status-pending  { background-color: var(--color-accent-light);   color: var(--color-accent-dark); }
+.lookup-status-done     { background-color: var(--color-success-light);   color: var(--color-success); }
+.lookup-status-cancelled{ background-color: var(--color-danger-light);    color: var(--color-danger); }
+
+.lookup-empty {
+    text-align: center;
+    padding: 32px 0;
+    color: var(--color-text-light);
+    font-size: 0.88rem;
+}
+
+.lookup-empty-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.lookup-modal-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 24px;
+    border-top: 1px solid var(--color-border);
+    background-color: var(--color-bg-light);
+    font-size: 0.82rem;
+    color: var(--color-text-light);
+}
+
+.lookup-modal-footer a { font-weight: 700; color: var(--color-primary); }
+.lookup-modal-footer a:hover { color: var(--color-accent-dark); }
+
+@media (max-width: 640px) {
+    .lookup-modal-header  { padding: 20px 18px 14px; }
+    .lookup-form-area     { padding: 16px 18px; }
+    .lookup-input-row     { flex-direction: column; }
+    .lookup-submit-btn    { width: 100%; justify-content: center; }
+    .lookup-results       { padding: 0 18px 16px; }
+    .lookup-modal-footer  { padding: 12px 18px; }
+}

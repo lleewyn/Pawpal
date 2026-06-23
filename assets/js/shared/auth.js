@@ -124,7 +124,7 @@ function setCurrentUser(user) {
 // Đăng xuất
 function logout() {
     localStorage.removeItem(CURRENT_USER_KEY);
-    window.location.href = '/pages/public/landing.html';
+    window.location.href = '/pages/public/landing/landing.html';
 }
 
 // --- TOAST NOTIFICATION SYSTEM ---
@@ -222,7 +222,7 @@ function enforceTemporaryAccountLock() {
             tokens.push(tokenObj);
             localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
         }
-        window.location.href = `/pages/public/login.html?action=setup-password&token=${tokenObj.token}`;
+        window.location.href = `/pages/public/login/login.html?action=setup-password&token=${tokenObj.token}`;
         return;
     }
 
@@ -573,9 +573,9 @@ function initAuthForms() {
             showToast('success', 'Đăng nhập thành công!', 2000);
             setTimeout(() => {
                 if (user.role === 'admin') {
-                    window.location.href = '/pages/admin/index.html';
+                    window.location.href = '/pages/admin/index/index.html';
                 } else {
-                    window.location.href = '/pages/user/dashboard.html';
+                    window.location.href = '/pages/user/dashboard/dashboard.html';
                 }
             }, 2000);
         } else {
@@ -817,7 +817,7 @@ function initAuthForms() {
                     tokens.push(tokenObj);
                     localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
                     setTimeout(() => {
-                        window.location.href = `/pages/public/login.html?action=setup-password&token=${tokenObj.token}`;
+                        window.location.href = `/pages/public/login/login.html?action=setup-password&token=${tokenObj.token}`;
                     }, 1000);
                 } else {
                     forgotNewPasswordSection.classList.remove('d-none');
@@ -1103,7 +1103,7 @@ const passwordPolicy = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
                 
                 // Tự động chuyển hướng về trang Dashboard người dùng sau 2 giây nữa
                 setTimeout(() => {
-                    window.location.href = '/pages/user/dashboard.html';
+                    window.location.href = '/pages/user/dashboard/dashboard.html';
                 }, 2000);
             }
         }, stepTime);
@@ -1172,7 +1172,7 @@ const passwordPolicy = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
                 showToast('success', 'Kích hoạt tài khoản thành viên thành công! Bạn nhận thêm 50 điểm thưởng chào mừng.');
                 setTimeout(() => {
-                    window.location.href = '/pages/user/dashboard.html';
+                    window.location.href = '/pages/user/dashboard/dashboard.html';
                 }, 2000);
             }
         });
@@ -1199,7 +1199,7 @@ const passwordPolicy = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
             localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
 
             showToast('success', 'Đã gửi link mới qua SMS. Vui lòng kiểm tra điện thoại của bạn.', 6000);
-            console.log(`[SMS Simulation] Setup password link: ${window.location.origin}/pages/public/login.html?action=setup-password&token=${token}`);
+            console.log(`[SMS Simulation] Setup password link: ${window.location.origin}/pages/public/login/login.html?action=setup-password&token=${token}`);
         });
     }
 }
@@ -1270,7 +1270,7 @@ function initAdminQuickAddCustomer() {
                 localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
 
                 // Phản hồi Toast thành công
-                showAdminToast(`Đã khởi tạo tài khoản tạm và gửi link SMS kích hoạt mật khẩu cho khách thành công!<br><a href="/pages/public/login.html?action=setup-password&token=${token}" target="_blank" style="color:var(--color-accent); font-weight:bold;">Mở liên kết kích hoạt (Simulated SMS Link)</a>`);
+                showAdminToast(`Đã khởi tạo tài khoản tạm và gửi link SMS kích hoạt mật khẩu cho khách thành công!<br><a href="/pages/public/login/login.html?action=setup-password&token=${token}" target="_blank" style="color:var(--color-accent); font-weight:bold;">Mở liên kết kích hoạt (Simulated SMS Link)</a>`);
 
                 // Reset button
                 submitBtn.disabled = false;

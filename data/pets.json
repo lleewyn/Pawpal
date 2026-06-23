@@ -1,0 +1,47 @@
+[
+  {
+    "id": "PET-001",
+    "userId": "USER-001",
+    "name": "Milu",
+    "species": "dog",
+    "breed": "Corgi",
+    "gender": "male",
+    "weight": 8.5,
+    "dob": "2023-05-15",
+    "color": "Vàng trắng",
+    "vaccinated": true,
+    "allergies": "Dị ứng hải sản",
+    "notes": "Bé khá nhát người lạ, thích ăn pate bò.",
+    "avatar": "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+  },
+  {
+    "id": "PET-002",
+    "userId": "USER-001",
+    "name": "Mimi",
+    "species": "cat",
+    "breed": "Anh lông ngắn (ALN)",
+    "gender": "female",
+    "weight": 4.2,
+    "dob": "2024-01-20",
+    "color": "Xám xanh",
+    "vaccinated": true,
+    "allergies": "",
+    "notes": "Thích cào móng vào buổi sáng.",
+    "avatar": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+  },
+  {
+    "id": "PET-003",
+    "userId": "USER-ADMIN",
+    "name": "Boss",
+    "species": "dog",
+    "breed": "Golden Retriever",
+    "gender": "male",
+    "weight": 25.0,
+    "dob": "2021-10-10",
+    "color": "Vàng nhạt",
+    "vaccinated": true,
+    "allergies": "Không",
+    "notes": "Rất hiếu động, thích nghịch nước.",
+    "avatar": "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+  }
+]

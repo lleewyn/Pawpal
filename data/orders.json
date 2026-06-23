@@ -1,7 +1,7 @@
 [
     {
         "id": "ORD-2026-001",
-        "userId": "USER-123",
+        "userId": "USER-001",
         "status": "shipping",
         "paymentStatus": "unpaid",
         "paymentMethod": "cod",
@@ -60,7 +60,7 @@
     },
     {
         "id": "ORD-2026-002",
-        "userId": "USER-123",
+        "userId": "USER-001",
         "status": "completed",
         "paymentStatus": "paid",
         "paymentMethod": "vnpay",
@@ -123,7 +123,7 @@
     },
     {
         "id": "ORD-2026-003",
-        "userId": "USER-123",
+        "userId": "USER-001",
         "status": "pending_payment",
         "paymentStatus": "unpaid",
         "paymentMethod": "cod",

@@ -1,8 +1,8 @@
 {
   "scripts": {
-    "sync": "node scripts/sync_static.js",
+    "sync": "node sync_static.js",
     "dev": "npx serve -p 3000",
-    "build": "node scripts/sync_static.js"
+    "build": "node sync_static.js"
   },
   "dependencies": {
     "bootstrap": "^5.3.3"
