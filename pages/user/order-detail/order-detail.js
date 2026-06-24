@@ -25,11 +25,17 @@ async function loadOrderDetail() {
     }
     
     try {
-        const response = await fetch('/data/orders.json');
-        const orders = await response.json();
-        
-        currentOrder = orders.find(order => order.id === orderId);
-        
+        // First try localStorage cache (orders created by the app)
+        const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+        currentOrder = Array.isArray(localOrders) ? localOrders.find(o => String(o.id) === String(orderId)) : null;
+
+        // Fallback to the seeded data file when local storage is empty
+        if (!currentOrder) {
+            const response = await fetch('/data/orders.json');
+            const orders = await response.json();
+            currentOrder = Array.isArray(orders) ? orders.find(order => String(order.id) === String(orderId)) : null;
+        }
+
         if (!currentOrder) {
             showError('Không tìm thấy đơn hàng');
             return;

@@ -4,6 +4,9 @@
 
 let allServices = [];
 let initDiagnostics = "Not initialized yet.";
+// Member discount config (change these to adjust member discount globally)
+const MEMBER_DISCOUNT_PERCENT = 0.05; // 5%
+const MEMBER_DISCOUNT_TEXT = 'Thành viên được giảm thêm';
 let selectedService = null;
 let bookingState = {
     step: 1,
@@ -24,6 +27,25 @@ let bookingState = {
 
 let holdTimerInterval = null;
 let holdExpirationTime = null;
+let heldSlot = '';
+
+function loadBookingConfig() {
+    try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', '/data/booking-config.json', false);
+        xhr.send(null);
+        if (xhr.status >= 200 && xhr.status < 300) {
+            const config = JSON.parse(xhr.responseText);
+            window.PawPalBookingConfig = config;
+            return config;
+        }
+    } catch (error) {
+        console.warn('[booking] Cannot load booking-config.json:', error);
+    }
+    return null;
+}
+
+loadBookingConfig();
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('=== BOOKING MODULE INITIALIZING ===');
@@ -170,7 +192,7 @@ function loadMemberPets(user) {
 }
 
 function setupGuestValidation() {
-    const inputs = ['ownerName', 'ownerPhone', 'petName', 'petType', 'petWeight'];
+    const inputs = ['ownerName', 'ownerPhone', 'petName', 'petType', 'petTypeOther', 'petWeight'];
     inputs.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -186,10 +208,24 @@ function setupGuestValidation() {
     });
 
     const petTypeEl = document.getElementById('petType');
+    const petTypeOtherGroup = document.getElementById('petTypeOtherGroup');
     if (petTypeEl) {
         petTypeEl.addEventListener('change', () => {
+            // Toggle visibility of specific species input when 'Khác' selected
+            if (petTypeEl.value === 'Khác') {
+                petTypeOtherGroup && petTypeOtherGroup.classList.remove('d-none');
+            } else {
+                petTypeOtherGroup && petTypeOtherGroup.classList.add('d-none');
+                // clear any previous warnings/errors
+                const otherErr = document.getElementById('petTypeOtherErr');
+                const otherWarn = document.getElementById('petTypeOtherWarn');
+                if (otherErr) { otherErr.textContent = ''; otherErr.classList.add('d-none'); }
+                if (otherWarn) { otherWarn.classList.add('d-none'); }
+            }
             validateStep1();
         });
+        // initialize visibility on load
+        if (petTypeEl.value === 'Khác') petTypeOtherGroup && petTypeOtherGroup.classList.remove('d-none');
     }
 }
 
@@ -218,6 +254,25 @@ function validateGuestInput(id) {
     } else if (id === 'petName' && !val) {
         isValid = false;
         errMsg = 'Vui lòng nhập tên bé';
+    } else if (id === 'petTypeOther') {
+        const petTypeSelect = document.getElementById('petType');
+        const warnEl = document.getElementById('petTypeOtherWarn');
+        // If user selected 'Khác', require this field; otherwise ignore
+        if (petTypeSelect && petTypeSelect.value === 'Khác') {
+            if (!val) {
+                isValid = false;
+                errMsg = 'Vui lòng nhập loài cụ thể';
+            } else {
+                // check for weird characters (letters, spaces, hyphen, apostrophe allowed)
+                const safeRe = /^[\p{L}\s\-']+$/u;
+                if (!safeRe.test(val)) {
+                    // show warning but do not block submission
+                    if (warnEl) { warnEl.classList.remove('d-none'); }
+                } else {
+                    if (warnEl) { warnEl.classList.add('d-none'); }
+                }
+            }
+        }
     } else if (id === 'petType' && !val) {
         isValid = false;
         errMsg = 'Vui lòng chọn loại thú cưng';
@@ -260,10 +315,15 @@ function validateStep1() {
         const ownerPhone = document.getElementById('ownerPhone').value.trim();
         const petName = document.getElementById('petName').value.trim();
         const petType = document.getElementById('petType').value;
+        const petTypeOtherVal = document.getElementById('petTypeOther')?.value.trim() || '';
         const petWeight = parseFloat(document.getElementById('petWeight').value);
 
         const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
         isValid = ownerName && ownerPhone && phoneRegex.test(ownerPhone) && petName && petType && !isNaN(petWeight) && petWeight > 0;
+        // If 'Khác' selected, require petTypeOtherVal
+        if (isValid && petType === 'Khác') {
+            isValid = petTypeOtherVal.length > 0;
+        }
     }
 
     document.getElementById('step1Next').disabled = !isValid;
@@ -322,7 +382,7 @@ function renderServices(type, searchQuery = '') {
         const formattedPrice = calculatedPrice.toLocaleString('vi-VN');
         const priceUnit = service.priceDisplay.includes('đêm') ? ' / đêm' : '';
 
-        const memberPrice = Math.round(calculatedPrice * 0.95);
+        const memberPrice = Math.round(calculatedPrice * (1 - MEMBER_DISCOUNT_PERCENT));
         const formattedMemberPrice = memberPrice.toLocaleString('vi-VN');
 
         const isSelected = bookingState.serviceId === service.serviceId ? 'selected' : '';
@@ -336,7 +396,7 @@ function renderServices(type, searchQuery = '') {
                 </div>
                 <div class="svc-select-price">
                     <div class="svc-price-main">${formattedPrice}đ${priceUnit}</div>
-                    <div class="svc-price-duration" style="color: var(--color-primary); font-size: 0.8rem; font-weight: 600;">${formattedMemberPrice}đ (Thành viên -5%)</div>
+                    <div class="svc-price-duration" style="color: var(--color-primary); font-size: 0.8rem; font-weight: 600;">${formattedMemberPrice}đ (${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}% giảm cho thành viên)</div>
                 </div>
             </div>
         `;
@@ -486,13 +546,16 @@ function renderTimeslots() {
     const grid = document.getElementById('timeslotGrid');
     if (!grid) return;
 
-    const slots = [
-        '08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
-    ];
+    const slots = (window.PawPalBookingConfig && Array.isArray(window.PawPalBookingConfig.slots))
+        ? window.PawPalBookingConfig.slots
+        : ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
 
     // Check if slots are too close to current time (under 2 hours)
     const now = new Date();
     const isToday = bookingState.date === now.toISOString().split('T')[0];
+
+    // Determine busy slots from existing bookings instead of randomizing
+    const existingBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
 
     grid.innerHTML = slots.map(slot => {
         let isTooSoon = false;
@@ -508,28 +571,47 @@ function renderTimeslots() {
             }
         }
 
-        // Mock occupancy
-        const isBusy = !isTooSoon && Math.random() < 0.25;
+        // Occupancy: check existing bookings matching date and start time (simple overlap)
+        const isBusy = existingBookings.some(b => b.date === bookingState.date && b.timeStart === slot);
 
         let statusClass = 'open';
         if (isTooSoon) statusClass = 'soon';
         else if (isBusy) statusClass = 'busy';
 
         const disabled = isTooSoon || isBusy ? 'disabled' : '';
+        const tooSoonClass = isTooSoon ? 'too-soon' : '';
 
-        return `<button class="timeslot-btn slot-${statusClass}" ${disabled} data-slot="${slot}">${slot}</button>`;
+        return `<button class="timeslot-btn slot-${statusClass} ${tooSoonClass}" ${disabled} data-slot="${slot}">${slot}</button>`;
     }).join('');
 
-    // Attach click events
+    // Re-apply selected / held classes if bookingState has a selected slot or a held slot
     grid.querySelectorAll('.timeslot-btn').forEach(btn => {
+        const slot = btn.dataset.slot;
+        // mark selected if it matches bookingState
+        if (bookingState.timeSlot && bookingState.timeSlot === slot) {
+            btn.classList.add('selected');
+        }
+        // mark held if it matches heldSlot
+        if (heldSlot && heldSlot === slot) {
+            btn.classList.add('held');
+        }
+
+        // Attach click events only for enabled buttons
         btn.addEventListener('click', (e) => {
             e.preventDefault();
-            grid.querySelectorAll('.timeslot-btn').forEach(b => b.classList.remove('selected'));
-            btn.classList.add('selected');
+            if (btn.disabled) return;
 
+            // Deselect others and remove previous selected marker
+            grid.querySelectorAll('.timeslot-btn').forEach(b => b.classList.remove('selected'));
+
+            // Mark clicked as selected and visually held
+            btn.classList.add('selected');
+            btn.classList.add('held');
+
+            // Update booking state
             bookingState.timeSlot = btn.dataset.slot;
 
-            // Start Hold Timer
+            // Start Hold Timer (clears previous holds inside)
             startHoldTimer(bookingState.timeSlot);
 
             renderStaff();
@@ -542,6 +624,14 @@ function renderTimeslots() {
 function startHoldTimer(slot) {
     if (holdTimerInterval) {
         clearInterval(holdTimerInterval);
+    }
+    // Remove held class from previous held slot button if any
+    if (heldSlot) {
+        const prevBtn = document.querySelector(`.timeslot-btn[data-slot="${heldSlot}"]`);
+        if (prevBtn) {
+            prevBtn.classList.remove('held');
+        }
+        heldSlot = '';
     }
 
     const holdBanner = document.getElementById('bookingHoldBanner');
@@ -558,6 +648,10 @@ function startHoldTimer(slot) {
     };
 
     updateTimerDisplay();
+    // Track current held slot so we can clear class later
+    heldSlot = slot;
+    const currentBtn = document.querySelector(`.timeslot-btn[data-slot="${slot}"]`);
+    if (currentBtn) currentBtn.classList.add('held');
 
     holdTimerInterval = setInterval(() => {
         timeRemaining--;
@@ -568,9 +662,12 @@ function startHoldTimer(slot) {
             holdBanner.style.background = '#fff3cd';
             holdBanner.style.borderColor = '#ffeeba';
 
-            // Deselect slot
+            // Deselect slot and remove held marker
             bookingState.timeSlot = '';
             document.querySelectorAll('.timeslot-btn').forEach(b => b.classList.remove('selected'));
+            const heldBtn = document.querySelector(`.timeslot-btn[data-slot="${slot}"]`);
+            if (heldBtn) heldBtn.classList.remove('held');
+            heldSlot = '';
             document.getElementById('step3Next').disabled = true;
             updateSummary();
         } else {
@@ -583,12 +680,14 @@ function renderStaff() {
     const listContainer = document.getElementById('staffList');
     if (!listContainer) return;
 
-    const staffs = [
-        { name: 'Phân bổ ngẫu nhiên', desc: 'PawPal tự động chọn bảo mẫu trống lịch', id: 'random' },
-        { name: 'Nguyễn Minh An', desc: 'Chuyên viên Spa • 3 năm kinh nghiệm', id: 'staff1' },
-        { name: 'Trần An Nhiên', desc: 'Bảo mẫu Hotel • Cực kỳ nhẹ nhàng', id: 'staff2' },
-        { name: 'Lê Hoàng Tiến', desc: 'Chuyên viên cắt tỉa Grooming', id: 'staff3' }
-    ];
+    const staffs = (window.PawPalBookingConfig && Array.isArray(window.PawPalBookingConfig.staffs))
+        ? window.PawPalBookingConfig.staffs
+        : [
+            { name: 'Phân bổ ngẫu nhiên', desc: 'PawPal tự động chọn bảo mẫu trống lịch', id: 'random' },
+            { name: 'Nguyễn Minh An', desc: 'Chuyên viên Spa • 3 năm kinh nghiệm', id: 'staff1' },
+            { name: 'Trần An Nhiên', desc: 'Bảo mẫu Hotel • Cực kỳ nhẹ nhàng', id: 'staff2' },
+            { name: 'Lê Hoàng Tiến', desc: 'Chuyên viên cắt tỉa Grooming', id: 'staff3' }
+        ];
 
     listContainer.innerHTML = staffs.map(staff => {
         const isSelected = bookingState.staff === staff.name ? 'selected' : '';
@@ -709,7 +808,9 @@ function setupStepActions() {
             bookingState.ownerName = document.getElementById('ownerName').value.trim();
             bookingState.ownerPhone = document.getElementById('ownerPhone').value.trim();
             bookingState.petName = document.getElementById('petName').value.trim();
-            bookingState.petType = document.getElementById('petType').value;
+            const petTypeVal = document.getElementById('petType').value;
+            const petTypeOtherVal = document.getElementById('petTypeOther')?.value.trim() || '';
+            bookingState.petType = petTypeVal === 'Khác' && petTypeOtherVal ? petTypeOtherVal : petTypeVal;
             bookingState.petBreed = document.getElementById('petBreed').value.trim() || 'Chưa rõ';
             bookingState.petWeight = parseFloat(document.getElementById('petWeight').value);
             bookingState.petNote = document.getElementById('petNote').value.trim();
@@ -816,14 +917,18 @@ function updateSummary() {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
     const isMember = currentUser && !currentUser.is_temporary;
 
-    const finalPrice = isMember ? Math.round(totalPrice * 0.95) : totalPrice;
+    const finalPrice = isMember ? Math.round(totalPrice * (1 - MEMBER_DISCOUNT_PERCENT)) : totalPrice;
     document.getElementById('sumPriceVal').textContent = `${finalPrice.toLocaleString('vi-VN')}đ`;
 
     const sumMemberNote = document.getElementById('sumMemberNote');
+    // Show member discount note with actual discount amount and percent
+    const memberDiscount = isMember ? Math.round(totalPrice * MEMBER_DISCOUNT_PERCENT) : 0;
     if (isMember) {
         sumMemberNote.classList.remove('d-none');
+        sumMemberNote.innerHTML = `${MEMBER_DISCOUNT_TEXT} ${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}% (-${memberDiscount.toLocaleString('vi-VN')}đ)`;
     } else {
         sumMemberNote.classList.add('d-none');
+        sumMemberNote.innerHTML = '';
     }
 }
 
@@ -877,13 +982,13 @@ function renderStep4Confirm() {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
     const isMember = currentUser && !currentUser.is_temporary;
 
-    const discount = isMember ? Math.round(subtotal * 0.05) : 0;
+    const discount = isMember ? Math.round(subtotal * MEMBER_DISCOUNT_PERCENT) : 0;
     const finalTotal = subtotal - discount;
 
     if (isMember) {
         billLines += `
             <div class="summary-row" style="color: #27ae60;">
-                <span class="sum-label">Khấu trừ thành viên (Bạc -5%)</span>
+                <span class="sum-label">Khấu trừ thành viên (Bạc -${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}%)</span>
                 <span class="sum-value">-${discount.toLocaleString('vi-VN')}đ</span>
             </div>
         `;
@@ -955,7 +1060,7 @@ function processBookingSubmit() {
 
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
     const isMember = currentUser && !currentUser.is_temporary;
-    const finalPrice = isMember ? Math.round(totalPrice * 0.95) : totalPrice;
+    const finalPrice = isMember ? Math.round(totalPrice * (1 - MEMBER_DISCOUNT_PERCENT)) : totalPrice;
 
     const bookingRecord = {
         id: newBookingId,
@@ -974,6 +1079,8 @@ function processBookingSubmit() {
         price: finalPrice,
         status: 'pending',
         note: bookingState.petNote || null,
+        changeCount: 0,
+        cancelCount: 0,
         createdAt: new Date().toISOString()
     };
 
@@ -995,8 +1102,37 @@ function processBookingSubmit() {
                 is_temporary: true,
                 points: 0 // Sẽ nhận 50 điểm sau khi kích hoạt mật khẩu
             };
+            // Ensure user has an id (uses global ensureUserId from auth.js)
+            try {
+                ensureUserId(tempUser);
+            } catch (e) {
+                // fail silently if ensureUserId isn't available
+                if (!tempUser.id) tempUser.id = 'USER-TMP-' + Date.now();
+            }
             users.push(tempUser);
             localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+
+            // Also create a pet profile and associate with this temporary user so it persists when they activate
+            try {
+                const pets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+                const petName = bookingState.petName || 'Bé cưng';
+                const petExists = pets.some(p => String(p.userId) === String(tempUser.id) && p.name === petName);
+                if (!petExists) {
+                    const newPet = {
+                        id: 'PET-' + Date.now(),
+                        name: petName,
+                        species: bookingState.petType || 'other',
+                        breed: bookingState.petBreed || '',
+                        weight: bookingState.petWeight || '',
+                        userId: tempUser.id,
+                        createdAt: new Date().toISOString()
+                    };
+                    pets.unshift(newPet);
+                    localStorage.setItem('pawpal_pets', JSON.stringify(pets));
+                }
+            } catch (e) {
+                console.warn('Could not persist pet for temp user', e);
+            }
 
             // Tạo token kích hoạt mật khẩu có hiệu lực 48 giờ
             generatedToken = 'token-temp-' + Math.floor(100000 + Math.random() * 900000);

@@ -39,7 +39,7 @@
         localStorage.removeItem(DRAFT_PREFIX + productId);
     }
 
-    /** Persistent review store (localStorage mock for frontend-only demo) */
+    /** Persistent review store backed by localStorage */
     function getStoredReviews() {
         try {
             return JSON.parse(localStorage.getItem(REVIEWS_KEY) || '[]');

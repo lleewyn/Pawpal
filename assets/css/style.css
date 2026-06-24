@@ -165,6 +165,14 @@
    PawPal — Button Components
    ========================================================================== */
 
+/* Ensure Bootstrap buttons render Vietnamese diacritics correctly: use UI font
+    and avoid forced uppercase / large letter-spacing on small action buttons. */
+.btn, .btn-sm, .btn-outline-secondary {
+     font-family: var(--font-body) !important;
+     text-transform: none !important;
+     letter-spacing: normal !important;
+}
+
 .btn-cta {
     display: inline-flex;
     align-items: center;

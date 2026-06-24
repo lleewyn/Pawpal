@@ -10,11 +10,40 @@
 .booking-layout {
     max-width: 1160px;
     margin: 0 auto;
-    /* display: grid; grid-template-columns: 1fr 340px; */
+    gap: 24px;
+    align-items: start;
+.booking-layout {
+    max-width: 1160px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 360px;
     gap: 24px;
     align-items: start;
 }
+}
+    /* Ensure the summary column aligns with the main schedule column and stays visible */
+    align-self: start;
+}
 
+/* Make the summary card sticky so it stays in view while scrolling */
+.booking-summary-col .summary-card {
+    position: sticky;
+    top: 96px; /* adjust as needed to sit below header/stepper */
+    max-height: calc(100vh - 120px);
+    overflow: auto;
+}
+
+/* Responsive: disable sticky on small screens so layout stacks naturally */
+@media (max-width: 991px) {
+    .booking-layout {
+        grid-template-columns: 1fr;
+    }
+    .booking-summary-col .summary-card {
+        position: static;
+        max-height: none;
+        overflow: visible;
+    }
+}
 /* ── Stepper ── */
 .booking-stepper {
     display: flex;
@@ -428,6 +457,62 @@
 
 .spa-schedule { display: flex; flex-direction: column; gap: 20px; }
 
+/* Desktop: lay out date/timeslot and staff selection side-by-side */
+@media (min-width: 992px) {
+    /* Single-column flow: date -> timeslot -> banner -> staff (stacked vertically)
+       so staff selection appears under the timeslot on desktop as requested. */
+    .spa-schedule {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "date"
+            "timeslot"
+            "banner"
+            "staff";
+        gap: 12px 0;
+        align-items: start;
+    }
+
+    .spa-schedule > .form-group { grid-area: date; }
+    .spa-schedule > .timeslot-section { grid-area: timeslot; }
+    .spa-schedule > .booking-hold-banner { grid-area: banner; }
+    .spa-schedule > .staff-selection { grid-area: staff; }
+
+    /* Allow timeslot grid to scroll if tall; staff list flows below naturally */
+    .spa-schedule .timeslot-section { max-height: 520px; overflow: auto; padding-right: 6px; }
+    .spa-schedule .staff-selection { max-height: none; overflow: visible; }
+}
+
+/* Make the booking date label and input inline on wide screens only */
+@media (min-width: 992px) {
+    .spa-schedule .form-group.booking-date {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 0;
+    }
+
+    .spa-schedule .form-group.booking-date label {
+        flex: 0 0 120px;
+        margin-bottom: 0; /* override stacked label styles */
+        font-weight: 700;
+    }
+
+    .spa-schedule .form-group.booking-date input[type="date"] {
+        flex: 1 1 auto;
+        min-width: 220px;
+        padding: 10px 14px;
+        height: 44px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(42,89,68,0.04);
+        border: 1px solid rgba(42,89,68,0.08);
+        background: #ffffff;
+    }
+
+    /* reduce gap between date row and timeslot grid */
+    .spa-schedule .timeslot-section { margin-top: 6px; }
+}
+
 .timeslot-label {
     font-size: 0.82rem;
     font-weight: 600;
@@ -533,9 +618,24 @@
 }
 
 .timeslot-btn.held {
+    /* Held (temporary) state — subtle amber outline so user knows it's reserved for them.
+       If also `.selected`, `.selected` styles take precedence (green filled). */
     border-color: #f59e0b;
-    background: rgba(245,158,11,0.12);
+    box-shadow: 0 6px 14px rgba(245,158,11,0.08);
+}
+
+/* Busy slots (already full) */
+.timeslot-btn.slot-busy {
+    background: #f1f5f9;
+    color: #94a3b8;
+    border-color: #cbd5e1;
+}
+
+/* Slots too close to now (<2h) */
+.timeslot-btn.slot-soon {
+    background: #fff7ed;
     color: #92400e;
+    border-color: #fed7aa;
 }
 
 .timeslot-btn.selected {

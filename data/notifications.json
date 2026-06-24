@@ -1,0 +1,56 @@
+[
+  {
+    "id": "noti-1",
+    "type": "service",
+    "title": "Dịch vụ của bé",
+    "content": "Bé Bông đã tắm xong và đang chơi ở khu vực chờ nhé!",
+    "timeOffsetMinutes": 5,
+    "read": false,
+    "link": "/pages/user/pet-diary/pet-diary.html"
+  },
+  {
+    "id": "noti-2",
+    "type": "order",
+    "title": "Cập nhật đơn hàng",
+    "content": "Đơn hàng #ORD-2026 của bạn đã được bàn giao cho đơn vị vận chuyển.",
+    "timeOffsetMinutes": 15,
+    "read": false,
+    "link": "/pages/user/orders/orders.html"
+  },
+  {
+    "id": "noti-3",
+    "type": "promo",
+    "title": "Ưu đãi đặc quyền",
+    "content": "PawPal gửi tặng bạn mã giảm giá 15% dịch vụ Hotel nhân dịp sinh nhật bé cưng!",
+    "timeOffsetMinutes": 60,
+    "read": true,
+    "link": "/pages/user/loyalty/loyalty.html"
+  },
+  {
+    "id": "noti-4",
+    "type": "service",
+    "title": "Cập nhật lịch chăm sóc",
+    "content": "[Tên Bé] đã được xác nhận lịch hẹn Spa vào ngày mai lúc 10:00.",
+    "timeOffsetMinutes": 120,
+    "read": false,
+    "link": "/pages/services/booking/booking.html"
+  },
+  {
+    "id": "noti-5",
+    "type": "promo",
+    "title": "Khuyến mãi Shop",
+    "content": "Nhận ngay voucher giảm 20% cho đơn hàng phụ kiện thú cưng khi mua từ 500k.",
+    "timeOffsetMinutes": 360,
+    "read": true,
+    "link": "/pages/user/loyalty/loyalty.html"
+  },
+  {
+    "id": "noti-6",
+    "type": "order",
+    "title": "Thông báo hoàn tiền",
+    "content": "Yêu cầu hoàn tiền #ORD-2025 của bạn đã được duyệt. Số tiền đã được cộng về ví.",
+    "timeOffsetMinutes": 1440,
+    "read": false,
+    "link": "/pages/user/orders/orders.html"
+  }
+]

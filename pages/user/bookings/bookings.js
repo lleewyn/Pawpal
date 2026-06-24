@@ -1,16 +1,16 @@
 /* ==========================================================================
    Bookings List Page
-   Loads demo bookings from /data/bookings.json through the mock API cache.
+   Loads seeded bookings from /data/bookings.json through the API cache.
    ========================================================================== */
 
 import { API } from '/assets/js/api/api.js';
 
 export const statusLabels = {
-    upcoming: 'Da xac nhan',
-    confirmed: 'Da xac nhan',
-    'in-progress': 'Dang thuc hien',
-    completed: 'Hoan thanh',
-    cancelled: 'Da huy'
+    upcoming: 'Đã xác nhận',
+    confirmed: 'Đã xác nhận',
+    'in-progress': 'Đang thực hiện',
+    completed: 'Hoàn thành',
+    cancelled: 'Đã hủy'
 };
 
 const statusAliases = {
@@ -90,11 +90,11 @@ function createBookingCard(booking) {
     const normalizedStatus = booking.status === 'upcoming' ? 'confirmed' : booking.status;
     card.className = `booking-card status-${normalizedStatus}`;
     card.onclick = () => {
-        window.location.href = `booking-detail.html?id=${booking.id}`;
+        window.location.href = `../booking-detail/booking-detail.html?id=${booking.id}`;
     };
 
-    const petName = booking.petName || booking.petInfo?.petName || booking.petId || 'Be cung';
-    const serviceName = booking.service || booking.serviceName || booking.selectedService?.name || 'Dich vu PawPal';
+    const petName = booking.petName || booking.petInfo?.petName || booking.petId || 'Bé cưng';
+    const serviceName = booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal';
     const dateTimeText = buildDateTimeText(booking);
 
     card.innerHTML = `
@@ -106,8 +106,8 @@ function createBookingCard(booking) {
                 <div class="booking-card-datetime">
                     ${dateTimeText}
                 </div>
-                ${booking.staff ? `<div class="booking-card-staff">Nhan vien: ${booking.staff}</div>` : ''}
-                ${booking.branch ? `<div class="booking-card-staff">Chi nhanh: ${booking.branch}</div>` : ''}
+                ${booking.staff ? `<div class="booking-card-staff">Nhân viên: ${booking.staff}</div>` : ''}
+                ${booking.branch ? `<div class="booking-card-staff">Chi nhánh: ${booking.branch}</div>` : ''}
             </div>
             <span class="badge-status badge-${normalizedStatus}">${statusLabels[booking.status] || booking.status}</span>
         </div>
@@ -123,21 +123,21 @@ function buildDateTimeText(booking) {
     let dateTimeText = formatDate(booking.date || booking.schedule?.date);
 
     if (booking.timeStart) {
-        dateTimeText += ` - ${booking.timeStart}${booking.timeEnd ? ` den ${booking.timeEnd}` : ''}`;
+        dateTimeText += ` - ${booking.timeStart}${booking.timeEnd ? ` đến ${booking.timeEnd}` : ''}`;
     } else if (booking.time) {
         dateTimeText += ` - ${booking.time}`;
     } else if (booking.schedule?.slot) {
         dateTimeText += ` - ${booking.schedule.slot}`;
     } else if (booking.dateEnd) {
         const nights = calculateNights(booking.date, booking.dateEnd);
-        dateTimeText += ` - ${formatDate(booking.dateEnd)} (${nights} dem)`;
+        dateTimeText += ` - ${formatDate(booking.dateEnd)} (${nights} đêm)`;
     }
 
     return dateTimeText;
 }
 
 export function formatDate(dateString) {
-    if (!dateString) return 'Chua co ngay';
+    if (!dateString) return 'Chưa có ngày';
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) return dateString;
     return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });

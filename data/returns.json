@@ -1,40 +1,97 @@
 [
-  {
-    "orderId": "ORD-2026-002",
-    "rmaId": "RMA-12948",
-    "createdAt": "2026-06-09T10:20:00",
-    "status": "approved",
-    "reason": "broken",
-    "type": "exchange",
-    "description": "San pham cat ve sinh bi rach bao bi va am khi mo hop, nho shop kiem tra va doi san pham moi.",
-    "products": [
-      {
-        "id": "PROD-010",
-        "name": "Cat ve sinh cho meo Catsan 10L",
-        "image": "https://via.placeholder.com/100x100?text=Cat+Litter",
-        "quantity": 1,
-        "price": 180000,
-        "total": 180000
-      }
-    ]
-  },
-  {
-    "orderId": "ORD-2026-001",
-    "rmaId": "RMA-12949",
-    "createdAt": "2026-06-12T09:00:00",
-    "status": "reviewing",
-    "reason": "wrong_item",
-    "type": "refund",
-    "description": "Khach bao nhan sai mau do choi, dang cho bo phan CSKH kiem tra hinh anh doi chieu.",
-    "products": [
-      {
-        "id": "PROD-002",
-        "name": "Do choi gam xuong cao su",
-        "image": "https://via.placeholder.com/100x100?text=Toy",
-        "quantity": 1,
-        "price": 400000,
-        "total": 400000
-      }
-    ]
-  }
+    {
+        "orderId":  "ORD-2026-002",
+        "rmaId":  "RMA-12948",
+        "createdAt":  "2026-06-09T10:20:00",
+        "status":  "approved",
+        "reason":  "broken",
+        "type":  "exchange",
+        "description":  "San pham cat ve sinh bi rach bao bi va am khi mo hop, nho shop kiem tra va doi san pham moi.",
+        "products":  [
+                         {
+                             "id":  "PROD-010",
+                             "name":  "Cat ve sinh cho meo Catsan 10L",
+                             "image":  "/assets/images/shop/products/vs-khay-01.webp",
+                             "quantity":  1,
+                             "price":  180000,
+                             "total":  180000
+                         }
+                     ]
+    },
+    {
+        "orderId":  "ORD-2026-001",
+        "rmaId":  "RMA-12949",
+        "createdAt":  "2026-06-12T09:00:00",
+        "status":  "reviewing",
+        "reason":  "wrong_item",
+        "type":  "refund",
+        "description":  "Khach bao nhan sai mau do choi, dang cho bo phan CSKH kiem tra hinh anh doi chieu.",
+        "products":  [
+                         {
+                             "id":  "PROD-002",
+                             "name":  "Do choi gam xuong cao su",
+                             "image":  "/assets/images/shop/products/pk-dochoi-01.jpg",
+                             "quantity":  1,
+                             "price":  400000,
+                             "total":  400000
+                         }
+                     ]
+    },
+    {
+        "orderId":  "ORD-2026-003",
+        "rmaId":  "RMA-12950",
+        "createdAt":  "2026-06-13T08:20:00",
+        "status":  "rejected",
+        "reason":  "change_mind",
+        "type":  "refund",
+        "description":  "Khach doi y ve muc dich su dung, he thong tu choi vi da qua han",
+        "products":  [
+                         {
+                             "id":  "PROD-015",
+                             "name":  "Balo van chuyen thu cung",
+                             "image":  "/assets/images/shop/products/pk-balo-01.webp",
+                             "quantity":  1,
+                             "price":  650000,
+                             "total":  650000
+                         }
+                     ]
+    },
+    {
+        "orderId":  "ORD-2026-001",
+        "rmaId":  "RMA-12951",
+        "createdAt":  "2026-06-14T09:30:00",
+        "status":  "shipping_return",
+        "reason":  "wrong_size",
+        "type":  "exchange",
+        "description":  "Khach da gui hang tra ve kho",
+        "products":  [
+                         {
+                             "id":  "PROD-002",
+                             "name":  "Do choi gam xuong cao su",
+                             "image":  "/assets/images/shop/products/pk-dochoi-01.jpg",
+                             "quantity":  1,
+                             "price":  400000,
+                             "total":  400000
+                         }
+                     ]
+    },
+    {
+        "orderId":  "ORD-2026-002",
+        "rmaId":  "RMA-12952",
+        "createdAt":  "2026-06-15T11:00:00",
+        "status":  "completed",
+        "reason":  "broken",
+        "type":  "exchange",
+        "description":  "Yeu cau doi tra da duoc giai quyet xong",
+        "products":  [
+                         {
+                             "id":  "PROD-010",
+                             "name":  "Cat ve sinh cho meo Catsan 10L",
+                             "image":  "/assets/images/shop/products/vs-khay-01.webp",
+                             "quantity":  1,
+                             "price":  180000,
+                             "total":  180000
+                         }
+                     ]
+    }
 ]

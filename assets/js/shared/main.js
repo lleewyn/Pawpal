@@ -449,7 +449,7 @@ function initShopFilter() {
                 return `
                     <div class="product-card" data-category="${mappedCategory}" data-marketing="${marketingTags.join(' ')}">
                         <div class="product-image-box">
-                            <img src="${imgSrc}" alt="${product.name}" loading="lazy" onerror="this.src='../../assets/images/placeholder.jpg'">
+                            <img src="${imgSrc}" alt="${product.name}" loading="lazy" onerror="this.src='../../assets/images/shop/products/placeholder.webp'">
                             ${displayBadge}
                         </div>
                         <div class="product-info">
@@ -1694,55 +1694,59 @@ async function initServicesGrid() {
     if (window.DataLoader && typeof window.DataLoader.loadServices === 'function') {
         try {
             const allServices = await window.DataLoader.loadServices();
-            
-            grid.innerHTML = allServices.map(service => {
-                const formattedPrice = service.price.toLocaleString('vi-VN') + 'đ';
-                const memberPrice = Math.round(service.price * 0.95).toLocaleString('vi-VN') + 'đ';
-                const priceUnit = service.priceDisplay.includes('đêm') ? '<span style="font-size: 11px; color: var(--color-text-light);">/đêm</span>' : '';
-                const memberPriceUnit = service.priceDisplay.includes('đêm') ? '/đêm' : '';
-                const imgSrc = service.image.startsWith('http') ? service.image : `../../${service.image}`;
-                const fallbackImg = service.category === 'hotel' ? '../../assets/images/services/hotel.png' : '../../assets/images/services/spa.png';
-                const detailUrl = `/pages/services/service-detail/service-detail.html?id=${encodeURIComponent(service.serviceId)}`;
+            if (allServices.length > 0) {
+                grid.innerHTML = allServices.map(service => {
+                    const formattedPrice = service.price.toLocaleString('vi-VN') + 'đ';
+                    const memberPrice = Math.round(service.price * 0.95).toLocaleString('vi-VN') + 'đ';
+                    const priceUnit = service.priceDisplay.includes('đêm') ? '<span style="font-size: 11px; color: var(--color-text-light);">/đêm</span>' : '';
+                    const memberPriceUnit = service.priceDisplay.includes('đêm') ? '/đêm' : '';
+                    const imgSrc = service.image.startsWith('http') ? service.image : service.image;
+                    const fallbackImg = service.category === 'hotel' ? '../../assets/images/services/hotel.png' : '../../assets/images/services/spa.png';
+                    const detailUrl = `${window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../'}pages/services/service-detail/service-detail.html?id=${encodeURIComponent(service.serviceId)}`;
 
-                return `
-                    <div class="product-card svc-landing-card" data-category="${service.category}">
-                        <a href="${detailUrl}" class="svc-landing-card-link" aria-label="Xem chi tiết ${service.name}">
-                            <div class="product-image-box">
-                                <img src="${imgSrc}" alt="${service.name}" loading="lazy" onerror="this.src='${fallbackImg}'">
-                                ${service.rating >= 4.8 ? '<span class="tag-badge tag-banchay">Yêu thích</span>' : ''}
-                            </div>
-                        </a>
-                        <div class="product-info">
+                    return `
+                        <div class="product-card svc-landing-card" data-category="${service.category}">
                             <a href="${detailUrl}" class="svc-landing-card-link" aria-label="Xem chi tiết ${service.name}">
-                                <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
-                                    <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">${service.serviceId}</span>
-                                    <div>
-                                        <span class="rating-stars"></span> <span class="rating-score">${service.rating.toFixed(1)}</span> <span class="sold-count">(${service.reviewCount})</span>
-                                    </div>
-                                </div>
-                                <h3>${service.name}</h3>
-                                <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${service.description}</p>
-                                <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
-                                    <span> ${service.petType}</span>
-                                    <span>${service.duration || 'Theo ngày'}</span>
+                                <div class="product-image-box">
+                                    <img src="${imgSrc}" alt="${service.name}" loading="lazy" onerror="this.src='${fallbackImg}'">
+                                    ${service.rating >= 4.8 ? '<span class="tag-badge tag-banchay">Yêu thích</span>' : ''}
                                 </div>
                             </a>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current" style="font-size: 16px;">${formattedPrice}</span>
-                                    ${priceUnit}
+                            <div class="product-info">
+                                <a href="${detailUrl}" class="svc-landing-card-link" aria-label="Xem chi tiết ${service.name}">
+                                    <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
+                                        <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">${service.serviceId}</span>
+                                        <div>
+                                            <span class="rating-stars"></span> <span class="rating-score">${service.rating.toFixed(1)}</span> <span class="sold-count">(${service.reviewCount})</span>
+                                        </div>
+                                    </div>
+                                    <h3>${service.name}</h3>
+                                    <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${service.description}</p>
+                                    <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
+                                        <span> ${service.petType}</span>
+                                        <span>${service.duration || 'Theo ngày'}</span>
+                                    </div>
+                                </a>
+                                <div class="product-info-footer">
+                                    <div class="product-price">
+                                        <span class="price-current" style="font-size: 16px;">${formattedPrice}</span>
+                                        ${priceUnit}
+                                    </div>
+                                    <a href="../../pages/services/booking/booking.html?service=${service.serviceId}" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
                                 </div>
-                                <a href="../../pages/services/booking/booking.html?service=${service.serviceId}" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
-                            </div>
-                            <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
-                                TV Bạc: ${memberPrice}${memberPriceUnit}
+                                <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
+                                    TV Bạc: ${memberPrice}${memberPriceUnit}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
+            } else {
+                console.warn('Landing services data is empty; keeping static markup.');
+            }
         } catch (err) {
             console.error('Error loading services for landing:', err);
+            console.warn('Keeping existing landing service markup due to load failure.');
         }
     }
 

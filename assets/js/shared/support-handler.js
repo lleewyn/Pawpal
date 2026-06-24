@@ -4,6 +4,8 @@
 
 (function() {
     const TICKETS_KEY = 'pawpal_tickets';
+    const TICKETS_SEED_VERSION_KEY = 'pawpal_support_seed_version';
+    const TICKETS_SEED_VERSION = '2026-06-24-support-seed-v1';
 
     // Dữ liệu câu hỏi FAQ mẫu
     const faqData = [
@@ -27,128 +29,43 @@
         }
     ];
 
-    const initialTickets = [
-        {
-            id: 'TK-82910',
-            title: 'Lỗi trừ tiền Momo nhưng đơn hàng báo thất bại',
-            type: 'payment',
-            priority: 'Cao',
-            status: 'processing',
-            messages: [
-                {
-                    sender: 'user',
-                    text: 'Tôi đã thanh toán Momo thành công và bị trừ 250k nhưng hệ thống vẫn báo đơn hàng chưa được thanh toán.',
-                    time: new Date(Date.now() - 1200000).toISOString()
-                },
-                {
-                    sender: 'cskh',
-                    agent: 'Nguyễn Văn B',
-                    text: 'PawPal xin lỗi bạn vì sự cố này ạ. Chúng tôi đã chuyển thông tin giao dịch sang bộ phận Kỹ thuật kiểm soát đối chiếu dòng tiền. Bạn đợi chúng tôi 5 phút ạ!',
-                    time: new Date(Date.now() - 600000).toISOString()
-                }
-            ],
-            rating: null,
-            ratingComment: ''
-        },
-        {
-            id: 'TK-82911',
-            title: 'Yêu cầu thay đổi lịch tắm cho bé',
-            type: 'booking',
-            priority: 'Trung bình',
-            status: 'completed',
-            messages: [
-                {
-                    sender: 'user',
-                    text: 'Em muốn dời lịch tắm Bông từ thứ 5 sang thứ 6 tuần này. Dạo này bé bận việc nhập học nên không có thời gian.',
-                    time: new Date(Date.now() - 3600000).toISOString()
-                },
-                {
-                    sender: 'cskh',
-                    agent: 'Trần Thị C',
-                    text: 'Được ạ! PawPal vừa dời lịch Bông từ thứ 5 sang thứ 6 lúc 14:00 rồi. Bạn kiểm tra email xác nhận nhé ạ!',
-                    time: new Date(Date.now() - 3000000).toISOString()
-                }
-            ],
-            rating: 5,
-            ratingComment: 'Dịch vụ cực tuyệt vời, giải quyết nhanh!'
-        },
-        {
-            id: 'TK-82912',
-            title: 'Sản phẩm thú cưng bị hỏng khi nhận hàng',
-            type: 'returns',
-            priority: 'Cao',
-            status: 'pending',
-            messages: [
-                {
-                    sender: 'user',
-                    text: 'Hôm qua em nhận hàng nhưng chiếc giường cho bé bị nước lọc và mùi mốc. Mong PawPal giải quyết sớm ạ.',
-                    time: new Date(Date.now() - 7200000).toISOString()
-                }
-            ],
-            rating: null,
-            ratingComment: ''
-        },
-        {
-            id: 'TK-82913',
-            title: 'Hỏi về dịch vụ spa cho chó lông dài',
-            type: 'inquiry',
-            priority: 'Trung bình',
-            status: 'completed',
-            messages: [
-                {
-                    sender: 'user',
-                    text: 'Bé tôi là chó Golden Retriever, lông dài. Có dịch vụ spa chuyên biệt nào cho lông dài không ạ? Giá bao nhiêu?',
-                    time: new Date(Date.now() - 86400000).toISOString()
-                },
-                {
-                    sender: 'cskh',
-                    agent: 'Lê Văn D',
-                    text: 'Được ạ! PawPal có gói Spa Premium cho chó lông dài: gồm tắm, sấy (tốn thời gian), cắt tỉa, xoa dầu chuyên biệt. Giá 450k/lần. Bạn có muốn đặt lịch không?',
-                    time: new Date(Date.now() - 82800000).toISOString()
-                }
-            ],
-            rating: 4,
-            ratingComment: 'Chính xác, tư vấn rất tốt'
-        },
-        {
-            id: 'TK-82914',
-            title: 'Đăng ký Paw Points bị lỗi',
-            type: 'account',
-            priority: 'Trung bình',
-            status: 'processing',
-            messages: [
-                {
-                    sender: 'user',
-                    text: 'Tôi muốn tham gia chương trình Paw Points nhưng nút đăng ký không hoạt động. Có vấn đề gì không ạ?',
-                    time: new Date(Date.now() - 900000).toISOString()
-                },
-                {
-                    sender: 'cskh',
-                    agent: 'Phạm Văn E',
-                    text: 'Xin lỗi bạn! Chúng tôi đang kiểm tra vấn đề kỹ thuật này. Bạn thử đăng xuất rồi đăng nhập lại xem nhé.',
-                    time: new Date(Date.now() - 300000).toISOString()
-                }
-            ],
-            rating: null,
-            ratingComment: ''
-        },
-        {
-            id: 'TK-82915',
-            title: 'Tôi muốn nhượng quyền mở chi nhánh PawPal',
-            type: 'business',
-            priority: 'Trung bình',
-            status: 'pending',
-            messages: [
-                {
-                    sender: 'user',
-                    text: 'Xin chào! Tôi rất yêu thích PawPal và muốn mở chi nhánh tại quận 1, TP.HCM. Có chương trình hợp tác nào không ạ?',
-                    time: new Date(Date.now() - 432000000).toISOString()
-                }
-            ],
-            rating: null,
-            ratingComment: ''
+    const SUPPORT_TICKETS_URL = '/data/support-tickets.json';
+
+    function readSupportTicketsSeed() {
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', SUPPORT_TICKETS_URL, false);
+            xhr.send(null);
+            if (xhr.status >= 200 && xhr.status < 300) {
+                return JSON.parse(xhr.responseText);
+            }
+        } catch (error) {
+            console.warn('[support-handler] Cannot load support tickets seed:', error);
         }
-    ];
+        return [];
+    }
+
+    const initialTickets = readSupportTicketsSeed();
+
+    function seedTicketsIfNeeded() {
+        try {
+            const raw = localStorage.getItem(TICKETS_KEY);
+            const stored = raw ? JSON.parse(raw) : null;
+            const hasStoredTickets = Array.isArray(stored) && stored.length > 0;
+
+            if (!hasStoredTickets) {
+                localStorage.setItem(TICKETS_KEY, JSON.stringify(initialTickets));
+            }
+
+            if (!localStorage.getItem(TICKETS_SEED_VERSION_KEY)) {
+                localStorage.setItem(TICKETS_SEED_VERSION_KEY, TICKETS_SEED_VERSION);
+            }
+        } catch (error) {
+            console.warn('[support-handler] Cannot seed support tickets:', error);
+        }
+    }
+
+    seedTicketsIfNeeded();
 
     function getTickets() {
         try {

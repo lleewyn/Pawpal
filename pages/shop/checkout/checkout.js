@@ -954,9 +954,8 @@ function handleQRExpired() {
     }, 3000);
 }
 
-function mockPaymentVerification() {
+function verifyPaymentSimulation() {
     // Simulate payment verification with random success/failure
-    // In demo, let's make it 80% success rate after 2-5 seconds
     const willSucceed = Math.random() < 0.8;
     const delay = Math.random() * 3000 + 2000; // 2-5 seconds
     
@@ -1050,7 +1049,7 @@ function setupEventListeners() {
     
     document.getElementById('btn-confirm-payment').addEventListener('click', async () => {
         document.getElementById('btn-confirm-payment').disabled = true;
-        await mockPaymentVerification();
+        await verifyPaymentSimulation();
     });
 }
 
@@ -1061,12 +1060,33 @@ function saveOrderToUserHistory(orderData) {
     // Get existing orders
     let orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
     
-    // Add new order to beginning of array (newest first)
-    orders.unshift({
-        ...orderData,
+    // Normalize order object and add new order to beginning of array (newest first)
+    // Normalize shape to match order-detail expectations
+    const normalized = {
+        id: orderData.orderId || orderData.id || generateOrderId(),
+        userId: orderData.userId || null,
+        // order-detail expects `delivery` object
+        delivery: orderData.shipping || {},
+        // order-detail expects `products` array with `name`, `image`, `quantity`, `total`
+        products: (orderData.items || []).map(item => {
+            const qty = item.quantity || item.qty || 1;
+            const totalVal = item.total != null ? item.total : ((item.price || 0) * qty);
+            return {
+                id: item.id || item.productId || null,
+                name: item.name || item.title || 'Sản phẩm',
+                image: item.image || item.img || '',
+                quantity: qty,
+                total: totalVal
+            };
+        }),
+        pricing: orderData.pricing || {},
+        paymentMethod: orderData.payment?.method || null,
+        paymentStatus: orderData.payment?.status || (orderData.paymentStatus || 'pending'),
+        timeline: orderData.timeline || [],
         createdAt: new Date().toISOString(),
-        status: 'pending' // Initial status
-    });
+        status: 'pending'
+    };
+    orders.unshift(normalized);
     
     // Save back to localStorage
     localStorage.setItem('pawpal_orders', JSON.stringify(orders));

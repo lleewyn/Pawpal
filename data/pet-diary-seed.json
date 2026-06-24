@@ -1,0 +1,93 @@
+{
+  "currentSession": {
+    "service": "Spa & Grooming",
+    "status": "Đang thực hiện",
+    "timeline": [
+      {
+        "id": 3,
+        "status": "Đang sấy lông",
+        "offsetMinutes": 10,
+        "description": "{petName} đang được sấy lông với nhiệt độ phù hợp. Bé rất ngoan và hợp tác.",
+        "staff": "Nguyễn Thị Mai",
+        "type": "in_progress",
+        "image": "/assets/images/tracker/belu-1.png"
+      },
+      {
+        "id": 2,
+        "status": "Đang tắm",
+        "offsetMinutes": 45,
+        "description": "{petName} đang được tắm sạch với sữa tắm chuyên dụng phù hợp cho da của bé.",
+        "staff": "Nguyễn Thị Mai",
+        "type": "in_progress",
+        "image": "/assets/images/tracker/belu-2.png"
+      },
+      {
+        "id": 1,
+        "status": "Đã tiếp nhận",
+        "offsetMinutes": 60,
+        "description": "{petName} đã được tiếp nhận tại PawPal. Mã hồ sơ: {petId}. Nhân viên sẽ bắt đầu quy trình ngay.",
+        "staff": "Trần Văn Nam",
+        "type": "check_in",
+        "image": "/assets/images/tracker/belu-3.png"
+      }
+    ]
+  },
+  "history": [
+    {
+      "idSuffix": "001",
+      "service": "Cắt tỉa lông",
+      "daysAgo": 7,
+      "status": "Hoàn thành",
+      "timeline": [
+        {
+          "id": 3,
+          "status": "Hoàn thành",
+          "offsetMinutes": 30,
+          "description": "{petName} đã hoàn thành dịch vụ cắt tỉa lông. Bé trông rất đẹp và sạch sẽ!",
+          "staff": "Nguyễn Thị Mai",
+          "type": "completed",
+          "invoice": {
+            "code": "HD-{petId}-001",
+            "items": [
+              {
+                "name": "Cắt tỉa lông tiêu chuẩn",
+                "price": 80000
+              }
+            ],
+            "total": 80000,
+            "paid": true
+          }
+        },
+        {
+          "id": 2,
+          "status": "Đang cắt tỉa",
+          "offsetMinutes": 90,
+          "description": "Đang thực hiện cắt tỉa lông cho {petName}.",
+          "staff": "Nguyễn Thị Mai",
+          "type": "in_progress",
+          "image": "/assets/images/tracker/belu-2.png"
+        },
+        {
+          "id": 1,
+          "status": "Đã tiếp nhận",
+          "offsetMinutes": 120,
+          "description": "{petName} đã được tiếp nhận. Mã hồ sơ: {petId}.",
+          "staff": "Trần Văn Nam",
+          "type": "check_in",
+          "image": "/assets/images/tracker/belu-3.png"
+        }
+      ],
+      "invoice": {
+        "code": "HD-{petId}-001",
+        "items": [
+          {
+            "name": "Cắt tỉa lông tiêu chuẩn",
+            "price": 80000
+          }
+        ],
+        "total": 80000,
+        "paid": true
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 /**
  * ORDERS PAGE
- * Reads demo orders from /data/orders.json through the mock API cache.
+ * Reads seeded orders from /data/orders.json through the API cache.
  */
 
 import { API } from '/assets/js/api/api.js';
@@ -33,7 +33,7 @@ async function loadOrders() {
         renderOrders();
     } catch (error) {
         console.error('Loi load don hang:', error);
-        showEmptyState('Khong the tai don hang. Vui long thu lai sau.');
+        showEmptyState('Không thể tải đơn hàng. Vui lòng thử lại sau.');
     }
 }
 
@@ -98,7 +98,7 @@ function renderOrders() {
     const container = document.getElementById('orders-list');
 
     if (ordersState.filteredOrders.length === 0) {
-        showEmptyState('Khong tim thay don hang nao');
+        showEmptyState('Không tìm thấy đơn hàng nào');
         return;
     }
 
@@ -143,35 +143,35 @@ function createOrderCard(order) {
             `;
         } else if (hasAnyReviewed) {
             returnActionHTML = `
-                <button class="btn-track-order" disabled title="Giao dich da duoc danh gia, khong the doi tra.">
+                <button class="btn-track-order" disabled title="Giao dịch đã được đánh giá, không thể đổi trả.">
                     Da danh gia
                 </button>
             `;
         } else {
             returnActionHTML = `
                 <button class="btn-track-order" onclick="openRMADrawer('${order.id}')">
-                    Yeu cau tra hang/hoan tien
+                    Yêu cầu trả hàng/hoàn tiền
                 </button>
             `;
         }
     }
 
     const reorderActionHTML = isCompleted
-        ? `<button class="btn-view-detail border-0" onclick="reorder('${order.id}')">Mua lai</button>`
+        ? `<button class="btn-view-detail border-0" onclick="reorder('${order.id}')">Mua lại</button>`
         : '';
 
     let footerButtonsHTML = '';
     if (order.status === 'shipping') {
         footerButtonsHTML = `
-            <button class="btn-track-order" onclick="contactHotline('${order.id}')">
-                Lien he hotline
-            </button>
+                <button class="btn-track-order" onclick="contactHotline('${order.id}')">
+                Liên hệ hotline
+                </button>
         `;
     } else if (order.status === 'pending_payment' || order.status === 'preparing') {
         footerButtonsHTML = `
-            <button class="btn-track-order" onclick="contactHotline('${order.id}')">
-                Lien he hotline
-            </button>
+                <button class="btn-track-order" onclick="contactHotline('${order.id}')">
+                Liên hệ hotline
+                </button>
             <button class="btn-track-order text-danger border-danger" onclick="cancelOrder('${order.id}')">
                 Huy don hang
             </button>
@@ -180,11 +180,11 @@ function createOrderCard(order) {
         footerButtonsHTML = `${returnActionHTML}${reviewActionHTML}${reorderActionHTML}`;
     }
 
-    return `
+            return `
         <article class="order-card" data-order-id="${order.id}">
             <div class="order-card-header">
                 <div class="order-info">
-                    <span class="order-id">Ma: ${order.id}</span>
+                    <span class="order-id">Mã: ${order.id}</span>
                     <span class="order-date">${formatDate(order.createdAt)}</span>
                 </div>
                 <span class="status-badge status-${order.status}">
@@ -200,9 +200,9 @@ function createOrderCard(order) {
                     </div>
                 </div>
                 <div class="order-summary">
-                    <span class="summary-label">Tong tien:</span>
-                    <span class="summary-value">${formatCurrency(order.pricing.total)}</span>
-                </div>
+                        <span class="summary-label">Tổng tiền:</span>
+                        <span class="summary-value">${formatCurrency(order.pricing.total)}</span>
+                    </div>
             </div>
             <div class="order-card-footer">
                 ${footerButtonsHTML}
@@ -265,7 +265,7 @@ function cancelOrder(orderId) {
     if (confirm(`Ban co chac chan muon huy don hang ${orderId}?`)) {
         const order = ordersState.allOrders.find((item) => item.id === orderId);
         if (!order) {
-            alert('Khong tim thay don hang de huy.');
+            alert('Không tìm thấy đơn hàng để hủy.');
             return;
         }
 
@@ -313,12 +313,12 @@ function saveOrderToLocalStorage(order) {
 
 function getStatusLabel(status) {
     const labels = {
-        pending_payment: 'Cho thanh toan',
-        preparing: 'Dang chuan bi',
-        shipping: 'Dang giao',
-        delivered: 'Da giao hang',
-        completed: 'Hoan thanh',
-        cancelled: 'Da huy'
+        pending_payment: 'Chờ thanh toán',
+        preparing: 'Đang chuẩn bị',
+        shipping: 'Đang giao',
+        delivered: 'Đã giao hàng',
+        completed: 'Hoàn thành',
+        cancelled: 'Đã hủy'
     };
     return labels[status] || status;
 }

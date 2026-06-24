@@ -18,30 +18,26 @@
      * Fallback về relative nếu không detect được.
      */
     function getRootPath() {
-        // Ưu tiên: dùng absolute path nếu server hỗ trợ (Vite và Live Server đều hỗ trợ)
-        // Detect xem URL có dạng http/https không (tức là đang chạy qua server)
-        if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-            // Tìm script tag hiện tại để biết prefix root
-            var scripts = document.querySelectorAll('script[src]');
-            for (var i = 0; i < scripts.length; i++) {
-                // Dùng .src (full absolute URL) thay vì getAttribute('src') (relative path)
-                // VD: "http://localhost:3000/assets/js/shared/components.js"
-                var src = scripts[i].src;
-                var marker = '/assets/js/shared/components.js';
-                var idx = src.indexOf(marker);
-                if (idx !== -1) {
-                    // Lấy phần origin + prefix: "http://localhost:3000"
-                    var detectedRoot = src.substring(0, idx);
-                    return detectedRoot + '/';
-                }
+        // Detect xem script components.js đang được load từ đâu.
+        // Cả server (http/https) và file:// đều có thể xử lý bằng cách dùng src của thẻ script.
+        var scripts = document.querySelectorAll('script[src]');
+        for (var i = 0; i < scripts.length; i++) {
+            var src = scripts[i].src;
+            var marker = '/assets/js/shared/components.js';
+            var idx = src.indexOf(marker);
+            if (idx !== -1) {
+                return src.substring(0, idx) + '/';
             }
-            // Không tìm được -> dùng absolute root '/'
+        }
+
+        // Nếu không tìm được marker, fallback an toàn.
+        if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
             return '/';
         }
 
-        // Fallback cho file:// (mở trực tiếp file, không qua server)
+        // Fallback cho file:// khi không có script src rõ ràng.
         var depth = window.location.pathname.split('/').filter(Boolean).length;
-        return depth <= 1 ? './' : '../'.repeat(depth - 1);
+        return depth <= 1 ? './' : '../'.repeat(Math.max(0, depth - 1));
     }
 
     // Expose globally for other scripts
@@ -97,13 +93,13 @@
         }
         if (currentUser && !currentUser.is_temporary && !document.querySelector('script[src*="notifications-handler.js"]')) {
             var notiScript = document.createElement('script');
-            notiScript.src = rootPath + 'assets/js/user/notifications-handler.js';
+            notiScript.src = rootPath + 'assets/js/shared/notifications-handler.js';
             notiScript.defer = true;
             document.head.appendChild(notiScript);
         }
         if (!document.querySelector('script[src*="support-handler.js"]')) {
             var supportScript = document.createElement('script');
-            supportScript.src = rootPath + 'assets/js/user/support-handler.js';
+            supportScript.src = rootPath + 'assets/js/shared/support-handler.js';
             supportScript.defer = true;
             document.head.appendChild(supportScript);
         }

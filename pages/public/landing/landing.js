@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, _loaderThreshold);
     
 });
-\n\n
+
 document.addEventListener('DOMContentLoaded', function() {
 
         // Smart Loader: hide as soon as DOM is ready, cancel show-timer if fast enough
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })();
     
 });
-\n\n
+
 document.addEventListener('DOMContentLoaded', function() {
 
         (function () {
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })();
     
 });
-\n\n
+
         document.addEventListener('DOMContentLoaded', function () {
             console.log('--- DIAGNOSTICS START ---');
             console.log('Bootstrap available:', typeof bootstrap !== 'undefined');
@@ -167,4 +167,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             console.log('--- DIAGNOSTICS END ---');
         });
-    \n\n
+    

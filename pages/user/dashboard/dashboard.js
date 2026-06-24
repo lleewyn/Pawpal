@@ -114,21 +114,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function loadProfileData(user) {
     document.getElementById('profileName').textContent = user.name || '-';
-    document.getElementById('profileEmail').textContent = user.email || 'Chua cap nhat';
+    document.getElementById('profileEmail').textContent = user.email || 'Chưa cập nhật';
     document.getElementById('profilePhone').textContent = user.phone || '-';
 
-    let genderText = 'Chua cap nhat';
+    let genderText = 'Chưa cập nhật';
     if (user.gender === 'male') genderText = 'Nam';
     else if (user.gender === 'female') genderText = 'Nu';
     else if (user.gender === 'other') genderText = 'Khac';
     document.getElementById('profileGender').textContent = genderText;
 
-    document.getElementById('profileDob').textContent = user.dob ? formatDateDisplay(user.dob) : 'Chua cap nhat';
-    document.getElementById('profileAddress').textContent = user.address || 'Chua thiet lap dia chi mac dinh';
+    document.getElementById('profileDob').textContent = user.dob ? formatDateDisplay(user.dob) : 'Chưa cập nhật';
+    document.getElementById('profileAddress').textContent = user.address || 'Chưa thiết lập địa chỉ mặc định';
 
-    document.getElementById('welcomeName').textContent = user.name ? user.name.split(' ').pop() : 'ban';
+    document.getElementById('welcomeName').textContent = user.name ? user.name.split(' ').pop() : 'bạn';
     document.getElementById('statPoints').textContent = user.points || 0;
-    document.getElementById('statAccountType').textContent = user.is_temporary ? 'Tai khoan tam' : 'Thanh vien';
+    document.getElementById('statAccountType').textContent = user.is_temporary ? 'Tài khoản tạm' : getMemberTierLabel(user);
+}
+
+function getMemberTierLabel(user) {
+    if (!user) return 'Thành viên';
+    // Prefer explicit tier property if present
+    if (user.tier && typeof user.tier === 'string' && user.tier.trim() !== '') {
+        return user.tier;
+    }
+
+    // Fallback by points thresholds
+    const points = Number(user.points) || 0;
+    if (points >= 5000) return 'Kim cương';
+    if (points >= 1000) return 'Vàng';
+    return 'Bạc';
 }
 
 function formatDateDisplay(isoString) {
@@ -140,78 +154,80 @@ function formatDateDisplay(isoString) {
 
 function initProfileEditForm(user) {
     const editButton = document.getElementById('btnEditProfile');
-    const cancelButton = document.getElementById('btnCancelProfileEdit');
     const form = document.getElementById('profileUpdateForm');
-
+    const saveButton = document.getElementById('btnSaveProfile');
     const nameInput = document.getElementById('profileNameInput');
     const emailInput = document.getElementById('profileEmailInput');
     const phoneInput = document.getElementById('profilePhoneInput');
-    const genderInput = document.getElementById('profileGenderInput');
-    const dobInput = document.getElementById('profileDobInput');
-    const addressInputEdit = document.getElementById('profileAddressInputEdit');
-    const editSection = document.getElementById('profileEditSection');
-    const displaySection = document.getElementById('profileDisplaySection');
+    const addressesList = document.getElementById('addressesList');
+    const newAddressInput = document.getElementById('newAddressInput');
+    const addAddressBtn = document.getElementById('btnAddAddress');
 
-    if (!editButton || !cancelButton || !form || !nameInput || !phoneInput || !editSection) return;
+    if (!editButton || !form || !saveButton || !nameInput || !phoneInput) return;
 
-    function openEditForm() {
-        nameInput.value = user.name || '';
-        if (emailInput) emailInput.value = user.email || '';
-        phoneInput.value = user.phone || '';
-        if (genderInput) genderInput.value = user.gender || '';
-        if (dobInput) dobInput.value = user.dob || '';
-        if (addressInputEdit) addressInputEdit.value = user.address || '';
+    let modalInstance = null;
+    const modalEl = document.getElementById('profileEditModal');
+    if (modalEl) modalInstance = new bootstrap.Modal(modalEl);
 
-        editSection.classList.remove('d-none');
-        if (displaySection) displaySection.classList.add('d-none');
-        editButton.classList.add('d-none');
+    function renderAddresses(addresses) {
+        addressesList.innerHTML = '';
+        (addresses || []).forEach((addr, idx) => {
+            const div = document.createElement('div');
+            div.className = 'd-flex align-items-center mb-2 gap-2';
+            div.innerHTML = `
+                <input class="form-control form-control-sm address-item" data-idx="${idx}" value="${addr}">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-remove-address">X</button>
+            `;
+            addressesList.appendChild(div);
+            div.querySelector('.btn-remove-address').addEventListener('click', () => {
+                addresses.splice(idx,1);
+                renderAddresses(addresses);
+            });
+        });
     }
 
-    function closeEditForm() {
-        editSection.classList.add('d-none');
-        if (displaySection) displaySection.classList.remove('d-none');
-        editButton.style.display = 'inline-block';
-    }
-
-    editButton.addEventListener('click', (event) => {
-        event.preventDefault();
-        openEditForm();
+    editButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        const current = getCurrentUser() || user;
+        nameInput.value = current.name || '';
+        emailInput.value = current.email || '';
+        phoneInput.value = current.phone || '';
+        const addrs = Array.isArray(current.addresses) ? [...current.addresses] : (current.address ? [current.address] : []);
+        renderAddresses(addrs);
+        if (modalInstance) modalInstance.show();
     });
 
-    cancelButton.addEventListener('click', (event) => {
-        event.preventDefault();
-        closeEditForm();
+    addAddressBtn && addAddressBtn.addEventListener('click', () => {
+        const val = newAddressInput.value.trim();
+        if (!val) return;
+        const inputs = addressesList.querySelectorAll('.address-item');
+        const addresses = Array.from(inputs).map(i => i.value).concat([val]);
+        newAddressInput.value = '';
+        renderAddresses(addresses);
     });
 
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
-
+    saveButton.addEventListener('click', () => {
         const updatedName = nameInput.value.trim();
-        const updatedEmail = emailInput ? emailInput.value.trim() : '';
+        const updatedEmail = emailInput.value.trim();
         const updatedPhone = phoneInput.value.trim();
-        const updatedGender = genderInput ? genderInput.value : '';
-        const updatedDob = dobInput ? dobInput.value : '';
-        const updatedAddress = addressInputEdit ? addressInputEdit.value.trim() : '';
-
         if (!updatedName || !updatedPhone) {
-            showToast('warning', 'Vui long nhap ten va so dien thoai.');
+            showToast('warning', 'Vui lòng nhập tên và số điện thoại.');
             return;
         }
-
+        const inputs = addressesList.querySelectorAll('.address-item');
+        const addresses = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
         const updatedUser = {
             ...user,
             name: updatedName,
             email: updatedEmail,
             phone: updatedPhone,
-            gender: updatedGender,
-            dob: updatedDob,
-            address: updatedAddress
+            addresses: addresses,
+            address: addresses[0] || ''
         };
-
         updateCurrentUserRecord(updatedUser);
         loadProfileData(updatedUser);
-        closeEditForm();
-        showToast('success', 'Da cap nhat thong tin thanh cong!');
+        if (modalInstance) modalInstance.hide();
+        showToast('success', 'Đã cập nhật thông tin thành công!');
     });
 }
 
@@ -256,7 +272,7 @@ async function loadUpcomingBookings(user) {
 
     const upcoming = await API.getUserBookings(user.id);
     if (!upcoming || upcoming.length === 0) {
-        container.innerHTML = '<p class="text-muted p-3">Chua co lich hen sap toi.</p>';
+        container.innerHTML = '<p class="text-muted p-3">Chưa có lịch hẹn sắp tới.</p>';
         return;
     }
 
@@ -295,8 +311,8 @@ async function loadUpcomingBookings(user) {
                 </div>
             </div>
             <div class="booking-actions">
-                <a href="/pages/user/bookings/bookings.html" class="btn btn-green-outline btn-sm" style="border-color: var(--color-primary); color: #ffffff; background-color: var(--color-primary);">Chi tiet lich hen</a>
-                <a href="/pages/public/chat.html" class="btn btn-outline-secondary btn-sm">Hoan lich</a>
+                <a href="../bookings/bookings.html" class="btn btn-green-outline btn-sm" style="border-color: var(--color-primary); color: #ffffff; background-color: var(--color-primary);">Chi tiết lịch hẹn</a>
+                <a href="../../public/chat.html" class="btn btn-outline-secondary btn-sm">Hoãn lịch</a>
             </div>
         </div>
     `;
@@ -321,7 +337,7 @@ async function loadMyPets(user) {
             <div class="pet-avatar-item">
                 ${avatarHtml}
                 <div class="pet-avatar-name">${pet.name}</div>
-                <div class="pet-avatar-breed">${pet.breed || pet.species || 'Chua ro'}</div>
+                <div class="pet-avatar-breed">${pet.breed || pet.species || 'Chưa rõ'}</div>
             </div>
         `;
     });
@@ -330,8 +346,8 @@ async function loadMyPets(user) {
         <div class="pet-avatar-item">
             <a href="/pages/user/pet-profile/pet-profile.html" style="text-decoration: none;">
                 <div class="add-pet-circle">+</div>
-                <div class="pet-avatar-name">Them moi</div>
-                <div class="pet-avatar-breed">Dang ky them</div>
+                <div class="pet-avatar-name">Thêm mới</div>
+                <div class="pet-avatar-breed">Đăng ký thêm</div>
             </a>
         </div>
     `;
@@ -345,7 +361,7 @@ async function loadRecentOrders(user) {
 
     const userOrders = await API.getUserOrders(user.id);
     if (!userOrders || userOrders.length === 0) {
-        container.innerHTML = '<p class="text-muted p-3">Chua co don hang nao.</p>';
+        container.innerHTML = '<p class="text-muted p-3">Chưa có đơn hàng nào.</p>';
         return;
     }
 
@@ -360,18 +376,18 @@ async function loadRecentOrders(user) {
             : (order.cart ? order.cart.map((item) => item.name).join(', ') : 'San pham mua sam');
         const price = `${(order.pricing ? order.pricing.total : order.total).toLocaleString('vi-VN')}d`;
 
-        let badgeClass = 'status-nhan';
-        let statusText = 'DA NHAN';
+            let badgeClass = 'status-nhan';
+            let statusText = 'Đã nhận';
         const status = order.status || order.orderStatus;
         if (status === 'Dang giao' || status === 'shipping') {
             badgeClass = 'status-giao';
-            statusText = 'DANG GIAO';
+                statusText = 'Đang giao';
         } else if (status === 'Cho xac nhan' || status === 'pending_payment') {
             badgeClass = 'status-giao';
-            statusText = 'CHO XU LY';
+                statusText = 'Chờ xử lý';
         } else if (status === 'completed') {
             badgeClass = 'status-nhan';
-            statusText = 'HOAN THANH';
+                statusText = 'Hoàn thành';
         }
 
         html += `

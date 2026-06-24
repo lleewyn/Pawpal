@@ -1,0 +1,74 @@
+{
+  "0901234567": {
+    "services": [
+      {
+        "title": "Gói Spa Cắt tỉa (Cho bé cưng)",
+        "code": "BK-1234",
+        "time": "Hôm nay, 14:00",
+        "pet": "Miu Miu",
+        "price": "350.000đ",
+        "statusText": "Đang chăm sóc",
+        "statusClass": "status-in-progress",
+        "meta": [
+          { "label": "Nhân viên", "value": "Ngọc Anh" },
+          { "label": "Chi nhánh", "value": "PawPal Quận 3" },
+          { "label": "Thời lượng", "value": "90 phút" },
+          { "label": "Ghi chú", "value": "Bé hơi sợ nước, thao tác nhẹ tay" }
+        ],
+        "timeline": [
+          { "time": "13:00", "content": "Bé đã đến spa và được đón tiếp chu đáo. Nhân viên đang kiểm tra tình trạng da lông ban đầu.", "tone": "success" },
+          { "time": "13:15", "content": "Đang tắm massage với bọt tuyết chuyên dụng làm sạch sâu.", "tone": "accent" },
+          { "time": "13:45 (Dự kiến)", "content": "Cắt tỉa tạo kiểu theo yêu cầu của ba mẹ...", "tone": "muted", "expected": true }
+        ],
+        "action": "cancel-change",
+        "actionLabel": "Hủy lịch / Đổi lịch"
+      }
+    ],
+    "orders": [
+      {
+        "title": "Đơn hàng: ORD-5678",
+        "product": "Cát vệ sinh cho mèo Catsan 10L (x3)",
+        "delivery": "Hôm nay",
+        "receiver": "Minh Anh",
+        "price": "520.000đ",
+        "statusText": "Đang giao hàng",
+        "statusClass": "order-status-shipping",
+        "meta": [
+          { "label": "Mã vận đơn", "value": "VN-884211" },
+          { "label": "Nhà vận chuyển", "value": "Giao Nhanh" },
+          { "label": "Thanh toán", "value": "Đã thanh toán" },
+          { "label": "Địa chỉ", "value": "12 Nguyễn Trãi, Quận 5" }
+        ],
+        "note": "Đơn hàng đã đến trạm trung chuyển Tân Bình lúc 09:30. Shipper đang lấy hàng.",
+        "action": "return-request",
+        "actionLabel": "Yêu cầu đổi trả"
+      }
+    ]
+  },
+  "0912345678": {
+    "services": [
+      {
+        "title": "Lưu trú Pet Hotel Deluxe",
+        "code": "BK-7742",
+        "time": "Ngày mai, 09:00",
+        "pet": "Bông",
+        "price": "680.000đ",
+        "statusText": "Đã xác nhận",
+        "statusClass": "status-confirmed",
+        "meta": [
+          { "label": "Nhân viên", "value": "Thu Thảo" },
+          { "label": "Chi nhánh", "value": "PawPal Quận 7" },
+          { "label": "Thời lượng", "value": "2 ngày 1 đêm" },
+          { "label": "Ghi chú", "value": "Bé cần chế độ ăn riêng" }
+        ],
+        "timeline": [
+          { "time": "08:30", "content": "Đã xác nhận chỗ nghỉ cho bé.", "tone": "success" },
+          { "time": "09:00", "content": "Chuẩn bị bàn giao hồ sơ và vật dụng đi kèm.", "tone": "accent" }
+        ],
+        "action": "cancel-change",
+        "actionLabel": "Hủy lịch / Đổi lịch"
+      }
+    ],
+    "orders": []
+  }
+}

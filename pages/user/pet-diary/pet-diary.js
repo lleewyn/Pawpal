@@ -22,6 +22,7 @@ let currentSessionId = null;
 // ── Init ──────────────────────────────────────────────────────────────────────
 export function initPetDiary() {
     localStorage.removeItem('pawpal_tracker_db');
+    localStorage.removeItem('pawpal_pet_tracker_logs');
     populatePetSelector();
 
     const petSelector = document.getElementById('petSelector');
@@ -102,7 +103,7 @@ function handlePetChange(e) {
 // ── Load Diary ────────────────────────────────────────────────────────────────
 async function loadPetDiary(petId) {
     const pets = await getPets();
-    const pet = pets.find(p => p.id === petId);
+    const pet = pets.find(p => String(p.id) === String(petId));
     if (!pet) {
         showToast('Không tìm thấy thông tin bé cưng', 'error');
         return;
@@ -139,100 +140,70 @@ function getOrSeedTrackerLogs(pet) {
     return seeded;
 }
 
+function readPetDiarySeed() {
+    try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', '/data/pet-diary-seed.json', false);
+        xhr.send(null);
+        if (xhr.status >= 200 && xhr.status < 300) {
+            return JSON.parse(xhr.responseText);
+        }
+    } catch (error) {
+        console.warn('[pet-diary] Cannot load seed data:', error);
+    }
+    return null;
+}
+
+function replaceTokens(value, pet) {
+    if (typeof value === 'string') {
+        return value.replace(/\{petName\}/g, pet.name).replace(/\{petId\}/g, pet.id);
+    }
+    if (Array.isArray(value)) {
+        return value.map(item => replaceTokens(item, pet));
+    }
+    if (value && typeof value === 'object') {
+        const next = {};
+        Object.entries(value).forEach(([key, child]) => {
+            next[key] = replaceTokens(child, pet);
+        });
+        return next;
+    }
+    return value;
+}
+
 function seedDemoLogs(pet) {
+    const seed = readPetDiarySeed();
+    if (!seed) return { currentSession: null, history: [] };
+
     const now = new Date();
-    const ago = (minutes) => new Date(now.getTime() - minutes * 60 * 1000).toISOString();
-
-    const pastBase = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const pastDateStr = pastBase.toISOString().split('T')[0];
-    const pastAgo = (minutes) => new Date(pastBase.getTime() - minutes * 60 * 1000).toISOString();
-
-    return {
-        currentSession: {
-            id: `SVC-${pet.id}-002`,
-            service: 'Spa & Grooming',
-            date: now.toISOString().split('T')[0],
-            status: 'Đang thực hiện',
-            timeline: [
-                {
-                    id: 3,
-                    status: 'Đang sấy lông',
-                    timestamp: ago(10),
-                    description: `${pet.name} đang được sấy lông với nhiệt độ phù hợp. Bé rất ngoan và hợp tác.`,
-                    staff: DEMO_STAFF_PRIMARY,
-                    type: 'in_progress',
-                    image: '/assets/images/tracker/belu-1.png'
-                },
-                {
-                    id: 2,
-                    status: 'Đang tắm',
-                    timestamp: ago(45),
-                    description: `${pet.name} đang được tắm sạch với sữa tắm chuyên dụng phù hợp cho da của bé.`,
-                    staff: DEMO_STAFF_PRIMARY,
-                    type: 'in_progress',
-                    image: '/assets/images/tracker/belu-2.png'
-                },
-                {
-                    id: 1,
-                    status: 'Đã tiếp nhận',
-                    timestamp: ago(60),
-                    description: `${pet.name} đã được tiếp nhận tại PawPal. Mã hồ sơ: ${pet.id}. Nhân viên sẽ bắt đầu quy trình ngay.`,
-                    staff: DEMO_STAFF_RECEPTION,
-                    type: 'check_in',
-                    image: '/assets/images/tracker/belu-3.png'
-                }
-            ],
-            invoice: null
-        },
-        history: [
-            {
-                id: `SVC-${pet.id}-001`,
-                service: 'Cắt tỉa lông',
-                date: pastDateStr,
-                status: 'Hoàn thành',
-                timeline: [
-                    {
-                        id: 3,
-                        status: 'Hoàn thành',
-                        timestamp: pastAgo(30),
-                        description: `${pet.name} đã hoàn thành dịch vụ cắt tỉa lông. Bé trông rất đẹp và sạch sẽ!`,
-                        staff: DEMO_STAFF_PRIMARY,
-                        type: 'completed',
-                        invoice: {
-                            code: `HD-${pet.id}-001`,
-                            items: [{ name: 'Cắt tỉa lông tiêu chuẩn', price: 80000 }],
-                            total: 80000,
-                            paid: true
-                        }
-                    },
-                    {
-                        id: 2,
-                        status: 'Đang cắt tỉa',
-                        timestamp: pastAgo(90),
-                        description: `Đang thực hiện cắt tỉa lông cho ${pet.name}.`,
-                        staff: DEMO_STAFF_PRIMARY,
-                        type: 'in_progress',
-                        image: '/assets/images/tracker/belu-2.png'
-                    },
-                    {
-                        id: 1,
-                        status: 'Đã tiếp nhận',
-                        timestamp: pastAgo(120),
-                        description: `${pet.name} đã được tiếp nhận. Mã hồ sơ: ${pet.id}.`,
-                        staff: DEMO_STAFF_RECEPTION,
-                        type: 'check_in',
-                        image: '/assets/images/tracker/belu-3.png'
-                    }
-                ],
-                invoice: {
-                    code: `HD-${pet.id}-001`,
-                    items: [{ name: 'Cắt tỉa lông tiêu chuẩn', price: 80000 }],
-                    total: 80000,
-                    paid: true
-                }
-            }
-        ]
+    const currentSession = {
+        id: `SVC-${pet.id}-002`,
+        service: seed.currentSession.service,
+        date: now.toISOString().split('T')[0],
+        status: seed.currentSession.status,
+        timeline: (seed.currentSession.timeline || []).map(item => ({
+            ...replaceTokens(item, pet),
+            timestamp: new Date(now.getTime() - Number(item.offsetMinutes || 0) * 60000).toISOString()
+        })),
+        invoice: null
     };
+
+    const history = (seed.history || []).map(entry => {
+        const baseDate = new Date(now.getTime() - Number(entry.daysAgo || 0) * 86400000);
+        return {
+            id: `SVC-${pet.id}-${entry.idSuffix || '000'}`,
+            service: entry.service,
+            date: baseDate.toISOString().split('T')[0],
+            status: entry.status,
+            timeline: (entry.timeline || []).map(item => ({
+                ...replaceTokens(item, pet),
+                timestamp: new Date(baseDate.getTime() - Number(item.offsetMinutes || 0) * 60000).toISOString()
+            })),
+            invoice: entry.invoice ? replaceTokens(entry.invoice, pet) : null
+        };
+    });
+
+    return { currentSession, history };
 }
 
 // ── Render: Pet Info Card (ĐÃ SỬA) ───────────────────────────────────────────

@@ -14,3 +14,51 @@
     font-size: 0.95rem;
     line-height: 1.5;
 }
+
+/* Action buttons on booking detail */
+.action-buttons-section {
+    display: flex;
+    gap: 12px;
+    margin: 18px 0;
+}
+
+.action-buttons-section button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: var(--border-radius-pill);
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-change-schedule {
+    background: var(--color-accent);
+    color: var(--color-primary-dark);
+}
+
+.btn-change-schedule:hover { background: var(--color-accent-dark); color: #fff; }
+
+.btn-cancel-booking {
+    background: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+}
+
+.btn-cancel-booking:hover,
+.btn-cancel-booking:focus {
+    background: var(--color-primary);
+    color: #ffffff;
+    border-color: var(--color-primary);
+}
+
+.btn-cancel-booking:active {
+    transform: translateY(1px);
+}
+
+/* Hide header status badge (moved into summary) */
+.header-title-row .badge-status {
+    display: none !important;
+}

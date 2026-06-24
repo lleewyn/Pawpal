@@ -103,10 +103,30 @@
                 <span>123 Đường Thú Cưng, Tân Phong, Q.7, TP. HCM</span>
             </li>
         </ul>
-        <form class="footer-newsletter-form" onsubmit="event.preventDefault(); alert('Đăng ký nhận tin thành công!'); this.reset();">
-            <input type="email" placeholder="Email của bạn..." required>
+        <form class="footer-newsletter-form" id="footerSignupForm">
+            <input type="tel" id="footerSignupPhone" placeholder="Số điện thoại của bạn..." required>
             <button type="submit">Đăng ký</button>
         </form>
+        <script>
+            (function(){
+                const form = document.getElementById('footerSignupForm');
+                const input = document.getElementById('footerSignupPhone');
+                if (!form || !input) return;
+
+                form.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    const phone = (input.value || '').trim();
+                    if (!/^0[0-9]{9}$/.test(phone)) {
+                        alert('Vui lòng nhập số điện thoại hợp lệ (10 chữ số, bắt đầu bằng 0)');
+                        input.focus();
+                        return;
+                    }
+                    // Redirect to register page with phone prefilled
+                    const origin = window.location.origin || '';
+                    window.location.href = origin + '/pages/public/login/login.html?action=register&phone=' + encodeURIComponent(phone);
+                });
+            })();
+        </script>
         <div class="payment-methods" style="display: flex; gap: 8px; margin-top: 10px;">
             <img src="/assets/images/shared/payment_momo.png" alt="Momo" style="height: 24px; width: auto; object-fit: contain;">
             <img src="/assets/images/shared/payment_vnpay.png" alt="VNPay" style="height: 24px; width: auto; object-fit: contain;">
@@ -121,10 +141,13 @@
     <div class="map-container">
         <div class="map-badge">Maps</div>
         <div class="map-capsule-wrapper">
-            <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.9544103877597!2d106.6978907!3d10.7380015!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f9b8c0a8747%3A0xf6398b1b22e1b10a!2zMTIzIMSQxrDhu51uZyBUaMO6IEPGsG5nLCBUw6JuIFBob25nLCBRdeG6rW4gNywgVGjDoG5oIHBo4buRIEjhu5MgQ2jDrSBNaW5o!5e0!3m2!1svi!2svn!4v1700000000000!5m2!1svi!2svn"
-                width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <div class="map-placeholder">
+                <div class="map-placeholder-inner">
+                    <p class="map-placeholder-title">PawPal - 123 Đường Thú Cưng, Tân Phong, Q.7</p>
+                    <p class="map-placeholder-text">Bản đồ tương tác sẽ được hiển thị khi trình duyệt cho phép tải Google Maps.</p>
+                    <a class="map-placeholder-link" href="https://www.google.com/maps/search/?api=1&query=123+Đường+Thú+Cưng,+Tân+Phong,+Q.7,+TP.+HCM" target="_blank" rel="noopener">Mở trên Google Maps</a>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -4,13 +4,10 @@
  */
 
 // ══════════════════════════════════════════════════════════════════════════
-// Mock Data - DEPRECATED: Now using DataLoader to load from CSV
+// Static fallback data kept only for rendering support
 // ══════════════════════════════════════════════════════════════════════════
 
-// Mock data kept as fallback only
-const mockProducts = [];
-
-const mockBrands = [
+const brandCatalog = [
     { id: 1, name: 'Royal Canin', logo: '/assets/images/shop/brand/royal-canin.png', slug: 'royal-canin' },
     { id: 2, name: 'Pedigree', logo: '/assets/images/shop/brand/Pedigree.png', slug: 'pedigree' },
     { id: 3, name: 'Me-O', logo: '/assets/images/shop/brand/me-o.png', slug: 'me-o' },
@@ -698,7 +695,7 @@ function createPageButton(pageNum) {
 
 function initBrands() {
     const brandsGrid = document.getElementById('brandsGrid');
-    brandsGrid.innerHTML = mockBrands.map(brand => `
+    brandsGrid.innerHTML = brandCatalog.map(brand => `
         <a href="#brand-${brand.slug}" class="brand-card" data-brand="${brand.name}">
             <img src="${brand.logo}" alt="${brand.name}" class="brand-logo">
         </a>

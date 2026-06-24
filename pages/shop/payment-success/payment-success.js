@@ -52,20 +52,33 @@ function setupGuestActivationCard(order) {
 }
 
 function setupTrackingLink(order) {
-    const trackBtns = document.querySelectorAll('a[href="/pages/user/orders/orders.html"]');
+    // Find any anchor that links to the orders list and convert it into a direct
+    // link to the created order's detail. Match both absolute and relative hrefs.
+    const anchors = Array.from(document.querySelectorAll('a'));
+    const trackBtns = anchors.filter(a => {
+        const href = a.getAttribute('href') || '';
+        return href.includes('/pages/user/orders/') || href.endsWith('/orders.html') || href.endsWith('orders.html');
+    });
+
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     const isLoggedInUser = Boolean(currentUser && (currentUser.id || currentUser.phone));
     const isSamePhone = currentUser && order.shipping && currentUser.phone === order.shipping.phone;
 
     trackBtns.forEach(btn => {
-        if (isLoggedInUser && currentUser.id && order.userId === currentUser.id) {
-            btn.href = `/pages/user/order-detail.html?id=${order.orderId}`;
+        // Prefer linking to the order detail page with the normalized `id` if available
+        const id = order.id || order.orderId || order.orderID || orderIdFrom(order);
+        if (id) {
+            btn.href = `/pages/user/order-detail/order-detail.html?id=${encodeURIComponent(id)}`;
         } else if (isLoggedInUser && isSamePhone) {
             btn.href = '/pages/user/orders/orders.html';
         } else {
             btn.href = '/pages/public/return-guest/return-guest.html';
         }
     });
+}
+
+function orderIdFrom(order) {
+    return order && (order.orderId || order.id || order.orderID || null);
 }
 
 function displayOrderInfo(order) {

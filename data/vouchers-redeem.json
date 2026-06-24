@@ -1,0 +1,68 @@
+[
+  {
+    "id": "REDEEM-SPA50K",
+    "name": "Voucher Spa 50.000đ",
+    "type": "fixed",
+    "value": 50000,
+    "minOrderValue": 200000,
+    "maxDiscount": null,
+    "applicableFor": ["services"],
+    "quantity": 50,
+    "description": "Giảm 50.000đ cho dịch vụ Spa & Grooming"
+  },
+  {
+    "id": "REDEEM-SHOP10PCT",
+    "name": "Giảm 10% Cửa hàng",
+    "type": "percentage",
+    "value": 10,
+    "minOrderValue": 300000,
+    "maxDiscount": 80000,
+    "applicableFor": ["shop"],
+    "quantity": 30,
+    "description": "Giảm 10% tối đa 80.000đ cho đơn hàng cửa hàng"
+  },
+  {
+    "id": "REDEEM-HOTEL100K",
+    "name": "Voucher Hotel 100.000đ",
+    "type": "fixed",
+    "value": 100000,
+    "minOrderValue": 500000,
+    "maxDiscount": null,
+    "applicableFor": ["services"],
+    "quantity": 20,
+    "description": "Giảm 100.000đ cho dịch vụ lưu trú thú cưng"
+  },
+  {
+    "id": "REDEEM-FREESHIP",
+    "name": "Miễn phí vận chuyển",
+    "type": "shipping",
+    "value": 30000,
+    "minOrderValue": 150000,
+    "maxDiscount": 30000,
+    "applicableFor": ["shop"],
+    "quantity": 100,
+    "description": "Miễn phí vận chuyển cho đơn từ 150.000đ"
+  },
+  {
+    "id": "REDEEM-ALL15PCT",
+    "name": "Giảm 15% Toàn bộ",
+    "type": "percentage",
+    "value": 15,
+    "minOrderValue": 500000,
+    "maxDiscount": 150000,
+    "applicableFor": ["all"],
+    "quantity": 15,
+    "description": "Giảm 15% tối đa 150.000đ cho tất cả dịch vụ & mua sắm"
+  },
+  {
+    "id": "REDEEM-GROOMING200K",
+    "name": "Voucher Grooming 200.000đ",
+    "type": "fixed",
+    "value": 200000,
+    "minOrderValue": 800000,
+    "maxDiscount": null,
+    "applicableFor": ["services"],
+    "quantity": 10,
+    "description": "Giảm 200.000đ cho gói Grooming Premium"
+  }
+]

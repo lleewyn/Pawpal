@@ -10,12 +10,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rmaData = returnsList.find((item) => item.orderId === orderId);
 
     if (!rmaData) {
-        alert('Khong tim thay yeu cau doi tra cho don hang nay.');
+        alert('Không tìm thấy yêu cầu đổi trả cho đơn hàng này.');
         window.location.href = 'orders.html';
         return;
     }
 
-    document.getElementById('rma-id-title').textContent = `Yeu cau doi tra #${rmaData.rmaId}`;
+    document.getElementById('rma-id-title').textContent = `Yêu cầu đổi trả #${rmaData.rmaId}`;
 
     const dateObj = new Date(rmaData.createdAt);
     document.getElementById('rma-date').textContent = `Ngay tao: ${dateObj.toLocaleDateString('vi-VN')} luc ${dateObj.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
@@ -35,21 +35,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     `).join('');
 
     const reasonsMap = {
-        broken: 'San pham loi hong (do van chuyen hoac NSX)',
-        wrong_item: 'Giao sai mau ma, chung loai',
-        wrong_size: 'Khong vua kich thuoc',
-        change_mind: 'Khong con nhu cau su dung'
+        broken: 'Sản phẩm lỗi hỏng (do vận chuyển hoặc NSX)',
+        wrong_item: 'Giao sai mẫu mã, chủng loại',
+        wrong_size: 'Không vừa kích thước',
+        change_mind: 'Không còn nhu cầu sử dụng'
     };
 
     document.getElementById('rma-reason-text').textContent = reasonsMap[rmaData.reason] || rmaData.reason;
-    document.getElementById('rma-description-text').textContent = rmaData.description || 'Khong co mo ta chi tiet.';
+    document.getElementById('rma-description-text').textContent = rmaData.description || 'Không có mô tả chi tiết.';
 
     const timelineSteps = [
-        { key: 'placed', title: 'Gui yeu cau', desc: 'Da tiep nhan yeu cau doi tra' },
-        { key: 'reviewing', title: 'Dang kiem duyet', desc: 'Doi ngu ho tro dang xem xet thong tin' },
-        { key: 'approved', title: 'Da chap nhan', desc: 'Yeu cau duoc duyet. Vui long gui hang ve shop' },
-        { key: 'shipping_return', title: 'Dang gui hang tra', desc: 'Dang cho kho nhan san pham' },
-        { key: 'completed', title: 'Hoan tat', desc: 'Giao dich doi tra da duoc giai quyet' }
+        { key: 'placed', title: 'Gửi yêu cầu', desc: 'Đã tiếp nhận yêu cầu đổi trả' },
+        { key: 'reviewing', title: 'Đang kiểm duyệt', desc: 'Đội ngũ hỗ trợ đang xem xét thông tin' },
+        { key: 'approved', title: 'Đã chấp nhận', desc: 'Yêu cầu được duyệt. Vui lòng gửi hàng về shop' },
+        { key: 'shipping_return', title: 'Đang gửi hàng trả', desc: 'Đang chờ kho nhận sản phẩm' },
+        { key: 'completed', title: 'Hoàn tất', desc: 'Giao dịch đổi trả đã được giải quyết' }
     ];
 
     const timelineContainer = document.getElementById('rma-timeline');
@@ -78,12 +78,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function getStatusLabel(status) {
     const statusMap = {
-        placed: 'Da gui yeu cau',
+        placed: 'Đã gửi yêu cầu',
         reviewing: 'Dang kiem duyet',
-        approved: 'Da chap nhan',
-        shipping_return: 'Dang gui hang tra',
-        completed: 'Hoan tat',
-        rejected: 'Tu choi'
+        reviewing: 'Đang kiểm duyệt',
+        approved: 'Đã chấp nhận',
+        shipping_return: 'Đang gửi hàng trả',
+        completed: 'Hoàn tất',
+        rejected: 'Từ chối'
     };
 
     return statusMap[status] || status;

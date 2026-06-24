@@ -12,7 +12,7 @@
     "vaccinated": true,
     "allergies": "Dị ứng hải sản",
     "notes": "Bé khá nhát người lạ, thích ăn pate bò.",
-    "avatar": "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+    "avatar": "/assets/images/tracker/belu-1.png"
   },
   {
     "id": "PET-002",
@@ -27,7 +27,7 @@
     "vaccinated": true,
     "allergies": "",
     "notes": "Thích cào móng vào buổi sáng.",
-    "avatar": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+    "avatar": "/assets/images/tracker/belu-2.png"
   },
   {
     "id": "PET-003",
@@ -42,6 +42,6 @@
     "vaccinated": true,
     "allergies": "Không",
     "notes": "Rất hiếu động, thích nghịch nước.",
-    "avatar": "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+    "avatar": "/assets/images/tracker/belu-3.png"
   }
 ]

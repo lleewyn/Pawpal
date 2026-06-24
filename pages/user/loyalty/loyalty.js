@@ -1,5 +1,5 @@
 /**
- * loyalty.js — Xử lý nghiệp vụ Ưu đãi vÃ  ThÃ nh viên (Quy trình 3.1.13)
+ * loyalty.js — Xử lý nghiệp vụ Ưu đãi và Thành viên (Quy trình 3.1.13)
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Nếu chưa đăng nhập, guard chuyển hướng
     if (!currentUser) {
-        alert('Vui lòng đăng nhập để truy cập trang nÃ y.');
+        alert('Vui lòng đăng nhập để truy cập trang này.');
         window.location.href = '/pages/public/login/login.html';
         return;
     }
@@ -26,28 +26,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     let vouchersMock = [];
     try {
         // Thử fetch từ absolute path
-        const response = await fetch('/data/vouchers.json');
-        console.log('Fetch vouchers.json:', response.status, response.ok);
+        const response = await fetch('/data/vouchers-redeem.json');
+        console.log('Fetch vouchers-redeem.json:', response.status, response.ok);
         
         if (response.ok) {
             const vouchersData = await response.json();
+            window.PawPalVoucherRedeemSeed = vouchersData;
             console.log('Loaded vouchers data:', vouchersData.length, 'items');
             
             // Transform từ format JSON sang format UI
             vouchersMock = vouchersData
-                .filter(v => v.active) // Chỉ lấy những vouchers đang hoạt động
                 .map((v, idx) => ({
                     id: `VOUCHER-${idx}`,
-                    name: v.description.split(' - ')[0] || v.code,
+                    name: v.name || v.id || `VOUCHER-${idx + 1}`,
                     value: v.type === 'fixed' 
                         ? `${new Intl.NumberFormat('vi-VN').format(v.value)}đ`
                         : v.type === 'percentage'
                         ? `Giảm ${v.value}% (Tối đa ${new Intl.NumberFormat('vi-VN').format(v.maxDiscount || 0)})`
                         : v.description,
                     pointsCost: Math.ceil(v.value / 1000) * 50, // Tính điểm từ giá trị
-                    quantity: v.maxUsage - v.usageCount,
-                    terms: v.description
+                    quantity: Number.isFinite(Number(v.quantity)) ? Number(v.quantity) : Math.max(10, 50 - idx * 5),
+                    terms: [
+                        `Áp dụng cho: ${(v.applicableFor || []).join(', ') || 'Tất cả'}`,
+                        v.minOrderValue ? `Đơn tối thiểu: ${new Intl.NumberFormat('vi-VN').format(Number(v.minOrderValue) || 0)}đ` : null,
+                        v.maxDiscount ? `Giảm tối đa: ${new Intl.NumberFormat('vi-VN').format(Number(v.maxDiscount) || 0)}đ` : null
+                    ].filter(Boolean).join(' • ')
                 }));
+
+            if (!vouchersMock.length) {
+                vouchersMock = [{
+                    id: 'VOUCHER-DEMO-1',
+                    name: 'Voucher đổi điểm giảm 50.000đ',
+                    value: 'Giảm 50.000đ',
+                    pointsCost: 100,
+                    quantity: 1,
+                    terms: 'Áp dụng cho: Tất cả'
+                }];
+            }
             
             console.log('Transformed vouchers:', vouchersMock.length, 'items');
         } else {
@@ -62,17 +77,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderLoyaltyPage(currentUser, vouchersMock);
     renderMyVouchers(currentUser);
 
-    // Kiểm tra xem có quÃ  nÃ o đang chờ khôi phục luồng đổi quÃ  không (US 13-3)
+    // Kiểm tra xem có quà nào đang chờ khôi phục luồng đổi quà không (US 13-3)
     checkPendingRedeem(currentUser);
 });
 
-// HÃ m hiển thị toÃ n bộ nội dung trang Loyalty
+// Hàm hiển thị toàn bộ nội dung trang Loyalty
 function renderLoyaltyPage(user, vouchers) {
     // 1. Phân hạng dựa trên tổng chi tiêu
-    // Bạc: < 5tr, VÃ ng: 5tr - 15tr, Kim Cương: > 15tr
+    // Bạc: < 5tr, Vàng: 5tr - 15tr, Kim Cương: > 15tr
     let tierName = 'Hạng Bạc (Silver)';
     let tierClass = 'tier-silver';
-    let nextTierName = 'Hạng VÃ ng';
+    let nextTierName = 'Hạng Vàng';
     let nextTierLimit = 5000000;
     let currentSpend = user.spend || 0;
 
@@ -82,7 +97,7 @@ function renderLoyaltyPage(user, vouchers) {
         nextTierName = 'Tối đa';
         nextTierLimit = 15000000;
     } else if (currentSpend >= 5000000) {
-        tierName = 'Hạng VÃ ng (Gold)';
+        tierName = 'Hạng Vàng (Gold)';
         tierClass = 'tier-gold';
         nextTierName = 'Hạng Kim Cương';
         nextTierLimit = 15000000;
@@ -92,12 +107,12 @@ function renderLoyaltyPage(user, vouchers) {
     const warningBanner = document.getElementById('loyalty-warning-banner');
     if (warningBanner) {
         if (user.points >= 50) {
-            // Giả lập điểm sắp hết hạn trong 30 ngÃ y tới
+            // Giả lập điểm sắp hết hạn trong 30 ngày tới
             warningBanner.classList.remove('d-none');
             warningBanner.innerHTML = `
                 <div class="warning-banner-content">
                     <span class="warning-icon"></span>
-                    <span>Bạn có <strong>50</strong> điểm Paw Points sắp hết hạn sử dụng vÃ o ngÃ y 15/07/2026. Hãy đổi ưu đãi ngay nhé!</span>
+                    <span>Bạn có <strong>50</strong> điểm Paw Points sắp hết hạn sử dụng vào ngày 15/07/2026. Hãy đổi ưu đãi ngay nhé!</span>
                 </div>
             `;
         } else {
@@ -105,7 +120,7 @@ function renderLoyaltyPage(user, vouchers) {
         }
     }
 
-    // 3. Render Virtual Card vÃ  Progress
+    // 3. Render Virtual Card và Progress
     const cardEl = document.getElementById('loyalty-card-wrapper');
     if (cardEl) {
         const progressPercent = Math.min((currentSpend / nextTierLimit) * 100, 100);
@@ -116,7 +131,7 @@ function renderLoyaltyPage(user, vouchers) {
             upgradeText = 'Bạn đã đạt cấp bậc cao nhất của PawPal!';
         }
 
-        // Multipliers vÃ  Perks mapping
+        // Multipliers và Perks mapping
         let pointsMultiplier = "1x Points";
         let mainPerk = "Cập nhật Care-Log";
         if (tierClass === 'tier-gold') {
@@ -138,7 +153,7 @@ function renderLoyaltyPage(user, vouchers) {
                             <span class="card-chip"></span>
                         </div>
                         <div class="card-body-info">
-                            <span class="card-tier-label" id="virtualCardTier">${tierClass === 'tier-silver' ? 'Hạng Bạc' : (tierClass === 'tier-gold' ? 'Hạng VÃ ng' : 'Hạng Kim Cương')}</span>
+                            <span class="card-tier-label" id="virtualCardTier">${tierClass === 'tier-silver' ? 'Hạng Bạc' : (tierClass === 'tier-gold' ? 'Hạng Vàng' : 'Hạng Kim Cương')}</span>
                             <div class="pet-owner-info">
                                 <span class="pet-name">VIP PET PASS</span>
                                 <span class="owner-name" id="virtualCardOwner">${user.name}</span>
@@ -160,7 +175,7 @@ function renderLoyaltyPage(user, vouchers) {
 
                 <div class="loyalty-card-details-panel">
                     <div class="points-balance-summary">
-                        <span class="label">Điểm tích lÅ©y hiện tại:</span>
+                        <span class="label">Điểm tích lũy hiện tại:</span>
                         <strong id="current-points-display">${user.points} Paw Points</strong>
                     </div>
                     <div class="progress-upgrade-label">Tiến trình nâng hạng:</div>
@@ -184,7 +199,7 @@ function renderLoyaltyPage(user, vouchers) {
         // Gắn sự kiện click cho các nút Đổi (nếu đủ điểm)
         vouchers.forEach(v => {
             if (v.quantity > 0 && user.points >= v.pointsCost) {
-                const btn = document.querySelector(`.voucher-card[data-id="${v.id}"] .redeem-btn`);
+                const btn = document.querySelector(`.voucher-card-shopee[data-id="${v.id}"] .redeem-btn`);
                 if (btn) {
                     btn.addEventListener('click', (e) => {
                         // Disable button to prevent double submit
@@ -209,7 +224,7 @@ function renderMyVouchers(user) {
     if (!myVouchers.length) {
         container.innerHTML = `
             <div class="no-my-vouchers">
-                <p>Bạn chưa có voucher nÃ o. Đổi điểm ngay để nhận voucher hấp dẫn!</p>
+                <p>Bạn chưa có voucher nào. Đổi điểm ngay để nhận voucher hấp dẫn!</p>
             </div>
         `;
         return;
@@ -229,8 +244,8 @@ function renderMyVoucherCard(voucher) {
             <div class="my-voucher-card-body">
                 <div class="my-voucher-code">${voucher.code}</div>
                 <div class="my-voucher-name">${voucher.name}</div>
-                <div class="my-voucher-meta">Đổi: ${voucher.pointsCost} Points</div>
-                <div class="my-voucher-meta">NgÃ y đổi: ${createdLabel}</div>
+                <div class="my-voucher-meta">Đổi: ${voucher.pointsCost} điểm</div>
+                <div class="my-voucher-meta">Ngày đổi: ${createdLabel}</div>
                 <div class="my-voucher-meta">Hạn dùng: ${expiryLabel}</div>
             </div>
             <div class="my-voucher-status">Chưa sử dụng</div>
@@ -249,7 +264,7 @@ function renderVoucherCard(voucher, user) {
     if (isOutOfStock) {
         statusClass = 'out-of-stock';
         actionHtml = `
-            <div class="voucher-status-label out-of-stock-label">Đã hết quÃ </div>
+            <div class="voucher-status-label out-of-stock-label">Đã hết quà</div>
         `;
     } else if (isInsufficientPoints) {
         statusClass = 'insufficient';
@@ -279,7 +294,7 @@ function renderVoucherCard(voucher, user) {
     `;
 }
 
-// HÃ m khởi tạo Slider kéo trượt bằng touch/mouse event
+// Hàm khởi tạo Slider kéo trượt bằng touch/mouse event
 function initSlider(voucherId, user) {
     const container = document.getElementById(`slider-${voucherId}`);
     if (!container) return;
@@ -319,13 +334,13 @@ function initSlider(voucherId, user) {
         if (!isDragging) return;
         isDragging = false;
 
-        // Nếu kéo qua 90% hÃ nh trình, coi như đổi thÃ nh công
+        // Nếu kéo qua 90% hành trình, coi như đổi thành công
         if (currentX >= maxDrag * 0.9) {
             handle.style.transform = `translateX(${maxDrag}px)`;
             text.style.opacity = '0';
             triggerRedeem(voucherId, user, container);
         } else {
-            // Trả về vị trí cÅ© mượt mÃ 
+            // Trả về vị trí cÅ© mượt mà
             handle.style.transition = 'transform 0.3s ease';
             handle.style.transform = 'translateX(0px)';
             text.style.transition = 'opacity 0.3s ease';
@@ -343,7 +358,7 @@ function initSlider(voucherId, user) {
     document.addEventListener('touchend', onEnd);
 }
 
-// HÃ m xử lý đổi quÃ 
+// Hàm xử lý đổi quà
 function triggerRedeem(voucherId, user, sliderContainer) {
     // helper to reset UI (slider or button)
     const resetUI = () => {
@@ -368,10 +383,10 @@ function triggerRedeem(voucherId, user, sliderContainer) {
         }
     };
 
-    // 1. Kiểm tra tÃ i khoản tạm (US 13-3)
+    // 1. Kiểm tra tài khoản tạm (US 13-3)
     if (user.is_temporary) {
         resetUI();
-        // Mở popup bảo mật tÃ i khoản
+        // Mở popup bảo mật tài khoản
         showSecurityModal(voucherId);
         return;
     }
@@ -380,40 +395,12 @@ function triggerRedeem(voucherId, user, sliderContainer) {
     const isSystemError = Math.random() < 0.05;
     if (isSystemError) {
         resetUI();
-        showToast('error', 'Hệ thống bận, vui lòng thử lại sau. Điểm của bạn đã được giữ an toÃ n.');
+        showToast('error', 'Hệ thống bận, vui lòng thử lại sau. Điểm của bạn đã được giữ an toàn.');
         return;
     }
 
-    // 3. Tiến hÃ nh đổi điểm thÃ nh công
-    const vouchersList = {
-        'VOUCHER-SPA-50K': {
-            cost: 100,
-            name: 'Voucher Giảm giá dịch vụ Spa 50k',
-            type: 'fixed',
-            value: 50000,
-            minOrderValue: 0,
-            maxDiscount: null,
-            applicableFor: ['all']
-        },
-        'VOUCHER-PETSHOP-10': {
-            cost: 150,
-            name: 'Voucher Mua sắm hạt hạt 10%',
-            type: 'percentage',
-            value: 10,
-            minOrderValue: 200000,
-            maxDiscount: 100000,
-            applicableFor: ['all']
-        },
-        'VOUCHER-HOTEL-FREE': {
-            cost: 300,
-            name: 'Voucher Miễn phí 1 đêm lưu trú Hotel',
-            type: 'fixed',
-            value: 100000,
-            minOrderValue: 0,
-            maxDiscount: null,
-            applicableFor: ['all']
-        }
-    };
+    // 3. Tiến hành đổi điểm thành công
+    const vouchersList = Object.fromEntries((window.PawPalVoucherRedeemSeed || []).map(v => [v.id, v]));
 
     const voucherInfo = vouchersList[voucherId];
     if (!voucherInfo) return;
@@ -431,7 +418,7 @@ function triggerRedeem(voucherId, user, sliderContainer) {
             user.points = users[userIdx].points;
             localStorage.setItem('pawpal_current_user', JSON.stringify(user));
 
-            // Sinh mã voucher đưa vÃ o "Voucher của tôi"
+            // Sinh mã voucher đưa vào "Voucher của tôi"
             const voucherCode = 'PAWPAL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
             const myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]');
             const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -452,10 +439,10 @@ function triggerRedeem(voucherId, user, sliderContainer) {
             localStorage.setItem('pawpal_my_vouchers', JSON.stringify(myVouchers));
             localStorage.setItem('pawpal_applied_voucher_code', voucherCode);
 
-            // Hiển thị giao diện thÃ nh công (button or footer)
+            // Hiển thị giao diện thành công (button or footer)
             try {
                 if (sliderContainer) {
-                    sliderContainer.innerHTML = `<div class="redeem-success-btn">Đã đổi thÃ nh công!</div>`;
+                    sliderContainer.innerHTML = `<div class="redeem-success-btn">Đã đổi thành công!</div>`;
                 }
             } catch (e) {
                 // ignore
@@ -467,8 +454,8 @@ function triggerRedeem(voucherId, user, sliderContainer) {
                 pointsDisplay.innerHTML = `${user.points} <span class="points-unit">Paw Points</span>`;
             }
 
-            // Toast báo thÃ nh công
-            showToast('success', `Đổi điểm thÃ nh công! Mã ưu đãi của bạn: ${voucherCode}`);
+            // Toast báo thành công
+            showToast('success', `Đổi điểm thành công! Mã ưu đãi của bạn: ${voucherCode}`);
 
             // Reload lại danh sách voucher sau 1.5 giây để cập nhật trạng thái các voucher khác (ví dụ: thiếu điểm sau khi trừ)
             setTimeout(() => {
@@ -478,7 +465,7 @@ function triggerRedeem(voucherId, user, sliderContainer) {
     }
 }
 
-// Hiển thị Modal bảo mật tÃ i khoản tạm (US 13-3)
+// Hiển thị Modal bảo mật tài khoản tạm (US 13-3)
 function showSecurityModal(voucherId) {
     // Tạo modal động bằng JS nếu chưa có
     let modalEl = document.getElementById('security-auth-modal');
@@ -489,13 +476,13 @@ function showSecurityModal(voucherId) {
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title fw-bold">
-                                Bảo mật tÃ i khoản
+                                Bảo mật tài khoản
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <p>
-                                Bạn cần thiết lập mật khẩu tÃ i khoản để sử dụng tính năng đổi điểm thưởng Paw Points.
+                                Bạn cần thiết lập mật khẩu tài khoản để sử dụng tính năng đổi điểm thưởng Paw Points.
                             </p>
                         </div>
                         <div class="modal-footer">
@@ -513,10 +500,10 @@ function showSecurityModal(voucherId) {
     const bootstrapModal = new bootstrap.Modal(modalEl);
     bootstrapModal.show();
 
-    // RÃ ng buộc sự kiện nút chuyển hướng
+    // Ràng buộc sự kiện nút chuyển hướng
     const btnRedirect = document.getElementById('btn-redirect-setup-pwd');
     btnRedirect.onclick = () => {
-        // Lưu voucherId cần đổi vÃ o sessionStorage để sau khi đặt mật khẩu thÃ nh công thì quay lại đổi ngay
+        // Lưu voucherId cần đổi vào sessionStorage để sau khi đặt mật khẩu thành công thì quay lại đổi ngay
         sessionStorage.setItem('pending_redeem_voucher', voucherId);
         bootstrapModal.hide();
         
@@ -534,14 +521,14 @@ function showSecurityModal(voucherId) {
     };
 }
 
-// Kiểm tra xem có yêu cầu đổi quÃ  nÃ o đang chờ khôi phục sau khi đổi pass không (US 13-3 / AC3.2)
+// Kiểm tra xem có yêu cầu đổi quà nào đang chờ khôi phục sau khi đổi pass không (US 13-3 / AC3.2)
 function checkPendingRedeem(user) {
     const pendingVoucherId = sessionStorage.getItem('pending_redeem_voucher');
     if (pendingVoucherId && !user.is_temporary) {
         sessionStorage.removeItem('pending_redeem_voucher');
-        showToast('info', 'ChÃ o mừng bạn trở thÃ nh thÃ nh viên chính thức! Hệ thống đang tự động khôi phục yêu cầu đổi ưu đãi của bạn...');
+        showToast('info', 'Chào mừng bạn trở thành thành viên chính thức! Hệ thống đang tự động khôi phục yêu cầu đổi ưu đãi của bạn...');
         
-        // Tự động trigger đổi quÃ  sau 2 giây
+        // Tự động trigger đổi quà sau 2 giây
         setTimeout(() => {
             const voucherCard = document.querySelector(`.voucher-card[data-id="${pendingVoucherId}"]`);
             if (voucherCard) {
@@ -553,3 +540,5 @@ function checkPendingRedeem(user) {
         }, 2000);
     }
 }
+
+

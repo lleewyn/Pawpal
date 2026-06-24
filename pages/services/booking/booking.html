@@ -128,6 +128,14 @@
                                         <span class="field-error" id="petTypeErr"></span>
                                     </div>
                                 </div>
+                                <div class="form-row d-none" id="petTypeOtherGroup">
+                                    <div class="form-group full-width">
+                                        <label for="petTypeOther">Loài cụ thể</label>
+                                        <input type="text" id="petTypeOther" placeholder="Nhập loài cụ thể, ví dụ: Chó cảnh, Bò sữa...">
+                                        <span class="field-error d-none" id="petTypeOtherErr"></span>
+                                        <span class="field-note d-none" id="petTypeOtherWarn" style="color:#b45309; font-weight:600;">Ký tự lạ được phát hiện — chỉ là cảnh báo, không bắt buộc.</span>
+                                    </div>
+                                </div>
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="petBreed">Giống</label>
@@ -281,7 +289,7 @@
 
                         <!-- Spa: date + time slot -->
                         <div class="spa-schedule" id="spaSchedule">
-                            <div class="form-group">
+                            <div class="form-group booking-date">
                                 <label for="bookingDate">Chọn ngày <span class="required">*</span></label>
                                 <input type="date" id="bookingDate">
                             </div>
@@ -426,8 +434,8 @@
                 <span class="code-value" id="bookingCode">PP-000000</span>
             </div>
             <div class="success-actions">
-                <a href="../../../user/dashboard/dashboard.html" class="btn-cta">Xem lịch hẹn của tôi</a>
-                <a href="../../../pages/public/landing/landing.html" class="btn-green-outline">Về trang chủ</a>
+                <a href="../../user/dashboard/dashboard.html" class="btn-cta">Xem lịch hẹn của tôi</a>
+                <a href="../../public/landing/landing.html" class="btn-green-outline">Về trang chủ</a>
             </div>
         </div>
     </div>

@@ -1,5 +1,0 @@
-# Hướng dẫn thiết kế giao diện (UI/UX)
-Mỗi khi thực hiện bất kỳ công việc nào liên quan đến thiết kế, chỉnh sửa giao diện (HTML/CSS) hoặc viết mã front-end:
-1. Bạn BẮT BUỘC phải đọc file `Docs/DESIGN.md` trước tiên để nắm rõ các Token (Colors, Typography, Spacing, Border Radius, Motion) và Quy tắc viết CSS (CSS Coding Rules).
-2. Tuyệt đối tuân thủ tất cả các mệnh lệnh và quy tắc được ghi trong file `Docs/DESIGN.md` (bao gồm cả các yêu cầu đặc biệt ở dòng 2 của file).
-3. Đảm bảo giao diện nhất quán, không được tự ý hardcode màu sắc hay khoảng cách ngoài hệ thống Token đã định nghĩa.

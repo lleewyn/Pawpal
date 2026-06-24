@@ -69,13 +69,13 @@ function handlePetChange(event) {
     const historyContent = document.getElementById('historyContent');
 
     if (!petId) {
-        if (emptyState) emptyState.classList.remove('d-none');
-        if (historyContent) historyContent.classList.add('d-none');
+        if (emptyState) { emptyState.style.display = ''; emptyState.classList.remove('d-none'); }
+        if (historyContent) { historyContent.style.display = 'none'; historyContent.classList.add('d-none'); }
         return;
     }
 
-    if (emptyState) emptyState.classList.add('d-none');
-    if (historyContent) historyContent.classList.remove('d-none');
+    if (emptyState) { emptyState.style.display = 'none'; emptyState.classList.add('d-none'); }
+    if (historyContent) { historyContent.style.display = 'block'; historyContent.classList.remove('d-none'); }
 
     currentPetId = petId;
     loadCareHistory(petId);
@@ -83,7 +83,7 @@ function handlePetChange(event) {
 
 async function loadCareHistory(petId) {
     const pets = await getSelectablePets();
-    const pet = pets.find((item) => item.id === petId);
+    const pet = pets.find((item) => String(item.id) === String(petId));
     if (!pet) {
         showToast('Không tìm thấy thông tin bé cưng', 'error');
         return;
@@ -92,7 +92,12 @@ async function loadCareHistory(petId) {
     renderPetInfoCard(pet);
 
     const allLogs = getTrackerLogs();
-    const petLogs = allLogs[petId];
+    let petLogs = allLogs[petId];
+
+    // Seed from care-logs.json if no local data exists
+    if (!petLogs) {
+        petLogs = await seedFromCareLogsJson(petId);
+    }
 
     if (!petLogs) {
         renderEmptySessionList();
@@ -101,10 +106,21 @@ async function loadCareHistory(petId) {
 
     const sessions = [];
     if (petLogs.history && petLogs.history.length > 0) sessions.push(...petLogs.history);
-    if (petLogs.currentSession && petLogs.currentSession.status === 'Hoan thanh') sessions.push(petLogs.currentSession);
+    if (petLogs.currentSession && petLogs.currentSession.status === 'Hoàn thành') sessions.push(petLogs.currentSession);
 
     sessions.sort((a, b) => new Date(b.date) - new Date(a.date));
     renderSessionList(sessions);
+}
+
+async function seedFromCareLogsJson(petId) {
+    try {
+        const resp = await fetch('/data/care-logs.json');
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        return data[petId] || null;
+    } catch {
+        return null;
+    }
 }
 
 function renderPetInfoCard(pet) {
@@ -148,7 +164,7 @@ function renderEmptySessionList() {
                 <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"></path>
                 <path d="M12 7v5l4 2"></path>
             </svg>
-            <p>Chua co lich su dich vu nao. Cac phien cham soc sau khi hoan thanh se xuat hien tai day.</p>
+            <p>Chưa có lịch sử dịch vụ nào. Các phiên chăm sóc sau khi hoàn thành sẽ xuất hiện tại đây.</p>
         </div>
     `;
 }
@@ -232,7 +248,7 @@ function extractLeadStaff(timeline) {
 
 function buildReadOnlyTimeline(timeline) {
     if (!timeline || timeline.length === 0) {
-        return '<p class="timeline-no-data">Khong co du lieu dong thoi gian</p>';
+        return '<p class="timeline-no-data">Không có dữ liệu dòng thời gian</p>';
     }
 
     const sorted = [...timeline].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -244,17 +260,24 @@ function buildReadOnlyTimeline(timeline) {
         return `
             <div class="timeline-item">
                 <div class="timeline-dot"></div>
-                <div class="timeline-content">
-                    <div class="timeline-time">${timeStr}</div>
-                    <h4 class="timeline-status">${escapeHtml(item.status)}</h4>
-                    <p class="timeline-description">${escapeHtml(item.description)}</p>
-                    <div class="timeline-staff">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-                        </svg>
-                        <span>${escapeHtml(item.staff)}</span>
+                <div class="timeline-content${item.image ? ' timeline-content-with-image' : ''}">
+                    <div class="timeline-item-main">
+                        <div class="timeline-time">${timeStr}</div>
+                        <h4 class="timeline-status">${escapeHtml(item.status)}</h4>
+                        <p class="timeline-description">${escapeHtml(item.description)}</p>
+                        <div class="timeline-staff">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                            </svg>
+                            <span>${escapeHtml(item.staff)}</span>
+                        </div>
+                        ${isCompleted && item.invoice ? buildInvoiceBlockHtml(item.invoice) : ''}
                     </div>
-                    ${isCompleted && item.invoice ? buildInvoiceBlockHtml(item.invoice) : ''}
+                    ${item.image ? `
+                    <div class="timeline-photo">
+                        <img src="${item.image}" alt="${escapeHtml(item.status)}" class="timeline-item-image" />
+                    </div>
+                    ` : ''}
                 </div>
             </div>
         `;
@@ -277,11 +300,11 @@ function buildInvoiceBlockHtml(invoice) {
                 `).join('')}
             </div>
             <div class="invoice-total">
-                <span class="invoice-total-label">Tong thanh toan:</span>
+                <span class="invoice-total-label">Tổng thanh toán:</span>
                 <span class="invoice-total-amount">${formatCurrency(invoice.total)}</span>
             </div>
             <div class="invoice-status-badge ${invoice.paid ? 'invoice-paid' : 'invoice-unpaid'}">
-                ${invoice.paid ? 'Da thanh toan' : 'Chua thanh toan'}
+                ${invoice.paid ? 'Đã thanh toán' : 'Chưa thanh toán'}
             </div>
         </div>
     `;

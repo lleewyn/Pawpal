@@ -341,12 +341,12 @@ function getCurrentProduct() {
         const urlParams = new URLSearchParams(window.location.search);
         let productId = urlParams.get('id');
         
-        // If no ID in URL, generate a mock ID
+        // If no ID in URL, generate a temporary ID
         if (!productId) {
             productId = 'prod_' + Date.now();
         }
         
-        // Get product data from page elements (with fallbacks for demo)
+        // Get product data from page elements with safe fallbacks
         const titleElement = document.getElementById('productTitle');
         const brandElement = document.getElementById('productBrand');
         const priceElement = document.getElementById('productPrice');
@@ -354,29 +354,28 @@ function getCurrentProduct() {
         const stockElement = document.getElementById('stockRemaining');
         const categoryElement = document.getElementById('productCategory');
         
+        const fallbackImage = '/assets/images/shop/products/placeholder.webp';
         const product = {
             id: productId,
             name: titleElement?.textContent?.trim() || 'Royal Canin Mini Adult',
             brand: brandElement?.textContent?.trim() || 'Royal Canin',
             price: parsePriceFromText(priceElement?.textContent || '250000') || 250000,
-            image: imageElement?.src || 'https://via.placeholder.com/300',
+            image: imageElement?.src || fallbackImage,
             stock: parseInt(stockElement?.textContent || '99'),
             category: categoryElement?.textContent?.trim() || 'Thức ăn khô'
         };
         
-        console.log('Product data:', product);
         return product;
         
     } catch (error) {
         console.error('Error getting product data:', error);
         
-        // Return mock product as fallback
         return {
-            id: 'prod_mock_' + Date.now(),
+            id: 'prod-fallback',
             name: 'Royal Canin Mini Adult',
             brand: 'Royal Canin',
             price: 250000,
-            image: 'https://via.placeholder.com/300',
+            image: '/assets/images/shop/products/placeholder.webp',
             stock: 99,
             category: 'Thức ăn khô'
         };

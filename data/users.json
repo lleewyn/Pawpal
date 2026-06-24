@@ -48,6 +48,8 @@
       "facebook": null
     },
     "avatar": "/assets/images/avatars/user1.jpg"
+    ,
+    "tier": "Bạc"
   },
   {
     "id": "USER-GUEST-DEMO",
@@ -73,5 +75,7 @@
       "facebook": null
     },
     "avatar": "/assets/images/avatars/default.jpg"
+    ,
+    "tier": "Thành viên Mới"
   }
 ]

@@ -5,7 +5,7 @@
  */
 
 export const API = {
-    DATA_VERSION: '2026-06-23-user-json-cleanup-v3',
+    DATA_VERSION: '2026-06-24-fix-order-images-v2',
 
     async getJSON(url) {
         try {
@@ -52,7 +52,20 @@ export const API = {
         if (shouldRefreshMockData || localOrders.length === 0 || !localOrders.some(order => order.userId)) {
             const orders = await this.getJSON('/data/orders.json');
             if (orders) {
-                localStorage.setItem('pawpal_orders', JSON.stringify(mergeById(orders, localOrders)));
+                // When refreshing, seed data wins for product fields (image, name, price),
+                // but preserve user-modified fields like status (e.g. cancelled orders)
+                const mergedOrders = orders.map(seedOrder => {
+                    const local = localOrders.find(o => String(o.id) === String(seedOrder.id));
+                    if (!local) return seedOrder;
+                    // Keep seed product data fresh, only preserve user-action fields
+                    return {
+                        ...seedOrder,
+                        status: local.status,
+                        paymentStatus: local.paymentStatus,
+                        updatedAt: local.updatedAt
+                    };
+                });
+                localStorage.setItem('pawpal_orders', JSON.stringify(mergedOrders));
                 localStorage.setItem('pawpal_orders_seeded', 'true');
             }
         }

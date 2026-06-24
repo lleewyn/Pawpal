@@ -30,7 +30,11 @@ function ensureSupportReady(callback) {
                     ticketsTableBody.innerHTML = '';
 
                     if (tickets.length === 0) {
-                        ticketsTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Bạn chưa gửi yêu cầu hỗ trợ nào hết.</td></tr>';
+                        ticketsTableBody.innerHTML = `
+                            <tr><td colspan="5" class="tickets-empty-cell">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                <p>Bạn chưa gửi yêu cầu hỗ trợ nào.</p>
+                            </td></tr>`;
                         return;
                     }
 
@@ -45,21 +49,20 @@ function ensureSupportReady(callback) {
                             statusClass = 'badge-status-completed';
                         }
 
+                        const isPriorityHigh = ticket.priority === 'Cao';
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td class="fw-bold">#${ticket.id}</td>
-                            <td>${ticket.title}</td>
+                            <td><span class="ticket-id-pill">#${ticket.id}</span></td>
+                            <td class="ticket-title-cell">${ticket.title}</td>
                             <td class="text-center"><span class="badge-status ${statusClass}">${statusLabel}</span></td>
-                            <td class="text-center"><span class="badge-priority ${ticket.priority === 'Cao' ? 'badge-priority-high' : 'badge-priority-normal'}">${ticket.priority}</span></td>
+                            <td class="text-center"><span class="badge-priority ${isPriorityHigh ? 'badge-priority-high' : 'badge-priority-normal'}">${ticket.priority}</span></td>
                             <td class="text-center">
                                 <button class="btn-green-outline btn-view-ticket" data-id="${ticket.id}">Chi tiết</button>
                             </td>
                         `;
-
                         row.querySelector('.btn-view-ticket').addEventListener('click', () => {
                             showTicketDetail(ticket.id);
                         });
-
                         ticketsTableBody.appendChild(row);
                     });
                 }

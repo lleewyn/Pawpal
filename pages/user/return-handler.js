@@ -13,20 +13,18 @@ function openRMADrawer(orderId) {
         currentRmaOrder = ordersState.allOrders.find(o => o.id === orderId);
     }
     
-    // Fallback nếu không có data từ state (ví dụ trường hợp chạy độc lập)
+    // Safe fallback if the order list is unavailable
     if (!currentRmaOrder) {
         currentRmaOrder = {
             id: orderId,
-            products: [
-                {
-                    id: "PROD-010",
-                    name: "Cát vệ sinh cho mèo Catsan 10L",
-                    image: "https://via.placeholder.com/100x100?text=Cat+Litter",
-                    quantity: 3,
-                    price: 180000,
-                    total: 540000
-                }
-            ]
+            products: [{
+                id: 'PROD-UNKNOWN',
+                name: 'Sản phẩm không có dữ liệu',
+                image: '/assets/images/shop/products/placeholder.webp',
+                quantity: 1,
+                price: 0,
+                total: 0
+            }]
         };
     }
 

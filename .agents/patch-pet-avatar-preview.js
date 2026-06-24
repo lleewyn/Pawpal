@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const jsPath = 'd:/Aboutme/MyProject/Pawpal/assets/js/user/pet-profile-page.js';
+const jsPath = 'd:/Aboutme/MyProject/Pawpal/pages/user/pet-profile/pet-profile-page.js';
 let js = fs.readFileSync(jsPath, 'utf8');
 
 // Normalize to LF

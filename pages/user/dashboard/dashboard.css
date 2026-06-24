@@ -890,6 +890,8 @@ input:checked + .slider:before {
     transition: color 0.2s;
     display: inline-flex;
     align-items: center;
+    position: relative;
+    z-index: 2000; /* ensure link is clickable above floating FABs */
 }
 
 .section-link-custom:hover {
@@ -978,6 +980,23 @@ input:checked + .slider:before {
     border-color: var(--color-primary);
     color: var(--color-primary);
     background-color: var(--color-primary-light);
+}
+
+/* Improve small outline button appearance for dashboard (Hoãn lịch) */
+.booking-actions .btn.btn-outline-secondary.btn-sm {
+    font-family: var(--font-body);
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--color-text-light);
+    background-color: #f3f4f3; /* subtle light bg for visibility */
+    border-color: rgba(0,0,0,0.12);
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+.booking-actions .btn.btn-outline-secondary.btn-sm:hover {
+    background-color: #e9efe9;
+    color: var(--color-primary-dark);
+    border-color: var(--color-border);
 }
 
 /* Redesigned upcoming appointments card */

@@ -1,0 +1,138 @@
+[
+  {
+    "id": "TK-82910",
+    "title": "Loi tru tien Momo nhung don hang bao that bai",
+    "type": "payment",
+    "priority": "Cao",
+    "status": "processing",
+    "messages": [
+      {
+        "sender": "user",
+        "text": "Toi da thanh toan Momo thanh cong va bi tru 250k nhung he thong van bao don hang chua duoc thanh toan.",
+        "time": "2026-06-24T01:20:00.000Z"
+      },
+      {
+        "sender": "cskh",
+        "agent": "Nguyen Van B",
+        "text": "PawPal xin loi ban vi su co nay a. Chung toi da chuyen thong tin giao dich sang bo phan ky thuat kiem soat doi chieu dong tien. Ban doi chung toi 5 phut a!",
+        "time": "2026-06-24T01:30:00.000Z"
+      }
+    ],
+    "rating": null,
+    "ratingComment": ""
+  },
+  {
+    "id": "TK-82911",
+    "title": "Yeu cau thay doi lich tam cho be",
+    "type": "booking",
+    "priority": "Trung binh",
+    "status": "completed",
+    "messages": [
+      {
+        "sender": "user",
+        "text": "Em muon doi lich tam Bong tu thu 5 sang thu 6 tuan nay. Dao nay be ban viec nhap hoc nen khong co thoi gian.",
+        "time": "2026-06-24T02:00:00.000Z"
+      },
+      {
+        "sender": "cskh",
+        "agent": "Tran Thi C",
+        "text": "Duoc a! PawPal vua doi lich Bong tu thu 5 sang thu 6 luc 14:00 roi. Ban kiem tra email xac nhan nhe a!",
+        "time": "2026-06-24T02:45:00.000Z"
+      }
+    ],
+    "rating": 5,
+    "ratingComment": "Dich vu cuc tuyet voi, giai quyet nhanh!"
+  },
+  {
+    "id": "TK-82912",
+    "title": "San pham thu cung bi hong khi nhan hang",
+    "type": "returns",
+    "priority": "Cao",
+    "status": "pending",
+    "messages": [
+      {
+        "sender": "user",
+        "text": "Hom qua em nhan hang nhung chiec giuong cho be bi nuoc loc va mui moc. Mong PawPal giai quyet som a.",
+        "time": "2026-06-24T03:10:00.000Z"
+      }
+    ],
+    "rating": null,
+    "ratingComment": ""
+  },
+  {
+    "id": "TK-82913",
+    "title": "Hoi ve dich vu spa cho cho long dai",
+    "type": "inquiry",
+    "priority": "Trung binh",
+    "status": "completed",
+    "messages": [
+      {
+        "sender": "user",
+        "text": "Be toi la cho Golden Retriever, long dai. Co dich vu spa chuyen biet nao cho long dai khong a? Gia bao nhieu?",
+        "time": "2026-06-23T04:10:00.000Z"
+      },
+      {
+        "sender": "cskh",
+        "agent": "Le Van D",
+        "text": "Duoc a! PawPal co goi Spa Premium cho cho long dai: gom tam, say, cat tia, xoa dau chuyen biet. Gia 450k/lan. Ban co muon dat lich khong?",
+        "time": "2026-06-23T04:25:00.000Z"
+      }
+    ],
+    "rating": 4,
+    "ratingComment": "Chinh xac, tu van rat tot"
+  },
+  {
+    "id": "TK-82914",
+    "title": "Dang ky Paw Points bi loi",
+    "type": "account",
+    "priority": "Trung binh",
+    "status": "processing",
+    "messages": [
+      {
+        "sender": "user",
+        "text": "Toi muon tham gia chuong trinh Paw Points nhung nut dang ky khong hoat dong. Co van de gi khong a?",
+        "time": "2026-06-24T04:30:00.000Z"
+      },
+      {
+        "sender": "cskh",
+        "agent": "Pham Van E",
+        "text": "Xin loi ban! Chung toi dang kiem tra van de ky thuat nay. Ban thu dang xuat roi dang nhap lai xem nhe.",
+        "time": "2026-06-24T04:35:00.000Z"
+      }
+    ],
+    "rating": null,
+    "ratingComment": ""
+  },
+  {
+    "id": "TK-82915",
+    "title": "Toi muon nhuong quyen mo chi nhanh PawPal",
+    "type": "business",
+    "priority": "Trung binh",
+    "status": "pending",
+    "messages": [
+      {
+        "sender": "user",
+        "text": "Xin chao! Toi rat yeu thich PawPal va muon mo chi nhanh tai quan 1, TP.HCM. Co chuong trinh hop tac nao khong a?",
+        "time": "2026-06-20T04:10:00.000Z"
+      }
+    ],
+    "rating": null,
+    "ratingComment": ""
+  },
+  {
+    "id": "TK-82916",
+    "title": "Can ho tro OTP nhan lich cho khach vang lai",
+    "type": "booking",
+    "priority": "Cao",
+    "status": "pending",
+    "messages": [
+      {
+        "sender": "user",
+        "text": "Toi la khach vang lai, can xac thuc OTP de doi lich hen.",
+        "time": "2026-06-24T05:00:00.000Z"
+      }
+    ],
+    "rating": null,
+    "ratingComment": ""
+  }
+]

@@ -287,6 +287,13 @@ function transformServiceData(rawData) {
         const rating = parseFloat(item['Đánh giá (Rating)'] || '4.8');
         const reviewCount = parseInt(item['Lượt đánh giá (Review Count)'] || '0', 10);
 
+        const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
+        const cleanImagePath = (rawPath) => {
+            const trimmed = rawPath.trim();
+            return trimmed.replace(/^\/*/, '');
+        };
+        const serviceImages = item['Hình ảnh'] ? item['Hình ảnh'].split(',').map(s => rootPath + cleanImagePath(s)) : [rootPath + 'assets/images/services/spa.png'];
+
         return {
             id: index + 1,
             serviceId: item['Mã dịch vụ (Service ID)'] || `SVC-${index + 1}`,
@@ -306,8 +313,8 @@ function transformServiceData(rawData) {
             checklist: item['Quy trình thực hiện (Checklist)'] || '',
             amenities: item['Tiện ích / Cơ sở vật chất (Amenities)'] || '',
             groomerLevel: item['Cấp độ nhân viên thực hiện (Groomer Level)'] || '',
-            image: item['Hình ảnh'] ? `/${item['Hình ảnh'].split(',')[0].trim()}` : '/assets/images/services/spa.png',
-            images: item['Hình ảnh'] ? item['Hình ảnh'].split(',').map(s => `/${s.trim()}`) : ['/assets/images/services/spa.png'],
+            image: serviceImages[0],
+            images: serviceImages,
             status: item['Trạng thái kinh doanh'] || 'Đang phục vụ'
         };
     });
@@ -325,7 +332,8 @@ async function loadServices() {
     
     try {
         console.log('Loading services from CSV...');
-        const response = await fetch('/data/dichvu.csv');
+        const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
+        const response = await fetch(rootPath + 'data/dichvu.csv');
         
         if (!response.ok) {
             throw new Error(`Failed to load services: ${response.status} ${response.statusText}`);
