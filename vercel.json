@@ -1,6 +1,6 @@
 {
   "cleanUrls": false,
-  "buildCommand": "npm run build",
+  "buildCommand": "echo done",
   "outputDirectory": ".",
   "redirects": [
     {
