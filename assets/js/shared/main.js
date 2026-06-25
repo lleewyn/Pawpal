@@ -1672,6 +1672,8 @@ function initProcessTimeline() {
  * FAB Stack — AI Chatbot + Scroll to top
  */
 function initFab() {
+    if (window.__pawpalFabInitialized) return;
+
     // ── Scroll to top button visibility ──
     const bookingBtn = document.getElementById('fabBookingBtn');
     if (bookingBtn) {
@@ -1724,6 +1726,8 @@ function initFab() {
             if (e.key === 'Enter') sendMessage();
         });
     }
+
+    window.__pawpalFabInitialized = true;
 
     function appendMessage(text, type) {
         const bubble = document.createElement('div');
@@ -1779,6 +1783,14 @@ function initFab() {
 document.addEventListener('footerInjected', function () {
     setTimeout(initFab, 100);
 });
+
+if (document.readyState !== 'loading') {
+    setTimeout(initFab, 0);
+} else {
+    document.addEventListener('DOMContentLoaded', function () {
+        setTimeout(initFab, 0);
+    });
+}
 
 /**
  * Services Grid — Handle category tabs filtering for landing page (Dynamic)
