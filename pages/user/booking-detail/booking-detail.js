@@ -8,6 +8,8 @@ import { API } from '/scripts/api/api.js';
 import { statusLabels, formatDate, formatPrice } from '../bookings/bookings.js';
 
 let currentBooking = null;
+let currentPet = null;
+let currentCareLog = null;
 let bannerTimeout = null;
 
 document.addEventListener('DOMContentLoaded', async function () {
@@ -36,24 +38,43 @@ async function loadBookingDetail(bookingId) {
         return;
     }
 
+    const userPets = currentUser ? await API.getUserPets(currentUser.id) : [];
+    currentPet = userPets.find((pet) => String(pet.id) === String(currentBooking.petId)) || null;
+    const careLogs = await API.getCareLogs();
+    currentCareLog = currentBooking.petId ? (careLogs[currentBooking.petId] || null) : null;
+
+    const careLogButton = document.getElementById('btnViewCareLog');
+    if (careLogButton) {
+        careLogButton.onclick = () => {
+            const petId = currentBooking.petId || currentPet?.id;
+            if (!petId) {
+                alert('Không tìm thấy mã bé cưng để mở nhật ký chăm sóc.');
+                return;
+            }
+            const sessionId = currentBooking.id || '';
+            const query = `id=${encodeURIComponent(petId)}${sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : ''}`;
+            window.location.href = `/pages/user/pet-diary/pet-diary.html?${query}`;
+        };
+    }
+
     renderBookingDetail(currentBooking);
     checkBookingModifiability(currentBooking);
 }
 
 function renderBookingDetail(booking) {
-    const normalizedStatus = booking.status === 'upcoming' ? 'confirmed' : booking.status;
-    const petName = booking.petName || booking.petInfo?.petName || booking.petId || 'Bé cưng';
+    const normalizedStatus = resolveBookingStatus(booking);
+    const petName = booking.petName || currentPet?.name || booking.petInfo?.petName || booking.petId || 'Bé cưng';
     const petBreed = booking.petBreed || booking.petInfo?.breed || '';
     const petWeight = booking.petWeight || booking.petInfo?.weight || '';
     const serviceName = booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal';
     const servicePackage = booking.package ? ` - ${booking.package}` : '';
 
     document.getElementById('headerStatusBadge').className = `badge-status badge-${normalizedStatus}`;
-    document.getElementById('headerStatusBadge').textContent = statusLabels[booking.status] || booking.status;
+    document.getElementById('headerStatusBadge').textContent = statusLabels[normalizedStatus] || normalizedStatus;
 
     const statusInfo = document.getElementById('statusInfo');
     if (statusInfo) {
-        statusInfo.innerHTML = `<span class="badge-status badge-${normalizedStatus}">${statusLabels[booking.status] || booking.status}</span>`;
+        statusInfo.innerHTML = `<span class="badge-status badge-${normalizedStatus}">${statusLabels[normalizedStatus] || normalizedStatus}</span>`;
     }
 
     document.getElementById('bookingCode').textContent = booking.id;
@@ -79,6 +100,15 @@ function renderBookingDetail(booking) {
         document.getElementById('noteRow').classList.remove('d-none');
         document.getElementById('noteInfo').textContent = booking.note;
     }
+
+    const careLogSection = document.getElementById('careLogActionSection');
+    if (careLogSection) {
+        const hasCareLog = currentCareLog && (
+            currentCareLog.currentSession ||
+            (Array.isArray(currentCareLog.history) && currentCareLog.history.length > 0)
+        );
+        careLogSection.classList.toggle('d-none', !(normalizedStatus === 'completed' && hasCareLog));
+    }
 }
 
 function checkBookingModifiability(booking) {
@@ -100,12 +130,13 @@ function checkBookingModifiability(booking) {
     const diffMinutes = (bookingDateTime - now) / (1000 * 60);
     const changeLimitReached = (booking.changeCount || 0) >= 2;
 
+    const currentStatus = resolveBookingStatus(booking);
     const canModify = diffMinutes >= 120
-        && !['in-progress', 'completed', 'cancelled'].includes(booking.status)
+        && !['in-progress', 'completed', 'cancelled'].includes(currentStatus)
         && !changeLimitReached;
 
     const canCancel = diffMinutes >= 120
-        && ['pending', 'confirmed', 'upcoming'].includes(booking.status)
+        && ['pending', 'confirmed', 'upcoming', 'accepted'].includes(currentStatus)
         && (booking.cancelCount || 0) < 3;
 
     btnChange.classList.toggle('d-none', !canModify);
@@ -538,6 +569,33 @@ function showToast(message, type = 'info') {
 window.handleChangeSchedule = handleChangeSchedule;
 window.handleCancelBooking = handleCancelBooking;
 window.closeErrorBanner = closeErrorBanner;
+
+function resolveBookingStatus(booking) {
+    const rawStatus = booking?.status || 'upcoming';
+    if (['cancelled', 'completed', 'in-progress', 'accepted'].includes(rawStatus)) {
+        return rawStatus;
+    }
+
+    const scheduledAt = getBookingScheduledAt(booking);
+    if (!scheduledAt) {
+        return rawStatus === 'confirmed' ? 'accepted' : 'confirmed';
+    }
+
+    const now = Date.now();
+    const hoursPast = (now - scheduledAt.getTime()) / (1000 * 60 * 60);
+
+    if (hoursPast >= 4) return 'completed';
+    if (hoursPast >= 1) return 'in-progress';
+    if (hoursPast >= 0) return 'accepted';
+    return 'confirmed';
+}
+
+function getBookingScheduledAt(booking) {
+    if (!booking?.date) return null;
+    const time = booking.timeStart || booking.time || '00:00';
+    const scheduled = new Date(`${booking.date}T${time}:00`);
+    return Number.isNaN(scheduled.getTime()) ? null : scheduled;
+}
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {

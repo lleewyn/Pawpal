@@ -979,9 +979,10 @@ function handleQRExpired() {
 }
 
 function verifyPaymentSimulation() {
-    // Simulate payment verification with random success/failure
-    const willSucceed = Math.random() < 0.8;
-    const delay = Math.random() * 3000 + 2000; // 2-5 seconds
+    // Simulate payment verification deterministically for the demo flow.
+    // Online payment should not randomly fail and force a reload.
+    const willSucceed = true;
+    const delay = 1800;
     
     const statusMsg = document.getElementById('payment-status-message');
     statusMsg.className = 'payment-status-message show loading';
@@ -1009,20 +1010,17 @@ function verifyPaymentSimulation() {
                 }, 1500);
             } else {
                 statusMsg.className = 'payment-status-message show error';
-                statusMsg.textContent = ' Thanh toán thất bại. Vui lòng thử lại.';
+                statusMsg.textContent = 'Xác nhận thanh toán thất bại. Vui lòng thử lại.';
+                document.getElementById('btn-confirm-payment').disabled = false;
                 
                 setTimeout(() => {
                     hideQRPaymentModal();
                 }, 2000);
             }
-            resolve(willSucceed);
+            resolve();
         }, delay);
     });
 }
-
-// ============================================================================
-// Event Listeners
-// ============================================================================
 function setupEventListeners() {
     // Address dropdown
     const addressDropdown = document.getElementById('address-dropdown');
@@ -1083,9 +1081,22 @@ function setupEventListeners() {
 function saveOrderToUserHistory(orderData) {
     // Get existing orders
     let orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+
+    const toNumber = (value, fallback = 0) => {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : fallback;
+    };
     
     // Normalize order object and add new order to beginning of array (newest first)
     // Normalize shape to match order-detail expectations
+    const subtotal = toNumber(orderData.pricing?.subtotal, 0);
+    const shippingFee = toNumber(orderData.pricing?.shippingFee, 0);
+    const discount = toNumber(orderData.pricing?.discount, 0);
+    const grandTotal = toNumber(
+        orderData.pricing?.total ?? orderData.pricing?.grandTotal,
+        Math.max(0, subtotal + shippingFee - discount)
+    );
+
     const normalized = {
         id: orderData.orderId || orderData.id || generateOrderId(),
         userId: orderData.userId || null,
@@ -1093,8 +1104,9 @@ function saveOrderToUserHistory(orderData) {
         delivery: orderData.shipping || {},
         // order-detail expects `products` array with `name`, `image`, `quantity`, `total`
         products: (orderData.items || []).map(item => {
-            const qty = item.quantity || item.qty || 1;
-            const totalVal = item.total != null ? item.total : ((item.price || 0) * qty);
+            const qty = toNumber(item.quantity ?? item.qty, 1);
+            const unitPrice = toNumber(item.price ?? item.unitPrice ?? item.salePrice, 0);
+            const totalVal = toNumber(item.total, unitPrice * qty);
             return {
                 id: item.id || item.productId || null,
                 name: item.name || item.title || 'Sản phẩm',
@@ -1103,7 +1115,12 @@ function saveOrderToUserHistory(orderData) {
                 total: totalVal
             };
         }),
-        pricing: orderData.pricing || {},
+        pricing: {
+            subtotal,
+            shippingFee,
+            discount,
+            total: grandTotal
+        },
         paymentMethod: orderData.payment?.method || null,
         paymentStatus: (() => {
             const method = orderData.payment?.method;

@@ -596,7 +596,14 @@
 
     .mobile-nav-toggle {
         display: block;
-        z-index: 1002;
+        position: relative;
+        z-index: 1205;
+        pointer-events: auto;
+        touch-action: manipulation;
+        cursor: pointer;
+        flex-shrink: 0;
+        min-width: 44px;
+        min-height: 44px;
     }
 
     /* Drawer — hidden by default */
@@ -616,9 +623,13 @@
         overflow-y: auto;
         display: flex;
         flex-direction: column;
+        pointer-events: none;
     }
 
-    .nav-menu.show { transform: translateX(0); }
+    .nav-menu.show {
+        transform: translateX(0);
+        pointer-events: auto;
+    }
 
     .nav-menu ul,
     .nav-menu .navbar-nav {

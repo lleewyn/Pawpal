@@ -38,12 +38,12 @@ async function loadOrders() {
 }
 
 function updateStats() {
-    const processingStatuses = ['pending_payment', 'preparing', 'shipping', 'delivered'];
+    const processingStatuses = ['pending', 'pending_payment', 'preparing', 'shipping', 'delivered'];
     const processingCount = ordersState.allOrders.filter((order) => processingStatuses.includes(order.status)).length;
     const completedCount = ordersState.allOrders.filter((order) => order.status === 'completed').length;
     const totalSpent = ordersState.allOrders
         .filter((order) => order.paymentStatus === 'paid')
-        .reduce((sum, order) => sum + order.pricing.total, 0);
+        .reduce((sum, order) => sum + toNumber(order.pricing?.total), 0);
 
     document.getElementById('processing-count').textContent = processingCount;
     document.getElementById('completed-count').textContent = completedCount;
@@ -56,7 +56,7 @@ function updateTabCounts() {
     statuses.forEach((status) => {
         const count = status === 'all'
             ? ordersState.allOrders.length
-            : ordersState.allOrders.filter((order) => order.status === status).length;
+            : ordersState.allOrders.filter((order) => normalizeOrderStatus(order.status) === status).length;
 
         const countElement = document.getElementById(`count-${status}`);
         if (countElement) countElement.textContent = `(${count})`;
@@ -79,7 +79,7 @@ function applyFilters() {
     let filtered = ordersState.allOrders;
 
     if (ordersState.currentTab !== 'all') {
-        filtered = filtered.filter((order) => order.status === ordersState.currentTab);
+        filtered = filtered.filter((order) => normalizeOrderStatus(order.status) === ordersState.currentTab);
     }
 
     if (ordersState.searchQuery) {
@@ -113,8 +113,9 @@ function renderOrders() {
 function createOrderCard(order) {
     const firstProduct = order.products[0];
     const remainingCount = order.products.length - 1;
-    const statusLabel = getStatusLabel(order.status);
-    const isCompleted = order.status === 'completed';
+    const normalizedStatus = normalizeOrderStatus(order.status);
+    const statusLabel = getStatusLabel(normalizedStatus);
+    const isCompleted = normalizedStatus === 'completed';
 
     const reviewed = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
     const allReviewed = isCompleted && order.products.every((product) =>
@@ -175,19 +176,19 @@ function createOrderCard(order) {
         : '';
 
     let footerButtonsHTML = '';
-    if (order.status === 'shipping') {
+    if (normalizedStatus === 'shipping') {
         footerButtonsHTML = `
                 <button class="btn-track-order" onclick="contactHotline('${order.id}')">
                 Liên hệ hotline
                 </button>
         `;
-    } else if (order.status === 'pending_payment' || order.status === 'preparing') {
+    } else if (normalizedStatus === 'pending_payment' || normalizedStatus === 'preparing') {
         footerButtonsHTML = `
                 <button class="btn-track-order" onclick="contactHotline('${order.id}')">
                 Liên hệ hotline
                 </button>
             <button class="btn-track-order text-danger border-danger" onclick="cancelOrder('${order.id}')">
-                Huy don hang
+                Hủy đơn hàng
             </button>
         `;
     } else if (order.status === 'completed') {
@@ -201,7 +202,7 @@ function createOrderCard(order) {
                     <span class="order-id">Mã: ${order.id}</span>
                     <span class="order-date">${formatDate(order.createdAt)}</span>
                 </div>
-                <span class="status-badge status-${order.status}">
+                <span class="status-badge status-${normalizedStatus}">
                     ${statusLabel}
                 </span>
             </div>
@@ -215,7 +216,7 @@ function createOrderCard(order) {
                 </div>
                 <div class="order-summary">
                         <span class="summary-label">Tổng tiền:</span>
-                        <span class="summary-value">${formatCurrency(order.pricing.total)}</span>
+                        <span class="summary-value">${formatCurrency(toNumber(order.pricing?.total))}</span>
                     </div>
             </div>
             <div class="order-card-footer">
@@ -389,10 +390,16 @@ function showOrdersToast(message, type = 'info') {
 }
 
 function formatCurrency(amount) {
+    const value = Number(amount);
     return new Intl.NumberFormat('vi-VN', {
         style: 'currency',
         currency: 'VND'
-    }).format(amount);
+    }).format(Number.isFinite(value) ? value : 0);
+}
+
+function toNumber(value, fallback = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
 }
 
 function formatDate(dateString) {
@@ -417,6 +424,7 @@ function saveOrderToLocalStorage(order) {
 
 function getStatusLabel(status) {
     const labels = {
+        pending: 'Chờ thanh toán',
         pending_payment: 'Chờ thanh toán',
         preparing: 'Đang chuẩn bị',
         shipping: 'Đang giao',
@@ -425,6 +433,12 @@ function getStatusLabel(status) {
         cancelled: 'Đã hủy'
     };
     return labels[status] || status;
+}
+
+function normalizeOrderStatus(status) {
+    if (status === 'pending') return 'pending_payment';
+    if (status === 'return_pending') return 'pending_payment';
+    return status;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

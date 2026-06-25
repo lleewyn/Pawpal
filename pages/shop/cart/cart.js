@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             products = await window.DataLoader.loadProducts();
             
             // Lấy giỏ hàng từ localStorage và phục hồi nếu có backup
-            cart = restoreCartFromBackup(JSON.parse(localStorage.getItem('pawpal_cart') || '[]'));
+            cart = restoreCartFromBackup(JSON.parse(localStorage.getItem('pawpal_cart') || '[]')).map(normalizeCartItem);
             
             // Mặc định chọn tất cả sản phẩm
             cart.forEach(item => {
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (selectedIds.has(Number(item.id))) {
                 const prod = products.find(p => Number(p.id) === Number(item.id));
                 if (prod) {
-                    checkedSubtotal += prod.price * item.quantity;
+                    checkedSubtotal += prod.price * getItemQuantity(item);
                 }
             }
         });
@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Lọc những sản phẩm thực sự hợp lệ và còn tồn tại
         const cartItemsData = cart.map(item => {
             const product = products.find(p => Number(p.id) === Number(item.id));
-            return product ? { ...product, quantity: item.quantity } : null;
+            return product ? { ...product, quantity: getItemQuantity(item), qty: getItemQuantity(item) } : null;
         }).filter(item => item !== null);
 
         if (cartItemsData.length === 0) {
@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         cartItemsList.innerHTML = '';
         
         cartItemsData.forEach(item => {
-            const itemTotal = item.price * item.quantity;
+            const itemTotal = item.price * getItemQuantity(item);
 
             const row = document.createElement('div');
             row.className = 'cart-item-row';
@@ -270,8 +270,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="cart-item-price-unit mt-1">${formatPrice(item.price)}</div>
                 </div>
                 <div class="cart-item-qty-actions">
-                    <button class="cart-item-qty-btn btn-qty-minus" ${item.quantity <= 1 ? 'disabled' : ''}>-</button>
-                    <span class="cart-item-qty-value">${item.quantity}</span>
+                    <button class="cart-item-qty-btn btn-qty-minus" ${getItemQuantity(item) <= 1 ? 'disabled' : ''}>-</button>
+                    <span class="cart-item-qty-value">${getItemQuantity(item)}</span>
                     <button class="cart-item-qty-btn btn-qty-plus">+</button>
                 </div>
                 <div class="cart-item-total-price">${formatPrice(itemTotal)}</div>
@@ -291,8 +291,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const btnRemove = row.querySelector('.btn-remove-cart-item');
             const checkbox = row.querySelector('.item-checkbox');
 
-            btnMinus.addEventListener('click', () => updateQuantity(item.id, item.quantity - 1));
-            btnPlus.addEventListener('click', () => updateQuantity(item.id, item.quantity + 1));
+            btnMinus.addEventListener('click', () => updateQuantity(item.id, getItemQuantity(item) - 1));
+            btnPlus.addEventListener('click', () => updateQuantity(item.id, getItemQuantity(item) + 1));
             btnRemove.addEventListener('click', () => removeCartItem(item.id, row));
             
             checkbox.addEventListener('change', (e) => {
@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return sum;
             }
             const prod = products.find(p => Number(p.id) === Number(item.id));
-            return prod ? sum + prod.price * item.quantity : sum;
+            return prod ? sum + prod.price * getItemQuantity(item) : sum;
         }, 0);
     }
 
@@ -340,15 +340,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (selectedIds.has(Number(item.id))) {
                 const prod = products.find(p => Number(p.id) === Number(item.id));
                 if (prod) {
-                    subtotal += prod.price * item.quantity;
-                    selectedCount += item.quantity;
+                    subtotal += prod.price * getItemQuantity(item);
+                    selectedCount += getItemQuantity(item);
                 }
             }
         });
 
         // Tổng số lượng sản phẩm hiển thị trên tiêu đề chính
         if (cartCountHeader) {
-            cartCountHeader.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCountHeader.textContent = cart.reduce((sum, item) => sum + getItemQuantity(item), 0);
         }
 
         cartSubtotal.textContent = formatPrice(subtotal);
@@ -407,6 +407,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 newQty = maxQty;
             }
             item.quantity = newQty;
+            item.qty = newQty;
             saveCart();
             renderCart();
         }
@@ -597,15 +598,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         backupItems.forEach(backupItem => {
             const existing = mergedCart.find(item => Number(item.id) === Number(backupItem.id));
             if (existing) {
-                existing.quantity += Number(backupItem.quantity || 0);
+                const backupQty = getItemQuantity(backupItem);
+                existing.quantity = getItemQuantity(existing) + backupQty;
+                existing.qty = existing.quantity;
             } else {
-                mergedCart.push(backupItem);
+                mergedCart.push(normalizeCartItem(backupItem));
             }
         });
 
         localStorage.setItem('pawpal_cart', JSON.stringify(mergedCart));
         localStorage.removeItem('pawpal_cart_unselected_backup');
         return mergedCart;
+    }
+
+    function getItemQuantity(item) {
+        const qty = Number(item?.quantity ?? item?.qty ?? 1);
+        return Number.isFinite(qty) && qty > 0 ? qty : 1;
+    }
+
+    function normalizeCartItem(item) {
+        const quantity = getItemQuantity(item);
+        return {
+            ...item,
+            quantity,
+            qty: quantity
+        };
     }
 
     // Khởi tạo

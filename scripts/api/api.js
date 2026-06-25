@@ -79,6 +79,12 @@ export const API = {
             }
         }
 
+        // Normalize orders on every startup so older cached records keep working.
+        const normalizedOrders = normalizeOrders(safeReadArray('pawpal_orders'));
+        if (normalizedOrders.length) {
+            localStorage.setItem('pawpal_orders', JSON.stringify(normalizedOrders));
+        }
+
         const localReturns = safeReadArray('pawpal_returns');
         if (shouldRefreshMockData || localReturns.length === 0) {
             const returns = await this.getJSON('/data/returns.json');
@@ -180,6 +186,43 @@ function mergeCareLogs(seedLogs, localLogs) {
         ...(seedLogs && typeof seedLogs === 'object' ? seedLogs : {}),
         ...(localLogs && typeof localLogs === 'object' ? localLogs : {})
     };
+}
+
+function normalizeOrders(orders) {
+    return (Array.isArray(orders) ? orders : []).map(order => {
+        const subtotal = toNumber(order?.pricing?.subtotal);
+        const shippingFee = toNumber(order?.pricing?.shippingFee);
+        const discount = toNumber(order?.pricing?.discount);
+        const itemTotals = Array.isArray(order?.products)
+            ? order.products.reduce((sum, item) => sum + toNumber(item?.total, toNumber(item?.price) * toNumber(item?.quantity, 1)), 0)
+            : 0;
+        const resolvedSubtotal = subtotal > 0 ? subtotal : itemTotals;
+        const resolvedTotal = toNumber(order?.pricing?.total, resolvedSubtotal + shippingFee - discount);
+
+        return {
+            ...order,
+            products: Array.isArray(order?.products)
+                ? order.products.map(item => ({
+                    ...item,
+                    quantity: toNumber(item?.quantity, 1),
+                    price: toNumber(item?.price),
+                    total: toNumber(item?.total, toNumber(item?.price) * toNumber(item?.quantity, 1))
+                }))
+                : [],
+            pricing: {
+                ...(order?.pricing || {}),
+                subtotal: resolvedSubtotal,
+                shippingFee,
+                discount,
+                total: resolvedTotal > 0 ? resolvedTotal : Math.max(0, resolvedSubtotal + shippingFee - discount)
+            }
+        };
+    });
+}
+
+function toNumber(value, fallback = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
 }
 
 function sameUser(user, currentUser) {

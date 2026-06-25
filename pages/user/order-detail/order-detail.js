@@ -156,23 +156,28 @@ function renderProducts() {
                 <h4 class="product-item-name">${product.name}</h4>
                 <p class="product-item-meta">x${product.quantity}</p>
             </div>
-            <div class="product-item-price">${formatCurrency(product.total)}</div>
+            <div class="product-item-price">${formatCurrency(toNumber(product.total))}</div>
         </div>
     `).join('');
 }
 
 // Render summary
 function renderSummary() {
-    document.getElementById('subtotal').textContent = 
-        formatCurrency(currentOrder.pricing.subtotal);
-    document.getElementById('shipping-fee').textContent = 
-        formatCurrency(currentOrder.pricing.shippingFee);
-    document.getElementById('discount').textContent = 
-        currentOrder.pricing.discount > 0 
-            ? '-' + formatCurrency(currentOrder.pricing.discount)
+    const subtotal = toNumber(currentOrder.pricing?.subtotal);
+    const shippingFee = toNumber(currentOrder.pricing?.shippingFee);
+    const discount = toNumber(currentOrder.pricing?.discount);
+    const total = resolveOrderTotal(currentOrder.pricing, subtotal, shippingFee, discount);
+
+    document.getElementById('subtotal').textContent =
+        formatCurrency(subtotal);
+    document.getElementById('shipping-fee').textContent =
+        formatCurrency(shippingFee);
+    document.getElementById('discount').textContent =
+        discount > 0
+            ? '-' + formatCurrency(discount)
             : '0đ';
-    document.getElementById('total').textContent = 
-        formatCurrency(currentOrder.pricing.total);
+    document.getElementById('total').textContent =
+        formatCurrency(total);
 }
 
 // Render timeline
@@ -400,9 +405,12 @@ function cancelOrder() {
         // Ghi nhận yêu cầu hoàn tiền nếu đã thanh toán online
         if (currentOrder.paymentMethod && currentOrder.paymentMethod !== 'cod' && currentOrder.paymentStatus === 'paid') {
             const refunds = JSON.parse(localStorage.getItem('pawpal_refunds') || '[]');
+            const subtotal = toNumber(currentOrder.pricing?.subtotal);
+            const shippingFee = toNumber(currentOrder.pricing?.shippingFee);
+            const discount = toNumber(currentOrder.pricing?.discount);
             refunds.push({
                 orderId: currentOrder.id,
-                amount: currentOrder.pricing?.total || 0,
+                amount: resolveOrderTotal(currentOrder.pricing, subtotal, shippingFee, discount),
                 paymentMethod: currentOrder.paymentMethod,
                 status: 'pending_refund',
                 createdAt: new Date().toISOString()
@@ -419,7 +427,7 @@ function cancelOrder() {
             description: 'Khách hàng đã hủy đơn hàng'
         });
         saveOrderToLocalStorage(currentOrder);
-        window.location.href = './orders.html';
+        window.location.href = '/pages/user/orders/orders.html';
     });
 }
 
@@ -544,10 +552,26 @@ function showError(message) {
 
 // Utility: Format currency
 function formatCurrency(amount) {
+    const value = Number(amount);
     return new Intl.NumberFormat('vi-VN', {
         style: 'currency',
         currency: 'VND'
-    }).format(amount);
+    }).format(Number.isFinite(value) ? value : 0);
+}
+
+function toNumber(value, fallback = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+}
+
+function resolveOrderTotal(pricing, subtotal = 0, shippingFee = 0, discount = 0) {
+    const directTotal = toNumber(pricing?.total, NaN);
+    if (Number.isFinite(directTotal) && directTotal > 0) {
+        return directTotal;
+    }
+
+    const fallbackTotal = subtotal + shippingFee - discount;
+    return fallbackTotal > 0 ? fallbackTotal : 0;
 }
 
 // Utility: Format date

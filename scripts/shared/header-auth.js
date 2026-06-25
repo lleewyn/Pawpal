@@ -28,7 +28,10 @@
     // Định nghĩa hàm cập nhật badge giỏ hàng toàn cục
     window.updateCartBadge = function() {
         const cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
-        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        const totalItems = cart.reduce((sum, item) => {
+            const qty = Number(item.quantity ?? item.qty ?? 1);
+            return sum + (Number.isFinite(qty) && qty > 0 ? qty : 1);
+        }, 0);
         
         // Badge trên desktop header
         const cartBadge = document.querySelector('.cart-badge');

@@ -5,17 +5,18 @@
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Tải thông tin người dùng từ localStorage
     let currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
-    
-    // Nếu chưa đăng nhập, guard chuyển hướng
     if (!currentUser) {
-        alert('Vui lòng đăng nhập để truy cập trang này.');
-        window.location.href = '/pages/public/login/login.html';
-        return;
+        currentUser = {
+            phone: null,
+            name: 'Khách vãng lai',
+            points: 0,
+            is_temporary: true
+        };
     }
 
     // Đảm bảo đồng bộ points từ Users DB
     const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
-    const userInDb = users.find(u => u.phone === currentUser.phone);
+    const userInDb = currentUser.phone ? users.find(u => u.phone === currentUser.phone) : null;
     if (userInDb) {
         currentUser.points = userInDb.points;
         currentUser.is_temporary = userInDb.is_temporary;

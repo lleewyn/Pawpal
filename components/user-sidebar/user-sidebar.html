@@ -25,9 +25,6 @@
             <a href="/pages/user/bookings/bookings.html" class="sidebar-link" id="nav-bookings">
                 <span class="icon"><i data-lucide="calendar"></i></span> Lịch hẹn của bé
             </a>
-            <a href="/pages/user/care-history/care-history.html" class="sidebar-link" id="nav-care-history">
-                <span class="icon"><i data-lucide="history"></i></span> Lịch sử chăm sóc
-            </a>
             <a href="/pages/user/orders/orders.html" class="sidebar-link" id="nav-orders">
                 <span class="icon"><i data-lucide="package"></i></span> Đơn hàng của bé
             </a>
@@ -109,8 +106,6 @@
             else if (currentPath.includes('pet-profile') && linkPath.includes('pet-profile')) {
                 link.classList.add('active');
             } else if (currentPath.includes('pet-diary') && linkPath.includes('pet-diary')) {
-                link.classList.add('active');
-            } else if (currentPath.includes('care-history') && linkPath.includes('care-history')) {
                 link.classList.add('active');
             } else if (currentPath.includes('booking') && linkPath.includes('booking')) {
                 link.classList.add('active');

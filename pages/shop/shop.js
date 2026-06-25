@@ -501,13 +501,6 @@ function renderProducts() {
                 const productId = parseInt(btn.dataset.productId);
                 const product = state.products.find(p => p.id === productId);
                 if (product && product.inStock) {
-                    // Check login
-                    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-                    if (!user) {
-                        showToast('Vui lòng đăng nhập để mua hàng', 'warning');
-                        return;
-                    }
-
                     // Create temporary cart with this product only
                     const buyNowCart = [{
                         ...product,
@@ -857,13 +850,6 @@ function toggleWishlist(productId) {
 // ══════════════════════════════════════════════════════════════════════════
 
 function addToCart(productId) {
-    // Check if user is logged in
-    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    if (!user) {
-        showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
-        return;
-    }
-
     const product = state.products.find(p => p.id === productId);
     if (!product || !product.inStock) return;
     

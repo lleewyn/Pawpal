@@ -92,7 +92,6 @@ seedLocalStorageIfNeeded();
         'dashboard':      { label: 'Tổng quan tài khoản', parent: null },
         'pet-profile':    { label: 'Hồ sơ bé cưng',       parent: null },
         'pet-diary':      { label: 'Nhật ký chăm sóc',    parent: { label: 'Bé cưng', href: '../pet-profile/pet-profile.html' } },
-        'care-history':   { label: 'Lịch sử chăm sóc',    parent: { label: 'Bé cưng', href: '../pet-profile/pet-profile.html' } },
         'bookings':       { label: 'Lịch hẹn của tôi',    parent: null },
         'booking-detail': { label: 'Chi tiết lịch hẹn',   parent: { label: 'Lịch hẹn', href: '../bookings/bookings.html' } },
         'orders':         { label: 'Đơn hàng của tôi',    parent: null },

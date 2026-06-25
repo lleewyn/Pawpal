@@ -20,10 +20,8 @@ let currentPetId = null;
 let currentSessionId = null;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-export function initPetDiary() {
-    localStorage.removeItem('pawpal_tracker_db');
-    localStorage.removeItem('pawpal_pet_tracker_logs');
-    populatePetSelector();
+export async function initPetDiary() {
+    await populatePetSelector();
 
     const petSelector = document.getElementById('petSelector');
     if (petSelector) {
@@ -33,11 +31,13 @@ export function initPetDiary() {
     // Handle ?id= URL param
     const urlParams = new URLSearchParams(window.location.search);
     const petIdFromUrl = urlParams.get('id');
+    const sessionIdFromUrl = urlParams.get('sessionId');
     if (petIdFromUrl && petSelector) {
         petSelector.value = petIdFromUrl;
-        handlePetChange({ target: petSelector });
+        await handlePetChange({ target: petSelector });
+        await openSessionFromUrlOrFallback(sessionIdFromUrl);
     } else if (petSelector && petSelector.value) {
-        handlePetChange({ target: petSelector });
+        await handlePetChange({ target: petSelector });
     } else {
         if (typeof renderActiveServicesDashboard === 'function') {
             renderActiveServicesDashboard();
@@ -76,7 +76,7 @@ function getSpeciesDisplay(pet) {
 }
 
 // ── Handle Pet Change ─────────────────────────────────────────────────────────
-function handlePetChange(e) {
+async function handlePetChange(e) {
     const petId = e.target.value;
     const emptyState = document.getElementById('emptyState');
     const diaryContent = document.getElementById('diaryContent');
@@ -97,7 +97,7 @@ function handlePetChange(e) {
     if (diaryContent) diaryContent.style.display = 'block';
 
     currentPetId = petId;
-    loadPetDiary(petId);
+    await loadPetDiary(petId);
 }
 
 // ── Load Diary ────────────────────────────────────────────────────────────────
@@ -123,6 +123,9 @@ async function loadPetDiary(petId) {
     if (currentSession) {
         currentSessionId = currentSession.id;
         renderTimeline(currentSession.timeline);
+    } else if (history.length > 0) {
+        currentSessionId = history[0].id;
+        renderTimeline(history[0].timeline);
     } else {
         currentSessionId = null;
         renderTimeline([]);
@@ -544,6 +547,23 @@ function switchSession(sessionId) {
     currentSessionId = session.id;
     renderTimeline(session.timeline);
 
+}
+
+async function openSessionFromUrlOrFallback(sessionId) {
+    const historyItems = document.querySelectorAll('.history-item');
+    const target = sessionId
+        ? Array.from(historyItems).find((item) => item.dataset.sessionId === sessionId)
+        : null;
+
+    if (target) {
+        target.click();
+        return;
+    }
+
+    const firstHistory = historyItems[0];
+    if (firstHistory) {
+        firstHistory.click();
+    }
 }
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
