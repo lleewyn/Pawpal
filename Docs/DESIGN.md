@@ -294,7 +294,7 @@ gsap.from(element, {
 | Product card | `16/9` | Widescreen |
 | Expert card | `4/3` | Portrait |
 
-**⚠ Expert card JS/CSS sync:** `width: 300px` trong CSS phải khớp với `const cardWidth = 300` trong `initExpertsCarousel()` ở `assets/js/shared/main.js`. Nếu đổi một bên mà quên bên kia, carousel tính offset sai.
+**⚠ Expert card JS/CSS sync:** `width: 300px` trong CSS phải khớp với `const cardWidth = 300` trong `initExpertsCarousel()` ở `scripts/shared/main.js`. Nếu đổi một bên mà quên bên kia, carousel tính offset sai.
 
 **Product Grid breakpoints:**
 
@@ -361,7 +361,7 @@ input:focus {
 ## 11. CSS File Structure
 
 ```
-assets/css/
+styles/
 ├── style.css                  ← Entry point: import tokens + shared base
 ├── tokens/
 │   ├── colors.css             ← --color-*
@@ -495,19 +495,19 @@ Mỗi trang HTML phải link theo đúng thứ tự sau:
 
 ```html
 <!-- 1. Global tokens + base reset -->
-<link rel="stylesheet" href="../../assets/css/style.css">
+<link rel="stylesheet" href="../../styles/style.css">
 
 <!-- 2. Shared components (header, footer, buttons...) -->
-<link rel="stylesheet" href="../../assets/css/components/button.css">
-<link rel="stylesheet" href="../../assets/css/components/nav.css">
-<link rel="stylesheet" href="../../assets/css/components/footer.css">
-<link rel="stylesheet" href="../../assets/css/components/modal.css">
-<link rel="stylesheet" href="../../assets/css/components/filter.css">
-<link rel="stylesheet" href="../../assets/css/components/notification.css">
-<link rel="stylesheet" href="../../assets/css/components/chat.css">
+<link rel="stylesheet" href="../../styles/components/button.css">
+<link rel="stylesheet" href="../../styles/components/nav.css">
+<link rel="stylesheet" href="../../styles/components/footer.css">
+<link rel="stylesheet" href="../../styles/components/modal.css">
+<link rel="stylesheet" href="../../styles/components/filter.css">
+<link rel="stylesheet" href="../../styles/components/notification.css">
+<link rel="stylesheet" href="../../styles/components/chat.css">
 
 <!-- 3. Page-specific (PHẢI đứng cuối để override được components) -->
-<link rel="stylesheet" href="../../assets/css/public/about.css">
+<link rel="stylesheet" href="../../styles/public/about.css">
 ```
 
 > **Thứ tự quan trọng:** Page CSS phải load sau components. Nếu load trước, components sẽ override page styles.
@@ -615,7 +615,7 @@ Mobile-last (desktop first) — viết default cho desktop, override cho màn h�
 Tuyệt đối không chèn trực tiếp (inline) các đoạn mã script JavaScript dài, logic điều khiển tương tác hoặc xử lý sự kiện vào bên trong các tệp HTML tĩnh.
 
 **Quy định:**
-- Tất cả mã logic, tương tác UI, render danh sách, sự kiện click phức tạp phải được tổ chức thành các tệp `.js` riêng biệt đặt tại các thư mục chức năng (`assets/js/...`) và nạp thông qua thẻ `<script src="..." defer></script>`.
+- Tất cả mã logic, tương tác UI, render danh sách, sự kiện click phức tạp phải được tổ chức thành các tệp `.js` riêng biệt đặt tại các thư mục chức năng (`scripts/...`) và nạp thông qua thẻ `<script src="..." defer></script>`.
 - Các tệp HTML chỉ được phép giữ lại các script siêu ngắn tối giản (chẳng hạn như kiểm tra đăng nhập Auth Guard hoặc nạp layout đồng bộ XMLHttpRequest).
 
 ---
@@ -635,3 +635,4 @@ Tuyệt đối không chèn trực tiếp (inline) các đoạn mã script JavaS
 | 06/2026 | Đồng bộ container max-width → **1400px**, section padding → **64px** (`--space-xl`) |
 | 06/2026 | Thiết lập Spacing System base 8px, Vertical Rhythm 4 tầng |
 | 06/2026 | Thêm semantic colors (danger/success/info/neutral) |
+

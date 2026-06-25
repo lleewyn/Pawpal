@@ -9,6 +9,11 @@
 let currentOrder = null;
 let isGuest = false; // Giả định: false = Member, true = Guest
 
+function resolveDataUrl(path) {
+    const scriptSrc = document.currentScript?.src || window.location.href;
+    return new URL(path, scriptSrc).href;
+}
+
 // Get order ID from URL
 function getOrderIdFromURL() {
     const params = new URLSearchParams(window.location.search);
@@ -31,7 +36,7 @@ async function loadOrderDetail() {
 
         // Fallback to the seeded data file when local storage is empty
         if (!currentOrder) {
-            const response = await fetch('/data/orders.json');
+            const response = await fetch(resolveDataUrl('../../../data/orders.json'));
             const orders = await response.json();
             currentOrder = Array.isArray(orders) ? orders.find(order => String(order.id) === String(orderId)) : null;
         }
@@ -55,7 +60,8 @@ async function loadOrderDetail() {
         
         // Inject review buttons/forms for completed orders (US 11-1, 11-2)
         if ((currentOrder.status === 'completed') && typeof ReviewHandler !== 'undefined') {
-            const deliveredEntry = currentOrder.timeline.find(t => t.status === 'delivered' || t.status === 'completed');
+            const orderTimeline = Array.isArray(currentOrder.timeline) ? currentOrder.timeline : [];
+            const deliveredEntry = orderTimeline.find(t => t.status === 'delivered' || t.status === 'completed');
             const deliveredDate  = deliveredEntry
                 ? new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(deliveredEntry.timestamp))
                 : '';
@@ -73,7 +79,8 @@ async function loadOrderDetail() {
 function checkAutoComplete() {
     if (currentOrder.status !== 'delivered') return;
     
-    const deliveredTimeline = currentOrder.timeline.find(t => t.status === 'delivered');
+    const orderTimeline = Array.isArray(currentOrder.timeline) ? currentOrder.timeline : [];
+    const deliveredTimeline = orderTimeline.find(t => t.status === 'delivered');
     if (!deliveredTimeline) return;
     
     const deliveredTime = new Date(deliveredTimeline.timestamp);
@@ -83,12 +90,13 @@ function checkAutoComplete() {
     if (hoursPassed >= 72) {
         // Auto complete
         currentOrder.status = 'completed';
-        currentOrder.timeline.push({
+        orderTimeline.push({
             status: 'completed',
             timestamp: new Date().toISOString(),
             title: 'Hoàn thành',
             description: 'Tự động hoàn thành sau 3 ngày giao hàng'
         });
+        currentOrder.timeline = orderTimeline;
         // Persist ngay để reload lại không bị trùng
         saveOrderToLocalStorage(currentOrder);
         console.log('Đơn hàng tự động hoàn thành');
@@ -403,7 +411,8 @@ function cancelOrder() {
         }
 
         currentOrder.status = 'cancelled';
-        currentOrder.timeline.push({
+        const orderTimeline = Array.isArray(currentOrder.timeline) ? currentOrder.timeline : (currentOrder.timeline = []);
+        orderTimeline.push({
             status: 'cancelled',
             timestamp: new Date().toISOString(),
             title: 'Đã hủy',
@@ -453,7 +462,8 @@ function confirmReceived() {
     document.getElementById('confirmReceivedBtn').addEventListener('click', () => {
         modal.hide();
         currentOrder.status = 'completed';
-        currentOrder.timeline.push({
+        const orderTimeline = Array.isArray(currentOrder.timeline) ? currentOrder.timeline : (currentOrder.timeline = []);
+        orderTimeline.push({
             status: 'completed',
             timestamp: new Date().toISOString(),
             title: 'Hoàn thành',

@@ -3,7 +3,7 @@
    ========================================================================== */
 
 import { getTrackerLogs, saveTrackerLogs, calcAge, fmtDate, showToast } from '../pet-profile/pet-profile.js';
-import { getPets } from '/assets/js/api/petService.js';
+import { getPets } from '/scripts/api/petService.js';
 
 const DEMO_STAFF_PRIMARY = 'Nguyễn Thị Mai';
 const DEMO_STAFF_RECEPTION = 'Trần Văn Nam';
@@ -632,3 +632,4 @@ async function renderActiveServicesDashboard() {
         grid.appendChild(clone);
     });
 }
+

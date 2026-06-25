@@ -13,7 +13,7 @@
 (function () {
     /**
      * Tìm root path của project bằng cách đọc src của chính script này.
-     * Ví dụ: src = "/assets/js/shared/components.js"
+     * Ví dụ: src = "/scripts/shared/components.js"
      *        -> root = "/"  (absolute, luôn đúng)
      * Fallback về relative nếu không detect được.
      */
@@ -23,7 +23,7 @@
         var scripts = document.querySelectorAll('script[src]');
         for (var i = 0; i < scripts.length; i++) {
             var src = scripts[i].src;
-            var marker = '/assets/js/shared/components.js';
+            var marker = '/scripts/shared/components.js';
             var idx = src.indexOf(marker);
             if (idx !== -1) {
                 return src.substring(0, idx) + '/';
@@ -87,19 +87,19 @@
         }
         if (!document.querySelector('script[src*="header-auth.js"]')) {
             var authScript = document.createElement('script');
-            authScript.src = rootPath + 'assets/js/shared/header-auth.js';
+            authScript.src = rootPath + 'scripts/shared/header-auth.js';
             authScript.defer = true;
             document.head.appendChild(authScript);
         }
         if (currentUser && !currentUser.is_temporary && !document.querySelector('script[src*="notifications-handler.js"]')) {
             var notiScript = document.createElement('script');
-            notiScript.src = rootPath + 'assets/js/shared/notifications-handler.js';
+            notiScript.src = rootPath + 'scripts/shared/notifications-handler.js';
             notiScript.defer = true;
             document.head.appendChild(notiScript);
         }
         if (!document.querySelector('script[src*="support-handler.js"]')) {
             var supportScript = document.createElement('script');
-            supportScript.src = rootPath + 'assets/js/shared/support-handler.js';
+            supportScript.src = rootPath + 'scripts/shared/support-handler.js';
             supportScript.defer = true;
             document.head.appendChild(supportScript);
         }

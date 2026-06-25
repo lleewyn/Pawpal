@@ -14,6 +14,11 @@ const TEMP_TOKENS_KEY     = 'pawpal_temp_tokens';
 const TEMP_TOKENS_URL     = '/data/temp-tokens.json';
 const PAWPAL_USERS_VERSION = 'v6'; // Tăng khi users.json thay đổi
 
+function resolveFromAuthScript(path) {
+    const scriptSrc = document.currentScript?.src || document.querySelector('script[src*="scripts/shared/auth.js"]')?.src;
+    return new URL(path, scriptSrc || window.location.href).href;
+}
+
 // --- ID helpers ---
 function generateUserId() {
     return `USER-${Math.random().toString(36).slice(2, 10)}-${Date.now()}`;
@@ -46,7 +51,7 @@ function initMockDatabase() {
     if (!localStorage.getItem(PAWPAL_USERS_KEY)) {
         try {
             const xhr = new XMLHttpRequest();
-            xhr.open('GET', '/data/users.json', false);
+            xhr.open('GET', resolveFromAuthScript('../../data/users.json'), false);
             xhr.send(null);
             if (xhr.status >= 200 && xhr.status < 300) {
                 // Merge seed với currentUser để không ghi đè trạng thái user đã kích hoạt
@@ -69,7 +74,7 @@ function initMockDatabase() {
     if (!localStorage.getItem(TEMP_TOKENS_KEY)) {
         try {
             const xhr = new XMLHttpRequest();
-            xhr.open('GET', TEMP_TOKENS_URL, false);
+            xhr.open('GET', resolveFromAuthScript('../../data/temp-tokens.json'), false);
             xhr.send(null);
             if (xhr.status >= 200 && xhr.status < 300) {
                 localStorage.setItem(TEMP_TOKENS_KEY, xhr.responseText);

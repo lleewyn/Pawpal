@@ -3,7 +3,7 @@
  * Reads seeded orders from /data/orders.json through the API cache.
  */
 
-import { API } from '/assets/js/api/api.js';
+import { API } from '/scripts/api/api.js';
 
 const ordersState = {
     allOrders: [],
@@ -452,3 +452,4 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ordersState.currentPage < totalPages) goToPage(ordersState.currentPage + 1);
     });
 });
+

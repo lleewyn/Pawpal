@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const filePath = path.join(__dirname, '../assets/css/user/dashboard.css');
+const filePath = path.join(__dirname, '../styles/user/dashboard.css');
 let content = fs.readFileSync(filePath, 'utf8');
 
 const settingsStyles = `
@@ -342,3 +342,4 @@ const settingsStyles = `
 content += settingsStyles;
 fs.writeFileSync(filePath, content, 'utf8');
 console.log('Successfully appended settings styles to dashboard.css');
+

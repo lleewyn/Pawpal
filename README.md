@@ -231,13 +231,13 @@ Dự án được xây dựng dưới dạng Static HTML nhằm tối ưu hóa S
 
 ### 2. Hệ Thống Design Tokens & Biên Dịch CSS
 Để duy trì tính nhất quán của hệ thống thiết kế cao cấp, CSS của PawPal được tổ chức mô-đun hóa:
-* **Design Tokens ([assets/css/tokens/](file:///d:/Aboutme/MyProject/Pawpal/assets/css/tokens/)):** Định nghĩa các biến CSS Custom Properties cho màu sắc (`colors.css`), kích thước font (`typography.css`), và giãn cách (`spacing.css`).
-* **Component-specific CSS ([assets/css/components/](file:///d:/Aboutme/MyProject/Pawpal/assets/css/components/)):** Mỗi cấu phần như nút bấm, thanh điều hướng, khung chat, bộ lọc hay modal đều được viết trong các file riêng biệt để dễ dàng phát triển và kiểm soát.
+* **Design Tokens ([styles/tokens/](file:///d:/Aboutme/MyProject/Pawpal/styles/tokens/)):** Định nghĩa các biến CSS Custom Properties cho màu sắc (`colors.css`), kích thước font (`typography.css`), và giãn cách (`spacing.css`).
+* **Component-specific CSS ([styles/components/](file:///d:/Aboutme/MyProject/Pawpal/styles/components/)):** Mỗi cấu phần như nút bấm, thanh điều hướng, khung chat, bộ lọc hay modal đều được viết trong các file riêng biệt để dễ dàng phát triển và kiểm soát.
 * **Biên dịch và Gộp CSS:** Khi thực hiện `npm run sync`, [sync_static.js](file:///d:/Aboutme/MyProject/Pawpal/scripts/sync_static.js) sẽ:
-  1. Đọc nội dung hiện tại của [style.css](file:///d:/Aboutme/MyProject/Pawpal/assets/css/style.css).
+  1. Đọc nội dung hiện tại của [style.css](file:///d:/Aboutme/MyProject/Pawpal/styles/style.css).
   2. Định vị mốc marker đặc biệt: `/* --- CORE_STYLES_START --- */`.
   3. Giữ nguyên toàn bộ mã CSS tùy chỉnh nằm dưới mốc marker này (không làm mất các CSS viết tay bổ sung trực tiếp trên style.css).
-  4. Đọc tất cả các file css tokens & css components từ danh sách định sẵn, gộp chúng lại với nhau rồi chèn vào phía trên marker của [style.css](file:///d:/Aboutme/MyProject/Pawpal/assets/css/style.css).
+  4. Đọc tất cả các file css tokens & css components từ danh sách định sẵn, gộp chúng lại với nhau rồi chèn vào phía trên marker của [style.css](file:///d:/Aboutme/MyProject/Pawpal/styles/style.css).
 
 ---
 
@@ -247,5 +247,6 @@ PawPal ưu tiên tối đa cho trải nghiệm di động (**Mobile-first conten
 - **Framework:** Sử dụng hệ thống Grid và các class Responsive của **Bootstrap 5.3** kết hợp tùy biến CSS thuần.
 - **Kích thước nút bấm:** Mọi phần tử tương tác trên Mobile đảm bảo touch target tối thiểu là `44px x 44px`.
 - **Hiển thị thông tin:** Đảm bảo không ẩn các thông tin thiết yếu (CTA, giá tiền, tên dịch vụ) trên giao diện điện thoại.
+
 
 

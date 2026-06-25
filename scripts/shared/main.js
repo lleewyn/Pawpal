@@ -48,7 +48,7 @@ function initSharedComponents() {
         .filter(Boolean).length;
     const root = depth <= 1 ? './' : '../'.repeat(depth - 1);
     const script = document.createElement('script');
-    script.src = root + 'assets/js/shared/components.js';
+    script.src = root + 'scripts/shared/components.js';
     script.defer = true;
     document.head.appendChild(script);
 }

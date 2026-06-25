@@ -4,8 +4,8 @@
    ========================================================================== */
 
 import { getTrackerLogs, calcAge, fmtDate, showToast } from '../pet-profile/pet-profile.js';
-import { getPets } from '/assets/js/api/petService.js';
-import { API } from '/assets/js/api/api.js';
+import { getPets } from '/scripts/api/petService.js';
+import { API } from '/scripts/api/api.js';
 
 let currentPetId = null;
 
@@ -327,3 +327,4 @@ function escapeHtml(text) {
     div.textContent = String(text ?? '');
     return div.innerHTML;
 }
+

@@ -1,4 +1,4 @@
-import { API } from '/assets/js/api/api.js';
+import { API } from '/scripts/api/api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     await API.initData();
@@ -161,3 +161,4 @@ function getStatusLabel(status) {
     };
     return statusMap[status] || status;
 }
+

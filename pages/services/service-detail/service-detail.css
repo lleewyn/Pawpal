@@ -711,7 +711,7 @@
     line-height: 1.6;
 }
 
-/* Review styles removed and unified in assets/css/components/reviews.css */
+/* Review styles removed and unified in styles/components/reviews.css */
 
 .reviewer-tier-badge.diamond {
     background: #e0f2fe;
@@ -931,3 +931,4 @@
     gap: 1.5rem;
     margin-top: 1.5rem;
 }
+

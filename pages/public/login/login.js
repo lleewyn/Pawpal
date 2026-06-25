@@ -1,6 +1,6 @@
 /**
  * login.js — UI logic riêng của trang login/register PawPal.
- * Phụ thuộc vào: /assets/js/shared/auth.js (phải load trước)
+ * Phụ thuộc vào: /scripts/shared/auth.js (phải load trước)
  *
  * Chứa:
  *  - handleLoginRouting()   — điều hướng section theo URL param
@@ -852,3 +852,4 @@ if (document.readyState === 'loading') {
     initLoginPage();
 }
 window.addEventListener('popstate', handleLoginRouting);
+

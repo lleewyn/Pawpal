@@ -519,7 +519,7 @@ function renderProducts() {
                     sessionStorage.setItem('pawpal_is_buynow', 'true');
                     
                     // Redirect to checkout
-                    window.location.href = '../shop/checkout.html?buynow=true';
+                    window.location.href = '/pages/shop/checkout/checkout.html?buynow=true';
                 }
             });
         });

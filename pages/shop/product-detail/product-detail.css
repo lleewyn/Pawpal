@@ -761,7 +761,7 @@
     font-weight: 700;
 }
 
-/* Review styles removed and unified in assets/css/components/reviews.css */
+/* Review styles removed and unified in styles/components/reviews.css */
 
 /* ── Related Products Section ──────────────────────────────────────────── */
 .related-products-section,
@@ -1150,7 +1150,7 @@
     }
 }
 
-/* Review enhancements removed and unified in assets/css/components/reviews.css */
+/* Review enhancements removed and unified in styles/components/reviews.css */
 
 /* ── Product Detail: Service-style Layout ──────────────────────────────── */
 .pd-gallery-card {
@@ -1303,3 +1303,4 @@
 .pd-summary-footer .product-actions {
     margin-bottom: 0;
 }
+

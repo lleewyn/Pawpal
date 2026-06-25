@@ -4,7 +4,7 @@
    US 6-1, 6-2: Huy lich
    ========================================================================== */
 
-import { API } from '/assets/js/api/api.js';
+import { API } from '/scripts/api/api.js';
 import { statusLabels, formatDate, formatPrice } from '../bookings/bookings.js';
 
 let currentBooking = null;
@@ -545,3 +545,4 @@ document.addEventListener('keydown', (e) => {
         if (banner && !banner.classList.contains('d-none')) closeErrorBanner();
     }
 });
+

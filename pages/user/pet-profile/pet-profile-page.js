@@ -2,9 +2,9 @@
    pet-profile-page.js — Main logic
    ========================================================================== */
 
-import { getPets, savePets, deletePet as deletePetService, restorePet as restorePetService } from '/assets/js/api/petService.js';
+import { getPets, savePets, deletePet as deletePetService, restorePet as restorePetService } from '/scripts/api/petService.js';
 import { generatePetId, calcAge, showToast } from '../pet-profile/pet-profile.js';
-import { API } from '/assets/js/api/api.js';
+import { API } from '/scripts/api/api.js';
 
 export async function initPetProfilePage() {
     console.log('Pet Profile Page init...');

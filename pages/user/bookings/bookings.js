@@ -3,7 +3,7 @@
    Loads seeded bookings from /data/bookings.json through the API cache.
    ========================================================================== */
 
-import { API } from '/assets/js/api/api.js';
+import { API } from '/scripts/api/api.js';
 
 export const statusLabels = {
     upcoming: 'Đã xác nhận',
@@ -162,3 +162,4 @@ window.BookingsData = {
     formatDate,
     formatPrice
 };
+

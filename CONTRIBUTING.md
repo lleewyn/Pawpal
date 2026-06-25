@@ -10,10 +10,10 @@ Dự án được chia thành 4 phân hệ chính tương ứng với cấu trú
 
 | Vai trò | Thành viên phụ trách | Phạm vi thư mục/files được phép chỉnh sửa |
 | :--- | :--- | :--- |
-| **1. Core Architect & Admin Panel** | *[Tên Dev 1]* | <ul><li>`components/` (Header, Footer dùng chung)</li><li>`assets/css/tokens/` (Màu sắc, font, spacing)</li><li>`assets/css/style.css`, `assets/css/admin/`</li><li>`pages/admin/` (Bao gồm: `index.html`, `bookings.html`, `orders.html`, `care-log.html`, `products.html`, `users.html`)</li><li>`scripts/`</li></ul> |
-| **2. Public & Marketing Web** | *[Tên Dev 2]* | <ul><li>`pages/public/` (Landing, About, Login, Blog...)</li><li>`assets/css/public/`</li></ul> |
-| **3. Customer Portal (User Area)** | *[Tên Dev 3]* | <ul><li>`pages/user/` (Dashboard, Pet Archive, Loyalty...)</li><li>`assets/css/user/`</li></ul> |
-| **4. Commerce & Services Engine** | *[Tên Dev 4]* | <ul><li>`pages/shop/` & `pages/services/`</li><li>`assets/css/shop/` & `assets/css/services/`</li></ul> |
+| **1. Core Architect & Admin Panel** | *[Tên Dev 1]* | <ul><li>`components/` (Header, Footer dùng chung)</li><li>`styles/tokens/` (Màu sắc, font, spacing)</li><li>`styles/style.css`, `styles/admin/`</li><li>`pages/admin/` (Bao gồm: `index.html`, `bookings.html`, `orders.html`, `care-log.html`, `products.html`, `users.html`)</li><li>`scripts/`</li></ul> |
+| **2. Public & Marketing Web** | *[Tên Dev 2]* | <ul><li>`pages/public/` (Landing, About, Login, Blog...)</li><li>`styles/public/`</li></ul> |
+| **3. Customer Portal (User Area)** | *[Tên Dev 3]* | <ul><li>`pages/user/` (Dashboard, Pet Archive, Loyalty...)</li><li>`styles/user/`</li></ul> |
+| **4. Commerce & Services Engine** | *[Tên Dev 4]* | <ul><li>`pages/shop/` & `pages/services/`</li><li>`styles/shop/` & `styles/services/`</li></ul> |
 
 ---
 
@@ -52,3 +52,4 @@ Dự án này sử dụng cơ chế render tĩnh để tối ưu tốc độ t�
    ```
 
 Chúc cả nhóm làm việc hiệu quả và hoàn thành dự án PawPal xuất sắc! 🐾
+

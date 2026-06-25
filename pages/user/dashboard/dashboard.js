@@ -4,7 +4,7 @@
  * Tuan thu design.md
  */
 
-import { API } from '/assets/js/api/api.js';
+import { API } from '/scripts/api/api.js';
 
 const PAWPAL_USERS_KEY = 'pawpal_users_db';
 const CURRENT_USER_KEY = 'pawpal_current_user';
@@ -411,3 +411,4 @@ async function loadRecentOrders(user) {
 
     container.innerHTML = html;
 }
+
