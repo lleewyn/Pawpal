@@ -271,9 +271,13 @@ function goToPage(page) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+window.goToPage = goToPage;
+
 function contactHotline(orderId) {
     showOrdersToast(`Tổng đài hỗ trợ đơn hàng ${orderId}: 1900 1234`, 'info');
 }
+
+window.contactHotline = contactHotline;
 
 function cancelOrder(orderId) {
     const order = ordersState.allOrders.find((item) => item.id === orderId);
@@ -359,9 +363,13 @@ function cancelOrder(orderId) {
     });
 }
 
+window.cancelOrder = cancelOrder;
+
 function reorder(orderId) {
     showOrdersToast(`Đã thêm các sản phẩm của đơn hàng ${orderId} vào giỏ hàng.`, 'success');
 }
+
+window.reorder = reorder;
 
 function showOrdersToast(message, type = 'info') {
     let container = document.getElementById('orders-toast-container');

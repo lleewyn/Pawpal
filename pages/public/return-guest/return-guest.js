@@ -46,6 +46,25 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.textContent = 'Đang tìm...';
 
         const data     = await loadData();
+        const normPhone = normalizePhone(phone);
+        const memberUser = (data.users || []).find(u =>
+            normalizePhone(u.phone) === normPhone && !u.is_temporary
+        );
+
+        if (memberUser) {
+            btn.disabled    = false;
+            btn.textContent = 'Tìm kiếm';
+            resultsEl.style.display = 'none';
+            errorBox.innerHTML = `
+                Tài khoản này là tài khoản thành viên. Vui lòng
+                <a href="/pages/public/login/login.html?phone=${encodeURIComponent(phone)}" class="text-decoration-underline fw-bold">đăng nhập</a>
+                để xem thông tin tại
+                <a href="/pages/user/dashboard/dashboard.html" class="text-decoration-underline fw-bold">Trang cá nhân</a>.
+            `;
+            errorBox.style.display = 'block';
+            return;
+        }
+
         const bookings = findBookingsByPhone(phone, data);
         const orders   = findOrdersByPhone(phone, data);
 

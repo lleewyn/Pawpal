@@ -423,10 +423,14 @@ function cancelOrder() {
     });
 }
 
+window.cancelOrder = cancelOrder;
+
 function contactHotline() {
     alert('Đang kết nối đến tổng đài CSKH: 1900 xxxx...');
     // TODO: Initiate call or show hotline modal
 }
+
+window.contactHotline = contactHotline;
 
 function confirmReceived() {
     const modalId = 'confirmReceivedModal';
@@ -474,6 +478,8 @@ function confirmReceived() {
     });
 }
 
+window.confirmReceived = confirmReceived;
+
 function saveOrderToLocalStorage(order) {
     const allOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
     const index = allOrders.findIndex(o => o.id === order.id);
@@ -516,6 +522,8 @@ function showOrderReviewsModal(orderId) {
     `;
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
+
+window.showOrderReviewsModal = showOrderReviewsModal;
 
 function reorder(orderId) {
     alert(`Đã thêm các sản phẩm của đơn hàng ${orderId} vào giỏ hàng`);
