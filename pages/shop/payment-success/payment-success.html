@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="view-transition" content="same-origin">
-    <title>PawPal - Thanh to�n th�nh c�ng</title>
+    <title>PawPal - Thanh toán thành công</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,10 +38,10 @@
             
             <!-- Success Message -->
             <div class="text-center mb-5">
-                <h1 class="result-title text-success mb-3">�?t h�ng th�nh c�ng!</h1>
+                <h1 class="result-title text-success mb-3">Đặt hàng thành công!</h1>
                 <p class="result-subtitle text-muted">
-                    C?m on b?n d� tin tu?ng PawPal.<br>
-                    �on h�ng c?a b?n d� du?c ti?p nh?n.
+                    C?m on b?n dï¿½ tin tu?ng PawPal.<br>
+                    ï¿½on hï¿½ng c?a b?n dï¿½ du?c ti?p nh?n.
                 </p>
             </div>
             
@@ -49,13 +49,13 @@
             <div class="row justify-content-center mb-4">
                 <div class="col-lg-8">
                     <div class="info-card mb-4">
-                        <h2 class="card-title">Th�ng tin don h�ng</h2>
+                        <h2 class="card-title">Thï¿½ng tin don hï¿½ng</h2>
                         <div class="info-rows">
                             <div class="info-row">
-                                <span class="info-label">M� don h�ng:</span>
+                                <span class="info-label">Mã đơn hàng:</span>
                                 <span class="info-value">
                                     <strong id="order-id">...</strong>
-                                    <button type="button" class="btn-copy" id="btn-copy-order" title="Sao ch�p">
+                                    <button type="button" class="btn-copy" id="btn-copy-order" title="Sao chép">
                                         <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
                                         </svg>
@@ -63,26 +63,26 @@
                                 </span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label">Tr?ng th�i thanh to�n:</span>
+                                <span class="info-label">Tr?ng thï¿½i thanh toï¿½n:</span>
                                 <span class="info-value">
                                     <span class="status-badge status-paid">
                                         <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                                         </svg>
-                                        �� THANH TO�N
+                                        ĐÃ THANH TOÁN
                                     </span>
                                 </span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label">�?a ch? giao h�ng:</span>
+                                <span class="info-label">ï¿½?a ch? giao hï¿½ng:</span>
                                 <span class="info-value" id="shipping-address">...</span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label">Th?i gian d?t h�ng:</span>
+                                <span class="info-label">Th?i gian d?t hï¿½ng:</span>
                                 <span class="info-value" id="order-time">...</span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label">Phuong th?c thanh to�n:</span>
+                                <span class="info-label">Phuong th?c thanh toï¿½n:</span>
                                 <span class="info-value" id="payment-method">...</span>
                             </div>
                         </div>
@@ -90,31 +90,31 @@
                     
                     <!-- Guest Activation Card -->
                     <div class="info-card guest-activation-card d-none" id="guestActivationCard">
-                        <h2 class="card-title">Ho�n t?t t�i kho?n kh�ch h�ng</h2>
-                        <p>Ch�ng t�i d� t?o m?t t�i kho?n t?m cho S�T <strong id="guestPhoneDisplay">...</strong>. Thi?t l?p m?t kh?u d? qu?n l� don h�ng v� nh?n th�m di?m thu?ng.</p>
+                        <h2 class="card-title">Hoï¿½n t?t tï¿½i kho?n khï¿½ch hï¿½ng</h2>
+                        <p>Chï¿½ng tï¿½i dï¿½ t?o m?t tï¿½i kho?n t?m cho Sï¿½T <strong id="guestPhoneDisplay">...</strong>. Thi?t l?p m?t kh?u d? qu?n lï¿½ don hï¿½ng vï¿½ nh?n thï¿½m di?m thu?ng.</p>
                         <div class="d-flex flex-wrap gap-2">
-                            <a href="#" id="btn-guest-activate" class="btn btn-success">K�ch ho?t t�i kho?n</a>
-                            <a href="../shop.html" id="btn-guest-skip" class="btn btn-outline-secondary">B? qua</a>
+                            <a href="#" id="btn-guest-activate" class="btn btn-success">Kï¿½ch ho?t tï¿½i kho?n</a>
+                            <a href="../shop.html" id="btn-guest-skip" class="btn btn-outline-secondary">Bỏ qua</a>
                         </div>
                     </div>
                     
                     <!-- Products List -->
                     <div class="info-card">
-                        <h2 class="card-title">S?n ph?m d� d?t</h2>
+                        <h2 class="card-title">S?n ph?m dï¿½ d?t</h2>
                         <div id="order-products" class="products-list mb-3">
                             <!-- Will be populated by JS -->
                         </div>
                         <div class="order-totals">
                             <div class="total-row">
-                                <span>T?ng ti?n h�ng:</span>
+                                <span>T?ng ti?n hï¿½ng:</span>
                                 <span id="subtotal">0d</span>
                             </div>
                             <div class="total-row">
-                                <span>Ph� v?n chuy?n:</span>
+                                <span>Phï¿½ v?n chuy?n:</span>
                                 <span id="shipping-fee">0d</span>
                             </div>
                             <div class="total-row d-none" id="points-row">
-                                <span>D�ng PawPoints:</span>
+                                <span>Dùng PawPoints:</span>
                                 <span class="text-danger" id="points-discount">-0d</span>
                             </div>
                             <div class="total-row d-none" id="voucher-row">
@@ -123,7 +123,7 @@
                             </div>
                             <hr>
                             <div class="total-row grand-total">
-                                <span>T?NG C?NG:</span>
+                                <span>TỔNG CỘNG:</span>
                                 <span id="grand-total">0d</span>
                             </div>
                         </div>
@@ -137,7 +137,7 @@
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style="vertical-align: text-top;">
                         <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
                     </svg>
-                    Theo d�i don h�ng
+                    Theo dõi đơn hàng
                 </a>
                 <a href="../shop.html" class="btn btn-outline-primary btn-lg mb-2">
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style="vertical-align: text-top;">
@@ -160,4 +160,5 @@
     <div id="site-fab"></div>
 </body>
 </html>
+
 

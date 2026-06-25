@@ -20,6 +20,13 @@ const ORDER_STATUS = {
     cancelled:       { label: 'Đã hủy',         cls: 'rg-badge-cancelled' },
 };
 
+let rgOtpFlowActive = false;
+let rgLastSearchState = {
+    phone: '',
+    bookings: [],
+    orders: [],
+};
+
 // ── Init ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     const form      = document.getElementById('rg-form');
@@ -53,6 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         errorBox.style.display  = 'none';
         resultsEl.style.display = 'block';
+        rgLastSearchState = {
+            phone,
+            bookings,
+            orders,
+        };
         renderResults(bookings, orders);
     });
 });
@@ -433,6 +445,9 @@ function showSendOTPConfirm(title, desc, phone, onConfirm) {
 
 // ── OTP Modal ─────────────────────────────────────────────────────────────
 function showOTPModal(phone, onSuccess) {
+    if (rgOtpFlowActive) return;
+    rgOtpFlowActive = true;
+
     const existing = document.getElementById('rg-otp-modal');
     if (existing) existing.remove();
 
@@ -466,6 +481,11 @@ function showOTPModal(phone, onSuccess) {
 
     const modal = new bootstrap.Modal(el);
     modal.show();
+
+    el.addEventListener('hidden.bs.modal', () => {
+        rgOtpFlowActive = false;
+        el.remove();
+    });
 
     const inputs = el.querySelectorAll('.otp-input');
     const confirmBtn = document.getElementById('rg-otp-confirm');
@@ -503,6 +523,7 @@ function showOTPModal(phone, onSuccess) {
         if (code === '555666') {
             modal.hide();
             onSuccess();
+            rgOtpFlowActive = false;
         } else {
             inputs.forEach(i => i.classList.add('otp-error'));
             errorEl.classList.remove('d-none');
@@ -811,9 +832,25 @@ function showUpsellModal(phone) {
         });
         document.getElementById('rg-upsell-skip').addEventListener('click', () => {
             modal.hide();
-            window.location.href = '/pages/public/return-guest/return-guest.html';
+            restoreLastSearchResults();
         });
     }, 800);
+}
+
+function restoreLastSearchResults() {
+    const resultsEl = document.getElementById('rg-results');
+    const errorBox  = document.getElementById('rg-error');
+    if (!resultsEl || !errorBox) return;
+
+    if (rgLastSearchState.bookings.length || rgLastSearchState.orders.length) {
+        errorBox.style.display = 'none';
+        resultsEl.style.display = 'block';
+        renderResults(rgLastSearchState.bookings, rgLastSearchState.orders);
+        const phoneInput = document.getElementById('rg-phone');
+        if (phoneInput && rgLastSearchState.phone) {
+            phoneInput.value = rgLastSearchState.phone;
+        }
+    }
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────
