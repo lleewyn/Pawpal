@@ -448,7 +448,7 @@ function initShopFilter() {
 
                 return `
                     <div class="product-card" data-category="${mappedCategory}" data-marketing="${marketingTags.join(' ')}" data-product-id="${product.id}">
-                        <a href="../../shop/product-detail/product-detail.html?id=${product.id}" class="product-card-link">
+                        <a href="/pages/shop/product-detail/product-detail.html?id=${product.id}" class="product-card-link">
                             <div class="product-image-box">
                                 <img src="${imgSrc}" alt="${product.name}" loading="lazy" onerror="this.src='../../assets/images/shop/products/placeholder.webp'">
                                 ${displayBadge}
@@ -1768,11 +1768,11 @@ function initFab() {
         if (t.match(/hotel|lưu trú|gửi/))
             return 'Pet Hotel có phòng riêng, điều hòa, camera 24/7. Giá từ <strong>180.000đ/đêm</strong>. Yêu cầu vaccine đầy đủ.';
         if (t.match(/giá|bao nhiêu|phí/))
-            return 'Bạn có thể xem bảng giá đầy đủ tại <a href="pages/services/services.html" style="color:#7c3aed">trang dịch vụ</a>. Cần tư vấn dịch vụ cụ thể nào?';
+            return 'Bạn có thể xem bảng giá đầy đủ tại <a href="/pages/services/services.html" style="color:#7c3aed">trang dịch vụ</a>. Cần tư vấn dịch vụ cụ thể nào?';
         if (t.match(/chuẩn bị|mang gì|cần gì/))
             return 'Cần mang: sổ tiêm phòng, đồ ăn riêng (nếu có), đồ chơi yêu thích của bé. Chúng tôi lo phần còn lại!';
         if (t.match(/đặt lịch|booking/))
-            return 'Bạn có thể đặt lịch ngay tại <a href="pages/services/booking/booking.html" style="color:#7c3aed">trang đặt lịch</a> — xác nhận tức thì qua SMS/Zalo.';
+            return 'Bạn có thể đặt lịch ngay tại <a href="/pages/services/booking/booking.html" style="color:#7c3aed">trang đặt lịch</a> — xác nhận tức thì qua SMS/Zalo.';
         if (t.match(/giờ|mở cửa|thời gian/))
             return 'PawPal mở cửa <strong>8:00–20:00</strong> mỗi ngày. Pet Hotel hoạt động 24/7.';
         return 'Cảm ơn bạn đã nhắn tin!  Để được tư vấn chi tiết hơn, bạn có thể gọi hotline <strong>0774 561 496</strong> hoặc chat Zalo nhé.';
