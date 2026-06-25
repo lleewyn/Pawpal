@@ -312,7 +312,7 @@ async function loadUpcomingBookings(user) {
             </div>
             <div class="booking-actions">
                 <a href="../bookings/bookings.html" class="btn btn-green-outline btn-sm" style="border-color: var(--color-primary); color: #ffffff; background-color: var(--color-primary);">Chi tiết lịch hẹn</a>
-                <a href="../../public/chat.html" class="btn btn-outline-secondary btn-sm">Hoãn lịch</a>
+                <a href="/pages/public/help-center/help-center.html" class="btn btn-outline-secondary btn-sm">Hoãn lịch</a>
             </div>
         </div>
     `;

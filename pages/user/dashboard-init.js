@@ -70,7 +70,7 @@ seedLocalStorageIfNeeded();
 
     try {
         const xhr = new XMLHttpRequest();
-        xhr.open('GET', '../../components/user-sidebar.html', false);
+        xhr.open('GET', '../../components/user-sidebar/user-sidebar.html', false);
         xhr.send();
         if (xhr.status === 200) {
             sidebarContainer.innerHTML = xhr.responseText;
