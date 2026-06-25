@@ -501,6 +501,13 @@ function renderProducts() {
                 const productId = parseInt(btn.dataset.productId);
                 const product = state.products.find(p => p.id === productId);
                 if (product && product.inStock) {
+                    // Check login
+                    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+                    if (!user) {
+                        showToast('Vui lòng đăng nhập để mua hàng', 'warning');
+                        return;
+                    }
+
                     // Create temporary cart with this product only
                     const buyNowCart = [{
                         ...product,
@@ -828,6 +835,12 @@ function saveWishlist() {
 }
 
 function toggleWishlist(productId) {
+    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    if (!user) {
+        showToast('Vui lòng đăng nhập để sử dụng tính năng yêu thích', 'warning');
+        return;
+    }
+
     const index = state.wishlist.indexOf(productId);
     if (index > -1) {
         state.wishlist.splice(index, 1);

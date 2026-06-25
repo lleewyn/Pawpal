@@ -5,7 +5,7 @@
  */
 
 export const API = {
-    DATA_VERSION: '2026-06-25-add-guest-002-data',
+    DATA_VERSION: '2026-06-25-v2-add-4-users-data',
 
     async getJSON(url) {
         try {
@@ -31,7 +31,16 @@ export const API = {
                 const currentUser = safeReadObject('pawpal_current_user');
                 if (currentUser) {
                     const richUser = mergedUsers.find(user => sameUser(user, currentUser));
-                    if (richUser) localStorage.setItem('pawpal_current_user', JSON.stringify(richUser));
+                    if (richUser) {
+                        // Bảo vệ các field user-action: không để seed ghi đè trạng thái đã kích hoạt
+                        const safeUser = {
+                            ...richUser,
+                            is_temporary: currentUser.is_temporary,
+                            password:     currentUser.password     !== undefined ? currentUser.password     : richUser.password,
+                            points:       currentUser.points       !== undefined ? currentUser.points       : richUser.points,
+                        };
+                        localStorage.setItem('pawpal_current_user', JSON.stringify(safeUser));
+                    }
                 }
             }
         }

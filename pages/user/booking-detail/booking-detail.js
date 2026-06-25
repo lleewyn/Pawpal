@@ -105,7 +105,8 @@ function checkBookingModifiability(booking) {
         && !changeLimitReached;
 
     const canCancel = diffMinutes >= 120
-        && ['pending', 'confirmed', 'upcoming'].includes(booking.status);
+        && ['pending', 'confirmed', 'upcoming'].includes(booking.status)
+        && (booking.cancelCount || 0) < 3;
 
     btnChange.classList.toggle('d-none', !canModify);
     btnCancel.classList.toggle('d-none', !canCancel);
@@ -134,23 +135,37 @@ function showChangeScheduleModal(user = null) {
     const existing = document.getElementById(modalId);
     if (existing) existing.remove();
 
-    const today = new Date();
-    const days = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(today);
-        d.setDate(today.getDate() + i + 1);
-        return d;
-    });
+    const slots = (window.PawPalBookingConfig?.slots) || [
+        '08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'
+    ];
+    const staffs = (window.PawPalBookingConfig?.staffs) || [
+        { name: 'Phân bổ ngẫu nhiên', desc: 'PawPal tự động chọn nhân viên trống lịch', id: 'random' },
+        { name: 'Nguyễn Minh An',     desc: 'Chuyên viên Spa • 3 năm kinh nghiệm',      id: 'staff1' },
+        { name: 'Trần An Nhiên',      desc: 'Bảo mẫu Hotel • Cực kỳ nhẹ nhàng',         id: 'staff2' },
+        { name: 'Lê Hoàng Tiến',     desc: 'Chuyên viên cắt tỉa Grooming',              id: 'staff3' }
+    ];
 
-    const slots = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+    // slots render với disabled ban đầu — chỉ enable sau khi chọn ngày
+    const slotsHtml = slots.map(s =>
+        `<button class="slot-time-btn" data-time="${s}" disabled style="opacity:0.4;cursor:not-allowed;">${s}</button>`
+    ).join('');
 
-    const dayTabsHtml = days.map((d, i) => {
-        const label = d.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' });
-        return `<button class="slot-day-tab${i === 0 ? ' active' : ''}" data-idx="${i}">${label}</button>`;
+    const staffHtml = staffs.map(s => {
+        const initials = s.name === 'Phân bổ ngẫu nhiên' ? '🎲' : s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+        return `
+            <div class="staff-card" data-name="${s.name}" tabindex="-1" role="button"
+                style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:not-allowed;opacity:0.4;transition:all .2s;pointer-events:none;">
+                <div style="width:36px;height:36px;border-radius:50%;background:var(--color-primary-light,#e8f5e9);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:var(--color-primary-dark,#2e7d32);flex-shrink:0;">${initials}</div>
+                <div>
+                    <div style="font-weight:700;font-size:0.88rem;color:var(--color-primary-dark,#2e7d32);">${s.name}</div>
+                    <div style="font-size:0.75rem;color:#64748b;">${s.desc}</div>
+                </div>
+            </div>`;
     }).join('');
 
-    const slotsHtml = slots.map(s =>
-        `<button class="slot-time-btn" data-time="${s}">${s}</button>`
-    ).join('');
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const minDate = tomorrow.toISOString().split('T')[0];
 
     const modalEl = document.createElement('div');
     modalEl.id = modalId;
@@ -164,15 +179,27 @@ function showChangeScheduleModal(user = null) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted small mb-3">Chọn ngày và giờ mới. Lịch cũ sẽ được giải phóng sau khi xác nhận.</p>
-                    <div class="slot-day-tabs mb-3">${dayTabsHtml}</div>
-                    <div class="slot-time-grid">${slotsHtml}</div>
-                    <div class="slot-selected-info mt-3 d-none" id="slotSelectedInfo">
+                    <p class="text-muted small mb-3">Chọn ngày trước, sau đó chọn giờ và nhân viên.</p>
+
+                    <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn ngày</div>
+                    <input type="date" id="changeDatePicker" class="form-control mb-4" min="${minDate}" style="max-width:220px;">
+
+                    <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn giờ</div>
+                    <div class="slot-time-grid mb-3" id="changeSlotGrid">${slotsHtml}</div>
+                    <div id="holdBanner" class="d-none mb-3" style="font-size:0.82rem;padding:8px 12px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;color:#7a5c00;">
+                        ⏳ <strong>Giữ chỗ tạm thời:</strong> Giờ <strong id="holdSlotLabel"></strong> được giữ riêng cho bạn trong <strong id="holdCountdown"></strong>
+                    </div>
+
+                    <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn nhân viên</div>
+                    <div id="changeStaffList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:12px;">${staffHtml}</div>
+
+                    <div class="slot-selected-info mt-2 d-none" id="slotSelectedInfo" style="font-size:0.85rem;color:var(--color-primary-dark,#2e7d32);display:flex;align-items:center;gap:6px;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                         Đã chọn: <strong id="slotSelectedText"></strong>
                     </div>
-                    <div class="mt-4">
-                        <label class="form-label fw-semibold">Ghi chú <span class="text-muted fw-normal">(tuỳ chọn)</span></label>
+
+                    <div class="mt-3">
+                        <label class="form-label fw-semibold" style="font-size:0.88rem;">Ghi chú <span class="text-muted fw-normal">(tuỳ chọn)</span></label>
                         <textarea class="form-control" id="changeNotes" rows="2" placeholder="Ví dụ: tôi cần chuyển sang buổi chiều..."></textarea>
                     </div>
                 </div>
@@ -187,16 +214,71 @@ function showChangeScheduleModal(user = null) {
     const modal = new bootstrap.Modal(modalEl);
     modal.show();
 
-    let selectedDayIdx = 0;
+    let selectedDate = '';
     let selectedTime = null;
+    let selectedStaff = null;
+    let holdInterval = null;
+
+    function clearHoldTimer() {
+        if (holdInterval) { clearInterval(holdInterval); holdInterval = null; }
+        document.getElementById('holdBanner').classList.add('d-none');
+    }
+
+    function startHoldTimer(slot) {
+        clearHoldTimer();
+        let remaining = 15 * 60;
+        const banner   = document.getElementById('holdBanner');
+        const label    = document.getElementById('holdSlotLabel');
+        const countdown = document.getElementById('holdCountdown');
+        label.textContent = slot;
+        banner.classList.remove('d-none');
+
+        function tick() {
+            const m = Math.floor(remaining / 60).toString().padStart(2, '0');
+            const s = (remaining % 60).toString().padStart(2, '0');
+            countdown.textContent = `${m}:${s}`;
+            if (remaining <= 0) {
+                clearHoldTimer();
+                // Giải phóng slot — reset giờ đã chọn
+                selectedTime = null;
+                modalEl.querySelectorAll('.slot-time-btn').forEach(b => b.classList.remove('active'));
+                banner.innerHTML = `⚠️ <strong>Hết thời gian giữ chỗ!</strong> Vui lòng chọn lại giờ.`;
+                banner.style.background = '#fff3cd';
+                banner.style.borderColor = '#ffeeba';
+                banner.classList.remove('d-none');
+                refresh();
+            }
+            remaining--;
+        }
+        tick();
+        holdInterval = setInterval(tick, 1000);
+    }
+
+    // Dọn hold timer khi đóng modal
+    modalEl.addEventListener('hidden.bs.modal', () => clearHoldTimer());
+
+    function enableTimeAndStaff() {
+        modalEl.querySelectorAll('.slot-time-btn').forEach(b => {
+            b.disabled = false;
+            b.style.opacity = '';
+            b.style.cursor = '';
+        });
+        modalEl.querySelectorAll('.staff-card').forEach(c => {
+            c.style.opacity = '';
+            c.style.cursor = '';
+            c.style.pointerEvents = '';
+            c.tabIndex = 0;
+        });
+    }
 
     function refresh() {
-        const d = days[selectedDayIdx];
-        const infoEl = document.getElementById('slotSelectedInfo');
-        const textEl = document.getElementById('slotSelectedText');
+        const infoEl    = document.getElementById('slotSelectedInfo');
+        const textEl    = document.getElementById('slotSelectedText');
         const confirmBtn = document.getElementById('confirmChangeBtn');
-        if (selectedTime) {
-            textEl.textContent = `${d.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })} lúc ${selectedTime}`;
+        if (selectedDate && selectedTime && selectedStaff) {
+            const d = new Date(selectedDate + 'T00:00:00');
+            const dateLabel = d.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+            textEl.textContent = `${dateLabel} lúc ${selectedTime} • ${selectedStaff}`;
             infoEl.classList.remove('d-none');
             confirmBtn.disabled = false;
         } else {
@@ -205,36 +287,52 @@ function showChangeScheduleModal(user = null) {
         }
     }
 
-    modalEl.querySelectorAll('.slot-day-tab').forEach(btn => {
-        btn.addEventListener('click', () => {
-            modalEl.querySelectorAll('.slot-day-tab').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            selectedDayIdx = parseInt(btn.dataset.idx);
-            selectedTime = null;
-            modalEl.querySelectorAll('.slot-time-btn').forEach(b => b.classList.remove('active'));
-            refresh();
-        });
+    document.getElementById('changeDatePicker').addEventListener('change', (e) => {
+        selectedDate = e.target.value;
+        // Reset giờ khi đổi ngày
+        selectedTime = null;
+        clearHoldTimer();
+        modalEl.querySelectorAll('.slot-time-btn').forEach(b => b.classList.remove('active'));
+        // Mở khóa giờ + nhân viên
+        enableTimeAndStaff();
+        refresh();
     });
 
     modalEl.querySelectorAll('.slot-time-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            if (!selectedDate) return;
             modalEl.querySelectorAll('.slot-time-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             selectedTime = btn.dataset.time;
+            startHoldTimer(selectedTime);
+            refresh();
+        });
+    });
+
+    modalEl.querySelectorAll('.staff-card').forEach(card => {
+        card.addEventListener('click', () => {
+            if (!selectedDate) return;
+            modalEl.querySelectorAll('.staff-card').forEach(c => {
+                c.style.borderColor = '#e2e8f0';
+                c.style.background = '';
+            });
+            card.style.borderColor = 'var(--color-primary, #4caf50)';
+            card.style.background = 'var(--color-primary-light, #e8f5e9)';
+            selectedStaff = card.dataset.name;
             refresh();
         });
     });
 
     document.getElementById('confirmChangeBtn').addEventListener('click', () => {
-        if (!selectedTime) return;
+        if (!selectedDate || !selectedTime || !selectedStaff) return;
+        clearHoldTimer();
 
-        const dateString = days[selectedDayIdx].toISOString().split('T')[0];
         const notes = document.getElementById('changeNotes').value.trim();
-
-        currentBooking.date = dateString;
+        currentBooking.date = selectedDate;
         currentBooking.time = selectedTime;
         currentBooking.timeStart = selectedTime;
         currentBooking.timeEnd = '';
+        currentBooking.staff = selectedStaff;
         currentBooking.changeCount = (currentBooking.changeCount || 0) + 1;
         if (notes) currentBooking.note = `Yêu cầu đổi lịch: ${notes}`;
 
@@ -250,7 +348,6 @@ function showChangeScheduleModal(user = null) {
         checkBookingModifiability(currentBooking);
         bootstrap.Modal.getInstance(modalEl)?.hide();
 
-        // Nếu là guest → hiện upsell mật khẩu sau khi đổi
         if (user) {
             setTimeout(() => showUpsellPasswordModal(user), 800);
         }
@@ -404,8 +501,7 @@ function showUpsellPasswordModal(user) {
 
     document.getElementById('upsellSkipBtn').addEventListener('click', () => {
         modal.hide();
-        // Redirect về trang tra cứu công khai
-        window.location.href = '/pages/public/lookup/lookup.html';
+        window.location.href = '/pages/public/return-guest/return-guest.html';
     });
 }
 

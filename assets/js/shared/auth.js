@@ -12,7 +12,7 @@ const PAWPAL_USERS_KEY    = 'pawpal_users_db';
 const CURRENT_USER_KEY    = 'pawpal_current_user';
 const TEMP_TOKENS_KEY     = 'pawpal_temp_tokens';
 const TEMP_TOKENS_URL     = '/data/temp-tokens.json';
-const PAWPAL_USERS_VERSION = 'v5'; // Tăng khi users.json thay đổi
+const PAWPAL_USERS_VERSION = 'v6'; // Tăng khi users.json thay đổi
 
 // --- ID helpers ---
 function generateUserId() {
@@ -30,9 +30,17 @@ function ensureUserId(user) {
 function initMockDatabase() {
     // Force re-seed nếu version cũ hơn
     if (localStorage.getItem('pawpal_users_version') !== PAWPAL_USERS_VERSION) {
+        // Backup currentUser trước khi xóa DB — tránh mất trạng thái đăng nhập
+        const currentUserBackup = localStorage.getItem(CURRENT_USER_KEY);
+
         localStorage.removeItem(PAWPAL_USERS_KEY);
         localStorage.removeItem(TEMP_TOKENS_KEY);
         localStorage.setItem('pawpal_users_version', PAWPAL_USERS_VERSION);
+
+        // Restore currentUser sau khi xóa DB
+        if (currentUserBackup) {
+            localStorage.setItem(CURRENT_USER_KEY, currentUserBackup);
+        }
     }
 
     if (!localStorage.getItem(PAWPAL_USERS_KEY)) {
@@ -41,7 +49,17 @@ function initMockDatabase() {
             xhr.open('GET', '/data/users.json', false);
             xhr.send(null);
             if (xhr.status >= 200 && xhr.status < 300) {
-                localStorage.setItem(PAWPAL_USERS_KEY, xhr.responseText);
+                // Merge seed với currentUser để không ghi đè trạng thái user đã kích hoạt
+                const seedUsers = JSON.parse(xhr.responseText) || [];
+                const currentUser = JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || 'null');
+                if (currentUser && currentUser.phone) {
+                    const idx = seedUsers.findIndex(u => u.phone === currentUser.phone);
+                    if (idx !== -1) {
+                        // Local (currentUser) thắng seed cho các field user-action
+                        seedUsers[idx] = { ...seedUsers[idx], ...currentUser };
+                    }
+                }
+                localStorage.setItem(PAWPAL_USERS_KEY, JSON.stringify(seedUsers));
             }
         } catch (error) {
             console.warn('[auth] Cannot load /data/users.json:', error);

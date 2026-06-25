@@ -149,7 +149,7 @@ function loadMemberPets(user) {
 
     // Get pets from local storage
     const allPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-    const activePets = allPets.filter(p => !p.archived);
+    const activePets = allPets.filter(p => !p.isArchived && String(p.userId) === String(user.id));
 
     const listContainer = document.getElementById('memberPetList');
     if (activePets.length === 0) {
@@ -480,8 +480,25 @@ function setupScheduleSelection() {
     }
 
     if (bookingDateInput) {
+        // Disable timeslot + staff section until date is picked
+        const timeslotGrid = document.getElementById('timeslotGrid');
+        const staffList    = document.getElementById('staffList');
+
+        function setScheduleLocked(locked) {
+            [timeslotGrid, staffList].forEach(el => {
+                if (!el) return;
+                el.style.opacity        = locked ? '0.4' : '';
+                el.style.pointerEvents  = locked ? 'none' : '';
+            });
+        }
+
+        // Lock on initial load
+        setScheduleLocked(true);
+
         bookingDateInput.addEventListener('change', () => {
             bookingState.date = bookingDateInput.value;
+            // Unlock only when a valid date is chosen
+            setScheduleLocked(!bookingDateInput.value);
             renderTimeslots();
             validateStep3();
         });
@@ -1064,20 +1081,25 @@ function processBookingSubmit() {
 
     const bookingRecord = {
         id: newBookingId,
+        userId: currentUser ? currentUser.id : null, // gán sau nếu là guest mới tạo
         ownerName: bookingState.ownerName,
         ownerPhone: bookingState.ownerPhone,
+        petId: bookingState.petId || null,
         petName: bookingState.petName,
         petEmoji: bookingState.petType === 'Mèo' ? '' : (bookingState.petType === 'Chó' ? '' : (bookingState.petType === 'Thỏ' ? '' : (bookingState.petType === 'Chuột Hamster' ? '' : ''))),
         petWeight: bookingState.petWeight,
         service: selectedService.category === 'hotel' ? 'Pet Hotel' : 'Spa và Grooming',
+        serviceName: selectedService.name,
         package: selectedService.name,
         date: bookingState.date,
         dateEnd: selectedService.category === 'hotel' ? bookingState.checkOutDate : null,
+        time: selectedService.category === 'spa' ? bookingState.timeSlot : null,
         timeStart: selectedService.category === 'spa' ? bookingState.timeSlot : null,
         timeEnd: selectedService.category === 'spa' ? calculateEndTime(bookingState.timeSlot, selectedService.duration) : null,
         staff: selectedService.category === 'spa' ? bookingState.staff : 'Bảo mẫu khách sạn',
+        branch: 'PawPal Chi nhánh Quận 1',
         price: finalPrice,
-        status: 'pending',
+        status: 'upcoming',
         note: bookingState.petNote || null,
         changeCount: 0,
         cancelCount: 0,
@@ -1102,17 +1124,24 @@ function processBookingSubmit() {
                 is_temporary: true,
                 points: 0 // Sẽ nhận 50 điểm sau khi kích hoạt mật khẩu
             };
-            // Ensure user has an id (uses global ensureUserId from auth.js)
+            // Ensure user has an id
             try {
                 ensureUserId(tempUser);
             } catch (e) {
-                // fail silently if ensureUserId isn't available
                 if (!tempUser.id) tempUser.id = 'USER-TMP-' + Date.now();
             }
             users.push(tempUser);
             localStorage.setItem('pawpal_users_db', JSON.stringify(users));
 
-            // Also create a pet profile and associate with this temporary user so it persists when they activate
+            // Patch userId vào booking vừa tạo
+            const allBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+            const bIdx = allBookings.findIndex(b => b.id === newBookingId);
+            if (bIdx !== -1) {
+                allBookings[bIdx].userId = tempUser.id;
+                localStorage.setItem('pawpal_bookings', JSON.stringify(allBookings));
+            }
+
+            // Tạo pet profile liên kết với tài khoản tạm
             try {
                 const pets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
                 const petName = bookingState.petName || 'Bé cưng';
@@ -1125,6 +1154,7 @@ function processBookingSubmit() {
                         breed: bookingState.petBreed || '',
                         weight: bookingState.petWeight || '',
                         userId: tempUser.id,
+                        isArchived: false,
                         createdAt: new Date().toISOString()
                     };
                     pets.unshift(newPet);
@@ -1143,11 +1173,18 @@ function processBookingSubmit() {
                 createdAt: Date.now()
             });
             localStorage.setItem('pawpal_temp_tokens', JSON.stringify(tokens));
-            // Show simulated SMS / activation toast that leads to OTP activation flow
             try {
                 showTempAccountActivationToast(bookingState.ownerPhone, generatedToken);
             } catch (err) {
                 console.warn('showTempAccountActivationToast not available', err);
+            }
+        } else {
+            // Guest đã tồn tại — patch userId vào booking để dashboard/bookings.html tìm thấy
+            const allBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+            const bIdx = allBookings.findIndex(b => b.id === newBookingId);
+            if (bIdx !== -1 && !allBookings[bIdx].userId) {
+                allBookings[bIdx].userId = existing.id;
+                localStorage.setItem('pawpal_bookings', JSON.stringify(allBookings));
             }
         }
     }

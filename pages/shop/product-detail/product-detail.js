@@ -283,6 +283,13 @@ function handleAddToCart() {
  * Handle Buy Now - Add product to cart and redirect to checkout
  */
 function handleBuyNow() {
+    // Check login
+    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    if (!user) {
+        showToast('Vui lòng đăng nhập để mua hàng', 'warning');
+        return;
+    }
+
     const product = getCurrentProduct();
     const quantity = parseInt(document.getElementById('quantity').value) || 1;
     

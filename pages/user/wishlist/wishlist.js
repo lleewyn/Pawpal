@@ -181,6 +181,12 @@
 
     // Add to cart
     function addToCart(product) {
+        const user = getCurrentUser();
+        if (!user) {
+            showNotification('Vui lòng đăng nhập để thêm vào giỏ hàng');
+            return;
+        }
+
         let cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
         
         const existingItem = cart.find(item => item.id === product.id);

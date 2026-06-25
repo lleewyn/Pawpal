@@ -71,13 +71,19 @@
                         </button>
                     </section>
 
+                    <!-- Tab switcher -->
+                    <div class="d-flex gap-2 mb-4">
+                        <button class="tab-btn active" data-tab="active">Đang hoạt động</button>
+                        <button class="tab-btn" data-tab="archive">Kho lưu trữ</button>
+                    </div>
+
                     <!-- Pet Cards Grid - Active -->
                     <div id="activeTab">
                         <div class="pet-cards-grid" id="activePetGrid">
                             <!-- Active pet cards will be rendered here -->
                         </div>
                         <!-- Empty State -->
-                        <div class="empty-state" id="emptyStateActive" style="display:none;">
+                        <div class="empty-state d-none" id="emptyStateActive">
                             <div class="empty-state-icon" style="color: var(--color-primary-light); display: inline-flex; justify-content: center; margin-bottom: var(--space-sm);">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
@@ -85,9 +91,28 @@
                             </div>
                             <h3 class="empty-state-title">Chưa có bé cưng nào</h3>
                             <p class="empty-state-desc">Thêm hồ sơ bé cưng để bắt đầu sử dụng dịch vụ của PawPal nhé!</p>
-                            <button class="btn-cta" type="button">
+                            <button class="btn-cta" type="button" onclick="window.openPetFormModal()">
                                 Thêm bé mới
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Pet Cards Grid - Archive -->
+                    <div id="archiveTab" style="display:none;">
+                        <div class="pet-cards-grid" id="archivePetGrid">
+                            <!-- Archived pet cards will be rendered here -->
+                        </div>
+                        <!-- Empty State Archive -->
+                        <div class="empty-state d-none" id="emptyStateArchive">
+                            <div class="empty-state-icon" style="color: var(--color-text-light); display: inline-flex; justify-content: center; margin-bottom: var(--space-sm);">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                                    <rect x="1" y="3" width="22" height="5"></rect>
+                                    <line x1="10" y1="12" x2="14" y2="12"></line>
+                                </svg>
+                            </div>
+                            <h3 class="empty-state-title">Kho lưu trữ trống</h3>
+                            <p class="empty-state-desc">Các hồ sơ đã xóa sẽ xuất hiện ở đây và tự động xóa sau 30 ngày.</p>
                         </div>
                     </div>
 
@@ -223,6 +248,7 @@
                                 <div class="field full">
                                     <label for="color">Màu lông hoặc đặc điểm nhận dạng</label>
                                     <input type="text" id="color" placeholder="Ví dụ: Vàng kem, có đốm trắng ở trán...">
+                                    <span class="error-msg d-none"></span>
                                 </div>
 
                                 <div class="field full">

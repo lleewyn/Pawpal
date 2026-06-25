@@ -326,7 +326,31 @@ function setupForm() {
             return;
         }
 
+        // Kiểm tra tên trùng trong cùng tài khoản (quy trình 3.1.3)
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
+        const allPetsForDup = await getPets();
+        const sameNamePets = allPetsForDup.filter(p =>
+            p.name.trim().toLowerCase() === petName.toLowerCase() &&
+            String(p.userId) === String(currentUser?.id) &&
+            !p.isArchived &&
+            p.id !== (petId || '')
+        );
+
+        if (sameNamePets.length > 0) {
+            // Yêu cầu thêm điểm phân biệt: màu lông
+            if (!color.trim()) {
+                const colorField = document.getElementById('color');
+                const colorError = colorField?.nextElementSibling;
+                if (colorError && colorError.classList.contains('error-msg')) {
+                    colorError.textContent = `Bé "${petName}" đã tồn tại. Vui lòng thêm màu lông / đặc điểm để phân biệt.`;
+                    colorError.classList.remove('d-none');
+                } else {
+                    showToast(`Bé "${petName}" đã tồn tại. Vui lòng thêm màu lông để phân biệt.`, 'error');
+                }
+                colorField?.focus();
+                return;
+            }
+        }
         const petData = {
             id: petId || generatePetId(),
             userId: currentUser ? currentUser.id : 'USER-001',

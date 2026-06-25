@@ -397,9 +397,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Cập nhật số lượng sản phẩm
     function updateQuantity(productId, newQty) {
         if (newQty < 1) return;
-        
+
         const item = cart.find(i => Number(i.id) === Number(productId));
         if (item) {
+            // Cap theo stock nếu có
+            const maxQty = (item.stock != null && item.stock > 0) ? item.stock : newQty;
+            if (newQty > maxQty) {
+                showToast(`Chỉ còn ${maxQty} sản phẩm trong kho`, 'warning');
+                newQty = maxQty;
+            }
             item.quantity = newQty;
             saveCart();
             renderCart();

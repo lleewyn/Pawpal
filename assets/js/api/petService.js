@@ -10,14 +10,19 @@ export async function getPets(userId) {
         if (currentUser?.id) {
             const pets = await API.getUserPets(currentUser.id);
             if (pets.length > 0) return pets;
+
+            // fallback: lọc theo userId để không trả về pet của user khác
+            try {
+                const fallbackPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+                return Array.isArray(fallbackPets)
+                    ? fallbackPets.filter(p => String(p.userId) === String(currentUser.id))
+                    : [];
+            } catch {
+                return [];
+            }
         }
 
-        try {
-            const fallbackPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-            return Array.isArray(fallbackPets) ? fallbackPets : [];
-        } catch {
-            return [];
-        }
+        return [];
     }
 
     const pets = await API.getUserPets(userId);

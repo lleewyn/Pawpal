@@ -12,7 +12,8 @@
     "vaccinated": true,
     "allergies": "Dị ứng hải sản",
     "notes": "Bé khá nhát người lạ, thích ăn pate bò.",
-    "avatar": "/assets/images/tracker/belu-1.png"
+    "avatar": "/assets/images/tracker/belu-1.png",
+    "isArchived": false
   },
   {
     "id": "PET-002",
@@ -27,7 +28,8 @@
     "vaccinated": true,
     "allergies": "",
     "notes": "Thích cào móng vào buổi sáng.",
-    "avatar": "/assets/images/tracker/belu-2.png"
+    "avatar": "/assets/images/tracker/belu-2.png",
+    "isArchived": false
   },
   {
     "id": "PET-003",
@@ -42,7 +44,8 @@
     "vaccinated": true,
     "allergies": "Không",
     "notes": "Rất hiếu động, thích nghịch nước.",
-    "avatar": "/assets/images/tracker/belu-3.png"
+    "avatar": "/assets/images/tracker/belu-3.png",
+    "isArchived": false
   },
   {
     "id": "PET-004",
@@ -57,7 +60,8 @@
     "vaccinated": false,
     "allergies": "Không",
     "notes": "Bé thích được vuốt ve, hơi nhút nhát với người lạ.",
-    "avatar": "/assets/images/tracker/belu-2.png"
+    "avatar": "/assets/images/tracker/belu-2.png",
+    "isArchived": false
   },
   {
     "id": "PET-005",
@@ -72,7 +76,8 @@
     "vaccinated": true,
     "allergies": "Không",
     "notes": "Bé rất thích chạy nhảy, cần cắt lông thường xuyên.",
-    "avatar": "/assets/images/tracker/belu-1.png"
+    "avatar": "/assets/images/tracker/belu-1.png",
+    "isArchived": false
   },
   {
     "id": "PET-006",
@@ -87,7 +92,8 @@
     "vaccinated": true,
     "allergies": "Không",
     "notes": "Bé ít vận động, thích nằm ngủ cả ngày.",
-    "avatar": "/assets/images/tracker/belu-2.png"
+    "avatar": "/assets/images/tracker/belu-2.png",
+    "isArchived": false
   },
   {
     "id": "PET-007",
@@ -102,7 +108,8 @@
     "vaccinated": true,
     "allergies": "Dị ứng thức ăn có gluten",
     "notes": "Bé rất thân thiện, thích tắm và làm đẹp.",
-    "avatar": "/assets/images/tracker/belu-3.png"
+    "avatar": "/assets/images/tracker/belu-3.png",
+    "isArchived": false
   },
   {
     "id": "PET-008",
@@ -117,6 +124,7 @@
     "vaccinated": false,
     "allergies": "Không",
     "notes": "Bé rất hay sủa, chưa tiêm phòng đầy đủ.",
-    "avatar": "/assets/images/tracker/belu-1.png"
+    "avatar": "/assets/images/tracker/belu-1.png",
+    "isArchived": false
   }
 ]

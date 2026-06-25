@@ -69,6 +69,7 @@ async function loadData() {
     // Merge với localStorage để phản ánh thay đổi user đã thực hiện
     const localBookings = safeParseArray('pawpal_bookings');
     const localOrders   = safeParseArray('pawpal_orders');
+    const localPets     = safeParseArray('pawpal_pets');
 
     const bookingsMap = new Map((bookingsRaw || []).map(b => [b.id, b]));
     localBookings.forEach(b => { if (b.id) bookingsMap.set(b.id, b); });
@@ -76,11 +77,15 @@ async function loadData() {
     const ordersMap = new Map((ordersRaw || []).map(o => [o.id, o]));
     localOrders.forEach(o => { if (o.id) ordersMap.set(o.id, o); });
 
+    // Merge pets: seed từ file + user tự thêm từ localStorage
+    const petsMap = new Map((petsRaw || []).map(p => [p.id, p]));
+    localPets.forEach(p => { if (p.id) petsMap.set(p.id, p); });
+
     return {
         bookings: [...bookingsMap.values()],
         orders:   [...ordersMap.values()],
         users:    usersRaw || [],
-        pets:     petsRaw  || [],
+        pets:     [...petsMap.values()],
     };
 }
 
@@ -192,6 +197,17 @@ function canReturnOrder(o) {
 }
 function canModifyBooking(b) {
     if (!['pending', 'confirmed', 'upcoming'].includes(b.status)) return false;
+    if ((b.changeCount || 0) >= 2) return false;
+    try {
+        const [y, m, d] = (b.date || '').split('-');
+        const [h, min]  = (b.timeStart || b.time || '09:00').split(':');
+        return (new Date(y, m - 1, d, h, min) - new Date()) > 2 * 3600 * 1000;
+    } catch (_) { return false; }
+}
+
+function canCancelBooking(b) {
+    if (!['pending', 'confirmed', 'upcoming'].includes(b.status)) return false;
+    if ((b.cancelCount || 0) >= 3) return false;
     try {
         const [y, m, d] = (b.date || '').split('-');
         const [h, min]  = (b.timeStart || b.time || '09:00').split(':');
@@ -236,14 +252,16 @@ function buildBookingCard(b) {
                 <div class="rg-summary-value">${esc(b.note)}</div>
             </div>` : ''}
         </div>
-        ${canModifyBooking(b) ? `
+        ${canModifyBooking(b) || canCancelBooking(b) ? `
         <div class="rg-actions">
+            ${canCancelBooking(b) ? `
             <button class="btn-green-outline" onclick="handleGuestBookingAction('${esc(b.id)}', 'cancel')">
                 Hủy lịch
-            </button>
+            </button>` : ''}
+            ${canModifyBooking(b) ? `
             <button class="btn-green-outline" onclick="handleGuestBookingAction('${esc(b.id)}', 'change')">
                 Đổi lịch
-            </button>
+            </button>` : ''}
         </div>` : ''}
     </div>`;
 }
@@ -304,12 +322,19 @@ window.handleGuestBookingAction = function(bookingId, action) {
 
     const title  = action === 'cancel' ? 'Hủy lịch hẹn' : 'Đổi lịch hẹn';
     const desc   = action === 'cancel'
-        ? 'Lịch hẹn sau khi hủy sẽ không thể khôi phục.'
-        : 'Bạn sẽ chọn lại ngày và giờ phù hợp.';
+        ? 'Lịch hẹn sau khi hủy sẽ không thể khôi phục. Bạn có chắc muốn tiếp tục?'
+        : 'Bạn có muốn thay đổi lịch hẹn này không? PawPal sẽ xác thực danh tính trước khi tiến hành.';
 
-    showSendOTPConfirm(title, desc, phone, () => {
-        if (action === 'cancel') showCancelConfirmModal(bookingId, phone);
-        else showChangeScheduleModal(bookingId, phone);
+    showActionConfirm(title, desc, phone, () => {
+        if (action === 'cancel') {
+            // Sau khi xác nhận + OTP → hủy thẳng, không hỏi lại lần 2
+            showOTPModal(phone, () => {
+                confirmCancelBooking(bookingId);
+                showUpsellModal(phone);
+            });
+        } else {
+            showChangeScheduleModal(bookingId, phone);
+        }
     });
 };
 
@@ -321,12 +346,47 @@ window.handleGuestCancelOrder = function(orderId) {
         confirmCancelOrder(orderId);
     });
 };
-
-window.handleGuestReturnRequest = function(orderId) {
     showToast('Vui lòng liên hệ Hotline: 0987 654 321 để yêu cầu đổi trả.', 'info');
 };
 
-// ── Bước 1: Xác nhận gửi OTP ─────────────────────────────────────────────
+// ── Bước 1: Xác nhận hành động (Đồng ý → tự gửi OTP) ────────────────────
+function showActionConfirm(title, desc, phone, onConfirm) {
+    const existing = document.getElementById('rg-action-confirm-modal');
+    if (existing) existing.remove();
+
+    const el = document.createElement('div');
+    el.id = 'rg-action-confirm-modal';
+    el.className = 'modal fade';
+    el.tabIndex = -1;
+    el.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">${esc(title)}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">${esc(desc)}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Huỷ bỏ</button>
+                    <button type="button" class="btn-cta" id="rg-action-confirm-btn">Đồng ý</button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(el);
+
+    const modal = new bootstrap.Modal(el);
+    modal.show();
+
+    document.getElementById('rg-action-confirm-btn').addEventListener('click', () => {
+        modal.hide();
+        // Sau khi đồng ý → tự động gửi OTP (không cần user nhấn "Gửi OTP" nữa)
+        showOTPModal(phone, onConfirm);
+    });
+}
+
+// ── Bước 2: Xác nhận gửi OTP (dùng cho hủy đơn hàng) ────────────────────
 function showSendOTPConfirm(title, desc, phone, onConfirm) {
     const existing = document.getElementById('rg-send-otp-modal');
     if (existing) existing.remove();
@@ -485,6 +545,7 @@ function confirmCancelBooking(bookingId) {
     const idx = bookings.findIndex(b => b.id === bookingId);
     if (idx !== -1) {
         bookings[idx].status = 'cancelled';
+        bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
         localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
     }
     showToast('Đã hủy lịch hẹn thành công!', 'success');
@@ -509,23 +570,37 @@ function showChangeScheduleModal(bookingId, phone) {
     const existing = document.getElementById('rg-change-modal');
     if (existing) existing.remove();
 
-    const today = new Date();
-    const days = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(today);
-        d.setDate(today.getDate() + i + 1);
-        return d;
-    });
-    const slots = ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
+    const slots = (window.PawPalBookingConfig?.slots) || [
+        '08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'
+    ];
+    const staffs = (window.PawPalBookingConfig?.staffs) || [
+        { name: 'Phân bổ ngẫu nhiên', desc: 'PawPal tự động chọn nhân viên trống lịch', id: 'random' },
+        { name: 'Nguyễn Minh An',     desc: 'Chuyên viên Spa • 3 năm kinh nghiệm',      id: 'staff1' },
+        { name: 'Trần An Nhiên',      desc: 'Bảo mẫu Hotel • Cực kỳ nhẹ nhàng',         id: 'staff2' },
+        { name: 'Lê Hoàng Tiến',     desc: 'Chuyên viên cắt tỉa Grooming',              id: 'staff3' }
+    ];
 
-    const dayTabsHtml = days.map((d, i) =>
-        `<button class="rg-slot-day${i === 0 ? ' active' : ''}" data-idx="${i}">
-            ${d.toLocaleDateString('vi-VN', { weekday:'short', day:'2-digit', month:'2-digit' })}
-        </button>`
-    ).join('');
-
+    // Disabled cho đến khi chọn ngày
     const slotsHtml = slots.map(s =>
-        `<button class="rg-slot-time" data-time="${s}">${s}</button>`
+        `<button class="rg-slot-time" data-time="${s}" disabled style="opacity:0.4;cursor:not-allowed;">${s}</button>`
     ).join('');
+
+    const staffHtml = staffs.map(s => {
+        const initials = s.name === 'Phân bổ ngẫu nhiên' ? '🎲' : s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+        return `
+            <div class="rg-staff-card" data-name="${s.name}" tabindex="-1" role="button"
+                style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:not-allowed;opacity:0.4;transition:all .2s;pointer-events:none;">
+                <div style="width:36px;height:36px;border-radius:50%;background:#e8f5e9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:#2e7d32;flex-shrink:0;">${initials}</div>
+                <div>
+                    <div style="font-weight:700;font-size:0.88rem;color:#2e7d32;">${s.name}</div>
+                    <div style="font-size:0.75rem;color:#64748b;">${s.desc}</div>
+                </div>
+            </div>`;
+    }).join('');
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const minDate = tomorrow.toISOString().split('T')[0];
 
     const el = document.createElement('div');
     el.id = 'rg-change-modal';
@@ -539,9 +614,21 @@ function showChangeScheduleModal(bookingId, phone) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="rg-day-tabs mb-3">${dayTabsHtml}</div>
-                    <div class="rg-time-grid">${slotsHtml}</div>
-                    <div class="rg-slot-selected mt-3 d-none" id="rg-slot-info">
+                    <p class="text-muted small mb-3">Chọn ngày trước, sau đó chọn giờ và nhân viên.</p>
+
+                    <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn ngày</div>
+                    <input type="date" id="rg-date-picker" class="form-control mb-4" min="${minDate}" style="max-width:220px;">
+
+                    <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn giờ</div>
+                    <div class="rg-time-grid mb-3" id="rg-slot-grid">${slotsHtml}</div>
+                    <div id="rg-hold-banner" class="d-none mb-3" style="font-size:0.82rem;padding:8px 12px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;color:#7a5c00;">
+                        ⏳ <strong>Giữ chỗ tạm thời:</strong> Giờ <strong id="rg-hold-label"></strong> được giữ riêng cho bạn trong <strong id="rg-hold-countdown"></strong>
+                    </div>
+
+                    <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn nhân viên</div>
+                    <div id="rg-staff-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:12px;">${staffHtml}</div>
+
+                    <div class="rg-slot-selected mt-2 d-none" id="rg-slot-info" style="font-size:0.85rem;color:#2e7d32;display:flex;align-items:center;gap:6px;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                         Đã chọn: <strong id="rg-slot-text"></strong>
                     </div>
@@ -557,14 +644,68 @@ function showChangeScheduleModal(bookingId, phone) {
     const modal = new bootstrap.Modal(el);
     modal.show();
 
-    let selDay = 0, selTime = null;
+    let selDate = '', selTime = null, selStaff = null;
+    let holdInterval = null;
+
+    function clearHoldTimer() {
+        if (holdInterval) { clearInterval(holdInterval); holdInterval = null; }
+        document.getElementById('rg-hold-banner').classList.add('d-none');
+    }
+
+    function startHoldTimer(slot) {
+        clearHoldTimer();
+        let remaining = 15 * 60;
+        const banner    = document.getElementById('rg-hold-banner');
+        const label     = document.getElementById('rg-hold-label');
+        const countdown = document.getElementById('rg-hold-countdown');
+        label.textContent = slot;
+        banner.style.background = '#fff8e1';
+        banner.style.borderColor = '#ffe082';
+        banner.classList.remove('d-none');
+
+        function tick() {
+            const m = Math.floor(remaining / 60).toString().padStart(2, '0');
+            const s = (remaining % 60).toString().padStart(2, '0');
+            countdown.textContent = `${m}:${s}`;
+            if (remaining <= 0) {
+                clearHoldTimer();
+                selTime = null;
+                el.querySelectorAll('.rg-slot-time').forEach(b => b.classList.remove('active'));
+                banner.innerHTML = `⚠️ <strong>Hết thời gian giữ chỗ!</strong> Vui lòng chọn lại giờ.`;
+                banner.style.background = '#fff3cd';
+                banner.style.borderColor = '#ffeeba';
+                banner.classList.remove('d-none');
+                refresh();
+            }
+            remaining--;
+        }
+        tick();
+        holdInterval = setInterval(tick, 1000);
+    }
+
+    el.addEventListener('hidden.bs.modal', () => clearHoldTimer());
+
+    function enableTimeAndStaff() {
+        el.querySelectorAll('.rg-slot-time').forEach(b => {
+            b.disabled = false;
+            b.style.opacity = '';
+            b.style.cursor = '';
+        });
+        el.querySelectorAll('.rg-staff-card').forEach(c => {
+            c.style.opacity = '';
+            c.style.cursor = '';
+            c.style.pointerEvents = '';
+            c.tabIndex = 0;
+        });
+    }
 
     function refresh() {
         const info = document.getElementById('rg-slot-info');
         const txt  = document.getElementById('rg-slot-text');
         const btn  = document.getElementById('rg-change-confirm');
-        if (selTime) {
-            txt.textContent = `${days[selDay].toLocaleDateString('vi-VN', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' })} lúc ${selTime}`;
+        if (selDate && selTime && selStaff) {
+            const d = new Date(selDate + 'T00:00:00');
+            txt.textContent = `${d.toLocaleDateString('vi-VN', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' })} lúc ${selTime} • ${selStaff}`;
             info.classList.remove('d-none');
             btn.disabled = false;
         } else {
@@ -573,15 +714,152 @@ function showChangeScheduleModal(bookingId, phone) {
         }
     }
 
-    el.querySelectorAll('.rg-slot-day').forEach(btn => {
+    document.getElementById('rg-date-picker').addEventListener('change', (e) => {
+        selDate = e.target.value;
+        selTime = null;
+        clearHoldTimer();
+        el.querySelectorAll('.rg-slot-time').forEach(b => b.classList.remove('active'));
+        enableTimeAndStaff();
+        refresh();
+    });
+
+    el.querySelectorAll('.rg-slot-time').forEach(btn => {
         btn.addEventListener('click', () => {
-            el.querySelectorAll('.rg-slot-day').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            selDay = parseInt(btn.dataset.idx);
-            selTime = null;
+            if (!selDate) return;
             el.querySelectorAll('.rg-slot-time').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selTime = btn.dataset.time;
+            startHoldTimer(selTime);
             refresh();
         });
+    });
+
+    el.querySelectorAll('.rg-staff-card').forEach(card => {
+        card.addEventListener('click', () => {
+            if (!selDate) return;
+            el.querySelectorAll('.rg-staff-card').forEach(c => {
+                c.style.borderColor = '#e2e8f0';
+                c.style.background = '';
+            });
+            card.style.borderColor = '#4caf50';
+            card.style.background = '#e8f5e9';
+            selStaff = card.dataset.name;
+            refresh();
+        });
+    });
+
+    document.getElementById('rg-change-confirm').addEventListener('click', () => {
+        if (!selDate || !selTime || !selStaff) return;
+        clearHoldTimer();
+        const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        const idx = bookings.findIndex(b => b.id === bookingId);
+        if (idx !== -1) {
+            bookings[idx].date = selDate;
+            bookings[idx].time = selTime;
+            bookings[idx].timeStart = selTime;
+            bookings[idx].staff = selStaff;
+            bookings[idx].changeCount = (bookings[idx].changeCount || 0) + 1;
+            localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
+        }
+        modal.hide();
+        showToast('Đã đổi lịch hẹn thành công!', 'success');
+        showUpsellModal(phone);
+        setTimeout(() => document.getElementById('rg-form').dispatchEvent(new Event('submit')), 1200);
+    });
+}
+    const staffs = (window.PawPalBookingConfig?.staffs) || [
+        { name: 'Phân bổ ngẫu nhiên', desc: 'PawPal tự động chọn nhân viên trống lịch', id: 'random' },
+        { name: 'Nguyễn Minh An',     desc: 'Chuyên viên Spa • 3 năm kinh nghiệm',      id: 'staff1' },
+        { name: 'Trần An Nhiên',      desc: 'Bảo mẫu Hotel • Cực kỳ nhẹ nhàng',         id: 'staff2' },
+        { name: 'Lê Hoàng Tiến',     desc: 'Chuyên viên cắt tỉa Grooming',              id: 'staff3' }
+    ];
+
+    const dayTabsHtml = days.map((d, i) =>
+        `<button class="rg-slot-day${i === 0 ? ' active' : ''}" data-idx="${i}">
+            ${d.toLocaleDateString('vi-VN', { weekday:'short', day:'2-digit', month:'2-digit' })}
+        </button>`
+    ).join('');
+
+    const slotsHtml = slots.map(s =>
+        `<button class="rg-slot-time" data-time="${s}">${s}</button>`
+    ).join('');
+
+    const staffHtml = staffs.map(s => {
+        const initials = s.name === 'Phân bổ ngẫu nhiên' ? '🎲' : s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+        return `
+            <div class="rg-staff-card" data-name="${s.name}" tabindex="0" role="button" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:all .2s;">
+                <div style="width:36px;height:36px;border-radius:50%;background:#e8f5e9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:#2e7d32;flex-shrink:0;">${initials}</div>
+                <div>
+                    <div style="font-weight:700;font-size:0.88rem;color:#2e7d32;">${s.name}</div>
+                    <div style="font-size:0.75rem;color:#64748b;">${s.desc}</div>
+                </div>
+            </div>`;
+    }).join('');
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const minDate = tomorrow.toISOString().split('T')[0];
+
+    const el = document.createElement('div');
+    el.id = 'rg-change-modal';
+    el.className = 'modal fade';
+    el.tabIndex = -1;
+    el.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chọn lịch mới — ${esc(bookingId)}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn ngày</div>
+                    <input type="date" id="rg-date-picker" class="form-control mb-4" min="${minDate}" style="max-width:220px;">
+
+                    <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn giờ</div>
+                    <div class="rg-time-grid mb-4">${slotsHtml}</div>
+
+                    <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn nhân viên</div>
+                    <div id="rg-staff-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:12px;">${staffHtml}</div>
+
+                    <div class="rg-slot-selected mt-2 d-none" id="rg-slot-info" style="font-size:0.85rem;color:#2e7d32;display:flex;align-items:center;gap:6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        Đã chọn: <strong id="rg-slot-text"></strong>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Huỷ</button>
+                    <button type="button" class="btn-cta" id="rg-change-confirm" disabled>Xác nhận đổi lịch</button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(el);
+
+    const modal = new bootstrap.Modal(el);
+    modal.show();
+
+    let selDate = '', selTime = null, selStaff = null;
+
+    function refresh() {
+        const info = document.getElementById('rg-slot-info');
+        const txt  = document.getElementById('rg-slot-text');
+        const btn  = document.getElementById('rg-change-confirm');
+        if (selDate && selTime && selStaff) {
+            const d = new Date(selDate + 'T00:00:00');
+            const dateLabel = d.toLocaleDateString('vi-VN', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' });
+            txt.textContent = `${dateLabel} lúc ${selTime} • ${selStaff}`;
+            info.classList.remove('d-none');
+            btn.disabled = false;
+        } else {
+            info.classList.add('d-none');
+            btn.disabled = true;
+        }
+    }
+
+    document.getElementById('rg-date-picker').addEventListener('change', (e) => {
+        selDate = e.target.value;
+        selTime = null;
+        el.querySelectorAll('.rg-slot-time').forEach(b => b.classList.remove('active'));
+        refresh();
     });
 
     el.querySelectorAll('.rg-slot-time').forEach(btn => {
@@ -593,14 +871,28 @@ function showChangeScheduleModal(bookingId, phone) {
         });
     });
 
+    el.querySelectorAll('.rg-staff-card').forEach(card => {
+        card.addEventListener('click', () => {
+            el.querySelectorAll('.rg-staff-card').forEach(c => {
+                c.style.borderColor = '#e2e8f0';
+                c.style.background = '';
+            });
+            card.style.borderColor = '#4caf50';
+            card.style.background = '#e8f5e9';
+            selStaff = card.dataset.name;
+            refresh();
+        });
+    });
+
     document.getElementById('rg-change-confirm').addEventListener('click', () => {
-        const newDate = days[selDay].toISOString().split('T')[0];
+        if (!selDate || !selTime || !selStaff) return;
         const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
         const idx = bookings.findIndex(b => b.id === bookingId);
         if (idx !== -1) {
-            bookings[idx].date = newDate;
+            bookings[idx].date = selDate;
             bookings[idx].time = selTime;
             bookings[idx].timeStart = selTime;
+            bookings[idx].staff = selStaff;
             bookings[idx].changeCount = (bookings[idx].changeCount || 0) + 1;
             localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
         }
@@ -644,7 +936,10 @@ function showUpsellModal(phone) {
         document.getElementById('rg-upsell-setup').addEventListener('click', () => {
             window.location.href = `/pages/public/login/login.html`;
         });
-        document.getElementById('rg-upsell-skip').addEventListener('click', () => modal.hide());
+        document.getElementById('rg-upsell-skip').addEventListener('click', () => {
+            modal.hide();
+            window.location.href = '/pages/public/return-guest/return-guest.html';
+        });
     }, 800);
 }
 

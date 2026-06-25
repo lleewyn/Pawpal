@@ -188,28 +188,27 @@
             setupUserDropdown();
             
         } else if (user && user.is_temporary) {
-            // Tài khoản tạm: Hiển thị cảnh báo
-            if (lookupBtn) lookupBtn.style.display = 'none';
-            if (lookupDivider) lookupDivider.style.display = 'none';
-            
+            // Tài khoản tạm: hiển thị như chưa đăng nhập (không show badge/nút kích hoạt)
+            if (lookupBtn) lookupBtn.style.display = '';
+            if (lookupDivider) lookupDivider.style.display = '';
+
             authActions.innerHTML = `
-                <div class="temp-account-warning">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                <a href="${root}pages/public/login/login.html" class="login-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
                     </svg>
-                    <span>Tài khoản tạm</span>
-                </div>
-                <a href="${root}pages/public/login/login.html?action=setup-password" class="btn-signup">Kích hoạt tài khoản</a>
+                    <span>Đăng nhập</span>
+                </a>
+                <a href="${root}pages/public/login/login.html?action=register" class="btn-signup">Đăng ký</a>
             `;
-            
-            // Cập nhật Mobile Nav
+
+            // Mobile Nav
             mobileGuestOnly.forEach(el => el.style.display = 'none');
             mobileUserOnly.forEach(el => el.style.display = 'none');
             mobileTempOnly.forEach(el => el.style.display = 'block');
-            
-            // Setup logout handlers for mobile logout
+
             setupLogoutButtons();
             
         } else {

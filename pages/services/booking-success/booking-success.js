@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Update the setup link to start guest activation (OTP) flow on the login page
                 const setupLink = document.querySelector('#passwordSetupCard a.btn-cta');
                 if (setupLink) {
-                    setupLink.href = `../public/login.html?action=guest-activate&phone=${encodeURIComponent(targetUser.phone)}`;
+                    setupLink.href = `/pages/public/login/login.html?action=guest-activate&phone=${encodeURIComponent(targetUser.phone)}`;
                 }
 
                 // Display logic is enough, logic for OTP and password setup handled in login.js
