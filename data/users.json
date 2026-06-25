@@ -27,7 +27,7 @@
   {
     "id": "USER-001",
     "name": "Nguyễn Văn A",
-    "phone": "0912345678",
+    "phone": "0901234567",
     "email": "nguyenvana@gmail.com",
     "password": "password123",
     "role": "customer",
@@ -74,8 +74,137 @@
       "google": null,
       "facebook": null
     },
-    "avatar": "/assets/images/avatars/default.jpg"
-    ,
+    "avatar": "/assets/images/avatars/default.jpg",
+    "tier": "Thành viên Mới"
+  },
+  {
+    "id": "USER-GUEST-002",
+    "name": "Trần Thị Bích",
+    "phone": "0912345678",
+    "email": null,
+    "password": null,
+    "role": "customer",
+    "is_temporary": true,
+    "points": 0,
+    "accountType": "Thành viên Mới",
+    "address": "Chưa thiết lập",
+    "settings": {
+      "language": "vi",
+      "weightUnit": "kg"
+    },
+    "notifications": {
+      "email": false,
+      "sms": true
+    },
+    "socialLinks": {
+      "google": null,
+      "facebook": null
+    },
+    "avatar": "/assets/images/avatars/default.jpg",
+    "tier": "Thành viên Mới"
+  },
+  {
+    "id": "USER-003",
+    "name": "Nguyễn Thị Bích Phượng",
+    "phone": "0798833157",
+    "email": "bphuong157@gmail.com",
+    "password": "bphuong157@",
+    "role": "customer",
+    "is_temporary": true,
+    "points": 0,
+    "accountType": "Thành viên Mới",
+    "address": "Chưa thiết lập",
+    "settings": {
+      "language": "vi",
+      "weightUnit": "kg"
+    },
+    "notifications": {
+      "email": false,
+      "sms": true
+    },
+    "socialLinks": {
+      "google": null,
+      "facebook": null
+    },
+    "avatar": "/assets/images/avatars/default.jpg",
+    "tier": "Thành viên Mới"
+  },
+  {
+    "id": "USER-004",
+    "name": "Nguyễn Lê Thi",
+    "phone": "0834562948",
+    "email": "lthi@gmail.com",
+    "password": "Lthi@11042005",
+    "role": "customer",
+    "is_temporary": false,
+    "points": 320,
+    "accountType": "Thành viên Mới",
+    "address": "Chưa thiết lập",
+    "settings": {
+      "language": "vi",
+      "weightUnit": "kg"
+    },
+    "notifications": {
+      "email": true,
+      "sms": true
+    },
+    "socialLinks": {
+      "google": null,
+      "facebook": null
+    },
+    "avatar": "/assets/images/avatars/default.jpg",
+    "tier": "Thành viên Mới"
+  },
+  {
+    "id": "USER-005",
+    "name": "Nguyễn Lê Nhật Khanh",
+    "phone": "0972163376",
+    "email": "khanh@gmail.com",
+    "password": "Khanhcute123",
+    "role": "customer",
+    "is_temporary": false,
+    "points": 780,
+    "accountType": "Bạc",
+    "address": "Chưa thiết lập",
+    "settings": {
+      "language": "vi",
+      "weightUnit": "kg"
+    },
+    "notifications": {
+      "email": true,
+      "sms": true
+    },
+    "socialLinks": {
+      "google": null,
+      "facebook": null
+    },
+    "avatar": "/assets/images/avatars/default.jpg",
+    "tier": "Bạc"
+  },
+  {
+    "id": "USER-GUEST-003",
+    "name": "Lê Lệ Quyên",
+    "phone": "0774561497",
+    "email": null,
+    "password": "llquyen211@",
+    "role": "customer",
+    "is_temporary": true,
+    "points": 0,
+    "accountType": "Thành viên Mới",
+    "address": "Chưa thiết lập",
+    "settings": {
+      "language": "vi",
+      "weightUnit": "kg"
+    },
+    "notifications": {
+      "email": false,
+      "sms": true
+    },
+    "socialLinks": {
+      "google": null,
+      "facebook": null
+    },
+    "avatar": "/assets/images/avatars/default.jpg",
     "tier": "Thành viên Mới"
   }
 ]

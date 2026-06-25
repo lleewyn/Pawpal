@@ -5,7 +5,7 @@
  */
 
 export const API = {
-    DATA_VERSION: '2026-06-24-fix-order-images-v2',
+    DATA_VERSION: '2026-06-25-add-guest-002-data',
 
     async getJSON(url) {
         try {

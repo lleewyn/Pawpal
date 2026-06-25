@@ -1,4 +1,4 @@
-function initApp() {
+﻿function initApp() {
     console.log('[main.js] initApp');
     initLookup();
     initPremiumMotion();
@@ -447,27 +447,46 @@ function initShopFilter() {
                 const imgSrc = product.image.startsWith('http') ? product.image : `../../${product.image}`;
 
                 return `
-                    <div class="product-card" data-category="${mappedCategory}" data-marketing="${marketingTags.join(' ')}">
-                        <div class="product-image-box">
-                            <img src="${imgSrc}" alt="${product.name}" loading="lazy" onerror="this.src='../../assets/images/shop/products/placeholder.webp'">
-                            ${displayBadge}
-                        </div>
-                        <div class="product-info">
-                            <h3>${product.name}</h3>
-                            <div class="product-meta">
-                                <span class="rating-stars"></span> <span class="rating-score">${product.rating}</span> <span class="sold-count">(${product.reviewCount} đã bán)</span>
+                    <div class="product-card" data-category="${mappedCategory}" data-marketing="${marketingTags.join(' ')}" data-product-id="${product.id}">
+                        <a href="../../shop/product-detail/product-detail.html?id=${product.id}" class="product-card-link">
+                            <div class="product-image-box">
+                                <img src="${imgSrc}" alt="${product.name}" loading="lazy" onerror="this.src='../../assets/images/shop/products/placeholder.webp'">
+                                ${displayBadge}
                             </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">${formattedPrice}</span>
-                                    ${formattedOldPrice ? `<span class="price-old">${formattedOldPrice}</span>` : ''}
+                            <div class="product-info">
+                                <h3>${product.name}</h3>
+                                <div class="product-meta">
+                                    <span class="rating-stars"></span> <span class="rating-score">${product.rating}</span> <span class="sold-count">(${product.reviewCount} đã bán)</span>
                                 </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
+                                <div class="product-info-footer">
+                                    <div class="product-price">
+                                        <span class="price-current">${formattedPrice}</span>
+                                        ${formattedOldPrice ? `<span class="price-old">${formattedOldPrice}</span>` : ''}
+                                    </div>
+                                </div>
                             </div>
+                        </a>
+                        <button class="product-wishlist-btn" data-product-id="${product.id}" aria-label="Thêm vào yêu thích">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </button>
+                        <div class="product-card-actions">
+                            <button class="product-quick-add" data-product-id="${product.id}" ${!product.inStock ? 'disabled' : ''} aria-label="Thêm vào giỏ">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="9" cy="21" r="1"></circle>
+                                    <circle cx="20" cy="21" r="1"></circle>
+                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                </svg>
+                            </button>
+                            <button class="product-buy-now" data-product-id="${product.id}" ${!product.inStock ? 'disabled' : ''}>Mua ngay</button>
                         </div>
                     </div>
                 `;
             }).join('');
+
+            // Gắn event listeners cho wishlist, add-to-cart, buy-now
+            setupShopLandingActions(grid);
 
             // Call setup logic after rendering
             setupFilterInteractions();
@@ -480,6 +499,84 @@ function initShopFilter() {
     }
 }
 
+function setupShopLandingActions(grid) {
+    const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
+
+    // Helper: lấy giỏ hàng từ localStorage
+    function getCart() { return JSON.parse(localStorage.getItem('pawpal_cart') || '[]'); }
+    function saveCart(cart) { localStorage.setItem('pawpal_cart', JSON.stringify(cart)); }
+
+    // Helper: lấy wishlist
+    function getWishlist() { return JSON.parse(localStorage.getItem('pawpal_wishlist') || '[]'); }
+    function saveWishlist(wl) { localStorage.setItem('pawpal_wishlist', JSON.stringify(wl)); }
+
+    // Helper: toast nhỏ
+    function miniToast(msg, type) {
+        if (typeof window.showGlobalToast === 'function') { window.showGlobalToast(type || 'success', msg); return; }
+        const t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2d5343;color:#fff;padding:10px 20px;border-radius:99px;font-size:14px;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
+        document.body.appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 2000);
+    }
+
+    // Wishlist buttons
+    grid.querySelectorAll('.product-wishlist-btn').forEach(btn => {
+        const id = btn.dataset.productId;
+        const wl = getWishlist();
+        if (wl.includes(id)) btn.classList.add('active');
+
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const wl = getWishlist();
+            const idx = wl.indexOf(id);
+            if (idx === -1) {
+                wl.push(id);
+                btn.classList.add('active');
+                miniToast('Đã thêm vào yêu thích ❤️');
+            } else {
+                wl.splice(idx, 1);
+                btn.classList.remove('active');
+                miniToast('Đã bỏ khỏi yêu thích');
+            }
+            saveWishlist(wl);
+        });
+    });
+
+    // Add to cart buttons
+    grid.querySelectorAll('.product-quick-add').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = btn.dataset.productId;
+            const cart = getCart();
+            const existing = cart.find(i => i.id === id);
+            if (existing) { existing.qty = (existing.qty || 1) + 1; }
+            else { cart.push({ id, qty: 1 }); }
+            saveCart(cart);
+            // Update cart count badge nếu có
+            const badge = document.querySelector('.cart-count');
+            if (badge) badge.textContent = cart.reduce((s, i) => s + (i.qty || 1), 0);
+            miniToast('Đã thêm vào giỏ hàng 🛒');
+        });
+    });
+
+    // Buy now buttons
+    grid.querySelectorAll('.product-buy-now').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = btn.dataset.productId;
+            const cart = getCart();
+            const existing = cart.find(i => i.id === id);
+            if (existing) { existing.qty = (existing.qty || 1) + 1; }
+            else { cart.push({ id, qty: 1 }); }
+            saveCart(cart);
+            window.location.href = rootPath + 'pages/shop/cart/cart.html';
+        });
+    });
+}
 function setupFilterInteractions() {
     const mainTabBtns = document.querySelectorAll('.shop-tab-bar .shop-tab-btn');
     const subFilterBtns = document.querySelectorAll('.shop-sub-filters .shop-sub-filter-btn');
@@ -1703,6 +1800,7 @@ async function initServicesGrid() {
                     const imgSrc = service.image.startsWith('http') ? service.image : service.image;
                     const fallbackImg = service.category === 'hotel' ? '../../assets/images/services/hotel.png' : '../../assets/images/services/spa.png';
                     const detailUrl = `${window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../'}pages/services/service-detail/service-detail.html?id=${encodeURIComponent(service.serviceId)}`;
+                    const bookingUrl = `${window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../'}pages/services/booking/booking.html?service=${encodeURIComponent(service.serviceId)}`;
 
                     return `
                         <div class="product-card svc-landing-card" data-category="${service.category}">
@@ -1732,7 +1830,7 @@ async function initServicesGrid() {
                                         <span class="price-current" style="font-size: 16px;">${formattedPrice}</span>
                                         ${priceUnit}
                                     </div>
-                                    <a href="../../pages/services/booking/booking.html?service=${service.serviceId}" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
+                                    <a href="${bookingUrl}" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>
                                 </div>
                                 <div style="font-size:12px; font-weight:700; color:var(--color-accent); text-align:left; margin-top:8px; border-top:1px dashed var(--color-border); padding-top:6px;">
                                     TV Bạc: ${memberPrice}${memberPriceUnit}

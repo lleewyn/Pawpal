@@ -28,7 +28,7 @@
     <script type="module" src="../../../assets/js/shared/auth.js"></script>
     <script src="../../../assets/js/shared/components.js" defer></script>
     <script src="../../../assets/js/shared/header-auth.js" defer></script>
-    <script type="module" src="../../../assets/js/shared/main.js"></script>
+    <script src="../../../assets/js/shared/main.js?v=3" defer></script>
 
 
 
@@ -207,230 +207,8 @@
                     <button class="shop-tab-btn" data-category="taxi">Pet Taxi</button>
                 </div>
 
-                <!-- Services Grid (Product Card Style) -->
-                <div class="product-grid mt-4" id="svcLandingGrid">
-
-                    <!-- Service 1 -->
-                    <div class="product-card svc-landing-card" data-category="spa">
-                        <div class="product-image-box">
-                            <img src="../../../assets/images/services/spa01.webp" alt="Gói Tắm Vệ Sinh Cơ Bản"
-                                loading="lazy" onerror="this.src='../../../assets/images/services/spa.png'">
-                            <span class="tag-badge tag-banchay">Phổ biến nhất</span>
-                        </div>
-                        <div class="product-info">
-                            <div class="product-meta justify-content-between mb-1">
-                                <span
-                                    class="fs-10px fw-bold bg-bg-light text-secondary px-2 py-1 rounded-1">SPA01</span>
-                                <div>
-                                    <span class="rating-stars"></span> <span class="rating-score">4.8</span> <span
-                                        class="sold-count">(154)</span>
-                                </div>
-                            </div>
-                            <h3>Gói Tắm Vệ Sinh Cơ Bản</h3>
-                            <p class="fs-13px text-secondary mb-2 text-truncate-2">Liệu trình tắm làm sạch và khử mùi
-                                hôi cơ bản dành cho các bé chó mèo có sức khỏe da lông bình thường, giúp duy trì vệ sinh
-                                sạch sẽ định kỳ hàng tuần.</p>
-                            <div class="fw-medium fs-12px text-dark mb-2 d-flex gap-2">
-                                <span> Chó / Mèo</span>
-                                <span>⏱ 60 phút</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current fs-16px">120.000đ</span>
-                                </div>
-                                <a href="../../services/booking/booking.html"
-                                    class="add-to-cart-btn px-3 py-2 text-decoration-none text-center">Đặt lịch</a>
-                            </div>
-                            <div class="fs-12px fw-bold text-accent text-start mt-2 border-top border-dashed pt-1">
-                                TV Bạc: 114.000đ
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Service 2 -->
-                    <div class="product-card svc-landing-card" data-category="spa">
-                        <div class="product-image-box">
-                            <img src="../../../assets/images/services/spa07.webp" alt="Grooming Tạo Kiểu Cơ Bản"
-                                loading="lazy" onerror="this.src='../../../assets/images/services/spa.png'">
-                            <span class="tag-badge tag-khuyenmai">Đánh giá cao</span>
-                        </div>
-                        <div class="product-info">
-                            <div class="product-meta justify-content-between mb-1">
-                                <span
-                                    class="fs-10px fw-bold bg-bg-light text-secondary px-2 py-1 rounded-1">SPA07</span>
-                                <div>
-                                    <span class="rating-stars"></span> <span class="rating-score">4.9</span> <span
-                                        class="sold-count">(210)</span>
-                                </div>
-                            </div>
-                            <h3>Grooming Tạo Kiểu Cơ Bản</h3>
-                            <p class="fs-13px text-secondary mb-2 text-truncate-2">Gói làm đẹp toàn diện bao gồm tắm vệ
-                                sinh kỹ lưỡng kết hợp cắt tỉa lông tạo kiểu cơ bản (như cắt tròn mặt Boo, tỉa gọn chân)
-                                theo tiêu chuẩn.</p>
-                            <div class="fw-medium fs-12px text-dark mb-2 d-flex gap-2">
-                                <span> Chó (Nhỏ/Vừa)</span>
-                                <span>⏱ 150 phút</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current fs-16px">350.000đ</span>
-                                </div>
-                                <a href="../../services/booking/booking.html"
-                                    class="add-to-cart-btn px-3 py-2 text-decoration-none text-center">Đặt lịch</a>
-                            </div>
-                            <div class="fs-12px fw-bold text-accent text-start mt-2 border-top border-dashed pt-1">
-                                TV Bạc: 332.500đ
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Service 3 -->
-                    <div class="product-card svc-landing-card" data-category="hotel">
-                        <div class="product-image-box">
-                            <img src="../../../assets/images/services/htl01.webp" alt="Phòng Standard" loading="lazy"
-                                onerror="this.src='../../../assets/images/services/hotel.png'">
-                        </div>
-                        <div class="product-info">
-                            <div class="product-meta justify-content-between mb-1">
-                                <span
-                                    class="fs-10px fw-bold bg-bg-light text-secondary px-2 py-1 rounded-1">HTL01</span>
-                                <div>
-                                    <span class="rating-stars"></span> <span class="rating-score">4.7</span> <span
-                                        class="sold-count">(115)</span>
-                                </div>
-                            </div>
-                            <h3>Phòng Standard</h3>
-                            <p class="fs-13px text-secondary mb-2 text-truncate-2">Không gian phòng lưu trú cơ bản tiêu
-                                chuẩn sạch sẽ, thoáng mát, thích hợp cho các bé chó mèo nhỏ hướng nội, thích sự yên tĩnh
-                                khi vắng chủ.</p>
-                            <div class="fw-medium fs-12px text-dark mb-2 d-flex gap-2">
-                                <span> Chó / Mèo</span>
-                                <span> Theo ngày</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current fs-16px">180.000đ</span>
-                                    <span class="text-secondary fs-11px">/đêm</span>
-                                </div>
-                                <a href="../../services/booking/booking.html"
-                                    class="add-to-cart-btn px-3 py-2 text-decoration-none text-center">Đặt lịch</a>
-                            </div>
-                            <div class="fs-12px fw-bold text-accent text-start mt-2 border-top border-dashed pt-1">
-                                TV Bạc: 171.000đ/đêm
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Service 4 -->
-                    <div class="product-card svc-landing-card" data-category="hotel">
-                        <div class="product-image-box">
-                            <img src="../../../assets/images/services/htl03.webp" alt="Phòng Deluxe" loading="lazy"
-                                onerror="this.src='../../../assets/images/services/hotel.png'">
-                            <span class="tag-badge tag-banchay">Yêu thích</span>
-                        </div>
-                        <div class="product-info">
-                            <div class="product-meta justify-content-between mb-1">
-                                <span
-                                    class="fs-10px fw-bold bg-bg-light text-secondary px-2 py-1 rounded-1">HTL03</span>
-                                <div>
-                                    <span class="rating-stars"></span> <span class="rating-score">4.9</span> <span
-                                        class="sold-count">(102)</span>
-                                </div>
-                            </div>
-                            <h3>Phòng Deluxe (Có Camera)</h3>
-                            <p class="fs-13px text-secondary mb-2 text-truncate-2">Hạng phòng lưu trú cao cấp được trang
-                                bị Camera IP giám sát 24/7 riêng cho từng phòng giúp chủ nuôi tự theo dõi hình ảnh bé
-                                trực tiếp từ xa qua website.</p>
-                            <div class="fw-medium fs-12px text-dark mb-2 d-flex gap-2">
-                                <span> Chó / Mèo</span>
-                                <span> Theo ngày</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current fs-16px">380.000đ</span>
-                                    <span class="text-secondary fs-11px">/đêm</span>
-                                </div>
-                                <a href="../../services/booking/booking.html"
-                                    class="add-to-cart-btn px-3 py-2 text-decoration-none text-center">Đặt lịch</a>
-                            </div>
-                            <div class="fs-12px fw-bold text-accent text-start mt-2 border-top border-dashed pt-1">
-                                TV Bạc: 361.000đ/đêm
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Service 5 -->
-                    <div class="product-card svc-landing-card" data-category="hotel">
-                        <div class="product-image-box">
-                            <img src="../../../assets/images/services/htl07.webp" alt="Daycare (Bán trú)" loading="lazy"
-                                onerror="this.src='../../../assets/images/services/hotel.png'">
-                        </div>
-                        <div class="product-info">
-                            <div class="product-meta justify-content-between mb-1">
-                                <span
-                                    class="fs-10px fw-bold bg-bg-light text-secondary px-2 py-1 rounded-1">HTL07</span>
-                                <div>
-                                    <span class="rating-stars"></span> <span class="rating-score">4.8</span> <span
-                                        class="sold-count">(145)</span>
-                                </div>
-                            </div>
-                            <h3>Daycare (Bán trú trong ngày)</h3>
-                            <p class="fs-13px text-secondary mb-2 text-truncate-2">Giải pháp gửi giữ thú cưng theo giờ
-                                hoặc trong ngày dành cho chủ nuôi bận rộn đi làm, đảm bảo bé có bạn chơi đùa dưới sự
-                                giám sát.</p>
-                            <div class="fw-medium fs-12px text-dark mb-2 d-flex gap-2">
-                                <span> Tất cả</span>
-                                <span>⏱ Trong ngày</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current fs-16px">100.000đ</span>
-                                </div>
-                                <a href="../../services/booking/booking.html"
-                                    class="add-to-cart-btn px-3 py-2 text-decoration-none text-center">Đặt lịch</a>
-                            </div>
-                            <div class="fs-12px fw-bold text-accent text-start mt-2 border-top border-dashed pt-1">
-                                TV Bạc: 95.000đ
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Service 6 -->
-                    <div class="product-card svc-landing-card" data-category="taxi">
-                        <div class="product-image-box">
-                            <img src="../../../assets/images/services/txi01.webp" alt="Pet Taxi Đưa Đón" loading="lazy"
-                                onerror="this.src='https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?auto=format&fit=crop&w=500&q=80'">
-                        </div>
-                        <div class="product-info">
-                            <div class="product-meta justify-content-between mb-1">
-                                <span
-                                    class="fs-10px fw-bold bg-bg-light text-secondary px-2 py-1 rounded-1">TXI01</span>
-                                <div>
-                                    <span class="rating-stars"></span> <span class="rating-score">4.7</span> <span
-                                        class="sold-count">(64)</span>
-                                </div>
-                            </div>
-                            <h3>Pet Taxi Đưa Đón Tận Nơi</h3>
-                            <p class="fs-13px text-secondary mb-2 text-truncate-2">Dịch vụ đưa đón thú cưng an toàn tận
-                                nhà bằng xe ô tô chuyên dụng có lồng vận chuyển sạch sẽ cách âm, điều hòa mát mẻ.</p>
-                            <div class="fw-medium fs-12px text-dark mb-2 d-flex gap-2">
-                                <span> Chó / Mèo</span>
-                                <span> Theo chuyến</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current fs-16px">150.000đ</span>
-                                </div>
-                                <a href="../../services/booking/booking.html"
-                                    class="add-to-cart-btn px-3 py-2 text-decoration-none text-center">Đặt lịch</a>
-                            </div>
-                            <div class="fs-12px fw-bold text-accent text-start mt-2 border-top border-dashed pt-1">
-                                TV Bạc: 142.500đ
-                            </div>
-                        </div>
-                    </div>
-
-                </div><!-- /.product-grid -->
+                <!-- Services Grid — rendered dynamically from dichvu.csv via main.js -->
+                <div class="product-grid mt-4" id="svcLandingGrid"></div>
 
                 <!-- Action -->
                 <div class="services-action text-center mt-3">
@@ -527,233 +305,11 @@
                 </div>
 
                 <div class="product-grid" id="productGrid">
-                    <!-- Product 1 -->
-                    <div class="product-card" data-category="thucan" data-marketing="banchay hangmoi">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1589924691995-400dc9ecc119?auto=format&fit=crop&w=500&q=80"
-                                alt="Thức ăn hạt cao cấp cho chó lớn 2.5kg" loading="lazy">
-                            <span class="tag-badge tag-banchay">Bán chạy</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Thức ăn hạt cao cấp cho chó lớn 2.5kg</h3>
-                            <div class="product-meta">
-                                <span class="rating-stars"></span> <span class="rating-score">4.9</span> <span
-                                    class="sold-count">(1.2k đã bán)</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">450.000đ</span>
-                                    <span class="price-old">500.000đ</span>
-                                </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 2 -->
-                    <div class="product-card" data-category="thucan" data-marketing="banchay">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?auto=format&fit=crop&w=500&q=80"
-                                alt="Thức ăn hạt dinh dưỡng cho mèo 1.5kg" loading="lazy">
-                            <span class="tag-badge tag-khuyenmai">Khuyến mãi</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Thức ăn hạt dinh dưỡng cho mèo 1.5kg</h3>
-                            <div class="product-meta">
-                                <span class="rating-stars"></span> <span class="rating-score">4.8</span> <span
-                                    class="sold-count">(850 đã bán)</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">250.000đ</span>
-                                    <span class="price-old">300.000đ</span>
-                                </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 3 -->
-                    <div class="product-card" data-category="thucan" data-marketing="hangmoi">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=500&q=80"
-                                alt="Pate cá hồi Na Uy hảo hạng lon 80g" loading="lazy">
-                            <span class="tag-badge tag-hangmoi">Hàng mới</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Pate cá hồi Na Uy hảo hạng lon 80g</h3>
-                            <div class="product-meta">
-                                <span class="rating-stars"></span> <span class="rating-score">5.0</span> <span
-                                    class="sold-count">(300 đã bán)</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">85.000đ</span>
-                                </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 4 -->
-                    <div class="product-card" data-category="vesinh" data-marketing="khuyenmai">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=500&q=80"
-                                alt="Sữa tắm organic mượt lông cho mèo 500ml" loading="lazy">
-                            <span class="tag-badge tag-khuyenmai">Khuyến mãi</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Sữa tắm organic mượt lông cho mèo 500ml</h3>
-                            <div class="product-meta">
-                                <span class="rating-stars"></span> <span class="rating-score">4.7</span> <span
-                                    class="sold-count">(1.5k đã bán)</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">252.000đ</span>
-                                    <span class="price-old">280.000đ</span>
-                                </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 5 -->
-                    <div class="product-card" data-category="vesinh" data-marketing="banchay">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=500&q=80"
-                                alt="Sữa tắm khử mùi chuyên sâu cho chó 500ml" loading="lazy">
-                            <span class="tag-badge tag-banchay">Bán chạy</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Sữa tắm khử mùi chuyên sâu cho chó 500ml</h3>
-                            <div class="product-meta">
-                                <span class="rating-stars"></span> <span class="rating-score">4.9</span> <span
-                                    class="sold-count">(2.1k đã bán)</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">252.000đ</span>
-                                </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 6 -->
-                    <div class="product-card" data-category="phukien" data-marketing="hangmoi">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1544568100-847a948585b9?auto=format&fit=crop&w=500&q=80"
-                                alt="Balo phi hành gia trong suốt chống nước" loading="lazy">
-                            <span class="tag-badge tag-hangmoi">Hàng mới</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Balo phi hành gia trong suốt chống nước</h3>
-                            <div class="product-meta">
-                                <span class="rating-stars"></span> <span class="rating-score">4.8</span> <span
-                                    class="sold-count">(450 đã bán)</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">360.000đ</span>
-                                    <span class="price-old">400.000đ</span>
-                                </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 7 -->
-                    <div class="product-card" data-category="vesinh" data-marketing="banchay khuyenmai">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=500&q=80"
-                                alt="Cát vệ sinh đậu nành Tofu khử mùi 5L" loading="lazy">
-                            <span class="tag-badge tag-khuyenmai">Khuyến mãi</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Cát vệ sinh đậu nành Tofu khử mùi 5L</h3>
-                            <div class="product-meta">
-                                <span class="rating-stars"></span> <span class="rating-score">4.9</span> <span
-                                    class="sold-count">(5.2k đã bán)</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">130.000đ</span>
-                                </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 8 -->
-                    <div class="product-card" data-category="vesinh" data-marketing="hangmoi">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1548681528-6a5c45b66b42?auto=format&fit=crop&w=500&q=80"
-                                alt="Khay vệ sinh thành cao chống văng" loading="lazy">
-                        </div>
-                        <div class="product-info">
-                            <h3>Khay vệ sinh thành cao chống văng</h3>
-                            <div class="product-meta">
-                                <span class="rating-stars"></span> <span class="rating-score">4.6</span> <span
-                                    class="sold-count">(120 đã bán)</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">190.000đ</span>
-                                </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 9 -->
-                    <div class="product-card" data-category="phukien" data-marketing="banchay">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=500&q=80"
-                                alt="Xương gặm canxi sạch răng cho chó 100g" loading="lazy">
-                            <span class="tag-badge tag-banchay">Bán chạy</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Xương gặm canxi sạch răng cho chó 100g</h3>
-                            <div class="product-meta">
-                                <span class="rating-stars"></span> <span class="rating-score">4.9</span> <span
-                                    class="sold-count">(3.4k đã bán)</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">45.000đ</span>
-                                </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 10 -->
-                    <div class="product-card" data-category="phukien" data-marketing="khuyenmai">
-                        <div class="product-image-box">
-                            <img src="https://images.unsplash.com/photo-1537151608804-ea6fac25d474?auto=format&fit=crop&w=500&q=80"
-                                alt="Vòng cổ dây dắt phản quang size M" loading="lazy">
-                            <span class="tag-badge tag-khuyenmai">Khuyến mãi</span>
-                        </div>
-                        <div class="product-info">
-                            <h3>Vòng cổ dây dắt phản quang size M</h3>
-                            <div class="product-meta">
-                                <span class="rating-stars"></span> <span class="rating-score">4.7</span> <span
-                                    class="sold-count">(940 đã bán)</span>
-                            </div>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">80.000đ</span>
-                                    <span class="price-old">100.000đ</span>
-                                </div>
-                                <button class="add-to-cart-btn" aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Rendered by JS from sanpham.csv -->
                 </div>
 
                 <div class="shop-action text-center">
-                    <a href="../../shop/shop.html" class="btn-green-outline">Xem tất cả sản phẩm</a>
+                    <a href="/pages/shop/shop.html" class="btn-green-outline">Xem tất cả sản phẩm</a>
                 </div>
             </div>
         </section>
@@ -957,7 +513,7 @@
 
                 <!-- CTA -->
                 <div class="experts-cta text-center">
-                    <a href="../../services/booking/booking.html" class="btn-green-outline">
+                    <a href="../../services/tie/booking.html" class="btn-green-outline">
                         Đặt lịch với chuyên gia
                     </a>
                 </div>
@@ -1627,28 +1183,129 @@
     <div id="site-fab"></div>
 
     <script>
-        // Make product cards clickable to open shop page
-        document.querySelectorAll('.product-card').forEach(card => {
-            card.style.cursor = 'pointer';
-            card.addEventListener('click', function(e) {
-                // Don't navigate if user clicked the "Add to Cart" button
-                if (e.target.closest('.add-to-cart-btn')) {
-                    return;
-                }
-                // Prevent other bubbling
-                e.preventDefault();
-                window.location.href = '../../shop/shop.html';
+        // Load real products from sanpham.csv and render into landing grid
+        (async function() {
+            const grid = document.getElementById('productGrid');
+            if (!grid) return;
+
+            // Wait for DataLoader
+            let attempts = 0;
+            while (!window.DataLoader && attempts < 20) {
+                await new Promise(r => setTimeout(r, 100));
+                attempts++;
+            }
+            if (!window.DataLoader) return;
+
+            const products = await window.DataLoader.loadProducts();
+            if (!products || !products.length) return;
+
+            // Show 10 featured products (on sale / highest rated)
+            const featured = products
+                .filter(p => p.stock > 0)
+                .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                .slice(0, 10);
+
+            const detailBase = '/pages/shop/product-detail/product-detail.html';
+
+            grid.innerHTML = featured.map(p => {
+                const hasDiscount = p.originalPrice && p.originalPrice > p.price;
+                const badge = hasDiscount
+                    ? `<span class="tag-badge tag-khuyenmai">Khuyến mãi</span>`
+                    : `<span class="tag-badge tag-hangmoi">Nổi bật</span>`;
+                const oldPrice = hasDiscount
+                    ? `<span class="price-old">${Number(p.originalPrice).toLocaleString('vi-VN')}đ</span>`
+                    : '';
+                const stars = '★'.repeat(Math.round(p.rating || 5));
+                const sold = p.soldCount ? `(${Number(p.soldCount).toLocaleString('vi-VN')} đã bán)` : '';
+
+                return `
+                <a href="${detailBase}?id=${p.id}" class="product-card-link" style="text-decoration:none;color:inherit">
+                    <div class="product-card" data-product-id="${p.id}">
+                        <div class="product-image-box">
+                            <img src="${p.image || '/assets/images/shop/products/placeholder.webp'}"
+                                alt="${p.name}" loading="lazy"
+                                onerror="this.src='/assets/images/shop/products/placeholder.webp'">
+                            ${badge}
+                        </div>
+                        <div class="product-info">
+                            <h3>${p.name}</h3>
+                            <div class="product-meta">
+                                <span class="rating-stars" style="color:#f59e0b">${stars}</span>
+                                <span class="rating-score">${p.rating || '5.0'}</span>
+                                <span class="sold-count">${sold}</span>
+                            </div>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current">${Number(p.price).toLocaleString('vi-VN')}đ</span>
+                                    ${oldPrice}
+                                </div>
+                                <button class="add-to-cart-btn" data-product-id="${p.id}"
+                                    onclick="event.preventDefault();event.stopPropagation();"
+                                    aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
+                            </div>
+                        </div>
+                    </div>
+                </a>`;
+            }).join('');
+
+            // Sub-filter tabs
+            document.querySelectorAll('.shop-sub-filter-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    document.querySelectorAll('.shop-sub-filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const tag = btn.dataset.tag;
+
+                    let filtered;
+                    if (tag === 'all') {
+                        filtered = featured;
+                    } else {
+                        const catMap = { thucan: ['food','thucăn','thức ăn'], phukien: ['accessory','phụkiện','đồdùng'], vesinh: ['hygiene','vệsinh','chămsóc'] };
+                        const keys = catMap[tag] || [tag];
+                        filtered = products
+                            .filter(p => p.stock > 0 && keys.some(k =>
+                                (p.category || '').toLowerCase().includes(k) ||
+                                (p.tags || '').toLowerCase().includes(k)
+                            ))
+                            .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                            .slice(0, 10);
+                        if (!filtered.length) filtered = featured.slice(0, 10);
+                    }
+
+                    grid.innerHTML = filtered.map(p => {
+                        const hasDiscount = p.originalPrice && p.originalPrice > p.price;
+                        const badge = hasDiscount
+                            ? `<span class="tag-badge tag-khuyenmai">Khuyến mãi</span>`
+                            : `<span class="tag-badge tag-hangmoi">Nổi bật</span>`;
+                        const oldPrice = hasDiscount
+                            ? `<span class="price-old">${Number(p.originalPrice).toLocaleString('vi-VN')}đ</span>`
+                            : '';
+                        return `
+                        <a href="${detailBase}?id=${p.id}" class="product-card-link" style="text-decoration:none;color:inherit">
+                            <div class="product-card" data-product-id="${p.id}">
+                                <div class="product-image-box">
+                                    <img src="${p.image || '/assets/images/shop/products/placeholder.webp'}"
+                                        alt="${p.name}" loading="lazy"
+                                        onerror="this.src='/assets/images/shop/products/placeholder.webp'">
+                                    ${badge}
+                                </div>
+                                <div class="product-info">
+                                    <h3>${p.name}</h3>
+                                    <div class="product-info-footer">
+                                        <div class="product-price">
+                                            <span class="price-current">${Number(p.price).toLocaleString('vi-VN')}đ</span>
+                                            ${oldPrice}
+                                        </div>
+                                        <button class="add-to-cart-btn" data-product-id="${p.id}"
+                                            onclick="event.preventDefault();event.stopPropagation();"
+                                            aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>`;
+                    }).join('');
+                });
             });
-            // Also add direct event to card for touchscreen
-            card.addEventListener('touchend', function(e) {
-                if (e.target.closest('.add-to-cart-btn')) {
-                    return;
-                }
-                e.preventDefault();
-                window.location.href = '../../shop/shop.html';
-            });
-        });
-        console.log('Product card listeners attached:', document.querySelectorAll('.product-card').length);
+        })();
     </script>
 </body>
 

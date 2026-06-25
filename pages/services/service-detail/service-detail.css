@@ -849,6 +849,7 @@
 .sticky-price-col {
     display: flex;
     flex-direction: column;
+    padding-right: 16px;
 }
 
 .sticky-price-label {

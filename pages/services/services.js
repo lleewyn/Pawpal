@@ -197,7 +197,7 @@ function renderServices() {
                     </div>
                 </a>
                 <div class="service-card-actions">
-                    <a href="booking.html?service=${service.serviceId}" class="service-btn-book">Đặt lịch ngay</a>
+                    <a href="booking/booking.html?service=${service.serviceId}" class="service-btn-book">Đặt lịch ngay</a>
                 </div>
             </div>
         `;

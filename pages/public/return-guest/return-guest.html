@@ -1,262 +1,54 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tra cứu đơn hàng/lịch - PawPal</title>
-
+    <meta name="view-transition" content="same-origin">
+    <title>Tra cứu lịch / đơn hàng - PawPal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../../../assets/css/style.css">
     <link rel="stylesheet" href="return-guest.css">
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
-    <script src="https://unpkg.com/lucide@latest" defer></script>
     <script src="../../../assets/js/shared/components.js" defer></script>
+    <script src="../../../assets/js/shared/header-auth.js" defer></script>
     <script type="module" src="../../../assets/js/shared/main.js"></script>
-    <script type="module" src="../../../assets/js/shared/auth.js"></script>
     <script src="return-guest.js" defer></script>
 </head>
-
-<body class="return-guest-body">
+<body>
     <div id="site-header"></div>
 
-    <main class="guest-lookup-wrapper">
-        <div class="lookup-card">
-            <h1 class="lookup-title">Tra cứu lịch dịch vụ / đơn hàng</h1>
-            <p class="lookup-subtitle">Nhập số điện thoại đã dùng khi đặt lịch hoặc mua hàng để xem đầy đủ thông tin của đơn và lịch hẹn.</p>
+    <main class="rg-page">
+        <div class="container-xl">
+            <div class="rg-card">
+                <h1 class="rg-title">Tra cứu lịch dịch vụ | đơn hàng</h1>
 
-            <form id="lookup-form" class="lookup-form-area">
-                <label class="form-label d-block mb-1" for="phone-number">Số điện thoại mua hàng *</label>
-                <div class="lookup-form-row">
-                    <input type="tel" id="phone-number" class="form-input flex-fill h-48px" placeholder="Ví dụ: 0901234567" required>
-                    <button type="submit" class="btn-cta text-nowrap h-48px">Tìm kiếm</button>
-                </div>
-                <div class="error-alert" id="error-box">
-                    Tiếc quá, PawPal chưa tìm thấy đơn hàng nào với số điện thoại này. Bạn kiểm tra lại giúp PawPal nha!
-                </div>
-            </form>
-
-            <section class="success-result" id="result-box">
-                <h3 class="font-heading text-primary-dark fs-h3 mb-2">Kết quả tìm thấy</h3>
-
-                <div class="lookup-tabs-container" id="lookupTabs">
-                    <button type="button" class="lookup-tab-btn active" data-filter="all">Tất cả</button>
-                    <button type="button" class="lookup-tab-btn" data-filter="service">Dịch vụ (1)</button>
-                    <button type="button" class="lookup-tab-btn" data-filter="order">Đơn hàng (1)</button>
-                </div>
-
-                <div id="mock-results-container" class="lookup-results">
-                    <div class="service-card result-item item-service">
-                        <div class="service-card-header">
-                            <div class="service-card-info">
-                                <h4 class="service-card-title">Gói Spa Cắt tỉa (Cho bé cưng)</h4>
-                                <div class="service-card-meta">
-                                    <span class="random-bk">Lịch hẹn: BK-1234</span>
-                                    <span>Hôm nay, 14:00</span>
-                                    <span>Pet: Miu Miu</span>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <div class="service-card-price">350.000đ</div>
-                                <div class="service-status-badge status-in-progress">
-                                    <span></span> Đang chăm sóc
-                                </div>
-                            </div>
-                        </div>
-
-                        <hr class="border-0 border-top border-dashed mb-0">
-
-                        <div class="lookup-summary-grid">
-                            <div class="lookup-summary-item">
-                                <span class="lookup-summary-label">Nhân viên</span>
-                                <span class="lookup-summary-value">Ngọc Anh</span>
-                            </div>
-                            <div class="lookup-summary-item">
-                                <span class="lookup-summary-label">Chi nhánh</span>
-                                <span class="lookup-summary-value">PawPal Quận 3</span>
-                            </div>
-                            <div class="lookup-summary-item">
-                                <span class="lookup-summary-label">Thời lượng</span>
-                                <span class="lookup-summary-value">90 phút</span>
-                            </div>
-                            <div class="lookup-summary-item">
-                                <span class="lookup-summary-label">Ghi chú</span>
-                                <span class="lookup-summary-value">Bé hơi sợ nước, thao tác nhẹ tay</span>
-                            </div>
-                        </div>
-
-                        <button type="button" class="btn-toggle-timeline">
-                            <span>Xem nhật ký chăm sóc</span>
-                            <svg class="chevron transition-transform" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                        </button>
-                        <div class="timeline-accordion">
-                            <div class="timeline-container">
-                                <div class="timeline-item">
-                                    <div class="timeline-dot bg-success"></div>
-                                    <div>
-                                        <div class="timeline-time">13:00</div>
-                                        <div class="timeline-content">Bé đã đến spa và được đón tiếp chu đáo. Nhân viên đang kiểm tra tình trạng da lông ban đầu.</div>
-                                    </div>
-                                </div>
-                                <div class="timeline-item">
-                                    <div class="timeline-dot bg-accent"></div>
-                                    <div>
-                                        <div class="timeline-time">13:15</div>
-                                        <div class="timeline-content">Đang tắm massage với bọt tuyết chuyên dụng làm sạch sâu.</div>
-                                    </div>
-                                </div>
-                                <div class="timeline-item">
-                                    <div class="timeline-dot bg-border shadow-none"></div>
-                                    <div>
-                                        <div class="timeline-time text-secondary">13:45 (Dự kiến)</div>
-                                        <div class="timeline-content text-secondary bg-transparent p-0">Cắt tỉa tạo kiểu theo yêu cầu của ba mẹ...</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="order-card-actions">
-                            <button type="button" class="btn-green-outline guest-lookup-action" data-action="cancel-change">
-                                Hủy lịch / Đổi lịch
-                            </button>
-                        </div>
+                <!-- Search form -->
+                <form id="rg-form" class="rg-form">
+                    <label class="rg-label" for="rg-phone">Số điện thoại *</label>
+                    <div class="rg-form-row">
+                        <input type="tel" id="rg-phone" class="rg-input" placeholder="Ví dụ: 0901234567" required>
+                        <button type="submit" class="btn-cta rg-search-btn">Tìm kiếm</button>
                     </div>
-
-                    <div class="order-card result-item item-order">
-                        <div class="order-card-header">
-                            <div class="order-card-info">
-                                <h4 class="order-card-code">Đơn hàng: ORD-5678</h4>
-                                <div class="order-card-meta">
-                                    <span>Sản phẩm: Cát vệ sinh cho mèo Catsan 10L (x3)</span>
-                                    <span>Dự kiến giao: Hôm nay</span>
-                                    <span>Người nhận: Minh Anh</span>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <div class="order-card-price">520.000đ</div>
-                                <div class="order-status-badge order-status-shipping">
-                                    <span></span> Đang giao hàng
-                                </div>
-                            </div>
-                        </div>
-
-                        <hr class="border-0 border-top border-dashed mb-0">
-
-                        <div class="lookup-summary-grid order-summary-grid">
-                            <div class="lookup-summary-item">
-                                <span class="lookup-summary-label">Mã vận đơn</span>
-                                <span class="lookup-summary-value">VN-884211</span>
-                            </div>
-                            <div class="lookup-summary-item">
-                                <span class="lookup-summary-label">Nhà vận chuyển</span>
-                                <span class="lookup-summary-value">Giao Nhanh</span>
-                            </div>
-                            <div class="lookup-summary-item">
-                                <span class="lookup-summary-label">Thanh toán</span>
-                                <span class="lookup-summary-value">Đã thanh toán</span>
-                            </div>
-                            <div class="lookup-summary-item">
-                                <span class="lookup-summary-label">Địa chỉ</span>
-                                <span class="lookup-summary-value">12 Nguyễn Trãi, Quận 5</span>
-                            </div>
-                        </div>
-
-                        <div class="lookup-status-note">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-1 text-primary flex-shrink-0"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                            <span class="lh-base">Đơn hàng đã đến trạm trung chuyển Tân Bình lúc 09:30. Shipper đang lấy hàng.</span>
-                        </div>
-
-                        <div class="order-card-actions mt-4">
-                            <button type="button" class="btn-green-outline guest-lookup-action" data-action="return-request">
-                                Yêu cầu đổi trả
-                            </button>
-                        </div>
+                    <div class="rg-error" id="rg-error" style="display:none;">
+                        Chưa tìm thấy kết quả nào với số điện thoại này. Vui lòng kiểm tra lại.
                     </div>
-                </div>
-            </section>
+                </form>
+
+                <!-- Results -->
+                <section id="rg-results" style="display:none;">
+                    <h3 class="rg-results-title">Kết quả tìm thấy</h3>
+                    <div class="rg-tabs" id="rg-tabs"></div>
+                    <div class="rg-list" id="rg-list"></div>
+                </section>
+            </div>
         </div>
     </main>
 
     <div id="site-footer"></div>
     <div class="toast-container-custom" id="toastContainer"></div>
     <div id="site-fab"></div>
-
-    <div class="modal fade" id="bookingChangeModal" tabindex="-1" aria-labelledby="bookingChangeLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title" id="bookingChangeLabel">Đổi/Hủy Lịch Dịch Vụ</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="bookingChangeForm">
-                        <div class="mb-3">
-                            <label for="changeReason" class="form-label">Lý do đổi/hủy *</label>
-                            <select class="form-select" id="changeReason" required>
-                                <option value="">-- Chọn lý do --</option>
-                                <option value="reschedule">Đổi ngày/giờ</option>
-                                <option value="pet-not-available">Bé cưng không sẵn sàng</option>
-                                <option value="change-service">Thay đổi dịch vụ</option>
-                                <option value="cancel">Hủy hoàn toàn</option>
-                            </select>
-                        </div>
-                        <div class="mb-3" id="newDateContainer" style="display:none;">
-                            <label for="newDate" class="form-label">Chọn ngày/giờ mới *</label>
-                            <input type="datetime-local" class="form-control" id="newDate">
-                        </div>
-                        <div class="mb-3">
-                            <label for="changeNotes" class="form-label">Ghi chú thêm</label>
-                            <textarea class="form-control" id="changeNotes" rows="3" placeholder="Ví dụ: Vì lịch công tác bị thay đổi..."></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="button" class="btn btn-primary" id="submitBookingChange">Xác Nhận</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="returnRequestModal" tabindex="-1" aria-labelledby="returnRequestLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title" id="returnRequestLabel">Yêu Cầu Đổi/Trả Hàng</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="returnRequestForm">
-                        <div class="mb-3">
-                            <label for="returnReason" class="form-label">Lý do đổi/trả *</label>
-                            <select class="form-select" id="returnReason" required>
-                                <option value="">-- Chọn lý do --</option>
-                                <option value="defective">Sản phẩm bị lỗi/hư hỏng</option>
-                                <option value="wrong-item">Nhận nhầm sản phẩm</option>
-                                <option value="not-as-described">Không đúng mô tả</option>
-                                <option value="change-mind">Đổi ý</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="returnNotes" class="form-label">Mô tả chi tiết *</label>
-                            <textarea class="form-control" id="returnNotes" rows="3" placeholder="Mô tả vấn đề chi tiết..." required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Hình ảnh sản phẩm</label>
-                            <input type="file" class="form-control" id="returnImages" multiple accept="image/*">
-                            <small class="text-muted">Tối đa 3 hình ảnh</small>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="button" class="btn btn-primary" id="submitReturnRequest">Gửi Yêu Cầu</button>
-                </div>
-            </div>
-        </div>
-    </div>
 </body>
-
 </html>

@@ -83,3 +83,67 @@ seedLocalStorageIfNeeded();
         console.warn('[dashboard-init] Sidebar load error:', error);
     }
 })();
+
+// ── Breadcrumb Auto-Inject ──────────────────────────────────────────────────
+(function injectBreadcrumb() {
+    // Map path segments → breadcrumb config
+    // { label, parent: { label, href } | null }
+    const BREADCRUMB_MAP = {
+        'dashboard':      { label: 'Tổng quan tài khoản', parent: null },
+        'pet-profile':    { label: 'Hồ sơ bé cưng',       parent: null },
+        'pet-diary':      { label: 'Nhật ký chăm sóc',    parent: { label: 'Bé cưng', href: '../pet-profile/pet-profile.html' } },
+        'care-history':   { label: 'Lịch sử chăm sóc',    parent: { label: 'Bé cưng', href: '../pet-profile/pet-profile.html' } },
+        'bookings':       { label: 'Lịch hẹn của tôi',    parent: null },
+        'booking-detail': { label: 'Chi tiết lịch hẹn',   parent: { label: 'Lịch hẹn', href: '../bookings/bookings.html' } },
+        'orders':         { label: 'Đơn hàng của tôi',    parent: null },
+        'order-detail':   { label: 'Chi tiết đơn hàng',   parent: { label: 'Đơn hàng', href: '../orders/orders.html' } },
+        'return-detail':  { label: 'Chi tiết đổi trả',    parent: { label: 'Đơn hàng', href: '../orders/orders.html' } },
+        'loyalty':        { label: 'Paw Points',           parent: null },
+        'wishlist':       { label: 'Yêu thích',            parent: null },
+        'settings':       { label: 'Cài đặt',              parent: null },
+        'support-tickets':{ label: 'Yêu cầu hỗ trợ',      parent: null },
+        'support-create': { label: 'Gửi yêu cầu mới',     parent: { label: 'Yêu cầu hỗ trợ', href: '../support-tickets/support-tickets.html' } },
+    };
+
+    // Detect current page from URL
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    // e.g. ["pages","user","support-tickets","support-tickets.html"]
+    const pageFolder = pathParts.find(p => BREADCRUMB_MAP[p]) || null;
+    if (!pageFolder) return;
+
+    const config = BREADCRUMB_MAP[pageFolder];
+
+    // Build breadcrumb HTML — only show for pages that have a parent (sub-pages)
+    // Top-level pages already have sidebar navigation, no breadcrumb needed
+    if (!config.parent) return;
+
+    const items = [
+        `<li class="breadcrumb-item"><a href="${config.parent.href}">${config.parent.label}</a></li>`,
+        `<li class="breadcrumb-item active">${config.label}</li>`
+    ];
+
+    const nav = document.createElement('nav');
+    nav.setAttribute('aria-label', 'breadcrumb');
+    nav.className = 'user-breadcrumb';
+    nav.innerHTML = `<ol class="breadcrumb">${items.join('')}</ol>`;
+
+    // Inject: try col-lg-9 first (sidebar layout), then orders-main-content / order-detail-main
+    function tryInject() {
+        const targets = [
+            document.querySelector('.col-lg-9'),
+            document.querySelector('.orders-main-content'),
+            document.querySelector('.order-detail-main'),
+        ];
+        const target = targets.find(el => el !== null);
+        if (target) {
+            target.insertBefore(nav, target.firstChild);
+        }
+    }
+
+    // Run after DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', tryInject);
+    } else {
+        tryInject();
+    }
+})();

@@ -36,7 +36,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             populateServiceInfo();
             setupGallery();
             setupTimelineAndBenefits();
-            setupAmenities();
             setupFAQs();
             setupReviews();
             setupStickyBarTrigger();
@@ -104,7 +103,7 @@ function populateServiceInfo() {
 
     const btnPanelBook = document.getElementById('btnPanelBook');
     if (btnPanelBook) {
-        btnPanelBook.href = `booking.html?service=${serviceData.serviceId}`;
+        btnPanelBook.href = `../booking/booking.html?service=${serviceData.serviceId}`;
     }
 
     if (serviceData.status !== 'Đang phục vụ') {
@@ -336,7 +335,7 @@ function recalculatePrice() {
         price: finalPrice
     });
 
-    const bookingUrl = `booking.html?${bookingParams.toString()}`;
+    const bookingUrl = `../booking/booking.html?${bookingParams.toString()}`;
     const stickyBookAction = document.getElementById('btnStickyBookAction');
     if (stickyBookAction) {
         stickyBookAction.href = bookingUrl;
@@ -421,33 +420,7 @@ function setupTimelineAndBenefits() {
     }, 400);
 }
 
-// 6. Amenities Bento
-function setupAmenities() {
-    const container = document.getElementById('amenitiesGrid');
-    if (!container) return;
-
-    let amenities = [];
-    if (serviceData.amenities) {
-        amenities = serviceData.amenities.split(/[,;\n]/).map(a => a.trim()).filter(a => a.length > 0);
-    }
-
-    if (amenities.length === 0) {
-        amenities = ['Phòng điều hòa 26 độ C', 'Máy sấy giảm tiếng ồn', 'Dầu tắm thảo dược dịu nhẹ'];
-    }
-
-    container.innerHTML = amenities.map(amenity => `
-        <div class="amenity-card-item">
-            <div class="amenity-icon-wrapper">
-                <svg class="amenity-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-            </div>
-            <h4 class="amenity-title-label">${amenity.replace(/&/g, 'và')}</h4>
-            <p class="amenity-desc-text">PawPal trang bị cơ sở vật chất hiện đại bậc nhất, mang lại cảm giác thoải mái nhất cho bé cưng.</p>
-        </div>
-    `).join('');
-}
+// 6. (Amenities section removed)
 
 // 7. FAQs accordion
 function setupFAQs() {

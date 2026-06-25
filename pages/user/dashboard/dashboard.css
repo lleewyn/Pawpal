@@ -4,6 +4,53 @@
    =================================================================== */
 
 /* Container */
+/* ── User Breadcrumb (auto-injected) ──────────────────────────────────────── */
+.user-breadcrumb {
+    margin-bottom: var(--space-md);
+}
+
+.user-breadcrumb .breadcrumb {
+    margin: 0;
+    padding: 0;
+    background: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0;
+    list-style: none;
+}
+
+.user-breadcrumb .breadcrumb-item {
+    display: flex;
+    align-items: center;
+    font-size: var(--fs-small);
+    color: var(--color-text-light);
+}
+
+.user-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    color: var(--color-text-light);
+    margin: 0 6px;
+    font-size: var(--fs-body);
+    line-height: 1;
+}
+
+.user-breadcrumb .breadcrumb-item a {
+    color: var(--color-text-light);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.user-breadcrumb .breadcrumb-item a:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.user-breadcrumb .breadcrumb-item.active {
+    color: var(--color-text-dark);
+    font-weight: 500;
+}
+
 /* ── Breadcrumb ───────────────────────────────────────────────────────── */
 .breadcrumb {
     display: flex;

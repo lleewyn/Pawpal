@@ -1,15 +1,20 @@
-/**
- * auth.js â€” Logic xác thực, đÄƒng ký, OTP và tài khoản tạm thời của PawPal.
- * Quản lý kho lưu trữ giả láº­p qua localStorage.
+﻿/**
+ * auth.js — Shared authentication core của PawPal.
+ * Chứa: database helpers, session management, toast/banner UI,
+ * session protection cho tài khoản tạm.
+ *
+ * Logic UI riêng của trang login (form, OTP, routing) nằm trong:
+ * → /pages/public/login/login.js
  */
 
 // --- 1. MOCK DATABASE SETUP ---
-const PAWPAL_USERS_KEY = 'pawpal_users_db';
-const CURRENT_USER_KEY = 'pawpal_current_user';
-const TEMP_TOKENS_KEY = 'pawpal_temp_tokens';
-const TEMP_TOKENS_URL = '/data/temp-tokens.json';
+const PAWPAL_USERS_KEY    = 'pawpal_users_db';
+const CURRENT_USER_KEY    = 'pawpal_current_user';
+const TEMP_TOKENS_KEY     = 'pawpal_temp_tokens';
+const TEMP_TOKENS_URL     = '/data/temp-tokens.json';
+const PAWPAL_USERS_VERSION = 'v5'; // Tăng khi users.json thay đổi
 
-// Generate a stable user ID for authenticated users
+// --- ID helpers ---
 function generateUserId() {
     return `USER-${Math.random().toString(36).slice(2, 10)}-${Date.now()}`;
 }
@@ -21,8 +26,15 @@ function ensureUserId(user) {
     return user;
 }
 
-// Initialize default users if not exists
+// --- Database init ---
 function initMockDatabase() {
+    // Force re-seed nếu version cũ hơn
+    if (localStorage.getItem('pawpal_users_version') !== PAWPAL_USERS_VERSION) {
+        localStorage.removeItem(PAWPAL_USERS_KEY);
+        localStorage.removeItem(TEMP_TOKENS_KEY);
+        localStorage.setItem('pawpal_users_version', PAWPAL_USERS_VERSION);
+    }
+
     if (!localStorage.getItem(PAWPAL_USERS_KEY)) {
         try {
             const xhr = new XMLHttpRequest();
@@ -49,7 +61,8 @@ function initMockDatabase() {
         }
     }
 }
-// Lấy danh sách users
+
+// --- CRUD helpers ---
 function getUsers() {
     const users = JSON.parse(localStorage.getItem(PAWPAL_USERS_KEY)) || [];
     let updated = false;
@@ -61,19 +74,14 @@ function getUsers() {
         }
     });
 
-    if (updated) {
-        saveUsers(users);
-    }
-
+    if (updated) saveUsers(users);
     return users;
 }
 
-// Lưu danh sách users
 function saveUsers(users) {
     localStorage.setItem(PAWPAL_USERS_KEY, JSON.stringify(users));
 }
 
-// Lấy user hiện tại đang đÄƒng nháº­p
 function getCurrentUser() {
     const user = JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || null;
     if (user && !user.id) {
@@ -90,111 +98,87 @@ function getCurrentUser() {
     return user;
 }
 
-// ÄÄƒng nháº­p user
 function setCurrentUser(user) {
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-    // Dispatch event để cáº­p nháº­t giao diện
     document.dispatchEvent(new CustomEvent('auth_state_changed', { detail: user }));
 }
 
-// ÄÄƒng xuất
 function logout() {
     localStorage.removeItem(CURRENT_USER_KEY);
     window.location.href = '/pages/public/landing/landing.html';
 }
 
-// --- TOAST NOTIFICATION SYSTEM ---
+// --- 2. TOAST NOTIFICATION SYSTEM ---
 function showToast(type, message, duration = 5000) {
     const container = document.getElementById('toastContainer');
     if (!container) {
-        console.warn('Toast container not found');
+        console.warn('[auth] Toast container not found');
         return;
     }
 
     const toastId = 'toast-' + Date.now();
-    const icons = {
-        success: '',
-        error: '',
-        info: 'â„¹',
-        warning: ''
-    };
-
-    const titles = {
-        success: 'Thành công',
-        error: 'Lỗi',
-        info: 'Thông báo',
-        warning: 'Cảnh báo'
-    };
+    const icons  = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+    const titles = { success: 'Thành công', error: 'Lỗi', info: 'Thông báo', warning: 'Cảnh báo' };
 
     const toastHtml = `
         <div id="${toastId}" class="toast-custom toast-${type}">
-            <span class="toast-icon">${icons[type] || 'â„¹'}</span>
+            <span class="toast-icon">${icons[type] || 'ℹ'}</span>
             <div class="toast-content">
                 <div class="toast-title">${titles[type] || 'Thông báo'}</div>
                 <p class="toast-message">${message}</p>
             </div>
-            <button type="button" class="toast-close" aria-label="Äóng">&times;</button>
+            <button type="button" class="toast-close" aria-label="Đóng">&times;</button>
         </div>
     `;
 
     container.insertAdjacentHTML('beforeend', toastHtml);
     const toastElement = document.getElementById(toastId);
 
-    // Close button
     toastElement.querySelector('.toast-close').addEventListener('click', () => {
         removeToast(toastElement);
     });
 
-    // Auto remove
-    setTimeout(() => {
-        removeToast(toastElement);
-    }, duration);
+    setTimeout(() => removeToast(toastElement), duration);
 }
 
 function removeToast(toastElement) {
     toastElement.style.opacity = '0';
     toastElement.style.transform = 'translateX(100%)';
-    setTimeout(() => {
-        toastElement.remove();
-    }, 300);
+    setTimeout(() => toastElement.remove(), 300);
 }
 
 // --- ERROR BANNER DISPLAY ---
 function showErrorBanner(message, parentForm) {
-    // Remove existing banner
     const existingBanner = parentForm.querySelector('.auth-error-banner');
-    if (existingBanner) {
-        existingBanner.remove();
-    }
+    if (existingBanner) existingBanner.remove();
 
     const banner = document.createElement('div');
     banner.className = 'auth-error-banner';
     banner.innerHTML = message;
-    
     parentForm.insertBefore(banner, parentForm.firstChild);
 
-    // Auto remove after 7 seconds
     setTimeout(() => {
         banner.style.opacity = '0';
         setTimeout(() => banner.remove(), 300);
     }, 7000);
 }
 
-// --- 2. Xá»¬ LÃ Lá»ŒC TRANG VÀ KHÃ“A TÀI KHOáº¢N Táº M (US 1-2) ---
+// --- 3. SESSION PROTECTION — KHÓA TÀI KHOẢN TẠM (US 1-2) ---
 function enforceTemporaryAccountLock() {
     const currentUser = getCurrentUser();
     const isTemp = currentUser && currentUser.is_temporary;
-    
-    // Nếu là tài khoản tạm và đang truy cáº­p trực tiếp vào trang User cá nhân -> Äáº©y ra ngoài
+
+    // Tài khoản tạm truy cập thẳng vào trang /user/ → đẩy ra ngoài
     const currentPath = window.location.pathname.toLowerCase();
-    const isUserPage = currentPath.includes('/pages/user/');
-    
-    if (isTemp && isUserPage) {
-        // Chặn trực tiếp và chuyển hướng về trang thiết láº­p máº­t kháº©u kèm token
+    if (isTemp && currentPath.includes('/pages/user/')) {
         const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
         let tokenObj = tokens.find(t => t.phone === currentUser.phone);
         if (!tokenObj) {
-            tokenObj = { token: 'token-dynamic-' + Math.random().toString(36).substr(2, 9), phone: currentUser.phone, createdAt: Date.now() };
+            tokenObj = {
+                token: 'token-dynamic-' + Math.random().toString(36).substr(2, 9),
+                phone: currentUser.phone,
+                createdAt: Date.now()
+            };
             tokens.push(tokenObj);
             localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
         }
@@ -202,38 +186,24 @@ function enforceTemporaryAccountLock() {
         return;
     }
 
-    // Äợi Header được load xong để kiểm soát các click liên kết
-    document.addEventListener('headerInjected', () => {
-        applyLockingUI(isTemp);
-    });
-    // Chạy thêm một lượt phòng hờ Header đã inject trước đó
+    // Chờ header inject xong để khóa nav links
+    document.addEventListener('headerInjected', () => applyLockingUI(isTemp));
     applyLockingUI(isTemp);
 }
 
 function applyLockingUI(isTemp) {
     if (!isTemp) return;
 
-    // Tìm các thẻ menu hoặc liên kết dáº«n tới trang cá nhân / admin
     const navLinks = document.querySelectorAll('.nav-menu a, .navbar-nav a, .auth-actions a, .header-actions a');
     navLinks.forEach(link => {
         const href = link.getAttribute('href');
         if (!href) return;
 
-        // Chỉ cho phép đi các trang công khai: landing, services, booking, shop, about, blog, contact
-        const isPublicPage = href.includes('landing.html') || 
-                             href.includes('services.html') || 
-                             href.includes('booking.html') || 
-                             href.includes('shop.html') ||
-                             href.includes('about.html') ||
-                             href.includes('blog.html') ||
-                             href.includes('contact.html') ||
-                             href.includes('login.html');
+        const isPublicPage = ['landing', 'services', 'booking', 'shop', 'about', 'blog', 'contact', 'login']
+            .some(p => href.includes(p + '.html'));
 
         if (!isPublicPage && (href.includes('/user/') || href.includes('/admin/'))) {
-            // Thiết láº­p trạng thái khóa
             link.classList.add('nav-link-locked');
-            
-            // Chặn click
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 showLockedTooltip(link);
@@ -242,25 +212,20 @@ function applyLockingUI(isTemp) {
     });
 }
 
-// Hiển thị tooltip cảnh báo khóa tài khoản tạm thời
 let currentTooltip = null;
 function showLockedTooltip(targetElement) {
-    if (currentTooltip) {
-        currentTooltip.remove();
-    }
+    if (currentTooltip) currentTooltip.remove();
 
     const tooltip = document.createElement('div');
     tooltip.className = 'locked-tooltip-custom';
-    tooltip.textContent = 'Hãy thiết láº­p máº­t kháº©u ngay để trở thành thành viên của Pawpal, mở khóa ngay các tính nÄƒng thú vị!';
+    tooltip.textContent = 'Hãy thiết lập mật khẩu ngay để trở thành thành viên của Pawpal, mở khóa các tính năng thú vị!';
     document.body.appendChild(tooltip);
     currentTooltip = tooltip;
 
-    // Äịnh vị tooltip
     const rect = targetElement.getBoundingClientRect();
     tooltip.style.left = `${rect.left + rect.width / 2 + window.scrollX}px`;
-    tooltip.style.top = `${rect.top + window.scrollY}px`;
+    tooltip.style.top  = `${rect.top + window.scrollY}px`;
 
-    // Tự động áº©n sau 4 giây
     setTimeout(() => {
         if (currentTooltip === tooltip) {
             tooltip.style.opacity = '0';
@@ -270,1148 +235,7 @@ function showLockedTooltip(targetElement) {
     }, 4000);
 }
 
-// --- 3. ÄIá»€U HÆ¯á»šNG STATE TRÃŠN TRANG LOGIN.HTML ---
-function handleLoginRouting() {
-    const params = new URLSearchParams(window.location.search);
-    const hash = window.location.hash;
-    
-    let action = params.get('action');
-    let token = params.get('token');
-
-    // Hỗ trợ fallback từ hash nếu redirect server làm mất query parameters
-    if (!action && hash) {
-        const hashClean = hash.substring(1); // Bỏ dấu '#'
-        if (hashClean === 'register' || hashClean === 'login') {
-            action = hashClean;
-        } else if (hashClean.startsWith('setup-password')) {
-            action = 'setup-password';
-            // Parse token từ hash dạng setup-password?token=xyz hoặc setup-password&token=xyz
-            const tokenMatch = hashClean.match(/token=([^&]+)/);
-            if (tokenMatch) {
-                token = tokenMatch[1];
-            }
-        }
-    }
-
-    // áº¨n tất cả các sections
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const otpSection = document.getElementById('otpSection');
-    const congratsSection = document.getElementById('congratsSection');
-    const setupPasswordSection = document.getElementById('setupPasswordSection');
-    const setupExpiredSection = document.getElementById('setupExpiredSection');
-    const authTabs = document.getElementById('authTabs');
-
-    if (!loginForm) return; // Không nằm trên trang login.html
-
-    // Reset default view
-    loginForm.classList.remove('active-form');
-    registerForm.classList.remove('active-form');
-    otpSection.classList.add('d-none');
-    congratsSection.classList.add('d-none');
-    setupPasswordSection.classList.add('d-none');
-    setupExpiredSection.classList.add('d-none');
-    authTabs.style.display = 'flex';
-
-    if (action === 'register') {
-        registerForm.classList.add('active-form');
-        document.getElementById('tabRegister').classList.add('active');
-        document.getElementById('tabLogin').classList.remove('active');
-        // Prefill phone if provided via query param (e.g., from footer signup)
-        const phoneParamForRegister = params.get('phone') || null;
-        if (phoneParamForRegister) {
-            const regPhoneInput = document.getElementById('registerPhone');
-            if (regPhoneInput) {
-                regPhoneInput.value = phoneParamForRegister;
-                regPhoneInput.dispatchEvent(new Event('input'));
-            }
-        }
-        // Autofocus: prefer name field if empty, otherwise focus password
-        setTimeout(() => {
-            const regNameInput = document.getElementById('registerName');
-            const regPassInput = document.getElementById('registerPassword');
-            try {
-                if (regNameInput && (!regNameInput.value || regNameInput.value.trim() === '')) {
-                    regNameInput.focus();
-                } else if (regPassInput) {
-                    regPassInput.focus();
-                }
-            } catch (e) { /* ignore focus errors in non-DOM env */ }
-        }, 60);
-    } else if (action === 'setup-password' && token) {
-        authTabs.style.display = 'none';
-        
-        // Kiểm tra tính hợp lệ của token
-        const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
-        const tokenData = tokens.find(t => t.token === token);
-
-        if (tokenData) {
-            const timeElapsed = Date.now() - tokenData.createdAt;
-            const limit = 48 * 60 * 60 * 1000; // 48 tiếng
-
-            if (timeElapsed <= limit) {
-                // Hợp lệ
-                setupPasswordSection.classList.remove('d-none');
-                setupPasswordSection.dataset.phone = tokenData.phone;
-                setupPasswordSection.dataset.token = token;
-            } else {
-                // Quá hạn
-                setupExpiredSection.classList.remove('d-none');
-            }
-        } else {
-            // Không tìm thấy token -> coi như hết hạn/lỗi
-            setupExpiredSection.classList.remove('d-none');
-        }
-    } else {
-        // Mặc định là login
-        loginForm.classList.add('active-form');
-        document.getElementById('tabLogin').classList.add('active');
-        document.getElementById('tabRegister').classList.remove('active');
-    }
-
-    // Guest activation entry point: show OTP flow prefilled with phone
-    if (action === 'guest-activate' || action === 'guest-verify-otp') {
-        const phoneParam = params.get('phone') || null;
-        if (phoneParam && loginForm) {
-            // Hide normal auth tabs and show OTP section for guest activation
-            if (authTabs) authTabs.style.display = 'none';
-
-            const forgotOtpSection = document.getElementById('forgotOtpSection');
-            const forgotPhoneSection = document.getElementById('forgotPhoneSection');
-            // Hide phone-entry and login steps so user sees only OTP
-            const loginStepPhone = document.getElementById('loginStepPhone');
-            const loginStepPassword = document.getElementById('loginStepPassword');
-            if (loginStepPhone) loginStepPhone.style.display = 'none';
-            if (loginStepPassword) loginStepPassword.style.display = 'none';
-            if (forgotPhoneSection) forgotPhoneSection.classList.add('d-none');
-
-            if (forgotOtpSection) {
-                forgotOtpSection.classList.remove('d-none');
-                forgotOtpSection.style.opacity = '1';
-                // Set guest activation flow flags
-                window.isGuestActivationFlow = true;
-                window.guestActivationPhone = phoneParam;
-
-                // Prefill phone input in the forgot flow if present
-                const forgotPhoneInput = document.getElementById('forgotPhone');
-                if (forgotPhoneInput) forgotPhoneInput.value = phoneParam;
-
-                // Update titles/descriptions based on action
-                let titleText = 'Xác thực kích hoạt tài khoản';
-                let subtitleText = 'Mã xác thực 6 số đã được gửi đến SÄT của bạn để kích hoạt tài khoản tạm.';
-                
-                if (action === 'guest-verify-otp') {
-                    titleText = 'Xác thực để đổi/hủy lịch';
-                    subtitleText = 'Mã xác thực 6 số đã được gửi đến SÄT của bạn để xác nháº­n danh tính.';
-                }
-                
-                forgotOtpSection.querySelector('.form-title').textContent = titleText;
-                forgotOtpSection.querySelector('.form-subtitle').textContent = subtitleText;
-
-                // Simulate sending OTP and start timer
-                showToast('info', 'Mã OTP xác thực đã gửi về SMS: 555666', 6000);
-                if (typeof window.startForgotOtpTimerFn === 'function') {
-                    window.startForgotOtpTimerFn();
-                }
-                // Reset OTP inputs and focus first one
-                const forgotOtpInputs = document.querySelectorAll('.forgot-otp-input');
-                if (forgotOtpInputs && forgotOtpInputs.length) {
-                    forgotOtpInputs.forEach((input, idx) => {
-                        input.value = '';
-                        input.disabled = idx > 0;
-                    });
-                    forgotOtpInputs[0].focus();
-                }
-            }
-        }
-    }
-}
-
-// --- 4. FORM VALIDATION và INTERACTION ON LOGIN/REGISTER ---
-function initAuthForms() {
-    const loginForm = document.getElementById('loginForm');
-    if (!loginForm) return;
-
-    // --- Tá»”NG Há»¢P TOGGLE ÄÄ‚NG NHáº¬P / ÄÄ‚NG KÃ ---
-    const tabLogin = document.getElementById('tabLogin');
-    const tabRegister = document.getElementById('tabRegister');
-    const registerForm = document.getElementById('registerForm');
-
-    tabLogin.addEventListener('click', () => {
-        window.history.pushState({}, '', '?action=login');
-        handleLoginRouting();
-    });
-
-    tabRegister.addEventListener('click', () => {
-        window.history.pushState({}, '', '?action=register');
-        handleLoginRouting();
-    });
-
-    // --- AN/HIá»†N Máº¬T KHáº¨U ---
-    document.querySelectorAll('.btn-toggle-password').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const input = btn.previousElementSibling;
-            if (input.type === 'password') {
-                input.type = 'text';
-                btn.innerHTML = `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
-            } else {
-                input.type = 'password';
-                btn.innerHTML = `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
-            }
-        });
-    });
-
-    // --- PHÆ¯Æ NG THá»¨C ÄÄ‚NG NHáº¬P (MULTI-STEP và SMS IN NEW LAYOUT) ---
-    const btnLoginContinue = document.getElementById('btnLoginContinue');
-    const loginStepPhone = document.getElementById('loginStepPhone');
-    const loginStepPassword = document.getElementById('loginStepPassword');
-    const loginPhone = document.getElementById('loginPhone');
-    const loginPhoneDisplay = document.getElementById('loginPhoneDisplay');
-    const btnChangePhone = document.getElementById('btnChangePhone');
-    const loginPassword = document.getElementById('loginPassword');
-    const btnLoginSubmit = document.getElementById('btnLoginSubmit');
-
-    // Handle "Continue" button in Step 1 of Login
-    if (btnLoginContinue) {
-        btnLoginContinue.addEventListener('click', (e) => {
-            e.preventDefault();
-            const phoneVal = loginPhone.value.trim();
-            const feedback = document.getElementById('loginPhoneFeedback');
-            
-            if (!/^0[0-9]{9}$/.test(phoneVal)) {
-                loginPhone.classList.add('is-invalid');
-                if (feedback) feedback.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
-                return;
-            }
-            loginPhone.classList.remove('is-invalid');
-
-            const users = getUsers();
-            const user = users.find(u => u.phone === phoneVal);
-
-            if (!user) {
-                // SÄT chưa tồn tại
-                showErrorBanner(
-                    'Số điện thoại chưa được đÄƒng ký. Vui lòng <a href="?action=register" class="text-decoration-underline fw-bold" style="color: var(--color-danger);">ÄÄƒng ký ngay</a>',
-                    loginForm
-                );
-            } else if (user.is_temporary) {
-                // Tài khoản tạm của khách vãng lai -> Chuyển sang xác nháº­n OTP rồi thiết láº­p máº­t kháº©u
-                loginForm.style.opacity = '0';
-                setTimeout(() => {
-                    loginForm.classList.remove('active-form');
-                    const authTabs = document.getElementById('authTabs');
-                    if (authTabs) authTabs.style.display = 'none';
-                    
-                    const forgotOtpSection = document.getElementById('forgotOtpSection');
-                    forgotOtpSection.classList.remove('d-none');
-                    forgotOtpSection.style.opacity = '1';
-                    
-                    forgotOtpSection.querySelector('.form-title').textContent = 'Xác thực kích hoạt tài khoản';
-                    forgotOtpSection.querySelector('.form-subtitle').textContent = 'Mã xác thực 6 số đã được gửi đến SÄT của bạn để kích hoạt tài khoản tạm.';
-                    
-                    window.isGuestActivationFlow = true;
-                    window.guestActivationPhone = user.phone;
-                    
-                    showToast('info', 'Tài khoản của bạn là tài khoản tạm. Mã OTP xác thực: 555666', 6000);
-                    
-                    // Reset and start timer for OTP
-                    const forgotOtpInputs = document.querySelectorAll('.forgot-otp-input');
-                    forgotOtpInputs.forEach((input, idx) => {
-                        input.value = '';
-                        input.disabled = (idx > 0);
-                    });
-                    forgotOtpInputs[0].focus();
-                    
-                    if (typeof window.startForgotOtpTimerFn === 'function') {
-                        window.startForgotOtpTimerFn();
-                    }
-                }, 300);
-            } else {
-                // Thành viên chính thức -> Cho nháº­p máº­t kháº©u
-                loginStepPhone.classList.add('d-none');
-                loginStepPassword.classList.remove('d-none');
-                if (loginPhoneDisplay) loginPhoneDisplay.textContent = phoneVal;
-                if (loginPassword) loginPassword.focus();
-            }
-        });
-    }
-
-    // Handle change phone click in Step 2 of Login
-    if (btnChangePhone) {
-        btnChangePhone.addEventListener('click', () => {
-            loginStepPassword.classList.add('d-none');
-            loginStepPhone.classList.remove('d-none');
-            if (loginPassword) loginPassword.value = '';
-            const existingBanner = loginForm.querySelector('.auth-error-banner');
-            if (existingBanner) existingBanner.remove();
-        });
-    }
-
-    if (loginPassword) {
-        loginPassword.addEventListener('input', () => {
-            const existingBanner = loginForm.querySelector('.auth-error-banner');
-            if (existingBanner) existingBanner.remove();
-        });
-    }
-    
-    if (loginPhone) {
-        loginPhone.addEventListener('input', () => {
-            const existingBanner = loginForm.querySelector('.auth-error-banner');
-            if (existingBanner) existingBanner.remove();
-            loginPhone.classList.remove('is-invalid');
-        });
-    }
-
-    // --- FORM SUBMIT LOGIN (US 2-1) ---
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        // If we're still on the phone step, delegate to the Continue handler
-        if (loginStepPassword && loginStepPassword.classList.contains('d-none')) {
-            if (btnLoginContinue) btnLoginContinue.click();
-            return;
-        }
-
-        const phone = loginPhone.value.trim();
-        const password = loginPassword.value;
-
-        // Basic phone format validation first
-        if (!/^0[0-9]{9}$/.test(phone)) {
-            loginPhone.classList.add('is-invalid');
-            const feedback = document.getElementById('loginPhoneFeedback');
-            if (feedback) feedback.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
-            return;
-        }
-
-        const users = getUsers();
-        const userByPhone = users.find(u => u.phone === phone);
-
-        if (!userByPhone) {
-            // Phone not registered
-            showErrorBanner(
-                'Số điện thoại chưa được đÄƒng ký. Vui lòng <a href="?action=register" class="text-decoration-underline fw-bold" style="color: var(--color-danger);">ÄÄƒng ký ngay</a>',
-                loginForm
-            );
-            return;
-        }
-
-        // If account is temporary, guide to activation flow
-        if (userByPhone.is_temporary) {
-            // Trigger the continue handler which handles temp-user flow
-            if (btnLoginContinue) btnLoginContinue.click();
-            return;
-        }
-
-        // Now validate password
-        const user = users.find(u => u.phone === phone && u.password === password);
-        if (user) {
-            ensureUserId(user);
-            setCurrentUser(user);
-            saveUsers(getUsers().map(u => u.phone === user.phone ? user : u));
-            showToast('success', 'Đăng nhập thành công!', 2000);
-            setTimeout(() => {
-                if (user.role === 'admin') {
-                    window.location.href = '/pages/admin/index/index.html';
-                } else {
-                    window.location.href = '/pages/user/dashboard/dashboard.html';
-                }
-            }, 2000);
-        } else {
-            showErrorBanner('Mật khẩu không đúng. Vui lòng thử lại hoặc <a href="#" id="inlineForgotLink" class="text-decoration-underline fw-bold" style="color: var(--color-danger);">quên mật khẩu?</a>', loginForm);
-            setTimeout(() => {
-                const inlineForgotLink = document.getElementById('inlineForgotLink');
-                if (inlineForgotLink) {
-                    inlineForgotLink.addEventListener('click', (ev) => {
-                        ev.preventDefault();
-                        const triggerForgot = document.getElementById('triggerForgot');
-                        if (triggerForgot) triggerForgot.click();
-                    });
-                }
-            }, 100);
-        }
-    });
-
-    // --- XÃC THá»°C TRÃŠN FORM ÄÄ‚NG KÃ (US 1-1 / AC1.1.1) ---
-    const regName = document.getElementById('registerName');
-    const regPhone = document.getElementById('registerPhone');
-    const regPassword = document.getElementById('registerPassword');
-    const regConfirmPassword = document.getElementById('registerConfirmPassword');
-    const btnRegisterSubmit = document.getElementById('btnRegisterSubmit');
-
-    // US 2-1: Enhanced phone validation on blur for signup
-    if (regPhone) {
-        regPhone.addEventListener('blur', () => {
-            const phoneValue = regPhone.value.trim();
-            const feedback = document.getElementById('registerPhoneFeedback');
-            if (phoneValue.length > 0 && !/^0[0-9]{9}$/.test(phoneValue)) {
-                regPhone.classList.add('is-invalid');
-                if (feedback) feedback.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
-            } else {
-                regPhone.classList.remove('is-invalid');
-            }
-        });
-        regPhone.addEventListener('input', () => {
-            regPhone.classList.remove('is-invalid');
-        });
-    }
-
-    // Password strength meter for registration
-    const pwdStrengthFill = document.getElementById('registerPasswordStrengthFill');
-    const pwdStrengthText = document.getElementById('registerPasswordStrengthText');
-    const pwdStrengthWrap = document.getElementById('registerPasswordStrength');
-
-    function assessPasswordStrength(pwd) {
-        let score = 0;
-        if (!pwd) return score;
-        if (pwd.length >= 8) score += 1;
-        if (/[0-9]/.test(pwd)) score += 1;
-        if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
-        if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score += 1;
-        return score; // 0..4
-    }
-
-    function updatePasswordStrength(pwd) {
-        if (!pwdStrengthFill || !pwdStrengthText || !pwdStrengthWrap) return;
-        const score = assessPasswordStrength(pwd);
-        pwdStrengthWrap.classList.remove('d-none');
-        let pct = Math.min(100, (score / 4) * 100);
-        let color = '#f87171';
-        let text = 'Yếu';
-        if (score >= 3) { color = '#f59e0b'; text = 'Trung bình'; }
-        if (score >= 4) { color = '#10b981'; text = 'Mạnh'; }
-        if (score === 0) { pct = 0; text = 'Rỗng'; color = '#e5e7eb'; }
-        pwdStrengthFill.style.width = pct + '%';
-        pwdStrengthFill.style.background = color;
-        pwdStrengthText.textContent = text;
-    }
-
-    if (regPassword) {
-        regPassword.addEventListener('input', (e) => {
-            updatePasswordStrength(e.target.value);
-        });
-    }
-
-    // --- US 2-2: FORGOT PASSWORD FLOW ---
-    const triggerForgot = document.getElementById('triggerForgot');
-    const forgotPhoneSection = document.getElementById('forgotPhoneSection');
-    const btnForgotBackToLogin = document.getElementById('btnForgotBackToLogin');
-    const forgotPhoneForm = document.getElementById('forgotPhoneForm');
-    const forgotPhone = document.getElementById('forgotPhone');
-    
-    const forgotOtpSection = document.getElementById('forgotOtpSection');
-    const btnForgotOtpBack = document.getElementById('btnForgotOtpBack');
-    const forgotOtpTimer = document.getElementById('forgotOtpTimer');
-    const btnForgotResendOtp = document.getElementById('btnForgotResendOtp');
-    const forgotOtpInputs = document.querySelectorAll('.forgot-otp-input');
-    
-    const forgotNewPasswordSection = document.getElementById('forgotNewPasswordSection');
-    const forgotNewPasswordForm = document.getElementById('forgotNewPasswordForm');
-    const forgotNewPassword = document.getElementById('forgotNewPassword');
-    const forgotConfirmNewPassword = document.getElementById('forgotConfirmNewPassword');
-    const btnForgotNewPasswordSubmit = document.getElementById('btnForgotNewPasswordSubmit');
-
-    let forgotOtpInterval = null;
-
-    if (triggerForgot && forgotPhoneSection) {
-        triggerForgot.addEventListener('click', (e) => {
-            e.preventDefault();
-            
-            loginForm.style.opacity = '0';
-            loginForm.style.transition = 'opacity 0.3s ease';
-            
-            setTimeout(() => {
-                loginForm.classList.remove('active-form');
-                if (authTabs) authTabs.style.display = 'none';
-                forgotPhoneSection.classList.remove('d-none');
-                forgotPhoneSection.style.opacity = '0';
-                forgotPhoneSection.style.transition = 'opacity 0.3s ease';
-                
-                setTimeout(() => {
-                    forgotPhoneSection.style.opacity = '1';
-                    forgotPhone.focus();
-                }, 50);
-            }, 300);
-        });
-
-        btnForgotBackToLogin.addEventListener('click', () => {
-            forgotPhoneSection.style.opacity = '0';
-            
-            setTimeout(() => {
-                forgotPhoneSection.classList.add('d-none');
-                if (authTabs) authTabs.style.display = 'flex';
-                loginForm.classList.add('active-form');
-                loginForm.style.opacity = '0';
-                
-                setTimeout(() => {
-                    loginForm.style.opacity = '1';
-                }, 50);
-            }, 300);
-        });
-
-        // Validate forgot password phone input
-        forgotPhone.addEventListener('blur', () => {
-            const phoneValue = forgotPhone.value.trim();
-            if (phoneValue.length > 0 && !/^0[0-9]{9}$/.test(phoneValue)) {
-                forgotPhone.classList.add('is-invalid');
-            } else {
-                forgotPhone.classList.remove('is-invalid');
-            }
-        });
-
-        forgotPhone.addEventListener('input', () => {
-            forgotPhone.classList.remove('is-invalid');
-        });
-
-        // Form submit - Step 1: Send OTP code
-        forgotPhoneForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const phone = forgotPhone.value.trim();
-            
-            if (!/^0[0-9]{9}$/.test(phone)) {
-                forgotPhone.classList.add('is-invalid');
-                return;
-            }
-
-            const users = getUsers();
-            const userExists = users.find(u => u.phone === phone);
-            
-            if (!userExists) {
-                showErrorBanner(
-                    'Số điện thoại chưa được đÄƒng ký trong hệ thống. Vui lòng kiểm tra lại hoặc <a href="?action=register" class="text-decoration-underline fw-bold" style="color: var(--color-danger);">đÄƒng ký tài khoản mới</a>.',
-                    forgotPhoneForm
-                );
-                return;
-            }
-            
-            // Switch to OTP section
-            forgotPhoneSection.classList.add('d-none');
-            forgotOtpSection.classList.remove('d-none');
-            
-            // Reset title and subtitle just in case it was changed by guest flow
-            forgotOtpSection.querySelector('.form-title').textContent = 'Nháº­p mã xác thực';
-            forgotOtpSection.querySelector('.form-subtitle').textContent = 'Mã OTP 6 số đã được gửi đến SÄT của bạn.';
-            window.isGuestActivationFlow = false;
-            
-            forgotOtpInputs.forEach((input, idx) => {
-                input.value = '';
-                input.disabled = (idx > 0);
-            });
-            forgotOtpInputs[0].focus();
-            
-            showToast('info', 'Mã OTP xác thực đã được gửi về SMS: 555666', 6000);
-            if (typeof window.startForgotOtpTimerFn === 'function') {
-                window.startForgotOtpTimerFn();
-            }
-        });
-
-        // Back from OTP to phone input
-        btnForgotOtpBack.addEventListener('click', () => {
-            forgotOtpSection.classList.add('d-none');
-            forgotPhoneSection.classList.remove('d-none');
-            if (forgotOtpInterval) clearInterval(forgotOtpInterval);
-        });
-
-        // Handle OTP input digits
-        forgotOtpInputs.forEach((input, index) => {
-            input.addEventListener('input', (e) => {
-                const val = e.target.value;
-                if (!/^[0-9]$/.test(val)) {
-                    e.target.value = '';
-                    return;
-                }
-                if (index < forgotOtpInputs.length - 1) {
-                    forgotOtpInputs[index + 1].disabled = false;
-                    forgotOtpInputs[index + 1].focus();
-                } else {
-                    checkForgotOtpSubmission();
-                }
-            });
-
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Backspace') {
-                    if (input.value === '') {
-                        if (index > 0) {
-                            forgotOtpInputs[index - 1].focus();
-                            forgotOtpInputs[index].disabled = true;
-                        }
-                    } else {
-                        input.value = '';
-                    }
-                }
-            });
-        });
-
-        function startForgotOtpTimer() {
-            if (forgotOtpInterval) clearInterval(forgotOtpInterval);
-            let duration = 300; // 5 mins
-            btnForgotResendOtp.disabled = true;
-
-            forgotOtpInterval = setInterval(() => {
-                let minutes = Math.floor(duration / 60);
-                let seconds = duration % 60;
-                forgotOtpTimer.textContent = `${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
-
-                if (duration <= 0) {
-                    clearInterval(forgotOtpInterval);
-                    btnForgotResendOtp.disabled = false;
-                }
-                duration--;
-            }, 1000);
-        }
-        
-        // Expose to window so step 1 can call it without clicking the resend button
-        window.startForgotOtpTimerFn = startForgotOtpTimer;
-
-        if (btnForgotResendOtp) {
-            btnForgotResendOtp.addEventListener('click', () => {
-                showToast('info', 'Mã OTP xác thực mới đã gửi lại: 555666', 6000);
-                if (typeof window.startForgotOtpTimerFn === 'function') {
-                    window.startForgotOtpTimerFn();
-                }
-                
-                forgotOtpInputs.forEach((input, idx) => {
-                    input.value = '';
-                    input.disabled = (idx > 0);
-                });
-                forgotOtpInputs[0].focus();
-            });
-        }
-
-        function checkForgotOtpSubmission() {
-            let code = '';
-            forgotOtpInputs.forEach(input => code += input.value);
-            if (code === '555666') {
-                clearInterval(forgotOtpInterval);
-                forgotOtpSection.classList.add('d-none');
-                
-                if (window.isGuestActivationFlow) {
-                    showToast('success', 'Xác thực OTP thành công!');
-                    // Store guest phone in session for booking page to use
-                    sessionStorage.setItem('guestVerifiedPhone', window.guestActivationPhone);
-                    
-                    // Check if there's a pending action (from return-guest.html button click)
-                    const pendingAction = sessionStorage.getItem('guestPendingAction');
-                    const urlParams = new URLSearchParams(window.location.search);
-                    
-                    // Build redirect URL with action parameter
-                    let redirectUrl = `/pages/public/return-guest/return-guest.html?verified=true&phone=${encodeURIComponent(window.guestActivationPhone)}`;
-                    if (pendingAction) {
-                        redirectUrl += `&action=${encodeURIComponent(pendingAction)}`;
-                    }
-                    
-                    setTimeout(() => {
-                        window.location.href = redirectUrl;
-                    }, 1000);
-                } else {
-                    forgotNewPasswordSection.classList.remove('d-none');
-                    forgotNewPassword.focus();
-                }
-            } else {
-                showToast('error', 'Mã OTP chưa chính xác. Vui lòng nháº­p 555666 để test');
-                forgotOtpInputs.forEach((input, idx) => {
-                    input.value = '';
-                    if (idx > 0) input.disabled = true;
-                });
-                forgotOtpInputs[0].focus();
-            }
-        }
-
-        // New password formulation validation
-        function validateForgotNewPasswordForm() {
-const passwordPolicy = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-        const isPassValid = passwordPolicy.test(forgotNewPassword.value);
-        const isConfirmValid = forgotConfirmNewPassword.value === forgotNewPassword.value;
-        
-        if (forgotNewPassword.value.length > 0 && !isPassValid) {
-            document.getElementById('forgotPasswordFeedback').textContent = 'Máº­t kháº©u phải ít nhất 8 ký tự, bao gồm một chữ số và một ký tự đặc biệt';
-            forgotNewPassword.classList.add('is-invalid');
-        } else {
-            forgotNewPassword.classList.remove('is-invalid');
-        }
-
-            if (forgotConfirmNewPassword.value.length > 0 && !isConfirmValid) {
-                document.getElementById('forgotConfirmFeedback').textContent = 'Máº­t kháº©u chưa khớp';
-                forgotConfirmNewPassword.classList.add('is-invalid');
-            } else {
-                forgotConfirmNewPassword.classList.remove('is-invalid');
-            }
-
-            btnForgotNewPasswordSubmit.disabled = !(isPassValid && isConfirmValid);
-        }
-
-        forgotNewPassword.addEventListener('input', validateForgotNewPasswordForm);
-        forgotConfirmNewPassword.addEventListener('input', validateForgotNewPasswordForm);
-
-        forgotNewPasswordForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const phone = forgotPhone.value.trim();
-            const users = getUsers();
-            const userIdx = users.findIndex(u => u.phone === phone);
-
-            if (userIdx !== -1) {
-                users[userIdx].password = forgotNewPassword.value;
-                saveUsers(users);
-                
-                showToast('success', 'Äặt lại máº­t kháº©u thành công! Vui lòng đÄƒng nháº­p với máº­t kháº©u mới.');
-                setTimeout(() => {
-                    // Reset to login form step 1 and ensure inputs are visible
-                    forgotNewPasswordSection.classList.add('d-none');
-                    if (authTabs) authTabs.style.display = 'flex';
-
-                    // Reset login form first to clear any stale state
-                    if (loginForm) loginForm.reset();
-
-                    // Show login container and make sure phone step is visible
-                    if (loginForm) {
-                        loginForm.classList.add('active-form');
-                        loginForm.style.display = '';
-                        loginForm.style.opacity = '1';
-                        loginForm.style.transition = '';
-                    }
-
-                    if (loginStepPassword) {
-                        loginStepPassword.classList.add('d-none');
-                        loginStepPassword.style.display = 'none';
-                    }
-                    if (loginStepPhone) {
-                        loginStepPhone.classList.remove('d-none');
-                        loginStepPhone.style.display = '';
-                    }
-
-                    // Prefill phone and clear password field, ensure inputs are focusable
-                    if (loginPhone) {
-                        loginPhone.value = phone;
-                        loginPhone.classList.remove('is-invalid');
-                    }
-                    if (loginPassword) {
-                        loginPassword.value = '';
-                        loginPassword.classList.remove('is-invalid');
-                    }
-
-                    // Focus phone input so user sees the field
-                    if (loginPhone) {
-                        setTimeout(() => loginPhone.focus(), 80);
-                    }
-
-                    if (forgotPhoneForm) forgotPhoneForm.reset();
-                    if (forgotNewPasswordForm) forgotNewPasswordForm.reset();
-                }, 2000);
-            }
-        });
-    }
-
-    // --- XÃC THá»°C TRÃŠN FORM ÄÄ‚NG KÃ (US 1-1 / AC1.1.1) ---
-
-    function validateRegisterForm() {
-        const isNameValid = regName.value.trim().length > 0;
-        
-        // Regex số điện thoại VN 10 số (bắt đầu bằng 0)
-        const isPhoneValid = /^0[0-9]{9}$/.test(regPhone.value.trim());
-        if (regPhone.value.trim().length > 0 && !isPhoneValid) {
-            regPhone.classList.add('is-invalid');
-            const phoneFb = document.getElementById('registerPhoneFeedback');
-            if (phoneFb) phoneFb.style.display = 'block';
-        } else {
-            regPhone.classList.remove('is-invalid');
-            const phoneFb = document.getElementById('registerPhoneFeedback');
-            if (phoneFb) phoneFb.style.display = 'none';
-        }
-
-        const passwordPolicy = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-        const isPasswordValid = passwordPolicy.test(regPassword.value);
-        const passFb = document.getElementById('registerPasswordFeedback');
-        if (regPassword.value.length > 0 && !isPasswordValid) {
-            regPassword.classList.add('is-invalid');
-            if (passFb) passFb.style.display = 'block';
-        } else {
-            regPassword.classList.remove('is-invalid');
-            if (passFb) passFb.style.display = 'none';
-        }
-        
-        const isConfirmValid = regConfirmPassword.value === regPassword.value;
-        const confirmFb = document.getElementById('registerConfirmFeedback');
-        if (regConfirmPassword.value.length > 0 && !isConfirmValid) {
-            regConfirmPassword.classList.add('is-invalid');
-            if (confirmFb) confirmFb.style.display = 'block';
-        } else {
-            regConfirmPassword.classList.remove('is-invalid');
-            if (confirmFb) confirmFb.style.display = 'none';
-        }
-
-        // Kích hoạt/Vô hiệu hoá nút ÄÄƒng ký
-        if (isNameValid && isPhoneValid && isPasswordValid && isConfirmValid) {
-            btnRegisterSubmit.disabled = false;
-        } else {
-            btnRegisterSubmit.disabled = true;
-        }
-    }
-
-    [regName, regPhone, regPassword, regConfirmPassword].forEach(input => {
-        input.addEventListener('input', validateRegisterForm);
-        input.addEventListener('blur', validateRegisterForm);
-    });
-
-    // --- CHUYá»‚N FORM SANG KHUNG NHáº¬P OTP (US 1-1 / AC1.1.2) ---
-    const otpSection = document.getElementById('otpSection');
-    const authTabs = document.getElementById('authTabs');
-    const otpTimer = document.getElementById('otpTimer');
-    const btnResendOtp = document.getElementById('btnResendOtp');
-    const otpInputs = document.querySelectorAll('#otpSection .otp-input');
-    
-    let otpCountdownInterval = null;
-
-    registerForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        // Check trùng SÄT trong database
-        const users = getUsers();
-        const existing = users.find(u => u.phone === regPhone.value.trim());
-        if (existing && !existing.is_temporary) {
-            showToast('error', 'Số điện thoại này đã được đÄƒng ký tài khoản chính thức!');
-            return;
-        }
-
-        // Chuyển cảnh sang OTP mượt mà
-        registerForm.style.opacity = '0';
-        registerForm.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => {
-            registerForm.classList.remove('active-form');
-            authTabs.style.display = 'none';
-            otpSection.classList.remove('d-none');
-            otpSection.style.opacity = '1';
-            
-            // Focus và reset ô OTP
-            otpInputs.forEach((input, idx) => {
-                input.value = '';
-                input.disabled = (idx > 0);
-            });
-            otpInputs[0].focus();
-            
-            // Toast thay vì Alert
-            showToast('info', 'Mã OTP xác thực đã gửi về SMS: 555666', 6000);
-            
-            startOtpTimer();
-        }, 300);
-    });
-
-    // Logic nháº­p liệu 6 ô OTP độc láº­p
-    otpInputs.forEach((input, index) => {
-        input.addEventListener('input', (e) => {
-            const val = e.target.value;
-            // Chỉ nháº­n số
-            if (!/^[0-9]$/.test(val)) {
-                e.target.value = '';
-                return;
-            }
-
-            // Nhảy focus sang ô tiếp theo
-            if (index < otpInputs.length - 1) {
-                otpInputs[index + 1].disabled = false;
-                otpInputs[index + 1].focus();
-            } else {
-                // Ã” cuối cùng gõ xong thì tự động gọi lệnh kiểm tra
-                checkOtpSubmission();
-            }
-        });
-
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace') {
-                if (input.value === '') {
-                    // Lùi về ô trước
-                    if (index > 0) {
-                        otpInputs[index - 1].focus();
-                        otpInputs[index].disabled = true;
-                    }
-                } else {
-                    input.value = '';
-                }
-            }
-        });
-    });
-
-    function startOtpTimer() {
-        if (otpCountdownInterval) clearInterval(otpCountdownInterval);
-        let duration = 5 * 60; // 5 phút
-        btnResendOtp.disabled = true;
-
-        otpCountdownInterval = setInterval(() => {
-            let minutes = Math.floor(duration / 60);
-            let seconds = duration % 60;
-            
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            seconds = seconds < 10 ? '0' + seconds : seconds;
-            
-            otpTimer.textContent = `${minutes}:${seconds}`;
-
-            if (duration <= 0) {
-                clearInterval(otpCountdownInterval);
-                btnResendOtp.disabled = false;
-            }
-            duration--;
-        }, 1000);
-    }
-
-    btnResendOtp.addEventListener('click', () => {
-        showToast('info', 'Mã OTP xác thực mới đã gửi lại: 555666', 6000);
-        startOtpTimer();
-        
-        otpInputs.forEach((input, idx) => {
-            input.value = '';
-            input.disabled = (idx > 0);
-        });
-        otpInputs[0].focus();
-    });
-
-    function checkOtpSubmission() {
-        let otpCode = '';
-        otpInputs.forEach(input => otpCode += input.value);
-
-        if (otpCode.length === 6) {
-            if (otpCode === '555666') {
-                // Xác thực thành công!
-                clearInterval(otpCountdownInterval);
-                showRegisterSuccess();
-            } else {
-                showToast('error', 'Mã OTP chưa chính xác. Vui lòng nháº­p 555666 để test');
-                // Clear inputs
-                otpInputs.forEach((input, idx) => {
-                    input.value = '';
-                    if (idx > 0) input.disabled = true;
-                });
-                otpInputs[0].focus();
-            }
-        }
-    }
-
-    function showRegisterSuccess() {
-        otpSection.classList.add('d-none');
-        const congratsSection = document.getElementById('congratsSection');
-        congratsSection.classList.remove('d-none');
-
-        // Lưu user mới vào localStorage database
-        const users = getUsers();
-        
-        // Nếu trước đó là tài khoản tạm thì chuyển đổi sang tài khoản chính thức
-        let userIdx = users.findIndex(u => u.phone === regPhone.value.trim());
-        const newUserObj = ensureUserId({
-            name: regName.value.trim(),
-            phone: regPhone.value.trim(),
-            password: regPassword.value,
-            role: "customer",
-            is_temporary: false,
-            points: 50 // Kích hoạt nhận 50 Paw Points
-        });
-
-        if (userIdx !== -1) {
-            users[userIdx] = newUserObj;
-        } else {
-            users.push(newUserObj);
-        }
-        
-        saveUsers(users);
-        setCurrentUser(newUserObj);
-
-        // Hiệu ứng tÄƒng số điểm thưởng động (Points Counter Animation)
-        const counterEl = document.getElementById('pointsCounter');
-        let currentPoints = 0;
-        const targetPoints = 50;
-        const duration = 1500; // 1.5s
-        const stepTime = Math.abs(Math.floor(duration / targetPoints));
-        
-        const timer = setInterval(() => {
-            currentPoints += 1;
-            counterEl.textContent = currentPoints;
-            if (currentPoints >= targetPoints) {
-                clearInterval(timer);
-                
-                // Tự động chuyển hướng về trang Dashboard người dùng sau 2 giây nữa
-                setTimeout(() => {
-                    window.location.href = '/pages/user/dashboard/dashboard.html';
-                }, 2000);
-            }
-        }, stepTime);
-    }
-
-    // --- THIáº¾T Láº¬P Máº¬T KHáº¨U Tá»ª SMS LINK (US 1-2 / AC1.2.2) ---
-    const setupPasswordForm = document.getElementById('setupPasswordForm');
-    const setupPass = document.getElementById('setupPassword');
-    const setupConfirm = document.getElementById('setupConfirmPassword');
-    const setupTermsCheckbox = document.getElementById('setupTermsCheckbox');
-    const btnSetupSubmit = document.getElementById('btnSetupSubmit');
-
-    function validateSetupForm() {
-        const passwordPolicy = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-        const isPassValid = passwordPolicy.test(setupPass.value);
-        const isConfirmValid = setupConfirm.value === setupPass.value;
-        const isTermsChecked = setupTermsCheckbox && setupTermsCheckbox.checked;
-
-        if (setupPass.value.length > 0 && !isPassValid) {
-            setupPass.classList.add('is-invalid');
-        } else {
-            setupPass.classList.remove('is-invalid');
-        }
-
-        if (setupConfirm.value.length > 0 && !isConfirmValid) {
-            setupConfirm.classList.add('is-invalid');
-        } else {
-            setupConfirm.classList.remove('is-invalid');
-        }
-
-        if (isPassValid && isConfirmValid && isTermsChecked) {
-            btnSetupSubmit.disabled = false;
-        } else {
-            btnSetupSubmit.disabled = true;
-        }
-    }
-
-    if (setupPasswordForm) {
-        setupPass.addEventListener('input', validateSetupForm);
-        setupConfirm.addEventListener('input', validateSetupForm);
-        if (setupTermsCheckbox) {
-            setupTermsCheckbox.addEventListener('change', validateSetupForm);
-        }
-
-        setupPasswordForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const phone = document.getElementById('setupPasswordSection').dataset.phone;
-            const token = document.getElementById('setupPasswordSection').dataset.token;
-            
-            const users = getUsers();
-            const userIdx = users.findIndex(u => u.phone === phone);
-            
-            if (userIdx !== -1) {
-                users[userIdx].password = setupPass.value;
-                users[userIdx].is_temporary = false; // Chuyển thành chính thức
-                users[userIdx].points += 50; // Thưởng 50 Paw Points kích hoạt thành viên
-                saveUsers(users);
-                
-                // ÄÄƒng nháº­p luôn
-                setCurrentUser(users[userIdx]);
-                
-                // Xoá token đã dùng
-                const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
-                const updatedTokens = tokens.filter(t => t.token !== token);
-                localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(updatedTokens));
-
-                showToast('success', 'Kích hoạt tài khoản thành viên thành công! Bạn nháº­n thêm 50 điểm thưởng chào mừng.');
-                setTimeout(() => {
-                    window.location.href = '/pages/user/dashboard/dashboard.html';
-                }, 2000);
-            }
-        });
-    }
-
-    // Gửi lại link xác thực mới
-    const btnRequestNewLink = document.getElementById('btnRequestNewLink');
-    if (btnRequestNewLink) {
-        btnRequestNewLink.addEventListener('click', () => {
-            const phone = document.getElementById('expiredPhone').value;
-            if (!/^[0-9]{10}$/.test(phone)) {
-                showToast('error', 'Vui lòng nháº­p số điện thoại hợp lệ.');
-                return;
-            }
-
-            // Tạo token mới
-            const token = 'token-dynamic-' + Math.random().toString(36).substr(2, 9);
-            const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
-            tokens.push({
-                token: token,
-                phone: phone,
-                createdAt: Date.now()
-            });
-            localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
-
-            showToast('success', 'Äã gửi link mới qua SMS. Vui lòng kiểm tra điện thoại của bạn.', 6000);
-            console.log(`[SMS Simulation] Setup password link: ${window.location.origin}/pages/public/login/login.html?action=setup-password&token=${token}`);
-        });
-    }
-}
-
-// --- 5. ADMIN QUICK ADD CUSTOMER FORM INTEGRATION (US 1-3) ---
-function initAdminQuickAddCustomer() {
-    const btnQuickAdd = document.getElementById('btnAdminQuickAddCustomer');
-    if (!btnQuickAdd) return;
-
-    btnQuickAdd.addEventListener('click', () => {
-        // Mở popup modal
-        const modalEl = document.getElementById('adminQuickAddModal');
-        if (modalEl) {
-            const modal = new bootstrap.Modal(modalEl);
-            modal.show();
-        }
-    });
-
-    const formQuickAdd = document.getElementById('adminQuickAddForm');
-    if (formQuickAdd) {
-        formQuickAdd.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const name = document.getElementById('qaName').value;
-            const phone = document.getElementById('qaPhone').value;
-            const petName = document.getElementById('qaPetName').value;
-            const submitBtn = formQuickAdd.querySelector('button[type="submit"]');
-
-            if (!name || !/^[0-9]{10}$/.test(phone)) {
-                alert('Họ tên và Số điện thoại 10 số là bắt buộc.');
-                return;
-            }
-
-            // Show Spinner và chặn click đúp (AC1.3.1)
-            const origContent = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Äang lưu...`;
-
-            setTimeout(() => {
-                // Tạo tài khoản tạm trong database
-                const users = getUsers();
-                const existing = users.find(u => u.phone === phone);
-                
-                if (!existing) {
-                    users.push({
-                        name: name,
-                        phone: phone,
-                        role: "customer",
-                        is_temporary: true,
-                        points: 0,
-                        pet: {
-                            name: petName,
-                            species: document.getElementById('qaPetSpecies').value,
-                            weight: document.getElementById('qaPetWeight').value
-                        }
-                    });
-                    saveUsers(users);
-                }
-
-                // Tạo Token thiết láº­p máº­t kháº©u mới
-                const token = 'token-dynamic-' + Math.random().toString(36).substr(2, 9);
-                const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
-                tokens.push({
-                    token: token,
-                    phone: phone,
-                    createdAt: Date.now()
-                });
-                localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
-
-                // Phản hồi Toast thành công
-                showAdminToast(`Äã khởi tạo tài khoản tạm và gửi link SMS kích hoạt máº­t kháº©u cho khách thành công!<br><a href="/pages/public/login/login.html?action=setup-password&token=${token}" target="_blank" style="color:var(--color-accent); font-weight:bold;">Mở liên kết kích hoạt (Simulated SMS Link)</a>`);
-
-                // Reset button
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = origContent;
-
-                // Close Modal
-                const modalInstance = bootstrap.Modal.getInstance(document.getElementById('adminQuickAddModal'));
-                if (modalInstance) modalInstance.hide();
-                formQuickAdd.reset();
-
-                // Refresh Admin User List if function exists
-                if (typeof renderAdminUsersList === 'function') renderAdminUsersList();
-
-            }, 1000); // 1s simulation delay
-        });
-    }
-}
-
+// --- ADMIN TOAST (dùng trong admin quick-add) ---
 function showAdminToast(message) {
     let toastContainer = document.querySelector('.toast-container');
     if (!toastContainer) {
@@ -1424,9 +248,7 @@ function showAdminToast(message) {
     const toastHtml = `
         <div id="${toastId}" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
-                <div class="toast-body">
-                    ${message}
-                </div>
+                <div class="toast-body">${message}</div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
@@ -1436,39 +258,92 @@ function showAdminToast(message) {
     const toastEl = document.getElementById(toastId);
     const bsToast = new bootstrap.Toast(toastEl, { delay: 6000 });
     bsToast.show();
+    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+}
 
-    toastEl.addEventListener('hidden.bs.toast', () => {
-        toastEl.remove();
+// --- 4. ADMIN QUICK ADD CUSTOMER (US 1-3) ---
+function initAdminQuickAddCustomer() {
+    const btnQuickAdd = document.getElementById('btnAdminQuickAddCustomer');
+    if (!btnQuickAdd) return;
+
+    btnQuickAdd.addEventListener('click', () => {
+        const modalEl = document.getElementById('adminQuickAddModal');
+        if (modalEl) new bootstrap.Modal(modalEl).show();
+    });
+
+    const formQuickAdd = document.getElementById('adminQuickAddForm');
+    if (!formQuickAdd) return;
+
+    formQuickAdd.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const name      = document.getElementById('qaName').value;
+        const phone     = document.getElementById('qaPhone').value;
+        const petName   = document.getElementById('qaPetName').value;
+        const submitBtn = formQuickAdd.querySelector('button[type="submit"]');
+
+        if (!name || !/^0[0-9]{9}$/.test(phone)) {
+            alert('Họ tên và Số điện thoại 10 số (bắt đầu bằng 0) là bắt buộc.');
+            return;
+        }
+
+        const origContent = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang lưu...`;
+
+        setTimeout(() => {
+            const users = getUsers();
+            const existing = users.find(u => u.phone === phone);
+
+            if (!existing) {
+                users.push({
+                    name,
+                    phone,
+                    role: 'customer',
+                    is_temporary: true,
+                    points: 0,
+                    pet: {
+                        name: petName,
+                        species: document.getElementById('qaPetSpecies').value,
+                        weight:  document.getElementById('qaPetWeight').value
+                    }
+                });
+                saveUsers(users);
+            }
+
+            // Tạo token kích hoạt mật khẩu
+            const token  = 'token-dynamic-' + Math.random().toString(36).substr(2, 9);
+            const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
+            tokens.push({ token, phone, createdAt: Date.now() });
+            localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
+
+            showAdminToast(
+                `Đã khởi tạo tài khoản tạm và gửi link SMS kích hoạt cho khách thành công!<br>` +
+                `<a href="/pages/public/login/login.html?action=setup-password&token=${token}" target="_blank" style="color:var(--color-accent);font-weight:bold;">Mở liên kết kích hoạt (Simulated SMS Link)</a>`
+            );
+
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = origContent;
+
+            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('adminQuickAddModal'));
+            if (modalInstance) modalInstance.hide();
+            formQuickAdd.reset();
+
+            if (typeof renderAdminUsersList === 'function') renderAdminUsersList();
+        }, 1000);
     });
 }
 
-function initAuth() {
+// --- 5. SHARED INIT (dùng cho mọi trang, không phải login) ---
+function initAuthShared() {
     initMockDatabase();
     enforceTemporaryAccountLock();
-    handleLoginRouting();
-    initAuthForms();
     initAdminQuickAddCustomer();
-
-    // Lắng nghe click vào bất ká»³ link nào trỏ tới login.html khi đang ở chính trang login.html
-    document.addEventListener('click', (e) => {
-        const link = e.target.closest('a');
-        if (!link) return;
-        const href = link.getAttribute('href');
-        if (!href) return;
-
-        if (href.includes('login.html') && window.location.pathname.includes('login.html')) {
-            e.preventDefault();
-            // Äáº©y state mới vào history và chạy lại router
-            window.history.pushState({}, '', href);
-            handleLoginRouting();
-        }
-    });
 }
 
-// --- INITIALIZE ALL ON LOAD ---
+// Chạy shared init trên mọi trang
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAuth);
+    document.addEventListener('DOMContentLoaded', initAuthShared);
 } else {
-    initAuth();
+    initAuthShared();
 }
-window.addEventListener('popstate', handleLoginRouting);

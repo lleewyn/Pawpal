@@ -28,7 +28,7 @@ async function loadBookingDetail(bookingId) {
 
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     const userBookings = currentUser ? await API.getUserBookings(currentUser.id) : [];
-    currentBooking = userBookings.find((booking) => booking.id === bookingId || booking.code === bookingId);
+    currentBooking = userBookings.find((b) => b.id === bookingId || b.code === bookingId);
 
     if (!currentBooking) {
         alert('Không tìm thấy lịch hẹn này');
@@ -42,15 +42,14 @@ async function loadBookingDetail(bookingId) {
 
 function renderBookingDetail(booking) {
     const normalizedStatus = booking.status === 'upcoming' ? 'confirmed' : booking.status;
-    const petName = booking.petName || booking.petInfo?.petName || booking.petId || 'Be cung';
+    const petName = booking.petName || booking.petInfo?.petName || booking.petId || 'Bé cưng';
     const petBreed = booking.petBreed || booking.petInfo?.breed || '';
     const petWeight = booking.petWeight || booking.petInfo?.weight || '';
-    const serviceName = booking.service || booking.serviceName || booking.selectedService?.name || 'Dich vu PawPal';
+    const serviceName = booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal';
     const servicePackage = booking.package ? ` - ${booking.package}` : '';
 
-    const headerStatusBadge = document.getElementById('headerStatusBadge');
-    headerStatusBadge.className = `badge-status badge-${normalizedStatus}`;
-    headerStatusBadge.textContent = statusLabels[booking.status] || booking.status;
+    document.getElementById('headerStatusBadge').className = `badge-status badge-${normalizedStatus}`;
+    document.getElementById('headerStatusBadge').textContent = statusLabels[booking.status] || booking.status;
 
     const statusInfo = document.getElementById('statusInfo');
     if (statusInfo) {
@@ -64,7 +63,7 @@ function renderBookingDetail(booking) {
 
     let dateTimeText = formatDate(booking.date || booking.schedule?.date);
     if (booking.timeStart) {
-        dateTimeText += ` | ${booking.timeStart} - ${booking.timeEnd}`;
+        dateTimeText += ` | ${booking.timeStart}${booking.timeEnd ? ` - ${booking.timeEnd}` : ''}`;
     } else if (booking.time) {
         dateTimeText += ` | ${booking.time}`;
     } else if (booking.schedule?.slot) {
@@ -73,7 +72,6 @@ function renderBookingDetail(booking) {
         dateTimeText = `${dateTimeText} - ${formatDate(booking.dateEnd)}`;
     }
     document.getElementById('dateTimeInfo').textContent = dateTimeText;
-
     document.getElementById('staffInfo').textContent = booking.staff || 'Chưa phân công';
     document.getElementById('priceInfo').textContent = formatPrice(booking.price || 0);
 
@@ -84,8 +82,8 @@ function renderBookingDetail(booking) {
 }
 
 function checkBookingModifiability(booking) {
-    const btnChangeSchedule = document.getElementById('btnChangeSchedule');
-    const btnCancelBooking = document.getElementById('btnCancelBooking');
+    const btnChange = document.getElementById('btnChangeSchedule');
+    const btnCancel = document.getElementById('btnCancelBooking');
 
     const now = new Date();
     let bookingDateTime;
@@ -101,336 +99,297 @@ function checkBookingModifiability(booking) {
 
     const diffMinutes = (bookingDateTime - now) / (1000 * 60);
     const changeLimitReached = (booking.changeCount || 0) >= 2;
-    const canModify = diffMinutes >= 120 && booking.status !== 'in-progress' && booking.status !== 'completed' && booking.status !== 'cancelled' && !changeLimitReached;
-    const canCancel = diffMinutes >= 120 && (booking.status === 'pending' || booking.status === 'confirmed' || booking.status === 'upcoming');
 
-    if (!canModify) btnChangeSchedule.classList.add('d-none');
-    else btnChangeSchedule.style.display = 'inline-flex';
+    const canModify = diffMinutes >= 120
+        && !['in-progress', 'completed', 'cancelled'].includes(booking.status)
+        && !changeLimitReached;
 
-    if (!canCancel) btnCancelBooking.classList.add('d-none');
-    else btnCancelBooking.style.display = 'inline-flex';
+    const canCancel = diffMinutes >= 120
+        && ['pending', 'confirmed', 'upcoming'].includes(booking.status);
+
+    btnChange.classList.toggle('d-none', !canModify);
+    btnCancel.classList.toggle('d-none', !canCancel);
 }
 
+// ── Thay đổi lịch ────────────────────────────────────────────────────────
 function handleChangeSchedule() {
-    const btnChangeSchedule = document.getElementById('btnChangeSchedule');
-    if (!btnChangeSchedule || btnChangeSchedule.disabled) {
+    const btnChange = document.getElementById('btnChangeSchedule');
+    if (!btnChange || btnChange.disabled) {
         showErrorBanner();
         return;
     }
 
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (currentUser && currentUser.is_temporary) {
-        showGuestChangeOTPFlow(currentUser);
+        // Guest: OTP → chọn lịch mới → upsell mật khẩu
+        showGuestOTPModal(currentUser, () => showChangeScheduleModal(currentUser));
         return;
     }
 
-    showChangeScheduleModal();
+    showChangeScheduleModal(null);
 }
 
-function showChangeScheduleModal() {
-    let modalEl = document.getElementById('changeScheduleModal');
-    if (!modalEl) {
-        modalEl = document.createElement('div');
-        modalEl.id = 'changeScheduleModal';
-        modalEl.className = 'modal fade';
-        modalEl.tabIndex = -1;
-        modalEl.innerHTML = `
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Yêu cầu đổi lịch</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+function showChangeScheduleModal(user = null) {
+    const modalId = 'changeScheduleModal';
+    const existing = document.getElementById(modalId);
+    if (existing) existing.remove();
+
+    const today = new Date();
+    const days = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i + 1);
+        return d;
+    });
+
+    const slots = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+
+    const dayTabsHtml = days.map((d, i) => {
+        const label = d.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' });
+        return `<button class="slot-day-tab${i === 0 ? ' active' : ''}" data-idx="${i}">${label}</button>`;
+    }).join('');
+
+    const slotsHtml = slots.map(s =>
+        `<button class="slot-time-btn" data-time="${s}">${s}</button>`
+    ).join('');
+
+    const modalEl = document.createElement('div');
+    modalEl.id = modalId;
+    modalEl.className = 'modal fade';
+    modalEl.tabIndex = -1;
+    modalEl.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chọn lịch mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">Chọn ngày và giờ mới. Lịch cũ sẽ được giải phóng sau khi xác nhận.</p>
+                    <div class="slot-day-tabs mb-3">${dayTabsHtml}</div>
+                    <div class="slot-time-grid">${slotsHtml}</div>
+                    <div class="slot-selected-info mt-3 d-none" id="slotSelectedInfo">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        Đã chọn: <strong id="slotSelectedText"></strong>
                     </div>
-                    <div class="modal-body">
-                        <form id="changeScheduleForm">
-                            <div class="mb-3">
-                                <label for="changeScheduleReason" class="form-label">Lý do thay đổi *</label>
-                                <select class="form-select" id="changeScheduleReason" required>
-                                    <option value="">-- Chọn lý do --</option>
-                                    <option value="reschedule">Đổi ngày/giờ</option>
-                                    <option value="pet-not-available">Bé cưng không sẵn sàng</option>
-                                    <option value="change-service">Thay đổi dịch vụ</option>
-                                </select>
-                            </div>
-                            <div class="mb-3" id="changeDateContainer" style="display:none;">
-                                <label for="changeDateValue" class="form-label">Chọn ngày/giờ mới *</label>
-                                <input type="datetime-local" class="form-control" id="changeDateValue">
-                            </div>
-                            <div class="mb-3">
-                                <label for="changeScheduleNotes" class="form-label">Ghi chú</label>
-                                <textarea class="form-control" id="changeScheduleNotes" rows="3" placeholder="Ví dụ: tôi cần chuyển sang buổi chiều do bận việc"></textarea>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                        <button type="button" class="btn btn-primary" id="confirmChangeScheduleBtn">Gửi yêu cầu</button>
+                    <div class="mt-4">
+                        <label class="form-label fw-semibold">Ghi chú <span class="text-muted fw-normal">(tuỳ chọn)</span></label>
+                        <textarea class="form-control" id="changeNotes" rows="2" placeholder="Ví dụ: tôi cần chuyển sang buổi chiều..."></textarea>
                     </div>
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Huỷ</button>
+                    <button type="button" class="btn-cta" id="confirmChangeBtn" disabled>Xác nhận thay đổi</button>
+                </div>
             </div>
-        `;
-        document.body.appendChild(modalEl);
-    }
+        </div>`;
+    document.body.appendChild(modalEl);
 
     const modal = new bootstrap.Modal(modalEl);
     modal.show();
 
-    const reasonSelect = document.getElementById('changeScheduleReason');
-    const dateContainer = document.getElementById('changeDateContainer');
-    const confirmBtn = document.getElementById('confirmChangeScheduleBtn');
+    let selectedDayIdx = 0;
+    let selectedTime = null;
 
-    if (reasonSelect) {
-        reasonSelect.addEventListener('change', function() {
-            if (this.value === 'reschedule') {
-                dateContainer.style.display = 'block';
-            } else {
-                dateContainer.style.display = 'none';
-            }
-        });
+    function refresh() {
+        const d = days[selectedDayIdx];
+        const infoEl = document.getElementById('slotSelectedInfo');
+        const textEl = document.getElementById('slotSelectedText');
+        const confirmBtn = document.getElementById('confirmChangeBtn');
+        if (selectedTime) {
+            textEl.textContent = `${d.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })} lúc ${selectedTime}`;
+            infoEl.classList.remove('d-none');
+            confirmBtn.disabled = false;
+        } else {
+            infoEl.classList.add('d-none');
+            confirmBtn.disabled = true;
+        }
     }
 
-    confirmBtn.onclick = function() {
-        const reason = document.getElementById('changeScheduleReason').value;
-        const newDateValue = document.getElementById('changeDateValue').value;
-        const notes = document.getElementById('changeScheduleNotes').value.trim();
+    modalEl.querySelectorAll('.slot-day-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            modalEl.querySelectorAll('.slot-day-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedDayIdx = parseInt(btn.dataset.idx);
+            selectedTime = null;
+            modalEl.querySelectorAll('.slot-time-btn').forEach(b => b.classList.remove('active'));
+            refresh();
+        });
+    });
 
-        if (!reason) {
-            alert('Vui lòng chọn lý do thay đổi lịch.');
-            return;
-        }
+    modalEl.querySelectorAll('.slot-time-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            modalEl.querySelectorAll('.slot-time-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedTime = btn.dataset.time;
+            refresh();
+        });
+    });
 
-        if (reason === 'reschedule' && !newDateValue) {
-            alert('Vui lòng chọn ngày/giờ mới.');
-            return;
-        }
+    document.getElementById('confirmChangeBtn').addEventListener('click', () => {
+        if (!selectedTime) return;
 
-        if (reason === 'reschedule') {
-            const parsed = new Date(newDateValue);
-            if (isNaN(parsed.getTime())) {
-                alert('Ngày/giờ mới không hợp lệ.');
-                return;
-            }
-            const dateString = parsed.toISOString().split('T')[0];
-            const timeString = parsed.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        const dateString = days[selectedDayIdx].toISOString().split('T')[0];
+        const notes = document.getElementById('changeNotes').value.trim();
 
-            currentBooking.date = dateString;
-            currentBooking.time = timeString;
-            currentBooking.timeStart = timeString;
-            currentBooking.timeEnd = '';
-        }
-
-        if (notes) {
-            currentBooking.note = `Yêu cầu đổi lịch: ${notes}`;
-        }
-
+        currentBooking.date = dateString;
+        currentBooking.time = selectedTime;
+        currentBooking.timeStart = selectedTime;
+        currentBooking.timeEnd = '';
         currentBooking.changeCount = (currentBooking.changeCount || 0) + 1;
+        if (notes) currentBooking.note = `Yêu cầu đổi lịch: ${notes}`;
 
         const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-        const index = bookings.findIndex((booking) => booking.id === currentBooking.id);
-        if (index !== -1) {
-            bookings[index] = { ...bookings[index], ...currentBooking };
+        const idx = bookings.findIndex(b => b.id === currentBooking.id);
+        if (idx !== -1) {
+            bookings[idx] = { ...bookings[idx], ...currentBooking };
             localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
         }
 
-        showToast('success', 'Yêu cầu đổi lịch đã được gửi. Thông tin đã được cập nhật tạm thời.');
+        showToast('Đã thay đổi lịch hẹn thành công!', 'success');
         renderBookingDetail(currentBooking);
         checkBookingModifiability(currentBooking);
+        bootstrap.Modal.getInstance(modalEl)?.hide();
 
-        const instance = bootstrap.Modal.getInstance(modalEl);
-        if (instance) instance.hide();
-    };
+        // Nếu là guest → hiện upsell mật khẩu sau khi đổi
+        if (user) {
+            setTimeout(() => showUpsellPasswordModal(user), 800);
+        }
+    });
 }
 
-function showErrorBanner() {
-    const banner = document.getElementById('errorBanner');
-
-    if (bannerTimeout) clearTimeout(bannerTimeout);
-
-    banner.classList.remove('d-none');
-    banner.classList.remove('hiding');
-
-    bannerTimeout = setTimeout(() => {
-        closeErrorBanner();
-    }, 7000);
-}
-
-function closeErrorBanner() {
-    const banner = document.getElementById('errorBanner');
-    banner.classList.add('hiding');
-    setTimeout(() => {
-        banner.classList.add('d-none');
-    }, 300);
-}
-
-window.closeErrorBanner = closeErrorBanner;
-
+// ── Hủy lịch ─────────────────────────────────────────────────────────────
 function handleCancelBooking() {
-    const btnCancelBooking = document.getElementById('btnCancelBooking');
-    if (btnCancelBooking.disabled) return;
-
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
 
     if (currentUser && currentUser.is_temporary) {
-        showGuestCancelOTPFlow(currentUser);
+        // Guest: xác nhận → OTP → hủy → upsell mật khẩu
+        showCancelConfirmModal(() => {
+            showGuestOTPModal(currentUser, () => {
+                confirmCancelBooking(() => showUpsellPasswordModal(currentUser));
+            });
+        });
         return;
     }
 
+    // Thành viên: xác nhận → hủy
+    showCancelConfirmModal(() => {
+        confirmCancelBooking(null);
+    });
+}
+
+function showCancelConfirmModal(onConfirm) {
     const cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
     document.getElementById('modalBookingCode').textContent = currentBooking.id;
     cancelModal.show();
-
     document.getElementById('confirmCancelBtn').onclick = function () {
-        confirmCancelBooking();
         cancelModal.hide();
+        onConfirm();
     };
 }
 
-function showGuestCancelOTPFlow(user) {
-    let otpModalEl = document.getElementById('guestOtpModal');
-    if (!otpModalEl) {
-        otpModalEl = document.createElement('div');
-        otpModalEl.id = 'guestOtpModal';
-        otpModalEl.className = 'modal fade';
-        otpModalEl.tabIndex = -1;
-        otpModalEl.innerHTML = `
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Xac thuc SDT khach hang</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>PawPal đã gửi mã xác thực (OTP) qua SMS đến số điện thoại <strong>${user.phone}</strong>.</p>
-                        <div class="form-group mb-3">
-                            <label for="cancelOtpInput" class="form-label fw-bold">Nhap ma OTP (Ma test: 555666)</label>
-                            <input type="text" id="cancelOtpInput" class="form-control text-center otp-input" maxlength="6" placeholder="******">
-                            <div class="invalid-feedback d-none" id="cancelOtpError">Mã OTP không chính xác, vui lòng thử lại.</div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
-                        <button type="button" class="btn-cta" id="confirmCancelOtpBtn">Xác nhận OTP</button>
+// ── OTP Modal dùng chung (guest) ──────────────────────────────────────────
+function showGuestOTPModal(user, onSuccess) {
+    const modalId = 'guestOtpModal';
+    const existing = document.getElementById(modalId);
+    if (existing) existing.remove();
+
+    const modalEl = document.createElement('div');
+    modalEl.id = modalId;
+    modalEl.className = 'modal fade';
+    modalEl.tabIndex = -1;
+    modalEl.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Xác thực số điện thoại</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">Mã OTP đã được gửi đến số <strong>${user.phone}</strong>.</p>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Mã OTP <span class="text-muted small fw-normal">(Mã test: 555666)</span></label>
+                        <input type="text" id="otpInput" class="form-control text-center fw-bold fs-4"
+                            maxlength="6" placeholder="_ _ _ _ _ _" autocomplete="one-time-code">
+                        <div class="text-danger small mt-1 d-none" id="otpError">Mã OTP không đúng, vui lòng thử lại.</div>
                     </div>
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Huỷ</button>
+                    <button type="button" class="btn-cta" id="confirmOtpBtn">Xác nhận</button>
+                </div>
             </div>
-        `;
-        document.body.appendChild(otpModalEl);
-    }
+        </div>`;
+    document.body.appendChild(modalEl);
 
-    const modal = new bootstrap.Modal(otpModalEl);
+    const modal = new bootstrap.Modal(modalEl);
     modal.show();
-    showToast('Ma OTP test cua ban la: 555666', 'success');
+    showToast('Mã OTP test: 555666', 'success');
 
-    const otpInput = document.getElementById('cancelOtpInput');
-    const otpError = document.getElementById('cancelOtpError');
-    const confirmOtpBtn = document.getElementById('confirmCancelOtpBtn');
-
-    otpInput.value = '';
-    otpError.classList.add('d-none');
-
-    confirmOtpBtn.onclick = () => {
-        if (otpInput.value === '555666') {
+    document.getElementById('confirmOtpBtn').addEventListener('click', () => {
+        const val = document.getElementById('otpInput').value.trim();
+        if (val === '555666') {
             modal.hide();
-            const cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
-            document.getElementById('modalBookingCode').textContent = currentBooking.id;
-            cancelModal.show();
-            document.getElementById('confirmCancelBtn').onclick = function () {
-                confirmCancelBooking();
-                cancelModal.hide();
-            };
+            onSuccess();
         } else {
-            otpError.classList.remove('d-none');
+            document.getElementById('otpError').classList.remove('d-none');
         }
-    };
+    });
 }
 
-function showGuestChangeOTPFlow(user) {
-    let otpModalEl = document.getElementById('guestChangeOtpModal');
-    if (!otpModalEl) {
-        otpModalEl = document.createElement('div');
-        otpModalEl.id = 'guestChangeOtpModal';
-        otpModalEl.className = 'modal fade';
-        otpModalEl.tabIndex = -1;
-        otpModalEl.innerHTML = `
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Xác thực để thay đổi lịch</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>PawPal đã gửi mã OTP đến số <strong>${user.phone}</strong>. Vui lòng nhập mã để tiếp tục.</p>
-                        <div class="form-group mb-3">
-                            <label for="changeOtpInput" class="form-label fw-bold">Nhập mã OTP (Mã test: 555666)</label>
-                            <input type="text" id="changeOtpInput" class="form-control text-center otp-input" maxlength="6" placeholder="******">
-                            <div class="invalid-feedback d-none" id="changeOtpError">Mã OTP không chính xác, vui lòng thử lại.</div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
-                        <button type="button" class="btn-cta" id="confirmChangeOtpBtn">Xác nhận OTP</button>
+// ── Confirm Cancel ────────────────────────────────────────────────────────
+function confirmCancelBooking(onDone) {
+    const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+    const idx = bookings.findIndex(b => b.id === currentBooking.id);
+    if (idx !== -1) {
+        bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
+        bookings[idx].status = 'cancelled';
+        localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
+    }
+
+    currentBooking.status = 'cancelled';
+    showToast('Đã hủy lịch hẹn thành công', 'success');
+
+    if (onDone) {
+        setTimeout(onDone, 800);
+    } else {
+        setTimeout(() => { window.location.href = '../bookings/bookings.html'; }, 1500);
+    }
+}
+
+// ── Upsell mật khẩu (sau khi guest hủy thành công) ───────────────────────
+function showUpsellPasswordModal(user) {
+    const modalId = 'upsellPasswordModal';
+    const existing = document.getElementById(modalId);
+    if (existing) existing.remove();
+
+    const modalEl = document.createElement('div');
+    modalEl.id = modalId;
+    modalEl.className = 'modal fade';
+    modalEl.tabIndex = -1;
+    modalEl.setAttribute('data-bs-backdrop', 'static'); // không đóng khi click ngoài
+    modalEl.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4 px-4">
+                    <div class="mb-3" style="font-size:2.5rem">🐾</div>
+                    <h5 class="fw-bold mb-2" style="color:var(--color-primary-dark)">Lịch hẹn đã được hủy!</h5>
+                    <p class="text-muted mb-4">Thiết lập mật khẩu để quản lý lịch hẹn, tích điểm Paw Points và nhận nhiều ưu đãi độc quyền dành cho thành viên.</p>
+                    <div class="d-flex flex-column gap-2">
+                        <button class="btn-cta w-100" id="upsellSetupBtn">Thiết lập mật khẩu ngay</button>
+                        <button class="btn-green-outline w-100" id="upsellSkipBtn">Bỏ qua, quay về tra cứu</button>
                     </div>
                 </div>
             </div>
-        `;
-        document.body.appendChild(otpModalEl);
-    }
+        </div>`;
+    document.body.appendChild(modalEl);
 
-    const modal = new bootstrap.Modal(otpModalEl);
-    modal.show();
-    showToast('info', 'Mã OTP test của bạn là: 555666', 'success');
-
-    const otpInput = document.getElementById('changeOtpInput');
-    const otpError = document.getElementById('changeOtpError');
-    const confirmOtpBtn = document.getElementById('confirmChangeOtpBtn');
-
-    otpInput.value = '';
-    otpError.classList.add('d-none');
-
-    confirmOtpBtn.onclick = () => {
-        if (otpInput.value === '555666') {
-            modal.hide();
-            showChangeScheduleModal();
-        } else {
-            otpError.classList.remove('d-none');
-        }
-    };
-}
-
-function showGuestActionChoices(user) {
-    let choicesModalEl = document.getElementById('guestChoicesModal');
-    if (!choicesModalEl) {
-        choicesModalEl = document.createElement('div');
-        choicesModalEl.id = 'guestChoicesModal';
-        choicesModalEl.className = 'modal fade';
-        choicesModalEl.tabIndex = -1;
-        choicesModalEl.innerHTML = `
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Yêu cầu kích hoạt mật khẩu</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body text-center">
-                        <p class="cancel-desc">De tu huy lich truc tuyen tren website, ban vui long thiet lap mat khau cho tai khoan de bao ve thong tin nhe!</p>
-                        <div class="d-flex flex-column gap-2 mt-4">
-                            <button class="btn-cta" id="choiceSetupPassBtn">Thiet lap mat khau ngay</button>
-                            <a href="tel:0987654321" class="btn-green-outline text-decoration-none" id="choiceCallHotlineBtn">Goi Hotline ho tro huy thu cong</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(choicesModalEl);
-    }
-
-    const modal = new bootstrap.Modal(choicesModalEl);
+    const modal = new bootstrap.Modal(modalEl);
     modal.show();
 
-    document.getElementById('choiceSetupPassBtn').onclick = () => {
-        modal.hide();
+    document.getElementById('upsellSetupBtn').addEventListener('click', () => {
+        // Tạo token tạm để điều hướng thiết lập mật khẩu
         const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
-        let tokenObj = tokens.find((token) => token.phone === user.phone);
+        let tokenObj = tokens.find(t => t.phone === user.phone);
         if (!tokenObj) {
             tokenObj = {
                 token: `token-temp-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -440,45 +399,38 @@ function showGuestActionChoices(user) {
             tokens.push(tokenObj);
             localStorage.setItem('pawpal_temp_tokens', JSON.stringify(tokens));
         }
-
         window.location.href = `/pages/public/login/login.html#setup-password?token=${tokenObj.token}`;
-    };
+    });
+
+    document.getElementById('upsellSkipBtn').addEventListener('click', () => {
+        modal.hide();
+        // Redirect về trang tra cứu công khai
+        window.location.href = '/pages/public/lookup/lookup.html';
+    });
 }
 
-function confirmCancelBooking() {
-    const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-    const index = bookings.findIndex((booking) => booking.id === currentBooking.id);
-
-    if (index !== -1) {
-        bookings[index].cancelCount = (bookings[index].cancelCount || 0) + 1;
-        bookings[index].status = 'cancelled';
-        localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
-    }
-
-    currentBooking.cancelCount = (currentBooking.cancelCount || 0) + 1;
-    currentBooking.status = 'cancelled';
-    showToast('Đã hủy lịch hẹn thành công', 'success');
-
-    setTimeout(() => {
-        window.location.href = 'bookings.html';
-    }, 1500);
+// ── Error Banner ──────────────────────────────────────────────────────────
+function showErrorBanner() {
+    const banner = document.getElementById('errorBanner');
+    if (bannerTimeout) clearTimeout(bannerTimeout);
+    banner.classList.remove('d-none', 'hiding');
+    bannerTimeout = setTimeout(closeErrorBanner, 7000);
 }
 
+function closeErrorBanner() {
+    const banner = document.getElementById('errorBanner');
+    banner.classList.add('hiding');
+    setTimeout(() => banner.classList.add('d-none'), 300);
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
 function showToast(message, type = 'info') {
-    const toastContainer = document.getElementById('toastContainer');
-    if (!toastContainer) return;
-
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast-custom toast-${type}`;
-    toast.innerHTML = `
-        <div class="toast-content">
-            <span class="toast-icon">${type === 'success' ? '' : 'i'}</span>
-            <span class="toast-message">${message}</span>
-        </div>
-    `;
-
-    toastContainer.appendChild(toast);
-
+    toast.innerHTML = `<div class="toast-content"><span class="toast-message">${message}</span></div>`;
+    container.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 10);
     setTimeout(() => {
         toast.classList.remove('show');
@@ -486,14 +438,14 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+// ── Exports ───────────────────────────────────────────────────────────────
 window.handleChangeSchedule = handleChangeSchedule;
 window.handleCancelBooking = handleCancelBooking;
+window.closeErrorBanner = closeErrorBanner;
 
-document.addEventListener('keydown', function (e) {
+document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         const banner = document.getElementById('errorBanner');
-        if (banner && banner.style.display !== 'none') {
-            closeErrorBanner();
-        }
+        if (banner && !banner.classList.contains('d-none')) closeErrorBanner();
     }
 });

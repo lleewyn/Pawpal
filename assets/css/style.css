@@ -6890,7 +6890,6 @@ input:checked + .switch-slider:before {
     background: var(--color-bg-light);
     border: 1px solid var(--color-accent);
     border-radius: var(--card-border-radius);
-    border-radius: 2px 8px 8px 2px;
 }
 
 .seller-reply-title {

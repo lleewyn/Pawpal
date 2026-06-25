@@ -17,7 +17,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
     <script src="../../../assets/js/shared/components.js" defer></script>
     <script type="module" src="../../../assets/js/shared/main.js"></script>
-    <script type="module" src="../../../assets/js/shared/auth.js"></script>
+    <script src="../../../assets/js/shared/auth.js" defer></script>
+    <script src="login.js" defer></script>
 </head>
 <body class="login-page-body">
 
@@ -52,6 +53,20 @@
                                 <button type="button" class="btn-cta w-100" id="btnLoginContinue">
                                     <span>Tiếp tục</span>
                                 </button>
+                            </div>
+
+                            <!-- Bước 1b: Xác nhận gửi OTP (tài khoản tạm) -->
+                            <div id="loginStepSendOTP" class="d-none">
+                                <div class="login-phone-display mb-4">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.16 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.36 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.34 1.85.573 2.81.7A2 2 0 0122 14.92v2z"/></svg>
+                                    <span id="loginOtpPhoneDisplay" class="login-phone-number"></span>
+                                    <button type="button" class="btn-change-phone" id="btnChangePhoneOtp">Đổi số</button>
+                                </div>
+                                <p class="form-subtitle text-center mb-4">Số điện thoại này có tài khoản tạm trên PawPal. Xác thực OTP để kích hoạt và trải nghiệm đầy đủ.</p>
+                                <button type="button" class="btn-cta w-100" id="btnSendOTPGuest">
+                                    <span>Gửi mã OTP</span>
+                                </button>
+                                <p class="text-center mt-3" style="font-size:var(--fs-small);color:var(--color-text-light)">Mã sẽ được gửi đến số điện thoại trên</p>
                             </div>
 
                             <!-- Bước 2: Mật khẩu (hiện sau khi xác nhận SĐT là thành viên) -->

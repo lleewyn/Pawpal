@@ -259,5 +259,330 @@
             }
         ],
         "allowedActions": ["track_return", "contact_support"]
+    },
+    {
+        "id": "ORD-2026-G01",
+        "userId": "USER-GUEST-002",
+        "status": "delivered",
+        "paymentStatus": "paid",
+        "paymentMethod": "cod",
+        "createdAt": "2026-06-18T10:00:00",
+        "updatedAt": "2026-06-21T15:00:00",
+        "delivery": {
+            "name": "Trần Thị Bích",
+            "phone": "0912345678",
+            "address": "88 Đường Nguyễn Thị Thập, Phường Tân Phú, Quận 7, TP.HCM"
+        },
+        "products": [
+            {
+                "id": "PROD-010",
+                "name": "Cát vệ sinh cho mèo Catsan 5L",
+                "image": "/assets/images/shop/products/TP-SUP-09.png",
+                "quantity": 2,
+                "price": 95000,
+                "total": 190000
+            },
+            {
+                "id": "PROD-011",
+                "name": "Bát ăn inox chống lật cho mèo",
+                "image": "/assets/images/shop/products/pk-dochoi-01.jpg",
+                "quantity": 1,
+                "price": 65000,
+                "total": 65000
+            }
+        ],
+        "pricing": {
+            "subtotal": 255000,
+            "shippingFee": 25000,
+            "discount": 0,
+            "total": 280000
+        },
+        "timeline": [
+            {
+                "status": "placed",
+                "timestamp": "2026-06-18T10:00:00",
+                "title": "Đơn hàng đã đặt",
+                "description": null
+            },
+            {
+                "status": "confirmed",
+                "timestamp": "2026-06-18T11:30:00",
+                "title": "Đã xác nhận",
+                "description": null
+            },
+            {
+                "status": "shipping",
+                "timestamp": "2026-06-19T08:00:00",
+                "title": "Đang giao hàng",
+                "description": null
+            },
+            {
+                "status": "delivered",
+                "timestamp": "2026-06-21T15:00:00",
+                "title": "Đã giao hàng",
+                "description": "Khách đã nhận hàng thành công."
+            }
+        ],
+        "allowedActions": ["review", "reorder"]
+    },
+    {
+        "id": "ORD-2026-P01",
+        "userId": "USER-003",
+        "status": "shipping",
+        "paymentStatus": "unpaid",
+        "paymentMethod": "cod",
+        "createdAt": "2026-06-22T09:15:00",
+        "updatedAt": "2026-06-23T08:00:00",
+        "delivery": {
+            "name": "Nguyễn Thị Bích Phượng",
+            "phone": "0798833157",
+            "address": "45 Đường Hoàng Diệu, Phường 10, Quận Phú Nhuận, TP.HCM"
+        },
+        "products": [
+            {
+                "id": "PROD-001",
+                "name": "Thức ăn hạt cho chó Poodle SmartHeart 1.5kg",
+                "image": "/assets/images/shop/products/TP-HAT-05.png",
+                "quantity": 2,
+                "price": 185000,
+                "total": 370000
+            },
+            {
+                "id": "PROD-016",
+                "name": "Lược chải lông Poodle chuyên dụng",
+                "image": "/assets/images/shop/products/pk-dochoi-01.jpg",
+                "quantity": 1,
+                "price": 95000,
+                "total": 95000
+            }
+        ],
+        "pricing": {
+            "subtotal": 465000,
+            "shippingFee": 30000,
+            "discount": 0,
+            "total": 495000
+        },
+        "timeline": [
+            { "status": "placed",    "timestamp": "2026-06-22T09:15:00", "title": "Đơn hàng đã đặt" },
+            { "status": "confirmed", "timestamp": "2026-06-22T10:00:00", "title": "Đã xác nhận" },
+            { "status": "shipping",  "timestamp": "2026-06-23T08:00:00", "title": "Đang giao hàng", "description": "Đơn vị vận chuyển: GHN\nMã vận đơn: GHN987654321" }
+        ],
+        "allowedActions": ["confirm_received", "cancel_order"]
+    },
+    {
+        "id": "ORD-2026-T01",
+        "userId": "USER-004",
+        "status": "completed",
+        "paymentStatus": "paid",
+        "paymentMethod": "momo",
+        "createdAt": "2026-06-08T14:20:00",
+        "updatedAt": "2026-06-12T16:00:00",
+        "delivery": {
+            "name": "Nguyễn Lê Thi",
+            "phone": "0834562948",
+            "address": "12 Đường Cách Mạng Tháng 8, Phường 10, Quận 3, TP.HCM"
+        },
+        "products": [
+            {
+                "id": "PROD-022",
+                "name": "Nhà vệ sinh cho mèo có mái che",
+                "image": "/assets/images/shop/products/vs-khay-01.webp",
+                "quantity": 1,
+                "price": 320000,
+                "total": 320000
+            },
+            {
+                "id": "PROD-010",
+                "name": "Cát vệ sinh Bioline cho mèo 10L",
+                "image": "/assets/images/shop/products/TP-SUP-09.png",
+                "quantity": 3,
+                "price": 110000,
+                "total": 330000
+            }
+        ],
+        "pricing": {
+            "subtotal": 650000,
+            "shippingFee": 0,
+            "discount": 50000,
+            "total": 600000
+        },
+        "timeline": [
+            { "status": "placed",    "timestamp": "2026-06-08T14:20:00", "title": "Đơn hàng đã đặt" },
+            { "status": "confirmed", "timestamp": "2026-06-08T15:00:00", "title": "Đã xác nhận" },
+            { "status": "preparing", "timestamp": "2026-06-09T08:00:00", "title": "Đang chuẩn bị hàng" },
+            { "status": "shipping",  "timestamp": "2026-06-10T09:00:00", "title": "Đang giao hàng" },
+            { "status": "delivered", "timestamp": "2026-06-12T14:00:00", "title": "Đã giao hàng" },
+            { "status": "completed", "timestamp": "2026-06-12T16:00:00", "title": "Hoàn thành" }
+        ],
+        "allowedActions": ["write_review", "return_request"]
+    },
+    {
+        "id": "ORD-2026-T02",
+        "userId": "USER-004",
+        "status": "pending_payment",
+        "paymentStatus": "unpaid",
+        "paymentMethod": "vnpay",
+        "createdAt": "2026-06-24T11:00:00",
+        "updatedAt": "2026-06-24T11:00:00",
+        "delivery": {
+            "name": "Nguyễn Lê Thi",
+            "phone": "0834562948",
+            "address": "12 Đường Cách Mạng Tháng 8, Phường 10, Quận 3, TP.HCM"
+        },
+        "products": [
+            {
+                "id": "PROD-035",
+                "name": "Đồ chơi cần câu cho mèo",
+                "image": "/assets/images/shop/products/pk-dochoi-01.jpg",
+                "quantity": 2,
+                "price": 55000,
+                "total": 110000
+            }
+        ],
+        "pricing": {
+            "subtotal": 110000,
+            "shippingFee": 25000,
+            "discount": 0,
+            "total": 135000
+        },
+        "timeline": [
+            { "status": "pending_payment", "timestamp": "2026-06-24T11:00:00", "title": "Chờ thanh toán" }
+        ],
+        "allowedActions": ["pay_now", "cancel_order"]
+    },
+    {
+        "id": "ORD-2026-K01",
+        "userId": "USER-005",
+        "status": "completed",
+        "paymentStatus": "paid",
+        "paymentMethod": "vnpay",
+        "createdAt": "2026-06-05T08:30:00",
+        "updatedAt": "2026-06-09T17:00:00",
+        "delivery": {
+            "name": "Nguyễn Lê Nhật Khanh",
+            "phone": "0972163376",
+            "address": "78 Đường Lý Tự Trọng, Phường Bến Thành, Quận 1, TP.HCM"
+        },
+        "products": [
+            {
+                "id": "PROD-030",
+                "name": "Áo mưa cho chó size S",
+                "image": "/assets/images/shop/products/pk-ao-01.jpg",
+                "quantity": 1,
+                "price": 210000,
+                "total": 210000
+            },
+            {
+                "id": "PROD-031",
+                "name": "Bánh thưởng mềm vị gà (dành cho chó nhạy cảm)",
+                "image": "/assets/images/shop/products/TP-HAT-05.png",
+                "quantity": 4,
+                "price": 55000,
+                "total": 220000
+            },
+            {
+                "id": "PROD-017",
+                "name": "Dây dắt Shih Tzu chống xoắn",
+                "image": "/assets/images/shop/products/pk-dochoi-01.jpg",
+                "quantity": 1,
+                "price": 150000,
+                "total": 150000
+            }
+        ],
+        "pricing": {
+            "subtotal": 580000,
+            "shippingFee": 30000,
+            "discount": 30000,
+            "total": 580000
+        },
+        "timeline": [
+            { "status": "placed",    "timestamp": "2026-06-05T08:30:00", "title": "Đơn hàng đã đặt" },
+            { "status": "confirmed", "timestamp": "2026-06-05T09:00:00", "title": "Đã xác nhận" },
+            { "status": "shipping",  "timestamp": "2026-06-06T10:00:00", "title": "Đang giao hàng", "description": "Đơn vị vận chuyển: J&T Express\nMã vận đơn: JT223344556" },
+            { "status": "delivered", "timestamp": "2026-06-09T14:30:00", "title": "Đã giao hàng" },
+            { "status": "completed", "timestamp": "2026-06-09T17:00:00", "title": "Hoàn thành" }
+        ],
+        "allowedActions": ["write_review", "return_request"]
+    },
+    {
+        "id": "ORD-2026-K02",
+        "userId": "USER-005",
+        "status": "shipping",
+        "paymentStatus": "paid",
+        "paymentMethod": "momo",
+        "createdAt": "2026-06-23T16:00:00",
+        "updatedAt": "2026-06-24T09:00:00",
+        "delivery": {
+            "name": "Nguyễn Lê Nhật Khanh",
+            "phone": "0972163376",
+            "address": "78 Đường Lý Tự Trọng, Phường Bến Thành, Quận 1, TP.HCM"
+        },
+        "products": [
+            {
+                "id": "PROD-019",
+                "name": "Giường nệm tròn cho chó nhỏ",
+                "image": "/assets/images/shop/products/pk-nem-01.jpg",
+                "quantity": 1,
+                "price": 380000,
+                "total": 380000
+            }
+        ],
+        "pricing": {
+            "subtotal": 380000,
+            "shippingFee": 25000,
+            "discount": 0,
+            "total": 405000
+        },
+        "timeline": [
+            { "status": "placed",    "timestamp": "2026-06-23T16:00:00", "title": "Đơn hàng đã đặt" },
+            { "status": "confirmed", "timestamp": "2026-06-23T17:00:00", "title": "Đã xác nhận" },
+            { "status": "shipping",  "timestamp": "2026-06-24T09:00:00", "title": "Đang giao hàng", "description": "Đơn vị vận chuyển: GHN\nMã vận đơn: GHN112233445" }
+        ],
+        "allowedActions": ["confirm_received"]
+    },
+    {
+        "id": "ORD-2026-Q01",
+        "userId": "USER-GUEST-003",
+        "status": "delivered",
+        "paymentStatus": "paid",
+        "paymentMethod": "cod",
+        "createdAt": "2026-06-20T14:00:00",
+        "updatedAt": "2026-06-23T11:00:00",
+        "delivery": {
+            "name": "Lê Lệ Quyên",
+            "phone": "0774561497",
+            "address": "33 Đường Nguyễn Oanh, Phường 17, Quận Gò Vấp, TP.HCM"
+        },
+        "products": [
+            {
+                "id": "PROD-025",
+                "name": "Dây dắt chó Chihuahua siêu nhẹ",
+                "image": "/assets/images/shop/products/pk-dochoi-01.jpg",
+                "quantity": 1,
+                "price": 85000,
+                "total": 85000
+            },
+            {
+                "id": "PROD-026",
+                "name": "Bộ đồ ăn dặm cho chó con",
+                "image": "/assets/images/shop/products/TP-SUP-09.png",
+                "quantity": 2,
+                "price": 120000,
+                "total": 240000
+            }
+        ],
+        "pricing": {
+            "subtotal": 325000,
+            "shippingFee": 25000,
+            "discount": 0,
+            "total": 350000
+        },
+        "timeline": [
+            { "status": "placed",    "timestamp": "2026-06-20T14:00:00", "title": "Đơn hàng đã đặt" },
+            { "status": "confirmed", "timestamp": "2026-06-20T15:30:00", "title": "Đã xác nhận" },
+            { "status": "shipping",  "timestamp": "2026-06-21T08:00:00", "title": "Đang giao hàng" },
+            { "status": "delivered", "timestamp": "2026-06-23T11:00:00", "title": "Đã giao hàng", "description": "Khách đã nhận hàng." }
+        ],
+        "allowedActions": ["review", "reorder"]
     }
 ]

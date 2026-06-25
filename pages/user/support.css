@@ -519,10 +519,14 @@
 }
 .support-btn-cancel {
     border-radius: var(--border-radius-pill);
-    padding: 10px 24px;
+    padding: 8px 20px;
+    font-size: var(--fs-small);
+    font-weight: 600;
+    border-width: 1.5px;
 }
 .support-btn-submit {
-    padding: 10px 24px;
+    padding: 8px 20px;
+    font-size: var(--fs-small);
 }
 
 /* support-tickets.css Extracted */
