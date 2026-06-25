@@ -1170,6 +1170,11 @@
             const grid = document.getElementById('productGrid');
             if (!grid) return;
 
+            const cartKey = 'pawpal_cart';
+            const cartPage = '/pages/shop/cart/cart.html';
+            const getCart = () => JSON.parse(localStorage.getItem(cartKey) || '[]');
+            const saveCart = (cart) => localStorage.setItem(cartKey, JSON.stringify(cart));
+
             // Wait for DataLoader
             let attempts = 0;
             while (!window.DataLoader && attempts < 20) {
@@ -1230,6 +1235,61 @@
                 </a>`;
             }).join('');
 
+            grid.querySelectorAll('.product-info-footer').forEach(footer => {
+                const existingBuyNow = footer.querySelector('.buy-now-btn');
+                if (existingBuyNow) return;
+
+                const addBtn = footer.querySelector('.add-to-cart-btn');
+                if (!addBtn) return;
+
+                const productId = addBtn.getAttribute('data-product-id') || '';
+                const actions = document.createElement('div');
+                actions.className = 'product-card-actions';
+                actions.innerHTML = `
+                    <button class="add-to-cart-btn" data-product-id="${productId}"
+                        onclick="event.preventDefault();event.stopPropagation();"
+                        aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
+                    <button class="buy-now-btn" data-product-id="${productId}"
+                        onclick="event.preventDefault();event.stopPropagation();"
+                        aria-label="Mua ngay">Mua ngay</button>
+                `;
+                addBtn.remove();
+                footer.appendChild(actions);
+            });
+
+            grid.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                if (btn.dataset.bound === 'true') return;
+                btn.dataset.bound = 'true';
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.productId;
+                    const cart = getCart();
+                    const existing = cart.find(item => item.id === id);
+                    if (existing) {
+                        existing.qty = (existing.qty || 1) + 1;
+                    } else {
+                        cart.push({ id, qty: 1 });
+                    }
+                    saveCart(cart);
+                });
+            });
+
+            grid.querySelectorAll('.buy-now-btn').forEach(btn => {
+                if (btn.dataset.bound === 'true') return;
+                btn.dataset.bound = 'true';
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.productId;
+                    const cart = getCart();
+                    const existing = cart.find(item => item.id === id);
+                    if (existing) {
+                        existing.qty = (existing.qty || 1) + 1;
+                    } else {
+                        cart.push({ id, qty: 1 });
+                    }
+                    saveCart(cart);
+                    window.location.href = cartPage;
+                });
+            });
+
             // Sub-filter tabs
             document.querySelectorAll('.shop-sub-filter-btn').forEach(btn => {
                 btn.addEventListener('click', async () => {
@@ -1285,6 +1345,61 @@
                             </div>
                         </a>`;
                     }).join('');
+
+                    grid.querySelectorAll('.product-info-footer').forEach(footer => {
+                        const existingBuyNow = footer.querySelector('.buy-now-btn');
+                        if (existingBuyNow) return;
+
+                        const addBtn = footer.querySelector('.add-to-cart-btn');
+                        if (!addBtn) return;
+
+                        const productId = addBtn.getAttribute('data-product-id') || '';
+                        const actions = document.createElement('div');
+                        actions.className = 'product-card-actions';
+                        actions.innerHTML = `
+                            <button class="add-to-cart-btn" data-product-id="${productId}"
+                                onclick="event.preventDefault();event.stopPropagation();"
+                                aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
+                            <button class="buy-now-btn" data-product-id="${productId}"
+                                onclick="event.preventDefault();event.stopPropagation();"
+                                aria-label="Mua ngay">Mua ngay</button>
+                        `;
+                        addBtn.remove();
+                        footer.appendChild(actions);
+                    });
+
+                    grid.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+                        if (btn.dataset.bound === 'true') return;
+                        btn.dataset.bound = 'true';
+                        btn.addEventListener('click', () => {
+                            const id = btn.dataset.productId;
+                            const cart = getCart();
+                            const existing = cart.find(item => item.id === id);
+                            if (existing) {
+                                existing.qty = (existing.qty || 1) + 1;
+                            } else {
+                                cart.push({ id, qty: 1 });
+                            }
+                            saveCart(cart);
+                        });
+                    });
+
+                    grid.querySelectorAll('.buy-now-btn').forEach(btn => {
+                        if (btn.dataset.bound === 'true') return;
+                        btn.dataset.bound = 'true';
+                        btn.addEventListener('click', () => {
+                            const id = btn.dataset.productId;
+                            const cart = getCart();
+                            const existing = cart.find(item => item.id === id);
+                            if (existing) {
+                                existing.qty = (existing.qty || 1) + 1;
+                            } else {
+                                cart.push({ id, qty: 1 });
+                            }
+                            saveCart(cart);
+                            window.location.href = cartPage;
+                        });
+                    });
                 });
             });
         })();

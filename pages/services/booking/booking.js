@@ -1197,7 +1197,7 @@ function processBookingSubmit() {
     // Simulate API request delay
     setTimeout(() => {
         confirmBtn.innerHTML = ` Đặt lịch thành công!`;
-        window.location.href = `booking-success.html?code=${newBookingId}`;
+        window.location.href = `../booking-success/booking-success.html?code=${newBookingId}`;
     }, 1200);
 }
 
