@@ -135,16 +135,30 @@ function createOrderCard(order) {
 
     let returnActionHTML = '';
     if (isCompleted) {
+        // Kiểm tra cửa sổ 7 ngày
+        const completedEntry = Array.isArray(order.timeline)
+            ? order.timeline.slice().reverse().find(t => t.status === 'completed')
+            : null;
+        const completedAt = completedEntry ? new Date(completedEntry.timestamp) : new Date(order.createdAt || 0);
+        const daysPassed = (Date.now() - completedAt.getTime()) / (1000 * 60 * 60 * 24);
+        const withinReturnWindow = daysPassed <= 7;
+
         if (alreadyReturned) {
             returnActionHTML = `
                 <a href="/pages/user/return-detail/return-detail.html?orderId=${order.id}" class="btn-track-order text-decoration-none">
-                    Chi tiet doi tra
+                    Chi tiết đổi trả
                 </a>
+            `;
+        } else if (!withinReturnWindow) {
+            returnActionHTML = `
+                <button class="btn-track-order" disabled title="Đã quá 7 ngày, không thể yêu cầu đổi trả.">
+                    Hết hạn đổi trả
+                </button>
             `;
         } else if (hasAnyReviewed) {
             returnActionHTML = `
                 <button class="btn-track-order" disabled title="Giao dịch đã được đánh giá, không thể đổi trả.">
-                    Da danh gia
+                    Đã đánh giá (Không thể đổi trả)
                 </button>
             `;
         } else {
@@ -258,15 +272,80 @@ function goToPage(page) {
 }
 
 function contactHotline(orderId) {
-    alert(`Goi hotline ho tro cho don hang ${orderId}: 1900 1234`);
+    showOrdersToast(`Tổng đài hỗ trợ đơn hàng ${orderId}: 1900 1234`, 'info');
 }
 
 function cancelOrder(orderId) {
-    if (confirm(`Ban co chac chan muon huy don hang ${orderId}?`)) {
-        const order = ordersState.allOrders.find((item) => item.id === orderId);
-        if (!order) {
-            alert('Không tìm thấy đơn hàng để hủy.');
-            return;
+    const order = ordersState.allOrders.find((item) => item.id === orderId);
+    if (!order) {
+        showOrdersToast('Không tìm thấy đơn hàng để hủy.', 'error');
+        return;
+    }
+
+    // Modal xác nhận
+    const modalId = 'orders-cancel-modal';
+    const existing = document.getElementById(modalId);
+    if (existing) existing.remove();
+
+    const el = document.createElement('div');
+    el.id = modalId;
+    el.className = 'modal fade';
+    el.tabIndex = -1;
+    el.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Xác nhận hủy đơn hàng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn hủy đơn hàng <strong>${orderId}</strong>?</p>
+                    <p class="text-muted small">Đơn hàng sau khi hủy sẽ không thể khôi phục.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Quay lại</button>
+                    <button type="button" class="btn-danger-outline" id="orders-cancel-confirm">Xác nhận hủy</button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(el);
+
+    const modal = new bootstrap.Modal(el);
+    modal.show();
+
+    document.getElementById('orders-cancel-confirm').addEventListener('click', () => {
+        modal.hide();
+
+        // Hoàn trả tồn kho
+        if (Array.isArray(order.products)) {
+            try {
+                const storedProducts = JSON.parse(localStorage.getItem('pawpal_products') || '[]');
+                if (storedProducts.length) {
+                    order.products.forEach(item => {
+                        const idx = storedProducts.findIndex(p => String(p.id) === String(item.id));
+                        if (idx !== -1) {
+                            storedProducts[idx].stock = (Number(storedProducts[idx].stock) || 0) + (Number(item.quantity) || 0);
+                            storedProducts[idx].inStock = true;
+                        }
+                    });
+                    localStorage.setItem('pawpal_products', JSON.stringify(storedProducts));
+                }
+            } catch (e) {
+                console.warn('cancelOrder stock restore error:', e);
+            }
+        }
+
+        // Ghi nhận yêu cầu hoàn tiền nếu đã thanh toán online
+        if (order.paymentMethod && order.paymentMethod !== 'cod' && order.paymentStatus === 'paid') {
+            const refunds = JSON.parse(localStorage.getItem('pawpal_refunds') || '[]');
+            refunds.push({
+                orderId: order.id,
+                amount: order.pricing?.total || 0,
+                paymentMethod: order.paymentMethod,
+                status: 'pending_refund',
+                createdAt: new Date().toISOString()
+            });
+            localStorage.setItem('pawpal_refunds', JSON.stringify(refunds));
         }
 
         order.status = 'cancelled';
@@ -276,12 +355,29 @@ function cancelOrder(orderId) {
         updateTabCounts();
         applyFilters();
 
-        alert(`Don hang ${orderId} da duoc chuyen sang trang thai Da huy.`);
-    }
+        showOrdersToast(`Đơn hàng ${orderId} đã được hủy thành công.`, 'success');
+    });
 }
 
 function reorder(orderId) {
-    alert(`Da them cac san pham cua don hang ${orderId} vao gio hang`);
+    showOrdersToast(`Đã thêm các sản phẩm của đơn hàng ${orderId} vào giỏ hàng.`, 'success');
+}
+
+function showOrdersToast(message, type = 'info') {
+    let container = document.getElementById('orders-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'orders-toast-container';
+        container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;';
+        document.body.appendChild(container);
+    }
+    const colors = { success: '#2a5944', error: '#dc3545', info: '#0d6efd', warning: '#ffc107' };
+    const t = document.createElement('div');
+    t.style.cssText = `background:${colors[type]||colors.info};color:${type==='warning'?'#000':'#fff'};padding:12px 18px;border-radius:8px;font-size:0.88rem;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:320px;`;
+    t.textContent = message;
+    container.appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; }, 3000);
+    setTimeout(() => t.remove(), 3400);
 }
 
 function formatCurrency(amount) {

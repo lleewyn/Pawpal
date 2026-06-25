@@ -231,12 +231,94 @@
         updateHeaderDropdown();
     }
 
+    function deleteNotification(id) {
+        // Hiện confirm trước khi xóa (spec: "hỏi xác nhận một lần")
+        const confirmId = 'noti-delete-confirm-modal';
+        const existing = document.getElementById(confirmId);
+        if (existing) existing.remove();
+
+        const el = document.createElement('div');
+        el.id = confirmId;
+        el.className = 'modal fade';
+        el.tabIndex = -1;
+        el.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Xóa thông báo</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn có chắc chắn muốn xóa thông báo này không?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn-danger-outline" id="noti-delete-confirm-btn">Xóa</button>
+                    </div>
+                </div>
+            </div>`;
+        document.body.appendChild(el);
+
+        const modal = typeof bootstrap !== 'undefined'
+            ? new bootstrap.Modal(el)
+            : null;
+        modal ? modal.show() : el.style.display = 'block';
+
+        document.getElementById('noti-delete-confirm-btn').addEventListener('click', () => {
+            modal ? modal.hide() : el.remove();
+            const notis = getNotifications().filter(n => n.id !== id);
+            saveNotifications(notis);
+            updateHeaderDropdown();
+        });
+    }
+
+    function clearAllNotifications() {
+        const confirmId = 'noti-clear-confirm-modal';
+        const existing = document.getElementById(confirmId);
+        if (existing) existing.remove();
+
+        const el = document.createElement('div');
+        el.id = confirmId;
+        el.className = 'modal fade';
+        el.tabIndex = -1;
+        el.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Xóa tất cả thông báo</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn có chắc chắn muốn xóa toàn bộ thông báo không? Thao tác này không thể hoàn tác.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn-danger-outline" id="noti-clear-confirm-btn">Xóa tất cả</button>
+                    </div>
+                </div>
+            </div>`;
+        document.body.appendChild(el);
+
+        const modal = typeof bootstrap !== 'undefined'
+            ? new bootstrap.Modal(el)
+            : null;
+        modal ? modal.show() : el.style.display = 'block';
+
+        document.getElementById('noti-clear-confirm-btn').addEventListener('click', () => {
+            modal ? modal.hide() : el.remove();
+            saveNotifications([]);
+            updateHeaderDropdown();
+        });
+    }
+
     window.PawPalNotifications = {
         getNotifications,
         saveNotifications,
         updateHeaderDropdown,
         markAllAsRead,
         markAsRead,
+        deleteNotification,
+        clearAllNotifications,
         showToast
     };
     window.PawPalNotificationsReady = true;

@@ -34,17 +34,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.PawPalVoucherRedeemSeed = vouchersData;
             console.log('Loaded vouchers data:', vouchersData.length, 'items');
             
+            // Bảng quy đổi điểm theo spec
+            const POINTS_TABLE = [
+                { points: 50,   maxValue: 9999     },
+                { points: 100,  maxValue: 29999    },
+                { points: 300,  maxValue: 59999    },
+                { points: 500,  maxValue: 99999    },
+                { points: 1000, maxValue: Infinity }
+            ];
+            function calcPointsCost(v) {
+                const val = v.type === 'fixed' ? v.value : (v.maxDiscount || v.value || 0);
+                const row = POINTS_TABLE.find(t => val <= t.maxValue);
+                return row ? row.points : Math.ceil(val / 150);
+            }
+
             // Transform từ format JSON sang format UI
             vouchersMock = vouchersData
                 .map((v, idx) => ({
                     id: `VOUCHER-${idx}`,
                     name: v.name || v.id || `VOUCHER-${idx + 1}`,
-                    value: v.type === 'fixed' 
+                    value: v.type === 'fixed'
                         ? `${new Intl.NumberFormat('vi-VN').format(v.value)}đ`
                         : v.type === 'percentage'
                         ? `Giảm ${v.value}% (Tối đa ${new Intl.NumberFormat('vi-VN').format(v.maxDiscount || 0)})`
                         : v.description,
-                    pointsCost: Math.ceil(v.value / 1000) * 50, // Tính điểm từ giá trị
+                    pointsCost: calcPointsCost(v),
                     quantity: Number.isFinite(Number(v.quantity)) ? Number(v.quantity) : Math.max(10, 50 - idx * 5),
                     terms: [
                         `Áp dụng cho: ${(v.applicableFor || []).join(', ') || 'Tất cả'}`,
@@ -107,14 +121,27 @@ function renderLoyaltyPage(user, vouchers) {
     const warningBanner = document.getElementById('loyalty-warning-banner');
     if (warningBanner) {
         if (user.points >= 50) {
-            // Giả lập điểm sắp hết hạn trong 30 ngày tới
-            warningBanner.classList.remove('d-none');
-            warningBanner.innerHTML = `
-                <div class="warning-banner-content">
-                    <span class="warning-icon"></span>
-                    <span>Bạn có <strong>50</strong> điểm Paw Points sắp hết hạn sử dụng vào ngày 15/07/2026. Hãy đổi ưu đãi ngay nhé!</span>
-                </div>
-            `;
+            // Tính ngày hết hạn động: lastTransactionAt + 12 tháng
+            const lastTx = user.lastTransactionAt || user.createdAt || null;
+            const expiryDate = lastTx
+                ? new Date(new Date(lastTx).getTime() + 365 * 24 * 60 * 60 * 1000)
+                : null;
+            const daysUntilExpiry = expiryDate
+                ? Math.ceil((expiryDate - Date.now()) / (1000 * 60 * 60 * 24))
+                : null;
+
+            if (expiryDate && daysUntilExpiry <= 30 && daysUntilExpiry > 0) {
+                warningBanner.classList.remove('d-none');
+                warningBanner.innerHTML = `
+                    <div class="warning-banner-content">
+                        <span class="warning-icon">⚠️</span>
+                        <span>Bạn có <strong>${user.points}</strong> điểm Paw Points sắp hết hạn sử dụng vào ngày
+                        <strong>${expiryDate.toLocaleDateString('vi-VN')}</strong>. Hãy đổi ưu đãi ngay nhé!</span>
+                    </div>
+                `;
+            } else {
+                warningBanner.classList.add('d-none');
+            }
         } else {
             warningBanner.classList.add('d-none');
         }
@@ -399,12 +426,51 @@ function triggerRedeem(voucherId, user, sliderContainer) {
         return;
     }
 
-    // 3. Tiến hành đổi điểm thành công
+    // 3. Tiến hành đổi điểm — hiện modal xác nhận trước
     const vouchersList = Object.fromEntries((window.PawPalVoucherRedeemSeed || []).map(v => [v.id, v]));
-
     const voucherInfo = vouchersList[voucherId];
     if (!voucherInfo) return;
 
+    // Modal xác nhận
+    const confirmId = 'redeem-confirm-modal';
+    const existingModal = document.getElementById(confirmId);
+    if (existingModal) existingModal.remove();
+
+    const el = document.createElement('div');
+    el.id = confirmId;
+    el.className = 'modal fade';
+    el.tabIndex = -1;
+    el.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Xác nhận đổi ưu đãi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn sử dụng <strong>${voucherInfo.cost} điểm</strong> để đổi lấy ưu đãi <strong>${voucherInfo.name}</strong>?</p>
+                    <p class="text-muted small">Điểm bị trừ sẽ không thể hoàn lại.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-gray" data-bs-dismiss="modal" id="redeem-cancel-btn">Để sau</button>
+                    <button type="button" class="btn-orange" id="redeem-confirm-btn">Xác nhận đổi</button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(el);
+
+    const confirmModal = new bootstrap.Modal(el);
+    confirmModal.show();
+
+    document.getElementById('redeem-cancel-btn').addEventListener('click', () => resetUI());
+
+    document.getElementById('redeem-confirm-btn').addEventListener('click', () => {
+        confirmModal.hide();
+        doRedeem(voucherInfo, user, sliderContainer, resetUI);
+    });
+}
+
+function doRedeem(voucherInfo, user, sliderContainer, resetUI) {
     // Trừ điểm trong Database
     const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
     const userIdx = users.findIndex(u => u.phone === user.phone);
@@ -461,6 +527,10 @@ function triggerRedeem(voucherId, user, sliderContainer) {
             setTimeout(() => {
                 location.reload();
             }, 1500);
+        } else {
+            // Không đủ điểm — thông báo rõ ràng
+            resetUI();
+            showToast('error', `Số điểm hiện tại chưa đủ để đổi ưu đãi này. Cần ${voucherInfo.cost} điểm, bạn đang có ${users[userIdx].points} điểm.`);
         }
     }
 }

@@ -514,8 +514,8 @@
             all.push(review);
             saveStoredReviews(all);
 
-            // Mark order product as reviewed
-            markProductReviewed(orderId, productId);
+            // Mark order product as reviewed (lưu hasMedia để tính điểm trừ khi hoàn tiền)
+            markProductReviewed(orderId, productId, uploadedFiles.length > 0);
 
             // Clear draft
             clearDraft(productId);
@@ -560,10 +560,10 @@
         } catch (_) { return 'Khách hàng'; }
     }
 
-    function markProductReviewed(orderId, productId) {
+    function markProductReviewed(orderId, productId, hasMedia = false) {
         const key  = 'pawpal_reviewed';
         const list = JSON.parse(localStorage.getItem(key) || '[]');
-        list.push({ orderId, productId });
+        list.push({ orderId, productId, hasMedia });
         localStorage.setItem(key, JSON.stringify(list));
     }
 
@@ -573,6 +573,15 @@
             if (!u) return;
             u.points = (u.points || 0) + amount;
             localStorage.setItem('pawpal_current_user', JSON.stringify(u));
+
+            // Sync vào users_db để không bị ghi đè khi initData reload
+            const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+            const idx = users.findIndex(usr => usr.phone === u.phone);
+            if (idx !== -1) {
+                users[idx].points = u.points;
+                localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+            }
+
             // Sync to header display if present
             const el = document.getElementById('headerPoints');
             if (el) el.textContent = u.points + ' Paw Points';

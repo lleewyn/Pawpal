@@ -148,7 +148,13 @@ function validateCheckoutCart() {
     if (checkoutState.appliedVoucher) {
         const validation = validateVoucher(checkoutState.appliedVoucher.code, false);
         if (!validation.valid) {
-            return { valid: false, message: `Mã giảm giá hiện tại không hợp lệ: ${validation.message}.` };
+            // Tự động xóa voucher không hợp lệ, hiển thị thông báo nhưng không block checkout
+            const voucherCode = checkoutState.appliedVoucher.code;
+            checkoutState.appliedVoucher = null;
+            localStorage.removeItem('pawpal_applied_voucher_code');
+            renderAppliedVoucherUI();
+            updateOrderTotals();
+            showToast(`Mã giảm giá "${voucherCode}" đã bị xóa: ${validation.message}`, 'warning');
         }
     }
 
@@ -693,7 +699,24 @@ function validateCheckoutForm() {
 // Checkout
 // ============================================================================
 async function handleCheckout() {
+    // Double-submit guard — disable nút ngay lập tức
+    const btnCheckout = document.getElementById('btn-checkout');
+    if (btnCheckout) {
+        if (btnCheckout.disabled) return;       // đã submit, bỏ qua
+        btnCheckout.disabled = true;
+        btnCheckout.dataset.originalText = btnCheckout.textContent;
+        btnCheckout.textContent = 'Đang xử lý...';
+    }
+
+    const restoreBtn = () => {
+        if (btnCheckout) {
+            btnCheckout.disabled = false;
+            btnCheckout.textContent = btnCheckout.dataset.originalText || 'Xác nhận đặt hàng';
+        }
+    };
+
     if (!validateCheckoutForm()) {
+        restoreBtn();
         return;
     }
     
@@ -741,6 +764,7 @@ async function handleCheckout() {
         showToast(validation.message, 'error');
         // redirect back to checkout form area if needed
         document.getElementById('shipping-form').scrollIntoView({ behavior: 'smooth' });
+        restoreBtn();
         return;
     }
 
@@ -1081,7 +1105,15 @@ function saveOrderToUserHistory(orderData) {
         }),
         pricing: orderData.pricing || {},
         paymentMethod: orderData.payment?.method || null,
-        paymentStatus: orderData.payment?.status || (orderData.paymentStatus || 'pending'),
+        paymentStatus: (() => {
+            const method = orderData.payment?.method;
+            // COD: chờ thanh toán khi nhận hàng
+            if (method === 'cod') return 'pending_payment';
+            // Online đã qua QR verify: paid
+            if (orderData.payment?.status === 'paid') return 'paid';
+            // Mặc định: chờ xử lý
+            return orderData.payment?.status || 'pending';
+        })(),
         timeline: orderData.timeline || [],
         createdAt: new Date().toISOString(),
         status: 'pending'

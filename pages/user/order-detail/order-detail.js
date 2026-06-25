@@ -89,6 +89,8 @@ function checkAutoComplete() {
             title: 'Hoàn thành',
             description: 'Tự động hoàn thành sau 3 ngày giao hàng'
         });
+        // Persist ngay để reload lại không bị trùng
+        saveOrderToLocalStorage(currentOrder);
         console.log('Đơn hàng tự động hoàn thành');
     }
 }
@@ -217,6 +219,7 @@ function renderActions() {
     let buttons = [];
     
     switch(currentOrder.status) {
+        case 'pending':
         case 'pending_payment':
             buttons.push(`
                 <button class="btn-cta" onclick="payNow()">
@@ -256,11 +259,19 @@ function renderActions() {
             break;
             
         case 'completed':
-            // 1. Return logic
+            // 1. Kiểm tra cửa sổ 7 ngày từ ngày hoàn thành
+            const completedEntry = currentOrder.timeline
+                ? currentOrder.timeline.slice().reverse().find(t => t.status === 'completed')
+                : null;
+            const completedAt = completedEntry ? new Date(completedEntry.timestamp) : new Date(currentOrder.createdAt || 0);
+            const daysPassed = (Date.now() - completedAt.getTime()) / (1000 * 60 * 60 * 24);
+            const withinReturnWindow = daysPassed <= 7;
+
+            // 2. Return logic
             const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
             const alreadyReturned = returnsList.some(r => r.orderId === currentOrder.id);
-            
-            // Check if order has any product reviewed to disable return
+
+            // 3. Check if order has any product reviewed to disable return
             const reviewedList = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
             const hasAnyReviewed = reviewedList.some(r => r.orderId === currentOrder.id);
 
@@ -269,6 +280,12 @@ function renderActions() {
                     <a href="/pages/user/return-detail/return-detail.html?orderId=${currentOrder.id}" class="btn-track-order text-decoration-none">
                         Chi tiết đổi trả
                     </a>
+                `);
+            } else if (!withinReturnWindow) {
+                buttons.push(`
+                    <button class="btn-track-order" disabled title="Đã quá 7 ngày kể từ ngày nhận hàng, không thể yêu cầu đổi trả.">
+                        Hết hạn đổi trả
+                    </button>
                 `);
             } else if (hasAnyReviewed) {
                 buttons.push(`
@@ -316,8 +333,75 @@ function payNow() {
     // TODO: Redirect to payment page
 }
 
+function restoreStockForOrder(order) {
+    // Hoàn trả tồn kho khi đơn hàng bị hủy
+    if (!order || !Array.isArray(order.products)) return;
+    try {
+        const storedProducts = JSON.parse(localStorage.getItem('pawpal_products') || '[]');
+        if (!storedProducts.length) return; // không có cache sản phẩm, bỏ qua
+
+        order.products.forEach(item => {
+            const idx = storedProducts.findIndex(p => String(p.id) === String(item.id));
+            if (idx !== -1) {
+                storedProducts[idx].stock = (Number(storedProducts[idx].stock) || 0) + (Number(item.quantity) || 0);
+                storedProducts[idx].inStock = true;
+            }
+        });
+        localStorage.setItem('pawpal_products', JSON.stringify(storedProducts));
+    } catch (e) {
+        console.warn('restoreStockForOrder error:', e);
+    }
+}
+
 function cancelOrder() {
-    if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+    // Hiện modal xác nhận thay vì confirm() native
+    const modalId = 'cancelOrderModal';
+    const existing = document.getElementById(modalId);
+    if (existing) existing.remove();
+
+    const el = document.createElement('div');
+    el.id = modalId;
+    el.className = 'modal fade';
+    el.tabIndex = -1;
+    el.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Xác nhận hủy đơn hàng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn hủy đơn hàng <strong>${currentOrder.id}</strong>?</p>
+                    <p class="text-muted small">Đơn hàng sau khi hủy sẽ không thể khôi phục.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Quay lại</button>
+                    <button type="button" class="btn-danger-outline" id="confirmCancelOrderBtn">Xác nhận hủy</button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(el);
+
+    const modal = new bootstrap.Modal(el);
+    modal.show();
+
+    document.getElementById('confirmCancelOrderBtn').addEventListener('click', () => {
+        modal.hide();
+        restoreStockForOrder(currentOrder);
+
+        // Ghi nhận yêu cầu hoàn tiền nếu đã thanh toán online
+        if (currentOrder.paymentMethod && currentOrder.paymentMethod !== 'cod' && currentOrder.paymentStatus === 'paid') {
+            const refunds = JSON.parse(localStorage.getItem('pawpal_refunds') || '[]');
+            refunds.push({
+                orderId: currentOrder.id,
+                amount: currentOrder.pricing?.total || 0,
+                paymentMethod: currentOrder.paymentMethod,
+                status: 'pending_refund',
+                createdAt: new Date().toISOString()
+            });
+            localStorage.setItem('pawpal_refunds', JSON.stringify(refunds));
+        }
+
         currentOrder.status = 'cancelled';
         currentOrder.timeline.push({
             status: 'cancelled',
@@ -326,9 +410,8 @@ function cancelOrder() {
             description: 'Khách hàng đã hủy đơn hàng'
         });
         saveOrderToLocalStorage(currentOrder);
-        alert('Đơn hàng đã được hủy.');
         window.location.href = './orders.html';
-    }
+    });
 }
 
 function contactHotline() {
@@ -337,7 +420,38 @@ function contactHotline() {
 }
 
 function confirmReceived() {
-    if (confirm('Xác nhận bạn đã nhận được hàng?')) {
+    const modalId = 'confirmReceivedModal';
+    const existing = document.getElementById(modalId);
+    if (existing) existing.remove();
+
+    const el = document.createElement('div');
+    el.id = modalId;
+    el.className = 'modal fade';
+    el.tabIndex = -1;
+    el.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Xác nhận đã nhận hàng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn xác nhận đã nhận được đơn hàng <strong>${currentOrder.id}</strong>?</p>
+                    <p class="text-muted small">Sau khi xác nhận, đơn hàng sẽ chuyển sang trạng thái Hoàn thành.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Chưa nhận</button>
+                    <button type="button" class="btn-cta" id="confirmReceivedBtn">Đã nhận hàng</button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(el);
+
+    const modal = new bootstrap.Modal(el);
+    modal.show();
+
+    document.getElementById('confirmReceivedBtn').addEventListener('click', () => {
+        modal.hide();
         currentOrder.status = 'completed';
         currentOrder.timeline.push({
             status: 'completed',
@@ -346,9 +460,8 @@ function confirmReceived() {
             description: 'Khách hàng xác nhận đã nhận hàng'
         });
         saveOrderToLocalStorage(currentOrder);
-        alert('Cảm ơn bạn! Đơn hàng đã hoàn thành.');
         location.reload();
-    }
+    });
 }
 
 function saveOrderToLocalStorage(order) {

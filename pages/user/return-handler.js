@@ -75,6 +75,14 @@ function openRMADrawer(orderId) {
                     </div>
                 </div>
 
+                <!-- Thông tin hoàn tiền COD (hiện khi chọn hoàn tiền) -->
+                <div class="rma-form-group" id="rma-refund-account-group" style="display:none;">
+                    <span class="rma-form-label">Số tài khoản ngân hàng / Ví MoMo <span style="font-size:0.78rem;color:var(--color-text-light)">(tuỳ chọn)</span></span>
+                    <input type="text" id="rma-refund-account" placeholder="VD: 0901234567 (MoMo) hoặc số TK ngân hàng"
+                        style="border:1px solid var(--color-border);border-radius:var(--card-border-radius);padding:10px;width:100%;font-family:var(--font-primary);">
+                    <p style="font-size:0.75rem;color:var(--color-text-light);margin:4px 0 0;">Nếu để trống, nhân viên CSKH sẽ liên hệ trong vòng 24 giờ.</p>
+                </div>
+
                 <!-- Return Reason -->
                 <div class="rma-form-group">
                     <span class="rma-form-label">Lý do đổi trả</span>
@@ -152,12 +160,14 @@ function setupDrawerListeners() {
         cardExchange.classList.add('is-selected');
         cardRefund.classList.remove('is-selected');
         cardExchange.querySelector('input').checked = true;
+        document.getElementById('rma-refund-account-group').style.display = 'none';
     });
 
     cardRefund.addEventListener('click', () => {
         cardRefund.classList.add('is-selected');
         cardExchange.classList.remove('is-selected');
         cardRefund.querySelector('input').checked = true;
+        document.getElementById('rma-refund-account-group').style.display = 'block';
     });
 
     // Kích hoạt upload file
@@ -228,40 +238,27 @@ function setupDrawerListeners() {
         }
 
         // Lưu thông tin yêu cầu đổi trả (Giả lập LocalStorage)
+        const returnType = document.querySelector('input[name="return_type"]:checked').value;
         const returnData = {
             orderId: currentRmaOrder.id,
             rmaId: 'RMA-' + Math.floor(10000 + Math.random() * 90000),
             createdAt: new Date().toISOString(),
-            status: 'approved', // Mặc định chuyển sang Đã chấp nhận để hiển thị thông tin hướng dẫn
+            status: 'reviewing', // Bắt đầu ở bước Chờ kiểm duyệt — điểm chỉ trừ khi status = 'completed'
             reason: reason,
-            type: document.querySelector('input[name="return_type"]:checked').value,
+            type: returnType,
             description: document.getElementById('rma-desc').value,
+            // Lưu thêm thông tin TK hoàn tiền cho COD refund
+            refundAccount: returnType === 'refund'
+                ? (document.getElementById('rma-refund-account')?.value?.trim() || '')
+                : '',
             products: Array.from(checkedItems).map(cb => {
                 const prodId = cb.getAttribute('data-product-id');
                 return currentRmaOrder.products.find(p => p.id === prodId);
             })
         };
 
-        // Khấu trừ điểm tích lũy Paw Points nếu là Hoàn tiền (refund)
-        if (returnData.type === 'refund') {
-            const returnTotalValue = returnData.products.reduce((sum, p) => sum + (p.total || (p.price * p.quantity)), 0);
-            const pointsToDeduct = Math.floor(returnTotalValue / 10000);
-            
-            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
-            if (currentUser) {
-                currentUser.points = Math.max(0, (currentUser.points || 0) - pointsToDeduct);
-                localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
-                
-                // Cập nhật CSDL users_db
-                const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
-                const uIdx = users.findIndex(u => u.phone === currentUser.phone);
-                if (uIdx !== -1) {
-                    users[uIdx].points = currentUser.points;
-                    localStorage.setItem('pawpal_users_db', JSON.stringify(users));
-                }
-                console.log(`[RMA] Deducted ${pointsToDeduct} Paw Points. New balance: ${currentUser.points}`);
-            }
-        }
+        // Không trừ điểm ngay — điểm sẽ được trừ khi admin chuyển RMA sang 'completed'
+        // (Logic trừ điểm đặt tại return-detail.js khi cập nhật status)
 
         const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
         returnsList.push(returnData);
