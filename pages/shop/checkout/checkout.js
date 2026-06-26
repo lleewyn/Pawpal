@@ -723,6 +723,7 @@ async function handleCheckout() {
     const orderData = {
         orderId: generateOrderId(),
         userId: checkoutState.user?.id || null,
+        userPhone: checkoutState.user?.phone || document.getElementById('phone').value || null,
         
         shipping: {
             name: document.getElementById('fullName').value,
@@ -992,6 +993,9 @@ function verifyPaymentSimulation() {
         setTimeout(() => {
             if (willSucceed) {
                 qrPaymentState.paymentVerified = true;
+                qrPaymentState.orderData.payment.status = 'paid';
+                localStorage.setItem('pawpal_current_order', JSON.stringify(qrPaymentState.orderData));
+                updatePersistedOrderPaymentStatus(qrPaymentState.orderData.orderId, 'paid');
                 statusMsg.className = 'payment-status-message show success';
                 statusMsg.innerHTML = ' Thanh toán thành công!';
                 
@@ -1097,9 +1101,14 @@ function saveOrderToUserHistory(orderData) {
         Math.max(0, subtotal + shippingFee - discount)
     );
 
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    const resolvedUserId = orderData.userId || currentUser?.id || null;
+    const resolvedUserPhone = orderData.userPhone || orderData.shipping?.phone || currentUser?.phone || null;
+
     const normalized = {
         id: orderData.orderId || orderData.id || generateOrderId(),
-        userId: orderData.userId || null,
+        userId: resolvedUserId,
+        userPhone: resolvedUserPhone,
         // order-detail expects `delivery` object
         delivery: orderData.shipping || {},
         // order-detail expects `products` array with `name`, `image`, `quantity`, `total`
@@ -1170,6 +1179,27 @@ function createGuestTempUserForOrder(orderData) {
         });
         localStorage.setItem('pawpal_temp_tokens', JSON.stringify(tokens));
     }
+}
+
+function updatePersistedOrderPaymentStatus(orderId, paymentStatus) {
+    const orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+    const index = orders.findIndex(order => String(order.id) === String(orderId));
+
+    if (index === -1) {
+        return;
+    }
+
+    orders[index] = {
+        ...orders[index],
+        paymentStatus,
+        payment: {
+            ...(orders[index].payment || {}),
+            status: paymentStatus
+        },
+        updatedAt: new Date().toISOString()
+    };
+
+    localStorage.setItem('pawpal_orders', JSON.stringify(orders));
 }
 
 function formatCurrency(amount) {

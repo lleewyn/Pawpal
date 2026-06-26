@@ -534,7 +534,78 @@ function showOrderReviewsModal(orderId) {
 window.showOrderReviewsModal = showOrderReviewsModal;
 
 function reorder(orderId) {
-    alert(`Đã thêm các sản phẩm của đơn hàng ${orderId} vào giỏ hàng`);
+    if (!currentOrder || !Array.isArray(currentOrder.products) || currentOrder.products.length === 0) {
+        showPawPalToast('Không tìm thấy sản phẩm để mua lại.', 'error');
+        return;
+    }
+
+    const cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+
+    currentOrder.products.forEach((product) => {
+        const productId = product.id != null ? String(product.id) : '';
+        const quantity = Number(product.quantity || 1);
+
+        if (!productId) return;
+
+        const existing = cart.find(item => String(item.id) === productId);
+        if (existing) {
+            existing.quantity = (Number(existing.quantity) || 1) + quantity;
+        } else {
+            cart.push({
+                id: product.id,
+                name: product.name,
+                brand: product.brand || '',
+                price: Number(product.price || 0),
+                quantity,
+                image: product.image || '',
+                stock: Number(product.stock || 99)
+            });
+        }
+    });
+
+    localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+    updateCartBadgeCount();
+
+    showPawPalToast(`Đã thêm ${currentOrder.products.length} sản phẩm của đơn hàng ${orderId} vào giỏ hàng.`, 'success');
+}
+
+function showPawPalToast(message, type = 'info') {
+    let container = document.getElementById('pawpal-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'pawpal-toast-container';
+        container.style.cssText = 'position:fixed;top:92px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:360px;';
+        document.body.appendChild(container);
+    }
+
+    const colors = {
+        success: '#2d7d46',
+        error: '#c44536',
+        warning: '#d18b00',
+        info: '#2b6cb0'
+    };
+
+    const toast = document.createElement('div');
+    toast.style.cssText = `background:${colors[type] || colors.info};color:#fff;padding:14px 16px;border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.18);font-size:14px;line-height:1.45;`;
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(12px)';
+        toast.style.transition = 'opacity .25s ease, transform .25s ease';
+        setTimeout(() => toast.remove(), 250);
+    }, 3500);
+}
+
+function updateCartBadgeCount() {
+    const cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+    const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+    const badge = document.querySelector('.cart-count, .cart-badge');
+    if (badge) {
+        badge.textContent = totalItems;
+        badge.classList.remove('d-none');
+    }
 }
 
 // Show error

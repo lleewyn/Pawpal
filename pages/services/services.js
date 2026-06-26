@@ -7,8 +7,59 @@
 let allServices = [];
 let filteredServices = [];
 
+function isCompactServicesLayout() {
+    return window.innerWidth <= 1024;
+}
+
+function openServicesSidebar() {
+    const sidebar = document.getElementById('servicesSidebar');
+    const overlay = document.getElementById('servicesSidebarOverlay');
+    if (!sidebar || !overlay || !isCompactServicesLayout()) return;
+    sidebar.classList.add('show');
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add('show'));
+    document.body.classList.add('services-filter-open');
+}
+
+function closeServicesSidebar() {
+    const sidebar = document.getElementById('servicesSidebar');
+    const overlay = document.getElementById('servicesSidebarOverlay');
+    if (!sidebar || !overlay) return;
+    sidebar.classList.remove('show');
+    overlay.classList.remove('show');
+    document.body.classList.remove('services-filter-open');
+    setTimeout(() => {
+        if (!overlay.classList.contains('show')) {
+            overlay.hidden = true;
+        }
+    }, 260);
+}
+
+function initResponsiveServicesSidebar() {
+    const openBtn = document.getElementById('openServicesSidebar');
+    const closeBtn = document.getElementById('closeServicesSidebar');
+    const overlay = document.getElementById('servicesSidebarOverlay');
+    const sidebar = document.getElementById('servicesSidebar');
+    if (!openBtn || !closeBtn || !overlay || !sidebar) return;
+
+    openBtn.onclick = () => openServicesSidebar();
+    closeBtn.onclick = () => closeServicesSidebar();
+    overlay.onclick = () => closeServicesSidebar();
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeServicesSidebar();
+    });
+
+    window.addEventListener('resize', () => {
+        if (!isCompactServicesLayout()) {
+            closeServicesSidebar();
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('=== SERVICES PAGE LOADING ===');
+    initResponsiveServicesSidebar();
 
     // Load services from CSV using DataLoader
     try {
@@ -115,6 +166,10 @@ window.applyFilters = function () {
     }
 
     renderServices();
+
+    if (isCompactServicesLayout()) {
+        closeServicesSidebar();
+    }
 };
 
 // 2. Render Services Dynamic Grid

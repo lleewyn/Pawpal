@@ -16,8 +16,9 @@
     initProcessTimeline();
     initServicesGrid();
     initFab();
-    // Gọi lại initActiveNav ở đây để đảm bảo chạy sau khi header đã inject
+    // Gọi lại init sau khi header đã inject; fallback này giúp tránh lỡ nhịp event
     setTimeout(initActiveNav, 50);
+    setTimeout(initMobileNavigation, 50);
 }
 
 // Run nav init after header is injected by components.js
@@ -108,23 +109,9 @@ function initMobileNavigation() {
     const nav = document.getElementById('primaryNavigation');
     if (!toggleBtn || !nav) return;
 
-    // Toggle open/close (stop propagation so document click doesn't immediately close it)
-    toggleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isOpen = nav.classList.contains('show');
-        if (isOpen) {
-            closeDrawer();
-        } else {
-            openDrawer();
-        }
-    });
-
-    // Close when nav link clicked (trừ dropdown toggle)
-    nav.querySelectorAll('a').forEach(link => {
-        if (!link.classList.contains('dropdown-toggle')) {
-            link.addEventListener('click', closeDrawer);
-        }
-    });
+    if (toggleBtn.dataset.mobileNavReady === 'true' && nav.dataset.mobileNavReady === 'true') {
+        return;
+    }
 
     // Close on overlay click (click outside drawer)
     // We'll create an overlay element when opening the drawer and remove it on close.
@@ -178,10 +165,31 @@ function initMobileNavigation() {
         nav.querySelectorAll('.dropdown-toggle svg').forEach(svg => svg.style.transform = 'rotate(0deg)');
     }
 
+    // Toggle open/close (stop propagation so document click doesn't immediately close it)
+    toggleBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const isOpen = nav.classList.contains('show');
+        if (isOpen) {
+            closeDrawer();
+        } else {
+            openDrawer();
+        }
+    };
+
+    // Close when nav link clicked (trừ dropdown toggle)
+    nav.querySelectorAll('a').forEach(link => {
+        if (!link.classList.contains('dropdown-toggle') && link.dataset.mobileNavCloseBound !== 'true') {
+            link.addEventListener('click', closeDrawer);
+            link.dataset.mobileNavCloseBound = 'true';
+        }
+    });
+
     // Rotate caret icons for any dropdown toggles when they expand/collapse
     const dropdownToggles = nav.querySelectorAll('.dropdown-toggle');
     dropdownToggles.forEach(dt => {
-        dt.addEventListener('click', (e) => {
+        if (dt.dataset.mobileDropdownBound === 'true') return;
+        dt.addEventListener('click', () => {
             // after bootstrap or custom toggle behavior, flip the SVG
             setTimeout(() => {
                 const expanded = dt.getAttribute('aria-expanded') === 'true' || dt.classList.contains('show');
@@ -189,7 +197,11 @@ function initMobileNavigation() {
                 if (svg) svg.style.transform = expanded ? 'rotate(180deg)' : 'rotate(0deg)';
             }, 40);
         });
+        dt.dataset.mobileDropdownBound = 'true';
     });
+
+    toggleBtn.dataset.mobileNavReady = 'true';
+    nav.dataset.mobileNavReady = 'true';
 }
 
 /**

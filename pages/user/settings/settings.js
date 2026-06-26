@@ -36,28 +36,61 @@ function showToast(type, message, duration = 5000) {
     }
 
     const toastId = 'toast-' + Date.now();
-    const icons = {
-        success: '✓',
-        error: '✗',
-        info: 'ℹ',
-        warning: '⚠'
+    const toastColors = {
+        success: { bg: '#2d7d46', accent: '#dff3e6' },
+        error: { bg: '#c44536', accent: '#fde8e4' },
+        info: { bg: '#2b6cb0', accent: '#e7f1fb' },
+        warning: { bg: '#d18b00', accent: '#fff4d6' }
     };
-
-    const titles = {
-        success: 'Thành công',
-        error: 'Lỗi',
-        info: 'Thông báo',
-        warning: 'Cảnh báo'
-    };
+    const cfg = toastColors[type] || toastColors.info;
 
     const toastHtml = `
-        <div id="${toastId}" class="toast-custom toast-${type}">
-            <span class="toast-icon">${icons[type] || 'ℹ'}</span>
-            <div class="toast-content">
-                <div class="toast-title">${titles[type] || 'Thông báo'}</div>
-                <p class="toast-message">${message}</p>
+        <div id="${toastId}" style="
+            display:flex;
+            align-items:flex-start;
+            gap:12px;
+            background:#ffffff;
+            border:1px solid ${cfg.accent};
+            border-left:none;
+            box-shadow:0 14px 30px rgba(20, 40, 30, 0.14);
+            border-radius:16px;
+            padding:14px 16px;
+            min-width:320px;
+            max-width:420px;
+            color:#183127;
+            transform:translateY(-6px);
+            opacity:1;
+            transition:opacity .25s ease, transform .25s ease;
+        ">
+            <div style="
+                width:28px;
+                height:28px;
+                flex:0 0 28px;
+                border-radius:999px;
+                background:${cfg.accent};
+                color:${cfg.bg};
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-weight:800;
+                font-size:14px;
+                line-height:1;
+                margin-top:1px;
+            ">${type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '!' : 'i'}</div>
+            <div style="flex:1; min-width:0;">
+                <div style="font-weight:700; font-size:0.95rem; margin-bottom:3px; color:#183127;">${type === 'success' ? 'Thành công' : type === 'error' ? 'Lỗi' : type === 'warning' ? 'Cảnh báo' : 'Thông báo'}</div>
+                <div style="font-size:0.9rem; line-height:1.45; color:#3f5a52;">${message}</div>
             </div>
-            <button type="button" class="toast-close" aria-label="Đóng">&times;</button>
+            <button type="button" class="toast-close" aria-label="Đóng" style="
+                border:none;
+                background:transparent;
+                color:#667;
+                font-size:20px;
+                line-height:1;
+                padding:0;
+                cursor:pointer;
+                margin-top:-1px;
+            ">&times;</button>
         </div>
     `;
 
@@ -76,8 +109,9 @@ function showToast(type, message, duration = 5000) {
 }
 
 function removeToast(toastElement) {
+    if (!toastElement) return;
     toastElement.style.opacity = '0';
-    toastElement.style.transform = 'translateX(100%)';
+    toastElement.style.transform = 'translateY(-2px) translateX(8px)';
     setTimeout(() => {
         toastElement.remove();
     }, 300);

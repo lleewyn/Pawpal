@@ -19,6 +19,7 @@
     <script src="../../../scripts/shared/components.js" defer></script>
     <script type="module" src="../../../scripts/shared/main.js"></script>
     <script type="module" src="../../../scripts/shared/auth.js"></script>
+    <script type="module" src="contact.js"></script>
 </head>
 <body class="contact-page-body">
 
@@ -81,7 +82,7 @@
 
                     <!-- Right Column: Contact Form (Approx 8 parts) -->
                     <div class="contact-form-wrapper">
-                        <form class="contact-form">
+                        <form class="contact-form" id="contactForm">
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="fullName">Họ và Tên</label>
@@ -109,7 +110,7 @@
                                 <textarea id="message" rows="6" placeholder="Nhập nội dung cần hỗ trợ..."></textarea>
                             </div>
 
-                            <button type="button" class="btn-submit">Gửi Tin Nhắn Cho PawPal</button>
+                            <button type="submit" class="btn-submit">Gửi Tin Nhắn Cho PawPal</button>
                         </form>
                     </div>
 

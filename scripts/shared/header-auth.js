@@ -47,11 +47,19 @@
         }
     };
 
+    function setMobileGroupVisibility(elements, isVisible) {
+        elements.forEach(el => {
+            const item = el.closest('.nav-item') || el;
+            item.style.display = isVisible ? '' : 'none';
+        });
+    }
+
     function updateHeaderAuth() {
         const user = getCurrentUser();
         const authActions = document.querySelector('.auth-actions');
         const lookupBtn = document.querySelector('.lookup-btn');
         const lookupDivider = document.querySelector('.lookup-divider');
+        const primaryNavigation = document.getElementById('primaryNavigation');
         
         const mobileGuestOnly = document.querySelectorAll('.mobile-guest-only');
         const mobileUserOnly = document.querySelectorAll('.mobile-user-only');
@@ -68,8 +76,12 @@
         if (!authActions) return; // Header chưa load
         
         const root = getRootPath();
+        if (primaryNavigation) {
+            primaryNavigation.classList.remove('nav-auth-user', 'nav-auth-temp', 'nav-auth-guest');
+        }
         
         if (user && !user.is_temporary) {
+            if (primaryNavigation) primaryNavigation.classList.add('nav-auth-user');
             // User đã đăng nhập chính thức
             // Ẩn: Tra cứu, Đăng nhập, Đăng ký và divider
             if (lookupBtn) lookupBtn.style.display = 'none';
@@ -183,14 +195,15 @@
             `;
             
             // Cập nhật Mobile Nav
-            mobileGuestOnly.forEach(el => el.style.display = 'none');
-            mobileUserOnly.forEach(el => el.style.display = 'block');
-            mobileTempOnly.forEach(el => el.style.display = 'none');
+            setMobileGroupVisibility(mobileGuestOnly, false);
+            setMobileGroupVisibility(mobileUserOnly, true);
+            setMobileGroupVisibility(mobileTempOnly, false);
             
             // Attach dropdown toggle handler
             setupUserDropdown();
             
         } else if (user && user.is_temporary) {
+            if (primaryNavigation) primaryNavigation.classList.add('nav-auth-temp');
             // Tài khoản tạm: hiển thị như chưa đăng nhập (không show badge/nút kích hoạt)
             if (lookupBtn) lookupBtn.style.display = '';
             if (lookupDivider) lookupDivider.style.display = '';
@@ -208,13 +221,14 @@
             `;
 
             // Mobile Nav
-            mobileGuestOnly.forEach(el => el.style.display = 'none');
-            mobileUserOnly.forEach(el => el.style.display = 'none');
-            mobileTempOnly.forEach(el => el.style.display = 'block');
+            setMobileGroupVisibility(mobileGuestOnly, false);
+            setMobileGroupVisibility(mobileUserOnly, false);
+            setMobileGroupVisibility(mobileTempOnly, true);
 
             setupLogoutButtons();
             
         } else {
+            if (primaryNavigation) primaryNavigation.classList.add('nav-auth-guest');
             // Chưa đăng nhập: Giữ nguyên UI mặc định
             if (lookupBtn) lookupBtn.style.display = '';
             if (lookupDivider) lookupDivider.style.display = '';
@@ -233,9 +247,9 @@
             `;
             
             // Cập nhật Mobile Nav
-            mobileGuestOnly.forEach(el => el.style.display = 'block');
-            mobileUserOnly.forEach(el => el.style.display = 'none');
-            mobileTempOnly.forEach(el => el.style.display = 'none');
+            setMobileGroupVisibility(mobileGuestOnly, true);
+            setMobileGroupVisibility(mobileUserOnly, false);
+            setMobileGroupVisibility(mobileTempOnly, false);
         }
 
         // Thực thi cập nhật số lượng badge tức thì

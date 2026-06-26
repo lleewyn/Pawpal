@@ -609,18 +609,20 @@
     /* Drawer — hidden by default */
     .nav-menu {
         position: fixed;
-        top: 0;
-        right: 0;
+        inset: 0 0 0 auto;
         width: min(280px, 80vw);
         height: 100dvh;
         background-color: var(--color-primary-dark);
-        padding: 72px 28px 32px;
+        padding: 88px 28px 32px;
         box-shadow: -10px 0 30px rgba(0, 0, 0, 0.18);
         transform: translateX(100%);
         transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
         /* Ensure drawer sits above the sticky header */
         z-index: 1202;
         overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
         display: flex;
         flex-direction: column;
         pointer-events: none;
@@ -637,17 +639,31 @@
         align-items: flex-start;
         gap: 16px;
         width: 100%;
+        min-height: max-content;
         margin-bottom: auto;
+    }
+
+    .nav-menu.nav-auth-user .mobile-user-only {
+        order: 20;
+    }
+
+    .nav-menu.nav-auth-user .mobile-cta-item {
+        order: 24;
     }
 
     /* Mobile Dropdown styles */
     .nav-item.dropdown .dropdown-menu {
         display: none;
+        position: static !important;
+        inset: auto !important;
+        float: none !important;
+        width: 100%;
         background: transparent;
         border: none;
         padding: 8px 0 8px 16px;
         margin: 0;
         box-shadow: none;
+        transform: none !important;
     }
 
     .nav-item.dropdown .dropdown-menu.show {
@@ -704,8 +720,7 @@
     .nav-menu a::before { display: none; }
     .nav-menu .dropdown-toggle::after { display: none !important; }
     .nav-menu .nav-link-cta-mobile { color: var(--color-accent) !important; }
-    .nav-menu li.nav-item.mobile-drawer-only:not(.mobile-user-only):not(.mobile-temp-only),
-    .nav-menu li.nav-item.mobile-guest-only {
+    .nav-menu li.nav-item.mobile-drawer-only:not(.mobile-user-only):not(.mobile-temp-only):not(.mobile-guest-only) {
         display: list-item !important;
     }
     .header-actions { display: none !important; }
@@ -3998,24 +4013,38 @@ h1, h2, h3, h4, h5, h6 {
 
     .mobile-nav-toggle {
         display: block;
-        z-index: 1002;
+        position: relative;
+        z-index: 1305;
+        pointer-events: auto;
+        touch-action: manipulation;
+        cursor: pointer;
+        flex-shrink: 0;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .mobile-nav-toggle svg,
+    .mobile-nav-toggle svg * {
+        pointer-events: none;
     }
 
     /* Drawer — hidden by default */
     .nav-menu {
         position: fixed;
-        top: 0;
-        right: 0;
+        inset: 0 0 0 auto;
         width: min(280px, 80vw);
         height: 100dvh;
         background-color: var(--color-primary-dark);
-        padding: 72px 28px 32px;
+        padding: 88px 28px 32px;
         box-shadow: -10px 0 30px rgba(0, 0, 0, 0.18);
         transform: translateX(100%);
         transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
         /* Ensure drawer sits above the sticky header */
         z-index: 1202;
         overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
         display: flex;
         flex-direction: column;
     }
@@ -4028,17 +4057,23 @@ h1, h2, h3, h4, h5, h6 {
         align-items: flex-start;
         gap: 16px;
         width: 100%;
+        min-height: max-content;
         margin-bottom: auto;
     }
 
     /* Mobile Dropdown styles */
     .nav-item.dropdown .dropdown-menu {
         display: none;
+        position: static !important;
+        inset: auto !important;
+        float: none !important;
+        width: 100%;
         background: transparent;
         border: none;
         padding: 8px 0 8px 16px;
         margin: 0;
         box-shadow: none;
+        transform: none !important;
     }
 
     .nav-item.dropdown .dropdown-menu.show {
@@ -4095,8 +4130,7 @@ h1, h2, h3, h4, h5, h6 {
     .nav-menu a::before { display: none; }
     .nav-menu .dropdown-toggle::after { display: none !important; }
     .nav-menu .nav-link-cta-mobile { color: var(--color-accent) !important; }
-    .nav-menu li.nav-item.mobile-drawer-only:not(.mobile-user-only):not(.mobile-temp-only),
-    .nav-menu li.nav-item.mobile-guest-only {
+    .nav-menu li.nav-item.mobile-drawer-only:not(.mobile-user-only):not(.mobile-temp-only):not(.mobile-guest-only) {
         display: list-item !important;
     }
     .header-actions { display: none !important; }

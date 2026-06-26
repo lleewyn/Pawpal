@@ -117,7 +117,20 @@ export const API = {
     async getUserOrders(userId) {
         await this.initData();
         const orders = safeReadArray('pawpal_orders');
-        return orders.filter(order => sameUserId(order.userId, userId));
+        const currentUser = safeReadObject('pawpal_current_user');
+        return orders.filter(order => {
+            if (sameUserId(order.userId, userId)) {
+                return true;
+            }
+
+            if (!currentUser) {
+                return false;
+            }
+
+            return Boolean(
+                order.userPhone && currentUser.phone && String(order.userPhone) === String(currentUser.phone)
+            );
+        });
     },
 
     async getCareLogs() {
