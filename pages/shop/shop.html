@@ -37,7 +37,7 @@
             <div class="container-xl">
                 <div class="section-header-shop">
                     <h2 class="section-title-shop">Mua sắm theo danh mục</h2>
-                    <a href="#all-products" class="link-see-all">
+                    <a href="#all-products" class="link-see-all shop-category-jump">
                         <span>Xem tất cả</span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
@@ -131,6 +131,7 @@
                         <span class="category-card-label">Khác</span>
                     </a>
                 </div>
+                <button type="button" class="category-mobile-toggle" id="categoryMobileToggle" hidden>Xem thêm danh mục</button>
             </div>
         </section>
 
@@ -143,6 +144,9 @@
                         <!-- Fixed Header -->
                         <div class="sidebar-header">
                             <h3 class="sidebar-title">Bộ lọc</h3>
+                            <button type="button" class="sidebar-close-btn" id="closeShopSidebar" aria-label="Đóng bộ lọc">
+                                <span aria-hidden="true">×</span>
+                            </button>
                         </div>
 
                         <!-- Scrollable Body -->
@@ -345,26 +349,9 @@
             </div>
         </section>
 
-        <!-- Mobile Filter Drawer -->
-        <div class="mobile-filter-overlay d-none" id="mobileFilterOverlay"></div>
-        <div class="mobile-filter-drawer d-none" id="mobileFilterDrawer">
-            <div class="drawer-header">
-                <h3 class="drawer-title">Bộ lọc</h3>
-                <button class="drawer-close" id="drawerClose" aria-label="Đóng">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-            <div class="drawer-content" id="drawerContent">
-                <!-- Filter content will be cloned here on mobile -->
-            </div>
-            <div class="drawer-footer">
-                <button class="btn-apply-filters" id="btnApplyFilters">Áp dụng bộ lọc</button>
-            </div>
-        </div>
     </main>
+
+    <div class="mobile-filter-overlay" id="mobileFilterOverlay" hidden></div>
 
     <div id="site-footer"></div>
 

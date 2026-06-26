@@ -4,25 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Về chúng tôi - PawPal</title>
-    
-    <!-- Google Fonts -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
-    
-    <!-- Bootstrap CSS -->
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Core Style -->
     <link rel="stylesheet" href="../../../styles/style.css">
-    
-    <!-- Components -->
-    <!-- Page Specific CSS -->
     <link rel="stylesheet" href="about.css">
+
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmxc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
     <script src="../../../scripts/shared/components.js" defer></script>
     <script type="module" src="../../../scripts/shared/main.js"></script>
     <script type="module" src="../../../scripts/shared/auth.js"></script>
@@ -32,103 +26,230 @@
     <div id="site-header" style="min-height:110px;background:var(--color-bg-light);"></div>
 
     <main>
-        <!-- Section 1: Hero -->
         <section class="about-hero">
             <div class="container-xl">
                 <div class="about-hero-content">
-                    <span class="section-label">VỀ CHÚNG TÔI</span>
                     <h1>Chăm sóc thú cưng<br>bằng sự yêu thương</h1>
-                    <p>PawPal được tạo ra với mong muốn mang đến những sản phẩm chất lượng và trải nghiệm mua sắm đáng tin cậy cho mọi người yêu thú cưng.</p>
-                    <a href="/pages/shop/shop.html" class="btn-cta">Khám phá sản phẩm</a>
+                    <p>PawPal được tạo ra để giúp các Sen yên tâm hơn khi mua sắm, đặt lịch và chăm sóc Boss mỗi ngày.</p>
+                    <div class="about-hero-actions">
+                        <a href="/pages/shop/shop.html" class="btn-cta">Khám phá sản phẩm</a>
+                        <a href="/pages/services/services.html" class="btn-green-outline">Xem dịch vụ</a>
+                    </div>
+                    <div class="about-hero-facts">
+                        <div class="hero-fact-item">
+                            <strong>5.000+</strong>
+                            <span>sen tin tưởng</span>
+                        </div>
+                        <div class="hero-fact-item">
+                            <strong>24/7</strong>
+                            <span>hỗ trợ tư vấn</span>
+                        </div>
+                        <div class="hero-fact-item">
+                            <strong>100%</strong>
+                            <span>nguồn gốc rõ ràng</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 2: Câu chuyện -->
+        <section class="about-trust">
+            <div class="container-xl">
+                <div class="section-header text-center">
+                    <h2>Những cam kết giúp Sen yên tâm hơn</h2>
+                </div>
+                <div class="about-trust-grid">
+                    <article class="trust-card">
+                        <span class="trust-card-number">01</span>
+                        <h3>Thông tin rõ ràng</h3>
+                        <p>Mức giá, nguồn gốc sản phẩm, quy trình dịch vụ và lưu ý chăm sóc đều được trình bày minh bạch để Sen dễ quyết định.</p>
+                    </article>
+                    <article class="trust-card">
+                        <span class="trust-card-number">02</span>
+                        <h3>Chăm sóc có tiêu chuẩn</h3>
+                        <p>Từ khâu tiếp nhận, vệ sinh đến theo dõi sau dịch vụ, PawPal giữ một cách làm nhất quán để Boss luôn được đối xử nhẹ nhàng.</p>
+                    </article>
+                    <article class="trust-card">
+                        <span class="trust-card-number">03</span>
+                        <h3>Luôn có người đồng hành</h3>
+                        <p>Khi Sen còn phân vân, đội ngũ PawPal ưu tiên tư vấn đúng nhu cầu thật thay vì cố bán thêm những thứ chưa cần thiết.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
         <section class="about-story">
             <div class="container-xl">
                 <div class="about-story-grid">
-                    <div class="about-story-image">
-                        <img src="/assets/images/publics/pet.png" alt="Ngôi nhà PawPal">
-                    </div>
-                    <div class="about-story-content">
-                        <span class="section-label">CÂU CHUYỆN CỦA CHÚNG TÔI</span>
+                    <div class="about-story-copy">
                         <h2>Hành trình bắt đầu từ tình yêu dành cho thú cưng</h2>
                         <div class="story-text">
-                            <p>PawPal ra đời từ tình yêu với những người bạn nhỏ bốn chân. Chúng tôi hiểu rằng mỗi thú cưng đều là một thành viên quan trọng trong gia đình.</p>
-                            <p>Vì thế, PawPal luôn nỗ lực chọn lọc những sản phẩm an toàn, chất lượng và phù hợp nhất để đồng hành cùng bạn trên hành trình chăm sóc thú cưng mỗi ngày.</p>
+                            <p>PawPal ra đời từ một mong muốn rất đơn giản: giúp việc chăm sóc thú cưng trở nên rõ ràng, nhẹ nhàng và đáng tin hơn với mọi gia đình.</p>
+                            <p>Chúng tôi hiểu rằng mỗi quyết định mua đồ ăn, chọn sản phẩm chăm sóc hay đặt một lịch spa đều gắn với sức khỏe và cảm xúc của Boss. Vì vậy, PawPal ưu tiên sự minh bạch trong thông tin, chất lượng trong lựa chọn và sự tử tế trong từng trải nghiệm.</p>
                         </div>
-                        <a href="#" class="btn-cta-outline about-story-btn">Tìm hiểu thêm về chúng tôi</a>
+                        <div class="about-story-points">
+                            <div class="story-point-item">Chọn lọc sản phẩm theo tiêu chí an toàn và phù hợp thật sự</div>
+                            <div class="story-point-item">Kết nối mua sắm, đặt lịch và chăm sóc trong cùng một hệ sinh thái</div>
+                            <div class="story-point-item">Đặt sự an tâm của Sen và sự thoải mái của Boss lên trước</div>
+                        </div>
+                        <div class="about-story-note">
+                            <strong>PawPal không muốn chỉ là nơi bán hàng.</strong>
+                            <p>Chúng tôi muốn trở thành nơi mà mỗi lần Sen ghé qua, bạn đều cảm thấy dễ chọn hơn, yên tâm hơn và được đồng hành đúng lúc.</p>
+                        </div>
+                        <div class="about-story-gallery">
+                            <div class="story-gallery-item story-gallery-item-large">
+                                <img src="/assets/images/services/spa/gallery/cust_khach_1_dang_say_long.jpg" alt="Boss được chăm sóc tại PawPal">
+                            </div>
+                            <div class="story-gallery-item">
+                                <img src="/assets/images/services/spa/gallery/cust_khach_1_dang_nghi_ngoi.jpg" alt="Boss thư giãn sau khi chăm sóc">
+                            </div>
+                            <div class="story-gallery-item">
+                                <img src="/assets/images/services/spa/gallery/cust_khach_2_nghi_ngoi.jpg" alt="Khoảnh khắc đáng yêu tại PawPal">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="about-story-aside">
+                        <div class="about-story-image">
+                            <img src="/assets/images/services/spa/gallery/cust_khach_1_dang_tam.jpg" alt="Không gian chăm sóc tại PawPal">
+                        </div>
+                        <div class="about-story-stats">
+                            <div class="story-stat-card">
+                                <strong>2019</strong>
+                                <span>Khởi đầu tại TP.HCM</span>
+                            </div>
+                            <div class="story-stat-card">
+                                <strong>12.000+</strong>
+                                <span>Lượt mua và đặt lịch</span>
+                            </div>
+                            <div class="story-stat-card">
+                                <strong>4,9/5</strong>
+                                <span>Mức hài lòng trung bình</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 3: Giá trị cốt lõi -->
         <section class="about-core-values">
             <div class="container-xl">
                 <div class="section-header text-center">
-                    <span class="section-label">NHỮNG GIÁ TRỊ CHÚNG TÔI THEO ĐUỔI</span>
                     <h2>Điều quan trọng với PawPal</h2>
                 </div>
                 <div class="core-values-grid">
-                    <div class="value-item">
+                    <article class="value-item">
                         <h3>An toàn</h3>
-                        <p>Sản phẩm được lựa chọn kỹ lưỡng, ưu tiên sức khỏe và sự an toàn của thú cưng.</p>
-                    </div>
-                    <div class="value-item">
+                        <p>Sản phẩm và dịch vụ được chọn theo tiêu chí ưu tiên sức khỏe, độ lành tính và sự phù hợp theo từng nhóm thú cưng.</p>
+                    </article>
+                    <article class="value-item">
                         <h3>Chất lượng</h3>
-                        <p>Cam kết mang đến những sản phẩm chính hãng, nguồn gốc rõ ràng và chất lượng vượt trội.</p>
-                    </div>
-                    <div class="value-item">
+                        <p>PawPal theo đuổi trải nghiệm chỉn chu từ tư vấn, mua sắm đến giao nhận và chăm sóc sau đặt lịch.</p>
+                    </article>
+                    <article class="value-item">
                         <h3>Yêu thương</h3>
-                        <p>Chúng tôi chăm sóc thú cưng của bạn bằng sự thấu hiểu và tình yêu như với chính thú cưng của mình.</p>
-                    </div>
+                        <p>Mỗi điểm chạm đều được xây dựng với sự thấu hiểu rằng Boss không chỉ là thú cưng, mà là một phần của gia đình.</p>
+                    </article>
                 </div>
             </div>
         </section>
 
-        <!-- Section 4: Cuộc sống cùng PawPal (Gallery Bento) -->
+        <section class="about-team">
+            <div class="container-xl">
+                <div class="section-header text-center">
+                    <h2>Những gương mặt đại diện cho sự an tâm</h2>
+                </div>
+                <div class="about-team-grid">
+                    <article class="team-card">
+                        <img src="/assets/images/experts/expert-1.jpg" alt="Minh Tuấn">
+                        <div class="team-card-content">
+                            <h3>Minh Tuấn</h3>
+                            <p class="team-role">Chuyên gia Grooming</p>
+                            <p>Đồng hành cùng hàng nghìn ca chăm sóc và tạo kiểu, luôn ưu tiên sự nhẹ nhàng và đúng nhu cầu của từng bé.</p>
+                        </div>
+                    </article>
+                    <article class="team-card">
+                        <img src="/assets/images/experts/expert-2.jpg" alt="Nhật Khanh Xinh đẹp">
+                        <div class="team-card-content">
+                            <h3>Nhật Khanh Xinh đẹp</h3>
+                            <p class="team-role">Chuyên gia Chăm sóc và Hotel</p>
+                            <p>Phụ trách trải nghiệm lưu trú và chăm sóc hằng ngày, giúp các Sen yên tâm hơn khi gửi Boss tại PawPal.</p>
+                        </div>
+                    </article>
+                    <article class="team-card">
+                        <img src="/assets/images/experts/expert-3.jpg" alt="Nhật Khanh Cute">
+                        <div class="team-card-content">
+                            <h3>Nhật Khanh Cute</h3>
+                            <p class="team-role">Tư vấn sức khỏe thú cưng</p>
+                            <p>Hỗ trợ Sen chọn lộ trình chăm sóc phù hợp hơn theo độ tuổi, giống loài và thể trạng của từng bé.</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-why">
+            <div class="container-xl">
+                <div class="section-header text-center">
+                    <h2>Vì sao khách hàng quay lại với PawPal</h2>
+                </div>
+                <div class="about-why-grid">
+                    <article class="why-card">
+                        <h3>Rõ ràng và dễ chọn</h3>
+                        <p>Thông tin sản phẩm, mức giá và cách dùng được trình bày để Sen ra quyết định nhanh hơn mà không bị rối.</p>
+                    </article>
+                    <article class="why-card">
+                        <h3>Một nơi cho nhiều nhu cầu</h3>
+                        <p>Từ mua sắm đến đặt lịch chăm sóc, PawPal giúp hành trình nuôi Boss liền mạch và bớt phân mảnh hơn.</p>
+                    </article>
+                    <article class="why-card">
+                        <h3>Tư vấn có trách nhiệm</h3>
+                        <p>PawPal ưu tiên gợi ý đúng nhu cầu thật, không cố bán quá mức, để Sen cảm thấy được đồng hành chứ không bị ép mua.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
         <section class="about-gallery">
             <div class="container-xl">
                 <div class="section-header text-center">
-                    <span class="section-label">CUỘC SỐNG CÙNG PAWPAL</span>
                     <h2>Những khoảnh khắc đáng yêu</h2>
                 </div>
                 <div class="gallery-bento">
                     <div class="gallery-img gallery-img-tall">
-                        <img src="/assets/images/publics/dog.jpg" alt="Corgi dog">
+                        <img src="/assets/images/publics/dog.jpg" alt="Boss vui vẻ tại PawPal">
                     </div>
                     <div class="gallery-img gallery-img-square">
-                        <img src="/assets/images/publics/cat.jpg" alt="Cat being pet">
+                        <img src="/assets/images/publics/cat.jpg" alt="Boss mèo được vuốt ve">
                     </div>
                     <div class="gallery-img gallery-img-landscape">
-                        <img src="/assets/images/shop/product-catalog/cham_soc.png" alt="PawPal package">
+                        <img src="/assets/images/shop/product-catalog/cham_soc.png" alt="Sản phẩm chăm sóc tại PawPal">
                     </div>
                     <div class="gallery-img gallery-img-landscape">
-                        <img src="/assets/images/shop/product-catalog/Thuc_an_uot.png" alt="Pet food package">
+                        <img src="/assets/images/shop/product-catalog/Thuc_an_uot.png" alt="Thức ăn dành cho thú cưng">
                     </div>
                     <div class="gallery-img gallery-img-square">
-                        <img src="/assets/images/shared/blog_cat_care.webp" alt="Cat eating">
+                        <img src="/assets/images/shared/blog_cat_care.webp" alt="Boss mèo trong bữa ăn">
                     </div>
                     <div class="gallery-img gallery-img-tall">
-                        <img src="/assets/images/publics/dog11.png" alt="Pomeranian in clothes">
+                        <img src="/assets/images/publics/dog11.png" alt="Boss diện đồ xinh tại PawPal">
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section 5: CTA Banner -->
         <section class="about-cta">
             <div class="container-xl">
                 <div class="cta-banner">
-                    <div class="cta-banner-img">
-                        <img src="/assets/images/shared/blog_dog_care.webp" alt="Dog and Cat companion">
-                    </div>
                     <div class="cta-banner-content">
                         <h2>Đồng hành cùng<br>người bạn nhỏ của bạn</h2>
-                        <p>Khám phá trang trại sản phẩm chất lượng<br>được tuyển chọn dành riêng cho thú cưng.</p>
-                        <a href="/pages/shop/shop.html" class="btn-cta">Mua sắm ngay</a>
+                        <p>Khám phá sản phẩm chất lượng và dịch vụ chăm sóc được chọn lọc để Sen yên tâm hơn mỗi ngày.</p>
+                        <div class="about-cta-actions">
+                            <a href="/pages/shop/shop.html" class="btn-cta">Mua sắm ngay</a>
+                            <a href="/pages/services/services.html" class="btn-green-outline">Đặt lịch chăm sóc</a>
+                        </div>
+                    </div>
+                    <div class="cta-banner-img">
+                        <img src="/assets/images/services/hotel/htl-deluxe.jpg" alt="Boss vui vẻ cùng PawPal">
                     </div>
                 </div>
             </div>
@@ -136,15 +257,6 @@
     </main>
 
     <div id="site-footer"></div>
-
-    
-    
-    
-    
-    
-    
-    
     <div id="site-fab"></div>
 </body>
 </html>
-

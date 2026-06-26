@@ -57,9 +57,74 @@ function initResponsiveServicesSidebar() {
     });
 }
 
+function initServicesFilterControls() {
+    const searchInput = document.getElementById('searchServiceInput');
+    if (searchInput && searchInput.dataset.bound !== 'true') {
+        searchInput.addEventListener('input', () => applyFilters());
+        searchInput.dataset.bound = 'true';
+    }
+
+    document.querySelectorAll('input[name="sortFilter"], input[name="categoryFilter"], input[name="petFilter"], input[name="priceBucketFilter"]').forEach((input) => {
+        if (input.dataset.bound === 'true') return;
+        input.addEventListener('change', () => applyFilters());
+        input.dataset.bound = 'true';
+    });
+
+    const ratingAll = document.getElementById('ratingAll');
+    if (ratingAll && ratingAll.dataset.bound !== 'true') {
+        ratingAll.addEventListener('change', () => handleRatingAllChange(ratingAll));
+        ratingAll.dataset.bound = 'true';
+    }
+
+    document.querySelectorAll('.rating-star-check').forEach((input) => {
+        if (input.dataset.bound === 'true') return;
+        input.addEventListener('change', () => handleRatingStarChange());
+        input.dataset.bound = 'true';
+    });
+
+    document.querySelectorAll('.btn-clear-filters-full, .btn-clear-filters').forEach((button) => {
+        if (button.dataset.bound === 'true') return;
+        button.addEventListener('click', () => clearFilters());
+        button.dataset.bound = 'true';
+    });
+}
+
+function updateServicesFilterCount() {
+    const badge = document.getElementById('servicesFilterCount');
+    const label = document.getElementById('servicesFilterLabel');
+    const toggle = document.getElementById('openServicesSidebar');
+    if (!badge || !label || !toggle) return;
+
+    let activeCount = 0;
+
+    const searchVal = document.getElementById('searchServiceInput')?.value.trim() || '';
+    if (searchVal) activeCount += 1;
+
+    const categoryFilter = document.querySelector('input[name="categoryFilter"]:checked')?.value || 'all';
+    if (categoryFilter !== 'all') activeCount += 1;
+
+    const petFilter = document.querySelector('input[name="petFilter"]:checked')?.value || 'all';
+    if (petFilter !== 'all') activeCount += 1;
+
+    const priceBucketFilter = document.querySelector('input[name="priceBucketFilter"]:checked')?.value || 'all';
+    if (priceBucketFilter !== 'all') activeCount += 1;
+
+    const sortBy = document.querySelector('input[name="sortFilter"]:checked')?.value || 'default';
+    if (sortBy !== 'default') activeCount += 1;
+
+    const selectedRatings = [...document.querySelectorAll('.rating-star-check:checked')];
+    if (selectedRatings.length > 0) activeCount += 1;
+
+    badge.textContent = String(activeCount);
+    badge.hidden = activeCount === 0;
+    label.textContent = activeCount > 0 ? `Bộ lọc (${activeCount})` : 'Bộ lọc';
+    toggle.classList.toggle('is-active', activeCount > 0);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('=== SERVICES PAGE LOADING ===');
     initResponsiveServicesSidebar();
+    initServicesFilterControls();
 
     // Load services from CSV using DataLoader
     try {
@@ -77,6 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Apply initial filters and render
             applyFilters();
+            updateServicesFilterCount();
         } else {
             console.error('DataLoader.loadServices not found');
             showErrorMessage();
@@ -166,6 +232,7 @@ window.applyFilters = function () {
     }
 
     renderServices();
+    updateServicesFilterCount();
 
     if (isCompactServicesLayout()) {
         closeServicesSidebar();
