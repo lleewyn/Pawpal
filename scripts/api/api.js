@@ -5,7 +5,7 @@
  */
 
 export const API = {
-    DATA_VERSION: '2026-06-28-v5-rename-user-to-le-le-quyen',
+    DATA_VERSION: '2026-06-28-v6-fix-accents',
 
     async getJSON(url) {
         try {

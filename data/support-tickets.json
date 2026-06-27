@@ -1,19 +1,19 @@
 [
   {
     "id": "TK-82910",
-    "title": "Lỗi trừ tiền Momo nhưng đơn hàng báo thất bại",
+    "title": "Lỗi trừ tiền MoMo nhưng đơn hàng báo thất bại",
     "type": "payment",
     "priority": "Cao",
     "status": "processing",
     "messages": [
       {
         "sender": "user",
-        "text": "Tôi đã thanh toán Momo thành công và bị trừ 250k nhưng hệ thống vẫn báo đơn hàng chưa được thanh toán.",
+        "text": "Tôi đã thanh toán MoMo thành công và bị trừ 250k nhưng hệ thống vẫn báo đơn hàng chưa được thanh toán.",
         "time": "2026-06-24T01:20:00.000Z"
       },
       {
         "sender": "cskh",
-        "agent": "Nguyen Van B",
+        "agent": "Nguyễn Văn B",
         "text": "PawPal xin lỗi bạn vì sự cố này ạ. Chúng tôi đã chuyển thông tin giao dịch sang bộ phận kỹ thuật kiểm soát đối chiếu dòng tiền. Bạn đợi chúng tôi 5 phút ạ!",
         "time": "2026-06-24T01:30:00.000Z"
       }
@@ -23,19 +23,19 @@
   },
   {
     "id": "TK-82911",
-    "title": "Yeu cau thay doi lich tam cho be",
+    "title": "Yêu cầu thay đổi lịch tắm cho bé",
     "type": "booking",
-    "priority": "Trung binh",
+    "priority": "Trung bình",
     "status": "completed",
     "messages": [
       {
         "sender": "user",
-        "text": "Em muon doi lich tam Bong tu thu 5 sang thu 6 tuan nay. Dao nay be ban viec nhap hoc nen khong co thoi gian.",
+        "text": "Em muốn đổi lịch tắm Bông từ thứ 5 sang thứ 6 tuần này. Dạo này bé bận việc nhập học nên không có thời gian.",
         "time": "2026-06-24T02:00:00.000Z"
       },
       {
         "sender": "cskh",
-        "agent": "Tran Thi C",
+        "agent": "Trần Thị C",
         "text": "Được ạ! PawPal vừa đổi lịch Bông từ thứ 5 sang thứ 6 lúc 14:00 rồi. Bạn kiểm tra email xác nhận nhé ạ!",
         "time": "2026-06-24T02:45:00.000Z"
       }
@@ -52,7 +52,7 @@
     "messages": [
       {
         "sender": "user",
-        "text": "Hom qua em nhan hang nhung chiec giuong cho be bi nuoc loc va mui moc. Mong PawPal giai quyet som a.",
+        "text": "Hôm qua em nhận hàng nhưng chiếc giường cho bé bị nước lọc và mùi mốc. Mong PawPal giải quyết sớm ạ.",
         "time": "2026-06-24T03:10:00.000Z"
       }
     ],
@@ -63,29 +63,29 @@
     "id": "TK-82913",
     "title": "Hỏi về dịch vụ spa cho chó lông dài",
     "type": "inquiry",
-    "priority": "Trung binh",
+    "priority": "Trung bình",
     "status": "completed",
     "messages": [
       {
         "sender": "user",
-        "text": "Be toi la cho Golden Retriever, long dai. Co dich vu spa chuyen biet nao cho long dai khong a? Gia bao nhieu?",
+        "text": "Bé tôi là chó Golden Retriever, lông dài. Có dịch vụ spa chuyên biệt nào cho lông dài không ạ? Giá bao nhiêu?",
         "time": "2026-06-23T04:10:00.000Z"
       },
       {
         "sender": "cskh",
-        "agent": "Le Van D",
-        "text": "Duoc a! PawPal co goi Spa Premium cho cho long dai: gom tam, say, cat tia, xoa dau chuyen biet. Gia 450k/lan. Ban co muon dat lich khong?",
+        "agent": "Lê Văn D",
+        "text": "Được ạ! PawPal có gói Spa Premium cho chó lông dài: gồm tắm, sấy, cắt tỉa, xoa dầu chuyên biệt. Giá 450k/lần. Bạn có muốn đặt lịch không?",
         "time": "2026-06-23T04:25:00.000Z"
       }
     ],
     "rating": 4,
-    "ratingComment": "Chinh xac, tu van rat tot"
+    "ratingComment": "Chính xác, tư vấn rất tốt"
   },
   {
     "id": "TK-82914",
     "title": "Đăng ký Paw Points bị lỗi",
     "type": "account",
-    "priority": "Trung binh",
+    "priority": "Trung bình",
     "status": "processing",
     "messages": [
       {
@@ -95,7 +95,7 @@
       },
       {
         "sender": "cskh",
-        "agent": "Pham Van E",
+        "agent": "Phạm Văn E",
         "text": "Xin lỗi bạn! Chúng tôi đang kiểm tra vấn đề kỹ thuật này. Bạn thử đăng xuất rồi đăng nhập lại xem nhé.",
         "time": "2026-06-24T04:35:00.000Z"
       }
@@ -105,14 +105,14 @@
   },
   {
     "id": "TK-82915",
-    "title": "Toi muon nhuong quyen mo chi nhanh PawPal",
+    "title": "Tôi muốn nhượng quyền mở chi nhánh PawPal",
     "type": "business",
-    "priority": "Trung binh",
+    "priority": "Trung bình",
     "status": "pending",
     "messages": [
       {
         "sender": "user",
-        "text": "Xin chao! Toi rat yeu thich PawPal va muon mo chi nhanh tai quan 1, TP.HCM. Co chuong trinh hop tac nao khong a?",
+        "text": "Xin chào! Tôi rất yêu thích PawPal và muốn mở chi nhánh tại Quận 1, TP.HCM. Có chương trình hợp tác nào không ạ?",
         "time": "2026-06-20T04:10:00.000Z"
       }
     ],
@@ -128,7 +128,7 @@
     "messages": [
       {
         "sender": "user",
-        "text": "Toi la khach vang lai, can xac thuc OTP de doi lich hen.",
+        "text": "Tôi là khách vãng lai, cần xác thực OTP để đổi lịch hẹn.",
         "time": "2026-06-24T05:00:00.000Z"
       }
     ],

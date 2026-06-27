@@ -5,7 +5,7 @@
 (function() {
     const TICKETS_KEY = 'pawpal_tickets';
     const TICKETS_SEED_VERSION_KEY = 'pawpal_support_seed_version';
-    const TICKETS_SEED_VERSION = '2026-06-24-support-seed-v1';
+    const TICKETS_SEED_VERSION = '2026-06-28-support-seed-v2-fix-accents';
 
     // Dữ liệu câu hỏi FAQ mẫu
     const faqData = [
@@ -52,12 +52,19 @@
             const raw = localStorage.getItem(TICKETS_KEY);
             const stored = raw ? JSON.parse(raw) : null;
             const hasStoredTickets = Array.isArray(stored) && stored.length > 0;
+            const isOldVersion = localStorage.getItem(TICKETS_SEED_VERSION_KEY) !== TICKETS_SEED_VERSION;
 
-            if (!hasStoredTickets) {
-                localStorage.setItem(TICKETS_KEY, JSON.stringify(initialTickets));
-            }
-
-            if (!localStorage.getItem(TICKETS_SEED_VERSION_KEY)) {
+            if (!hasStoredTickets || isOldVersion) {
+                const merged = Array.isArray(initialTickets) ? initialTickets.map(seed => {
+                    const local = Array.isArray(stored) ? stored.find(s => String(s.id) === String(seed.id)) : null;
+                    return local ? { ...seed, status: local.status, rating: local.rating, ratingComment: local.ratingComment } : seed;
+                }) : [];
+                if (Array.isArray(stored)) {
+                    stored.forEach(local => {
+                        if (!merged.some(m => String(m.id) === String(local.id))) merged.push(local);
+                    });
+                }
+                localStorage.setItem(TICKETS_KEY, JSON.stringify(merged));
                 localStorage.setItem(TICKETS_SEED_VERSION_KEY, TICKETS_SEED_VERSION);
             }
         } catch (error) {

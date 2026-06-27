@@ -29,7 +29,7 @@
         "products":  [
                          {
                              "id":  "PROD-002",
-                             "name":  "Do choi gam xuong cao su",
+                             "name":  "Đồ chơi gặm xương cao su",
                              "image":  "/assets/images/shop/products/pk-dochoi-01.jpg",
                              "quantity":  1,
                              "price":  400000,
@@ -44,11 +44,11 @@
         "status":  "rejected",
         "reason":  "change_mind",
         "type":  "refund",
-        "description":  "Khach doi y ve muc dich su dung, he thong tu choi vi da qua han",
+        "description":  "Khách đổi ý về mục đích sử dụng, hệ thống từ chối vì đã quá hạn.",
         "products":  [
                          {
                              "id":  "PROD-015",
-                             "name":  "Balo van chuyen thu cung",
+                             "name":  "Balo vận chuyển thú cưng",
                              "image":  "/assets/images/shop/products/pk-balo-01.webp",
                              "quantity":  1,
                              "price":  650000,
@@ -63,11 +63,11 @@
         "status":  "shipping_return",
         "reason":  "wrong_size",
         "type":  "exchange",
-        "description":  "Khach da gui hang tra ve kho",
+        "description":  "Khách đã gửi hàng trả về kho.",
         "products":  [
                          {
                              "id":  "PROD-002",
-                             "name":  "Do choi gam xuong cao su",
+                             "name":  "Đồ chơi gặm xương cao su",
                              "image":  "/assets/images/shop/products/pk-dochoi-01.jpg",
                              "quantity":  1,
                              "price":  400000,
@@ -82,7 +82,7 @@
         "status":  "completed",
         "reason":  "broken",
         "type":  "exchange",
-        "description":  "Yeu cau doi tra da duoc giai quyet xong",
+        "description":  "Yêu cầu đổi trả đã được giải quyết xong.",
         "products":  [
                          {
                              "id":  "PROD-010",
