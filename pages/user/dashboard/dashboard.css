@@ -1126,8 +1126,9 @@ input:checked + .slider:before {
 /* Bottom layout grid */
 .dashboard-bottom-grid {
     display: grid;
-    grid-template-columns: 1.2fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-md);
+    width: 100%;
 }
 
 .dashboard-bottom-card {
@@ -1139,6 +1140,8 @@ input:checked + .slider:before {
     display: flex;
     flex-direction: column;
     color: #3b4f46;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .bottom-card-header {
@@ -1237,6 +1240,8 @@ input:checked + .slider:before {
     border-radius: 12px;
     background: var(--color-bg-white);
     gap: 10px;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .order-icon-box {
