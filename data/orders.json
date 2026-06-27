@@ -291,7 +291,7 @@
       {
         "id": "PROD-005",
         "name": "Pate cho mèo Whiskas vị cá biển 85g (Lốc 12 túi)",
-        "image": "/assets/images/shop/products/TP-SUP-01.png",
+        "image": "/assets/images/shop/products/TP-PATE-02.png",
         "quantity": 2,
         "price": 195000,
         "total": 390000
@@ -357,7 +357,7 @@
       {
         "id": "PROD-012",
         "name": "Vòng cổ đệm êm chống siết cho chó trung bình",
-        "image": "/assets/images/shop/products/pk-vongco-01.jpg",
+        "image": "/assets/images/shop/products/pk-vong-01.jpg",
         "quantity": 1,
         "price": 150000,
         "total": 150000
@@ -365,7 +365,7 @@
       {
         "id": "PROD-015",
         "name": "Xịt khử mùi và sát khuẩn chuồng trại PawCare 500ml",
-        "image": "/assets/images/shop/products/vs-xitkhumui-01.jpg",
+        "image": "/assets/images/shop/products/VS-XIT-07.png",
         "quantity": 1,
         "price": 120000,
         "total": 120000
