@@ -1,4 +1,4 @@
-﻿/**
+/**
  * auth.js — Shared authentication core của PawPal.
  * Chứa: database helpers, session management, toast/banner UI,
  * session protection cho tài khoản tạm.
@@ -178,6 +178,11 @@ function showToast(type, message, duration = 5000) {
     container.insertAdjacentHTML('beforeend', toastHtml);
     const toastElement = document.getElementById(toastId);
 
+    // Trigger animation to show the toast
+    requestAnimationFrame(() => {
+        toastElement.classList.add('show');
+    });
+
     toastElement.querySelector('.toast-close').addEventListener('click', () => {
         removeToast(toastElement);
     });
@@ -186,6 +191,8 @@ function showToast(type, message, duration = 5000) {
 }
 
 function removeToast(toastElement) {
+    if (!toastElement) return;
+    toastElement.classList.remove('show');
     toastElement.style.opacity = '0';
     toastElement.style.transform = 'translateX(100%)';
     setTimeout(() => toastElement.remove(), 300);

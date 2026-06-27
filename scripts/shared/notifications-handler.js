@@ -201,6 +201,11 @@
         const toastElement = document.getElementById(toastId);
         if (!toastElement) return;
 
+        // Trigger animation to show the toast
+        requestAnimationFrame(() => {
+            toastElement.classList.add('show');
+        });
+
         toastElement.querySelector('.toast-close').addEventListener('click', () => {
             removeToast(toastElement);
         });
@@ -210,6 +215,7 @@
 
     function removeToast(toastElement) {
         if (!toastElement) return;
+        toastElement.classList.remove('show');
         toastElement.style.opacity = '0';
         toastElement.style.transform = 'translateX(100%)';
         setTimeout(() => toastElement.remove(), 300);
