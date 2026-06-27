@@ -120,15 +120,6 @@ function createOrderCard(order) {
         ? order.products.reduce((sum, product) => sum + (Number(product.quantity) || 1), 0)
         : 0;
     const paymentLabel = getPaymentMethodLabel(order.paymentMethod);
-    const metaParts = [
-        productCount > 0 ? `${productCount} sản phẩm` : '',
-        paymentLabel,
-        normalizedStatus === 'shipping' ? 'Đang giao tới bạn' : '',
-        normalizedStatus === 'completed' ? 'Đơn đã hoàn tất' : '',
-        normalizedStatus === 'pending_payment' ? 'Chờ xác nhận thanh toán' : '',
-        normalizedStatus === 'preparing' ? 'Shop đang đóng gói' : ''
-    ].filter(Boolean);
-
     const reviewed = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
     const allReviewed = isCompleted && order.products.every((product) =>
         reviewed.some((item) => item.orderId === order.id && item.productId === product.id)
@@ -136,7 +127,7 @@ function createOrderCard(order) {
 
     const reviewActionHTML = isCompleted
         ? allReviewed
-            ? `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" class="btn-track-order text-decoration-none" aria-label="Xem đánh giá đơn hàng ${order.id}">Xem đánh giá</a>`
+            ? `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" class="btn-review text-decoration-none" aria-label="Xem đánh giá đơn hàng ${order.id}">Xem đánh giá</a>`
             : `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" class="btn-review text-decoration-none" aria-label="Đánh giá đơn hàng ${order.id}">Đánh giá</a>`
         : '';
 
@@ -147,7 +138,13 @@ function createOrderCard(order) {
     const hasAnyReviewed = reviewedList.some((item) => item.orderId === order.id);
 
     let returnActionHTML = '';
+    const statusNoticeChips = [];
+
     if (isCompleted) {
+        if (hasReviewedOrder(order) || hasAnyReviewed) {
+            statusNoticeChips.push(`<span class="order-meta-chip meta-chip-success">Đã đánh giá</span>`);
+        }
+
         const completedEntry = Array.isArray(order.timeline)
             ? order.timeline.slice().reverse().find((timelineItem) => timelineItem.status === 'completed')
             : null;
@@ -161,18 +158,11 @@ function createOrderCard(order) {
                     Chi tiết đổi trả
                 </a>
             `;
+            statusNoticeChips.push(`<span class="order-meta-chip meta-chip-info">Đã yêu cầu đổi trả</span>`);
         } else if (!withinReturnWindow) {
-            returnActionHTML = `
-                <button class="btn-track-order" disabled title="Đã quá 7 ngày, không thể yêu cầu đổi trả.">
-                    Hết hạn đổi trả
-                </button>
-            `;
+            statusNoticeChips.push(`<span class="order-meta-chip meta-chip-warning" title="Đã quá 7 ngày, không thể yêu cầu đổi trả.">Hết hạn đổi trả</span>`);
         } else if (hasAnyReviewed) {
-            returnActionHTML = `
-                <button class="btn-track-order" disabled title="Giao dịch đã được đánh giá, không thể đổi trả.">
-                    Đã đánh giá
-                </button>
-            `;
+            statusNoticeChips.push(`<span class="order-meta-chip meta-chip-muted" title="Giao dịch đã được đánh giá, không thể đổi trả.">Hết hạn đổi trả</span>`);
         } else {
             returnActionHTML = `
                 <button class="btn-track-order" onclick="openRMADrawer('${order.id}')">
@@ -181,6 +171,15 @@ function createOrderCard(order) {
             `;
         }
     }
+
+    const metaParts = [
+        productCount > 0 ? `${productCount} sản phẩm` : '',
+        paymentLabel,
+        normalizedStatus === 'shipping' ? 'Đang giao tới bạn' : '',
+        normalizedStatus === 'completed' ? 'Đơn đã hoàn tất' : '',
+        normalizedStatus === 'pending_payment' ? 'Chờ xác nhận thanh toán' : '',
+        normalizedStatus === 'preparing' ? 'Shop đang đóng gói' : ''
+    ].filter(Boolean);
 
     const reorderActionHTML = isCompleted
         ? `<button class="btn-view-detail border-0" onclick="reorder('${order.id}')">Mua lại</button>`
@@ -209,11 +208,15 @@ function createOrderCard(order) {
     } else if (normalizedStatus === 'completed') {
         footerButtonsHTML = `
             ${detailActionHTML}
-            ${returnActionHTML}${reviewActionHTML}${reorderActionHTML}
+            ${reviewActionHTML}
+            ${reorderActionHTML}
+            ${returnActionHTML}
         `;
     } else if (normalizedStatus === 'delivered' || normalizedStatus === 'cancelled') {
         footerButtonsHTML = detailActionHTML;
     }
+
+    const allMetaChips = [...metaParts.map((item) => `<span class="order-meta-chip">${item}</span>`), ...statusNoticeChips].join('');
 
     return `
         <article class="order-card" data-order-id="${order.id}">
@@ -232,7 +235,7 @@ function createOrderCard(order) {
                     <div class="product-info">
                         <h4 class="product-name">${firstProduct.name}</h4>
                         ${remainingCount > 0 ? `<p class="product-meta">và ${remainingCount} sản phẩm khác</p>` : ''}
-                        ${metaParts.length ? `<div class="order-meta-chips">${metaParts.map((item) => `<span class="order-meta-chip">${item}</span>`).join('')}</div>` : ''}
+                        ${allMetaChips ? `<div class="order-meta-chips">${allMetaChips}</div>` : ''}
                     </div>
                 </div>
                 <div class="order-summary">
@@ -425,6 +428,11 @@ function reorder(orderId) {
     showOrdersToast(`Đã thêm các sản phẩm của đơn hàng ${orderId} vào giỏ hàng.`, 'success');
 }
 
+function hasReviewedOrder(order) {
+    const reviewedList = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
+    return reviewedList.some((item) => String(item.orderId) === String(order.id));
+}
+
 window.reorder = reorder;
 
 function showOrdersToast(message, type = 'info') {
@@ -478,8 +486,10 @@ function saveOrderToLocalStorage(order) {
     const index = allOrders.findIndex((item) => item.id === order.id);
     if (index !== -1) {
         allOrders[index] = order;
-        localStorage.setItem('pawpal_orders', JSON.stringify(allOrders));
+    } else {
+        allOrders.push(order);
     }
+    localStorage.setItem('pawpal_orders', JSON.stringify(allOrders));
 }
 
 function getStatusLabel(status) {
