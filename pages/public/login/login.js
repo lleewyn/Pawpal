@@ -244,7 +244,7 @@ function initAuthForms() {
                             window.isGuestActivationFlow = true;
                             window.guestActivationPhone  = user.phone;
 
-                            showToast('info', 'Mã OTP xác thực: 555666', 6000);
+                            showToast('info', 'Mã OTP xác thực: 555666', 15000);
 
                             const forgotOtpInputs = document.querySelectorAll('.forgot-otp-input');
                             forgotOtpInputs.forEach((input, idx) => {
@@ -470,7 +470,7 @@ function initAuthForms() {
             otpSection.style.opacity = '1';
             otpInputs.forEach((input, idx) => { input.value = ''; input.disabled = idx > 0; });
             otpInputs[0].focus();
-            showToast('info', 'Mã OTP xác thực đã gửi về SMS: 555666', 6000);
+            showToast('info', 'Mã OTP xác thực đã gửi về SMS: 555666', 15000);
             startOtpTimer();
         }, 300);
     });
@@ -496,7 +496,7 @@ function initAuthForms() {
 
     function startOtpTimer() {
         if (otpCountdownInterval) clearInterval(otpCountdownInterval);
-        let duration = 5 * 60;
+        let duration = 30; // Changed to 30s for easier testing
         btnResendOtp.disabled = true;
         otpCountdownInterval = setInterval(() => {
             const m = Math.floor(duration / 60), s = duration % 60;
@@ -507,7 +507,7 @@ function initAuthForms() {
     }
 
     btnResendOtp.addEventListener('click', () => {
-        showToast('info', 'Mã OTP xác thực mới đã gửi lại: 555666', 6000);
+        showToast('info', 'Mã OTP xác thực mới đã gửi lại: 555666', 15000);
         startOtpTimer();
         otpInputs.forEach((input, idx) => { input.value = ''; input.disabled = idx > 0; });
         otpInputs[0].focus();
@@ -697,7 +697,7 @@ function initAuthForms() {
 
             forgotOtpInputs.forEach((input, idx) => { input.value = ''; input.disabled = idx > 0; });
             forgotOtpInputs[0].focus();
-            showToast('info', 'Mã OTP xác thực đã được gửi về SMS: 555666', 6000);
+            showToast('info', 'Mã OTP xác thực đã được gửi về SMS: 555666', 15000);
             if (typeof window.startForgotOtpTimerFn === 'function') window.startForgotOtpTimerFn();
         });
 
@@ -730,7 +730,7 @@ function initAuthForms() {
 
         function startForgotOtpTimer() {
             if (forgotOtpInterval) clearInterval(forgotOtpInterval);
-            let duration = 300;
+            let duration = 30; // Changed to 30s for easier testing
             btnForgotResendOtp.disabled = true;
             forgotOtpInterval = setInterval(() => {
                 const m = Math.floor(duration / 60), s = duration % 60;
@@ -743,7 +743,7 @@ function initAuthForms() {
 
         if (btnForgotResendOtp) {
             btnForgotResendOtp.addEventListener('click', () => {
-                showToast('info', 'Mã OTP xác thực mới đã gửi lại: 555666', 6000);
+                showToast('info', 'Mã OTP xác thực mới đã gửi lại: 555666', 15000);
                 startForgotOtpTimer();
                 forgotOtpInputs.forEach((input, idx) => { input.value = ''; input.disabled = idx > 0; });
                 forgotOtpInputs[0].focus();
