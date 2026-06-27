@@ -178,10 +178,9 @@ function showToast(type, message, duration = 5000) {
     container.insertAdjacentHTML('beforeend', toastHtml);
     const toastElement = document.getElementById(toastId);
 
-    // Trigger animation to show the toast
-    requestAnimationFrame(() => {
-        toastElement.classList.add('show');
-    });
+    // Force reflow and trigger animation to show the toast
+    toastElement.offsetHeight;
+    toastElement.classList.add('show');
 
     toastElement.querySelector('.toast-close').addEventListener('click', () => {
         removeToast(toastElement);

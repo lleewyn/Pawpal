@@ -503,7 +503,7 @@ function initAuthForms() {
 
     function startOtpTimer() {
         if (otpCountdownInterval) clearInterval(otpCountdownInterval);
-        let duration = 30; // Changed to 30s for easier testing
+        let duration = 10; // Changed to 10s for easier testing
         btnResendOtp.disabled = true;
         otpCountdownInterval = setInterval(() => {
             const m = Math.floor(duration / 60), s = duration % 60;
@@ -737,7 +737,7 @@ function initAuthForms() {
 
         function startForgotOtpTimer() {
             if (forgotOtpInterval) clearInterval(forgotOtpInterval);
-            let duration = 30; // Changed to 30s for easier testing
+            let duration = 10; // Changed to 10s for easier testing
             btnForgotResendOtp.disabled = true;
             forgotOtpInterval = setInterval(() => {
                 const m = Math.floor(duration / 60), s = duration % 60;
