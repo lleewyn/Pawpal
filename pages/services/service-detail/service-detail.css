@@ -589,11 +589,11 @@
 
 /* 4. Amenities Grid */
 .amenities-section-card {
-    background: var(--color-bg-white);
+    background: var(--color-bg-light, #f7f9fc);
     border: var(--border-card);
     border-radius: var(--card-border-radius);
     padding: var(--space-md);
-    margin-bottom: var(--space-lg);
+    margin-bottom: var(--space-md);
 }
 
 .amenities-bento-grid {
