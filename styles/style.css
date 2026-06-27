@@ -3190,7 +3190,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .fab-item--booking:hover {
     background: var(--color-primary-dark);
-    translateX(-4px);
+    transform: translateX(-4px);
 }
 
 /* ==========================================================================
