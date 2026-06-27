@@ -136,33 +136,7 @@ function setupGallery() {
     if (!thumbsContainer) return;
 
     // Build image list based on category
-    let rawImages = [serviceData.image];
-    
-    if (serviceData.category && serviceData.category.toLowerCase().includes('hotel')) {
-        rawImages.push(
-            'assets/images/services/hotel/htl01.webp',
-            'assets/images/services/hotel/htl02.jpg',
-            'assets/images/services/hotel/htl03.jpg',
-            'assets/images/services/hotel/htl04.jfif',
-            'assets/images/services/hotel/htl05.webp',
-            'assets/images/services/hotel/htl06.jpg',
-            'assets/images/services/hotel/htl07.jfif',
-            'assets/images/services/hotel/htl08.jfif'
-        );
-    } else {
-        // Spa / Grooming
-        rawImages.push(
-            'assets/images/services/spa/gallery/đang tắm.jpg',
-            'assets/images/services/spa/gallery/đang chải lông.jpg',
-            'assets/images/services/spa/gallery/đang sấy lông.jpg',
-            'assets/images/services/spa/gallery/đang nghỉ ngơi.jpg',
-            'assets/images/services/spa/gallery/đang vệ sinh chân.jpg',
-            'assets/images/services/spa/gallery/tắm.jpg',
-            'assets/images/services/spa/gallery/lau khô.jpg',
-            'assets/images/services/spa/gallery/sấy lông.jpg',
-            'assets/images/services/spa/gallery/nghỉ ngơi.jpg'
-        );
-    }
+    let rawImages = Array.isArray(serviceData.images) && serviceData.images.length > 0 ? [...serviceData.images] : [serviceData.image];
 
     // Unique images only
     rawImages = [...new Set(rawImages)];
