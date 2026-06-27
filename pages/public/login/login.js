@@ -257,6 +257,13 @@ function initAuthForms() {
                         }, 300);
                     };
                 }
+
+                const btnSkipGuestSetup = document.getElementById('btnSkipGuestSetup');
+                if (btnSkipGuestSetup) {
+                    btnSkipGuestSetup.onclick = () => {
+                        window.location.href = '/pages/public/landing/landing.html';
+                    };
+                }
             } else {
                 // Thành viên chính thức → nhập mật khẩu
                 loginStepPhone.classList.add('d-none');
