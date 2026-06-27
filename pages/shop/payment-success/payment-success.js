@@ -48,7 +48,7 @@ function setupGuestActivationCard(order) {
 
     card.classList.remove('d-none');
     phoneDisplay.textContent = tempUser.phone;
-    activateLink.href = `../public/login.html?action=guest-activate&phone=${encodeURIComponent(tempUser.phone)}`;
+    activateLink.href = `../../public/login/login.html?action=guest-activate&phone=${encodeURIComponent(tempUser.phone)}`;
 }
 
 function setupTrackingLink(order) {
@@ -61,16 +61,18 @@ function setupTrackingLink(order) {
     });
 
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    const isLoggedInUser = Boolean(currentUser && (currentUser.id || currentUser.phone));
+    const isLoggedInUser = Boolean(currentUser && (currentUser.id || currentUser.phone) && !currentUser.is_temporary);
     const isSamePhone = currentUser && order.shipping && currentUser.phone === order.shipping.phone;
 
     trackBtns.forEach(btn => {
         // Prefer linking to the order detail page with the normalized `id` if available
         const id = order.id || order.orderId || order.orderID || orderIdFrom(order);
-        if (id) {
-            btn.href = `/pages/user/order-detail/order-detail.html?id=${encodeURIComponent(id)}`;
-        } else if (isLoggedInUser && isSamePhone) {
-            btn.href = '/pages/user/orders/orders.html';
+        if (isLoggedInUser) {
+            if (id) {
+                btn.href = `/pages/user/order-detail/order-detail.html?id=${encodeURIComponent(id)}`;
+            } else {
+                btn.href = '/pages/user/orders/orders.html';
+            }
         } else {
             btn.href = '/pages/public/return-guest/return-guest.html';
         }
