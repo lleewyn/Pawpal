@@ -431,7 +431,7 @@ function renderPagination() {
 
 function createPageButton(page) {
     const btn = document.createElement('button');
-    btn.className = `page-btn ${page === currentPage ? 'active' : ''}`;
+    btn.className = `page-number ${page === currentPage ? 'active' : ''}`;
     btn.textContent = page;
     btn.onclick = () => {
         if (currentPage !== page) {
