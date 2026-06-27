@@ -183,7 +183,7 @@ function createOrderCard(order) {
     }
 
     const reorderActionHTML = isCompleted
-        ? `<button class="btn-view-detail border-0" onclick="reorder('${order.id}')">Mua lai</button>`
+        ? `<button class="btn-view-detail border-0" onclick="reorder('${order.id}')">Mua lại</button>`
         : '';
 
     const detailActionHTML = `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}" class="btn-view-detail text-decoration-none">Xem chi tiết</a>`;
