@@ -843,16 +843,83 @@
     align-items: flex-end;
 }
 
-.member-badge {
-    font-size: 9px;
-    background: var(--color-accent-light);
-    color: var(--color-accent-dark);
-    padding: 1px 6px;
-    border-radius: var(--border-radius-pill);
-    font-weight: 700;
-    text-transform: uppercase;
-    margin-top: 2px;
-    letter-spacing: 0.3px;
+
+
+/* ── Pagination ───────────────────────────────────────────────────────── */
+.pagination-wrapper {
+    margin-top: auto;
+    padding-top: var(--space-lg);
 }
 
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+}
 
+.page-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-white);
+    border: var(--border-card);
+    border-radius: var(--card-border-radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.page-btn:hover:not(:disabled) {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+}
+
+.page-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.page-numbers {
+    display: flex;
+    gap: var(--space-xs);
+}
+
+.page-number {
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    background: var(--color-bg-white);
+    border: var(--border-card);
+    border-radius: var(--card-border-radius);
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--color-text-dark);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.page-number:hover {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
+}
+
+.page-number.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+}
+
+.page-ellipsis {
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-light);
+}
