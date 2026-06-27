@@ -525,7 +525,7 @@ function setupFAQs() {
                 <span>${faq.q}</span>
                 <span class="faq-accordion-icon">▼</span>
             </button>
-            <div class="faq-accordion-panel" id="faqAcc-${idx}" class="d-none">
+            <div class="faq-accordion-panel d-none" id="faqAcc-${idx}">
                 <p style="margin:0;">${faq.a}</p>
             </div>
         </div>
