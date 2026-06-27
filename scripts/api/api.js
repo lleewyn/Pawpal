@@ -5,7 +5,7 @@
  */
 
 export const API = {
-    DATA_VERSION: '2026-06-28-v3-remove-medical-services',
+    DATA_VERSION: '2026-06-28-v4-force-refresh-carelogs',
 
     async getJSON(url) {
         try {
@@ -191,20 +191,26 @@ function safeReadObject(key) {
 
 function mergeById(seedItems, localItems) {
     const merged = new Map();
-    (Array.isArray(seedItems) ? seedItems : []).forEach(item => {
+    (Array.isArray(localItems) ? localItems : []).forEach(item => {
         if (item && item.id) merged.set(String(item.id), item);
     });
-    (Array.isArray(localItems) ? localItems : []).forEach(item => {
-        if (item && item.id) merged.set(String(item.id), { ...(merged.get(String(item.id)) || {}), ...item });
+    (Array.isArray(seedItems) ? seedItems : []).forEach(item => {
+        if (item && item.id) {
+            const local = merged.get(String(item.id));
+            merged.set(String(item.id), local ? { ...item, status: local.status || item.status } : item);
+        }
     });
     return Array.from(merged.values());
 }
 
 function mergeCareLogs(seedLogs, localLogs) {
-    return {
-        ...(seedLogs && typeof seedLogs === 'object' ? seedLogs : {}),
-        ...(localLogs && typeof localLogs === 'object' ? localLogs : {})
-    };
+    const result = { ...(localLogs && typeof localLogs === 'object' ? localLogs : {}) };
+    if (seedLogs && typeof seedLogs === 'object') {
+        Object.keys(seedLogs).forEach(petId => {
+            result[petId] = seedLogs[petId];
+        });
+    }
+    return result;
 }
 
 function normalizeOrders(orders) {
