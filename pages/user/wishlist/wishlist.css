@@ -13,6 +13,30 @@
     margin: var(--space-xs) 0 0 0;
 }
 
+.wishlist-tabs {
+    display: flex;
+    gap: 10px;
+    margin-top: var(--space-sm);
+    flex-wrap: wrap;
+}
+
+.wishlist-tab {
+    padding: 9px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-pill);
+    background: var(--color-bg-white);
+    color: var(--color-text-dark);
+    font-size: var(--fs-small);
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+.wishlist-tab.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+}
+
 /* ── Empty State ───────────────────────────────────────────────────────── */
 .empty-wishlist {
     text-align: center;
@@ -154,6 +178,18 @@
     margin-bottom: 2px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+.wishlist-card-type {
+    display: inline-flex;
+    align-self: flex-start;
+    margin-bottom: 6px;
+    padding: 4px 9px;
+    border-radius: var(--border-radius-pill);
+    background: var(--color-primary-light);
+    color: var(--color-primary-dark);
+    font-size: var(--fs-caption);
+    font-weight: 700;
 }
 
 .wishlist-card-name {

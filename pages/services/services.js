@@ -9,6 +9,54 @@ let filteredServices = [];
 let currentPage = 1;
 const itemsPerPage = 9;
 
+function getCurrentWishlistUser() {
+    try {
+        return JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+    } catch {
+        return null;
+    }
+}
+
+function getServiceWishlistStorageKey(user = getCurrentWishlistUser()) {
+    return user && user.phone ? `pawpal_wishlist_services_${user.phone}` : 'pawpal_wishlist_services_guest';
+}
+
+function loadServiceWishlistIds() {
+    try {
+        return JSON.parse(localStorage.getItem(getServiceWishlistStorageKey()) || '[]').map(String);
+    } catch {
+        return [];
+    }
+}
+
+function saveServiceWishlistIds(ids) {
+    localStorage.setItem(getServiceWishlistStorageKey(), JSON.stringify(ids.map(String)));
+}
+
+function toggleServiceWishlist(serviceId) {
+    const current = loadServiceWishlistIds();
+    const normalizedId = String(serviceId);
+    const exists = current.includes(normalizedId);
+    const next = exists ? current.filter((id) => id !== normalizedId) : [...current, normalizedId];
+    saveServiceWishlistIds(next);
+    return !exists;
+}
+
+function showServiceWishlistToast(message) {
+    if (typeof window.showGlobalToast === 'function') {
+        window.showGlobalToast('success', message);
+        return;
+    }
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2d5343;color:#fff;padding:10px 20px;border-radius:99px;font-size:14px;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 400);
+    }, 2000);
+}
+
 function isCompactServicesLayout() {
     return window.innerWidth <= 1024;
 }
@@ -281,6 +329,7 @@ function renderServices() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedServices = filteredServices.slice(startIndex, endIndex);
+    const likedServiceIds = loadServiceWishlistIds();
 
     grid.innerHTML = paginatedServices.map(service => {
         // Map category slug to display label (avoid ampersand)
@@ -303,6 +352,11 @@ function renderServices() {
 
         return `
             <div class="service-card" data-id="${service.serviceId}">
+                <button class="service-wishlist-btn ${likedServiceIds.includes(String(service.serviceId)) ? 'active' : ''}" data-service-id="${service.serviceId}" aria-label="Lưu dịch vụ yêu thích">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </button>
                 <a href="service-detail/service-detail.html?id=${service.serviceId}" class="service-card-link">
                     <div class="service-image-wrapper">
                         <span class="service-category-badge">${displayCategory}</span>
@@ -360,6 +414,16 @@ function renderServices() {
             { opacity: 1, y: 0, duration: 0.4, stagger: 0.08, ease: 'power2.out' }
         );
     }
+
+    grid.querySelectorAll('.service-wishlist-btn').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const added = toggleServiceWishlist(button.dataset.serviceId || '');
+            button.classList.toggle('active', added);
+            showServiceWishlistToast(added ? 'Đã thêm vào yêu thích' : 'Đã bỏ khỏi yêu thích');
+        });
+    });
 
     renderPagination();
 }

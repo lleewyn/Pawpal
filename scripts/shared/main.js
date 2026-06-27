@@ -532,8 +532,21 @@ function setupShopLandingActions(grid) {
     function saveCart(cart) { localStorage.setItem('pawpal_cart', JSON.stringify(cart)); }
 
     // Helper: lấy wishlist
-    function getWishlist() { return JSON.parse(localStorage.getItem('pawpal_wishlist') || '[]'); }
-    function saveWishlist(wl) { localStorage.setItem('pawpal_wishlist', JSON.stringify(wl)); }
+    function getWishlistStorageKey() {
+        const user = getCurrentWishlistUser();
+        return user && user.phone ? `pawpal_wishlist_${user.phone}` : 'pawpal_wishlist_guest';
+    }
+    function getWishlist() {
+        const current = JSON.parse(localStorage.getItem(getWishlistStorageKey()) || '[]');
+        const legacy = JSON.parse(localStorage.getItem('pawpal_wishlist') || '[]');
+        const merged = [...new Set([...(Array.isArray(current) ? current : []), ...(Array.isArray(legacy) ? legacy : [])].map(String))];
+        if (legacy.length) {
+            localStorage.setItem(getWishlistStorageKey(), JSON.stringify(merged));
+            localStorage.removeItem('pawpal_wishlist');
+        }
+        return merged;
+    }
+    function saveWishlist(wl) { localStorage.setItem(getWishlistStorageKey(), JSON.stringify(wl.map(String))); }
 
     // Helper: toast nhỏ
     function miniToast(msg, type) {
@@ -599,6 +612,58 @@ function setupShopLandingActions(grid) {
             else { cart.push({ id, qty: 1 }); }
             saveCart(cart);
             window.location.href = rootPath + 'pages/shop/cart/cart.html';
+        });
+    });
+}
+
+function getCurrentWishlistUser() {
+    try {
+        return JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+    } catch {
+        return null;
+    }
+}
+
+function getServiceWishlistStorageKey(user = getCurrentWishlistUser()) {
+    return user && user.phone ? `pawpal_wishlist_services_${user.phone}` : 'pawpal_wishlist_services_guest';
+}
+
+function loadServiceWishlistIds() {
+    try {
+        return JSON.parse(localStorage.getItem(getServiceWishlistStorageKey()) || '[]').map(String);
+    } catch {
+        return [];
+    }
+}
+
+function saveServiceWishlistIds(ids) {
+    localStorage.setItem(getServiceWishlistStorageKey(), JSON.stringify(ids.map(String)));
+}
+
+function setupLandingServiceWishlist(grid) {
+    function miniToast(msg, type) {
+        if (typeof window.showGlobalToast === 'function') {
+            window.showGlobalToast(type || 'success', msg);
+            return;
+        }
+        const t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2d5343;color:#fff;padding:10px 20px;border-radius:99px;font-size:14px;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
+        document.body.appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 2000);
+    }
+
+    grid.querySelectorAll('.svc-wishlist-btn').forEach((btn) => {
+        btn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const serviceId = String(btn.dataset.serviceId || '');
+            const current = loadServiceWishlistIds();
+            const exists = current.includes(serviceId);
+            const next = exists ? current.filter((id) => id !== serviceId) : [...current, serviceId];
+            saveServiceWishlistIds(next);
+            btn.classList.toggle('active', !exists);
+            miniToast(!exists ? 'Đã thêm vào yêu thích' : 'Đã bỏ khỏi yêu thích');
         });
     });
 }
@@ -1829,6 +1894,7 @@ async function initServicesGrid() {
         try {
             const allServices = await window.DataLoader.loadServices();
             if (allServices.length > 0) {
+                const likedServiceIds = loadServiceWishlistIds();
                 grid.innerHTML = allServices.map(service => {
                     const formattedPrice = service.price.toLocaleString('vi-VN') + 'đ';
                     const memberPrice = Math.round(service.price * 0.95).toLocaleString('vi-VN') + 'đ';
@@ -1841,10 +1907,14 @@ async function initServicesGrid() {
 
                     return `
                         <div class="product-card svc-landing-card" data-category="${service.category}">
+                            <button class="svc-wishlist-btn ${likedServiceIds.includes(String(service.serviceId)) ? 'active' : ''}" data-service-id="${service.serviceId}" aria-label="Lưu dịch vụ yêu thích">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                            </button>
                             <a href="${detailUrl}" class="svc-landing-card-link" aria-label="Xem chi tiết ${service.name}">
                                 <div class="product-image-box">
                                     <img src="${imgSrc}" alt="${service.name}" loading="lazy" onerror="this.src='${fallbackImg}'">
-                                    ${service.rating >= 4.8 ? '<span class="tag-badge tag-banchay">Yêu thích</span>' : ''}
                                 </div>
                             </a>
                             <div class="product-info">
@@ -1876,6 +1946,7 @@ async function initServicesGrid() {
                         </div>
                     `;
                 }).join('');
+                setupLandingServiceWishlist(grid);
             } else {
                 console.warn('Landing services data is empty; keeping static markup.');
             }
