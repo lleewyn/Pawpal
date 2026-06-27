@@ -964,10 +964,9 @@
 }
 .seller-reply {
     background: var(--color-bg-light);
-    border-left: 3px solid var(--color-primary);
     padding: 12px 16px;
     margin-top: 16px;
-    border-radius: 4px;
+    border-radius: 8px;
     font-size: 0.95rem;
 }
 .seller-reply-title {
