@@ -87,13 +87,13 @@ export const API = {
 
         const localReturns = safeReadArray('pawpal_returns');
         if (shouldRefreshMockData || localReturns.length === 0) {
-            const returns = await this.getJSON('/data/returns.json');
+            const returns = await this.getJSON(`/data/returns.json?v=${this.DATA_VERSION}`);
             if (returns) localStorage.setItem('pawpal_returns', JSON.stringify(mergeById(returns, localReturns)));
         }
 
         const localCareLogs = safeReadObject('pawpal_pet_tracker_logs') || {};
         if (shouldRefreshMockData || Object.keys(localCareLogs).length === 0) {
-            const careLogs = await this.getJSON('/data/care-logs.json');
+            const careLogs = await this.getJSON(`/data/care-logs.json?v=${this.DATA_VERSION}`);
             if (careLogs) {
                 localStorage.setItem('pawpal_pet_tracker_logs', JSON.stringify(mergeCareLogs(careLogs, localCareLogs)));
             }
