@@ -161,6 +161,34 @@
                             </button>
                         </div>
 
+                        <section class="service-review-card d-none" id="serviceReviewSection" aria-labelledby="serviceReviewTitle">
+                            <div class="service-review-header">
+                                <div>
+                                    <h4 id="serviceReviewTitle">Đánh giá dịch vụ</h4>
+                                    <p>Chỉ cần vài thao tác để chia sẻ cảm nhận của bạn sau buổi đã hoàn thành.</p>
+                                </div>
+                                <span class="service-review-status" id="serviceReviewStatus">Chưa đánh giá</span>
+                            </div>
+
+                            <div class="service-review-body">
+                                <div class="service-star-row" id="serviceStarRow" role="radiogroup" aria-label="Chọn số sao đánh giá">
+                                    <button type="button" class="service-star-btn" data-rating="1" aria-label="1 sao">★</button>
+                                    <button type="button" class="service-star-btn" data-rating="2" aria-label="2 sao">★</button>
+                                    <button type="button" class="service-star-btn" data-rating="3" aria-label="3 sao">★</button>
+                                    <button type="button" class="service-star-btn" data-rating="4" aria-label="4 sao">★</button>
+                                    <button type="button" class="service-star-btn" data-rating="5" aria-label="5 sao">★</button>
+                                </div>
+                                <div class="service-review-hint" id="serviceReviewHint">Hãy chọn mức độ hài lòng của bạn.</div>
+
+                                <label class="service-review-label" for="serviceReviewComment">Nhận xét</label>
+                                <textarea id="serviceReviewComment" class="service-review-textarea" rows="4" maxlength="500" placeholder="Chia sẻ trải nghiệm của bạn về dịch vụ này..."></textarea>
+
+                                <div class="service-review-actions">
+                                    <button type="button" class="btn-cta" id="btnSubmitServiceReview">Gửi đánh giá</button>
+                                </div>
+                            </div>
+                        </section>
+
                         <!-- Policy Note -->
                         <div class="policy-note">
                             <div class="policy-icon text-accent">

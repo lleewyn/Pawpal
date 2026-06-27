@@ -385,6 +385,43 @@ function cancelOrder(orderId) {
 window.cancelOrder = cancelOrder;
 
 function reorder(orderId) {
+    const order = ordersState.allOrders.find((item) => String(item.id) === String(orderId));
+    if (!order || !Array.isArray(order.products) || order.products.length === 0) {
+        showOrdersToast(`Không tìm thấy sản phẩm để mua lại cho đơn hàng ${orderId}.`, 'error');
+        return;
+    }
+
+    const cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+    order.products.forEach((product) => {
+        const productId = product?.id == null ? '' : String(product.id);
+        if (!productId) return;
+
+        const quantity = Number(product.quantity || 1);
+        const existing = cart.find((item) => String(item.id) === productId);
+        if (existing) {
+            existing.quantity = (Number(existing.quantity) || 1) + quantity;
+            existing.qty = existing.quantity;
+        } else {
+            cart.push({
+                id: product.id,
+                name: product.name,
+                brand: product.brand || '',
+                price: Number(product.price || 0),
+                quantity,
+                image: product.image || '',
+                stock: Number(product.stock || 99),
+                category: product.category || null
+            });
+        }
+    });
+
+    localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+
+    const badge = document.querySelector('.cart-count, .cart-badge');
+    if (badge) {
+        badge.textContent = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+    }
+
     showOrdersToast(`Đã thêm các sản phẩm của đơn hàng ${orderId} vào giỏ hàng.`, 'success');
 }
 

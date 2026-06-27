@@ -39,6 +39,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     let appliedVoucher = null;
     let selectedIds = new Set(); // Store IDs of selected items
 
+    function normalizeId(value) {
+        return value == null ? '' : String(value);
+    }
+
+    function isSameCartItemId(a, b) {
+        return normalizeId(a) === normalizeId(b);
+    }
+
     // Format tiền tệ Việt Nam
     function formatPrice(price) {
         return price.toLocaleString('vi-VN') + 'đ';
@@ -55,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Mặc định chọn tất cả sản phẩm
             cart.forEach(item => {
-                selectedIds.add(Number(item.id));
+                selectedIds.add(normalizeId(item.id));
             });
 
             // Tải danh sách voucher
@@ -88,7 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             selectAllItems.addEventListener('change', (e) => {
                 const isChecked = e.target.checked;
                 if (isChecked) {
-                    cart.forEach(item => selectedIds.add(Number(item.id)));
+                    cart.forEach(item => selectedIds.add(normalizeId(item.id)));
                 } else {
                     selectedIds.clear();
                 }
@@ -124,7 +132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (btnProceed) {
             btnProceed.addEventListener('click', (e) => {
                 // Lọc ra các sản phẩm được tích chọn
-                const selectedItems = cart.filter(item => selectedIds.has(Number(item.id)));
+                const selectedItems = cart.filter(item => selectedIds.has(normalizeId(item.id)));
                 
                 if (selectedItems.length === 0) {
                     e.preventDefault();
@@ -133,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 // Lưu lại giỏ hàng thanh toán và các phần không chọn (để phục hồi sau)
-                const unselectedItems = cart.filter(item => !selectedIds.has(Number(item.id)));
+                const unselectedItems = cart.filter(item => !selectedIds.has(normalizeId(item.id)));
                 localStorage.setItem('pawpal_cart_unselected_backup', JSON.stringify(unselectedItems));
                 
                 // Cập nhật lại giỏ hàng chính chỉ gồm các sản phẩm được chọn để trang checkout xử lý
@@ -173,8 +181,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Tính tổng tiền các sản phẩm được chọn để kiểm tra minOrderValue
         let checkedSubtotal = 0;
         cart.forEach(item => {
-            if (selectedIds.has(Number(item.id))) {
-                const prod = products.find(p => Number(p.id) === Number(item.id));
+            if (selectedIds.has(normalizeId(item.id))) {
+                const prod = products.find(p => isSameCartItemId(p.id, item.id));
                 if (prod) {
                     checkedSubtotal += prod.price * getItemQuantity(item);
                 }
@@ -236,8 +244,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Lọc những sản phẩm thực sự hợp lệ và còn tồn tại
         const cartItemsData = cart.map(item => {
-            const product = products.find(p => Number(p.id) === Number(item.id));
-            return product ? { ...product, quantity: getItemQuantity(item), qty: getItemQuantity(item) } : null;
+            const product = products.find(p => isSameCartItemId(p.id, item.id));
+            if (product) {
+                return { ...product, quantity: getItemQuantity(item), qty: getItemQuantity(item) };
+            }
+
+            // Fallback cho các mặt hàng được lưu trực tiếp từ đơn hàng/nguồn ngoài catalogue
+            return {
+                ...item,
+                name: item.name || `Sản phẩm ${item.id}`,
+                brand: item.brand || '',
+                price: Number(item.price || 0),
+                image: item.image || '/assets/images/shop/products/placeholder.webp',
+                quantity: getItemQuantity(item),
+                qty: getItemQuantity(item),
+                category: item.category || null
+            };
         }).filter(item => item !== null);
 
         if (cartItemsData.length === 0) {
@@ -257,7 +279,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.className = 'cart-item-row';
             row.dataset.id = item.id;
             
-            const isChecked = selectedIds.has(Number(item.id));
+            const isChecked = selectedIds.has(normalizeId(item.id));
             
             row.innerHTML = `
                 <div class="cart-item-checkbox-wrapper">
@@ -297,9 +319,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             checkbox.addEventListener('change', (e) => {
                 if (e.target.checked) {
-                    selectedIds.add(Number(item.id));
+                    selectedIds.add(normalizeId(item.id));
                 } else {
-                    selectedIds.delete(Number(item.id));
+                    selectedIds.delete(normalizeId(item.id));
                 }
                 
                 // Cập nhật trạng thái selectAll
@@ -324,10 +346,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Tính toán lại tổng tiền
     function calculateSelectedSubtotal() {
         return cart.reduce((sum, item) => {
-            if (!selectedIds.has(Number(item.id))) {
+            if (!selectedIds.has(normalizeId(item.id))) {
                 return sum;
             }
-            const prod = products.find(p => Number(p.id) === Number(item.id));
+            const prod = products.find(p => isSameCartItemId(p.id, item.id));
             return prod ? sum + prod.price * getItemQuantity(item) : sum;
         }, 0);
     }
@@ -337,8 +359,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         let selectedCount = 0;
 
         cart.forEach(item => {
-            if (selectedIds.has(Number(item.id))) {
-                const prod = products.find(p => Number(p.id) === Number(item.id));
+            if (selectedIds.has(normalizeId(item.id))) {
+                const prod = products.find(p => isSameCartItemId(p.id, item.id));
                 if (prod) {
                     subtotal += prod.price * getItemQuantity(item);
                     selectedCount += getItemQuantity(item);
@@ -419,8 +441,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Đợi hiệu ứng chuyển động hoàn tất rồi mới xóa
         setTimeout(() => {
-            cart = cart.filter(i => Number(i.id) !== Number(productId));
-            selectedIds.delete(Number(productId));
+            cart = cart.filter(i => !isSameCartItemId(i.id, productId));
+            selectedIds.delete(normalizeId(productId));
             saveCart();
             renderCart();
         }, 300);
@@ -555,8 +577,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (voucher.applicableFor && !voucher.applicableFor.includes('all')) {
             const cartCategories = cart.map(item => {
-                const prod = products.find(p => Number(p.id) === Number(item.id));
-                return prod ? prod.category : null;
+                const prod = products.find(p => isSameCartItemId(p.id, item.id));
+                return prod ? prod.category : (item.category || null);
             }).filter(Boolean);
             const hasMatchingCategory = cartCategories.some(category => voucher.applicableFor.includes(category));
             if (!hasMatchingCategory) {
@@ -596,7 +618,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const mergedCart = [...currentCart];
         backupItems.forEach(backupItem => {
-            const existing = mergedCart.find(item => Number(item.id) === Number(backupItem.id));
+            const existing = mergedCart.find(item => isSameCartItemId(item.id, backupItem.id));
             if (existing) {
                 const backupQty = getItemQuantity(backupItem);
                 existing.quantity = getItemQuantity(existing) + backupQty;

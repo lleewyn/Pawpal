@@ -17,8 +17,17 @@ function getCurrentWishlistUser() {
     }
 }
 
+function requireWishlistUser() {
+    const user = getCurrentWishlistUser();
+    if (!user) {
+        showServiceWishlistToast('Vui lòng đăng nhập để thêm vào danh sách yêu thích');
+        return null;
+    }
+    return user;
+}
+
 function getServiceWishlistStorageKey(user = getCurrentWishlistUser()) {
-    return user && user.phone ? `pawpal_wishlist_services_${user.phone}` : 'pawpal_wishlist_services_guest';
+    return user && user.phone ? `pawpal_wishlist_services_${user.phone}` : 'pawpal_wishlist_services';
 }
 
 function loadServiceWishlistIds() {
@@ -34,6 +43,9 @@ function saveServiceWishlistIds(ids) {
 }
 
 function toggleServiceWishlist(serviceId) {
+    const user = requireWishlistUser();
+    if (!user) return null;
+
     const current = loadServiceWishlistIds();
     const normalizedId = String(serviceId);
     const exists = current.includes(normalizedId);

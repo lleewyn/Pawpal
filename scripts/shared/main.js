@@ -624,8 +624,17 @@ function getCurrentWishlistUser() {
     }
 }
 
+function requireWishlistUser() {
+    const user = getCurrentWishlistUser();
+    if (!user) {
+        miniToast('Vui lòng đăng nhập để thêm vào danh sách yêu thích', 'warning');
+        return null;
+    }
+    return user;
+}
+
 function getServiceWishlistStorageKey(user = getCurrentWishlistUser()) {
-    return user && user.phone ? `pawpal_wishlist_services_${user.phone}` : 'pawpal_wishlist_services_guest';
+    return user && user.phone ? `pawpal_wishlist_services_${user.phone}` : 'pawpal_wishlist_services';
 }
 
 function loadServiceWishlistIds() {
@@ -657,6 +666,7 @@ function setupLandingServiceWishlist(grid) {
         btn.addEventListener('click', (event) => {
             event.preventDefault();
             event.stopPropagation();
+            if (!requireWishlistUser()) return;
             const serviceId = String(btn.dataset.serviceId || '');
             const current = loadServiceWishlistIds();
             const exists = current.includes(serviceId);
