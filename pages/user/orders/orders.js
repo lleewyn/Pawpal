@@ -20,7 +20,7 @@ async function loadOrders() {
 
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (!currentUser) {
-            showEmptyState('Vui long dang nhap de xem don hang.');
+            showEmptyState('Vui lòng đăng nhập để xem đơn hàng.');
             return;
         }
 
@@ -32,7 +32,7 @@ async function loadOrders() {
         updateTabCounts();
         renderOrders();
     } catch (error) {
-        console.error('Loi load don hang:', error);
+        console.error('Lỗi load đơn hàng:', error);
         showEmptyState('Không thể tải đơn hàng. Vui lòng thử lại sau.');
     }
 }
@@ -116,6 +116,18 @@ function createOrderCard(order) {
     const normalizedStatus = normalizeOrderStatus(order.status);
     const statusLabel = getStatusLabel(normalizedStatus);
     const isCompleted = normalizedStatus === 'completed';
+    const productCount = Array.isArray(order.products)
+        ? order.products.reduce((sum, product) => sum + (Number(product.quantity) || 1), 0)
+        : 0;
+    const paymentLabel = getPaymentMethodLabel(order.paymentMethod);
+    const metaParts = [
+        productCount > 0 ? `${productCount} sản phẩm` : '',
+        paymentLabel,
+        normalizedStatus === 'shipping' ? 'Đang giao tới bạn' : '',
+        normalizedStatus === 'completed' ? 'Đơn đã hoàn tất' : '',
+        normalizedStatus === 'pending_payment' ? 'Chờ xác nhận thanh toán' : '',
+        normalizedStatus === 'preparing' ? 'Shop đang đóng gói' : ''
+    ].filter(Boolean);
 
     const reviewed = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
     const allReviewed = isCompleted && order.products.every((product) =>
@@ -124,8 +136,8 @@ function createOrderCard(order) {
 
     const reviewActionHTML = isCompleted
         ? allReviewed
-            ? `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" class="btn-track-order text-decoration-none" aria-label="Xem đánh giá đơn hàng ${order.id}">Xem đánh giá</a>`
-            : `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" class="btn-review text-decoration-none" aria-label="Đánh giá đơn hàng ${order.id}">Đánh giá</a>`
+            ? `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" class="btn-track-order text-decoration-none" aria-label="Xem danh gia don hang ${order.id}">Xem danh gia</a>`
+            : `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" class="btn-review text-decoration-none" aria-label="Danh gia don hang ${order.id}">Danh gia</a>`
         : '';
 
     const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
@@ -136,9 +148,8 @@ function createOrderCard(order) {
 
     let returnActionHTML = '';
     if (isCompleted) {
-        // Kiểm tra cửa sổ 7 ngày
         const completedEntry = Array.isArray(order.timeline)
-            ? order.timeline.slice().reverse().find(t => t.status === 'completed')
+            ? order.timeline.slice().reverse().find((timelineItem) => timelineItem.status === 'completed')
             : null;
         const completedAt = completedEntry ? new Date(completedEntry.timestamp) : new Date(order.createdAt || 0);
         const daysPassed = (Date.now() - completedAt.getTime()) / (1000 * 60 * 60 * 24);
@@ -159,7 +170,7 @@ function createOrderCard(order) {
         } else if (hasAnyReviewed) {
             returnActionHTML = `
                 <button class="btn-track-order" disabled title="Giao dịch đã được đánh giá, không thể đổi trả.">
-                    Đã đánh giá (Không thể đổi trả)
+                    Đã đánh giá
                 </button>
             `;
         } else {
@@ -172,30 +183,39 @@ function createOrderCard(order) {
     }
 
     const reorderActionHTML = isCompleted
-        ? `<button class="btn-view-detail border-0" onclick="reorder('${order.id}')">Mua lại</button>`
+        ? `<button class="btn-view-detail border-0" onclick="reorder('${order.id}')">Mua lai</button>`
         : '';
+
+    const detailActionHTML = `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}" class="btn-view-detail text-decoration-none">Xem chi tiết</a>`;
 
     let footerButtonsHTML = '';
     if (normalizedStatus === 'shipping') {
         footerButtonsHTML = `
-                <button class="btn-track-order" onclick="contactHotline('${order.id}')">
+            ${detailActionHTML}
+            <button class="btn-track-order" onclick="contactHotline('${order.id}')">
                 Liên hệ hotline
-                </button>
+            </button>
         `;
     } else if (normalizedStatus === 'pending_payment' || normalizedStatus === 'preparing') {
         footerButtonsHTML = `
-                <button class="btn-track-order" onclick="contactHotline('${order.id}')">
+            ${detailActionHTML}
+            <button class="btn-track-order" onclick="contactHotline('${order.id}')">
                 Liên hệ hotline
-                </button>
+            </button>
             <button class="btn-track-order text-danger border-danger" onclick="cancelOrder('${order.id}')">
                 Hủy đơn hàng
             </button>
         `;
-    } else if (order.status === 'completed') {
-        footerButtonsHTML = `${returnActionHTML}${reviewActionHTML}${reorderActionHTML}`;
+    } else if (normalizedStatus === 'completed') {
+        footerButtonsHTML = `
+            ${detailActionHTML}
+            ${returnActionHTML}${reviewActionHTML}${reorderActionHTML}
+        `;
+    } else if (normalizedStatus === 'delivered' || normalizedStatus === 'cancelled') {
+        footerButtonsHTML = detailActionHTML;
     }
 
-            return `
+    return `
         <article class="order-card" data-order-id="${order.id}">
             <div class="order-card-header">
                 <div class="order-info">
@@ -206,18 +226,19 @@ function createOrderCard(order) {
                     ${statusLabel}
                 </span>
             </div>
-            <div class="order-card-body" onclick="window.location.href='/pages/user/order-detail/order-detail.html?id=${order.id}'" title="Nhan de xem chi tiet don hang">
+            <div class="order-card-body" onclick="window.location.href='/pages/user/order-detail/order-detail.html?id=${order.id}'" title="Nhấn để xem chi tiết đơn hàng">
                 <div class="product-preview">
                     <img src="${firstProduct.image}" alt="${firstProduct.name}" class="product-thumb" loading="lazy">
                     <div class="product-info">
                         <h4 class="product-name">${firstProduct.name}</h4>
-                        ${remainingCount > 0 ? `<p class="product-meta">va ${remainingCount} san pham khac</p>` : ''}
+                        ${remainingCount > 0 ? `<p class="product-meta">va ${remainingCount} sản phẩm khac</p>` : ''}
+                        ${metaParts.length ? `<div class="order-meta-chips">${metaParts.map((item) => `<span class="order-meta-chip">${item}</span>`).join('')}</div>` : ''}
                     </div>
                 </div>
                 <div class="order-summary">
-                        <span class="summary-label">Tổng tiền:</span>
-                        <span class="summary-value">${formatCurrency(toNumber(order.pricing?.total))}</span>
-                    </div>
+                    <span class="summary-label">Tổng tiền:</span>
+                    <span class="summary-value">${formatCurrency(toNumber(order.pricing?.total))}</span>
+                </div>
             </div>
             <div class="order-card-footer">
                 ${footerButtonsHTML}
@@ -287,7 +308,6 @@ function cancelOrder(orderId) {
         return;
     }
 
-    // Modal xác nhận
     const modalId = 'orders-cancel-modal';
     const existing = document.getElementById(modalId);
     if (existing) existing.remove();
@@ -321,13 +341,12 @@ function cancelOrder(orderId) {
     document.getElementById('orders-cancel-confirm').addEventListener('click', () => {
         modal.hide();
 
-        // Hoàn trả tồn kho
         if (Array.isArray(order.products)) {
             try {
                 const storedProducts = JSON.parse(localStorage.getItem('pawpal_products') || '[]');
                 if (storedProducts.length) {
-                    order.products.forEach(item => {
-                        const idx = storedProducts.findIndex(p => String(p.id) === String(item.id));
+                    order.products.forEach((item) => {
+                        const idx = storedProducts.findIndex((product) => String(product.id) === String(item.id));
                         if (idx !== -1) {
                             storedProducts[idx].stock = (Number(storedProducts[idx].stock) || 0) + (Number(item.quantity) || 0);
                             storedProducts[idx].inStock = true;
@@ -335,12 +354,11 @@ function cancelOrder(orderId) {
                     });
                     localStorage.setItem('pawpal_products', JSON.stringify(storedProducts));
                 }
-            } catch (e) {
-                console.warn('cancelOrder stock restore error:', e);
+            } catch (error) {
+                console.warn('cancelOrder stock restore error:', error);
             }
         }
 
-        // Ghi nhận yêu cầu hoàn tiền nếu đã thanh toán online
         if (order.paymentMethod && order.paymentMethod !== 'cod' && order.paymentStatus === 'paid') {
             const refunds = JSON.parse(localStorage.getItem('pawpal_refunds') || '[]');
             refunds.push({
@@ -360,14 +378,14 @@ function cancelOrder(orderId) {
         updateTabCounts();
         applyFilters();
 
-        showOrdersToast(`Đơn hàng ${orderId} đã được hủy thành công.`, 'success');
+        showOrdersToast(`Don hang ${orderId} da duoc huy thanh cong.`, 'success');
     });
 }
 
 window.cancelOrder = cancelOrder;
 
 function reorder(orderId) {
-    showOrdersToast(`Đã thêm các sản phẩm của đơn hàng ${orderId} vào giỏ hàng.`, 'success');
+    showOrdersToast(`Da them cac sản phẩm cua don hang ${orderId} vao gio hang.`, 'success');
 }
 
 window.reorder = reorder;
@@ -380,13 +398,18 @@ function showOrdersToast(message, type = 'info') {
         container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;';
         document.body.appendChild(container);
     }
+
     const colors = { success: '#2a5944', error: '#dc3545', info: '#0d6efd', warning: '#ffc107' };
-    const t = document.createElement('div');
-    t.style.cssText = `background:${colors[type]||colors.info};color:${type==='warning'?'#000':'#fff'};padding:12px 18px;border-radius:8px;font-size:0.88rem;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:320px;`;
-    t.textContent = message;
-    container.appendChild(t);
-    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; }, 3000);
-    setTimeout(() => t.remove(), 3400);
+    const toast = document.createElement('div');
+    toast.style.cssText = `background:${colors[type] || colors.info};color:${type === 'warning' ? '#000' : '#fff'};padding:12px 18px;border-radius:8px;font-size:0.88rem;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:320px;`;
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity .3s';
+    }, 3000);
+    setTimeout(() => toast.remove(), 3400);
 }
 
 function formatCurrency(amount) {
@@ -398,8 +421,8 @@ function formatCurrency(amount) {
 }
 
 function toNumber(value, fallback = 0) {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : fallback;
+    const normalized = Number(value);
+    return Number.isFinite(normalized) ? normalized : fallback;
 }
 
 function formatDate(dateString) {
@@ -441,11 +464,21 @@ function normalizeOrderStatus(status) {
     return status;
 }
 
+function getPaymentMethodLabel(method) {
+    const labels = {
+        cod: 'Thanh toán COD',
+        momo: 'Thanh toán MoMo',
+        bank_transfer: 'Chuyển khoản',
+        card: 'Thẻ ngân hàng'
+    };
+    return labels[method] || 'Thanh toán online';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadOrders();
 
-    document.querySelectorAll('.tab-btn').forEach((btn) => {
-        btn.addEventListener('click', (event) => {
+    document.querySelectorAll('.tab-btn').forEach((button) => {
+        button.addEventListener('click', (event) => {
             document.querySelectorAll('.tab-btn').forEach((item) => item.classList.remove('active'));
             event.currentTarget.classList.add('active');
             filterByStatus(event.currentTarget.dataset.status);
@@ -474,4 +507,3 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ordersState.currentPage < totalPages) goToPage(ordersState.currentPage + 1);
     });
 });
-
