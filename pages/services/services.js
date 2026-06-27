@@ -6,6 +6,8 @@
 
 let allServices = [];
 let filteredServices = [];
+let currentPage = 1;
+const itemsPerPage = 9;
 
 function isCompactServicesLayout() {
     return window.innerWidth <= 1024;
@@ -87,6 +89,24 @@ function initServicesFilterControls() {
         button.addEventListener('click', () => clearFilters());
         button.dataset.bound = 'true';
     });
+
+    document.querySelectorAll('[data-service-focus]').forEach((button) => {
+        if (button.dataset.bound === 'true') return;
+        button.addEventListener('click', () => applyQuickServiceFocus(button.dataset.serviceFocus || ''));
+        button.dataset.bound = 'true';
+    });
+}
+
+function initServicesAccordions() {
+    document.querySelectorAll('.accordion-trigger').forEach((trigger) => {
+        if (trigger.dataset.bound === 'true') return;
+        trigger.addEventListener('click', () => {
+            const panel = trigger.nextElementSibling;
+            if (!panel?.id) return;
+            toggleAccordion(panel.id);
+        });
+        trigger.dataset.bound = 'true';
+    });
 }
 
 function updateServicesFilterCount() {
@@ -125,6 +145,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('=== SERVICES PAGE LOADING ===');
     initResponsiveServicesSidebar();
     initServicesFilterControls();
+    initServicesAccordions();
 
     // Load services from CSV using DataLoader
     try {
@@ -223,7 +244,7 @@ window.applyFilters = function () {
 
     // Handle sorting before rendering
     const sortBy = document.querySelector('input[name="sortFilter"]:checked')?.value || 'default';
-    if (sortBy === 'price-asc') {
+        if (sortBy === 'price-asc') {
         filteredServices.sort((a, b) => a.price - b.price);
     } else if (sortBy === 'price-desc') {
         filteredServices.sort((a, b) => b.price - a.price);
@@ -231,6 +252,7 @@ window.applyFilters = function () {
         filteredServices.sort((a, b) => b.rating - a.rating);
     }
 
+    currentPage = 1;
     renderServices();
     updateServicesFilterCount();
 
@@ -252,10 +274,15 @@ function renderServices() {
                 <p class="empty-desc">Rất tiếc, PawPal không tìm thấy dịch vụ nào phù hợp với bộ lọc của bạn.</p>
             </div>
         `;
+        document.getElementById('paginationWrapper')?.classList.add('d-none');
         return;
     }
 
-    grid.innerHTML = filteredServices.map(service => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedServices = filteredServices.slice(startIndex, endIndex);
+
+    grid.innerHTML = paginatedServices.map(service => {
         // Map category slug to display label (avoid ampersand)
         let displayCategory = 'Dịch vụ';
         if (service.category === 'spa') displayCategory = 'Spa và Làm đẹp';
@@ -333,6 +360,87 @@ function renderServices() {
             { opacity: 1, y: 0, duration: 0.4, stagger: 0.08, ease: 'power2.out' }
         );
     }
+
+    renderPagination();
+}
+
+// 2.5 Pagination
+function renderPagination() {
+    const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
+    const pageNumbers = document.getElementById('pageNumbers');
+    const pagePrev = document.getElementById('pagePrev');
+    const pageNext = document.getElementById('pageNext');
+    const paginationWrapper = document.getElementById('paginationWrapper');
+    
+    if (!pageNumbers || !pagePrev || !pageNext || !paginationWrapper) return;
+    
+    if (totalPages <= 1) {
+        paginationWrapper.classList.add('d-none');
+        return;
+    }
+    
+    paginationWrapper.classList.remove('d-none');
+    
+    pagePrev.disabled = currentPage === 1;
+    pageNext.disabled = currentPage === totalPages;
+    
+    pagePrev.onclick = () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderServices();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+    
+    pageNext.onclick = () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderServices();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+    
+    pageNumbers.innerHTML = '';
+    pageNumbers.appendChild(createPageButton(1));
+    
+    let startPage = Math.max(2, currentPage - 1);
+    let endPage = Math.min(totalPages - 1, currentPage + 1);
+    
+    if (startPage > 2) {
+        const ellipsis = document.createElement('div');
+        ellipsis.className = 'page-ellipsis';
+        ellipsis.textContent = '...';
+        pageNumbers.appendChild(ellipsis);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.appendChild(createPageButton(i));
+    }
+    
+    if (endPage < totalPages - 1) {
+        const ellipsis = document.createElement('div');
+        ellipsis.className = 'page-ellipsis';
+        ellipsis.textContent = '...';
+        pageNumbers.appendChild(ellipsis);
+    }
+    
+    if (totalPages > 1) {
+        pageNumbers.appendChild(createPageButton(totalPages));
+    }
+}
+
+function createPageButton(page) {
+    const btn = document.createElement('button');
+    btn.className = `page-btn ${page === currentPage ? 'active' : ''}`;
+    btn.textContent = page;
+    btn.onclick = () => {
+        if (currentPage !== page) {
+            currentPage = page;
+            renderServices();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+    return btn;
 }
 
 // 3. Clear Filters
@@ -357,6 +465,64 @@ window.clearFilters = function () {
     if (sortDefault) sortDefault.checked = true;
 
     applyFilters();
+};
+
+function setRadioFilter(name, value) {
+    const target = document.querySelector(`input[name="${name}"][value="${value}"]`);
+    if (target) target.checked = true;
+}
+
+function focusServicesResult() {
+    const toolbar = document.querySelector('.services-toolbar');
+    if (!toolbar) return;
+    toolbar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+window.applyQuickServiceFocus = function (focusKey) {
+    const searchInput = document.getElementById('searchServiceInput');
+    if (searchInput) searchInput.value = '';
+
+    setRadioFilter('sortFilter', 'default');
+    setRadioFilter('categoryFilter', 'all');
+    setRadioFilter('petFilter', 'all');
+    setRadioFilter('priceBucketFilter', 'all');
+
+    const ratingAll = document.getElementById('ratingAll');
+    if (ratingAll) ratingAll.checked = true;
+    document.querySelectorAll('.rating-star-check').forEach((checkbox) => {
+        checkbox.checked = false;
+    });
+
+    switch (focusKey) {
+        case 'basic':
+            if (searchInput) searchInput.value = 'vệ sinh cơ bản';
+            setRadioFilter('priceBucketFilter', 'under-150');
+            break;
+        case 'premium':
+            if (searchInput) searchInput.value = 'premium';
+            setRadioFilter('priceBucketFilter', '150-300');
+            break;
+        case 'style':
+        case 'styling':
+            if (searchInput) searchInput.value = 'tạo kiểu';
+            setRadioFilter('priceBucketFilter', 'over-300');
+            break;
+        case 'odor':
+            if (searchInput) searchInput.value = 'khử mùi';
+            break;
+        case 'shedding':
+            if (searchInput) searchInput.value = 'dưỡng';
+            setRadioFilter('priceBucketFilter', '150-300');
+            break;
+        case 'hotel':
+            setRadioFilter('categoryFilter', 'hotel');
+            break;
+        default:
+            break;
+    }
+
+    applyFilters();
+    focusServicesResult();
 };
 
 // 4. Update Price Display Text
