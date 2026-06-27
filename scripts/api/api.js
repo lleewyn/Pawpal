@@ -1,11 +1,11 @@
-﻿/**
+/**
  * Mock API layer for PawPal.
  * JSON files in /data are the source of demo data. localStorage is only a writable cache
  * so user actions such as editing pets or cancelling orders can still work without a backend.
  */
 
 export const API = {
-    DATA_VERSION: '2026-06-25-v2-add-4-users-data',
+    DATA_VERSION: '2026-06-27-v3-fix-vietnamese',
 
     async getJSON(url) {
         try {

@@ -105,13 +105,34 @@ function saveUsers(users) {
     localStorage.setItem(PAWPAL_USERS_KEY, JSON.stringify(users));
 }
 
+function reconcileUserSession(user, users) {
+    if (!user) return null;
+
+    const sameIdentityUsers = (users || []).filter((candidate) => {
+        if (user.id && candidate.id && String(candidate.id) === String(user.id)) return true;
+        if (user.phone && candidate.phone && String(candidate.phone) === String(user.phone)) return true;
+        return false;
+    });
+
+    if (!sameIdentityUsers.length) return user;
+
+    const preferredUser = sameIdentityUsers.find((candidate) => !candidate.is_temporary) || sameIdentityUsers[0];
+    return { ...preferredUser, ...user, is_temporary: Boolean(preferredUser.is_temporary) };
+}
+
 function getCurrentUser() {
-    const user = JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || null;
+    const rawUser = JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || null;
+    const users = getUsers();
+    const user = reconcileUserSession(rawUser, users);
+
+    if (user && JSON.stringify(user) !== JSON.stringify(rawUser)) {
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    }
+
     if (user && !user.id) {
         user.id = generateUserId();
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
 
-        const users = getUsers();
         const idx = users.findIndex(u => u.phone === user.phone);
         if (idx !== -1) {
             users[idx] = user;

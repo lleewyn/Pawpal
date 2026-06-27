@@ -3,9 +3,37 @@
  */
 
 (function() {
+    function getUsers() {
+        try {
+            return JSON.parse(localStorage.getItem('pawpal_users_db')) || [];
+        } catch {
+            return [];
+        }
+    }
+
+    function reconcileUserSession(user, users) {
+        if (!user) return null;
+
+        const sameIdentityUsers = (users || []).filter((candidate) => {
+            if (user.id && candidate.id && String(candidate.id) === String(user.id)) return true;
+            if (user.phone && candidate.phone && String(candidate.phone) === String(user.phone)) return true;
+            return false;
+        });
+
+        if (!sameIdentityUsers.length) return user;
+
+        const preferredUser = sameIdentityUsers.find((candidate) => !candidate.is_temporary) || sameIdentityUsers[0];
+        return { ...preferredUser, ...user, is_temporary: Boolean(preferredUser.is_temporary) };
+    }
+
     function getCurrentUser() {
         try {
-            return JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+            const rawUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+            const user = reconcileUserSession(rawUser, getUsers());
+            if (user && JSON.stringify(user) !== JSON.stringify(rawUser)) {
+                localStorage.setItem('pawpal_current_user', JSON.stringify(user));
+            }
+            return user;
         } catch {
             return null;
         }
