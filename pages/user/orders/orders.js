@@ -136,8 +136,8 @@ function createOrderCard(order) {
 
     const reviewActionHTML = isCompleted
         ? allReviewed
-            ? `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" class="btn-track-order text-decoration-none" aria-label="Xem danh gia don hang ${order.id}">Xem danh gia</a>`
-            : `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" class="btn-review text-decoration-none" aria-label="Danh gia don hang ${order.id}">Danh gia</a>`
+            ? `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" class="btn-track-order text-decoration-none" aria-label="Xem đánh giá đơn hàng ${order.id}">Xem đánh giá</a>`
+            : `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" class="btn-review text-decoration-none" aria-label="Đánh giá đơn hàng ${order.id}">Đánh giá</a>`
         : '';
 
     const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');

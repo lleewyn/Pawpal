@@ -82,7 +82,15 @@
 }
 
 .booking-card:hover {
-    
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: var(--color-primary);
+}
+
+.booking-card:focus-visible {
+    outline: 3px solid rgba(224, 151, 22, 0.35);
+    outline-offset: 3px;
+    transform: translateY(-2px);
     box-shadow: var(--shadow-card-hover);
     border-color: var(--color-primary);
 }
@@ -117,19 +125,36 @@
     font-weight: 700;
     color: var(--color-primary-dark);
     margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.booking-card-pet-name {
+    color: var(--color-primary-dark);
+}
+
+.booking-card-service-separator {
+    color: rgba(64, 92, 79, 0.5);
+}
+
+.booking-card-service-name {
+    color: var(--color-accent-dark);
+    font-weight: 800;
 }
 
 .booking-card-datetime {
     font-family: var(--font-primary);
     font-size: 0.9rem;
-    color: var(--color-text-light);
+    color: #5e7067;
     margin-bottom: 4px;
 }
 
 .booking-card-staff {
     font-family: var(--font-primary);
     font-size: 0.875rem;
-    color: var(--color-text-light);
+    color: #66786f;
 }
 
 .booking-card-footer {
@@ -155,6 +180,20 @@
     font-size: 1.1rem;
     font-weight: 700;
     color: var(--color-accent-dark);
+}
+
+.booking-card-detail-hint {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: var(--border-radius-pill);
+    background: #eef5f0;
+    color: var(--color-primary-dark);
+    font-family: var(--font-primary);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .booking-card-link {
@@ -196,13 +235,16 @@
 
 /* ── Status Badges ── */
 .badge-status {
-    padding: 4px 12px;
+    padding: 6px 14px;
     border-radius: var(--border-radius-pill);
-    font-family: var(--font-primary);
-    font-size: 0.75rem;
+    font-family: var(--font-body);
+    font-size: var(--fs-small);
     font-weight: 700;
-    letter-spacing: 0.5px;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2;
+    text-transform: none;
 }
 
 .badge-pending {
@@ -211,18 +253,18 @@
 }
 
 .badge-confirmed {
-    background: var(--color-success-light);
-    color: var(--color-success);
+    background: #e4f5ea;
+    color: #2f8a58;
 }
 
 .badge-in-progress {
-    background: var(--color-accent-light);
-    color: var(--color-accent-dark);
+    background: #fff0d7;
+    color: #b77412;
 }
 
 .badge-completed {
-    background: var(--color-neutral-light);
-    color: var(--color-neutral);
+    background: #eef1ef;
+    color: #6b7b73;
 }
 
 .badge-cancelled {
@@ -270,7 +312,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-xs);
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--color-primary);

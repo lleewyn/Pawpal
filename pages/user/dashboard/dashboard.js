@@ -1,6 +1,6 @@
 /**
  * dashboard.js - User Dashboard Logic
- * US 2-3: Doi mat khau voi thanh do do manh
+ * US 2-3: Đổi mật khẩu với thanh đo độ mạnh
  * Tuan thu design.md
  */
 
@@ -45,7 +45,7 @@ function normalizeAddressEntry(address, fallbackUser = {}) {
 
         return {
             id: `addr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-            label: 'Dia chi da luu',
+            label: 'Địa chỉ đã lưu',
             name: fallbackUser.name || '',
             phone: fallbackUser.phone || '',
             street,
@@ -112,7 +112,7 @@ function showToast(type, message, duration = 5000) {
     };
 
     const titles = {
-        success: 'Thanh cong',
+        success: 'Thành công',
         error: 'Loi',
         info: 'Thong bao',
         warning: 'Canh bao'
@@ -283,7 +283,7 @@ function initProfileEditForm(user) {
 
         editingAddresses.push({
             id: `addr-${Date.now()}`,
-            label: editingAddresses.length === 0 ? 'Dia chi mac dinh' : `Dia chi ${editingAddresses.length + 1}`,
+            label: editingAddresses.length === 0 ? 'Địa chỉ mặc định' : `Địa chỉ ${editingAddresses.length + 1}`,
             name: nameInput.value.trim() || user.name || '',
             phone: phoneInput.value.trim() || user.phone || '',
             street,
@@ -364,7 +364,7 @@ function initAddressEditForm(user) {
 
         editCard.classList.add('d-none');
         viewCard.classList.remove('d-none');
-        showToast('success', 'Da cap nhat dia chi thanh cong!');
+        showToast('success', 'Đã cập nhật địa chỉ thành công!');
         user.address = updatedAddress;
     });
 }
@@ -485,7 +485,7 @@ async function loadRecentOrders(user) {
         if (status === 'Dang giao' || status === 'shipping') {
             badgeClass = 'status-giao';
                 statusText = 'Đang giao';
-        } else if (status === 'Cho xac nhan' || status === 'pending_payment') {
+        } else if (status === 'Chờ xác nhận' || status === 'pending_payment') {
             badgeClass = 'status-giao';
                 statusText = 'Chờ xử lý';
         } else if (status === 'completed') {

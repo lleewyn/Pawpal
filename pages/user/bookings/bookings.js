@@ -105,7 +105,10 @@ function createBookingCard(booking) {
     const careLogLink = normalizedStatus === 'completed' && petId
         ? `<a class="booking-card-link" href="../pet-diary/pet-diary.html${diaryQuery}" onclick="event.stopPropagation()">Xem nhật ký chăm sóc</a>`
         : '';
+    const detailPrompt = '<span class="booking-card-detail-hint">Nhấn để xem chi tiết</span>';
     card.className = `booking-card status-${normalizedStatus}`;
+    card.tabIndex = 0;
+    card.setAttribute('role', 'link');
     card.onclick = () => {
         window.location.href = `../booking-detail/booking-detail.html?id=${booking.id}`;
     };
@@ -113,12 +116,22 @@ function createBookingCard(booking) {
     const petName = booking.petName || currentPetMap.get(String(booking.petId))?.name || booking.petInfo?.petName || booking.petId || 'Bé cưng';
     const serviceName = booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal';
     const dateTimeText = buildDateTimeText(booking);
+    card.setAttribute('aria-label', `Xem chi tiết lịch hẹn ${petName}`);
+
+    card.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            window.location.href = `../booking-detail/booking-detail.html?id=${booking.id}`;
+        }
+    });
 
     card.innerHTML = `
         <div class="booking-card-header">
             <div>
                 <div class="booking-card-pet-service">
-                    ${petName} - ${serviceName}
+                    <span class="booking-card-pet-name">${petName}</span>
+                    <span class="booking-card-service-separator">-</span>
+                    <span class="booking-card-service-name">${serviceName}</span>
                 </div>
                 <div class="booking-card-datetime">
                     ${dateTimeText}
@@ -133,6 +146,7 @@ function createBookingCard(booking) {
         <div class="booking-card-footer">
             <div class="booking-card-price">${formatPrice(booking.price || 0)}</div>
             <div class="booking-card-actions">
+                ${detailPrompt}
                 ${isChangeLimited ? '<span class="booking-limit-warning">Đã hết lượt đổi</span>' : ''}
                 ${careLogLink}
             </div>

@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Find if there's a temporary guest user account waiting for password setup
             const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+            const isLoggedMember = Boolean(currentUser && !currentUser.is_temporary);
 
             // Check if this booking belongs to a temporary user
             const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
@@ -13,8 +14,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
             let targetUser = null;
 
-            if (currentBooking) {
-                targetUser = users.find(u => u.phone === currentBooking.ownerPhone && u.is_temporary);
+            if (isLoggedMember) {
+                targetUser = null;
+            } else if (currentBooking && currentBooking.userId) {
+                targetUser = users.find(u => String(u.id) === String(currentBooking.userId) && u.is_temporary) || null;
+            } else if (currentBooking) {
+                targetUser = users.find(u => u.phone === currentBooking.ownerPhone && u.is_temporary) || null;
             } else if (currentUser && currentUser.is_temporary) {
                 targetUser = currentUser;
             }

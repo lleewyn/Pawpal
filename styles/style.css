@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 /* ==========================================================================
    PawPal Core Compiled Styles (Do not edit directly above the marker)
    ========================================================================== */
@@ -57,7 +59,7 @@
 :root {
     /* Fonts — Lora (heading, serif, warm) + DM Sans (body, geometric, friendly) */
     --font-heading: 'Lora', Georgia, serif;      /* Headings, accent italic, display */
-    --font-body: 'DM Sans', system-ui, sans-serif; /* Body, UI, buttons, labels */
+    --font-body: 'Inter', system-ui, sans-serif; /* Body, UI, buttons, labels */
 
     /* Legacy aliases — kept for backward compat, map to new vars */
     --font-primary: var(--font-body);
@@ -2810,7 +2812,7 @@ input:checked + .switch-slider:before {
 
 :root {
     --font-heading:  'Lora', Georgia, serif;
-    --font-body:     'DM Sans', system-ui, sans-serif;
+    --font-body:     'Inter', system-ui, sans-serif;
     --font-primary:  var(--font-body);
     --font-display:  var(--font-heading);
 
