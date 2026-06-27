@@ -5,7 +5,7 @@
  */
 
 export const API = {
-    DATA_VERSION: '2026-06-27-v4-fix-vietnamese',
+    DATA_VERSION: '2026-06-28-v1-add-orders',
 
     async getJSON(url) {
         try {
@@ -58,9 +58,10 @@ export const API = {
         }
 
         const localOrders = safeReadArray('pawpal_orders');
-        if (shouldRefreshMockData || localOrders.length === 0 || !localOrders.some(order => order.userId)) {
-            const orders = await this.getJSON('/data/orders.json');
-            if (orders) {
+        const orders = await this.getJSON('/data/orders.json');
+        if (orders) {
+            const hasNewSeedOrders = orders.some(seed => !localOrders.some(l => String(l.id) === String(seed.id)));
+            if (shouldRefreshMockData || localOrders.length === 0 || !localOrders.some(order => order.userId) || hasNewSeedOrders) {
                 // When refreshing, seed data wins for product fields (image, name, price),
                 // but preserve user-modified fields like status (e.g. cancelled orders)
                 const mergedOrders = orders.map(seedOrder => {
@@ -73,6 +74,11 @@ export const API = {
                         paymentStatus: local.paymentStatus,
                         updatedAt: local.updatedAt
                     };
+                });
+                localOrders.forEach(local => {
+                    if (!mergedOrders.some(o => String(o.id) === String(local.id))) {
+                        mergedOrders.push(local);
+                    }
                 });
                 localStorage.setItem('pawpal_orders', JSON.stringify(mergedOrders));
                 localStorage.setItem('pawpal_orders_seeded', 'true');
