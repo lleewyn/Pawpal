@@ -58,7 +58,7 @@ function normalizeAddressEntry(address, fallbackUser = {}) {
 
     return {
         id: address.id || `addr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        label: address.label || 'Dia chi da luu',
+        label: address.label || 'Địa chỉ đã lưu',
         name: address.name || fallbackUser.name || '',
         phone: address.phone || fallbackUser.phone || '',
         street: address.street || address.address || '',
