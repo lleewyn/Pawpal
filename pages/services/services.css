@@ -501,6 +501,34 @@
     height: 100%;
 }
 
+.service-wishlist-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 3;
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--color-text-dark);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 18px rgba(21, 52, 39, 0.12);
+    transition: all 0.3s ease;
+}
+
+.service-wishlist-btn:hover {
+    background: var(--color-accent-light);
+    color: var(--color-accent-dark);
+}
+
+.service-wishlist-btn.active {
+    background: var(--color-accent);
+    color: #ffffff;
+}
+
 .service-card:hover {
 }
 
@@ -841,6 +869,21 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+}
+
+.member-badge {
+    font-size: 9px;
+    background: var(--color-accent-light);
+    color: var(--color-accent-dark);
+    padding: 1px 6px;
+    border-radius: var(--border-radius-pill);
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-top: 2px;
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
 }
 
 
