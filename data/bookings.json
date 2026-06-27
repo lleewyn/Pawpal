@@ -14,11 +14,11 @@
     "id": "BKG-1002",
     "userId": "USER-001",
     "petId": "PET-002",
-    "serviceName": "Khám sức khỏe tổng quát",
+    "serviceName": "Tắm sấy & Cắt tỉa lông",
     "date": "2026-06-10",
     "time": "09:30",
     "status": "completed",
-    "price": 500000,
+    "price": 400000,
     "branch": "PawPal Chi nhánh Quận 10"
   },
   {
@@ -102,7 +102,7 @@
     "id": "BKG-1009",
     "userId": "USER-001",
     "petId": "PET-002",
-    "serviceName": "Khám sức khỏe định kỳ",
+    "serviceName": "Spa Premium trọn gói",
     "date": "2026-06-22",
     "time": "15:30",
     "status": "confirmed",
@@ -241,15 +241,15 @@
     "id": "BKG-5002",
     "userId": "USER-005",
     "petId": "PET-007",
-    "serviceName": "Khám sức khỏe tổng quát",
-    "serviceId": "MED01",
+    "serviceName": "Tắm sấy & Vệ sinh móng",
+    "serviceId": "SPA02",
     "date": "2026-06-18",
     "time": "09:00",
     "status": "completed",
-    "price": 500000,
+    "price": 350000,
     "branch": "PawPal Chi nhánh Quận 3",
-    "staff": "Bs. Minh Tuấn",
-    "note": "Sức khỏe tốt, cân nặng ổn định"
+    "staff": "Nguyễn Thị Mai",
+    "note": "Bộ lông sạch sẽ, tinh thần vui vẻ"
   },
   {
     "id": "BKG-5003",
@@ -300,11 +300,11 @@
     "phone": "0988777666",
     "petId": null,
     "petName": "Kiki (Cún Corgi)",
-    "serviceName": "Khám sức khỏe tổng quát",
+    "serviceName": "Spa & Grooming nghệ thuật",
     "date": "2026-06-28",
     "time": "15:30",
     "status": "upcoming",
-    "price": 500000,
+    "price": 450000,
     "branch": "PawPal Chi nhánh Quận 10"
   }
 ]

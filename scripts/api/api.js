@@ -5,7 +5,7 @@
  */
 
 export const API = {
-    DATA_VERSION: '2026-06-28-v2-fix-images',
+    DATA_VERSION: '2026-06-28-v3-remove-medical-services',
 
     async getJSON(url) {
         try {

@@ -13,7 +13,7 @@
           "description": "Milu đang được sấy lông ở mức nhiệt nhẹ. Bé hợp tác tốt và đỡ bớt căng thẳng.",
           "staff": "Nguyễn Thị Mai",
           "type": "in_progress",
-          "image": "/assets/images/tracker/belu-1.png"
+          "image": "/assets/images/publics/dogcute3.jpg"
         },
         {
           "id": 3,
@@ -22,7 +22,7 @@
           "description": "Đã tắm bằng sữa tắm dành cho da nhạy cảm, tránh vùng bé có tiền sử dị ứng.",
           "staff": "Nguyễn Thị Mai",
           "type": "in_progress",
-          "image": "/assets/images/tracker/belu-2.png"
+          "image": "/assets/images/publics/dogcute6.jpg"
         },
         {
           "id": 2,
@@ -31,7 +31,7 @@
           "description": "Nhân viên kiểm tra tai, móng, da bụng và lông trước khi bắt đầu dịch vụ.",
           "staff": "Lê Hoàng An",
           "type": "checkup",
-          "image": "/assets/images/services/spa/gallery/cust_khach_1_dang_chai_long.jpg"
+          "image": "/assets/images/publics/catcute5.jpg"
         },
           {
             "id": 1,
@@ -40,7 +40,7 @@
             "description": "Milu đã được tiếp nhận tại chi nhánh Quận 1. Chủ có ghi chú bé nhát người lạ.",
           "staff": "Trần Văn Nam",
           "type": "check_in",
-          "image": "/assets/images/tracker/belu-3.png"
+          "image": "/assets/images/publics/catcute8.jpg"
         }
       ]
     },
@@ -75,7 +75,7 @@
             "description": "Sấy lông kỹ phần bụng và chân, chải lông rối nhẹ.",
             "staff": "Nguyễn Thị Mai",
             "type": "in_progress",
-            "image": "/assets/images/tracker/belu-1.png"
+            "image": "/assets/images/publics/dogcute3.jpg"
           },
           {
             "id": 2,
@@ -84,7 +84,7 @@
             "description": "Tắm với sữa tắm cho chó lông ngắn, lưu ý tránh mắt và tai.",
             "staff": "Nguyễn Thị Mai",
             "type": "in_progress",
-            "image": "/assets/images/tracker/belu-2.png"
+            "image": "/assets/images/publics/dogcute6.jpg"
           },
           {
             "id": 1,
@@ -93,7 +93,7 @@
             "description": "Kiểm tra cân nặng 8.5kg và tình trạng da lông trước dịch vụ.",
             "staff": "Trần Văn Nam",
             "type": "check_in",
-            "image": "/assets/images/tracker/belu-3.png"
+            "image": "/assets/images/publics/catcute5.jpg"
           }
         ],
         "invoice": {
@@ -137,7 +137,7 @@
             "description": "Cắt tỉa theo form gọn gàng, vệ sinh tai bằng dung dịch chuyên dụng.",
             "staff": "Phạm Bảo Châu",
             "type": "in_progress",
-            "image": "/assets/images/services/spa/gallery/cust_khach_1_dang_chai_long.jpg"
+            "image": "/assets/images/publics/catcute8.jpg"
           },
           {
             "id": 1,
@@ -146,7 +146,7 @@
             "description": "Tiếp nhận Milu, chủ yêu cầu cắt gọn nhưng không cạo sát.",
             "staff": "Trần Văn Nam",
             "type": "check_in",
-            "image": "/assets/images/tracker/belu-3.png"
+            "image": "/assets/images/publics/dogcute8.jpg"
           }
         ],
         "invoice": {
@@ -162,7 +162,7 @@
       },
       {
         "id": "SVC-PET-001-003",
-        "service": "Kiểm tra sức khỏe tổng quát",
+        "service": "Tắm sấy & Chăm sóc toàn thân",
         "date": "2026-04-22",
         "status": "Hoàn thành",
         "timeline": [
@@ -171,30 +171,30 @@
             "status": "Đã tiếp nhận",
             "timestamp": "2026-06-10T09:50:00",
             "description": "Kiểm tra cân nặng 8.5kg và tình trạng da lông trước dịch vụ.",
-            "staff": "BS. Hoàng Thảo",
+            "staff": "Nguyễn Thị Mai",
             "type": "completed",
             "invoice": {
               "code": "HD-PET-001-003",
               "items": [
-                { "name": "Kiểm tra sức khỏe tổng quát", "price": 500000 }
+                { "name": "Tắm sấy & Chăm sóc toàn thân", "price": 350000 }
               ],
-              "total": 500000,
+              "total": 350000,
               "paid": true
             }
           },
           {
             "id": 2,
-            "status": "Kiểm tra lâm sàng",
+            "status": "Chăm sóc & Sấy khô",
             "timestamp": "2026-04-22T10:05:00",
-            "description": "Kiểm tra răng miệng, tai, mắt, da lông và cân nặng.",
-            "staff": "BS. Hoàng Thảo",
-            "type": "checkup"
+            "description": "Vệ sinh tai, sấy khô và vắt tuyến mồ hôi cho bé.",
+            "staff": "Nguyễn Thị Mai",
+            "type": "grooming"
           },
           {
             "id": 1,
             "status": "Đã tiếp nhận",
             "timestamp": "2026-04-22T09:50:00",
-            "description": "Tiếp nhận hồ sơ sức khỏe của Milu tại quầy lễ tân.",
+            "description": "Tiếp nhận bé Milu tại quầy lễ tân spa.",
             "staff": "Trần Văn Nam",
             "type": "check_in"
           }
@@ -202,9 +202,9 @@
         "invoice": {
           "code": "HD-PET-001-003",
           "items": [
-            { "name": "Kiểm tra sức khỏe tổng quát", "price": 500000 }
+            { "name": "Tắm sấy & Chăm sóc toàn thân", "price": 350000 }
           ],
-          "total": 500000,
+          "total": 350000,
           "paid": true
         }
       }
@@ -262,7 +262,7 @@
             "description": "Tiếp nhận Mimi, chủ lưu ý bé không thích tiếng máy sấy lớn.",
             "staff": "Trần Văn Nam",
             "type": "check_in",
-            "image": "/assets/images/tracker/belu-3.png"
+            "image": "/assets/images/publics/dogcute8.jpg"
           }
         ],
         "invoice": {
@@ -448,7 +448,7 @@
             "description": "Tắm bằng sữa tắm khử mùi, sấy lông theo từng lớp vì lông Boss dày.",
             "staff": "Nguyễn Thị Mai",
             "type": "in_progress",
-            "image": "/assets/images/tracker/belu-2.png"
+            "image": "/assets/images/publics/catcute2.jpg"
           },
           {
             "id": 1,
@@ -457,7 +457,7 @@
             "description": "Tiếp nhận Boss, kiểm tra cân nặng 25kg và tình trạng lông.",
             "staff": "Trần Văn Nam",
             "type": "check_in",
-            "image": "/assets/images/tracker/belu-3.png"
+            "image": "/assets/images/publics/dogcute7.jpg"
           }
         ],
         "invoice": {
