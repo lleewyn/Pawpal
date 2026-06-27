@@ -5,7 +5,7 @@
  */
 
 export const API = {
-    DATA_VERSION: '2026-06-28-v4-force-refresh-carelogs',
+    DATA_VERSION: '2026-06-28-v5-rename-user-to-le-le-quyen',
 
     async getJSON(url) {
         try {
