@@ -275,6 +275,146 @@
     ]
   },
   {
+    "id": "ORD-2026-006",
+    "userId": "USER-001",
+    "status": "completed",
+    "paymentStatus": "paid",
+    "paymentMethod": "vnpay",
+    "createdAt": "2026-06-18T09:30:00",
+    "updatedAt": "2026-06-21T15:00:00",
+    "delivery": {
+      "name": "Nguyễn Văn A",
+      "phone": "0901234567",
+      "address": "456 Đường Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
+    },
+    "products": [
+      {
+        "id": "PROD-005",
+        "name": "Pate cho mèo Whiskas vị cá biển 85g (Lốc 12 túi)",
+        "image": "/assets/images/shop/products/TP-SUP-01.png",
+        "quantity": 2,
+        "price": 195000,
+        "total": 390000
+      }
+    ],
+    "pricing": {
+      "subtotal": 390000,
+      "shippingFee": 20000,
+      "discount": 30000,
+      "total": 380000
+    },
+    "timeline": [
+      {
+        "status": "placed",
+        "timestamp": "2026-06-18T09:30:00",
+        "title": "Đơn hàng đã đặt"
+      },
+      {
+        "status": "confirmed",
+        "timestamp": "2026-06-18T10:15:00",
+        "title": "Đã xác nhận"
+      },
+      {
+        "status": "preparing",
+        "timestamp": "2026-06-19T08:00:00",
+        "title": "Đang chuẩn bị hàng"
+      },
+      {
+        "status": "shipping",
+        "timestamp": "2026-06-20T09:00:00",
+        "title": "Đang giao hàng"
+      },
+      {
+        "status": "delivered",
+        "timestamp": "2026-06-21T11:30:00",
+        "title": "Đã giao hàng"
+      },
+      {
+        "status": "completed",
+        "timestamp": "2026-06-21T15:00:00",
+        "title": "Hoàn thành"
+      }
+    ],
+    "allowedActions": [
+      "write_review",
+      "return_request"
+    ]
+  },
+  {
+    "id": "ORD-2026-007",
+    "userId": "USER-001",
+    "status": "completed",
+    "paymentStatus": "paid",
+    "paymentMethod": "momo",
+    "createdAt": "2026-06-22T14:20:00",
+    "updatedAt": "2026-06-25T17:10:00",
+    "delivery": {
+      "name": "Nguyễn Văn A",
+      "phone": "0901234567",
+      "address": "456 Đường Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
+    },
+    "products": [
+      {
+        "id": "PROD-012",
+        "name": "Vòng cổ đệm êm chống siết cho chó trung bình",
+        "image": "/assets/images/shop/products/pk-vongco-01.jpg",
+        "quantity": 1,
+        "price": 150000,
+        "total": 150000
+      },
+      {
+        "id": "PROD-015",
+        "name": "Xịt khử mùi và sát khuẩn chuồng trại PawCare 500ml",
+        "image": "/assets/images/shop/products/vs-xitkhumui-01.jpg",
+        "quantity": 1,
+        "price": 120000,
+        "total": 120000
+      }
+    ],
+    "pricing": {
+      "subtotal": 270000,
+      "shippingFee": 25000,
+      "discount": 0,
+      "total": 295000
+    },
+    "timeline": [
+      {
+        "status": "placed",
+        "timestamp": "2026-06-22T14:20:00",
+        "title": "Đơn hàng đã đặt"
+      },
+      {
+        "status": "confirmed",
+        "timestamp": "2026-06-22T15:00:00",
+        "title": "Đã xác nhận"
+      },
+      {
+        "status": "preparing",
+        "timestamp": "2026-06-23T08:30:00",
+        "title": "Đang chuẩn bị hàng"
+      },
+      {
+        "status": "shipping",
+        "timestamp": "2026-06-24T09:15:00",
+        "title": "Đang giao hàng"
+      },
+      {
+        "status": "delivered",
+        "timestamp": "2026-06-25T14:00:00",
+        "title": "Đã giao hàng"
+      },
+      {
+        "status": "completed",
+        "timestamp": "2026-06-25T17:10:00",
+        "title": "Hoàn thành"
+      }
+    ],
+    "allowedActions": [
+      "write_review",
+      "return_request"
+    ]
+  },
+  {
     "id": "ORD-2026-G01",
     "userId": "USER-GUEST-002",
     "status": "delivered",
