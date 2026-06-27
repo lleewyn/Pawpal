@@ -141,6 +141,9 @@
     transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.35s ease;
     cursor: pointer;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .pet-card:hover {
@@ -225,6 +228,7 @@
     margin-top: var(--space-sm);
     padding-top: var(--space-sm);
     border-top: 1px solid var(--color-border);
+    flex: 1;
 }
 
 .pet-info-row {
@@ -246,7 +250,8 @@
 .pet-card-actions {
     display: flex;
     gap: var(--space-xs);
-    margin-top: var(--space-sm);
+    margin-top: auto;
+    padding-top: var(--space-sm);
 }
 
 .btn-card-action {
@@ -565,10 +570,10 @@
     display: none;
     align-items: flex-start;
     justify-content: center;
-    padding: 24px 16px;
-    background: rgba(42, 89, 68, 0.55);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    padding: 12px;
+    background: rgba(42, 89, 68, 0.34);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     overflow-y: auto;
 }
 
@@ -578,9 +583,9 @@
 
 .modal-content {
     position: relative;
-    background: var(--color-bg-white);
-    border-radius: var(--card-border-radius);
-    box-shadow: var(--shadow-card-hover);
+    background: #fffdf8;
+    border-radius: 28px;
+    box-shadow: 0 22px 54px rgba(32, 58, 45, 0.18);
     width: 100%;
     margin: auto;
     z-index: 2001;
@@ -615,7 +620,7 @@
     border: none;
     cursor: pointer;
     color: var(--color-text-light);
-    padding: 6px;
+    padding: 8px;
     border-radius: var(--border-radius-sm);
     transition: background 0.2s ease, color 0.2s ease;
     display: flex;
@@ -631,6 +636,19 @@
 
 .modal-body {
     padding: var(--space-lg);
+}
+
+.pet-add-page .modal-close {
+    position: absolute;
+    top: 24px;
+    right: 32px;
+    z-index: 30;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 6px 18px rgba(32, 58, 45, 0.08);
+    backdrop-filter: blur(6px);
 }
 
 /* Avatar upload error state */
