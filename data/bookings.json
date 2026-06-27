@@ -278,5 +278,33 @@
     "branch": "PawPal Chi nhánh Quận 7",
     "staff": "Ngọc Anh",
     "note": "Lần đầu đưa bé đến, bé chưa quen môi trường"
+  },
+  {
+    "id": "BKG-9901",
+    "userId": "GUEST",
+    "customerName": "Khách Vãng Lai (Cô Ba)",
+    "phone": "0912111222",
+    "petId": null,
+    "petName": "Bé Mi (Mèo Anh)",
+    "serviceName": "Cắt tỉa lông nghệ thuật",
+    "date": "2026-06-21",
+    "time": "10:00",
+    "status": "completed",
+    "price": 350000,
+    "branch": "PawPal Chi nhánh Quận 1"
+  },
+  {
+    "id": "BKG-9902",
+    "userId": "GUEST",
+    "customerName": "Khách Vãng Lai (Chú Tư)",
+    "phone": "0988777666",
+    "petId": null,
+    "petName": "Kiki (Cún Corgi)",
+    "serviceName": "Khám sức khỏe tổng quát",
+    "date": "2026-06-28",
+    "time": "15:30",
+    "status": "upcoming",
+    "price": 500000,
+    "branch": "PawPal Chi nhánh Quận 10"
   }
 ]
