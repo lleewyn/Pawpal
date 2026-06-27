@@ -647,22 +647,66 @@ function updatePointsDisplay(points) {
 function renderOrderSummary() {
     const container = document.getElementById('order-items');
     container.innerHTML = '';
+    const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
     
-    checkoutState.cart.forEach(item => {
+    checkoutState.cart.forEach((item, index) => {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'order-item';
         itemDiv.innerHTML = `
             <img src="${item.image}" alt="${item.name}" class="order-item-img">
             <div class="order-item-info">
                 <h4>${item.name}</h4>
-                <p class="order-item-qty">x${item.quantity}</p>
+                ${isBuyNow ? `
+                    <div class="buy-now-qty-control" data-index="${index}">
+                        <button type="button" class="buy-now-qty-btn" data-action="decrease" aria-label="Giảm số lượng">-</button>
+                        <span class="buy-now-qty-value">${item.quantity}</span>
+                        <button type="button" class="buy-now-qty-btn" data-action="increase" aria-label="Tăng số lượng">+</button>
+                    </div>
+                ` : `<p class="order-item-qty">x${item.quantity}</p>`}
             </div>
             <span class="order-item-price">${formatCurrency(item.price * item.quantity)}</span>
         `;
         container.appendChild(itemDiv);
     });
+
+    if (isBuyNow) {
+        bindBuyNowQuantityControls();
+    }
     
     updateOrderTotals();
+}
+
+function bindBuyNowQuantityControls() {
+    document.querySelectorAll('.buy-now-qty-control').forEach((control) => {
+        control.querySelectorAll('.buy-now-qty-btn').forEach((button) => {
+            button.addEventListener('click', () => {
+                const itemIndex = Number(control.dataset.index);
+                const action = button.dataset.action;
+                updateBuyNowQuantity(itemIndex, action);
+            });
+        });
+    });
+}
+
+function updateBuyNowQuantity(itemIndex, action) {
+    const item = checkoutState.cart[itemIndex];
+    if (!item) return;
+
+    const currentQuantity = Number(item.quantity) || 1;
+    const maxQuantity = Number(item.stock) || 99;
+    let nextQuantity = currentQuantity;
+
+    if (action === 'decrease') {
+        nextQuantity = Math.max(1, currentQuantity - 1);
+    } else if (action === 'increase') {
+        nextQuantity = Math.min(maxQuantity, currentQuantity + 1);
+    }
+
+    if (nextQuantity === currentQuantity) return;
+
+    item.quantity = nextQuantity;
+    sessionStorage.setItem('pawpal_buynow_cart', JSON.stringify(checkoutState.cart));
+    renderOrderSummary();
 }
 
 function calculateSubtotal() {

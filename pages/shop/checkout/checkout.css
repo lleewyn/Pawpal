@@ -306,6 +306,36 @@
   margin: 0;
 }
 
+.buy-now-qty-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 4px 6px;
+  border: 1px solid rgba(42, 89, 68, 0.14);
+  border-radius: 999px;
+  background: #fff;
+}
+
+.buy-now-qty-btn {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.buy-now-qty-value {
+  min-width: 18px;
+  text-align: center;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
 .order-item-price {
   font-weight: 600;
   color: var(--color-accent);

@@ -139,19 +139,27 @@ function setupGallery() {
     
     if (serviceData.category && serviceData.category.toLowerCase().includes('hotel')) {
         rawImages.push(
-            'assets/images/services/hotel/htl-deluxe.jpg',
-            'assets/images/services/hotel/htl-luxury.jpg',
-            'assets/images/services/hotel/htl-standard-plus.jpg',
-            'assets/images/services/hotel/htl-standard.jpg'
+            'assets/images/services/hotel/htl01.webp',
+            'assets/images/services/hotel/htl02.jpg',
+            'assets/images/services/hotel/htl03.jpg',
+            'assets/images/services/hotel/htl04.jfif',
+            'assets/images/services/hotel/htl05.webp',
+            'assets/images/services/hotel/htl06.jpg',
+            'assets/images/services/hotel/htl07.jfif',
+            'assets/images/services/hotel/htl08.jfif'
         );
     } else {
         // Spa / Grooming
         rawImages.push(
-            'assets/images/services/spa/process/process_tam_cho.jpg',
-            'assets/images/services/spa/process/process_say_long1.jpg',
-            'assets/images/services/spa/process/process_cat_long1.jpg',
-            'assets/images/services/spa/process/process_massage.jpg',
-            'assets/images/services/spa/gallery/cust1_dang_tam.jpg'
+            'assets/images/services/spa/gallery/đang tắm.jpg',
+            'assets/images/services/spa/gallery/đang chải lông.jpg',
+            'assets/images/services/spa/gallery/đang sấy lông.jpg',
+            'assets/images/services/spa/gallery/đang nghỉ ngơi.jpg',
+            'assets/images/services/spa/gallery/đang vệ sinh chân.jpg',
+            'assets/images/services/spa/gallery/tắm.jpg',
+            'assets/images/services/spa/gallery/lau khô.jpg',
+            'assets/images/services/spa/gallery/sấy lông.jpg',
+            'assets/images/services/spa/gallery/nghỉ ngơi.jpg'
         );
     }
 
@@ -486,12 +494,12 @@ function setupReviews() {
 
     const reviews = Array.isArray(serviceData.reviews) ? serviceData.reviews : [];
     reviewsList = reviews.length > 0 ? reviews : [{
-        name: 'Khach hang',
+        name: 'Khách hàng',
         tier: 'silver',
         tierName: 'Hoi vien Bac',
         rating: Math.max(4, Math.round(serviceData.rating || 4)),
         date: new Date().toLocaleDateString('vi-VN'),
-        text: 'Dich vu on, giao dien ro rang va trai nghiem on dinh.',
+        text: 'Dịch vụ ổn, giao diện rõ ràng và trải nghiệm ổn định.',
         images: []
     }];
 

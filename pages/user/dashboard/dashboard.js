@@ -277,7 +277,7 @@ function initProfileEditForm(user) {
         const city = newAddressCityInput.value.trim();
 
         if (!street || !district || !city) {
-            showToast('warning', 'Vui long nhap day du dia chi chi tiet, quan/huyen va thanh pho/tinh.');
+            showToast('warning', 'Vui lòng nhập đầy đủ địa chỉ chi tiết, quận/huyện và thành phố/tỉnh.');
             return;
         }
 
@@ -395,7 +395,7 @@ async function loadUpcomingBookings(user) {
 
     const petName = booking.petName || booking.petInfo?.petName || booking.petId || 'Be cung';
     const petBreed = booking.petInfo?.breed || '';
-    const serviceName = booking.serviceName || booking.selectedService?.name || 'Dich vu cham soc';
+    const serviceName = booking.serviceName || booking.selectedService?.name || 'Dịch vụ chăm sóc';
     const timeVal = booking.time || booking.schedule?.slot || '';
     const branchVal = booking.branch || 'Chi nhanh mac dinh';
 
@@ -476,7 +476,7 @@ async function loadRecentOrders(user) {
         const orderNum = order.id ? order.id.replace('ORD-', '') : (order.code || '').replace('DH-', '');
         const summary = order.products
             ? order.products.map((item) => item.name).join(', ')
-            : (order.cart ? order.cart.map((item) => item.name).join(', ') : 'San pham mua sam');
+            : (order.cart ? order.cart.map((item) => item.name).join(', ') : 'Sản phẩm mua sắm');
         const price = `${(order.pricing ? order.pricing.total : order.total).toLocaleString('vi-VN')}d`;
 
             let badgeClass = 'status-nhan';

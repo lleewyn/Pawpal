@@ -378,14 +378,14 @@ function cancelOrder(orderId) {
         updateTabCounts();
         applyFilters();
 
-        showOrdersToast(`Don hang ${orderId} da duoc huy thanh cong.`, 'success');
+        showOrdersToast(`Đơn hàng ${orderId} đã được hủy thành công.`, 'success');
     });
 }
 
 window.cancelOrder = cancelOrder;
 
 function reorder(orderId) {
-    showOrdersToast(`Da them cac sản phẩm cua don hang ${orderId} vao gio hang.`, 'success');
+    showOrdersToast(`Đã thêm các sản phẩm của đơn hàng ${orderId} vào giỏ hàng.`, 'success');
 }
 
 window.reorder = reorder;

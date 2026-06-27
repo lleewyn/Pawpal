@@ -28,7 +28,7 @@
           "id": 2,
           "status": "Kiểm tra da và lông",
           "timestamp": "2026-06-23T13:50:00",
-          "description": "Nhan vien kiem tra tai, mong, da bung va long truoc khi bat dau dich vu.",
+          "description": "Nhân viên kiểm tra tai, móng, da bụng và lông trước khi bắt đầu dịch vụ.",
           "staff": "Le Hoang An",
           "type": "checkup",
           "image": "/assets/images/services/spa/gallery/cust_khach_1_dang_chai_long.jpg"
@@ -90,7 +90,7 @@
             "id": 1,
             "status": "Đã tiếp nhận",
             "timestamp": "2026-06-10T09:50:00",
-            "description": "Kiem tra can nang 8.5kg va tinh trang da long truoc dich vu.",
+            "description": "Kiểm tra cân nặng 8.5kg và tình trạng da lông trước dịch vụ.",
             "staff": "Tran Van Nam",
             "type": "check_in",
             "image": "/assets/images/tracker/belu-3.png"

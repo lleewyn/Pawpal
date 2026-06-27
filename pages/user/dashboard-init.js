@@ -57,7 +57,7 @@ seedLocalStorageIfNeeded();
 (function () {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
     if (!currentUser) {
-        alert('Vui long dang nhap de truy cap trang nay');
+        alert('Vui lòng đăng nhập để truy cập trang này');
         window.location.href = '/pages/public/login/login.html';
         return;
     }

@@ -45,8 +45,139 @@ let state = {
     isLoading: true
 };
 
+let buyNowModalState = {
+    product: null,
+    quantity: 1
+};
+
 function isCompactShopLayout() {
     return window.innerWidth <= 1024;
+}
+
+function ensureBuyNowModal() {
+    if (document.getElementById('buyNowQuantityModal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'buyNowQuantityModal';
+    modal.className = 'buy-now-modal';
+    modal.hidden = true;
+    modal.innerHTML = `
+        <div class="buy-now-modal__backdrop" data-close-buy-now="true"></div>
+        <div class="buy-now-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="buyNowModalTitle">
+            <button type="button" class="buy-now-modal__close" aria-label="Đóng" data-close-buy-now="true">×</button>
+            <p class="buy-now-modal__eyebrow">Mua ngay</p>
+            <h3 id="buyNowModalTitle" class="buy-now-modal__title">Chọn số lượng trước khi thanh toán</h3>
+            <div class="buy-now-modal__product">
+                <img id="buyNowModalImage" class="buy-now-modal__image" src="" alt="">
+                <div class="buy-now-modal__product-info">
+                    <strong id="buyNowModalName"></strong>
+                    <span id="buyNowModalPrice"></span>
+                    <small id="buyNowModalStock"></small>
+                </div>
+            </div>
+            <div class="buy-now-modal__quantity">
+                <span class="buy-now-modal__label">Số lượng</span>
+                <div class="buy-now-modal__quantity-control">
+                    <button type="button" class="buy-now-modal__qty-btn" data-action="decrease">-</button>
+                    <input id="buyNowModalQty" class="buy-now-modal__qty-input" type="number" min="1" value="1">
+                    <button type="button" class="buy-now-modal__qty-btn" data-action="increase">+</button>
+                </div>
+            </div>
+            <button type="button" id="buyNowModalConfirm" class="buy-now-modal__confirm">Tiếp tục thanh toán</button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', (event) => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.dataset.closeBuyNow === 'true') {
+            closeBuyNowModal();
+        }
+    });
+
+    modal.querySelectorAll('.buy-now-modal__qty-btn').forEach((button) => {
+        button.addEventListener('click', () => updateBuyNowModalQuantity(button.dataset.action));
+    });
+
+    const qtyInput = modal.querySelector('#buyNowModalQty');
+    qtyInput.addEventListener('input', () => {
+        const max = Number(buyNowModalState.product?.stock) || 99;
+        let nextValue = Number(qtyInput.value) || 1;
+        nextValue = Math.max(1, Math.min(max, nextValue));
+        buyNowModalState.quantity = nextValue;
+        qtyInput.value = nextValue;
+    });
+
+    modal.querySelector('#buyNowModalConfirm').addEventListener('click', confirmBuyNowFromModal);
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !modal.hidden) {
+            closeBuyNowModal();
+        }
+    });
+}
+
+function openBuyNowModal(product) {
+    if (!product) return;
+
+    ensureBuyNowModal();
+    buyNowModalState.product = product;
+    buyNowModalState.quantity = 1;
+
+    const modal = document.getElementById('buyNowQuantityModal');
+    const image = document.getElementById('buyNowModalImage');
+    const name = document.getElementById('buyNowModalName');
+    const price = document.getElementById('buyNowModalPrice');
+    const stock = document.getElementById('buyNowModalStock');
+    const qtyInput = document.getElementById('buyNowModalQty');
+
+    image.src = product.image || '';
+    image.alt = product.name || 'Sản phẩm';
+    name.textContent = product.name || 'Sản phẩm';
+    price.textContent = formatPrice(product.price || 0);
+    stock.textContent = `Còn ${product.stock || 0} sản phẩm trong kho`;
+    qtyInput.max = product.stock || 99;
+    qtyInput.value = '1';
+
+    modal.hidden = false;
+    document.body.classList.add('buy-now-modal-open');
+}
+
+function closeBuyNowModal() {
+    const modal = document.getElementById('buyNowQuantityModal');
+    if (!modal) return;
+    modal.hidden = true;
+    document.body.classList.remove('buy-now-modal-open');
+}
+
+function updateBuyNowModalQuantity(action) {
+    const qtyInput = document.getElementById('buyNowModalQty');
+    const max = Number(buyNowModalState.product?.stock) || 99;
+    const current = Number(qtyInput.value) || 1;
+    let next = current;
+
+    if (action === 'decrease') next = Math.max(1, current - 1);
+    if (action === 'increase') next = Math.min(max, current + 1);
+
+    buyNowModalState.quantity = next;
+    qtyInput.value = String(next);
+}
+
+function confirmBuyNowFromModal() {
+    const product = buyNowModalState.product;
+    const quantity = buyNowModalState.quantity;
+    if (!product) return;
+
+    const buyNowCart = [{
+        ...product,
+        quantity
+    }];
+
+    sessionStorage.setItem('pawpal_buynow_cart', JSON.stringify(buyNowCart));
+    sessionStorage.setItem('pawpal_is_buynow', 'true');
+    closeBuyNowModal();
+    window.location.href = '/pages/shop/checkout/checkout.html?buynow=true';
 }
 
 function initResponsiveCategorySection() {
@@ -551,18 +682,7 @@ function renderProducts() {
                 const productId = parseInt(btn.dataset.productId);
                 const product = state.products.find(p => p.id === productId);
                 if (product && product.inStock) {
-                    // Create temporary cart with this product only
-                    const buyNowCart = [{
-                        ...product,
-                        quantity: 1
-                    }];
-                    
-                    // Save to sessionStorage
-                    sessionStorage.setItem('pawpal_buynow_cart', JSON.stringify(buyNowCart));
-                    sessionStorage.setItem('pawpal_is_buynow', 'true');
-                    
-                    // Redirect to checkout
-                    window.location.href = '/pages/shop/checkout/checkout.html?buynow=true';
+                    openBuyNowModal(product);
                 }
             });
         });
