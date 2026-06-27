@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             populateServiceInfo();
             setupGallery();
             setupTimelineAndBenefits();
+            setupAmenities();
             setupFAQs();
             setupReviews();
             setupStickyBarTrigger();
@@ -388,19 +389,24 @@ function setupTimelineAndBenefits() {
     ];
 
     if (serviceData.checklist) {
-        const rawSteps = serviceData.checklist.split(/[;.\n]/).map(s => s.trim()).filter(s => s.length > 0);
+        const rawSteps = serviceData.checklist.split(/[;\n]/).map(s => s.trim()).filter(s => s.length > 0);
         if (rawSteps.length > 0) {
             checklist = rawSteps.map((stepText, idx) => {
-                const parts = stepText.split(':');
-                const title = parts[0] || `Bước ${idx + 1}`;
-                const desc = parts[1] || 'Tiến hành chăm sóc kỹ lưỡng chuẩn y khoa';
-                return { step: title.trim(), desc: desc.trim() };
+                let title = `Thao tác ${idx + 1}`;
+                let desc = stepText;
+                if (stepText.includes(':')) {
+                    const parts = stepText.split(':');
+                    title = parts[0].trim();
+                    desc = parts.slice(1).join(':').trim();
+                }
+                return { step: title, desc: desc };
             });
         }
     }
 
+    const MAX_VISIBLE_STEPS = 4;
     timeline.innerHTML = checklist.map((item, idx) => `
-        <div class="timeline-step-item" id="timelineStep-${idx}">
+        <div class="timeline-step-item ${idx >= MAX_VISIBLE_STEPS ? 'd-none collapsed-step' : ''}" id="timelineStep-${idx}">
             <div class="timeline-bullet"></div>
             <div class="timeline-step-content">
                 <h4 class="timeline-step-title">Bước ${idx + 1}: ${item.step}</h4>
@@ -409,17 +415,56 @@ function setupTimelineAndBenefits() {
         </div>
     `).join('');
 
+    // Toggle logic
+    const toggleBtn = document.getElementById('timelineToggleBtn');
+    if (toggleBtn && checklist.length > MAX_VISIBLE_STEPS) {
+        toggleBtn.hidden = false;
+        let isExpanded = false;
+        toggleBtn.addEventListener('click', () => {
+            isExpanded = !isExpanded;
+            const hiddenSteps = timeline.querySelectorAll('.collapsed-step');
+            if (isExpanded) {
+                hiddenSteps.forEach(el => {
+                    el.classList.remove('d-none');
+                    if (typeof gsap !== 'undefined') {
+                        gsap.fromTo(el, { opacity: 0, height: 0 }, { opacity: 1, height: 'auto', duration: 0.3 });
+                    }
+                });
+                toggleBtn.textContent = 'Rút gọn';
+            } else {
+                hiddenSteps.forEach(el => {
+                    if (typeof gsap !== 'undefined') {
+                        gsap.to(el, {
+                            opacity: 0, height: 0, duration: 0.3, onComplete: () => el.classList.add('d-none')
+                        });
+                    } else {
+                        el.classList.add('d-none');
+                    }
+                });
+                toggleBtn.textContent = `Xem thêm ${checklist.length - MAX_VISIBLE_STEPS} bước`;
+            }
+            if (typeof ScrollTrigger !== 'undefined') {
+                setTimeout(() => ScrollTrigger.refresh(), 400);
+            }
+        });
+        toggleBtn.textContent = `Xem thêm ${checklist.length - MAX_VISIBLE_STEPS} bước`;
+    } else if (toggleBtn) {
+        toggleBtn.hidden = true;
+    }
+
     // GSAP ScrollTrigger to activate steps on scroll
     setTimeout(() => {
         if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
             checklist.forEach((item, idx) => {
                 const stepEl = document.getElementById(`timelineStep-${idx}`);
-                ScrollTrigger.create({
-                    trigger: stepEl,
-                    start: 'top 80%',
-                    onEnter: () => stepEl.classList.add('active'),
-                    onLeaveBack: () => stepEl.classList.remove('active')
-                });
+                if (stepEl) {
+                    ScrollTrigger.create({
+                        trigger: stepEl,
+                        start: 'top 80%',
+                        onEnter: () => stepEl.classList.add('active'),
+                        onLeaveBack: () => stepEl.classList.remove('active')
+                    });
+                }
             });
         } else {
             // Fallback: make all active
@@ -428,7 +473,48 @@ function setupTimelineAndBenefits() {
     }, 400);
 }
 
-// 6. (Amenities section removed)
+// 6. Amenities
+function setupAmenities() {
+    const amenitiesSection = document.getElementById('amenitiesSection');
+    const amenitiesGrid = document.getElementById('amenitiesGrid');
+    
+    if (!amenitiesSection || !amenitiesGrid) return;
+
+    if (serviceData.amenities) {
+        const items = serviceData.amenities.split(/[;.\n]/).map(a => a.trim()).filter(a => a.length > 0);
+        if (items.length > 0) {
+            amenitiesSection.style.display = 'block';
+            amenitiesGrid.innerHTML = items.map(item => `
+                <div style="display: flex; align-items: flex-start; gap: 8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span style="color: var(--color-text); font-size: 0.95rem; line-height: 1.5;">${item}</span>
+                </div>
+            `).join('');
+            
+            // Optional GSAP animation
+            if (typeof gsap !== 'undefined') {
+                gsap.from(amenitiesGrid.children, {
+                    scrollTrigger: {
+                        trigger: amenitiesSection,
+                        start: 'top 85%'
+                    },
+                    opacity: 0,
+                    y: 15,
+                    duration: 0.4,
+                    stagger: 0.1,
+                    ease: 'power2.out'
+                });
+            }
+        } else {
+            amenitiesSection.style.display = 'none';
+        }
+    } else {
+        amenitiesSection.style.display = 'none';
+    }
+}
 
 // 7. FAQs accordion
 function setupFAQs() {
