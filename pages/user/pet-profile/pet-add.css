@@ -422,6 +422,7 @@
     border-radius: 16px;
     background: #fffdf8;
     box-shadow: 0 22px 54px rgba(32, 58, 45, 0.18);
+    position: relative;
 }
 
 .modal-content-large.clean {
