@@ -46,6 +46,12 @@
                 <span class="icon"><i data-lucide="message-square"></i></span> Hỗ trợ
             </a>
         </div>
+
+        <div class="sidebar-group">
+            <a href="#" class="sidebar-link" id="nav-logout" onclick="if(typeof logout === 'function') { logout(); } else { localStorage.removeItem('pawpal_user'); window.location.href='/'; } return false;" style="color: var(--color-danger);">
+                <span class="icon"><i data-lucide="log-out"></i></span> Đăng xuất
+            </a>
+        </div>
     </nav>
 </div>
 
