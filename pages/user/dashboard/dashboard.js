@@ -182,8 +182,8 @@ function loadProfileData(user) {
 
     let genderText = 'Chưa cập nhật';
     if (user.gender === 'male') genderText = 'Nam';
-    else if (user.gender === 'female') genderText = 'Nu';
-    else if (user.gender === 'other') genderText = 'Khac';
+    else if (user.gender === 'female') genderText = 'Nữ';
+    else if (user.gender === 'other') genderText = 'Khác';
     document.getElementById('profileGender').textContent = genderText;
 
     document.getElementById('profileDob').textContent = user.dob ? formatDateDisplay(user.dob) : 'Chưa cập nhật';

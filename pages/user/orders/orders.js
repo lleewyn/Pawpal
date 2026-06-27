@@ -231,7 +231,7 @@ function createOrderCard(order) {
                     <img src="${firstProduct.image}" alt="${firstProduct.name}" class="product-thumb" loading="lazy">
                     <div class="product-info">
                         <h4 class="product-name">${firstProduct.name}</h4>
-                        ${remainingCount > 0 ? `<p class="product-meta">va ${remainingCount} sản phẩm khac</p>` : ''}
+                        ${remainingCount > 0 ? `<p class="product-meta">và ${remainingCount} sản phẩm khác</p>` : ''}
                         ${metaParts.length ? `<div class="order-meta-chips">${metaParts.map((item) => `<span class="order-meta-chip">${item}</span>`).join('')}</div>` : ''}
                     </div>
                 </div>
