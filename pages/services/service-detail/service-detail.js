@@ -481,18 +481,10 @@ function setupAmenities() {
     if (!amenitiesSection || !amenitiesGrid) return;
 
     if (serviceData.amenities) {
-        const items = serviceData.amenities.split(/[;.\n]/).map(a => a.trim()).filter(a => a.length > 0);
+        const items = serviceData.amenities.split(/[;.\n,]/).map(a => a.trim()).filter(a => a.length > 0);
         if (items.length > 0) {
             amenitiesSection.style.display = 'block';
-            amenitiesGrid.innerHTML = items.map(item => `
-                <div style="display: flex; align-items: flex-start; gap: 8px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                    <span style="color: var(--color-text); font-size: 0.95rem; line-height: 1.5;">${item}</span>
-                </div>
-            `).join('');
+            amenitiesGrid.innerHTML = items.map(item => `<li>${item}</li>`).join('');
             
             // Optional GSAP animation
             if (typeof gsap !== 'undefined') {
