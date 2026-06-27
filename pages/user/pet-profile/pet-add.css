@@ -33,7 +33,7 @@
 .pet-add-page .page-wrap {
     width: 100%;
     max-width: 850px;
-    padding: 24px 24px 18px 24px;
+    padding: 24px 24px 48px 24px;
 }
 
 /* ── Back link ── */
@@ -432,10 +432,12 @@
     overflow: hidden;
     background: #fffdf8;
     position: relative;
+    max-height: 100%;
+    width: 100%;
 }
 .page-wrap {
-    padding: 24px 24px 18px 24px;
-    max-height: calc(86vh - 24px);
+    padding: 24px 24px 48px 24px;
+    max-height: min(80vh, 780px);
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-gutter: stable;
