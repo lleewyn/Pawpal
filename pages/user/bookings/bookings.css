@@ -196,6 +196,21 @@
     white-space: nowrap;
 }
 
+.booking-reviewed-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: var(--border-radius-pill);
+    background: linear-gradient(135deg, #2f7a4f 0%, #4c9b67 100%);
+    color: #ffffff;
+    font-family: var(--font-primary);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    box-shadow: 0 6px 14px rgba(47, 122, 79, 0.22);
+    white-space: nowrap;
+}
+
 .booking-card-link {
     font-family: var(--font-primary);
     font-size: 0.875rem;

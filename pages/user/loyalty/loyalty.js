@@ -68,6 +68,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ].filter(Boolean).join(' • ')
                 }));
 
+            // Lưu luôn danh sách đã transform để luồng đổi quà dùng đúng id UI
+            window.PawPalVoucherRedeemList = vouchersMock;
+
             if (!vouchersMock.length) {
                 vouchersMock = [{
                     id: 'VOUCHER-DEMO-1',
@@ -77,6 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     quantity: 1,
                     terms: 'Áp dụng cho: Tất cả'
                 }];
+                window.PawPalVoucherRedeemList = vouchersMock;
             }
             
             console.log('Transformed vouchers:', vouchersMock.length, 'items');
@@ -428,7 +432,7 @@ function triggerRedeem(voucherId, user, sliderContainer) {
     }
 
     // 3. Tiến hành đổi điểm — hiện modal xác nhận trước
-    const vouchersList = Object.fromEntries((window.PawPalVoucherRedeemSeed || []).map(v => [v.id, v]));
+    const vouchersList = Object.fromEntries((window.PawPalVoucherRedeemList || []).map(v => [v.id, v]));
     const voucherInfo = vouchersList[voucherId];
     if (!voucherInfo) return;
 
@@ -449,7 +453,7 @@ function triggerRedeem(voucherId, user, sliderContainer) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Bạn có chắc chắn muốn sử dụng <strong>${voucherInfo.cost} điểm</strong> để đổi lấy ưu đãi <strong>${voucherInfo.name}</strong>?</p>
+                    <p>Bạn có chắc chắn muốn sử dụng <strong>${voucherInfo.pointsCost} điểm</strong> để đổi lấy ưu đãi <strong>${voucherInfo.name}</strong>?</p>
                     <p class="text-muted small">Điểm bị trừ sẽ không thể hoàn lại.</p>
                 </div>
                 <div class="modal-footer">
@@ -477,8 +481,8 @@ function doRedeem(voucherInfo, user, sliderContainer, resetUI) {
     const userIdx = users.findIndex(u => u.phone === user.phone);
     
     if (userIdx !== -1) {
-        if (users[userIdx].points >= voucherInfo.cost) {
-            users[userIdx].points -= voucherInfo.cost;
+        if (users[userIdx].points >= voucherInfo.pointsCost) {
+            users[userIdx].points -= voucherInfo.pointsCost;
             localStorage.setItem('pawpal_users_db', JSON.stringify(users));
             
             // Cập nhật session user
@@ -493,7 +497,7 @@ function doRedeem(voucherInfo, user, sliderContainer, resetUI) {
                 ownerPhone: user.phone,
                 code: voucherCode,
                 name: voucherInfo.name,
-                pointsCost: voucherInfo.cost,
+                pointsCost: voucherInfo.pointsCost,
                 type: voucherInfo.type,
                 value: voucherInfo.value,
                 minOrderValue: voucherInfo.minOrderValue,
@@ -524,6 +528,8 @@ function doRedeem(voucherInfo, user, sliderContainer, resetUI) {
             // Toast báo thành công
             showToast('success', `Đổi điểm thành công! Mã ưu đãi của bạn: ${voucherCode}`);
 
+            renderMyVouchers(user);
+
             // Reload lại danh sách voucher sau 1.5 giây để cập nhật trạng thái các voucher khác (ví dụ: thiếu điểm sau khi trừ)
             setTimeout(() => {
                 location.reload();
@@ -531,7 +537,7 @@ function doRedeem(voucherInfo, user, sliderContainer, resetUI) {
         } else {
             // Không đủ điểm — thông báo rõ ràng
             resetUI();
-            showToast('error', `Số điểm hiện tại chưa đủ để đổi ưu đãi này. Cần ${voucherInfo.cost} điểm, bạn đang có ${users[userIdx].points} điểm.`);
+            showToast('error', `Số điểm hiện tại chưa đủ để đổi ưu đãi này. Cần ${voucherInfo.pointsCost} điểm, bạn đang có ${users[userIdx].points} điểm.`);
         }
     }
 }

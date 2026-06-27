@@ -95,7 +95,11 @@ function initActiveNav() {
         currentPath.includes('booking.html')
     ) {
         matched = navList.querySelector('a.nav-link[href*="services.html"]');
-    } else if (currentPath.includes('shop') || currentPath.includes('product') || currentPath.includes('cart') || currentPath.includes('checkout')) {
+    } else if (
+        currentPath.includes('/pages/shop/shop.html') ||
+        currentPath.includes('product-detail') ||
+        currentPath.includes('/pages/shop/product')
+    ) {
         matched = navList.querySelector('a.nav-link[href*="shop.html"]');
     } else if (currentPath.includes('blog') || currentPath.includes('cam-nang')) {
         matched = navList.querySelector('a.nav-link[href*="blog.html"]');

@@ -604,6 +604,7 @@
         if (productsList && !document.querySelector('.order-reviews-heading')) {
             const heading = document.createElement('h3');
             heading.className = 'order-reviews-heading';
+            heading.id = 'reviews';
             heading.textContent = 'Đánh giá sản phẩm';
             productsList.parentNode.insertBefore(heading, productsList);
         }

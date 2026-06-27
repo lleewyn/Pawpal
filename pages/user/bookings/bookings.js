@@ -25,6 +25,18 @@ const statusAliases = {
 let allBookings = [];
 let currentPetMap = new Map();
 
+function getServiceReviewKey(booking) {
+    return `pawpal_service_review_${booking.id || booking.code || ''}`;
+}
+
+function hasServiceReview(booking) {
+    try {
+        return Boolean(localStorage.getItem(getServiceReviewKey(booking)));
+    } catch {
+        return false;
+    }
+}
+
 async function init() {
     if (!document.getElementById('bookingsList')) return;
     initFilterTabs();
@@ -100,12 +112,29 @@ function createBookingCard(booking) {
     const changeCount = Number(booking.changeCount || 0);
     const cancelCount = Number(booking.cancelCount || 0);
     const isChangeLimited = changeCount >= 2;
+    const scheduledAt = getBookingScheduledAt(booking);
+    const diffMinutes = scheduledAt ? (scheduledAt.getTime() - Date.now()) / (1000 * 60) : Number.POSITIVE_INFINITY;
+    const canModify = diffMinutes >= 120
+        && !['in-progress', 'completed', 'cancelled'].includes(normalizedStatus)
+        && !isChangeLimited;
+    const canCancel = diffMinutes >= 120
+        && ['pending', 'confirmed', 'upcoming', 'accepted'].includes(normalizedStatus)
+        && cancelCount < 3;
     const petId = booking.petId || currentPetMap.get(String(booking.petId))?.id || '';
     const diaryQuery = petId ? `?id=${encodeURIComponent(petId)}&sessionId=${encodeURIComponent(booking.id || '')}` : '';
     const careLogLink = normalizedStatus === 'completed' && petId
         ? `<a class="booking-card-link" href="../pet-diary/pet-diary.html${diaryQuery}" onclick="event.stopPropagation()">Xem nhật ký chăm sóc</a>`
         : '';
+    const reviewedBadge = normalizedStatus === 'completed' && hasServiceReview(booking)
+        ? '<span class="booking-reviewed-badge">Đã đánh giá</span>'
+        : '';
     const detailPrompt = '<span class="booking-card-detail-hint">Nhấn để xem chi tiết</span>';
+    const changeScheduleAction = canModify
+        ? `<a class="btn-change-schedule" href="../booking-detail/booking-detail.html?id=${booking.id}" onclick="event.stopPropagation()">Đổi lịch</a>`
+        : '';
+    const cancelBookingAction = canCancel
+        ? `<a class="btn-cancel-booking" href="../booking-detail/booking-detail.html?id=${booking.id}" onclick="event.stopPropagation()">Huỷ lịch</a>`
+        : '';
     card.className = `booking-card status-${normalizedStatus}`;
     card.tabIndex = 0;
     card.setAttribute('role', 'link');
@@ -146,7 +175,10 @@ function createBookingCard(booking) {
         <div class="booking-card-footer">
             <div class="booking-card-price">${formatPrice(booking.price || 0)}</div>
             <div class="booking-card-actions">
+                ${changeScheduleAction}
+                ${cancelBookingAction}
                 ${detailPrompt}
+                ${reviewedBadge}
                 ${isChangeLimited ? '<span class="booking-limit-warning">Đã hết lượt đổi</span>' : ''}
                 ${careLogLink}
             </div>

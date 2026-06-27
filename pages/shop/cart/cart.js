@@ -292,12 +292,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="cart-item-price-unit mt-1">${formatPrice(item.price)}</div>
                 </div>
                 <div class="cart-item-qty-actions">
-                    <button class="cart-item-qty-btn btn-qty-minus" ${getItemQuantity(item) <= 1 ? 'disabled' : ''}>-</button>
+                    <button type="button" class="cart-item-qty-btn btn-qty-minus" ${getItemQuantity(item) <= 1 ? 'disabled' : ''}>-</button>
                     <span class="cart-item-qty-value">${getItemQuantity(item)}</span>
-                    <button class="cart-item-qty-btn btn-qty-plus">+</button>
+                    <button type="button" class="cart-item-qty-btn btn-qty-plus">+</button>
                 </div>
                 <div class="cart-item-total-price">${formatPrice(itemTotal)}</div>
-                <button class="btn-remove-cart-item" title="Xóa sản phẩm">
+                <button type="button" class="btn-remove-cart-item" title="Xóa sản phẩm">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="3 6 5 6 21 6"></polyline>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -350,7 +350,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return sum;
             }
             const prod = products.find(p => isSameCartItemId(p.id, item.id));
-            return prod ? sum + prod.price * getItemQuantity(item) : sum;
+            const unitPrice = prod?.price ?? Number(item.price) ?? 0;
+            return sum + unitPrice * getItemQuantity(item);
         }, 0);
     }
 
@@ -361,10 +362,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         cart.forEach(item => {
             if (selectedIds.has(normalizeId(item.id))) {
                 const prod = products.find(p => isSameCartItemId(p.id, item.id));
-                if (prod) {
-                    subtotal += prod.price * getItemQuantity(item);
-                    selectedCount += getItemQuantity(item);
-                }
+                const unitPrice = prod?.price ?? Number(item.price) ?? 0;
+                subtotal += unitPrice * getItemQuantity(item);
+                selectedCount += getItemQuantity(item);
             }
         });
 
@@ -420,7 +420,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateQuantity(productId, newQty) {
         if (newQty < 1) return;
 
-        const item = cart.find(i => Number(i.id) === Number(productId));
+        const item = cart.find(i => isSameCartItemId(i.id, productId));
         if (item) {
             // Cap theo stock nếu có
             const maxQty = (item.stock != null && item.stock > 0) ? item.stock : newQty;

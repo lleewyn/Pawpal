@@ -196,7 +196,8 @@ function renderResults(bookings, orders) {
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 function badge(statusMap, status) {
-    const s = statusMap[status] || { label: status, cls: 'rg-badge-pending' };
+    const normalized = normalizeOrderStatus(status);
+    const s = statusMap[normalized] || { label: normalized, cls: 'rg-badge-pending' };
     return `<span class="rg-badge ${s.cls}">${s.label}</span>`;
 }
 
@@ -219,7 +220,7 @@ function esc(s) {
 }
 
 function canCancelOrder(o) {
-    return ['pending_payment', 'preparing'].includes(o.status);
+    return ['pending_payment', 'preparing'].includes(normalizeOrderStatus(o.status));
 }
 
 function canReturnOrder(o) {
@@ -365,7 +366,6 @@ window.handleGuestBookingAction = function(bookingId, action) {
             // Sau khi xác nhận + OTP → hủy thẳng, không hỏi lại lần 2
             showOTPModal(phone, () => {
                 confirmCancelBooking(bookingId);
-                showUpsellModal(phone);
             });
         } else {
             showChangeScheduleModal(bookingId, phone);
@@ -597,6 +597,7 @@ function confirmCancelBooking(bookingId) {
         localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
     }
     showToast('Đã hủy lịch hẹn thành công!', 'success');
+    setTimeout(() => showUpsellModal(document.getElementById('rg-phone')?.value?.trim() || ''), 250);
     // Re-search để cập nhật UI
     setTimeout(() => document.getElementById('rg-form').dispatchEvent(new Event('submit')), 1000);
 }
@@ -607,10 +608,17 @@ function confirmCancelOrder(orderId) {
     const idx = orders.findIndex(o => o.id === orderId);
     if (idx !== -1) {
         orders[idx].status = 'cancelled';
+        orders[idx].updatedAt = new Date().toISOString();
         localStorage.setItem('pawpal_orders', JSON.stringify(orders));
     }
     showToast('Đã hủy đơn hàng thành công!', 'success');
     setTimeout(() => document.getElementById('rg-form').dispatchEvent(new Event('submit')), 1000);
+}
+
+function normalizeOrderStatus(status) {
+    if (status === 'pending') return 'pending_payment';
+    if (status === 'return_pending') return 'pending_payment';
+    return status;
 }
 
 // ── Change Schedule Modal ─────────────────────────────────────────────────

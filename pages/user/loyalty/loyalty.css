@@ -752,3 +752,72 @@
 #security-auth-modal .modal-footer button {
     margin: 0;
 }
+
+/* Redeem confirmation modal */
+#redeem-confirm-modal .modal-content {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(32, 58, 45, 0.18);
+    overflow: hidden;
+}
+
+#redeem-confirm-modal .modal-header {
+    border-bottom: 1px solid rgba(79, 122, 104, 0.14);
+    padding: 18px 20px 14px;
+}
+
+#redeem-confirm-modal .modal-title {
+    font-family: var(--font-heading);
+    color: var(--color-primary-dark);
+    font-weight: 700;
+}
+
+#redeem-confirm-modal .modal-body {
+    padding: 18px 20px 10px;
+    color: var(--color-text-dark);
+    line-height: 1.6;
+}
+
+#redeem-confirm-modal .modal-body strong {
+    color: var(--color-primary-dark);
+}
+
+#redeem-confirm-modal .modal-footer {
+    border-top: 1px solid rgba(79, 122, 104, 0.14);
+    padding: 14px 20px 18px;
+    gap: 10px;
+}
+
+#redeem-confirm-modal .modal-footer button {
+    margin: 0;
+    border: none;
+    border-radius: 999px;
+    font-family: var(--font-body);
+    font-weight: 700;
+    padding: 10px 18px;
+    min-width: 108px;
+}
+
+#redeem-confirm-modal .btn-gray {
+    background: #f4f7f5;
+    color: var(--color-text-dark);
+    border: 1px solid rgba(79, 122, 104, 0.18);
+}
+
+#redeem-confirm-modal .btn-gray:hover {
+    background: #e8efea;
+}
+
+#redeem-confirm-modal .btn-orange {
+    background: var(--color-primary);
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(79, 122, 104, 0.22);
+}
+
+#redeem-confirm-modal .btn-orange:hover {
+    background: var(--color-primary-dark);
+}
+
+#redeem-confirm-modal .btn-close {
+    box-shadow: none;
+}

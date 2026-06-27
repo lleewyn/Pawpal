@@ -373,13 +373,16 @@ async function loadUpcomingBookings(user) {
     const container = document.getElementById('upcomingBookingCardContainer');
     if (!container) return;
 
-    const upcoming = await API.getUserBookings(user.id);
-    if (!upcoming || upcoming.length === 0) {
+    const allBookings = await API.getUserBookings(user.id);
+    const upcoming = (allBookings || [])
+        .filter((booking) => isUpcomingBooking(booking))
+        .sort((a, b) => getBookingScheduledTime(a) - getBookingScheduledTime(b));
+
+    if (!upcoming.length) {
         container.innerHTML = '<p class="text-muted p-3">Chưa có lịch hẹn sắp tới.</p>';
         return;
     }
 
-    upcoming.sort((a, b) => new Date(a.date || a.schedule?.date || '') - new Date(b.date || b.schedule?.date || ''));
     const booking = upcoming[0];
     const rawDate = booking.date || booking.schedule?.date || '';
 
@@ -414,11 +417,37 @@ async function loadUpcomingBookings(user) {
                 </div>
             </div>
             <div class="booking-actions">
-                <a href="../bookings/bookings.html" class="btn btn-green-outline btn-sm" style="border-color: var(--color-primary); color: #ffffff; background-color: var(--color-primary);">Chi tiết lịch hẹn</a>
-                <a href="/pages/public/help-center/help-center.html" class="btn btn-outline-secondary btn-sm">Hoãn lịch</a>
+                <a href="../booking-detail/booking-detail.html?id=${booking.id}" class="btn btn-green-outline btn-sm" style="border-color: var(--color-primary); color: #ffffff; background-color: var(--color-primary);">Chi tiết lịch hẹn</a>
             </div>
         </div>
     `;
+}
+
+function isUpcomingBooking(booking) {
+    const status = String(booking?.status || booking?.bookingStatus || 'upcoming').toLowerCase();
+    if (['cancelled', 'completed'].includes(status)) return false;
+
+    const scheduledTime = getBookingScheduledTime(booking);
+    return scheduledTime ? scheduledTime >= Date.now() : true;
+}
+
+function getBookingScheduledTime(booking) {
+    const date = booking?.date || booking?.schedule?.date;
+    if (!date) return 0;
+
+    const time = booking?.time || booking?.timeStart || booking?.schedule?.slot || '00:00';
+    const scheduled = new Date(`${date}T${time}:00`);
+    return Number.isNaN(scheduled.getTime()) ? 0 : scheduled.getTime();
+}
+
+function normalizeOrderStatus(status) {
+    const raw = String(status || '').toLowerCase().trim();
+    if (raw === 'pending' || raw === 'return_pending' || raw === 'chờ xác nhận') {
+        return 'pending_payment';
+    }
+    if (raw === 'dang giao') return 'shipping';
+    if (raw === 'dang xac nhan') return 'pending_payment';
+    return raw;
 }
 
 async function loadMyPets(user) {
@@ -479,18 +508,24 @@ async function loadRecentOrders(user) {
             : (order.cart ? order.cart.map((item) => item.name).join(', ') : 'Sản phẩm mua sắm');
         const price = `${(order.pricing ? order.pricing.total : order.total).toLocaleString('vi-VN')}d`;
 
-            let badgeClass = 'status-nhan';
-            let statusText = 'Đã nhận';
-        const status = order.status || order.orderStatus;
-        if (status === 'Dang giao' || status === 'shipping') {
+        const status = normalizeOrderStatus(order.status || order.orderStatus);
+        let badgeClass = 'status-giao';
+        let statusText = 'Chờ thanh toán';
+        if (status === 'preparing') {
             badgeClass = 'status-giao';
-                statusText = 'Đang giao';
-        } else if (status === 'Chờ xác nhận' || status === 'pending_payment') {
+            statusText = 'Đang chuẩn bị';
+        } else if (status === 'shipping') {
             badgeClass = 'status-giao';
-                statusText = 'Chờ xử lý';
+            statusText = 'Đang giao';
+        } else if (status === 'delivered') {
+            badgeClass = 'status-nhan';
+            statusText = 'Đã giao';
         } else if (status === 'completed') {
             badgeClass = 'status-nhan';
-                statusText = 'Hoàn thành';
+            statusText = 'Hoàn thành';
+        } else if (status === 'cancelled') {
+            badgeClass = 'status-nhan';
+            statusText = 'Đã hủy';
         }
 
         html += `

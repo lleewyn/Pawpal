@@ -12,7 +12,7 @@
     "vaccinated": true,
     "allergies": "Dị ứng hải sản",
     "notes": "Bé khá nhát người lạ, thích ăn pate bò.",
-    "avatar": "/assets/images/tracker/belu-1.png",
+    "avatar": "/assets/images/publics/dogcute3.jpg",
     "isArchived": false
   },
   {
@@ -28,7 +28,7 @@
     "vaccinated": true,
     "allergies": "",
     "notes": "Thích cào móng vào buổi sáng.",
-    "avatar": "/assets/images/tracker/belu-2.png",
+    "avatar": "/assets/images/publics/catcute5.jpg",
     "isArchived": false
   },
   {
@@ -44,7 +44,7 @@
     "vaccinated": true,
     "allergies": "Không",
     "notes": "Rất hiếu động, thích nghịch nước.",
-    "avatar": "/assets/images/tracker/belu-3.png",
+    "avatar": "/assets/images/publics/dogcute8.jpg",
     "isArchived": false
   },
   {
@@ -60,7 +60,7 @@
     "vaccinated": false,
     "allergies": "Không",
     "notes": "Bé thích được vuốt ve, hơi nhút nhát với người lạ.",
-    "avatar": "/assets/images/tracker/belu-2.png",
+    "avatar": "/assets/images/publics/catcute8.jpg",
     "isArchived": false
   },
   {
@@ -76,7 +76,7 @@
     "vaccinated": true,
     "allergies": "Không",
     "notes": "Bé rất thích chạy nhảy, cần cắt lông thường xuyên.",
-    "avatar": "/assets/images/tracker/belu-1.png",
+    "avatar": "/assets/images/publics/dogcute6.jpg",
     "isArchived": false
   },
   {
@@ -92,7 +92,7 @@
     "vaccinated": true,
     "allergies": "Không",
     "notes": "Bé ít vận động, thích nằm ngủ cả ngày.",
-    "avatar": "/assets/images/tracker/belu-2.png",
+    "avatar": "/assets/images/publics/catcute2.jpg",
     "isArchived": false
   },
   {
@@ -108,7 +108,7 @@
     "vaccinated": true,
     "allergies": "Dị ứng thức ăn có gluten",
     "notes": "Bé rất thân thiện, thích tắm và làm đẹp.",
-    "avatar": "/assets/images/tracker/belu-3.png",
+    "avatar": "/assets/images/publics/dogcute7.jpg",
     "isArchived": false
   },
   {
@@ -124,7 +124,7 @@
     "vaccinated": false,
     "allergies": "Không",
     "notes": "Bé rất hay sủa, chưa tiêm phòng đầy đủ.",
-    "avatar": "/assets/images/tracker/belu-1.png",
+    "avatar": "/assets/images/publics/dogcute1.jpg",
     "isArchived": false
   }
 ]

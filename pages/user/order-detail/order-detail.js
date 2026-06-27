@@ -67,6 +67,7 @@ async function loadOrderDetail() {
                 : '';
             const products = currentOrder.products.map(p => ({ ...p, deliveredDate }));
             ReviewHandler.init(currentOrder.id, products);
+            scrollToReviewAnchor();
         }
         
     } catch (error) {
@@ -220,6 +221,7 @@ function renderTimeline() {
 function renderActions() {
     const actionsContainer = document.getElementById('order-actions');
     const guestNotice = document.getElementById('guest-notice');
+    const statusNotes = [];
     
     if (isGuest) {
         // Guest mode - hide actions, show notice
@@ -295,16 +297,16 @@ function renderActions() {
                     </a>
                 `);
             } else if (!withinReturnWindow) {
-                buttons.push(`
-                    <button class="btn-track-order" disabled title="Đã quá 7 ngày kể từ ngày nhận hàng, không thể yêu cầu đổi trả.">
+                statusNotes.push(`
+                    <span class="order-warning-text order-inline-note" title="Đã quá 7 ngày kể từ ngày nhận hàng, không thể yêu cầu đổi trả.">
                         Hết hạn đổi trả
-                    </button>
+                    </span>
                 `);
             } else if (hasAnyReviewed) {
-                buttons.push(`
-                    <button class="btn-track-order" disabled title="Giao dịch đã được đánh giá, không thể đổi trả.">
-                        Đã đánh giá (Không thể đổi trả)
-                    </button>
+                statusNotes.push(`
+                    <span class="order-reviewed-note order-inline-note" title="Giao dịch đã được đánh giá, không thể đổi trả.">
+                        Đã đánh giá
+                    </span>
                 `);
             } else {
                 buttons.push(`
@@ -336,7 +338,10 @@ function renderActions() {
             break;
     }
     
-    actionsContainer.innerHTML = buttons.join('');
+    actionsContainer.innerHTML = `
+        ${statusNotes.length ? `<div class="order-status-notes">${statusNotes.join('')}</div>` : ''}
+        <div class="order-actions-buttons">${buttons.join('')}</div>
+    `;
     actionsContainer.style.display = buttons.length > 0 ? 'flex' : 'none';
 }
 
@@ -431,6 +436,20 @@ function cancelOrder() {
     });
 }
 
+function scrollToReviewAnchor() {
+    if (window.location.hash !== '#reviews') return;
+
+    const target = document.getElementById('reviews') || document.querySelector('.order-reviews-heading');
+    if (!target) {
+        setTimeout(scrollToReviewAnchor, 120);
+        return;
+    }
+
+    setTimeout(() => {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+}
+
 window.cancelOrder = cancelOrder;
 
 function contactHotline() {
@@ -493,8 +512,10 @@ function saveOrderToLocalStorage(order) {
     const index = allOrders.findIndex(o => o.id === order.id);
     if (index !== -1) {
         allOrders[index] = order;
-        localStorage.setItem('pawpal_orders', JSON.stringify(allOrders));
+    } else {
+        allOrders.push(order);
     }
+    localStorage.setItem('pawpal_orders', JSON.stringify(allOrders));
 }
 
 function showOrderReviewsModal(orderId) {

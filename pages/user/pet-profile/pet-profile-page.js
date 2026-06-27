@@ -6,6 +6,13 @@ import { getPets, savePets, deletePet as deletePetService, restorePet as restore
 import { generatePetId, calcAge, showToast } from '../pet-profile/pet-profile.js';
 import { API } from '/scripts/api/api.js';
 
+const DEFAULT_PET_AVATARS = {
+    dog: '/assets/images/publics/dogcute.jpg',
+    cat: '/assets/images/publics/catcute.jpg',
+    rabbit: '/assets/images/publics/pet1.jpg',
+    other: '/assets/images/publics/pet.jpg'
+};
+
 export async function initPetProfilePage() {
     console.log('Pet Profile Page init...');
     
@@ -30,6 +37,10 @@ export async function initPetProfilePage() {
 }
 
 let editingPetId = null;
+
+function getDefaultPetAvatar(species) {
+    return DEFAULT_PET_AVATARS[species] || DEFAULT_PET_AVATARS.other;
+}
 
 async function openPetFormModal(petId = null) {
     const modal = document.getElementById('petFormModal');
@@ -87,8 +98,8 @@ function populatePetForm(pet) {
     const avatarPreview = document.getElementById('avatarPreview');
     const avatarCircle = document.getElementById('avatarCircle');
     if (avatarPreview) {
-        avatarPreview.src = pet.avatar || '';
-        if (pet.avatar && avatarCircle) {
+        avatarPreview.src = pet.avatar || getDefaultPetAvatar(pet.species);
+        if ((pet.avatar || pet.species) && avatarCircle) {
             avatarCircle.classList.add('has-image');
         } else if (avatarCircle) {
             avatarCircle.classList.remove('has-image');
@@ -181,13 +192,11 @@ async function renderPetGrids() {
 function createPetCard(pet, isArchived = false) {
     const card = document.createElement('div');
     card.className = `pet-card ${isArchived ? 'pet-card-archived' : ''}`;
+    const avatarSrc = pet.avatar || getDefaultPetAvatar(pet.species);
     
     card.innerHTML = `
         <div class="pet-card-header">
-            ${pet.avatar ? 
-                `<img src="${pet.avatar}" class="pet-avatar" alt="${pet.name}">` : 
-                `<div class="pet-avatar-placeholder"></div>`
-            }
+            <img src="${avatarSrc}" class="pet-avatar" alt="${pet.name}">
             <div class="pet-card-info">
                 <h3 class="pet-name">${pet.name}</h3>
                 <div class="pet-id">${pet.id}</div>
@@ -365,7 +374,7 @@ function setupForm() {
             vaccinated,
             allergies,
             notes,
-            avatar,
+            avatar: avatar || getDefaultPetAvatar(species),
             isArchived: false,
             createdAt: petId ? (await getPets()).find(p => p.id === petId)?.createdAt || new Date().toISOString() : new Date().toISOString()
         };

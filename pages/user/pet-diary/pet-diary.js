@@ -8,12 +8,12 @@ import { getPets } from '/scripts/api/petService.js';
 const DEMO_STAFF_PRIMARY = 'Nguyễn Thị Mai';
 const DEMO_STAFF_RECEPTION = 'Trần Văn Nam';
 const TIMELINE_FALLBACK_IMAGES = {
-    dry: '/assets/images/tracker/belu-1.png',
-    bath: '/assets/images/tracker/belu-2.png',
-    receive: '/assets/images/tracker/belu-3.png',
-    trim: '/assets/images/services/spa/gallery/cust_khach_1_dang_chai_long.jpg',
-    complete: '/assets/images/services/spa/gallery/cust_khach_1_dang_nghi_ngoi.jpg',
-    default: '/assets/images/services/spa/gallery/cust_khach_1_dang_tam.jpg'
+    dry: '/assets/images/publics/dogcute3.jpg',
+    bath: '/assets/images/publics/dogcute6.jpg',
+    receive: '/assets/images/publics/catcute5.jpg',
+    trim: '/assets/images/publics/catcute8.jpg',
+    complete: '/assets/images/publics/dogcute8.jpg',
+    default: '/assets/images/publics/pet3.jpg'
 };
 
 let currentPetId = null;

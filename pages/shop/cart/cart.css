@@ -94,10 +94,11 @@
 
 .cart-main-title {
     font-family: var(--font-heading);
-    font-size: var(--fs-h2);
+    font-size: clamp(1.85rem, 2.2vw, 2.15rem);
     color: var(--color-primary-dark);
     text-align: left;
     margin-bottom: 0;
+    line-height: 1.15;
 }
 
 .cart-section-title-small {

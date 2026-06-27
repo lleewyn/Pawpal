@@ -10,7 +10,7 @@
         "description": "{petName} đang được sấy lông với nhiệt độ phù hợp. Bé rất ngoan và hợp tác.",
         "staff": "Nguyễn Thị Mai",
         "type": "in_progress",
-        "image": "/assets/images/tracker/belu-1.png"
+        "image": "/assets/images/publics/dogcute3.jpg"
       },
       {
         "id": 2,
@@ -19,7 +19,7 @@
         "description": "{petName} đang được tắm sạch với sữa tắm chuyên dụng phù hợp cho da của bé.",
         "staff": "Nguyễn Thị Mai",
         "type": "in_progress",
-        "image": "/assets/images/tracker/belu-2.png"
+        "image": "/assets/images/publics/dogcute6.jpg"
       },
       {
         "id": 1,
@@ -28,7 +28,7 @@
         "description": "{petName} đã được tiếp nhận tại PawPal. Mã hồ sơ: {petId}. Nhân viên sẽ bắt đầu quy trình ngay.",
         "staff": "Trần Văn Nam",
         "type": "check_in",
-        "image": "/assets/images/tracker/belu-3.png"
+        "image": "/assets/images/publics/catcute5.jpg"
       }
     ]
   },
@@ -65,7 +65,7 @@
           "description": "Đang thực hiện cắt tỉa lông cho {petName}.",
           "staff": "Nguyễn Thị Mai",
           "type": "in_progress",
-          "image": "/assets/images/tracker/belu-2.png"
+          "image": "/assets/images/publics/catcute8.jpg"
         },
         {
           "id": 1,
@@ -74,7 +74,7 @@
           "description": "{petName} đã được tiếp nhận. Mã hồ sơ: {petId}.",
           "staff": "Trần Văn Nam",
           "type": "check_in",
-          "image": "/assets/images/tracker/belu-3.png"
+          "image": "/assets/images/publics/dogcute8.jpg"
         }
       ],
       "invoice": {
