@@ -1012,11 +1012,11 @@
 
 /* ── Typography ── */
 .svc-title {
-    font-family: var(--font-primary);
+    font-family: var(--font-heading);
     font-weight: 700;
     color: var(--color-primary-dark);
     margin: 0;
-    line-height: 1.25;
+    line-height: 1.3;
 }
 
 .svc-card--featured .svc-title {
@@ -1851,7 +1851,7 @@
 }
 
 .product-info h3 {
-    font-family: var(--font-body);
+    font-family: var(--font-heading);
     font-size: 0.875rem;
     font-weight: 700;
     color: var(--color-primary-dark);

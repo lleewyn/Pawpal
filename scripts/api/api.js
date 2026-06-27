@@ -5,7 +5,7 @@
  */
 
 export const API = {
-    DATA_VERSION: '2026-06-27-v3-fix-vietnamese',
+    DATA_VERSION: '2026-06-27-v4-fix-vietnamese',
 
     async getJSON(url) {
         try {
