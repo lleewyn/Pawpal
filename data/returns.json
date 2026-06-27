@@ -6,11 +6,11 @@
         "status":  "approved",
         "reason":  "broken",
         "type":  "exchange",
-        "description":  "San pham cat ve sinh bi rach bao bi va am khi mo hop, nho shop kiem tra va doi san pham moi.",
+        "description":  "Sản phẩm cát vệ sinh bị rách bao bì và ẩm khi mở hộp, nhờ shop kiểm tra và đổi sản phẩm mới.",
         "products":  [
                          {
                              "id":  "PROD-010",
-                             "name":  "Cat ve sinh cho meo Catsan 10L",
+                             "name":  "Cát vệ sinh cho mèo Catsan 10L",
                              "image":  "/assets/images/shop/products/vs-khay-01.webp",
                              "quantity":  1,
                              "price":  180000,
@@ -25,7 +25,7 @@
         "status":  "reviewing",
         "reason":  "wrong_item",
         "type":  "refund",
-        "description":  "Khach bao nhan sai mau do choi, dang cho bo phan CSKH kiem tra hinh anh doi chieu.",
+        "description":  "Khách báo nhận sai màu đồ chơi, đang chờ bộ phận CSKH kiểm tra hình ảnh đối chiếu.",
         "products":  [
                          {
                              "id":  "PROD-002",
@@ -86,7 +86,7 @@
         "products":  [
                          {
                              "id":  "PROD-010",
-                             "name":  "Cat ve sinh cho meo Catsan 10L",
+                             "name":  "Cát vệ sinh cho mèo Catsan 10L",
                              "image":  "/assets/images/shop/products/vs-khay-01.webp",
                              "quantity":  1,
                              "price":  180000,

@@ -11,7 +11,7 @@
           "status": "Đang sấy lông",
           "timestamp": "2026-06-23T14:35:00",
           "description": "Milu đang được sấy lông ở mức nhiệt nhẹ. Bé hợp tác tốt và đỡ bớt căng thẳng.",
-          "staff": "Nguyen Thi Mai",
+          "staff": "Nguyễn Thị Mai",
           "type": "in_progress",
           "image": "/assets/images/tracker/belu-1.png"
         },
@@ -19,8 +19,8 @@
           "id": 3,
           "status": "Tắm sạch với sữa tắm dịu nhẹ",
           "timestamp": "2026-06-23T14:05:00",
-          "description": "Da tam bang sua tam danh cho da nhay cam, tranh vung be co tien su di ung.",
-          "staff": "Nguyen Thi Mai",
+          "description": "Đã tắm bằng sữa tắm dành cho da nhạy cảm, tránh vùng bé có tiền sử dị ứng.",
+          "staff": "Nguyễn Thị Mai",
           "type": "in_progress",
           "image": "/assets/images/tracker/belu-2.png"
         },
@@ -29,7 +29,7 @@
           "status": "Kiểm tra da và lông",
           "timestamp": "2026-06-23T13:50:00",
           "description": "Nhân viên kiểm tra tai, móng, da bụng và lông trước khi bắt đầu dịch vụ.",
-          "staff": "Le Hoang An",
+          "staff": "Lê Hoàng An",
           "type": "checkup",
           "image": "/assets/images/services/spa/gallery/cust_khach_1_dang_chai_long.jpg"
         },
@@ -38,7 +38,7 @@
             "status": "Đã tiếp nhận",
             "timestamp": "2026-06-23T13:30:00",
             "description": "Milu đã được tiếp nhận tại chi nhánh Quận 1. Chủ có ghi chú bé nhát người lạ.",
-          "staff": "Tran Van Nam",
+          "staff": "Trần Văn Nam",
           "type": "check_in",
           "image": "/assets/images/tracker/belu-3.png"
         }
@@ -47,7 +47,7 @@
     "history": [
       {
         "id": "SVC-PET-001-005",
-        "service": "Tam say tron goi",
+        "service": "Tắm sấy trọn gói",
         "date": "2026-06-10",
         "status": "Hoàn thành",
         "timeline": [
@@ -56,13 +56,13 @@
             "status": "Hoàn thành",
             "timestamp": "2026-06-10T11:20:00",
             "description": "Milu hoàn thành dịch vụ, lông khô mềm và đã được xịt khử mùi nhẹ.",
-            "staff": "Nguyen Thi Mai",
+            "staff": "Nguyễn Thị Mai",
             "type": "completed",
             "invoice": {
               "code": "HD-PET-001-005",
               "items": [
-                { "name": "Tam say tron goi", "price": 250000 },
-                { "name": "Xit khu mui diu nhe", "price": 40000 }
+                { "name": "Tắm sấy trọn gói", "price": 250000 },
+                { "name": "Xịt khử mùi dịu nhẹ", "price": 40000 }
               ],
               "total": 290000,
               "paid": true
@@ -70,19 +70,19 @@
           },
           {
             "id": 3,
-            "status": "Say va chai long",
+            "status": "Sấy và chải lông",
             "timestamp": "2026-06-10T10:45:00",
-            "description": "Say long ky phan bung va chan, chai long roi nhe.",
-            "staff": "Nguyen Thi Mai",
+            "description": "Sấy lông kỹ phần bụng và chân, chải lông rối nhẹ.",
+            "staff": "Nguyễn Thị Mai",
             "type": "in_progress",
             "image": "/assets/images/tracker/belu-1.png"
           },
           {
             "id": 2,
-            "status": "Tam sach",
+            "status": "Tắm sạch",
             "timestamp": "2026-06-10T10:10:00",
-            "description": "Tam voi sua tam cho cho long ngan, luu y tranh mat va tai.",
-            "staff": "Nguyen Thi Mai",
+            "description": "Tắm với sữa tắm cho chó lông ngắn, lưu ý tránh mắt và tai.",
+            "staff": "Nguyễn Thị Mai",
             "type": "in_progress",
             "image": "/assets/images/tracker/belu-2.png"
           },
@@ -91,7 +91,7 @@
             "status": "Đã tiếp nhận",
             "timestamp": "2026-06-10T09:50:00",
             "description": "Kiểm tra cân nặng 8.5kg và tình trạng da lông trước dịch vụ.",
-            "staff": "Tran Van Nam",
+            "staff": "Trần Văn Nam",
             "type": "check_in",
             "image": "/assets/images/tracker/belu-3.png"
           }
@@ -99,8 +99,8 @@
         "invoice": {
           "code": "HD-PET-001-005",
           "items": [
-            { "name": "Tam say tron goi", "price": 250000 },
-            { "name": "Xit khu mui diu nhe", "price": 40000 }
+            { "name": "Tắm sấy trọn gói", "price": 250000 },
+            { "name": "Xịt khử mùi dịu nhẹ", "price": 40000 }
           ],
           "total": 290000,
           "paid": true
@@ -108,7 +108,7 @@
       },
       {
         "id": "SVC-PET-001-004",
-        "service": "Cat tia long ve sinh",
+        "service": "Cắt tỉa lông vệ sinh",
         "date": "2026-05-18",
         "status": "Hoàn thành",
         "timeline": [
@@ -116,15 +116,15 @@
             "id": 3,
             "status": "Hoàn thành",
             "timestamp": "2026-05-18T16:10:00",
-            "description": "Da cat tia gon phan long chan, bung va quanh duoi. Be sach se va thoai mai.",
-            "staff": "Pham Bao Chau",
+            "description": "Đã cắt tỉa gọn phần lông chân, bụng và quanh đuôi. Bé sạch sẽ và thoải mái.",
+            "staff": "Phạm Bảo Châu",
             "type": "completed",
             "invoice": {
               "code": "HD-PET-001-004",
               "items": [
-                { "name": "Cat tia long ve sinh", "price": 180000 },
-                { "name": "Ve sinh tai", "price": 50000 },
-                { "name": "Cat mong", "price": 40000 }
+                { "name": "Cắt tỉa lông vệ sinh", "price": 180000 },
+                { "name": "Vệ sinh tai", "price": 50000 },
+                { "name": "Cắt móng", "price": 40000 }
               ],
               "total": 270000,
               "paid": true
@@ -132,10 +132,10 @@
           },
           {
             "id": 2,
-            "status": "Cat tia va ve sinh tai",
+            "status": "Cắt tỉa và vệ sinh tai",
             "timestamp": "2026-05-18T15:20:00",
-            "description": "Cat tia theo form gon gang, ve sinh tai bang dung dich chuyen dung.",
-            "staff": "Pham Bao Chau",
+            "description": "Cắt tỉa theo form gọn gàng, vệ sinh tai bằng dung dịch chuyên dụng.",
+            "staff": "Phạm Bảo Châu",
             "type": "in_progress",
             "image": "/assets/images/services/spa/gallery/cust_khach_1_dang_chai_long.jpg"
           },
@@ -144,7 +144,7 @@
             "status": "Đã tiếp nhận",
             "timestamp": "2026-05-18T15:00:00",
             "description": "Tiếp nhận Milu, chủ yêu cầu cắt gọn nhưng không cạo sát.",
-            "staff": "Tran Van Nam",
+            "staff": "Trần Văn Nam",
             "type": "check_in",
             "image": "/assets/images/tracker/belu-3.png"
           }
@@ -152,9 +152,9 @@
         "invoice": {
           "code": "HD-PET-001-004",
           "items": [
-            { "name": "Cat tia long ve sinh", "price": 180000 },
-            { "name": "Ve sinh tai", "price": 50000 },
-            { "name": "Cat mong", "price": 40000 }
+            { "name": "Cắt tỉa lông vệ sinh", "price": 180000 },
+            { "name": "Vệ sinh tai", "price": 50000 },
+            { "name": "Cắt móng", "price": 40000 }
           ],
           "total": 270000,
           "paid": true
@@ -171,12 +171,12 @@
             "status": "Đã tiếp nhận",
             "timestamp": "2026-06-10T09:50:00",
             "description": "Kiểm tra cân nặng 8.5kg và tình trạng da lông trước dịch vụ.",
-            "staff": "BS. Hoang Thao",
+            "staff": "BS. Hoàng Thảo",
             "type": "completed",
             "invoice": {
               "code": "HD-PET-001-003",
               "items": [
-                { "name": "Kiem tra suc khoe tong quat", "price": 500000 }
+                { "name": "Kiểm tra sức khỏe tổng quát", "price": 500000 }
               ],
               "total": 500000,
               "paid": true
@@ -184,10 +184,10 @@
           },
           {
             "id": 2,
-            "status": "Kiem tra lam sang",
+            "status": "Kiểm tra lâm sàng",
             "timestamp": "2026-04-22T10:05:00",
-            "description": "Kiem tra rang mieng, tai, mat, da long va can nang.",
-            "staff": "BS. Hoang Thao",
+            "description": "Kiểm tra răng miệng, tai, mắt, da lông và cân nặng.",
+            "staff": "BS. Hoàng Thảo",
             "type": "checkup"
           },
           {
@@ -195,14 +195,14 @@
             "status": "Đã tiếp nhận",
             "timestamp": "2026-04-22T09:50:00",
             "description": "Tiếp nhận hồ sơ sức khỏe của Milu tại quầy lễ tân.",
-            "staff": "Tran Van Nam",
+            "staff": "Trần Văn Nam",
             "type": "check_in"
           }
         ],
         "invoice": {
           "code": "HD-PET-001-003",
           "items": [
-            { "name": "Kiem tra suc khoe tong quat", "price": 500000 }
+            { "name": "Kiểm tra sức khỏe tổng quát", "price": 500000 }
           ],
           "total": 500000,
           "paid": true
@@ -216,7 +216,7 @@
     "history": [
       {
         "id": "SVC-PET-002-004",
-        "service": "Grooming cho meo long ngan",
+        "service": "Grooming cho mèo lông ngắn",
         "date": "2026-06-12",
         "status": "Hoàn thành",
         "timeline": [
@@ -225,13 +225,13 @@
             "status": "Hoàn thành",
             "timestamp": "2026-06-12T17:05:00",
             "description": "Mimi hoàn thành grooming. Bé hơi nhạy cảm lúc sấy nên nhân viên đã nghỉ giải lao ngắn.",
-            "staff": "Le Hoang An",
+            "staff": "Lê Hoàng An",
             "type": "completed",
             "invoice": {
               "code": "HD-PET-002-004",
               "items": [
-                { "name": "Grooming meo long ngan", "price": 220000 },
-                { "name": "Cat mong", "price": 40000 }
+                { "name": "Grooming mèo lông ngắn", "price": 220000 },
+                { "name": "Cắt móng", "price": 40000 }
               ],
               "total": 260000,
               "paid": true
@@ -239,19 +239,19 @@
           },
           {
             "id": 3,
-            "status": "Say long va cham soc mong",
+            "status": "Sấy lông và chăm sóc móng",
             "timestamp": "2026-06-12T16:30:00",
-            "description": "Say bang gio am nhe, cat mong va lau sach dem chan.",
-            "staff": "Le Hoang An",
+            "description": "Sấy bằng gió ấm nhẹ, cắt móng và lau sạch đệm chân.",
+            "staff": "Lê Hoàng An",
             "type": "in_progress",
             "image": "/assets/images/services/spa/process/process_say_say_long.jpg"
           },
           {
             "id": 2,
-            "status": "Tam kho va chai long",
+            "status": "Tắm khô và chải lông",
             "timestamp": "2026-06-12T16:00:00",
-            "description": "Mimi duoc tam kho va chai long de giam rung long.",
-            "staff": "Le Hoang An",
+            "description": "Mimi được tắm khô và chải lông để giảm rụng lông.",
+            "staff": "Lê Hoàng An",
             "type": "in_progress",
             "image": "/assets/images/services/spa/gallery/cust_khach_2_say_long.jpg"
           },
@@ -260,7 +260,7 @@
             "status": "Đã tiếp nhận",
             "timestamp": "2026-06-12T15:40:00",
             "description": "Tiếp nhận Mimi, chủ lưu ý bé không thích tiếng máy sấy lớn.",
-            "staff": "Tran Van Nam",
+            "staff": "Trần Văn Nam",
             "type": "check_in",
             "image": "/assets/images/tracker/belu-3.png"
           }
@@ -268,8 +268,8 @@
         "invoice": {
           "code": "HD-PET-002-004",
           "items": [
-            { "name": "Grooming meo long ngan", "price": 220000 },
-            { "name": "Cat mong", "price": 40000 }
+            { "name": "Grooming mèo lông ngắn", "price": 220000 },
+            { "name": "Cắt móng", "price": 40000 }
           ],
           "total": 260000,
           "paid": true
@@ -277,7 +277,7 @@
       },
       {
         "id": "SVC-PET-002-003",
-        "service": "Ve sinh tai va mat",
+        "service": "Vệ sinh tai va mat",
         "date": "2026-05-30",
         "status": "Hoàn thành",
         "timeline": [
@@ -285,13 +285,13 @@
             "id": 3,
             "status": "Hoàn thành",
             "timestamp": "2026-05-30T11:35:00",
-            "description": "Da ve sinh tai, lau mat va kiem tra vung long quanh mat. Khong ghi nhan dau hieu bat thuong.",
-            "staff": "Pham Bao Chau",
+            "description": "Đã vệ sinh tai, lau mắt và kiểm tra vùng lông quanh mắt. Không ghi nhận dấu hiệu bất thường.",
+            "staff": "Phạm Bảo Châu",
             "type": "completed",
             "invoice": {
               "code": "HD-PET-002-003",
               "items": [
-                { "name": "Ve sinh tai va mat", "price": 90000 }
+                { "name": "Vệ sinh tai va mat", "price": 90000 }
               ],
               "total": 90000,
               "paid": true
@@ -299,10 +299,10 @@
           },
           {
             "id": 2,
-            "status": "Dang ve sinh",
+            "status": "Đang vệ sinh",
             "timestamp": "2026-05-30T11:10:00",
-            "description": "Lau sach mat va ve sinh tai nhe nhang, Mimi hop tac tot.",
-            "staff": "Pham Bao Chau",
+            "description": "Lau sạch mắt và vệ sinh tai nhẹ nhàng, Mimi hợp tác tốt.",
+            "staff": "Phạm Bảo Châu",
             "type": "in_progress"
           },
           {
@@ -310,14 +310,14 @@
             "status": "Đã tiếp nhận",
             "timestamp": "2026-05-30T11:00:00",
             "description": "Tiếp nhận Mimi cho dịch vụ vệ sinh nhanh.",
-            "staff": "Tran Van Nam",
+            "staff": "Trần Văn Nam",
             "type": "check_in"
           }
         ],
         "invoice": {
           "code": "HD-PET-002-003",
           "items": [
-            { "name": "Ve sinh tai va mat", "price": 90000 }
+            { "name": "Vệ sinh tai va mat", "price": 90000 }
           ],
           "total": 90000,
           "paid": true
@@ -325,7 +325,7 @@
       },
       {
         "id": "SVC-PET-002-002",
-        "service": "Khach san thu cung 1 dem",
+        "service": "Khách sạn thú cưng 1 đêm",
         "date": "2026-05-08",
         "status": "Hoàn thành",
         "timeline": [
@@ -333,14 +333,14 @@
             "id": 4,
             "status": "Hoàn thành",
             "timestamp": "2026-05-09T09:00:00",
-            "description": "Mimi da duoc ban giao lai cho chu. Be an tot va ngu on dinh trong dem.",
-            "staff": "Dang Thu Ha",
+            "description": "Mimi đã được bàn giao lại cho chủ. Bé ăn tốt và ngủ ổn định trong đêm.",
+            "staff": "Đặng Thu Hà",
             "type": "completed",
             "invoice": {
               "code": "HD-PET-002-002",
               "items": [
-                { "name": "Khach san meo 1 dem", "price": 350000 },
-                { "name": "Bua an pate ga", "price": 45000 }
+                { "name": "Khách sạn mèo 1 đêm", "price": 350000 },
+                { "name": "Bữa ăn pate gà", "price": 45000 }
               ],
               "total": 395000,
               "paid": true
@@ -348,18 +348,18 @@
           },
           {
             "id": 3,
-            "status": "Cap nhat buoi toi",
+            "status": "Cập nhật buổi tối",
             "timestamp": "2026-05-08T20:30:00",
-            "description": "Mimi an het 80% khau phan, da dung khay cat va nghi trong phong yen tinh.",
-            "staff": "Dang Thu Ha",
+            "description": "Mimi ăn hết 80% khẩu phần, đã dùng khay cát và nghỉ trong phòng yên tĩnh.",
+            "staff": "Đặng Thu Hà",
             "type": "in_progress"
           },
           {
             "id": 2,
-            "status": "Nhan phong",
+            "status": "Nhận phòng",
             "timestamp": "2026-05-08T17:20:00",
-            "description": "Mimi duoc dua vao phong meo rieng, co dem nam va khay cat moi.",
-            "staff": "Dang Thu Ha",
+            "description": "Mimi được đưa vào phòng mèo riêng, có đệm nằm và khay cát mới.",
+            "staff": "Đặng Thu Hà",
             "type": "check_in"
           },
           {
@@ -367,15 +367,15 @@
             "status": "Đã tiếp nhận",
             "timestamp": "2026-05-08T17:00:00",
             "description": "Tiếp nhận Mimi lưu trữ qua đêm theo lịch đặt trước.",
-            "staff": "Tran Van Nam",
+            "staff": "Trần Văn Nam",
             "type": "check_in"
           }
         ],
         "invoice": {
           "code": "HD-PET-002-002",
           "items": [
-            { "name": "Khach san meo 1 dem", "price": 350000 },
-            { "name": "Bua an pate ga", "price": 45000 }
+            { "name": "Khách sạn mèo 1 đêm", "price": 350000 },
+            { "name": "Bữa ăn pate gà", "price": 45000 }
           ],
           "total": 395000,
           "paid": true
@@ -387,24 +387,24 @@
   "PET-003": {
     "currentSession": {
       "id": "SVC-PET-003-004",
-      "service": "Khach san thu cung 3 ngay",
+      "service": "Khách sạn thú cưng 3 ngày",
       "date": "2026-06-23",
-      "status": "Dang luu tru",
+      "status": "Đang lưu trú",
       "timeline": [
         {
           "id": 3,
-          "status": "Cap nhat buoi trua",
+          "status": "Cập nhật buổi trưa",
           "timestamp": "2026-06-23T12:20:00",
-          "description": "Boss an het khau phan, choi 20 phut tai san choi va uong nuoc tot.",
-          "staff": "Dang Thu Ha",
+          "description": "Boss ăn hết khẩu phần, chơi 20 phút tại sân chơi và uống nước tốt.",
+          "staff": "Đặng Thu Hà",
           "type": "in_progress"
         },
         {
           "id": 2,
-          "status": "Di dao va lam quen phong",
+          "status": "Đi dạo và làm quen phòng",
           "timestamp": "2026-06-23T09:30:00",
-          "description": "Boss duoc di dao nhe va lam quen khu luu tru. Be vui ve, nang dong.",
-          "staff": "Dang Thu Ha",
+          "description": "Boss được đi dạo nhẹ và làm quen khu lưu trú. Bé vui vẻ, năng động.",
+          "staff": "Đặng Thu Hà",
           "type": "in_progress"
         },
           {
@@ -412,7 +412,7 @@
             "status": "Đã tiếp nhận",
             "timestamp": "2026-06-23T08:10:00",
             "description": "Boss được tiếp nhận cho gói khách sạn 3 ngày tại chi nhánh Quận 1.",
-          "staff": "Tran Van Nam",
+          "staff": "Trần Văn Nam",
           "type": "check_in"
         }
       ]
@@ -420,7 +420,7 @@
     "history": [
       {
         "id": "SVC-PET-003-003",
-        "service": "Tam say cho lon",
+        "service": "Tắm sấy cho chó lớn",
         "date": "2026-06-01",
         "status": "Hoàn thành",
         "timeline": [
@@ -429,13 +429,13 @@
             "status": "Hoàn thành",
             "timestamp": "2026-06-01T10:45:00",
             "description": "Boss hoàn thành tắm sấy, lông khô hoàn toàn và được chải lông kỹ.",
-            "staff": "Nguyen Thi Mai",
+            "staff": "Nguyễn Thị Mai",
             "type": "completed",
             "invoice": {
               "code": "HD-PET-003-003",
               "items": [
-                { "name": "Tam say cho lon", "price": 320000 },
-                { "name": "Chai long giam rung", "price": 60000 }
+                { "name": "Tắm sấy cho chó lớn", "price": 320000 },
+                { "name": "Chải lông giảm rụng", "price": 60000 }
               ],
               "total": 380000,
               "paid": true
@@ -443,10 +443,10 @@
           },
           {
             "id": 2,
-            "status": "Tam va say long",
+            "status": "Tắm và sấy lông",
             "timestamp": "2026-06-01T09:40:00",
-            "description": "Tam bang sua tam khu mui, say long theo tung lop vi long Boss day.",
-            "staff": "Nguyen Thi Mai",
+            "description": "Tắm bằng sữa tắm khử mùi, sấy lông theo từng lớp vì lông Boss dày.",
+            "staff": "Nguyễn Thị Mai",
             "type": "in_progress",
             "image": "/assets/images/tracker/belu-2.png"
           },
@@ -455,7 +455,7 @@
             "status": "Đã tiếp nhận",
             "timestamp": "2026-06-01T09:15:00",
             "description": "Tiếp nhận Boss, kiểm tra cân nặng 25kg và tình trạng lông.",
-            "staff": "Tran Van Nam",
+            "staff": "Trần Văn Nam",
             "type": "check_in",
             "image": "/assets/images/tracker/belu-3.png"
           }
@@ -463,8 +463,8 @@
         "invoice": {
           "code": "HD-PET-003-003",
           "items": [
-            { "name": "Tam say cho lon", "price": 320000 },
-            { "name": "Chai long giam rung", "price": 60000 }
+            { "name": "Tắm sấy cho chó lớn", "price": 320000 },
+            { "name": "Chải lông giảm rụng", "price": 60000 }
           ],
           "total": 380000,
           "paid": true

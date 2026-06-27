@@ -18,10 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 targetUser = null;
             } else if (currentBooking && currentBooking.userId) {
                 targetUser = users.find(u => String(u.id) === String(currentBooking.userId) && u.is_temporary) || null;
-            } else if (currentBooking) {
-                targetUser = users.find(u => u.phone === currentBooking.ownerPhone && u.is_temporary) || null;
             } else if (currentUser && currentUser.is_temporary) {
                 targetUser = currentUser;
+            } else if (currentBooking) {
+                targetUser = users.find(u => u.phone === currentBooking.ownerPhone && u.is_temporary) || null;
             }
 
             if (targetUser) {

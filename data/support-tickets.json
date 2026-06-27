@@ -36,7 +36,7 @@
       {
         "sender": "cskh",
         "agent": "Tran Thi C",
-        "text": "Duoc a! PawPal vua doi lich Bong tu thu 5 sang thu 6 luc 14:00 roi. Ban kiem tra email xac nhan nhe a!",
+        "text": "Được ạ! PawPal vừa đổi lịch Bông từ thứ 5 sang thứ 6 lúc 14:00 rồi. Bạn kiểm tra email xác nhận nhé ạ!",
         "time": "2026-06-24T02:45:00.000Z"
       }
     ],
@@ -96,7 +96,7 @@
       {
         "sender": "cskh",
         "agent": "Pham Van E",
-        "text": "Xin loi ban! Chung toi dang kiem tra van de ky thuat nay. Ban thu dang xuat roi dang nhap lai xem nhe.",
+        "text": "Xin lỗi bạn! Chúng tôi đang kiểm tra vấn đề kỹ thuật này. Bạn thử đăng xuất rồi đăng nhập lại xem nhé.",
         "time": "2026-06-24T04:35:00.000Z"
       }
     ],
@@ -121,7 +121,7 @@
   },
   {
     "id": "TK-82916",
-    "title": "Can ho tro OTP nhan lich cho khach vang lai",
+    "title": "Cần hỗ trợ OTP nhận lịch cho khách vãng lai",
     "type": "booking",
     "priority": "Cao",
     "status": "pending",
