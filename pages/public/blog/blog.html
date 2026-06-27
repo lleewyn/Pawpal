@@ -10,7 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="../../../styles/style.css">
-    <!-- Components -->
     <link rel="stylesheet" href="blog.css">
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
@@ -22,254 +21,334 @@
     <script type="module" src="blog.js"></script>
 </head>
 <body class="blog-page-body">
-
     <div id="site-header"></div>
 
     <main class="blog-magazine-main">
         <div class="blog-page-wrapper">
-        
-        <!-- SECTION 1: FILTER / TAGS -->
-        <section class="blog-section blog-filters-section">
-            <div class="container">
-                <div class="blog-filter-group main-filters mb-3">
-                    <button class="btn-filter-pill active">Kiến thức chăm sóc</button>
-                    <button class="btn-filter-pill">Khuyến mãi</button>
-                    <button class="btn-filter-pill">Tin tức</button>
-                </div>
-                <div class="blog-filter-group sub-filters">
-                    <button class="btn-filter-tag active">Tất cả</button>
-                    <button class="btn-filter-tag">Chó</button>
-                    <button class="btn-filter-tag">Mèo</button>
-                    <button class="btn-filter-tag">Chó con</button>
-                    <button class="btn-filter-tag">Mèo con</button>
-                    <button class="btn-filter-tag">Dinh dưỡng</button>
-                    <button class="btn-filter-tag">Sức khỏe</button>
-                    <button class="btn-filter-tag">Huấn luyện</button>
-                </div>
-            </div>
-        </section>
+            <section class="blog-section blog-hero-section" id="blog-top">
+                <div class="blog-hero-shell">
+                    <div class="blog-hero-copy">
+                        <span class="blog-kicker">Cẩm nang PawPal</span>
+                        <h1 class="blog-hero-title">Cẩm nang chăm Boss dễ đọc và dễ áp dụng</h1>
+                        <form class="blog-search-form" role="search">
+                            <label class="visually-hidden" for="blogSearchInput">Tìm bài viết</label>
+                            <input id="blogSearchInput" type="search" placeholder="Tìm theo chủ đề, giống loài, dinh dưỡng..." autocomplete="off">
+                            <button type="submit" class="btn-cta">Tìm bài</button>
+                        </form>
+                        <div class="blog-hero-stats">
+                            <div class="hero-stat-card">
+                                <strong>40+</strong>
+                                <span>bài viết dễ áp dụng</span>
+                            </div>
+                            <div class="hero-stat-card">
+                                <strong>3</strong>
+                                <span>nhóm nội dung chính</span>
+                            </div>
+                            <div class="hero-stat-card">
+                                <strong>1 chạm</strong>
+                                <span>sang sản phẩm và dịch vụ liên quan</span>
+                            </div>
+                        </div>
+                    </div>
 
-        <!-- SECTION 2: MỚI NHẤT (ASYMMETRIC GRID) -->
-        <section class="blog-section blog-latest-section">
-            <div class="container">
-                <div class="section-header d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="section-title">Kiến thức chăm sóc mới nhất</h2>
-                </div>
-
-                <div class="latest-grid-wrapper mb-5">
-                    <!-- Khối trái: Bài nổi bật (Featured) -->
-                    <article class="blog-card featured-card">
+                    <article class="blog-hero-spotlight blog-entry" data-main="tips" data-tags="cho suc-khoe tam grooming">
                         <a href="../blog-detail/blog-detail.html" class="card-img-link">
                             <div class="img-wrapper">
-                                <img src="../../../assets/images/publics/dog.jpg" alt="Tắm cho chó" loading="lazy">
-                                <span class="card-badge">Có thể bạn chưa biết</span>
+                                <img src="../../../assets/images/publics/dogcute6.jpg" alt="Tắm cho chó mùa mưa" loading="lazy">
+                                <span class="card-badge">Bài nổi bật</span>
                             </div>
                         </a>
-                        <div class="card-content mt-3">
-                            <h3 class="card-title"><a href="../blog-detail/blog-detail.html">CÓ NÊN TẮM CHO CHÓ VÀO MÙA MƯA?</a></h3>
-                            <div class="card-meta">
+                        <div class="card-content">
+                            <div class="card-meta-line">
                                 <span class="card-date">24 thg 7, 2026</span>
+                                <span class="card-reading-time">6 phút đọc</span>
                             </div>
-                            <p class="card-excerpt">Những điều cần lưu ý để giữ bé khỏe, lông khô thoáng và tránh cảm lạnh trong những ngày mưa ẩm.</p>
+                            <h2 class="card-title"><a href="../blog-detail/blog-detail.html">Có nên tắm cho chó vào mùa mưa?</a></h2>
+                            <p class="card-excerpt">Những điều cần lưu ý để giữ bé khô thoáng, không bị hôi lông và tránh cảm lạnh trong những ngày ẩm kéo dài.</p>
+                            <div class="card-tags">
+                                <span>Chó</span>
+                                <span>Sức khỏe</span>
+                            </div>
                         </div>
                     </article>
+                </div>
+            </section>
 
-                    <!-- Khối phải: Danh sách xếp dọc (Stacked) -->
-                    <div class="stacked-cards-list">
-                        <article class="blog-card-small">
-                            <a href="../blog-detail/blog-detail.html" class="card-img-link"><img src="../../../assets/images/publics/dog11.png" alt="Chó ngủ"></a>
-                            <div class="card-content">
-                                <h4 class="card-title"><a href="../blog-detail/blog-detail.html">Chó cào ổ bao lâu thì đẻ?</a></h4>
+            <section class="blog-section blog-filters-section">
+                <div class="blog-filter-shell">
+                    <div class="blog-filter-group main-filters">
+                        <button class="btn-filter-pill active" type="button" data-main-target="tips" data-scroll-target="#blog-latest">Kiến thức chăm sóc</button>
+                        <button class="btn-filter-pill" type="button" data-main-target="promo" data-scroll-target="#blog-news">Khuyến mãi</button>
+                        <button class="btn-filter-pill" type="button" data-main-target="news" data-scroll-target="#blog-news">Tin tức</button>
+                    </div>
+                    <div class="blog-filter-group sub-filters">
+                        <button class="btn-filter-tag active" type="button" data-tag="all">Tất cả</button>
+                        <button class="btn-filter-tag" type="button" data-tag="cho">Chó</button>
+                        <button class="btn-filter-tag" type="button" data-tag="meo">Mèo</button>
+                        <button class="btn-filter-tag" type="button" data-tag="cho-con">Chó con</button>
+                        <button class="btn-filter-tag" type="button" data-tag="meo-con">Mèo con</button>
+                        <button class="btn-filter-tag" type="button" data-tag="dinh-duong">Dinh dưỡng</button>
+                        <button class="btn-filter-tag" type="button" data-tag="suc-khoe">Sức khỏe</button>
+                        <button class="btn-filter-tag" type="button" data-tag="huan-luyen">Huấn luyện</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="blog-section blog-quick-links-section">
+                <div class="section-header">
+                    <h2 class="section-title">Lối đọc nhanh</h2>
+                </div>
+                <div class="blog-quick-links-grid">
+                    <a href="#blog-latest" class="quick-link-card">
+                        <strong>Mới đăng</strong>
+                        <span>Đọc những bài vừa cập nhật gần đây nhất</span>
+                    </a>
+                    <a href="#blog-trending" class="quick-link-card">
+                        <strong>Đọc nhiều</strong>
+                        <span>Xem các chủ đề được Sen quan tâm nhất</span>
+                    </a>
+                    <a href="#blog-news" class="quick-link-card">
+                        <strong>Tin + deal</strong>
+                        <span>Không bỏ lỡ khuyến mãi và cập nhật từ PawPal</span>
+                    </a>
+                </div>
+            </section>
+
+            <section class="blog-section blog-latest-section" id="blog-latest">
+                <div class="section-header">
+                    <h2 class="section-title">Mới lên cẩm nang</h2>
+                </div>
+
+                <div class="latest-grid-wrapper">
+                    <article class="blog-card featured-card blog-entry" data-main="tips" data-tags="cho sinh-san suc-khoe">
+                        <a href="../blog-detail/blog-detail.html" class="card-img-link">
+                            <div class="img-wrapper">
+                                <img src="../../../assets/images/publics/dogcute1.jpg" alt="Chó cào ổ" loading="lazy">
+                                <span class="card-badge">Nên đọc trước</span>
+                            </div>
+                        </a>
+                        <div class="card-content">
+                            <div class="card-meta-line">
                                 <span class="card-date">22 thg 7, 2026</span>
+                                <span class="card-reading-time">5 phút đọc</span>
+                            </div>
+                            <h3 class="card-title"><a href="../blog-detail/blog-detail.html">Chó cào ổ bao lâu thì đẻ?</a></h3>
+                            <p class="card-excerpt">Dấu hiệu nào là bình thường, lúc nào cần theo dõi sát hơn và khi nào Sen nên liên hệ bác sĩ thú y.</p>
+                        </div>
+                    </article>
+
+                    <div class="stacked-cards-list">
+                        <article class="blog-card-small blog-entry" data-main="tips" data-tags="meo meo-con grooming">
+                            <a href="../blog-detail/blog-detail.html" class="card-img-link"><img src="../../../assets/images/publics/catcute5.jpg" alt="Mèo Ragdoll"></a>
+                            <div class="card-content">
+                                <div class="card-meta-line">
+                                    <span class="card-date">20 thg 7, 2026</span>
+                                    <span class="card-reading-time">4 phút đọc</span>
+                                </div>
+                                <h3 class="card-title"><a href="../blog-detail/blog-detail.html">Khám phá giống mèo Ragdoll và cách chăm sóc đúng chuẩn</a></h3>
                             </div>
                         </article>
-                        <article class="blog-card-small">
-                            <a href="../blog-detail/blog-detail.html" class="card-img-link"><img src="../../../assets/images/shared/blog_cat_care.webp" alt="Mèo Ragdoll"></a>
+                        <article class="blog-card-small blog-entry" data-main="tips" data-tags="cho suc-khoe tam">
+                            <a href="../blog-detail/blog-detail.html" class="card-img-link"><img src="../../../assets/images/publics/dogcute3.jpg" alt="Tắm chó mùa hè"></a>
                             <div class="card-content">
-                                <h4 class="card-title"><a href="../blog-detail/blog-detail.html">Khám phá giống mèo Ragdoll và cách chăm sóc đúng chuẩn</a></h4>
-                                <span class="card-date">20 thg 7, 2026</span>
+                                <div class="card-meta-line">
+                                    <span class="card-date">18 thg 7, 2026</span>
+                                    <span class="card-reading-time">4 phút đọc</span>
+                                </div>
+                                <h3 class="card-title"><a href="../blog-detail/blog-detail.html">Có nên tắm cho chó thường xuyên vào mùa hè?</a></h3>
                             </div>
                         </article>
-                        <article class="blog-card-small">
-                            <a href="../blog-detail/blog-detail.html" class="card-img-link"><img src="../../../assets/images/publics/dog.jpg" alt="Tắm chó"></a>
+                        <article class="blog-card-small blog-entry" data-main="tips" data-tags="cho meo huan-luyen cho-con meo-con">
+                            <a href="../blog-detail/blog-detail.html" class="card-img-link"><img src="../../../assets/images/publics/catcute2.jpg" alt="Trò chơi trong nhà"></a>
                             <div class="card-content">
-                                <h4 class="card-title"><a href="../blog-detail/blog-detail.html">Có nên tắm cho chó thường xuyên vào mùa hè?</a></h4>
-                                <span class="card-date">18 thg 7, 2026</span>
-                            </div>
-                        </article>
-                        <article class="blog-card-small">
-                            <a href="../blog-detail/blog-detail.html" class="card-img-link"><img src="../../../assets/images/publics/cat5.jpg" alt="Trò chơi"></a>
-                            <div class="card-content">
-                                <h4 class="card-title"><a href="../blog-detail/blog-detail.html">Tổng hợp các trò chơi trong nhà cùng chó mèo khi trời mưa</a></h4>
-                                <span class="card-date">15 thg 7, 2026</span>
+                                <div class="card-meta-line">
+                                    <span class="card-date">15 thg 7, 2026</span>
+                                    <span class="card-reading-time">3 phút đọc</span>
+                                </div>
+                                <h3 class="card-title"><a href="../blog-detail/blog-detail.html">Tổng hợp các trò chơi trong nhà cùng chó mèo khi trời mưa</a></h3>
                             </div>
                         </article>
                     </div>
                 </div>
 
-                <!-- Lưới 3 cột ngang -->
-                <div class="row g-4 grid-3-cols">
-                    <div class="col-md-4">
-                        <article class="blog-card standard-card">
-                            <a href="../blog-detail/blog-detail.html" class="card-img-link"><img src="../../../assets/images/publics/cat9.png" alt="Thức ăn"></a>
-                            <div class="card-content mt-3">
-                                <h4 class="card-title"><a href="../blog-detail/blog-detail.html">Nên chọn thức ăn cho chó chứa ngũ cốc hay không ngũ cốc?</a></h4>
+                <div class="blog-card-grid">
+                    <article class="blog-card standard-card blog-entry" data-main="tips" data-tags="cho dinh-duong">
+                            <a href="../blog-detail/blog-detail.html" class="card-img-link"><img src="../../../assets/images/publics/feed.jpg" alt="Thức ăn cho chó"></a>
+                        <div class="card-content">
+                            <div class="card-meta-line">
                                 <span class="card-date">10 thg 7, 2026</span>
+                                <span class="card-reading-time">6 phút đọc</span>
                             </div>
-                        </article>
-                    </div>
-                    <div class="col-md-4">
-                        <article class="blog-card standard-card">
-                            <a href="../blog-detail/blog-detail.html" class="card-img-link"><img src="../../../assets/images/publics/dog3.svg" alt="Chó Shiba"></a>
-                            <div class="card-content mt-3">
-                                <h4 class="card-title"><a href="../blog-detail/blog-detail.html">Chó Shiba có phù hợp với bạn không?</a></h4>
+                            <h3 class="card-title"><a href="../blog-detail/blog-detail.html">Nên chọn thức ăn cho chó chứa ngũ cốc hay không ngũ cốc?</a></h3>
+                        </div>
+                    </article>
+                    <article class="blog-card standard-card blog-entry" data-main="tips" data-tags="cho huan-luyen">
+                            <a href="../blog-detail/blog-detail.html" class="card-img-link"><img src="../../../assets/images/publics/dogcute6.jpg" alt="Chó Shiba"></a>
+                        <div class="card-content">
+                            <div class="card-meta-line">
                                 <span class="card-date">08 thg 7, 2026</span>
+                                <span class="card-reading-time">5 phút đọc</span>
                             </div>
-                        </article>
-                    </div>
-                    <div class="col-md-4">
-                        <article class="blog-card standard-card">
-                            <a href="../blog-detail/blog-detail.html" class="card-img-link"><img src="../../../assets/images/publics/cat3.svg" alt="Đánh răng"></a>
-                            <div class="card-content mt-3">
-                                <h4 class="card-title"><a href="../blog-detail/blog-detail.html">Chó có thể nuốt kem đánh răng được không?</a></h4>
+                            <h3 class="card-title"><a href="../blog-detail/blog-detail.html">Chó Shiba có phù hợp với bạn không?</a></h3>
+                        </div>
+                    </article>
+                    <article class="blog-card standard-card blog-entry" data-main="tips" data-tags="cho suc-khoe">
+                            <a href="../blog-detail/blog-detail.html" class="card-img-link"><img src="../../../assets/images/publics/smile1.jpg" alt="Đánh răng cho chó"></a>
+                        <div class="card-content">
+                            <div class="card-meta-line">
                                 <span class="card-date">05 thg 7, 2026</span>
+                                <span class="card-reading-time">4 phút đọc</span>
                             </div>
-                        </article>
-                    </div>
+                            <h3 class="card-title"><a href="../blog-detail/blog-detail.html">Chó có thể nuốt kem đánh răng được không?</a></h3>
+                        </div>
+                    </article>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- SECTION 3: XEM NHIỀU NHẤT -->
-        <section class="blog-section blog-trending-section">
-            <div class="container">
-                <h2 class="section-title mb-5 text-center">Kiến thức chăm sóc được xem nhiều nhất</h2>
-                
-                <div class="trending-list-wrapper mx-auto">
-                    <article class="trending-item">
+            <section class="blog-section blog-trending-section" id="blog-trending">
+                <div class="section-header">
+                    <h2 class="section-title">Được xem nhiều nhất</h2>
+                </div>
+                <div class="trending-list-wrapper">
+                    <article class="trending-item blog-entry" data-main="tips" data-tags="cho suc-khoe">
                         <div class="trending-rank">1</div>
-                        <a href="../blog-detail/blog-detail.html" class="trending-img"><img src="../../../assets/images/publics/cat6.jpg" alt="Thuốc"></a>
+                        <a href="../blog-detail/blog-detail.html" class="trending-img"><img src="../../../assets/images/publics/handpaw.jpg" alt="Thuốc trị ve cho chó"></a>
                         <div class="trending-content">
-                            <h4 class="trending-title"><a href="../blog-detail/blog-detail.html">Top 10 các loại thuốc trị ve cho chó tốt nhất hiện nay</a></h4>
-                            <span class="trending-date">24 thg 7, 2023</span>
+                            <div class="card-meta-line">
+                                <span class="trending-date">24 thg 7, 2026</span>
+                                <span class="card-reading-time">7 phút đọc</span>
+                            </div>
+                            <h3 class="trending-title"><a href="../blog-detail/blog-detail.html">Top 10 các loại thuốc trị ve cho chó tốt nhất hiện nay</a></h3>
                         </div>
                     </article>
-                    <article class="trending-item">
+                    <article class="trending-item blog-entry" data-main="tips" data-tags="meo dinh-duong">
                         <div class="trending-rank">2</div>
-                        <a href="../blog-detail/blog-detail.html" class="trending-img"><img src="../../../assets/images/publics/cat11.jpg" alt="Pate mèo"></a>
+                        <a href="../blog-detail/blog-detail.html" class="trending-img"><img src="../../../assets/images/publics/catcute8.jpg" alt="Pate mèo"></a>
                         <div class="trending-content">
-                            <h4 class="trending-title"><a href="../blog-detail/blog-detail.html">Cách làm Pate cho mèo ngon bổ rẻ tại nhà</a></h4>
-                            <span class="trending-date">10 thg 7, 2024</span>
+                            <div class="card-meta-line">
+                                <span class="trending-date">19 thg 7, 2026</span>
+                                <span class="card-reading-time">5 phút đọc</span>
+                            </div>
+                            <h3 class="trending-title"><a href="../blog-detail/blog-detail.html">Cách làm pate cho mèo ngon bổ rẻ tại nhà</a></h3>
                         </div>
                     </article>
-                    <article class="trending-item">
+                    <article class="trending-item blog-entry" data-main="tips" data-tags="cho huan-luyen">
                         <div class="trending-rank">3</div>
-                        <a href="../blog-detail/blog-detail.html" class="trending-img"><img src="../../../assets/images/publics/dog4.svg" alt="Chó đẹp"></a>
+                        <a href="../blog-detail/blog-detail.html" class="trending-img"><img src="../../../assets/images/publics/dogcute8.jpg" alt="Giống chó đẹp"></a>
                         <div class="trending-content">
-                            <h4 class="trending-title"><a href="../blog-detail/blog-detail.html">Top 10 giống chó đẹp nhất thế giới</a></h4>
-                            <span class="trending-date">24 thg 6, 2024</span>
-                        </div>
-                    </article>
-                    <article class="trending-item">
-                        <div class="trending-rank">4</div>
-                        <a href="../blog-detail/blog-detail.html" class="trending-img"><img src="../../../assets/images/publics/dog5.svg" alt="Chó thông minh"></a>
-                        <div class="trending-content">
-                            <h4 class="trending-title"><a href="../blog-detail/blog-detail.html">Top 10 loài chó thông minh nhất thế giới</a></h4>
-                            <span class="trending-date">29 thg 5, 2023</span>
-                        </div>
-                    </article>
-                    <article class="trending-item">
-                        <div class="trending-rank">5</div>
-                        <a href="../blog-detail/blog-detail.html" class="trending-img"><img src="../../../assets/images/publics/pet.png" alt="Sữa tắm"></a>
-                        <div class="trending-content">
-                            <h4 class="trending-title"><a href="../blog-detail/blog-detail.html">5 loại sữa tắm cho chó tốt nhất trên thị trường</a></h4>
-                            <span class="trending-date">18 thg 5, 2023</span>
+                            <div class="card-meta-line">
+                                <span class="trending-date">15 thg 7, 2026</span>
+                                <span class="card-reading-time">6 phút đọc</span>
+                            </div>
+                            <h3 class="trending-title"><a href="../blog-detail/blog-detail.html">Top 10 giống chó đẹp nhất thế giới</a></h3>
                         </div>
                     </article>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- SECTION 4: KHUYẾN MÃI và TIN TỨC (2 CỘT) -->
-        <section class="blog-section blog-news-promo-section">
-            <div class="container">
-                <div class="row g-5">
-                    <!-- Cột trái: Khuyến mãi -->
-                    <div class="col-lg-6">
-                        <div class="section-header d-flex justify-content-between align-items-center mb-4">
-                            <h2 class="section-title">Khuyến Mãi</h2>
+            <section class="blog-section blog-news-promo-section" id="blog-news">
+                <div class="blog-news-grid">
+                    <div class="news-column" id="blog-promo-column">
+                        <div class="section-header">
+                            <h2 class="section-title">Khuyến mãi</h2>
                         </div>
                         <div class="news-list">
-                            <article class="news-list-item">
-                                <a href="../blog-detail/blog-detail.html" class="news-img"><img src="../../../assets/images/publics/dog6.jpg" alt="Khuyến mãi 1"></a>
+                            <article class="news-list-item blog-entry" data-main="promo" data-tags="meo dinh-duong">
+                                <a href="../blog-detail/blog-detail.html" class="news-img"><img src="../../../assets/images/publics/catcute11.jpg" alt="Khuyến mãi pate"></a>
                                 <div class="news-content">
-                                    <h4 class="news-title"><a href="../blog-detail/blog-detail.html">Săn vé tham gia "Khu vườn Pate+" từ Snappy Tom - sen đã biết chưa?</a></h4>
-                                    <span class="news-date">12 thg 6, 2026</span>
+                                    <div class="card-meta-line">
+                                        <span class="news-date">12 thg 6, 2026</span>
+                                        <span class="card-reading-time">2 phút đọc</span>
+                                    </div>
+                                    <h3 class="news-title"><a href="../blog-detail/blog-detail.html">Mua 4 pate Catidea Real và Raw, tặng muỗng limited siêu cute</a></h3>
                                 </div>
                             </article>
-                            <article class="news-list-item">
-                                <a href="../blog-detail/blog-detail.html" class="news-img"><img src="../../../assets/images/publics/dog11.png" alt="Khuyến mãi 2"></a>
+                            <article class="news-list-item blog-entry" data-main="promo" data-tags="cho dinh-duong">
+                                <a href="../blog-detail/blog-detail.html" class="news-img"><img src="../../../assets/images/publics/bowl.jpg" alt="Deal Royal Canin"></a>
                                 <div class="news-content">
-                                    <h4 class="news-title"><a href="../blog-detail/blog-detail.html">Mua 4 pate Catidea Real và Raw - tặng muỗng limited siêu cute!</a></h4>
-                                    <span class="news-date">08 thg 6, 2026</span>
+                                    <div class="card-meta-line">
+                                        <span class="news-date">08 thg 6, 2026</span>
+                                        <span class="card-reading-time">2 phút đọc</span>
+                                    </div>
+                                    <h3 class="news-title"><a href="../blog-detail/blog-detail.html">Deal hot từ Royal Canin đã lên kệ PawPal rồi nè</a></h3>
                                 </div>
                             </article>
-                            <article class="news-list-item">
-                                <a href="../blog-detail/blog-detail.html" class="news-img"><img src="../../../assets/images/publics/cat7.jpg" alt="Khuyến mãi 3"></a>
+                            <article class="news-list-item blog-entry" data-main="promo" data-tags="meo cho">
+                                <a href="../blog-detail/blog-detail.html" class="news-img"><img src="../../../assets/images/publics/spa.jpg" alt="Deal khai trương"></a>
                                 <div class="news-content">
-                                    <h4 class="news-title"><a href="../blog-detail/blog-detail.html">Sen ơi, deal hot từ Royal Canin đã lên kệ PawPal rồi nè!</a></h4>
-                                    <span class="news-date">04 thg 6, 2026</span>
+                                    <div class="card-meta-line">
+                                        <span class="news-date">04 thg 6, 2026</span>
+                                        <span class="card-reading-time">2 phút đọc</span>
+                                    </div>
+                                    <h3 class="news-title"><a href="../blog-detail/blog-detail.html">Săn deal khai trương và quà trải nghiệm tại cửa hàng mới của PawPal</a></h3>
                                 </div>
                             </article>
                         </div>
                     </div>
 
-                    <!-- Cột phải: Tin tức -->
-                    <div class="col-lg-6">
-                        <div class="section-header d-flex justify-content-between align-items-center mb-4">
-                            <h2 class="section-title">Tin Tức</h2>
+                    <div class="news-column" id="blog-news-column">
+                        <div class="section-header">
+                            <h2 class="section-title">Tin từ PawPal</h2>
                         </div>
                         <div class="news-list">
-                            <article class="news-list-item">
-                                <a href="../blog-detail/blog-detail.html" class="news-img"><img src="../../../assets/images/publics/cat8.jpg" alt="Tin tức 1"></a>
+                            <article class="news-list-item blog-entry" data-main="news" data-tags="cho meo">
+                                <a href="../blog-detail/blog-detail.html" class="news-img"><img src="../../../assets/images/publics/paw2.jpg" alt="Khai trương chi nhánh"></a>
                                 <div class="news-content">
-                                    <h4 class="news-title"><a href="../blog-detail/blog-detail.html">Khai trương chi nhánh 5: cửa hàng mới toanh - săn nhanh deal xịn</a></h4>
-                                    <span class="news-date">21 thg 5, 2026</span>
+                                    <div class="card-meta-line">
+                                        <span class="news-date">21 thg 5, 2026</span>
+                                        <span class="card-reading-time">3 phút đọc</span>
+                                    </div>
+                                    <h3 class="news-title"><a href="../blog-detail/blog-detail.html">Khai trương chi nhánh 5, cửa hàng mới toanh và nhiều ưu đãi chào đón Sen</a></h3>
                                 </div>
                             </article>
-                            <article class="news-list-item">
-                                <a href="../blog-detail/blog-detail.html" class="news-img"><img src="../../../assets/images/publics/dog.jpg" alt="Tin tức 2"></a>
+                            <article class="news-list-item blog-entry" data-main="news" data-tags="cho meo dinh-duong">
+                                <a href="../blog-detail/blog-detail.html" class="news-img"><img src="../../../assets/images/publics/paw1.jpg" alt="Thông báo điều chỉnh giá"></a>
                                 <div class="news-content">
-                                    <h4 class="news-title"><a href="../blog-detail/blog-detail.html">Thông báo điều chỉnh giá sản phẩm Royal Canin từ 1/6/2026</a></h4>
-                                    <span class="news-date">21 thg 5, 2026</span>
+                                    <div class="card-meta-line">
+                                        <span class="news-date">18 thg 5, 2026</span>
+                                        <span class="card-reading-time">2 phút đọc</span>
+                                    </div>
+                                    <h3 class="news-title"><a href="../blog-detail/blog-detail.html">Thông báo điều chỉnh giá một số sản phẩm Royal Canin từ đầu tháng 6</a></h3>
                                 </div>
                             </article>
-                            <article class="news-list-item">
-                                <a href="../blog-detail/blog-detail.html" class="news-img"><img src="../../../assets/images/publics/cat1.svg" alt="Tin tức 3"></a>
+                            <article class="news-list-item blog-entry" data-main="news" data-tags="cho meo">
+                                <a href="../blog-detail/blog-detail.html" class="news-img"><img src="../../../assets/images/publics/pet3.jpg" alt="Soft opening"></a>
                                 <div class="news-content">
-                                    <h4 class="news-title"><a href="../blog-detail/blog-detail.html">Soft opening PawPal 17 Tô Hiến Thành - ưu đãi 8% chào đón cửa hàng thứ 5</a></h4>
-                                    <span class="news-date">11 thg 5, 2026</span>
+                                    <div class="card-meta-line">
+                                        <span class="news-date">11 thg 5, 2026</span>
+                                        <span class="card-reading-time">3 phút đọc</span>
+                                    </div>
+                                    <h3 class="news-title"><a href="../blog-detail/blog-detail.html">Soft opening cửa hàng mới với ưu đãi 8 phần trăm cho những ngày đầu tiên</a></h3>
                                 </div>
                             </article>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
+            <section class="blog-section blog-cta-section">
+                <div class="blog-cta-shell">
+                    <div class="blog-cta-copy">
+                        <h2 class="section-title">Đọc xong rồi thì mình chăm Boss tiếp nhé</h2>
+                        <div class="blog-cta-actions">
+                            <a href="/pages/services/services.html" class="btn-cta">Đặt lịch chăm sóc</a>
+                            <a href="/pages/shop/shop.html" class="btn-green-outline">Xem sản phẩm liên quan</a>
+                        </div>
+                    </div>
+                    <div class="blog-cta-media">
+                        <img src="../../../assets/images/publics/pet4.jpg" alt="Boss đáng yêu tại PawPal">
+                    </div>
+                </div>
+            </section>
+
+            <div class="blog-empty-state" id="blogEmptyState" hidden>
+                <strong>Chưa có bài đúng với lựa chọn này.</strong>
+                <p>Thử đổi chủ đề hoặc bỏ từ khóa tìm kiếm để xem thêm bài khác.</p>
+            </div>
+        </div>
     </main>
 
     <div id="site-footer"></div>
-
-    
-    
-    
-    
-    
-    
-    
-    
     <div id="site-fab"></div>
 </body>
 </html>
-

@@ -435,3 +435,15 @@
     font-size: var(--fs-xs);
   }
 }
+
+
+/* Extracted from checkout.html */
+.ui-bg-box-7 {
+    min-height:110px;
+    background:#f4faf7;
+}
+
+/* Extracted from checkout.html */
+.ui-element-7 {
+    vertical-align: text-top;
+}

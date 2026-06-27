@@ -100,6 +100,11 @@ function createBookingCard(booking) {
     const changeCount = Number(booking.changeCount || 0);
     const cancelCount = Number(booking.cancelCount || 0);
     const isChangeLimited = changeCount >= 2;
+    const petId = booking.petId || currentPetMap.get(String(booking.petId))?.id || '';
+    const diaryQuery = petId ? `?id=${encodeURIComponent(petId)}&sessionId=${encodeURIComponent(booking.id || '')}` : '';
+    const careLogLink = normalizedStatus === 'completed' && petId
+        ? `<a class="booking-card-link" href="../pet-diary/pet-diary.html${diaryQuery}" onclick="event.stopPropagation()">Xem nhật ký chăm sóc</a>`
+        : '';
     card.className = `booking-card status-${normalizedStatus}`;
     card.onclick = () => {
         window.location.href = `../booking-detail/booking-detail.html?id=${booking.id}`;
@@ -127,7 +132,10 @@ function createBookingCard(booking) {
         </div>
         <div class="booking-card-footer">
             <div class="booking-card-price">${formatPrice(booking.price || 0)}</div>
-            ${isChangeLimited ? '<span class="booking-limit-warning">Đã hết lượt đổi</span>' : ''}
+            <div class="booking-card-actions">
+                ${isChangeLimited ? '<span class="booking-limit-warning">Đã hết lượt đổi</span>' : ''}
+                ${careLogLink}
+            </div>
         </div>
     `;
 

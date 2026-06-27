@@ -1,0 +1,213 @@
+
+
+/* Extracted from pet-profile.html */
+.ui-flex-row-2 {
+    display: flex;
+     justify-content: flex-end;
+     padding-right: 16px;
+     margin-bottom: 24px;
+}
+
+/* Extracted from pet-profile.html */
+.ui-text-format-10 {
+    padding: 8px 16px;
+     font-size: 0.85rem;
+}
+
+/* Extracted from pet-profile.html */
+.ui-spacing-10 {
+    margin-right: 4px;
+}
+
+/* Extracted from pet-profile.html */
+.ui-spacing-11 {
+    color: var(--color-primary-light);
+     display: inline-flex;
+     justify-content: center;
+     margin-bottom: var(--space-sm);
+}
+
+/* Extracted from pet-profile.html */
+.ui-spacing-12 {
+    color: var(--color-text-light);
+     display: inline-flex;
+     justify-content: center;
+     margin-bottom: var(--space-sm);
+}
+
+/* Extracted from pet-profile.html */
+.ui-bg-box-13 {
+    background-color: #fef9c3;
+     border: 1px solid #fef08a;
+     border-radius: 16px;
+     padding: 24px;
+     display: flex;
+     flex-direction: column;
+     justify-content: space-between;
+     height: 100%;
+     box-shadow: var(--shadow-card);
+}
+
+/* Extracted from pet-profile.html */
+.ui-text-format-11 {
+    font-family: var(--font-heading);
+     font-size: 1.3rem;
+     color: #713f12;
+     font-weight: 700;
+     margin-bottom: 12px;
+}
+
+/* Extracted from pet-profile.html */
+.ui-text-format-12 {
+    font-size: 0.9rem;
+     color: #854d0e;
+     line-height: 1.5;
+     margin-bottom: 24px;
+}
+
+/* Extracted from pet-profile.html */
+.ui-bg-box-14 {
+    background-color: #064e3b;
+     color: #fff;
+     border: none;
+     border-radius: 20px;
+     padding: 10px 24px;
+     font-weight: 700;
+     display: inline-block;
+     width: max-content;
+     font-size: 0.85rem;
+     text-decoration: none;
+     align-self: flex-end;
+}
+
+/* Extracted from pet-profile.html */
+.ui-bg-box-15 {
+    background: #fff;
+     border: 1px solid #e2e8f0;
+     border-radius: 16px;
+     padding: 24px;
+     height: 100%;
+     box-shadow: var(--shadow-card);
+     display: flex;
+     flex-direction: column;
+     justify-content: space-between;
+}
+
+/* Extracted from pet-profile.html */
+.ui-text-format-13 {
+    font-family: var(--font-heading);
+     font-size: 1.25rem;
+     color: var(--color-text-dark);
+     font-weight: 700;
+     margin-bottom: 16px;
+}
+
+/* Extracted from pet-profile.html */
+.ui-flex-row-3 {
+    display: flex;
+     gap: 12px;
+     width: 100%;
+}
+
+/* Extracted from pet-profile.html */
+.ui-bg-box-16 {
+    flex: 1;
+     background-color: #fef9c3;
+     border: 1px solid #fef08a;
+     border-radius: 12px;
+     padding: 12px 16px;
+}
+
+/* Extracted from pet-profile.html */
+.ui-text-format-14 {
+    font-weight: 700;
+     font-size: 0.85rem;
+     color: #713f12;
+}
+
+/* Extracted from pet-profile.html */
+.ui-text-format-15 {
+    font-size: 0.75rem;
+     color: #854d0e;
+     margin-top: 2px;
+}
+
+/* Extracted from pet-profile.html */
+.ui-bg-box-17 {
+    flex: 1;
+     background-color: #e8f5e9;
+     border: 1px solid #c8e6c9;
+     border-radius: 12px;
+     padding: 12px 16px;
+}
+
+/* Extracted from pet-profile.html */
+.ui-text-format-16 {
+    font-weight: 700;
+     font-size: 0.85rem;
+     color: #1b5e20;
+}
+
+/* Extracted from pet-profile.html */
+.ui-text-format-17 {
+    font-size: 0.75rem;
+     color: #2e7d32;
+     margin-top: 2px;
+}
+
+/* Extracted from pet-profile.html */
+.ui-text-format-18 {
+    font-size: 0.85rem;
+     font-weight: 700;
+     color: var(--color-primary);
+     text-decoration: none;
+     display: block;
+     text-align: center;
+     margin-top: 16px;
+}
+
+/* Extracted from pet-profile.html */
+.ui-spacing-13 {
+    padding: 0;
+     background: transparent;
+     border: none;
+     box-shadow: none;
+}
+
+/* Extracted from pet-profile.html */
+.ui-bg-box-18 {
+    border-radius: 16px;
+     overflow: hidden;
+     background: var(--cream);
+     position: relative;
+}
+
+/* Extracted from pet-profile.html */
+.ui-element-12 {
+    position: absolute;
+     top: 24px;
+     right: 24px;
+     z-index: 100;
+}
+
+/* Extracted from pet-profile.html */
+.ui-box-20 {
+    padding: 30px;
+     max-height: 85vh;
+     overflow-y: auto;
+}
+
+/* Extracted from pet-profile.html */
+.ui-element-13 {
+    flex-wrap: nowrap;
+}
+
+/* Extracted from pet-profile.html */
+.ui-text-format-19 {
+    font-size: 0.875rem;
+}
+
+/* Extracted from pet-profile.html */
+.ui-element-14 {
+    color: var(--color-primary);
+}

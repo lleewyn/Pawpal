@@ -279,7 +279,7 @@ function renderServices() {
                 <a href="service-detail/service-detail.html?id=${service.serviceId}" class="service-card-link">
                     <div class="service-image-wrapper">
                         <span class="service-category-badge">${displayCategory}</span>
-                        <img src="../../${service.image}" alt="${sanitizedName}" class="service-image" loading="lazy" onerror="this.onerror=null; this.src='../../assets/images/services/${service.category === 'hotel' ? 'hotel.png' : 'spa.png'}'">
+                        <img src="${service.image}" alt="${sanitizedName}" class="service-image" loading="lazy" onerror="this.onerror=null; this.src='../../assets/images/services/${service.category === 'hotel' ? 'hotel.png' : 'spa.png'}'">
                     </div>
                     <div class="service-card-info">
                         <div class="service-card-header">

@@ -168,3 +168,16 @@
         grid-template-columns: 1fr;
     }
 }
+
+
+/* Extracted from contact.html */
+.ui-bg-box-4 {
+    min-height:110px;
+    background:var(--color-bg-light);
+}
+
+/* Extracted from contact.html */
+.ui-border-1 {
+    border:0;
+     border-radius: var(--card-border-radius);
+}

@@ -1,0 +1,15 @@
+
+
+/* Extracted from support-tickets.html */
+.ui-flex-row-4 {
+    display: flex;
+     justify-content: space-between;
+     align-items: center;
+}
+
+/* Extracted from support-tickets.html */
+.ui-spacing-15 {
+    font-weight: 700;
+     color: var(--color-primary-dark);
+     margin: 0;
+}

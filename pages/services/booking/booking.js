@@ -1122,7 +1122,7 @@ function processBookingSubmit() {
                 phone: bookingState.ownerPhone,
                 role: 'customer',
                 is_temporary: true,
-                points: 0 // Sẽ nhận 50 điểm sau khi kích hoạt mật khẩu
+                points: 0 // Sẽ nhận 50 điểm sau khi kích hoạt tài khoản
             };
             // Ensure user has an id
             try {
@@ -1164,7 +1164,7 @@ function processBookingSubmit() {
                 console.warn('Could not persist pet for temp user', e);
             }
 
-            // Tạo token kích hoạt mật khẩu có hiệu lực 48 giờ
+            // Tạo token kích hoạt tài khoản có hiệu lực 48 giờ
             generatedToken = 'token-temp-' + Math.floor(100000 + Math.random() * 900000);
             const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
             tokens.push({

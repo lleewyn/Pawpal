@@ -244,3 +244,76 @@
         font-size: 2rem;
     }
 }
+
+
+/* Extracted from blog-detail.html */
+.post-meta-avatar {
+    max-height: 500px;
+     object-fit: cover;
+}
+
+/* Extracted from blog-detail.html */
+.post-meta-author {
+    font-size: 0.85rem;
+}
+
+/* Extracted from blog-detail.html */
+.post-meta-date {
+    width: 80px;
+     height: 80px;
+     object-fit: cover;
+}
+
+/* Extracted from blog-detail.html */
+.post-meta-comments {
+    width: 45px;
+     height: 45px;
+}
+
+/* Extracted from blog-detail.html */
+.author-box-avatar {
+    width: 45px;
+     height: 45px;
+     object-fit: cover;
+}
+
+/* Extracted from blog-detail.html */
+.author-box-desc {
+    top: 100px;
+     z-index: 10;
+}
+
+/* Extracted from blog-detail.html */
+.trending-post-thumb {
+    width: 70px;
+     height: 50px;
+     object-fit: cover;
+}
+
+/* Extracted from blog-detail.html */
+.trending-post-title {
+    font-size: 0.85rem;
+     line-height: 1.4;
+}
+
+/* Extracted from blog-detail.html */
+.trending-post-date {
+    font-size: 0.75rem;
+}
+
+/* Extracted from blog-detail.html */
+.related-post-thumb {
+    height: 300px;
+     object-fit: cover;
+}
+
+/* Extracted from blog-detail.html */
+.related-post-overlay {
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+}
+
+/* Extracted from blog-detail.html */
+.related-post-img-wrapper {
+    aspect-ratio: 16/9;
+     transition: transform 0.3s ease;
+}

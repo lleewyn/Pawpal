@@ -1338,3 +1338,10 @@
     border-radius: 12px;
     color: #665200;
 }
+
+
+/* Extracted from booking.html */
+.ui-element-6 {
+    color:#b45309;
+     font-weight:600;
+}

@@ -581,3 +581,38 @@
 @media (max-width: 480px) {
     .form-title { font-size: 1.3rem; }
 }
+
+
+/* Extracted from login.html */
+.ui-text-format-6 {
+    font-size:var(--fs-small);
+    color:var(--color-text-light);
+}
+
+/* Extracted from login.html */
+.ui-spacing-4 {
+    margin-top:8px;
+}
+
+/* Extracted from login.html */
+.ui-bg-box-5 {
+    height:8px;
+    background:#eef2f0;
+    border-radius:8px;
+    overflow:hidden;
+}
+
+/* Extracted from login.html */
+.ui-bg-box-6 {
+    width:0%;
+    height:100%;
+    background:#f87171;
+    transition:width .25s ease;
+}
+
+/* Extracted from login.html */
+.ui-text-format-7 {
+    font-size:0.85rem;
+    color:var(--color-text-light);
+    margin-top:6px;
+}

@@ -73,14 +73,27 @@ function initActiveNav() {
     links.forEach(link => {
         link.classList.remove('active');
         link.removeAttribute('aria-current');
+        link.style.color = '';
+        link.style.fontWeight = '';
     });
+
+    // Các trang trong khu vực tài khoản người dùng không nên sáng mục public nav
+    if (currentPath.includes('/pages/user/') || currentPath.includes('/user/')) {
+        return;
+    }
 
     let matched = null;
 
     // Logic mới: So khớp linh hoạt cho toàn bộ các trang con
     if (currentPath === '/' || currentPath.includes('index.html') || currentPath.includes('landing.html')) {
         matched = navList.querySelector('a.nav-link[href*="landing.html"]');
-    } else if (currentPath.includes('services') || currentPath.includes('service-detail') || currentPath.includes('booking')) {
+    } else if (
+        currentPath.includes('/services/') ||
+        currentPath.includes('services.html') ||
+        currentPath.includes('service-detail') ||
+        currentPath.includes('/booking/') ||
+        currentPath.includes('booking.html')
+    ) {
         matched = navList.querySelector('a.nav-link[href*="services.html"]');
     } else if (currentPath.includes('shop') || currentPath.includes('product') || currentPath.includes('cart') || currentPath.includes('checkout')) {
         matched = navList.querySelector('a.nav-link[href*="shop.html"]');

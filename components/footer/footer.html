@@ -25,8 +25,8 @@
 <div class="footer-container">
     <!-- Col 1 -->
     <div class="footer-col col-brand">
-        <a href="#" class="logo footer-logo" style="display: block; margin-bottom: 16px;">
-            <img src="/assets/images/logo/Logo_pawpal_navbar.png" alt="PawPal Logo" style="height: 52px; width: auto; object-fit: contain;">
+        <a href="#" class="logo footer-logo ui-spacing-1">
+            <img src="/assets/images/logo/Logo_pawpal_navbar.png" alt="PawPal Logo" class="ui-logo-1">
         </a>
         <p class="brand-description" style="font-size: 0.85rem; line-height: 1.6; margin-bottom: 20px; color: rgba(255,255,255,0.7);">
             PawPal - Hệ sinh thái chăm sóc thú cưng toàn diện bằng cả tình yêu thương và công nghệ hiện đại. Mang đến sự an tâm tuyệt đối cho các Sen gửi gắm boss yêu.
@@ -77,14 +77,14 @@
             <li><a href="/pages/public/about/about.html">Về chúng tôi</a></li>
             <li><a href="/pages/public/blog/blog.html">Tuyển dụng</a></li>
             <li><a href="/pages/public/contact/contact.html">Liên hệ</a></li>
-            <li><a href="#" style="opacity: 0.8; pointer-events: none; font-size: 0.85rem;">Đối tác: Royal Canin, Whiskas</a></li>
+            <li><a href="#" class="ui-text-format-2">Đối tác: Royal Canin, Whiskas</a></li>
         </ul>
     </div>
 
     <!-- Col 4 -->
     <div class="footer-col col-contact">
         <h4>LIÊN HỆ &amp; ĐĂNG KÝ</h4>
-        <ul class="contact-list" style="margin-bottom: 20px;">
+        <ul class="contact-list ui-spacing-2">
             <li>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -107,31 +107,12 @@
             <input type="tel" id="footerSignupPhone" placeholder="Số điện thoại của bạn..." required>
             <button type="submit">Đăng ký</button>
         </form>
-        <script>
-            (function(){
-                const form = document.getElementById('footerSignupForm');
-                const input = document.getElementById('footerSignupPhone');
-                if (!form || !input) return;
-
-                form.addEventListener('submit', function(e){
-                    e.preventDefault();
-                    const phone = (input.value || '').trim();
-                    if (!/^0[0-9]{9}$/.test(phone)) {
-                        alert('Vui lòng nhập số điện thoại hợp lệ (10 chữ số, bắt đầu bằng 0)');
-                        input.focus();
-                        return;
-                    }
-                    // Redirect to register page with phone prefilled
-                    const origin = window.location.origin || '';
-                    window.location.href = origin + '/pages/public/login/login.html?action=register&phone=' + encodeURIComponent(phone);
-                });
-            })();
-        </script>
-        <div class="payment-methods" style="display: flex; gap: 8px; margin-top: 10px;">
-            <img src="/assets/images/shared/payment_momo.png" alt="Momo" style="height: 24px; width: auto; object-fit: contain;">
-            <img src="/assets/images/shared/payment_vnpay.png" alt="VNPay" style="height: 24px; width: auto; object-fit: contain;">
-            <img src="/assets/images/shared/payment_visa.png" alt="Visa" style="height: 24px; width: auto; object-fit: contain;">
-            <img src="/assets/images/shared/payment_VietQR.png" alt="VietQR" style="height: 24px; width: auto; object-fit: contain;">
+        <script src="/components/footer/footer.js" defer></script>
+        <div class="payment-methods ui-flex-row-1">
+            <img src="/assets/images/shared/payment_momo.png" alt="Momo" class="ui-logo-2">
+            <img src="/assets/images/shared/payment_vnpay.png" alt="VNPay" class="ui-logo-2">
+            <img src="/assets/images/shared/payment_visa.png" alt="Visa" class="ui-logo-2">
+            <img src="/assets/images/shared/payment_VietQR.png" alt="VietQR" class="ui-logo-2">
         </div>
     </div>
 </div>
@@ -144,8 +125,7 @@
             <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3920.0775739697!2d106.7099!3d10.7326!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f9b5da0f4b1%3A0x0!2zVMOibiBQaG9uZywgUXXhuq1uIDcsIFRow6BuaCBwaOG7kSBI4buTIENow60gTWluaA!5e0!3m2!1svi!2s!4v1700000000000!5m2!1svi!2s"
                 width="100%"
-                height="100%"
-                style="border:0; width:100%; height:100%;"
+                height="100%" class="ui-box-1" 
                 allowfullscreen=""
                 loading="lazy"
                 referrerpolicy="no-referrer-when-downgrade"

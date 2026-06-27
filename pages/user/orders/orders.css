@@ -423,3 +423,16 @@
     flex-wrap: wrap;
     justify-content: flex-end;
 }
+
+
+/* Extracted from orders.html */
+.ui-box-19 {
+    min-height:300px;
+}
+
+/* Extracted from orders.html */
+.ui-spacing-8 {
+    text-align:center;
+    padding:20px;
+    color:#999;
+}

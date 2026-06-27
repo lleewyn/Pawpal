@@ -19,27 +19,28 @@
     <!-- Components -->
     <!-- Page Specific Style -->
     <link rel="stylesheet" href="../../user/support.css">
+    <link rel="stylesheet" href="help-center.css">
     <script src="help-center.js" defer></script>
 </head>
 
 <body>
     <div id="site-header"></div>
 
-    <main style="background-color: var(--color-bg-light); min-height: 100vh; padding: var(--space-xl) 0;">
+    <main class="help-center-main">
         <div class="container-xl">
             <!-- Search Banner -->
             <div class="text-center mb-5">
                 <h2
-                    style="font-family: var(--font-heading); color: var(--color-primary-dark); font-weight: 700; margin-bottom: var(--space-xs);">
+                    class="help-center-title">
                     TRUNG TÂM TRỢ GIÚP PAWPAL
                 </h2>
                 <p class="text-muted mb-4">bạn cần hỗ trợ vấn đề gì cho bé cưng nhà mình ạ?</p>
-                <div style="max-width: 600px; margin: 0 auto; position: relative;">
+                <div class="search-wrapper">
                     <input type="text" id="faqSearchInput" placeholder="Tìm kiếm câu hỏi của bạn..."
-                        style="width: 100%; border: 2px solid var(--color-border); border-radius: var(--border-radius-pill); padding: 14px 24px 14px 50px; font-size: var(--fs-body);">
+                        class="search-input">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2"
-                        style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: var(--color-text-light);">
+                        class="search-icon">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
@@ -57,7 +58,7 @@
                         </svg>
                     </div>
                     <h4 class="topic-title">Tài khoản và Bảo mật</h4>
-                    <p class="topic-desc">Tạo tài khẩu, kích hoạt mật khẩu, đổi thông tin</p>
+                    <p class="topic-desc">Tạo tài khoản, thiết lập mật khẩu, đổi thông tin</p>
                 </a>
                 <a href="#" class="bento-card-topic" data-topic="booking">
                     <div class="topic-icon">
@@ -88,7 +89,7 @@
             <!-- FAQ Accordion -->
             <div class="card p-4 border-2 mb-5">
                 <h3
-                    style="font-family: var(--font-heading); color: var(--color-primary-dark); font-weight: 700; margin-bottom: var(--space-md);">
+                    class="contact-title">
                     CÂU HỎI THƯỜNG GẶP (FAQ)
                 </h3>
                 <div class="faq-accordion-container" id="faqAccordionContainer">
@@ -99,9 +100,9 @@
             <!-- Help CTAs -->
             <div class="text-center pt-3 d-flex justify-content-center gap-3">
                 <a href="../../../user/support-create/support-create.html" class="btn-green-outline"
-                    style="border-radius: var(--border-radius-pill); font-weight: 700; padding: 12px 28px;">Tạo phiếu hỗ
+                    class="btn btn-primary btn-ticket">Tạo phiếu hỗ
                     trợ</a>
-                <button class="btn-cta" id="btnOpenChatDrawer" style="font-weight: 700; padding: 12px 28px;">Chat trực
+                <button class="btn-cta btn-chat" id="btnOpenChatDrawer">Chat trực
                     tuyến với AI</button>
             </div>
         </div>
@@ -112,7 +113,7 @@
         <div class="chat-drawer-header">
             <h5 class="chat-title">
                 <span class="chat-dot"
-                    style="width: 8px; height: 8px; background-color: #4ade80; border-radius: 50%; display: inline-block;"></span>
+                    class="status-dot"></span>
                 TRỢ LÝ ẢO PAWPAL
             </h5>
             <button class="btn-close-drawer" id="btnCloseChatDrawer">&times;</button>

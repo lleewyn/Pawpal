@@ -809,3 +809,17 @@ body {
         transition: none;
     }
 }
+
+
+/* Extracted from pet-diary.html */
+.ui-spacing-9 {
+    color: var(--color-primary-light);
+     display: inline-flex;
+     justify-content: center;
+     margin-bottom: var(--space-sm);
+}
+
+/* Extracted from pet-diary.html */
+.ui-element-11 {
+    color: var(--color-primary-light);
+}

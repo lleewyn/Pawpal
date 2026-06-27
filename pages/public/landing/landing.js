@@ -168,3 +168,263 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('--- DIAGNOSTICS END ---');
         });
     
+
+
+// ── Product Loading ──────────────────────────────────────────
+// Load real products from sanpham.csv and render into landing grid
+(async function() {
+    const grid = document.getElementById('productGrid');
+    if (!grid) return;
+
+    const cartKey = 'pawpal_cart';
+    const cartPage = '/pages/shop/cart/cart.html';
+    const checkoutPage = '/pages/shop/checkout/checkout.html?buynow=true';
+    const getCart = () => JSON.parse(localStorage.getItem(cartKey) || '[]');
+    const saveCart = (cart) => localStorage.setItem(cartKey, JSON.stringify(cart));
+    const getQty = (item) => {
+        const qty = Number(item?.quantity ?? item?.qty ?? 1);
+        return Number.isFinite(qty) && qty > 0 ? qty : 1;
+    };
+    const showCartToast = (message) => {
+        if (typeof window.showGlobalToast === 'function') {
+            window.showGlobalToast('success', message);
+            return;
+        }
+        if (typeof window.showToast === 'function') {
+            window.showToast(message, 'success');
+            return;
+        }
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            transform: translateY(8px);
+            background: var(--color-success, #2d8a57);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 9999;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        `;
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateY(0)';
+        });
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(8px)';
+            setTimeout(() => toast.remove(), 350);
+        }, 2200);
+    };
+    const upsertCartItem = (cart, id, product, quantity = 1) => {
+        const existing = cart.find(item => String(item.id) === String(id));
+        if (existing) {
+            existing.quantity = getQty(existing) + quantity;
+            existing.qty = existing.quantity;
+            Object.assign(existing, product);
+        } else {
+            cart.push({
+                ...product,
+                id,
+                quantity,
+                qty: quantity
+            });
+        }
+        return cart;
+    };
+
+    // Wait for DataLoader
+    let attempts = 0;
+    while (!window.DataLoader && attempts < 20) {
+        await new Promise(r => setTimeout(r, 100));
+        attempts++;
+    }
+    if (!window.DataLoader) return;
+
+    const products = await window.DataLoader.loadProducts();
+    if (!products || !products.length) return;
+
+    // Show 10 featured products (on sale / highest rated)
+    const featured = products
+        .filter(p => p.stock > 0)
+        .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        .slice(0, 10);
+
+    const detailBase = '/pages/shop/product-detail/product-detail.html';
+
+    grid.innerHTML = featured.map(p => {
+        const hasDiscount = p.originalPrice && p.originalPrice > p.price;
+        const badge = hasDiscount
+            ? `<span class="tag-badge tag-khuyenmai">Khuyến mãi</span>`
+            : `<span class="tag-badge tag-hangmoi">Nổi bật</span>`;
+        const oldPrice = hasDiscount
+            ? `<span class="price-old">${Number(p.originalPrice).toLocaleString('vi-VN')}đ</span>`
+            : '';
+        const stars = '★'.repeat(Math.round(p.rating || 5));
+        const sold = p.soldCount ? `(${Number(p.soldCount).toLocaleString('vi-VN')} đã bán)` : '';
+
+        return `
+        <div class="product-card" data-product-id="${p.id}">
+            <a href="${detailBase}?id=${p.id}" class="product-card-link" style="text-decoration:none;color:inherit">
+                <div class="product-image-box">
+                    <img src="${p.image || '/assets/images/shop/products/placeholder.webp'}"
+                        alt="${p.name}" loading="lazy"
+                        onerror="this.src='/assets/images/shop/products/placeholder.webp'">
+                    ${badge}
+                </div>
+                <div class="product-info">
+                    <h3>${p.name}</h3>
+                    <div class="product-meta">
+                        <span class="rating-stars" style="color:#f59e0b">${stars}</span>
+                        <span class="rating-score">${p.rating || '5.0'}</span>
+                        <span class="sold-count">${sold}</span>
+                    </div>
+                    <div class="product-info-footer">
+                        <div class="product-price">
+                            <span class="price-current">${Number(p.price).toLocaleString('vi-VN')}đ</span>
+                            ${oldPrice}
+                        </div>
+                    </div>
+                </div>
+            </a>
+            <div class="product-card-actions">
+                <button class="add-to-cart-btn" data-product-id="${p.id}"
+                    aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
+                <button class="buy-now-btn" data-product-id="${p.id}"
+                    aria-label="Mua ngay">Mua ngay</button>
+            </div>
+        </div>`;
+    }).join('');
+
+    grid.addEventListener('click', (event) => {
+        const addBtn = event.target.closest('.add-to-cart-btn');
+        const buyBtn = event.target.closest('.buy-now-btn');
+        if (!addBtn && !buyBtn) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const btn = addBtn || buyBtn;
+        const id = btn.dataset.productId;
+        const product = products.find(item => String(item.id) === String(id));
+        if (!product) return;
+
+        if (buyBtn) {
+            const buyNowCart = [{
+                ...product,
+                quantity: 1,
+                qty: 1
+            }];
+            sessionStorage.setItem('pawpal_buynow_cart', JSON.stringify(buyNowCart));
+            sessionStorage.setItem('pawpal_is_buynow', 'true');
+            window.location.href = checkoutPage;
+            return;
+        }
+
+        const cart = getCart();
+        upsertCartItem(cart, id, product, 1);
+        saveCart(cart);
+        showCartToast(`Đã thêm ${product.name} vào giỏ hàng`);
+        if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
+    });
+
+    // Sub-filter tabs
+    document.querySelectorAll('.shop-sub-filter-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            document.querySelectorAll('.shop-sub-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const tag = btn.dataset.tag;
+
+            let filtered;
+            if (tag === 'all') {
+                filtered = featured;
+            } else {
+                const catMap = { thucan: ['food','thucăn','thức ăn'], phukien: ['accessory','phụkiện','đồdùng'], vesinh: ['hygiene','vệsinh','chămsóc'] };
+                const keys = catMap[tag] || [tag];
+                filtered = products
+                    .filter(p => p.stock > 0 && keys.some(k =>
+                        (p.category || '').toLowerCase().includes(k) ||
+                        (p.tags || '').toLowerCase().includes(k)
+                    ))
+                    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                    .slice(0, 10);
+                if (!filtered.length) filtered = featured.slice(0, 10);
+            }
+
+            grid.innerHTML = filtered.map(p => {
+                const hasDiscount = p.originalPrice && p.originalPrice > p.price;
+                const badge = hasDiscount
+                    ? `<span class="tag-badge tag-khuyenmai">Khuyến mãi</span>`
+                    : `<span class="tag-badge tag-hangmoi">Nổi bật</span>`;
+                const oldPrice = hasDiscount
+                    ? `<span class="price-old">${Number(p.originalPrice).toLocaleString('vi-VN')}đ</span>`
+                    : '';
+                return `
+                <div class="product-card" data-product-id="${p.id}">
+                    <a href="${detailBase}?id=${p.id}" class="product-card-link" style="text-decoration:none;color:inherit">
+                        <div class="product-image-box">
+                            <img src="${p.image || '/assets/images/shop/products/placeholder.webp'}"
+                                alt="${p.name}" loading="lazy"
+                                onerror="this.src='/assets/images/shop/products/placeholder.webp'">
+                            ${badge}
+                        </div>
+                        <div class="product-info">
+                            <h3>${p.name}</h3>
+                            <div class="product-info-footer">
+                                <div class="product-price">
+                                    <span class="price-current">${Number(p.price).toLocaleString('vi-VN')}đ</span>
+                                    ${oldPrice}
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="product-card-actions">
+                        <button class="add-to-cart-btn" data-product-id="${p.id}"
+                            aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
+                        <button class="buy-now-btn" data-product-id="${p.id}"
+                            aria-label="Mua ngay">Mua ngay</button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            grid.addEventListener('click', (event) => {
+                const addBtn = event.target.closest('.add-to-cart-btn');
+                const buyBtn = event.target.closest('.buy-now-btn');
+                if (!addBtn && !buyBtn) return;
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                const btn = addBtn || buyBtn;
+                const id = btn.dataset.productId;
+                const product = products.find(item => String(item.id) === String(id));
+                if (!product) return;
+
+                if (buyBtn) {
+                    const buyNowCart = [{
+                        ...product,
+                        quantity: 1,
+                        qty: 1
+                    }];
+                    sessionStorage.setItem('pawpal_buynow_cart', JSON.stringify(buyNowCart));
+                    sessionStorage.setItem('pawpal_is_buynow', 'true');
+                    window.location.href = checkoutPage;
+                    return;
+                }
+
+                const cart = getCart();
+                upsertCartItem(cart, id, product, 1);
+                saveCart(cart);
+                showCartToast(`Đã thêm ${product.name} vào giỏ hàng`);
+                if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
+            });
+        });
+    });
+})();

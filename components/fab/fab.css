@@ -345,3 +345,12 @@
         display: none;
     }
 }
+
+
+/* Extracted from fab.html */
+.ui-avatar-1 {
+    width: 100%;
+     height: 100%;
+     object-fit: cover;
+     border-radius: 50%;
+}

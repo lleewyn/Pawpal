@@ -1,0 +1,192 @@
+
+
+/* Extracted from settings.html */
+.ui-clickable-1 {
+    cursor: pointer;
+}
+
+/* Extracted from settings.html */
+.ui-element-15 {
+    transition: transform 0.3s ease;
+     transform: rotate(180deg);
+}
+
+/* Extracted from settings.html */
+.ui-bg-box-19 {
+    background:none;
+     border:none;
+     color:var(--color-text-light);
+     font-weight:600;
+     cursor:pointer;
+}
+
+/* Extracted from settings.html */
+.ui-bg-box-20 {
+    background-color: #ea4335;
+     color:#fff;
+     display:flex;
+     align-items:center;
+     justify-content:center;
+     border-radius:50%;
+     width:32px;
+     height:32px;
+}
+
+/* Extracted from settings.html */
+.ui-bg-box-21 {
+    background:#f1f5f9;
+     border:none;
+     border-radius:15px;
+     padding:4px 16px;
+     font-size:0.75rem;
+     font-weight:600;
+}
+
+/* Extracted from settings.html */
+.ui-bg-box-22 {
+    background-color: #1877f2;
+     color:#fff;
+     display:flex;
+     align-items:center;
+     justify-content:center;
+     border-radius:50%;
+     width:32px;
+     height:32px;
+}
+
+/* Extracted from settings.html */
+.ui-bg-box-23 {
+    display:flex;
+     justify-content:space-between;
+     align-items:center;
+     padding: 12px;
+     border: 1px solid var(--color-border);
+     border-radius: 12px;
+     background: #f8fafc;
+}
+
+/* Extracted from settings.html */
+.ui-element-16 {
+    display:flex;
+     flex-direction:column;
+}
+
+/* Extracted from settings.html */
+.ui-text-format-20 {
+    font-weight:700;
+     color:var(--color-text-dark);
+     font-size:0.85rem;
+}
+
+/* Extracted from settings.html */
+.ui-text-format-21 {
+    font-size:0.75rem;
+     color:var(--color-text-light);
+     margin-top:2px;
+}
+
+/* Extracted from settings.html */
+.ui-bg-box-24 {
+    width:100%;
+     border:none;
+     border-radius:24px;
+     padding:12px;
+     font-weight:700;
+     color:#fff;
+     background:#f59e0b;
+     transition:background 0.2s;
+}
+
+/* Extracted from settings.html */
+.ui-text-format-22 {
+    font-weight:600;
+     color:var(--color-text-dark);
+     font-size:0.8rem;
+     margin-bottom:6px;
+     display:block;
+}
+
+/* Extracted from settings.html */
+.ui-bg-box-25 {
+    width:100%;
+     padding:10px 14px;
+     border:1px solid var(--color-border);
+     border-radius:12px;
+     background:#f8fafc;
+     font-size:0.85rem;
+     color:var(--color-text-dark);
+}
+
+/* Extracted from settings.html */
+.ui-bg-box-26 {
+    display:flex;
+     justify-content:space-between;
+     align-items:center;
+     padding: 12px;
+     border: 1px solid var(--color-border);
+     border-radius: 12px;
+     background: #f8fafc;
+     margin-top:16px;
+}
+
+/* Extracted from settings.html */
+.ui-spacing-14 {
+    display:flex;
+     flex-direction:column;
+     padding-right:12px;
+}
+
+/* Extracted from settings.html */
+.ui-text-format-23 {
+    font-size:0.7rem;
+     color:var(--color-text-light);
+     margin-top:2px;
+}
+
+/* Extracted from settings.html */
+.ui-bg-box-27 {
+    display:flex;
+     background:#e2e8f0;
+     border-radius:8px;
+     padding:3px;
+     flex-shrink:0;
+}
+
+/* Extracted from settings.html */
+.ui-bg-box-28 {
+    border:none;
+     border-radius:6px;
+     padding:4px 12px;
+     font-size:0.75rem;
+     font-weight:700;
+     cursor:pointer;
+     background:#fff;
+     color:var(--color-text-dark);
+     transition:all 0.2s;
+}
+
+/* Extracted from settings.html */
+.ui-bg-box-29 {
+    border:none;
+     border-radius:6px;
+     padding:4px 12px;
+     font-size:0.75rem;
+     font-weight:700;
+     cursor:pointer;
+     background:transparent;
+     color:var(--color-text-light);
+     transition:all 0.2s;
+}
+
+/* Extracted from settings.html */
+.ui-element-17 {
+    position:fixed;
+    top:96px;
+    right:20px;
+    z-index:99999;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    align-items:flex-end;
+    pointer-events:none;
+}

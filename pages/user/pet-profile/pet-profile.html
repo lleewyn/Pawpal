@@ -27,20 +27,7 @@
     <script type="module" src="../../../scripts/shared/main.js"></script>
     <script src="pet-add.js" defer></script>
     <script type="module" src="pet-profile.js"></script>
-    <script type="module">
-        import { initPetProfilePage } from './pet-profile-page.js';
-        
-        // Wait for DOM and all modules to load
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                console.log('DOM loaded, initializing pet profile page...');
-                initPetProfilePage();
-            });
-        } else {
-            console.log('DOM already loaded, initializing pet profile page...');
-            initPetProfilePage();
-        }
-    </script>
+    <script type="module" src="pet-profile-init.js"></script>
     </head>
 <body>
     <div id="site-header"></div>
@@ -61,9 +48,9 @@
                 <!-- Main Content -->
                 <div class="col-lg-9">
                     <!-- Add Pet Button -->
-                    <section class="pet-profile-action-section" style="display: flex; justify-content: flex-end; padding-right: 16px; margin-bottom: 24px;">
-                        <button class="btn-cta" id="btnAddPet" style="padding: 8px 16px; font-size: 0.85rem;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+                    <section class="pet-profile-action-section ui-flex-row-2">
+                        <button class="btn-cta ui-text-format-10" id="btnAddPet">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="ui-spacing-10">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
@@ -124,9 +111,9 @@
                                 <div class="pet-offer-card" style="background-color: #fef9c3; border: 1px solid #fef08a; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: var(--shadow-card);">
                                     <div>
                                         <h3 style="font-family: var(--font-heading); font-size: 1.3rem; color: #713f12; font-weight: 700; margin-bottom: 12px;">Ưu đãi hôm nay dành cho bé</h3>
-                                        <p style="font-size: 0.9rem; color: #854d0e; line-height: 1.5; margin-bottom: 24px;">Giảm 20% cho tất cả dịch vụ spa và làm đẹp khi đặt lịch qua ứng dụng PawPal.</p>
+                                        <p class="ui-text-format-12">Giảm 20% cho tất cả dịch vụ spa và làm đẹp khi đặt lịch qua ứng dụng PawPal.</p>
                                     </div>
-                                    <a href="../../services/booking/booking.html" class="btn" style="background-color: #064e3b; color: #fff; border: none; border-radius: 20px; padding: 10px 24px; font-weight: 700; display: inline-block; width: max-content; font-size: 0.85rem; text-decoration: none; align-self: flex-end;">Đặt ngay</a>
+                                    <a href="../../services/booking/booking.html" class="btn ui-bg-box-14">Đặt ngay</a>
                                 </div>
                             </div>
                             <!-- Right: Reminders -->
@@ -134,14 +121,14 @@
                                 <div class="pet-reminder-card" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; height: 100%; box-shadow: var(--shadow-card); display: flex; flex-direction: column; justify-content: space-between;">
                                     <div>
                                         <h3 style="font-family: var(--font-heading); font-size: 1.25rem; color: var(--color-text-dark); font-weight: 700; margin-bottom: 16px;">Nhắc nhở</h3>
-                                        <div class="reminder-list" style="display: flex; gap: 12px; width: 100%;">
-                                            <div class="reminder-item" style="flex: 1; background-color: #fef9c3; border: 1px solid #fef08a; border-radius: 12px; padding: 12px 16px;">
-                                                <div style="font-weight: 700; font-size: 0.85rem; color: #713f12;">Tiêm phòng Milu</div>
-                                                <div style="font-size: 0.75rem; color: #854d0e; margin-top: 2px;">Trong 2 ngày tới</div>
+                                        <div class="reminder-list ui-flex-row-3">
+                                            <div class="reminder-item ui-bg-box-16">
+                                                <div class="ui-text-format-14">Tiêm phòng Milu</div>
+                                                <div class="ui-text-format-15">Trong 2 ngày tới</div>
                                             </div>
-                                            <div class="reminder-item" style="flex: 1; background-color: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 12px; padding: 12px 16px;">
-                                                <div style="font-weight: 700; font-size: 0.85rem; color: #1b5e20;">Cắt tỉa lông LALA</div>
-                                                <div style="font-size: 0.75rem; color: #2e7d32; margin-top: 2px;">Chủ nhật này</div>
+                                            <div class="reminder-item ui-bg-box-17">
+                                                <div class="ui-text-format-16">Cắt tỉa lông LALA</div>
+                                                <div class="ui-text-format-17">Chủ nhật này</div>
                                             </div>
                                         </div>
                                     </div>
@@ -159,16 +146,16 @@
 
     <!-- Add/Edit Pet Modal -->
     <div class="modal-overlay" id="petFormModal">
-        <div class="modal-content modal-content-large" style="padding: 0; background: transparent; border: none; box-shadow: none;">
+        <div class="modal-content modal-content-large ui-spacing-13">
             <div class="pet-add-page" style="border-radius: 16px; overflow: hidden; background: var(--cream); position: relative;">
                 <!-- Close Button -->
-                <button class="modal-close" style="position: absolute; top: 24px; right: 24px; z-index: 100;" onclick="document.getElementById('petFormModal').classList.remove('active'); return false;" aria-label="Đóng">
+                <button class="modal-close ui-element-12"  onclick="document.getElementById('petFormModal').classList.remove('active'); return false;" aria-label="Đóng">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
                 </button>
-                <div class="page-wrap" style="padding: 30px; max-height: 85vh; overflow-y: auto;">
+                <div class="page-wrap ui-box-20">
                     <input type="hidden" id="petId" value="">
 
                     <!-- Avatar -->
@@ -197,7 +184,7 @@
 
                                 <div class="field">
                                     <label>Loài <span class="req">*</span></label>
-                                    <div class="chip-group" style="flex-wrap: nowrap;">
+                                    <div class="chip-group ui-element-13">
                                         <input type="radio" name="species" id="dog" value="dog">
                                         <label for="dog" >Chó</label>
                                         <input type="radio" name="species" id="cat" value="cat">
@@ -311,7 +298,7 @@
             </div>
             <div class="modal-body">
                 <p>Bạn có chắc muốn xóa hồ sơ của <strong id="deletePetName"></strong> không?</p>
-                <p class="text-muted" style="font-size: 0.875rem;">Hồ sơ sẽ được chuyển vào Kho lưu trữ và tự động xóa sau 30 ngày.</p>
+                <p class="text-muted ui-text-format-19">Hồ sơ sẽ được chuyển vào Kho lưu trữ và tự động xóa sau 30 ngày.</p>
                 <div class="form-actions">
                     <button class="btn-green-outline" onclick="closeDeleteModal()">Hủy</button>
                     <button class="btn-danger" id="btnConfirmDelete">Xóa hồ sơ</button>

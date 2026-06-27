@@ -129,7 +129,7 @@ function setupGallery() {
         this.onerror = null;
         this.src = '/assets/images/services/' + (serviceData.category === 'hotel' ? 'hotel.png' : 'spa.png');
     };
-    mainImg.src = '../../' + serviceData.image;
+    mainImg.src = serviceData.image;
 
     const thumbsContainer = document.getElementById('galleryThumbnails');
     if (!thumbsContainer) return;
@@ -158,12 +158,12 @@ function setupGallery() {
     // Unique images only
     rawImages = [...new Set(rawImages)];
 
-    galleryImages = rawImages.map(url => '../../' + url);
+    galleryImages = rawImages.map(url => url);
     currentImageIndex = 0;
 
     thumbsContainer.innerHTML = rawImages.map((imgUrl, index) => `
         <div class="gallery-thumb ${index === 0 ? 'active' : ''}" data-index="${index}">
-            <img src="../../${imgUrl}" alt="Ảnh chi tiết ${index + 1}" class="gallery-thumb-img" onerror="this.onerror=null; this.src='/assets/images/services/spa.png'">
+            <img src="${imgUrl}" alt="Ảnh chi tiết ${index + 1}" class="gallery-thumb-img" onerror="this.onerror=null; this.src='/assets/images/services/spa.png'">
         </div>
     `).join('');
 
@@ -757,7 +757,7 @@ async function setupRelatedServices() {
                 <a href="service-detail.html?id=${service.serviceId}" class="service-card-link">
                     <div class="service-image-wrapper">
                         <span class="service-category-badge">${displayCategory}</span>
-                        <img src="../../${service.image}" alt="${sanitizedName}" class="service-image" loading="lazy" onerror="this.onerror=null; this.src='/assets/images/services/${service.category === 'hotel' ? 'hotel.png' : 'spa.png'}'">
+                        <img src="${service.image}" alt="${sanitizedName}" class="service-image" loading="lazy" onerror="this.onerror=null; this.src='/assets/images/services/${service.category === 'hotel' ? 'hotel.png' : 'spa.png'}'">
                     </div>
                     <div class="service-card-info">
                         <div class="service-card-header">

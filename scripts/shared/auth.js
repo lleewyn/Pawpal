@@ -334,7 +334,7 @@ function initAdminQuickAddCustomer() {
                 saveUsers(users);
             }
 
-            // Tạo token kích hoạt mật khẩu
+            // Tạo token kích hoạt tài khoản
             const token  = 'token-dynamic-' + Math.random().toString(36).substr(2, 9);
             const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
             tokens.push({ token, phone, createdAt: Date.now() });
