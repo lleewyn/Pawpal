@@ -640,14 +640,14 @@
 
 .pet-add-page .modal-close {
     position: absolute;
-    top: 24px;
-    right: 32px;
-    z-index: 30;
+    top: 18px;
+    right: 20px;
+    z-index: 100;
     width: 36px;
     height: 36px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 6px 18px rgba(32, 58, 45, 0.08);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 6px 18px rgba(32, 58, 45, 0.12);
     backdrop-filter: blur(6px);
 }
 
