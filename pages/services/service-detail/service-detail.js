@@ -571,25 +571,65 @@ function setupReviews() {
     document.getElementById('totalReviewsCount').textContent = `Dựa trên ${serviceData.reviewCount} lượt đánh giá thực tế`;
 
     const reviews = Array.isArray(serviceData.reviews) ? serviceData.reviews : [];
-    reviewsList = reviews.length > 0 ? reviews : [{
-        name: 'Khách hàng',
-        tier: 'silver',
-        tierName: 'Hoi vien Bac',
-        rating: Math.max(4, Math.round(serviceData.rating || 4)),
-        date: new Date().toLocaleDateString('vi-VN'),
-        text: 'Dịch vụ ổn, giao diện rõ ràng và trải nghiệm ổn định.',
-        images: []
-    }];
+    if (reviews.length > 0) {
+        reviewsList = reviews;
+    } else {
+        reviewsList = [
+            {
+                name: 'Minh Tuấn',
+                tier: 'gold',
+                tierName: 'Hội viên Vàng',
+                rating: 5,
+                date: '15/06/2026',
+                text: 'Dịch vụ rất chu đáo! Bé nhà mình bình thường rất nhát nhưng đến đây được các bạn nhân viên dỗ dành rất khéo. Sẽ tiếp tục ủng hộ PawPal.',
+                images: [],
+                sellerReply: 'Cảm ơn anh Tuấn đã tin tưởng và sử dụng dịch vụ của PawPal. Chúc bé cưng luôn ngoan và khỏe mạnh ạ!'
+            },
+            {
+                name: 'Ngọc Hân',
+                tier: 'silver',
+                tierName: 'Hội viên Bạc',
+                rating: 4,
+                date: '02/06/2026',
+                text: 'Không gian sạch sẽ, thơm tho. Tuy nhiên cuối tuần hơi đông nên phải đợi khoảng 15 phút mới tới lượt. Mọi người nên đặt lịch trước nhé.',
+                images: ['/assets/images/services/spa.png'],
+                sellerReply: 'PawPal xin lỗi chị Hân vì sự bất tiện này ạ. Nhận được góp ý của chị, tụi em sẽ cải thiện quy trình xếp lịch cuối tuần để phục vụ tốt hơn. Hẹn gặp lại chị và bé ạ!'
+            },
+            {
+                name: 'Hoàng Anh',
+                tier: 'member',
+                tierName: 'Thành viên',
+                rating: 5,
+                date: '20/05/2026',
+                text: 'Giá cả hợp lý so với chất lượng dịch vụ. Các bước làm rất kỹ và chuyên nghiệp.',
+                images: [],
+                sellerReply: null
+            }
+        ];
+    }
 
     renderReviewList('all');
 
-    // Set up filter clickers
+    // Set up filter clickers and update counts
     const chips = document.querySelectorAll('.review-filter-chip');
     chips.forEach(chip => {
+        const filterType = chip.getAttribute('data-filter');
+        let count = 0;
+        if (filterType === 'all') count = reviewsList.length;
+        else if (filterType === '5') count = reviewsList.filter(r => r.rating === 5).length;
+        else if (filterType === '4') count = reviewsList.filter(r => r.rating >= 4).length;
+        else if (filterType === 'media') count = reviewsList.filter(r => r.images && r.images.length > 0).length;
+        
+        // Update chip text with count
+        if (count >= 0) {
+            const originalText = chip.textContent.replace(/\s*\(\d+\)$/, '');
+            chip.textContent = `${originalText} (${count})`;
+        }
+
         chip.addEventListener('click', () => {
             chips.forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
-            renderReviewList(chip.getAttribute('data-filter'));
+            renderReviewList(filterType);
         });
     });
 
@@ -614,7 +654,7 @@ function renderReviewList(filter) {
     } else if (filter === '4') {
         filtered = reviewsList.filter(r => r.rating >= 4);
     } else if (filter === 'media') {
-        filtered = reviewsList.filter(r => r.images.length > 0);
+        filtered = reviewsList.filter(r => r.images && r.images.length > 0);
     }
 
     if (filtered.length === 0) {
@@ -631,25 +671,25 @@ function renderReviewList(filter) {
                 <div class="review-header">
                     <div class="reviewer-avatar">${initial}</div>
                     <div class="reviewer-meta">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                            <div class="reviewer-name" style="margin-bottom: 0;">Khách hàng ${r.name}</div>
-                            <div class="review-stars" aria-label="${r.rating} sao" style="margin-bottom: 0; font-size: 1.15em;">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <div class="reviewer-name ui-spacing-5">${r.name}</div>
+                            <div class="review-stars ui-text-format-9" aria-label="${r.rating} sao">
                                 ${starsText}
                             </div>
                         </div>
-                        <span class="reviewer-tier-badge ${r.tier}">${r.tierName}</span>
+                        <span class="review-verified-badge">Người mua thực</span>
                         <div class="review-meta-info">
-                            <span class="review-date">${r.date}</span>
+                            <span class="review-date">${r.date || new Date().toLocaleDateString('vi-VN')}</span>
                         </div>
                     </div>
                 </div>
                 <div class="review-content">
                     <p>${r.text}</p>
                 </div>
-                ${r.images.length > 0 ? `
+                ${r.images && r.images.length > 0 ? `
                 <div class="review-media-list">
                     ${r.images.map(img => `
-                        <img src="../../${img}" alt="Ảnh đính kèm" class="review-photo" onclick="openLightbox('../../${img}')">
+                        <img src="${img}" alt="Ảnh đính kèm" class="review-photo" onclick="openLightbox('${img}')">
                     `).join('')}
                 </div>
                 ` : ''}
@@ -664,7 +704,7 @@ function renderReviewList(filter) {
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
                         </svg>
-                        Hữu ích (${Math.floor(Math.random() * 10) + 1})
+                        Hữu ích? (${Math.floor(Math.random() * 10) + 1})
                     </button>
                 </div>
             </div>

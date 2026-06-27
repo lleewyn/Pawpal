@@ -948,3 +948,51 @@
 .ui-box-11 {
     width: 2%;
 }
+
+/* Reviews enhancements */
+.review-verified-badge {
+    color: var(--color-primary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.review-date {
+    color: var(--color-text-light);
+    font-size: 0.85rem;
+}
+.seller-reply {
+    background: var(--color-bg-light);
+    border-left: 3px solid var(--color-primary);
+    padding: 12px 16px;
+    margin-top: 16px;
+    border-radius: 4px;
+    font-size: 0.95rem;
+}
+.seller-reply-title {
+    font-weight: 600;
+    color: var(--color-text-dark);
+    margin-bottom: 4px;
+}
+.seller-reply-content {
+    color: var(--color-text);
+    line-height: 1.5;
+}
+.review-actions {
+    margin-top: 16px;
+}
+.btn-helpful {
+    background: none;
+    border: none;
+    color: var(--color-text-light);
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+}
+.btn-helpful:hover {
+    color: var(--color-primary);
+}
