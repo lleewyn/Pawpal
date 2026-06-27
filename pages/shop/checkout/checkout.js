@@ -27,6 +27,79 @@ const checkoutState = {
     }
 };
 
+function ensureSelectOption(selectElement, value) {
+    if (!selectElement || !value) return;
+
+    const hasOption = Array.from(selectElement.options).some((option) => option.value === value);
+    if (!hasOption) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        selectElement.appendChild(option);
+    }
+}
+
+function buildStructuredAddressLabel(address) {
+    if (!address || typeof address !== 'object') return '';
+
+    return [address.street, address.district, address.city]
+        .map((part) => String(part || '').trim())
+        .filter(Boolean)
+        .join(', ');
+}
+
+function normalizeCheckoutAddress(address, fallbackUser = {}) {
+    if (!address) return null;
+
+    if (typeof address === 'string') {
+        const parts = address.split(',').map((part) => part.trim()).filter(Boolean);
+        const city = parts.length > 0 ? parts[parts.length - 1] : '';
+        const district = parts.length > 1 ? parts[parts.length - 2] : '';
+        const street = parts.slice(0, Math.max(parts.length - 2, 1)).join(', ') || parts[0] || '';
+
+        return {
+            id: `addr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            label: 'Dia chi da luu',
+            name: fallbackUser.name || '',
+            phone: fallbackUser.phone || '',
+            street,
+            district,
+            city,
+            note: '',
+            isDefault: true
+        };
+    }
+
+    return {
+        id: address.id || `addr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        label: address.label || 'Dia chi da luu',
+        name: address.name || fallbackUser.name || '',
+        phone: address.phone || fallbackUser.phone || '',
+        street: address.street || address.address || '',
+        district: address.district || '',
+        city: address.city || '',
+        note: address.note || '',
+        isDefault: Boolean(address.isDefault)
+    };
+}
+
+function getCheckoutUserAddresses(user) {
+    const addresses = Array.isArray(user?.addresses) ? user.addresses : [];
+    const normalized = addresses
+        .map((address) => normalizeCheckoutAddress(address, user))
+        .filter(Boolean);
+
+    if (!normalized.length && user?.address) {
+        const legacyAddress = normalizeCheckoutAddress(user.address, user);
+        if (legacyAddress) normalized.push(legacyAddress);
+    }
+
+    return normalized.map((address, index) => ({
+        ...address,
+        isDefault: index === 0 ? true : Boolean(address.isDefault)
+    }));
+}
+
 // ============================================================================
 // Initialize
 // ============================================================================
@@ -288,13 +361,20 @@ function loadPersistedVoucher() {
 // ============================================================================
 function initializeShippingForm() {
     if (checkoutState.user) {
+        checkoutState.user.addresses = getCheckoutUserAddresses(checkoutState.user);
+
         // Show save address checkbox
         document.getElementById('save-address-section').classList.remove('d-none');
         
         // Auto-fill user data
         document.getElementById('fullName').value = checkoutState.user.name || '';
         document.getElementById('phone').value = checkoutState.user.phone || '';
-        document.getElementById('address').value = checkoutState.user.address || '';
+        const primaryAddress = checkoutState.user.addresses[0];
+        if (primaryAddress) {
+            fillAddressForm(primaryAddress);
+        } else {
+            document.getElementById('address').value = checkoutState.user.address || '';
+        }
         
         // Load saved addresses if exists
         if (checkoutState.user.addresses && checkoutState.user.addresses.length > 0) {
@@ -306,12 +386,13 @@ function initializeShippingForm() {
 function populateSavedAddresses() {
     const dropdown = document.getElementById('address-dropdown');
     const section = document.getElementById('saved-addresses-section');
+    dropdown.innerHTML = '<option value="">-- Chọn địa chỉ đã lưu --</option>';
     
     // Add addresses to dropdown
     checkoutState.user.addresses.forEach(addr => {
         const option = document.createElement('option');
         option.value = addr.id;
-        option.textContent = `${addr.label} - ${addr.name}, ${addr.phone}`;
+        option.textContent = `${addr.label} - ${buildStructuredAddressLabel(addr)}`;
         dropdown.appendChild(option);
     });
     
@@ -336,8 +417,12 @@ function fillAddressForm(address) {
     document.getElementById('fullName').value = address.name;
     document.getElementById('phone').value = address.phone;
     document.getElementById('address').value = address.street;
-    document.getElementById('city').value = address.city;
-    document.getElementById('district').value = address.district;
+    const citySelect = document.getElementById('city');
+    const districtSelect = document.getElementById('district');
+    ensureSelectOption(citySelect, address.city);
+    ensureSelectOption(districtSelect, address.district);
+    citySelect.value = address.city || '';
+    districtSelect.value = address.district || '';
     document.getElementById('note').value = address.note || '';
 }
 
@@ -745,6 +830,37 @@ async function handleCheckout() {
             status: 'pending'
         }
     };
+
+    if (checkoutState.user && document.getElementById('saveAddress')?.checked) {
+        const savedAddresses = getCheckoutUserAddresses(checkoutState.user);
+        const newAddress = {
+            id: `addr-${Date.now()}`,
+            label: savedAddresses.length === 0 ? 'Dia chi mac dinh' : `Dia chi ${savedAddresses.length + 1}`,
+            name: orderData.shipping.name,
+            phone: orderData.shipping.phone,
+            street: orderData.shipping.address,
+            district: orderData.shipping.district,
+            city: orderData.shipping.city,
+            note: orderData.shipping.note || '',
+            isDefault: savedAddresses.length === 0
+        };
+
+        const updatedUser = {
+            ...checkoutState.user,
+            address: buildStructuredAddressLabel(newAddress),
+            addresses: [...savedAddresses, newAddress]
+        };
+
+        checkoutState.user = updatedUser;
+        localStorage.setItem('pawpal_current_user', JSON.stringify(updatedUser));
+
+        const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+        const userIndex = users.findIndex((user) => String(user.id) === String(updatedUser.id));
+        if (userIndex !== -1) {
+            users[userIndex] = { ...users[userIndex], ...updatedUser };
+            localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+        }
+    }
     
     // Add invoice if checked
     const invoiceChecked = document.getElementById('invoice-checkbox').checked;
@@ -1032,6 +1148,10 @@ function setupEventListeners() {
         addressDropdown.addEventListener('change', (e) => {
             if (e.target.value === 'new') {
                 document.getElementById('shipping-form').reset();
+                if (checkoutState.user) {
+                    document.getElementById('fullName').value = checkoutState.user.name || '';
+                    document.getElementById('phone').value = checkoutState.user.phone || '';
+                }
             } else if (e.target.value) {
                 const address = checkoutState.user.addresses.find(a => a.id === e.target.value);
                 if (address) fillAddressForm(address);

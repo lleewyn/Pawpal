@@ -25,6 +25,67 @@ function setCurrentUser(user) {
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
 }
 
+function buildAddressLabel(address) {
+    if (!address || typeof address !== 'object') return '';
+
+    return [address.street, address.district, address.city]
+        .map((part) => String(part || '').trim())
+        .filter(Boolean)
+        .join(', ');
+}
+
+function normalizeAddressEntry(address, fallbackUser = {}) {
+    if (!address) return null;
+
+    if (typeof address === 'string') {
+        const parts = address.split(',').map((part) => part.trim()).filter(Boolean);
+        const city = parts.length > 0 ? parts[parts.length - 1] : '';
+        const district = parts.length > 1 ? parts[parts.length - 2] : '';
+        const street = parts.slice(0, Math.max(parts.length - 2, 1)).join(', ') || parts[0] || '';
+
+        return {
+            id: `addr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            label: 'Dia chi da luu',
+            name: fallbackUser.name || '',
+            phone: fallbackUser.phone || '',
+            street,
+            district,
+            city,
+            note: '',
+            isDefault: true
+        };
+    }
+
+    return {
+        id: address.id || `addr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        label: address.label || 'Dia chi da luu',
+        name: address.name || fallbackUser.name || '',
+        phone: address.phone || fallbackUser.phone || '',
+        street: address.street || address.address || '',
+        district: address.district || '',
+        city: address.city || '',
+        note: address.note || '',
+        isDefault: Boolean(address.isDefault)
+    };
+}
+
+function getStructuredAddresses(user) {
+    const addresses = Array.isArray(user?.addresses) ? user.addresses : [];
+    const normalized = addresses
+        .map((address) => normalizeAddressEntry(address, user))
+        .filter(Boolean);
+
+    if (!normalized.length && user?.address) {
+        const legacyAddress = normalizeAddressEntry(user.address, user);
+        if (legacyAddress) normalized.push(legacyAddress);
+    }
+
+    return normalized.map((address, index) => ({
+        ...address,
+        isDefault: index === 0 ? true : Boolean(address.isDefault)
+    }));
+}
+
 function updateCurrentUserRecord(updatedUser) {
     const users = getUsers();
     const userIndex = users.findIndex((user) => String(user.phone) === String(updatedUser.phone) || (user.id && user.id === updatedUser.id));
@@ -113,6 +174,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function loadProfileData(user) {
+    const addresses = getStructuredAddresses(user);
+    const primaryAddress = addresses[0];
     document.getElementById('profileName').textContent = user.name || '-';
     document.getElementById('profileEmail').textContent = user.email || 'Chưa cập nhật';
     document.getElementById('profilePhone').textContent = user.phone || '-';
@@ -124,7 +187,7 @@ function loadProfileData(user) {
     document.getElementById('profileGender').textContent = genderText;
 
     document.getElementById('profileDob').textContent = user.dob ? formatDateDisplay(user.dob) : 'Chưa cập nhật';
-    document.getElementById('profileAddress').textContent = user.address || 'Chưa thiết lập địa chỉ mặc định';
+    document.getElementById('profileAddress').textContent = buildAddressLabel(primaryAddress) || user.address || 'Chưa thiết lập địa chỉ mặc định';
 
     document.getElementById('welcomeName').textContent = user.name ? user.name.split(' ').pop() : 'bạn';
     document.getElementById('statPoints').textContent = user.points || 0;
@@ -160,7 +223,9 @@ function initProfileEditForm(user) {
     const emailInput = document.getElementById('profileEmailInput');
     const phoneInput = document.getElementById('profilePhoneInput');
     const addressesList = document.getElementById('addressesList');
-    const newAddressInput = document.getElementById('newAddressInput');
+    const newAddressStreetInput = document.getElementById('newAddressStreetInput');
+    const newAddressDistrictInput = document.getElementById('newAddressDistrictInput');
+    const newAddressCityInput = document.getElementById('newAddressCityInput');
     const addAddressBtn = document.getElementById('btnAddAddress');
 
     if (!editButton || !form || !saveButton || !nameInput || !phoneInput) return;
@@ -169,19 +234,25 @@ function initProfileEditForm(user) {
     const modalEl = document.getElementById('profileEditModal');
     if (modalEl) modalInstance = new bootstrap.Modal(modalEl);
 
+    let editingAddresses = [];
+
     function renderAddresses(addresses) {
         addressesList.innerHTML = '';
         (addresses || []).forEach((addr, idx) => {
             const div = document.createElement('div');
             div.className = 'd-flex align-items-center mb-2 gap-2';
             div.innerHTML = `
-                <input class="form-control form-control-sm address-item" data-idx="${idx}" value="${addr}">
+                <input class="form-control form-control-sm address-item" data-idx="${idx}" value="${buildAddressLabel(addr)}" readonly>
                 <button type="button" class="btn btn-sm btn-outline-danger btn-remove-address">X</button>
             `;
             addressesList.appendChild(div);
             div.querySelector('.btn-remove-address').addEventListener('click', () => {
-                addresses.splice(idx,1);
-                renderAddresses(addresses);
+                editingAddresses.splice(idx, 1);
+                editingAddresses = editingAddresses.map((address, index) => ({
+                    ...address,
+                    isDefault: index === 0
+                }));
+                renderAddresses(editingAddresses);
             });
         });
     }
@@ -192,18 +263,40 @@ function initProfileEditForm(user) {
         nameInput.value = current.name || '';
         emailInput.value = current.email || '';
         phoneInput.value = current.phone || '';
-        const addrs = Array.isArray(current.addresses) ? [...current.addresses] : (current.address ? [current.address] : []);
-        renderAddresses(addrs);
+        newAddressStreetInput.value = '';
+        newAddressDistrictInput.value = '';
+        newAddressCityInput.value = '';
+        editingAddresses = getStructuredAddresses(current);
+        renderAddresses(editingAddresses);
         if (modalInstance) modalInstance.show();
     });
 
     addAddressBtn && addAddressBtn.addEventListener('click', () => {
-        const val = newAddressInput.value.trim();
-        if (!val) return;
-        const inputs = addressesList.querySelectorAll('.address-item');
-        const addresses = Array.from(inputs).map(i => i.value).concat([val]);
-        newAddressInput.value = '';
-        renderAddresses(addresses);
+        const street = newAddressStreetInput.value.trim();
+        const district = newAddressDistrictInput.value.trim();
+        const city = newAddressCityInput.value.trim();
+
+        if (!street || !district || !city) {
+            showToast('warning', 'Vui long nhap day du dia chi chi tiet, quan/huyen va thanh pho/tinh.');
+            return;
+        }
+
+        editingAddresses.push({
+            id: `addr-${Date.now()}`,
+            label: editingAddresses.length === 0 ? 'Dia chi mac dinh' : `Dia chi ${editingAddresses.length + 1}`,
+            name: nameInput.value.trim() || user.name || '',
+            phone: phoneInput.value.trim() || user.phone || '',
+            street,
+            district,
+            city,
+            note: '',
+            isDefault: editingAddresses.length === 0
+        });
+
+        newAddressStreetInput.value = '';
+        newAddressDistrictInput.value = '';
+        newAddressCityInput.value = '';
+        renderAddresses(editingAddresses);
     });
 
     saveButton.addEventListener('click', () => {
@@ -214,15 +307,19 @@ function initProfileEditForm(user) {
             showToast('warning', 'Vui lòng nhập tên và số điện thoại.');
             return;
         }
-        const inputs = addressesList.querySelectorAll('.address-item');
-        const addresses = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+        const addresses = editingAddresses.map((address, index) => ({
+            ...address,
+            name: updatedName,
+            phone: updatedPhone,
+            isDefault: index === 0
+        }));
         const updatedUser = {
             ...user,
             name: updatedName,
             email: updatedEmail,
             phone: updatedPhone,
             addresses: addresses,
-            address: addresses[0] || ''
+            address: buildAddressLabel(addresses[0]) || ''
         };
         updateCurrentUserRecord(updatedUser);
         loadProfileData(updatedUser);
@@ -254,7 +351,13 @@ function initAddressEditForm(user) {
 
     btnSave.addEventListener('click', () => {
         const updatedAddress = addressInput.value.trim();
-        const updatedUser = { ...user, address: updatedAddress };
+        const normalizedPrimary = normalizeAddressEntry(updatedAddress, user);
+        const otherAddresses = getStructuredAddresses(user).slice(1);
+        const updatedUser = {
+            ...user,
+            address: updatedAddress,
+            addresses: normalizedPrimary ? [normalizedPrimary, ...otherAddresses] : otherAddresses
+        };
 
         updateCurrentUserRecord(updatedUser);
         loadProfileData(updatedUser);

@@ -451,125 +451,101 @@ function getProductCatalog() {
     return Promise.resolve([]);
 }
 
-function normalizeCardText(value) {
-    return String(value || '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, ' ')
-        .trim();
-}
+async function bindRelatedProductCards() {
+    const products = await getProductCatalog();
+    if (!products || products.length === 0) return;
 
-function findMatchingProductFromCard(card, fallbackIndex = -1) {
-    const name = card.querySelector('.product-name')?.textContent || '';
-    const brand = card.querySelector('.product-brand')?.textContent || '';
-    const targetName = normalizeCardText(name);
-    const targetBrand = normalizeCardText(brand);
+    // Get random products for 'You May Like' (5 items)
+    const youMayLikeProducts = [...products].sort(() => 0.5 - Math.random()).slice(0, 5);
+    
+    // Get related products from same category (5 items)
+    const currentCategory = (typeof currentLoadedProduct !== 'undefined' && currentLoadedProduct) ? currentLoadedProduct.category : 'food-dry';
+    const currentId = (typeof currentLoadedProduct !== 'undefined' && currentLoadedProduct) ? currentLoadedProduct.id : -1;
+    let relatedProducts = products.filter(p => p.category === currentCategory && String(p.id) !== String(currentId)).slice(0, 5);
+    
+    // Fallback if not enough related products
+    if (relatedProducts.length < 5) {
+        const more = products.filter(p => !relatedProducts.includes(p) && String(p.id) !== String(currentId)).slice(0, 5 - relatedProducts.length);
+        relatedProducts.push(...more);
+    }
 
-    return getProductCatalog().then(products => {
-        let match = products.find(product => {
-            const productName = normalizeCardText(product.name);
-            const productBrand = normalizeCardText(product.brand);
-            return productName === targetName || (
-                targetName && productName.includes(targetName)
-            ) || (
-                targetBrand && productBrand === targetBrand && targetName && productName.includes(targetName)
-            );
-        });
+    const generateCardHTML = (product) => {
+        const priceFmt = new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(product.price).replace('₫', 'đ');
+        const oldPriceHTML = product.oldPrice ? '<span class="price-old">' + new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(product.oldPrice).replace('₫', 'đ') + '</span>' : '';
+        const isWishlisted = typeof isProductInWishlist === 'function' && isProductInWishlist(product.id) ? 'active' : '';
+        const stars = Array(5).fill(0).map((_, i) => '<span class="star ' + (i < Math.floor(product.rating || 5) ? 'filled' : '') + '"></span>').join('');
+        
+        return '<div class="product-card" onclick="window.location.href=\'/pages/shop/product-detail/product-detail.html?id=' + product.id + '\'">' +
+            '<div class="product-card-image" role="link" tabindex="0" aria-label="Xem chi tiết ' + product.name + '">' +
+                '<img src="' + product.image + '" alt="' + product.name + '" loading="lazy">' +
+                '<button class="wishlist-btn ' + isWishlisted + '" aria-label="Thêm vào yêu thích" data-product-id="' + product.id + '">' +
+                    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>' +
+                '</button>' +
+            '</div>' +
+            '<div class="product-card-body">' +
+                '<div class="product-brand">' + product.brand + '</div>' +
+                '<h3 class="product-name">' + product.name + '</h3>' +
+                '<div class="product-rating"><div class="stars">' + stars + '</div><span class="rating-count">(' + (product.reviewCount || 0) + ')</span></div>' +
+                '<div class="product-price"><span class="price-current">' + priceFmt + '</span>' + oldPriceHTML + '</div>' +
+                '<div class="product-card-actions">' +
+                    '<button class="product-quick-add btn-add-cart" aria-label="Thêm vào giỏ" data-product-id="' + product.id + '">' +
+                        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>' +
+                    '</button>' +
+                    '<button class="product-buy-now btn-buy-now" data-product-id="' + product.id + '">Mua ngay</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    };
 
-        if (!match && fallbackIndex >= 0 && products[fallbackIndex]) {
-            match = products[fallbackIndex];
-        }
+    const youMayLikeEl = document.getElementById('youMayLikeProducts');
+    if (youMayLikeEl) youMayLikeEl.innerHTML = youMayLikeProducts.map(generateCardHTML).join('');
 
-        return match || null;
-    });
-}
+    const relatedEl = document.getElementById('relatedProducts');
+    if (relatedEl) relatedEl.innerHTML = relatedProducts.map(generateCardHTML).join('');
 
-function openProductDetail(product) {
-    if (!product || product.id == null) return;
-    window.location.href = `/pages/shop/product-detail/product-detail.html?id=${encodeURIComponent(product.id)}`;
-}
-
-function syncCardButtons(card, product) {
-    if (!card || !product) return;
-    const productId = String(product.id);
-    card.querySelectorAll('.wishlist-btn, .product-quick-add, .product-buy-now').forEach(btn => {
-        btn.dataset.productId = productId;
-    });
-}
-
-function bindRelatedProductCards() {
-    const sections = [
-        document.getElementById('youMayLikeProducts'),
-        document.getElementById('relatedProducts')
-    ].filter(Boolean);
-
+    const sections = [youMayLikeEl, relatedEl].filter(Boolean);
     sections.forEach(section => {
-        section.querySelectorAll('.product-card').forEach((card, index) => {
+        section.querySelectorAll('.product-card').forEach(card => {
             card.style.cursor = 'pointer';
+            const productId = card.querySelector('.wishlist-btn') ? card.querySelector('.wishlist-btn').dataset.productId : null;
+            if (!productId) return;
+            const product = products.find(p => String(p.id) === String(productId));
+            if (!product) return;
 
-            findMatchingProductFromCard(card, index).then(product => {
-                if (!product) return;
-                syncCardButtons(card, product);
+            const wishlist = card.querySelector('.wishlist-btn');
+            if (wishlist) {
+                wishlist.addEventListener('click', (e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+                    if (!user) {
+                        if(typeof showToast === 'function') showToast('Vui lòng đăng nhập để thêm vào danh sách yêu thích!', 'warning');
+                        return;
+                    }
+                    const added = typeof toggleWishlistItem === 'function' ? toggleWishlistItem(String(product.id)) : false;
+                    wishlist.classList.toggle('active', added);
+                    if(typeof showToast === 'function') showToast(added ? 'Đã thêm vào danh sách yêu thích' : 'Đã bỏ khỏi danh sách yêu thích', 'success');
+                });
+            }
 
-                const image = card.querySelector('.product-card-image');
-                const body = card.querySelector('.product-card-body');
+            const addBtn = card.querySelector('.product-quick-add');
+            if (addBtn) {
+                addBtn.addEventListener('click', (e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    if(typeof handleCardAddToCart === 'function') handleCardAddToCart(product);
+                });
+            }
 
-                if (image) {
-                    image.addEventListener('click', (e) => {
-                        if (e.target.closest('button')) return;
-                        openProductDetail(product);
-                    });
-                }
-
-                if (body) {
-                    body.addEventListener('click', (e) => {
-                        if (e.target.closest('button')) return;
-                        openProductDetail(product);
-                    });
-                }
-
-                const wishlist = card.querySelector('.wishlist-btn');
-                if (wishlist) {
-                    wishlist.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-                        if (!user) {
-                            showToast('Vui lòng đăng nhập để thêm vào danh sách yêu thích!', 'warning');
-                            return;
-                        }
-                        const added = toggleWishlistItem(String(product.id));
-                        wishlist.classList.toggle('active', added);
-                        showToast(added ? 'Đã thêm vào danh sách yêu thích' : 'Đã bỏ khỏi danh sách yêu thích', 'success');
-                    });
-                }
-
-                const addBtn = card.querySelector('.product-quick-add');
-                if (addBtn) {
-                    addBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleCardAddToCart(product);
-                    });
-                }
-
-                const buyBtn = card.querySelector('.product-buy-now');
-                if (buyBtn) {
-                    buyBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleCardBuyNow(product);
-                    });
-                }
-            });
+            const buyBtn = card.querySelector('.product-buy-now');
+            if (buyBtn) {
+                buyBtn.addEventListener('click', (e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    if(typeof handleCardBuyNow === 'function') handleCardBuyNow(product);
+                });
+            }
         });
     });
 }
 
-/**
- * Add product to cart (persistent cart in localStorage)
- */
 function addProductToCart(product, quantity) {
     // Get existing cart
     let cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
