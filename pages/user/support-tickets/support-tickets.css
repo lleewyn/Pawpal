@@ -3,13 +3,27 @@
 /* Extracted from support-tickets.html */
 .ui-flex-row-4 {
     display: flex;
-     justify-content: space-between;
-     align-items: center;
+    justify-content: space-between;
+    align-items: center;
 }
 
-/* Extracted from support-tickets.html */
-.ui-spacing-15 {
+.btn-new-ticket {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 20px;
+    border-radius: var(--border-radius-pill);
+    background: var(--color-accent);
+    color: #ffffff !important;
+    font-size: var(--fs-small);
     font-weight: 700;
-     color: var(--color-primary-dark);
-     margin: 0;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(230, 126, 34, 0.25);
+    transition: all 0.2s ease;
+}
+
+.btn-new-ticket:hover {
+    background: #d35400;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(230, 126, 34, 0.35);
 }
