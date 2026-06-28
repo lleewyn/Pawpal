@@ -326,9 +326,25 @@ function openQuickRescheduleModal(booking) {
     if (existing) existing.remove();
 
     const configSlots = (window.PawPalBookingConfig?.slots) || ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
-    const configStaffs = (window.PawPalBookingConfig?.staffs) || ['Phân bổ ngẫu nhiên', 'Nguyễn Minh An', 'Trần An Nhiên', 'Lê Hoàng Tiến'];
+    const configStaffs = (window.PawPalBookingConfig?.staffs) || [
+        { name: 'Phân bổ ngẫu nhiên', desc: 'PawPal tự động chọn nhân viên trống lịch', id: 'random' },
+        { name: 'Nguyễn Minh An',     desc: 'Chuyên viên Spa • 3 năm kinh nghiệm',      id: 'staff1' },
+        { name: 'Trần An Nhiên',      desc: 'Bảo mẫu Hotel • Cực kỳ nhẹ nhàng',         id: 'staff2' },
+        { name: 'Lê Hoàng Tiến',     desc: 'Chuyên viên cắt tỉa Grooming',              id: 'staff3' }
+    ];
     const slotOptions = configSlots.map((slot) => `<button type="button" class="quick-slot-btn" data-slot="${slot}">${slot}</button>`).join('');
-    const staffOptions = configStaffs.map((staff) => `<button type="button" class="quick-staff-btn" data-staff="${typeof staff === 'string' ? staff : staff.name}">${typeof staff === 'string' ? staff : staff.name}</button>`).join('');
+    const staffOptions = configStaffs.map((s) => {
+        const initials = s.name === 'Phân bổ ngẫu nhiên' ? '🎲' : s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+        return `
+            <div class="quick-staff-btn" data-staff="${s.name}" tabindex="0" role="button"
+                style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;text-align:left;">
+                <div style="width:36px;height:36px;border-radius:50%;background:var(--color-primary-light,#e8f5e9);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:var(--color-primary-dark,#2e7d32);flex-shrink:0;">${initials}</div>
+                <div>
+                    <div style="font-weight:700;font-size:0.88rem;color:var(--color-text-dark,#1e293b);">${s.name}</div>
+                    <div style="font-size:0.75rem;color:#64748b;">${s.desc}</div>
+                </div>
+            </div>`;
+    }).join('');
     const minDate = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
     const modalEl = document.createElement('div');
@@ -349,7 +365,7 @@ function openQuickRescheduleModal(booking) {
                     <label class="form-label fw-semibold">Chọn giờ</label>
                     <div class="d-flex flex-wrap gap-2 mb-3" id="quickRescheduleSlots">${slotOptions}</div>
                     <label class="form-label fw-semibold">Chọn nhân viên</label>
-                    <div class="d-flex flex-wrap gap-2 mb-3" id="quickRescheduleStaffs">${staffOptions}</div>
+                    <div class="mb-3" id="quickRescheduleStaffs" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:12px;">${staffOptions}</div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Hủy</button>
