@@ -7,7 +7,7 @@
 let allServices = [];
 let filteredServices = [];
 let currentPage = 1;
-const itemsPerPage = 9;
+const itemsPerPage = 12;
 
 function getCurrentWishlistUser() {
     try {

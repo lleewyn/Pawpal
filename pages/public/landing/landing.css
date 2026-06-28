@@ -4217,6 +4217,21 @@
     z-index: 5;
 }
 
+/* Landing shop cards: wishlist sits on image top-right like service cards */
+.product-card {
+    position: relative;
+}
+
+.product-card .product-wishlist-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+    width: 36px;
+    height: 36px;
+    margin: 0;
+}
+
 .product-quick-add {
     width: 36px;
     height: 36px;

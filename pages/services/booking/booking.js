@@ -1,12 +1,12 @@
-﻿// ==========================================================================
-// PawPal â€” Booking Page Script (Section 3.1.4)
+// ==========================================================================
+// PawPal — Booking Page Script (Section 3.1.4)
 // ==========================================================================
 
 let allServices = [];
 let initDiagnostics = "Not initialized yet.";
 // Member discount config (change these to adjust member discount globally)
 const MEMBER_DISCOUNT_PERCENT = 0.05; // 5%
-const MEMBER_DISCOUNT_TEXT = 'ThÃ nh viÃªn Ä‘Æ°á»£c giáº£m thÃªm';
+const MEMBER_DISCOUNT_TEXT = 'Thành viên được giảm thêm';
 let selectedService = null;
 let bookingState = {
     step: 1,
@@ -155,21 +155,50 @@ function loadMemberPets(user) {
     if (activePets.length === 0) {
         listContainer.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 20px; background: rgba(0,0,0,0.03); border-radius: 8px;">
-                <p style="margin: 0; color: var(--text-light);">Báº¡n chÆ°a cÃ³ há»“ sÆ¡ bÃ© cÆ°ng nÃ o.</p>
-                <a href="../user/pet-profile.html" class="btn-green-outline btn-sm" style="margin-top: 10px; display: inline-block; padding: 6px 14px; font-size: 0.85rem; text-decoration: none;">+ ThÃªm há»“ sÆ¡ bÃ© cÆ°ng</a>
+                <p style="margin: 0; color: var(--text-light);">Bạn chưa có hồ sơ bé cưng nào.</p>
+                <a href="../user/pet-profile.html" class="btn-green-outline btn-sm" style="margin-top: 10px; display: inline-block; padding: 6px 14px; font-size: 0.85rem; text-decoration: none;">+ Thêm hồ sơ bé cưng</a>
             </div>
         `;
         return;
     }
 
+    const DEFAULT_PET_AVATARS = {
+        dog: '/assets/images/publics/dogcute.jpg',
+        cat: '/assets/images/publics/catcute.jpg',
+        rabbit: '/assets/images/publics/pet1.jpg',
+        other: '/assets/images/publics/pet.jpg'
+    };
+
+    function getPetAvatar(pet) {
+        if (pet.avatar && !pet.avatar.includes('dogcute3') && !pet.avatar.includes('catcute5')) {
+            return pet.avatar;
+        }
+        return DEFAULT_PET_AVATARS[pet.species] || DEFAULT_PET_AVATARS.other;
+    }
+
+    function getSpeciesAndBreed(pet) {
+        let speciesName = '';
+        switch(pet.species) {
+            case 'dog': speciesName = 'Chó'; break;
+            case 'cat': speciesName = 'Mèo'; break;
+            case 'rabbit': speciesName = 'Thỏ'; break;
+            case 'other': speciesName = pet.otherSpecies || 'Khác'; break;
+            default: speciesName = pet.species || 'Thú cưng';
+        }
+        if (pet.breed && pet.breed.trim() !== '') {
+            return `${speciesName} ${pet.breed.trim()}`;
+        }
+        return speciesName;
+    }
+
     listContainer.innerHTML = activePets.map(pet => `
         <div class="pet-select-card" data-pet-id="${pet.id}" data-name="${pet.name}" data-type="${pet.species}" data-breed="${pet.breed}" data-weight="${pet.weight}" tabindex="0" role="button">
-            <div class="pet-avatar-placeholder" style="font-size: 1.5rem; width: 44px; height: 44px;">
-                ${pet.species === 'MÃ¨o' ? '' : (pet.species === 'ChÃ³' ? '' : (pet.species === 'Thá»' ? '' : (pet.species === 'Chuá»™t Hamster' ? '' : '')))}
+            <div class="pet-avatar-placeholder" style="font-size: 1.5rem; width: 44px; height: 44px; overflow: hidden; border-radius: 50%;">
+                <img src="${getPetAvatar(pet)}" alt="${pet.name}" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
             <div class="pet-select-details">
                 <span class="pet-select-name">${pet.name}</span>
-                <span class="pet-select-meta">${pet.species} â€¢ ${pet.breed || 'ChÆ°a rÃµ'} â€¢ ${pet.weight}kg</span>
+                <span class="pet-select-meta">${getSpeciesAndBreed(pet)} • ${pet.weight}kg</span>
             </div>
         </div>
     `).join('');
@@ -211,8 +240,8 @@ function setupGuestValidation() {
     const petTypeOtherGroup = document.getElementById('petTypeOtherGroup');
     if (petTypeEl) {
         petTypeEl.addEventListener('change', () => {
-            // Toggle visibility of specific species input when 'KhÃ¡c' selected
-            if (petTypeEl.value === 'KhÃ¡c') {
+            // Toggle visibility of specific species input when 'Khác' selected
+            if (petTypeEl.value === 'Khác') {
                 petTypeOtherGroup && petTypeOtherGroup.classList.remove('d-none');
             } else {
                 petTypeOtherGroup && petTypeOtherGroup.classList.add('d-none');
@@ -225,7 +254,7 @@ function setupGuestValidation() {
             validateStep1();
         });
         // initialize visibility on load
-        if (petTypeEl.value === 'KhÃ¡c') petTypeOtherGroup && petTypeOtherGroup.classList.remove('d-none');
+        if (petTypeEl.value === 'Khác') petTypeOtherGroup && petTypeOtherGroup.classList.remove('d-none');
     }
 }
 
@@ -241,27 +270,27 @@ function validateGuestInput(id) {
 
     if ((id === 'ownerName' || id === 'memberOwnerName') && !val) {
         isValid = false;
-        errMsg = 'Vui lÃ²ng nháº­p há» vÃ  tÃªn';
+        errMsg = 'Vui lòng nhập họ và tên';
     } else if (id === 'ownerPhone' || id === 'memberOwnerPhone') {
         const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
         if (!val) {
             isValid = false;
-            errMsg = 'Vui lÃ²ng nháº­p sá»‘ Ä‘iá»‡n thoáº¡i';
+            errMsg = 'Vui lòng nhập số điện thoại';
         } else if (!phoneRegex.test(val)) {
             isValid = false;
-            errMsg = 'SÄT khÃ´ng há»£p lá»‡ (10 chá»¯ sá»‘ báº¯t Ä‘áº§u báº±ng 0)';
+            errMsg = 'SĐT không hợp lệ (10 chữ số bắt đầu bằng 0)';
         }
     } else if (id === 'petName' && !val) {
         isValid = false;
-        errMsg = 'Vui lÃ²ng nháº­p tÃªn bÃ©';
+        errMsg = 'Vui lòng nhập tên bé';
     } else if (id === 'petTypeOther') {
         const petTypeSelect = document.getElementById('petType');
         const warnEl = document.getElementById('petTypeOtherWarn');
-        // If user selected 'KhÃ¡c', require this field; otherwise ignore
-        if (petTypeSelect && petTypeSelect.value === 'KhÃ¡c') {
+        // If user selected 'Khác', require this field; otherwise ignore
+        if (petTypeSelect && petTypeSelect.value === 'Khác') {
             if (!val) {
                 isValid = false;
-                errMsg = 'Vui lÃ²ng nháº­p loÃ i cá»¥ thá»ƒ';
+                errMsg = 'Vui lòng nhập loài cụ thể';
             } else {
                 // check for weird characters (letters, spaces, hyphen, apostrophe allowed)
                 const safeRe = /^[\p{L}\s\-']+$/u;
@@ -275,15 +304,15 @@ function validateGuestInput(id) {
         }
     } else if (id === 'petType' && !val) {
         isValid = false;
-        errMsg = 'Vui lÃ²ng chá»n loáº¡i thÃº cÆ°ng';
+        errMsg = 'Vui lòng chọn loại thú cưng';
     } else if (id === 'petWeight') {
         const weightVal = parseFloat(val);
         if (!val) {
             isValid = false;
-            errMsg = 'Vui lÃ²ng nháº­p cÃ¢n náº·ng';
+            errMsg = 'Vui lòng nhập cân nặng';
         } else if (isNaN(weightVal) || weightVal <= 0) {
             isValid = false;
-            errMsg = 'CÃ¢n náº·ng pháº£i lá»›n hÆ¡n 0';
+            errMsg = 'Cân nặng phải lớn hơn 0';
         }
     }
 
@@ -320,8 +349,8 @@ function validateStep1() {
 
         const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
         isValid = ownerName && ownerPhone && phoneRegex.test(ownerPhone) && petName && petType && !isNaN(petWeight) && petWeight > 0;
-        // If 'KhÃ¡c' selected, require petTypeOtherVal
-        if (isValid && petType === 'KhÃ¡c') {
+        // If 'Khác' selected, require petTypeOtherVal
+        if (isValid && petType === 'Khác') {
             isValid = petTypeOtherVal.length > 0;
         }
     }
@@ -371,7 +400,7 @@ function renderServices(type, searchQuery = '') {
     if (filtered.length === 0) {
         listContainer.innerHTML = `
             <p style="text-align: center; color: var(--text-light); padding: 20px;">
-                KhÃ´ng tÃ¬m tháº¥y dá»‹ch vá»¥ nÃ o phÃ¹ há»£p vá»›i tÃ¬m kiáº¿m cá»§a báº¡n.
+                Không tìm thấy dịch vụ nào phù hợp với tìm kiếm của bạn.
             </p>
         `;
         return;
@@ -380,7 +409,7 @@ function renderServices(type, searchQuery = '') {
     listContainer.innerHTML = filtered.map(service => {
         const calculatedPrice = calculateDynamicPrice(service, bookingState.petWeight);
         const formattedPrice = calculatedPrice.toLocaleString('vi-VN');
-        const priceUnit = service.priceDisplay.includes('Ä‘Ãªm') ? ' / Ä‘Ãªm' : '';
+        const priceUnit = service.priceDisplay.includes('đêm') ? ' / đêm' : '';
 
         const memberPrice = Math.round(calculatedPrice * (1 - MEMBER_DISCOUNT_PERCENT));
         const formattedMemberPrice = memberPrice.toLocaleString('vi-VN');
@@ -395,8 +424,8 @@ function renderServices(type, searchQuery = '') {
                     <p class="svc-select-meta" style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--color-text-light);">${service.description}</p>
                 </div>
                 <div class="svc-select-price">
-                    <div class="svc-price-main">${formattedPrice}Ä‘${priceUnit}</div>
-                    <div class="svc-price-duration" style="color: var(--color-primary); font-size: 0.8rem; font-weight: 600;">${formattedMemberPrice}Ä‘ (${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}% giáº£m cho thÃ nh viÃªn)</div>
+                    <div class="svc-price-main">${formattedPrice}đ${priceUnit}</div>
+                    <div class="svc-price-duration" style="color: var(--color-primary); font-size: 0.8rem; font-weight: 600;">${formattedMemberPrice}đ (${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}% giảm cho thành viên)</div>
                 </div>
             </div>
         `;
@@ -419,20 +448,18 @@ function renderServices(type, searchQuery = '') {
 
 // Calculate dynamic price based on weight
 function calculateDynamicPrice(service, weight) {
-    const normalizedWeight = Number(weight);
-    const priceTable = service && service.prices ? service.prices : null;
-
-    if (priceTable && Number.isFinite(normalizedWeight)) {
-        if (normalizedWeight < 5 && Number.isFinite(priceTable['< 5kg']) && priceTable['< 5kg'] > 0) return priceTable['< 5kg'];
-        if (normalizedWeight < 10 && Number.isFinite(priceTable['5 - 10kg']) && priceTable['5 - 10kg'] > 0) return priceTable['5 - 10kg'];
-        if (normalizedWeight < 20 && Number.isFinite(priceTable['10 - 20kg']) && priceTable['10 - 20kg'] > 0) return priceTable['10 - 20kg'];
-        if (Number.isFinite(priceTable['> 20kg']) && priceTable['> 20kg'] > 0) return priceTable['> 20kg'];
-    }
-
-    return Number.isFinite(service?.price) && service.price > 0 ? service.price : 0;
+    if (!service.prices) return service.price;
+    
+    let targetPrice = service.price;
+    if (weight < 5 && service.prices['< 5kg']) targetPrice = service.prices['< 5kg'];
+    else if (weight >= 5 && weight < 10 && service.prices['5 - 10kg']) targetPrice = service.prices['5 - 10kg'];
+    else if (weight >= 10 && weight < 20 && service.prices['10 - 20kg']) targetPrice = service.prices['10 - 20kg'];
+    else if (weight >= 20 && service.prices['> 20kg']) targetPrice = service.prices['> 20kg'];
+    
+    return targetPrice;
 }
 
-// Step 3: Date vÃ  Staff selection
+// Step 3: Date và Staff selection
 function setupScheduleSelection() {
     // Check-in and check-out dates for Hotel
     const checkInInput = document.getElementById('checkInDate');
@@ -460,16 +487,16 @@ function setupScheduleSelection() {
                     bookingState.nights = nights;
 
                     document.getElementById('hotelNightsDisplay').classList.remove('d-none');
-                    document.getElementById('hotelNightsText').textContent = `${nights} Ä‘Ãªm`;
+                    document.getElementById('hotelNightsText').textContent = `${nights} đêm`;
 
                     const calculatedPrice = calculateDynamicPrice(selectedService, bookingState.petWeight);
                     const totalPrice = calculatedPrice * nights;
-                    document.getElementById('hotelTotalPrice').textContent = `Táº¡m tÃ­nh: ${totalPrice.toLocaleString('vi-VN')}Ä‘`;
+                    document.getElementById('hotelTotalPrice').textContent = `Tạm tính: ${totalPrice.toLocaleString('vi-VN')}đ`;
 
                     validateStep3();
                     updateSummary();
                 } else {
-                    alert('NgÃ y check-out pháº£i sau ngÃ y check-in.');
+                    alert('Ngày check-out phải sau ngày check-in.');
                     checkOutInput.value = '';
                     document.getElementById('hotelNightsDisplay').classList.add('d-none');
                     validateStep3();
@@ -527,24 +554,24 @@ function updateAddons() {
     bookingState.addons = [];
 
     if (document.getElementById('addonMeal')?.checked) {
-        bookingState.addons.push({ name: 'ChÄƒm sÃ³c dinh dÆ°á»¡ng', price: 30000, perNight: true });
+        bookingState.addons.push({ name: 'Chăm sóc dinh dưỡng', price: 30000, perNight: true });
     }
 
     if (document.getElementById('addonWalk')?.checked) {
         const qty = parseInt(document.getElementById('addonWalkQty')?.value || '1');
-        bookingState.addons.push({ name: `Dáº¯t Ä‘i dáº¡o x${qty} lÆ°á»£t`, price: 40000 * qty, perNight: false });
+        bookingState.addons.push({ name: `Dắt đi dạo x${qty} lượt`, price: 40000 * qty, perNight: false });
     }
 
     if (document.getElementById('addonPlay')?.checked) {
         const qty = parseInt(document.getElementById('addonPlayQty')?.value || '1');
-        bookingState.addons.push({ name: `ChÆ¡i tÆ°Æ¡ng tÃ¡c x${qty} lÆ°á»£t`, price: 20000 * qty, perNight: false });
+        bookingState.addons.push({ name: `Chơi tương tác x${qty} lượt`, price: 20000 * qty, perNight: false });
     }
 
     if (document.getElementById('addonBath')?.checked) {
         // Addon Bath reduction - 20% off base Spa standard price
-        // Mock Spa base price as 120,000 VNÄ
+        // Mock Spa base price as 120,000 VNĐ
         const bathPrice = Math.round(120000 * 0.8);
-        bookingState.addons.push({ name: 'Táº¯m vá»‡ sinh lÆ°u trÃº', price: bathPrice, perNight: false });
+        bookingState.addons.push({ name: 'Tắm vệ sinh lưu trú', price: bathPrice, perNight: false });
     }
 }
 
@@ -663,7 +690,7 @@ function startHoldTimer(slot) {
     const updateTimerDisplay = () => {
         const mins = Math.floor(timeRemaining / 60);
         const secs = timeRemaining % 60;
-        holdBanner.innerHTML = `ï¸ <strong>Äang giá»¯ chá»— táº¡m thá»i:</strong> Khung giá» <strong>${slot}</strong> Ä‘Ã£ Ä‘Æ°á»£c khÃ³a riÃªng cho báº¡n. Vui lÃ²ng xÃ¡c nháº­n trong <strong>${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}</strong>.`;
+        holdBanner.innerHTML = `️ <strong>Đang giữ chỗ tạm thời:</strong> Khung giờ <strong>${slot}</strong> đã được khóa riêng cho bạn. Vui lòng xác nhận trong <strong>${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}</strong>.`;
     };
 
     updateTimerDisplay();
@@ -676,7 +703,7 @@ function startHoldTimer(slot) {
         timeRemaining--;
         if (timeRemaining <= 0) {
             clearInterval(holdTimerInterval);
-            holdBanner.innerHTML = ` <strong>Háº¿t thá»i gian giá»¯ chá»—!</strong> Khung giá» <strong>${slot}</strong> Ä‘Ã£ tá»± Ä‘á»™ng giáº£i phÃ³ng. Vui lÃ²ng chá»n láº¡i.`;
+            holdBanner.innerHTML = ` <strong>Hết thời gian giữ chỗ!</strong> Khung giờ <strong>${slot}</strong> đã tự động giải phóng. Vui lòng chọn lại.`;
             holdBanner.style.color = '#856404';
             holdBanner.style.background = '#fff3cd';
             holdBanner.style.borderColor = '#ffeeba';
@@ -702,15 +729,15 @@ function renderStaff() {
     const staffs = (window.PawPalBookingConfig && Array.isArray(window.PawPalBookingConfig.staffs))
         ? window.PawPalBookingConfig.staffs
         : [
-            { name: 'PhÃ¢n bá»• ngáº«u nhiÃªn', desc: 'PawPal tá»± Ä‘á»™ng chá»n báº£o máº«u trá»‘ng lá»‹ch', id: 'random' },
-            { name: 'Nguyá»…n Minh An', desc: 'ChuyÃªn viÃªn Spa â€¢ 3 nÄƒm kinh nghiá»‡m', id: 'staff1' },
-            { name: 'Tráº§n An NhiÃªn', desc: 'Báº£o máº«u Hotel â€¢ Cá»±c ká»³ nháº¹ nhÃ ng', id: 'staff2' },
-            { name: 'LÃª HoÃ ng Tiáº¿n', desc: 'ChuyÃªn viÃªn cáº¯t tá»‰a Grooming', id: 'staff3' }
+            { name: 'Phân bổ ngẫu nhiên', desc: 'PawPal tự động chọn bảo mẫu trống lịch', id: 'random' },
+            { name: 'Nguyễn Minh An', desc: 'Chuyên viên Spa • 3 năm kinh nghiệm', id: 'staff1' },
+            { name: 'Trần An Nhiên', desc: 'Bảo mẫu Hotel • Cực kỳ nhẹ nhàng', id: 'staff2' },
+            { name: 'Lê Hoàng Tiến', desc: 'Chuyên viên cắt tỉa Grooming', id: 'staff3' }
         ];
 
     listContainer.innerHTML = staffs.map(staff => {
         const isSelected = bookingState.staff === staff.name ? 'selected' : '';
-        const initials = staff.name === 'PhÃ¢n bá»• ngáº«u nhiÃªn' ? '' : staff.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+        const initials = staff.name === 'Phân bổ ngẫu nhiên' ? '' : staff.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
         return `
             <div class="staff-card ${isSelected}" data-name="${staff.name}" tabindex="0" role="button">
                 <div class="staff-card-avatar" style="font-size: 1.1rem;">${initials}</div>
@@ -829,8 +856,8 @@ function setupStepActions() {
             bookingState.petName = document.getElementById('petName').value.trim();
             const petTypeVal = document.getElementById('petType').value;
             const petTypeOtherVal = document.getElementById('petTypeOther')?.value.trim() || '';
-            bookingState.petType = petTypeVal === 'KhÃ¡c' && petTypeOtherVal ? petTypeOtherVal : petTypeVal;
-            bookingState.petBreed = document.getElementById('petBreed').value.trim() || 'ChÆ°a rÃµ';
+            bookingState.petType = petTypeVal === 'Khác' && petTypeOtherVal ? petTypeOtherVal : petTypeVal;
+            bookingState.petBreed = document.getElementById('petBreed').value.trim() || 'Chưa rõ';
             bookingState.petWeight = parseFloat(document.getElementById('petWeight').value);
             bookingState.petNote = document.getElementById('petNote').value.trim();
         } else {
@@ -890,7 +917,7 @@ function updateSummary() {
     // Owner
     if (bookingState.ownerName) {
         sumOwner.classList.remove('d-none');
-        document.getElementById('sumOwnerVal').textContent = `${bookingState.ownerName} â€¢ ${bookingState.ownerPhone}`;
+        document.getElementById('sumOwnerVal').textContent = `${bookingState.ownerName} • ${bookingState.ownerPhone}`;
     } else {
         sumOwner.classList.add('d-none');
     }
@@ -908,9 +935,9 @@ function updateSummary() {
         sumDate.classList.remove('d-none');
         let dateText = formatDate(bookingState.date);
         if (selectedService.category === 'hotel' && bookingState.checkOutDate) {
-            dateText += ` $\\rightarrow$ ${formatDate(bookingState.checkOutDate)} (${bookingState.nights} Ä‘Ãªm)`;
+            dateText += ` $\\rightarrow$ ${formatDate(bookingState.checkOutDate)} (${bookingState.nights} đêm)`;
         } else if (bookingState.timeSlot) {
-            dateText += ` lÃºc ${bookingState.timeSlot}`;
+            dateText += ` lúc ${bookingState.timeSlot}`;
         }
         document.getElementById('sumDateVal').textContent = dateText;
     } else {
@@ -937,18 +964,25 @@ function updateSummary() {
     const isMember = currentUser && !currentUser.is_temporary;
 
     const finalPrice = isMember ? Math.round(totalPrice * (1 - MEMBER_DISCOUNT_PERCENT)) : totalPrice;
-    document.getElementById('sumPriceVal').textContent = `${finalPrice.toLocaleString('vi-VN')}Ä‘`;
+    const prefix = (!bookingState.petWeight && selectedService.prices) ? 'Từ ' : '';
 
-    const sumMemberNote = document.getElementById('sumMemberNote');
-    // Show member discount note with actual discount amount and percent
-    const memberDiscount = isMember ? Math.round(totalPrice * MEMBER_DISCOUNT_PERCENT) : 0;
+    const sumSubtotalRow = document.getElementById('sumSubtotalRow');
+    const sumDiscountRow = document.getElementById('sumDiscountRow');
+
     if (isMember) {
-        sumMemberNote.classList.remove('d-none');
-        sumMemberNote.innerHTML = `${MEMBER_DISCOUNT_TEXT} ${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}% (-${memberDiscount.toLocaleString('vi-VN')}Ä‘)`;
+        sumSubtotalRow.classList.remove('d-none');
+        document.getElementById('sumSubtotalVal').textContent = `${prefix}${totalPrice.toLocaleString('vi-VN')}đ`;
+
+        const memberDiscount = Math.round(totalPrice * MEMBER_DISCOUNT_PERCENT);
+        sumDiscountRow.classList.remove('d-none');
+        document.getElementById('sumDiscountLabel').textContent = `${MEMBER_DISCOUNT_TEXT} (-${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}%)`;
+        document.getElementById('sumDiscountVal').textContent = `-${memberDiscount.toLocaleString('vi-VN')}đ`;
     } else {
-        sumMemberNote.classList.add('d-none');
-        sumMemberNote.innerHTML = '';
+        sumSubtotalRow.classList.add('d-none');
+        sumDiscountRow.classList.add('d-none');
     }
+
+    document.getElementById('sumPriceVal').textContent = `${prefix}${finalPrice.toLocaleString('vi-VN')}đ`;
 }
 
 // Render Step 4 bill details
@@ -958,29 +992,19 @@ function renderStep4Confirm() {
 
     let billLines = `
         <div class="summary-row">
-            <span class="sum-label">${selectedService.name} (GiÃ¡ gá»‘c)</span>
-            <span class="sum-value">${selectedService.price.toLocaleString('vi-VN')}Ä‘</span>
+            <span class="sum-label">${selectedService.name} (Giá gốc)</span>
+            <span class="sum-value">${selectedService.price.toLocaleString('vi-VN')}đ</span>
         </div>
     `;
 
-    if (selectedService.category === 'spa' && bookingState.petWeight > 5) {
-        const factor = bookingState.petWeight > 10 ? 0.5 : 0.2;
-        const increase = Math.round(selectedService.price * factor);
-        billLines += `
-            <div class="summary-row" style="color: #c0392b;">
-                <span class="sum-label"> $\\rightarrow$ Há»‡ sá»‘ cÃ¢n náº·ng (${bookingState.petWeight}kg: +${factor * 100}%)</span>
-                <span class="sum-value">+${increase.toLocaleString('vi-VN')}Ä‘</span>
-            </div>
-        `;
-    }
 
     if (selectedService.category === 'hotel') {
         const nights = bookingState.nights || 1;
         subtotal = basePrice * nights;
         billLines = `
             <div class="summary-row">
-                <span class="sum-label">${selectedService.name} (${basePrice.toLocaleString('vi-VN')}Ä‘ Ã— ${nights} Ä‘Ãªm)</span>
-                <span class="sum-value">${subtotal.toLocaleString('vi-VN')}Ä‘</span>
+                <span class="sum-label">${selectedService.name} (${basePrice.toLocaleString('vi-VN')}đ × ${nights} đêm)</span>
+                <span class="sum-value">${subtotal.toLocaleString('vi-VN')}đ</span>
             </div>
         `;
 
@@ -989,7 +1013,7 @@ function renderStep4Confirm() {
             billLines += `
                 <div class="summary-row">
                     <span class="sum-label">${addon.name}</span>
-                    <span class="sum-value">+${cost.toLocaleString('vi-VN')}Ä‘</span>
+                    <span class="sum-value">+${cost.toLocaleString('vi-VN')}đ</span>
                 </div>
             `;
             subtotal += cost;
@@ -1007,8 +1031,8 @@ function renderStep4Confirm() {
     if (isMember) {
         billLines += `
             <div class="summary-row" style="color: #27ae60;">
-                <span class="sum-label">Kháº¥u trá»« thÃ nh viÃªn (Báº¡c -${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}%)</span>
-                <span class="sum-value">-${discount.toLocaleString('vi-VN')}Ä‘</span>
+                <span class="sum-label">Khấu trừ thành viên (Bạc -${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}%)</span>
+                <span class="sum-value">-${discount.toLocaleString('vi-VN')}đ</span>
             </div>
         `;
     }
@@ -1016,24 +1040,24 @@ function renderStep4Confirm() {
     const container = document.getElementById('confirmSummary');
     container.innerHTML = `
         <div class="confirm-bill-card" style="background: rgba(0,0,0,0.02); border: 1px solid var(--color-border); border-radius: var(--card-border-radius); padding: 20px; margin-bottom: 20px;">
-            <h4 style="font-family: var(--font-heading); color: var(--color-primary-dark); margin-top:0; margin-bottom: 15px;">Chi tiáº¿t hÃ³a Ä‘Æ¡n</h4>
+            <h4 style="font-family: var(--font-heading); color: var(--color-primary-dark); margin-top:0; margin-bottom: 15px;">Chi tiết hóa đơn</h4>
             
             ${billLines}
             
             <div class="summary-divider" style="margin: 15px 0; border-top: 1px solid var(--color-border);"></div>
             
             <div class="summary-row price-row" style="font-size: 1.2rem; font-weight: bold; color: var(--color-primary-dark);">
-                <span class="sum-label">Tá»•ng tiá»n hÃ³a Ä‘Æ¡n:</span>
-                <span class="sum-value" style="color: var(--color-primary);">${finalTotal.toLocaleString('vi-VN')} VNÄ</span>
+                <span class="sum-label">Tổng tiền hóa đơn:</span>
+                <span class="sum-value" style="color: var(--color-primary);">${finalTotal.toLocaleString('vi-VN')} VNĐ</span>
             </div>
 
             <div class="summary-row price-row" style="font-size: 1.1rem; font-weight: bold; margin-top: 8px;">
-                <span class="sum-label">Chi phÃ­ Ä‘áº·t cá»c:</span>
-                <span class="sum-value" style="color: #27ae60; font-size: 1.3rem;">0 VNÄ</span>
+                <span class="sum-label">Chi phí đặt cọc:</span>
+                <span class="sum-value" style="color: #27ae60; font-size: 1.3rem;">0 VNĐ</span>
             </div>
 
             <div class="alert-bill-note" style="margin-top: 15px; padding: 12px; border: 1px dashed #e67e22; background: rgba(230,126,34,0.08); border-radius: 8px; font-size: 0.85rem; color: #d35400; line-height: 1.5;">
-                ï¸ <strong>Cáº£nh bÃ¡o:</strong> Má»©c giÃ¡ hiá»‡n táº¡i chá»‰ lÃ  dá»± kiáº¿n dá»±a trÃªn sá»‘ cÃ¢n náº·ng tá»± khai bÃ¡o (${bookingState.petWeight}kg). NhÃ¢n viÃªn sáº½ tiáº¿n hÃ nh cÃ¢n láº¡i thá»±c táº¿ táº¡i quáº§y Ä‘á»ƒ Ã¡p giÃ¡ chuáº©n nháº¥t theo quy Ä‘á»‹nh.
+                ️ <strong>Cảnh báo:</strong> Mức giá hiện tại chỉ là dự kiến dựa trên số cân nặng tự khai báo (${bookingState.petWeight}kg). Nhân viên sẽ tiến hành cân lại thực tế tại quầy để áp giá chuẩn nhất theo quy định.
             </div>
         </div>
     `;
@@ -1062,7 +1086,7 @@ function processBookingSubmit() {
 
     // Disable button and show spinner
     confirmBtn.disabled = true;
-    confirmBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="margin-right:8px;"></span>Äang xá»­ lÃ½ Ä‘áº·t lá»‹ch...`;
+    confirmBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="margin-right:8px;"></span>Đang xử lý đặt lịch...`;
 
     // Save booking database representation
     const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
@@ -1083,14 +1107,14 @@ function processBookingSubmit() {
 
     const bookingRecord = {
         id: newBookingId,
-        userId: currentUser ? currentUser.id : null, // gÃ¡n sau náº¿u lÃ  guest má»›i táº¡o
+        userId: currentUser ? currentUser.id : null, // gán sau nếu là guest mới tạo
         ownerName: bookingState.ownerName,
         ownerPhone: bookingState.ownerPhone,
         petId: bookingState.petId || null,
         petName: bookingState.petName,
-        petEmoji: bookingState.petType === 'MÃ¨o' ? '' : (bookingState.petType === 'ChÃ³' ? '' : (bookingState.petType === 'Thá»' ? '' : (bookingState.petType === 'Chuá»™t Hamster' ? '' : ''))),
+        petEmoji: bookingState.petType === 'Mèo' ? '' : (bookingState.petType === 'Chó' ? '' : (bookingState.petType === 'Thỏ' ? '' : (bookingState.petType === 'Chuột Hamster' ? '' : ''))),
         petWeight: bookingState.petWeight,
-        service: selectedService.category === 'hotel' ? 'Pet Hotel' : 'Spa vÃ  Grooming',
+        service: selectedService.category === 'hotel' ? 'Pet Hotel' : 'Spa và Grooming',
         serviceName: selectedService.name,
         package: selectedService.name,
         date: bookingState.date,
@@ -1098,8 +1122,8 @@ function processBookingSubmit() {
         time: selectedService.category === 'spa' ? bookingState.timeSlot : null,
         timeStart: selectedService.category === 'spa' ? bookingState.timeSlot : null,
         timeEnd: selectedService.category === 'spa' ? calculateEndTime(bookingState.timeSlot, selectedService.duration) : null,
-        staff: selectedService.category === 'spa' ? bookingState.staff : 'Báº£o máº«u khÃ¡ch sáº¡n',
-        branch: 'PawPal Chi nhÃ¡nh Quáº­n 1',
+        staff: selectedService.category === 'spa' ? bookingState.staff : 'Bảo mẫu khách sạn',
+        branch: 'PawPal Chi nhánh Quận 1',
         price: finalPrice,
         status: 'upcoming',
         note: bookingState.petNote || null,
@@ -1111,10 +1135,10 @@ function processBookingSubmit() {
     bookings.push(bookingRecord);
     localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
 
-    // Handle vÃ£ng lai registration
+    // Handle vãng lai registration
     let generatedToken = null;
     if (!currentUser) {
-        // Ngáº§m khá»Ÿi táº¡o "TÃ i khoáº£n táº¡m"
+        // Ngầm khởi tạo "Tài khoản tạm"
         const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
         const existing = users.find(u => u.phone === bookingState.ownerPhone);
 
@@ -1124,7 +1148,7 @@ function processBookingSubmit() {
                 phone: bookingState.ownerPhone,
                 role: 'customer',
                 is_temporary: true,
-                points: 0 // Sáº½ nháº­n 50 Ä‘iá»ƒm sau khi kÃ­ch hoáº¡t tÃ i khoáº£n
+                points: 0 // Sẽ nhận 50 điểm sau khi kích hoạt tài khoản
             };
             // Ensure user has an id
             try {
@@ -1135,7 +1159,7 @@ function processBookingSubmit() {
             users.push(tempUser);
             localStorage.setItem('pawpal_users_db', JSON.stringify(users));
 
-            // Patch userId vÃ o booking vá»«a táº¡o
+            // Patch userId vào booking vừa tạo
             const allBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
             const bIdx = allBookings.findIndex(b => b.id === newBookingId);
             if (bIdx !== -1) {
@@ -1143,10 +1167,10 @@ function processBookingSubmit() {
                 localStorage.setItem('pawpal_bookings', JSON.stringify(allBookings));
             }
 
-            // Táº¡o pet profile liÃªn káº¿t vá»›i tÃ i khoáº£n táº¡m
+            // Tạo pet profile liên kết với tài khoản tạm
             try {
                 const pets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-                const petName = bookingState.petName || 'BÃ© cÆ°ng';
+                const petName = bookingState.petName || 'Bé cưng';
                 const petExists = pets.some(p => String(p.userId) === String(tempUser.id) && p.name === petName);
                 if (!petExists) {
                     const newPet = {
@@ -1166,7 +1190,7 @@ function processBookingSubmit() {
                 console.warn('Could not persist pet for temp user', e);
             }
 
-            // Táº¡o token kÃ­ch hoáº¡t tÃ i khoáº£n cÃ³ hiá»‡u lá»±c 48 giá»
+            // Tạo token kích hoạt tài khoản có hiệu lực 48 giờ
             generatedToken = 'token-temp-' + Math.floor(100000 + Math.random() * 900000);
             const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
             tokens.push({
@@ -1181,7 +1205,7 @@ function processBookingSubmit() {
                 console.warn('showTempAccountActivationToast not available', err);
             }
         } else {
-            // Guest Ä‘Ã£ tá»“n táº¡i â€” patch userId vÃ o booking Ä‘á»ƒ dashboard/bookings.html tÃ¬m tháº¥y
+            // Guest đã tồn tại — patch userId vào booking để dashboard/bookings.html tìm thấy
             const allBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
             const bIdx = allBookings.findIndex(b => b.id === newBookingId);
             if (bIdx !== -1 && !allBookings[bIdx].userId) {
@@ -1198,7 +1222,7 @@ function processBookingSubmit() {
 
     // Simulate API request delay
     setTimeout(() => {
-        confirmBtn.innerHTML = ` Äáº·t lá»‹ch thÃ nh cÃ´ng!`;
+        confirmBtn.innerHTML = ` Đặt lịch thành công!`;
         window.location.href = `../booking-success/booking-success.html?code=${newBookingId}`;
     }, 1200);
 }
@@ -1225,10 +1249,10 @@ function showTempAccountActivationToast(phone, token) {
         <div class="toast-content" style="flex-direction: column; align-items: flex-start; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
                 <span class="toast-icon"></span>
-                <strong>[SMS Gateway] Gá»­i Ä‘áº¿n ${phone}:</strong>
+                <strong>[SMS Gateway] Gửi đến ${phone}:</strong>
             </div>
             <div style="font-size: 0.85rem; line-height: 1.4; color: rgba(255,255,255,0.95);">
-                ChÃ o má»«ng báº¡n Ä‘áº¿n vá»›i PawPal! TÃ i khoáº£n táº¡m cá»§a báº¡n Ä‘Ã£ Ä‘Æ°á»£c khá»Ÿi táº¡o. Äáº·t máº­t kháº©u ngay trong 48h Ä‘á»ƒ nháº­n 50 Ä‘iá»ƒm thÆ°á»Ÿng vÃ  quáº£n lÃ½ lá»‹ch háº¹n trá»±c tuyáº¿n: 
+                Chào mừng bạn đến với PawPal! Tài khoản tạm của bạn đã được khởi tạo. Đặt mật khẩu ngay trong 48h để nhận 50 điểm thưởng và quản lý lịch hẹn trực tuyến: 
                 <a href="${setupUrl}" target="_blank" style="color: #f1c40f; text-decoration: underline; word-break: break-all;">${setupUrl}</a>
             </div>
         </div>
@@ -1244,9 +1268,9 @@ function calculateEndTime(startTime, durationStr) {
     const [h, m] = startTime.split(':').map(Number);
     let durationMinutes = 60; // default 1h
 
-    if (durationStr.includes('phÃºt')) {
+    if (durationStr.includes('phút')) {
         durationMinutes = parseInt(durationStr.replace(/[^\d]/g, ''));
-    } else if (durationStr.includes('giá»') || durationStr.includes('tiáº¿ng')) {
+    } else if (durationStr.includes('giờ') || durationStr.includes('tiếng')) {
         durationMinutes = parseFloat(durationStr.replace(/[^\d.]/g, '')) * 60;
     }
 
@@ -1291,9 +1315,9 @@ function parseCSVDirectly(csvText) {
 
 function transformServiceDataDirectly(rawData) {
     return rawData.map((item, index) => {
-        const rawCategory = item['PhÃ¢n loáº¡i'] || '';
+        const rawCategory = item['Phân loại'] || '';
         let category = 'other';
-        if (rawCategory.includes('Spa vÃ  Grooming') || rawCategory.includes('Spa & Grooming')) {
+        if (rawCategory.includes('Spa và Grooming') || rawCategory.includes('Spa & Grooming')) {
             category = 'spa';
         } else if (rawCategory.includes('Pet Hotel')) {
             category = 'hotel';
@@ -1301,32 +1325,46 @@ function transformServiceDataDirectly(rawData) {
             category = 'taxi';
         }
 
-        const price = parseInt(item['GiÃ¡ niÃªm yáº¿t (VNÄ)']?.replace(/[^\d]/g, '') || '0', 10);
-        const rating = parseFloat(item['ÄÃ¡nh giÃ¡ (Rating)'] || '4.8');
-        const reviewCount = parseInt(item['LÆ°á»£t Ä‘Ã¡nh giÃ¡ (Review Count)'] || '0', 10);
+        const priceSub5 = parseInt(item['Giá <5kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
+        const price5to10 = parseInt(item['Giá 5-10kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
+        const price10to20 = parseInt(item['Giá 10-20kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
+        const priceOver20 = parseInt(item['Giá >20kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
+
+        const prices = {
+            '< 5kg': priceSub5,
+            '5 - 10kg': price5to10,
+            '10 - 20kg': price10to20,
+            '> 20kg': priceOver20
+        };
+
+        const validPrices = Object.values(prices).filter(p => p > 0);
+        const basePrice = validPrices.length > 0 ? Math.min(...validPrices) : 0;
+
+        const rating = parseFloat(item['Đánh giá (Rating)'] || '4.8');
+        const reviewCount = parseInt(item['Lượt đánh giá (Review Count)'] || '0', 10);
 
         return {
             id: index + 1,
-            serviceId: item['MÃ£ dá»‹ch vá»¥ (Service ID)'] || `SVC-${index + 1}`,
-            name: item['TÃªn dá»‹ch vá»¥'] || 'Dá»‹ch vá»¥',
+            serviceId: item['Mã dịch vụ (Service ID)'] || `SVC-${index + 1}`,
+            name: item['Tên dịch vụ'] || 'Dịch vụ',
             category: category,
             rawCategory: rawCategory,
-            petType: item['Loáº¡i thÃº cÆ°ng'] || 'Táº¥t cáº£',
-            weightClass: 'TÃ¹y chá»n cáºn náº·ng',
-            price: price,
-            priceDisplay: item['GiÃ¡ <5kg (VNÄ)'] || item['GiÃ¡ niÃªm yáº¿t (VNÄ)'] || 'LiÃªn há»‡',
+            petType: item['Loại thú cưng'] || 'Tất cả',
+            weightClass: validPrices.length > 0 ? 'Tùy chọn cân nặng' : 'Tất cả',
+            price: basePrice,
             prices: prices,
-            memberPrice: item['GiÃ¡ Æ°u Ä‘Ã£i thÃ nh viÃªn (VNÄ)'] || '',
-            duration: item['Thá»i gian thá»±c hiá»‡n (Duration)'] || '',
+            priceDisplay: category === 'hotel' ? 'đêm' : '',
+            memberPrice: item['Giá ưu đãi thành viên (VNĐ)'] || '',
+            duration: item['Thời gian thực hiện (Duration)'] || '',
             rating: rating,
             reviewCount: reviewCount,
-            description: item['MÃ´ táº£ chi tiáº¿t (Description)'] || '',
-            benefits: item['Lá»£i Ã­ch chÃ­nh (Key Benefits)'] || '',
-            checklist: item['Quy trÃ¬nh thá»±c hiá»‡n (Checklist)'] || '',
-            amenities: item['Tiá»‡n Ã­ch / CÆ¡ sá»Ÿ váº­t cháº¥t (Amenities)'] || '',
-            groomerLevel: item['Cáº¥p Ä‘á»™ nhÃ¢n viÃªn thá»±c hiá»‡n (Groomer Level)'] || '',
-            image: item['HÃ¬nh áº£nh'] ? `/${item['HÃ¬nh áº£nh']}` : '/assets/images/services/spa.png',
-            status: item['Tráº¡ng thÃ¡i kinh doanh'] || 'Äang phá»¥c vá»¥'
+            description: item['Mô tả chi tiết (Description)'] || '',
+            benefits: item['Lợi ích chính (Key Benefits)'] || '',
+            checklist: item['Quy trình thực hiện (Checklist)'] || '',
+            amenities: item['Tiện ích / Cơ sở vật chất (Amenities)'] || '',
+            groomerLevel: item['Cấp độ nhân viên thực hiện (Groomer Level)'] || '',
+            image: item['Hình ảnh'] ? `/${item['Hình ảnh']}` : '/assets/images/services/spa.png',
+            status: item['Trạng thái kinh doanh'] || 'Đang phục vụ'
         };
     });
 }
@@ -1360,4 +1398,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
-

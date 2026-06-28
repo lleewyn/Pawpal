@@ -458,17 +458,11 @@ function initShopFilter() {
                 else if (['hygiene', 'grooming', 'health'].includes(product.category)) mappedCategory = 'vesinh';
                 else mappedCategory = 'phukien'; // toys, clothes, bowls, accessories, furniture, other
 
-                // Determine marketing tags
+                // Determine marketing tags for filtering only
                 let marketingTags = [];
                 if (product.badge === 'new') marketingTags.push('hangmoi');
                 if (product.badge === 'best') marketingTags.push('banchay');
                 if (product.sale || product.badge === 'hot') marketingTags.push('khuyenmai');
-                
-                // Determine badge to display (priority: khuyenmai, banchay, hangmoi)
-                let displayBadge = '';
-                if (product.sale) displayBadge = '<span class="tag-badge tag-khuyenmai">Khuyến mãi</span>';
-                else if (product.badge === 'best') displayBadge = '<span class="tag-badge tag-banchay">Bán chạy</span>';
-                else if (product.badge === 'new') displayBadge = '<span class="tag-badge tag-hangmoi">Hàng mới</span>';
 
                 const formattedPrice = product.price.toLocaleString('vi-VN') + 'đ';
                 const formattedOldPrice = product.originalPrice > product.price ? product.originalPrice.toLocaleString('vi-VN') + 'đ' : '';
@@ -480,7 +474,6 @@ function initShopFilter() {
                         <a href="/pages/shop/product-detail/product-detail.html?id=${product.id}" class="product-card-link">
                             <div class="product-image-box">
                                 <img src="${imgSrc}" alt="${product.name}" loading="lazy" onerror="this.src='../../assets/images/shop/products/placeholder.webp'">
-                                ${displayBadge}
                             </div>
                             <div class="product-info">
                                 <h3>${product.name}</h3>
@@ -495,12 +488,12 @@ function initShopFilter() {
                                 </div>
                             </div>
                         </a>
-                        <button class="product-wishlist-btn" data-product-id="${product.id}" aria-label="Thêm vào yêu thích">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                            </svg>
-                        </button>
                         <div class="product-card-actions">
+                            <button class="product-wishlist-btn" data-product-id="${product.id}" aria-label="Thêm vào yêu thích">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                            </button>
                             <button class="product-quick-add" data-product-id="${product.id}" ${!product.inStock ? 'disabled' : ''} aria-label="Thêm vào giỏ">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="9" cy="21" r="1"></circle>

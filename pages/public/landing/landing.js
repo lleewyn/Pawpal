@@ -239,6 +239,43 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return cart;
     };
+    const getCurrentWishlistUser = () => {
+        try {
+            return JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        } catch (error) {
+            return null;
+        }
+    };
+    const getWishlistKey = () => {
+        const user = getCurrentWishlistUser();
+        return user && user.phone ? `pawpal_wishlist_${user.phone}` : 'pawpal_wishlist_guest';
+    };
+    const getWishlist = () => {
+        try {
+            return JSON.parse(localStorage.getItem(getWishlistKey()) || '[]');
+        } catch (error) {
+            return [];
+        }
+    };
+    const saveWishlist = (wishlist) => localStorage.setItem(getWishlistKey(), JSON.stringify(wishlist.map(String)));
+    const toggleWishlist = (productId) => {
+        const wishlist = getWishlist();
+        const id = String(productId);
+        const index = wishlist.indexOf(id);
+        if (index >= 0) {
+            wishlist.splice(index, 1);
+        } else {
+            wishlist.push(id);
+        }
+        saveWishlist(wishlist);
+        return wishlist.includes(id);
+    };
+    const syncWishlistButtons = () => {
+        const wishlist = getWishlist();
+        grid.querySelectorAll('.product-wishlist-btn').forEach(btn => {
+            btn.classList.toggle('active', wishlist.includes(String(btn.dataset.productId)));
+        });
+    };
 
     // Wait for DataLoader
     let attempts = 0;
@@ -261,9 +298,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     grid.innerHTML = featured.map(p => {
         const hasDiscount = p.originalPrice && p.originalPrice > p.price;
-        const badge = hasDiscount
-            ? `<span class="tag-badge tag-khuyenmai">Khuyến mãi</span>`
-            : `<span class="tag-badge tag-hangmoi">Nổi bật</span>`;
         const oldPrice = hasDiscount
             ? `<span class="price-old">${Number(p.originalPrice).toLocaleString('vi-VN')}đ</span>`
             : '';
@@ -272,12 +306,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return `
         <div class="product-card" data-product-id="${p.id}">
+            <button class="product-wishlist-btn" data-product-id="${p.id}" aria-label="Thêm vào yêu thích">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+            </button>
             <a href="${detailBase}?id=${p.id}" class="product-card-link" style="text-decoration:none;color:inherit">
                 <div class="product-image-box">
                     <img src="${p.image || '/assets/images/shop/products/placeholder.webp'}"
                         alt="${p.name}" loading="lazy"
                         onerror="this.src='/assets/images/shop/products/placeholder.webp'">
-                    ${badge}
                 </div>
                 <div class="product-info">
                     <h3>${p.name}</h3>
@@ -302,14 +340,22 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>`;
     }).join('');
+    syncWishlistButtons();
 
     grid.addEventListener('click', (event) => {
+        const wishlistBtn = event.target.closest('.product-wishlist-btn');
         const addBtn = event.target.closest('.add-to-cart-btn');
         const buyBtn = event.target.closest('.buy-now-btn');
-        if (!addBtn && !buyBtn) return;
+        if (!wishlistBtn && !addBtn && !buyBtn) return;
 
         event.preventDefault();
         event.stopPropagation();
+
+        if (wishlistBtn) {
+            const active = toggleWishlist(wishlistBtn.dataset.productId);
+            wishlistBtn.classList.toggle('active', active);
+            return;
+        }
 
         const btn = addBtn || buyBtn;
         const id = btn.dataset.productId;
@@ -360,20 +406,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
             grid.innerHTML = filtered.map(p => {
                 const hasDiscount = p.originalPrice && p.originalPrice > p.price;
-                const badge = hasDiscount
-                    ? `<span class="tag-badge tag-khuyenmai">Khuyến mãi</span>`
-                    : `<span class="tag-badge tag-hangmoi">Nổi bật</span>`;
                 const oldPrice = hasDiscount
                     ? `<span class="price-old">${Number(p.originalPrice).toLocaleString('vi-VN')}đ</span>`
                     : '';
                 return `
                 <div class="product-card" data-product-id="${p.id}">
+                    <button class="product-wishlist-btn" data-product-id="${p.id}" aria-label="Thêm vào yêu thích">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                    </button>
                     <a href="${detailBase}?id=${p.id}" class="product-card-link" style="text-decoration:none;color:inherit">
                         <div class="product-image-box">
                             <img src="${p.image || '/assets/images/shop/products/placeholder.webp'}"
                                 alt="${p.name}" loading="lazy"
                                 onerror="this.src='/assets/images/shop/products/placeholder.webp'">
-                            ${badge}
                         </div>
                         <div class="product-info">
                             <h3>${p.name}</h3>
@@ -393,14 +440,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>`;
             }).join('');
+            syncWishlistButtons();
 
             grid.addEventListener('click', (event) => {
+                const wishlistBtn = event.target.closest('.product-wishlist-btn');
                 const addBtn = event.target.closest('.add-to-cart-btn');
                 const buyBtn = event.target.closest('.buy-now-btn');
-                if (!addBtn && !buyBtn) return;
+                if (!wishlistBtn && !addBtn && !buyBtn) return;
 
                 event.preventDefault();
                 event.stopPropagation();
+
+                if (wishlistBtn) {
+                    const active = toggleWishlist(wishlistBtn.dataset.productId);
+                    wishlistBtn.classList.toggle('active', active);
+                    return;
+                }
 
                 const btn = addBtn || buyBtn;
                 const id = btn.dataset.productId;

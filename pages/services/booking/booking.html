@@ -387,13 +387,19 @@
                                     <span class="sum-value" id="sumDateVal">—</span>
                                 </div>
                                 <div class="summary-divider"></div>
-                                <div class="summary-row price-row">
+                                <div class="summary-row" id="sumSubtotalRow" class="d-none">
+                                    <span class="sum-label">Tạm tính</span>
+                                    <span class="sum-value" id="sumSubtotalVal">—</span>
+                                </div>
+                                <div class="summary-row" id="sumDiscountRow" class="d-none" style="color: var(--color-primary);">
+                                    <span class="sum-label" id="sumDiscountLabel">Giảm giá</span>
+                                    <span class="sum-value" id="sumDiscountVal">—</span>
+                                </div>
+                                <div class="summary-row price-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--color-border);">
                                     <span class="sum-label">Tổng tiền</span>
                                     <span class="sum-value price-val" id="sumPriceVal">—</span>
                                 </div>
-                                <div class="summary-member-note" id="sumMemberNote" class="d-none">
-                                    <span> Thành viên được giảm thêm</span>
-                                </div>
+                                <div id="sumMemberNote" class="d-none"></div>
                             </div>
                         </div>
 
