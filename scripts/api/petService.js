@@ -62,6 +62,9 @@ export async function savePets(pets) {
             };
 
             const targetId = pet._id || current?._id;
+            
+            // Xóa _id khỏi payload để tránh lỗi MongoDB immutable field khi update
+            delete payload._id;
 
             if (targetId) {
                 const updated = await API.request(`/api/pets/${targetId}`, {
