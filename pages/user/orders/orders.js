@@ -127,8 +127,8 @@ function createOrderCard(order) {
 
     const reviewActionHTML = isCompleted
         ? allReviewed
-            ? `<button type="button" class="btn-review" onclick="openQuickReviewModal('${order.id}')" aria-label="Xem đánh giá đơn hàng ${order.id}">Xem đánh giá</button>`
-            : `<button type="button" class="btn-review" onclick="openQuickReviewModal('${order.id}')" aria-label="Đánh giá đơn hàng ${order.id}">Đánh giá</button>`
+            ? `<a class="btn-review" href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" aria-label="Xem đánh giá đơn hàng ${order.id}">Xem đánh giá</a>`
+            : `<a class="btn-review" href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" aria-label="Đánh giá đơn hàng ${order.id}">Đánh giá</a>`
         : '';
 
     const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');

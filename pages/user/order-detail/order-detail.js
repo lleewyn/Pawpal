@@ -68,6 +68,15 @@ async function loadOrderDetail() {
             const products = currentOrder.products.map(p => ({ ...p, deliveredDate }));
             ReviewHandler.init(currentOrder.id, products);
             scrollToReviewAnchor();
+
+            // Nếu đi từ danh sách đơn hàng sang với #reviews, mở sẵn form đánh giá đầu tiên
+            if (window.location.hash === '#reviews' && products.length) {
+                setTimeout(() => {
+                    if (typeof ReviewHandler.openForm === 'function') {
+                        ReviewHandler.openForm(products[0].id);
+                    }
+                }, 180);
+            }
         }
         
     } catch (error) {
