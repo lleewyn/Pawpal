@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="cart-item-checkbox-wrapper">
                     <input type="checkbox" class="form-check-input item-checkbox" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
                 </div>
-                <img src="../../${item.image}" alt="${item.name}" class="cart-item-img" onerror="this.onerror=null; this.src='/assets/images/shop/products/placeholder.webp'">
+                <img src="${item.image}" alt="${item.name}" class="cart-item-img" onerror="this.onerror=null; this.src='/assets/images/shop/products/placeholder.webp'">
                 <div class="cart-item-details">
                     <a href="/pages/shop/product-detail/product-detail.html?id=${item.id}" class="cart-item-name">${item.name}</a>
                     <div class="cart-item-meta">Thương hiệu: ${item.brand}</div>
