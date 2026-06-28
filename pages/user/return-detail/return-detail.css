@@ -3,6 +3,22 @@
    ========================================================================== */
 
 /* Slide-out Panel (Drawer) */
+.info-card {
+    background: var(--color-bg-white);
+    border-radius: var(--card-border-radius);
+    border: var(--border-card);
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+    box-shadow: var(--shadow-card);
+}
+.info-card h3 {
+    font-family: var(--font-heading);
+    font-size: var(--fs-h3);
+    font-weight: 600;
+    color: var(--color-text-dark);
+    margin-bottom: var(--space-sm);
+}
+
 .rma-drawer-overlay {
     position: fixed;
     top: 0;
