@@ -54,19 +54,54 @@ function buildPetPayload(pet, currentUser, current) {
     return payload;
 }
 
-export async function getPets(userId) {
-    let pets = [];
-    if (!userId) {
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        if (currentUser?.id) {
-            pets = normalizePetList(await API.getUserPets(currentUser.id));
+function sameUserId(left, right) {
+    if (left == null || right == null) return false;
+    return String(left) === String(right);
+}
+
+function mergePetLists(serverPets, localPets, targetUserId) {
+    const map = new Map();
+
+    const shouldKeep = (pet) => {
+        if (!targetUserId) return true;
+        return sameUserId(pet.userId?._id || pet.userId, targetUserId) || sameUserId(pet.userLegacyId, targetUserId);
+    };
+
+    const upsert = (pet, priority) => {
+        if (!pet || !shouldKeep(pet)) return;
+        const key = String(pet._id || pet.legacyId || pet.id || `${pet.name || ''}-${pet.dob || ''}`);
+        const existing = map.get(key);
+        if (!existing) {
+            map.set(key, { ...pet, __priority: priority });
+            return;
         }
+        if (priority >= (existing.__priority || 0)) {
+            map.set(key, { ...existing, ...pet, __priority: priority });
+        }
+    };
+
+    serverPets.forEach(pet => upsert(pet, 1));
+    localPets.forEach(pet => upsert(pet, 2));
+
+    return Array.from(map.values()).map(({ __priority, ...pet }) => pet);
+}
+
+export async function getPets(userId) {
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    const targetUserId = userId || currentUser?.id || null;
+
+    let serverPets = [];
+    if (targetUserId) {
+        serverPets = normalizePetList(await API.getUserPets(targetUserId));
     } else {
-        pets = normalizePetList(await API.getUserPets(userId));
+        serverPets = normalizePetList(await API.request('/api/pets'));
     }
 
-    localStorage.setItem('pawpal_pets', JSON.stringify(pets));
-    return pets;
+    const localPets = normalizePetList(JSON.parse(localStorage.getItem('pawpal_pets') || '[]'));
+    const merged = mergePetLists(serverPets, localPets, targetUserId);
+
+    localStorage.setItem('pawpal_pets', JSON.stringify(merged));
+    return merged;
 }
 
 export async function savePets(pets) {

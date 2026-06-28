@@ -139,11 +139,28 @@ export const API = {
     async getUserPets(userId) {
         const pets = await this.request(`/api/pets`);
         if (Array.isArray(pets)) {
-            return pets.filter(pet => sameUserId(pet.userId?._id || pet.userId, userId) || sameUserId(pet.userLegacyId, userId));
+            const currentUser = safeReadObject('pawpal_current_user');
+            return pets.filter(pet =>
+                sameUserId(pet.userId?._id || pet.userId, userId) ||
+                sameUserId(pet.userLegacyId, userId) ||
+                sameUserId(pet.userLegacyId, currentUser?.id) ||
+                sameUserId(pet.userId?._id || pet.userId, currentUser?._id) ||
+                sameUserId(pet.userLegacyId, currentUser?.legacyId) ||
+                sameUserId(currentUser?.phone, pet.ownerPhone) ||
+                sameUserId(currentUser?.phone, pet.phone)
+            );
         }
         await this.initData();
         const localPets = safeReadArray('pawpal_pets');
-        return localPets.filter(pet => sameUserId(pet.userId, userId));
+        const currentUser = safeReadObject('pawpal_current_user');
+        return localPets.filter(pet =>
+            sameUserId(pet.userId, userId) ||
+            sameUserId(pet.userLegacyId, userId) ||
+            sameUserId(pet.userLegacyId, currentUser?.id) ||
+            sameUserId(pet.userId, currentUser?._id) ||
+            sameUserId(currentUser?.phone, pet.ownerPhone) ||
+            sameUserId(currentUser?.phone, pet.phone)
+        );
     },
 
     async getUserBookings(userId) {
