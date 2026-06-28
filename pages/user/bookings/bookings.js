@@ -130,10 +130,10 @@ function createBookingCard(booking) {
         : '';
     const detailPrompt = '<span class="booking-card-detail-hint">Nhấn để xem chi tiết</span>';
     const changeScheduleAction = canModify
-        ? `<a class="btn-change-schedule" href="../booking-detail/booking-detail.html?id=${booking.id}" onclick="event.stopPropagation()">Đổi lịch</a>`
+        ? `<button type="button" class="btn-change-schedule" data-booking-id="${booking.id}">Đổi lịch</button>`
         : '';
     const cancelBookingAction = canCancel
-        ? `<a class="btn-cancel-booking" href="../booking-detail/booking-detail.html?id=${booking.id}" onclick="event.stopPropagation()">Huỷ lịch</a>`
+        ? `<button type="button" class="btn-cancel-booking" data-booking-id="${booking.id}">Huỷ lịch</button>`
         : '';
     card.className = `booking-card status-${normalizedStatus}`;
     card.tabIndex = 0;
@@ -184,6 +184,24 @@ function createBookingCard(booking) {
             </div>
         </div>
     `;
+
+    const changeBtn = card.querySelector('.btn-change-schedule');
+    if (changeBtn) {
+        changeBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openQuickRescheduleModal(booking);
+        });
+    }
+
+    const cancelBtn = card.querySelector('.btn-cancel-booking');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openQuickCancelModal(booking);
+        });
+    }
 
     return card;
 }
@@ -258,4 +276,131 @@ window.BookingsData = {
     formatDate,
     formatPrice
 };
+
+function openQuickCancelModal(booking) {
+    const existing = document.getElementById('quickCancelBookingModal');
+    if (existing) existing.remove();
+
+    const modalEl = document.createElement('div');
+    modalEl.id = 'quickCancelBookingModal';
+    modalEl.className = 'modal fade';
+    modalEl.tabIndex = -1;
+    modalEl.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Hủy lịch hẹn</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc muốn hủy lịch <strong>${booking.id}</strong> không?</p>
+                    <p class="text-muted small mb-0">Lịch đã hủy sẽ không thể khôi phục.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Không</button>
+                    <button type="button" class="btn-cta" id="quickConfirmCancelBtn">Xác nhận hủy</button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(modalEl);
+
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    modalEl.querySelector('#quickConfirmCancelBtn').addEventListener('click', () => {
+        const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        const idx = bookings.findIndex((b) => b.id === booking.id);
+        if (idx !== -1) {
+            bookings[idx].status = 'cancelled';
+            bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
+            localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
+        }
+        modal.hide();
+        showToast('Đã hủy lịch hẹn thành công!', 'success');
+        loadBookings(document.querySelector('.filter-tab.active')?.dataset.status || 'all');
+    });
+}
+
+function openQuickRescheduleModal(booking) {
+    const existing = document.getElementById('quickRescheduleBookingModal');
+    if (existing) existing.remove();
+
+    const configSlots = (window.PawPalBookingConfig?.slots) || ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
+    const configStaffs = (window.PawPalBookingConfig?.staffs) || ['Phân bổ ngẫu nhiên', 'Nguyễn Minh An', 'Trần An Nhiên', 'Lê Hoàng Tiến'];
+    const slotOptions = configSlots.map((slot) => `<button type="button" class="quick-slot-btn" data-slot="${slot}">${slot}</button>`).join('');
+    const staffOptions = configStaffs.map((staff) => `<button type="button" class="quick-staff-btn" data-staff="${typeof staff === 'string' ? staff : staff.name}">${typeof staff === 'string' ? staff : staff.name}</button>`).join('');
+    const minDate = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+    const modalEl = document.createElement('div');
+    modalEl.id = 'quickRescheduleBookingModal';
+    modalEl.className = 'modal fade';
+    modalEl.tabIndex = -1;
+    modalEl.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Đổi lịch hẹn</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">Chọn ngày, giờ và nhân viên mới cho lịch <strong>${booking.id}</strong>.</p>
+                    <label class="form-label fw-semibold">Chọn ngày</label>
+                    <input type="date" id="quickRescheduleDate" class="form-control mb-3" min="${minDate}">
+                    <label class="form-label fw-semibold">Chọn giờ</label>
+                    <div class="d-flex flex-wrap gap-2 mb-3" id="quickRescheduleSlots">${slotOptions}</div>
+                    <label class="form-label fw-semibold">Chọn nhân viên</label>
+                    <div class="d-flex flex-wrap gap-2 mb-3" id="quickRescheduleStaffs">${staffOptions}</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn-cta" id="quickConfirmRescheduleBtn" disabled>Xác nhận đổi lịch</button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(modalEl);
+
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    let selectedDate = '';
+    let selectedSlot = '';
+    let selectedStaff = '';
+    const refreshState = () => {
+        modalEl.querySelectorAll('.quick-slot-btn, .quick-staff-btn').forEach((btn) => btn.classList.remove('active'));
+        modalEl.querySelectorAll('.quick-slot-btn').forEach((btn) => {
+            if (btn.dataset.slot === selectedSlot) btn.classList.add('active');
+        });
+        modalEl.querySelectorAll('.quick-staff-btn').forEach((btn) => {
+            if (btn.dataset.staff === selectedStaff) btn.classList.add('active');
+        });
+        modalEl.querySelector('#quickConfirmRescheduleBtn').disabled = !(selectedDate && selectedSlot && selectedStaff);
+    };
+
+    modalEl.querySelector('#quickRescheduleDate').addEventListener('change', (e) => {
+        selectedDate = e.target.value;
+        refreshState();
+    });
+    modalEl.querySelectorAll('.quick-slot-btn').forEach((btn) => {
+        btn.addEventListener('click', () => { selectedSlot = btn.dataset.slot; refreshState(); });
+    });
+    modalEl.querySelectorAll('.quick-staff-btn').forEach((btn) => {
+        btn.addEventListener('click', () => { selectedStaff = btn.dataset.staff; refreshState(); });
+    });
+
+    modalEl.querySelector('#quickConfirmRescheduleBtn').addEventListener('click', () => {
+        const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        const idx = bookings.findIndex((b) => b.id === booking.id);
+        if (idx !== -1) {
+            bookings[idx].date = selectedDate;
+            bookings[idx].time = selectedSlot;
+            bookings[idx].timeStart = selectedSlot;
+            bookings[idx].staff = selectedStaff;
+            bookings[idx].changeCount = (bookings[idx].changeCount || 0) + 1;
+            localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
+        }
+        modal.hide();
+        showToast('Đã đổi lịch hẹn thành công!', 'success');
+        loadBookings(document.querySelector('.filter-tab.active')?.dataset.status || 'all');
+    });
+}
 

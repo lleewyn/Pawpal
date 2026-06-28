@@ -420,7 +420,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-xs); /* 8px */
-    padding: var(--space-sm) var(--space-md); /* 16px 24px */
+    padding: 10px 20px;
     border-radius: var(--border-radius-pill);
     font-family: var(--font-primary);
     font-size: 0.9rem;
