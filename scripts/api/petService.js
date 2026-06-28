@@ -14,9 +14,7 @@ function getDefaultPetAvatar(species) {
 function normalizePetAvatar(pet) {
     if (!pet || typeof pet !== 'object') return pet;
 
-    // Ensure frontend `id` field exists from MongoDB `_id` or `legacyId`
     const normalizedId = pet.id || pet.legacyId || pet._id;
-
     const avatar = typeof pet.avatar === 'string' ? pet.avatar : '';
     const shouldReplaceLegacyAvatar = !avatar || avatar.includes('/assets/images/tracker/') || avatar.includes('belu-');
 
@@ -31,6 +29,31 @@ function normalizePetList(pets) {
     return Array.isArray(pets) ? pets.map(normalizePetAvatar) : [];
 }
 
+function buildPetPayload(pet, currentUser, current) {
+    const payload = { ...pet };
+
+    delete payload._id;
+    delete payload.id;
+
+    const rawUserId = pet.userId || current?.userId || null;
+    const rawUserLegacyId = pet.userLegacyId || currentUser?.id || current?.userLegacyId || null;
+
+    if (typeof rawUserId === 'string' && /^[a-f\d]{24}$/i.test(rawUserId)) {
+        payload.userId = rawUserId;
+    } else {
+        delete payload.userId;
+    }
+
+    payload.userLegacyId = rawUserLegacyId ? String(rawUserLegacyId) : null;
+
+    if (typeof payload.weight === 'string') {
+        const parsedWeight = Number(payload.weight);
+        payload.weight = Number.isFinite(parsedWeight) ? parsedWeight : 0;
+    }
+
+    return payload;
+}
+
 export async function getPets(userId) {
     let pets = [];
     if (!userId) {
@@ -41,7 +64,7 @@ export async function getPets(userId) {
     } else {
         pets = normalizePetList(await API.getUserPets(userId));
     }
-    
+
     localStorage.setItem('pawpal_pets', JSON.stringify(pets));
     return pets;
 }
@@ -56,15 +79,8 @@ export async function savePets(pets) {
         const results = [];
         for (const pet of normalizedPets) {
             const current = byLegacyId.get(String(pet.id));
-            const payload = {
-                ...pet,
-                userLegacyId: pet.userId || currentUser?.id || current?.userId || null
-            };
-
+            const payload = buildPetPayload(pet, currentUser, current);
             const targetId = pet._id || current?._id;
-            
-            // Xóa _id khỏi payload để tránh lỗi MongoDB immutable field khi update
-            delete payload._id;
 
             if (targetId) {
                 const updated = await API.request(`/api/pets/${targetId}`, {
@@ -84,7 +100,7 @@ export async function savePets(pets) {
         const success = results.every(Boolean);
         if (success) {
             localStorage.setItem('pawpal_pets', JSON.stringify(normalizedPets));
-            console.log('Đã lưu', normalizedPets.length, 'bé cưng');
+            console.log('Da luu', normalizedPets.length, 'be cung');
         }
         return success;
     } catch (e) {
@@ -97,9 +113,12 @@ export async function deletePet(petId) {
     const pets = JSON.parse(localStorage.getItem('pawpal_pets')) || [];
     const pet = pets.find((item) => item.id === petId);
     if (pet?._id) {
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        const current = pets.find((item) => String(item.id) === String(petId));
+        const payload = buildPetPayload({ ...pet, isArchived: true }, currentUser, current);
         const updated = await API.request(`/api/pets/${pet._id}`, {
             method: 'PUT',
-            body: JSON.stringify({ ...pet, isArchived: true })
+            body: JSON.stringify(payload)
         });
         if (updated) {
             localStorage.setItem('pawpal_pets', JSON.stringify(pets.map(p => p.id === petId ? { ...p, isArchived: true } : p)));
@@ -113,9 +132,12 @@ export async function restorePet(petId) {
     const pets = JSON.parse(localStorage.getItem('pawpal_pets')) || [];
     const pet = pets.find((item) => item.id === petId);
     if (pet?._id) {
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        const current = pets.find((item) => String(item.id) === String(petId));
+        const payload = buildPetPayload({ ...pet, isArchived: false }, currentUser, current);
         const updated = await API.request(`/api/pets/${pet._id}`, {
             method: 'PUT',
-            body: JSON.stringify({ ...pet, isArchived: false })
+            body: JSON.stringify(payload)
         });
         if (updated) {
             localStorage.setItem('pawpal_pets', JSON.stringify(pets.map(p => p.id === petId ? { ...p, isArchived: false } : p)));
