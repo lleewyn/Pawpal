@@ -17,7 +17,12 @@ const allowedOrigins = new Set([
 app.use(cors({
     origin(origin, callback) {
         if (!origin) return callback(null, true);
-        if (allowedOrigins.has(origin) || /^http:\/\/localhost:\d+$/.test(origin) || /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) {
+        if (
+            allowedOrigins.has(origin) ||
+            /^http:\/\/localhost:\d+$/.test(origin) ||
+            /^http:\/\/127\.0\.0\.1:\d+$/.test(origin) ||
+            /^https:\/\/.*\.vercel\.app$/.test(origin)
+        ) {
             return callback(null, true);
         }
         return callback(new Error(`CORS blocked for origin: ${origin}`));
