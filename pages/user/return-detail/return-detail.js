@@ -127,15 +127,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const timelineContainer = document.getElementById('rma-timeline');
     timelineContainer.innerHTML = timelineSteps.map((step, idx) => {
         let statusClass = 'pending';
-        if (idx < activeIdx) statusClass = 'done';
+        if (idx < activeIdx) statusClass = 'completed';
         else if (idx === activeIdx) statusClass = 'active';
 
         return `
-            <div class="timeline-step ${statusClass}">
-                <div class="timeline-step-dot"></div>
-                <div class="timeline-step-content">
-                    <h5>${step.title}</h5>
-                    <p>${step.desc}</p>
+            <div class="rma-timeline-item ${statusClass}">
+                <div class="rma-timeline-dot"></div>
+                <div class="rma-timeline-content">
+                    <div class="rma-timeline-title">${step.title}</div>
+                    <div class="rma-timeline-desc">${step.desc}</div>
                 </div>
             </div>
         `;
