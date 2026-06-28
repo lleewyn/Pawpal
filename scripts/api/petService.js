@@ -17,9 +17,7 @@ function normalizePetAvatar(pet) {
     const avatar = typeof pet.avatar === 'string' ? pet.avatar : '';
     const shouldReplaceLegacyAvatar = !avatar || avatar.includes('/assets/images/tracker/') || avatar.includes('belu-');
 
-    if (!shouldReplaceLegacyAvatar) {
-        return pet;
-    }
+    if (!shouldReplaceLegacyAvatar) return pet;
 
     return {
         ...pet,
@@ -31,75 +29,90 @@ function normalizePetList(pets) {
     return Array.isArray(pets) ? pets.map(normalizePetAvatar) : [];
 }
 
-/**
- * Lấy danh sách thú cưng của user hiện tại.
- * Đọc từ localStorage do hàm initData() của api.js đã nạp vào.
- */
 export async function getPets(userId) {
     if (!userId) {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (currentUser?.id) {
             const pets = normalizePetList(await API.getUserPets(currentUser.id));
             if (pets.length > 0) return pets;
-
-            // fallback: lọc theo userId để không trả về pet của user khác
-            try {
-                const fallbackPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-                return normalizePetList(
-                    Array.isArray(fallbackPets)
-                        ? fallbackPets.filter(p => String(p.userId) === String(currentUser.id))
-                        : []
-                );
-            } catch {
-                return [];
-            }
         }
-
         return [];
     }
 
     const pets = normalizePetList(await API.getUserPets(userId));
-    if (pets.length > 0) return pets;
-
-    try {
-        const fallbackPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-        return normalizePetList(
-            Array.isArray(fallbackPets) ? fallbackPets.filter((pet) => String(pet.userId) === String(userId)) : []
-        );
-    } catch {
-        return [];
-    }
+    return pets;
 }
 
-/**
- * Lưu danh sách thú cưng
- */
 export async function savePets(pets) {
     try {
         const normalizedPets = normalizePetList(pets);
-        localStorage.setItem('pawpal_pets', JSON.stringify(normalizedPets));
-        console.log(' Đã lưu', normalizedPets.length, 'bé cưng');
-        return true;
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        const existing = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+        const byLegacyId = new Map(existing.map((item) => [String(item.id), item]));
+
+        const results = [];
+        for (const pet of normalizedPets) {
+            const current = byLegacyId.get(String(pet.id));
+            const payload = {
+                ...pet,
+                userLegacyId: pet.userId || currentUser?.id || current?.userId || null
+            };
+
+            if (current?._id) {
+                const updated = await API.request(`/api/pets/${current._id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(payload)
+                });
+                results.push(Boolean(updated));
+            } else {
+                const created = await API.request('/api/pets', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                results.push(Boolean(created));
+            }
+        }
+
+        const success = results.every(Boolean);
+        if (success) {
+            localStorage.setItem('pawpal_pets', JSON.stringify(normalizedPets));
+            console.log('Đã lưu', normalizedPets.length, 'bé cưng');
+        }
+        return success;
     } catch (e) {
         console.error('savePets error:', e);
         return false;
     }
 }
 
-/**
- * Xóa (lưu trữ) thú cưng
- */
 export async function deletePet(petId) {
-    let pets = JSON.parse(localStorage.getItem('pawpal_pets')) || [];
-    pets = pets.map(p => p.id === petId ? { ...p, isArchived: true } : p);
-    return await savePets(pets);
+    const pets = JSON.parse(localStorage.getItem('pawpal_pets')) || [];
+    const pet = pets.find((item) => item.id === petId);
+    if (pet?._id) {
+        const updated = await API.request(`/api/pets/${pet._id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ ...pet, isArchived: true })
+        });
+        if (updated) {
+            localStorage.setItem('pawpal_pets', JSON.stringify(pets.map(p => p.id === petId ? { ...p, isArchived: true } : p)));
+            return true;
+        }
+    }
+    return await savePets(pets.map(p => p.id === petId ? { ...p, isArchived: true } : p));
 }
 
-/**
- * Khôi phục thú cưng
- */
 export async function restorePet(petId) {
-    let pets = JSON.parse(localStorage.getItem('pawpal_pets')) || [];
-    pets = pets.map(p => p.id === petId ? { ...p, isArchived: false } : p);
-    return await savePets(pets);
+    const pets = JSON.parse(localStorage.getItem('pawpal_pets')) || [];
+    const pet = pets.find((item) => item.id === petId);
+    if (pet?._id) {
+        const updated = await API.request(`/api/pets/${pet._id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ ...pet, isArchived: false })
+        });
+        if (updated) {
+            localStorage.setItem('pawpal_pets', JSON.stringify(pets.map(p => p.id === petId ? { ...p, isArchived: false } : p)));
+            return true;
+        }
+    }
+    return await savePets(pets.map(p => p.id === petId ? { ...p, isArchived: false } : p));
 }

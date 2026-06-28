@@ -157,7 +157,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     await API.initData();
-    const freshUser = getCurrentUser() || currentUser;
+    const apiUser = await API.getUserById(currentUser.id);
+    const freshUser = apiUser || getCurrentUser() || currentUser;
+    if (apiUser) {
+        updateCurrentUserRecord({ ...currentUser, ...apiUser, id: apiUser._id || apiUser.id || currentUser.id });
+    }
 
     loadProfileData(freshUser);
     await loadUpcomingBookings(freshUser);

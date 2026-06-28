@@ -2,10 +2,17 @@
   "scripts": {
     "sync": "node sync_static.js",
     "dev": "npx serve -p 3000",
-    "build": "node sync_static.js"
+    "build": "node sync_static.js",
+    "server": "node backend/server.js",
+    "dev:full": "node backend/server.js",
+    "seed:db": "node backend/src/seed/importSeed.js"
   },
   "dependencies": {
-    "bootstrap": "^5.3.3"
+    "bootstrap": "^5.3.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "mongoose": "^8.16.5"
   },
   "devDependencies": {}
 }

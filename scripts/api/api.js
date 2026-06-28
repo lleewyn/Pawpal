@@ -7,6 +7,13 @@
 export const API = {
     DATA_VERSION: '2026-06-28-v6-fix-accents',
 
+    getBaseUrl() {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            return window.PAWPAL_API_BASE_URL || 'http://localhost:4000';
+        }
+        return '';
+    },
+
     async getJSON(url) {
         try {
             const response = await fetch(url);
@@ -14,6 +21,27 @@ export const API = {
             return await response.json();
         } catch (error) {
             console.error(`[API] Cannot load ${url}:`, error);
+            return null;
+        }
+    },
+
+    async request(path, options = {}) {
+        try {
+            const response = await fetch(`${this.getBaseUrl()}${path}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(options.headers || {})
+                },
+                ...options
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error(`[API] request failed: ${path}`, error);
             return null;
         }
     },
@@ -109,22 +137,34 @@ export const API = {
     },
 
     async getUserPets(userId) {
+        const pets = await this.request(`/api/pets`);
+        if (Array.isArray(pets)) {
+            return pets.filter(pet => sameUserId(pet.userId?._id || pet.userId, userId) || sameUserId(pet.userLegacyId, userId));
+        }
         await this.initData();
-        const pets = safeReadArray('pawpal_pets');
-        return pets.filter(pet => sameUserId(pet.userId, userId));
+        const localPets = safeReadArray('pawpal_pets');
+        return localPets.filter(pet => sameUserId(pet.userId, userId));
     },
 
     async getUserBookings(userId) {
+        const bookings = await this.request(`/api/bookings`);
+        if (Array.isArray(bookings)) {
+            return bookings.filter(booking => sameUserId(booking.userId?._id || booking.userId, userId) || sameUserId(booking.userLegacyId, userId));
+        }
         await this.initData();
-        const bookings = safeReadArray('pawpal_bookings');
-        return bookings.filter(booking => sameUserId(booking.userId, userId));
+        const localBookings = safeReadArray('pawpal_bookings');
+        return localBookings.filter(booking => sameUserId(booking.userId, userId));
     },
 
     async getUserOrders(userId) {
+        const orders = await this.request(`/api/orders`);
+        if (Array.isArray(orders)) {
+            return orders.filter(order => sameUserId(order.userId?._id || order.userId, userId) || sameUserId(order.userLegacyId, userId));
+        }
         await this.initData();
-        const orders = safeReadArray('pawpal_orders');
+        const localOrders = safeReadArray('pawpal_orders');
         const currentUser = safeReadObject('pawpal_current_user');
-        return orders.filter(order => {
+        return localOrders.filter(order => {
             if (sameUserId(order.userId, userId)) {
                 return true;
             }
@@ -140,34 +180,49 @@ export const API = {
     },
 
     async getCareLogs() {
+        const careLogs = await this.request('/api/care-logs');
+        if (careLogs && typeof careLogs === 'object') return careLogs;
         await this.initData();
         return safeReadObject('pawpal_pet_tracker_logs') || {};
     },
 
-    async updateUserProfile(userId, newData) {
+    async getUserById(userId) {
+        const users = await this.request('/api/users');
+        if (Array.isArray(users)) {
+            return users.find(user => sameUserId(user._id || user.id, userId) || sameUserId(user.legacyId, userId)) || null;
+        }
         await this.initData();
+        const localUsers = safeReadArray('pawpal_users_db');
+        return localUsers.find(user => sameUserId(user.id, userId)) || null;
+    },
 
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const users = safeReadArray('pawpal_users_db');
-                const idx = users.findIndex(user => sameUserId(user.id, userId));
-
-                if (idx === -1) {
-                    resolve({ success: false, message: 'Khong tim thay user' });
-                    return;
-                }
-
-                users[idx] = { ...users[idx], ...newData };
-                localStorage.setItem('pawpal_users_db', JSON.stringify(users));
-
-                const currentUser = safeReadObject('pawpal_current_user');
-                if (currentUser && sameUser(currentUser, users[idx])) {
-                    localStorage.setItem('pawpal_current_user', JSON.stringify(users[idx]));
-                }
-
-                resolve({ success: true, data: users[idx] });
-            }, 300);
+    async updateUserProfile(userId, newData) {
+        const updated = await this.request(`/api/users/${userId}`, {
+            method: 'PUT',
+            body: JSON.stringify(newData)
         });
+
+        if (updated) {
+            const currentUser = safeReadObject('pawpal_current_user');
+            if (currentUser && sameUserId(currentUser.id, userId)) {
+                localStorage.setItem('pawpal_current_user', JSON.stringify(updated));
+            }
+            return { success: true, data: updated };
+        }
+
+        await this.initData();
+        const users = safeReadArray('pawpal_users_db');
+        const idx = users.findIndex(user => sameUserId(user.id, userId));
+        if (idx === -1) {
+            return { success: false, message: 'Khong tim thay user' };
+        }
+        users[idx] = { ...users[idx], ...newData };
+        localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+        const currentUser = safeReadObject('pawpal_current_user');
+        if (currentUser && sameUser(currentUser, users[idx])) {
+            localStorage.setItem('pawpal_current_user', JSON.stringify(users[idx]));
+        }
+        return { success: true, data: users[idx] };
     }
 };
 
