@@ -21,6 +21,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // Fallback cho các yêu cầu cũ: nếu products bị lưu thiếu thì lấy lại từ đơn gốc
+    if (!Array.isArray(rmaData.products) || rmaData.products.length === 0 || rmaData.products.every((p) => !p || !p.name)) {
+        try {
+            const storedOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+            const sourceOrder = Array.isArray(storedOrders)
+                ? storedOrders.find((item) => String(item.id) === String(orderId))
+                : null;
+            if (sourceOrder && Array.isArray(sourceOrder.products) && sourceOrder.products.length) {
+                rmaData.products = sourceOrder.products.map((product) => ({
+                    id: product.id,
+                    name: product.name,
+                    image: product.image || '/assets/images/shop/products/placeholder.webp',
+                    quantity: Number(product.quantity) || 1,
+                    price: Number(product.price) || 0,
+                    total: Number(product.total) || (Number(product.price) || 0) * (Number(product.quantity) || 1)
+                }));
+            }
+        } catch (error) {
+            console.warn('return-detail products fallback error:', error);
+        }
+    }
+
     // Bug 2 + 4: Trừ điểm khi RMA status = 'completed' (chưa trừ trước đó)
     if (rmaData.status === 'completed' && rmaData.type === 'refund' && !rmaData.pointsDeducted) {
         deductPointsForRefund(rmaData);
@@ -48,7 +70,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p class="rma-product-meta">Số lượng: ${product.quantity} • Đơn giá: ${new Intl.NumberFormat('vi-VN').format(product.price)}đ</p>
             </div>
         </div>
-    `).join('');
+    `).join('') || `
+        <div class="rma-product-item border-0 p-0">
+            <img src="/assets/images/shop/products/placeholder.webp" alt="Sản phẩm" class="rma-product-thumb">
+            <div class="rma-product-info">
+                <h5 class="rma-product-name">Sản phẩm không có dữ liệu</h5>
+                <p class="rma-product-meta">Đơn hàng đang được cập nhật</p>
+            </div>
+        </div>
+    `;
 
     const reasonsMap = {
         broken:      'Sản phẩm lỗi hỏng (do vận chuyển hoặc NSX)',

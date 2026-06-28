@@ -267,7 +267,7 @@ function setupDrawerListeners() {
                 : '',
             products: Array.from(checkedItems).map(cb => {
                 const prodId = cb.getAttribute('data-product-id');
-                return currentRmaOrder.products.find(p => p.id === prodId);
+                return currentRmaOrder.products.find(p => String(p.id) === String(prodId));
             })
         };
 
