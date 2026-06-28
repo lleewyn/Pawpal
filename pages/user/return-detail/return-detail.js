@@ -91,31 +91,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('rma-description-text').textContent = rmaData.description || 'Không có mô tả chi tiết.';
 
     // Hiển thị thông tin TK hoàn tiền nếu có
+    const refundWrapper = document.getElementById('rma-refund-wrapper');
     const refundAccountEl = document.getElementById('rma-refund-account-display');
-    if (refundAccountEl) {
+    if (refundWrapper && refundAccountEl && rmaData.type === 'refund') {
+        refundWrapper.classList.remove('d-none');
         refundAccountEl.textContent = rmaData.refundAccount
             ? rmaData.refundAccount
             : 'Nhân viên CSKH sẽ liên hệ trong vòng 24 giờ.';
     }
 
     // Bug 7 (G7): Hiển thị hướng dẫn gửi hàng khi đã duyệt
-    const shippingGuideEl = document.getElementById('rma-shipping-guide');
-    if (shippingGuideEl) {
+    const shippingBox = document.getElementById('rma-shipping-box');
+    if (shippingBox) {
         if (rmaData.status === 'approved' || rmaData.status === 'shipping_return') {
-            shippingGuideEl.style.display = 'block';
-            shippingGuideEl.innerHTML = `
-                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 16px;margin-top:12px;">
-                    <h6 style="margin:0 0 8px;color:#166534;">📦 Hướng dẫn gửi hàng trả</h6>
-                    <ol style="margin:0;padding-left:18px;font-size:0.88rem;color:#166534;line-height:1.7;">
-                        <li>Đóng gói sản phẩm còn nguyên tem, bao bì (nếu có thể).</li>
-                        <li>Ghi rõ <strong>mã RMA: ${rmaData.rmaId}</strong> lên bên ngoài kiện hàng.</li>
-                        <li>Gửi về địa chỉ: <strong>PawPal — 123 Đường Thú Cưng, Quận 1, TP.HCM</strong></li>
-                        <li>Sau khi gửi, liên hệ hotline <strong>1900 1234</strong> để thông báo mã vận đơn.</li>
-                    </ol>
-                </div>
-            `;
+            shippingBox.classList.remove('d-none');
+            const codeBold = document.getElementById('rma-code-bold');
+            if (codeBold) codeBold.textContent = rmaData.rmaId;
         } else {
-            shippingGuideEl.style.display = 'none';
+            shippingBox.classList.add('d-none');
         }
     }
 
