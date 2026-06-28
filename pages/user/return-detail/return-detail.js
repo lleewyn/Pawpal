@@ -1,6 +1,6 @@
 import { API } from '/scripts/api/api.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initReturnDetail() {
     await API.initData();
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -140,7 +140,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `;
     }).join('');
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initReturnDetail);
+} else {
+    initReturnDetail();
+}
 
 // Bug 2+4: Trừ điểm mua sắm + điểm đánh giá khi hoàn tiền được xác nhận
 function deductPointsForRefund(rmaData) {
