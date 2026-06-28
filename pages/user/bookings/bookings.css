@@ -801,3 +801,30 @@
 .ui-element-10 {
     color: var(--color-primary-light);
 }
+
+/* Quick Reschedule Modal Buttons */
+.quick-slot-btn, .quick-staff-btn {
+    padding: 8px 16px;
+    border-radius: var(--border-radius-pill);
+    border: 1px solid rgba(42,89,68,0.2);
+    background: var(--color-bg-white);
+    color: var(--color-text-dark);
+    font-family: var(--font-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quick-slot-btn:hover:not(:disabled), .quick-staff-btn:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.quick-slot-btn.active, .quick-staff-btn.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(42,89,68,0.2);
+}
