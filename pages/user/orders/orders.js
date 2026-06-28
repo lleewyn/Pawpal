@@ -127,8 +127,8 @@ function createOrderCard(order) {
 
     const reviewActionHTML = isCompleted
         ? allReviewed
-            ? `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" class="btn-review text-decoration-none" aria-label="Xem đánh giá đơn hàng ${order.id}">Xem đánh giá</a>`
-            : `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" class="btn-review text-decoration-none" aria-label="Đánh giá đơn hàng ${order.id}">Đánh giá</a>`
+            ? `<button type="button" class="btn-review" onclick="openQuickReviewModal('${order.id}')" aria-label="Xem đánh giá đơn hàng ${order.id}">Xem đánh giá</button>`
+            : `<button type="button" class="btn-review" onclick="openQuickReviewModal('${order.id}')" aria-label="Đánh giá đơn hàng ${order.id}">Đánh giá</button>`
         : '';
 
     const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
@@ -434,6 +434,121 @@ function hasReviewedOrder(order) {
 }
 
 window.reorder = reorder;
+
+function openQuickReviewModal(orderId) {
+    const order = ordersState.allOrders.find((item) => String(item.id) === String(orderId));
+    if (!order || !Array.isArray(order.products) || order.products.length === 0) {
+        showOrdersToast('Không tìm thấy đơn hàng để đánh giá.', 'error');
+        return;
+    }
+
+    const existing = document.getElementById('quickReviewModal');
+    if (existing) existing.remove();
+
+    const savedReviews = JSON.parse(localStorage.getItem('pawpal_reviews') || '[]');
+    const savedByProduct = new Map(
+        savedReviews
+            .filter((item) => String(item.orderId) === String(order.id))
+            .map((item) => [String(item.productId), item])
+    );
+
+    const productBlocks = order.products.map((product) => {
+        const saved = savedByProduct.get(String(product.id)) || {};
+        const rating = Number(saved.rating) || 5;
+        const comment = saved.comment || '';
+        const stars = [1, 2, 3, 4, 5].map((value) => `
+            <button type="button" class="quick-review-star ${value <= rating ? 'active' : ''}" data-product-id="${product.id}" data-rating="${value}" aria-label="${value} sao">★</button>
+        `).join('');
+
+        return `
+            <div class="quick-review-item" data-product-id="${product.id}">
+                <div class="quick-review-product">
+                    <img src="${product.image || '/assets/images/shop/products/placeholder.webp'}" alt="${product.name}" class="quick-review-thumb" loading="lazy">
+                    <div>
+                        <div class="quick-review-name">${product.name}</div>
+                        <div class="quick-review-sub">Đánh giá sản phẩm này</div>
+                    </div>
+                </div>
+                <div class="quick-review-stars">${stars}</div>
+                <textarea class="quick-review-comment" rows="3" placeholder="Nhận xét về sản phẩm này...">${comment}</textarea>
+            </div>
+        `;
+    }).join('');
+
+    const el = document.createElement('div');
+    el.id = 'quickReviewModal';
+    el.className = 'modal fade';
+    el.tabIndex = -1;
+    el.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Đánh giá đơn hàng ${order.id}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">Chọn số sao và ghi nhận xét cho từng sản phẩm trong đơn. Bạn có thể bấm nút đánh giá ngay ở đây.</p>
+                    <div class="quick-review-list">${productBlocks}</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Để sau</button>
+                    <button type="button" class="btn-cta" id="quickReviewSaveBtn">Lưu đánh giá</button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(el);
+
+    const modal = new bootstrap.Modal(el);
+    modal.show();
+
+    el.querySelectorAll('.quick-review-star').forEach((starBtn) => {
+        starBtn.addEventListener('click', () => {
+            const productId = String(starBtn.dataset.productId);
+            const rating = Number(starBtn.dataset.rating);
+            const item = el.querySelector(`.quick-review-item[data-product-id="${productId}"]`);
+            if (!item) return;
+            item.querySelectorAll('.quick-review-star').forEach((btn) => {
+                btn.classList.toggle('active', Number(btn.dataset.rating) <= rating);
+            });
+        });
+    });
+
+    el.querySelector('#quickReviewSaveBtn').addEventListener('click', () => {
+        const allReviews = JSON.parse(localStorage.getItem('pawpal_reviews') || '[]');
+        const filtered = allReviews.filter((item) => String(item.orderId) !== String(order.id));
+        const reviewedFlags = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]')
+            .filter((item) => String(item.orderId) !== String(order.id));
+
+        let hasAtLeastOneReview = false;
+        el.querySelectorAll('.quick-review-item').forEach((itemEl) => {
+            const productId = itemEl.dataset.productId;
+            const activeStars = Array.from(itemEl.querySelectorAll('.quick-review-star.active'));
+            const rating = activeStars.length ? Math.max(...activeStars.map((btn) => Number(btn.dataset.rating) || 0)) : 5;
+            const comment = itemEl.querySelector('.quick-review-comment')?.value?.trim() || '';
+
+            filtered.push({
+                orderId: order.id,
+                productId,
+                productName: order.products.find((p) => String(p.id) === String(productId))?.name || '',
+                rating,
+                comment,
+                createdAt: new Date().toISOString()
+            });
+            reviewedFlags.push({ orderId: order.id, productId, hasMedia: false });
+            hasAtLeastOneReview = true;
+        });
+
+        localStorage.setItem('pawpal_reviews', JSON.stringify(filtered));
+        localStorage.setItem('pawpal_reviewed', JSON.stringify(reviewedFlags));
+        modal.hide();
+        if (hasAtLeastOneReview) {
+            showOrdersToast('Đã lưu đánh giá thành công.', 'success');
+            applyFilters();
+        }
+    });
+}
+
+window.openQuickReviewModal = openQuickReviewModal;
 
 function showOrdersToast(message, type = 'info') {
     let container = document.getElementById('orders-toast-container');

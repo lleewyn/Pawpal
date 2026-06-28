@@ -537,6 +537,79 @@
     box-shadow: 0 8px 18px rgba(36, 95, 68, 0.16);
 }
 
+/* Quick review modal on orders page */
+.quick-review-list {
+    display: grid;
+    gap: 16px;
+}
+
+.quick-review-item {
+    border: 1px solid rgba(42, 89, 68, 0.12);
+    border-radius: 14px;
+    padding: 14px;
+    background: #ffffff;
+}
+
+.quick-review-product {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.quick-review-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 1px solid rgba(42, 89, 68, 0.12);
+}
+
+.quick-review-name {
+    font-weight: 700;
+    color: var(--color-primary-dark);
+}
+
+.quick-review-sub {
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+}
+
+.quick-review-stars {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.quick-review-star {
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    line-height: 1;
+    color: #d7cbb2;
+    cursor: pointer;
+    padding: 0;
+}
+
+.quick-review-star.active {
+    color: #f4a61d;
+}
+
+.quick-review-comment {
+    width: 100%;
+    border: 1px solid rgba(42, 89, 68, 0.14);
+    border-radius: 12px;
+    padding: 10px 12px;
+    resize: vertical;
+    outline: none;
+    font-family: var(--font-body);
+}
+
+.quick-review-comment:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(42, 89, 68, 0.08);
+}
+
 .order-warning-text {
     background: #fff6e7;
     color: #b36800;
