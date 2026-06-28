@@ -32,16 +32,17 @@ function normalizePetList(pets) {
 }
 
 export async function getPets(userId) {
+    let pets = [];
     if (!userId) {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (currentUser?.id) {
-            const pets = normalizePetList(await API.getUserPets(currentUser.id));
-            if (pets.length > 0) return pets;
+            pets = normalizePetList(await API.getUserPets(currentUser.id));
         }
-        return [];
+    } else {
+        pets = normalizePetList(await API.getUserPets(userId));
     }
-
-    const pets = normalizePetList(await API.getUserPets(userId));
+    
+    localStorage.setItem('pawpal_pets', JSON.stringify(pets));
     return pets;
 }
 
@@ -60,8 +61,10 @@ export async function savePets(pets) {
                 userLegacyId: pet.userId || currentUser?.id || current?.userId || null
             };
 
-            if (current?._id) {
-                const updated = await API.request(`/api/pets/${current._id}`, {
+            const targetId = pet._id || current?._id;
+
+            if (targetId) {
+                const updated = await API.request(`/api/pets/${targetId}`, {
                     method: 'PUT',
                     body: JSON.stringify(payload)
                 });
