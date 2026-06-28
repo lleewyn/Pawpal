@@ -131,6 +131,8 @@ function openRMADrawer(orderId) {
     setupDrawerListeners();
 }
 
+window.openRMADrawer = openRMADrawer;
+
 // Thiết lập sự kiện lắng nghe cho Drawer
 function setupDrawerListeners() {
     const overlay = document.getElementById('rma-overlay');
@@ -286,3 +288,5 @@ function removeRmaFile() {
     if (fileInput) fileInput.value = '';
     if (previewContainer) previewContainer.innerHTML = '';
 }
+
+window.removeRmaFile = removeRmaFile;
