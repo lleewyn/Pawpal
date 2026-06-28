@@ -14,14 +14,16 @@ function getDefaultPetAvatar(species) {
 function normalizePetAvatar(pet) {
     if (!pet || typeof pet !== 'object') return pet;
 
+    // Ensure frontend `id` field exists from MongoDB `_id` or `legacyId`
+    const normalizedId = pet.id || pet.legacyId || pet._id;
+
     const avatar = typeof pet.avatar === 'string' ? pet.avatar : '';
     const shouldReplaceLegacyAvatar = !avatar || avatar.includes('/assets/images/tracker/') || avatar.includes('belu-');
 
-    if (!shouldReplaceLegacyAvatar) return pet;
-
     return {
         ...pet,
-        avatar: getDefaultPetAvatar(pet.species)
+        id: normalizedId,
+        avatar: shouldReplaceLegacyAvatar ? getDefaultPetAvatar(pet.species) : avatar
     };
 }
 
