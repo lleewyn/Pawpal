@@ -1910,10 +1910,15 @@ async function initServicesGrid() {
             if (allServices.length > 0) {
                 const likedServiceIds = loadServiceWishlistIds();
                 grid.innerHTML = allServices.map(service => {
-                    const formattedPrice = service.price.toLocaleString('vi-VN') + 'đ';
-                    const memberPrice = Math.round(service.price * 0.95).toLocaleString('vi-VN') + 'đ';
+                    const priceList = service.prices ? Object.values(service.prices).filter((p) => Number.isFinite(p) && p > 0) : [];
+                    const displayPrice = priceList.length > 0 ? Math.min(...priceList) : service.price;
+                    const formattedPrice = displayPrice.toLocaleString('vi-VN') + 'đ';
+                    const memberPrice = Math.round(displayPrice * 0.95).toLocaleString('vi-VN') + 'đ';
                     const priceUnit = service.priceDisplay.includes('đêm') ? '<span style="font-size: 11px; color: var(--color-text-light);">/đêm</span>' : '';
                     const memberPriceUnit = service.priceDisplay.includes('đêm') ? '/đêm' : '';
+                    const shortDuration = service.duration
+                        ? service.duration.replace(/\bphút\b/i, 'p').replace(/\s+/g, ' ')
+                        : 'Theo ngày';
                     const imgSrc = service.image.startsWith('http') ? service.image : service.image;
                     const fallbackImg = service.category === 'hotel' ? '../../assets/images/services/hotel.png' : '../../assets/images/services/spa.png';
                     const detailUrl = `${window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../'}pages/services/service-detail/service-detail.html?id=${encodeURIComponent(service.serviceId)}`;
@@ -1936,19 +1941,20 @@ async function initServicesGrid() {
                                     <div class="product-meta" style="justify-content: space-between; margin-bottom: 6px;">
                                         <span style="font-size:10px; font-weight:700; background:var(--color-bg-light); color:var(--color-text-light); padding:2px 6px; border-radius:4px;">${service.serviceId}</span>
                                         <div>
-                                            <span class="rating-stars"></span> <span class="rating-score">${service.rating.toFixed(1)}</span> <span class="sold-count">(${service.reviewCount})</span>
+                                            <span class="rating-stars"></span> <span class="rating-score rating-score-gold">${service.rating.toFixed(1)}</span> <span class="sold-count">(${service.reviewCount})</span>
                                         </div>
                                     </div>
                                     <h3>${service.name}</h3>
                                     <p style="font-size:13px; color:var(--color-text-light); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${service.description}</p>
-                                    <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500;">
-                                        <span> ${service.petType}</span>
-                                        <span>${service.duration || 'Theo ngày'}</span>
+                                    <div style="font-size:12px; color:var(--color-text-dark); margin-bottom:12px; display:flex; gap:12px; font-weight: 500; flex-wrap: wrap;">
+                                        <span style="white-space:nowrap;">${service.petType}</span>
+                                        <span>${service.weightClass || 'Tùy chọn cân nặng'}</span>
+                                        <span>${shortDuration}</span>
                                     </div>
                                 </a>
                                 <div class="product-info-footer">
                                     <div class="product-price">
-                                        <span class="price-current" style="font-size: 16px;">${formattedPrice}</span>
+                                        <span class="price-current" style="font-size: 16px;">Từ ${formattedPrice}</span>
                                         ${priceUnit}
                                     </div>
                                     <a href="${bookingUrl}" class="add-to-cart-btn" style="text-decoration:none; text-align:center; padding: 8px 16px;">Đặt lịch</a>

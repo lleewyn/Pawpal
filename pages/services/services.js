@@ -400,12 +400,12 @@ function renderServices() {
 
                         <div class="service-card-price-row">
                             <span class="price-label">Giá niêm yết:</span>
-                            <span class="service-card-price">${formattedPrice} VNĐ<span class="service-card-price-unit">${priceUnit}</span></span>
+                            <span class="service-card-price">Từ ${formattedPrice} VNĐ<span class="service-card-price-unit">${priceUnit}</span></span>
                         </div>
                         <div class="service-card-member-price-row">
                             <span class="member-price-label">Thành viên:</span>
                             <span class="service-card-member-price">
-                                <span>${formattedMemberPrice} VNĐ<span class="service-card-price-unit">${priceUnit}</span></span>
+                                <span>Từ ${formattedMemberPrice} VNĐ<span class="service-card-price-unit">${priceUnit}</span></span>
                                 <span class="member-badge">PawPass Bạc (-5%)</span>
                             </span>
                         </div>

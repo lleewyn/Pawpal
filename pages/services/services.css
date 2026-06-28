@@ -835,6 +835,7 @@
     box-shadow: 0 0 0 3px rgba(42, 89, 68, 0.08);
 }
 
+
 .service-card-price-row {
     margin-top: auto;
     padding-top: 4px;
@@ -850,7 +851,7 @@
 .service-card-member-price-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
     margin-top: 4px;
     padding-top: 4px;
     border-top: 1px dashed var(--color-border);

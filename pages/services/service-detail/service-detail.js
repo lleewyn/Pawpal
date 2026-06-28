@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             setupStickyBarTrigger();
             setupWishlistAndShare();
             setupRelatedServices();
+            setupConfigurator();
 
             // Initial Price Recalculation
             recalculatePrice();
@@ -96,7 +97,6 @@ function populateServiceInfo() {
     document.getElementById('detailRatingScore').textContent = `${serviceData.rating.toFixed(1)} / 5`;
     document.getElementById('detailRatingCount').textContent = `(${serviceData.reviewCount} đánh giá thực tế)`;
     document.getElementById('detailPetType').textContent = serviceData.petType;
-    document.getElementById('detailWeightClass').textContent = serviceData.weightClass.replace(/&/g, 'và');
     document.getElementById('detailDuration').textContent = serviceData.duration || 'Đang cập nhật';
 
     const statusEl = document.getElementById('detailStatus');
@@ -210,46 +210,27 @@ function resetAutoSlide() {
 
 // 3. Set up configuration selection pill buttons
 function setupConfigurator() {
-    // A. Pet Type Option
-    const petGroup = document.getElementById('petTypeGroup');
-    const petOptions = document.getElementById('petTypeOptions');
-
+    // A. Pet Type Option (Hidden as per user request - weight is enough)
     const rawPet = serviceData.petType;
     if (rawPet.includes('/') || rawPet.toLowerCase().includes('và')) {
-        // Both dog and cat supported
-        petGroup.classList.remove('d-none');
-        petOptions.innerHTML = `
-            <button class="config-pill-btn active" data-val="Chó">Chó cún</button>
-            <button class="config-pill-btn" data-val="Mèo">Mèo con</button>
-        `;
-        petOptions.querySelectorAll('.config-pill-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                petOptions.querySelectorAll('.config-pill-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedPetType = btn.getAttribute('data-val');
-                recalculatePrice();
-            });
-        });
+        selectedPetType = 'Tất cả'; // Default
     } else {
         selectedPetType = rawPet.includes('Chó') ? 'Chó' : (rawPet.includes('Mèo') ? 'Mèo' : 'Tất cả');
     }
 
     // B. Weight Class Options
     const weightOptions = document.getElementById('weightClassOptions');
-    const rawWeight = serviceData.weightClass;
+    const availableWeights = Object.keys(serviceData.prices).filter(w => serviceData.prices[w] > 0);
 
-    let weightList = ['Dưới 5kg', '5kg - 10kg', 'Trên 10kg']; // Default choices
-    if (rawWeight.includes('/') || rawWeight.includes('–')) {
-        weightList = rawWeight.split(/[\/–]/).map(w => w.trim());
-    } else if (rawWeight !== 'Tất cả' && !rawWeight.includes('Tất cả')) {
-        weightList = [rawWeight];
+    if (availableWeights.length > 0) {
+        weightOptions.innerHTML = availableWeights.map((w, idx) => `
+            <button class="config-pill-btn ${idx === 0 ? 'active' : ''}" data-val="${w}">${w}</button>
+        `).join('');
+        selectedWeight = availableWeights[0];
+    } else {
+        weightOptions.innerHTML = `<button class="config-pill-btn active" data-val="Tất cả">Tất cả</button>`;
+        selectedWeight = 'Tất cả';
     }
-
-    weightOptions.innerHTML = weightList.map((w, idx) => `
-        <button class="config-pill-btn ${idx === 0 ? 'active' : ''}" data-val="${w}">${w.replace(/&/g, 'và')}</button>
-    `).join('');
-
-    selectedWeight = weightList[0];
 
     weightOptions.querySelectorAll('.config-pill-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -260,42 +241,15 @@ function setupConfigurator() {
         });
     });
 
-    // C. Groomer Selection Level (Only for Spa Category)
-    const groomerGroup = document.getElementById('groomerGroup');
-    if (serviceData.category === 'spa') {
-        groomerGroup.classList.remove('d-none');
-        const groomerOpts = document.getElementById('groomerOptions');
-        groomerOpts.querySelectorAll('.config-pill-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                groomerOpts.querySelectorAll('.config-pill-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedGroomer = btn.getAttribute('data-level');
-                recalculatePrice();
-            });
-        });
-    }
 }
 
 // 4. Calculate prices with weight and staff surcharge
 function recalculatePrice() {
-    let finalPrice = serviceData.price;
+    let finalPrice = serviceData.prices && serviceData.prices[selectedWeight] ? serviceData.prices[selectedWeight] : serviceData.price;
 
-    // A. Staff level surcharge
-    if (serviceData.category === 'spa') {
-        if (selectedGroomer === 'senior') {
-            finalPrice += 50000;
-        } else if (selectedGroomer === 'master') {
-            finalPrice += 100000;
-        }
-    }
 
-    // B. Weight level surcharge
-    // If user picks heavier weight options, we add a logical 40,000 phụ thu per level
-    const weightOptions = Array.from(document.querySelectorAll('#weightClassOptions .config-pill-btn'));
-    const selectedIdx = weightOptions.findIndex(b => b.classList.contains('active'));
-    if (selectedIdx > 0) {
-        finalPrice += (selectedIdx * 40000);
-    }
+
+    // B. Weight level surcharge is now handled directly by the exact price from CSV
 
     // C. Calculate member tier prices
     const silverPrice = Math.round(finalPrice * 0.95);

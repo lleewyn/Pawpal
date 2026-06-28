@@ -283,7 +283,21 @@ function transformServiceData(rawData) {
             category = 'taxi';
         }
 
-        const price = parseInt(item['Giá niêm yết (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
+        const priceSub5 = parseInt(item['Giá <5kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
+        const price5to10 = parseInt(item['Giá 5-10kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
+        const price10to20 = parseInt(item['Giá 10-20kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
+        const priceOver20 = parseInt(item['Giá >20kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
+
+        const prices = {
+            '< 5kg': priceSub5,
+            '5 - 10kg': price5to10,
+            '10 - 20kg': price10to20,
+            '> 20kg': priceOver20
+        };
+
+        const validPrices = Object.values(prices).filter(p => p > 0);
+        const basePrice = validPrices.length > 0 ? Math.min(...validPrices) : 0;
+
         const rating = parseFloat(item['Đánh giá (Rating)'] || '4.8');
         const reviewCount = parseInt(item['Lượt đánh giá (Review Count)'] || '0', 10);
 
@@ -301,9 +315,10 @@ function transformServiceData(rawData) {
             category: category,
             rawCategory: rawCategory,
             petType: item['Loại thú cưng'] || 'Tất cả',
-            weightClass: item['Phân khúc cân nặng'] || 'Tất cả',
-            price: price,
-            priceDisplay: item['Giá niêm yết (VNĐ)'] || 'Liên hệ',
+            weightClass: validPrices.length > 0 ? 'Tùy chọn cân nặng' : 'Tất cả',
+            price: basePrice,
+            prices: prices,
+            priceDisplay: category === 'hotel' ? 'đêm' : '',
             memberPrice: item['Giá ưu đãi thành viên (VNĐ)'] || '',
             duration: item['Thời gian thực hiện (Duration)'] || '',
             rating: rating,

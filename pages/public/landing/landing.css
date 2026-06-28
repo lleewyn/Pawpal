@@ -1883,6 +1883,10 @@
     font-weight: 600;
 }
 
+.rating-score-gold {
+    color: var(--color-accent);
+}
+
 .sold-count {
     color: var(--color-text-light);
 }
