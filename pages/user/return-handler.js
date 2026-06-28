@@ -12,6 +12,18 @@ function openRMADrawer(orderId) {
     if (typeof ordersState !== 'undefined' && ordersState.allOrders) {
         currentRmaOrder = ordersState.allOrders.find(o => o.id === orderId);
     }
+
+    // Fallback: lấy từ localStorage khi đang ở trang chi tiết đơn hàng
+    if (!currentRmaOrder) {
+        try {
+            const storedOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+            if (Array.isArray(storedOrders)) {
+                currentRmaOrder = storedOrders.find(o => String(o.id) === String(orderId));
+            }
+        } catch (error) {
+            console.warn('openRMADrawer localStorage lookup error:', error);
+        }
+    }
     
     // Safe fallback if the order list is unavailable
     if (!currentRmaOrder) {
