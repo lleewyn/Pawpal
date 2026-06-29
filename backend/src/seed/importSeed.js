@@ -6,6 +6,8 @@ const User = require('../models/User');
 const Pet = require('../models/Pet');
 const Booking = require('../models/Booking');
 const Order = require('../models/Order');
+const Cart = require('../models/Cart');
+const Wishlist = require('../models/Wishlist');
 const Return = require('../models/Return');
 const CareLog = require('../models/CareLog');
 const SupportTicket = require('../models/SupportTicket');
@@ -168,7 +170,10 @@ async function main() {
         link: item.link
     }));
 
-    console.log(`Seeded ${users.length} users, ${pets.length} pets, ${bookings.length} bookings, ${orders.length} orders, ${returns.length} returns, ${Object.keys(careLogs || {}).length} careLogs, ${supportTickets.length} tickets, ${vouchers.length} vouchers, ${notifications.length} notifications`);
+    await seedCollection(Cart, [], null);
+    await seedCollection(Wishlist, [], null);
+
+    console.log(`Seeded ${users.length} users, ${pets.length} pets, ${bookings.length} bookings, ${orders.length} orders, ${returns.length} returns, ${Object.keys(careLogs || {}).length} careLogs, ${supportTickets.length} tickets, ${vouchers.length} vouchers, ${notifications.length} notifications, cart/wishlist collections ready`);
     process.exit(0);
 }
 

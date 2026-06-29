@@ -203,6 +203,68 @@ export const API = {
         return safeReadObject('pawpal_pet_tracker_logs') || {};
     },
 
+    async getUserCart(userId) {
+        if (!userId) return safeReadArray('pawpal_cart');
+        const cart = await this.request(`/api/cart/${encodeURIComponent(userId)}`);
+        if (cart && typeof cart === 'object' && Array.isArray(cart.items)) {
+            return cart.items;
+        }
+        return safeReadArray('pawpal_cart');
+    },
+
+    async saveUserCart(userId, items) {
+        if (!userId) {
+            localStorage.setItem('pawpal_cart', JSON.stringify(Array.isArray(items) ? items : []));
+            return { success: true, data: items };
+        }
+        const saved = await this.request(`/api/cart/${encodeURIComponent(userId)}`, {
+            method: 'PUT',
+            body: JSON.stringify({ items: Array.isArray(items) ? items : [] })
+        });
+        if (saved) {
+            localStorage.setItem('pawpal_cart', JSON.stringify(Array.isArray(items) ? items : []));
+            return { success: true, data: saved };
+        }
+        return { success: false };
+    },
+
+    async getUserWishlist(userId) {
+        if (!userId) {
+            const product = safeReadArray('pawpal_wishlist_guest');
+            return { productIds: product, serviceIds: safeReadArray('pawpal_wishlist_services_guest') };
+        }
+        const wishlist = await this.request(`/api/wishlist/${encodeURIComponent(userId)}`);
+        if (wishlist && typeof wishlist === 'object') {
+            return {
+                productIds: Array.isArray(wishlist.productIds) ? wishlist.productIds : [],
+                serviceIds: Array.isArray(wishlist.serviceIds) ? wishlist.serviceIds : []
+            };
+        }
+        return { productIds: [], serviceIds: [] };
+    },
+
+    async saveUserWishlist(userId, wishlist) {
+        const payload = {
+            productIds: Array.isArray(wishlist?.productIds) ? wishlist.productIds.map(String) : [],
+            serviceIds: Array.isArray(wishlist?.serviceIds) ? wishlist.serviceIds.map(String) : []
+        };
+        if (!userId) {
+            localStorage.setItem('pawpal_wishlist_guest', JSON.stringify(payload.productIds));
+            localStorage.setItem('pawpal_wishlist_services_guest', JSON.stringify(payload.serviceIds));
+            return { success: true, data: payload };
+        }
+        const saved = await this.request(`/api/wishlist/${encodeURIComponent(userId)}`, {
+            method: 'PUT',
+            body: JSON.stringify(payload)
+        });
+        if (saved) {
+            localStorage.setItem('pawpal_wishlist_guest', JSON.stringify(payload.productIds));
+            localStorage.setItem('pawpal_wishlist_services_guest', JSON.stringify(payload.serviceIds));
+            return { success: true, data: saved };
+        }
+        return { success: false };
+    },
+
     async getUserById(userId) {
         const users = await this.request('/api/users');
         if (Array.isArray(users)) {

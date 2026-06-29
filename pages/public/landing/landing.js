@@ -180,7 +180,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const cartPage = '/pages/shop/cart/cart.html';
     const checkoutPage = '/pages/shop/checkout/checkout.html?buynow=true';
     const getCart = () => JSON.parse(localStorage.getItem(cartKey) || '[]');
-    const saveCart = (cart) => localStorage.setItem(cartKey, JSON.stringify(cart));
+    const saveCart = (cart) => {
+        localStorage.setItem(cartKey, JSON.stringify(cart));
+        const currentUser = getCurrentWishlistUser();
+        if (window.API && typeof window.API.saveUserCart === 'function') {
+            window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
+        }
+    };
     const getQty = (item) => {
         const qty = Number(item?.quantity ?? item?.qty ?? 1);
         return Number.isFinite(qty) && qty > 0 ? qty : 1;
@@ -257,7 +263,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return [];
         }
     };
-    const saveWishlist = (wishlist) => localStorage.setItem(getWishlistKey(), JSON.stringify(wishlist.map(String)));
+    const saveWishlist = (wishlist) => {
+        const list = wishlist.map(String);
+        localStorage.setItem(getWishlistKey(), JSON.stringify(list));
+        const currentUser = getCurrentWishlistUser();
+        if (window.API && typeof window.API.saveUserWishlist === 'function') {
+            window.API.saveUserWishlist(currentUser?.id || currentUser?.phone || null, { productIds: list, serviceIds: [] });
+        }
+    };
     const toggleWishlist = (productId) => {
         const wishlist = getWishlist();
         const id = String(productId);

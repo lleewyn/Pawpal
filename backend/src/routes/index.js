@@ -12,5 +12,7 @@ router.use('/users', require('./users'));
 router.use('/pets', require('./pets'));
 router.use('/bookings', require('./bookings'));
 router.use('/orders', require('./orders'));
+router.use('/cart', require('./cart'));
+router.use('/wishlist', require('./wishlist'));
 
 module.exports = router;

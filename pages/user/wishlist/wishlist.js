@@ -77,11 +77,19 @@
     }
 
     async function getWishlistItems() {
+        const currentUser = getCurrentUser();
+        const serverWishlist = currentUser
+            ? await window.API.getUserWishlist(currentUser.id || currentUser.phone || null)
+            : { productIds: [], serviceIds: [] };
         const productRaw = [
+            ...(serverWishlist.productIds || []),
             ...loadWishlistRaw(getProductWishlistStorageKey()),
             ...loadWishlistRaw('pawpal_wishlist')
         ];
-        const serviceRaw = loadWishlistRaw(getServiceWishlistStorageKey());
+        const serviceRaw = [
+            ...(serverWishlist.serviceIds || []),
+            ...loadWishlistRaw(getServiceWishlistStorageKey())
+        ];
 
         const allProducts = window.DataLoader && typeof window.DataLoader.loadProducts === 'function'
             ? await window.DataLoader.loadProducts()
@@ -156,6 +164,16 @@
             return String(item) !== String(id);
         });
         saveWishlistRaw(key, filtered);
+        const currentUser = getCurrentUser();
+        if (currentUser && window.API && typeof window.API.saveUserWishlist === 'function') {
+            const productIds = type === 'service'
+                ? loadWishlistRaw(getProductWishlistStorageKey()).map(String)
+                : filtered.map(String);
+            const serviceIds = type === 'service'
+                ? filtered.map(String)
+                : loadWishlistRaw(getServiceWishlistStorageKey()).map(String);
+            window.API.saveUserWishlist(currentUser.id || currentUser.phone || null, { productIds, serviceIds });
+        }
         renderWishlist();
         showNotification('Đã xóa khỏi danh sách yêu thích');
     }
@@ -172,6 +190,10 @@
         if (existing) existing.quantity += 1;
         else cart.push({ ...product.rawProduct, quantity: 1 });
         localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+        const currentUser = getCurrentUser();
+        if (currentUser && window.API && typeof window.API.saveUserCart === 'function') {
+            window.API.saveUserCart(currentUser.id || currentUser.phone || null, cart);
+        }
         showNotification('Đã thêm vào giỏ hàng');
     }
 

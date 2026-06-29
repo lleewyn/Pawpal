@@ -58,8 +58,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Tải sản phẩm từ CSV
             products = await window.DataLoader.loadProducts();
             
-            // Lấy giỏ hàng từ localStorage và phục hồi nếu có backup
-            cart = restoreCartFromBackup(JSON.parse(localStorage.getItem('pawpal_cart') || '[]')).map(normalizeCartItem);
+            // Lấy giỏ hàng từ MongoDB rồi ghép với cache cũ để tránh mất dữ liệu
+            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            const serverCart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
+            const localCart = restoreCartFromBackup(JSON.parse(localStorage.getItem('pawpal_cart') || '[]'));
+            cart = [...serverCart, ...localCart].map(normalizeCartItem);
+            await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
             
             // Mặc định chọn tất cả sản phẩm
             cart.forEach(item => {
@@ -74,7 +78,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error(' Lỗi tải danh sách voucher:', err);
             }
 
-            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
             myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]')
                 .filter(v => currentUser && v.ownerPhone === currentUser.phone);
             
@@ -146,6 +149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 // Cập nhật lại giỏ hàng chính chỉ gồm các sản phẩm được chọn để trang checkout xử lý
                 localStorage.setItem('pawpal_cart', JSON.stringify(selectedItems));
+                window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, selectedItems);
                 
                 // Clear any lingering "buy now" state so checkout loads the normal cart
                 sessionStorage.removeItem('pawpal_is_buynow');
@@ -451,6 +455,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Lưu giỏ hàng vào localStorage
     function saveCart() {
         localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
     }
 
     // Xóa toàn bộ giỏ hàng
@@ -629,6 +635,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         localStorage.setItem('pawpal_cart', JSON.stringify(mergedCart));
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, mergedCart);
         localStorage.removeItem('pawpal_cart_unselected_backup');
         return mergedCart;
     }
