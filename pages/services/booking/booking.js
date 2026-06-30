@@ -75,10 +75,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
     if (currentUser && !currentUser.is_temporary) {
         // Logged in member
-        document.getElementById('memberFlow').classList.remove('d-none');
-        document.getElementById('guestFlow').classList.add('d-none');
-        document.getElementById('guestInfoNote').classList.add('d-none');
-        loadMemberPets(currentUser);
+        const allPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+        const activePets = allPets.filter(p => !p.isArchived && String(p.userId) === String(currentUser.id));
+        
+        if (activePets.length === 0) {
+            // Logged in member but has no pets -> show guest flow for quick creation
+            document.getElementById('memberFlow').classList.add('d-none');
+            document.getElementById('guestFlow').classList.remove('d-none');
+            document.getElementById('guestInfoNote').classList.add('d-none'); // Hide note as they already have an account
+            
+            bookingState.isMemberWithNoPets = true;
+            bookingState.isGuest = true; // Use guest validation logic
+            
+            // Prefill guest form with member info
+            const ownerNameInput = document.getElementById('ownerName');
+            const ownerPhoneInput = document.getElementById('ownerPhone');
+            if (ownerNameInput) ownerNameInput.value = currentUser.name || '';
+            if (ownerPhoneInput) ownerPhoneInput.value = currentUser.phone || '';
+            
+            bookingState.ownerName = currentUser.name || '';
+            bookingState.ownerPhone = currentUser.phone || '';
+            
+            setupGuestValidation();
+        } else {
+            // Normal member flow
+            document.getElementById('memberFlow').classList.remove('d-none');
+            document.getElementById('guestFlow').classList.add('d-none');
+            document.getElementById('guestInfoNote').classList.add('d-none');
+            loadMemberPets(currentUser);
+        }
     } else {
         // Guest flow
         document.getElementById('memberFlow').classList.add('d-none');
@@ -156,7 +181,7 @@ function loadMemberPets(user) {
         listContainer.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 20px; background: rgba(0,0,0,0.03); border-radius: 8px;">
                 <p style="margin: 0; color: var(--text-light);">Bạn chưa có hồ sơ bé cưng nào.</p>
-                <a href="../user/pet-profile.html" class="btn-green-outline btn-sm" style="margin-top: 10px; display: inline-block; padding: 6px 14px; font-size: 0.85rem; text-decoration: none;">+ Thêm hồ sơ bé cưng</a>
+                <a href="../../user/pet-profile/pet-profile.html" class="btn-green-outline btn-sm" style="margin-top: 10px; display: inline-block; padding: 6px 14px; font-size: 0.85rem; text-decoration: none;">+ Thêm hồ sơ bé cưng</a>
             </div>
         `;
         return;
@@ -1212,6 +1237,26 @@ function processBookingSubmit() {
                 allBookings[bIdx].userId = existing.id;
                 localStorage.setItem('pawpal_bookings', JSON.stringify(allBookings));
             }
+        }
+    } else if (currentUser && bookingState.isMemberWithNoPets) {
+        // Create pet profile for member
+        try {
+            const pets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+            const petName = bookingState.petName || 'Bé cưng';
+            const newPet = {
+                id: 'PET-' + Date.now(),
+                name: petName,
+                species: bookingState.petType || 'other',
+                breed: bookingState.petBreed || '',
+                weight: bookingState.petWeight || '',
+                userId: currentUser.id,
+                isArchived: false,
+                createdAt: new Date().toISOString()
+            };
+            pets.unshift(newPet);
+            localStorage.setItem('pawpal_pets', JSON.stringify(pets));
+        } catch (e) {
+            console.warn('Could not persist pet for member', e);
         }
     }
 
