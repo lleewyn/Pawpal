@@ -7,10 +7,48 @@
  * → /pages/public/login/login.js
  */
 
+// --- 0. CENTRALIZED STORAGE HELPER ---
+window.PawpalStorage = {
+    KEYS: {
+        CURRENT_USER: 'pawpal_current_user',
+        USERS_DB: 'pawpal_users_db',
+        USERS_VERSION: 'pawpal_users_version',
+        TEMP_TOKENS: 'pawpal_temp_tokens',
+        PETS: 'pawpal_pets',
+        BOOKINGS: 'pawpal_bookings',
+        ORDERS: 'pawpal_orders'
+    },
+    get(key, defaultValue = null) {
+        try {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : defaultValue;
+        } catch (e) {
+            console.error(`[PawpalStorage] Error reading key "${key}":`, e);
+            return defaultValue;
+        }
+    },
+    set(key, value) {
+        try {
+            localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+            return true;
+        } catch (e) {
+            console.error(`[PawpalStorage] Error writing key "${key}":`, e);
+            return false;
+        }
+    },
+    remove(key) {
+        try {
+            localStorage.removeItem(key);
+        } catch (e) {
+            console.error(`[PawpalStorage] Error removing key "${key}":`, e);
+        }
+    }
+};
+
 // --- 1. MOCK DATABASE SETUP ---
-const PAWPAL_USERS_KEY    = 'pawpal_users_db';
-const CURRENT_USER_KEY    = 'pawpal_current_user';
-const TEMP_TOKENS_KEY     = 'pawpal_temp_tokens';
+const PAWPAL_USERS_KEY    = window.PawpalStorage.KEYS.USERS_DB;
+const CURRENT_USER_KEY    = window.PawpalStorage.KEYS.CURRENT_USER;
+const TEMP_TOKENS_KEY     = window.PawpalStorage.KEYS.TEMP_TOKENS;
 const TEMP_TOKENS_URL     = '/data/temp-tokens.json';
 const PAWPAL_USERS_VERSION = 'v6'; // Tăng khi users.json thay đổi
 const PAWPAL_API_BASE_URL = window.PAWPAL_API_BASE_URL || 'http://localhost:4000';
@@ -35,17 +73,17 @@ function ensureUserId(user) {
 // --- Database init ---
 function initMockDatabase() {
     // Force re-seed nếu version cũ hơn
-    if (localStorage.getItem('pawpal_users_version') !== PAWPAL_USERS_VERSION) {
+    if (localStorage.getItem(window.PawpalStorage.KEYS.USERS_VERSION) !== PAWPAL_USERS_VERSION) {
         // Backup currentUser trước khi xóa DB — tránh mất trạng thái đăng nhập
-        const currentUserBackup = localStorage.getItem(CURRENT_USER_KEY);
+        const currentUserBackup = window.PawpalStorage.get(CURRENT_USER_KEY);
 
-        localStorage.removeItem(PAWPAL_USERS_KEY);
-        localStorage.removeItem(TEMP_TOKENS_KEY);
-        localStorage.setItem('pawpal_users_version', PAWPAL_USERS_VERSION);
+        window.PawpalStorage.remove(PAWPAL_USERS_KEY);
+        window.PawpalStorage.remove(TEMP_TOKENS_KEY);
+        localStorage.setItem(window.PawpalStorage.KEYS.USERS_VERSION, PAWPAL_USERS_VERSION);
 
         // Restore currentUser sau khi xóa DB
         if (currentUserBackup) {
-            localStorage.setItem(CURRENT_USER_KEY, currentUserBackup);
+            window.PawpalStorage.set(CURRENT_USER_KEY, currentUserBackup);
         }
     }
 
@@ -57,7 +95,7 @@ function initMockDatabase() {
             if (xhr.status >= 200 && xhr.status < 300) {
                 // Merge seed với currentUser để không ghi đè trạng thái user đã kích hoạt
                 const seedUsers = JSON.parse(xhr.responseText) || [];
-                const currentUser = JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || 'null');
+                const currentUser = window.PawpalStorage.get(CURRENT_USER_KEY);
                 if (currentUser && currentUser.phone) {
                     const idx = seedUsers.findIndex(u => u.phone === currentUser.phone);
                     if (idx !== -1) {
@@ -65,7 +103,7 @@ function initMockDatabase() {
                         seedUsers[idx] = { ...seedUsers[idx], ...currentUser };
                     }
                 }
-                localStorage.setItem(PAWPAL_USERS_KEY, JSON.stringify(seedUsers));
+                window.PawpalStorage.set(PAWPAL_USERS_KEY, seedUsers);
             }
         } catch (error) {
             console.warn('[auth] Cannot load /data/users.json:', error);
@@ -78,7 +116,7 @@ function initMockDatabase() {
             xhr.open('GET', resolveFromAuthScript('../../data/temp-tokens.json'), false);
             xhr.send(null);
             if (xhr.status >= 200 && xhr.status < 300) {
-                localStorage.setItem(TEMP_TOKENS_KEY, xhr.responseText);
+                window.PawpalStorage.set(TEMP_TOKENS_KEY, xhr.responseText);
             }
         } catch (error) {
             console.warn('[auth] Cannot load /data/temp-tokens.json:', error);
@@ -88,7 +126,7 @@ function initMockDatabase() {
 
 // --- CRUD helpers ---
 function getUsers() {
-    const users = JSON.parse(localStorage.getItem(PAWPAL_USERS_KEY)) || [];
+    const users = window.PawpalStorage.get(PAWPAL_USERS_KEY, []);
     let updated = false;
 
     users.forEach(user => {
@@ -103,7 +141,7 @@ function getUsers() {
 }
 
 function saveUsers(users) {
-    localStorage.setItem(PAWPAL_USERS_KEY, JSON.stringify(users));
+    window.PawpalStorage.set(PAWPAL_USERS_KEY, users);
 }
 
 function reconcileUserSession(user, users) {
@@ -122,17 +160,17 @@ function reconcileUserSession(user, users) {
 }
 
 function getCurrentUser() {
-    const rawUser = JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || null;
+    const rawUser = window.PawpalStorage.get(CURRENT_USER_KEY);
     const users = getUsers();
     const user = reconcileUserSession(rawUser, users);
 
     if (user && JSON.stringify(user) !== JSON.stringify(rawUser)) {
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        window.PawpalStorage.set(CURRENT_USER_KEY, user);
     }
 
     if (user && !user.id) {
         user.id = generateUserId();
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        window.PawpalStorage.set(CURRENT_USER_KEY, user);
 
         const idx = users.findIndex(u => u.phone === user.phone);
         if (idx !== -1) {
@@ -144,12 +182,12 @@ function getCurrentUser() {
 }
 
 function setCurrentUser(user) {
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    window.PawpalStorage.set(CURRENT_USER_KEY, user);
     document.dispatchEvent(new CustomEvent('auth_state_changed', { detail: user }));
 }
 
 function logout() {
-    localStorage.removeItem(CURRENT_USER_KEY);
+    window.PawpalStorage.remove(CURRENT_USER_KEY);
     window.location.href = '/pages/public/landing/landing.html';
 }
 
@@ -222,7 +260,7 @@ function enforceTemporaryAccountLock() {
     // Tài khoản tạm truy cập thẳng vào trang /user/ → đẩy ra ngoài
     const currentPath = window.location.pathname.toLowerCase();
     if (isTemp && currentPath.includes('/pages/user/')) {
-        const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
+        const tokens = window.PawpalStorage.get(TEMP_TOKENS_KEY, []);
         let tokenObj = tokens.find(t => t.phone === currentUser.phone);
         if (!tokenObj) {
             tokenObj = {
@@ -231,7 +269,7 @@ function enforceTemporaryAccountLock() {
                 createdAt: Date.now()
             };
             tokens.push(tokenObj);
-            localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
+            window.PawpalStorage.set(TEMP_TOKENS_KEY, tokens);
         }
         window.location.href = `/pages/public/login/login.html?action=setup-password&token=${tokenObj.token}`;
         return;
@@ -364,9 +402,9 @@ function initAdminQuickAddCustomer() {
 
             // Tạo token kích hoạt tài khoản
             const token  = 'token-dynamic-' + Math.random().toString(36).substr(2, 9);
-            const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
+            const tokens = window.PawpalStorage.get(TEMP_TOKENS_KEY, []);
             tokens.push({ token, phone, createdAt: Date.now() });
-            localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens));
+            window.PawpalStorage.set(TEMP_TOKENS_KEY, tokens);
 
             showAdminToast(
                 `Đã khởi tạo tài khoản tạm và gửi link SMS kích hoạt cho khách thành công!<br>` +

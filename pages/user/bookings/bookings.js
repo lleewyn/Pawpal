@@ -71,7 +71,13 @@ async function loadBookings(status) {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         allBookings = currentUser ? await API.getUserBookings(currentUser.id) : [];
         const userPets = currentUser ? await API.getUserPets(currentUser.id) : [];
-        currentPetMap = new Map((Array.isArray(userPets) ? userPets : []).map((pet) => [String(pet.id), pet]));
+        
+        currentPetMap = new Map();
+        (Array.isArray(userPets) ? userPets : []).forEach((pet) => {
+            if (pet._id) currentPetMap.set(String(pet._id), pet);
+            if (pet.id) currentPetMap.set(String(pet.id), pet);
+        });
+
         renderBookings(status);
     } catch (error) {
         console.error('Cannot load bookings:', error);
@@ -120,8 +126,13 @@ function createBookingCard(booking) {
     const canCancel = diffMinutes >= 120
         && ['pending', 'confirmed', 'upcoming', 'accepted'].includes(normalizedStatus)
         && cancelCount < 3;
-    const petId = booking.petId || currentPetMap.get(String(booking.petId))?.id || '';
-    const diaryQuery = petId ? `?id=${encodeURIComponent(petId)}&sessionId=${encodeURIComponent(booking.id || '')}` : '';
+    
+    const petKey = String(booking.petId || '');
+    const petObj = currentPetMap.get(petKey);
+    const petId = booking.petId || petObj?._id || petObj?.id || '';
+    const bookingId = booking.id || booking._id || '';
+
+    const diaryQuery = petId ? `?id=${encodeURIComponent(petId)}&sessionId=${encodeURIComponent(bookingId)}` : '';
     const careLogLink = normalizedStatus === 'completed' && petId
         ? `<a class="booking-card-link" href="../pet-diary/pet-diary.html${diaryQuery}" onclick="event.stopPropagation()">Xem nhật ký chăm sóc</a>`
         : '';
@@ -130,19 +141,19 @@ function createBookingCard(booking) {
         : '';
     const detailPrompt = '<span class="booking-card-detail-hint">Nhấn để xem chi tiết</span>';
     const changeScheduleAction = canModify
-        ? `<button type="button" class="btn-change-schedule" data-booking-id="${booking.id}">Đổi lịch</button>`
+        ? `<button type="button" class="btn-change-schedule" data-booking-id="${bookingId}">Đổi lịch</button>`
         : '';
     const cancelBookingAction = canCancel
-        ? `<button type="button" class="btn-cancel-booking" data-booking-id="${booking.id}">Huỷ lịch</button>`
+        ? `<button type="button" class="btn-cancel-booking" data-booking-id="${bookingId}">Huỷ lịch</button>`
         : '';
     card.className = `booking-card status-${normalizedStatus}`;
     card.tabIndex = 0;
     card.setAttribute('role', 'link');
     card.onclick = () => {
-        window.location.href = `../booking-detail/booking-detail.html?id=${booking.id}`;
+        window.location.href = `../booking-detail/booking-detail.html?id=${bookingId}`;
     };
 
-    const petName = booking.petName || currentPetMap.get(String(booking.petId))?.name || booking.petInfo?.petName || booking.petId || 'Bé cưng';
+    const petName = booking.petName || petObj?.name || booking.petInfo?.petName || booking.petId || 'Bé cưng';
     const serviceName = booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal';
     const dateTimeText = buildDateTimeText(booking);
     card.setAttribute('aria-label', `Xem chi tiết lịch hẹn ${petName}`);
@@ -150,7 +161,7 @@ function createBookingCard(booking) {
     card.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
-            window.location.href = `../booking-detail/booking-detail.html?id=${booking.id}`;
+            window.location.href = `../booking-detail/booking-detail.html?id=${bookingId}`;
         }
     });
 
@@ -281,6 +292,12 @@ function openQuickCancelModal(booking) {
     const existing = document.getElementById('quickCancelBookingModal');
     if (existing) existing.remove();
 
+    const petKey = String(booking.petId || '');
+    const petObj = currentPetMap.get(petKey);
+    const petName = booking.petName || petObj?.name || booking.petInfo?.petName || booking.petId || 'Bé cưng';
+    const serviceName = booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal';
+    const bookingId = booking.id || booking._id || '';
+
     const modalEl = document.createElement('div');
     modalEl.id = 'quickCancelBookingModal';
     modalEl.className = 'modal fade';
@@ -293,7 +310,7 @@ function openQuickCancelModal(booking) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Bạn có chắc muốn hủy lịch <strong>${booking.id}</strong> không?</p>
+                    <p>Bạn có chắc muốn hủy lịch <strong>${serviceName}</strong> của <strong>${petName}</strong> không?</p>
                     <p class="text-muted small mb-0">Lịch đã hủy sẽ không thể khôi phục.</p>
                 </div>
                 <div class="modal-footer">
@@ -307,9 +324,18 @@ function openQuickCancelModal(booking) {
     const modal = new bootstrap.Modal(modalEl);
     modal.show();
 
-    modalEl.querySelector('#quickConfirmCancelBtn').addEventListener('click', () => {
+    modalEl.querySelector('#quickConfirmCancelBtn').addEventListener('click', async () => {
+        try {
+            await API.request(`/api/bookings/${bookingId}`, 'PUT', {
+                status: 'cancelled',
+                cancelCount: (booking.cancelCount || 0) + 1
+            });
+        } catch (e) {
+            console.error('API cancel failed, fallback to local', e);
+        }
+
         const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-        const idx = bookings.findIndex((b) => b.id === booking.id);
+        const idx = bookings.findIndex((b) => String(b.id || b._id) === String(bookingId));
         if (idx !== -1) {
             bookings[idx].status = 'cancelled';
             bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
@@ -324,6 +350,12 @@ function openQuickCancelModal(booking) {
 function openQuickRescheduleModal(booking) {
     const existing = document.getElementById('quickRescheduleBookingModal');
     if (existing) existing.remove();
+
+    const petKey = String(booking.petId || '');
+    const petObj = currentPetMap.get(petKey);
+    const petName = booking.petName || petObj?.name || booking.petInfo?.petName || booking.petId || 'Bé cưng';
+    const serviceName = booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal';
+    const bookingId = booking.id || booking._id || '';
 
     const configSlots = (window.PawPalBookingConfig?.slots) || ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
     const configStaffs = (window.PawPalBookingConfig?.staffs) || [
@@ -359,7 +391,7 @@ function openQuickRescheduleModal(booking) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted small mb-3">Chọn ngày, giờ và nhân viên mới cho lịch <strong>${booking.id}</strong>.</p>
+                    <p class="text-muted small mb-3">Chọn ngày, giờ và nhân viên mới cho lịch <strong>${serviceName}</strong> của <strong>${petName}</strong>.</p>
                     <label class="form-label fw-semibold">Chọn ngày</label>
                     <input type="date" id="quickRescheduleDate" class="form-control mb-3" min="${minDate}">
                     <label class="form-label fw-semibold">Chọn giờ</label>
@@ -403,9 +435,21 @@ function openQuickRescheduleModal(booking) {
         btn.addEventListener('click', () => { selectedStaff = btn.dataset.staff; refreshState(); });
     });
 
-    modalEl.querySelector('#quickConfirmRescheduleBtn').addEventListener('click', () => {
+    modalEl.querySelector('#quickConfirmRescheduleBtn').addEventListener('click', async () => {
+        try {
+            await API.request(`/api/bookings/${bookingId}`, 'PUT', {
+                date: selectedDate,
+                time: selectedSlot,
+                timeStart: selectedSlot,
+                staff: selectedStaff,
+                changeCount: (booking.changeCount || 0) + 1
+            });
+        } catch (e) {
+            console.error('API reschedule failed, fallback to local', e);
+        }
+
         const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-        const idx = bookings.findIndex((b) => b.id === booking.id);
+        const idx = bookings.findIndex((b) => String(b.id || b._id) === String(bookingId));
         if (idx !== -1) {
             bookings[idx].date = selectedDate;
             bookings[idx].time = selectedSlot;

@@ -15,38 +15,80 @@ const dataCache = {
  * @returns {Array<Object>} - Array of objects
  */
 function parseCSV(csvText) {
-    const lines = csvText.trim().split('\n');
-    if (lines.length === 0) return [];
-    
-    // Get headers from first line
-    const headers = lines[0].split('\t').map(h => h.trim());
-    
-    // Parse data rows
     const data = [];
-    for (let i = 1; i < lines.length; i++) {
-        const line = lines[i];
-        if (!line.trim()) continue; // Skip empty lines
+    let row = [];
+    let field = '';
+    let inQuotes = false;
+    
+    // Duyệt qua từng ký tự để phân tích trạng thái ngoặc kép và dấu phân tách hàng/cột
+    for (let i = 0; i < csvText.length; i++) {
+        const char = csvText[i];
+        const nextChar = csvText[i + 1];
         
-        // Split by tab, handle quoted fields
-        const values = line.split('\t').map(v => {
-            // Remove surrounding quotes if present
-            v = v.trim();
-            if (v.startsWith('"') && v.endsWith('"')) {
-                v = v.slice(1, -1);
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                // Xử lý ký tự ngoặc kép lồng nhau bên trong ô dữ liệu ("" -> ")
+                field += '"';
+                i++; // Bỏ qua ký tự nháy tiếp theo
+            } else {
+                // Đổi trạng thái (đang ở trong hoặc ngoài cặp dấu ngoặc kép)
+                inQuotes = !inQuotes;
             }
-            return v;
-        });
-        
-        // Create object from headers and values
-        const obj = {};
-        headers.forEach((header, index) => {
-            obj[header] = values[index] || '';
-        });
-        
-        data.push(obj);
+        } else if (char === '\t' && !inQuotes) {
+            // Hết một cột (dấu tab phân tách ngoài ngoặc kép)
+            row.push(field.trim());
+            field = '';
+        } else if ((char === '\r' || char === '\n') && !inQuotes) {
+            // Hết một dòng dữ liệu (ngoài ngoặc kép)
+            if (char === '\r' && nextChar === '\n') {
+                i++; // Bỏ qua ký tự \n đi kèm sau \r
+            }
+            if (field || row.length > 0) {
+                row.push(field.trim());
+                data.push(row);
+            }
+            row = [];
+            field = '';
+        } else {
+            field += char;
+        }
     }
     
-    return data;
+    // Nạp nốt trường cuối cùng nếu dòng cuối không có ký tự xuống dòng
+    if (field || row.length > 0) {
+        row.push(field.trim());
+        data.push(row);
+    }
+    
+    if (data.length === 0) return [];
+    
+    // Lấy tiêu đề cột từ hàng đầu tiên và loại bỏ dấu ngoặc kép bao quanh nếu có
+    const headers = data[0].map(h => {
+        let cleaned = h.trim();
+        if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+            cleaned = cleaned.slice(1, -1);
+        }
+        return cleaned;
+    });
+    
+    // Áp các hàng dữ liệu tương ứng vào tiêu đề cột tương ứng
+    const result = [];
+    for (let i = 1; i < data.length; i++) {
+        const rowData = data[i];
+        if (rowData.length === 0 || (rowData.length === 1 && rowData[0] === '')) continue;
+        
+        const obj = {};
+        headers.forEach((header, index) => {
+            let val = rowData[index] || '';
+            if (val.startsWith('"') && val.endsWith('"')) {
+                val = val.slice(1, -1);
+            }
+            obj[header] = val;
+        });
+        result.push(obj);
+    }
+    
+    return result;
 }
 
 /**

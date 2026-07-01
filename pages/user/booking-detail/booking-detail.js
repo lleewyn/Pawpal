@@ -31,7 +31,7 @@ async function loadBookingDetail(bookingId) {
 
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     const userBookings = currentUser ? await API.getUserBookings(currentUser.id) : [];
-    currentBooking = userBookings.find((b) => b.id === bookingId || b.code === bookingId);
+    currentBooking = userBookings.find((b) => String(b.id || b._id) === String(bookingId) || b.code === bookingId);
 
     if (!currentBooking) {
         alert('Không tìm thấy lịch hẹn này');
@@ -40,14 +40,14 @@ async function loadBookingDetail(bookingId) {
     }
 
     const userPets = currentUser ? await API.getUserPets(currentUser.id) : [];
-    currentPet = userPets.find((pet) => String(pet.id) === String(currentBooking.petId)) || null;
+    currentPet = userPets.find((pet) => String(pet._id || pet.id) === String(currentBooking.petId)) || null;
     const careLogs = await API.getCareLogs();
     currentCareLog = currentBooking.petId ? (careLogs[currentBooking.petId] || null) : null;
 
     const careLogButton = document.getElementById('btnViewCareLog');
     if (careLogButton) {
         careLogButton.onclick = () => {
-            const petId = currentBooking.petId || currentPet?.id;
+            const petId = currentBooking.petId || currentPet?._id || currentPet?.id;
             if (!petId) {
                 alert('Không tìm thấy mã bé cưng để mở nhật ký chăm sóc.');
                 return;

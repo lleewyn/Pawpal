@@ -111,6 +111,7 @@ function renderOrders() {
 }
 
 function createOrderCard(order) {
+    const orderId = order.id || order._id || '';
     const firstProduct = order.products[0];
     const remainingCount = order.products.length - 1;
     const normalizedStatus = normalizeOrderStatus(order.status);
@@ -122,20 +123,20 @@ function createOrderCard(order) {
     const paymentLabel = getPaymentMethodLabel(order.paymentMethod);
     const reviewed = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
     const allReviewed = isCompleted && order.products.every((product) =>
-        reviewed.some((item) => item.orderId === order.id && item.productId === product.id)
+        reviewed.some((item) => String(item.orderId) === String(orderId) && item.productId === product.id)
     );
 
     const reviewActionHTML = isCompleted
         ? allReviewed
-            ? `<a class="btn-review" href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" aria-label="Xem đánh giá đơn hàng ${order.id}">Xem đánh giá</a>`
-            : `<a class="btn-review" href="/pages/user/order-detail/order-detail.html?id=${order.id}#reviews" aria-label="Đánh giá đơn hàng ${order.id}">Đánh giá</a>`
+            ? `<a class="btn-review" href="/pages/user/order-detail/order-detail.html?id=${orderId}#reviews" aria-label="Xem đánh giá đơn hàng ${orderId}">Xem đánh giá</a>`
+            : `<a class="btn-review" href="/pages/user/order-detail/order-detail.html?id=${orderId}#reviews" aria-label="Đánh giá đơn hàng ${orderId}">Đánh giá</a>`
         : '';
 
     const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
-    const alreadyReturned = returnsList.some((item) => item.orderId === order.id);
+    const alreadyReturned = returnsList.some((item) => String(item.orderId) === String(orderId));
 
     const reviewedList = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
-    const hasAnyReviewed = reviewedList.some((item) => item.orderId === order.id);
+    const hasAnyReviewed = reviewedList.some((item) => String(item.orderId) === String(orderId));
 
     let returnActionHTML = '';
     const statusNoticeChips = [];
@@ -154,7 +155,7 @@ function createOrderCard(order) {
 
         if (alreadyReturned) {
             returnActionHTML = `
-                <a href="/pages/user/return-detail/return-detail.html?orderId=${order.id}" class="btn-track-order text-decoration-none">
+                <a href="/pages/user/return-detail/return-detail.html?orderId=${orderId}" class="btn-track-order text-decoration-none">
                     Chi tiết đổi trả
                 </a>
             `;
@@ -165,7 +166,7 @@ function createOrderCard(order) {
             statusNoticeChips.push(`<span class="order-meta-chip meta-chip-muted" title="Giao dịch đã được đánh giá, không thể đổi trả.">Hết hạn đổi trả</span>`);
         } else {
             returnActionHTML = `
-                <button class="btn-track-order" onclick="openRMADrawer('${order.id}')">
+                <button class="btn-track-order" onclick="openRMADrawer('${orderId}')">
                     Yêu cầu trả hàng/hoàn tiền
                 </button>
             `;
@@ -182,26 +183,26 @@ function createOrderCard(order) {
     ].filter(Boolean);
 
     const reorderActionHTML = isCompleted
-        ? `<button class="btn-view-detail border-0" onclick="reorder('${order.id}')">Mua lại</button>`
+        ? `<button class="btn-view-detail border-0" onclick="reorder('${orderId}')">Mua lại</button>`
         : '';
 
-    const detailActionHTML = `<a href="/pages/user/order-detail/order-detail.html?id=${order.id}" class="btn-view-detail text-decoration-none">Xem chi tiết</a>`;
+    const detailActionHTML = `<a href="/pages/user/order-detail/order-detail.html?id=${orderId}" class="btn-view-detail text-decoration-none">Xem chi tiết</a>`;
 
     let footerButtonsHTML = '';
     if (normalizedStatus === 'shipping') {
         footerButtonsHTML = `
             ${detailActionHTML}
-            <button class="btn-track-order" onclick="contactHotline('${order.id}')">
+            <button class="btn-track-order" onclick="contactHotline('${orderId}')">
                 Liên hệ hotline
             </button>
         `;
     } else if (normalizedStatus === 'pending_payment' || normalizedStatus === 'preparing') {
         footerButtonsHTML = `
             ${detailActionHTML}
-            <button class="btn-track-order" onclick="contactHotline('${order.id}')">
+            <button class="btn-track-order" onclick="contactHotline('${orderId}')">
                 Liên hệ hotline
             </button>
-            <button class="btn-track-order text-danger border-danger" onclick="cancelOrder('${order.id}')">
+            <button class="btn-track-order text-danger border-danger" onclick="cancelOrder('${orderId}')">
                 Hủy đơn hàng
             </button>
         `;
@@ -219,17 +220,17 @@ function createOrderCard(order) {
     const allMetaChips = [...metaParts.map((item) => `<span class="order-meta-chip">${item}</span>`), ...statusNoticeChips].join('');
 
     return `
-        <article class="order-card" data-order-id="${order.id}">
+        <article class="order-card" data-order-id="${orderId}">
             <div class="order-card-header">
                 <div class="order-info">
-                    <span class="order-id">Mã: ${order.id}</span>
+                    <span class="order-id">Mã: ${orderId}</span>
                     <span class="order-date">${formatDate(order.createdAt)}</span>
                 </div>
                 <span class="status-badge status-${normalizedStatus}">
                     ${statusLabel}
                 </span>
             </div>
-            <div class="order-card-body" onclick="window.location.href='/pages/user/order-detail/order-detail.html?id=${order.id}'" title="Nhấn để xem chi tiết đơn hàng">
+            <div class="order-card-body" onclick="window.location.href='/pages/user/order-detail/order-detail.html?id=${orderId}'" title="Nhấn để xem chi tiết đơn hàng">
                 <div class="product-preview">
                     <img src="${firstProduct.image}" alt="${firstProduct.name}" class="product-thumb" loading="lazy">
                     <div class="product-info">

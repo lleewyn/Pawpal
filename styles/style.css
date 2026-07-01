@@ -7201,4 +7201,8 @@ input:checked + .switch-slider:before {
     }
 }
 
+.hide-initial {
+    display: none;
+}
+
 /* --- END: components\ui\reviews.css --- */

@@ -6,6 +6,7 @@
 
 export const API = {
     DATA_VERSION: '2026-06-28-v6-fix-accents',
+    USE_BACKEND: false, // Thiết lập false để ngắt kết nối backend MongoDB, chuyển hoàn toàn sang Mock offline bằng LocalStorage và tệp tin JSON tĩnh.
 
     getBaseUrl() {
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -26,6 +27,7 @@ export const API = {
     },
 
     async request(path, options = {}) {
+        if (!this.USE_BACKEND) return null;
         try {
             const response = await fetch(`${this.getBaseUrl()}${path}`, {
                 headers: {
@@ -47,14 +49,14 @@ export const API = {
     },
 
     async initData() {
-        const shouldRefreshMockData = localStorage.getItem('pawpal_mock_data_version') !== this.DATA_VERSION;
+        const shouldRefreshMockData = (window.PawpalStorage ? window.PawpalStorage.get('pawpal_mock_data_version') : localStorage.getItem('pawpal_mock_data_version')) !== this.DATA_VERSION;
 
         const localUsers = safeReadArray('pawpal_users_db');
         if (shouldRefreshMockData || localUsers.length === 0 || localUsers.length <= 3) {
             const users = await this.getJSON('/data/users.json');
             if (users) {
                 const mergedUsers = mergeById(users, localUsers);
-                localStorage.setItem('pawpal_users_db', JSON.stringify(mergedUsers));
+                safeWrite('pawpal_users_db', mergedUsers);
 
                 const currentUser = safeReadObject('pawpal_current_user');
                 if (currentUser) {
@@ -67,7 +69,7 @@ export const API = {
                             password:     currentUser.password     !== undefined ? currentUser.password     : richUser.password,
                             points:       currentUser.points       !== undefined ? currentUser.points       : richUser.points,
                         };
-                        localStorage.setItem('pawpal_current_user', JSON.stringify(safeUser));
+                        safeWrite('pawpal_current_user', safeUser);
                     }
                 }
             }
@@ -76,13 +78,13 @@ export const API = {
         const localPets = safeReadArray('pawpal_pets');
         if (shouldRefreshMockData || localPets.length === 0 || !localPets.some(pet => pet.userId)) {
             const pets = await this.getJSON('/data/pets.json');
-            if (pets) localStorage.setItem('pawpal_pets', JSON.stringify(mergeById(pets, localPets)));
+            if (pets) safeWrite('pawpal_pets', mergeById(pets, localPets));
         }
 
         const localBookings = safeReadArray('pawpal_bookings');
         if (shouldRefreshMockData || localBookings.length === 0 || !localBookings.some(booking => booking.userId)) {
             const bookings = await this.getJSON('/data/bookings.json');
-            if (bookings) localStorage.setItem('pawpal_bookings', JSON.stringify(mergeById(bookings, localBookings)));
+            if (bookings) safeWrite('pawpal_bookings', mergeById(bookings, localBookings));
         }
 
         const localOrders = safeReadArray('pawpal_orders');
@@ -108,32 +110,64 @@ export const API = {
                         mergedOrders.push(local);
                     }
                 });
-                localStorage.setItem('pawpal_orders', JSON.stringify(mergedOrders));
-                localStorage.setItem('pawpal_orders_seeded', 'true');
+                safeWrite('pawpal_orders', mergedOrders);
+                safeWrite('pawpal_orders_seeded', 'true');
             }
         }
 
         // Normalize orders on every startup so older cached records keep working.
         const normalizedOrders = normalizeOrders(safeReadArray('pawpal_orders'));
-        if (normalizedOrders.length) {
-            localStorage.setItem('pawpal_orders', JSON.stringify(normalizedOrders));
+        
+        // Tự động hoàn thành đơn hàng đã giao (delivered) quá 3 ngày (72 giờ)
+        let updatedOrders = false;
+        const finalOrders = normalizedOrders.map(order => {
+            if (order.status === 'delivered') {
+                const deliveredEntry = Array.isArray(order.timeline)
+                    ? order.timeline.slice().reverse().find(t => t.status === 'delivered')
+                    : null;
+                const deliveredAt = deliveredEntry ? new Date(deliveredEntry.timestamp) : new Date(order.updatedAt || order.createdAt || 0);
+                const daysPassed = (Date.now() - deliveredAt.getTime()) / (1000 * 60 * 60 * 24);
+                
+                if (daysPassed >= 3) {
+                    order.status = 'completed';
+                    order.updatedAt = new Date().toISOString().slice(0, 19);
+                    
+                    if (!Array.isArray(order.timeline)) {
+                        order.timeline = [];
+                    }
+                    order.timeline.push({
+                        status: 'completed',
+                        timestamp: order.updatedAt,
+                        title: 'Đã hoàn thành (Tự động)',
+                        description: 'Hệ thống tự động hoàn thành đơn hàng sau 3 ngày kể từ khi giao hàng thành công.'
+                    });
+                    updatedOrders = true;
+                }
+            }
+            return order;
+        });
+
+        if (updatedOrders) {
+            safeWrite('pawpal_orders', finalOrders);
+        } else if (normalizedOrders.length) {
+            safeWrite('pawpal_orders', normalizedOrders);
         }
 
         const localReturns = safeReadArray('pawpal_returns');
         if (shouldRefreshMockData || localReturns.length === 0) {
             const returns = await this.getJSON(`/data/returns.json?v=${this.DATA_VERSION}`);
-            if (returns) localStorage.setItem('pawpal_returns', JSON.stringify(mergeById(returns, localReturns)));
+            if (returns) safeWrite('pawpal_returns', mergeById(returns, localReturns));
         }
 
         const localCareLogs = safeReadObject('pawpal_pet_tracker_logs') || {};
         if (shouldRefreshMockData || Object.keys(localCareLogs).length === 0) {
             const careLogs = await this.getJSON(`/data/care-logs.json?v=${this.DATA_VERSION}`);
             if (careLogs) {
-                localStorage.setItem('pawpal_pet_tracker_logs', JSON.stringify(mergeCareLogs(careLogs, localCareLogs)));
+                safeWrite('pawpal_pet_tracker_logs', mergeCareLogs(careLogs, localCareLogs));
             }
         }
 
-        localStorage.setItem('pawpal_mock_data_version', this.DATA_VERSION);
+        safeWrite('pawpal_mock_data_version', this.DATA_VERSION);
     },
 
     async getUserPets(userId) {
@@ -258,8 +292,8 @@ export const API = {
             body: JSON.stringify(payload)
         });
         if (saved) {
-            localStorage.setItem('pawpal_wishlist_guest', JSON.stringify(payload.productIds));
-            localStorage.setItem('pawpal_wishlist_services_guest', JSON.stringify(payload.serviceIds));
+            safeWrite('pawpal_wishlist_guest', payload.productIds);
+            safeWrite('pawpal_wishlist_services_guest', payload.serviceIds);
             return { success: true, data: saved };
         }
         return { success: false };
@@ -284,7 +318,7 @@ export const API = {
         if (updated) {
             const currentUser = safeReadObject('pawpal_current_user');
             if (currentUser && sameUserId(currentUser.id, userId)) {
-                localStorage.setItem('pawpal_current_user', JSON.stringify(updated));
+                safeWrite('pawpal_current_user', updated);
             }
             return { success: true, data: updated };
         }
@@ -296,16 +330,19 @@ export const API = {
             return { success: false, message: 'Khong tim thay user' };
         }
         users[idx] = { ...users[idx], ...newData };
-        localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+        safeWrite('pawpal_users_db', users);
         const currentUser = safeReadObject('pawpal_current_user');
         if (currentUser && sameUser(currentUser, users[idx])) {
-            localStorage.setItem('pawpal_current_user', JSON.stringify(users[idx]));
+            safeWrite('pawpal_current_user', users[idx]);
         }
         return { success: true, data: users[idx] };
     }
 };
 
 function safeReadArray(key) {
+    if (window.PawpalStorage) {
+        return window.PawpalStorage.get(key, []);
+    }
     try {
         const value = JSON.parse(localStorage.getItem(key) || '[]');
         return Array.isArray(value) ? value : [];
@@ -315,11 +352,25 @@ function safeReadArray(key) {
 }
 
 function safeReadObject(key) {
+    if (window.PawpalStorage) {
+        return window.PawpalStorage.get(key, null);
+    }
     try {
         const value = JSON.parse(localStorage.getItem(key) || 'null');
         return value && typeof value === 'object' ? value : null;
     } catch (error) {
         return null;
+    }
+}
+
+function safeWrite(key, value) {
+    if (window.PawpalStorage) {
+        return window.PawpalStorage.set(key, value);
+    }
+    try {
+        localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+    } catch (error) {
+        console.error(error);
     }
 }
 

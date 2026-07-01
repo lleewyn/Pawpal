@@ -48,7 +48,7 @@
                 <div class="col-lg-9">
                     
                     <!-- Warning Banner cho tài khoản tạm -->
-                    <div class="alert-warning-custom mb-4" id="tempAccountWarning" style="display:none;">
+                    <div class="alert-warning-custom mb-4 hide-initial" id="tempAccountWarning">
                         <strong>Cảnh báo:</strong> Bạn bắt buộc phải thiết lập mật khẩu cá nhân để mở khóa tính năng đổi điểm thưởng và bảo mật thông tin bé cưng.
                     </div>
 
@@ -61,7 +61,7 @@
                             <div class="settings-card-custom">
                                 <div class="settings-card-header-custom ui-clickable-1" id="togglePasswordBtn">
                                     <h3 class="settings-card-title-custom">Đổi mật khẩu</h3>
-                                    <svg id="passwordToggleIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.3s ease; transform: rotate(180deg);"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                    <svg id="passwordToggleIcon" class="ui-element-15" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                                 </div>
                                 <div class="settings-card-body-custom" id="passwordFormContainer">
                                     <form id="changePasswordForm" class="settings-form-custom">
@@ -95,7 +95,7 @@
                                                 <div class="strength-bar-segment" id="strengthSeg3"></div>
                                             </div>
                                             <!-- Hidden element for JS compatibility -->
-                                            <div class="password-strength-bar" style="display:none;"><div class="strength-bar-fill" id="strengthBarFill"></div></div>
+                                            <div class="password-strength-bar hide-initial"><div class="strength-bar-fill" id="strengthBarFill"></div></div>
                                         </div>
 
                                         <div class="form-group mb-4">
@@ -111,7 +111,7 @@
 
                                         <div class="settings-action-row">
                                             <button type="submit" class="btn-submit-custom" id="btnUpdateSecurity" disabled>Cập nhật mật khẩu</button>
-                                            <button type="button" class="btn-cancel-custom" id="btnCancelSecurity" style="background:none; border:none; color:var(--color-text-light); font-weight:600; cursor:pointer;">Hủy</button>
+                                            <button type="button" class="btn-cancel-custom ui-bg-box-19" id="btnCancelSecurity">Hủy</button>
                                         </div>
                                     </form>
                                 </div>
@@ -163,20 +163,20 @@
                                 </div>
                                 <div class="settings-card-body-custom pt-3">
                                     <form id="notificationSettingsForm" class="notifications-form-custom">
-                                        <div class="notification-row-custom mb-3" style="display:flex; justify-content:space-between; align-items:center; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; background: #f8fafc;">
+                                        <div class="notification-row-custom mb-3 ui-bg-box-23">
                                             <div class="notification-text-custom ui-element-16">
-                                                <span class="notification-type-title" style="font-weight:700; color:var(--color-text-dark); font-size:0.85rem;">Email</span>
-                                                <span class="notification-type-desc" style="font-size:0.75rem; color:var(--color-text-light); margin-top:2px;">Cập nhật lịch hẹn và khuyến mãi.</span>
+                                                <span class="notification-type-title ui-text-format-20">Email</span>
+                                                <span class="notification-type-desc ui-text-format-21">Cập nhật lịch hẹn và khuyến mãi.</span>
                                             </div>
                                             <label class="switch">
                                                 <input type="checkbox" id="notifyEmail">
                                                 <span class="slider round"></span>
                                             </label>
                                         </div>
-                                        <div class="notification-row-custom mb-4" style="display:flex; justify-content:space-between; align-items:center; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; background: #f8fafc;">
+                                        <div class="notification-row-custom mb-4 ui-bg-box-23">
                                             <div class="notification-text-custom ui-element-16">
-                                                <span class="notification-type-title" style="font-weight:700; color:var(--color-text-dark); font-size:0.85rem;">SMS</span>
-                                                <span class="notification-type-desc" style="font-size:0.75rem; color:var(--color-text-light); margin-top:2px;">Đón trả bé cưng & đơn hàng.</span>
+                                                <span class="notification-type-title ui-text-format-20">SMS</span>
+                                                <span class="notification-type-desc ui-text-format-21">Đón trả bé cưng & đơn hàng.</span>
                                             </div>
                                             <label class="switch">
                                                 <input type="checkbox" id="notifySMS">
@@ -195,22 +195,22 @@
                                 </div>
                                 <div class="settings-card-body-custom pt-3">
                                     <div class="form-group mb-3">
-                                        <label class="form-label-custom" for="languageSelect" style="font-weight:600; color:var(--color-text-dark); font-size:0.8rem; margin-bottom:6px; display:block;">Ngôn ngữ</label>
+                                        <label class="form-label-custom ui-text-format-22" for="languageSelect">Ngôn ngữ</label>
                                         <div class="select-wrapper-custom">
-                                            <select id="languageSelect" class="form-select-custom" style="width:100%; padding:10px 14px; border:1px solid var(--color-border); border-radius:12px; background:#f8fafc; font-size:0.85rem; color:var(--color-text-dark);">
+                                            <select id="languageSelect" class="form-select-custom ui-bg-box-25">
                                                 <option value="vi">Tiếng Việt</option>
                                                 <option value="en">English</option>
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="unit-toggle-row-custom" style="display:flex; justify-content:space-between; align-items:center; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; background: #f8fafc; margin-top:16px;">
+                                    <div class="unit-toggle-row-custom ui-bg-box-26">
                                         <div class="unit-text-custom ui-spacing-14">
-                                            <span class="unit-title-custom" style="font-weight:700; color:var(--color-text-dark); font-size:0.85rem;">Đơn vị cân nặng</span>
-                                            <span class="unit-desc-custom" style="font-size:0.7rem; color:var(--color-text-light); margin-top:2px;">Sử dụng kg hoặc lb cho cân nặng thú cưng.</span>
+                                            <span class="unit-title-custom ui-text-format-20">Đơn vị cân nặng</span>
+                                            <span class="unit-desc-custom ui-text-format-23">Sử dụng kg hoặc lb cho cân nặng thú cưng.</span>
                                         </div>
                                         <div class="unit-toggle-buttons ui-bg-box-27">
-                                            <button type="button" id="unitKgBtn" class="unit-btn active" style="border:none; border-radius:6px; padding:4px 12px; font-size:0.75rem; font-weight:700; cursor:pointer; background:#fff; color:var(--color-text-dark); transition:all 0.2s;">kg</button>
-                                            <button type="button" id="unitLbBtn" class="unit-btn" style="border:none; border-radius:6px; padding:4px 12px; font-size:0.75rem; font-weight:700; cursor:pointer; background:transparent; color:var(--color-text-light); transition:all 0.2s;">lb</button>
+                                            <button type="button" id="unitKgBtn" class="unit-btn active ui-bg-box-28">kg</button>
+                                            <button type="button" id="unitLbBtn" class="unit-btn ui-bg-box-29">lb</button>
                                         </div>
                                     </div>
                                 </div>
