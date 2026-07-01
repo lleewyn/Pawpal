@@ -2,9 +2,9 @@
    pet-profile-page.js — Main logic
    ========================================================================== */
 
-import { getPets, savePets, deletePet as deletePetService, restorePet as restorePetService } from '/scripts/api/petService.js';
+import { getPets, savePets, deletePet as deletePetService, restorePet as restorePetService } from '../../../scripts/api/petService.js';
 import { generatePetId, calcAge, showToast } from '../pet-profile/pet-profile.js';
-import { API } from '/scripts/api/api.js';
+import { API } from '../../../scripts/api/api.js';
 
 const DEFAULT_PET_AVATARS = {
     dog: '/assets/images/publics/dogcute.jpg',

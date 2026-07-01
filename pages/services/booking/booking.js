@@ -116,6 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupServiceSelection();
     setupScheduleSelection();
     setupConfirmation();
+    validateStep1();
 
     // Parse URL parameter ?service=SPA01 (from details/services page)
     const urlParams = new URLSearchParams(window.location.search);
@@ -162,11 +163,11 @@ function loadMemberPets(user) {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('input', () => {
-                validateGuestInput(id);
+                validateGuestInput(id, false);
                 validateStep1();
             });
             el.addEventListener('blur', () => {
-                validateGuestInput(id);
+                validateGuestInput(id, true);
                 validateStep1();
             });
         }
@@ -251,11 +252,11 @@ function setupGuestValidation() {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('input', () => {
-                validateGuestInput(id);
+                validateGuestInput(id, false);
                 validateStep1();
             });
             el.addEventListener('blur', () => {
-                validateGuestInput(id);
+                validateGuestInput(id, true);
                 validateStep1();
             });
         }
@@ -283,7 +284,7 @@ function setupGuestValidation() {
     }
 }
 
-function validateGuestInput(id) {
+function validateGuestInput(id, isBlur = false) {
     const el = document.getElementById(id);
     const errEl = document.getElementById(`${id}Err`);
     if (!el || !errEl) return;
@@ -342,9 +343,11 @@ function validateGuestInput(id) {
     }
 
     if (!isValid) {
-        el.classList.add('is-invalid');
-        errEl.textContent = errMsg;
-        errEl.classList.remove('d-none');
+        if (isBlur || el.classList.contains('is-invalid')) {
+            el.classList.add('is-invalid');
+            errEl.textContent = errMsg;
+            errEl.classList.remove('d-none');
+        }
     } else {
         el.classList.remove('is-invalid');
         errEl.textContent = '';
