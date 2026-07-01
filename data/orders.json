@@ -908,7 +908,7 @@
       {
         "id": "PROD-007",
         "name": "Cát vệ sinh đậu nành",
-        "image": "/assets/images/shop/products/cat_vesinh.png",
+        "image": "/assets/images/shop/products/VS-CAT-04.png",
         "quantity": 2,
         "price": 120000,
         "total": 240000
@@ -996,7 +996,7 @@
       {
         "id": "PROD-007",
         "name": "Cát vệ sinh đậu nành",
-        "image": "/assets/images/shop/products/cat_vesinh.png",
+        "image": "/assets/images/shop/products/VS-CAT-04.png",
         "quantity": 3,
         "price": 120000,
         "total": 360000
