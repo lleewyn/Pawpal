@@ -245,10 +245,16 @@ function renderActions() {
     switch(currentOrder.status) {
         case 'pending':
         case 'pending_payment':
+            const isPaid = currentOrder.paymentStatus === 'paid';
+            const isCOD = currentOrder.paymentMethod === 'cod';
+            if (!isPaid && !isCOD) {
+                buttons.push(`
+                    <button class="btn-cta" onclick="payNow()">
+                        Thanh toán ngay
+                    </button>
+                `);
+            }
             buttons.push(`
-                <button class="btn-cta" onclick="payNow()">
-                    Thanh toán ngay
-                </button>
                 <button class="btn-danger-outline" onclick="cancelOrder()">
                     Hủy đơn hàng
                 </button>
@@ -356,8 +362,46 @@ function renderActions() {
 
 // Action handlers
 function payNow() {
-    alert(`Chuyển đến trang thanh toán cho đơn hàng ${currentOrder.id}`);
-    // TODO: Redirect to payment page
+    // 1. Cập nhật trạng thái thanh toán trong danh sách đơn hàng
+    const orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+    const idx = orders.findIndex(o => String(o.id) === String(currentOrder.id));
+    if (idx !== -1) {
+        orders[idx].paymentStatus = 'paid';
+        // Thêm timeline event
+        if (!Array.isArray(orders[idx].timeline)) orders[idx].timeline = [];
+        orders[idx].timeline.push({
+            status: 'paid',
+            timestamp: new Date().toISOString().slice(0, 19),
+            title: 'Thanh toán thành công',
+            description: `Đã thanh toán qua ${currentOrder.paymentMethod === 'vnpay' ? 'VNPay' : 'Ví MoMo'}`
+        });
+        localStorage.setItem('pawpal_orders', JSON.stringify(orders));
+        
+        // Cập nhật currentOrder cục bộ để đồng bộ
+        currentOrder.paymentStatus = 'paid';
+        currentOrder.payment = {
+            method: currentOrder.paymentMethod,
+            status: 'paid'
+        };
+        // Cũng cần mock thuộc tính shipping giống order-detail mong đợi
+        currentOrder.shipping = currentOrder.delivery || {};
+        currentOrder.items = (currentOrder.products || []).map(p => ({
+            productId: p.id,
+            name: p.name,
+            image: p.image,
+            quantity: p.quantity,
+            price: p.price,
+            total: p.total
+        }));
+        
+        localStorage.setItem('pawpal_current_order', JSON.stringify(currentOrder));
+    }
+    
+    // 2. Chuyển hướng tới trang thông báo thành công
+    showPawPalToast('Đang kết nối cổng thanh toán...', 'info');
+    setTimeout(() => {
+        window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${currentOrder.id}`;
+    }, 1000);
 }
 
 function restoreStockForOrder(order) {
