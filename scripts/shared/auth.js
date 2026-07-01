@@ -50,7 +50,7 @@ const PAWPAL_USERS_KEY    = window.PawpalStorage.KEYS.USERS_DB;
 const CURRENT_USER_KEY    = window.PawpalStorage.KEYS.CURRENT_USER;
 const TEMP_TOKENS_KEY     = window.PawpalStorage.KEYS.TEMP_TOKENS;
 const TEMP_TOKENS_URL     = '/data/temp-tokens.json';
-const PAWPAL_USERS_VERSION = 'v6'; // Tăng khi users.json thay đổi
+const PAWPAL_USERS_VERSION = 'v7'; // Tăng khi users.json thay đổi
 const PAWPAL_API_BASE_URL = window.PAWPAL_API_BASE_URL || 'http://localhost:4000';
 
 function resolveFromAuthScript(path) {

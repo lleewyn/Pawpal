@@ -172,26 +172,24 @@ export const API = {
 
     async getUserPets(userId) {
         const pets = await this.request(`/api/pets`);
+        const currentUser = safeReadObject('pawpal_current_user');
+        const dbUsers = safeReadArray('pawpal_users_db');
+        const dbUser = dbUsers.find(u => sameUserId(u.id, userId) || (currentUser && sameUserId(u.phone, currentUser.phone)));
+        const effectiveUserId = dbUser ? dbUser.id : userId;
+
         if (Array.isArray(pets)) {
-            const currentUser = safeReadObject('pawpal_current_user');
             return pets.filter(pet =>
-                sameUserId(pet.userId?._id || pet.userId, userId) ||
-                sameUserId(pet.userLegacyId, userId) ||
-                sameUserId(pet.userLegacyId, currentUser?.id) ||
-                sameUserId(pet.userId?._id || pet.userId, currentUser?._id) ||
-                sameUserId(pet.userLegacyId, currentUser?.legacyId) ||
+                sameUserId(pet.userId?._id || pet.userId, effectiveUserId) ||
+                sameUserId(pet.userLegacyId, effectiveUserId) ||
                 sameUserId(currentUser?.phone, pet.ownerPhone) ||
                 sameUserId(currentUser?.phone, pet.phone)
             );
         }
         await this.initData();
         const localPets = safeReadArray('pawpal_pets');
-        const currentUser = safeReadObject('pawpal_current_user');
         return localPets.filter(pet =>
-            sameUserId(pet.userId, userId) ||
-            sameUserId(pet.userLegacyId, userId) ||
-            sameUserId(pet.userLegacyId, currentUser?.id) ||
-            sameUserId(pet.userId, currentUser?._id) ||
+            sameUserId(pet.userId, effectiveUserId) ||
+            sameUserId(pet.userLegacyId, effectiveUserId) ||
             sameUserId(currentUser?.phone, pet.ownerPhone) ||
             sameUserId(currentUser?.phone, pet.phone)
         );
@@ -199,24 +197,44 @@ export const API = {
 
     async getUserBookings(userId) {
         const bookings = await this.request(`/api/bookings`);
+        const currentUser = safeReadObject('pawpal_current_user');
+        const dbUsers = safeReadArray('pawpal_users_db');
+        const dbUser = dbUsers.find(u => sameUserId(u.id, userId) || (currentUser && sameUserId(u.phone, currentUser.phone)));
+        const effectiveUserId = dbUser ? dbUser.id : userId;
+
         if (Array.isArray(bookings)) {
-            return bookings.filter(booking => sameUserId(booking.userId?._id || booking.userId, userId) || sameUserId(booking.userLegacyId, userId));
+            return bookings.filter(booking => 
+                sameUserId(booking.userId?._id || booking.userId, effectiveUserId) || 
+                sameUserId(booking.userLegacyId, effectiveUserId) ||
+                (booking.phone && currentUser?.phone && String(booking.phone) === String(currentUser.phone))
+            );
         }
         await this.initData();
         const localBookings = safeReadArray('pawpal_bookings');
-        return localBookings.filter(booking => sameUserId(booking.userId, userId));
+        return localBookings.filter(booking => 
+            sameUserId(booking.userId, effectiveUserId) ||
+            (booking.phone && currentUser?.phone && String(booking.phone) === String(currentUser.phone))
+        );
     },
 
     async getUserOrders(userId) {
         const orders = await this.request(`/api/orders`);
+        const currentUser = safeReadObject('pawpal_current_user');
+        const dbUsers = safeReadArray('pawpal_users_db');
+        const dbUser = dbUsers.find(u => sameUserId(u.id, userId) || (currentUser && sameUserId(u.phone, currentUser.phone)));
+        const effectiveUserId = dbUser ? dbUser.id : userId;
+
         if (Array.isArray(orders)) {
-            return orders.filter(order => sameUserId(order.userId?._id || order.userId, userId) || sameUserId(order.userLegacyId, userId));
+            return orders.filter(order => 
+                sameUserId(order.userId?._id || order.userId, effectiveUserId) || 
+                sameUserId(order.userLegacyId, effectiveUserId) ||
+                (order.delivery?.phone && currentUser?.phone && String(order.delivery.phone) === String(currentUser.phone))
+            );
         }
         await this.initData();
         const localOrders = safeReadArray('pawpal_orders');
-        const currentUser = safeReadObject('pawpal_current_user');
         return localOrders.filter(order => {
-            if (sameUserId(order.userId, userId)) {
+            if (sameUserId(order.userId, effectiveUserId)) {
                 return true;
             }
 
@@ -225,7 +243,8 @@ export const API = {
             }
 
             return Boolean(
-                order.userPhone && currentUser.phone && String(order.userPhone) === String(currentUser.phone)
+                (order.userPhone && currentUser.phone && String(order.userPhone) === String(currentUser.phone)) ||
+                (order.delivery?.phone && currentUser.phone && String(order.delivery.phone) === String(currentUser.phone))
             );
         });
     },
