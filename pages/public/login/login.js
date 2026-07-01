@@ -376,12 +376,23 @@ function initAuthForms() {
             const fb = document.getElementById('registerPhoneFeedback');
             if (v.length > 0 && !/^0[0-9]{9}$/.test(v)) {
                 regPhone.classList.add('is-invalid');
-                if (fb) fb.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
+                if (fb) {
+                    fb.textContent = 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0';
+                    fb.style.display = 'block';
+                }
             } else {
                 regPhone.classList.remove('is-invalid');
+                if (fb) fb.style.display = 'none';
             }
         });
-        regPhone.addEventListener('input', () => regPhone.classList.remove('is-invalid'));
+        regPhone.addEventListener('input', () => {
+            const v = regPhone.value.trim();
+            const fb = document.getElementById('registerPhoneFeedback');
+            if (/^0[0-9]{9}$/.test(v) || v.length === 0) {
+                regPhone.classList.remove('is-invalid');
+                if (fb) fb.style.display = 'none';
+            }
+        });
     }
 
     // Password strength meter
@@ -430,6 +441,7 @@ function initAuthForms() {
             if (phoneFb) phoneFb.style.display = 'block';
         } else {
             regPhone.classList.remove('is-invalid');
+            if (phoneFb) phoneFb.style.display = 'none';
         }
 
         if (regPassword.value.length > 0 && !isPasswordValid) {
