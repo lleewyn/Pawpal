@@ -280,7 +280,15 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        bindTabs();
-        renderWishlist();
+        // Đợi window.API sẵn sàng (api-global.js là module, có thể chạy sau)
+        function runWhenReady() {
+            if (window.API && window.DataLoader) {
+                bindTabs();
+                renderWishlist();
+            } else {
+                setTimeout(runWhenReady, 20);
+            }
+        }
+        runWhenReady();
     });
 })();

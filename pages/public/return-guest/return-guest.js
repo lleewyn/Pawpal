@@ -12,12 +12,14 @@ const BOOKING_STATUS = {
 };
 
 const ORDER_STATUS = {
+    pending:         { label: 'Chờ xác nhận',   cls: 'rg-badge-pending' },
     pending_payment: { label: 'Chờ thanh toán', cls: 'rg-badge-pending' },
     preparing:       { label: 'Đang chuẩn bị',  cls: 'rg-badge-inprogress' },
     shipping:        { label: 'Đang giao hàng', cls: 'rg-badge-shipping' },
     delivered:       { label: 'Đã giao',        cls: 'rg-badge-confirmed' },
     completed:       { label: 'Hoàn thành',     cls: 'rg-badge-completed' },
     cancelled:       { label: 'Đã hủy',         cls: 'rg-badge-cancelled' },
+    return_pending:  { label: 'Chờ đổi trả',    cls: 'rg-badge-pending' },
 };
 
 let rgOtpFlowActive = false;
@@ -220,7 +222,12 @@ function esc(s) {
 }
 
 function canCancelOrder(o) {
-    return ['pending_payment', 'preparing'].includes(normalizeOrderStatus(o.status));
+    const status = normalizeOrderStatus(o.status);
+    // Chỉ cho hủy khi đơn chưa được giao / chưa hoàn thành
+    if (!['pending', 'pending_payment', 'preparing'].includes(status)) return false;
+    // Đơn đang xử lý hoàn tiền hoặc đã hoàn tiền → không cho hủy lần 2
+    if (o.paymentStatus === 'pending_refund' || o.paymentStatus === 'refunded') return false;
+    return true;
 }
 
 function canReturnOrder(o) {
@@ -308,7 +315,25 @@ function buildOrderCard(o) {
     const name    = esc(first?.name || 'Sản phẩm');
     const extra   = o.products?.length > 1 ? ` +${o.products.length - 1} sản phẩm` : '';
     const address = esc(o.delivery?.address || '');
-    const paid    = o.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán';
+
+    // Trạng thái thanh toán — đọc cả hai cấu trúc dữ liệu
+    const isPaid = o.paymentStatus === 'paid' || o.payment?.status === 'paid';
+    const isPendingRefund = o.paymentStatus === 'pending_refund';
+    const isRefunded = o.paymentStatus === 'refunded';
+    let paymentLabel, paymentColor;
+    if (isRefunded) {
+        paymentLabel = 'Đã hoàn tiền';
+        paymentColor = 'var(--color-success, #2d7d46)';
+    } else if (isPendingRefund) {
+        paymentLabel = 'Đang xử lý hoàn tiền';
+        paymentColor = '#d18b00';
+    } else if (isPaid) {
+        paymentLabel = 'Đã thanh toán';
+        paymentColor = 'var(--color-success, #2d7d46)';
+    } else {
+        paymentLabel = 'Chưa thanh toán';
+        paymentColor = 'inherit';
+    }
 
     return `
     <div class="rg-item" data-type="order">
@@ -334,7 +359,7 @@ function buildOrderCard(o) {
             </div>` : ''}
             <div>
                 <div class="rg-summary-label">Thanh toán</div>
-                <div class="rg-summary-value">${paid}</div>
+                <div class="rg-summary-value" style="color:${paymentColor};font-weight:500;">${paymentLabel}</div>
             </div>
         </div>
         ${canCancelOrder(o) ? `
@@ -378,9 +403,25 @@ window.handleGuestCancelOrder = function(orderId) {
     const phone = document.getElementById('rg-phone').value.trim();
     if (!phone) { showToast('Vui lòng nhập số điện thoại trước.', 'info'); return; }
 
-    showSendOTPConfirm('Hủy đơn hàng', 'Đơn hàng sau khi hủy sẽ không thể khôi phục.', phone, () => {
-        confirmCancelOrder(orderId);
-    });
+    // Tìm đơn để kiểm tra trạng thái thanh toán
+    const orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+    const order = orders.find(o => o.id === orderId);
+    const isPaidOnline = order
+        && (order.paymentStatus === 'paid' || order.payment?.status === 'paid')
+        && order.paymentMethod !== 'cod'
+        && order.paymentMethod;
+
+    const total = order?.pricing?.total || 0;
+    const refundNote = isPaidOnline
+        ? ` Số tiền <strong>${fmtPrice(total)}</strong> sẽ được hoàn lại theo chính sách của cửa hàng.`
+        : '';
+
+    showSendOTPConfirm(
+        'Hủy đơn hàng',
+        `Đơn hàng sau khi hủy sẽ không thể khôi phục.${refundNote}`,
+        phone,
+        () => { confirmCancelOrder(orderId); }
+    );
 };
 
 window.handleGuestReturnRequest = function(orderId) {
@@ -607,19 +648,87 @@ function confirmCancelBooking(bookingId) {
 function confirmCancelOrder(orderId) {
     const orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
     const idx = orders.findIndex(o => o.id === orderId);
-    if (idx !== -1) {
-        orders[idx].status = 'cancelled';
-        orders[idx].updatedAt = new Date().toISOString();
-        localStorage.setItem('pawpal_orders', JSON.stringify(orders));
+    if (idx === -1) {
+        showToast('Không tìm thấy đơn hàng.', 'error');
+        return;
     }
-    showToast('Đã hủy đơn hàng thành công!', 'success');
-    setTimeout(() => document.getElementById('rg-form').dispatchEvent(new Event('submit')), 1000);
+
+    const order = orders[idx];
+
+    // Hoàn tồn kho
+    try {
+        const storedProducts = JSON.parse(localStorage.getItem('pawpal_products') || '[]');
+        if (storedProducts.length && Array.isArray(order.products)) {
+            order.products.forEach(item => {
+                const pi = storedProducts.findIndex(p => String(p.id) === String(item.id));
+                if (pi !== -1) {
+                    storedProducts[pi].stock = (Number(storedProducts[pi].stock) || 0) + (Number(item.quantity) || 0);
+                    storedProducts[pi].inStock = true;
+                }
+            });
+            localStorage.setItem('pawpal_products', JSON.stringify(storedProducts));
+        }
+    } catch (_) {}
+
+    // Ghi nhận hoàn tiền nếu đã thanh toán online
+    const isPaidOnline = (order.paymentStatus === 'paid' || order.payment?.status === 'paid')
+                      && order.paymentMethod && order.paymentMethod !== 'cod';
+    if (isPaidOnline) {
+        const refunds = JSON.parse(localStorage.getItem('pawpal_refunds') || '[]');
+        refunds.push({
+            orderId: order.id,
+            amount: order.pricing?.total || 0,
+            paymentMethod: order.paymentMethod,
+            status: 'pending_refund',
+            createdAt: new Date().toISOString()
+        });
+        localStorage.setItem('pawpal_refunds', JSON.stringify(refunds));
+        orders[idx].paymentStatus = 'pending_refund';
+    }
+
+    // Trừ điểm Paw Points nếu đơn đã cộng điểm (pointsAwarded)
+    if (order.pointsAwarded && order.pointsEarned > 0) {
+        try {
+            const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+            const phone = order.delivery?.phone || order.userPhone || '';
+            const ui = users.findIndex(u => u.phone === phone);
+            if (ui !== -1) {
+                users[ui].points = Math.max(0, (users[ui].points || 0) - order.pointsEarned);
+                localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+                // Sync session nếu đang đăng nhập
+                const sessionUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+                if (sessionUser && sessionUser.phone === phone) {
+                    sessionUser.points = users[ui].points;
+                    localStorage.setItem('pawpal_current_user', JSON.stringify(sessionUser));
+                }
+            }
+        } catch (_) {}
+    }
+
+    // Cập nhật trạng thái đơn hàng
+    orders[idx].status = 'cancelled';
+    orders[idx].updatedAt = new Date().toISOString();
+    if (!Array.isArray(orders[idx].timeline)) orders[idx].timeline = [];
+    orders[idx].timeline.push({
+        status: 'cancelled',
+        timestamp: new Date().toISOString(),
+        title: 'Đã hủy',
+        description: isPaidOnline
+            ? `Khách hàng hủy đơn. Yêu cầu hoàn tiền ${fmtPrice(order.pricing?.total || 0)} đã được ghi nhận.`
+            : 'Khách hàng hủy đơn hàng'
+    });
+    localStorage.setItem('pawpal_orders', JSON.stringify(orders));
+
+    const toastMsg = isPaidOnline
+        ? 'Đã hủy đơn hàng. Yêu cầu hoàn tiền đã được ghi nhận!'
+        : 'Đã hủy đơn hàng thành công!';
+    showToast(toastMsg, 'success');
+    setTimeout(() => document.getElementById('rg-form').dispatchEvent(new Event('submit')), 1200);
 }
 
 function normalizeOrderStatus(status) {
-    if (status === 'pending') return 'pending_payment';
-    if (status === 'return_pending') return 'pending_payment';
-    return status;
+    // Không cần remap nữa — ORDER_STATUS đã có đủ các trạng thái
+    return status || 'pending';
 }
 
 // ── Change Schedule Modal ─────────────────────────────────────────────────

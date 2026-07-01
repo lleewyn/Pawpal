@@ -85,6 +85,50 @@ async function loadOrderDetail() {
     }
 }
 
+// ============================================================================
+// Paw Points — Tích điểm khi đơn hàng hoàn thành (Quy trình 3.1.13)
+// Công thức: 10.000 VNĐ = 1 Paw Point (tính trên grandTotal sau giảm giá)
+// Idempotent: dùng flag `pointsAwarded` trên đơn hàng, tránh cộng 2 lần
+// ============================================================================
+function awardLoyaltyPoints(order) {
+    // Chỉ cộng điểm 1 lần
+    if (order.pointsAwarded) return;
+
+    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    if (!user || user.is_temporary) return;
+
+    const grandTotal = Number(
+        order.pricing?.total ?? order.pricing?.grandTotal ?? 0
+    );
+    if (grandTotal <= 0) return;
+
+    // 10.000 VNĐ = 1 điểm (làm tròn xuống)
+    const pointsEarned = Math.floor(grandTotal / 10000);
+    if (pointsEarned <= 0) return;
+
+    // Cập nhật users_db
+    const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+    const idx = users.findIndex(u => u.phone === user.phone);
+    if (idx !== -1) {
+        users[idx].points  = (users[idx].points  || 0) + pointsEarned;
+        users[idx].spend   = (users[idx].spend   || 0) + grandTotal;
+        users[idx].lastTransactionAt = new Date().toISOString();
+        localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+
+        // Sync session
+        user.points  = users[idx].points;
+        user.spend   = users[idx].spend;
+        user.lastTransactionAt = users[idx].lastTransactionAt;
+        localStorage.setItem('pawpal_current_user', JSON.stringify(user));
+    }
+
+    // Đánh dấu đã cộng điểm trên đơn hàng
+    order.pointsAwarded  = true;
+    order.pointsEarned   = pointsEarned;
+
+    console.log(`[Loyalty] +${pointsEarned} Paw Points cho đơn ${order.id} (${grandTotal.toLocaleString('vi-VN')}đ)`);
+}
+
 // Check auto-complete (3 days after delivered)
 function checkAutoComplete() {
     if (currentOrder.status !== 'delivered') return;
@@ -98,6 +142,9 @@ function checkAutoComplete() {
     const hoursPassed = (now - deliveredTime) / (1000 * 60 * 60);
     
     if (hoursPassed >= 72) {
+        // Cộng điểm trước khi chuyển trạng thái
+        awardLoyaltyPoints(currentOrder);
+
         // Auto complete
         currentOrder.status = 'completed';
         orderTimeline.push({
@@ -244,22 +291,40 @@ function renderActions() {
     
     switch(currentOrder.status) {
         case 'pending':
-        case 'pending_payment':
-            const isPaid = currentOrder.paymentStatus === 'paid';
-            const isCOD = currentOrder.paymentMethod === 'cod';
-            if (!isPaid && !isCOD) {
+        case 'pending_payment': {
+            // Đọc paymentStatus từ nhiều cấu trúc dữ liệu khác nhau
+            const isPaid   = currentOrder.paymentStatus === 'paid'
+                          || currentOrder.payment?.status === 'paid';
+            // Chỉ coi là online khi phương thức thanh toán rõ ràng là online gateway
+            const ONLINE_METHODS = ['vnpay', 'momo', 'zalopay', 'vietqr'];
+            const payMethod = (currentOrder.paymentMethod || currentOrder.payment?.method || '').toLowerCase();
+            const isCOD     = payMethod === 'cod';
+            const isOnline  = ONLINE_METHODS.includes(payMethod);
+
+            if (isPaid && isOnline) {
+                // Đã thanh toán online — không cho thanh toán lại
+                statusNotes.push(`
+                    <span class="order-reviewed-note order-inline-note" style="color:var(--color-success);">
+                        Đã thanh toán — đang chờ xác nhận
+                    </span>
+                `);
+            } else if (!isPaid && isOnline) {
+                // Chưa thanh toán online — cho phép thanh toán
                 buttons.push(`
                     <button class="btn-cta" onclick="payNow()">
                         Thanh toán ngay
                     </button>
                 `);
             }
+            // COD hoặc phương thức không xác định: không hiện nút thanh toán
+
             buttons.push(`
                 <button class="btn-danger-outline" onclick="cancelOrder()">
                     Hủy đơn hàng
                 </button>
             `);
             break;
+        }
             
         case 'preparing':
             buttons.push(`
@@ -288,6 +353,36 @@ function renderActions() {
             `);
             break;
             
+        case 'cancelled': {
+            // Đơn đã hủy — hiển thị trạng thái hoàn tiền (nếu có) và cho phép đặt lại
+            const isPaidCancelled = currentOrder.paymentStatus === 'paid'
+                                 || currentOrder.payment?.status === 'paid';
+            const isRefunded      = currentOrder.paymentStatus === 'refunded';
+            const isPendingRefund = currentOrder.paymentStatus === 'pending_refund';
+            const isCODCancelled  = currentOrder.paymentMethod === 'cod';
+
+            if (isRefunded) {
+                statusNotes.push(`
+                    <span class="order-reviewed-note order-inline-note" style="color:var(--color-success);">
+                        Đã hoàn tiền
+                    </span>
+                `);
+            } else if (isPendingRefund || isPaidCancelled && !isCODCancelled) {
+                statusNotes.push(`
+                    <span class="order-warning-text order-inline-note" title="Yêu cầu hoàn tiền đã được ghi nhận, đang xử lý.">
+                        Đang xử lý hoàn tiền
+                    </span>
+                `);
+            }
+
+            buttons.push(`
+                <button class="btn-view-detail border-0" onclick="reorder('${currentOrder.id}')">
+                    Đặt lại
+                </button>
+            `);
+            break;
+        }
+
         case 'completed':
             // 1. Kiểm tra cửa sổ 7 ngày từ ngày hoàn thành
             const completedEntry = currentOrder.timeline
@@ -362,46 +457,25 @@ function renderActions() {
 
 // Action handlers
 function payNow() {
-    // 1. Cập nhật trạng thái thanh toán trong danh sách đơn hàng
-    const orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-    const idx = orders.findIndex(o => String(o.id) === String(currentOrder.id));
-    if (idx !== -1) {
-        orders[idx].paymentStatus = 'paid';
-        // Thêm timeline event
-        if (!Array.isArray(orders[idx].timeline)) orders[idx].timeline = [];
-        orders[idx].timeline.push({
-            status: 'paid',
-            timestamp: new Date().toISOString().slice(0, 19),
-            title: 'Thanh toán thành công',
-            description: `Đã thanh toán qua ${currentOrder.paymentMethod === 'vnpay' ? 'VNPay' : 'Ví MoMo'}`
-        });
-        localStorage.setItem('pawpal_orders', JSON.stringify(orders));
-        
-        // Cập nhật currentOrder cục bộ để đồng bộ
-        currentOrder.paymentStatus = 'paid';
-        currentOrder.payment = {
-            method: currentOrder.paymentMethod,
-            status: 'paid'
-        };
-        // Cũng cần mock thuộc tính shipping giống order-detail mong đợi
-        currentOrder.shipping = currentOrder.delivery || {};
-        currentOrder.items = (currentOrder.products || []).map(p => ({
-            productId: p.id,
-            name: p.name,
-            image: p.image,
-            quantity: p.quantity,
-            price: p.price,
-            total: p.total
-        }));
-        
-        localStorage.setItem('pawpal_current_order', JSON.stringify(currentOrder));
-    }
-    
-    // 2. Chuyển hướng tới trang thông báo thành công
-    showPawPalToast('Đang kết nối cổng thanh toán...', 'info');
-    setTimeout(() => {
-        window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${currentOrder.id}`;
-    }, 1000);
+    // Chỉ cho phép thanh toán với đơn online chưa paid
+    const ONLINE_METHODS = ['vnpay', 'momo', 'zalopay', 'vietqr'];
+    const payMethod = (currentOrder.paymentMethod || currentOrder.payment?.method || '').toLowerCase();
+    if (!ONLINE_METHODS.includes(payMethod)) return; // Guard: COD/unknown không gọi được
+
+    // Lưu currentOrder vào session để payment-success đọc được
+    currentOrder.shipping = currentOrder.delivery || currentOrder.shipping || {};
+    currentOrder.items = (currentOrder.products || []).map(p => ({
+        productId: p.id,
+        name: p.name,
+        image: p.image,
+        quantity: p.quantity,
+        price: p.price,
+        total: p.total
+    }));
+    localStorage.setItem('pawpal_current_order', JSON.stringify(currentOrder));
+
+    // Chuyển hướng tới cổng thanh toán (mock: payment-success)
+    window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${currentOrder.id}`;
 }
 
 function restoreStockForOrder(order) {
@@ -426,6 +500,23 @@ function restoreStockForOrder(order) {
 
 function cancelOrder() {
     // Hiện modal xác nhận thay vì confirm() native
+    const isPaidOnline = (currentOrder.paymentStatus === 'paid' || currentOrder.payment?.status === 'paid')
+                      && currentOrder.paymentMethod !== 'cod';
+    const refundAmount = (() => {
+        if (!isPaidOnline) return 0;
+        const subtotal    = toNumber(currentOrder.pricing?.subtotal);
+        const shippingFee = toNumber(currentOrder.pricing?.shippingFee);
+        const discount    = toNumber(currentOrder.pricing?.discount);
+        return resolveOrderTotal(currentOrder.pricing, subtotal, shippingFee, discount);
+    })();
+
+    const refundNote = isPaidOnline
+        ? `<div class="alert alert-warning py-2 px-3 mt-2 mb-0 small">
+               Đơn hàng đã thanh toán qua <strong>${currentOrder.paymentMethod === 'vnpay' ? 'VNPay' : 'MoMo'}</strong>.
+               Số tiền <strong>${formatCurrency(refundAmount)}</strong> sẽ được hoàn lại theo chính sách của cửa hàng.
+           </div>`
+        : '';
+
     const modalId = 'cancelOrderModal';
     const existing = document.getElementById(modalId);
     if (existing) existing.remove();
@@ -444,6 +535,7 @@ function cancelOrder() {
                 <div class="modal-body">
                     <p>Bạn có chắc chắn muốn hủy đơn hàng <strong>${currentOrder.id}</strong>?</p>
                     <p class="text-muted small">Đơn hàng sau khi hủy sẽ không thể khôi phục.</p>
+                    ${refundNote}
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Quay lại</button>
@@ -474,6 +566,8 @@ function cancelOrder() {
                 createdAt: new Date().toISOString()
             });
             localStorage.setItem('pawpal_refunds', JSON.stringify(refunds));
+            // Cập nhật trạng thái thanh toán để UI hiển thị "Đang xử lý hoàn tiền"
+            currentOrder.paymentStatus = 'pending_refund';
         }
 
         currentOrder.status = 'cancelled';
@@ -482,7 +576,9 @@ function cancelOrder() {
             status: 'cancelled',
             timestamp: new Date().toISOString(),
             title: 'Đã hủy',
-            description: 'Khách hàng đã hủy đơn hàng'
+            description: isPaidOnline
+                ? `Khách hàng đã hủy đơn hàng. Yêu cầu hoàn tiền ${formatCurrency(refundAmount)} đã được ghi nhận.`
+                : 'Khách hàng đã hủy đơn hàng'
         });
         saveOrderToLocalStorage(currentOrder);
         window.location.href = '/pages/user/orders/orders.html';
@@ -545,6 +641,11 @@ function confirmReceived() {
 
     document.getElementById('confirmReceivedBtn').addEventListener('click', () => {
         modal.hide();
+
+        // Cộng điểm Paw Points trước khi chuyển trạng thái (idempotent)
+        awardLoyaltyPoints(currentOrder);
+        const pointsEarned = currentOrder.pointsEarned || 0;
+
         currentOrder.status = 'completed';
         const orderTimeline = Array.isArray(currentOrder.timeline) ? currentOrder.timeline : (currentOrder.timeline = []);
         orderTimeline.push({
@@ -554,7 +655,14 @@ function confirmReceived() {
             description: 'Khách hàng xác nhận đã nhận hàng'
         });
         saveOrderToLocalStorage(currentOrder);
-        location.reload();
+
+        // Hiển thị toast Paw Points nếu có điểm được cộng
+        if (pointsEarned > 0 && typeof showPawPalToast === 'function') {
+            showPawPalToast(`Xác nhận thành công! Bạn vừa tích được +${pointsEarned} Paw Points.`, 'success');
+            setTimeout(() => location.reload(), 1800);
+        } else {
+            location.reload();
+        }
     });
 }
 

@@ -51,7 +51,6 @@ const CURRENT_USER_KEY    = window.PawpalStorage.KEYS.CURRENT_USER;
 const TEMP_TOKENS_KEY     = window.PawpalStorage.KEYS.TEMP_TOKENS;
 const TEMP_TOKENS_URL     = '/data/temp-tokens.json';
 const PAWPAL_USERS_VERSION = 'v7'; // Tăng khi users.json thay đổi
-const PAWPAL_API_BASE_URL = window.PAWPAL_API_BASE_URL || 'http://localhost:4000';
 
 function resolveFromAuthScript(path) {
     const scriptSrc = document.currentScript?.src || document.querySelector('script[src*="scripts/shared/auth.js"]')?.src;
@@ -90,7 +89,7 @@ function initMockDatabase() {
     if (!localStorage.getItem(PAWPAL_USERS_KEY)) {
         try {
             const xhr = new XMLHttpRequest();
-            xhr.open('GET', `${PAWPAL_API_BASE_URL}/api/users`, false);
+            xhr.open('GET', resolveFromAuthScript('../../data/users.json'), false);
             xhr.send(null);
             if (xhr.status >= 200 && xhr.status < 300) {
                 // Merge seed với currentUser để không ghi đè trạng thái user đã kích hoạt

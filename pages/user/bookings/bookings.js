@@ -136,8 +136,12 @@ function createBookingCard(booking) {
     const careLogLink = normalizedStatus === 'completed' && petId
         ? `<a class="booking-card-link" href="../pet-diary/pet-diary.html${diaryQuery}" onclick="event.stopPropagation()">Xem nhật ký chăm sóc</a>`
         : '';
-    const reviewedBadge = normalizedStatus === 'completed' && hasServiceReview(booking)
+    const alreadyReviewed = normalizedStatus === 'completed' && hasServiceReview(booking);
+    const reviewedBadge = alreadyReviewed
         ? '<span class="booking-reviewed-badge">Đã đánh giá</span>'
+        : '';
+    const writeReviewBtn = normalizedStatus === 'completed' && !alreadyReviewed
+        ? `<a class="booking-card-link btn-write-service-review" href="../booking-detail/booking-detail.html?id=${bookingId}#service-review" onclick="event.stopPropagation()">Viết đánh giá</a>`
         : '';
     const detailPrompt = '<span class="booking-card-detail-hint">Nhấn để xem chi tiết</span>';
     const changeScheduleAction = canModify
@@ -188,8 +192,9 @@ function createBookingCard(booking) {
             <div class="booking-card-actions">
                 ${changeScheduleAction}
                 ${cancelBookingAction}
-                ${detailPrompt}
+                ${writeReviewBtn}
                 ${reviewedBadge}
+                ${detailPrompt}
                 ${isChangeLimited ? '<span class="booking-limit-warning">Đã hết lượt đổi</span>' : ''}
                 ${careLogLink}
             </div>
@@ -325,15 +330,6 @@ function openQuickCancelModal(booking) {
     modal.show();
 
     modalEl.querySelector('#quickConfirmCancelBtn').addEventListener('click', async () => {
-        try {
-            await API.request(`/api/bookings/${bookingId}`, 'PUT', {
-                status: 'cancelled',
-                cancelCount: (booking.cancelCount || 0) + 1
-            });
-        } catch (e) {
-            console.error('API cancel failed, fallback to local', e);
-        }
-
         const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
         const idx = bookings.findIndex((b) => String(b.id || b._id) === String(bookingId));
         if (idx !== -1) {
@@ -436,18 +432,6 @@ function openQuickRescheduleModal(booking) {
     });
 
     modalEl.querySelector('#quickConfirmRescheduleBtn').addEventListener('click', async () => {
-        try {
-            await API.request(`/api/bookings/${bookingId}`, 'PUT', {
-                date: selectedDate,
-                time: selectedSlot,
-                timeStart: selectedSlot,
-                staff: selectedStaff,
-                changeCount: (booking.changeCount || 0) + 1
-            });
-        } catch (e) {
-            console.error('API reschedule failed, fallback to local', e);
-        }
-
         const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
         const idx = bookings.findIndex((b) => String(b.id || b._id) === String(bookingId));
         if (idx !== -1) {

@@ -90,18 +90,47 @@ export async function getPets(userId) {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     const targetUserId = userId || currentUser?.id || null;
 
+    // Lấy pets từ API (offline = [], online = server data)
     let serverPets = [];
     if (targetUserId) {
         serverPets = normalizePetList(await API.getUserPets(targetUserId));
-    } else {
-        serverPets = normalizePetList(await API.request('/api/pets'));
     }
 
     const localPets = normalizePetList(JSON.parse(localStorage.getItem('pawpal_pets') || '[]'));
-    const merged = mergePetLists(serverPets, localPets, targetUserId);
 
-    localStorage.setItem('pawpal_pets', JSON.stringify(merged));
-    return merged;
+    // Nếu server trả data, merge và lưu cache
+    if (serverPets.length > 0) {
+        const merged = mergePetLists(serverPets, localPets, targetUserId);
+        localStorage.setItem('pawpal_pets', JSON.stringify(merged));
+        return merged;
+    }
+
+    // Offline: dùng thẳng localPets, lọc theo user
+    if (!targetUserId) return localPets;
+
+    const dbUsers = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+    const dbUser = dbUsers.find(u =>
+        String(u.id) === String(targetUserId) ||
+        (currentUser?.phone && String(u.phone) === String(currentUser.phone))
+    );
+    const knownIds = new Set(
+        [targetUserId, dbUser?.id, currentUser?.id]
+            .filter(Boolean)
+            .map(String)
+    );
+    const currentPhone = currentUser?.phone ? String(currentUser.phone) : null;
+
+    const userPets = localPets.filter(pet => {
+        const petUserId = pet.userId?._id || pet.userId;
+        if (petUserId && knownIds.has(String(petUserId))) return true;
+        if (pet.userLegacyId && knownIds.has(String(pet.userLegacyId))) return true;
+        if (!currentPhone) return false;
+        if (pet.ownerPhone && String(pet.ownerPhone) === currentPhone) return true;
+        if (pet.phone && String(pet.phone) === currentPhone) return true;
+        return false;
+    });
+
+    return userPets;
 }
 
 export async function savePets(pets) {
@@ -111,33 +140,37 @@ export async function savePets(pets) {
         const existing = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
         const byLegacyId = new Map(existing.map((item) => [String(item.id), item]));
 
-        const results = [];
-        for (const pet of normalizedPets) {
-            const current = byLegacyId.get(String(pet.id));
-            const payload = buildPetPayload(pet, currentUser, current);
-            const targetId = pet._id || current?._id;
+        // Luôn lưu localStorage ngay lập tức (offline-first)
+        localStorage.setItem('pawpal_pets', JSON.stringify(normalizedPets));
 
-            if (targetId) {
-                const updated = await API.request(`/api/pets/${targetId}`, {
-                    method: 'PUT',
-                    body: JSON.stringify(payload)
-                });
-                results.push(Boolean(updated));
-            } else {
-                const created = await API.request('/api/pets', {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                results.push(Boolean(created));
+        // Nếu backend bật thì sync thêm lên server
+        if (API.USE_BACKEND) {
+            const results = [];
+            for (const pet of normalizedPets) {
+                const current = byLegacyId.get(String(pet.id));
+                const payload = buildPetPayload(pet, currentUser, current);
+                const targetId = pet._id || current?._id;
+
+                if (targetId) {
+                    const updated = await API.request(`/api/pets/${targetId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(payload)
+                    });
+                    results.push(Boolean(updated));
+                } else {
+                    const created = await API.request('/api/pets', {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                    results.push(Boolean(created));
+                }
             }
+            console.log('Da sync', normalizedPets.length, 'be cung len server');
+        } else {
+            console.log('Da luu', normalizedPets.length, 'be cung (offline)');
         }
 
-        const success = results.every(Boolean);
-        if (success) {
-            localStorage.setItem('pawpal_pets', JSON.stringify(normalizedPets));
-            console.log('Da luu', normalizedPets.length, 'be cung');
-        }
-        return success;
+        return true;
     } catch (e) {
         console.error('savePets error:', e);
         return false;
@@ -146,38 +179,48 @@ export async function savePets(pets) {
 
 export async function deletePet(petId) {
     const pets = JSON.parse(localStorage.getItem('pawpal_pets')) || [];
-    const pet = pets.find((item) => item.id === petId);
-    if (pet?._id) {
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        const current = pets.find((item) => String(item.id) === String(petId));
-        const payload = buildPetPayload({ ...pet, isArchived: true }, currentUser, current);
-        const updated = await API.request(`/api/pets/${pet._id}`, {
-            method: 'PUT',
-            body: JSON.stringify(payload)
-        });
-        if (updated) {
-            localStorage.setItem('pawpal_pets', JSON.stringify(pets.map(p => p.id === petId ? { ...p, isArchived: true } : p)));
-            return true;
+    const updatedPets = pets.map(p => p.id === petId ? { ...p, isArchived: true } : p);
+
+    // Offline-first: lưu ngay
+    localStorage.setItem('pawpal_pets', JSON.stringify(updatedPets));
+
+    // Sync lên server nếu backend bật và pet có _id
+    if (API.USE_BACKEND) {
+        const pet = pets.find((item) => item.id === petId);
+        if (pet?._id) {
+            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            const current = pets.find((item) => String(item.id) === String(petId));
+            const payload = buildPetPayload({ ...pet, isArchived: true }, currentUser, current);
+            await API.request(`/api/pets/${pet._id}`, {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
         }
     }
-    return await savePets(pets.map(p => p.id === petId ? { ...p, isArchived: true } : p));
+
+    return true;
 }
 
 export async function restorePet(petId) {
     const pets = JSON.parse(localStorage.getItem('pawpal_pets')) || [];
-    const pet = pets.find((item) => item.id === petId);
-    if (pet?._id) {
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        const current = pets.find((item) => String(item.id) === String(petId));
-        const payload = buildPetPayload({ ...pet, isArchived: false }, currentUser, current);
-        const updated = await API.request(`/api/pets/${pet._id}`, {
-            method: 'PUT',
-            body: JSON.stringify(payload)
-        });
-        if (updated) {
-            localStorage.setItem('pawpal_pets', JSON.stringify(pets.map(p => p.id === petId ? { ...p, isArchived: false } : p)));
-            return true;
+    const updatedPets = pets.map(p => p.id === petId ? { ...p, isArchived: false } : p);
+
+    // Offline-first: lưu ngay
+    localStorage.setItem('pawpal_pets', JSON.stringify(updatedPets));
+
+    // Sync lên server nếu backend bật và pet có _id
+    if (API.USE_BACKEND) {
+        const pet = pets.find((item) => item.id === petId);
+        if (pet?._id) {
+            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            const current = pets.find((item) => String(item.id) === String(petId));
+            const payload = buildPetPayload({ ...pet, isArchived: false }, currentUser, current);
+            await API.request(`/api/pets/${pet._id}`, {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
         }
     }
-    return await savePets(pets.map(p => p.id === petId ? { ...p, isArchived: false } : p));
+
+    return true;
 }

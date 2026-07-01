@@ -9,6 +9,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // Đợi window.API sẵn sàng (api.js là module, load song song với cart.js)
+    if (!window.API) {
+        await new Promise(resolve => {
+            const check = setInterval(() => {
+                if (window.API) { clearInterval(check); resolve(); }
+            }, 20);
+            // Timeout sau 3s để tránh treo vô hạn
+            setTimeout(() => { clearInterval(check); resolve(); }, 3000);
+        });
+    }
+
     const cartContentRow = document.getElementById('cart-content-row');
     const cartItemsList = document.getElementById('cart-items-list');
     const cartSubtotal = document.getElementById('cart-subtotal');
@@ -58,12 +69,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Tải sản phẩm từ CSV
             products = await window.DataLoader.loadProducts();
             
-            // Lấy giỏ hàng từ MongoDB rồi ghép với cache cũ để tránh mất dữ liệu
+            // Lấy giỏ hàng từ localStorage (offline-first, tránh duplicate)
             const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-            const serverCart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
             const localCart = restoreCartFromBackup(JSON.parse(localStorage.getItem('pawpal_cart') || '[]'));
-            cart = [...serverCart, ...localCart].map(normalizeCartItem);
-            await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
+            cart = localCart.map(normalizeCartItem);
             
             // Mặc định chọn tất cả sản phẩm
             cart.forEach(item => {

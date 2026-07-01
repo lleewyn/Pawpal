@@ -5,7 +5,7 @@
  */
 
 export const API = {
-    DATA_VERSION: '2026-07-01-v8-fix-cat-litter',
+    DATA_VERSION: '2026-07-01-v9-fix-orders-filter',
     USE_BACKEND: false, // Thiết lập false để ngắt kết nối backend MongoDB, chuyển hoàn toàn sang Mock offline bằng LocalStorage và tệp tin JSON tĩnh.
 
     getBaseUrl() {
@@ -100,9 +100,16 @@ export const API = {
                     // Keep seed product data fresh, only preserve user-action fields
                     return {
                         ...seedOrder,
-                        status: local.status,
+                        status:        local.status,
                         paymentStatus: local.paymentStatus,
-                        updatedAt: local.updatedAt
+                        updatedAt:     local.updatedAt,
+                        // Giữ lại field tích điểm loyalty đã xử lý
+                        pointsAwarded: local.pointsAwarded,
+                        pointsEarned:  local.pointsEarned,
+                        // Giữ lại userId/userPhone để filter đúng
+                        userId:        local.userId    || seedOrder.userId,
+                        userPhone:     local.userPhone || seedOrder.userPhone,
+                        timeline:      local.timeline  || seedOrder.timeline,
                     };
                 });
                 localOrders.forEach(local => {
@@ -174,85 +181,123 @@ export const API = {
         const pets = await this.request(`/api/pets`);
         const currentUser = safeReadObject('pawpal_current_user');
         const dbUsers = safeReadArray('pawpal_users_db');
-        const dbUser = dbUsers.find(u => sameUserId(u.id, userId) || (currentUser && sameUserId(u.phone, currentUser.phone)));
+        const dbUser = dbUsers.find(u =>
+            sameUserId(u.id, userId) ||
+            (currentUser && sameUserId(u.phone, currentUser.phone))
+        );
         const effectiveUserId = dbUser ? dbUser.id : userId;
 
-        if (Array.isArray(pets)) {
-            return pets.filter(pet =>
-                sameUserId(pet.userId?._id || pet.userId, effectiveUserId) ||
-                sameUserId(pet.userLegacyId, effectiveUserId) ||
-                sameUserId(currentUser?.phone, pet.ownerPhone) ||
-                sameUserId(currentUser?.phone, pet.phone)
-            );
-        }
-        await this.initData();
-        const localPets = safeReadArray('pawpal_pets');
-        return localPets.filter(pet =>
-            sameUserId(pet.userId, effectiveUserId) ||
-            sameUserId(pet.userLegacyId, effectiveUserId) ||
-            sameUserId(currentUser?.phone, pet.ownerPhone) ||
-            sameUserId(currentUser?.phone, pet.phone)
+        // Tập hợp tất cả id có thể của user
+        const knownIds = new Set(
+            [userId, effectiveUserId, currentUser?.id, dbUser?.id]
+                .filter(Boolean)
+                .map(String)
         );
+        const currentPhone = currentUser?.phone ? String(currentUser.phone) : null;
+
+        const matchPet = (pet) => {
+            const petUserId = pet.userId?._id || pet.userId;
+            if (petUserId && knownIds.has(String(petUserId))) return true;
+            if (pet.userLegacyId && knownIds.has(String(pet.userLegacyId))) return true;
+            if (!currentPhone) return false;
+            if (pet.ownerPhone && String(pet.ownerPhone) === currentPhone) return true;
+            if (pet.phone && String(pet.phone) === currentPhone) return true;
+            return false;
+        };
+
+        if (Array.isArray(pets)) {
+            return pets.filter(matchPet);
+        }
+
+        // Offline path — không gọi lại initData()
+        const localPets = safeReadArray('pawpal_pets');
+        return localPets.filter(matchPet);
     },
 
     async getUserBookings(userId) {
         const bookings = await this.request(`/api/bookings`);
         const currentUser = safeReadObject('pawpal_current_user');
         const dbUsers = safeReadArray('pawpal_users_db');
-        const dbUser = dbUsers.find(u => sameUserId(u.id, userId) || (currentUser && sameUserId(u.phone, currentUser.phone)));
+        const dbUser = dbUsers.find(u =>
+            sameUserId(u.id, userId) ||
+            (currentUser && sameUserId(u.phone, currentUser.phone))
+        );
         const effectiveUserId = dbUser ? dbUser.id : userId;
 
-        if (Array.isArray(bookings)) {
-            return bookings.filter(booking => 
-                sameUserId(booking.userId?._id || booking.userId, effectiveUserId) || 
-                sameUserId(booking.userLegacyId, effectiveUserId) ||
-                (booking.phone && currentUser?.phone && String(booking.phone) === String(currentUser.phone))
-            );
-        }
-        await this.initData();
-        const localBookings = safeReadArray('pawpal_bookings');
-        return localBookings.filter(booking => 
-            sameUserId(booking.userId, effectiveUserId) ||
-            (booking.phone && currentUser?.phone && String(booking.phone) === String(currentUser.phone))
+        // Tập hợp tất cả id có thể của user
+        const knownIds = new Set(
+            [userId, effectiveUserId, currentUser?.id, dbUser?.id]
+                .filter(Boolean)
+                .map(String)
         );
+        const currentPhone = currentUser?.phone ? String(currentUser.phone) : null;
+
+        const matchBooking = (booking) => {
+            const bookingUserId = booking.userId?._id || booking.userId;
+            if (bookingUserId && knownIds.has(String(bookingUserId))) return true;
+            if (booking.userLegacyId && knownIds.has(String(booking.userLegacyId))) return true;
+            if (!currentPhone) return false;
+            if (booking.phone && String(booking.phone) === currentPhone) return true;
+            if (booking.userPhone && String(booking.userPhone) === currentPhone) return true;
+            if (booking.delivery?.phone && String(booking.delivery.phone) === currentPhone) return true;
+            return false;
+        };
+
+        if (Array.isArray(bookings)) {
+            return bookings.filter(matchBooking);
+        }
+
+        // Offline path — không gọi lại initData()
+        const localBookings = safeReadArray('pawpal_bookings');
+        return localBookings.filter(matchBooking);
     },
 
     async getUserOrders(userId) {
         const orders = await this.request(`/api/orders`);
         const currentUser = safeReadObject('pawpal_current_user');
         const dbUsers = safeReadArray('pawpal_users_db');
-        const dbUser = dbUsers.find(u => sameUserId(u.id, userId) || (currentUser && sameUserId(u.phone, currentUser.phone)));
+        const dbUser = dbUsers.find(u =>
+            sameUserId(u.id, userId) ||
+            (currentUser && sameUserId(u.phone, currentUser.phone))
+        );
         const effectiveUserId = dbUser ? dbUser.id : userId;
 
+        // Tập hợp tất cả id có thể của user hiện tại để match rộng nhất
+        const knownIds = new Set(
+            [userId, effectiveUserId, currentUser?.id, dbUser?.id]
+                .filter(Boolean)
+                .map(String)
+        );
+        const currentPhone = currentUser?.phone ? String(currentUser.phone) : null;
+
+        const matchOrder = (order) => {
+            // Match theo userId (bất kỳ variant nào)
+            const orderUserId = order.userId?._id || order.userId;
+            if (orderUserId && knownIds.has(String(orderUserId))) return true;
+            if (order.userLegacyId && knownIds.has(String(order.userLegacyId))) return true;
+
+            // Match theo phone (ưu tiên nhất vì orders.js lưu userPhone)
+            if (!currentPhone) return false;
+            if (order.userPhone && String(order.userPhone) === currentPhone) return true;
+            if (order.delivery?.phone && String(order.delivery.phone) === currentPhone) return true;
+            if (order.shipping?.phone && String(order.shipping.phone) === currentPhone) return true;
+
+            return false;
+        };
+
         if (Array.isArray(orders)) {
-            return orders.filter(order => 
-                sameUserId(order.userId?._id || order.userId, effectiveUserId) || 
-                sameUserId(order.userLegacyId, effectiveUserId) ||
-                (order.delivery?.phone && currentUser?.phone && String(order.delivery.phone) === String(currentUser.phone))
-            );
+            return orders.filter(matchOrder);
         }
-        await this.initData();
+
+        // Offline path — không gọi lại initData(), dùng localStorage trực tiếp
         const localOrders = safeReadArray('pawpal_orders');
-        return localOrders.filter(order => {
-            if (sameUserId(order.userId, effectiveUserId)) {
-                return true;
-            }
-
-            if (!currentUser) {
-                return false;
-            }
-
-            return Boolean(
-                (order.userPhone && currentUser.phone && String(order.userPhone) === String(currentUser.phone)) ||
-                (order.delivery?.phone && currentUser.phone && String(order.delivery.phone) === String(currentUser.phone))
-            );
-        });
+        return localOrders.filter(matchOrder);
     },
 
     async getCareLogs() {
         const careLogs = await this.request('/api/care-logs');
         if (careLogs && typeof careLogs === 'object') return careLogs;
-        await this.initData();
+        // Offline path — không gọi lại initData()
         return safeReadObject('pawpal_pet_tracker_logs') || {};
     },
 
@@ -270,22 +315,28 @@ export const API = {
             localStorage.setItem('pawpal_cart', JSON.stringify(Array.isArray(items) ? items : []));
             return { success: true, data: items };
         }
-        const saved = await this.request(`/api/cart/${encodeURIComponent(userId)}`, {
-            method: 'PUT',
-            body: JSON.stringify({ items: Array.isArray(items) ? items : [] })
-        });
-        if (saved) {
-            localStorage.setItem('pawpal_cart', JSON.stringify(Array.isArray(items) ? items : []));
-            return { success: true, data: saved };
+        // Luôn lưu localStorage (offline-first)
+        localStorage.setItem('pawpal_cart', JSON.stringify(Array.isArray(items) ? items : []));
+        // Sync lên server nếu backend bật
+        if (this.USE_BACKEND) {
+            const saved = await this.request(`/api/cart/${encodeURIComponent(userId)}`, {
+                method: 'PUT',
+                body: JSON.stringify({ items: Array.isArray(items) ? items : [] })
+            });
+            return { success: true, data: saved || items };
         }
-        return { success: false };
+        return { success: true, data: items };
     },
 
     async getUserWishlist(userId) {
         if (!userId) {
-            const product = safeReadArray('pawpal_wishlist_guest');
-            return { productIds: product, serviceIds: safeReadArray('pawpal_wishlist_services_guest') };
+            return {
+                productIds: safeReadArray('pawpal_wishlist_guest'),
+                serviceIds: safeReadArray('pawpal_wishlist_services_guest')
+            };
         }
+
+        // Thử server trước
         const wishlist = await this.request(`/api/wishlist/${encodeURIComponent(userId)}`);
         if (wishlist && typeof wishlist === 'object') {
             return {
@@ -293,7 +344,16 @@ export const API = {
                 serviceIds: Array.isArray(wishlist.serviceIds) ? wishlist.serviceIds : []
             };
         }
-        return { productIds: [], serviceIds: [] };
+
+        // Offline: đọc từ localStorage theo key của user (dùng phone để match với shop.js)
+        const currentUser = safeReadObject('pawpal_current_user');
+        const userPhone = currentUser?.phone ? String(currentUser.phone) : null;
+        const productKey  = userPhone ? `pawpal_wishlist_${userPhone}` : 'pawpal_wishlist_guest';
+        const serviceKey  = userPhone ? `pawpal_wishlist_services_${userPhone}` : 'pawpal_wishlist_services_guest';
+        return {
+            productIds: safeReadArray(productKey),
+            serviceIds: safeReadArray(serviceKey)
+        };
     },
 
     async saveUserWishlist(userId, wishlist) {
@@ -302,20 +362,28 @@ export const API = {
             serviceIds: Array.isArray(wishlist?.serviceIds) ? wishlist.serviceIds.map(String) : []
         };
         if (!userId) {
-            localStorage.setItem('pawpal_wishlist_guest', JSON.stringify(payload.productIds));
-            localStorage.setItem('pawpal_wishlist_services_guest', JSON.stringify(payload.serviceIds));
+            safeWrite('pawpal_wishlist_guest', payload.productIds);
+            safeWrite('pawpal_wishlist_services_guest', payload.serviceIds);
             return { success: true, data: payload };
         }
+
+        // Thử sync lên server
         const saved = await this.request(`/api/wishlist/${encodeURIComponent(userId)}`, {
             method: 'PUT',
             body: JSON.stringify(payload)
         });
-        if (saved) {
+
+        // Dù server thành công hay không, luôn lưu localStorage theo key của user
+        const currentUser = safeReadObject('pawpal_current_user');
+        const userPhone = currentUser?.phone ? String(currentUser.phone) : null;
+        if (userPhone) {
+            safeWrite(`pawpal_wishlist_${userPhone}`, payload.productIds);
+            safeWrite(`pawpal_wishlist_services_${userPhone}`, payload.serviceIds);
+        } else {
             safeWrite('pawpal_wishlist_guest', payload.productIds);
             safeWrite('pawpal_wishlist_services_guest', payload.serviceIds);
-            return { success: true, data: saved };
         }
-        return { success: false };
+        return { success: true, data: saved || payload };
     },
 
     async getUserById(userId) {
@@ -323,7 +391,7 @@ export const API = {
         if (Array.isArray(users)) {
             return users.find(user => sameUserId(user._id || user.id, userId) || sameUserId(user.legacyId, userId)) || null;
         }
-        await this.initData();
+        // Offline path — không gọi lại initData()
         const localUsers = safeReadArray('pawpal_users_db');
         return localUsers.find(user => sameUserId(user.id, userId)) || null;
     },
@@ -464,3 +532,6 @@ function sameUserId(a, b) {
 }
 
 API.initData();
+
+// Expose ra window để các script non-module (cart.js, wishlist.js, landing.js...) dùng được
+window.API = API;

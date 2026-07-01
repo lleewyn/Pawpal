@@ -61,6 +61,17 @@ async function loadBookingDetail(bookingId) {
     renderBookingDetail(currentBooking);
     renderServiceReviewSection(currentBooking);
     checkBookingModifiability(currentBooking);
+
+    // Scroll đến section đánh giá nếu điều hướng từ danh sách lịch hẹn
+    if (window.location.hash === '#service-review') {
+        setTimeout(() => {
+            const target = document.getElementById('serviceReviewSection')
+                        || document.querySelector('.service-review-section');
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 200);
+    }
 }
 
 function renderBookingDetail(booking) {

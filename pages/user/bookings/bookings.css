@@ -233,6 +233,37 @@
     outline-offset: 2px;
 }
 
+/* Nút viết đánh giá dịch vụ — nổi bật hơn link thông thường */
+.btn-write-service-review {
+    padding: 6px 14px;
+    border: 1.5px solid var(--color-primary);
+    border-radius: var(--border-radius-pill, 999px);
+    background: transparent;
+    color: var(--color-primary);
+    font-weight: 700;
+    text-decoration: none !important;
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn-write-service-review:hover {
+    background: var(--color-primary);
+    color: #fff;
+    text-decoration: none !important;
+}
+
+/* Badge "Đã đánh giá" hiển thị sau khi submit */
+.booking-reviewed-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: var(--border-radius-pill, 999px);
+    background: var(--color-primary-light, #e8f5e9);
+    color: var(--color-primary-dark, #2e7d32);
+    font-size: 0.8rem;
+    font-weight: 600;
+    gap: 4px;
+}
+
 .booking-limit-warning {
     display: inline-flex;
     align-items: center;
