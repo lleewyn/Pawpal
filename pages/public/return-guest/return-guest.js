@@ -259,6 +259,7 @@ function buildBookingCard(b) {
     const time    = b.timeStart || b.time || b.schedule?.slot || '';
     const staff   = esc(b.staff || 'Chưa phân công');
     const branch  = esc(b.branch || '');
+    const resolvedStatus = resolveBookingStatus(b);
 
     return `
     <div class="rg-item" data-type="booking">
@@ -274,7 +275,7 @@ function buildBookingCard(b) {
             </div>
             <div style="text-align:right">
                 <div class="rg-item-price">${fmtPrice(b.price)}</div>
-                ${badge(BOOKING_STATUS, b.status)}
+                ${badge(BOOKING_STATUS, resolvedStatus)}
             </div>
         </div>
         <hr class="rg-divider">
