@@ -928,5 +928,103 @@
         "description": "Khách hàng chuyển khoản"
       }
     ]
+  },
+  {
+    "id": "ORD-2026-1101",
+    "userId": "USER-004",
+    "status": "shipping",
+    "paymentStatus": "unpaid",
+    "paymentMethod": "cod",
+    "createdAt": "2026-06-30T10:00:00",
+    "updatedAt": "2026-07-01T09:00:00",
+    "delivery": {
+      "name": "Nguyễn Lê Thi",
+      "phone": "0834562948",
+      "address": "456 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
+    },
+    "products": [
+      {
+        "id": "PROD-001",
+        "name": "Thức ăn cho chó Royal Canin Adult 15kg",
+        "image": "/assets/images/shop/products/TP-SUP-09.png",
+        "quantity": 1,
+        "price": 225000,
+        "total": 225000
+      }
+    ],
+    "pricing": {
+      "subtotal": 225000,
+      "shippingFee": 30000,
+      "discount": 0,
+      "total": 255000
+    },
+    "timeline": [
+      {
+        "status": "placed",
+        "timestamp": "2026-06-30T10:00:00",
+        "title": "Đơn hàng đã đặt",
+        "description": null
+      },
+      {
+        "status": "confirmed",
+        "timestamp": "2026-06-30T11:30:00",
+        "title": "Đã xác nhận",
+        "description": null
+      },
+      {
+        "status": "shipping",
+        "timestamp": "2026-07-01T09:00:00",
+        "title": "Đang giao hàng",
+        "description": "Đơn vị vận chuyển: J&T Express. Mã vận đơn: JT834562948"
+      }
+    ]
+  },
+  {
+    "id": "ORD-2026-1102",
+    "userId": "USER-004",
+    "status": "completed",
+    "paymentStatus": "paid",
+    "paymentMethod": "vnpay",
+    "createdAt": "2026-06-20T15:00:00",
+    "updatedAt": "2026-06-22T14:30:00",
+    "delivery": {
+      "name": "Nguyễn Lê Thi",
+      "phone": "0834562948",
+      "address": "456 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
+    },
+    "products": [
+      {
+        "id": "PROD-007",
+        "name": "Cát vệ sinh đậu nành",
+        "image": "/assets/images/shop/products/cat_vesinh.png",
+        "quantity": 3,
+        "price": 120000,
+        "total": 360000
+      }
+    ],
+    "pricing": {
+      "subtotal": 360000,
+      "shippingFee": 30000,
+      "discount": 20000,
+      "total": 370000
+    },
+    "timeline": [
+      {
+        "status": "placed",
+        "timestamp": "2026-06-20T15:00:00",
+        "title": "Đơn hàng đã đặt"
+      },
+      {
+        "status": "confirmed",
+        "timestamp": "2026-06-20T15:15:00",
+        "title": "Đã xác nhận"
+      },
+      {
+        "status": "completed",
+        "timestamp": "2026-06-22T14:30:00",
+        "title": "Hoàn thành",
+        "description": "Giao hàng thành công"
+      }
+    ]
   }
 ]

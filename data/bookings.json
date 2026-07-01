@@ -306,5 +306,29 @@
     "status": "upcoming",
     "price": 450000,
     "branch": "PawPal Chi nhánh Quận 10"
+  },
+  {
+    "id": "BKG-1101",
+    "userId": "USER-004",
+    "petId": "PET-006",
+    "serviceName": "Tắm sấy & Vệ sinh tai mèo",
+    "date": "2026-07-05",
+    "time": "14:00",
+    "status": "upcoming",
+    "price": 200000,
+    "branch": "PawPal Chi nhánh Quận 10",
+    "staff": "Trần An Nhiên"
+  },
+  {
+    "id": "BKG-1102",
+    "userId": "USER-004",
+    "petId": "PET-006",
+    "serviceName": "Cắt tỉa lông tạo kiểu",
+    "date": "2026-06-20",
+    "time": "09:30",
+    "status": "completed",
+    "price": 320000,
+    "branch": "PawPal Chi nhánh Quận 10",
+    "staff": "Lê Hoàng Tiến"
   }
 ]
