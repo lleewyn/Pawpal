@@ -58,7 +58,7 @@ async function loadOrderDetail() {
         renderTimeline();
         renderActions();
         
-        // Inject review buttons/forms for completed orders (US 11-1, 11-2)
+        // Inject batch review form for completed orders (US 11-1, 11-2)
         if ((currentOrder.status === 'completed') && typeof ReviewHandler !== 'undefined') {
             const orderTimeline = Array.isArray(currentOrder.timeline) ? currentOrder.timeline : [];
             const deliveredEntry = orderTimeline.find(t => t.status === 'delivered' || t.status === 'completed');
@@ -69,14 +69,12 @@ async function loadOrderDetail() {
             ReviewHandler.init(currentOrder.id, products);
             scrollToReviewAnchor();
 
-            // Nếu đi từ danh sách đơn hàng sang với #reviews, mở sẵn form đánh giá đầu tiên
-            if (window.location.hash === '#reviews' && products.length) {
-                setTimeout(() => {
-                    if (typeof ReviewHandler.openForm === 'function') {
-                        ReviewHandler.openForm(products[0].id);
-                    }
-                }, 180);
-            }
+            // Khi user submit batch review → re-render action buttons
+            window.addEventListener('pawpal:reviewSubmitted', (e) => {
+                if (String(e.detail.orderId) === String(currentOrder.id)) {
+                    renderActions();
+                }
+            }, { once: true });
         }
         
     } catch (error) {
@@ -166,16 +164,20 @@ function renderOrderHeader() {
     document.getElementById('order-created-date').textContent = 
         'Đặt ngày ' + formatDate(currentOrder.createdAt);
     
+    // Normalize: 'pending' → 'pending_payment' để CSS class nhất quán với orders list
+    const displayStatus = currentOrder.status === 'pending' ? 'pending_payment' : currentOrder.status;
     const statusBadge = document.getElementById('order-status-badge');
     statusBadge.textContent = getStatusLabel(currentOrder.status);
-    statusBadge.className = `status-badge status-${currentOrder.status}`;
+    statusBadge.className = `status-badge status-${displayStatus}`;
 }
 
 // Render delivery info
 function renderDeliveryInfo() {
-    document.getElementById('receiver-name').textContent = currentOrder.delivery.name;
-    document.getElementById('receiver-phone').textContent = currentOrder.delivery.phone;
-    document.getElementById('receiver-address').textContent = currentOrder.delivery.address;
+    // Đơn từ orders.json dùng `delivery`, đơn tạo từ checkout dùng `shipping`
+    const delivery = currentOrder.delivery || currentOrder.shipping || {};
+    document.getElementById('receiver-name').textContent = delivery.name || '—';
+    document.getElementById('receiver-phone').textContent = delivery.phone || '—';
+    document.getElementById('receiver-address').textContent = delivery.address || delivery.street || '—';
 }
 
 // Render payment info
@@ -202,16 +204,22 @@ function renderPaymentInfo() {
 // Render products
 function renderProducts() {
     const container = document.getElementById('products-list');
-    
-    container.innerHTML = currentOrder.products.map(product => `
+    const products = Array.isArray(currentOrder.products) ? currentOrder.products : [];
+
+    if (!products.length) {
+        container.innerHTML = '<p class="text-muted small">Không có thông tin sản phẩm.</p>';
+        return;
+    }
+
+    container.innerHTML = products.map(product => `
         <div class="product-item">
-            <img src="${product.image}" 
-                 alt="${product.name}" 
+            <img src="${product.image || ''}" 
+                 alt="${product.name || 'Sản phẩm'}" 
                  class="product-item-img"
                  loading="lazy">
             <div class="product-item-info">
-                <h4 class="product-item-name">${product.name}</h4>
-                <p class="product-item-meta">x${product.quantity}</p>
+                <h4 class="product-item-name">${product.name || 'Sản phẩm'}</h4>
+                <p class="product-item-meta">x${product.quantity || 1}</p>
             </div>
             <div class="product-item-price">${formatCurrency(toNumber(product.total))}</div>
         </div>
@@ -220,9 +228,12 @@ function renderProducts() {
 
 // Render summary
 function renderSummary() {
-    const subtotal = toNumber(currentOrder.pricing?.subtotal);
+    const subtotal    = toNumber(currentOrder.pricing?.subtotal);
     const shippingFee = toNumber(currentOrder.pricing?.shippingFee);
-    const discount = toNumber(currentOrder.pricing?.discount);
+    // Tương thích cả đơn cũ (discount) lẫn đơn mới (voucherDiscount + pointsDiscount)
+    const discount = toNumber(currentOrder.pricing?.discount)
+                  || toNumber(currentOrder.pricing?.voucherDiscount)
+                   + toNumber(currentOrder.pricing?.pointsDiscount);
     const total = resolveOrderTotal(currentOrder.pricing, subtotal, shippingFee, discount);
 
     document.getElementById('subtotal').textContent =
@@ -383,7 +394,26 @@ function renderActions() {
             break;
         }
 
-        case 'completed':
+        case 'return_pending': {
+            // Đơn đang chờ duyệt đổi trả — dẫn đến trang chi tiết RMA
+            const rmaList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
+            const rma = rmaList.find(r => String(r.orderId) === String(currentOrder.id));
+            if (rma) {
+                buttons.push(`
+                    <a href="/pages/user/return-detail/return-detail.html?orderId=${currentOrder.id}" class="btn-track-order text-decoration-none">
+                        Theo dõi đổi trả
+                    </a>
+                `);
+            }
+            buttons.push(`
+                <button class="btn-green-outline" onclick="contactHotline()">
+                    Liên hệ hotline
+                </button>
+            `);
+            break;
+        }
+
+        case 'completed': {
             // 1. Kiểm tra cửa sổ 7 ngày từ ngày hoàn thành
             const completedEntry = currentOrder.timeline
                 ? currentOrder.timeline.slice().reverse().find(t => t.status === 'completed')
@@ -396,9 +426,10 @@ function renderActions() {
             const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
             const alreadyReturned = returnsList.some(r => r.orderId === currentOrder.id);
 
-            // 3. Check if order has any product reviewed to disable return
-            const reviewedList = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
-            const hasAnyReviewed = reviewedList.some(r => r.orderId === currentOrder.id);
+            // 3. Check batch review status (dùng hasOrderReviewed thay vì per-product)
+            const orderAlreadyReviewed = typeof ReviewHandler !== 'undefined'
+                ? ReviewHandler.hasOrderReviewed(currentOrder.id)
+                : false;
 
             if (alreadyReturned) {
                 buttons.push(`
@@ -412,7 +443,7 @@ function renderActions() {
                         Hết hạn đổi trả
                     </span>
                 `);
-            } else if (hasAnyReviewed) {
+            } else if (orderAlreadyReviewed) {
                 statusNotes.push(`
                     <span class="order-reviewed-note order-inline-note" title="Giao dịch đã được đánh giá, không thể đổi trả.">
                         Đã đánh giá
@@ -426,26 +457,23 @@ function renderActions() {
                 `);
             }
 
-            // 2. Review logic
-            const reviewed = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
-            const allReviewed = currentOrder.products.every(p =>
-                reviewed.some(r => r.orderId === currentOrder.id && r.productId === p.id)
-            );
-            if (allReviewed) {
-                 buttons.push(`
+            // 4. Review button — "Xem đánh giá" nếu đã submit batch
+            if (orderAlreadyReviewed) {
+                buttons.push(`
                     <button class="btn-review border-0" onclick="showOrderReviewsModal('${currentOrder.id}')">
                         Xem đánh giá
                     </button>
                 `);
             }
 
-            // 3. Reorder
+            // 5. Reorder
             buttons.push(`
                 <button class="btn-view-detail border-0" onclick="reorder('${currentOrder.id}')">
                     Mua lại
                 </button>
             `);
             break;
+        }
     }
     
     actionsContainer.innerHTML = `
@@ -602,8 +630,7 @@ function scrollToReviewAnchor() {
 window.cancelOrder = cancelOrder;
 
 function contactHotline() {
-    alert('Đang kết nối đến tổng đài CSKH: 1900 xxxx...');
-    // TODO: Initiate call or show hotline modal
+    showPawPalToast('Tổng đài CSKH PawPal: 1900 xxxx — Vui lòng gọi để được hỗ trợ.', 'info');
 }
 
 window.contactHotline = contactHotline;
@@ -681,36 +708,79 @@ function saveOrderToLocalStorage(order) {
 
 function showOrderReviewsModal(orderId) {
     const allReviews = JSON.parse(localStorage.getItem('pawpal_reviews') || '[]');
-    const myReviews = allReviews.filter(r => r.orderId === orderId);
-    
+    const myReviews  = allReviews.filter(r => String(r.orderId) === String(orderId));
+
     if (myReviews.length === 0) {
-        alert('Bạn chưa viết đánh giá nào cho đơn hàng này.');
+        showPawPalToast('Không tìm thấy đánh giá cho đơn hàng này.', 'info');
         return;
     }
 
-    let reviewItems = myReviews.map(r => {
-        let stars = '&#9733;'.repeat(r.rating) + '&#9734;'.repeat(5 - r.rating);
+    // Tìm tên sản phẩm từ currentOrder
+    function getProductName(productId) {
+        if (!currentOrder || !Array.isArray(currentOrder.products)) return '';
+        const p = currentOrder.products.find(x => String(x.id) === String(productId));
+        return p ? p.name : '';
+    }
+    function getProductImg(productId) {
+        if (!currentOrder || !Array.isArray(currentOrder.products)) return '';
+        const p = currentOrder.products.find(x => String(x.id) === String(productId));
+        return p ? p.image : '';
+    }
+
+    const reviewItems = myReviews.map(r => {
+        const filledStars = '&#9733;'.repeat(r.rating);
+        const emptyStars  = '&#9734;'.repeat(5 - r.rating);
+        const productName = getProductName(r.productId);
+        const productImg  = getProductImg(r.productId);
+        const defaultBadge = r.isDefaultRating
+            ? '<span class="review-modal-default-badge">Mặc định 5&#9733;</span>'
+            : '';
+
+        const mediaHTML = r.media && r.media.length
+            ? `<div class="review-modal-media">${r.media.map((m, i) =>
+                m.type === 'video'
+                    ? `<video src="${m.src}" muted class="review-modal-thumb"></video>`
+                    : `<img src="${m.src}" alt="Ảnh ${i + 1}" class="review-modal-thumb" loading="lazy">`
+              ).join('')}</div>`
+            : '';
+
         return `
-            <div class="review-item">
-                <div class="review-stars">${stars}</div>
-                <p class="review-comment">${r.comment || '<i>Không có nhận xét</i>'}</p>
-            </div>
-        `;
+            <div class="review-modal-item">
+                <div class="review-modal-product">
+                    ${productImg ? `<img src="${productImg}" alt="${productName}" class="review-modal-product-img">` : ''}
+                    <span class="review-modal-product-name">${productName || 'Sản phẩm'}</span>
+                </div>
+                <div class="review-modal-stars" aria-label="${r.rating} sao">
+                    <span class="stars-filled">${filledStars}</span><span class="stars-empty">${emptyStars}</span>
+                    ${defaultBadge}
+                </div>
+                ${r.comment
+                    ? `<p class="review-modal-comment">${r.comment}</p>`
+                    : '<p class="review-modal-comment text-muted"><em>Không có nhận xét</em></p>'}
+                ${mediaHTML}
+            </div>`;
     }).join('');
 
-    // Create a simple modal
-    const modalHtml = `
-        <div id="review-modal-overlay" class="review-modal-overlay">
+    // Remove existing modal if any
+    const existing = document.getElementById('review-modal-overlay');
+    if (existing) existing.remove();
+
+    document.body.insertAdjacentHTML('beforeend', `
+        <div id="review-modal-overlay" class="review-modal-overlay" role="dialog" aria-modal="true" aria-label="Xem đánh giá đơn hàng">
             <div class="review-modal-content">
-                <button onclick="document.getElementById('review-modal-overlay').remove()" class="review-modal-close">&times;</button>
+                <button class="review-modal-close" onclick="document.getElementById('review-modal-overlay').remove()" aria-label="Đóng">&times;</button>
                 <h3 class="review-modal-title">Đánh giá của bạn</h3>
                 <div class="review-modal-body">
                     ${reviewItems}
                 </div>
             </div>
         </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    `);
+
+    // Close on overlay click
+    document.getElementById('review-modal-overlay').addEventListener('click', function(e) {
+        if (e.target === this) this.remove();
+    });
 }
 
 window.showOrderReviewsModal = showOrderReviewsModal;
@@ -842,13 +912,17 @@ function formatDate(dateString) {
 // Utility: Get status label
 function getStatusLabel(status) {
     const labels = {
+        'pending':         'Chờ thanh toán',
         'pending_payment': 'Chờ thanh toán',
-        'confirmed': 'Đã xác nhận',
-        'preparing': 'Đang chuẩn bị',
-        'shipping': 'Đang giao',
-        'delivered': 'Đã giao hàng',
-        'completed': 'Hoàn thành',
-        'cancelled': 'Đã hủy'
+        'confirmed':       'Đã xác nhận',
+        'preparing':       'Đang chuẩn bị',
+        'shipping':        'Đang giao',
+        'delivered':       'Đã giao hàng',
+        'completed':       'Hoàn thành',
+        'cancelled':       'Đã hủy',
+        'return_pending':  'Chờ duyệt đổi trả',
+        'return_approved': 'Đổi trả được duyệt',
+        'refunded':        'Đã hoàn tiền'
     };
     return labels[status] || status;
 }

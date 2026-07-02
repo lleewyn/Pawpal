@@ -43,7 +43,12 @@ function updateStats() {
     const completedCount = ordersState.allOrders.filter((order) => order.status === 'completed').length;
     const totalSpent = ordersState.allOrders
         .filter((order) => order.paymentStatus === 'paid')
-        .reduce((sum, order) => sum + toNumber(order.pricing?.total), 0);
+        .reduce((sum, order) => {
+            // Đọc cả `total` lẫn `grandTotal` để tương thích đơn cũ và mới
+            const amount = toNumber(order.pricing?.total)
+                        || toNumber(order.pricing?.grandTotal);
+            return sum + amount;
+        }, 0);
 
     document.getElementById('processing-count').textContent = processingCount;
     document.getElementById('completed-count').textContent = completedCount;
@@ -121,13 +126,12 @@ function createOrderCard(order) {
         ? order.products.reduce((sum, product) => sum + (Number(product.quantity) || 1), 0)
         : 0;
     const paymentLabel = getPaymentMethodLabel(order.paymentMethod);
-    const reviewed = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
-    const allReviewed = isCompleted && order.products.every((product) =>
-        reviewed.some((item) => String(item.orderId) === String(orderId) && item.productId === product.id)
-    );
+    // Dùng pawpal_order_reviewed (batch lock) để check toàn đơn đã submit chưa
+    const orderReviewedList = JSON.parse(localStorage.getItem('pawpal_order_reviewed') || '[]');
+    const orderAlreadyReviewed = isCompleted && orderReviewedList.includes(String(orderId));
 
     const reviewActionHTML = isCompleted
-        ? allReviewed
+        ? orderAlreadyReviewed
             ? `<a class="btn-review" href="/pages/user/order-detail/order-detail.html?id=${orderId}#reviews" aria-label="Xem đánh giá đơn hàng ${orderId}">Xem đánh giá</a>`
             : `<a class="btn-review" href="/pages/user/order-detail/order-detail.html?id=${orderId}#reviews" aria-label="Đánh giá đơn hàng ${orderId}">Đánh giá</a>`
         : '';
@@ -136,13 +140,13 @@ function createOrderCard(order) {
     const alreadyReturned = returnsList.some((item) => String(item.orderId) === String(orderId));
 
     const reviewedList = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
-    const hasAnyReviewed = reviewedList.some((item) => String(item.orderId) === String(orderId));
+    // hasAnyReviewed đã được tính ở trên từ `reviewed` array — dùng lại không khai báo lại
 
     let returnActionHTML = '';
     const statusNoticeChips = [];
 
     if (isCompleted) {
-        if (hasReviewedOrder(order) || hasAnyReviewed) {
+        if (orderAlreadyReviewed) {
             statusNoticeChips.push(`<span class="order-meta-chip meta-chip-success">Đã đánh giá</span>`);
         }
 
@@ -162,7 +166,7 @@ function createOrderCard(order) {
             statusNoticeChips.push(`<span class="order-meta-chip meta-chip-info">Đã yêu cầu đổi trả</span>`);
         } else if (!withinReturnWindow) {
             statusNoticeChips.push(`<span class="order-meta-chip meta-chip-warning" title="Đã quá 7 ngày, không thể yêu cầu đổi trả.">Hết hạn đổi trả</span>`);
-        } else if (hasAnyReviewed) {
+        } else if (orderAlreadyReviewed) {
             statusNoticeChips.push(`<span class="order-meta-chip meta-chip-muted" title="Giao dịch đã được đánh giá, không thể đổi trả.">Hết hạn đổi trả</span>`);
         } else {
             returnActionHTML = `
@@ -610,29 +614,37 @@ function saveOrderToLocalStorage(order) {
 
 function getStatusLabel(status) {
     const labels = {
-        pending: 'Chờ thanh toán',
+        pending:         'Chờ thanh toán',
         pending_payment: 'Chờ thanh toán',
-        preparing: 'Đang chuẩn bị',
-        shipping: 'Đang giao',
-        delivered: 'Đã giao hàng',
-        completed: 'Hoàn thành',
-        cancelled: 'Đã hủy'
+        preparing:       'Đang chuẩn bị',
+        shipping:        'Đang giao',
+        delivered:       'Đã giao hàng',
+        completed:       'Hoàn thành',
+        cancelled:       'Đã hủy',
+        return_pending:  'Chờ duyệt đổi trả',
+        return_approved: 'Đổi trả được duyệt',
+        refunded:        'Đã hoàn tiền'
     };
     return labels[status] || status;
 }
 
 function normalizeOrderStatus(status) {
     if (status === 'pending') return 'pending_payment';
-    if (status === 'return_pending') return 'pending_payment';
+    // return_pending là trạng thái riêng — KHÔNG map về pending_payment
     return status;
 }
 
 function getPaymentMethodLabel(method) {
     const labels = {
-        cod: 'Thanh toán COD',
-        momo: 'Thanh toán MoMo',
-        bank_transfer: 'Chuyển khoản',
-        card: 'Thẻ ngân hàng'
+        cod:           'Thanh toán khi nhận hàng (COD)',
+        momo:          'Thanh toán MoMo',
+        vnpay:         'VNPay',
+        zalopay:       'ZaloPay',
+        vietqr:        'VietQR',
+        bank_transfer: 'Chuyển khoản ngân hàng',
+        card:          'Thẻ ngân hàng',
+        cash:          'Tiền mặt tại quầy',
+        transfer:      'Chuyển khoản tại quầy'
     };
     return labels[method] || 'Thanh toán online';
 }

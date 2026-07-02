@@ -1,61 +1,84 @@
 /**
- * review-handler.js — QUY TRÌNH 3.1.11: ĐÁNH GIÁ
+ * review-handler.js — QUY TRÌNH 3.1.11: ĐÁNH GIÁ  (Shopee-style batch)
  *
- * Covers (excluding admin US 11-5):
- *   US 11-1  Hiển thị nút "Viết đánh giá" / "Đã đánh giá"
- *   US 11-2  Accordion form tại chỗ + kiểm tra quyền sở hữu
- *   US 11-3  Star rating, nhận xét, upload ảnh/video
+ * Covers:
+ *   US 11-1  Hiển thị nút "Đánh giá" / "Xem đánh giá"
+ *   US 11-2  Batch form tất cả sản phẩm trong 1 lần + kiểm tra quyền sở hữu
+ *   US 11-3  Star rating (default 5★), nhận xét, upload ảnh/video per product
  *   US 11-4  Confirm-on-button 2-tap + 5s countdown
  *   US 11-6  Cộng điểm Paw Points + toast
- *   US 11-7  Lightbox + filter reviews trên product-detail (xem product-reviews.js)
+ *   US 11-7  Lightbox xem ảnh upload
  *   US 11-8  Offline draft auto-save + auto-retry
  *
- * API surface (global):
+ * Public API (global):
  *   ReviewHandler.init(orderId, products)   — gọi từ order-detail.js
- *   ReviewHandler.openForm(productId)       — mở accordion cho 1 sản phẩm
+ *   ReviewHandler.hasOrderReviewed(orderId) — check toàn đơn đã reviewed chưa
+ *   ReviewHandler.Lightbox                  — lightbox singleton
+ *
+ * Storage:
+ *   pawpal_reviews         — array of review objects (per-product)
+ *   pawpal_reviewed        — array of { orderId, productId, hasMedia } (backwards compat)
+ *   pawpal_order_reviewed  — array of orderId đã submit batch (new)
+ *   pawpal_review_draft_<orderId> — draft cho toàn đơn
  */
 
 (function (global) {
     'use strict';
 
     // ── Storage helpers ─────────────────────────────────────────────────────
-    const DRAFT_PREFIX = 'pawpal_review_draft_';
-    const REVIEWS_KEY  = 'pawpal_reviews';
+    const DRAFT_KEY_PREFIX  = 'pawpal_review_draft_';
+    const REVIEWS_KEY       = 'pawpal_reviews';
+    const REVIEWED_KEY      = 'pawpal_reviewed';          // per-product (compat)
+    const ORDER_REVIEWED_KEY = 'pawpal_order_reviewed';   // per-order batch lock
 
-    function saveDraft(productId, data) {
-        try {
-            localStorage.setItem(DRAFT_PREFIX + productId, JSON.stringify(data));
-        } catch (_) {}
+    function saveDraft(orderId, data) {
+        try { localStorage.setItem(DRAFT_KEY_PREFIX + orderId, JSON.stringify(data)); } catch (_) {}
     }
 
-    function loadDraft(productId) {
+    function loadDraft(orderId) {
         try {
-            const raw = localStorage.getItem(DRAFT_PREFIX + productId);
+            const raw = localStorage.getItem(DRAFT_KEY_PREFIX + orderId);
             return raw ? JSON.parse(raw) : null;
         } catch (_) { return null; }
     }
 
-    function clearDraft(productId) {
-        localStorage.removeItem(DRAFT_PREFIX + productId);
+    function clearDraft(orderId) {
+        localStorage.removeItem(DRAFT_KEY_PREFIX + orderId);
     }
 
-    /** Persistent review store backed by localStorage */
     function getStoredReviews() {
-        try {
-            return JSON.parse(localStorage.getItem(REVIEWS_KEY) || '[]');
-        } catch (_) { return []; }
+        try { return JSON.parse(localStorage.getItem(REVIEWS_KEY) || '[]'); } catch (_) { return []; }
     }
 
     function saveStoredReviews(reviews) {
+        try { localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews)); } catch (_) {}
+    }
+
+    /** Check toàn bộ đơn đã được submit batch chưa */
+    function hasOrderReviewed(orderId) {
         try {
-            localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
+            const list = JSON.parse(localStorage.getItem(ORDER_REVIEWED_KEY) || '[]');
+            return list.includes(String(orderId));
+        } catch (_) { return false; }
+    }
+
+    function markOrderReviewed(orderId) {
+        try {
+            const list = JSON.parse(localStorage.getItem(ORDER_REVIEWED_KEY) || '[]');
+            if (!list.includes(String(orderId))) {
+                list.push(String(orderId));
+                localStorage.setItem(ORDER_REVIEWED_KEY, JSON.stringify(list));
+            }
         } catch (_) {}
     }
 
-    function hasReviewed(orderId, productId) {
-        return getStoredReviews().some(
-            r => r.orderId === orderId && r.productId === productId
-        );
+    /** Backwards-compat: ghi per-product entry vào pawpal_reviewed */
+    function markProductReviewedCompat(orderId, productId, hasMedia) {
+        try {
+            const list = JSON.parse(localStorage.getItem(REVIEWED_KEY) || '[]');
+            list.push({ orderId: String(orderId), productId: String(productId), hasMedia });
+            localStorage.setItem(REVIEWED_KEY, JSON.stringify(list));
+        } catch (_) {}
     }
 
     // ── Paw Points Toast ────────────────────────────────────────────────────
@@ -69,7 +92,6 @@
             toast.setAttribute('aria-live', 'polite');
             document.body.appendChild(toast);
         }
-
         toast.innerHTML = `
             <span style="font-size:1.2rem">&#x1F43E;</span>
             <span><span class="points-amount">+${points}</span> Paw Points đã được thêm vào ví của bạn</span>
@@ -152,397 +174,417 @@
     // ── Star Emotion Labels ─────────────────────────────────────────────────
     const EMOTIONS = ['', 'Rất tệ', 'Tệ', 'Bình thường', 'Hài lòng', 'Rất hài lòng'];
 
-    // ── Build accordion form for one product ───────────────────────────────
-    function buildFormHTML(orderId, product) {
-        const productId = product.id;
+    // ── Build HTML cho 1 product row trong batch form ───────────────────────
+    function buildProductRowHTML(product, draft) {
+        const pid     = product.id;
+        const defRating = (draft && draft[pid] && draft[pid].rating) ? draft[pid].rating : 5;
+        const defComment = (draft && draft[pid] && draft[pid].comment) ? draft[pid].comment : '';
+
+        // Build radio inputs — checked state dựa trên draft hoặc default 5
+        const starInputs = [5, 4, 3, 2, 1].map(v => `
+            <input type="radio" name="rating-${pid}" id="star${v}-${pid}" value="${v}" ${defRating === v ? 'checked' : ''}>
+            <label for="star${v}-${pid}" aria-label="${v} sao — ${EMOTIONS[v]}" title="${EMOTIONS[v]}">&#9733;</label>
+        `).join('');
+
         return `
-        <div class="review-accordion" id="review-accordion-${productId}" data-order-id="${orderId}" data-product-id="${productId}">
-            <div class="review-form-card">
-                <!-- Offline banner (US 11-8) -->
-                <div class="review-offline-banner" id="offline-banner-${productId}" role="alert">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
-                        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
-                        <path d="M10.71 5.05A16 16 0 0 1 22.56 9"></path>
-                        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
-                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-                        <line x1="12" y1="20" x2="12.01" y2="20"></line>
-                    </svg>
-                    <span>Mất kết nối mạng. Đang tự động lưu nháp và thử kết nối lại...</span>
+        <div class="batch-review-product" data-product-id="${pid}" id="batch-product-${pid}">
+            <!-- Product header -->
+            <div class="batch-product-header">
+                <img src="${product.image}" alt="${product.name}" class="batch-product-img" loading="lazy">
+                <div class="batch-product-info">
+                    <div class="batch-product-name">${product.name}</div>
+                    ${product.deliveredDate ? `<div class="batch-product-date">Đã mua · ${product.deliveredDate}</div>` : ''}
                 </div>
+            </div>
 
-                <!-- Product context (US 11-2) -->
-                <div class="review-product-context">
-                    <img src="${product.image}" alt="${product.name}" class="ctx-img" loading="lazy">
-                    <div class="ctx-info">
-                        <div class="ctx-name">${product.name}</div>
-                        <div class="ctx-date">Đã mua • ${product.deliveredDate || ''}</div>
-                    </div>
+            <!-- Star rating — default 5★ -->
+            <div class="batch-star-group">
+                <div class="star-picker" role="radiogroup" aria-label="Chọn số sao cho ${product.name}">
+                    ${starInputs}
                 </div>
+                <div class="batch-star-emotion" id="batch-emotion-${pid}" aria-live="polite">${EMOTIONS[defRating]}</div>
+            </div>
 
-                <form class="review-form" id="review-form-${productId}" novalidate>
-                    <!-- Star Rating (US 11-3) -->
-                    <div class="star-rating-group">
-                        <label class="group-label">Đánh giá <span class="required">*</span></label>
-                        <div class="star-picker" role="radiogroup" aria-label="Chọn số sao từ 1 đến 5">
-                            <input type="radio" name="rating-${productId}" id="star5-${productId}" value="5">
-                            <label for="star5-${productId}" aria-label="5 sao — Rất hài lòng" title="Rất hài lòng">&#9733;</label>
-                            <input type="radio" name="rating-${productId}" id="star4-${productId}" value="4">
-                            <label for="star4-${productId}" aria-label="4 sao — Hài lòng" title="Hài lòng">&#9733;</label>
-                            <input type="radio" name="rating-${productId}" id="star3-${productId}" value="3">
-                            <label for="star3-${productId}" aria-label="3 sao — Bình thường" title="Bình thường">&#9733;</label>
-                            <input type="radio" name="rating-${productId}" id="star2-${productId}" value="2">
-                            <label for="star2-${productId}" aria-label="2 sao — Tệ" title="Tệ">&#9733;</label>
-                            <input type="radio" name="rating-${productId}" id="star1-${productId}" value="1">
-                            <label for="star1-${productId}" aria-label="1 sao — Rất tệ" title="Rất tệ">&#9733;</label>
-                        </div>
-                        <div class="star-emotion" id="star-emotion-${productId}" aria-live="polite"></div>
-                        <div class="star-rating-error" id="star-error-${productId}" role="alert">
-                            Vui lòng chọn số sao đánh giá từ 1 đến 5.
-                        </div>
-                    </div>
+            <!-- Comment (optional) -->
+            <div class="batch-comment-group">
+                <textarea
+                    id="batch-comment-${pid}"
+                    class="batch-textarea"
+                    name="comment-${pid}"
+                    rows="3"
+                    maxlength="500"
+                    placeholder="Chia sẻ trải nghiệm về sản phẩm này (tùy chọn)...">${defComment}</textarea>
+                <span class="batch-char-counter" id="batch-char-${pid}" aria-live="polite">${defComment.length}/500</span>
+            </div>
 
-                    <!-- Comment (optional) -->
-                    <div class="review-form-field">
-                        <label for="review-comment-${productId}">Nhận xét (tùy chọn)</label>
-                        <textarea
-                            id="review-comment-${productId}"
-                            class="review-textarea"
-                            name="comment"
-                            rows="4"
-                            maxlength="500"
-                            placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."></textarea>
-                        <span class="char-counter" id="char-counter-${productId}" aria-live="polite">0/500</span>
-                    </div>
-
-                    <!-- Media Upload (optional) -->
-                    <div class="review-form-field">
-                        <label>Ảnh/Video minh chứng (tùy chọn)</label>
-                        <div class="review-upload-zone" id="upload-zone-${productId}" role="button" tabindex="0" aria-label="Kéo thả hoặc click để tải ảnh/video">
-                            <input type="file" id="file-input-${productId}" accept="image/jpeg,image/png,image/webp,video/mp4" multiple aria-hidden="true">
-                            <div class="upload-placeholder-icon" aria-hidden="true">&#9650;</div>
-                            <p class="upload-placeholder-text">Kéo thả hoặc click để tải ảnh/video</p>
-                            <span class="upload-placeholder-hint">Tối đa 5MB — JPG, PNG, WEBP, MP4</span>
-                        </div>
-                        <div class="upload-error" id="upload-error-${productId}" role="alert"></div>
-                        <div class="review-preview-list" id="preview-list-${productId}"></div>
-                    </div>
-
-                    <!-- Submit (US 11-4) -->
-                    <div class="review-submit-wrap">
-                        <p class="review-submit-notice" id="submit-notice-${productId}"></p>
-                        <button type="submit" class="btn-review-submit" id="submit-btn-${productId}">
-                            Gửi đánh giá
-                            <span class="confirm-ring" aria-hidden="true">
-                                <svg viewBox="0 0 200 40" preserveAspectRatio="none">
-                                    <rect x="2" y="2" width="196" height="36" rx="18" ry="18"
-                                        fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="3"
-                                        pathLength="500"
-                                        id="confirm-ring-rect-${productId}"/>
-                                </svg>
-                            </span>
-                        </button>
-                    </div>
-                </form>
-
-                <button class="btn-collapse-review" id="collapse-btn-${productId}" aria-label="Thu gọn form đánh giá">
-                    &#8963; Thu gọn
+            <!-- Upload ảnh/video (optional, collapsed by default) -->
+            <div class="batch-upload-section" id="batch-upload-section-${pid}">
+                <button type="button" class="batch-upload-toggle" id="batch-upload-toggle-${pid}"
+                        aria-expanded="false" aria-controls="batch-upload-zone-${pid}">
+                    &#128247; Thêm ảnh/video
                 </button>
+                <div class="batch-upload-collapsible" id="batch-upload-zone-${pid}" hidden>
+                    <div class="review-upload-zone" id="upload-drop-${pid}"
+                         role="button" tabindex="0" aria-label="Kéo thả hoặc click để tải ảnh/video">
+                        <input type="file" id="file-input-${pid}"
+                               accept="image/jpeg,image/png,image/webp,video/mp4" multiple aria-hidden="true">
+                        <div class="upload-placeholder-icon" aria-hidden="true">&#9650;</div>
+                        <p class="upload-placeholder-text">Kéo thả hoặc click để tải</p>
+                        <span class="upload-placeholder-hint">Tối đa 5MB — JPG, PNG, WEBP, MP4</span>
+                    </div>
+                    <div class="upload-error" id="upload-error-${pid}" role="alert"></div>
+                    <div class="review-preview-list" id="preview-list-${pid}"></div>
+                </div>
+            </div>
+
+            <hr class="batch-product-divider">
+        </div>`;
+    }
+
+    // ── Build toàn bộ batch form section ───────────────────────────────────
+    function buildBatchFormHTML(orderId, products, draft) {
+        const rows = products.map(p => buildProductRowHTML(p, draft)).join('');
+
+        return `
+        <div class="batch-review-section" id="batch-review-section-${orderId}">
+            <!-- Offline banner -->
+            <div class="review-offline-banner" id="batch-offline-banner" role="alert">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                    <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+                    <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+                    <path d="M10.71 5.05A16 16 0 0 1 22.56 9"></path>
+                    <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+                    <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                    <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                </svg>
+                <span>Mất kết nối mạng. Đang tự động lưu nháp...</span>
+            </div>
+
+            <div class="batch-products-list">
+                ${rows}
+            </div>
+
+            <!-- Submit area -->
+            <div class="batch-submit-wrap">
+                <p class="batch-submit-notice" id="batch-submit-notice-${orderId}"></p>
+                <button type="button" class="btn-batch-submit" id="batch-submit-btn-${orderId}">
+                    Gửi tất cả đánh giá
+                    <span class="confirm-ring" aria-hidden="true">
+                        <svg viewBox="0 0 240 44" preserveAspectRatio="none">
+                            <rect x="2" y="2" width="236" height="40" rx="20" ry="20"
+                                fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="3"
+                                pathLength="500"/>
+                        </svg>
+                    </span>
+                </button>
+                <p class="batch-submit-hint">
+                    &#9733; Mỗi sản phẩm đã được đặt 5 sao mặc định — bạn có thể thay đổi hoặc để nguyên
+                </p>
             </div>
         </div>`;
     }
 
-    // ── Wire up one product's form interactions ─────────────────────────────
-    function wireForm(orderId, product) {
-        const productId  = product.id;
-        const accordion  = document.getElementById(`review-accordion-${productId}`);
-        const form       = document.getElementById(`review-form-${productId}`);
-        const submitBtn  = document.getElementById(`submit-btn-${productId}`);
-        const submitNotice = document.getElementById(`submit-notice-${productId}`);
-        const emotionEl  = document.getElementById(`star-emotion-${productId}`);
-        const starError  = document.getElementById(`star-error-${productId}`);
-        const charCounter = document.getElementById(`char-counter-${productId}`);
-        const textarea   = document.getElementById(`review-comment-${productId}`);
-        const uploadZone = document.getElementById(`upload-zone-${productId}`);
-        const fileInput  = document.getElementById(`file-input-${productId}`);
-        const uploadError = document.getElementById(`upload-error-${productId}`);
-        const previewList = document.getElementById(`preview-list-${productId}`);
-        const offlineBanner = document.getElementById(`offline-banner-${productId}`);
-        const collapseBtn = document.getElementById(`collapse-btn-${productId}`);
+    // ── Build "Đã đánh giá" section ──────────────────────────────────────────
+    function buildReviewedHTML(productCount) {
+        return `
+        <div class="batch-reviewed-done" id="batch-reviewed-done">
+            <div class="reviewed-done-icon">&#10003;</div>
+            <div class="reviewed-done-text">
+                <strong>Đã gửi đánh giá thành công!</strong>
+                <span>${productCount} sản phẩm trong đơn hàng đã được đánh giá.</span>
+            </div>
+        </div>`;
+    }
 
-        if (!accordion || !form) return;
+    // ── Wire upload zone cho 1 product ──────────────────────────────────────
+    function wireUploadZone(pid, uploadedFilesMap) {
+        uploadedFilesMap[pid] = [];
 
-        let uploadedFiles = [];     // { file, src, type } entries
-        let confirmTimer  = null;
-        let confirmState  = false;  // true = waiting for 2nd tap
+        const toggleBtn  = document.getElementById(`batch-upload-toggle-${pid}`);
+        const zone       = document.getElementById(`batch-upload-zone-${pid}`);
+        const dropArea   = document.getElementById(`upload-drop-${pid}`);
+        const fileInput  = document.getElementById(`file-input-${pid}`);
+        const uploadError = document.getElementById(`upload-error-${pid}`);
+        const previewList = document.getElementById(`preview-list-${pid}`);
 
-        // ── Restore draft ──────────────────────────────────────────────────
-        const draft = loadDraft(productId);
-        if (draft) {
-            if (draft.rating) {
-                const radio = form.querySelector(`input[value="${draft.rating}"]`);
-                if (radio) {
-                    radio.checked = true;
-                    emotionEl.textContent = EMOTIONS[draft.rating] || '';
-                }
-            }
-            if (draft.comment && textarea) {
-                textarea.value = draft.comment;
-                charCounter.textContent = `${draft.comment.length}/500`;
-            }
-        }
+        if (!toggleBtn || !zone) return;
 
-        // ── Star rating ────────────────────────────────────────────────────
-        form.querySelectorAll(`input[name="rating-${productId}"]`).forEach(radio => {
-            radio.addEventListener('change', () => {
-                const val = parseInt(radio.value, 10);
-                emotionEl.textContent = EMOTIONS[val] || '';
-                starError.classList.remove('visible');
-                autoSaveDraft();
-            });
+        // Toggle collapse
+        toggleBtn.addEventListener('click', () => {
+            const isHidden = zone.hidden;
+            zone.hidden = !isHidden;
+            toggleBtn.setAttribute('aria-expanded', String(isHidden));
+            toggleBtn.textContent = isHidden
+                ? '▲ Ẩn bớt'
+                : '📷 Thêm ảnh/video';
         });
 
-        // ── Textarea char counter ──────────────────────────────────────────
-        if (textarea) {
-            textarea.addEventListener('input', () => {
-                charCounter.textContent = `${textarea.value.length}/500`;
-                autoSaveDraft();
-            });
-        }
-
-        // ── File upload ────────────────────────────────────────────────────
-        uploadZone.addEventListener('click', () => fileInput.click());
-        uploadZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
-
-        uploadZone.addEventListener('dragover', e => {
+        // Click & drag-drop
+        dropArea.addEventListener('click', () => fileInput.click());
+        dropArea.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
+        dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('drag-over'); });
+        dropArea.addEventListener('dragleave', () => dropArea.classList.remove('drag-over'));
+        dropArea.addEventListener('drop', e => {
             e.preventDefault();
-            uploadZone.classList.add('drag-over');
-        });
-        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
-        uploadZone.addEventListener('drop', e => {
-            e.preventDefault();
-            uploadZone.classList.remove('drag-over');
+            dropArea.classList.remove('drag-over');
             handleFiles(e.dataTransfer.files);
         });
-
-        fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+        fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
 
         function handleFiles(fileList) {
             uploadError.textContent = '';
             uploadError.classList.remove('visible');
-            let hasError = false;
 
             Array.from(fileList).forEach(file => {
-                const allowed = ['image/jpeg','image/png','image/webp','video/mp4'];
+                const allowed = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4'];
                 if (!allowed.includes(file.type)) {
                     uploadError.textContent = `Định dạng không hỗ trợ: ${file.name}. Chỉ chấp nhận JPG, PNG, WEBP, MP4.`;
                     uploadError.classList.add('visible');
-                    hasError = true;
                     return;
                 }
                 if (file.size > 5 * 1024 * 1024) {
                     uploadError.textContent = `File "${file.name}" vượt quá 5MB.`;
                     uploadError.classList.add('visible');
-                    hasError = true;
                     return;
                 }
-                if (hasError) return;
 
                 const reader = new FileReader();
                 reader.onload = ev => {
                     const src  = ev.target.result;
                     const type = file.type.startsWith('video') ? 'video' : 'image';
-                    uploadedFiles.push({ file, src, type });
+                    uploadedFilesMap[pid].push({ file, src, type });
                     renderPreview();
-                    autoSaveDraft();
                 };
                 reader.readAsDataURL(file);
             });
-            // Reset input so same file can be re-selected
-            fileInput.value = '';
         }
 
         function renderPreview() {
-            previewList.innerHTML = uploadedFiles.map((item, i) => `
-                <div class="preview-thumb" data-index="${i}">
+            previewList.innerHTML = uploadedFilesMap[pid].map((item, i) => `
+                <div class="preview-thumb" data-pid="${pid}" data-index="${i}">
                     ${item.type === 'video'
                         ? `<video src="${item.src}" muted></video>`
                         : `<img src="${item.src}" alt="Ảnh ${i + 1}" loading="lazy">`}
-                    <button class="remove-thumb" data-index="${i}" aria-label="Xóa ảnh ${i + 1}">&times;</button>
+                    <button class="remove-thumb" data-pid="${pid}" data-index="${i}" aria-label="Xóa ảnh ${i + 1}">&times;</button>
                 </div>
             `).join('');
 
-            // Remove buttons
             previewList.querySelectorAll('.remove-thumb').forEach(btn => {
                 btn.addEventListener('click', e => {
                     e.stopPropagation();
-                    const idx = parseInt(btn.dataset.index, 10);
-                    uploadedFiles.splice(idx, 1);
+                    uploadedFilesMap[btn.dataset.pid].splice(parseInt(btn.dataset.index, 10), 1);
                     renderPreview();
-                    autoSaveDraft();
                 });
             });
 
-            // Lightbox on thumb click (US 11-7)
             previewList.querySelectorAll('.preview-thumb').forEach(thumb => {
                 thumb.addEventListener('click', e => {
                     if (e.target.classList.contains('remove-thumb')) return;
                     const idx = parseInt(thumb.dataset.index, 10);
-                    Lightbox.open(uploadedFiles.map(f => ({ src: f.src, type: f.type })), idx);
+                    Lightbox.open(uploadedFilesMap[pid].map(f => ({ src: f.src, type: f.type })), idx);
                 });
             });
         }
+    }
 
-        // ── Auto-save draft ────────────────────────────────────────────────
-        function autoSaveDraft() {
-            const ratingInput = form.querySelector(`input[name="rating-${productId}"]:checked`);
-            saveDraft(productId, {
-                rating:  ratingInput ? parseInt(ratingInput.value, 10) : null,
-                comment: textarea ? textarea.value : '',
-                orderId, productId
+    // ── Wire toàn bộ batch form ─────────────────────────────────────────────
+    function wireBatchForm(orderId, products) {
+        const section    = document.getElementById(`batch-review-section-${orderId}`);
+        const submitBtn  = document.getElementById(`batch-submit-btn-${orderId}`);
+        const submitNotice = document.getElementById(`batch-submit-notice-${orderId}`);
+        const offlineBanner = document.getElementById('batch-offline-banner');
+
+        if (!section || !submitBtn) return;
+
+        // uploadedFilesMap: { [productId]: Array<{ file, src, type }> }
+        const uploadedFilesMap = {};
+
+        // Wire star + textarea + upload per product
+        products.forEach(product => {
+            const pid = product.id;
+
+            // Star rating
+            section.querySelectorAll(`input[name="rating-${pid}"]`).forEach(radio => {
+                radio.addEventListener('change', () => {
+                    const emotionEl = document.getElementById(`batch-emotion-${pid}`);
+                    if (emotionEl) emotionEl.textContent = EMOTIONS[parseInt(radio.value, 10)] || '';
+                    autoSaveDraft();
+                });
             });
-        }
 
-        // ── Collapse ───────────────────────────────────────────────────────
-        if (collapseBtn) {
-            collapseBtn.addEventListener('click', () => {
-                accordion.classList.remove('open');
-            });
-        }
-
-        // ── Offline detection (US 11-8) ────────────────────────────────────
-        let pendingOfflineSubmit = null;
-
-        window.addEventListener('online', () => {
-            offlineBanner.classList.remove('visible');
-            if (pendingOfflineSubmit) {
-                pendingOfflineSubmit();
-                pendingOfflineSubmit = null;
+            // Textarea char counter
+            const textarea = document.getElementById(`batch-comment-${pid}`);
+            const counter  = document.getElementById(`batch-char-${pid}`);
+            if (textarea && counter) {
+                textarea.addEventListener('input', () => {
+                    counter.textContent = `${textarea.value.length}/500`;
+                    autoSaveDraft();
+                });
             }
+
+            // Upload zone
+            wireUploadZone(pid, uploadedFilesMap);
         });
 
+        // Auto-save draft (tất cả products)
+        function autoSaveDraft() {
+            const draftData = {};
+            products.forEach(product => {
+                const pid = product.id;
+                const ratingInput = section.querySelector(`input[name="rating-${pid}"]:checked`);
+                const textarea = document.getElementById(`batch-comment-${pid}`);
+                draftData[pid] = {
+                    rating:  ratingInput ? parseInt(ratingInput.value, 10) : 5,
+                    comment: textarea ? textarea.value : ''
+                };
+            });
+            saveDraft(orderId, draftData);
+        }
+
+        // Offline detection
+        let pendingOfflineSubmit = null;
+        window.addEventListener('online', () => {
+            offlineBanner && offlineBanner.classList.remove('visible');
+            if (pendingOfflineSubmit) { pendingOfflineSubmit(); pendingOfflineSubmit = null; }
+        });
         window.addEventListener('offline', () => {
-            offlineBanner.classList.add('visible');
+            offlineBanner && offlineBanner.classList.add('visible');
         });
 
-        // ── Submit / Confirm-on-button (US 11-4) ───────────────────────────
-        form.addEventListener('submit', e => {
-            e.preventDefault();
+        // Confirm-on-button (2-tap + 5s countdown)
+        let confirmState = false;
+        let confirmTimer = null;
 
-            // Validate star
-            const ratingInput = form.querySelector(`input[name="rating-${productId}"]:checked`);
-            if (!ratingInput) {
-                starError.classList.add('visible');
-                starError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        submitBtn.addEventListener('click', () => {
+            // Security check
+            const userId = getCurrentUserId();
+            if (!userId || userId === 'GUEST') {
+                showToast('Bạn cần đăng nhập để gửi đánh giá.', 'error');
                 return;
             }
 
             if (!confirmState) {
-                // First tap: enter confirm mode
                 confirmState = true;
                 submitBtn.classList.add('confirm-pending');
-                submitBtn.textContent = 'Bấm lại để xác nhận công khai';
-                submitNotice.textContent = 'Phản hồi của bạn sẽ hiển thị công khai trên trang sản phẩm.';
+                submitBtn.textContent = 'Bấm lại để xác nhận gửi tất cả';
 
-                // Re-append the ring (textContent wipes it)
                 const ring = document.createElement('span');
                 ring.className = 'confirm-ring';
                 ring.setAttribute('aria-hidden', 'true');
-                ring.innerHTML = `<svg viewBox="0 0 200 40" preserveAspectRatio="none">
-                    <rect x="2" y="2" width="196" height="36" rx="18" ry="18"
+                ring.innerHTML = `<svg viewBox="0 0 240 44" preserveAspectRatio="none">
+                    <rect x="2" y="2" width="236" height="40" rx="20" ry="20"
                         fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="3" pathLength="500"/>
                 </svg>`;
                 submitBtn.appendChild(ring);
 
-                // 5-second timeout — revert (AC 4-3)
-                confirmTimer = setTimeout(() => {
-                    resetConfirmState();
-                }, 5000);
+                submitNotice.textContent = 'Phản hồi của bạn sẽ hiển thị công khai trên trang sản phẩm.';
 
+                confirmTimer = setTimeout(() => resetConfirmState(), 5000);
                 return;
             }
 
-            // Second tap: submit
             clearTimeout(confirmTimer);
-            doSubmit(ratingInput.value, textarea ? textarea.value : '');
+            doSubmitAll();
         });
 
         function resetConfirmState() {
             confirmState = false;
             clearTimeout(confirmTimer);
             submitBtn.classList.remove('confirm-pending');
-            submitBtn.textContent = 'Gửi đánh giá';
+            submitBtn.textContent = 'Gửi tất cả đánh giá';
             submitNotice.textContent = '';
+            // Re-append ring
+            if (!submitBtn.querySelector('.confirm-ring')) {
+                const ring = document.createElement('span');
+                ring.className = 'confirm-ring';
+                ring.setAttribute('aria-hidden', 'true');
+                ring.innerHTML = `<svg viewBox="0 0 240 44" preserveAspectRatio="none">
+                    <rect x="2" y="2" width="236" height="40" rx="20" ry="20"
+                        fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="3" pathLength="500"/>
+                </svg>`;
+                submitBtn.appendChild(ring);
+            }
         }
 
-        function doSubmit(rating, comment) {
-            // Offline check (US 11-8)
+        function doSubmitAll() {
             if (!navigator.onLine) {
-                offlineBanner.classList.add('visible');
+                offlineBanner && offlineBanner.classList.add('visible');
                 autoSaveDraft();
-                pendingOfflineSubmit = () => doSubmit(rating, comment);
+                pendingOfflineSubmit = doSubmitAll;
                 submitBtn.classList.remove('confirm-pending');
                 submitBtn.textContent = 'Đang kết nối lại...';
                 submitBtn.disabled = true;
                 return;
             }
 
-            // Disable button to prevent double-submit
             submitBtn.disabled = true;
             submitBtn.textContent = 'Đang gửi...';
 
-            // Build review object
-            const review = {
-                id:        'REV-' + Date.now(),
-                orderId,
-                productId,
-                userId:    getCurrentUserId(),
-                userName:  getMaskedUserName(),
-                rating:    parseInt(rating, 10),
-                comment:   comment.trim(),
-                media:     uploadedFiles.map(f => ({ src: f.src, type: f.type })),
-                verified:  true,
-                status:    parseInt(rating, 10) >= 4 ? 'published' : 'published_flagged',
-                createdAt: new Date().toISOString(),
-                helpful:   0,
-                shopReply: null
-            };
+            const now = new Date().toISOString();
+            const newReviews = [];
+            let totalPoints = 0;
 
-            // Persist locally
-            const all = getStoredReviews();
-            all.push(review);
-            saveStoredReviews(all);
+            products.forEach(product => {
+                const pid = product.id;
+                const ratingInput = section.querySelector(`input[name="rating-${pid}"]:checked`);
+                const textarea    = document.getElementById(`batch-comment-${pid}`);
+                const rating      = ratingInput ? parseInt(ratingInput.value, 10) : 5;
+                const comment     = textarea ? textarea.value.trim() : '';
+                const files       = uploadedFilesMap[pid] || [];
+                // Xác định user có chủ ý chọn sao không (default = 5 và chưa từng change)
+                const isDefaultRating = !ratingInput || (rating === 5);
 
-            // Mark order product as reviewed (lưu hasMedia để tính điểm trừ khi hoàn tiền)
-            markProductReviewed(orderId, productId, uploadedFiles.length > 0);
+                const review = {
+                    id:              'REV-' + Date.now() + '-' + pid,
+                    orderId:         String(orderId),
+                    productId:       String(pid),
+                    userId:          getCurrentUserId(),
+                    userName:        getMaskedUserName(),
+                    rating,
+                    isDefaultRating,
+                    comment,
+                    media:           files.map(f => ({ src: f.src, type: f.type })),
+                    verified:        true,
+                    status:          rating >= 4 ? 'published' : 'published_flagged',
+                    createdAt:       now,
+                    helpful:         0,
+                    shopReply:       null
+                };
 
-            // Clear draft
-            clearDraft(productId);
+                newReviews.push(review);
 
-            // Paw Points (US 11-6)
-            const points = uploadedFiles.length > 0 ? 5 : 1;
-            addPawPoints(points);
-            showPawPointsToast(points);
+                // Backwards-compat per-product entry
+                markProductReviewedCompat(orderId, pid, files.length > 0);
 
-            // Update UI: close accordion, replace button with "Đã đánh giá"
-            accordion.classList.remove('open');
+                // Paw Points: 5 pts nếu có ảnh, 1 pt nếu không
+                totalPoints += files.length > 0 ? 5 : 1;
+            });
 
-            const trigger = document.querySelector(`[data-review-trigger="${productId}"]`);
-            if (trigger) {
-                trigger.outerHTML = `<span class="reviewed-label" aria-label="Sản phẩm đã được đánh giá">&#10003; Đã đánh giá</span>`;
-            }
+            // Persist reviews
+            const allReviews = getStoredReviews();
+            allReviews.push(...newReviews);
+            saveStoredReviews(allReviews);
 
-            // Success state on button
-            submitBtn.disabled   = false;
-            submitBtn.textContent = 'Giao dịch thành công';
-            submitBtn.classList.remove('confirm-pending');
+            // Lock toàn đơn
+            markOrderReviewed(orderId);
+            clearDraft(orderId);
 
-            console.log('[ReviewHandler] Review saved:', review);
+            // Paw Points
+            addPawPoints(totalPoints);
+            showPawPointsToast(totalPoints);
+
+            // Update UI → replace section với "Đã đánh giá"
+            section.outerHTML = buildReviewedHTML(products.length);
+
+            // Trigger event để order-detail.js update nút actions
+            window.dispatchEvent(new CustomEvent('pawpal:reviewSubmitted', { detail: { orderId } }));
+
+            console.log(`[ReviewHandler] Batch submitted ${newReviews.length} reviews for order ${orderId}, +${totalPoints} pts`);
         }
     }
 
-    // ── Utility: get current user ───────────────────────────────────────────
+    // ── Utility: current user ───────────────────────────────────────────────
     function getCurrentUserId() {
         try {
             const u = JSON.parse(localStorage.getItem('pawpal_current_user'));
@@ -560,13 +602,6 @@
         } catch (_) { return 'Khách hàng'; }
     }
 
-    function markProductReviewed(orderId, productId, hasMedia = false) {
-        const key  = 'pawpal_reviewed';
-        const list = JSON.parse(localStorage.getItem(key) || '[]');
-        list.push({ orderId, productId, hasMedia });
-        localStorage.setItem(key, JSON.stringify(list));
-    }
-
     function addPawPoints(amount) {
         try {
             const u = JSON.parse(localStorage.getItem('pawpal_current_user'));
@@ -574,7 +609,6 @@
             u.points = (u.points || 0) + amount;
             localStorage.setItem('pawpal_current_user', JSON.stringify(u));
 
-            // Sync vào users_db để không bị ghi đè khi initData reload
             const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
             const idx = users.findIndex(usr => usr.phone === u.phone);
             if (idx !== -1) {
@@ -582,110 +616,9 @@
                 localStorage.setItem('pawpal_users_db', JSON.stringify(users));
             }
 
-            // Sync to header display if present
             const el = document.getElementById('headerPoints');
             if (el) el.textContent = u.points + ' Paw Points';
         } catch (_) {}
-    }
-
-    // ── Public API ──────────────────────────────────────────────────────────
-
-    /**
-     * init — inject review buttons + accordions for all products in an order
-     * @param {string} orderId
-     * @param {Array}  products  — array of { id, name, image, deliveredDate? }
-     * @param {string} containerSelector — CSS selector of container to append to, default '#order-actions'
-     */
-    function init(orderId, products) {
-        if (!orderId || !products || !products.length) return;
-
-        // Add "Đánh giá sản phẩm" heading once above the products list
-        const productsList = document.querySelector('.products-list');
-        if (productsList && !document.querySelector('.order-reviews-heading')) {
-            const heading = document.createElement('h3');
-            heading.className = 'order-reviews-heading';
-            heading.id = 'reviews';
-            heading.textContent = 'Đánh giá sản phẩm';
-            productsList.parentNode.insertBefore(heading, productsList);
-        }
-
-        products.forEach(product => {
-            const productId   = product.id;
-            const alreadyDone = hasReviewed(orderId, productId);
-
-            // Find the product-item by data-product-id or by name match
-            const productItems = document.querySelectorAll('.product-item');
-            let targetItem = null;
-
-            productItems.forEach(item => {
-                const nameEl = item.querySelector('.product-item-name');
-                if (nameEl && nameEl.textContent.trim() === product.name) {
-                    targetItem = item;
-                }
-            });
-
-            if (!targetItem) return;
-
-            // Mark item so CSS knows review zone follows
-            targetItem.classList.add('has-review');
-
-            // Build review zone div (uses CSS class, no inline style)
-            const zone = document.createElement('div');
-            zone.className = 'product-review-zone';
-
-            if (alreadyDone) {
-                zone.innerHTML = `<span class="reviewed-label" aria-label="Sản phẩm đã được đánh giá">&#10003; Đã đánh giá</span>`;
-            } else {
-                zone.innerHTML = `
-                    <button class="btn-write-review"
-                            data-review-trigger="${productId}"
-                            data-order-id="${orderId}"
-                            aria-label="Viết đánh giá cho ${product.name}">
-                        &#9998; Viết đánh giá
-                    </button>`;
-            }
-
-            // Insert zone after the product item
-            targetItem.parentNode.insertBefore(zone, targetItem.nextSibling);
-
-            // Inject accordion form right after the zone
-            if (!alreadyDone) {
-                const accordionWrap = document.createElement('div');
-                accordionWrap.innerHTML = buildFormHTML(orderId, product);
-                zone.parentNode.insertBefore(accordionWrap.firstElementChild, zone.nextSibling);
-
-                // Wire button to open accordion
-                const btn = zone.querySelector(`[data-review-trigger="${productId}"]`);
-                if (btn) {
-                    btn.addEventListener('click', () => openForm(productId));
-                }
-
-                wireForm(orderId, product);
-            }
-        });
-    }
-
-    /**
-     * openForm — expand accordion for a specific product
-     * @param {string} productId
-     */
-    function openForm(productId) {
-        const accordion = document.getElementById(`review-accordion-${productId}`);
-        if (!accordion) return;
-
-        // Security: verify the accordion belongs to current user's order (US 11-2 AC2.2)
-        const orderId = accordion.dataset.orderId;
-        const userId  = getCurrentUserId();
-        // In frontend-only mode we trust localStorage; in real app this would be server-validated
-        if (!orderId || !userId) {
-            showToast('Bạn không có quyền đánh giá giao dịch này.', 'error');
-            return;
-        }
-
-        accordion.classList.toggle('open');
-        if (accordion.classList.contains('open')) {
-            accordion.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
     }
 
     function showToast(msg, type) {
@@ -702,7 +635,64 @@
         setTimeout(() => t.remove(), 3500);
     }
 
+    // ── Public API ──────────────────────────────────────────────────────────
+
+    /**
+     * init — inject batch review form cho toàn bộ products trong đơn
+     * @param {string} orderId
+     * @param {Array}  products — array of { id, name, image, deliveredDate? }
+     */
+    function init(orderId, products) {
+        if (!orderId || !products || !products.length) return;
+
+        // Nếu đơn đã reviewed → inject trạng thái "Đã đánh giá" tĩnh
+        const container = _getOrCreateReviewContainer();
+        if (!container) return;
+
+        // Heading
+        if (!document.querySelector('.order-reviews-heading')) {
+            const heading = document.createElement('h3');
+            heading.className = 'order-reviews-heading';
+            heading.id = 'reviews';
+            heading.textContent = 'Đánh giá sản phẩm';
+            container.prepend(heading);
+        }
+
+        if (hasOrderReviewed(orderId)) {
+            // Đã reviewed → show done state
+            const done = document.createElement('div');
+            done.innerHTML = buildReviewedHTML(products.length);
+            container.appendChild(done.firstElementChild);
+            return;
+        }
+
+        // Chưa reviewed → build batch form
+        const draft = loadDraft(orderId);
+        const wrap  = document.createElement('div');
+        wrap.innerHTML = buildBatchFormHTML(orderId, products, draft);
+        container.appendChild(wrap.firstElementChild);
+
+        wireBatchForm(orderId, products);
+    }
+
+    /** Tìm / tạo container chứa batch review section */
+    function _getOrCreateReviewContainer() {
+        // Ưu tiên đặt review section sau .products-list
+        const productsList = document.querySelector('.products-list, #products-list');
+        if (productsList && productsList.parentNode) {
+            let reviewContainer = document.getElementById('order-review-container');
+            if (!reviewContainer) {
+                reviewContainer = document.createElement('div');
+                reviewContainer.id = 'order-review-container';
+                reviewContainer.className = 'order-review-container';
+                productsList.parentNode.insertBefore(reviewContainer, productsList.nextSibling);
+            }
+            return reviewContainer;
+        }
+        return document.querySelector('.order-detail-main') || document.body;
+    }
+
     // Expose
-    global.ReviewHandler = { init, openForm, Lightbox };
+    global.ReviewHandler = { init, hasOrderReviewed, Lightbox };
 
 })(window);
