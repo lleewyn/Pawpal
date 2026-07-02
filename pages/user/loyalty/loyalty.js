@@ -229,19 +229,17 @@ function renderLoyaltyPage(user, vouchers) {
         gridEl.innerHTML = vouchers.map(v => renderVoucherCard(v, user)).join('');
         
         // Gắn sự kiện click cho các nút Đổi (nếu đủ điểm)
-        vouchers.forEach(v => {
-            if (v.quantity > 0 && user.points >= v.pointsCost) {
-                const btn = document.querySelector(`.voucher-card-shopee[data-id="${v.id}"] .redeem-btn`);
-                if (btn) {
-                    btn.addEventListener('click', (e) => {
-                        // Disable button to prevent double submit
-                        btn.disabled = true;
-                        const voucherCard = btn.closest('.voucher-card');
-                        const footer = voucherCard ? voucherCard.querySelector('.voucher-card-footer') : null;
-                        triggerRedeem(v.id, user, footer || btn);
-                    });
-                }
-            }
+        // Dùng event delegation trên grid để tránh sai selector
+        gridEl.addEventListener('click', (e) => {
+            const btn = e.target.closest('.redeem-btn');
+            if (!btn || btn.disabled) return;
+            const card = btn.closest('.voucher-card-shopee');
+            if (!card) return;
+            const vId = card.dataset.id;
+            const vInfo = vouchers.find(v => v.id === vId);
+            if (!vInfo) return;
+            btn.disabled = true;
+            triggerRedeem(vId, user, btn);
         });
     }
 }

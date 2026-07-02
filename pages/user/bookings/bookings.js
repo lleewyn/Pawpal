@@ -6,12 +6,13 @@
 import { API } from '/scripts/api/api.js';
 
 export const statusLabels = {
-    upcoming: 'Đã xác nhận',
-    confirmed: 'Đã xác nhận',
-    accepted: 'Đã tiếp nhận',
+    pending:       'Chờ xác nhận',
+    upcoming:      'Đã xác nhận',
+    confirmed:     'Đã xác nhận',
+    accepted:      'Đã tiếp nhận',
     'in-progress': 'Đang thực hiện',
-    completed: 'Hoàn thành',
-    cancelled: 'Đã hủy'
+    completed:     'Hoàn thành',
+    cancelled:     'Đã hủy'
 };
 
 const statusAliases = {
@@ -124,7 +125,7 @@ function createBookingCard(booking) {
         && !['in-progress', 'completed', 'cancelled'].includes(normalizedStatus)
         && !isChangeLimited;
     const canCancel = diffMinutes >= 120
-        && ['pending', 'confirmed', 'upcoming', 'accepted'].includes(normalizedStatus)
+        && ['confirmed', 'accepted'].includes(normalizedStatus)
         && cancelCount < 3;
     
     const petKey = String(booking.petId || '');

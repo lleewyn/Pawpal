@@ -146,8 +146,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadPersistedVoucher();
         renderOrderSummary();
         
-        // Show PawPoints section if user logged in
-        if (checkoutState.user && checkoutState.user.pawPoints) {
+        // Show PawPoints section if user logged in và có điểm
+        if (checkoutState.user && (checkoutState.user.points || checkoutState.user.pawPoints)) {
             initializePawPoints();
         }
         
@@ -591,7 +591,8 @@ function initializePawPoints() {
     const section = document.getElementById('pawpoints-section');
     section.classList.remove('d-none');
     
-    const userPoints = checkoutState.user.pawPoints || 0;
+    // Đọc points từ cả hai field để tương thích dữ liệu cũ (pawPoints) và mới (points)
+    const userPoints = checkoutState.user.points || checkoutState.user.pawPoints || 0;
     const orderTotal = calculateSubtotal();
     
     // Set max points (min of user balance or order total / 1000)
@@ -634,7 +635,7 @@ function initializePawPoints() {
 
 function updatePointsDisplay(points) {
     const discount = points * 1000;
-    const remaining = (checkoutState.user.pawPoints || 0) - points;
+    const remaining = (checkoutState.user.points || checkoutState.user.pawPoints || 0) - points;
     
     document.getElementById('points-to-use').textContent = points;
     document.getElementById('points-discount-display').textContent = formatCurrency(discount);
@@ -1257,11 +1258,16 @@ function saveOrderToUserHistory(orderData) {
     
     // Normalize order object and add new order to beginning of array (newest first)
     // Normalize shape to match order-detail expectations
-    const subtotal = toNumber(orderData.pricing?.subtotal, 0);
+    const subtotal    = toNumber(orderData.pricing?.subtotal, 0);
     const shippingFee = toNumber(orderData.pricing?.shippingFee, 0);
-    const discount = toNumber(orderData.pricing?.discount, 0);
+    // Gom cả voucherDiscount + pointsDiscount vào 1 field `discount` để order-detail đọc đúng
+    const discount = toNumber(
+        orderData.pricing?.discount
+        ?? (toNumber(orderData.pricing?.voucherDiscount) + toNumber(orderData.pricing?.pointsDiscount)),
+        0
+    );
     const grandTotal = toNumber(
-        orderData.pricing?.total ?? orderData.pricing?.grandTotal,
+        orderData.pricing?.grandTotal ?? orderData.pricing?.total,
         Math.max(0, subtotal + shippingFee - discount)
     );
 

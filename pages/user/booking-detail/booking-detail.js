@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     const bookingId = urlParams.get('id');
 
     if (!bookingId) {
-        alert('Không tìm thấy thông tin lịch hẹn');
-        window.location.href = '../bookings/bookings.html';
+        showToast('Không tìm thấy thông tin lịch hẹn', 'error');
+        setTimeout(() => { window.location.href = '../bookings/bookings.html'; }, 1500);
         return;
     }
 
@@ -34,8 +34,8 @@ async function loadBookingDetail(bookingId) {
     currentBooking = userBookings.find((b) => String(b.id || b._id) === String(bookingId) || b.code === bookingId);
 
     if (!currentBooking) {
-        alert('Không tìm thấy lịch hẹn này');
-        window.location.href = '../bookings/bookings.html';
+        showToast('Không tìm thấy lịch hẹn này', 'error');
+        setTimeout(() => { window.location.href = '../bookings/bookings.html'; }, 1500);
         return;
     }
 
@@ -49,7 +49,7 @@ async function loadBookingDetail(bookingId) {
         careLogButton.onclick = () => {
             const petId = currentBooking.petId || currentPet?._id || currentPet?.id;
             if (!petId) {
-                alert('Không tìm thấy mã bé cưng để mở nhật ký chăm sóc.');
+                showToast('Không tìm thấy mã bé cưng để mở nhật ký chăm sóc.', 'error');
                 return;
             }
             const sessionId = currentBooking.id || '';
@@ -61,6 +61,9 @@ async function loadBookingDetail(bookingId) {
     renderBookingDetail(currentBooking);
     renderServiceReviewSection(currentBooking);
     checkBookingModifiability(currentBooking);
+
+    // Cộng điểm Paw Points khi booking hoàn thành (BPMN 3.1.13)
+    awardBookingLoyaltyPoints(currentBooking, currentUser);
 
     // Scroll đến section đánh giá nếu điều hướng từ danh sách lịch hẹn
     if (window.location.hash === '#service-review') {
@@ -195,7 +198,7 @@ function handleSubmitServiceReview() {
     if (!currentBooking) return;
 
     if (!currentServiceReviewRating) {
-        alert('Vui lòng chọn số sao đánh giá.');
+        showToast('Vui lòng chọn số sao đánh giá.', 'error');
         return;
     }
 
@@ -249,13 +252,27 @@ function checkBookingModifiability(booking) {
     const now = new Date();
     let bookingDateTime;
 
-    if (booking.timeStart) {
-        const [year, month, day] = booking.date.split('-');
+    const dateStr = booking.date || booking.schedule?.date;
+
+    if (booking.timeStart && dateStr) {
+        const [year, month, day] = dateStr.split('-');
         const [hours, minutes] = booking.timeStart.split(':');
         bookingDateTime = new Date(year, month - 1, day, hours, minutes);
-    } else {
-        bookingDateTime = new Date(booking.date || booking.schedule?.date);
+    } else if (dateStr) {
+        bookingDateTime = new Date(dateStr);
         bookingDateTime.setHours(9, 0, 0, 0);
+    } else {
+        // Không có ngày → ẩn cả hai nút, không crash
+        btnChange.classList.add('d-none');
+        btnCancel.classList.add('d-none');
+        return;
+    }
+
+    // Guard: nếu parse ra NaN thì cũng ẩn nút
+    if (isNaN(bookingDateTime.getTime())) {
+        btnChange.classList.add('d-none');
+        btnCancel.classList.add('d-none');
+        return;
     }
 
     const diffMinutes = (bookingDateTime - now) / (1000 * 60);
@@ -683,8 +700,14 @@ function closeErrorBanner() {
 
 // ── Toast ─────────────────────────────────────────────────────────────────
 function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
+    let container = document.getElementById('toastContainer');
+    // Fallback: tạo container tạm nếu chưa có trong DOM (ví dụ lỗi xảy ra trước khi trang render xong)
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;';
+        document.body.appendChild(container);
+    }
     const toast = document.createElement('div');
     toast.className = `toast-custom toast-${type}`;
     toast.innerHTML = `<div class="toast-content"><span class="toast-message">${message}</span></div>`;
@@ -694,6 +717,52 @@ function showToast(message, type = 'info') {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+}
+
+// ── Tích điểm Paw Points khi booking hoàn thành (BPMN 3.1.13) ────────────
+// Công thức: 10.000 VNĐ = 1 điểm — áp dụng cho cả dịch vụ lẫn sản phẩm
+// Idempotent: dùng flag pointsAwarded trên booking để tránh cộng 2 lần
+function awardBookingLoyaltyPoints(booking, user) {
+    if (!booking || !user || user.is_temporary) return;
+
+    const normalizedStatus = resolveBookingStatus(booking);
+    if (normalizedStatus !== 'completed') return;
+    if (booking.pointsAwarded) return;
+
+    const price = Number(booking.price || 0);
+    if (price <= 0) return;
+
+    const pointsEarned = Math.floor(price / 10000);
+    if (pointsEarned <= 0) return;
+
+    // Cập nhật users_db
+    const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+    const idx = users.findIndex(u => u.phone === user.phone);
+    if (idx !== -1) {
+        users[idx].points = (users[idx].points || 0) + pointsEarned;
+        users[idx].spend  = (users[idx].spend  || 0) + price;
+        users[idx].lastTransactionAt = new Date().toISOString();
+        localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+
+        // Sync session
+        user.points = users[idx].points;
+        user.spend  = users[idx].spend;
+        user.lastTransactionAt = users[idx].lastTransactionAt;
+        localStorage.setItem('pawpal_current_user', JSON.stringify(user));
+    }
+
+    // Đánh dấu đã cộng để tránh cộng lại khi reload
+    booking.pointsAwarded = true;
+    booking.pointsEarned  = pointsEarned;
+    const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+    const bi = bookings.findIndex(b => b.id === booking.id);
+    if (bi !== -1) {
+        bookings[bi] = { ...bookings[bi], pointsAwarded: true, pointsEarned };
+        localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
+    }
+
+    showToast(`Bạn vừa tích được +${pointsEarned} Paw Points cho dịch vụ này!`, 'success');
+    console.log(`[Loyalty] +${pointsEarned} Paw Points cho booking ${booking.id} (${price.toLocaleString('vi-VN')}đ)`);
 }
 
 // ── Exports ───────────────────────────────────────────────────────────────
