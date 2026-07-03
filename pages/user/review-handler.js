@@ -267,16 +267,9 @@
 
             <!-- Submit area -->
             <div class="batch-submit-wrap">
-                <p class="batch-submit-notice" id="batch-submit-notice-${orderId}"></p>
                 <button type="button" class="btn-batch-submit" id="batch-submit-btn-${orderId}">
                     Gửi tất cả đánh giá
-                    <span class="confirm-ring" aria-hidden="true">
-                        <svg viewBox="0 0 240 44" preserveAspectRatio="none">
-                            <rect x="2" y="2" width="236" height="40" rx="20" ry="20"
-                                fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="3"
-                                pathLength="500"/>
-                        </svg>
-                    </span>
+                </button>
                 </button>
                 <p class="batch-submit-hint">
                     &#9733; Mỗi sản phẩm đã được đặt 5 sao mặc định — bạn có thể thay đổi hoặc để nguyên
@@ -392,7 +385,6 @@
     function wireBatchForm(orderId, products) {
         const section    = document.getElementById(`batch-review-section-${orderId}`);
         const submitBtn  = document.getElementById(`batch-submit-btn-${orderId}`);
-        const submitNotice = document.getElementById(`batch-submit-notice-${orderId}`);
         const offlineBanner = document.getElementById('batch-offline-banner');
 
         if (!section || !submitBtn) return;
@@ -452,10 +444,7 @@
             offlineBanner && offlineBanner.classList.add('visible');
         });
 
-        // Confirm-on-button (2-tap + 5s countdown)
-        let confirmState = false;
-        let confirmTimer = null;
-
+        // Submit ngay khi bấm — không cần 2-tap xác nhận
         submitBtn.addEventListener('click', () => {
             // Security check
             const userId = getCurrentUserId();
@@ -464,48 +453,8 @@
                 return;
             }
 
-            if (!confirmState) {
-                confirmState = true;
-                submitBtn.classList.add('confirm-pending');
-                submitBtn.textContent = 'Bấm lại để xác nhận gửi tất cả';
-
-                const ring = document.createElement('span');
-                ring.className = 'confirm-ring';
-                ring.setAttribute('aria-hidden', 'true');
-                ring.innerHTML = `<svg viewBox="0 0 240 44" preserveAspectRatio="none">
-                    <rect x="2" y="2" width="236" height="40" rx="20" ry="20"
-                        fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="3" pathLength="500"/>
-                </svg>`;
-                submitBtn.appendChild(ring);
-
-                submitNotice.textContent = 'Phản hồi của bạn sẽ hiển thị công khai trên trang sản phẩm.';
-
-                confirmTimer = setTimeout(() => resetConfirmState(), 5000);
-                return;
-            }
-
-            clearTimeout(confirmTimer);
             doSubmitAll();
         });
-
-        function resetConfirmState() {
-            confirmState = false;
-            clearTimeout(confirmTimer);
-            submitBtn.classList.remove('confirm-pending');
-            submitBtn.textContent = 'Gửi tất cả đánh giá';
-            submitNotice.textContent = '';
-            // Re-append ring
-            if (!submitBtn.querySelector('.confirm-ring')) {
-                const ring = document.createElement('span');
-                ring.className = 'confirm-ring';
-                ring.setAttribute('aria-hidden', 'true');
-                ring.innerHTML = `<svg viewBox="0 0 240 44" preserveAspectRatio="none">
-                    <rect x="2" y="2" width="236" height="40" rx="20" ry="20"
-                        fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="3" pathLength="500"/>
-                </svg>`;
-                submitBtn.appendChild(ring);
-            }
-        }
 
         function doSubmitAll() {
             if (!navigator.onLine) {
