@@ -93,6 +93,34 @@
     {
       "source": "/pages/user/support-tickets",
       "destination": "/pages/user/support-tickets/support-tickets.html"
+    },
+    {
+      "source": "/pages/shop/cart",
+      "destination": "/pages/shop/cart/cart.html"
+    },
+    {
+      "source": "/pages/shop/checkout",
+      "destination": "/pages/shop/checkout/checkout.html"
+    },
+    {
+      "source": "/pages/shop/payment-success",
+      "destination": "/pages/shop/payment-success/payment-success.html"
+    },
+    {
+      "source": "/pages/shop/payment-failed",
+      "destination": "/pages/shop/payment-failed/payment-failed.html"
+    },
+    {
+      "source": "/pages/services/booking-success",
+      "destination": "/pages/services/booking-success/booking-success.html"
+    },
+    {
+      "source": "/pages/user/return-detail",
+      "destination": "/pages/user/return-detail/return-detail.html"
+    },
+    {
+      "source": "/pages/user/settings",
+      "destination": "/pages/user/settings/settings.html"
     }
   ]
 }

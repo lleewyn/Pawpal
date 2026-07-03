@@ -246,13 +246,6 @@ function navigateGallery(direction) {
  * Handle Add to Cart - Add product to cart and stay on page
  */
 function handleAddToCart() {
-    // Check if user is logged in
-    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    if (!user) {
-        showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
-        return;
-    }
-
     const product = getCurrentProduct();
     const quantity = parseInt(document.getElementById('quantity').value) || 1;
     
@@ -261,7 +254,6 @@ function handleAddToCart() {
         return;
     }
     
-    // Check stock
     if (product.stock === 0) {
         showToast('Sản phẩm đã hết hàng', 'error');
         return;
@@ -272,13 +264,8 @@ function handleAddToCart() {
         return;
     }
     
-    // Add to cart
     addProductToCart(product, quantity);
-    
-    // Show success toast
     showToast('Đã thêm sản phẩm vào giỏ hàng', 'success');
-    
-    // Update cart badge (if exists)
     updateCartBadge();
 }
 
@@ -286,13 +273,6 @@ function handleAddToCart() {
  * Handle Buy Now - Add product to cart and redirect to checkout
  */
 function handleBuyNow() {
-    // Check login
-    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    if (!user) {
-        showToast('Vui lòng đăng nhập để mua hàng', 'warning');
-        return;
-    }
-
     const product = getCurrentProduct();
     const quantity = parseInt(document.getElementById('quantity').value) || 1;
     
@@ -301,7 +281,6 @@ function handleBuyNow() {
         return;
     }
     
-    // Check stock
     if (product.stock === 0) {
         showToast('Sản phẩm đã hết hàng', 'error');
         return;
@@ -312,13 +291,11 @@ function handleBuyNow() {
         return;
     }
     
-    // Show loading
     const originalText = document.getElementById('buyNowBtn').innerHTML;
     document.getElementById('buyNowBtn').innerHTML = '<span>Đang xử lý...</span>';
     document.getElementById('buyNowBtn').disabled = true;
     
     setTimeout(() => {
-        // Create temporary cart with this product only
         const buyNowCart = [{
             id: product.id,
             name: product.name,
@@ -329,41 +306,23 @@ function handleBuyNow() {
             stock: product.stock
         }];
         
-        // Save to sessionStorage (temporary cart for buy now)
         sessionStorage.setItem('pawpal_buynow_cart', JSON.stringify(buyNowCart));
-        
-        // Set flag to indicate this is a buy now checkout
         sessionStorage.setItem('pawpal_is_buynow', 'true');
-        
-        // Redirect to checkout
         window.location.href = '/pages/shop/checkout/checkout.html?buynow=true';
     }, 500);
 }
 
 function handleCardAddToCart(product) {
-    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    if (!user) {
-        showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
-        return;
-    }
-
     if (!product || !product.inStock) {
         showToast('Sản phẩm không khả dụng', 'error');
         return;
     }
-
     addProductToCart(product, 1);
     updateCartBadge();
     showToast('Đã thêm sản phẩm vào giỏ hàng', 'success');
 }
 
 function handleCardBuyNow(product) {
-    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    if (!user) {
-        showToast('Vui lòng đăng nhập để mua hàng', 'warning');
-        return;
-    }
-
     if (!product || !product.inStock) {
         showToast('Sản phẩm không khả dụng', 'error');
         return;

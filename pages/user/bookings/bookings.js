@@ -363,7 +363,7 @@ function openQuickRescheduleModal(booking) {
     ];
     const slotOptions = configSlots.map((slot) => `<button type="button" class="quick-slot-btn" data-slot="${slot}">${slot}</button>`).join('');
     const staffOptions = configStaffs.map((s) => {
-        const initials = s.name === 'Phân bổ ngẫu nhiên' ? '🎲' : s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+        const initials = s.name === 'Phân bổ ngẫu nhiên' ? 'NG' : s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
         return `
             <div class="quick-staff-btn" data-staff="${s.name}" tabindex="0" role="button"
                 style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;text-align:left;">

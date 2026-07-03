@@ -151,6 +151,7 @@ function findBookingsByPhone(phone, { bookings, users, pets }) {
         .filter(b =>
             normalizePhone(b.phone) === norm ||
             normalizePhone(b.customerPhone) === norm ||
+            normalizePhone(b.ownerPhone) === norm ||
             (user && String(b.userId) === String(user.id))
         )
         .map(b => {
@@ -165,7 +166,9 @@ function findOrdersByPhone(phone, { orders, users }) {
 
     return orders.filter(o =>
         normalizePhone(o.delivery?.phone) === norm ||
+        normalizePhone(o.shipping?.phone) === norm ||
         normalizePhone(o.phone) === norm ||
+        normalizePhone(o.userPhone) === norm ||
         (user && String(o.userId) === String(user.id))
     );
 }
@@ -207,6 +210,26 @@ function fmtDate(d) {
     if (!d) return '';
     try { return new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
     catch (_) { return d; }
+}
+
+/** Tính trạng thái booking dựa vào thời gian thực — copy từ bookings.js */
+function resolveBookingStatus(booking) {
+    const rawStatus = booking?.status || 'upcoming';
+    if (['cancelled', 'completed', 'in-progress', 'accepted'].includes(rawStatus)) {
+        return rawStatus;
+    }
+    try {
+        const date = booking.date || '';
+        if (!date) return rawStatus === 'confirmed' ? 'accepted' : 'confirmed';
+        const time = booking.timeStart || booking.time || '00:00';
+        const scheduled = new Date(`${date}T${time}:00`);
+        if (isNaN(scheduled.getTime())) return 'confirmed';
+        const hoursPast = (Date.now() - scheduled.getTime()) / (1000 * 60 * 60);
+        if (hoursPast >= 4)  return 'completed';
+        if (hoursPast >= 1)  return 'in-progress';
+        if (hoursPast >= 0)  return 'accepted';
+        return 'confirmed';
+    } catch (_) { return 'confirmed'; }
 }
 
 function fmtPrice(n) {
@@ -362,18 +385,16 @@ function buildOrderCard(o) {
                 <div class="rg-summary-value" style="color:${paymentColor};font-weight:500;">${paymentLabel}</div>
             </div>
         </div>
-        ${canCancelOrder(o) ? `
         <div class="rg-actions">
+            ${canCancelOrder(o) ? `
             <button class="btn-green-outline" onclick="handleGuestCancelOrder('${esc(o.id)}')">
                 Hủy đơn hàng
-            </button>
-        </div>` : ''}
-        ${canReturnOrder(o) ? `
-        <div class="rg-actions">
+            </button>` : ''}
+            ${canReturnOrder(o) ? `
             <button class="btn-green-outline" onclick="handleGuestReturnRequest('${esc(o.id)}')">
                 Yêu cầu đổi trả
-            </button>
-        </div>` : ''}
+            </button>` : ''}
+        </div>
     </div>`;
 }
 
@@ -484,7 +505,7 @@ function showSendOTPConfirm(title, desc, phone, onConfirm) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-1">${esc(desc)}</p>
+                    <p class="mb-1">${desc}</p>
                     <p class="text-muted small">Để xác nhận, PawPal sẽ gửi mã OTP đến số <strong>${esc(phone)}</strong>.</p>
                 </div>
                 <div class="modal-footer">

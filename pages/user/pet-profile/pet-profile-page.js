@@ -215,6 +215,14 @@ function createPetCard(pet, isArchived = false) {
                 <span class="pet-info-label">Tuổi</span>
                 <span class="pet-info-value">${calcAge(pet.dob)}</span>
             </div>
+            ${pet.allergies && pet.allergies.trim() !== '' ? `
+            <div class="pet-info-row pet-allergy-row">
+                <span class="pet-info-label pet-allergy-label">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    Dị ứng / Bệnh nền
+                </span>
+                <span class="pet-info-value pet-allergy-value">${pet.allergies.length > 50 ? pet.allergies.substring(0, 47) + '...' : pet.allergies}</span>
+            </div>` : ''}
             <div class="pet-info-row">
                 <span class="pet-info-label">Sở thích / Lưu ý</span>
                 <span class="pet-info-value">${pet.notes && pet.notes.trim() !== '' 

@@ -659,6 +659,11 @@ function renderProducts() {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 e.preventDefault();
+                const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+                if (!user) {
+                    showToast('Vui lòng đăng nhập để sử dụng tính năng yêu thích', 'warning');
+                    return; // KHÔNG đổi màu icon
+                }
                 toggleWishlist(parseInt(btn.dataset.productId));
                 btn.classList.toggle('active');
             });

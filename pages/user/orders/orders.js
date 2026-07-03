@@ -120,7 +120,18 @@ function createOrderCard(order) {
     const firstProduct = order.products[0];
     const remainingCount = order.products.length - 1;
     const normalizedStatus = normalizeOrderStatus(order.status);
-    const statusLabel = getStatusLabel(normalizedStatus);
+
+    // Đọc paymentStatus từ cả 2 cấu trúc dữ liệu
+    const isPaid = order.paymentStatus === 'paid' || order.payment?.status === 'paid';
+    const ONLINE_METHODS = ['vnpay', 'momo', 'zalopay', 'vietqr'];
+    const payMethod = (order.paymentMethod || order.payment?.method || '').toLowerCase();
+    const isOnline  = ONLINE_METHODS.includes(payMethod);
+
+    // Badge: pending + online + paid → "Chờ xác nhận" thay vì "Chờ thanh toán"
+    const isPendingConfirm = (normalizedStatus === 'pending_payment') && isPaid && isOnline;
+    const displayStatusLabel = isPendingConfirm ? 'Chờ xác nhận' : getStatusLabel(normalizedStatus);
+    const displayStatusClass = isPendingConfirm ? 'status-preparing' : `status-${normalizedStatus}`;
+
     const isCompleted = normalizedStatus === 'completed';
     const productCount = Array.isArray(order.products)
         ? order.products.reduce((sum, product) => sum + (Number(product.quantity) || 1), 0)
@@ -182,7 +193,9 @@ function createOrderCard(order) {
         paymentLabel,
         normalizedStatus === 'shipping' ? 'Đang giao tới bạn' : '',
         normalizedStatus === 'completed' ? 'Đơn đã hoàn tất' : '',
-        normalizedStatus === 'pending_payment' ? 'Chờ xác nhận thanh toán' : '',
+        // Hiển thị đúng trạng thái: đã thanh toán chờ xác nhận vs chưa thanh toán
+        (normalizedStatus === 'pending_payment' && isPaid && isOnline) ? 'Đã thanh toán — chờ xác nhận' :
+        (normalizedStatus === 'pending_payment' && !isPaid) ? 'Chờ thanh toán' : '',
         normalizedStatus === 'preparing' ? 'Shop đang đóng gói' : ''
     ].filter(Boolean);
 
@@ -201,15 +214,26 @@ function createOrderCard(order) {
             </button>
         `;
     } else if (normalizedStatus === 'pending_payment' || normalizedStatus === 'preparing') {
-        footerButtonsHTML = `
-            ${detailActionHTML}
-            <button class="btn-track-order" onclick="contactHotline('${orderId}')">
-                Liên hệ hotline
-            </button>
-            <button class="btn-track-order text-danger border-danger" onclick="cancelOrder('${orderId}')">
-                Hủy đơn hàng
-            </button>
-        `;
+        if (isPaid && isOnline) {
+            // Đã thanh toán online, chờ admin xác nhận — không cho hủy, chỉ liên hệ hotline
+            footerButtonsHTML = `
+                ${detailActionHTML}
+                <button class="btn-track-order" onclick="contactHotline('${orderId}')">
+                    Liên hệ hotline
+                </button>
+            `;
+        } else {
+            // Chưa thanh toán hoặc đang chuẩn bị — cho hủy
+            footerButtonsHTML = `
+                ${detailActionHTML}
+                <button class="btn-track-order" onclick="contactHotline('${orderId}')">
+                    Liên hệ hotline
+                </button>
+                <button class="btn-track-order text-danger border-danger" onclick="cancelOrder('${orderId}')">
+                    Hủy đơn hàng
+                </button>
+            `;
+        }
     } else if (normalizedStatus === 'completed') {
         footerButtonsHTML = `
             ${detailActionHTML}
@@ -230,8 +254,8 @@ function createOrderCard(order) {
                     <span class="order-id">Mã: ${orderId}</span>
                     <span class="order-date">${formatDate(order.createdAt)}</span>
                 </div>
-                <span class="status-badge status-${normalizedStatus}">
-                    ${statusLabel}
+                <span class="status-badge ${displayStatusClass}">
+                    ${displayStatusLabel}
                 </span>
             </div>
             <div class="order-card-body" onclick="window.location.href='/pages/user/order-detail/order-detail.html?id=${orderId}'" title="Nhấn để xem chi tiết đơn hàng">

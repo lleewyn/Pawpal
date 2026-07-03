@@ -247,6 +247,32 @@
     font-weight: 500;
 }
 
+/* Dòng dị ứng / bệnh nền — nổi bật theo BPMN 3.1.3 */
+.pet-allergy-row {
+    background: #fff5f5;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-bottom: var(--space-xs);
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.pet-allergy-label {
+    color: #dc2626;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.pet-allergy-value {
+    color: #b91c1c;
+    font-weight: 600;
+    text-align: right;
+}
+
 .pet-card-actions {
     display: flex;
     gap: var(--space-xs);

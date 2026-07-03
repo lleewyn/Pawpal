@@ -330,7 +330,7 @@ function showChangeScheduleModal(user = null) {
     ).join('');
 
     const staffHtml = staffs.map(s => {
-        const initials = s.name === 'Phân bổ ngẫu nhiên' ? '🎲' : s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+        const initials = s.name === 'Phân bổ ngẫu nhiên' ? 'NG' : s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
         return `
             <div class="staff-card" data-name="${s.name}" tabindex="-1" role="button"
                 style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:not-allowed;opacity:0.4;transition:all .2s;pointer-events:none;">
@@ -366,7 +366,7 @@ function showChangeScheduleModal(user = null) {
                     <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn giờ</div>
                     <div class="slot-time-grid mb-3" id="changeSlotGrid">${slotsHtml}</div>
                     <div id="holdBanner" class="d-none mb-3" style="font-size:0.82rem;padding:8px 12px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;color:#7a5c00;">
-                        ⏳ <strong>Giữ chỗ tạm thời:</strong> Giờ <strong id="holdSlotLabel"></strong> được giữ riêng cho bạn trong <strong id="holdCountdown"></strong>
+                        <strong>Giữ chỗ tạm thời:</strong> Giờ <strong id="holdSlotLabel"></strong> được giữ riêng cho bạn trong <strong id="holdCountdown"></strong>
                     </div>
 
                     <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn nhân viên</div>
@@ -421,7 +421,7 @@ function showChangeScheduleModal(user = null) {
                 // Giải phóng slot — reset giờ đã chọn
                 selectedTime = null;
                 modalEl.querySelectorAll('.slot-time-btn').forEach(b => b.classList.remove('active'));
-                banner.innerHTML = `⚠️ <strong>Hết thời gian giữ chỗ!</strong> Vui lòng chọn lại giờ.`;
+                banner.innerHTML = `<strong>Hết thời gian giữ chỗ!</strong> Vui lòng chọn lại giờ.`;
                 banner.style.background = '#fff3cd';
                 banner.style.borderColor = '#ffeeba';
                 banner.classList.remove('d-none');

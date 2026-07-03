@@ -298,7 +298,8 @@ function validateGuestInput(id, isBlur = false) {
         isValid = false;
         errMsg = 'Vui lòng nhập họ và tên';
     } else if (id === 'ownerPhone' || id === 'memberOwnerPhone') {
-        const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+        // Chấp nhận mọi SĐT 10 số bắt đầu bằng 0 — không restrict đầu số
+        const phoneRegex = /^0[0-9]{9}$/;
         if (!val) {
             isValid = false;
             errMsg = 'Vui lòng nhập số điện thoại';
@@ -349,6 +350,7 @@ function validateGuestInput(id, isBlur = false) {
             errEl.classList.remove('d-none');
         }
     } else {
+        // Luôn clear error ngay khi input hợp lệ — dù là input hay blur event
         el.classList.remove('is-invalid');
         errEl.textContent = '';
         errEl.classList.add('d-none');
@@ -364,7 +366,7 @@ function validateStep1() {
     if (currentUser && !currentUser.is_temporary) {
         const mName = document.getElementById('memberOwnerName')?.value.trim() || '';
         const mPhone = document.getElementById('memberOwnerPhone')?.value.trim() || '';
-        const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+        const phoneRegex = /^0[0-9]{9}$/;
         
         isValid = bookingState.petId !== null && mName && mPhone && phoneRegex.test(mPhone);
     } else {
@@ -375,7 +377,7 @@ function validateStep1() {
         const petTypeOtherVal = document.getElementById('petTypeOther')?.value.trim() || '';
         const petWeight = parseFloat(document.getElementById('petWeight').value);
 
-        const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+        const phoneRegex = /^0[0-9]{9}$/;
         isValid = ownerName && ownerPhone && phoneRegex.test(ownerPhone) && petName && petType && !isNaN(petWeight) && petWeight > 0;
         // If 'Khác' selected, require petTypeOtherVal
         if (isValid && petType === 'Khác') {

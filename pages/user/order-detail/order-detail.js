@@ -69,6 +69,11 @@ async function loadOrderDetail() {
             ReviewHandler.init(currentOrder.id, products);
             scrollToReviewAnchor();
 
+            // Nếu đến từ danh sách với #reviews và đơn đã được đánh giá → mở modal luôn
+            if (window.location.hash === '#reviews' && ReviewHandler.hasOrderReviewed(currentOrder.id)) {
+                setTimeout(() => showOrderReviewsModal(currentOrder.id), 300);
+            }
+
             // Khi user submit batch review → re-render action buttons
             window.addEventListener('pawpal:reviewSubmitted', (e) => {
                 if (String(e.detail.orderId) === String(currentOrder.id)) {

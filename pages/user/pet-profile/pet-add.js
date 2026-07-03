@@ -12,15 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Reset form khi mở modal
-    const modal = document.getElementById('petFormModal');
-    if (modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                resetPetForm();
-            }
-        });
-    }
+    // KHÔNG reset form khi click backdrop — tránh mất dữ liệu đã nhập
+    // Form chỉ reset khi user chủ động bấm nút Đóng hoặc Hủy
 });
 
 function resetPetForm() {

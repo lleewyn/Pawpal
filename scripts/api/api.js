@@ -469,7 +469,27 @@ function mergeById(seedItems, localItems) {
     (Array.isArray(seedItems) ? seedItems : []).forEach(item => {
         if (item && item.id) {
             const local = merged.get(String(item.id));
-            merged.set(String(item.id), local ? { ...item, status: local.status || item.status } : item);
+            if (local) {
+                // Local (user-modified) wins cho các field action — seed chỉ cung cấp metadata tĩnh
+                merged.set(String(item.id), {
+                    ...item,
+                    // Booking user-action fields
+                    status:      local.status      ?? item.status,
+                    date:        local.date        ?? item.date,
+                    time:        local.time        ?? item.time,
+                    timeStart:   local.timeStart   ?? item.timeStart,
+                    timeEnd:     local.timeEnd     ?? item.timeEnd,
+                    staff:       local.staff       ?? item.staff,
+                    changeCount: local.changeCount ?? item.changeCount,
+                    cancelCount: local.cancelCount ?? item.cancelCount,
+                    note:        local.note        ?? item.note,
+                    // Loyalty
+                    pointsAwarded: local.pointsAwarded ?? item.pointsAwarded,
+                    pointsEarned:  local.pointsEarned  ?? item.pointsEarned,
+                });
+            } else {
+                merged.set(String(item.id), item);
+            }
         }
     });
     return Array.from(merged.values());
