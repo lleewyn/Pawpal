@@ -67,16 +67,37 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const bookings = findBookingsByPhone(phone, data);
-        const orders   = findOrdersByPhone(phone, data);
+        let bookings = findBookingsByPhone(phone, data);
+        let orders   = findOrdersByPhone(phone, data);
 
         btn.disabled    = false;
         btn.textContent = 'Tìm kiếm';
 
         if (!bookings.length && !orders.length) {
-            resultsEl.style.display = 'none';
-            errorBox.style.display  = 'block';
-            return;
+            // Fallback: try reading raw data files (ignore localStorage overrides)
+            const rawBookings = await fetchJSON(resolveAppUrl('../../../data/bookings.json')) || [];
+            const rawOrders = await fetchJSON(resolveAppUrl('../../../data/orders.json')) || [];
+            const normPhone = normalizePhone(phone);
+            const fb = (rawBookings || []).filter(b =>
+                normalizePhone(b.phone) === normPhone ||
+                normalizePhone(b.customerPhone) === normPhone ||
+                normalizePhone(b.ownerPhone) === normPhone
+            ).map(b => ({ ...b }));
+            const fo = (rawOrders || []).filter(o =>
+                normalizePhone(o.delivery?.phone) === normPhone ||
+                normalizePhone(o.phone) === normPhone ||
+                normalizePhone(o.userPhone) === normPhone
+            ).map(o => ({ ...o }));
+
+            if (fb.length || fo.length) {
+                bookings = fb;
+                orders = fo;
+                showToast('Kết quả lấy từ dữ liệu gốc (file). Nếu bạn dùng dữ liệu local cũ, thử xóa cache và reload.', 'info');
+            } else {
+                resultsEl.style.display = 'none';
+                errorBox.style.display  = 'block';
+                return;
+            }
         }
 
         errorBox.style.display  = 'none';
@@ -255,6 +276,9 @@ function canCancelOrder(o) {
 
 function canReturnOrder(o) {
     if (o.status !== 'completed') return false;
+    // Đã có RMA rồi → không cho yêu cầu thêm
+    const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
+    if (returnsList.some(r => r.orderId === o.id)) return false;
     // Trong vòng 7 ngày kể từ ngày hoàn thành
     const updatedAt = o.updatedAt || o.createdAt;
     if (!updatedAt) return false;
@@ -448,7 +472,37 @@ window.handleGuestCancelOrder = function(orderId) {
 window.handleGuestReturnRequest = function(orderId) {
     const phone = document.getElementById('rg-phone').value.trim();
     if (!phone) { showToast('Vui lòng nhập số điện thoại trước.', 'info'); return; }
-    showToast('Vui lòng liên hệ Hotline: 0987 654 321 để yêu cầu đổi trả.', 'info');
+
+    // Tìm đơn từ kết quả search hiện tại (đã merge localStorage + seed)
+    const order = (rgLastSearchState.orders || []).find(o => o.id === orderId)
+                || JSON.parse(localStorage.getItem('pawpal_orders') || '[]').find(o => o.id === orderId);
+
+    if (!order) {
+        showToast('Không tìm thấy đơn hàng.', 'error');
+        return;
+    }
+
+    // Sync đơn vào localStorage để openRMADrawer đọc được
+    try {
+        const stored = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+        if (!stored.find(o => o.id === orderId)) {
+            stored.unshift(order);
+            localStorage.setItem('pawpal_orders', JSON.stringify(stored));
+        }
+    } catch (_) {}
+
+    // Mở RMA drawer
+    if (typeof openRMADrawer === 'function') {
+        openRMADrawer(orderId);
+    } else {
+        const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
+        const existing = returnsList.find(r => r.orderId === orderId);
+        if (existing) {
+            window.location.href = `/pages/user/return-detail/return-detail.html?orderId=${orderId}`;
+        } else {
+            showToast('Vui lòng liên hệ Hotline: 1900 xxxx để được hỗ trợ đổi trả.', 'info');
+        }
+    }
 };
 
 // ── Bước 1: Xác nhận hành động (Đồng ý → tự gửi OTP) ────────────────────

@@ -28,7 +28,7 @@
     background-color: rgba(42, 89, 68, 0.4);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    z-index: 1050;
+    z-index: 10001;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
@@ -48,7 +48,7 @@
     height: 100%;
     background-color: var(--color-bg-white);
     box-shadow: -8px 0 32px rgba(42, 89, 68, 0.15);
-    z-index: 1051;
+    z-index: 10002;
     display: flex;
     flex-direction: column;
     transition: right 0.4s cubic-bezier(0.25, 1, 0.5, 1);

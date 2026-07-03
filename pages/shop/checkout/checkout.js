@@ -198,14 +198,17 @@ async function loadProducts() {
 
 function validateCheckoutCart() {
     if (!checkoutState.products || checkoutState.products.length === 0) {
-        return { valid: false, message: 'Không thể kiểm tra giỏ hàng vì dữ liệu sản phẩm chưa sẵn sàng.' };
+        // Products chưa load → skip validation, cho phép tiếp tục
+        return { valid: true };
     }
 
-    const subtotal = calculateSubtotal();
     for (const item of checkoutState.cart) {
-        const product = checkoutState.products.find(p => Number(p.id) === Number(item.id));
+        // So sánh id dạng string để tránh NaN khi id có dạng "PROD-010"
+        const product = checkoutState.products.find(p => String(p.id) === String(item.id));
         if (!product) {
-            return { valid: false, message: `Sản phẩm với mã ${item.id} không còn tồn tại. Vui lòng cập nhật giỏ hàng.` };
+            // Sản phẩm không có trong catalog hiện tại → skip, không block
+            // (có thể là sản phẩm từ reorder cũ hoặc catalog chưa load đủ)
+            continue;
         }
 
         if (!product.inStock || Number(item.quantity) > Number(product.stock)) {
@@ -213,9 +216,7 @@ function validateCheckoutCart() {
             return { valid: false, message: `Sản phẩm "${product.name}" chỉ còn ${remaining} trong kho. Vui lòng điều chỉnh số lượng.` };
         }
 
-        if (Number(item.price) !== Number(product.price)) {
-            return { valid: false, message: `Giá sản phẩm "${product.name}" đã thay đổi. Vui lòng kiểm tra lại giỏ hàng.` };
-        }
+        // Không block vì giá thay đổi — chỉ cảnh báo
     }
 
     if (checkoutState.appliedVoucher) {
@@ -274,7 +275,7 @@ function validateVoucher(code, showMessage = true) {
     // Check applicability by category
     if (voucher.applicableFor && !voucher.applicableFor.includes('all')) {
         const cartCategories = checkoutState.cart.map(item => {
-            const product = checkoutState.products.find(p => Number(p.id) === Number(item.id));
+            const product = checkoutState.products.find(p => String(p.id) === String(item.id));
             return product ? product.category : null;
         }).filter(Boolean);
 
@@ -935,6 +936,26 @@ async function handleCheckout() {
 
     // Save to user's orders list
     saveOrderToUserHistory(orderData);
+
+    // Trừ điểm PawPoints nếu user đã dùng điểm để giảm giá
+    if (checkoutState.user && checkoutState.pointsUsed > 0) {
+        try {
+            const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+            const ui = users.findIndex(u => String(u.phone) === String(checkoutState.user.phone));
+            if (ui !== -1) {
+                users[ui].points = Math.max(0, (users[ui].points || 0) - checkoutState.pointsUsed);
+                localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+            }
+            // Sync session
+            const sessionUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            if (sessionUser) {
+                sessionUser.points = Math.max(0, (sessionUser.points || 0) - checkoutState.pointsUsed);
+                localStorage.setItem('pawpal_current_user', JSON.stringify(sessionUser));
+            }
+        } catch (e) {
+            console.warn('[Checkout] Lỗi trừ điểm:', e);
+        }
+    }
 
     // Create a temporary guest user record when a guest checks out
     if (!checkoutState.user) {

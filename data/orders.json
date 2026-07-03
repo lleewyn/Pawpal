@@ -483,6 +483,62 @@
     ]
   },
   {
+    "id": "ORD-2026-G02",
+    "userId": "USER-GUEST-004",
+    "status": "completed",
+    "paymentStatus": "paid",
+    "paymentMethod": "cod",
+    "createdAt": "2026-06-28T09:00:00",
+    "updatedAt": "2026-06-30T12:00:00",
+    "delivery": {
+      "name": "Khách Vãng Lai",
+      "phone": "0912345678",
+      "address": "99 Đường Thí Nghiệm, Quận Thử, TP.HCM"
+    },
+    "products": [
+      {
+        "id": "PROD-050",
+        "name": "Bàn chải lông mềm cho thú cưng",
+        "image": "/assets/images/shop/products/pk-dochoi-01.jpg",
+        "quantity": 1,
+        "price": 120000,
+        "total": 120000
+      }
+    ],
+    "pricing": {
+      "subtotal": 120000,
+      "shippingFee": 20000,
+      "discount": 0,
+      "total": 140000
+    },
+    "timeline": [
+      {
+        "status": "placed",
+        "timestamp": "2026-06-28T09:00:00",
+        "title": "Đơn hàng đã đặt"
+      },
+      {
+        "status": "shipping",
+        "timestamp": "2026-06-29T08:00:00",
+        "title": "Đang giao hàng"
+      },
+      {
+        "status": "delivered",
+        "timestamp": "2026-06-30T10:30:00",
+        "title": "Đã giao hàng"
+      },
+      {
+        "status": "completed",
+        "timestamp": "2026-06-30T12:00:00",
+        "title": "Hoàn thành"
+      }
+    ],
+    "allowedActions": [
+      "write_review",
+      "return_request"
+    ]
+  },
+  {
     "id": "ORD-2026-P01",
     "userId": "USER-003",
     "status": "shipping",

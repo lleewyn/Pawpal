@@ -278,11 +278,27 @@ function setupDrawerListeners() {
         returnsList.push(returnData);
         localStorage.setItem('pawpal_returns', JSON.stringify(returnsList));
 
-        // Đóng Drawer và chuyển tiếp đến trang chi tiết đổi trả
+        // Đóng Drawer
         closeDrawer();
-        setTimeout(() => {
-            window.location.href = `/pages/user/return-detail/return-detail.html?orderId=${currentRmaOrder.id}`;
-        }, 100);
+
+        // Nếu đang ở trang tra cứu vãng lai → không redirect, chỉ refresh kết quả
+        const isGuestLookup = window.location.pathname.includes('return-guest');
+        if (isGuestLookup) {
+            setTimeout(() => {
+                // Re-submit form tra cứu để cập nhật lại danh sách
+                const searchForm = document.getElementById('rg-form');
+                if (searchForm) searchForm.dispatchEvent(new Event('submit'));
+                // Hiện toast xác nhận
+                if (typeof showToast === 'function') {
+                    showToast('Yêu cầu đổi trả đã được ghi nhận thành công!', 'success');
+                }
+            }, 200);
+        } else {
+            // Trang thành viên → redirect đến chi tiết đổi trả
+            setTimeout(() => {
+                window.location.href = `/pages/user/return-detail/return-detail.html?orderId=${currentRmaOrder.id}`;
+            }, 100);
+        }
     });
 }
 

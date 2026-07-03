@@ -169,10 +169,22 @@ function renderOrderHeader() {
     document.getElementById('order-created-date').textContent = 
         'Đặt ngày ' + formatDate(currentOrder.createdAt);
     
-    // Normalize: 'pending' → 'pending_payment' để CSS class nhất quán với orders list
-    const displayStatus = currentOrder.status === 'pending' ? 'pending_payment' : currentOrder.status;
+    // Nếu đơn online đã thanh toán nhưng chưa được admin xác nhận
+    // → hiện "Đã thanh toán — Chờ xác nhận" thay vì "Chờ thanh toán"
+    const ONLINE_METHODS = ['vnpay', 'momo', 'zalopay', 'vietqr'];
+    const payMethod = (currentOrder.paymentMethod || currentOrder.payment?.method || '').toLowerCase();
+    const isPaid = currentOrder.paymentStatus === 'paid' || currentOrder.payment?.status === 'paid';
+    const isPendingOnlinePaid = (currentOrder.status === 'pending' || currentOrder.status === 'pending_payment')
+                             && isPaid && ONLINE_METHODS.includes(payMethod);
+
+    const displayStatus = isPendingOnlinePaid ? 'preparing'   // dùng class xanh/vàng thay vì đỏ
+                        : currentOrder.status === 'pending' ? 'pending_payment'
+                        : currentOrder.status;
+    const displayLabel  = isPendingOnlinePaid ? 'Đã thanh toán — Chờ xác nhận'
+                        : getStatusLabel(currentOrder.status);
+
     const statusBadge = document.getElementById('order-status-badge');
-    statusBadge.textContent = getStatusLabel(currentOrder.status);
+    statusBadge.textContent = displayLabel;
     statusBadge.className = `status-badge status-${displayStatus}`;
 }
 
@@ -318,12 +330,7 @@ function renderActions() {
             const isOnline  = ONLINE_METHODS.includes(payMethod);
 
             if (isPaid && isOnline) {
-                // Đã thanh toán online — không cho thanh toán lại
-                statusNotes.push(`
-                    <span class="order-reviewed-note order-inline-note" style="color:var(--color-success);">
-                        Đã thanh toán — đang chờ xác nhận
-                    </span>
-                `);
+                // Đã thanh toán online — không cho thanh toán lại, badge header đã hiện trạng thái
             } else if (!isPaid && isOnline) {
                 // Chưa thanh toán online — cho phép thanh toán
                 buttons.push(`
