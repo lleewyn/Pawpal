@@ -7305,3 +7305,37 @@ input:checked + .switch-slider:before {
 .notification-dropdown-footer a:hover {
     text-decoration: underline;
 }
+
+/* --- NOTIFICATION FIXES --- */
+.notification-dropdown {
+    z-index: 9999 !important;
+}
+
+.notification-item__content {
+    min-width: 0 !important;
+}
+
+.notification-item__title {
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.4 !important;
+}
+
+.notification-item__link {
+    color: var(--color-text-light) !important;
+}
+
+.notification-item__link:hover {
+    color: var(--color-primary) !important;
+}
+
+.notification-item {
+    position: relative !important;
+}
+
+.notification-item__dot {
+    position: absolute !important;
+    top: 16px !important;
+    right: 16px !important;
+    margin-top: 0 !important;
+}
