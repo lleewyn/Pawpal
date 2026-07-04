@@ -53,6 +53,65 @@
         return './';
     }
 
+    const mockNotifications = [
+        {
+            id: 1,
+            isRead: false,
+            title: "Khuyến mãi 20% Dịch vụ Spa cuối tuần này",
+            time: "cách đây 2 giờ",
+            url: "#",
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>`
+        },
+        {
+            id: 2,
+            isRead: false,
+            title: "Bé Cún đã hoàn thành dịch vụ Tắm và Cắt tỉa.",
+            time: "cách đây 4 giờ",
+            url: "#",
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`
+        },
+        {
+            id: 3,
+            isRead: true,
+            title: "Nhắc nhở: Lịch hẹn Khám sức khỏe ngày mai (05/07)",
+            time: "cách đây 1 ngày",
+            url: "#",
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`
+        },
+        {
+            id: 4,
+            isRead: true,
+            title: "Bạn có hoạt động sắp hết hạn (Mã giảm giá Paw10)",
+            time: "cách đây 4 ngày 6 giờ",
+            url: "#",
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`
+        },
+        {
+            id: 5,
+            isRead: true,
+            title: "Đơn hàng #PP-2894 đã được giao thành công.",
+            time: "cách đây 9 ngày 11 giờ",
+            url: "#",
+            icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>`
+        }
+    ];
+
+    function renderNotifications() {
+        return mockNotifications.map(n => `
+            <div class="notification-item ${n.isRead ? '' : 'notification-item--unread'}">
+                <div class="notification-item__icon">
+                    ${n.icon}
+                </div>
+                <div class="notification-item__content">
+                    <p class="notification-item__title">${n.title}</p>
+                    <span class="notification-item__time">${n.time}</span>
+                    <a href="${n.url}" class="notification-item__link">View full notification</a>
+                </div>
+                ${!n.isRead ? '<div class="notification-item__dot"></div>' : ''}
+            </div>
+        `).join('');
+    }
+
     // Định nghĩa hàm cập nhật badge giỏ hàng toàn cục
     window.updateCartBadge = function() {
         const cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
@@ -126,7 +185,7 @@
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
-                        <span class="notification-badge" id="notificationBadge">0</span>
+                        <span class="notification-badge" id="notificationBadge">${mockNotifications.filter(n => !n.isRead).length}</span>
                     </button>
                     <div class="notification-dropdown" id="notificationDropdown">
                         <div class="notification-dropdown-header">
@@ -135,7 +194,10 @@
                         </div>
                         <div class="dropdown-divider" style="margin: 0;"></div>
                         <div class="notification-list" id="headerNotificationList">
-                            <!-- JS render notifications here -->
+                            ${renderNotifications()}
+                        </div>
+                        <div class="notification-dropdown-footer">
+                            <a href="#">See all</a>
                         </div>
                     </div>
                 </div>
@@ -261,16 +323,8 @@
             if (lookupBtn) lookupBtn.style.display = '';
             if (lookupDivider) lookupDivider.style.display = '';
             
-            // Khôi phục nút Đăng nhập / Đăng ký + cart icon cho guest
+            // Khôi phục nút Đăng nhập / Đăng ký cho guest (ẩn giỏ hàng theo yêu cầu)
             authActions.innerHTML = `
-                <a href="${root}pages/shop/cart/cart.html" class="cart-btn position-relative me-2" id="headerCartBtn" title="Giỏ hàng" style="display: flex; align-items: center; justify-content: center; color: var(--color-text-dark); transition: var(--transition-smooth);">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="9" cy="21" r="1"></circle>
-                        <circle cx="20" cy="21" r="1"></circle>
-                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                    </svg>
-                    <span class="cart-badge" style="display:none;">0</span>
-                </a>
                 <a href="${root}pages/public/login/login.html" class="login-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

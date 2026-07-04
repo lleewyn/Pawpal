@@ -159,15 +159,105 @@
 .notification-dropdown-header { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; font-weight:700; }
 .btn-mark-all-read { background:none; border:none; color:var(--color-primary); font-weight:700; cursor:pointer; padding:0; }
 
-.notification-list { max-height: 280px; overflow-y: auto; overflow-x: hidden; }
-.notification-item-dropdown { display:flex; gap:8px; padding:10px 12px; border-bottom:1px solid rgba(0,0,0,0.04); text-decoration:none; color:var(--color-text-dark); min-width: 0; align-items: flex-start; }
-.notification-item-dropdown.unread { background: rgba(235,247,255,0.9); }
-.notification-item-dropdown .item-icon { width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; background: rgba(48,121,227,0.08); color:var(--color-primary); flex-shrink:0; }
-.notification-item-dropdown .item-content { flex-grow:1; display:flex; flex-direction:column; gap:4px; min-width: 0; width: 100%; }
-.notification-item-dropdown .item-title { font-weight:700; font-size:0.95rem; color:var(--color-primary-dark); }
-.notification-item-dropdown .item-text { color:var(--color-text-dark); line-height:1.3; min-width: 0; width: 100%; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
-.notification-item-dropdown .item-time { font-size:var(--fs-caption); color:var(--color-text-light); }
-.view-all-notifications { text-align:center; padding:10px; display:block; font-weight:700; color:var(--color-primary); text-decoration:none; }
+/* Custom Scrollbar for Notification List */
+.notification-list { 
+    max-height: 400px; 
+    overflow-y: auto; 
+    overflow-x: hidden; 
+}
+.notification-list::-webkit-scrollbar {
+    width: 6px;
+}
+.notification-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.notification-list::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: var(--border-radius-pill);
+}
+
+.notification-item { 
+    display: flex; 
+    gap: var(--space-xs); 
+    padding: var(--space-sm) var(--space-md); 
+    border-bottom: 1px solid var(--color-border); 
+    text-decoration: none; 
+    color: var(--color-text-dark); 
+    font-family: var(--font-body);
+    align-items: flex-start;
+    transition: var(--transition-smooth);
+    position: relative;
+}
+.notification-item:last-child {
+    border-bottom: none;
+}
+.notification-item:hover {
+    background: var(--color-bg-light);
+}
+.notification-item--unread { 
+    background: var(--color-primary-light); 
+}
+.notification-item__icon { 
+    width: 32px; 
+    height: 32px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: var(--color-primary); 
+    flex-shrink: 0; 
+}
+.notification-item__content { 
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 4px; 
+}
+.notification-item__title { 
+    font-weight: 500; 
+    font-size: var(--fs-body); 
+    margin: 0;
+    color: var(--color-text-dark); 
+}
+.notification-item--unread .notification-item__title {
+    font-weight: 700;
+    color: var(--color-primary-dark);
+}
+.notification-item__time { 
+    font-size: var(--fs-caption); 
+    color: var(--color-text-light); 
+}
+.notification-item__link {
+    font-size: var(--fs-small);
+    color: var(--color-info);
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 4px;
+}
+.notification-item__link:hover {
+    text-decoration: underline;
+}
+.notification-item__dot {
+    width: 8px;
+    height: 8px;
+    background: var(--color-accent);
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+.notification-dropdown-footer {
+    border-top: 1px solid var(--color-border);
+    padding: var(--space-sm);
+    text-align: center;
+}
+.notification-dropdown-footer a {
+    color: var(--color-primary);
+    font-weight: 700;
+    text-decoration: none;
+    font-size: var(--fs-body);
+}
+.notification-dropdown-footer a:hover {
+    text-decoration: underline;
+}
 
 /* Notifications Page Styling (kept minimal and scoped) */
 .notifications-page-container { font-family: var(--font-primary); }
