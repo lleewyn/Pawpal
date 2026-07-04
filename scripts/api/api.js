@@ -77,7 +77,7 @@ export const API = {
 
         const localPets = safeReadArray('pawpal_pets');
         if (shouldRefreshMockData || localPets.length === 0 || !localPets.some(pet => pet.userId)) {
-            const pets = await this.getJSON('/data/pets.json');
+            const pets = await this.getJSON(`/data/pets.json?v=${this.DATA_VERSION}`);
             if (pets) safeWrite('pawpal_pets', mergeById(pets, localPets));
         }
 

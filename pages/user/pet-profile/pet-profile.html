@@ -26,6 +26,11 @@
     <script src="../../../scripts/shared/header-auth.js" defer></script>
     <script type="module" src="../../../scripts/shared/main.js"></script>
     <script src="pet-add.js" defer></script>
+    <script>
+        // Force refresh mock data if we're debugging Vercel cache
+        localStorage.removeItem('pawpal_mock_data_version');
+        if (window.PawpalStorage) window.PawpalStorage.remove('pawpal_mock_data_version');
+    </script>
     <script type="module" src="pet-profile.js"></script>
     <script type="module" src="pet-profile-init.js"></script>
     </head>
