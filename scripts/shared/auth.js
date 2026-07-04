@@ -21,7 +21,13 @@ window.PawpalStorage = {
     get(key, defaultValue = null) {
         try {
             const data = localStorage.getItem(key);
-            return data ? JSON.parse(data) : defaultValue;
+            if (!data) return defaultValue;
+            try {
+                return JSON.parse(data);
+            } catch (e) {
+                // If it's not valid JSON, it might just be a raw string
+                return data;
+            }
         } catch (e) {
             console.error(`[PawpalStorage] Error reading key "${key}":`, e);
             return defaultValue;

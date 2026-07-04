@@ -5,7 +5,7 @@
  */
 
 export const API = {
-    DATA_VERSION: '2026-07-04-v10-force-refresh',
+    DATA_VERSION: '2026-07-04-v11-fix-user-matching',
     USE_BACKEND: false, // Thiết lập false để ngắt kết nối backend MongoDB, chuyển hoàn toàn sang Mock offline bằng LocalStorage và tệp tin JSON tĩnh.
 
     getBaseUrl() {
@@ -181,15 +181,14 @@ export const API = {
         const pets = await this.request(`/api/pets`);
         const currentUser = safeReadObject('pawpal_current_user');
         const dbUsers = safeReadArray('pawpal_users_db');
-        const dbUser = dbUsers.find(u =>
+        const matchingUsers = dbUsers.filter(u =>
             sameUserId(u.id, userId) ||
             (currentUser && sameUserId(u.phone, currentUser.phone))
         );
-        const effectiveUserId = dbUser ? dbUser.id : userId;
 
         // Tập hợp tất cả id có thể của user
         const knownIds = new Set(
-            [userId, effectiveUserId, currentUser?.id, dbUser?.id]
+            [userId, currentUser?.id, ...matchingUsers.map(u => u.id)]
                 .filter(Boolean)
                 .map(String)
         );
@@ -218,15 +217,14 @@ export const API = {
         const bookings = await this.request(`/api/bookings`);
         const currentUser = safeReadObject('pawpal_current_user');
         const dbUsers = safeReadArray('pawpal_users_db');
-        const dbUser = dbUsers.find(u =>
+        const matchingUsers = dbUsers.filter(u =>
             sameUserId(u.id, userId) ||
             (currentUser && sameUserId(u.phone, currentUser.phone))
         );
-        const effectiveUserId = dbUser ? dbUser.id : userId;
 
         // Tập hợp tất cả id có thể của user
         const knownIds = new Set(
-            [userId, effectiveUserId, currentUser?.id, dbUser?.id]
+            [userId, currentUser?.id, ...matchingUsers.map(u => u.id)]
                 .filter(Boolean)
                 .map(String)
         );
@@ -256,15 +254,14 @@ export const API = {
         const orders = await this.request(`/api/orders`);
         const currentUser = safeReadObject('pawpal_current_user');
         const dbUsers = safeReadArray('pawpal_users_db');
-        const dbUser = dbUsers.find(u =>
+        const matchingUsers = dbUsers.filter(u =>
             sameUserId(u.id, userId) ||
             (currentUser && sameUserId(u.phone, currentUser.phone))
         );
-        const effectiveUserId = dbUser ? dbUser.id : userId;
 
         // Tập hợp tất cả id có thể của user hiện tại để match rộng nhất
         const knownIds = new Set(
-            [userId, effectiveUserId, currentUser?.id, dbUser?.id]
+            [userId, currentUser?.id, ...matchingUsers.map(u => u.id)]
                 .filter(Boolean)
                 .map(String)
         );
