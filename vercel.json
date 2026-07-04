@@ -121,6 +121,42 @@
     {
       "source": "/pages/user/settings",
       "destination": "/pages/user/settings/settings.html"
+    },
+    {
+      "source": "/pages/admin/index",
+      "destination": "/pages/admin/index/index.html"
+    },
+    {
+      "source": "/pages/admin/bookings",
+      "destination": "/pages/admin/bookings/bookings.html"
+    },
+    {
+      "source": "/pages/admin/care-log",
+      "destination": "/pages/admin/care-log/care-log.html"
+    },
+    {
+      "source": "/pages/admin/orders",
+      "destination": "/pages/admin/orders/orders.html"
+    },
+    {
+      "source": "/pages/admin/products",
+      "destination": "/pages/admin/products/products.html"
+    },
+    {
+      "source": "/pages/admin/users",
+      "destination": "/pages/admin/users/users.html"
+    },
+    {
+      "source": "/pages/public/blog-detail",
+      "destination": "/pages/public/blog-detail/blog-detail.html"
+    },
+    {
+      "source": "/pages/services/service-detail",
+      "destination": "/pages/services/service-detail/service-detail.html"
+    },
+    {
+      "source": "/pages/user/support-create",
+      "destination": "/pages/user/support-create/support-create.html"
     }
   ]
 }
