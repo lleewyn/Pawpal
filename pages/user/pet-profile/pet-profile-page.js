@@ -22,6 +22,24 @@ export async function initPetProfilePage() {
         await API.initData();
         console.log('API.initData() finished.');
 
+        // Fallback: nếu localPets vẫn empty sau initData → thử seed lại
+        const localPetsCheck = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+        if (localPetsCheck.length === 0) {
+            console.warn('[PetProfile] localPets empty after initData, forcing re-seed...');
+            try {
+                const resp = await fetch('/data/pets.json');
+                if (resp.ok) {
+                    const petsData = await resp.json();
+                    if (Array.isArray(petsData) && petsData.length > 0) {
+                        localStorage.setItem('pawpal_pets', JSON.stringify(petsData));
+                        console.log(`[PetProfile] Re-seeded ${petsData.length} pets`);
+                    }
+                }
+            } catch (e) {
+                console.warn('[PetProfile] Re-seed failed:', e);
+            }
+        }
+
         console.log('Waiting for renderPetGrids()...');
         await renderPetGrids();
         console.log('renderPetGrids() finished.');
