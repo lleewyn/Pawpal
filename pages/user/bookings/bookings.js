@@ -142,7 +142,7 @@ function createBookingCard(booking) {
         ? '<span class="booking-reviewed-badge">Đã đánh giá</span>'
         : '';
     const writeReviewBtn = normalizedStatus === 'completed' && !alreadyReviewed
-        ? `<a class="booking-card-link btn-write-service-review" href="../booking-detail/booking-detail.html?id=${bookingId}#service-review" onclick="event.stopPropagation()">Viết đánh giá</a>`
+        ? `<a class="btn-review text-decoration-none" href="../booking-detail/booking-detail.html?id=${bookingId}#service-review" onclick="event.stopPropagation()">Đánh giá</a>`
         : '';
     const detailPrompt = '<span class="booking-card-detail-hint">Nhấn để xem chi tiết</span>';
     const changeScheduleAction = canModify
