@@ -1,0 +1,11 @@
+﻿-- ==========================================
+-- BẢNG 14: customer_phone
+-- ==========================================
+INSERT INTO public.customer_phone (id, customer_id, phone_number, is_verified, created_at, updated_at) VALUES ('f0000000-0000-0000-1111-000000000001', 'd0000000-0000-0000-0000-000000000001', '0900000000', true, now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.customer_phone (id, customer_id, phone_number, is_verified, created_at, updated_at) VALUES ('f0000000-0000-0000-1111-000000000002', 'd0000000-0000-0000-0000-000000000002', '0901234567', true, now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.customer_phone (id, customer_id, phone_number, is_verified, created_at, updated_at) VALUES ('f0000000-0000-0000-1111-000000000003', 'd0000000-0000-0000-0000-000000000003', '0987654321', true, now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.customer_phone (id, customer_id, phone_number, is_verified, created_at, updated_at) VALUES ('f0000000-0000-0000-1111-000000000004', 'd0000000-0000-0000-0000-000000000004', '0912345678', true, now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.customer_phone (id, customer_id, phone_number, is_verified, created_at, updated_at) VALUES ('f0000000-0000-0000-1111-000000000005', 'd0000000-0000-0000-0000-000000000005', '0798833157', true, now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.customer_phone (id, customer_id, phone_number, is_verified, created_at, updated_at) VALUES ('f0000000-0000-0000-1111-000000000006', 'd0000000-0000-0000-0000-000000000006', '0834562948', true, now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.customer_phone (id, customer_id, phone_number, is_verified, created_at, updated_at) VALUES ('f0000000-0000-0000-1111-000000000007', 'd0000000-0000-0000-0000-000000000007', '0972163376', true, now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.customer_phone (id, customer_id, phone_number, is_verified, created_at, updated_at) VALUES ('f0000000-0000-0000-1111-000000000008', 'd0000000-0000-0000-0000-000000000008', '0774561497', true, now(), now()) ON CONFLICT (id) DO NOTHING;

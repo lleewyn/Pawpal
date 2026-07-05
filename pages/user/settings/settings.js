@@ -227,24 +227,57 @@ function initChangePasswordForm() {
         });
     }
     
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const currentUser = getCurrentUser();
         const users = getUsers();
-        
+
         if (currentPassword.value !== currentUser.password) {
             showToast('error', 'Mật khẩu hiện tại không đúng');
             currentPassword.classList.add('is-invalid');
             return;
         }
-        
+
         currentPassword.classList.remove('is-invalid');
-        
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Đang cập nhật...';
+
+        // Update lên Supabase — dùng phone_main vì id có thể là mock ID
+        const db = window.SupabaseClient;
+        if (db) {
+            const lookupId = currentUser._source === 'supabase' ? currentUser.id : null;
+            let supaError = null;
+
+            if (lookupId) {
+                const { error } = await db
+                    .from('customer')
+                    .update({ password_hash: newPassword.value })
+                    .eq('id', lookupId);
+                supaError = error;
+            } else {
+                // Fallback: tìm theo phone_main
+                const { error } = await db
+                    .from('customer')
+                    .update({ password_hash: newPassword.value })
+                    .eq('phone_main', currentUser.phone);
+                supaError = error;
+            }
+
+            if (supaError) {
+                console.error('[Settings] Supabase update password error:', supaError.message);
+                showToast('error', 'Cập nhật thất bại: ' + supaError.message);
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = 'Cập nhật mật khẩu';
+                return;
+            }
+            console.log('[Settings] ✅ Password updated in Supabase');
+        }
+
+        // Cập nhật localStorage
         const userIdx = users.findIndex(u => String(u.phone) === String(currentUser.phone));
         if (userIdx !== -1) {
             users[userIdx].password = newPassword.value;
-            // Also turn off temporary status if it was active
             if (users[userIdx].is_temporary) {
                 users[userIdx].is_temporary = false;
                 currentUser.is_temporary = false;
@@ -252,15 +285,16 @@ function initChangePasswordForm() {
                 if (warning) warning.classList.add('d-none');
             }
             saveUsers(users);
-            
-            currentUser.password = newPassword.value;
-            localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
-            
-            showToast('success', 'Cập nhật mật khẩu thành công!');
-            form.reset();
-            resetPasswordStrengthUI();
-            btnSubmit.disabled = true;
         }
+
+        currentUser.password = newPassword.value;
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+
+        showToast('success', 'Cập nhật mật khẩu thành công!');
+        form.reset();
+        resetPasswordStrengthUI();
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Cập nhật mật khẩu';
     });
 }
 

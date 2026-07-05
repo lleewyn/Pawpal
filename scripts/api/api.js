@@ -76,7 +76,11 @@ export const API = {
         }
 
         const localPets = safeReadArray('pawpal_pets');
-        if (shouldRefreshMockData || localPets.length === 0 || !localPets.some(pet => pet.userId)) {
+        const petsSyncedPhone = localStorage.getItem('pawpal_pets_supabase_synced');
+        const currentPhone = safeReadObject('pawpal_current_user')?.phone;
+        const petsAlreadySynced = petsSyncedPhone && currentPhone && petsSyncedPhone === String(currentPhone);
+
+        if (!petsAlreadySynced && (shouldRefreshMockData || localPets.length === 0 || !localPets.some(pet => pet.userId))) {
             const pets = await this.getJSON(`/data/pets.json?v=${this.DATA_VERSION}`);
             if (pets) safeWrite('pawpal_pets', mergeById(pets, localPets));
         }

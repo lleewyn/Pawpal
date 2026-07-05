@@ -9,6 +9,245 @@ import { API } from '/scripts/api/api.js';
 const PAWPAL_USERS_KEY = 'pawpal_users_db';
 const CURRENT_USER_KEY = 'pawpal_current_user';
 
+// ============================================================
+// SUPABASE DASHBOARD — logic nội bộ (thay thế supabase-dashboard.js)
+// ============================================================
+
+/**
+ * Sync toàn bộ dữ liệu user từ Supabase vào localStorage.
+ * Gọi trong DOMContentLoaded nếu window.SupabaseClient có mặt.
+ */
+async function syncFromSupabase(currentUser) {
+    const db = window.SupabaseClient;
+    if (!db) {
+        console.warn('[Dashboard] Không có Supabase client — dùng localStorage.');
+        return;
+    }
+
+    console.log('[Dashboard] Đang tải dữ liệu từ Supabase...');
+
+    try {
+        await Promise.all([
+            _syncUserProfile(db, currentUser),
+            _syncUserPets(db, currentUser),
+            _syncUserBookings(db, currentUser),
+            _syncUserOrders(db, currentUser),
+        ]);
+        console.log('[Dashboard] ✅ Sync hoàn tất');
+    } catch (err) {
+        console.error('[Dashboard] Lỗi sync:', err);
+    }
+}
+
+async function _syncUserProfile(db, currentUser) {
+    const { data, error } = await db
+        .from('customer')
+        .select(`
+            id, email, phone_main, account_status,
+            customer_profile ( full_name, gender, date_of_birth ),
+            customer_membership (
+                total_paw_points,
+                membership_tier ( tier_name, discount_percent )
+            ),
+            customer_address (
+                id, receiver_name, receiver_phone,
+                province, street_address, is_default
+            )
+        `)
+        .eq('id', currentUser.id)
+        .limit(1);
+
+    if (error || !data?.length) return;
+
+    const c          = data[0];
+    const profile    = c.customer_profile?.[0]   || {};
+    const membership = c.customer_membership?.[0] || {};
+    const tier       = membership.membership_tier || {};
+    const addresses  = (c.customer_address || []).map(a => ({
+        id:        a.id,
+        label:     a.is_default ? 'Địa chỉ mặc định' : 'Địa chỉ đã lưu',
+        name:      a.receiver_name  || profile.full_name || '',
+        phone:     a.receiver_phone || c.phone_main || '',
+        street:    a.street_address || '',
+        district:  '',
+        city:      a.province       || '',
+        isDefault: a.is_default,
+    }));
+
+    const updatedUser = {
+        ...currentUser,
+        id:        c.id,
+        name:      profile.full_name     || currentUser.name  || '',
+        email:     c.email               || currentUser.email || '',
+        phone:     c.phone_main          || currentUser.phone || '',
+        gender:    profile.gender        || currentUser.gender || '',
+        dob:       profile.date_of_birth || currentUser.dob   || '',
+        points:    membership.total_paw_points ?? currentUser.points ?? 0,
+        tier:      tier.tier_name        || currentUser.tier  || 'Đồng',
+        addresses: addresses.length ? addresses : currentUser.addresses || [],
+        _source:   'supabase',
+    };
+
+    localStorage.setItem('pawpal_current_user', JSON.stringify(updatedUser));
+    console.log('[Dashboard] Profile synced:', updatedUser.name, '| points:', updatedUser.points);
+}
+
+async function _syncUserPets(db, currentUser) {
+    const { data, error } = await db
+        .from('pet_profile')
+        .select('id, pet_code, pet_name, species, breed, gender, date_of_birth, color, weight, avatar_url, status')
+        .eq('customer_id', currentUser.id)
+        .eq('status', 'ACTIVE');
+
+    if (error) { console.error('[Dashboard] pets error:', error.message); return; }
+
+    const pets = (data || []).map(p => ({
+        id:      p.id,
+        userId:  currentUser.id,
+        name:    p.pet_name,
+        species: p.species,
+        breed:   p.breed          || '',
+        gender:  p.gender         || '',
+        dob:     p.date_of_birth  || '',
+        color:   p.color          || '',
+        weight:  p.weight         || '',
+        avatar:  p.avatar_url     || '',
+        photo:   p.avatar_url     || '',
+        _source: 'supabase',
+    }));
+
+    const localPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+    const otherPets = localPets.filter(p =>
+        String(p.userId) !== String(currentUser.id) &&
+        String(p.userId) !== String(currentUser.phone)
+    );
+    localStorage.setItem('pawpal_pets', JSON.stringify([...pets, ...otherPets]));
+    localStorage.setItem('pawpal_pets_supabase_synced', String(currentUser.phone));
+    console.log('[Dashboard] Pets synced:', pets.length, 'pets');
+}
+
+async function _syncUserBookings(db, currentUser) {
+    const { data, error } = await db
+        .from('appointment')
+        .select(`
+            id, appointment_code, appointment_date, appointment_time,
+            appointment_status, payment_status, note,
+            service ( service_name, service_category ),
+            pet_profile ( pet_name, breed, species )
+        `)
+        .eq('customer_id', currentUser.id)
+        .order('appointment_date', { ascending: false })
+        .limit(20);
+
+    if (error) { console.error('[Dashboard] bookings error:', error.message); return; }
+
+    const bookings = (data || []).map(b => ({
+        id:              b.id,
+        userId:          currentUser.id,
+        date:            b.appointment_date,
+        time:            b.appointment_time?.slice(0, 5) || '',
+        status:          _mapAppointmentStatus(b.appointment_status),
+        bookingStatus:   b.appointment_status,
+        paymentStatus:   b.payment_status,
+        serviceName:     b.service?.service_name      || '',
+        serviceCategory: b.service?.service_category  || '',
+        petName:         b.pet_profile?.pet_name      || '',
+        petBreed:        b.pet_profile?.breed         || '',
+        petSpecies:      b.pet_profile?.species       || '',
+        note:            b.note || '',
+        _source:         'supabase',
+    }));
+
+    const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+    const otherBookings = localBookings.filter(b => String(b.userId) !== String(currentUser.id));
+    localStorage.setItem('pawpal_bookings', JSON.stringify([...bookings, ...otherBookings]));
+    console.log('[Dashboard] Bookings synced:', bookings.length, 'bookings');
+}
+
+function _mapAppointmentStatus(status) {
+    const map = {
+        'PENDING':   'upcoming',
+        'CONFIRMED': 'upcoming',
+        'COMPLETED': 'completed',
+        'CANCELLED': 'cancelled',
+        'NO_SHOW':   'cancelled',
+    };
+    return map[status] || 'upcoming';
+}
+
+async function _syncUserOrders(db, currentUser) {
+    const { data, error } = await db
+        .from('sales_order')
+        .select(`
+            id, order_code, order_status, payment_status,
+            subtotal, shipping_fee, discount_amount, total_amount,
+            created_at, updated_at,
+            sales_order_detail (
+                id, quantity, unit_price, subtotal,
+                product ( id, product_name, image_urls )
+            )
+        `)
+        .eq('customer_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+    if (error) { console.error('[Dashboard] orders error:', error.message); return; }
+
+    const orders = (data || []).map(o => {
+        const details  = o.sales_order_detail || [];
+        const products = details.map(d => ({
+            id:       d.product?.id            || '',
+            name:     d.product?.product_name  || 'Sản phẩm',
+            image:    d.product?.image_urls?.[0] || '',
+            quantity: d.quantity,
+            price:    d.unit_price,
+            total:    d.subtotal,
+        }));
+
+        return {
+            id:            o.order_code || o.id,
+            userId:        currentUser.id,
+            userPhone:     currentUser.phone,
+            status:        _mapOrderStatus(o.order_status),
+            orderStatus:   o.order_status,
+            paymentStatus: o.payment_status,
+            products:      products,
+            pricing: {
+                subtotal:    o.subtotal,
+                shippingFee: o.shipping_fee,
+                discount:    o.discount_amount,
+                total:       o.total_amount,
+            },
+            createdAt:  o.created_at,
+            updatedAt:  o.updated_at,
+            _source:    'supabase',
+        };
+    });
+
+    const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+    const otherOrders = localOrders.filter(o =>
+        String(o.userId)    !== String(currentUser.id) &&
+        String(o.userPhone) !== String(currentUser.phone)
+    );
+    localStorage.setItem('pawpal_orders', JSON.stringify([...orders, ...otherOrders]));
+    console.log('[Dashboard] Orders synced:', orders.length, 'orders');
+}
+
+function _mapOrderStatus(status) {
+    const map = {
+        'PENDING':   'pending_payment',
+        'CONFIRMED': 'preparing',
+        'SHIPPING':  'shipping',
+        'DELIVERED': 'delivered',
+        'COMPLETED': 'completed',
+        'CANCELLED': 'cancelled',
+    };
+    return map[status] || 'pending_payment';
+}
+
+const PAWPAL_USERS_KEY = 'pawpal_users_db';
+const CURRENT_USER_KEY = 'pawpal_current_user';
+
 function getCurrentUser() {
     return JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || null;
 }
@@ -154,6 +393,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!currentUser) {
         window.location.href = '/pages/public/login/login.html';
         return;
+    }
+
+    // Sync dữ liệu từ Supabase nếu có client
+    if (window.SupabaseClient) {
+        await syncFromSupabase(currentUser);
     }
 
     await API.initData();

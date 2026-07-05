@@ -1,0 +1,11 @@
+﻿-- ==========================================
+-- BẢNG 11: customer
+-- ==========================================
+INSERT INTO public.customer (id, email, password_hash, account_status, phone_main, registered_at, created_at, updated_at) VALUES ('d0000000-0000-0000-0000-000000000001', 'admin@pawpal.vn', 'adminpassword', 'ACTIVE', '0900000000', now(), now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.customer (id, email, password_hash, account_status, phone_main, registered_at, created_at, updated_at) VALUES ('d0000000-0000-0000-0000-000000000002', 'nguyenvana@gmail.com', 'password123', 'ACTIVE', '0901234567', now(), now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.customer (id, email, password_hash, account_status, phone_main, registered_at, created_at, updated_at) VALUES ('d0000000-0000-0000-0000-000000000003', 'null', 'password123', 'ACTIVE', '0987654321', now(), now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.customer (id, email, password_hash, account_status, phone_main, registered_at, created_at, updated_at) VALUES ('d0000000-0000-0000-0000-000000000004', 'null', 'password123', 'ACTIVE', '0912345678', now(), now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.customer (id, email, password_hash, account_status, phone_main, registered_at, created_at, updated_at) VALUES ('d0000000-0000-0000-0000-000000000005', 'bphuong157@gmail.com', 'bphuong157@', 'ACTIVE', '0798833157', now(), now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.customer (id, email, password_hash, account_status, phone_main, registered_at, created_at, updated_at) VALUES ('d0000000-0000-0000-0000-000000000006', 'lthi@gmail.com', 'Lthi@11042005', 'ACTIVE', '0834562948', now(), now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.customer (id, email, password_hash, account_status, phone_main, registered_at, created_at, updated_at) VALUES ('d0000000-0000-0000-0000-000000000007', 'khanh@gmail.com', 'Khanhcute123', 'ACTIVE', '0972163376', now(), now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.customer (id, email, password_hash, account_status, phone_main, registered_at, created_at, updated_at) VALUES ('d0000000-0000-0000-0000-000000000008', 'null', 'llquyen211@', 'ACTIVE', '0774561497', now(), now(), now()) ON CONFLICT (id) DO NOTHING;

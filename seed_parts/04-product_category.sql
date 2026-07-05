@@ -1,0 +1,7 @@
+﻿-- ==========================================
+-- BẢNG 4: product_category
+-- ==========================================
+INSERT INTO public.product_category (id, category_name, description, status, created_at, updated_at) VALUES ('c0000000-0000-0000-0000-000000000001', 'Thực phẩm', 'Danh mục sản phẩm Thực phẩm', 'ACTIVE', now(), now()) ON CONFLICT (category_name) DO UPDATE SET description = EXCLUDED.description, updated_at = now();
+INSERT INTO public.product_category (id, category_name, description, status, created_at, updated_at) VALUES ('c0000000-0000-0000-0000-000000000002', 'Đồ dùng', 'Danh mục sản phẩm Đồ dùng', 'ACTIVE', now(), now()) ON CONFLICT (category_name) DO UPDATE SET description = EXCLUDED.description, updated_at = now();
+INSERT INTO public.product_category (id, category_name, description, status, created_at, updated_at) VALUES ('c0000000-0000-0000-0000-000000000003', 'Vệ sinh', 'Danh mục sản phẩm Vệ sinh', 'ACTIVE', now(), now()) ON CONFLICT (category_name) DO UPDATE SET description = EXCLUDED.description, updated_at = now();
+INSERT INTO public.product_category (id, category_name, description, status, created_at, updated_at) VALUES ('c0000000-0000-0000-0000-000000000004', 'Phụ kiện', 'Danh mục sản phẩm Phụ kiện', 'ACTIVE', now(), now()) ON CONFLICT (category_name) DO UPDATE SET description = EXCLUDED.description, updated_at = now();

@@ -1,0 +1,6 @@
+﻿-- ==========================================
+-- BẢNG 2: reward_rule
+-- ==========================================
+INSERT INTO public.reward_rule (id, rule_name, reward_type, trigger_event, reward_value, description, is_active, created_at, updated_at) VALUES ('91111111-1111-1111-1111-111111111111', 'Thưởng đăng ký', 'PAW_POINTS', 'REGISTER', 50, 'Thành viên nhận điểm Paw Points tự động', true, now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.reward_rule (id, rule_name, reward_type, trigger_event, reward_value, description, is_active, created_at, updated_at) VALUES ('92222222-2222-2222-2222-222222222222', 'Tích điểm đơn hàng', 'PAW_POINTS', 'PURCHASE', 10, 'Thành viên nhận điểm Paw Points tự động', true, now(), now()) ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.reward_rule (id, rule_name, reward_type, trigger_event, reward_value, description, is_active, created_at, updated_at) VALUES ('93333333-3333-3333-3333-333333333333', 'Đánh giá nhận điểm', 'PAW_POINTS', 'REVIEW', 20, 'Thành viên nhận điểm Paw Points tự động', true, now(), now()) ON CONFLICT (id) DO NOTHING;

@@ -3,10 +3,191 @@
  * Phụ thuộc vào: /scripts/shared/auth.js (phải load trước)
  *
  * Chứa:
+ *  - supabaseLogin()        — đăng nhập qua Supabase
+ *  - supabaseCheckPhone()   — kiểm tra phone tồn tại trên Supabase
+ *  - supabaseRegister()     — đăng ký tài khoản mới qua Supabase
  *  - handleLoginRouting()   — điều hướng section theo URL param
  *  - initAuthForms()        — toàn bộ form login, register, OTP, forgot password, setup password
  *  - initLoginPage()        — entry point, chỉ chạy trên trang login.html
  */
+
+// ============================================================
+// SUPABASE AUTH — logic nội bộ (thay thế supabase-auth.js)
+// ============================================================
+
+/**
+ * Đăng nhập bằng phone + password qua Supabase.
+ * Trả về { success, user, error, offline }
+ */
+async function supabaseLogin(phone, password) {
+    const db = window.SupabaseClient;
+    if (!db) return { success: false, offline: true };
+
+    try {
+        const { data: customers, error } = await db
+            .from('customer')
+            .select(`
+                id,
+                email,
+                phone_main,
+                account_status,
+                password_hash,
+                customer_profile (
+                    full_name,
+                    gender,
+                    date_of_birth
+                ),
+                customer_membership (
+                    total_paw_points,
+                    membership_tier (
+                        tier_name,
+                        discount_percent
+                    )
+                )
+            `)
+            .eq('phone_main', phone)
+            .eq('password_hash', password)
+            .limit(1);
+
+        if (error) {
+            console.error('[Login] supabaseLogin query error:', error.message);
+            return { success: false, error: error.message };
+        }
+
+        if (!customers || customers.length === 0) {
+            return { success: false, error: 'wrong_password' };
+        }
+
+        const c = customers[0];
+
+        if (c.account_status !== 'ACTIVE') {
+            return { success: false, error: 'account_inactive' };
+        }
+
+        const profile    = c.customer_profile?.[0] || {};
+        const membership = c.customer_membership?.[0] || {};
+        const tier       = membership.membership_tier || {};
+
+        const user = {
+            id:           c.id,
+            name:         profile.full_name || '',
+            phone:        c.phone_main,
+            email:        c.email || '',
+            password:     password,
+            role:         'customer',
+            is_temporary: false,
+            points:       membership.total_paw_points || 0,
+            tier:         tier.tier_name || 'Đồng',
+            gender:       profile.gender || '',
+            dob:          profile.date_of_birth || '',
+            _source:      'supabase',
+        };
+
+        console.log('[Login] ✅ Login từ SUPABASE DATABASE — user:', user.name, '| phone:', user.phone, '| points:', user.points);
+        return { success: true, user };
+
+    } catch (err) {
+        console.error('[Login] supabaseLogin exception:', err);
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Kiểm tra phone đã tồn tại trên Supabase chưa (dùng trước khi đăng ký).
+ * Trả về { exists, isTemporary, offline, error }
+ */
+async function supabaseCheckPhone(phone) {
+    const db = window.SupabaseClient;
+    if (!db) return { exists: false, offline: true };
+
+    try {
+        const { data, error } = await db
+            .from('customer')
+            .select('id, account_status')
+            .eq('phone_main', phone)
+            .limit(1);
+
+        if (error) return { exists: false, error: error.message };
+        if (!data || data.length === 0) return { exists: false };
+
+        return {
+            exists: true,
+            isTemporary: data[0].account_status === 'INACTIVE',
+        };
+    } catch (err) {
+        return { exists: false, error: err.message };
+    }
+}
+
+/**
+ * Đăng ký tài khoản mới qua Supabase.
+ * Insert vào customer + customer_profile + customer_membership.
+ * Trả về { success, user, error, offline }
+ */
+async function supabaseRegister(name, phone, password) {
+    const db = window.SupabaseClient;
+    if (!db) return { success: false, offline: true };
+
+    try {
+        const { data: newCustomers, error: custErr } = await db
+            .from('customer')
+            .insert({
+                email:          null,
+                password_hash:  password,
+                account_status: 'ACTIVE',
+                phone_main:     phone,
+                registered_at:  new Date().toISOString(),
+            })
+            .select('id')
+            .limit(1);
+
+        if (custErr) {
+            console.error('[Login] supabaseRegister customer error:', custErr.message);
+            return { success: false, error: custErr.message };
+        }
+
+        const customerId = newCustomers[0].id;
+
+        await db.from('customer_profile').insert({
+            customer_id: customerId,
+            full_name:   name,
+        });
+
+        const { data: tiers } = await db
+            .from('membership_tier')
+            .select('id')
+            .eq('tier_name', 'Đồng')
+            .limit(1);
+
+        const tierId = tiers?.[0]?.id;
+        if (tierId) {
+            await db.from('customer_membership').insert({
+                customer_id:        customerId,
+                membership_tier_id: tierId,
+                total_paw_points:   50,
+            });
+        }
+
+        const user = {
+            id:           customerId,
+            name:         name,
+            phone:        phone,
+            email:        '',
+            password:     password,
+            role:         'customer',
+            is_temporary: false,
+            points:       50,
+            tier:         'Đồng',
+            _source:      'supabase',
+        };
+
+        return { success: true, user };
+
+    } catch (err) {
+        console.error('[Login] supabaseRegister exception:', err);
+        return { success: false, error: err.message };
+    }
+}
 
 // --- ĐIỀU HƯỚNG SECTION THEO URL (US 2-1, US 1-1, US 1-2) ---
 function handleLoginRouting() {
@@ -299,7 +480,7 @@ function initAuthForms() {
     }
 
     // --- SUBMIT LOGIN (US 2-1) ---
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         // Nếu đang ở bước phone, delegate sang Continue
@@ -318,10 +499,53 @@ function initAuthForms() {
             return;
         }
 
+        // --- Thử đăng nhập qua Supabase trước, fallback về localStorage ---
+        if (window.SupabaseClient) {
+            const result = await supabaseLogin(phone, password);
+
+            if (!result.offline) {
+                if (result.success) {
+                    setCurrentUser(result.user);
+                    showToast('success', 'Đăng nhập thành công!', 2000);
+                    setTimeout(() => {
+                        window.location.href = result.user.role === 'admin'
+                            ? '/pages/admin/index/index.html'
+                            : '/pages/user/dashboard/dashboard.html';
+                    }, 2000);
+                    return;
+                }
+                if (result.error === 'wrong_password') {
+                    showErrorBanner(
+                        'Mật khẩu không đúng. Vui lòng thử lại hoặc <a href="#" id="inlineForgotLink" class="text-decoration-underline fw-bold" style="color:var(--color-danger);">quên mật khẩu?</a>',
+                        loginForm
+                    );
+                    return;
+                }
+                if (result.error === 'account_inactive') {
+                    showErrorBanner('Tài khoản đã bị khóa. Vui lòng liên hệ hỗ trợ.', loginForm);
+                    return;
+                }
+                // Lỗi kết nối → fallback localStorage bên dưới
+            }
+        }
+
+        // --- Fallback: localStorage (offline / chưa cấu hình Supabase) ---
+        console.warn('[Login] ⚠️ Dùng LOCAL STORAGE — Supabase không khả dụng hoặc chưa cấu hình');
         const users       = getUsers();
         const userByPhone = users.find(u => u.phone === phone);
 
         if (!userByPhone) {
+            // Kiểm tra Supabase xem phone có tồn tại không
+            if (window.SupabaseClient) {
+                const check = await supabaseCheckPhone(phone);
+                if (!check.offline && !check.exists) {
+                    showErrorBanner(
+                        'Số điện thoại chưa được đăng ký. Vui lòng <a href="?action=register" class="text-decoration-underline fw-bold" style="color:var(--color-danger);">Đăng ký ngay</a>',
+                        loginForm
+                    );
+                    return;
+                }
+            }
             showErrorBanner(
                 'Số điện thoại chưa được đăng ký. Vui lòng <a href="?action=register" class="text-decoration-underline fw-bold" style="color:var(--color-danger);">Đăng ký ngay</a>',
                 loginForm
@@ -471,11 +695,26 @@ function initAuthForms() {
     const otpInputs   = document.querySelectorAll('#otpSection .otp-input');
     let otpCountdownInterval = null;
 
-    registerForm.addEventListener('submit', (e) => {
+    registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const users    = getUsers();
-        const existing = users.find(u => u.phone === regPhone.value.trim());
-        if (existing && !existing.is_temporary) {
+
+        // Kiểm tra phone đã tồn tại chưa (Supabase trước, localStorage fallback)
+        let phoneAlreadyExists = false;
+
+        if (window.SupabaseClient) {
+            const check = await supabaseCheckPhone(regPhone.value.trim());
+            if (!check.offline) {
+                phoneAlreadyExists = check.exists && !check.isTemporary;
+            }
+        }
+
+        if (!phoneAlreadyExists) {
+            const users    = getUsers();
+            const existing = users.find(u => u.phone === regPhone.value.trim());
+            if (existing && !existing.is_temporary) phoneAlreadyExists = true;
+        }
+
+        if (phoneAlreadyExists) {
             showToast('error', 'Số điện thoại này đã được đăng ký tài khoản chính thức!');
             return;
         }
@@ -545,19 +784,37 @@ function initAuthForms() {
         }
     }
 
-    function showRegisterSuccess() {
+    async function showRegisterSuccess() {
         otpSection.classList.add('d-none');
         const congratsSection = document.getElementById('congratsSection');
         congratsSection.classList.remove('d-none');
 
-        const users    = getUsers();
-        let userIdx    = users.findIndex(u => u.phone === regPhone.value.trim());
-        const newUser  = ensureUserId({
-            name: regName.value.trim(), phone: regPhone.value.trim(),
-            password: regPassword.value, role: 'customer', is_temporary: false, points: 50
-        });
-        if (userIdx !== -1) users[userIdx] = newUser; else users.push(newUser);
-        saveUsers(users);
+        // Thử register lên Supabase trước
+        let newUser = null;
+
+        if (window.SupabaseClient) {
+            const result = await supabaseRegister(
+                regName.value.trim(),
+                regPhone.value.trim(),
+                regPassword.value
+            );
+            if (result.success) {
+                newUser = result.user;
+            }
+        }
+
+        // Fallback: lưu localStorage
+        if (!newUser) {
+            const users   = getUsers();
+            let userIdx   = users.findIndex(u => u.phone === regPhone.value.trim());
+            newUser = ensureUserId({
+                name: regName.value.trim(), phone: regPhone.value.trim(),
+                password: regPassword.value, role: 'customer', is_temporary: false, points: 50
+            });
+            if (userIdx !== -1) users[userIdx] = newUser; else users.push(newUser);
+            saveUsers(users);
+        }
+
         setCurrentUser(newUser);
 
         const counterEl = document.getElementById('pointsCounter');
