@@ -62,9 +62,28 @@ function sameUserId(left, right) {
 function mergePetLists(serverPets, localPets, targetUserId) {
     const map = new Map();
 
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    const dbUsers = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+    const dbUser = dbUsers.find(u =>
+        String(u.id) === String(targetUserId) ||
+        (currentUser?.phone && String(u.phone) === String(currentUser.phone))
+    );
+    const knownIds = new Set(
+        [targetUserId, dbUser?.id, currentUser?.id]
+            .filter(Boolean)
+            .map(String)
+    );
+    const currentPhone = currentUser?.phone ? String(currentUser.phone) : null;
+
     const shouldKeep = (pet) => {
         if (!targetUserId) return true;
-        return sameUserId(pet.userId?._id || pet.userId, targetUserId) || sameUserId(pet.userLegacyId, targetUserId);
+        const petUserId = pet.userId?._id || pet.userId;
+        if (petUserId && knownIds.has(String(petUserId))) return true;
+        if (pet.userLegacyId && knownIds.has(String(pet.userLegacyId))) return true;
+        if (!currentPhone) return false;
+        if (pet.ownerPhone && String(pet.ownerPhone) === currentPhone) return true;
+        if (pet.phone && String(pet.phone) === currentPhone) return true;
+        return false;
     };
 
     const upsert = (pet, priority) => {
