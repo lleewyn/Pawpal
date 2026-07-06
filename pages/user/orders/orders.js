@@ -5,6 +5,114 @@
 
 import { API } from '/scripts/api/api.js';
 
+// ============================================================================
+// Supabase Sync — Đồng bộ đơn hàng từ Supabase vào localStorage
+// ============================================================================
+async function syncOrdersFromSupabase(currentUser) {
+    const db = window.SupabaseClient;
+    if (!db || !currentUser) return;
+    try {
+        // Tìm customer UUID nếu dùng mock id
+        let customerId = currentUser.id;
+        if (currentUser._source !== 'supabase') {
+            const { data: found } = await db.from('customer').select('id').eq('phone_main', currentUser.phone).limit(1);
+            if (!found?.length) return;
+            customerId = found[0].id;
+        }
+
+        const { data, error } = await db
+            .from('sales_order')
+            .select(`
+                id, order_code, order_status, payment_status,
+                subtotal, shipping_fee, discount_amount, total_amount,
+                created_at, updated_at, note,
+                sales_order_detail (
+                    id, quantity, unit_price, discount_amount, subtotal,
+                    product ( id, product_name, image_urls, sku )
+                ),
+                customer_address ( receiver_name, receiver_phone, province, street_address )
+            `)
+            .eq('customer_id', customerId)
+            .order('created_at', { ascending: false });
+
+        if (error) { console.error('[Orders] Supabase error:', error.message); return; }
+
+        const orders = (data || []).map(o => {
+            const details = o.sales_order_detail || [];
+            const products = details.map(d => ({
+                id:       d.product?.id || '',
+                name:     d.product?.product_name || 'Sản phẩm',
+                sku:      d.product?.sku || '',
+                image:    normalizeImageUrl(d.product?.image_urls?.[0]),
+                quantity: d.quantity,
+                price:    d.unit_price,
+                total:    d.subtotal,
+            }));
+            const addr = o.customer_address;
+            return {
+                id:          o.order_code || o.id,
+                _supabaseId: o.id,
+                userId:      currentUser.id,
+                userPhone:   currentUser.phone,
+                status:      mapOrderStatus(o.order_status),
+                orderStatus: o.order_status,
+                paymentStatus: (o.payment_status || '').toLowerCase(),
+                products,
+                pricing: {
+                    subtotal:    o.subtotal,
+                    shippingFee: o.shipping_fee,
+                    discount:    o.discount_amount,
+                    total:       o.total_amount,
+                },
+                shipping: addr ? {
+                    name:    addr.receiver_name  || '',
+                    phone:   addr.receiver_phone || '',
+                    address: [addr.street_address, addr.province].filter(Boolean).join(', '),
+                } : {},
+                note:      o.note || '',
+                createdAt: o.created_at,
+                updatedAt: o.updated_at,
+                _source:   'supabase',
+            };
+        });
+
+        // Preserve pointsAwarded từ local
+        const local = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+        const withFlags = orders.map(o => {
+            const existing = local.find(l => String(l.id) === String(o.id));
+            return { ...o, pointsAwarded: existing?.pointsAwarded || false, pointsEarned: existing?.pointsEarned || 0 };
+        });
+
+        const others = local.filter(l =>
+            String(l.userId) !== String(currentUser.id) &&
+            String(l.userPhone) !== String(currentUser.phone)
+        );
+        localStorage.setItem('pawpal_orders', JSON.stringify([...withFlags, ...others]));
+        localStorage.setItem('pawpal_orders_supabase_synced', String(currentUser.phone));
+        console.log('[Orders] ✅ Synced từ Supabase:', orders.length, 'đơn hàng');
+    } catch (err) {
+        console.warn('[Orders] Supabase sync error:', err.message);
+    }
+}
+
+function mapOrderStatus(status) {
+    return {
+        'PENDING':   'pending',
+        'CONFIRMED': 'preparing',
+        'SHIPPING':  'shipping',
+        'DELIVERED': 'delivered',
+        'COMPLETED': 'completed',
+        'CANCELLED': 'cancelled',
+    }[status] || 'pending';
+}
+
+function normalizeImageUrl(url) {
+    if (!url) return '';
+    // Thêm / vào đầu nếu là relative path không có leading slash
+    if (!url.startsWith('http') && !url.startsWith('/')) return '/' + url;
+    return url;
+}
+
 const ordersState = {
     allOrders: [],
     filteredOrders: [],
@@ -16,9 +124,13 @@ const ordersState = {
 
 async function loadOrders() {
     try {
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        if (window.SupabaseClient && currentUser) {
+            await syncOrdersFromSupabase(currentUser);
+        }
+
         await API.initData();
 
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (!currentUser) {
             showEmptyState('Vui lòng đăng nhập để xem đơn hàng.');
             return;

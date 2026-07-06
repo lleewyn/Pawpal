@@ -20,7 +20,7 @@
  * Trả về { success, user, error, offline }
  */
 async function supabaseLogin(phone, password) {
-    const db = window.SupabaseClient;
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) return { success: false, offline: true };
 
     try {
@@ -97,7 +97,7 @@ async function supabaseLogin(phone, password) {
  * Trả về { exists, isTemporary, offline, error }
  */
 async function supabaseCheckPhone(phone) {
-    const db = window.SupabaseClient;
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) return { exists: false, offline: true };
 
     try {
@@ -125,7 +125,7 @@ async function supabaseCheckPhone(phone) {
  * Trả về { success, user, error, offline }
  */
 async function supabaseRegister(name, phone, password) {
-    const db = window.SupabaseClient;
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) return { success: false, offline: true };
 
     try {

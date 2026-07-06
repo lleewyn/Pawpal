@@ -400,6 +400,120 @@
     margin-bottom: var(--space-xs);
 }
 
+/* --------------------------------------------------
+   Settings tab specific helpers (fix layout glitches)
+   -------------------------------------------------- */
+
+/* Form control variants used on settings page */
+.form-control-custom {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: #f8fafc;
+    font-size: 0.95rem;
+    color: var(--color-text-dark);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    box-sizing: border-box;
+}
+.form-control-custom:focus {
+    border-color: var(--color-primary);
+    outline: none;
+    box-shadow: 0 4px 12px rgba(16,24,32,0.04);
+}
+
+.password-input-wrapper-custom { position: relative; }
+.password-input-wrapper-custom .form-control-custom { padding-right: 42px; }
+.btn-toggle-password-custom {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: var(--color-text-light); cursor: pointer;
+    padding: 4px; display:flex; align-items:center; justify-content:center;
+}
+
+.strength-label-container { display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; margin-top:6px; }
+.password-strength-bar-custom { display:flex; gap:8px; height:6px; margin-top:6px; }
+.strength-bar-segment { flex:1; background:#e6edf2; border-radius:3px; }
+.strength-bar-segment.weak { background: var(--color-danger); }
+.strength-bar-segment.medium { background: var(--color-accent); }
+.strength-bar-segment.strong { background: var(--color-success); }
+
+.settings-action-row { display:flex; gap:12px; align-items:center; margin-top:14px; }
+.btn-submit-custom {
+    border:none; border-radius:24px; padding:10px 22px; font-weight:700; color:#fff;
+    background: var(--color-primary-dark); cursor:pointer;
+}
+.btn-submit-custom:disabled { background:#cbd5e1; color:#94a3b8; cursor:not-allowed; }
+
+/* Social link items */
+.social-link-item-custom { display:flex; justify-content:space-between; align-items:center; padding:12px; border:1px solid var(--color-border); border-radius:12px; background:#fff; }
+
+/* Switch visual */
+.switch-custom { position:relative; display:inline-block; width:40px; height:22px; }
+.switch-custom input { opacity:0; width:0; height:0; }
+.slider-custom { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#cbd5e1; border-radius:22px; transition:0.25s; }
+.slider-custom:before { content:''; position:absolute; height:16px; width:16px; left:3px; bottom:3px; background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.12); transition:0.25s; }
+.switch-custom input:checked + .slider-custom { background: var(--color-primary); }
+.switch-custom input:checked + .slider-custom:before { transform: translateX(18px); }
+
+/* Unit toggle */
+.unit-toggle-buttons { display:flex; background:#e6eef3; border-radius:8px; padding:3px; }
+.unit-btn { border:none; border-radius:6px; padding:6px 12px; font-size:0.85rem; font-weight:700; cursor:pointer; background:transparent; color:var(--color-text-light); }
+.unit-btn.active { background:#ffffff; color:var(--color-text-dark); box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+
+/* Ensure small inline buttons don't collapse */
+.unit-btn, .btn-toggle-password-custom, .btn-social-action-custom { min-height:32px; min-width:40px; display:inline-flex; align-items:center; justify-content:center; }
+
+/* Small helper to reset unintended browser focus outlines */
+button:focus { outline: 3px solid rgba(16,185,129,0.12); outline-offset: 2px; }
+
+@media (max-width: 991px) {
+    .settings-grid-custom { grid-template-columns: 1fr; }
+}
+
+/* Fix for small/collapsed cancel button and select input on Settings page */
+.btn-cancel-custom {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--color-primary-dark);
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+.btn-cancel-custom:hover {
+    background: rgba(16,185,129,0.04);
+}
+
+.form-select-custom {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: #f8fafc url('/assets/images/icons/chev-down.svg') no-repeat calc(100% - 14px) center/12px 12px;
+    font-size: 0.95rem;
+    color: var(--color-text-dark);
+}
+.select-wrapper-custom { position: relative; }
+
+.select-wrapper-custom::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 6px;
+    background-image: linear-gradient(90deg, transparent, transparent);
+    pointer-events: none;
+}
+
 .settings-form .form-control,
 .security-form .form-control {
     border: 1px solid var(--color-border);
@@ -1355,6 +1469,14 @@ input:checked + .slider:before {
     border-bottom: 1px solid var(--color-border, #e2e8f0);
     padding-bottom: 14px;
     margin-bottom: 18px;
+}
+
+/* When a settings card is collapsed, subtly change header background to indicate state */
+.settings-card-custom.collapsed .settings-card-header-custom {
+    background: linear-gradient(90deg, rgba(242,247,244,0.7), rgba(242,247,244,0.7));
+    border-bottom-color: transparent;
+    border-radius: 12px 12px 0 0;
+    padding: 12px 20px;
 }
 
 .settings-card-title-custom {

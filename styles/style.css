@@ -6183,6 +6183,23 @@ input:checked + .switch-slider:before {
     background-color: var(--color-success);
 }
 
+.star {
+    font-size: 14px;
+    color: var(--color-border);
+}
+
+.star.filled {
+    color: var(--color-accent);
+}
+
+.star::before {
+    content: "☆";
+}
+
+.star.filled::before {
+    content: "★";
+}
+
 /* --- END: components\ui\notification.css --- */
 
 /* --- FROM: components\ui\review-form.css --- */
@@ -6206,6 +6223,23 @@ input:checked + .switch-slider:before {
                 margin 0.35s ease;
     opacity: 0;
     margin-top: 0;
+}
+
+.review-stars .star {
+    font-size: 12px;
+    color: var(--color-border);
+}
+
+.review-stars .star.filled {
+    color: var(--color-accent);
+}
+
+.star::before {
+    content: "☆";
+}
+
+.star.filled::before {
+    content: "★";
 }
 
 .review-accordion.open {
@@ -6251,7 +6285,23 @@ input:checked + .switch-slider:before {
     font-weight: 600;
     font-size: var(--fs-body);
     color: var(--color-text-dark);
-    white-space: nowrap;
+    .review-stars .star {
+    font-size: 12px;
+    color: var(--color-border);
+}
+
+.review-stars .star.filled {
+    color: var(--color-accent);
+}
+
+.star::before {
+    content: "☆";
+}
+
+.star.filled::before {
+    content: "★";
+}
+white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }

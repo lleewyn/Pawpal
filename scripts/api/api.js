@@ -94,8 +94,13 @@ export const API = {
         const localOrders = safeReadArray('pawpal_orders');
         const orders = await this.getJSON('/data/orders.json');
         if (orders) {
+            // Bỏ qua merge từ JSON nếu đã sync từ Supabase cho user hiện tại
+            const ordersSyncedPhone = localStorage.getItem('pawpal_orders_supabase_synced');
+            const currentPhone = safeReadObject('pawpal_current_user')?.phone;
+            const ordersAlreadySynced = ordersSyncedPhone && currentPhone && ordersSyncedPhone === String(currentPhone);
+
             const hasNewSeedOrders = orders.some(seed => !localOrders.some(l => String(l.id) === String(seed.id)));
-            if (shouldRefreshMockData || localOrders.length === 0 || !localOrders.some(order => order.userId) || hasNewSeedOrders) {
+            if (!ordersAlreadySynced && (shouldRefreshMockData || localOrders.length === 0 || !localOrders.some(order => order.userId) || hasNewSeedOrders)) {
                 // When refreshing, seed data wins for product fields (image, name, price),
                 // but preserve user-modified fields like status (e.g. cancelled orders)
                 const mergedOrders = orders.map(seedOrder => {
@@ -337,16 +342,25 @@ export const API = {
             };
         }
 
-        // Thử server trước
-        const wishlist = await this.request(`/api/wishlist/${encodeURIComponent(userId)}`);
-        if (wishlist && typeof wishlist === 'object') {
-            return {
-                productIds: Array.isArray(wishlist.productIds) ? wishlist.productIds : [],
-                serviceIds: Array.isArray(wishlist.serviceIds) ? wishlist.serviceIds : []
-            };
+        const db = window.SupabaseClient;
+        if (db) {
+            try {
+                const { data: wl } = await db.from('wishlist').select('id').eq('customer_id', userId).single();
+                if (wl && wl.id) {
+                    const { data: items, error: itError } = await db.from('wishlist_item').select('product_id, service_id').eq('wishlist_id', wl.id);
+                    if (!itError && items) {
+                        return {
+                            productIds: items.map(i => i.product_id).filter(Boolean),
+                            serviceIds: items.map(i => i.service_id).filter(Boolean)
+                        };
+                    }
+                }
+            } catch (err) {
+                console.warn('[API] getUserWishlist Supabase error:', err);
+            }
         }
 
-        // Offline: đọc từ localStorage theo key của user (dùng phone để match với shop.js)
+        // Offline fallback
         const currentUser = safeReadObject('pawpal_current_user');
         const userPhone = currentUser?.phone ? String(currentUser.phone) : null;
         const productKey  = userPhone ? `pawpal_wishlist_${userPhone}` : 'pawpal_wishlist_guest';
@@ -368,11 +382,50 @@ export const API = {
             return { success: true, data: payload };
         }
 
-        // Thử sync lên server
-        const saved = await this.request(`/api/wishlist/${encodeURIComponent(userId)}`, {
-            method: 'PUT',
-            body: JSON.stringify(payload)
-        });
+        const db = window.SupabaseClient;
+        if (db) {
+            try {
+                let wlId = null;
+                const { data: wl } = await db.from('wishlist').select('id').eq('customer_id', userId).single();
+                if (wl && wl.id) {
+                    wlId = wl.id;
+                } else {
+                    const newId = crypto.randomUUID();
+                    const { data: newWl, error: insertError } = await db.from('wishlist').insert({
+                        id: newId,
+                        customer_id: userId,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }).select('id').single();
+                    if (!insertError && newWl) wlId = newWl.id;
+                }
+
+                if (wlId) {
+                    await db.from('wishlist_item').delete().eq('wishlist_id', wlId);
+
+                    const insertRows = [];
+                    payload.productIds.forEach(pid => {
+                        insertRows.push({ id: crypto.randomUUID(), wishlist_id: wlId, product_id: pid, added_at: new Date().toISOString() });
+                    });
+                    payload.serviceIds.forEach(sid => {
+                        insertRows.push({ id: crypto.randomUUID(), wishlist_id: wlId, service_id: sid, added_at: new Date().toISOString() });
+                    });
+
+                    if (insertRows.length > 0) {
+                        const { error: finalErr } = await db.from('wishlist_item').insert(insertRows);
+                        if (!finalErr) {
+                            console.log(`[Supabase] Đã đồng bộ thành công ${insertRows.length} mục yêu thích lên database!`);
+                        } else {
+                            console.error(`[Supabase] Lỗi khi insert wishlist_item:`, finalErr);
+                        }
+                    } else {
+                        console.log(`[Supabase] Đã xóa trống wishlist trên database!`);
+                    }
+                }
+            } catch (err) {
+                console.warn('[API] saveUserWishlist Supabase error:', err);
+            }
+        }
 
         // Dù server thành công hay không, luôn lưu localStorage theo key của user
         const currentUser = safeReadObject('pawpal_current_user');
@@ -384,7 +437,7 @@ export const API = {
             safeWrite('pawpal_wishlist_guest', payload.productIds);
             safeWrite('pawpal_wishlist_services_guest', payload.serviceIds);
         }
-        return { success: true, data: saved || payload };
+        return { success: true, data: payload };
     },
 
     async getUserById(userId) {

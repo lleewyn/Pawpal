@@ -78,18 +78,40 @@
 
     async function getWishlistItems() {
         const currentUser = getCurrentUser();
-        const serverWishlist = currentUser
+        const serverWishlist = currentUser && window.API && typeof window.API.getUserWishlist === 'function'
             ? await window.API.getUserWishlist(currentUser.id || currentUser.phone || null)
             : { productIds: [], serviceIds: [] };
-        const productRaw = [
+
+        const productIdsRaw = [
             ...(serverWishlist.productIds || []),
             ...loadWishlistRaw(getProductWishlistStorageKey()),
             ...loadWishlistRaw('pawpal_wishlist')
         ];
-        const serviceRaw = [
+        const serviceIdsRaw = [
             ...(serverWishlist.serviceIds || []),
             ...loadWishlistRaw(getServiceWishlistStorageKey())
         ];
+
+        // Lọc trùng
+        const finalProductIds = [...new Set(productIdsRaw.map(String))];
+        const finalServiceIds = [...new Set(serviceIdsRaw.map(String))];
+
+        // Lưu lại local storage bản đã merge
+        saveWishlistRaw(getProductWishlistStorageKey(), finalProductIds);
+        saveWishlistRaw(getServiceWishlistStorageKey(), finalServiceIds);
+
+        // Background sync lên server nếu có data mới ở local
+        if (currentUser && window.API && typeof window.API.saveUserWishlist === 'function') {
+            if (finalProductIds.length > (serverWishlist.productIds?.length || 0) ||
+                finalServiceIds.length > (serverWishlist.serviceIds?.length || 0)) {
+                window.API.saveUserWishlist(currentUser.id || currentUser.phone || null, {
+                    productIds: finalProductIds,
+                    serviceIds: finalServiceIds
+                });
+                localStorage.removeItem('pawpal_wishlist');
+                localStorage.removeItem('pawpal_wishlist_services_guest');
+            }
+        }
 
         const allProducts = window.DataLoader && typeof window.DataLoader.loadProducts === 'function'
             ? await window.DataLoader.loadProducts()
@@ -97,6 +119,9 @@
         const allServices = window.DataLoader && typeof window.DataLoader.loadServices === 'function'
             ? await window.DataLoader.loadServices()
             : [];
+
+        const productRaw = finalProductIds;
+        const serviceRaw = finalServiceIds;
 
         const seenProducts = new Set();
         const products = productRaw.map((item) => {

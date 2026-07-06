@@ -6,8 +6,7 @@
 
 import { API } from '/scripts/api/api.js';
 
-const PAWPAL_USERS_KEY = 'pawpal_users_db';
-const CURRENT_USER_KEY = 'pawpal_current_user';
+// Keys are declared at the top; don't redeclare here to avoid duplicate identifier errors.
 
 // ============================================================
 // SUPABASE DASHBOARD — logic nội bộ (thay thế supabase-dashboard.js)
@@ -18,9 +17,9 @@ const CURRENT_USER_KEY = 'pawpal_current_user';
  * Gọi trong DOMContentLoaded nếu window.SupabaseClient có mặt.
  */
 async function syncFromSupabase(currentUser) {
-    const db = window.SupabaseClient;
-    if (!db) {
-        console.warn('[Dashboard] Không có Supabase client — dùng localStorage.');
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db || !currentUser?.id) {
+        console.warn('[Dashboard] Không có Supabase client hoặc user chưa đăng nhập — dùng localStorage.');
         return;
     }
 
@@ -40,6 +39,8 @@ async function syncFromSupabase(currentUser) {
 }
 
 async function _syncUserProfile(db, currentUser) {
+    if (!db || !currentUser?.id) return;
+
     const { data, error } = await db
         .from('customer')
         .select(`
@@ -93,6 +94,8 @@ async function _syncUserProfile(db, currentUser) {
 }
 
 async function _syncUserPets(db, currentUser) {
+    if (!db || !currentUser?.id) return;
+
     const { data, error } = await db
         .from('pet_profile')
         .select('id, pet_code, pet_name, species, breed, gender, date_of_birth, color, weight, avatar_url, status')
@@ -127,6 +130,8 @@ async function _syncUserPets(db, currentUser) {
 }
 
 async function _syncUserBookings(db, currentUser) {
+    if (!db || !currentUser?.id) return;
+
     const { data, error } = await db
         .from('appointment')
         .select(`
@@ -176,6 +181,8 @@ function _mapAppointmentStatus(status) {
 }
 
 async function _syncUserOrders(db, currentUser) {
+    if (!db || !currentUser?.id) return;
+
     const { data, error } = await db
         .from('sales_order')
         .select(`

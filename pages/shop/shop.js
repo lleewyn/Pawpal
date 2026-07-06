@@ -536,7 +536,22 @@ function applyFilters() {
     // Category filter
     if (state.filters.category && state.filters.category !== 'all') {
         const cats = Array.isArray(state.filters.category) ? state.filters.category : [state.filters.category];
-        filtered = filtered.filter(p => cats.includes(p.category));
+        const catMapping = {
+            'food-dry': 'c0000000-0000-0000-0000-000000000001',
+            'food-wet': 'c0000000-0000-0000-0000-000000000001',
+            'bones': 'c0000000-0000-0000-0000-000000000001',
+            'bowls': 'c0000000-0000-0000-0000-000000000002',
+            'toys': 'c0000000-0000-0000-0000-000000000002',
+            'clothes': 'c0000000-0000-0000-0000-000000000002',
+            'accessories': 'c0000000-0000-0000-0000-000000000004',
+            'furniture': 'c0000000-0000-0000-0000-000000000002',
+            'hygiene': 'c0000000-0000-0000-0000-000000000003',
+            'grooming': 'c0000000-0000-0000-0000-000000000003',
+            'health': 'c0000000-0000-0000-0000-000000000003',
+            'other': 'other'
+        };
+        const mappedCats = cats.map(c => catMapping[c] || c);
+        filtered = filtered.filter(p => mappedCats.includes(p.category) || mappedCats.includes(p.categoryName));
     }
     
     // Brand filter
@@ -664,7 +679,7 @@ function renderProducts() {
                     showToast('Vui lòng đăng nhập để sử dụng tính năng yêu thích', 'warning');
                     return; // KHÔNG đổi màu icon
                 }
-                toggleWishlist(parseInt(btn.dataset.productId));
+                toggleWishlist(btn.dataset.productId);
                 btn.classList.toggle('active');
             });
         });
@@ -674,7 +689,7 @@ function renderProducts() {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                addToCart(parseInt(btn.dataset.productId));
+                addToCart(btn.dataset.productId);
             });
         });
 
@@ -978,6 +993,14 @@ function loadWishlist() {
 
 function saveWishlist() {
     localStorage.setItem(getWishlistStorageKey(), JSON.stringify(state.wishlist));
+    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    if (user && window.API && typeof window.API.saveUserWishlist === 'function') {
+        const serviceIds = JSON.parse(localStorage.getItem(`pawpal_wishlist_services_${user.phone}`) || '[]');
+        window.API.saveUserWishlist(user.id || user.phone, {
+            productIds: state.wishlist,
+            serviceIds: serviceIds
+        });
+    }
 }
 
 function toggleWishlist(productId) {

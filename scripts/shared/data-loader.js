@@ -176,39 +176,69 @@ function transformProductData(rawData) {
  * @returns {Promise<Array<Object>>} - Promise resolving to products array
  */
 async function loadProducts() {
-    // Return cached data if available
     if (dataCache.products) {
-        console.log(' Using cached products data');
         return dataCache.products;
     }
     
     try {
-        console.log('Loading products from CSV...');
-        const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
-        const response = await fetch(rootPath + 'data/sanpham.csv');
-        
-        if (!response.ok) {
-            throw new Error(`Failed to load products: ${response.status} ${response.statusText}`);
+        const db = window.SupabaseClient;
+        if (!db) {
+            throw new Error('Supabase client is not initialized');
         }
+
+        console.log('Loading products from Supabase...');
+        const { data: rawProducts, error } = await db.from('product').select('*, product_category!inner(category_name)');
         
-        const csvText = await response.text();
-        console.log(` CSV loaded: ${csvText.length} characters`);
+        if (error) {
+            throw error;
+        }
+
+        console.log(` Loaded ${rawProducts.length} products from Supabase`);
+        const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
         
-        const rawData = parseCSV(csvText);
-        console.log(` Parsed ${rawData.length} raw products`);
-        
-        const products = transformProductData(rawData);
-        console.log(` Transformed ${products.length} products`);
+        const products = rawProducts.map(item => {
+            const sale = Number(item.sale_price) < Number(item.cost_price);
+            let images = [];
+            if (Array.isArray(item.image_urls)) {
+                images = item.image_urls.map(url => rootPath + url);
+            }
+            if (images.length === 0) images = [rootPath + 'assets/images/shop/products/placeholder.webp'];
+
+            let badgeStr = item.badge ? String(item.badge).toLowerCase() : null;
+
+            return {
+                id: item.id,
+                sku: item.sku,
+                name: item.product_name,
+                brand: 'PawPal', // Simplified
+                category: item.category_id,
+                categoryName: item.product_category?.category_name || 'Khác',
+                price: Number(item.sale_price),
+                originalPrice: sale ? Number(item.cost_price) : null,
+                oldPrice: sale ? Number(item.cost_price) : null,
+                image: images[0],
+                images: images,
+                inStock: item.status === 'ACTIVE' && Number(item.stock) > 0,
+                stock: Number(item.stock),
+                sale: sale,
+                badge: badgeStr,
+                trending: badgeStr === 'hot' || badgeStr === 'best',
+                rating: Number(item.rating) || 4.5,
+                reviewCount: Number(item.review_count) || 0,
+                origin: item.origin || 'Chưa rõ',
+                ingredients: item.ingredients || '',
+                benefits: item.benefits || item.description || '',
+                usage: item.usage_instructions || '',
+                specs: item.specs || '',
+                description: item.description || ''
+            };
+        });
         
         // Cache the data
         dataCache.products = products;
-        
         return products;
     } catch (error) {
-        console.error(' Error loading products:', error);
-        
-        // Return empty array as fallback
-        console.warn('️ Using fallback: empty products array');
+        console.error('Error loading products from Supabase:', error);
         return [];
     }
 }
@@ -431,6 +461,50 @@ async function getServiceById(serviceId) {
     return service;
 }
 
+/**
+ * Fetch product reviews by product ID
+ * @param {string} productId - The product UUID
+ * @returns {Promise<Array>} - List of reviews with customer names
+ */
+async function getProductReviews(productId) {
+    if (!window.SupabaseClient) {
+        console.warn('Supabase not available for fetching reviews.');
+        return [];
+    }
+    const db = window.SupabaseClient;
+    if (!db) return [];
+
+    try {
+        const { data, error } = await db
+            .from('review')
+            .select(`
+                *,
+                customer:customer_id (
+                    customer_profile (full_name)
+                )
+            `)
+            .eq('product_id', productId)
+            .eq('review_status', 'APPROVED')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        
+        return data.map(r => ({
+            id: r.id,
+            rating: r.rating,
+            content: r.review_content,
+            createdAt: r.created_at,
+            customerName: r.customer?.customer_profile?.[0]?.full_name || 'Khách hàng',
+            hasMedia: false, // Update if media is supported
+            hasReply: false  // Update if seller reply is supported
+        }));
+    } catch (err) {
+        console.error('Error fetching product reviews:', err);
+        alert('Lỗi Supabase khi tải đánh giá: ' + (err.message || JSON.stringify(err)));
+        return [];
+    }
+}
+
 // Export functions for use in other modules
 window.DataLoader = {
     loadProducts,
@@ -439,7 +513,8 @@ window.DataLoader = {
     getProductsByBrand,
     searchProducts,
     loadServices,
-    getServiceById
+    getServiceById,
+    getProductReviews
 };
 
 console.log(' DataLoader module initialized');

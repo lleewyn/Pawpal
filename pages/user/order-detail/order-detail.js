@@ -9,6 +9,148 @@
 let currentOrder = null;
 let isGuest = false; // Giả định: false = Member, true = Guest
 
+// ============================================================================
+// Supabase Sync — Đồng bộ chi tiết đơn hàng từ Supabase vào localStorage
+// ============================================================================
+async function syncSingleOrderFromSupabase(orderId, currentUser) {
+    const db = window.SupabaseClient;
+    if (!db || !currentUser) return null;
+    try {
+        let customerId = currentUser.id;
+        if (currentUser._source !== 'supabase') {
+            const { data: found } = await db.from('customer').select('id').eq('phone_main', currentUser.phone).limit(1);
+            if (!found?.length) return null;
+            customerId = found[0].id;
+        }
+
+        // Xác định filter: nếu là UUID thì dùng id, còn lại dùng order_code
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+        let query = db
+            .from('sales_order')
+            .select(`
+                id, order_code, order_status, payment_status,
+                subtotal, shipping_fee, discount_amount, total_amount,
+                created_at, updated_at, note,
+                sales_order_detail (
+                    id, quantity, unit_price, discount_amount, subtotal,
+                    product ( id, product_name, image_urls, sku )
+                ),
+                customer_address ( receiver_name, receiver_phone, province, street_address )
+            `)
+            .eq('customer_id', customerId)
+            .limit(1);
+
+        query = isUUID ? query.eq('id', orderId) : query.eq('order_code', orderId);
+        const { data, error } = await query;
+
+        if (error || !data?.length) return null;
+        const o = data[0];
+
+        const details = o.sales_order_detail || [];
+        const products = details.map(d => ({
+            id:       d.product?.id || '',
+            name:     d.product?.product_name || 'Sản phẩm',
+            sku:      d.product?.sku || '',
+            image:    normalizeImageUrl(d.product?.image_urls?.[0]),
+            quantity: d.quantity,
+            price:    d.unit_price,
+            total:    d.subtotal,
+        }));
+        const addr = o.customer_address;
+
+        const local = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+        const existing = local.find(l => String(l.id) === String(o.order_code || o.id) || String(l._supabaseId) === String(o.id));
+
+        const order = {
+            id:          o.order_code || o.id,
+            _supabaseId: o.id,
+            userId:      currentUser.id,
+            userPhone:   currentUser.phone,
+            status:      mapOrderStatus(o.order_status),
+            orderStatus: o.order_status,
+            paymentStatus: (o.payment_status || '').toLowerCase(),
+            products,
+            pricing: {
+                subtotal:    o.subtotal,
+                shippingFee: o.shipping_fee,
+                discount:    o.discount_amount,
+                total:       o.total_amount,
+            },
+            shipping: addr ? {
+                name:    addr.receiver_name  || '',
+                phone:   addr.receiver_phone || '',
+                address: [addr.street_address, addr.province].filter(Boolean).join(', '),
+            } : {},
+            note:          o.note || '',
+            createdAt:     o.created_at,
+            updatedAt:     o.updated_at,
+            pointsAwarded: existing?.pointsAwarded || false,
+            pointsEarned:  existing?.pointsEarned  || 0,
+            timeline:      existing?.timeline || buildTimelineFromStatus(o.order_status, o.created_at, o.updated_at),
+            _source:       'supabase',
+        };
+
+        const others = local.filter(l => String(l.id) !== String(order.id) && String(l._supabaseId) !== String(o.id));
+        localStorage.setItem('pawpal_orders', JSON.stringify([order, ...others]));
+        console.log('[OrderDetail] ✅ Synced từ Supabase:', order.id);
+        return order;
+    } catch (err) {
+        console.warn('[OrderDetail] Supabase sync error:', err.message);
+        return null;
+    }
+}
+
+function mapOrderStatus(status) {
+    return {
+        'PENDING':   'pending',
+        'CONFIRMED': 'preparing',
+        'SHIPPING':  'shipping',
+        'DELIVERED': 'delivered',
+        'COMPLETED': 'completed',
+        'CANCELLED': 'cancelled',
+    }[status] || 'pending';
+}
+
+function normalizeImageUrl(url) {
+    if (!url) return '';
+    if (!url.startsWith('http') && !url.startsWith('/')) return '/' + url;
+    return url;
+}
+
+/**
+ * Tạo timeline tối giản từ order_status khi đơn hàng từ Supabase không có timeline.
+ */
+function buildTimelineFromStatus(orderStatus, createdAt, updatedAt) {
+    const statusFlow = [
+        { status: 'placed',    title: 'Đặt hàng thành công',  desc: 'Đơn hàng đã được ghi nhận.' },
+        { status: 'confirmed', title: 'Đã xác nhận',           desc: 'Cửa hàng đã xác nhận đơn.' },
+        { status: 'preparing', title: 'Đang chuẩn bị hàng',    desc: 'Cửa hàng đang đóng gói sản phẩm.' },
+        { status: 'shipping',  title: 'Đang giao hàng',         desc: 'Đơn hàng đang trên đường đến bạn.' },
+        { status: 'delivered', title: 'Đã giao hàng',           desc: 'Đơn hàng đã được giao thành công.' },
+        { status: 'completed', title: 'Hoàn thành',             desc: 'Giao dịch hoàn tất.' },
+    ];
+
+    const localStatus = mapOrderStatus(orderStatus);
+    const statusOrder = statusFlow.map(s => s.status);
+    const currentIdx = statusOrder.indexOf(localStatus);
+
+    // Nếu đơn bị hủy
+    if (localStatus === 'cancelled') {
+        return [
+            { status: 'placed',    title: 'Đặt hàng thành công', timestamp: createdAt,  description: '' },
+            { status: 'cancelled', title: 'Đã hủy',               timestamp: updatedAt || createdAt, description: 'Đơn hàng đã bị hủy.' },
+        ];
+    }
+
+    // Tạo timeline từ placed → trạng thái hiện tại
+    return statusFlow.slice(0, Math.max(currentIdx + 1, 1)).map((step, idx) => ({
+        status:      step.status,
+        title:       step.title,
+        timestamp:   idx === 0 ? createdAt : (idx === currentIdx ? (updatedAt || createdAt) : null),
+        description: idx === currentIdx ? step.desc : '',
+    })).filter(s => s.timestamp); // bỏ bước chưa có timestamp
+}
+
 function resolveDataUrl(path) {
     const scriptSrc = document.currentScript?.src || window.location.href;
     return new URL(path, scriptSrc).href;
@@ -30,6 +172,11 @@ async function loadOrderDetail() {
     }
     
     try {
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        if (window.SupabaseClient && currentUser) {
+            await syncSingleOrderFromSupabase(orderId, currentUser);
+        }
+
         // First try localStorage cache (orders created by the app)
         const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
         currentOrder = Array.isArray(localOrders) ? localOrders.find(o => String(o.id) === String(orderId)) : null;

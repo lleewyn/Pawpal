@@ -111,7 +111,24 @@ async function loadPetDiary(petId) {
 
     renderPetInfoCard(pet);
 
-    const logs = getOrSeedTrackerLogs(pet);
+    let logs = null;
+    if (window.SupabaseClient) {
+        logs = await syncPetDiaryFromSupabase(pet);
+    }
+    
+    if (!logs) {
+        logs = getOrSeedTrackerLogs(pet);
+    } else {
+        // Lấy lại tin nhắn từ local storage để không bị mất chat giả lập
+        const localLogs = getTrackerLogs()[pet.id] || {};
+        logs.chatMessages = localLogs.chatMessages || {};
+        
+        // Lưu cache lại vào localStorage
+        const allLogs = getTrackerLogs();
+        allLogs[pet.id] = logs;
+        saveTrackerLogs(allLogs);
+    }
+
     const { currentSession, history = [] } = logs;
 
     const allSessions = [];
@@ -130,6 +147,100 @@ async function loadPetDiary(petId) {
         currentSessionId = null;
         renderTimeline([]);
     }
+}
+
+// ── Supabase Sync ─────────────────────────────────────────────────────────────
+async function syncPetDiaryFromSupabase(pet) {
+    const db = window.SupabaseClient;
+    if (!db) return null;
+
+    try {
+        const petUuid = pet._supabaseId || pet.id;
+        
+        // Fetch care_log with appointment, care_action, care_log_media
+        const { data, error } = await db.from('care_log')
+            .select(`
+                id,
+                appointment_id,
+                description,
+                health_status,
+                recorded_at,
+                care_action ( action_name ),
+                appointment ( appointment_code, appointment_date, appointment_status, service (service_name) ),
+                care_log_media ( media_url, staff ( full_name ) )
+            `)
+            .eq('pet_id', petUuid)
+            .order('recorded_at', { ascending: false });
+
+        if (error) {
+            console.error('[PetDiary] Supabase error:', error.message);
+            return null;
+        }
+
+        if (!data || data.length === 0) return null;
+
+        const sessionsMap = {};
+
+        for (const log of data) {
+            const aptId = log.appointment_id || 'no-appointment';
+            if (!sessionsMap[aptId]) {
+                sessionsMap[aptId] = {
+                    id: log.appointment?.appointment_code || aptId,
+                    service: log.appointment?.service?.service_name || 'Dịch vụ',
+                    date: log.appointment?.appointment_date || log.recorded_at.split('T')[0],
+                    status: mapAppointmentStatus(log.appointment?.appointment_status),
+                    timeline: [],
+                    invoice: null
+                };
+            }
+
+            const mediaUrl = log.care_log_media?.[0]?.media_url || null;
+            const staffName = log.care_log_media?.[0]?.staff?.full_name || 'Nhân viên PawPal';
+
+            sessionsMap[aptId].timeline.push({
+                id: log.id,
+                status: log.care_action?.action_name || 'Cập nhật',
+                description: log.description,
+                timestamp: log.recorded_at,
+                staff: staffName,
+                image: mediaUrl,
+                urgent: log.health_status !== 'Tốt' && log.health_status !== 'Bình thường'
+            });
+        }
+
+        const sessions = Object.values(sessionsMap).sort((a, b) => new Date(b.date) - new Date(a.date));
+        if (sessions.length === 0) return null;
+
+        let currentSession = null;
+        let history = [];
+
+        for (const session of sessions) {
+            const isFinished = session.status === 'Hoàn thành' || session.status === 'Đã hủy';
+            if (!currentSession && !isFinished) {
+                currentSession = session;
+            } else {
+                history.push(session);
+            }
+        }
+
+        return { currentSession, history, _source: 'supabase' };
+
+    } catch (err) {
+        console.warn('[PetDiary] Supabase sync error:', err.message);
+        return null;
+    }
+}
+
+function mapAppointmentStatus(status) {
+    const map = {
+        'PENDING': 'Chờ xác nhận',
+        'CONFIRMED': 'Đã xác nhận',
+        'COMPLETED': 'Hoàn thành',
+        'CANCELLED': 'Đã hủy',
+        'NO_SHOW': 'Đã hủy',
+        'IN_PROGRESS': 'Đang thực hiện'
+    };
+    return map[status] || status || 'Đang thực hiện';
 }
 
 // ── Tracker Logs ──────────────────────────────────────────────────────────────
@@ -336,8 +447,13 @@ function resolveTimelineImageUrl(item) {
         item.media?.url
     ];
 
-    const rawImage = candidates.find(value => typeof value === 'string' && value.trim() !== '')
+    let rawImage = candidates.find(value => typeof value === 'string' && value.trim() !== '')
         || getTimelineFallbackImage(item);
+
+    // Chuẩn hóa đường dẫn tương đối thành tuyệt đối từ thư mục gốc (để không bị lỗi 404 do ghép nối sai đường dẫn trang)
+    if (rawImage && !rawImage.startsWith('http') && !rawImage.startsWith('data:') && !rawImage.startsWith('/')) {
+        rawImage = '/' + rawImage;
+    }
 
     try {
         const url = new URL(rawImage, window.location.href);

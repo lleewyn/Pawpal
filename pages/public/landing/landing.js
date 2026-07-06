@@ -405,11 +405,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (tag === 'all') {
                 filtered = featured;
             } else {
-                const catMap = { thucan: ['food','thucăn','thức ăn'], phukien: ['accessory','phụkiện','đồdùng'], vesinh: ['hygiene','vệsinh','chămsóc'] };
+                const catMap = { 
+                    thucan: ['food','thucăn','thức ăn', 'thực phẩm'], 
+                    phukien: ['accessory','phụkiện','đồdùng', 'đồ dùng'], 
+                    vesinh: ['hygiene','vệsinh','chămsóc', 'vệ sinh'] 
+                };
                 const keys = catMap[tag] || [tag];
                 filtered = products
                     .filter(p => p.stock > 0 && keys.some(k =>
-                        (p.category || '').toLowerCase().includes(k) ||
+                        (p.categoryName || p.category || '').toLowerCase().includes(k) ||
                         (p.tags || '').toLowerCase().includes(k)
                     ))
                     .sort((a, b) => (b.rating || 0) - (a.rating || 0))

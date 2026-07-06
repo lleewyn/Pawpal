@@ -15,6 +15,9 @@
     <link rel="stylesheet" href="../../../styles/style.css">
     <!-- Components -->
     <link rel="stylesheet" href="product-detail.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../../scripts/api/supabase-client.js"></script>
+    <script type="module" src="../../../scripts/api/api-global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
     <script src="../../../scripts/shared/data-loader.js" defer></script>
     <script src="product-detail.js" defer></script>
@@ -279,253 +282,66 @@
                         <div class="total-reviews-count" id="totalReviewsCount">Dựa trên 156 đánh giá</div>
                     </div>
                     
-                    <!-- Progress Bar Right -->
+                                        <!-- Progress Bar Right -->
                     <div class="stars-distribution">
                         <div class="distribution-row">
                             <span class="distribution-label">5 Sao</span>
                             <div class="distribution-bar-bg">
-                                <div class="distribution-bar-fill ui-box-12"></div>
+                                <div class="distribution-bar-fill ui-box-12" id="bar5"></div>
                             </div>
-                            <span class="distribution-percent">65%</span>
+                            <span class="distribution-percent" id="pct5">0%</span>
                         </div>
                         <div class="distribution-row">
                             <span class="distribution-label">4 Sao</span>
                             <div class="distribution-bar-bg">
-                                <div class="distribution-bar-fill ui-box-13"></div>
+                                <div class="distribution-bar-fill ui-box-13" id="bar4"></div>
                             </div>
-                            <span class="distribution-percent">20%</span>
+                            <span class="distribution-percent" id="pct4">0%</span>
                         </div>
                         <div class="distribution-row">
                             <span class="distribution-label">3 Sao</span>
                             <div class="distribution-bar-bg">
-                                <div class="distribution-bar-fill ui-box-14"></div>
+                                <div class="distribution-bar-fill ui-box-14" id="bar3"></div>
                             </div>
-                            <span class="distribution-percent">10%</span>
+                            <span class="distribution-percent" id="pct3">0%</span>
                         </div>
                         <div class="distribution-row">
                             <span class="distribution-label">2 Sao</span>
                             <div class="distribution-bar-bg">
-                                <div class="distribution-bar-fill ui-box-15"></div>
+                                <div class="distribution-bar-fill ui-box-15" id="bar2"></div>
                             </div>
-                            <span class="distribution-percent">3%</span>
+                            <span class="distribution-percent" id="pct2">0%</span>
                         </div>
                         <div class="distribution-row">
                             <span class="distribution-label">1 Sao</span>
                             <div class="distribution-bar-bg">
-                                <div class="distribution-bar-fill ui-box-16"></div>
+                                <div class="distribution-bar-fill ui-box-16" id="bar1"></div>
                             </div>
-                            <span class="distribution-percent">2%</span>
+                            <span class="distribution-percent" id="pct1">0%</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Chips Filter -->
-                <div class="review-chips-wrapper">
+                <div class="review-chips-wrapper" id="reviewChips">
                     <button class="review-filter-chip active" data-filter="all">Tất cả</button>
-                    <button class="review-filter-chip" data-filter="5">5 Sao (102)</button>
-                    <button class="review-filter-chip" data-filter="4">4 Sao (31)</button>
-                    <button class="review-filter-chip" data-filter="3">3 Sao (16)</button>
-                    <button class="review-filter-chip" data-filter="2">2 Sao (5)</button>
-                    <button class="review-filter-chip" data-filter="1">1 Sao (2)</button>
-                    <button class="review-filter-chip" data-filter="media">Có Hình Ảnh / Video (24)</button>
-                    <button class="review-filter-chip" data-filter="replied">Có Bình Luận (18)</button>
+                    <button class="review-filter-chip" data-filter="5">5 Sao</button>
+                    <button class="review-filter-chip" data-filter="4">4 Sao</button>
+                    <button class="review-filter-chip" data-filter="3">3 Sao</button>
+                    <button class="review-filter-chip" data-filter="2">2 Sao</button>
+                    <button class="review-filter-chip" data-filter="1">1 Sao</button>
                 </div>
                 
                 <!-- Reviews List -->
-                <div class="reviews-list">
-                    <!-- Review Item 1 — 5 sao, có seller reply -->
-                    <div class="review-item" data-stars="5">
-                        <div class="review-header">
-                            <div class="reviewer-avatar">N</div>
-                            <div class="reviewer-meta">
-                                <div class="d-flex align-items-center gap-2 mb-1">
-                                    <div class="reviewer-name ui-spacing-5">Nguyễn T***i</div>
-                                    <div class="review-stars ui-text-format-9" aria-label="5 sao">
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                    </div>
-                                </div>
-                                <span class="review-verified-badge">Người mua thực</span>
-                                <div class="review-meta-info">
-                                    <span class="review-date">07/05/2025</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="review-content">
-                            <p>Sản phẩm rất tốt! Chó nhà mình ăn rất ngon và lông bóng mượt hơn hẳn sau 1 tháng sử dụng. Giao hàng nhanh, đóng gói cẩn thận.</p>
-                        </div>
-                        <div class="seller-reply">
-                            <div class="seller-reply-title">Phản hồi của cửa hàng</div>
-                            <div class="seller-reply-content">Cảm ơn bạn đã ủng hộ PawPal. Mong bạn và bé cưng luôn khoẻ!</div>
-                        </div>
-                        <div class="review-actions">
-                            <button class="btn-helpful" aria-label="Đánh dấu đánh giá này hữu ích">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                                </svg>
-                                Hữu ích? (3)
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Review Item 2 — 4 sao -->
-                    <div class="review-item" data-stars="4">
-                        <div class="review-header">
-                            <div class="reviewer-avatar">T</div>
-                            <div class="reviewer-meta">
-                                <div class="d-flex align-items-center gap-2 mb-1">
-                                    <div class="reviewer-name ui-spacing-5">Trần V***g</div>
-                                    <div class="review-stars ui-text-format-9" aria-label="4 sao">
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star" aria-hidden="true"></span>
-                                    </div>
-                                </div>
-                                <span class="review-verified-badge">Người mua thực</span>
-                                <div class="review-meta-info">
-                                    <span class="review-date">28/05/2025</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="review-content">
-                            <p>Chất lượng ổn, hạt khá nhỏ phù hợp với poodle nhà mình. Giá hơi cao nhưng chất lượng xứng đáng.</p>
-                        </div>
-                        <div class="seller-reply">
-                            <div class="seller-reply-title">Phản hồi của cửa hàng</div>
-                            <div class="seller-reply-content">Cảm ơn bạn, PawPal sẽ cố gắng cải thiện hơn nữa.</div>
-                        </div>
-                        <div class="review-actions">
-                            <button class="btn-helpful" aria-label="Đánh dấu đánh giá này hữu ích">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                                </svg>
-                                Hữu ích? (1)
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Review Item 3 — 5 sao, có ảnh -->
-                    <div class="review-item" data-stars="5" data-has-media="true">
-                        <div class="review-header">
-                            <div class="reviewer-avatar">L</div>
-                            <div class="reviewer-meta">
-                                <div class="d-flex align-items-center gap-2 mb-1">
-                                    <div class="reviewer-name ui-spacing-5">Lê M***n</div>
-                                    <div class="review-stars ui-text-format-9" aria-label="5 sao">
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                    </div>
-                                </div>
-                                <span class="review-verified-badge">Người mua thực</span>
-                                <div class="review-meta-info">
-                                    <span class="review-date">20/05/2025</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="review-content">
-                            <p>Mình đã mua nhiều loại thức ăn cho chó nhưng thấy Royal Canin là tốt nhất. Chó nhà mình ăn rất ngon và tiêu hóa tốt.</p>
-                        </div>
-                        <!-- Media thumbnails -->
-                        <div class="review-media-list">
-                            <img src="../../../assets/images/publics/cat7.jpg" alt="Ảnh bé cưng sau khi dùng sản phẩm" class="review-photo" loading="lazy">
-                        </div>
-                        <div class="review-actions">
-                            <button class="btn-helpful" aria-label="Đánh dấu đánh giá này hữu ích">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                                </svg>
-                                Hữu ích? (7)
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Review Item 4 — 4 sao -->
-                    <div class="review-item" data-stars="4">
-                        <div class="review-header">
-                            <div class="reviewer-avatar">P</div>
-                            <div class="reviewer-meta">
-                                <div class="d-flex align-items-center gap-2 mb-1">
-                                    <div class="reviewer-name ui-spacing-5">Phạm T***à</div>
-                                    <div class="review-stars ui-text-format-9" aria-label="4 sao">
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star" aria-hidden="true"></span>
-                                    </div>
-                                </div>
-                                <span class="review-verified-badge">Người mua thực</span>
-                                <div class="review-meta-info">
-                                    <span class="review-date">18/05/2025</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="review-content">
-                            <p>Sản phẩm đúng như mô tả, giao hàng nhanh. Tuy nhiên giá hơi cao so với mặt bằng chung.</p>
-                        </div>
-                        <div class="review-actions">
-                            <button class="btn-helpful" aria-label="Đánh dấu đánh giá này hữu ích">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                                </svg>
-                                Hữu ích?
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Review Item 5 — 5 sao -->
-                    <div class="review-item" data-stars="5">
-                        <div class="review-header">
-                            <div class="reviewer-avatar">H</div>
-                            <div class="reviewer-meta">
-                                <div class="d-flex align-items-center gap-2 mb-1">
-                                    <div class="reviewer-name ui-spacing-5">Hoàng Đ***h</div>
-                                    <div class="review-stars ui-text-format-9" aria-label="5 sao">
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                        <span class="star filled" aria-hidden="true"></span>
-                                    </div>
-                                </div>
-                                <span class="review-verified-badge">Người mua thực</span>
-                                <div class="review-meta-info">
-                                    <span class="review-date">15/05/2025</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="review-content">
-                            <p>Rất hài lòng với sản phẩm này. Con chó nhà mình từ khi ăn Royal Canin thì lông đẹp hơn hẳn, không còn rụng nhiều như trước.</p>
-                        </div>
-                        <div class="review-actions">
-                            <button class="btn-helpful" aria-label="Đánh dấu đánh giá này hữu ích">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                                </svg>
-                                Hữu ích? (2)
-                            </button>
-                        </div>
-                    </div>
+                <div class="reviews-list" id="reviewsContainer">
+                    <div class="text-center py-4 text-secondary">Đang tải đánh giá...</div>
                 </div>
 
-                <!-- Load More Button -->
-                <div class="reviews-load-more">
-                    <button class="btn-load-more" id="loadMoreReviews">
-                        Xem thêm đánh giá
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="reviews-showing-text">Đang hiển thị 5 trên 156 đánh giá</div>
-                </div>
+                <!-- Pagination -->
+                <nav aria-label="Review Pagination" class="mt-4" id="reviewsPaginationWrapper" style="display: none;">
+                    <ul class="pagination justify-content-center" id="reviewsPagination">
+                    </ul>
+                </nav>
             </div>
         </section>
 

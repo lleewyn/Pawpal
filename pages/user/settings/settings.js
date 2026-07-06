@@ -244,7 +244,7 @@ function initChangePasswordForm() {
         btnSubmit.textContent = 'Đang cập nhật...';
 
         // Update lên Supabase — dùng phone_main vì id có thể là mock ID
-        const db = window.SupabaseClient;
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (db) {
             const lookupId = currentUser._source === 'supabase' ? currentUser.id : null;
             let supaError = null;
@@ -360,12 +360,16 @@ function initPasswordAccordion() {
     
     if (toggleBtn && formContainer && icon) {
         toggleBtn.addEventListener('click', () => {
-            if (formContainer.style.display === 'none') {
+            const card = toggleBtn.closest('.settings-card-custom');
+            const isHidden = formContainer.classList.contains('d-none');
+            if (isHidden) {
                 formContainer.classList.remove('d-none');
                 icon.style.transform = 'rotate(180deg)';
+                if (card) card.classList.remove('collapsed');
             } else {
                 formContainer.classList.add('d-none');
                 icon.style.transform = 'rotate(0deg)';
+                if (card) card.classList.add('collapsed');
             }
         });
     }
