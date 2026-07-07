@@ -406,10 +406,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (appliedVoucher) {
             const validation = validateVoucherCode(appliedVoucher.code, subtotal);
             if (!validation.valid) {
-                appliedVoucher = null;
-                renderAppliedVoucherBadge();
-                localStorage.removeItem('pawpal_applied_voucher_code');
-                alert('Voucher đã tự động gỡ vì không còn hợp lệ.');
+                // Giữ voucher đã chọn trong state, chỉ tạm thời không tính giảm
+                // để khi tăng số lượng lên đủ điều kiện sẽ tự áp lại ngay.
+                discount = 0;
             } else {
                 appliedVoucher = validation.voucher;
                 discount = validation.discount;
@@ -510,8 +509,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (result.valid) {
             appliedVoucher = result.voucher;
             renderAppliedVoucherBadge();
-        } else {
-            localStorage.removeItem('pawpal_applied_voucher_code');
         }
     }
 
@@ -561,9 +558,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ? `-${formatPrice(voucher.value)}`
                 : voucher.type === 'percentage'
                     ? `-${voucher.value}%` : `Freeship tối đa ${formatPrice(voucher.value)}`;
+            const minOrderLabel = voucher.minOrderValue
+                ? `Áp dụng cho đơn từ ${formatPrice(voucher.minOrderValue)}`
+                : 'Áp dụng cho mọi đơn hàng';
             return `
                 <button type="button" class="btn btn-outline-secondary btn-sm voucher-select-btn" data-code="${voucher.code}">
-                    <strong>${voucher.code}</strong> • ${label}
+                    <strong>${voucher.code}</strong> • ${label}<br>
+                    <small class="text-muted">${minOrderLabel}</small>
                 </button>
             `;
         }).join('');

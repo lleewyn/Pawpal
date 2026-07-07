@@ -147,6 +147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderPaymentMethods();
         loadPersistedVoucher();
         loadPersistedPoints();
+        renderVoucherHints();
         renderOrderSummary();
         
         // Show PawPoints section if user logged in và có điểm
@@ -336,6 +337,51 @@ function renderAppliedVoucherUI() {
     if (voucherAmount) {
         voucherAmount.textContent = `-${formatCurrency(checkoutState.totals.voucherDiscount)}`;
     }
+}
+
+function renderVoucherHints() {
+    const container = document.getElementById('voucher-hints');
+    if (!container) return;
+
+    const subtotal = calculateSubtotal();
+    const vouchers = [...checkoutState.vouchers, ...checkoutState.myVouchers];
+    const seen = new Set();
+
+    const visibleVouchers = vouchers.filter(voucher => {
+        if (!voucher || !voucher.code || seen.has(voucher.code)) return false;
+        seen.add(voucher.code);
+        return true;
+    });
+
+    container.innerHTML = visibleVouchers.map(voucher => {
+        const minimum = Number(voucher.minOrderValue || 0);
+        const isEligible = subtotal >= minimum;
+        const label = minimum > 0
+            ? `Áp dụng cho đơn hàng từ ${formatCurrency(minimum)}`
+            : 'Áp dụng cho mọi đơn hàng';
+        const discountText = voucher.type === 'percentage'
+            ? `-${voucher.value}%`
+            : `-${formatCurrency(voucher.value)}`;
+
+        return `
+            <button type="button"
+                class="voucher-hint-item ${isEligible ? 'is-eligible' : ''}"
+                data-voucher-code="${voucher.code}">
+                <span class="voucher-hint-code">${voucher.code}</span>
+                <span class="voucher-hint-meta">${label} · ${discountText}</span>
+            </button>
+        `;
+    }).join('');
+
+    container.querySelectorAll('.voucher-hint-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const input = document.getElementById('voucher-input');
+            if (input) {
+                input.value = btn.dataset.voucherCode || '';
+                input.focus();
+            }
+        });
+    });
 }
 
 function loadPersistedVoucher() {
