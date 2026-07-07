@@ -27,6 +27,8 @@ const checkoutState = {
     }
 };
 
+const PENDING_POINTS_KEY = 'pawpal_checkout_points_used';
+
 function ensureSelectOption(selectElement, value) {
     if (!selectElement || !value) return;
 
@@ -144,6 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderDeliveryOptions();
         renderPaymentMethods();
         loadPersistedVoucher();
+        loadPersistedPoints();
         renderOrderSummary();
         
         // Show PawPoints section if user logged in và có điểm
@@ -222,13 +225,10 @@ function validateCheckoutCart() {
     if (checkoutState.appliedVoucher) {
         const validation = validateVoucher(checkoutState.appliedVoucher.code, false);
         if (!validation.valid) {
-            // Tự động xóa voucher không hợp lệ, hiển thị thông báo nhưng không block checkout
-            const voucherCode = checkoutState.appliedVoucher.code;
-            checkoutState.appliedVoucher = null;
-            localStorage.removeItem('pawpal_applied_voucher_code');
+            // Giữ mã đã chọn, chỉ tạm thời không tính giảm giá cho đến khi đơn đủ điều kiện lại
+            checkoutState.totals.voucherDiscount = 0;
             renderAppliedVoucherUI();
             updateOrderTotals();
-            showToast(`Mã giảm giá "${voucherCode}" đã bị xóa: ${validation.message}`, 'warning');
         }
     }
 
@@ -308,9 +308,6 @@ function calculateVoucherDiscount() {
 
     const validation = validateVoucher(checkoutState.appliedVoucher.code, false);
     if (!validation.valid) {
-        checkoutState.appliedVoucher = null;
-        localStorage.removeItem('pawpal_applied_voucher_code');
-        renderAppliedVoucherUI();
         return 0;
     }
 
@@ -606,7 +603,7 @@ function initializePawPoints() {
     
     const slider = document.getElementById('points-slider');
     slider.max = maxPoints;
-    slider.value = 0;
+    slider.value = Math.min(Number(localStorage.getItem(PENDING_POINTS_KEY) || 0), maxPoints);
     
     // Enable slider when checkbox checked
     const checkbox = document.getElementById('use-points-checkbox');
@@ -617,6 +614,14 @@ function initializePawPoints() {
             updatePointsDisplay(0);
             checkoutState.pointsUsed = 0;
             checkoutState.totals.pointsDiscount = 0;
+            localStorage.removeItem(PENDING_POINTS_KEY);
+            updateOrderTotals();
+        } else {
+            const restoredPoints = Math.min(Number(localStorage.getItem(PENDING_POINTS_KEY) || slider.value || 0), maxPoints);
+            slider.value = restoredPoints;
+            checkoutState.pointsUsed = restoredPoints;
+            checkoutState.totals.pointsDiscount = restoredPoints * 1000;
+            updatePointsDisplay(restoredPoints);
             updateOrderTotals();
         }
     });
@@ -629,6 +634,7 @@ function initializePawPoints() {
         if (checkbox.checked) {
             checkoutState.pointsUsed = points;
             checkoutState.totals.pointsDiscount = points * 1000;
+            localStorage.setItem(PENDING_POINTS_KEY, String(points));
             updateOrderTotals();
         }
     });
@@ -641,6 +647,22 @@ function updatePointsDisplay(points) {
     document.getElementById('points-to-use').textContent = points;
     document.getElementById('points-discount-display').textContent = formatCurrency(discount);
     document.getElementById('remaining-points').textContent = remaining;
+}
+
+function loadPersistedPoints() {
+    const savedPoints = Number(localStorage.getItem(PENDING_POINTS_KEY) || 0);
+    if (!savedPoints) return;
+
+    const checkbox = document.getElementById('use-points-checkbox');
+    const slider = document.getElementById('points-slider');
+    if (!checkbox || !slider) return;
+
+    checkbox.checked = true;
+    slider.disabled = false;
+    slider.value = savedPoints;
+    checkoutState.pointsUsed = savedPoints;
+    checkoutState.totals.pointsDiscount = savedPoints * 1000;
+    updatePointsDisplay(savedPoints);
 }
 
 // ============================================================================
@@ -950,26 +972,6 @@ async function handleCheckout() {
     // Save to user's orders list (legacy support)
     saveOrderToUserHistory(orderData);
 
-    // Trừ điểm PawPoints nếu user đã dùng điểm để giảm giá
-    if (checkoutState.user && checkoutState.pointsUsed > 0) {
-        try {
-            const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
-            const ui = users.findIndex(u => String(u.phone) === String(checkoutState.user.phone));
-            if (ui !== -1) {
-                users[ui].points = Math.max(0, (users[ui].points || 0) - checkoutState.pointsUsed);
-                localStorage.setItem('pawpal_users_db', JSON.stringify(users));
-            }
-            // Sync session
-            const sessionUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-            if (sessionUser) {
-                sessionUser.points = Math.max(0, (sessionUser.points || 0) - checkoutState.pointsUsed);
-                localStorage.setItem('pawpal_current_user', JSON.stringify(sessionUser));
-            }
-        } catch (e) {
-            console.warn('[Checkout] Lỗi trừ điểm:', e);
-        }
-    }
-
     // Create a temporary guest user record when a guest checks out
     if (!checkoutState.user) {
         createGuestTempUserForOrder(orderData);
@@ -980,6 +982,7 @@ async function handleCheckout() {
         // COD: Clear checkout state and go to success page
         localStorage.removeItem('pawpal_cart_unselected_backup');
         localStorage.removeItem('pawpal_applied_voucher_code');
+        localStorage.removeItem(PENDING_POINTS_KEY);
         const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
         if (isBuyNow) {
             sessionStorage.removeItem('pawpal_buynow_cart');
@@ -995,6 +998,7 @@ async function handleCheckout() {
         // Bank transfer: Clear checkout state and go to success page
         localStorage.removeItem('pawpal_cart_unselected_backup');
         localStorage.removeItem('pawpal_applied_voucher_code');
+        localStorage.removeItem(PENDING_POINTS_KEY);
         const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
         if (isBuyNow) {
             sessionStorage.removeItem('pawpal_buynow_cart');
@@ -1189,6 +1193,7 @@ function verifyPaymentSimulation() {
             if (willSucceed) {
                 qrPaymentState.paymentVerified = true;
                 qrPaymentState.orderData.payment.status = 'paid';
+                finalizePendingPointsUsage();
                 localStorage.setItem('pawpal_current_order', JSON.stringify(qrPaymentState.orderData));
                 updatePersistedOrderPaymentStatus(qrPaymentState.orderData.orderId, 'paid');
                 statusMsg.className = 'payment-status-message show success';
@@ -1219,6 +1224,28 @@ function verifyPaymentSimulation() {
             resolve();
         }, delay);
     });
+}
+
+function finalizePendingPointsUsage() {
+    if (!checkoutState.user || !checkoutState.pointsUsed) return;
+
+    try {
+        const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+        const ui = users.findIndex(u => String(u.phone) === String(checkoutState.user.phone));
+        if (ui !== -1) {
+            users[ui].points = Math.max(0, (users[ui].points || 0) - checkoutState.pointsUsed);
+            localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+        }
+        const sessionUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        if (sessionUser) {
+            sessionUser.points = Math.max(0, (sessionUser.points || 0) - checkoutState.pointsUsed);
+            localStorage.setItem('pawpal_current_user', JSON.stringify(sessionUser));
+        }
+    } catch (e) {
+        console.warn('[Checkout] Lỗi trừ điểm sau thanh toán:', e);
+    } finally {
+        localStorage.removeItem(PENDING_POINTS_KEY);
+    }
 }
 function setupEventListeners() {
     // Address dropdown
