@@ -1,4 +1,4 @@
-﻿function initApp() {
+function initApp() {
     console.log('[main.js] initApp');
     initLookup();
     initPremiumMotion();
@@ -527,12 +527,12 @@ function setupShopLandingActions(grid) {
     // Helper: lấy giỏ hàng từ localStorage
     function getCart() { return JSON.parse(localStorage.getItem('pawpal_cart') || '[]'); }
     function saveCart(cart) { 
-        localStorage.setItem('pawpal_cart', JSON.stringify(cart)); 
-        const currentUser = getCurrentWishlistUser();
-        if (window.API && window.API.saveUserCart) {
-            window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
+        if (window.saveCart) {
+            window.saveCart(cart);
+        } else {
+            localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+            if (window.updateCartBadge) window.updateCartBadge();
         }
-        if (window.updateCartBadge) window.updateCartBadge();
     }
 
     // Helper: lấy wishlist
@@ -557,7 +557,7 @@ function setupShopLandingActions(grid) {
         if (typeof window.showGlobalToast === 'function') { window.showGlobalToast(type || 'success', msg); return; }
         const t = document.createElement('div');
         t.textContent = msg;
-        t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2d5343;color:#fff;padding:10px 20px;border-radius:99px;font-size:14px;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
+        t.style.cssText = 'position:fixed;right:24px;bottom:24px;background:#2d5343;color:#fff;padding:10px 20px;border-radius:99px;font-size:14px;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
         document.body.appendChild(t);
         setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 2000);
     }
@@ -661,7 +661,7 @@ function setupLandingServiceWishlist(grid) {
         }
         const t = document.createElement('div');
         t.textContent = msg;
-        t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2d5343;color:#fff;padding:10px 20px;border-radius:99px;font-size:14px;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
+        t.style.cssText = 'position:fixed;right:24px;bottom:24px;background:#2d5343;color:#fff;padding:10px 20px;border-radius:99px;font-size:14px;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
         document.body.appendChild(t);
         setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 2000);
     }

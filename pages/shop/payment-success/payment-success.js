@@ -19,16 +19,83 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
-    // Display order info
-    displayOrderInfo(orderData);
-    setupGuestActivationCard(orderData);
+    resolveOrderData(orderId, orderData).then((resolvedOrder) => {
+        if (!resolvedOrder) {
+            window.location.href = '/pages/shop/shop.html';
+            return;
+        }
+
+        // Display order info
+        displayOrderInfo(resolvedOrder);
+        setupGuestActivationCard(resolvedOrder);
+
+        // Setup tracking link based on user auth status
+        setupTrackingLink(resolvedOrder);
+    });
     
     // Setup copy button
     document.getElementById('btn-copy-order').addEventListener('click', copyOrderId);
-    
-    // Setup tracking link based on user auth status
-    setupTrackingLink(orderData);
 });
+
+async function resolveOrderData(orderId, fallbackOrder) {
+    const localOrder = fallbackOrder || JSON.parse(localStorage.getItem('pawpal_current_order') || 'null');
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+
+    if (!db || !orderId) return localOrder;
+
+    try {
+        const { data, error } = await db
+            .from('sales_order')
+            .select(`
+                id, order_code, customer_id, order_status, payment_status,
+                subtotal, shipping_fee, discount_amount, total_amount, created_at,
+                sales_order_detail (
+                    id, quantity, unit_price, subtotal,
+                    product ( id, product_name, image_urls )
+                ),
+                customer_address ( receiver_name, receiver_phone, province, street_address )
+            `)
+            .or(`order_code.eq.${orderId},id.eq.${orderId}`)
+            .limit(1);
+
+        if (error || !data?.length) return localOrder;
+
+        const row = data[0];
+        const shipping = row.customer_address || {};
+        return {
+            orderId: row.order_code || row.id || orderId,
+            id: row.order_code || row.id || orderId,
+            shipping: {
+                name: shipping.receiver_name || '',
+                phone: shipping.receiver_phone || '',
+                address: shipping.street_address || '',
+                district: '',
+                city: shipping.province || '',
+            },
+            payment: {
+                method: localOrder?.payment?.method || 'cod',
+                status: String(row.payment_status || localOrder?.payment?.status || 'PENDING').toLowerCase(),
+            },
+            items: (row.sales_order_detail || []).map((item) => ({
+                id: item.product?.id || '',
+                name: item.product?.product_name || 'Sản phẩm',
+                image: item.product?.image_urls?.[0] || '',
+                quantity: item.quantity || 1,
+                price: item.unit_price || 0,
+            })),
+            pricing: {
+                subtotal: row.subtotal || 0,
+                shippingFee: row.shipping_fee || 0,
+                pointsDiscount: localOrder?.pricing?.pointsDiscount || 0,
+                voucherDiscount: localOrder?.pricing?.voucherDiscount || 0,
+                grandTotal: row.total_amount || 0,
+            },
+        };
+    } catch (err) {
+        console.warn('[payment-success] resolveOrderData error:', err?.message || err);
+        return localOrder;
+    }
+}
 
 function setupGuestActivationCard(order) {
     const card = document.getElementById('guestActivationCard');

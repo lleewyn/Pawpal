@@ -2,6 +2,8 @@
 // PawPal — Booking Page Script (Section 3.1.4)
 // ==========================================================================
 
+import { getPets, savePets } from '../../../scripts/api/petService.js';
+
 let allServices = [];
 let initDiagnostics = "Not initialized yet.";
 // Member discount config (change these to adjust member discount globally)
@@ -72,12 +74,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Determine current user state
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-    if (currentUser && !currentUser.is_temporary) {
+    const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+    const isMemberUser = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
+    if (isMemberUser) {
         // Logged in member
-        const allPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-        const activePets = allPets.filter(p => !p.isArchived && String(p.userId) === String(currentUser.id));
-        
+        const resolvedPets = await getPets(currentUser.id || currentUser.phone || currentUser.phone_main || null);
+        const activePets = (Array.isArray(resolvedPets) ? resolvedPets : []).filter(p => !p.isArchived);
+
         if (activePets.length === 0) {
             // Logged in member but has no pets -> show guest flow for quick creation
             document.getElementById('memberFlow').classList.add('d-none');
@@ -90,19 +93,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Prefill guest form with member info
             const ownerNameInput = document.getElementById('ownerName');
             const ownerPhoneInput = document.getElementById('ownerPhone');
-            if (ownerNameInput) ownerNameInput.value = currentUser.name || '';
-            if (ownerPhoneInput) ownerPhoneInput.value = currentUser.phone || '';
             
-            bookingState.ownerName = currentUser.name || '';
-            bookingState.ownerPhone = currentUser.phone || '';
+            const resolvedName = resolveCurrentUserName(currentUser);
+            const resolvedPhone = resolveCurrentUserPhone(currentUser);
+            
+            if (ownerNameInput) ownerNameInput.value = resolvedName;
+            if (ownerPhoneInput) ownerPhoneInput.value = resolvedPhone;
+            
+            bookingState.ownerName = resolvedName;
+            bookingState.ownerPhone = resolvedPhone;
             
             setupGuestValidation();
+            bindQuickAddPetModal(currentUser);
         } else {
             // Normal member flow
             document.getElementById('memberFlow').classList.remove('d-none');
             document.getElementById('guestFlow').classList.add('d-none');
             document.getElementById('guestInfoNote').classList.add('d-none');
-            loadMemberPets(currentUser);
+            await loadMemberPets(currentUser);
+            bindQuickAddPetModal(currentUser);
         }
     } else {
         // Guest flow
@@ -110,6 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('guestFlow').classList.remove('d-none');
         document.getElementById('guestInfoNote').classList.remove('d-none');
         setupGuestValidation();
+        bindQuickAddPetModal(currentUser);
     }
 
     setupStepActions();
@@ -148,15 +158,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-function loadMemberPets(user) {
+function resolveCurrentUserName(user) {
+    if (!user) return '';
+    if (user.name) return user.name;
+    if (user.full_name) return user.full_name;
+    if (user.displayName) return user.displayName;
+    if (Array.isArray(user.customer_profile) && user.customer_profile[0]?.full_name) {
+        return user.customer_profile[0].full_name;
+    }
+    if (user.customer_profile?.full_name) return user.customer_profile.full_name;
+    if (user.profile?.full_name) return user.profile.full_name;
+    if (user.profile?.name) return user.profile.name;
+    return '';
+}
+
+function resolveCurrentUserPhone(user) {
+    if (!user) return '';
+    return user.phone || user.phone_main || user.phoneNumber || user.phone_number || '';
+}
+
+async function loadMemberPets(user) {
     const mNameInput = document.getElementById('memberOwnerName');
     const mPhoneInput = document.getElementById('memberOwnerPhone');
+    const resolvedName = resolveCurrentUserName(user);
+    const resolvedPhone = resolveCurrentUserPhone(user);
     
-    if (mNameInput) mNameInput.value = user.name;
-    if (mPhoneInput) mPhoneInput.value = user.phone;
+    if (mNameInput) mNameInput.value = resolvedName;
+    if (mPhoneInput) mPhoneInput.value = resolvedPhone;
 
-    bookingState.ownerName = user.name;
-    bookingState.ownerPhone = user.phone;
+    bookingState.ownerName = resolvedName;
+    bookingState.ownerPhone = resolvedPhone;
 
     // Attach validation listeners
     ['memberOwnerName', 'memberOwnerPhone'].forEach(id => {
@@ -173,21 +204,39 @@ function loadMemberPets(user) {
         }
     });
 
-    // Get pets from local storage
-    const allPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-    const activePets = allPets.filter(p => !p.isArchived && String(p.userId) === String(user.id));
-
     const listContainer = document.getElementById('memberPetList');
-    if (activePets.length === 0) {
+    if (!listContainer) return;
+
+    const renderEmpty = () => {
         listContainer.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 20px; background: rgba(0,0,0,0.03); border-radius: 8px;">
-                <p style="margin: 0; color: var(--text-light);">Bạn chưa có hồ sơ bé cưng nào.</p>
-                <a href="../../user/pet-profile/pet-profile.html" class="btn-green-outline btn-sm" style="margin-top: 10px; display: inline-block; padding: 6px 14px; font-size: 0.85rem; text-decoration: none;">+ Thêm hồ sơ bé cưng</a>
+                <p style="margin: 0; color: var(--text-light);">B?n ch?a c? h? s? b? c?ng n?o.</p>
+                <button type="button" class="btn-green-outline btn-sm" id="addPetInlineBtn" style="margin-top: 10px; display: inline-block; padding: 6px 14px; font-size: 0.85rem;">+ Thêm hồ sơ bé cưng</button>
             </div>
         `;
-        return;
+    };
+
+    let activePets = [];
+    try {
+        const supabasePets = await getPets(user?.id || user?.phone || user?.phone_main || null);
+        activePets = (Array.isArray(supabasePets) ? supabasePets : []).filter(p => !p.isArchived);
+        if (activePets.length > 0) {
+            localStorage.setItem('pawpal_pets', JSON.stringify(activePets));
+        }
+    } catch (error) {
+        console.warn('[booking] Load pets from Supabase failed, fallback to localStorage:', error);
     }
 
+    if (activePets.length === 0) {
+        const allPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+        activePets = allPets.filter(p => !p.isArchived && String(p.userId) === String(user.id));
+    }
+
+    if (activePets.length === 0) {
+        renderEmpty();
+        setupInlineAddPetButton(user);
+        return;
+    }
     const DEFAULT_PET_AVATARS = {
         dog: '/assets/images/publics/dogcute.jpg',
         cat: '/assets/images/publics/catcute.jpg',
@@ -243,6 +292,117 @@ function loadMemberPets(user) {
 
             validateStep1();
         });
+    });
+
+    const addCard = document.createElement('button');
+    addCard.type = 'button';
+    addCard.className = 'pet-select-card pet-select-card-add';
+    addCard.style.justifyContent = 'center';
+    addCard.style.gap = '10px';
+    addCard.innerHTML = `
+        <div class="pet-avatar-placeholder" style="font-size: 1.5rem; width: 44px; height: 44px; display:flex;align-items:center;justify-content:center;">+</div>
+        <div class="pet-select-details">
+            <span class="pet-select-name">Thêm bé mới</span>
+            <span class="pet-select-meta">Tạo hồ sơ ngay tại trang đặt lịch</span>
+        </div>
+    `;
+    addCard.addEventListener('click', () => openQuickAddPetModal(user));
+    listContainer.appendChild(addCard);
+
+    setupInlineAddPetButton(user);
+}
+
+function setupInlineAddPetButton(user) {
+    const btn = document.getElementById('addPetInlineBtn');
+    if (btn && !btn.dataset.bound) {
+        btn.dataset.bound = 'true';
+        btn.addEventListener('click', () => openQuickAddPetModal(user));
+    }
+}
+
+function openQuickAddPetModal(user) {
+    const modal = document.getElementById('quickAddPetModal');
+    if (!modal) return;
+    const nameEl = document.getElementById('quickPetName');
+    const speciesEl = document.getElementById('quickPetSpecies');
+    const breedEl = document.getElementById('quickPetBreed');
+    const weightEl = document.getElementById('quickPetWeight');
+    const noteEl = document.getElementById('quickPetNote');
+    const ownerNameEl = document.getElementById('quickPetOwnerName');
+    const ownerPhoneEl = document.getElementById('quickPetOwnerPhone');
+    if (ownerNameEl) ownerNameEl.value = resolveCurrentUserName(user);
+    if (ownerPhoneEl) ownerPhoneEl.value = resolveCurrentUserPhone(user);
+    if (nameEl) nameEl.value = '';
+    if (speciesEl) speciesEl.value = 'cat';
+    if (breedEl) breedEl.value = '';
+    if (weightEl) weightEl.value = '';
+    if (noteEl) noteEl.value = '';
+    modal.classList.add('active');
+}
+
+async function createPetInline(user) {
+    const name = document.getElementById('quickPetName')?.value.trim();
+    const species = document.getElementById('quickPetSpecies')?.value || 'other';
+    const breed = document.getElementById('quickPetBreed')?.value.trim() || '';
+    const weight = parseFloat(document.getElementById('quickPetWeight')?.value || '0');
+    const note = document.getElementById('quickPetNote')?.value.trim() || '';
+    const ownerName = document.getElementById('quickPetOwnerName')?.value.trim() || resolveCurrentUserName(user);
+    const ownerPhone = document.getElementById('quickPetOwnerPhone')?.value.trim() || resolveCurrentUserPhone(user);
+
+    if (!name || !weight || Number.isNaN(weight) || weight <= 0) {
+        alert('Vui lòng nhập tên bé và cân nặng hợp lệ.');
+        return false;
+    }
+
+    const existing = await getPets(user?.id || user?.phone || user?.phone_main || null);
+    const petId = `PET-${Date.now()}`;
+    const newPet = {
+        id: petId,
+        name,
+        species,
+        breed,
+        weight,
+        notes: note,
+        ownerName,
+        ownerPhone,
+        userId: user?.id || null,
+        isArchived: false,
+        createdAt: new Date().toISOString()
+    };
+
+    const nextPets = [newPet, ...existing.filter((p) => String(p.id) !== String(petId))];
+    const saved = await savePets(nextPets);
+    if (!saved) {
+        alert('Không thể lưu hồ sơ bé cưng lúc này. Vui lòng thử lại.');
+        return false;
+    }
+
+    const modal = document.getElementById('quickAddPetModal');
+    if (modal) modal.classList.remove('active');
+    await loadMemberPets(user);
+    bookingState.petId = newPet.id;
+    bookingState.petName = newPet.name;
+    bookingState.petType = newPet.species;
+    bookingState.petBreed = newPet.breed;
+    bookingState.petWeight = newPet.weight;
+    validateStep1();
+    return true;
+}
+
+function bindQuickAddPetModal(user) {
+    const modal = document.getElementById('quickAddPetModal');
+    if (!modal || modal.dataset.bound === 'true') return;
+    modal.dataset.bound = 'true';
+
+    const close = () => modal.classList.remove('active');
+    document.getElementById('closeQuickAddPetModal')?.addEventListener('click', close);
+    document.getElementById('cancelQuickAddPet')?.addEventListener('click', close);
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) close();
+    });
+    document.getElementById('saveQuickAddPet')?.addEventListener('click', async () => {
+        const ok = await createPetInline(user);
+        if (ok) close();
     });
 }
 
@@ -360,10 +520,10 @@ function validateGuestInput(id, isBlur = false) {
 }
 
 function validateStep1() {
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+    const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
     let isValid = false;
 
-    if (currentUser && !currentUser.is_temporary) {
+    if (currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main)) {
         const mName = document.getElementById('memberOwnerName')?.value.trim() || '';
         const mPhone = document.getElementById('memberOwnerPhone')?.value.trim() || '';
         const phoneRegex = /^0[0-9]{9}$/;
@@ -879,8 +1039,9 @@ function setupStepActions() {
     // Next click
     nextButtons[1].addEventListener('click', () => {
         // Collect step 1 data if guest
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-        if (!currentUser || currentUser.is_temporary) {
+        const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+        const isMemberUser = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
+        if (!isMemberUser) {
             bookingState.ownerName = document.getElementById('ownerName').value.trim();
             bookingState.ownerPhone = document.getElementById('ownerPhone').value.trim();
             bookingState.petName = document.getElementById('petName').value.trim();
@@ -990,8 +1151,8 @@ function updateSummary() {
         });
     }
 
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-    const isMember = currentUser && !currentUser.is_temporary;
+    const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+    const isMember = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
 
     const finalPrice = isMember ? Math.round(totalPrice * (1 - MEMBER_DISCOUNT_PERCENT)) : totalPrice;
     const prefix = (!bookingState.petWeight && selectedService.prices) ? 'Từ ' : '';
@@ -1052,8 +1213,8 @@ function renderStep4Confirm() {
         subtotal = basePrice;
     }
 
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-    const isMember = currentUser && !currentUser.is_temporary;
+    const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+    const isMember = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
 
     const discount = isMember ? Math.round(subtotal * MEMBER_DISCOUNT_PERCENT) : 0;
     const finalTotal = subtotal - discount;
@@ -1111,12 +1272,14 @@ function setupConfirmation() {
 }
 
 // Final Submit
-function processBookingSubmit() {
+async function processBookingSubmit() {
     const confirmBtn = document.getElementById('confirmBookingBtn');
 
     // Disable button and show spinner
-    confirmBtn.disabled = true;
-    confirmBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="margin-right:8px;"></span>Đang xử lý đặt lịch...`;
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="margin-right:8px;"></span>Đang xử lý đặt lịch...`;
+    }
 
     // Save booking database representation
     const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
@@ -1131,16 +1294,24 @@ function processBookingSubmit() {
         });
     }
 
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-    const isMember = currentUser && !currentUser.is_temporary;
+    const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+    const isMember = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
+
+    // Nếu user đã đăng nhập nhưng state chưa có tên/phone, ưu tiên dùng currentUser
+    if (isMember) {
+        bookingState.ownerName = bookingState.ownerName || resolveCurrentUserName(currentUser);
+        bookingState.ownerPhone = bookingState.ownerPhone || resolveCurrentUserPhone(currentUser);
+    }
+
     const finalPrice = isMember ? Math.round(totalPrice * (1 - MEMBER_DISCOUNT_PERCENT)) : totalPrice;
 
     const bookingRecord = {
         id: newBookingId,
+        appointment_code: null,
         userId: currentUser ? currentUser.id : null, // gán sau nếu là guest mới tạo
+        petId: bookingState.petId || null,
         ownerName: bookingState.ownerName,
         ownerPhone: bookingState.ownerPhone,
-        petId: bookingState.petId || null,
         petName: bookingState.petName,
         petEmoji: bookingState.petType === 'Mèo' ? '' : (bookingState.petType === 'Chó' ? '' : (bookingState.petType === 'Thỏ' ? '' : (bookingState.petType === 'Chuột Hamster' ? '' : ''))),
         petWeight: bookingState.petWeight,
@@ -1161,6 +1332,17 @@ function processBookingSubmit() {
         cancelCount: 0,
         createdAt: new Date().toISOString()
     };
+
+    // Try sync booking to Supabase when possible.
+    if (window.getSupabaseClient || window.SupabaseClient) {
+        const synced = await insertBookingToSupabase(bookingRecord, currentUser);
+        if (synced) {
+            bookingRecord._supabaseId = synced.id;
+            bookingRecord.appointment_code = synced.appointment_code || bookingRecord.appointment_code;
+            bookingRecord.id = synced.appointment_code || bookingRecord.id;
+            bookingRecord._source = 'supabase';
+        }
+    }
 
     bookings.push(bookingRecord);
     localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
@@ -1329,6 +1511,178 @@ function calculateEndTime(startTime, durationStr) {
     const endM = totalMin % 60;
 
     return `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+}
+
+function normalizePhone(phone) {
+    if (!phone) return '';
+    const digits = String(phone).replace(/[^0-9]/g, '');
+    if (digits.startsWith('84') && digits.length === 11) {
+        return '0' + digits.slice(2);
+    }
+    if (digits.length === 10 && digits.startsWith('0')) {
+        return digits;
+    }
+    return digits;
+}
+
+async function createSupabaseCustomer(currentUser) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    const phone = normalizePhone(currentUser?.phone);
+    if (!db || !phone) return null;
+
+    try {
+        const { data: inserted, error: insertError } = await db
+            .from('customer')
+            .insert({
+                email: null,
+                password_hash: null,
+                account_status: 'ACTIVE',
+                phone_main: phone,
+                registered_at: new Date().toISOString(),
+            })
+            .select('id')
+            .limit(1);
+
+        if (insertError || !inserted?.length) {
+            console.warn('[Booking] Supabase customer create failed:', insertError?.message || 'no data');
+            return null;
+        }
+
+        const customerId = inserted[0].id;
+        if (currentUser.name) {
+            await db.from('customer_profile').insert({
+                customer_id: customerId,
+                full_name: resolveCurrentUserName(currentUser),
+            });
+        }
+
+        return customerId;
+    } catch (err) {
+        console.warn('[Booking] Supabase customer create exception:', err.message);
+        return null;
+    }
+}
+
+async function getSupabaseCustomerId(currentUser) {
+    if (!currentUser) return null;
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db) return null;
+    if (currentUser._source === 'supabase' && currentUser.id) return currentUser.id;
+    if (!currentUser.phone) return null;
+
+    try {
+        const { data, error } = await db
+            .from('customer')
+            .select('id')
+            .eq('phone_main', currentUser.phone)
+            .limit(1);
+        if (error) {
+            console.warn('[Booking] Supabase customer lookup failed:', error.message);
+            return null;
+        }
+
+        if (data?.length) {
+            return data[0].id;
+        }
+
+        return await createSupabaseCustomer(currentUser);
+    } catch (err) {
+        console.warn('[Booking] Supabase customer lookup exception:', err.message);
+        return null;
+    }
+}
+
+async function getSupabasePetId(db, customerId, petId) {
+    if (!db || !customerId || !petId) return null;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(petId);
+
+    try {
+        if (isUuid) {
+            const { data, error } = await db.from('pet_profile')
+                .select('id')
+                .eq('id', petId)
+                .limit(1);
+            if (!error && data?.length) return data[0].id;
+        }
+
+        const { data, error } = await db.from('pet_profile')
+            .select('id')
+            .eq('customer_id', customerId)
+            .eq('pet_code', petId)
+            .limit(1);
+        if (!error && data?.length) return data[0].id;
+    } catch (err) {
+        console.warn('[Booking] Supabase pet lookup failed:', err.message);
+    }
+    return null;
+}
+
+async function getSupabaseServiceId(db, serviceId) {
+    if (!db || !serviceId) return null;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(serviceId);
+
+    try {
+        if (isUuid) {
+            const { data, error } = await db.from('service')
+                .select('id')
+                .eq('id', serviceId)
+                .limit(1);
+            if (!error && data?.length) return data[0].id;
+        }
+
+        const { data, error } = await db.from('service')
+            .select('id')
+            .eq('service_code', serviceId)
+            .limit(1);
+        if (!error && data?.length) return data[0].id;
+    } catch (err) {
+        console.warn('[Booking] Supabase service lookup failed:', err.message);
+    }
+    return null;
+}
+
+async function insertBookingToSupabase(bookingRecord, currentUser) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db || !currentUser) return null;
+
+    const customerId = await getSupabaseCustomerId(currentUser);
+    if (!customerId) {
+        console.warn('[Booking] Không tìm hoặc tạo được customer Supabase cho', currentUser.phone);
+        return null;
+    }
+
+    const serviceId = await getSupabaseServiceId(db, selectedService?.serviceId || selectedService?.id);
+    const petId = await getSupabasePetId(db, customerId, bookingRecord.petId);
+    const staffId = 'd0000000-5555-5555-5555-555555555555';
+    const appointmentCode = bookingRecord.appointment_code || `APP-${Date.now()}`;
+    const appointmentTime = bookingRecord.timeStart ? `${bookingRecord.timeStart}:00` : null;
+
+    const payload = {
+        appointment_code: appointmentCode,
+        customer_id: customerId,
+        pet_id: petId,
+        service_id: serviceId,
+        staff_id: staffId,
+        appointment_date: bookingRecord.date,
+        appointment_time: appointmentTime,
+        appointment_status: 'PENDING',
+        payment_status: 'PENDING',
+        note: bookingRecord.note || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+    };
+
+    try {
+        const { data, error } = await db.from('appointment').insert([payload]).select();
+        if (error || !data?.length) {
+            console.warn('[Booking] Supabase insert failed:', error?.message || 'no data');
+            return null;
+        }
+        return data[0];
+    } catch (err) {
+        console.warn('[Booking] Supabase insert exception:', err.message);
+        return null;
+    }
 }
 
 // Format date (DD/MM/YYYY)

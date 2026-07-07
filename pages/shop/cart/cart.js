@@ -50,6 +50,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     let appliedVoucher = null;
     let selectedIds = new Set(); // Store IDs of selected items
 
+    function getCurrentUser() {
+        if (typeof window.getCurrentUser === 'function') {
+            return window.getCurrentUser();
+        }
+        try {
+            return JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        } catch {
+            return null;
+        }
+    }
+
     function normalizeId(value) {
         return value == null ? '' : String(value);
     }
@@ -70,8 +81,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             products = await window.DataLoader.loadProducts();
             
             // Lấy giỏ hàng từ localStorage (offline-first, tránh duplicate)
-                        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-            const fetchedCart = currentUser ? await window.API.getUserCart(currentUser.id) : JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+            const currentUser = getCurrentUser();
+            const fetchedCart = currentUser ? await window.API.getUserCart(currentUser.id || currentUser.phone || null) : JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
             const localCart = restoreCartFromBackup(fetchedCart);
             cart = localCart.map(normalizeCartItem);
             
@@ -158,7 +169,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 localStorage.setItem('pawpal_cart_unselected_backup', JSON.stringify(unselectedItems));
                 
                 // Cập nhật lại giỏ hàng chính chỉ gồm các sản phẩm được chọn để trang checkout xử lý
-                if (window.saveCart) window.saveCart(selectedItems); else localStorage.setItem('pawpal_cart', JSON.stringify(selectedItems));
+                if (window.saveCart) window.saveCart(selectedItems); else if (window.saveCart) window.saveCart(selectedItems); else localStorage.setItem('pawpal_cart', JSON.stringify(selectedItems));
+                const currentUser = getCurrentUser();
                 window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, selectedItems);
                 
                 // Clear any lingering "buy now" state so checkout loads the normal cart
@@ -464,9 +476,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Lưu giỏ hàng vào localStorage
     function saveCart() {
-        if (window.saveCart) window.saveCart(cart); else localStorage.setItem('pawpal_cart', JSON.stringify(cart));
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
+        if (window.saveCart) {
+            window.saveCart(cart);
+        } else {
+            localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+            const currentUser = getCurrentUser();
+            if (window.API && typeof window.API.saveUserCart === 'function') {
+                window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
+            }
+        }
     }
 
     // Xóa toàn bộ giỏ hàng
@@ -644,9 +662,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        if (window.saveCart) window.saveCart(mergedCart); else localStorage.setItem('pawpal_cart', JSON.stringify(mergedCart));
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, mergedCart);
+        if (window.saveCart) window.saveCart(mergedCart); else if (window.saveCart) window.saveCart(mergedCart); else localStorage.setItem('pawpal_cart', JSON.stringify(mergedCart));
+        const currentUser = getCurrentUser();
+        if (window.API && typeof window.API.saveUserCart === 'function') {
+            window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, mergedCart);
+        }
         localStorage.removeItem('pawpal_cart_unselected_backup');
         return mergedCart;
     }

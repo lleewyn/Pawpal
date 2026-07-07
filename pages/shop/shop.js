@@ -1046,12 +1046,18 @@ function addToCart(productId) {
             quantity: 1 
         });
     }
-    
-    if (window.saveCart) window.saveCart(cart); else localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+    if (window.saveCart) {
+        window.saveCart(cart);
+    } else {
+        localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+    }
     showToast(`Đã thêm ${product.name} vào giỏ hàng`, 'success');
     
     // Update cart badge if exists
     updateCartBadge();
+    if (typeof window.updateCartBadge === 'function') {
+        setTimeout(() => window.updateCartBadge(), 50);
+    }
 }
 
 function updateCartBadge() {
@@ -1061,6 +1067,10 @@ function updateCartBadge() {
     if (cartBadge) {
         cartBadge.textContent = totalItems;
         cartBadge.style.display = totalItems > 0 ? 'block' : 'none';
+    }
+    const cartBadgeMobile = document.querySelector('.cart-badge-mobile');
+    if (cartBadgeMobile) {
+        cartBadgeMobile.textContent = totalItems > 0 ? `(${totalItems})` : '';
     }
 }
 

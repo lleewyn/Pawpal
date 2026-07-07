@@ -186,10 +186,14 @@ function getCurrentUser() {
     return user;
 }
 
+window.getCurrentUser = getCurrentUser;
+
 function setCurrentUser(user) {
     window.PawpalStorage.set(CURRENT_USER_KEY, user);
     document.dispatchEvent(new CustomEvent('auth_state_changed', { detail: user }));
 }
+
+window.setCurrentUser = setCurrentUser;
 
 function logout() {
     window.PawpalStorage.remove(CURRENT_USER_KEY);

@@ -112,16 +112,36 @@
         `).join('');
     }
 
+    // Định nghĩa hàm lưu giỏ hàng toàn cục
+    window.saveCart = function(cart) {
+        localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+        const currentUser = (typeof window.getCurrentUser === 'function')
+            ? window.getCurrentUser()
+            : JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            
+        if (currentUser && window.API && window.API.saveUserCart) {
+            window.API.saveUserCart(currentUser.id || currentUser.phone || currentUser.phone_main || null, cart).then(() => {
+                if (window.updateCartBadge) window.updateCartBadge();
+            });
+        } else {
+            if (window.updateCartBadge) window.updateCartBadge();
+        }
+    };
+
     // Định nghĩa hàm cập nhật badge giỏ hàng toàn cục
-    window.updateCartBadge = async function() {
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    window.updateCartBadge = async function(forceSync = false) {
         let cart = [];
-        if (currentUser && window.API && window.API.getUserCart) {
-            cart = await window.API.getUserCart(currentUser.id);
+        const currentUser = (typeof window.getCurrentUser === 'function')
+            ? window.getCurrentUser()
+            : JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            
+        if (forceSync && currentUser && window.API && window.API.getUserCart) {
+            cart = await window.API.getUserCart(currentUser.id || currentUser.phone || currentUser.phone_main || null);
             localStorage.setItem('pawpal_cart', JSON.stringify(cart));
         } else {
             cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
         }
+        
         const totalItems = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
         
         // Badge trên desktop header
@@ -141,12 +161,86 @@
     function setMobileGroupVisibility(elements, isVisible) {
         elements.forEach(el => {
             const item = el.closest('.nav-item') || el;
-            item.style.display = isVisible ? '' : 'none';
+            item.style.setProperty('display', isVisible ? '' : 'none', 'important');
         });
     }
 
-    function updateHeaderAuth() {
-        const user = getCurrentUser();
+
+    function syncMobileAuthLinks(state) {
+        const nav = document.getElementById('primaryNavigation');
+        if (!nav) return;
+
+        const loginLinks = nav.querySelectorAll(
+            'a[href*="login.html"], a[href*="login/login.html"], a[href*="#register"], a[href*="action=register"]'
+        );
+        const guestLoginItems = nav.querySelectorAll(
+            '.mobile-guest-only, .nav-link-cta-mobile, .mobile-auth-login, a[href*="login.html"], a[href*="login/login.html"], a[href*="#register"], a[href*="action=register"]'
+        );
+        const userOnlyItems = nav.querySelectorAll('.mobile-user-only');
+        const tempOnlyItems = nav.querySelectorAll('.mobile-temp-only');
+
+        const isUser = state === 'user';
+        const isTemp = state === 'temp';
+
+        loginLinks.forEach((link) => {
+            const label = (link.textContent || '').trim().toLowerCase();
+            if (label.includes('??ng nh?p') || label.includes('??ng k?') || label.includes('login') || label.includes('register')) {
+                link.style.setProperty('display', isUser ? 'none' : '', 'important');
+            }
+        });
+
+        setMobileGroupVisibility(guestLoginItems, !isUser && !isTemp);
+        setMobileGroupVisibility(userOnlyItems, isUser);
+        setMobileGroupVisibility(tempOnlyItems, isTemp);
+    }
+
+    async function resolveUserDisplayName(user) {
+        if (!user) return user;
+        const currentName = String(user.name || '').trim();
+        const currentPhone = String(user.phone || '').trim();
+        const looksLikePhone = /^\d{8,15}$/.test(currentName.replace(/\s+/g, '')) || (currentPhone && currentName === currentPhone);
+        const looksLikeEmail = currentName.includes('@');
+        if (currentName && !looksLikePhone && !looksLikeEmail) return user;
+
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db || !user.id) return user;
+
+        try {
+            const { data, error } = await db
+                .from('customer')
+                .select(`
+                    phone_main,
+                    email,
+                    customer_profile ( full_name )
+                `)
+                .eq('id', user.id)
+                .limit(1);
+
+            if (error || !data || !data.length) return user;
+
+            const row = data[0];
+            const profile = Array.isArray(row.customer_profile) ? (row.customer_profile[0] || {}) : (row.customer_profile || {});
+            const resolvedName = String(profile.full_name || '').trim()
+                || (currentName && !currentName.includes('@') ? currentName : '')
+                || String(row.phone_main || user.phone || '').trim()
+                || 'Khách hàng';
+            const updatedUser = {
+                ...user,
+                name: resolvedName,
+                phone: row.phone_main || user.phone || '',
+                email: row.email || user.email || '',
+            };
+
+            localStorage.setItem('pawpal_current_user', JSON.stringify(updatedUser));
+            return updatedUser;
+        } catch (err) {
+            console.warn('[header-auth] Cannot resolve user display name:', err);
+            return user;
+        }
+    }
+
+    async function updateHeaderAuth() {
+        const user = await resolveUserDisplayName(getCurrentUser());
         const authActions = document.querySelector('.auth-actions');
         const lookupBtn = document.querySelector('.lookup-btn');
         const lookupDivider = document.querySelector('.lookup-divider');
@@ -179,7 +273,7 @@
             if (lookupDivider) lookupDivider.style.display = 'none';
             
             // Thay bằng: Giỏ hàng + Avatar + Tên + Dropdown
-            const userName = user.name || 'Khách hàng';
+            const userName = String(user.name || user.full_name || '').trim() || user.phone || 'Khách hàng';
             const userInitial = userName.charAt(0).toUpperCase();
             
             authActions.innerHTML = `
@@ -292,6 +386,7 @@
             setMobileGroupVisibility(mobileGuestOnly, false);
             setMobileGroupVisibility(mobileUserOnly, true);
             setMobileGroupVisibility(mobileTempOnly, false);
+            syncMobileAuthLinks('user');
             
             // Attach dropdown toggle handler
             setupUserDropdown();
@@ -318,6 +413,7 @@
             setMobileGroupVisibility(mobileGuestOnly, false);
             setMobileGroupVisibility(mobileUserOnly, false);
             setMobileGroupVisibility(mobileTempOnly, true);
+            syncMobileAuthLinks('temp');
 
             setupLogoutButtons();
             
@@ -344,10 +440,11 @@
             setMobileGroupVisibility(mobileGuestOnly, true);
             setMobileGroupVisibility(mobileUserOnly, false);
             setMobileGroupVisibility(mobileTempOnly, false);
+            syncMobileAuthLinks('guest');
         }
 
         // Thực thi cập nhật số lượng badge tức thì
-        window.updateCartBadge();
+        window.updateCartBadge(true);
     }
     
     function setupUserDropdown() {

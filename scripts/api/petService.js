@@ -66,15 +66,26 @@ function mapToSupabaseRow(pet, customerId) {
 async function getSupabaseCustomerId(db, currentUser) {
     if (!currentUser) return null;
 
-    // Nếu đã login qua Supabase, id là UUID thật
-    if (currentUser._source === 'supabase') return currentUser.id;
+    const currentPhone = currentUser.phone || currentUser.phone_main || null;
+    const currentEmail = currentUser.email || null;
+    const currentId = currentUser.id || null;
 
-    // Fallback: tra cứu theo phone
-    const { data, error } = await db
-        .from('customer')
-        .select('id')
-        .eq('phone_main', currentUser.phone)
-        .limit(1);
+    // Nếu id đã là UUID thật thì dùng trực tiếp
+    if (typeof currentId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentId)) {
+        return currentId;
+    }
+
+    // Fallback: tra cứu theo phone / email
+    let query = db.from('customer').select('id').limit(1);
+    if (currentPhone) {
+        query = query.eq('phone_main', currentPhone);
+    } else if (currentEmail) {
+        query = query.eq('email', currentEmail);
+    } else {
+        return null;
+    }
+
+    const { data, error } = await query;
 
     if (error || !data?.length) return null;
     return data[0].id;
@@ -161,7 +172,14 @@ function mergePetLists(serverPets, localPets, targetUserId) {
 
     const upsert = (pet, priority) => {
         if (!pet || !shouldKeep(pet)) return;
-        const key = String(pet._id || pet.legacyId || pet.id || `${pet.name || ''}-${pet.dob || ''}`);
+        const key = String(
+            pet._supabaseId ||
+            pet.pet_code ||
+            pet._id ||
+            pet.legacyId ||
+            pet.id ||
+            `${pet.name || ''}-${pet.dob || ''}`
+        );
         const existing = map.get(key);
         if (!existing) {
             map.set(key, { ...pet, __priority: priority });
@@ -181,54 +199,43 @@ function mergePetLists(serverPets, localPets, targetUserId) {
 export async function getPets(userId) {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     const targetUserId = userId || currentUser?.id || null;
+    const localPets = normalizePetList(JSON.parse(localStorage.getItem('pawpal_pets') || '[]'));
 
-    // ── Thử đọc từ Supabase trước ──────────────────────────────────────────
     const db = window.SupabaseClient;
     if (db && currentUser) {
         try {
             const customerId = await getSupabaseCustomerId(db, currentUser);
-            if (customerId) {
-                const { data, error } = await db
-                    .from('pet_profile')
-                    .select('id, pet_code, pet_name, species, breed, gender, date_of_birth, color, weight, avatar_url, vaccination_history, allergy, routine, status, customer_id')
-                    .eq('customer_id', customerId);
+            const phone = currentUser.phone || currentUser.phone_main || null;
 
-                if (!error && data) {
-                    const supabasePets = data.map(row => mapSupabasePet(row, currentUser));
-                    // Sync vào localStorage
-                    const localPets = normalizePetList(JSON.parse(localStorage.getItem('pawpal_pets') || '[]'));
-                    const otherPets = localPets.filter(p =>
-                        String(p.userId) !== String(currentUser.id) &&
-                        String(p.userId) !== String(currentUser.phone)
-                    );
-                    localStorage.setItem('pawpal_pets', JSON.stringify([...supabasePets, ...otherPets]));
-                    localStorage.setItem('pawpal_pets_supabase_synced', String(currentUser.phone));
-                    console.log('[petService] getPets từ Supabase:', supabasePets.length, 'pets');
-                    return supabasePets;
+            let query = db
+                .from('pet_profile')
+                .select('id, pet_code, pet_name, species, breed, gender, date_of_birth, color, weight, avatar_url, vaccination_history, allergy, routine, status, customer_id');
+
+            if (customerId) {
+                query = query.eq('customer_id', customerId);
+            } else if (phone) {
+                const { data: customerRows } = await db
+                    .from('customer')
+                    .select('id')
+                    .eq('phone_main', phone)
+                    .limit(1);
+                if (customerRows?.length) {
+                    query = query.eq('customer_id', customerRows[0].id);
                 }
+            }
+
+            const { data, error } = await query;
+            if (!error && Array.isArray(data)) {
+                const supabasePets = data.map((row) => mapSupabasePet(row, currentUser));
+                const merged = mergePetLists(supabasePets, localPets, targetUserId);
+                localStorage.setItem('pawpal_pets', JSON.stringify(merged));
+                return merged;
             }
         } catch (err) {
             console.warn('[petService] Supabase getPets error, fallback localStorage:', err.message);
         }
     }
 
-    // ── Fallback: localStorage ──────────────────────────────────────────────
-    // Lấy pets từ API (offline = [], online = server data)
-    let serverPets = [];
-    if (targetUserId) {
-        serverPets = normalizePetList(await API.getUserPets(targetUserId));
-    }
-
-    const localPets = normalizePetList(JSON.parse(localStorage.getItem('pawpal_pets') || '[]'));
-
-    // Nếu server trả data, merge và lưu cache
-    if (serverPets.length > 0) {
-        const merged = mergePetLists(serverPets, localPets, targetUserId);
-        localStorage.setItem('pawpal_pets', JSON.stringify(merged));
-        return merged;
-    }
-
-    // Offline: dùng thẳng localPets, lọc theo user
     if (!targetUserId) return localPets;
 
     const dbUsers = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
@@ -243,7 +250,7 @@ export async function getPets(userId) {
     );
     const currentPhone = currentUser?.phone ? String(currentUser.phone) : null;
 
-    const userPets = localPets.filter(pet => {
+    return localPets.filter((pet) => {
         const petUserId = pet.userId?._id || pet.userId;
         if (petUserId && knownIds.has(String(petUserId))) return true;
         if (pet.userLegacyId && knownIds.has(String(pet.userLegacyId))) return true;
@@ -252,8 +259,6 @@ export async function getPets(userId) {
         if (pet.phone && String(pet.phone) === currentPhone) return true;
         return false;
     });
-
-    return userPets;
 }
 
 export async function savePets(pets) {

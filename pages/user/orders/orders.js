@@ -139,7 +139,27 @@ async function loadOrders() {
         }
 
         const orders = await API.getUserOrders(currentUser.id);
-        ordersState.allOrders = Array.isArray(orders) ? orders : [];
+        const normalizedOrders = Array.isArray(orders) ? orders : [];
+        const uniqueOrders = Array.from(
+            normalizedOrders.reduce((map, order) => {
+                const key = String(order?._supabaseId || order?.id || '');
+                if (!key) return map;
+                if (!map.has(key)) {
+                    map.set(key, order);
+                    return map;
+                }
+
+                const existing = map.get(key);
+                if (currentUser._source === 'supabase' && existing?._source !== 'supabase' && order?._source === 'supabase') {
+                    map.set(key, order);
+                }
+                return map;
+            }, new Map()).values()
+        );
+
+        ordersState.allOrders = currentUser._source === 'supabase'
+            ? uniqueOrders.filter((order) => order._source === 'supabase' || order._supabaseId)
+            : uniqueOrders;
         ordersState.filteredOrders = ordersState.allOrders;
 
         updateStats();
@@ -356,7 +376,14 @@ function createOrderCard(order) {
             ${returnActionHTML}
         `;
     } else if (normalizedStatus === 'delivered' || normalizedStatus === 'cancelled') {
-        footerButtonsHTML = detailActionHTML;
+        footerButtonsHTML = normalizedStatus === 'delivered'
+            ? `
+                ${detailActionHTML}
+                <button class="btn-track-order" onclick="confirmOrderReceipt('${orderId}')">
+                    Xác nhận đơn hàng
+                </button>
+            `
+            : detailActionHTML;
     }
 
     const allMetaChips = [...metaParts.map((item) => `<span class="order-meta-chip">${item}</span>`), ...statusNoticeChips].join('');
@@ -530,6 +557,33 @@ function cancelOrder(orderId) {
 
 window.cancelOrder = cancelOrder;
 
+function confirmOrderReceipt(orderId) {
+    const order = ordersState.allOrders.find((item) => String(item.id) === String(orderId));
+    if (!order) {
+        showOrdersToast(`KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n hÃ ng ${orderId} Ä‘á»ƒ xÃ¡c nháº­n.`, 'error');
+        return;
+    }
+
+    const updatedOrder = {
+        ...order,
+        status: 'completed',
+        orderStatus: 'COMPLETED',
+        updatedAt: new Date().toISOString(),
+    };
+
+    saveOrderToLocalStorage(updatedOrder);
+    ordersState.allOrders = ordersState.allOrders.map((item) =>
+        String(item.id) === String(orderId) ? updatedOrder : item
+    );
+    applyFilters();
+    updateStats();
+    updateTabCounts();
+
+    showOrdersToast(`ÄÃ£ xÃ¡c nháº­n Ä‘Æ¡n hÃ ng ${orderId} thÃ nh cÃ´ng.`, 'success');
+}
+
+window.confirmOrderReceipt = confirmOrderReceipt;
+
 function reorder(orderId) {
     const order = ordersState.allOrders.find((item) => String(item.id) === String(orderId));
     if (!order || !Array.isArray(order.products) || order.products.length === 0) {
@@ -561,7 +615,7 @@ function reorder(orderId) {
         }
     });
 
-    if (window.saveCart) window.saveCart(cart); else localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+    if (window.saveCart) window.saveCart(cart); else if (window.saveCart) window.saveCart(cart); else localStorage.setItem('pawpal_cart', JSON.stringify(cart));
 
     const badge = document.querySelector('.cart-count, .cart-badge');
     if (badge) {

@@ -70,6 +70,14 @@ document.addEventListener('DOMContentLoaded', () => {
         let bookings = findBookingsByPhone(phone, data);
         let orders   = findOrdersByPhone(phone, data);
 
+        const supabaseResults = await loadSupabaseGuestResults(phone);
+        if ((supabaseResults.bookings && supabaseResults.bookings.length) ||
+            (supabaseResults.orders && supabaseResults.orders.length)) {
+            bookings = supabaseResults.bookings || [];
+            orders = supabaseResults.orders || [];
+            showToast('Đã tìm thấy dữ liệu từ Supabase.', 'success');
+        }
+
         btn.disabled    = false;
         btn.textContent = 'Tìm kiếm';
 
@@ -161,6 +169,141 @@ function safeParseArray(key) {
 
 function normalizePhone(p) {
     return String(p || '').replace(/\D/g, '').replace(/^84/, '0');
+}
+
+async function loadSupabaseGuestResults(phone) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db || !phone) return { bookings: [], orders: [] };
+
+    const normPhone = normalizePhone(phone);
+    try {
+        const { data: orderRows, error: orderError } = await db
+            .from('sales_order')
+            .select(`
+                id,
+                order_code,
+                order_status,
+                payment_status,
+                subtotal,
+                shipping_fee,
+                discount_amount,
+                total_amount,
+                created_at,
+                updated_at,
+                note,
+                customer_address ( receiver_name, receiver_phone, province, street_address ),
+                sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, image_urls, sku ) )
+            `)
+            .or(`customer_address.receiver_phone.eq.${normPhone}`)
+            .order('created_at', { ascending: false });
+
+        if (orderError) {
+            console.warn('[ReturnGuest] Supabase order lookup failed:', orderError.message || orderError);
+        }
+
+        const { data: bookingRows, error: bookingError } = await db
+            .from('appointment')
+            .select(`
+                id,
+                appointment_code,
+                appointment_date,
+                appointment_time,
+                appointment_status,
+                payment_status,
+                note,
+                customer ( id, phone_main, full_name ),
+                service ( id, service_name ),
+                pet_profile ( id, name )
+            `)
+            .or(`phone_main.eq.${normPhone},customer.phone_main.eq.${normPhone}`)
+            .order('appointment_date', { ascending: false });
+
+        if (bookingError) {
+            console.warn('[ReturnGuest] Supabase booking lookup failed:', bookingError.message || bookingError);
+        }
+
+        return {
+            bookings: Array.isArray(bookingRows) ? bookingRows.map(mapSupabaseBookingRow) : [],
+            orders: Array.isArray(orderRows) ? orderRows.map(mapSupabaseOrderRow) : [],
+        };
+    } catch (err) {
+        console.warn('[ReturnGuest] Supabase guest lookup exception:', err);
+        return { bookings: [], orders: [] };
+    }
+}
+
+function mapSupabaseOrderRow(row) {
+    const addr = row.customer_address || {};
+    const products = Array.isArray(row.sales_order_detail)
+        ? row.sales_order_detail.map((detail) => ({
+            id: detail.product?.id || '',
+            name: detail.product?.product_name || 'Sản phẩm',
+            sku: detail.product?.sku || '',
+            image: normalizeImageUrl(detail.product?.image_urls?.[0]),
+            quantity: detail.quantity,
+            price: detail.unit_price,
+            total: detail.subtotal,
+        }))
+        : [];
+
+    return {
+        id: row.order_code || row.id,
+        _supabaseId: row.id,
+        userId: null,
+        userPhone: addr.receiver_phone || '',
+        status: mapOrderStatus(row.order_status),
+        paymentStatus: String(row.payment_status || '').toLowerCase(),
+        paymentMethod: 'cod',
+        products,
+        pricing: {
+            subtotal: row.subtotal,
+            shippingFee: row.shipping_fee,
+            discount: row.discount_amount,
+            total: row.total_amount,
+        },
+        delivery: {
+            name: addr.receiver_name || '',
+            phone: addr.receiver_phone || '',
+            address: [addr.street_address, addr.province].filter(Boolean).join(', '),
+        },
+        note: row.note || '',
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+    };
+}
+
+function mapSupabaseBookingRow(row) {
+    return {
+        id: row.appointment_code || row.id,
+        serviceName: row.service?.service_name || 'Dịch vụ',
+        date: row.appointment_date,
+        time: row.appointment_time,
+        timeStart: row.appointment_time,
+        status: row.appointment_status || 'pending',
+        paymentStatus: row.payment_status || 'pending',
+        note: row.note || '',
+        petName: row.pet_profile?.name || row.customer?.full_name || 'Bé cưng',
+        branch: '',
+        staff: '',
+    };
+}
+
+function normalizeImageUrl(url) {
+    if (!url) return '/assets/images/shop/products/placeholder.webp';
+    if (!url.startsWith('http') && !url.startsWith('/')) return '/' + url;
+    return url;
+}
+
+function mapOrderStatus(status) {
+    return {
+        'PENDING': 'pending',
+        'CONFIRMED': 'pending',
+        'PREPARING': 'preparing',
+        'SHIPPING': 'shipping',
+        'DELIVERED': 'delivered',
+        'COMPLETED': 'completed',
+        'CANCELLED': 'cancelled',
+    }[String(status || '').toUpperCase()] || String(status || 'pending').toLowerCase();
 }
 
 // ── Search ────────────────────────────────────────────────────────────────

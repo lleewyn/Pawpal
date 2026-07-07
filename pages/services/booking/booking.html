@@ -11,17 +11,42 @@
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap"
         rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../../../styles/style.css">
     <!-- Components -->
     <link rel="stylesheet" href="booking.css">
+    <style>
+        .quick-add-pet-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 3200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.48);
+            backdrop-filter: blur(6px);
+        }
+        .quick-add-pet-modal.active { display: flex; }
+        .quick-add-pet-dialog {
+            width: min(760px, 100%);
+            background: #fff;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22);
+        }
+        .pet-select-card-add {
+            border: 1px dashed rgba(42, 89, 68, 0.35);
+            background: rgba(42, 89, 68, 0.04);
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmxc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../../scripts/api/supabase-client.js"></script>
+    <script type="module" src="../../../scripts/shared/data-loader.js"></script>
     <script src="../../../scripts/shared/components.js" defer></script>
     <script type="module" src="../../../scripts/shared/main.js"></script>
     <script type="module" src="booking.js"></script>
@@ -448,15 +473,75 @@
 
     <div id="site-footer"></div>
 
-    
-    
-    
-    
-    
-    
-    
-    
-    <div id="site-fab"></div>
+    <div class="quick-add-pet-modal" id="quickAddPetModal" aria-hidden="true">
+        <div class="quick-add-pet-dialog">
+            <button type="button" class="modal-close" id="closeQuickAddPetModal" aria-label="??ng">?</button>
+            <div class="page-wrap quick-add-pet-wrap">
+                <div class="modal-title-row">
+                    <h2>Th?m h? s? b? c?ng</h2>
+                    <p>?i?n nhanh h? s? ?? ti?p t?c ??t l?ch ngay tr?n trang n?y.</p>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-label">Th?ng tin ch? nu?i</div>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="quickPetOwnerName">H? v? t?n ch? nu?i</label>
+                            <input type="text" id="quickPetOwnerName" placeholder="Nguy?n L? Thi">
+                        </div>
+                        <div class="field">
+                            <label for="quickPetOwnerPhone">S? ?i?n tho?i</label>
+                            <input type="tel" id="quickPetOwnerPhone" placeholder="0834562948">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-label">Th?ng tin th? c?ng</div>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="quickPetName">T?n b? c?ng</label>
+                            <input type="text" id="quickPetName" placeholder="V? d?: Milu, B?ng, Cam...">
+                        </div>
+                        <div class="field">
+                            <label for="quickPetSpecies">Lo?i</label>
+                            <select id="quickPetSpecies">
+                                <option value="cat">M?o</option>
+                                <option value="dog">Ch?</option>
+                                <option value="rabbit">Th?</option>
+                                <option value="other">Kh?c</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="quickPetBreed">Gi?ng c? th?</label>
+                            <input type="text" id="quickPetBreed" placeholder="V? d?: M?o Anh l?ng ng?n...">
+                        </div>
+                        <div class="field">
+                            <label for="quickPetWeight">C?n n?ng (kg)</label>
+                            <input type="number" id="quickPetWeight" step="0.1" min="0.1" placeholder="V? d?: 4.5">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-label">Ghi ch? ch?m s?c</div>
+                    <div class="form-grid">
+                        <div class="field full">
+                            <label for="quickPetNote">Th?i quen v? nh?ng l?u ? ??c bi?t</label>
+                            <textarea id="quickPetNote" placeholder="V? d?: B? s? ti?ng ?n l?n, th?ch ???c ch?i l?ng m?i s?ng, kh?ng ?n ???c th?c ?n kh?..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" id="cancelQuickAddPet">Hu?</button>
+                    <button type="button" class="btn-save" id="saveQuickAddPet">L?u b? c?ng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div id="site-fab"></div>
 </body>
 
 </html>

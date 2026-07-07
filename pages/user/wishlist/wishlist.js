@@ -8,6 +8,9 @@
     let currentFilter = 'all';
 
     function getCurrentUser() {
+        if (typeof window.getCurrentUser === 'function') {
+            return window.getCurrentUser();
+        }
         try {
             return JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
         } catch {
@@ -16,11 +19,13 @@
     }
 
     function getProductWishlistStorageKey(user = getCurrentUser()) {
-        return user && user.phone ? `pawpal_wishlist_${user.phone}` : 'pawpal_wishlist_guest';
+        const userKey = user?.id || user?.phone || user?.phone_main || user?.email;
+        return userKey ? `pawpal_wishlist_${String(userKey)}` : 'pawpal_wishlist_guest';
     }
 
     function getServiceWishlistStorageKey(user = getCurrentUser()) {
-        return user && user.phone ? `pawpal_wishlist_services_${user.phone}` : 'pawpal_wishlist_services_guest';
+        const userKey = user?.id || user?.phone || user?.phone_main || user?.email;
+        return userKey ? `pawpal_wishlist_services_${String(userKey)}` : 'pawpal_wishlist_services_guest';
     }
 
     function loadWishlistRaw(key) {
@@ -189,16 +194,16 @@
             return String(item) !== String(id);
         });
         saveWishlistRaw(key, filtered);
-        const currentUser = getCurrentUser();
-        if (currentUser && window.API && typeof window.API.saveUserWishlist === 'function') {
-            const productIds = type === 'service'
-                ? loadWishlistRaw(getProductWishlistStorageKey()).map(String)
-                : filtered.map(String);
-            const serviceIds = type === 'service'
-                ? filtered.map(String)
-                : loadWishlistRaw(getServiceWishlistStorageKey()).map(String);
-            window.API.saveUserWishlist(currentUser.id || currentUser.phone || null, { productIds, serviceIds });
-        }
+            const currentUser = getCurrentUser();
+            if (currentUser && window.API && typeof window.API.saveUserWishlist === 'function') {
+                const productIds = type === 'service'
+                    ? loadWishlistRaw(getProductWishlistStorageKey()).map((item) => String(typeof item === 'object' && item !== null ? (item.id ?? item.productId ?? item.product_id) : item)).filter(Boolean)
+                    : filtered.map(String);
+                const serviceIds = type === 'service'
+                    ? filtered.map((item) => String(typeof item === 'object' && item !== null ? (item.id ?? item.serviceId ?? item.service_id) : item)).filter(Boolean)
+                    : loadWishlistRaw(getServiceWishlistStorageKey()).map((item) => String(typeof item === 'object' && item !== null ? (item.id ?? item.serviceId ?? item.service_id) : item)).filter(Boolean);
+                window.API.saveUserWishlist(currentUser.id || currentUser.phone || null, { productIds, serviceIds });
+            }
         renderWishlist();
         showNotification('Đã xóa khỏi danh sách yêu thích');
     }
@@ -214,10 +219,14 @@
         const existing = cart.find((item) => Number(item.id) === Number(product.id));
         if (existing) existing.quantity += 1;
         else cart.push({ ...product.rawProduct, quantity: 1 });
-        if (window.saveCart) window.saveCart(cart); else localStorage.setItem('pawpal_cart', JSON.stringify(cart));
-        const currentUser = getCurrentUser();
-        if (currentUser && window.API && typeof window.API.saveUserCart === 'function') {
-            window.API.saveUserCart(currentUser.id || currentUser.phone || null, cart);
+        if (window.saveCart) {
+            window.saveCart(cart);
+        } else {
+            localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+            const currentUser = getCurrentUser();
+            if (currentUser && window.API && typeof window.API.saveUserCart === 'function') {
+                window.API.saveUserCart(currentUser.id || currentUser.phone || null, cart);
+            }
         }
         showNotification('Đã thêm vào giỏ hàng');
     }

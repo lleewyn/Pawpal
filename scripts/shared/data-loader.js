@@ -570,7 +570,9 @@ async function getProductReviews(productId) {
             rating: r.rating,
             content: r.review_content,
             createdAt: r.created_at,
-            customerName: r.customer?.customer_profile?.[0]?.full_name || 'Khách hàng',
+            customerName: Array.isArray(r.customer?.customer_profile)
+                ? (r.customer.customer_profile[0]?.full_name || 'Khách hàng')
+                : (r.customer?.customer_profile?.full_name || 'Khách hàng'),
             hasMedia: false,
             hasReply: false
         }));
@@ -624,7 +626,9 @@ async function getServiceReviews(serviceId) {
             
             return {
                 id: r.id,
-                name: r.customer?.customer_profile?.[0]?.full_name || 'Khách hàng',
+                name: Array.isArray(r.customer?.customer_profile)
+                    ? (r.customer.customer_profile[0]?.full_name || 'Khách hàng')
+                    : (r.customer?.customer_profile?.full_name || 'Khách hàng'),
                 tier: rawTier,
                 tierName: getTierName(rawTier),
                 rating: r.rating,

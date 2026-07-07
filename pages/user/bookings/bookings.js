@@ -91,13 +91,13 @@ async function syncBookingsFromSupabase(currentUser) {
 
 function mapAppointmentStatus(status) {
     const map = {
-        'PENDING':   'confirmed',
+        'PENDING':   'pending',
         'CONFIRMED': 'confirmed',
         'COMPLETED': 'completed',
         'CANCELLED': 'cancelled',
         'NO_SHOW':   'cancelled',
     };
-    return map[status] || 'confirmed';
+    return map[status] || 'pending';
 }
 
 /**
@@ -403,7 +403,7 @@ function calculateNights(startDate, endDate) {
 
 function resolveBookingStatus(booking) {
     const rawStatus = booking?.status || 'upcoming';
-    if (['cancelled', 'completed', 'in-progress', 'accepted'].includes(rawStatus)) {
+    if (['cancelled', 'completed', 'in-progress', 'accepted', 'pending'].includes(rawStatus)) {
         return rawStatus;
     }
 

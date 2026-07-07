@@ -10,6 +10,9 @@ let currentPage = 1;
 const itemsPerPage = 12;
 
 function getCurrentWishlistUser() {
+    if (typeof window.getCurrentUser === 'function') {
+        return window.getCurrentUser();
+    }
     try {
         return JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
     } catch {
@@ -27,7 +30,8 @@ function requireWishlistUser() {
 }
 
 function getServiceWishlistStorageKey(user = getCurrentWishlistUser()) {
-    return user && user.phone ? `pawpal_wishlist_services_${user.phone}` : 'pawpal_wishlist_services';
+    const userKey = user?.id || user?.phone || user?.phone_main || user?.email;
+    return userKey ? `pawpal_wishlist_services_${String(userKey)}` : 'pawpal_wishlist_services';
 }
 
 function loadServiceWishlistIds() {
@@ -61,7 +65,7 @@ function showServiceWishlistToast(message) {
     }
     const toast = document.createElement('div');
     toast.textContent = message;
-    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#2d5343;color:#fff;padding:10px 20px;border-radius:99px;font-size:14px;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
+    toast.style.cssText = 'position:fixed;right:24px;bottom:24px;background:#2d5343;color:#fff;padding:10px 20px;border-radius:99px;font-size:14px;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
     document.body.appendChild(toast);
     setTimeout(() => {
         toast.style.opacity = '0';

@@ -94,7 +94,7 @@ async function syncSingleBookingFromSupabase(bookingId, currentUser) {
 }
 
 function mapBookingStatus(status) {
-    return { 'PENDING': 'confirmed', 'CONFIRMED': 'confirmed', 'COMPLETED': 'completed', 'CANCELLED': 'cancelled', 'NO_SHOW': 'cancelled' }[status] || 'confirmed';
+    return { 'PENDING': 'pending', 'CONFIRMED': 'confirmed', 'COMPLETED': 'completed', 'CANCELLED': 'cancelled', 'NO_SHOW': 'cancelled' }[status] || 'pending';
 }
 
 function getBookingPrice(priceMatrix, petSpecies) {
@@ -909,7 +909,7 @@ window.closeErrorBanner = closeErrorBanner;
 
 function resolveBookingStatus(booking) {
     const rawStatus = booking?.status || 'upcoming';
-    if (['cancelled', 'completed', 'in-progress', 'accepted'].includes(rawStatus)) {
+    if (['cancelled', 'completed', 'in-progress', 'accepted', 'pending'].includes(rawStatus)) {
         return rawStatus;
     }
 

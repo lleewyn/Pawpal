@@ -307,14 +307,35 @@ export const API = {
         return safeReadObject('pawpal_pet_tracker_logs') || {};
     },
 
-        async getUserCart(userId) {
+    async getUserCart(userId) {
         if (!userId) return safeReadArray('pawpal_cart');
-        
+
         const db = window.SupabaseClient;
         if (!db) return safeReadArray('pawpal_cart');
 
         try {
-            const { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', userId).single();
+            const resolveCustomerId = async () => {
+                const isUuidLike = typeof userId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+                if (isUuidLike) return userId;
+
+                const currentUser = safeReadObject('pawpal_current_user') || {};
+                const phone = currentUser.phone || currentUser.phone_main || (typeof userId === 'string' && /^0\d{9}$/.test(userId) ? userId : null);
+                const email = currentUser.email || (typeof userId === 'string' && userId.includes('@') ? userId : null);
+
+                let query = db.from('customer').select('id').limit(1);
+                if (phone) query = query.eq('phone_main', phone);
+                else if (email) query = query.eq('email', email);
+                else return null;
+
+                const { data, error } = await query;
+                if (error || !data?.length) return null;
+                return data[0].id;
+            };
+
+            const customerId = await resolveCustomerId();
+            if (!customerId) return safeReadArray('pawpal_cart');
+
+            const { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', customerId).single();
             if (cartError && cartError.code !== 'PGRST116') {
                 console.error('Error fetching cart:', cartError);
                 return safeReadArray('pawpal_cart');
@@ -347,11 +368,32 @@ export const API = {
         if (!db) return { success: false, error: 'No Supabase client' };
 
         try {
+            const resolveCustomerId = async () => {
+                const isUuidLike = typeof userId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+                if (isUuidLike) return userId;
+
+                const currentUser = safeReadObject('pawpal_current_user') || {};
+                const phone = currentUser.phone || currentUser.phone_main || (typeof userId === 'string' && /^0\d{9}$/.test(userId) ? userId : null);
+                const email = currentUser.email || (typeof userId === 'string' && userId.includes('@') ? userId : null);
+
+                let query = db.from('customer').select('id').limit(1);
+                if (phone) query = query.eq('phone_main', phone);
+                else if (email) query = query.eq('email', email);
+                else return null;
+
+                const { data, error } = await query;
+                if (error || !data?.length) return null;
+                return data[0].id;
+            };
+
+            const customerId = await resolveCustomerId();
+            if (!customerId) return { success: true, data: itemArray };
+
             // 1. Get or create cart for user
-            let { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', userId).single();
+            let { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', customerId).single();
             
             if (!cartData) {
-                const { data: newCart, error: insertError } = await db.from('cart').insert({ customer_id: userId, cart_status: 'ACTIVE' }).select('id').single();
+                const { data: newCart, error: insertError } = await db.from('cart').insert({ customer_id: customerId, cart_status: 'ACTIVE' }).select('id').single();
                 if (insertError) throw insertError;
                 cartData = newCart;
             }

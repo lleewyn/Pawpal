@@ -64,13 +64,13 @@ async function supabaseLogin(phone, password) {
             return { success: false, error: 'account_inactive' };
         }
 
-        const profile    = c.customer_profile?.[0] || {};
-        const membership = c.customer_membership?.[0] || {};
+        const profile    = Array.isArray(c.customer_profile) ? (c.customer_profile[0] || {}) : (c.customer_profile || {});
+        const membership = Array.isArray(c.customer_membership) ? (c.customer_membership[0] || {}) : (c.customer_membership || {});
         const tier       = membership.membership_tier || {};
 
         const user = {
             id:           c.id,
-            name:         profile.full_name || '',
+            name:         String(profile.full_name || '').trim() || c.phone_main,
             phone:        c.phone_main,
             email:        c.email || '',
             password:     password,
@@ -83,7 +83,7 @@ async function supabaseLogin(phone, password) {
             _source:      'supabase',
         };
 
-        console.log('[Login] ✅ Login từ SUPABASE DATABASE — user:', user.name, '| phone:', user.phone, '| points:', user.points);
+            console.log('[Login] ✅ Login từ SUPABASE DATABASE — user:', user.name, '| phone:', user.phone, '| points:', user.points);
         return { success: true, user };
 
     } catch (err) {
@@ -170,7 +170,7 @@ async function supabaseRegister(name, phone, password) {
 
         const user = {
             id:           customerId,
-            name:         name,
+            name:         String(name || '').trim() || phone,
             phone:        phone,
             email:        '',
             password:     password,

@@ -1,5 +1,90 @@
 import { API } from '/scripts/api/api.js';
 
+async function loadReturnRequestFromSupabase(orderId) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db || !orderId) return null;
+
+    try {
+        const { data, error } = await db
+            .from('return_request')
+            .select(`
+                id,
+                sales_order_id,
+                customer_id,
+                reason,
+                return_type,
+                request_status,
+                created_at,
+                updated_at,
+                refund_account,
+                description,
+                return_request_detail (
+                    id,
+                    product_id,
+                    quantity,
+                    unit_price,
+                    product ( id, product_name, image_urls )
+                )
+            `)
+            .eq('sales_order_id', orderId)
+            .limit(1)
+            .maybeSingle();
+
+        if (error) {
+            console.warn('[ReturnDetail] Supabase lookup error:', error.message || error);
+            return null;
+        }
+
+        return data || null;
+    } catch (err) {
+        console.warn('[ReturnDetail] Supabase fetch exception:', err);
+        return null;
+    }
+}
+
+function normalizeReturnRequestRow(row) {
+    if (!row) return null;
+
+    const products = Array.isArray(row.return_request_detail)
+        ? row.return_request_detail.map((item) => {
+            const product = item.product || {};
+            let imageUrls = product.image_urls;
+            if (typeof imageUrls === 'string') {
+                try {
+                    imageUrls = JSON.parse(imageUrls);
+                } catch {
+                    imageUrls = [imageUrls];
+                }
+            }
+            const image = Array.isArray(imageUrls) && imageUrls.length
+                ? imageUrls[0]
+                : '/assets/images/shop/products/placeholder.webp';
+
+            return {
+                id: item.product_id || product.id || '',
+                name: product.product_name || item.product_name || 'Sản phẩm',
+                image,
+                quantity: Number(item.quantity) || 1,
+                price: Number(item.unit_price) || 0,
+                total: (Number(item.quantity) || 1) * (Number(item.unit_price) || 0),
+            };
+        })
+        : [];
+
+    return {
+        orderId: row.sales_order_id || '',
+        rmaId: row.id || '',
+        createdAt: row.created_at || new Date().toISOString(),
+        status: String(row.request_status || 'placed').toLowerCase(),
+        reason: row.reason || 'change_mind',
+        type: String(row.return_type || 'exchange').toLowerCase(),
+        description: row.description || '',
+        refundAccount: row.refund_account || '',
+        products,
+        pointsDeducted: row.points_deducted || false,
+    };
+}
+
 async function initReturnDetail() {
     await API.initData();
 
@@ -12,8 +97,29 @@ async function initReturnDetail() {
         return;
     }
 
-    const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
-    const rmaData = returnsList.find((item) => item.orderId === orderId);
+    let rmaData = null;
+
+    if (window.getSupabaseClient || window.SupabaseClient) {
+        const supabaseRow = await loadReturnRequestFromSupabase(orderId);
+        if (supabaseRow) {
+            rmaData = normalizeReturnRequestRow(supabaseRow);
+            if (rmaData) {
+                try {
+                    const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
+                    const updatedList = returnsList.filter((item) => item.rmaId !== rmaData.rmaId);
+                    updatedList.push(rmaData);
+                    localStorage.setItem('pawpal_returns', JSON.stringify(updatedList));
+                } catch (err) {
+                    console.warn('[ReturnDetail] Cannot cache Supabase return request:', err);
+                }
+            }
+        }
+    }
+
+    if (!rmaData) {
+        const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
+        rmaData = returnsList.find((item) => item.orderId === orderId);
+    }
 
     if (!rmaData) {
         alert('Không tìm thấy yêu cầu đổi trả cho đơn hàng này.');

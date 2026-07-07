@@ -23,6 +23,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
     }
 
+    if (window.getSupabaseClient || window.SupabaseClient) {
+        currentUser = await syncLoyaltyFromSupabase(currentUser);
+    }
+
     // Tải vouchers từ JSON file
     let vouchersMock = [];
     try {
@@ -99,6 +103,192 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Kiểm tra xem có quà nào đang chờ khôi phục luồng đổi quà không (US 13-3)
     checkPendingRedeem(currentUser);
 });
+
+async function syncLoyaltyFromSupabase(user) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db || !user?.phone) return user;
+
+    try {
+        const { data, error } = await db
+            .from('customer')
+            .select(`
+                id,
+                phone_main,
+                email,
+                customer_profile ( full_name ),
+                customer_membership ( total_paw_points, membership_tier ( tier_name, discount_percent ) )
+            `)
+            .eq('phone_main', user.phone)
+            .limit(1)
+            .maybeSingle();
+
+        if (error) {
+            console.warn('[Loyalty] Supabase customer lookup error:', error.message || error);
+            return user;
+        }
+
+        if (!data) {
+            return user;
+        }
+
+        const profile = data.customer_profile?.[0] || {};
+        const membership = data.customer_membership?.[0] || {};
+        const tier = membership.membership_tier || {};
+
+        const updatedUser = {
+            ...user,
+            id: data.id || user.id,
+            name: profile.full_name || user.name || 'Khách vãng lai',
+            email: data.email || user.email || '',
+            phone: data.phone_main || user.phone,
+            points: membership.total_paw_points ?? user.points ?? 0,
+            tier: tier.tier_name || user.tier || 'Đồng',
+            _source: 'supabase',
+        };
+
+        localStorage.setItem('pawpal_current_user', JSON.stringify(updatedUser));
+        return updatedUser;
+    } catch (err) {
+        console.warn('[Loyalty] Supabase sync exception:', err);
+        return user;
+    }
+}
+
+async function findSupabaseCustomerIdByPhone(phone) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db || !phone) return null;
+
+    try {
+        const { data, error } = await db
+            .from('customer')
+            .select('id')
+            .eq('phone_main', phone)
+            .limit(1)
+            .maybeSingle();
+
+        if (error) {
+            console.warn('[Loyalty] Cannot resolve customer id:', error.message || error);
+            return null;
+        }
+        return data?.id || null;
+    } catch (err) {
+        console.warn('[Loyalty] findSupabaseCustomerIdByPhone exception:', err);
+        return null;
+    }
+}
+
+async function getMembershipTierId(tierName = 'Đồng') {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db) return null;
+
+    try {
+        const { data, error } = await db
+            .from('membership_tier')
+            .select('id')
+            .eq('tier_name', tierName)
+            .limit(1)
+            .maybeSingle();
+
+        if (error) {
+            console.warn('[Loyalty] Cannot resolve membership tier:', error.message || error);
+            return null;
+        }
+        return data?.id || null;
+    } catch (err) {
+        console.warn('[Loyalty] getMembershipTierId exception:', err);
+        return null;
+    }
+}
+
+async function updateSupabaseMembershipPoints(customerId, points) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db || !customerId) return false;
+
+    try {
+        const { data: existing, error: existingError } = await db
+            .from('customer_membership')
+            .select('id')
+            .eq('customer_id', customerId)
+            .limit(1)
+            .maybeSingle();
+
+        if (existingError) {
+            console.warn('[Loyalty] membership lookup error:', existingError.message || existingError);
+            return false;
+        }
+
+        if (existing) {
+            const { error } = await db
+                .from('customer_membership')
+                .update({ total_paw_points: points })
+                .eq('customer_id', customerId);
+            if (error) {
+                console.warn('[Loyalty] membership update failed:', error.message || error);
+                return false;
+            }
+            return true;
+        }
+
+        const tierId = await getMembershipTierId('Đồng');
+        const { error } = await db.from('customer_membership').insert({
+            customer_id: customerId,
+            membership_tier_id: tierId,
+            total_paw_points: points,
+        });
+
+        if (error) {
+            console.warn('[Loyalty] membership insert failed:', error.message || error);
+            return false;
+        }
+        return true;
+    } catch (err) {
+        console.warn('[Loyalty] updateSupabaseMembershipPoints exception:', err);
+        return false;
+    }
+}
+
+async function createPawPointTransaction(customerId, points, balanceAfter, description) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db || !customerId) return false;
+
+    try {
+        const { error } = await db.from('paw_point_transaction').insert({
+            customer_id: customerId,
+            points,
+            balance_after: balanceAfter,
+            description,
+            created_at: new Date().toISOString(),
+        });
+
+        if (error) {
+            console.warn('[Loyalty] paw_point_transaction insert failed:', error.message || error);
+            return false;
+        }
+        return true;
+    } catch (err) {
+        console.warn('[Loyalty] createPawPointTransaction exception:', err);
+        return false;
+    }
+}
+
+async function persistLoyaltyRedemption(user, voucherInfo) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db || !user?.phone) return;
+
+    const customerId = user.id || await findSupabaseCustomerIdByPhone(user.phone);
+    if (!customerId) {
+        console.warn('[Loyalty] Cannot persist redemption, missing customerId');
+        return;
+    }
+
+    await updateSupabaseMembershipPoints(customerId, user.points);
+    await createPawPointTransaction(
+        customerId,
+        -voucherInfo.pointsCost,
+        user.points,
+        `Đổi ưu đãi ${voucherInfo.name}`
+    );
+}
 
 // Hàm hiển thị toàn bộ nội dung trang Loyalty
 function renderLoyaltyPage(user, vouchers) {
@@ -473,7 +663,7 @@ function triggerRedeem(voucherId, user, sliderContainer) {
     });
 }
 
-function doRedeem(voucherInfo, user, sliderContainer, resetUI) {
+async function doRedeem(voucherInfo, user, sliderContainer, resetUI) {
     // Trừ điểm trong Database
     const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
     const userIdx = users.findIndex(u => u.phone === user.phone);
@@ -521,6 +711,11 @@ function doRedeem(voucherInfo, user, sliderContainer, resetUI) {
             const pointsDisplay = document.getElementById('current-points-display');
             if (pointsDisplay) {
                 pointsDisplay.innerHTML = `${user.points} <span class="points-unit">Paw Points</span>`;
+            }
+
+            // Persist loyalty update to Supabase if available
+            if (window.getSupabaseClient || window.SupabaseClient) {
+                await persistLoyaltyRedemption(user, voucherInfo);
             }
 
             // Toast báo thành công

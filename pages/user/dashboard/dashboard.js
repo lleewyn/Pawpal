@@ -61,8 +61,8 @@ async function _syncUserProfile(db, currentUser) {
     if (error || !data?.length) return;
 
     const c          = data[0];
-    const profile    = c.customer_profile?.[0]   || {};
-    const membership = c.customer_membership?.[0] || {};
+    const profile    = Array.isArray(c.customer_profile) ? (c.customer_profile[0] || {}) : (c.customer_profile || {});
+    const membership = Array.isArray(c.customer_membership) ? (c.customer_membership[0] || {}) : (c.customer_membership || {});
     const tier       = membership.membership_tier || {};
     const addresses  = (c.customer_address || []).map(a => ({
         id:        a.id,
@@ -91,6 +91,9 @@ async function _syncUserProfile(db, currentUser) {
 
     localStorage.setItem('pawpal_current_user', JSON.stringify(updatedUser));
     console.log('[Dashboard] Profile synced:', updatedUser.name, '| points:', updatedUser.points);
+    document.dispatchEvent(new CustomEvent('auth_state_changed', {
+        detail: { user: updatedUser, source: 'dashboard-sync' }
+    }));
 }
 
 async function _syncUserPets(db, currentUser) {
@@ -105,7 +108,8 @@ async function _syncUserPets(db, currentUser) {
     if (error) { console.error('[Dashboard] pets error:', error.message); return; }
 
     const pets = (data || []).map(p => ({
-        id:      p.id,
+        id:      p.pet_code || p.id,
+        _supabaseId: p.id,
         userId:  currentUser.id,
         name:    p.pet_name,
         species: p.species,
@@ -124,7 +128,14 @@ async function _syncUserPets(db, currentUser) {
         String(p.userId) !== String(currentUser.id) &&
         String(p.userId) !== String(currentUser.phone)
     );
-    localStorage.setItem('pawpal_pets', JSON.stringify([...pets, ...otherPets]));
+    const mergedPets = [...pets, ...otherPets].reduce((acc, pet) => {
+        const key = String(pet._supabaseId || pet.pet_code || pet.id || `${pet.name || ''}-${pet.dob || ''}`);
+        if (!acc.some(item => String(item._supabaseId || item.pet_code || item.id || `${item.name || ''}-${item.dob || ''}`) === key)) {
+            acc.push(pet);
+        }
+        return acc;
+    }, []);
+    localStorage.setItem('pawpal_pets', JSON.stringify(mergedPets));
     localStorage.setItem('pawpal_pets_supabase_synced', String(currentUser.phone));
     console.log('[Dashboard] Pets synced:', pets.length, 'pets');
 }
@@ -340,6 +351,9 @@ function updateCurrentUserRecord(updatedUser) {
         saveUsers(users);
     }
     setCurrentUser(updatedUser);
+    document.dispatchEvent(new CustomEvent('auth_state_changed', {
+        detail: { user: updatedUser, source: 'dashboard-update' }
+    }));
 }
 
 function showToast(type, message, duration = 5000) {
@@ -408,10 +422,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     await API.initData();
-    const apiUser = await API.getUserById(currentUser.id);
-    const freshUser = apiUser || getCurrentUser() || currentUser;
+    const syncedUser = getCurrentUser() || currentUser;
+    const apiUser = await API.getUserById(syncedUser.id);
+    const freshUser = { ...(apiUser || {}), ...syncedUser };
     if (apiUser) {
-        updateCurrentUserRecord({ ...currentUser, ...apiUser, id: apiUser._id || apiUser.id || currentUser.id });
+        updateCurrentUserRecord({ ...syncedUser, ...apiUser, id: apiUser._id || apiUser.id || syncedUser.id });
     }
 
     loadProfileData(freshUser);
