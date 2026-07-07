@@ -128,6 +128,27 @@
         }
     };
 
+    // Định nghĩa hàm lưu danh sách yêu thích toàn cục
+    window.saveWishlist = function(productIds, serviceIds = []) {
+        const currentUser = (typeof window.getCurrentUser === 'function')
+            ? window.getCurrentUser()
+            : JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            
+        const phone = currentUser ? currentUser.phone : null;
+        const pKey = phone ? `pawpal_wishlist_${phone}` : 'pawpal_wishlist_guest';
+        const sKey = phone ? `pawpal_wishlist_services_${phone}` : 'pawpal_wishlist_services_guest';
+        
+        localStorage.setItem(pKey, JSON.stringify(productIds));
+        localStorage.setItem(sKey, JSON.stringify(serviceIds));
+        
+        if (currentUser && window.API && window.API.saveUserWishlist) {
+            window.API.saveUserWishlist(currentUser.id || currentUser.phone || currentUser.phone_main || null, {
+                productIds: productIds,
+                serviceIds: serviceIds
+            });
+        }
+    };
+
     // Định nghĩa hàm cập nhật badge giỏ hàng toàn cục
     window.updateCartBadge = async function(forceSync = false) {
         let cart = [];
@@ -240,7 +261,8 @@
     }
 
     async function updateHeaderAuth() {
-        const user = await resolveUserDisplayName(getCurrentUser());
+        const isGuestLookupPage = window.location.pathname.includes('/return-guest/');
+        const user = isGuestLookupPage ? null : await resolveUserDisplayName(getCurrentUser());
         const authActions = document.querySelector('.auth-actions');
         const lookupBtn = document.querySelector('.lookup-btn');
         const lookupDivider = document.querySelector('.lookup-divider');
@@ -356,6 +378,12 @@
                             </svg>
                             Đơn hàng của tôi
                         </a>
+                        <a href="${root}pages/user/wishlist/wishlist.html" class="dropdown-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                            Yêu thích
+                        </a>
                         <a href="${root}pages/user/pet-diary/pet-diary.html" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
@@ -368,6 +396,13 @@
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                             </svg>
                             Paw Points
+                        </a>
+                        <a href="${root}pages/user/settings/settings.html" class="dropdown-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.92 0 1.71.57 2 1.39.06.19.1.4.1.61a2 2 0 0 1-2 2h-.09c-.65 0-1.24.39-1.51 1z"></path>
+                            </svg>
+                            Cài đặt
                         </a>
                         <div class="dropdown-divider"></div>
                         <button class="dropdown-item dropdown-item-danger" id="btnLogout">
@@ -387,6 +422,7 @@
             setMobileGroupVisibility(mobileUserOnly, true);
             setMobileGroupVisibility(mobileTempOnly, false);
             syncMobileAuthLinks('user');
+            setupMobileAccountToggle();
             
             // Attach dropdown toggle handler
             setupUserDropdown();
@@ -414,6 +450,7 @@
             setMobileGroupVisibility(mobileUserOnly, false);
             setMobileGroupVisibility(mobileTempOnly, true);
             syncMobileAuthLinks('temp');
+            setupMobileAccountToggle();
 
             setupLogoutButtons();
             
@@ -441,6 +478,7 @@
             setMobileGroupVisibility(mobileUserOnly, false);
             setMobileGroupVisibility(mobileTempOnly, false);
             syncMobileAuthLinks('guest');
+            setupMobileAccountToggle();
         }
 
         // Thực thi cập nhật số lượng badge tức thì
@@ -481,6 +519,20 @@
         });
         
         setupLogoutButtons();
+    }
+
+    function setupMobileAccountToggle() {
+        const accountGroup = document.querySelector('.mobile-account-group');
+        const toggle = document.querySelector('.mobile-account-toggle');
+        if (!accountGroup || !toggle) return;
+
+        if (toggle.dataset.bound === '1') return;
+        toggle.dataset.bound = '1';
+
+        toggle.addEventListener('click', () => {
+            const isOpen = accountGroup.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', String(isOpen));
+        });
     }
 
     function setupLogoutButtons() {

@@ -618,10 +618,12 @@
 }
 
 .timeslot-btn.held {
-    /* Held (temporary) state — subtle amber outline so user knows it's reserved for them.
-       If also `.selected`, `.selected` styles take precedence (green filled). */
+    /* Held (temporary) state — make it visually distinct with a warm amber treatment. */
+    background: linear-gradient(180deg, #fff7e6 0%, #fff1cc 100%);
     border-color: #f59e0b;
-    box-shadow: 0 6px 14px rgba(245,158,11,0.08);
+    color: #92400e;
+    box-shadow: 0 8px 18px rgba(245, 158, 11, 0.18);
+    transform: translateY(-1px);
 }
 
 /* Busy slots (already full) */
@@ -672,13 +674,25 @@
     flex-wrap: wrap;
 }
 
+.booking-warning-box,
+.booking-hold-banner {
+    background: linear-gradient(180deg, rgba(255, 247, 230, 0.98) 0%, rgba(255, 241, 204, 0.96) 100%);
+    border: 1px solid #f59e0b;
+    border-radius: var(--card-border-radius);
+    box-shadow: 0 10px 24px rgba(245, 158, 11, 0.12);
+    padding: 14px 16px;
+    color: #92400e;
+    margin-top: 10px;
+}
+
 .booking-hold-banner-text {
     font-size: 0.95rem;
     line-height: 1.4;
+    font-weight: 600;
 }
 
 .booking-hold-countdown {
-    background: rgba(249, 199, 79, 0.18);
+    background: rgba(245, 158, 11, 0.16);
     color: #92400e;
     font-weight: 700;
     padding: 10px 14px;

@@ -102,28 +102,28 @@
                     </li>
 
                     <!-- Mobile only - Logged-in User -->
-                    <li class="nav-item mobile-drawer-only mobile-user-only" style="display: none;">
-                        <a href="/pages/user/dashboard/dashboard.html" class="nav-link">Tài khoản của tôi</a>
+                    <li class="nav-item mobile-drawer-only mobile-user-only mobile-account-group" style="display: none;">
+                        <button type="button" class="nav-link mobile-account-toggle" aria-expanded="false">
+                            <span>Tài khoản của tôi</span>
+                            <svg class="mobile-account-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="mobile-account-submenu">
+                            <a href="/pages/user/dashboard/dashboard.html" class="nav-link mobile-account-child">Hồ sơ cá nhân</a>
+                            <a href="/pages/user/pet-profile/pet-profile.html" class="nav-link mobile-account-child">Hồ sơ bé cưng</a>
+                            <a href="/pages/user/bookings/bookings.html" class="nav-link mobile-account-child">Lịch hẹn của tôi</a>
+                            <a href="/pages/user/orders/orders.html" class="nav-link mobile-account-child">Đơn hàng của tôi</a>
+                            <a href="/pages/user/wishlist/wishlist.html" class="nav-link mobile-account-child">Yêu thích</a>
+                            <a href="/pages/user/pet-diary/pet-diary.html" class="nav-link mobile-account-child">Nhật ký chăm sóc</a>
+                            <a href="/pages/user/loyalty/loyalty.html" class="nav-link mobile-account-child">Paw Points</a>
+                            <a href="/pages/user/settings/settings.html" class="nav-link mobile-account-child">Cài đặt</a>
+                            <a href="/pages/shop/cart/cart.html" class="nav-link mobile-account-child">
+                                Giỏ hàng của tôi <span class="cart-badge-mobile" style="color: var(--color-danger); font-weight: 700;"></span>
+                            </a>
+                        </div>
                     </li>
-                    <li class="nav-item mobile-drawer-only mobile-user-only" style="display: none;">
-                        <a href="/pages/user/pet-profile/pet-profile.html" class="nav-link">Hồ sơ bé cưng</a>
-                    </li>
-                    <li class="nav-item mobile-drawer-only mobile-user-only" style="display: none;">
-                        <a href="/pages/user/bookings/bookings.html" class="nav-link">Lịch hẹn của tôi</a>
-                    </li>
-                    <li class="nav-item mobile-drawer-only mobile-user-only" style="display: none;">
-                        <a href="/pages/user/orders/orders.html" class="nav-link">Đơn hàng của tôi</a>
-                    </li>
-                    <li class="nav-item mobile-drawer-only mobile-user-only" style="display: none;">
-                        <a href="/pages/user/pet-diary/pet-diary.html" class="nav-link">Nhật ký chăm sóc</a>
-                    </li>
-                    <li class="nav-item mobile-drawer-only mobile-user-only" style="display: none;">
-                        <a href="/pages/user/loyalty/loyalty.html" class="nav-link">Paw Points</a>
-                    </li>
-                    <li class="nav-item mobile-drawer-only mobile-user-only" style="display: none;">
-                        <a href="/pages/shop/cart/cart.html" class="nav-link">Giỏ hàng của tôi <span class="cart-badge-mobile" style="color: var(--color-danger); font-weight: 700;"></span></a>
-                    </li>
-                    <li class="nav-item mobile-drawer-only mobile-user-only" style="display: none;">
+                    <li class="nav-item mobile-drawer-only mobile-user-only mobile-logout-separate" style="display: none;">
                         <a href="#" class="nav-link mobile-logout-btn" style="color: var(--color-danger) !important;">Đăng xuất</a>
                     </li>
 

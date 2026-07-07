@@ -250,12 +250,17 @@
     async function loadTickets() {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db) return cachedTickets;
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
+        
+        let query = db.from('support_ticket').select('*').order('created_at', { ascending: false });
+        if (currentUser && currentUser.id) {
+            query = query.eq('user_id', currentUser.id);
+        } else {
+            query = query.is('user_id', null);
+        }
         
         // Fetch tickets
-        const { data: ticketsData, error: tErr } = await db
-            .from('support_ticket')
-            .select('*')
-            .order('created_at', { ascending: false });
+        const { data: ticketsData, error: tErr } = await query;
             
         if (tErr) {
             console.error('[Support] Lỗi load tickets', tErr);
@@ -309,10 +314,12 @@
         if (!db) return null;
         
         const priority = detectPriority(title, content);
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
+        const userId = currentUser ? currentUser.id : null;
         
         // Insert ticket
         const { data: tData, error: tErr } = await db.from('support_ticket').insert([{
-            title, type, priority, status: 'pending'
+            title, type, priority, status: 'pending', user_id: userId
         }]).select();
         
         if (tErr || !tData || !tData.length) {
@@ -331,7 +338,6 @@
         
         await loadTickets();
         
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
         if (!currentUser || currentUser.is_temporary) {
             console.log(`[SMS CSKH] Gui tokenized link check ticket cho sdt: "pawpal.vn/support-guest?token=${newTicketId}"`);
         }

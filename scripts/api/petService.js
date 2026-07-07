@@ -109,8 +109,38 @@ function normalizePetAvatar(pet) {
     };
 }
 
+function getPetSignature(pet) {
+    const name = String(pet?.name || '').trim().toLowerCase();
+    const species = String(pet?.species || '').trim().toLowerCase();
+    const breed = String(pet?.breed || '').trim().toLowerCase();
+    const dob = String(pet?.dob || '').trim().toLowerCase();
+    const weight = String(pet?.weight || '').trim().toLowerCase();
+    const userKey = String(pet?.userId || pet?.userLegacyId || pet?.phone || pet?.ownerPhone || '').trim().toLowerCase();
+    return [name, species, breed, dob, weight, userKey].join('|');
+}
+
 function normalizePetList(pets) {
-    return Array.isArray(pets) ? pets.map(normalizePetAvatar) : [];
+    if (!Array.isArray(pets)) return [];
+
+    const map = new Map();
+    pets.map(normalizePetAvatar).forEach((pet) => {
+        if (!pet) return;
+        const signature = getPetSignature(pet);
+        const key = `sig:${signature}`;
+        const existing = map.get(key);
+        if (!existing) {
+            map.set(key, { ...pet, __signature: signature });
+            return;
+        }
+        map.set(key, {
+            ...existing,
+            ...pet,
+            __signature: signature,
+            _supabaseId: pet._supabaseId || existing._supabaseId || null,
+        });
+    });
+
+    return Array.from(map.values()).map(({ __signature, ...pet }) => pet);
 }
 
 function buildPetPayload(pet, currentUser, current) {
@@ -158,6 +188,15 @@ function mergePetLists(serverPets, localPets, targetUserId) {
             .map(String)
     );
     const currentPhone = currentUser?.phone ? String(currentUser.phone) : null;
+    const signatureOf = (pet) => {
+        const name = String(pet?.name || '').trim().toLowerCase();
+        const species = String(pet?.species || '').trim().toLowerCase();
+        const breed = String(pet?.breed || '').trim().toLowerCase();
+        const dob = String(pet?.dob || '').trim().toLowerCase();
+        const weight = String(pet?.weight || '').trim().toLowerCase();
+        const userKey = String(pet?.userId || pet?.userLegacyId || pet?.phone || pet?.ownerPhone || '').trim().toLowerCase();
+        return [name, species, breed, dob, weight, userKey].join('|');
+    };
 
     const shouldKeep = (pet) => {
         if (!targetUserId) return true;
@@ -172,28 +211,28 @@ function mergePetLists(serverPets, localPets, targetUserId) {
 
     const upsert = (pet, priority) => {
         if (!pet || !shouldKeep(pet)) return;
-        const key = String(
-            pet._supabaseId ||
-            pet.pet_code ||
-            pet._id ||
-            pet.legacyId ||
-            pet.id ||
-            `${pet.name || ''}-${pet.dob || ''}`
-        );
+        const sig = signatureOf(pet);
+        const key = `sig:${sig}`;
         const existing = map.get(key);
         if (!existing) {
-            map.set(key, { ...pet, __priority: priority });
+            map.set(key, { ...pet, __priority: priority, __signature: sig });
             return;
         }
         if (priority >= (existing.__priority || 0)) {
-            map.set(key, { ...existing, ...pet, __priority: priority });
+            map.set(key, {
+                ...existing,
+                ...pet,
+                __priority: priority,
+                __signature: sig,
+                _supabaseId: pet._supabaseId || existing._supabaseId || null
+            });
         }
     };
 
     serverPets.forEach(pet => upsert(pet, 1));
     localPets.forEach(pet => upsert(pet, 2));
 
-    return Array.from(map.values()).map(({ __priority, ...pet }) => pet);
+    return Array.from(map.values()).map(({ __priority, __signature, ...pet }) => pet);
 }
 
 export async function getPets(userId) {
@@ -224,13 +263,14 @@ export async function getPets(userId) {
                 }
             }
 
-            const { data, error } = await query;
-            if (!error && Array.isArray(data)) {
-                const supabasePets = data.map((row) => mapSupabasePet(row, currentUser));
-                const merged = mergePetLists(supabasePets, localPets, targetUserId);
-                localStorage.setItem('pawpal_pets', JSON.stringify(merged));
-                return merged;
-            }
+    const { data, error } = await query;
+    if (!error && Array.isArray(data)) {
+        const supabasePets = data.map((row) => mapSupabasePet(row, currentUser));
+        const merged = mergePetLists(supabasePets, localPets, targetUserId);
+        const deduped = normalizePetList(merged);
+        localStorage.setItem('pawpal_pets', JSON.stringify(deduped));
+        return deduped;
+    }
         } catch (err) {
             console.warn('[petService] Supabase getPets error, fallback localStorage:', err.message);
         }

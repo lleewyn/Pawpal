@@ -992,14 +992,14 @@ function loadWishlist() {
 }
 
 function saveWishlist() {
-    localStorage.setItem(getWishlistStorageKey(), JSON.stringify(state.wishlist));
-    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    if (user && window.API && typeof window.API.saveUserWishlist === 'function') {
-        const serviceIds = JSON.parse(localStorage.getItem(`pawpal_wishlist_services_${user.phone}`) || '[]');
-        window.API.saveUserWishlist(user.id || user.phone, {
-            productIds: state.wishlist,
-            serviceIds: serviceIds
-        });
+    if (window.saveWishlist) {
+        const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        const phone = user ? user.phone : null;
+        const serviceKey = phone ? `pawpal_wishlist_services_${phone}` : 'pawpal_wishlist_services_guest';
+        const serviceIds = JSON.parse(localStorage.getItem(serviceKey) || '[]');
+        window.saveWishlist(state.wishlist, serviceIds);
+    } else {
+        localStorage.setItem(getWishlistStorageKey(), JSON.stringify(state.wishlist));
     }
 }
 

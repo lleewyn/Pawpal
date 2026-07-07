@@ -720,6 +720,31 @@ function normalizeOrderStatus(status) {
     return raw;
 }
 
+function getDashboardOrderLabel(status, paymentStatus, paymentMethod) {
+    const normalizedStatus = normalizeOrderStatus(status);
+    const normalizedPayment = String(paymentStatus || '').toLowerCase().trim();
+    const normalizedMethod = String(paymentMethod || '').toLowerCase().trim();
+    const ONLINE_METHODS = ['vnpay', 'momo', 'zalopay', 'vietqr', 'bank_transfer', 'card', 'transfer'];
+    const isPaid = normalizedPayment === 'paid';
+    const isOnline = ONLINE_METHODS.includes(normalizedMethod);
+
+    if ((normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && isPaid && isOnline) {
+        return { className: 'status-giao', text: 'Chờ xác nhận' };
+    }
+
+    const labels = {
+        placed:          { className: 'status-giao', text: 'Chờ xử lý' },
+        pending_payment: { className: 'status-giao', text: 'Chờ thanh toán' },
+        preparing:       { className: 'status-giao', text: 'Đang chuẩn bị' },
+        shipping:        { className: 'status-giao', text: 'Đang giao' },
+        delivered:       { className: 'status-nhan', text: 'Đã giao hàng' },
+        completed:       { className: 'status-nhan', text: 'Hoàn thành' },
+        cancelled:       { className: 'status-nhan', text: 'Đã hủy' }
+    };
+
+    return labels[normalizedStatus] || { className: 'status-giao', text: 'Chờ xử lý' };
+}
+
 async function loadMyPets(user) {
     const container = document.getElementById('myPetsContainerHorizontal');
     if (!container) return;
@@ -778,25 +803,7 @@ async function loadRecentOrders(user) {
             : (order.cart ? order.cart.map((item) => item.name).join(', ') : 'Sản phẩm mua sắm');
         const price = `${(order.pricing ? order.pricing.total : order.total).toLocaleString('vi-VN')}d`;
 
-        const status = normalizeOrderStatus(order.status || order.orderStatus);
-        let badgeClass = 'status-giao';
-        let statusText = 'Chờ thanh toán';
-        if (status === 'preparing') {
-            badgeClass = 'status-giao';
-            statusText = 'Đang chuẩn bị';
-        } else if (status === 'shipping') {
-            badgeClass = 'status-giao';
-            statusText = 'Đang giao';
-        } else if (status === 'delivered') {
-            badgeClass = 'status-nhan';
-            statusText = 'Đã giao';
-        } else if (status === 'completed') {
-            badgeClass = 'status-nhan';
-            statusText = 'Hoàn thành';
-        } else if (status === 'cancelled') {
-            badgeClass = 'status-nhan';
-            statusText = 'Đã hủy';
-        }
+        const statusInfo = getDashboardOrderLabel(order.status || order.orderStatus, order.paymentStatus, order.paymentMethod);
 
         html += `
             <div class="order-item-card">
@@ -812,7 +819,7 @@ async function loadRecentOrders(user) {
                     <div class="order-summary" title="${summary}">${summary}</div>
                     <div class="order-price">${price}</div>
                 </div>
-                <span class="status-badge ${badgeClass}">${statusText}</span>
+                <span class="status-badge ${statusInfo.className}">${statusInfo.text}</span>
             </div>
         `;
     });

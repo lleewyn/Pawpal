@@ -100,11 +100,14 @@ function mapOrderStatus(status) {
     return {
         'PENDING':   'placed',
         'CONFIRMED': 'confirmed',
+        'PACKING':   'preparing',
         'PREPARING': 'preparing',
         'SHIPPING':  'shipping',
+        'SHIPPED':   'shipping',
         'DELIVERED': 'delivered',
         'COMPLETED': 'completed',
         'CANCELLED': 'cancelled',
+        'RETURNED':  'cancelled',
     }[status] || 'placed';
 }
 
@@ -251,7 +254,9 @@ function renderOrders() {
 
 function createOrderCard(order) {
     const orderId = order.id || order._id || '';
-    const firstProduct = order.products[0];
+    const firstProduct = (order.products && order.products.length > 0)
+        ? order.products[0]
+        : { name: 'Đơn hàng', image: '', sku: '', quantity: 1, price: 0, total: 0 };
     const remainingCount = order.products.length - 1;
     const normalizedStatus = normalizeOrderStatus(order.status);
 

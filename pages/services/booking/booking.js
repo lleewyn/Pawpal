@@ -136,11 +136,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (found) {
             selectedService = found;
             bookingState.serviceId = preselectedServiceId;
+            const foundGroup = getServiceGroup(found);
 
             // Set the active category tab
             const tabs = document.querySelectorAll('.svc-type-tab');
             tabs.forEach(tab => {
-                if (tab.dataset.type === found.category) {
+                if (tab.dataset.type === foundGroup) {
                     tab.classList.add('active');
                 } else {
                     tab.classList.remove('active');
@@ -152,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (step2Next) step2Next.disabled = false;
 
             // Pre-render services list with this category and selection
-            renderServices(found.category);
+            renderServices(foundGroup);
             updateSummary();
         }
     }
@@ -219,7 +220,27 @@ async function loadMemberPets(user) {
     let activePets = [];
     try {
         const supabasePets = await getPets(user?.id || user?.phone || user?.phone_main || null);
-        activePets = (Array.isArray(supabasePets) ? supabasePets : []).filter(p => !p.isArchived);
+        const dedupedPets = [];
+        const seen = new Set();
+        const buildSignature = (pet) => [
+            String(pet?.name || '').trim().toLowerCase(),
+            String(pet?.species || '').trim().toLowerCase(),
+            String(pet?.breed || '').trim().toLowerCase(),
+            String(pet?.dob || '').trim().toLowerCase(),
+            String(pet?.weight || '').trim().toLowerCase(),
+            String(pet?.userId || pet?.userLegacyId || pet?.phone || pet?.ownerPhone || '').trim().toLowerCase()
+        ].join('|');
+        (Array.isArray(supabasePets) ? supabasePets : []).forEach((pet) => {
+            if (!pet || pet.isArchived) return;
+            const signature = buildSignature(pet);
+            const key = String(pet.pet_code || pet._supabaseId || pet._id || pet.legacyId || pet.id || signature);
+            const compoundKey = `${key}::${signature}`;
+            if (seen.has(compoundKey) || seen.has(signature)) return;
+            seen.add(signature);
+            seen.add(compoundKey);
+            dedupedPets.push(pet);
+        });
+        activePets = dedupedPets;
         if (activePets.length > 0) {
             localStorage.setItem('pawpal_pets', JSON.stringify(activePets));
         }
@@ -572,12 +593,24 @@ function setupServiceSelection() {
     }
 }
 
+function getServiceGroup(service) {
+    const category = String(service?.category || '').toLowerCase().trim();
+    const rawCategory = String(service?.rawCategory || '').toLowerCase().trim();
+    const name = String(service?.name || '').toLowerCase().trim();
+
+    if (['spa', 'hotel', 'taxi'].includes(category)) return category;
+    if (rawCategory.includes('spa') || name.includes('tắm') || name.includes('spa') || name.includes('groom')) return 'spa';
+    if (rawCategory.includes('hotel') || name.includes('phòng') || name.includes('lưu trú') || name.includes('daycare') || name.includes('qua đêm')) return 'hotel';
+    if (rawCategory.includes('taxi') || name.includes('taxi') || name.includes('đưa đón')) return 'taxi';
+    return 'spa';
+}
+
 function renderServices(type, searchQuery = '') {
     const listContainer = document.getElementById('svcSelectList');
     if (!listContainer) return;
 
     // Filter services by category type (spa vs hotel)
-    let filtered = allServices.filter(s => s.category === type);
+    let filtered = allServices.filter(s => getServiceGroup(s) === type);
 
     if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -1007,7 +1040,7 @@ function setupStepActions() {
         bookingState.step = targetStep;
 
         if (targetStep === 2) {
-            const categoryToRender = selectedService ? selectedService.category : 'spa';
+            const categoryToRender = selectedService ? getServiceGroup(selectedService) : 'spa';
             const tabs = document.querySelectorAll('.svc-type-tab');
             tabs.forEach(tab => {
                 if (tab.dataset.type === categoryToRender) {

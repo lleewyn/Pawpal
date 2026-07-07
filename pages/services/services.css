@@ -259,6 +259,10 @@
     margin: 4px 0 var(--space-md) 0;
 }
 
+.services-guidance-section {
+    display: none !important;
+}
+
 .services-guidance-mini {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

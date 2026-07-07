@@ -53,20 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
             normalizePhone(u.phone) === normPhone && !u.is_temporary
         );
 
-        if (memberUser) {
-            btn.disabled    = false;
-            btn.textContent = 'Tìm kiếm';
-            resultsEl.style.display = 'none';
-            errorBox.innerHTML = `
-                Tài khoản này là tài khoản thành viên. Vui lòng
-                <a href="/pages/public/login/login.html?phone=${encodeURIComponent(phone)}" class="text-decoration-underline fw-bold">đăng nhập</a>
-                để xem thông tin tại
-                <a href="/pages/user/dashboard/dashboard.html" class="text-decoration-underline fw-bold">Trang cá nhân</a>.
-            `;
-            errorBox.style.display = 'block';
-            return;
-        }
-
         let bookings = findBookingsByPhone(phone, data);
         let orders   = findOrdersByPhone(phone, data);
 
@@ -110,6 +96,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         errorBox.style.display  = 'none';
         resultsEl.style.display = 'block';
+        if (memberUser) {
+            errorBox.innerHTML = `
+                Số điện thoại này thuộc tài khoản thành viên. Mình vẫn hiển thị kết quả tra cứu bên dưới, nhưng nếu muốn xem đầy đủ lịch sử cá nhân thì hãy vào trang cá nhân.
+            `;
+            errorBox.style.display = 'block';
+        }
         rgLastSearchState = {
             phone,
             bookings,
