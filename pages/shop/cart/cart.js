@@ -88,6 +88,56 @@ document.addEventListener('DOMContentLoaded', async () => {
         return Array.from(expanded);
     }
 
+    function normalizeProductVoucherCategory(product, item) {
+        const raw = [
+            product?.category,
+            product?.categoryName,
+            item?.category,
+            item?.categoryName
+        ].find(Boolean);
+
+        if (!raw) {
+            const nameSource = String(product?.name || item?.name || '').toLowerCase();
+            if (/(pate|súp|sup|thức ăn|thuc an|hạt|hat|churu|cá|ca|gà|ga|bọt|food)/i.test(nameSource)) {
+                return 'food-wet';
+            }
+            if (/(toy|đồ chơi|do choi|bóng|ball|xương|xuong|gặm|gam)/i.test(nameSource)) {
+                return 'toys';
+            }
+            if (/(spa|groom|tắm|tam|sấy|say|cắt móng|cat mong|vệ sinh|ve sinh|hotel|phòng|phong)/i.test(nameSource)) {
+                return 'care';
+            }
+            return null;
+        }
+
+        const value = String(raw).toLowerCase().trim();
+        const categoryMap = {
+            'thức ăn khô': 'food-dry',
+            'thuc an kho': 'food-dry',
+            'thức ăn ướt': 'food-wet',
+            'thuc an uot': 'food-wet',
+            'xương gặm': 'bones',
+            'xuong gam': 'bones',
+            'đồ chơi': 'toys',
+            'do choi': 'toys',
+            'sức khỏe': 'health',
+            'suc khoe': 'health',
+            'vệ sinh': 'hygiene',
+            've sinh': 'hygiene',
+            'grooming': 'grooming',
+            'health': 'health',
+            'hygiene': 'hygiene',
+            'food': 'food',
+            'care': 'care',
+            'toys': 'toys',
+            'shop': 'shop',
+            'services': 'services',
+            'other': 'other'
+        };
+
+        return categoryMap[value] || value;
+    }
+
     // Format tiền tệ Việt Nam
     function formatPrice(price) {
         return price.toLocaleString('vi-VN') + 'đ';
@@ -624,7 +674,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (voucher.applicableFor && !voucher.applicableFor.includes('all')) {
             const cartCategories = cart.map(item => {
                 const prod = products.find(p => isSameCartItemId(p.id, item.id));
-                return prod ? prod.category : (item.category || null);
+                return normalizeProductVoucherCategory(prod, item);
             }).filter(Boolean);
             const allowedCategories = expandVoucherCategories(voucher.applicableFor);
             const hasMatchingCategory = cartCategories.some(category => allowedCategories.includes(category));
