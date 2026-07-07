@@ -723,7 +723,7 @@ export const API = {
 
     async getVouchers() {
         try {
-            const db = window.SupabaseClient ? window.SupabaseClient.getDB() : null;
+            const db = window.SupabaseClient;
             if (!db) {
                 console.warn('[API] Supabase Client not initialized, falling back to mock vouchers');
                 const res = await fetch('/data/vouchers.json');
