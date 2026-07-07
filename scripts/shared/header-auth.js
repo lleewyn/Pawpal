@@ -356,10 +356,12 @@
                         </a>
                         <a href="${root}pages/user/pet-profile/pet-profile.html" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="10" r="3"/>
-                                <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/>
+                                <path d="M12 2c1.2 0 2.2 1 2.2 2.2S13.2 6.4 12 6.4 9.8 5.4 9.8 4.2 10.8 2 12 2z"/>
+                                <path d="M5 7.5c1 0 1.8.8 1.8 1.8S6 11 5 11s-1.8-.8-1.8-1.8S4 7.5 5 7.5z"/>
+                                <path d="M19 7.5c1 0 1.8.8 1.8 1.8S20 11 19 11s-1.8-.8-1.8-1.8S18 7.5 19 7.5z"/>
+                                <path d="M7.5 12.5c0-2 1.8-3.6 4.5-3.6s4.5 1.6 4.5 3.6c0 2.8-2 5.5-4.5 7.5-2.5-2-4.5-4.7-4.5-7.5z"/>
                             </svg>
-                            Hồ sơ của tôi
+                            Hồ sơ bé cưng
                         </a>
                         <a href="${root}pages/user/bookings/bookings.html" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -368,7 +370,7 @@
                                 <line x1="8" y1="2" x2="8" y2="6"></line>
                                 <line x1="3" y1="10" x2="21" y2="10"></line>
                             </svg>
-                            Lịch hẹn của tôi
+                            Lịch hẹn của bé
                         </a>
                         <a href="${root}pages/user/orders/orders.html" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -376,7 +378,7 @@
                                 <line x1="3" y1="6" x2="21" y2="6"></line>
                                 <path d="M16 10a4 4 0 0 1-8 0"></path>
                             </svg>
-                            Đơn hàng của tôi
+                            Đơn hàng của bé
                         </a>
                         <a href="${root}pages/user/wishlist/wishlist.html" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

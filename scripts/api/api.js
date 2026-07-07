@@ -743,7 +743,7 @@ export const API = {
             if (error) throw error;
             
             // Map db columns to frontend properties
-            return (data || []).map(v => ({
+            const mappedVouchers = (data || []).map(v => ({
                 code: v.voucher_code,
                 type: v.type || 'percentage',
                 value: v.discount_value || 0,
@@ -757,6 +757,9 @@ export const API = {
                 description: v.description,
                 active: v.is_active
             }));
+            
+            console.log('[API] Đã tải danh sách voucher từ Supabase:', mappedVouchers);
+            return mappedVouchers;
         } catch (err) {
             console.error('[API] Error fetching vouchers from Supabase:', err);
             return [];
