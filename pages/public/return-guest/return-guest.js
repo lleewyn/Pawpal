@@ -205,7 +205,7 @@ async function loadSupabaseGuestResults(phone) {
                 note,
                 customer!inner ( id, phone_main, customer_profile ( full_name ) ),
                 service ( id, service_name ),
-                pet_profile ( id, name )
+                pet_profile ( id, pet_name )
             `)
             .eq('customer.phone_main', normPhone)
             .order('appointment_date', { ascending: false });
@@ -274,7 +274,7 @@ function mapSupabaseBookingRow(row) {
         status: row.appointment_status || 'pending',
         paymentStatus: row.payment_status || 'pending',
         note: row.note || '',
-        petName: row.pet_profile?.name || (Array.isArray(row.customer?.customer_profile) ? row.customer.customer_profile[0]?.full_name : row.customer?.customer_profile?.full_name) || 'Bé cưng',
+        petName: row.pet_profile?.pet_name || (Array.isArray(row.customer?.customer_profile) ? row.customer.customer_profile[0]?.full_name : row.customer?.customer_profile?.full_name) || 'Bé cưng',
         branch: '',
         staff: '',
     };
