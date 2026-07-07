@@ -661,6 +661,35 @@ export const API = {
             console.error('Submit order error:', err);
             return { success: false, error: err };
         }
+    },
+
+    async updateOrderPaymentStatus(orderId, paymentStatus) {
+        const db = window.SupabaseClient;
+        if (!db || !orderId) {
+            return { success: false, error: 'No Supabase connection' };
+        }
+
+        try {
+            const normalizedStatus = String(paymentStatus || '').toUpperCase();
+            const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+
+            let query = db.from('sales_order').update({
+                payment_status: normalizedStatus,
+                updated_at: new Date().toISOString()
+            });
+
+            query = isUUID
+                ? query.eq('id', orderId)
+                : query.eq('order_code', orderId);
+
+            const { data, error } = await query.select('id, order_code, payment_status').maybeSingle();
+            if (error) throw error;
+
+            return { success: true, data };
+        } catch (err) {
+            console.error('[API] updateOrderPaymentStatus failed:', err);
+            return { success: false, error: err };
+        }
     }
 };
 

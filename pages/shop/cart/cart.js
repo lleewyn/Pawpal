@@ -112,6 +112,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const value = String(raw).toLowerCase().trim();
         const categoryMap = {
+            'thực phẩm': 'food',
+            'thuc pham': 'food',
             'thức ăn khô': 'food-dry',
             'thuc an kho': 'food-dry',
             'thức ăn ướt': 'food-wet',

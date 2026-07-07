@@ -74,7 +74,11 @@ async function resolveOrderData(orderId, fallbackOrder) {
             },
             payment: {
                 method: localOrder?.payment?.method || 'cod',
-                status: String(row.payment_status || localOrder?.payment?.status || 'PENDING').toLowerCase(),
+                status: String(
+                    localOrder?.payment?.status === 'paid'
+                        ? 'paid'
+                        : (row.payment_status || localOrder?.payment?.status || 'PENDING')
+                ).toLowerCase(),
             },
             items: (row.sales_order_detail || []).map((item) => ({
                 id: item.product?.id || '',

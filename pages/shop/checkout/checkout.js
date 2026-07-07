@@ -277,6 +277,10 @@ function validateVoucher(code, showMessage = true) {
     if (voucher.applicableFor && !voucher.applicableFor.includes('all')) {
         const cartCategories = checkoutState.cart.map(item => {
             const product = checkoutState.products.find(p => String(p.id) === String(item.id));
+            const rawCat = product ? String(product.category || item.category || '').toLowerCase().trim() : '';
+            if (rawCat === 'thực phẩm' || rawCat === 'thuc pham' || rawCat === 'thức ăn ướt' || rawCat === 'thức ăn khô') return 'food';
+            if (rawCat === 'đồ chơi' || rawCat === 'do choi') return 'toys';
+            if (rawCat === 'vệ sinh' || rawCat === 've sinh') return 'hygiene';
             return product ? product.category : null;
         }).filter(Boolean);
 

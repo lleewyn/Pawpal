@@ -60,6 +60,9 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
 
         const local = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
         const existing = local.find(l => String(l.id) === String(o.order_code || o.id) || String(l._supabaseId) === String(o.id));
+        const localPaymentStatus = String(existing?.paymentStatus || existing?.payment?.status || '').toLowerCase();
+        const remotePaymentStatus = String(o.payment_status || '').toLowerCase();
+        const paymentStatus = localPaymentStatus === 'paid' ? 'paid' : remotePaymentStatus;
 
         const order = {
             id:          o.order_code || o.id,
@@ -68,8 +71,8 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
             userPhone:   currentUser.phone,
             status:      mapOrderStatus(o.order_status),
             orderStatus: o.order_status,
-            paymentStatus: (o.payment_status || '').toLowerCase(),
-            paymentMethod: existing?.paymentMethod || 'cod',
+            paymentStatus,
+            paymentMethod: existing?.paymentMethod || local?.paymentMethod || 'cod',
             products,
             pricing: {
                 subtotal:    o.subtotal,
