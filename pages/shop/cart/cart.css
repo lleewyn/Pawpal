@@ -312,8 +312,58 @@
     border-color: var(--color-primary);
 }
 
-.applied-voucher-badge {
-    font-size: var(--fs-small);
+.voucher-note {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(40, 167, 69, 0.06);
+    border: 1px solid rgba(40, 167, 69, 0.18);
+    color: var(--color-text-light);
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+
+#my-vouchers-list,
+#available-vouchers-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.voucher-select-btn,
+.my-voucher-btn {
+    width: 100%;
+    white-space: normal;
+    text-align: left;
+    line-height: 1.25;
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.voucher-select-btn.is-selected-voucher,
+.my-voucher-btn.is-selected-voucher {
+    border-color: var(--color-primary);
+    background-color: rgba(67, 125, 102, 0.12);
+    color: var(--color-primary-dark);
+    box-shadow: 0 8px 18px rgba(67, 125, 102, 0.15);
+}
+
+.voucher-select-btn.is-selected-voucher strong,
+.my-voucher-btn.is-selected-voucher strong {
+    color: var(--color-primary-dark);
+}
+
+.voucher-select-btn strong,
+.my-voucher-btn strong {
+    display: block;
+}
+
+.voucher-select-btn small,
+.my-voucher-btn small {
+    display: block;
+    line-height: 1.25;
 }
 
 .bg-success-light {
@@ -427,6 +477,13 @@
     }
     .cart-main-title {
         text-align: center;
+    }
+}
+
+@media (max-width: 575.98px) {
+    #my-vouchers-list,
+    #available-vouchers-list {
+        grid-template-columns: 1fr;
     }
 }
 

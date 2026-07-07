@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Voucher elements
     const voucherInput = document.getElementById('voucher-input');
     const btnApplyVoucher = document.getElementById('btn-apply-voucher');
-    const appliedVouchersContainer = document.getElementById('applied-vouchers-container');
     const myVouchersList = document.getElementById('my-vouchers-list');
     const availableVouchersList = document.getElementById('available-vouchers-list');
     const rowDiscount = document.getElementById('row-discount');
@@ -104,11 +103,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             setupVoucherEvents();
             setupSelectAllEvent();
-            setupCheckoutEvent();
-            loadPersistedVoucher();
-            renderAvailableVouchers();
-            renderMyVouchers();
-            renderCart();
+        setupCheckoutEvent();
+        loadPersistedVoucher();
+        renderAvailableVouchers();
+        renderMyVouchers();
+        renderCart();
         } catch (error) {
             console.error(' Lỗi khởi tạo giỏ hàng:', error);
         }
@@ -204,6 +203,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        if (appliedVoucher && appliedVoucher.code === code) {
+            appliedVoucher = null;
+            localStorage.removeItem('pawpal_applied_voucher_code');
+            renderVoucherHighlights();
+            calculateTotals();
+            voucherInput.value = '';
+            return;
+        }
+
         // Tính tổng tiền các sản phẩm được chọn để kiểm tra minOrderValue
         let checkedSubtotal = 0;
         cart.forEach(item => {
@@ -223,41 +231,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         appliedVoucher = voucher;
         localStorage.setItem('pawpal_applied_voucher_code', code);
         voucherInput.value = '';
-        renderAppliedVoucherBadge();
+        renderVoucherHighlights();
         calculateTotals();
     }
 
-    // Hiển thị badge voucher đã áp dụng
-    function renderAppliedVoucherBadge() {
-        if (!appliedVouchersContainer) return;
-        
-        if (!appliedVoucher) {
-            appliedVouchersContainer.innerHTML = '';
-            return;
-        }
-
-        let discountText = '';
-        if (appliedVoucher.type === 'fixed') {
-            discountText = `-${formatPrice(appliedVoucher.value)}`;
-        } else if (appliedVoucher.type === 'percentage') {
-            discountText = `-${appliedVoucher.value}%`;
-        } else if (appliedVoucher.type === 'shipping') {
-            discountText = `Freeship tối đa -${formatPrice(appliedVoucher.value)}`;
-        }
-
-        appliedVouchersContainer.innerHTML = `
-            <div class="applied-voucher-badge d-inline-flex align-items-center gap-2 py-1 px-3 bg-success-light text-success rounded-pill border border-success">
-                <span class="fw-bold">${appliedVoucher.code}</span>
-                <span class="fs-sm">(${discountText})</span>
-                <button type="button" class="btn-close btn-close-voucher btn-sm ms-2" aria-label="Close" id="btn-remove-voucher"></button>
-            </div>
-        `;
-
-        // Bắt sự kiện xóa voucher
-        document.getElementById('btn-remove-voucher').addEventListener('click', () => {
-            appliedVoucher = null;
-            renderAppliedVoucherBadge();
-            calculateTotals();
+    function renderVoucherHighlights() {
+        const allVoucherButtons = document.querySelectorAll('.voucher-select-btn, .my-voucher-btn');
+        allVoucherButtons.forEach(button => {
+            const code = button.dataset.code;
+            const isActive = appliedVoucher && appliedVoucher.code === code;
+            button.classList.toggle('is-selected-voucher', !!isActive);
+            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
         });
     }
 
@@ -421,6 +405,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             cartDiscount.textContent = `-${formatPrice(discount)}`;
         } else {
             rowDiscount.classList.replace('d-flex', 'd-none');
+            discountCodeLabel.textContent = 'Voucher';
+            cartDiscount.textContent = '-0đ';
         }
 
         const grandTotal = Math.max(0, subtotal - discount);
@@ -430,6 +416,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (typeof window.updateCartBadge === 'function') {
             window.updateCartBadge();
         }
+
+        renderVoucherHighlights();
     }
 
     // Hiển thị trạng thái trống
@@ -487,17 +475,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Xóa toàn bộ giỏ hàng
-    if (btnClearCart) {
-        btnClearCart.addEventListener('click', () => {
-            if (confirm('Bạn có chắc chắn muốn xóa toàn bộ sản phẩm trong giỏ hàng?')) {
-                cart = [];
-                selectedIds.clear();
-                localStorage.removeItem('pawpal_applied_voucher_code');
-                saveCart();
-                renderCart();
-            }
-        });
-    }
+        if (btnClearCart) {
+            btnClearCart.addEventListener('click', () => {
+                if (confirm('Bạn có chắc chắn muốn xóa toàn bộ sản phẩm trong giỏ hàng?')) {
+                    cart = [];
+                    selectedIds.clear();
+                    localStorage.removeItem('pawpal_applied_voucher_code');
+                    saveCart();
+                    renderCart();
+                }
+            });
+        }
 
     function loadPersistedVoucher() {
         const code = localStorage.getItem('pawpal_applied_voucher_code');
@@ -508,8 +496,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const result = validateVoucherCode(code, calculateSelectedSubtotal());
         if (result.valid) {
             appliedVoucher = result.voucher;
-            renderAppliedVoucherBadge();
         }
+        renderVoucherHighlights();
     }
 
     function renderMyVouchers() {
@@ -526,6 +514,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return `
                 <button type="button" class="btn btn-outline-primary btn-sm my-voucher-btn" data-code="${voucher.code}">
                     <strong>${voucher.code}</strong> • ${voucher.name}
+                    <small class="text-muted">Áp dụng cho đơn từ ${formatPrice(voucher.minOrderValue || 0)}</small>
                 </button>
             `;
         }).join('');
@@ -575,6 +564,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 applyVoucherCode(code);
             });
         });
+
+        renderVoucherHighlights();
     }
 
     function validateVoucherCode(code, subtotal) {
