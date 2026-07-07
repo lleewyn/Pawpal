@@ -104,6 +104,29 @@ function createBlogCard(blog, type = 'standard', rank = 1) {
     const url = `../blog-detail/blog-detail.html?slug=${blog.slug}`;
     const readingTime = Math.max(2, Math.ceil(blog.content.length / 1000)) + ' phút đọc';
 
+    if (type === 'spotlight') {
+        return `
+        <article class="blog-hero-spotlight blog-entry" data-main="${mainCat}" data-tags="${mainCat}">
+            <a href="${url}" class="card-img-link">
+                <div class="img-wrapper">
+                    <img src="${blog.thumbnail}" alt="${blog.title}" loading="lazy">
+                    <span class="card-badge">Bài nổi bật</span>
+                </div>
+            </a>
+            <div class="card-content">
+                <div class="card-meta-line">
+                    <span class="card-date">${formatDate(blog.date)}</span>
+                    <span class="card-reading-time">${readingTime}</span>
+                </div>
+                <h2 class="card-title"><a href="${url}">${blog.title}</a></h2>
+                <p class="card-excerpt">${blog.summary}</p>
+                <div class="card-tags">
+                    <span>${blog.categoryName}</span>
+                </div>
+            </div>
+        </article>`;
+    }
+
     if (type === 'featured') {
         return `
         <article class="blog-card featured-card blog-entry" data-main="${mainCat}" data-tags="${mainCat}">
@@ -194,6 +217,14 @@ async function initBlog() {
     const news = blogs.filter(b => b.categorySlug === 'news');
     const promo = blogs.filter(b => b.categorySlug === 'promo');
     
+    // Spotlight section
+    const spotlightWrapper = document.querySelector('#blog-hero-spotlight-wrapper');
+    if (spotlightWrapper && blogs.length > 0) {
+        // Find "Có nên tắm cho chó" or just pick the most viewed overall
+        const spotlightBlog = blogs.find(b => b.title.includes('tắm cho chó')) || blogs[0];
+        spotlightWrapper.innerHTML = createBlogCard(spotlightBlog, 'spotlight');
+    }
+
     // Latest section
     const latestGrid = document.querySelector('#latest-grid-wrapper');
     const standardGrid = document.querySelector('#blog-card-grid');

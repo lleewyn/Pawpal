@@ -15,6 +15,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmxc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" defer></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../../scripts/api/supabase-client.js"></script>
+    <script type="module" src="../../../scripts/api/api-global.js"></script>
+    <script src="../../../scripts/shared/data-loader.js" defer></script>
+    
     <script src="../../../scripts/shared/components.js" defer></script>
     <script type="module" src="../../../scripts/shared/main.js"></script>
     <script type="module" src="../../../scripts/shared/auth.js"></script>
@@ -51,26 +57,9 @@
                         </div>
                     </div>
 
-                    <article class="blog-hero-spotlight blog-entry" data-main="tips" data-tags="cho suc-khoe tam grooming">
-                        <a href="../blog-detail/blog-detail.html" class="card-img-link">
-                            <div class="img-wrapper">
-                                <img src="../../../assets/images/publics/dogcute6.jpg" alt="Tắm cho chó mùa mưa" loading="lazy">
-                                <span class="card-badge">Bài nổi bật</span>
-                            </div>
-                        </a>
-                        <div class="card-content">
-                            <div class="card-meta-line">
-                                <span class="card-date">24 thg 7, 2026</span>
-                                <span class="card-reading-time">6 phút đọc</span>
-                            </div>
-                            <h2 class="card-title"><a href="../blog-detail/blog-detail.html">Có nên tắm cho chó vào mùa mưa?</a></h2>
-                            <p class="card-excerpt">Những điều cần lưu ý để giữ bé khô thoáng, không bị hôi lông và tránh cảm lạnh trong những ngày ẩm kéo dài.</p>
-                            <div class="card-tags">
-                                <span>Chó</span>
-                                <span>Sức khỏe</span>
-                            </div>
-                        </div>
-                    </article>
+                    <div id="blog-hero-spotlight-wrapper">
+                        <!-- Dynamic spotlight post will be injected here -->
+                    </div>
                 </div>
             </section>
 
