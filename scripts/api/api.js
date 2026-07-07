@@ -584,9 +584,15 @@ export const API = {
                     } else {
                         const { data: newCust, error: errC } = await db.from('customer').insert({
                             email: null,
+                            password_hash: null,
                             phone_main: phone,
-                            account_status: 'GUEST'
+                            account_status: 'GUEST',
+                            registered_at: new Date().toISOString()
                         }).select('id').single();
+                        
+                        if (errC) {
+                            console.error('[API] Failed to create guest customer:', errC);
+                        }
                         
                         if (!errC && newCust) {
                             customerId = newCust.id;
