@@ -124,17 +124,31 @@ async function _syncUserPets(db, currentUser) {
     }));
 
     const localPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-    const otherPets = localPets.filter(p =>
-        String(p.userId) !== String(currentUser.id) &&
-        String(p.userId) !== String(currentUser.phone)
-    );
-    const mergedPets = [...pets, ...otherPets].reduce((acc, pet) => {
-        const key = String(pet._supabaseId || pet.pet_code || pet.id || `${pet.name || ''}-${pet.dob || ''}`);
-        if (!acc.some(item => String(item._supabaseId || item.pet_code || item.id || `${item.name || ''}-${item.dob || ''}`) === key)) {
-            acc.push(pet);
-        }
-        return acc;
-    }, []);
+    const signatureOf = (pet) => {
+        return [
+            String(pet?.name || '').trim().toLowerCase(),
+            String(pet?.species || '').trim().toLowerCase(),
+            String(pet?.breed || '').trim().toLowerCase()
+        ].join('|');
+    };
+    
+    const serverPetKeys = new Set(pets.map(p => p.id));
+    const serverPetSigs = new Set(pets.map(signatureOf));
+
+    const otherPets = localPets.filter(p => {
+        if (String(p.userId) === String(currentUser.id)) return false;
+        if (String(p.userId) === String(currentUser.phone)) return false;
+        if (p.userLegacyId && String(p.userLegacyId) === String(currentUser.id)) return false;
+        if (p.ownerPhone && String(p.ownerPhone) === String(currentUser.phone)) return false;
+        
+        if (p.id && serverPetKeys.has(p.id)) return false;
+        if (p._supabaseId && serverPetKeys.has(p._supabaseId)) return false;
+        if (serverPetSigs.has(signatureOf(p))) return false;
+        
+        return true;
+    });
+
+    const mergedPets = [...pets, ...otherPets];
     localStorage.setItem('pawpal_pets', JSON.stringify(mergedPets));
     localStorage.setItem('pawpal_pets_supabase_synced', String(currentUser.phone));
     console.log('[Dashboard] Pets synced:', pets.length, 'pets');

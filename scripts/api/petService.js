@@ -119,6 +119,34 @@ function getPetSignature(pet) {
     return [name, species, breed, dob, weight, userKey].join('|');
 }
 
+function mapAppointmentPet(row, currentUser) {
+    const pet = row?.pet_profile;
+    if (!pet) return null;
+
+    const name = String(pet.pet_name || '').trim();
+    if (!name) return null;
+
+    return {
+        id: pet.pet_code || pet.id || `APPT-PET-${row.id}`,
+        _supabaseId: pet.id || null,
+        userId: row.customer_id || currentUser?.id || null,
+        name,
+        species: pet.species || 'other',
+        breed: pet.breed || '',
+        gender: pet.gender || '',
+        weight: pet.weight || '',
+        dob: pet.date_of_birth || '',
+        color: pet.color || '',
+        allergies: pet.allergy || '',
+        notes: pet.routine || '',
+        vaccinated: !!pet.vaccination_history,
+        avatar: pet.avatar_url || getDefaultPetAvatar(pet.species),
+        photo: pet.avatar_url || '',
+        isArchived: pet.status === 'INACTIVE',
+        _source: 'supabase-booking',
+    };
+}
+
 function normalizePetList(pets) {
     if (!Array.isArray(pets)) return [];
 
@@ -294,14 +322,56 @@ export async function getPets(userId) {
                 }
             }
 
-    const { data, error } = await query;
-    if (!error && Array.isArray(data)) {
-        const supabasePets = data.map((row) => mapSupabasePet(row, currentUser));
-        const merged = mergePetLists(supabasePets, localPets, targetUserId);
-        const deduped = normalizePetList(merged);
-        localStorage.setItem('pawpal_pets', JSON.stringify(deduped));
-        return deduped;
-    }
+            const { data, error } = await query;
+            if (!error && Array.isArray(data)) {
+                const supabasePets = data.map((row) => mapSupabasePet(row, currentUser));
+                const appointmentRows = await db
+                    .from('appointment')
+                    .select(`
+                        id,
+                        customer_id,
+                        pet_profile (
+                            id,
+                            pet_code,
+                            pet_name,
+                            species,
+                            breed,
+                            gender,
+                            date_of_birth,
+                            color,
+                            weight,
+                            avatar_url,
+                            allergy,
+                            routine,
+                            vaccination_history,
+                            status
+                        )
+                    `)
+                    .eq('customer_id', customerId || currentUser.id || null)
+                    .order('appointment_date', { ascending: false })
+                    .limit(50);
+
+                const appointmentPets = Array.isArray(appointmentRows?.data)
+                    ? appointmentRows.data
+                        .map((row) => mapAppointmentPet(row, currentUser))
+                        .filter(Boolean)
+                    : [];
+
+                const merged = mergePetLists([...supabasePets, ...appointmentPets], localPets, targetUserId);
+                const deduped = normalizePetList(merged);
+                localStorage.setItem('pawpal_pets', JSON.stringify(deduped));
+
+                // Nếu chỉ có pet từ lịch hẹn cũ, sync ngược lên Supabase để cố định hồ sơ
+                if (appointmentPets.length && window.API && window.API.savePets) {
+                    try {
+                        await window.API.savePets(deduped);
+                    } catch (syncErr) {
+                        console.warn('[petService] Backfill pets to Supabase failed:', syncErr?.message || syncErr);
+                    }
+                }
+
+                return deduped;
+            }
         } catch (err) {
             console.warn('[petService] Supabase getPets error, fallback localStorage:', err.message);
         }
