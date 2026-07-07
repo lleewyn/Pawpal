@@ -92,6 +92,176 @@ async function supabaseLogin(phone, password) {
     }
 }
 
+function normalizePetSpecies(species) {
+    const value = String(species || '').trim().toLowerCase();
+    if (!value) return 'other';
+    if (['dog', 'chó', 'cho', 'canine'].includes(value)) return 'dog';
+    if (['cat', 'mèo', 'meo', 'feline'].includes(value)) return 'cat';
+    return value;
+}
+
+function buildGuestPetFromUser(user, fallbackPhone = null) {
+    const pet = user?.pet;
+    if (!pet || typeof pet !== 'object') return null;
+
+    const petName = String(pet.name || pet.pet_name || '').trim();
+    if (!petName) return null;
+
+    return {
+        id: pet.id || `guest-pet-${String(fallbackPhone || user?.phone || Date.now())}`,
+        userId: user?.id || fallbackPhone || user?.phone || null,
+        name: petName,
+        species: normalizePetSpecies(pet.species),
+        otherSpecies: pet.otherSpecies || '',
+        breed: pet.breed || '',
+        gender: pet.gender || '',
+        dateOfBirth: pet.dateOfBirth || pet.dob || pet.date_of_birth || '',
+        color: pet.color || '',
+        weight: pet.weight || '',
+        avatar: pet.avatar || pet.avatar_url || '',
+        allergies: pet.allergies || '',
+        notes: pet.notes || '',
+        isArchived: false,
+        createdAt: pet.createdAt || new Date().toISOString(),
+    };
+}
+
+function buildPetFromBooking(booking, fallbackPhone = null) {
+    if (!booking) return null;
+
+    const petName = String(booking.petName || booking.pet_name || booking.pet || '').trim();
+    if (!petName) return null;
+
+    const species = normalizePetSpecies(booking.petType || booking.petSpecies || booking.species || booking.pet_type);
+    const breed = String(booking.petBreed || booking.pet_breed || '').trim();
+    const weight = booking.petWeight || booking.pet_weight || '';
+    const phone = String(fallbackPhone || booking.ownerPhone || booking.userPhone || booking.phone || '').trim();
+
+    return {
+        id: booking.petId || booking.pet_id || `guest-booking-pet-${phone || Date.now()}`,
+        userId: booking.userId || phone || null,
+        name: petName,
+        species,
+        otherSpecies: booking.petTypeOther || '',
+        breed,
+        gender: booking.petGender || '',
+        dateOfBirth: booking.petDob || booking.petDateOfBirth || '',
+        color: booking.petColor || '',
+        weight,
+        avatar: booking.petAvatar || '',
+        allergies: booking.petNote || booking.petAllergies || '',
+        notes: booking.petNote || '',
+        isArchived: false,
+        createdAt: booking.createdAt || booking.created_at || new Date().toISOString(),
+    };
+}
+
+async function migrateGuestPetsToMember(user, fallbackPhone = null) {
+    if (!user) return;
+
+    const resolvedPhone = String(fallbackPhone || user.phone || user.phone_main || '').trim();
+    const pets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+    const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+    const migrated = [];
+    const seen = new Set();
+
+    const pushUnique = (pet) => {
+        if (!pet) return;
+        const key = String(pet.id || `${pet.name}|${pet.breed}|${pet.weight}|${pet.createdAt || ''}`).toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        migrated.push({ ...pet });
+    };
+
+    pets.forEach((pet) => {
+        const ownsByPhone = resolvedPhone && (String(pet.userId) === resolvedPhone || String(pet.ownerPhone) === resolvedPhone);
+        const ownsByTempUser = user?.id && String(pet.userId) === String(user.id);
+        if (ownsByPhone || ownsByTempUser) {
+            pushUnique({
+                ...pet,
+                userId: user.id || pet.userId || resolvedPhone || null,
+                isArchived: false,
+            });
+        } else {
+            pushUnique(pet);
+        }
+    });
+
+    const embeddedPet = buildGuestPetFromUser(user, resolvedPhone);
+    if (embeddedPet) {
+        const alreadyExists = migrated.some((pet) =>
+            String(pet.id).toLowerCase() === String(embeddedPet.id).toLowerCase() ||
+            String(pet.name || '').trim().toLowerCase() === String(embeddedPet.name || '').trim().toLowerCase()
+        );
+        if (!alreadyExists) {
+            migrated.unshift({
+                ...embeddedPet,
+                userId: user.id || resolvedPhone || embeddedPet.userId || null,
+            });
+        }
+    }
+
+    bookings.forEach((booking) => {
+        const bookingPhone = String(booking.ownerPhone || booking.userPhone || booking.phone || '').trim();
+        const bookingUserId = String(booking.userId || '').trim();
+        const matchesUser = (user?.id && bookingUserId && bookingUserId === String(user.id)) || (resolvedPhone && bookingPhone === resolvedPhone);
+        if (!matchesUser) return;
+
+        const bookingPet = buildPetFromBooking(booking, resolvedPhone);
+        if (!bookingPet) return;
+
+        const alreadyExists = migrated.some((pet) =>
+            String(pet.id || '').toLowerCase() === String(bookingPet.id || '').toLowerCase() ||
+            String(pet.name || '').trim().toLowerCase() === String(bookingPet.name || '').trim().toLowerCase()
+        );
+        if (!alreadyExists) {
+            migrated.push({
+                ...bookingPet,
+                userId: user.id || resolvedPhone || bookingPet.userId || null,
+            });
+        }
+    });
+
+    localStorage.setItem('pawpal_pets', JSON.stringify(migrated));
+    localStorage.removeItem('pawpal_pets_supabase_synced');
+
+    if (window.API && window.API.savePets) {
+        try {
+            await window.API.savePets(migrated);
+        } catch (error) {
+            console.warn('[Login] Failed to sync migrated guest pets:', error);
+        }
+    }
+
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (db && user.id) {
+        try {
+            const rows = migrated
+                .filter((pet) => String(pet.userId) === String(user.id))
+                .map((pet) => ({
+                    customer_id: user.id,
+                    pet_code: pet.id || null,
+                    pet_name: pet.name || '',
+                    species: pet.species || 'other',
+                    breed: pet.breed || '',
+                    gender: pet.gender || '',
+                    date_of_birth: pet.dateOfBirth || pet.dob || pet.date_of_birth || null,
+                    color: pet.color || '',
+                    weight: pet.weight || null,
+                    avatar_url: pet.avatar || pet.avatar_url || '',
+                    notes: pet.notes || pet.allergies || '',
+                    status: pet.isArchived ? 'ARCHIVED' : 'ACTIVE',
+                }));
+
+            if (rows.length) {
+                await db.from('pet_profile').upsert(rows, { onConflict: 'pet_code' });
+            }
+        } catch (error) {
+            console.warn('[Login] Failed to upsert migrated guest pets to Supabase:', error);
+        }
+    }
+}
+
 /**
  * Kiểm tra phone đã tồn tại trên Supabase chưa (dùng trước khi đăng ký).
  * Trả về { exists, isTemporary, offline, error }
@@ -856,7 +1026,7 @@ function initAuthForms() {
         setupConfirm.addEventListener('input', validateSetupForm);
         if (setupTermsCheckbox) setupTermsCheckbox.addEventListener('change', validateSetupForm);
 
-        setupPasswordForm.addEventListener('submit', (e) => {
+        setupPasswordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const phone = document.getElementById('setupPasswordSection').dataset.phone;
             const token = document.getElementById('setupPasswordSection').dataset.token;
@@ -867,7 +1037,9 @@ function initAuthForms() {
                 users[idx].is_temporary = false;
                 users[idx].points      = (users[idx].points || 0) + 50;
                 saveUsers(users);
+                ensureUserId(users[idx]);
                 setCurrentUser(users[idx]);
+                await migrateGuestPetsToMember(users[idx], phone);
 
                 const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
                 localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens.filter(t => t.token !== token)));
@@ -1062,7 +1234,7 @@ function initAuthForms() {
         forgotNewPassword.addEventListener('input',        validateForgotNewPasswordForm);
         forgotConfirmNewPassword.addEventListener('input', validateForgotNewPasswordForm);
 
-        forgotNewPasswordForm.addEventListener('submit', (e) => {
+        forgotNewPasswordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const phone   = forgotPhone.value.trim();
             const users   = getUsers();
@@ -1081,8 +1253,9 @@ function initAuthForms() {
             saveUsers(users);
 
             if (isGuest) {
-                ensureUserId(users[userIdx]);
                 setCurrentUser(users[userIdx]);
+                ensureUserId(users[userIdx]);
+                await migrateGuestPetsToMember(users[userIdx], phone);
                 sessionStorage.setItem('guestVerifiedPhone', phone);
                 window.isGuestActivationFlow = false;
                 showToast('success', 'Kích hoạt thành công! Bạn nhận 50 Paw Points chào mừng 🎉', 3000);

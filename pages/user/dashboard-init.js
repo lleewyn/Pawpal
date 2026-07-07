@@ -90,7 +90,7 @@ seedLocalStorageIfNeeded();
     // { label, parent: { label, href } | null }
     const BREADCRUMB_MAP = {
         'dashboard':      { label: 'Tổng quan tài khoản', parent: null },
-        'pet-profile':    { label: 'Hồ sơ bé cưng',       parent: null },
+        'pet-profile':    { label: 'Hồ sơ của tôi',       parent: null },
         'pet-diary':      { label: 'Nhật ký chăm sóc',    parent: { label: 'Bé cưng', href: '../pet-profile/pet-profile.html' } },
         'bookings':       { label: 'Lịch hẹn của tôi',    parent: null },
         'booking-detail': { label: 'Chi tiết lịch hẹn',   parent: { label: 'Lịch hẹn', href: '../bookings/bookings.html' } },

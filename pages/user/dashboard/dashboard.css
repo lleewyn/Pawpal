@@ -1052,7 +1052,7 @@ input:checked + .slider:before {
     display: inline-flex;
     align-items: center;
     position: relative;
-    z-index: 2000; /* ensure link is clickable above floating FABs */
+    z-index: 1;
 }
 
 .section-link-custom:hover {

@@ -488,6 +488,10 @@ function buildBookingCard(b) {
             <button class="btn-green-outline" onclick="handleGuestBookingAction('${esc(b.id)}', 'change')">
                 Đổi lịch
             </button>` : ''}
+            ${['in-progress', 'completed'].includes(resolvedStatus) ? `
+            <button class="btn-cta" onclick="handleGuestViewCareLog('${esc(b.id)}')">
+                Nhật ký chăm sóc
+            </button>` : ''}
         </div>` : ''}
     </div>`;
 }
@@ -800,6 +804,109 @@ function showOTPModal(phone, onSuccess) {
             errorEl.classList.remove('d-none');
         }
     });
+}
+
+// ── Guest Care Log Modal ──────────────────────────────────────────────────
+window.handleGuestViewCareLog = async function(bookingId) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db) {
+        showToast('Chức năng đang bảo trì, không thể xem nhật ký chăm sóc lúc này.', 'info');
+        return;
+    }
+
+    const modal = getOrCreateGuestCareLogModal();
+    const timelineWrapper = document.getElementById('guestCareLogTimeline');
+    timelineWrapper.innerHTML = '<div class="text-center p-4"><div class="spinner-border text-primary" role="status"></div></div>';
+    
+    // Tìm booking trong danh sách search
+    const booking = (rgLastSearchState.bookings || []).find(b => b.id === bookingId) || (rgLastSearchState.bookings || []).find(b => b._supabaseId === bookingId);
+    if (booking) {
+        document.getElementById('guestCareLogTitle').innerHTML = `Nhật ký chăm sóc: <strong>${esc(booking.petName)}</strong> - <strong>${esc(booking.serviceName || booking.service)}</strong>`;
+    }
+
+    modal.show();
+
+    try {
+        const { data, error } = await db.from('care_log')
+            .select(`
+                id,
+                description,
+                health_status,
+                recorded_at,
+                care_action ( action_name ),
+                care_log_media ( media_url, staff ( full_name ) )
+            `)
+            .eq('appointment_id', bookingId)
+            .order('recorded_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            timelineWrapper.innerHTML = `
+                <div class="text-center p-4 text-muted">
+                    Chưa có nhật ký chăm sóc nào được ghi nhận cho dịch vụ này.
+                </div>`;
+            return;
+        }
+
+        timelineWrapper.innerHTML = data.map(log => {
+            const time = new Date(log.recorded_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            const date = new Date(log.recorded_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const mediaUrl = log.care_log_media?.[0]?.media_url;
+            const staffName = log.care_log_media?.[0]?.staff?.full_name || 'Nhân viên PawPal';
+            const isUrgent = log.health_status !== 'Tốt' && log.health_status !== 'Bình thường' && log.health_status != null;
+
+            return `
+                <div class="timeline-item ${isUrgent ? 'timeline-item-urgent' : ''}" style="display:flex; margin-bottom:1.5rem; position:relative;">
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background: ${isUrgent ? 'var(--color-danger)' : 'var(--color-primary)'}; position: absolute; left: -6px; top: 6px;"></div>
+                    <div style="border-left: 2px solid #e2e8f0; padding-left: 1.5rem; width: 100%;">
+                        <div style="font-size: 0.85rem; color: #64748b;">${time} - ${date}</div>
+                        <h5 style="margin: 0.25rem 0; font-weight: 600; color: ${isUrgent ? 'var(--color-danger)' : 'inherit'}">
+                            ${esc(log.care_action?.action_name || 'Cập nhật')}
+                        </h5>
+                        <p style="margin-bottom: 0.5rem;">${esc(log.description)}</p>
+                        <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.5rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                            ${esc(staffName)}
+                        </div>
+                        ${mediaUrl ? `<img src="${normalizeImageUrl(mediaUrl)}" alt="Photo" style="max-width: 100%; border-radius: 8px; margin-top: 0.5rem; max-height: 200px; object-fit: cover;">` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        timelineWrapper.innerHTML = `
+            <div class="text-center p-4 text-danger">
+                Lỗi khi tải nhật ký chăm sóc. Vui lòng thử lại sau.
+            </div>`;
+    }
+}
+
+function getOrCreateGuestCareLogModal() {
+    let el = document.getElementById('guestCareLogModal');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'guestCareLogModal';
+        el.className = 'modal fade';
+        el.tabIndex = -1;
+        el.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="guestCareLogTitle">Nhật ký chăm sóc</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" style="padding-left: 2rem;">
+                        <div id="guestCareLogTimeline" style="position: relative; border-left: 2px solid transparent;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>`;
+        document.body.appendChild(el);
+    }
+    return new bootstrap.Modal(el);
 }
 
 // ── Cancel Booking Modal ──────────────────────────────────────────────────
