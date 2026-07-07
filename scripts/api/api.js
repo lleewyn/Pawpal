@@ -572,11 +572,40 @@ export const API = {
         }
 
         try {
+            let customerId = orderData.userId;
+            const isUuidLike = typeof customerId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId);
+            
+            if (!customerId || !isUuidLike) {
+                const phone = orderData.shipping?.phone || '';
+                if (phone) {
+                    const { data: existingCust } = await db.from('customer').select('id').eq('phone_main', phone).limit(1);
+                    if (existingCust && existingCust.length > 0) {
+                        customerId = existingCust[0].id;
+                    } else {
+                        const { data: newCust, error: errC } = await db.from('customer').insert({
+                            email: null,
+                            phone_main: phone,
+                            account_status: 'GUEST'
+                        }).select('id').single();
+                        
+                        if (!errC && newCust) {
+                            customerId = newCust.id;
+                            await db.from('customer_profile').insert({
+                                customer_id: customerId,
+                                full_name: orderData.shipping?.name || 'Khách vãng lai'
+                            });
+                        }
+                    }
+                } else {
+                    customerId = null;
+                }
+            }
+
             // 0. Handle shipping address
             let shippingAddressId = 'f0000000-0000-0000-2222-000000000001'; // Fallback
-            if (orderData.shipping) {
+            if (orderData.shipping && customerId) {
                 const { data: addrData, error: addrError } = await db.from('customer_address').insert({
-                    customer_id: orderData.userId || null,
+                    customer_id: customerId,
                     receiver_name: orderData.shipping.name || 'Khách hàng',
                     receiver_phone: orderData.shipping.phone || '',
                     province: orderData.shipping.city || '',
@@ -594,7 +623,7 @@ export const API = {
             // 1. Map orderData to sales_order
             const salesOrder = {
                 order_code: orderData.orderId,
-                customer_id: orderData.userId || null,
+                customer_id: customerId,
                 shipping_address_id: shippingAddressId,
                 order_status: 'PENDING',
                 payment_status: (orderData.payment?.status || 'PENDING').toUpperCase(),
