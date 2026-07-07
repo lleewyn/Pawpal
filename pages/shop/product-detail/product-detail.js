@@ -546,7 +546,10 @@ function addProductToCart(product, quantity) {
     }
     
     // Save to localStorage
-    localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+    if (window.saveCart) window.saveCart(cart); else localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+    
+
+
 }
 
 /**

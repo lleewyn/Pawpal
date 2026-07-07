@@ -526,7 +526,14 @@ function setupShopLandingActions(grid) {
 
     // Helper: lấy giỏ hàng từ localStorage
     function getCart() { return JSON.parse(localStorage.getItem('pawpal_cart') || '[]'); }
-    function saveCart(cart) { localStorage.setItem('pawpal_cart', JSON.stringify(cart)); }
+    function saveCart(cart) { 
+        localStorage.setItem('pawpal_cart', JSON.stringify(cart)); 
+        const currentUser = getCurrentWishlistUser();
+        if (window.API && window.API.saveUserCart) {
+            window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
+        }
+        if (window.updateCartBadge) window.updateCartBadge();
+    }
 
     // Helper: lấy wishlist
     function getWishlistStorageKey() {

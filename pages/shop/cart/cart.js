@@ -70,8 +70,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             products = await window.DataLoader.loadProducts();
             
             // Lấy giỏ hàng từ localStorage (offline-first, tránh duplicate)
-            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-            const localCart = restoreCartFromBackup(JSON.parse(localStorage.getItem('pawpal_cart') || '[]'));
+                        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            const fetchedCart = currentUser ? await window.API.getUserCart(currentUser.id) : JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+            const localCart = restoreCartFromBackup(fetchedCart);
             cart = localCart.map(normalizeCartItem);
             
             // Mặc định chọn tất cả sản phẩm
@@ -157,7 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 localStorage.setItem('pawpal_cart_unselected_backup', JSON.stringify(unselectedItems));
                 
                 // Cập nhật lại giỏ hàng chính chỉ gồm các sản phẩm được chọn để trang checkout xử lý
-                localStorage.setItem('pawpal_cart', JSON.stringify(selectedItems));
+                if (window.saveCart) window.saveCart(selectedItems); else localStorage.setItem('pawpal_cart', JSON.stringify(selectedItems));
                 window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, selectedItems);
                 
                 // Clear any lingering "buy now" state so checkout loads the normal cart
@@ -463,7 +464,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Lưu giỏ hàng vào localStorage
     function saveCart() {
-        localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+        if (window.saveCart) window.saveCart(cart); else localStorage.setItem('pawpal_cart', JSON.stringify(cart));
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
     }
@@ -643,7 +644,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        localStorage.setItem('pawpal_cart', JSON.stringify(mergedCart));
+        if (window.saveCart) window.saveCart(mergedCart); else localStorage.setItem('pawpal_cart', JSON.stringify(mergedCart));
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, mergedCart);
         localStorage.removeItem('pawpal_cart_unselected_backup');

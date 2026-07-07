@@ -69,6 +69,7 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
             status:      mapOrderStatus(o.order_status),
             orderStatus: o.order_status,
             paymentStatus: (o.payment_status || '').toLowerCase(),
+            paymentMethod: existing?.paymentMethod || 'cod',
             products,
             pricing: {
                 subtotal:    o.subtotal,
@@ -102,13 +103,14 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
 
 function mapOrderStatus(status) {
     return {
-        'PENDING':   'pending',
-        'CONFIRMED': 'preparing',
+        'PENDING':   'placed',
+        'CONFIRMED': 'confirmed',
+        'PREPARING': 'preparing',
         'SHIPPING':  'shipping',
         'DELIVERED': 'delivered',
         'COMPLETED': 'completed',
         'CANCELLED': 'cancelled',
-    }[status] || 'pending';
+    }[status] || 'placed';
 }
 
 function normalizeImageUrl(url) {
@@ -465,6 +467,7 @@ function renderActions() {
     let buttons = [];
     
     switch(currentOrder.status) {
+        case 'placed':
         case 'pending':
         case 'pending_payment': {
             // Đọc paymentStatus từ nhiều cấu trúc dữ liệu khác nhau
@@ -974,7 +977,7 @@ function reorder(orderId) {
         }
     });
 
-    localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+    if (window.saveCart) window.saveCart(cart); else localStorage.setItem('pawpal_cart', JSON.stringify(cart));
     updateCartBadgeCount();
 
     showPawPalToast(`Đã thêm ${currentOrder.products.length} sản phẩm của đơn hàng ${orderId} vào giỏ hàng.`, 'success');
@@ -1071,6 +1074,7 @@ function formatDate(dateString) {
 // Utility: Get status label
 function getStatusLabel(status) {
     const labels = {
+        'placed':          'Chờ xử lý',
         'pending':         'Chờ thanh toán',
         'pending_payment': 'Chờ thanh toán',
         'confirmed':       'Đã xác nhận',

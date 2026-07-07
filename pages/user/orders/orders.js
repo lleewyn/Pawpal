@@ -57,6 +57,7 @@ async function syncOrdersFromSupabase(currentUser) {
                 status:      mapOrderStatus(o.order_status),
                 orderStatus: o.order_status,
                 paymentStatus: (o.payment_status || '').toLowerCase(),
+                paymentMethod: 'cod',
                 products,
                 pricing: {
                     subtotal:    o.subtotal,
@@ -97,13 +98,14 @@ async function syncOrdersFromSupabase(currentUser) {
 
 function mapOrderStatus(status) {
     return {
-        'PENDING':   'pending',
-        'CONFIRMED': 'preparing',
+        'PENDING':   'placed',
+        'CONFIRMED': 'confirmed',
+        'PREPARING': 'preparing',
         'SHIPPING':  'shipping',
         'DELIVERED': 'delivered',
         'COMPLETED': 'completed',
         'CANCELLED': 'cancelled',
-    }[status] || 'pending';
+    }[status] || 'placed';
 }
 
 function normalizeImageUrl(url) {
@@ -240,7 +242,7 @@ function createOrderCard(order) {
     const isOnline  = ONLINE_METHODS.includes(payMethod);
 
     // Badge: pending + online + paid → "Chờ xác nhận" thay vì "Chờ thanh toán"
-    const isPendingConfirm = (normalizedStatus === 'pending_payment') && isPaid && isOnline;
+    const isPendingConfirm = (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && isPaid && isOnline;
     const displayStatusLabel = isPendingConfirm ? 'Chờ xác nhận' : getStatusLabel(normalizedStatus);
     const displayStatusClass = isPendingConfirm ? 'status-preparing' : `status-${normalizedStatus}`;
 
@@ -306,8 +308,8 @@ function createOrderCard(order) {
         normalizedStatus === 'shipping' ? 'Đang giao tới bạn' : '',
         normalizedStatus === 'completed' ? 'Đơn đã hoàn tất' : '',
         // Hiển thị đúng trạng thái: đã thanh toán chờ xác nhận vs chưa thanh toán
-        (normalizedStatus === 'pending_payment' && isPaid && isOnline) ? 'Đã thanh toán — chờ xác nhận' :
-        (normalizedStatus === 'pending_payment' && !isPaid) ? 'Chờ thanh toán' : '',
+        (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && isPaid && isOnline ? 'Đã thanh toán — chờ xác nhận' :
+        (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && !isPaid ? 'Chờ thanh toán' : '',
         normalizedStatus === 'preparing' ? 'Shop đang đóng gói' : ''
     ].filter(Boolean);
 
@@ -325,7 +327,7 @@ function createOrderCard(order) {
                 Liên hệ hotline
             </button>
         `;
-    } else if (normalizedStatus === 'pending_payment' || normalizedStatus === 'preparing') {
+    } else if (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment' || normalizedStatus === 'preparing') {
         if (isPaid && isOnline) {
             // Đã thanh toán online, chờ admin xác nhận — không cho hủy, chỉ liên hệ hotline
             footerButtonsHTML = `
@@ -559,7 +561,7 @@ function reorder(orderId) {
         }
     });
 
-    localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+    if (window.saveCart) window.saveCart(cart); else localStorage.setItem('pawpal_cart', JSON.stringify(cart));
 
     const badge = document.querySelector('.cart-count, .cart-badge');
     if (badge) {
@@ -750,6 +752,7 @@ function saveOrderToLocalStorage(order) {
 
 function getStatusLabel(status) {
     const labels = {
+        placed:          'Chờ xử lý',
         pending:         'Chờ thanh toán',
         pending_payment: 'Chờ thanh toán',
         preparing:       'Đang chuẩn bị',

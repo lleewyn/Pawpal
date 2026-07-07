@@ -203,7 +203,7 @@
     font-family: var(--font-body);
     text-transform: none;
 }
-
+.status-placed,
 .status-pending_payment {
     background: var(--color-neutral-light);
     color: var(--color-neutral);

@@ -113,12 +113,16 @@
     }
 
     // Định nghĩa hàm cập nhật badge giỏ hàng toàn cục
-    window.updateCartBadge = function() {
-        const cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
-        const totalItems = cart.reduce((sum, item) => {
-            const qty = Number(item.quantity ?? item.qty ?? 1);
-            return sum + (Number.isFinite(qty) && qty > 0 ? qty : 1);
-        }, 0);
+    window.updateCartBadge = async function() {
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        let cart = [];
+        if (currentUser && window.API && window.API.getUserCart) {
+            cart = await window.API.getUserCart(currentUser.id);
+            localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+        } else {
+            cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+        }
+        const totalItems = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
         
         // Badge trên desktop header
         const cartBadge = document.querySelector('.cart-badge');

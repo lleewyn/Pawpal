@@ -214,7 +214,7 @@
         const existing = cart.find((item) => Number(item.id) === Number(product.id));
         if (existing) existing.quantity += 1;
         else cart.push({ ...product.rawProduct, quantity: 1 });
-        localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+        if (window.saveCart) window.saveCart(cart); else localStorage.setItem('pawpal_cart', JSON.stringify(cart));
         const currentUser = getCurrentUser();
         if (currentUser && window.API && typeof window.API.saveUserCart === 'function') {
             window.API.saveUserCart(currentUser.id || currentUser.phone || null, cart);

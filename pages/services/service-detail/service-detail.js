@@ -493,47 +493,58 @@ function setupFAQs() {
 
 // 8. Reviews section setup (matches shop reviews)
 let reviewsList = [];
-function setupReviews() {
+async function setupReviews() {
     // Populate score block
     document.getElementById('averageScore').textContent = serviceData.rating.toFixed(1);
     document.getElementById('totalReviewsCount').textContent = `Dựa trên ${serviceData.reviewCount} lượt đánh giá thực tế`;
 
-    const reviews = Array.isArray(serviceData.reviews) ? serviceData.reviews : [];
-    if (reviews.length > 0) {
-        reviewsList = reviews;
-    } else {
-        reviewsList = [
-            {
-                name: 'Minh Tuấn',
-                tier: 'gold',
-                tierName: 'Hội viên Vàng',
-                rating: 5,
-                date: '15/06/2026',
-                text: 'Dịch vụ rất chu đáo! Bé nhà mình bình thường rất nhát nhưng đến đây được các bạn nhân viên dỗ dành rất khéo. Sẽ tiếp tục ủng hộ PawPal.',
-                images: [],
-                sellerReply: 'Cảm ơn anh Tuấn đã tin tưởng và sử dụng dịch vụ của PawPal. Chúc bé cưng luôn ngoan và khỏe mạnh ạ!'
-            },
-            {
-                name: 'Ngọc Hân',
-                tier: 'silver',
-                tierName: 'Hội viên Bạc',
-                rating: 4,
-                date: '02/06/2026',
-                text: 'Không gian sạch sẽ, thơm tho. Tuy nhiên cuối tuần hơi đông nên phải đợi khoảng 15 phút mới tới lượt. Mọi người nên đặt lịch trước nhé.',
-                images: ['/assets/images/services/spa.png'],
-                sellerReply: 'PawPal xin lỗi chị Hân vì sự bất tiện này ạ. Nhận được góp ý của chị, tụi em sẽ cải thiện quy trình xếp lịch cuối tuần để phục vụ tốt hơn. Hẹn gặp lại chị và bé ạ!'
-            },
-            {
-                name: 'Hoàng Anh',
-                tier: 'member',
-                tierName: 'Thành viên',
-                rating: 5,
-                date: '20/05/2026',
-                text: 'Giá cả hợp lý so với chất lượng dịch vụ. Các bước làm rất kỹ và chuyên nghiệp.',
-                images: [],
-                sellerReply: null
-            }
-        ];
+    // Try to load reviews dynamically
+    if (window.DataLoader && window.DataLoader.getServiceReviews) {
+        const dynamicReviews = await window.DataLoader.getServiceReviews(serviceData.dbId);
+        if (dynamicReviews && dynamicReviews.length > 0) {
+            reviewsList = dynamicReviews;
+        }
+    }
+    
+    // Fallback if no dynamic reviews exist yet
+    if (reviewsList.length === 0) {
+        const reviews = Array.isArray(serviceData.reviews) ? serviceData.reviews : [];
+        if (reviews.length > 0) {
+            reviewsList = reviews;
+        } else {
+            reviewsList = [
+                {
+                    name: 'Minh Tuấn',
+                    tier: 'gold',
+                    tierName: 'Hội viên Vàng',
+                    rating: 5,
+                    date: '15/06/2026',
+                    text: 'Dịch vụ rất chu đáo! Bé nhà mình bình thường rất nhát nhưng đến đây được các bạn nhân viên dỗ dành rất khéo. Sẽ tiếp tục ủng hộ PawPal.',
+                    images: [],
+                    sellerReply: 'Cảm ơn anh Tuấn đã tin tưởng và sử dụng dịch vụ của PawPal. Chúc bé cưng luôn ngoan và khỏe mạnh ạ!'
+                },
+                {
+                    name: 'Ngọc Hân',
+                    tier: 'silver',
+                    tierName: 'Hội viên Bạc',
+                    rating: 4,
+                    date: '02/06/2026',
+                    text: 'Không gian sạch sẽ, thơm tho. Tuy nhiên cuối tuần hơi đông nên phải đợi khoảng 15 phút mới tới lượt. Mọi người nên đặt lịch trước nhé.',
+                    images: ['/assets/images/services/spa.png'],
+                    sellerReply: 'PawPal xin lỗi chị Hân vì sự bất tiện này ạ. Nhận được góp ý của chị, tụi em sẽ cải thiện quy trình xếp lịch cuối tuần để phục vụ tốt hơn. Hẹn gặp lại chị và bé ạ!'
+                },
+                {
+                    name: 'Hoàng Anh',
+                    tier: 'member',
+                    tierName: 'Thành viên',
+                    rating: 5,
+                    date: '20/05/2026',
+                    text: 'Giá cả hợp lý so với chất lượng dịch vụ. Các bước làm rất kỹ và chuyên nghiệp.',
+                    images: [],
+                    sellerReply: null
+                }
+            ];
+        }
     }
 
     renderReviewList('all');

@@ -931,10 +931,23 @@ async function handleCheckout() {
         return;
     }
 
-    // Save current order to localStorage (simulate API)
+    // Sync with Supabase API
+    if (window.API && window.API.submitOrder) {
+        const response = await window.API.submitOrder(orderData);
+        if (response && !response.success) {
+            showToast('Lỗi kết nối khi tạo đơn hàng trên hệ thống. Vui lòng thử lại!', 'error');
+            restoreBtn();
+            return;
+        }
+        if (response && response.success && response.orderId) {
+            orderData.orderId = response.orderId;
+        }
+    }
+
+    // Save current order to localStorage (fallback/simulate API)
     localStorage.setItem('pawpal_current_order', JSON.stringify(orderData));
 
-    // Save to user's orders list
+    // Save to user's orders list (legacy support)
     saveOrderToUserHistory(orderData);
 
     // Trừ điểm PawPoints nếu user đã dùng điểm để giảm giá
@@ -972,7 +985,7 @@ async function handleCheckout() {
             sessionStorage.removeItem('pawpal_buynow_cart');
             sessionStorage.removeItem('pawpal_is_buynow');
         } else {
-            localStorage.removeItem('pawpal_cart');
+            if(window.saveCart) { window.saveCart([]); } else { localStorage.removeItem('pawpal_cart'); }
         }
         window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${orderData.orderId}`;
     } else if (['momo', 'vnpay', 'zalopay', 'vietqr'].includes(checkoutState.selectedPayment)) {
@@ -987,7 +1000,7 @@ async function handleCheckout() {
             sessionStorage.removeItem('pawpal_buynow_cart');
             sessionStorage.removeItem('pawpal_is_buynow');
         } else {
-            localStorage.removeItem('pawpal_cart');
+            if(window.saveCart) { window.saveCart([]); } else { localStorage.removeItem('pawpal_cart'); }
         }
         window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${orderData.orderId}`;
     }
@@ -1188,7 +1201,7 @@ function verifyPaymentSimulation() {
                     sessionStorage.removeItem('pawpal_buynow_cart');
                     sessionStorage.removeItem('pawpal_is_buynow');
                 } else {
-                    localStorage.removeItem('pawpal_cart');
+                    if(window.saveCart) { window.saveCart([]); } else { localStorage.removeItem('pawpal_cart'); }
                 }
                 
                 setTimeout(() => {

@@ -123,7 +123,7 @@
     font-family: var(--font-body);
 }
 
-.status-pending_payment { background: var(--color-neutral-light); color: var(--color-neutral); }
+.status-placed, .status-pending_payment { background: var(--color-neutral-light); color: var(--color-neutral); }
 .status-preparing { background: var(--color-info-light); color: var(--color-info); }
 .status-shipping { background: var(--color-accent-light); color: var(--color-accent-dark); }
 .status-delivered, .status-completed { background: var(--color-success-light); color: var(--color-success); }

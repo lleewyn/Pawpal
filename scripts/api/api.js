@@ -307,31 +307,75 @@ export const API = {
         return safeReadObject('pawpal_pet_tracker_logs') || {};
     },
 
-    async getUserCart(userId) {
+        async getUserCart(userId) {
         if (!userId) return safeReadArray('pawpal_cart');
-        const cart = await this.request(`/api/cart/${encodeURIComponent(userId)}`);
-        if (cart && typeof cart === 'object' && Array.isArray(cart.items)) {
-            return cart.items;
+        
+        const db = window.SupabaseClient;
+        if (!db) return safeReadArray('pawpal_cart');
+
+        try {
+            const { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', userId).single();
+            if (cartError && cartError.code !== 'PGRST116') {
+                console.error('Error fetching cart:', cartError);
+                return safeReadArray('pawpal_cart');
+            }
+
+            if (cartData) {
+                const { data: items, error: itemsError } = await db.from('cart_item').select('product_id, quantity').eq('cart_id', cartData.id);
+                if (!itemsError && items) {
+                    // Translate UUID back to product_code if needed, but products are loaded with UUID as .id now!
+                    // Wait, frontend uses UUID for product_id now.
+                    return items.map(item => ({ id: item.product_id, qty: item.quantity }));
+                }
+            }
+        } catch (err) {
+            console.error('Error getUserCart:', err);
         }
+        
         return safeReadArray('pawpal_cart');
     },
 
     async saveUserCart(userId, items) {
+        const itemArray = Array.isArray(items) ? items : [];
+        localStorage.setItem('pawpal_cart', JSON.stringify(itemArray));
+
         if (!userId) {
-            localStorage.setItem('pawpal_cart', JSON.stringify(Array.isArray(items) ? items : []));
-            return { success: true, data: items };
+            return { success: true, data: itemArray };
         }
-        // Luôn lưu localStorage (offline-first)
-        localStorage.setItem('pawpal_cart', JSON.stringify(Array.isArray(items) ? items : []));
-        // Sync lên server nếu backend bật
-        if (this.USE_BACKEND) {
-            const saved = await this.request(`/api/cart/${encodeURIComponent(userId)}`, {
-                method: 'PUT',
-                body: JSON.stringify({ items: Array.isArray(items) ? items : [] })
-            });
-            return { success: true, data: saved || items };
+
+        const db = window.SupabaseClient;
+        if (!db) return { success: false, error: 'No Supabase client' };
+
+        try {
+            // 1. Get or create cart for user
+            let { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', userId).single();
+            
+            if (!cartData) {
+                const { data: newCart, error: insertError } = await db.from('cart').insert({ customer_id: userId, cart_status: 'ACTIVE' }).select('id').single();
+                if (insertError) throw insertError;
+                cartData = newCart;
+            }
+
+            // 2. Clear old items
+            await db.from('cart_item').delete().eq('cart_id', cartData.id);
+
+            // 3. Insert new items
+            if (itemArray.length > 0) {
+                const insertItems = itemArray.map(item => ({
+                    cart_id: cartData.id,
+                    product_id: item.id,
+                    quantity: item.qty || 1,
+                    unit_price: 0, // Simplified for now, backend could recalc
+                    subtotal: 0
+                }));
+                const { error: itemsError } = await db.from('cart_item').insert(insertItems);
+                if (itemsError) throw itemsError;
+            }
+            return { success: true, data: itemArray };
+        } catch (err) {
+            console.error('Error saving cart to Supabase:', err);
+            return { success: false, error: err };
         }
-        return { success: true, data: items };
     },
 
     async getUserWishlist(userId) {
@@ -477,6 +521,69 @@ export const API = {
             safeWrite('pawpal_current_user', users[idx]);
         }
         return { success: true, data: users[idx] };
+    },
+
+    async submitOrder(orderData) {
+        const db = window.SupabaseClient;
+        if (!db) {
+            return { success: false, error: 'No Supabase connection' };
+        }
+
+        try {
+            // 0. Handle shipping address
+            let shippingAddressId = 'f0000000-0000-0000-2222-000000000001'; // Fallback
+            if (orderData.shipping) {
+                const { data: addrData, error: addrError } = await db.from('customer_address').insert({
+                    customer_id: orderData.userId || null,
+                    receiver_name: orderData.shipping.name || 'Khách hàng',
+                    receiver_phone: orderData.shipping.phone || '',
+                    province: orderData.shipping.city || '',
+                    street_address: (orderData.shipping.address || '') + (orderData.shipping.district ? ', ' + orderData.shipping.district : ''),
+                    is_default: false
+                }).select('id').single();
+                
+                if (addrError) {
+                    console.warn('Could not insert address (maybe guest without customer_id?), using fallback', addrError);
+                } else if (addrData && addrData.id) {
+                    shippingAddressId = addrData.id;
+                }
+            }
+
+            // 1. Map orderData to sales_order
+            const salesOrder = {
+                order_code: orderData.orderId,
+                customer_id: orderData.userId || null,
+                shipping_address_id: shippingAddressId,
+                order_status: 'PENDING',
+                payment_status: (orderData.payment?.status || 'PENDING').toUpperCase(),
+                subtotal: orderData.pricing?.subtotal || 0,
+                shipping_fee: orderData.pricing?.shippingFee || 0,
+                discount_amount: orderData.pricing?.discount || 0,
+                total_amount: orderData.pricing?.total || 0,
+            };
+
+            const { data: newOrder, error: orderError } = await db.from('sales_order').insert(salesOrder).select('id').single();
+            if (orderError) throw orderError;
+
+            // 2. Map items to sales_order_detail
+            if (orderData.items && orderData.items.length > 0) {
+                const orderDetails = orderData.items.map(item => ({
+                    order_id: newOrder.id,
+                    product_id: item.id,
+                    quantity: item.qty || item.quantity || 1,
+                    unit_price: item.price || 0,
+                    discount_amount: 0,
+                    subtotal: (item.price || 0) * (item.qty || item.quantity || 1)
+                }));
+                const { error: itemsError } = await db.from('sales_order_detail').insert(orderDetails);
+                if (itemsError) throw itemsError;
+            }
+
+            return { success: true, orderId: newOrder.id };
+        } catch (err) {
+            console.error('Submit order error:', err);
+            return { success: false, error: err };
+        }
     }
 };
 

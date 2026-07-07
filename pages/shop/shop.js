@@ -699,8 +699,8 @@ function renderProducts() {
                 e.stopPropagation();
                 e.preventDefault();
 
-                const productId = parseInt(btn.dataset.productId);
-                const product = state.products.find(p => p.id === productId);
+                const productId = btn.dataset.productId;
+                const product = state.products.find(p => String(p.id) === String(productId));
                 if (product && product.inStock) {
                     openBuyNowModal(product);
                 }
@@ -1026,7 +1026,7 @@ function toggleWishlist(productId) {
 // ══════════════════════════════════════════════════════════════════════════
 
 function addToCart(productId) {
-    const product = state.products.find(p => p.id === productId);
+    const product = state.products.find(p => String(p.id) === String(productId));
     if (!product || !product.inStock) return;
     
     // Get cart from localStorage
@@ -1047,7 +1047,7 @@ function addToCart(productId) {
         });
     }
     
-    localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+    if (window.saveCart) window.saveCart(cart); else localStorage.setItem('pawpal_cart', JSON.stringify(cart));
     showToast(`Đã thêm ${product.name} vào giỏ hàng`, 'success');
     
     // Update cart badge if exists
