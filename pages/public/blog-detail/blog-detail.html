@@ -32,24 +32,19 @@
         <div class="blog-detail-header-wrapper">
             <div class="container">
                 <nav aria-label="breadcrumb" class="blog-breadcrumb">
-                    <ol class="breadcrumb">
+                    <ol class="breadcrumb" id="blog-breadcrumb">
                         <li class="breadcrumb-item"><a href="../landing/landing.html">Trang chủ</a></li>
                         <li class="breadcrumb-item"><a href="../blog/blog.html">Cẩm nang</a></li>
-                        <li class="breadcrumb-item"><a href="../blog/blog.html?category=dog">Chó</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Có nên tắm cho chó vào mùa mưa?</li>
+                        <!-- Dynamic breadcrumbs will be injected here -->
                     </ol>
                 </nav>
 
                 <div class="blog-hero">
-                    <h1 class="blog-hero-title">Có Nên Tắm Cho Chó Vào Mùa Mưa? Lời Khuyên Từ Chuyên Gia PawPal</h1>
+                    <h1 class="blog-hero-title" id="blog-title">Loading...</h1>
                     
                     <div class="blog-hero-meta">
-                        <div class="meta-author">
-                            <img src="../../../assets/images/publics/dog.jpg" alt="Author Avatar" class="author-avatar">
-                            <div class="author-info">
-                                <span class="author-name">Bởi <strong>PawPal Team</strong></span>
-                                <span class="post-date">24 tháng 7, 2026 &bull; 5 phút đọc</span>
-                            </div>
+                        <div class="meta-author" id="blog-author-meta">
+                            <!-- Dynamic author info -->
                         </div>
                         
                         <div class="meta-actions">
@@ -62,8 +57,8 @@
                         </div>
                     </div>
                     
-                    <div class="blog-hero-cover mt-4">
-                        <img src="../../../assets/images/publics/dog.jpg" alt="Tắm cho chó" class="img-fluid rounded-4 shadow-sm w-100 post-meta-avatar">
+                    <div class="blog-hero-cover mt-4" id="blog-hero-cover">
+                        <!-- Dynamic cover image -->
                     </div>
                 </div>
             </div>
@@ -75,72 +70,15 @@
                 
                 <!-- Main Content (70%) -->
                 <div class="col-lg-8">
-                    <article class="blog-article-content">
-                        <p class="lead">Mùa mưa mang đến thời tiết ẩm ướt, dễ khiến các bé cún mắc bệnh về da, hô hấp hoặc bốc mùi hôi khó chịu. Nhiều "con sen" phân vân không biết có nên tắm cho chó vào lúc này hay không? Cùng PawPal giải đáp thắc mắc và tìm hiểu cách chăm sóc các bé vào mùa mưa nhé!</p>
-
-                        <h2 id="section-1">1. Chó có cần tắm vào mùa mưa không?</h2>
-                        <p>Câu trả lời là <strong>CÓ</strong>, nhưng tần suất và cách thức sẽ khác so với mùa nắng. Mưa nhiều khiến lông các bé dễ bị bết dính bùn đất, ẩm ướt tạo môi trường lý tưởng cho nấm, vi khuẩn sinh sôi và gây ra các bệnh da liễu.</p>
-                        
-                        <blockquote class="blog-quote">
-                            "Mùi hôi đặc trưng của chó vào mùa mưa chủ yếu do vi khuẩn trên da phân hủy bã nhờn trong môi trường ẩm. Việc giữ cho lông bé luôn khô ráo là ưu tiên hàng đầu." - Chuyên gia thú y PawPal
-                        </blockquote>
-
-                        <h2 id="section-2">2. Bao lâu thì nên tắm một lần?</h2>
-                        <p>Thông thường, đối với các bé chó sống trong nhà, bạn chỉ nên tắm <strong>2-3 tuần/lần</strong>. Nếu bé đi dạo và bị dính mưa, chỉ cần dùng khăn ướt chuyên dụng lau sạch chân và những vùng lông bẩn, sau đó sấy khô ngay lập tức.</p>
-                        <ul>
-                            <li><strong>Chó lông ngắn (Pug, Bull, Lạp xưởng):</strong> 2-3 tuần/lần.</li>
-                            <li><strong>Chó lông dài (Poodle, Phốc sóc, Corgi):</strong> 1-2 tuần/lần, nhưng phải đảm bảo sấy thật khô tới tận chân lông.</li>
-                        </ul>
-
-                        <div class="text-center my-4">
-                            <img src="../../../assets/images/publics/dog11.png" alt="Chó sau khi tắm" class="img-fluid rounded-3 shadow-sm">
-                            <span class="text-muted d-block mt-2 post-meta-author">Sấy khô là bước cực kỳ quan trọng sau khi tắm.</span>
-                        </div>
-
-                        <h2 id="section-3">3. Những lưu ý "sống còn" khi tắm cho chó mùa mưa</h2>
-                        <ol>
-                            <li><strong>Tắm nước ấm:</strong> Tuyệt đối không dùng nước lạnh. Nước ấm giúp bé không bị sốc nhiệt và dễ dàng gột rửa bụi bẩn hơn.</li>
-                            <li><strong>Tắm nhanh:</strong> Không kéo dài thời gian ngâm nước quá 10 phút.</li>
-                            <li><strong>Sử dụng sữa tắm chuyên dụng:</strong> Chọn các loại sữa tắm có thành phần khử mùi, dưỡng lông và hỗ trợ kháng khuẩn da.</li>
-                            <li><strong>Sấy khô triệt để:</strong> Lau bằng khăn thấm hút mạnh, sau đó sấy bằng máy sấy chuyên dụng ở chế độ ấm nhẹ. Không để lông khô tự nhiên.</li>
-                        </ol>
-
-                        <!-- Product Injection -->
-                        <div class="blog-product-box mt-4 mb-4">
-                            <div class="row align-items-center">
-                                <div class="col-md-3 text-center">
-                                    <img src="../../../assets/images/publics/pet.png" alt="Sữa tắm chó" class="img-fluid rounded">
-                                </div>
-                                <div class="col-md-9">
-                                    <h5 class="mb-2">Sữa Tắm Khử Mùi và Ngừa Nấm SOS</h5>
-                                    <p class="text-muted small mb-2">Đặc biệt hiệu quả trong mùa mưa, giúp khử mùi hôi, dưỡng lông mềm mượt và bảo vệ da khỏi vi khuẩn.</p>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <span class="text-primary fw-bold">145.000 ₫</span>
-                                        <a href="/pages/shop/product-detail/product-detail.html" class="btn btn-sm btn-primary">Mua ngay</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h2 id="section-4">4. Nếu không tắm thì làm sao để bé bớt hôi?</h2>
-                        <p>Trong những đợt mưa dầm dề nhiều ngày, bạn có thể sử dụng các giải pháp thay thế tắm ướt:</p>
-                        <ul>
-                            <li><strong>Phấn tắm khô / Bọt tắm khô:</strong> Massage phấn/bọt lên lông để hút ẩm, loại bỏ chất bã nhờn và khử mùi, sau đó chải sạch.</li>
-                            <li><strong>Xịt khử mùi thú cưng:</strong> Xịt nhẹ nhàng lên cơ thể (tránh vùng mắt, mũi).</li>
-                            <li><strong>Giữ vệ sinh nơi ở:</strong> Giặt sạch nệm, lau sàn bằng dung dịch sát khuẩn an toàn cho pet.</li>
-                        </ul>
-
-                        <p>Hy vọng những chia sẻ trên từ PawPal sẽ giúp các bé cưng nhà bạn vượt qua mùa mưa một cách khỏe mạnh và thơm tho nhất!</p>
+                    <article class="blog-article-content" id="blog-content">
+                        <!-- Dynamic content will be injected here -->
                     </article>
 
                     <!-- Tags và Author -->
                     <div class="blog-footer-meta mt-5 pt-4 border-top">
-                        <div class="blog-tags mb-4">
+                        <div class="blog-tags mb-4" id="blog-tags">
                             <strong>Tags:</strong>
-                            <a href="#" class="btn-filter-tag">#ChămSócChó</a>
-                            <a href="#" class="btn-filter-tag">#TắmChó</a>
-                            <a href="#" class="btn-filter-tag">#MùaMưa</a>
-                            <a href="#" class="btn-filter-tag">#SứcKhỏe</a>
+                            <!-- Dynamic tags -->
                         </div>
                         
                         <div class="author-box p-4 bg-light rounded-4 d-flex gap-4 align-items-center">

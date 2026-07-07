@@ -6,7 +6,9 @@
 // Cache for loaded data
 const dataCache = {
     products: null,
-    services: null
+    services: null,
+    blogs: null,
+    blogCategories: null
 };
 
 /**
@@ -144,7 +146,7 @@ function transformProductData(rawData) {
 
             return {
                 id: index + 1,
-                dbId: svc.id,
+                dbId: null,
                 sku: item['Mã sản phẩm (SKU)'] || `PROD-${index + 1}`,
                 name: item['Tên sản phẩm'] || 'Sản phẩm không tên',
                 brand: item['Thương hiệu (Brand)'] || 'Chưa xác định',
@@ -383,7 +385,7 @@ function transformServiceData(rawData) {
 
         return {
             id: index + 1,
-                dbId: svc.id,
+            dbId: null,
             serviceId: item['Mã dịch vụ (Service ID)'] || `SVC-${index + 1}`,
             name: item['Tên dịch vụ'] || 'Dịch vụ',
             category: category,
@@ -645,6 +647,68 @@ async function getServiceReviews(serviceId) {
     }
 }
 
+/**
+ * Load blog categories from Supabase
+ * @returns {Promise<Array<Object>>}
+ */
+async function loadBlogCategories() {
+    if (dataCache.blogCategories) return dataCache.blogCategories;
+
+    try {
+        const db = window.SupabaseClient;
+        if (!db) throw new Error('Supabase client is not initialized');
+
+        const { data, error } = await db.from('blog_category').select('*').order('display_order', { ascending: true });
+        if (error) throw error;
+
+        dataCache.blogCategories = data;
+        return data;
+    } catch (error) {
+        console.error('Error fetching blog categories:', error);
+        return [];
+    }
+}
+
+/**
+ * Load blog posts from Supabase
+ * @returns {Promise<Array<Object>>}
+ */
+async function loadBlogs() {
+    if (dataCache.blogs) return dataCache.blogs;
+
+    try {
+        const db = window.SupabaseClient;
+        if (!db) throw new Error('Supabase client is not initialized');
+
+        const { data, error } = await db.from('blog_post').select('*, blog_category(category_name, slug)').eq('status', 'PUBLISHED').order('publish_at', { ascending: false });
+        if (error) throw error;
+
+        const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
+        const formatted = data.map(item => {
+            return {
+                id: item.id,
+                title: item.title,
+                slug: item.slug,
+                summary: item.summary,
+                content: item.content,
+                thumbnail: item.thumbnail_url ? (item.thumbnail_url.startsWith('http') ? item.thumbnail_url : rootPath + item.thumbnail_url.replace(/^[\/\\]+/, '')) : rootPath + 'assets/images/shop/products/placeholder.webp',
+                authorId: item.author_id,
+                date: item.publish_at || item.created_at,
+                viewCount: item.view_count || 0,
+                categoryId: item.category_id,
+                categoryName: item.blog_category?.category_name || 'Uncategorized',
+                categorySlug: item.blog_category?.slug || 'uncategorized'
+            };
+        });
+
+        dataCache.blogs = formatted;
+        return formatted;
+    } catch (error) {
+        console.error('Error fetching blogs:', error);
+        return [];
+    }
+}
+
 // Export functions for use in other modules
 window.DataLoader = {
     loadProducts,
@@ -655,7 +719,9 @@ window.DataLoader = {
     loadServices,
     getServiceById,
     getProductReviews,
-    getServiceReviews
+    getServiceReviews,
+    loadBlogs,
+    loadBlogCategories
 };
 
 console.log(' DataLoader module initialized');

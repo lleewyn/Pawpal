@@ -1,9 +1,10 @@
+let entries = [];
 const mainFilters = [...document.querySelectorAll('.main-filters .btn-filter-pill')];
 const subFilters = [...document.querySelectorAll('.sub-filters .btn-filter-tag')];
 const searchForm = document.querySelector('.blog-search-form');
 const searchInput = document.querySelector('#blogSearchInput');
-const entries = [...document.querySelectorAll('.blog-entry')];
 const emptyState = document.querySelector('#blogEmptyState');
+
 let activeMain = 'all';
 let activeTag = 'all';
 let searchKeyword = '';
@@ -23,7 +24,6 @@ function matchesTag(entryTags, expectedTag) {
 
 function applyFilters() {
     let visibleCount = 0;
-
     entries.forEach((entry) => {
         const main = entry.dataset.main || '';
         const tags = normalizeText(entry.dataset.tags || '').split(/\s+/).filter(Boolean);
@@ -94,31 +94,163 @@ if (searchForm && searchInput) {
     });
 }
 
-const urlParams = new URLSearchParams(window.location.search);
-const categoryParam = urlParams.get('category');
-
-if (categoryParam) {
-    const categoryMap = {
-        dog: 'cho',
-        cat: 'meo',
-        tips: 'all',
-        events: 'promo'
-    };
-
-    const normalizedCategory = normalizeText(categoryParam);
-    if (normalizedCategory === 'events') {
-        const promoButton = mainFilters.find((button) => button.dataset.mainTarget === 'promo');
-        promoButton?.click();
-    } else if (normalizedCategory === 'tips') {
-        const tipsButton = mainFilters.find((button) => button.dataset.mainTarget === 'tips');
-        tipsButton?.click();
-    } else {
-        const matchedTag = categoryMap[normalizedCategory];
-        if (matchedTag) {
-            const tagButton = subFilters.find((button) => button.dataset.tag === matchedTag);
-            tagButton?.click();
-        }
-    }
+function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-applyFilters();
+function createBlogCard(blog, type = 'standard', rank = 1) {
+    const mainCat = blog.categorySlug;
+    const url = `../blog-detail/blog-detail.html?slug=${blog.slug}`;
+    const readingTime = Math.max(2, Math.ceil(blog.content.length / 1000)) + ' phút đọc';
+
+    if (type === 'featured') {
+        return `
+        <article class="blog-card featured-card blog-entry" data-main="${mainCat}" data-tags="${mainCat}">
+            <a href="${url}" class="card-img-link">
+                <div class="img-wrapper">
+                    <img src="${blog.thumbnail}" alt="${blog.title}" loading="lazy">
+                    <span class="card-badge">Mới nhất</span>
+                </div>
+            </a>
+            <div class="card-content">
+                <div class="card-meta-line">
+                    <span class="card-date">${formatDate(blog.date)}</span>
+                    <span class="card-reading-time">${readingTime}</span>
+                </div>
+                <h3 class="card-title"><a href="${url}">${blog.title}</a></h3>
+                <p class="card-excerpt">${blog.summary}</p>
+            </div>
+        </article>`;
+    }
+
+    if (type === 'small') {
+        return `
+        <article class="blog-card-small blog-entry" data-main="${mainCat}" data-tags="${mainCat}">
+            <a href="${url}" class="card-img-link"><img src="${blog.thumbnail}" alt="${blog.title}"></a>
+            <div class="card-content">
+                <div class="card-meta-line">
+                    <span class="card-date">${formatDate(blog.date)}</span>
+                    <span class="card-reading-time">${readingTime}</span>
+                </div>
+                <h3 class="card-title"><a href="${url}">${blog.title}</a></h3>
+            </div>
+        </article>`;
+    }
+
+    if (type === 'trending') {
+        return `
+        <article class="trending-item blog-entry" data-main="${mainCat}" data-tags="${mainCat}">
+            <div class="trending-rank">${rank}</div>
+            <a href="${url}" class="trending-img"><img src="${blog.thumbnail}" alt="${blog.title}"></a>
+            <div class="trending-content">
+                <div class="card-meta-line">
+                    <span class="trending-date">${formatDate(blog.date)}</span>
+                    <span class="card-reading-time">${readingTime}</span>
+                </div>
+                <h3 class="trending-title"><a href="${url}">${blog.title}</a></h3>
+            </div>
+        </article>`;
+    }
+
+    if (type === 'news') {
+        return `
+        <article class="news-list-item blog-entry" data-main="${mainCat}" data-tags="${mainCat}">
+            <a href="${url}" class="news-img"><img src="${blog.thumbnail}" alt="${blog.title}"></a>
+            <div class="news-content">
+                <div class="card-meta-line">
+                    <span class="news-date">${formatDate(blog.date)}</span>
+                    <span class="card-reading-time">${readingTime}</span>
+                </div>
+                <h3 class="news-title"><a href="${url}">${blog.title}</a></h3>
+            </div>
+        </article>`;
+    }
+
+    // standard
+    return `
+    <article class="blog-card standard-card blog-entry" data-main="${mainCat}" data-tags="${mainCat}">
+        <a href="${url}" class="card-img-link"><img src="${blog.thumbnail}" alt="${blog.title}"></a>
+        <div class="card-content">
+            <div class="card-meta-line">
+                <span class="card-date">${formatDate(blog.date)}</span>
+                <span class="card-reading-time">${readingTime}</span>
+            </div>
+            <h3 class="card-title"><a href="${url}">${blog.title}</a></h3>
+        </div>
+    </article>`;
+}
+
+async function initBlog() {
+    if (!window.DataLoader || !window.DataLoader.loadBlogs) {
+        setTimeout(initBlog, 100);
+        return;
+    }
+
+    const blogs = await window.DataLoader.loadBlogs();
+    
+    // Categorize blogs based on categorySlug
+    const tips = blogs.filter(b => b.categorySlug === 'tips');
+    const news = blogs.filter(b => b.categorySlug === 'news');
+    const promo = blogs.filter(b => b.categorySlug === 'promo');
+    
+    // Latest section
+    const latestGrid = document.querySelector('#latest-grid-wrapper');
+    const standardGrid = document.querySelector('#blog-card-grid');
+    if (latestGrid && tips.length > 0) {
+        const featured = tips[0];
+        const smallList = tips.slice(1, 4);
+        const standardList = tips.slice(4);
+
+        let html = createBlogCard(featured, 'featured');
+        if (smallList.length > 0) {
+            html += '<div class="stacked-cards-list">';
+            html += smallList.map(b => createBlogCard(b, 'small')).join('');
+            html += '</div>';
+        }
+        latestGrid.innerHTML = html;
+
+        if (standardGrid) {
+            standardGrid.innerHTML = standardList.map(b => createBlogCard(b, 'standard')).join('');
+        }
+    }
+
+    // Trending section (sort by views)
+    const trendingList = document.querySelector('#trending-list-wrapper');
+    if (trendingList) {
+        const topTrending = [...blogs].sort((a, b) => b.viewCount - a.viewCount).slice(0, 3);
+        trendingList.innerHTML = topTrending.map((b, i) => createBlogCard(b, 'trending', i + 1)).join('');
+    }
+
+    // News & Promo sections
+    const promoList = document.querySelector('#blog-promo-list');
+    if (promoList) {
+        promoList.innerHTML = promo.map(b => createBlogCard(b, 'news')).join('');
+    }
+
+    const newsList = document.querySelector('#blog-news-list');
+    if (newsList) {
+        newsList.innerHTML = news.map(b => createBlogCard(b, 'news')).join('');
+    }
+
+    // Re-bind entries for filtering
+    entries = [...document.querySelectorAll('.blog-entry')];
+
+    // Handle URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryParam = urlParams.get('category');
+    if (categoryParam) {
+        const normalizedCategory = normalizeText(categoryParam);
+        if (normalizedCategory === 'events') {
+            const promoButton = mainFilters.find((button) => button.dataset.mainTarget === 'promo');
+            promoButton?.click();
+        } else if (normalizedCategory === 'tips') {
+            const tipsButton = mainFilters.find((button) => button.dataset.mainTarget === 'tips');
+            tipsButton?.click();
+        }
+    }
+
+    applyFilters();
+}
+
+document.addEventListener('DOMContentLoaded', initBlog);
