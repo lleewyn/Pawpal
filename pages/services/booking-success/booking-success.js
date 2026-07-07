@@ -42,6 +42,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (passwordSetupCard) passwordSetupCard.style.display = 'none';
         if (memberActions) memberActions.style.display = 'block';
     }
+
+    const myBookingsLink = document.querySelector('a[href*="/pages/user/bookings/bookings.html"]');
+    if (myBookingsLink) {
+        myBookingsLink.setAttribute('href', '/pages/user/bookings/bookings.html');
+        myBookingsLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = '/pages/user/bookings/bookings.html';
+        });
+    }
 });
 
 async function resolveBookingByCode(bookingCode) {

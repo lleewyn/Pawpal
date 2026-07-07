@@ -183,10 +183,10 @@ async function loadSupabaseGuestResults(phone) {
                 created_at,
                 updated_at,
                 note,
-                customer_address ( receiver_name, receiver_phone, province, street_address ),
+                customer_address!inner ( receiver_name, receiver_phone, province, street_address ),
                 sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, image_urls, sku ) )
             `)
-            .or(`customer_address.receiver_phone.eq.${normPhone}`)
+            .eq('customer_address.receiver_phone', normPhone)
             .order('created_at', { ascending: false });
 
         if (orderError) {
@@ -203,11 +203,11 @@ async function loadSupabaseGuestResults(phone) {
                 appointment_status,
                 payment_status,
                 note,
-                customer ( id, phone_main, full_name ),
+                customer!inner ( id, phone_main, full_name ),
                 service ( id, service_name ),
                 pet_profile ( id, name )
             `)
-            .or(`phone_main.eq.${normPhone},customer.phone_main.eq.${normPhone}`)
+            .eq('customer.phone_main', normPhone)
             .order('appointment_date', { ascending: false });
 
         if (bookingError) {
