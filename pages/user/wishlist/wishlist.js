@@ -155,7 +155,7 @@
             const serviceId = typeof item === 'object' && item !== null ? String(item.id || item.serviceId) : String(item);
             if (seenServices.has(serviceId)) return null;
             seenServices.add(serviceId);
-            const service = allServices.find((s) => String(s.serviceId) === serviceId);
+            const service = allServices.find((s) => String(s.serviceId) === serviceId || String(s.dbId) === serviceId);
             if (!service) return null;
 
             return {

@@ -698,24 +698,36 @@ function setupWishlistAndShare() {
     const likeBtn = document.getElementById('btnLikeService');
     const shareBtn = document.getElementById('btnShareService');
 
+    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    const phone = user ? user.phone : null;
+    const serviceKey = phone ? `pawpal_wishlist_services_${phone}` : 'pawpal_wishlist_services_guest';
+    const productKey = phone ? `pawpal_wishlist_${phone}` : 'pawpal_wishlist_guest';
+
     // Check if liked in localStorage
-    const savedWishlist = JSON.parse(localStorage.getItem('pawpal_wishlist_services') || '[]');
-    currentLikedState = savedWishlist.includes(serviceData.serviceId);
+    const savedWishlist = JSON.parse(localStorage.getItem(serviceKey) || '[]');
+    currentLikedState = savedWishlist.includes(String(serviceData.dbId));
 
     updateLikeButtonUI();
 
     likeBtn.addEventListener('click', () => {
-        let list = JSON.parse(localStorage.getItem('pawpal_wishlist_services') || '[]');
+        let list = JSON.parse(localStorage.getItem(serviceKey) || '[]');
         if (currentLikedState) {
-            list = list.filter(id => id !== serviceData.serviceId);
+            list = list.filter(id => String(id) !== String(serviceData.dbId));
             currentLikedState = false;
             showToast('Đã xóa dịch vụ khỏi danh sách yêu thích');
         } else {
-            list.push(serviceData.serviceId);
+            list.push(String(serviceData.dbId));
             currentLikedState = true;
             showToast('Đã lưu dịch vụ vào danh sách yêu thích!');
         }
-        localStorage.setItem('pawpal_wishlist_services', JSON.stringify(list));
+        
+        if (window.saveWishlist) {
+            const productIds = JSON.parse(localStorage.getItem(productKey) || '[]');
+            window.saveWishlist(productIds, list);
+        } else {
+            localStorage.setItem(serviceKey, JSON.stringify(list));
+        }
+        
         updateLikeButtonUI();
     });
 
