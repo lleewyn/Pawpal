@@ -1,5 +1,5 @@
 // blog-detail.js
-document.addEventListener('DOMContentLoaded', async () => {
+async function initBlogDetail() {
     function formatDate(dateStr) {
         const d = new Date(dateStr);
         return d.toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -155,4 +155,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     loadBlogData();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBlogDetail);
+} else {
+    initBlogDetail();
+}

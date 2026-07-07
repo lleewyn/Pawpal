@@ -284,4 +284,8 @@ async function initBlog() {
     applyFilters();
 }
 
-document.addEventListener('DOMContentLoaded', initBlog);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBlog);
+} else {
+    initBlog();
+}
