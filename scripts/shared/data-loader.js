@@ -680,7 +680,7 @@ async function loadBlogs() {
         const db = window.SupabaseClient;
         if (!db) throw new Error('Supabase client is not initialized');
 
-        const { data, error } = await db.from('blog_post').select('*, blog_category(category_name, slug)').eq('status', 'PUBLISHED').order('publish_at', { ascending: false });
+        const { data, error } = await db.from('blog_post').select('*, blog_category(category_name)').eq('status', 'PUBLISHED').order('publish_at', { ascending: false });
         if (error) throw error;
 
         const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
@@ -697,7 +697,7 @@ async function loadBlogs() {
                 viewCount: item.view_count || 0,
                 categoryId: item.category_id,
                 categoryName: item.blog_category?.category_name || 'Uncategorized',
-                categorySlug: item.blog_category?.slug || 'uncategorized'
+                categorySlug: item.blog_category?.category_name ? item.blog_category.category_name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'uncategorized'
             };
         });
 
