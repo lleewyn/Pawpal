@@ -491,10 +491,10 @@ export const API = {
 
                     const insertRows = [];
                     payload.productIds.forEach(pid => {
-                        insertRows.push({ id: crypto.randomUUID(), wishlist_id: wlId, product_id: pid, added_at: new Date().toISOString() });
+                        insertRows.push({ id: crypto.randomUUID(), wishlist_id: wlId, product_id: pid, service_id: null, added_at: new Date().toISOString() });
                     });
                     payload.serviceIds.forEach(sid => {
-                        insertRows.push({ id: crypto.randomUUID(), wishlist_id: wlId, service_id: sid, added_at: new Date().toISOString() });
+                        insertRows.push({ id: crypto.randomUUID(), wishlist_id: wlId, product_id: null, service_id: sid, added_at: new Date().toISOString() });
                     });
 
                     if (insertRows.length > 0) {

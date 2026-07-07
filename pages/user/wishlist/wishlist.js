@@ -83,38 +83,33 @@
 
     async function getWishlistItems() {
         const currentUser = getCurrentUser();
-        const serverWishlist = currentUser && window.API && typeof window.API.getUserWishlist === 'function'
-            ? await window.API.getUserWishlist(currentUser.id || currentUser.phone || null)
-            : { productIds: [], serviceIds: [] };
+        
+        let finalProductIds = [];
+        let finalServiceIds = [];
 
-        const productIdsRaw = [
-            ...(serverWishlist.productIds || []),
-            ...loadWishlistRaw(getProductWishlistStorageKey()),
-            ...loadWishlistRaw('pawpal_wishlist')
-        ];
-        const serviceIdsRaw = [
-            ...(serverWishlist.serviceIds || []),
-            ...loadWishlistRaw(getServiceWishlistStorageKey())
-        ];
-
-        // Lọc trùng
-        const finalProductIds = [...new Set(productIdsRaw.map(String))];
-        const finalServiceIds = [...new Set(serviceIdsRaw.map(String))];
-
-        // Lưu lại local storage bản đã merge
-        saveWishlistRaw(getProductWishlistStorageKey(), finalProductIds);
-        saveWishlistRaw(getServiceWishlistStorageKey(), finalServiceIds);
-
-        // Background sync lên server nếu có data mới ở local
-        if (currentUser && window.API && typeof window.API.saveUserWishlist === 'function') {
-            if (finalProductIds.length > (serverWishlist.productIds?.length || 0) ||
-                finalServiceIds.length > (serverWishlist.serviceIds?.length || 0)) {
-                window.API.saveUserWishlist(currentUser.id || currentUser.phone || null, {
-                    productIds: finalProductIds,
-                    serviceIds: finalServiceIds
-                });
+        if (currentUser && window.API && typeof window.API.getUserWishlist === 'function') {
+            const serverWishlist = await window.API.getUserWishlist(currentUser.id || currentUser.phone || null);
+            finalProductIds = serverWishlist.productIds || [];
+            finalServiceIds = serverWishlist.serviceIds || [];
+            
+            // Cập nhật lại local cache
+            saveWishlistRaw(getProductWishlistStorageKey(), finalProductIds);
+            saveWishlistRaw(getServiceWishlistStorageKey(), finalServiceIds);
+        } else {
+            const productIdsRaw = [
+                ...loadWishlistRaw(getProductWishlistStorageKey()),
+                ...loadWishlistRaw('pawpal_wishlist')
+            ];
+            const serviceIdsRaw = [
+                ...loadWishlistRaw(getServiceWishlistStorageKey())
+            ];
+            finalProductIds = [...new Set(productIdsRaw.map(String))];
+            finalServiceIds = [...new Set(serviceIdsRaw.map(String))];
+            
+            // Xoá pawpal_wishlist chung nếu có
+            if (getProductWishlistStorageKey() !== 'pawpal_wishlist') {
+                saveWishlistRaw(getProductWishlistStorageKey(), finalProductIds);
                 localStorage.removeItem('pawpal_wishlist');
-                localStorage.removeItem('pawpal_wishlist_services_guest');
             }
         }
 
@@ -130,10 +125,11 @@
 
         const seenProducts = new Set();
         const products = productRaw.map((item) => {
-            const productId = typeof item === 'object' && item !== null ? Number(item.id) : Number(item);
+            const productId = typeof item === 'object' && item !== null ? String(item.id) : String(item);
             if (seenProducts.has(productId)) return null;
             seenProducts.add(productId);
-            const product = allProducts.find((p) => p.id === productId);
+            const product = allProducts.find((p) => String(p.id) === productId);
+            
             if (!product) return null;
 
             return {
