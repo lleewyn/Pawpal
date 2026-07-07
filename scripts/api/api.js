@@ -586,7 +586,7 @@ export const API = {
                             email: null,
                             password_hash: null,
                             phone_main: phone,
-                            account_status: 'GUEST',
+                            account_status: 'ACTIVE',
                             registered_at: new Date().toISOString()
                         }).select('id').single();
                         
