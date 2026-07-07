@@ -59,8 +59,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const supabaseResults = await loadSupabaseGuestResults(phone);
         if ((supabaseResults.bookings && supabaseResults.bookings.length) ||
             (supabaseResults.orders && supabaseResults.orders.length)) {
-            bookings = supabaseResults.bookings || [];
-            orders = supabaseResults.orders || [];
+            
+            // Merge Supabase results with local results, preferring Supabase if duplicate ID
+            const sbBookings = supabaseResults.bookings || [];
+            const sbOrders = supabaseResults.orders || [];
+            
+            const sbBookingIds = new Set(sbBookings.map(b => b.id));
+            const sbOrderIds = new Set(sbOrders.map(o => o.id));
+            
+            const mergedBookings = [...sbBookings];
+            for (const b of bookings) {
+                if (!sbBookingIds.has(b.id)) mergedBookings.push(b);
+            }
+            bookings = mergedBookings;
+            
+            const mergedOrders = [...sbOrders];
+            for (const o of orders) {
+                if (!sbOrderIds.has(o.id)) mergedOrders.push(o);
+            }
+            orders = mergedOrders;
+            
             showToast('Đã tìm thấy dữ liệu từ Supabase.', 'success');
         }
 

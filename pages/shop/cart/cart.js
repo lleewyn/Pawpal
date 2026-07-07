@@ -90,10 +90,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function normalizeProductVoucherCategory(product, item) {
         const raw = [
-            product?.category,
             product?.categoryName,
-            item?.category,
-            item?.categoryName
+            item?.categoryName,
+            product?.category,
+            item?.category
         ].find(Boolean);
 
         if (!raw) {
@@ -619,10 +619,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         availableVouchersList.innerHTML = activeVouchers.map(voucher => {
-            const label = voucher.type === 'fixed'
+            let label = voucher.type === 'fixed'
                 ? `-${formatPrice(voucher.value)}`
                 : voucher.type === 'percentage'
                     ? `-${voucher.value}%` : `Freeship tối đa ${formatPrice(voucher.value)}`;
+            
+            if (voucher.type === 'percentage' && voucher.maxDiscount) {
+                label += ` (Tối đa ${formatPrice(voucher.maxDiscount)})`;
+            }
+
             const minOrderLabel = voucher.minOrderValue
                 ? `Áp dụng cho đơn từ ${formatPrice(voucher.minOrderValue)}`
                 : 'Áp dụng cho mọi đơn hàng';
@@ -690,6 +695,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         let discount = 0;
+        console.log('DEBUG VOUCHER CALC START:', { type: voucher.type, subtotal, value: voucher.value, maxDiscount: voucher.maxDiscount });
+        
         if (voucher.type === 'fixed') {
             discount = voucher.value;
         } else if (voucher.type === 'percentage') {
@@ -701,6 +708,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             discount = 0;
         }
 
+        console.log('DEBUG VOUCHER CALC END:', { discount });
         return { valid: true, discount, voucher };
     }
 

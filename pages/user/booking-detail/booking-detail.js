@@ -125,10 +125,11 @@ async function rescheduleBookingOnSupabase(booking) {
     const db = window.SupabaseClient;
     if (!db || !booking?._supabaseId) return;
     try {
+        const serviceCategory = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase();
         await db.from('appointment')
             .update({
                 appointment_date:   booking.date,
-                appointment_time:   (booking.timeStart || booking.time) + ':00',
+                appointment_time:   serviceCategory === 'hotel' ? null : (booking.timeStart || booking.time) + ':00',
                 appointment_status: 'PENDING',
                 change_count:       booking.changeCount || 0,
             })
@@ -452,6 +453,7 @@ function showChangeScheduleModal(user = null) {
     const existing = document.getElementById(modalId);
     if (existing) existing.remove();
 
+    const isHotelBooking = String(currentBookingState?.serviceCategory || currentBookingState?.category || currentBookingState?.service_type || '').toLowerCase() === 'hotel';
     const slots = (window.PawPalBookingConfig?.slots) || [
         '08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'
     ];
@@ -492,15 +494,16 @@ function showChangeScheduleModal(user = null) {
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Chọn lịch mới</h5>
+                    <h5 class="modal-title">${isHotelBooking ? 'Đổi ngày lưu trú' : 'Chọn lịch mới'}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted small mb-3">Chọn ngày trước, sau đó chọn giờ và nhân viên.</p>
+                    <p class="text-muted small mb-3">${isHotelBooking ? 'Pet Hotel chỉ cần đổi ngày, không cần chọn giờ hay nhân viên.' : 'Chọn ngày trước, sau đó chọn giờ và nhân viên.'}</p>
 
                     <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn ngày</div>
                     <input type="date" id="changeDatePicker" class="form-control mb-4" min="${minDate}" style="max-width:220px;">
 
+                    ${isHotelBooking ? '' : `
                     <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn giờ</div>
                     <div class="slot-time-grid mb-3" id="changeSlotGrid">${slotsHtml}</div>
                     <div id="holdBanner" class="d-none mb-3" style="font-size:0.82rem;padding:8px 12px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;color:#7a5c00;">
@@ -514,6 +517,7 @@ function showChangeScheduleModal(user = null) {
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                         Đã chọn: <strong id="slotSelectedText"></strong>
                     </div>
+                    `}
 
                     <div class="mt-3">
                         <label class="form-label fw-semibold" style="font-size:0.88rem;">Ghi chú <span class="text-muted fw-normal">(tuỳ chọn)</span></label>
@@ -533,15 +537,16 @@ function showChangeScheduleModal(user = null) {
 
     let selectedDate = '';
     let selectedTime = null;
-    let selectedStaff = null;
+    let selectedStaff = isHotelBooking ? 'Bảo mẫu khách sạn' : null;
     let holdInterval = null;
 
     function clearHoldTimer() {
         if (holdInterval) { clearInterval(holdInterval); holdInterval = null; }
-        document.getElementById('holdBanner').classList.add('d-none');
+        document.getElementById('holdBanner')?.classList.add('d-none');
     }
 
     function startHoldTimer(slot) {
+        if (isHotelBooking) return;
         clearHoldTimer();
         let remaining = 15 * 60;
         const banner   = document.getElementById('holdBanner');
@@ -575,6 +580,7 @@ function showChangeScheduleModal(user = null) {
     modalEl.addEventListener('hidden.bs.modal', () => clearHoldTimer());
 
     function enableTimeAndStaff() {
+        if (isHotelBooking) return;
         modalEl.querySelectorAll('.slot-time-btn').forEach(b => {
             b.disabled = false;
             b.style.opacity = '';
@@ -592,64 +598,75 @@ function showChangeScheduleModal(user = null) {
         const infoEl    = document.getElementById('slotSelectedInfo');
         const textEl    = document.getElementById('slotSelectedText');
         const confirmBtn = document.getElementById('confirmChangeBtn');
-        if (selectedDate && selectedTime && selectedStaff) {
+        if (selectedDate && (isHotelBooking || (selectedTime && selectedStaff))) {
             const d = new Date(selectedDate + 'T00:00:00');
             const dateLabel = d.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
-            textEl.textContent = `${dateLabel} lúc ${selectedTime} • ${selectedStaff}`;
-            infoEl.classList.remove('d-none');
+            textEl.textContent = isHotelBooking ? `${dateLabel}` : `${dateLabel} lúc ${selectedTime} • ${selectedStaff}`;
+            infoEl?.classList.remove('d-none');
             confirmBtn.disabled = false;
         } else {
-            infoEl.classList.add('d-none');
+            infoEl?.classList.add('d-none');
             confirmBtn.disabled = true;
         }
     }
 
     document.getElementById('changeDatePicker').addEventListener('change', (e) => {
         selectedDate = e.target.value;
-        // Reset giờ khi đổi ngày
-        selectedTime = null;
-        clearHoldTimer();
-        modalEl.querySelectorAll('.slot-time-btn').forEach(b => b.classList.remove('active'));
-        // Mở khóa giờ + nhân viên
-        enableTimeAndStaff();
+        if (!isHotelBooking) {
+            // Reset giờ khi đổi ngày
+            selectedTime = null;
+            clearHoldTimer();
+            modalEl.querySelectorAll('.slot-time-btn').forEach(b => b.classList.remove('active'));
+            // Mở khóa giờ + nhân viên
+            enableTimeAndStaff();
+        }
         refresh();
     });
 
-    modalEl.querySelectorAll('.slot-time-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (!selectedDate) return;
-            modalEl.querySelectorAll('.slot-time-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            selectedTime = btn.dataset.time;
-            startHoldTimer(selectedTime);
-            refresh();
-        });
-    });
-
-    modalEl.querySelectorAll('.staff-card').forEach(card => {
-        card.addEventListener('click', () => {
-            if (!selectedDate) return;
-            modalEl.querySelectorAll('.staff-card').forEach(c => {
-                c.style.borderColor = '#e2e8f0';
-                c.style.background = '';
+    if (!isHotelBooking) {
+        modalEl.querySelectorAll('.slot-time-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!selectedDate) return;
+                modalEl.querySelectorAll('.slot-time-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedTime = btn.dataset.time;
+                startHoldTimer(selectedTime);
+                refresh();
             });
-            card.style.borderColor = 'var(--color-primary, #4caf50)';
-            card.style.background = 'var(--color-primary-light, #e8f5e9)';
-            selectedStaff = card.dataset.name;
-            refresh();
         });
-    });
+
+        modalEl.querySelectorAll('.staff-card').forEach(card => {
+            card.addEventListener('click', () => {
+                if (!selectedDate) return;
+                modalEl.querySelectorAll('.staff-card').forEach(c => {
+                    c.style.borderColor = '#e2e8f0';
+                    c.style.background = '';
+                });
+                card.style.borderColor = 'var(--color-primary, #4caf50)';
+                card.style.background = 'var(--color-primary-light, #e8f5e9)';
+                selectedStaff = card.dataset.name;
+                refresh();
+            });
+        });
+    }
 
     document.getElementById('confirmChangeBtn').addEventListener('click', () => {
-        if (!selectedDate || !selectedTime || !selectedStaff) return;
+        if (!selectedDate || (!isHotelBooking && (!selectedTime || !selectedStaff))) return;
         clearHoldTimer();
 
         const notes = document.getElementById('changeNotes').value.trim();
         currentBooking.date = selectedDate;
-        currentBooking.time = selectedTime;
-        currentBooking.timeStart = selectedTime;
-        currentBooking.timeEnd = '';
-        currentBooking.staff = selectedStaff;
+        if (isHotelBooking) {
+            currentBooking.time = '';
+            currentBooking.timeStart = '';
+            currentBooking.timeEnd = '';
+            currentBooking.staff = 'Bảo mẫu khách sạn';
+        } else {
+            currentBooking.time = selectedTime;
+            currentBooking.timeStart = selectedTime;
+            currentBooking.timeEnd = '';
+            currentBooking.staff = selectedStaff;
+        }
         currentBooking.changeCount = (currentBooking.changeCount || 0) + 1;
         if (notes) currentBooking.note = `Yêu cầu đổi lịch: ${notes}`;
 
@@ -916,6 +933,11 @@ function resolveBookingStatus(booking) {
         return rawStatus;
     }
 
+    const serviceCategory = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase();
+    if (serviceCategory === 'hotel') {
+        return rawStatus === 'confirmed' ? 'confirmed' : 'confirmed';
+    }
+
     const scheduledAt = getBookingScheduledAt(booking);
     if (!scheduledAt) {
         return rawStatus === 'confirmed' ? 'accepted' : 'confirmed';
@@ -932,7 +954,8 @@ function resolveBookingStatus(booking) {
 
 function getBookingScheduledAt(booking) {
     if (!booking?.date) return null;
-    const time = booking.timeStart || booking.time || '00:00';
+    const serviceCategory = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase();
+    const time = booking.timeStart || booking.time || (serviceCategory === 'hotel' ? '12:00' : '09:00');
     const scheduled = new Date(`${booking.date}T${time}:00`);
     return Number.isNaN(scheduled.getTime()) ? null : scheduled;
 }

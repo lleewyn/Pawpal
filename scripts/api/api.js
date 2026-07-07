@@ -642,6 +642,20 @@ export const API = {
             const { data: newOrder, error: orderError } = await db.from('sales_order').insert(salesOrder).select('id').single();
             if (orderError) throw orderError;
 
+            // 1.5. Map payment to payment table
+            const paymentMethodStr = String(orderData.payment?.method || 'cod').toUpperCase();
+            const paymentCode = 'PAY-' + Date.now();
+            const paymentInsert = {
+                payment_code: paymentCode,
+                order_id: newOrder.id,
+                payment_type: 'PRODUCT',
+                payment_method: paymentMethodStr,
+                amount: orderData.pricing?.grandTotal || orderData.pricing?.total || 0,
+                transaction_status: (orderData.payment?.status || 'PENDING').toUpperCase()
+            };
+            const { error: payError } = await db.from('payment').insert(paymentInsert);
+            if (payError) console.error('[API] Failed to insert payment:', payError);
+
             // 2. Map items to sales_order_detail
             if (orderData.items && orderData.items.length > 0) {
                 const orderDetails = orderData.items.map(item => ({
@@ -684,6 +698,13 @@ export const API = {
 
             const { data, error } = await query.select('id, order_code, payment_status').maybeSingle();
             if (error) throw error;
+
+            if (data && data.id) {
+                await db.from('payment').update({
+                    transaction_status: normalizedStatus,
+                    updated_at: new Date().toISOString()
+                }).eq('order_id', data.id);
+            }
 
             return { success: true, data };
         } catch (err) {

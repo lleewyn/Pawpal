@@ -288,11 +288,15 @@ function validateVoucher(code, showMessage = true) {
     if (voucher.applicableFor && !voucher.applicableFor.includes('all')) {
         const cartCategories = checkoutState.cart.map(item => {
             const product = checkoutState.products.find(p => String(p.id) === String(item.id));
-            const rawCat = product ? String(product.category || item.category || '').toLowerCase().trim() : '';
-            if (rawCat === 'thực phẩm' || rawCat === 'thuc pham' || rawCat === 'thức ăn ướt' || rawCat === 'thức ăn khô') return 'food';
-            if (rawCat === 'đồ chơi' || rawCat === 'do choi') return 'toys';
-            if (rawCat === 'vệ sinh' || rawCat === 've sinh') return 'hygiene';
-            return product ? product.category : null;
+            const rawCat = product ? String(product.categoryName || product.category || item.categoryName || item.category || '').toLowerCase().trim() : '';
+            
+            // Cố gắng ánh xạ về category cơ bản
+            if (rawCat.includes('thực phẩm') || rawCat.includes('thuc pham') || rawCat.includes('thức ăn') || rawCat.includes('thuc an') || rawCat.includes('food') || rawCat.includes('pate') || rawCat.includes('hạt')) return 'food';
+            if (rawCat.includes('đồ chơi') || rawCat.includes('do choi') || rawCat.includes('toy')) return 'toys';
+            if (rawCat.includes('vệ sinh') || rawCat.includes('ve sinh') || rawCat.includes('cát') || rawCat.includes('cat')) return 'hygiene';
+            if (rawCat.includes('chăm sóc') || rawCat.includes('cham soc') || rawCat.includes('care')) return 'care';
+            
+            return product ? (product.categoryName || product.category) : null;
         }).filter(Boolean);
 
         const hasMatchingCategory = cartCategories.some(category => voucher.applicableFor.includes(category));
@@ -374,9 +378,14 @@ function renderVoucherHints() {
         const label = minimum > 0
             ? `Áp dụng cho đơn hàng từ ${formatCurrency(minimum)}`
             : 'Áp dụng cho mọi đơn hàng';
-        const discountText = voucher.type === 'percentage'
+        
+        let discountText = voucher.type === 'percentage'
             ? `-${voucher.value}%`
             : `-${formatCurrency(voucher.value)}`;
+            
+        if (voucher.type === 'percentage' && voucher.maxDiscount) {
+            discountText += ` (Tối đa ${formatCurrency(voucher.maxDiscount)})`;
+        }
 
         return `
             <button type="button"
@@ -1257,6 +1266,11 @@ function verifyPaymentSimulation() {
                 finalizePendingPointsUsage();
                 localStorage.setItem('pawpal_current_order', JSON.stringify(qrPaymentState.orderData));
                 updatePersistedOrderPaymentStatus(qrPaymentState.orderData.orderId, 'paid');
+                
+                if (window.API && window.API.updateOrderPaymentStatus) {
+                    window.API.updateOrderPaymentStatus(qrPaymentState.orderData.orderId, 'PAID').catch(err => console.error('Failed to update DB payment status', err));
+                }
+                
                 statusMsg.className = 'payment-status-message show success';
                 statusMsg.innerHTML = ' Thanh toán thành công!';
                 

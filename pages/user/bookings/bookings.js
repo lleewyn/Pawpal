@@ -407,6 +407,11 @@ function resolveBookingStatus(booking) {
         return rawStatus;
     }
 
+    const serviceCategory = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase();
+    if (serviceCategory === 'hotel') {
+        return rawStatus === 'confirmed' ? 'confirmed' : 'confirmed';
+    }
+
     const scheduledAt = getBookingScheduledAt(booking);
     if (!scheduledAt) {
         return rawStatus === 'confirmed' ? 'accepted' : 'confirmed';
@@ -423,7 +428,8 @@ function resolveBookingStatus(booking) {
 
 function getBookingScheduledAt(booking) {
     if (!booking?.date) return null;
-    const time = booking.time || booking.timeStart || '00:00';
+    const serviceCategory = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase();
+    const time = booking.time || booking.timeStart || (serviceCategory === 'hotel' ? '12:00' : '09:00');
     const scheduled = new Date(`${booking.date}T${time}:00`);
     return Number.isNaN(scheduled.getTime()) ? null : scheduled;
 }

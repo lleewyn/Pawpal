@@ -1087,7 +1087,13 @@ function initAuthForms() {
             const phone = document.getElementById('setupPasswordSection').dataset.phone;
             const token = document.getElementById('setupPasswordSection').dataset.token;
             const users = getUsers();
-            const idx   = users.findIndex(u => u.phone === phone);
+            
+            // Prioritize finding the temporary account for this phone
+            let idx = users.findIndex(u => u.phone === phone && u.is_temporary);
+            if (idx === -1) {
+                idx = users.findIndex(u => u.phone === phone);
+            }
+            
             if (idx !== -1) {
                 const localUser = { ...users[idx] };
                 const supabaseUser = await supabaseResolveUserByPhone(phone);
@@ -1302,10 +1308,19 @@ function initAuthForms() {
             e.preventDefault();
             const phone   = forgotPhone.value.trim();
             const users   = getUsers();
-            const userIdx = users.findIndex(u => u.phone === phone);
+            const isGuest = window.isGuestActivationFlow === true;
+            
+            // If it's a guest activation flow, prioritize finding the temporary account
+            let userIdx = -1;
+            if (isGuest) {
+                userIdx = users.findIndex(u => u.phone === phone && u.is_temporary);
+            }
+            if (userIdx === -1) {
+                userIdx = users.findIndex(u => u.phone === phone);
+            }
+            
             if (userIdx === -1) return;
 
-            const isGuest = window.isGuestActivationFlow === true;
             const localUser = { ...users[userIdx] };
             const supabaseUser = await supabaseResolveUserByPhone(phone);
             const updatedUser = ensureUserId({

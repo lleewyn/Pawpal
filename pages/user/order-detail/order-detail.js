@@ -35,7 +35,8 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
                     id, quantity, unit_price, discount_amount, subtotal,
                     product ( id, product_name, image_urls, sku )
                 ),
-                customer_address ( receiver_name, receiver_phone, province, street_address )
+                customer_address ( receiver_name, receiver_phone, province, street_address ),
+                payment ( payment_method, transaction_status )
             `)
             .eq('customer_id', customerId)
             .limit(1);
@@ -63,6 +64,10 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
         const localPaymentStatus = String(existing?.paymentStatus || existing?.payment?.status || '').toLowerCase();
         const remotePaymentStatus = String(o.payment_status || '').toLowerCase();
         const paymentStatus = localPaymentStatus === 'paid' ? 'paid' : remotePaymentStatus;
+        
+        const dbPayment = o.payment && o.payment.length > 0 ? o.payment[0] : null;
+        const dbPaymentMethod = dbPayment?.payment_method?.toLowerCase() || 'cod';
+        const paymentMethod = existing?.paymentMethod || dbPaymentMethod;
 
         const order = {
             id:          o.order_code || o.id,
@@ -72,7 +77,7 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
             status:      mapOrderStatus(o.order_status),
             orderStatus: o.order_status,
             paymentStatus,
-            paymentMethod: existing?.paymentMethod || local?.paymentMethod || 'cod',
+            paymentMethod: paymentMethod,
             products,
             pricing: {
                 subtotal:    o.subtotal,
@@ -528,55 +533,6 @@ function renderActions() {
                 </button>
             `);
             break;
-            
-        case 'cancelled': {
-            // Đơn đã hủy — hiển thị trạng thái hoàn tiền (nếu có) và cho phép đặt lại
-            const isPaidCancelled = currentOrder.paymentStatus === 'paid'
-                                 || currentOrder.payment?.status === 'paid';
-            const isRefunded      = currentOrder.paymentStatus === 'refunded';
-            const isPendingRefund = currentOrder.paymentStatus === 'pending_refund';
-            const isCODCancelled  = currentOrder.paymentMethod === 'cod';
-
-            if (isRefunded) {
-                statusNotes.push(`
-                    <span class="order-reviewed-note order-inline-note" style="color:var(--color-success);">
-                        Đã hoàn tiền
-                    </span>
-                `);
-            } else if (isPendingRefund || isPaidCancelled && !isCODCancelled) {
-                statusNotes.push(`
-                    <span class="order-warning-text order-inline-note" title="Yêu cầu hoàn tiền đã được ghi nhận, đang xử lý.">
-                        Đang xử lý hoàn tiền
-                    </span>
-                `);
-            }
-
-            buttons.push(`
-                <button class="btn-view-detail border-0" onclick="reorder('${currentOrder.id}')">
-                    Đặt lại
-                </button>
-            `);
-            break;
-        }
-
-        case 'return_pending': {
-            // Đơn đang chờ duyệt đổi trả — dẫn đến trang chi tiết RMA
-            const rmaList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
-            const rma = rmaList.find(r => String(r.orderId) === String(currentOrder.id));
-            if (rma) {
-                buttons.push(`
-                    <a href="/pages/user/return-detail/return-detail.html?orderId=${currentOrder.id}" class="btn-track-order text-decoration-none">
-                        Theo dõi đổi trả
-                    </a>
-                `);
-            }
-            buttons.push(`
-                <button class="btn-green-outline" onclick="contactHotline()">
-                    Liên hệ hotline
-                </button>
-            `);
-            break;
-        }
 
         case 'completed': {
             // 1. Kiểm tra cửa sổ 7 ngày từ ngày hoàn thành
@@ -621,7 +577,7 @@ function renderActions() {
                     </button>
                 `);
             }
-
+            
             // 4. Review button — "Xem đánh giá" nếu đã submit batch
             if (orderAlreadyReviewed) {
                 buttons.push(`
@@ -635,6 +591,55 @@ function renderActions() {
             buttons.push(`
                 <button class="btn-view-detail border-0" onclick="reorder('${currentOrder.id}')">
                     Mua lại
+                </button>
+            `);
+            break;
+        }
+
+        case 'cancelled': {
+            // Đơn đã hủy — hiển thị trạng thái hoàn tiền (nếu có) và cho phép đặt lại
+            const isPaidCancelled = currentOrder.paymentStatus === 'paid'
+                                 || currentOrder.payment?.status === 'paid';
+            const isRefunded      = currentOrder.paymentStatus === 'refunded';
+            const isPendingRefund = currentOrder.paymentStatus === 'pending_refund';
+            const isCODCancelled  = currentOrder.paymentMethod === 'cod';
+
+            if (isRefunded) {
+                statusNotes.push(`
+                    <span class="order-reviewed-note order-inline-note" style="color:var(--color-success);">
+                        Đã hoàn tiền
+                    </span>
+                `);
+            } else if (isPendingRefund || isPaidCancelled && !isCODCancelled) {
+                statusNotes.push(`
+                    <span class="order-warning-text order-inline-note" title="Yêu cầu hoàn tiền đã được ghi nhận, đang xử lý.">
+                        Đang xử lý hoàn tiền
+                    </span>
+                `);
+            }
+
+            buttons.push(`
+                <button class="btn-view-detail border-0" onclick="reorder('${currentOrder.id}')">
+                    Đặt lại
+                </button>
+            `);
+            break;
+        }
+
+        case 'return_pending': {
+            // Đơn đang chờ duyệt đổi trả — dẫn đến trang chi tiết RMA
+            const rmaList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
+            const rma = rmaList.find(r => String(r.orderId) === String(currentOrder.id));
+            if (rma) {
+                buttons.push(`
+                    <a href="/pages/user/return-detail/return-detail.html?orderId=${currentOrder.id}" class="btn-track-order text-decoration-none">
+                        Theo dõi đổi trả
+                    </a>
+                `);
+            }
+            buttons.push(`
+                <button class="btn-green-outline" onclick="contactHotline()">
+                    Liên hệ hotline
                 </button>
             `);
             break;

@@ -565,15 +565,27 @@ window.cancelOrder = cancelOrder;
 function confirmOrderReceipt(orderId) {
     const order = ordersState.allOrders.find((item) => String(item.id) === String(orderId));
     if (!order) {
-        showOrdersToast(`KhÃ´ng tÃ¬m tháº¥y Ä‘Æ¡n hÃ ng ${orderId} Ä‘á»ƒ xÃ¡c nháº­n.`, 'error');
+        showOrdersToast(`Không tìm thấy đơn hàng ${orderId} để xác nhận.`, 'error');
         return;
     }
 
+    const nowISO = new Date().toISOString();
+    const currentTimeline = Array.isArray(order.timeline) ? order.timeline : [];
+    
     const updatedOrder = {
         ...order,
         status: 'completed',
         orderStatus: 'COMPLETED',
-        updatedAt: new Date().toISOString(),
+        updatedAt: nowISO,
+        timeline: [
+            ...currentTimeline,
+            {
+                status: 'completed',
+                timestamp: nowISO,
+                title: 'Hoàn thành',
+                description: 'Khách hàng xác nhận đã nhận hàng'
+            }
+        ]
     };
 
     saveOrderToLocalStorage(updatedOrder);
@@ -589,7 +601,7 @@ function confirmOrderReceipt(orderId) {
     updateStats();
     updateTabCounts();
 
-    showOrdersToast(`ÄÃ£ xÃ¡c nháº­n Ä‘Æ¡n hÃ ng ${orderId} thÃ nh cÃ´ng.`, 'success');
+    showOrdersToast(`Đã xác nhận đơn hàng ${orderId} thành công.`, 'success');
 }
 
 window.confirmOrderReceipt = confirmOrderReceipt;
