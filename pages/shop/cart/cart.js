@@ -68,6 +68,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         return normalizeId(a) === normalizeId(b);
     }
 
+    function expandVoucherCategories(categories) {
+        const source = Array.isArray(categories) ? categories : [categories];
+        const expanded = new Set();
+
+        source.filter(Boolean).forEach(category => {
+            expanded.add(category);
+            if (category === 'food') {
+                ['food-dry', 'food-wet', 'bones'].forEach(c => expanded.add(c));
+            } else if (category === 'care') {
+                ['health', 'grooming', 'hygiene'].forEach(c => expanded.add(c));
+            } else if (category === 'toys') {
+                ['toys', 'accessories', 'clothes', 'bowls'].forEach(c => expanded.add(c));
+            } else if (category === 'other') {
+                ['furniture', 'other'].forEach(c => expanded.add(c));
+            }
+        });
+
+        return Array.from(expanded);
+    }
+
     // Format tiền tệ Việt Nam
     function formatPrice(price) {
         return price.toLocaleString('vi-VN') + 'đ';
@@ -399,7 +419,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        if (discount > 0) {
+        if (appliedVoucher) {
             rowDiscount.classList.replace('d-none', 'd-flex');
             discountCodeLabel.textContent = appliedVoucher.code;
             cartDiscount.textContent = `-${formatPrice(discount)}`;
@@ -606,7 +626,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const prod = products.find(p => isSameCartItemId(p.id, item.id));
                 return prod ? prod.category : (item.category || null);
             }).filter(Boolean);
-            const hasMatchingCategory = cartCategories.some(category => voucher.applicableFor.includes(category));
+            const allowedCategories = expandVoucherCategories(voucher.applicableFor);
+            const hasMatchingCategory = cartCategories.some(category => allowedCategories.includes(category));
             if (!hasMatchingCategory) {
                 return { valid: false, message: 'Mã giảm giá không áp dụng cho sản phẩm trong giỏ hàng hiện tại.' };
             }

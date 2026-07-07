@@ -52,7 +52,7 @@ function ensureSupportReady(callback) {
                         const isPriorityHigh = ticket.priority === 'Cao';
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td><span class="ticket-id-pill">#${ticket.id}</span></td>
+                            <td><span class="ticket-id-pill">#${ticket.id.substring(0,8)}</span></td>
                             <td class="ticket-title-cell">${ticket.title}</td>
                             <td class="text-center"><span class="badge-status ${statusClass}">${statusLabel}</span></td>
                             <td class="text-center"><span class="badge-priority ${isPriorityHigh ? 'badge-priority-high' : 'badge-priority-normal'}">${ticket.priority}</span></td>
@@ -77,7 +77,7 @@ function ensureSupportReady(callback) {
                     if (!ticket) return;
 
                     activeTicketId = ticketId;
-                    detailTicketTitle.textContent = `#${ticket.id} - ${ticket.title}`;
+                    detailTicketTitle.textContent = `#${ticket.id.substring(0,8)} - ${ticket.title}`;
 
                     let statusLabel = 'Chờ xử lý';
                     let statusClass = 'badge-status-pending';
