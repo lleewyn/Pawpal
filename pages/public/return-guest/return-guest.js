@@ -248,10 +248,10 @@ function mapSupabaseOrderRow(row) {
         paymentMethod: 'cod',
         products,
         pricing: {
-            subtotal: row.subtotal,
-            shippingFee: row.shipping_fee,
-            discount: row.discount_amount,
-            total: row.total_amount,
+            subtotal: row.subtotal || products.reduce((acc, p) => acc + p.total, 0),
+            shippingFee: row.shipping_fee || 0,
+            discount: row.discount_amount || 0,
+            total: row.total_amount || (products.reduce((acc, p) => acc + p.total, 0) + (row.shipping_fee || 0) - (row.discount_amount || 0)),
         },
         delivery: {
             name: addr.receiver_name || '',
