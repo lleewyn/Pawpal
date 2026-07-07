@@ -1250,6 +1250,25 @@ function initAuthForms() {
                 users[userIdx].points = (users[userIdx].points || 0) + 50;
             }
 
+            // Đồng bộ lên Supabase nếu có
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (db) {
+                try {
+                    const updateData = { password_hash: forgotNewPassword.value };
+                    if (isGuest) updateData.account_status = 'ACTIVE';
+                    
+                    const { error: dbErr } = await db
+                        .from('customer')
+                        .update(updateData)
+                        .eq('phone_main', phone);
+                        
+                    if (dbErr) console.warn('[Login] Failed to update password on Supabase:', dbErr.message);
+                    else console.log(`[Login] Supabase updated successfully for ${phone}`);
+                } catch (err) {
+                    console.error('[Login] Supabase update exception:', err);
+                }
+            }
+
             saveUsers(users);
 
             if (isGuest) {
