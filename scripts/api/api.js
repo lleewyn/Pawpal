@@ -722,19 +722,15 @@ export const API = {
     },
 
     async getVouchers() {
-        if (!API.USE_BACKEND) {
-            try {
-                const res = await fetch('/data/vouchers.json');
-                return await res.json();
-            } catch (err) {
-                console.error('[API] Error loading mock vouchers:', err);
-                return [];
-            }
-        }
-        
         try {
-            const db = window.SupabaseClient.getDB();
-            if (!db) throw new Error('Supabase Client not initialized');
+            const db = window.SupabaseClient ? window.SupabaseClient.getDB() : null;
+            if (!db) {
+                console.warn('[API] Supabase Client not initialized, falling back to mock vouchers');
+                const res = await fetch('/data/vouchers.json');
+                const mockVouchers = await res.json();
+                console.log('[API] Đã tải danh sách voucher từ file tĩnh (Mock):', mockVouchers);
+                return mockVouchers;
+            }
             
             const { data, error } = await db.from('voucher')
                 .select('*')
