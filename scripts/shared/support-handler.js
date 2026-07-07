@@ -243,12 +243,149 @@
     }
 
     // Xuất ra toàn cục
-    window.PawPalSupport = {
+    
+    // --- BẮT ĐẦU KẾT NỐI SUPABASE ---
+    let cachedTickets = []; // RAM cache to support getTickets synchronously for old UI
+
+    async function loadTickets() {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return cachedTickets;
+        
+        // Fetch tickets
+        const { data: ticketsData, error: tErr } = await db
+            .from('support_ticket')
+            .select('*')
+            .order('created_at', { ascending: false });
+            
+        if (tErr) {
+            console.error('[Support] Lỗi load tickets', tErr);
+            return cachedTickets;
+        }
+        
+        // Fetch messages
+        const { data: msgsData, error: mErr } = await db
+            .from('support_ticket_message')
+            .select('*')
+            .order('created_at', { ascending: true });
+            
+        if (mErr) console.error('[Support] Lỗi load messages', mErr);
+        
+        const msgsByTicket = {};
+        if (msgsData) {
+            msgsData.forEach(m => {
+                if (!msgsByTicket[m.ticket_id]) msgsByTicket[m.ticket_id] = [];
+                msgsByTicket[m.ticket_id].push({
+                    sender: m.sender_type,
+                    agent: m.agent_name,
+                    text: m.content,
+                    time: m.created_at
+                });
+            });
+        }
+        
+        cachedTickets = ticketsData.map(t => ({
+            id: t.id,
+            title: t.title,
+            type: t.type,
+            status: t.status,
+            priority: t.priority,
+            rating: t.rating,
+            ratingComment: t.rating_comment,
+            messages: msgsByTicket[t.id] || []
+        }));
+        
+        // Dispatch update
+        document.dispatchEvent(new CustomEvent('tickets_updated'));
+        return cachedTickets;
+    }
+
+    // Sync getter for old UI
+    function sbGetTickets() {
+        return cachedTickets;
+    }
+
+    async function sbCreateTicket(title, type, content, files = []) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return null;
+        
+        const priority = detectPriority(title, content);
+        
+        // Insert ticket
+        const { data: tData, error: tErr } = await db.from('support_ticket').insert([{
+            title, type, priority, status: 'pending'
+        }]).select();
+        
+        if (tErr || !tData || !tData.length) {
+            console.error('Lỗi tạo ticket:', tErr);
+            return null;
+        }
+        
+        const newTicketId = tData[0].id;
+        
+        // Insert first message
+        await db.from('support_ticket_message').insert([{
+            ticket_id: newTicketId,
+            sender_type: 'user',
+            content: content
+        }]);
+        
+        await loadTickets();
+        
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
+        if (!currentUser || currentUser.is_temporary) {
+            console.log(`[SMS CSKH] Gui tokenized link check ticket cho sdt: "pawpal.vn/support-guest?token=${newTicketId}"`);
+        }
+        
+        return tData[0];
+    }
+
+    async function sbSendTicketReply(ticketId, text) {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return;
+        
+        await db.from('support_ticket_message').insert([{
+            ticket_id: ticketId,
+            sender_type: 'user',
+            content: text
+        }]);
+        
+        await db.from('support_ticket').update({ status: 'processing', updated_at: new Date().toISOString() }).eq('id', ticketId);
+        
+        await loadTickets();
+        
+        // Simulate response
+        setTimeout(async () => {
+            await db.from('support_ticket_message').insert([{
+                ticket_id: ticketId,
+                sender_type: 'cskh',
+                agent_name: 'Nguyễn Văn B',
+                content: 'PawPal đã nhận được phản hồi từ bạn rồi ạ. Chúng tôi đang giải quyết gấp nhé!'
+            }]);
+            await loadTickets();
+        }, 2000);
+    }
+
+    async function sbCloseAndRateTicket(ticketId, rating, comment = '') {
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return;
+        
+        await db.from('support_ticket').update({
+            status: 'completed',
+            rating: rating,
+            rating_comment: comment,
+            updated_at: new Date().toISOString()
+        }).eq('id', ticketId);
+        
+        await loadTickets();
+    }
+    // --- KẾT THÚC KẾT NỐI SUPABASE ---
+window.PawPalSupport = {
         faq: faqData,
-        getTickets: getTickets,
-        createTicket: createTicket,
-        sendTicketReply: sendTicketReply,
-        closeAndRateTicket: closeAndRateTicket,
+        getTickets: sbGetTickets,
+        loadTickets: loadTickets,
+        createTicket: sbCreateTicket,
+        sendTicketReply: sbSendTicketReply,
+        closeAndRateTicket: sbCloseAndRateTicket,
         processChatInput: processChatInput
     };
     window.PawPalSupportReady = true;

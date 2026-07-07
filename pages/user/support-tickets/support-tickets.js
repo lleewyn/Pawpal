@@ -7,7 +7,7 @@ function ensureSupportReady(callback) {
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            ensureSupportReady(() => {
+            ensureSupportReady(async () => {
                 let activeTicketId = null;
                 let currentSelectedRating = 5;
 
@@ -189,7 +189,8 @@ function ensureSupportReady(callback) {
                     });
                 }
 
-                document.addEventListener('tickets_updated', () => {
+                document.addEventListener('tickets_updated', async () => {
+                    await window.PawPalSupport.loadTickets();
                     renderTable();
                     if (activeTicketId) {
                         showTicketDetail(activeTicketId);
@@ -197,13 +198,12 @@ function ensureSupportReady(callback) {
                 });
 
                 if (createTicketForm) {
-                    createTicketForm.addEventListener('submit', (e) => {
+                    createTicketForm.addEventListener('submit', async (e) => {
                         e.preventDefault();
-
                         const title = document.getElementById('ticketTitle').value.trim();
                         const type = document.getElementById('ticketType').value;
                         const content = document.getElementById('ticketContent').value.trim();
-
+                        
                         if (!title || !type || !content) {
                             alert('Vui lòng điền đầy đủ các trường bắt buộc.');
                             return;
@@ -219,8 +219,20 @@ function ensureSupportReady(callback) {
                             files.push(file.name);
                         }
 
-                        window.PawPalSupport.createTicket(title, type, content, files);
-                        alert('Phiếu hỗ trợ đã được tạo thành công!');
+                        const btn = createTicketForm.querySelector('button[type="submit"]');
+                        if (btn) {
+                            btn.disabled = true;
+                            btn.innerHTML = 'Đang gửi...';
+                        }
+
+                        // Gọi Supabase
+                        await window.PawPalSupport.createTicket(title, type, content, files);
+                        
+                        if (btn) {
+                            btn.innerHTML = 'Gửi thành công!';
+                        }
+                        
+                        alert('Phiếu hỗ trợ đã được tạo thành công! Bạn sẽ được chuyển về trang quản lý.');
 
                         const modalEl = document.getElementById('createTicketModal');
                         if (modalEl) {
@@ -229,10 +241,11 @@ function ensureSupportReady(callback) {
                         }
 
                         createTicketForm.reset();
-                        window.location.href = 'support-tickets.html';
+                        window.location.href = '../support-tickets/support-tickets.html';
                     });
                 }
 
+                await window.PawPalSupport.loadTickets();
                 renderTable();
             });
         });
