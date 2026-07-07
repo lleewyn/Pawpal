@@ -43,7 +43,7 @@ async function initBlogDetail() {
         `;
 
         document.getElementById('blog-hero-cover').innerHTML = `
-            <img src="${blog.thumbnail}" alt="${blog.title}" class="img-fluid rounded-4 shadow-sm w-100 post-meta-avatar">
+            <img src="${blog.thumbnail}" alt="${blog.title}" class="img-fluid rounded-4 shadow-sm w-100">
         `;
 
         const contentEl = document.getElementById('blog-content');
@@ -61,12 +61,7 @@ async function initBlogDetail() {
             <li class="breadcrumb-item active" aria-current="page">${blog.title}</li>
         `;
 
-        // Update Supabase view_count implicitly
-        if (window.SupabaseClient) {
-            window.SupabaseClient.rpc('increment_blog_view', { blog_id: blog.id }).then(() => {}).catch(e => {
-                // Ignore errors if rpc doesn't exist
-            });
-        }
+
 
         setupTOC(contentEl);
         setupShareBtns();
