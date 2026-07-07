@@ -635,8 +635,8 @@ export const API = {
                 payment_status: (orderData.payment?.status || 'PENDING').toUpperCase(),
                 subtotal: orderData.pricing?.subtotal || 0,
                 shipping_fee: orderData.pricing?.shippingFee || 0,
-                discount_amount: orderData.pricing?.discount || 0,
-                total_amount: orderData.pricing?.total || 0,
+                discount_amount: (orderData.pricing?.voucherDiscount || 0) + (orderData.pricing?.pointsDiscount || 0),
+                total_amount: orderData.pricing?.grandTotal || 0,
             };
 
             const { data: newOrder, error: orderError } = await db.from('sales_order').insert(salesOrder).select('id').single();
