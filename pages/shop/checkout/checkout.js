@@ -177,10 +177,21 @@ async function loadData() {
         const paymentResponse = await fetch('/data/payment-methods.json');
         checkoutState.paymentMethods = await paymentResponse.json();
         
-        // Load vouchers
-        const vouchersResponse = await fetch('/data/vouchers.json');
-        checkoutState.vouchers = await vouchersResponse.json();
+        await loadVouchers();
         
+    } catch (error) {
+        console.error('Error loading data:', error);
+    }
+}
+
+async function loadVouchers() {
+    try {
+        if (window.API && typeof window.API.getVouchers === 'function') {
+            checkoutState.vouchers = await window.API.getVouchers();
+        } else {
+            const vouchersResponse = await fetch('/data/vouchers.json');
+            checkoutState.vouchers = await vouchersResponse.json();
+        }
     } catch (error) {
         console.error('Error loading data:', error);
     }

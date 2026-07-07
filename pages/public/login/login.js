@@ -92,6 +92,62 @@ async function supabaseLogin(phone, password) {
     }
 }
 
+async function supabaseResolveUserByPhone(phone) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db || !phone) return null;
+
+    try {
+        const { data: customers, error } = await db
+            .from('customer')
+            .select(`
+                id,
+                email,
+                phone_main,
+                account_status,
+                password_hash,
+                customer_profile (
+                    full_name,
+                    gender,
+                    date_of_birth
+                ),
+                customer_membership (
+                    total_paw_points,
+                    membership_tier (
+                        tier_name,
+                        discount_percent
+                    )
+                )
+            `)
+            .eq('phone_main', phone)
+            .limit(1);
+
+        if (error || !customers || customers.length === 0) return null;
+
+        const c = customers[0];
+        const profile    = Array.isArray(c.customer_profile) ? (c.customer_profile[0] || {}) : (c.customer_profile || {});
+        const membership = Array.isArray(c.customer_membership) ? (c.customer_membership[0] || {}) : (c.customer_membership || {});
+        const tier       = membership.membership_tier || {};
+
+        return {
+            id:           c.id,
+            name:         String(profile.full_name || '').trim() || c.phone_main,
+            phone:        c.phone_main,
+            email:        c.email || '',
+            password:     c.password_hash || '',
+            role:         'customer',
+            is_temporary: c.account_status === 'INACTIVE',
+            points:       membership.total_paw_points || 0,
+            tier:         tier.tier_name || 'Đồng',
+            gender:       profile.gender || '',
+            dob:          profile.date_of_birth || '',
+            _source:      'supabase',
+        };
+    } catch (err) {
+        console.warn('[Login] supabaseResolveUserByPhone exception:', err);
+        return null;
+    }
+}
+
 function normalizePetSpecies(species) {
     const value = String(species || '').trim().toLowerCase();
     if (!value) return 'other';
@@ -1033,13 +1089,21 @@ function initAuthForms() {
             const users = getUsers();
             const idx   = users.findIndex(u => u.phone === phone);
             if (idx !== -1) {
-                users[idx].password    = setupPass.value;
-                users[idx].is_temporary = false;
-                users[idx].points      = (users[idx].points || 0) + 50;
+                const localUser = { ...users[idx] };
+                const supabaseUser = await supabaseResolveUserByPhone(phone);
+                const activatedUser = ensureUserId({
+                    ...(supabaseUser || localUser),
+                    ...localUser,
+                    password: setupPass.value,
+                    is_temporary: false,
+                    points: ((supabaseUser?.points ?? localUser.points) || 0) + 50,
+                    _source: supabaseUser ? 'supabase' : (localUser._source || 'local'),
+                });
+
+                users[idx] = activatedUser;
                 saveUsers(users);
-                ensureUserId(users[idx]);
-                setCurrentUser(users[idx]);
-                await migrateGuestPetsToMember(users[idx], phone);
+                setCurrentUser(activatedUser);
+                await migrateGuestPetsToMember(activatedUser, phone);
 
                 const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
                 localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens.filter(t => t.token !== token)));
@@ -1241,14 +1305,19 @@ function initAuthForms() {
             const userIdx = users.findIndex(u => u.phone === phone);
             if (userIdx === -1) return;
 
-            users[userIdx].password = forgotNewPassword.value;
-
-            // Chỉ dựa vào flag window.isGuestActivationFlow, không dùng is_temporary
             const isGuest = window.isGuestActivationFlow === true;
-            if (isGuest) {
-                users[userIdx].is_temporary = false;
-                users[userIdx].points = (users[userIdx].points || 0) + 50;
-            }
+            const localUser = { ...users[userIdx] };
+            const supabaseUser = await supabaseResolveUserByPhone(phone);
+            const updatedUser = ensureUserId({
+                ...(supabaseUser || localUser),
+                ...localUser,
+                password: forgotNewPassword.value,
+                is_temporary: isGuest ? false : Boolean(localUser.is_temporary),
+                points: isGuest ? ((supabaseUser?.points ?? localUser.points) || 0) + 50 : (localUser.points || 0),
+                _source: supabaseUser ? 'supabase' : (localUser._source || 'local'),
+            });
+
+            users[userIdx] = updatedUser;
 
             // Đồng bộ lên Supabase nếu có
             const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -1272,9 +1341,8 @@ function initAuthForms() {
             saveUsers(users);
 
             if (isGuest) {
-                setCurrentUser(users[userIdx]);
-                ensureUserId(users[userIdx]);
-                await migrateGuestPetsToMember(users[userIdx], phone);
+                setCurrentUser(updatedUser);
+                await migrateGuestPetsToMember(updatedUser, phone);
                 sessionStorage.setItem('guestVerifiedPhone', phone);
                 window.isGuestActivationFlow = false;
                 showToast('success', 'Kích hoạt thành công! Bạn nhận 50 Paw Points chào mừng 🎉', 3000);
@@ -1283,10 +1351,9 @@ function initAuthForms() {
             }
 
             showToast('success', 'Đặt lại mật khẩu thành công! Đang chuyển hướng...', 2000);
-            ensureUserId(users[userIdx]);
-            setCurrentUser(users[userIdx]);
+            setCurrentUser(updatedUser);
             setTimeout(() => {
-                window.location.href = users[userIdx].role === 'admin'
+                window.location.href = updatedUser.role === 'admin'
                     ? '/pages/admin/index/index.html'
                     : '/pages/user/dashboard/dashboard.html';
             }, 2000);

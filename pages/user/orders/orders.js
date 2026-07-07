@@ -99,7 +99,7 @@ async function syncOrdersFromSupabase(currentUser) {
 function mapOrderStatus(status) {
     return {
         'PENDING':   'placed',
-        'CONFIRMED': 'confirmed',
+        'CONFIRMED': 'preparing',
         'PACKING':   'preparing',
         'PREPARING': 'preparing',
         'SHIPPING':  'shipping',
@@ -577,6 +577,11 @@ function confirmOrderReceipt(orderId) {
     };
 
     saveOrderToLocalStorage(updatedOrder);
+    if (window.API && typeof window.API.updateOrderStatus === 'function') {
+        window.API.updateOrderStatus(updatedOrder.id, 'COMPLETED').catch((err) => {
+            console.warn('[Orders] Failed to sync completed status:', err);
+        });
+    }
     ordersState.allOrders = ordersState.allOrders.map((item) =>
         String(item.id) === String(orderId) ? updatedOrder : item
     );
@@ -814,6 +819,7 @@ function getStatusLabel(status) {
         placed:          'Chờ xử lý',
         pending:         'Chờ thanh toán',
         pending_payment: 'Chờ thanh toán',
+        confirmed:       'Đang chuẩn bị',
         preparing:       'Đang chuẩn bị',
         shipping:        'Đang giao',
         delivered:       'Đã giao hàng',
@@ -828,6 +834,7 @@ function getStatusLabel(status) {
 
 function normalizeOrderStatus(status) {
     if (status === 'pending') return 'pending_payment';
+    if (status === 'confirmed') return 'preparing';
     // return_pending là trạng thái riêng — KHÔNG map về pending_payment
     return status;
 }

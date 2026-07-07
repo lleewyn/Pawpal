@@ -690,6 +690,77 @@ export const API = {
             console.error('[API] updateOrderPaymentStatus failed:', err);
             return { success: false, error: err };
         }
+    },
+
+    async updateOrderStatus(orderId, orderStatus) {
+        const db = window.SupabaseClient;
+        if (!db || !orderId) {
+            return { success: false, error: 'No Supabase connection' };
+        }
+
+        try {
+            const normalizedStatus = String(orderStatus || '').toUpperCase();
+            const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+
+            let query = db.from('sales_order').update({
+                order_status: normalizedStatus,
+                updated_at: new Date().toISOString()
+            });
+
+            query = isUUID
+                ? query.eq('id', orderId)
+                : query.eq('order_code', orderId);
+
+            const { data, error } = await query.select('id, order_code, order_status').maybeSingle();
+            if (error) throw error;
+
+            return { success: true, data };
+        } catch (err) {
+            console.error('[API] updateOrderStatus failed:', err);
+            return { success: false, error: err };
+        }
+    },
+
+    async getVouchers() {
+        if (!API.USE_BACKEND) {
+            try {
+                const res = await fetch('/data/vouchers.json');
+                return await res.json();
+            } catch (err) {
+                console.error('[API] Error loading mock vouchers:', err);
+                return [];
+            }
+        }
+        
+        try {
+            const db = window.SupabaseClient.getDB();
+            if (!db) throw new Error('Supabase Client not initialized');
+            
+            const { data, error } = await db.from('voucher')
+                .select('*')
+                .eq('is_active', true);
+                
+            if (error) throw error;
+            
+            // Map db columns to frontend properties
+            return (data || []).map(v => ({
+                code: v.voucher_code,
+                type: v.type || 'percentage',
+                value: v.discount_value || 0,
+                minOrderValue: v.minimum_order_amount || 0,
+                maxDiscount: v.max_discount,
+                validFrom: v.start_date,
+                validUntil: v.end_date,
+                usageCount: v.usage_count || 0,
+                maxUsage: v.max_usage,
+                applicableFor: v.applicable_for || ['all'],
+                description: v.description,
+                active: v.is_active
+            }));
+        } catch (err) {
+            console.error('[API] Error fetching vouchers from Supabase:', err);
+            return [];
+        }
     }
 };
 

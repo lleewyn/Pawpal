@@ -164,8 +164,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Tải danh sách voucher
             try {
-                const vouchersResponse = await fetch('/data/vouchers.json');
-                vouchers = await vouchersResponse.json();
+                if (window.API && typeof window.API.getVouchers === 'function') {
+                    vouchers = await window.API.getVouchers();
+                } else {
+                    const vouchersResponse = await fetch('/data/vouchers.json');
+                    vouchers = await vouchersResponse.json();
+                }
             } catch (err) {
                 console.error(' Lỗi tải danh sách voucher:', err);
             }

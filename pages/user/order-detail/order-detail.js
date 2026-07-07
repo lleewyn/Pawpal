@@ -258,7 +258,7 @@ function awardLoyaltyPoints(order) {
     if (grandTotal <= 0) return;
 
     // 10.000 VNĐ = 1 điểm (làm tròn xuống)
-    const pointsEarned = Math.floor(grandTotal / 10000);
+    const pointsEarned = Math.floor(grandTotal / 1000);
     if (pointsEarned <= 0) return;
 
     // Cập nhật users_db
@@ -839,6 +839,7 @@ function confirmReceived() {
         const pointsEarned = currentOrder.pointsEarned || 0;
 
         currentOrder.status = 'completed';
+        currentOrder.orderStatus = 'COMPLETED';
         const orderTimeline = Array.isArray(currentOrder.timeline) ? currentOrder.timeline : (currentOrder.timeline = []);
         orderTimeline.push({
             status: 'completed',
@@ -847,11 +848,16 @@ function confirmReceived() {
             description: 'Khách hàng xác nhận đã nhận hàng'
         });
         saveOrderToLocalStorage(currentOrder);
+        if (window.API && typeof window.API.updateOrderStatus === 'function') {
+            window.API.updateOrderStatus(currentOrder.id, 'COMPLETED').catch((err) => {
+                console.warn('[OrderDetail] Failed to sync completed status:', err);
+            });
+        }
 
         // Hiển thị toast Paw Points nếu có điểm được cộng
         if (pointsEarned > 0 && typeof showPawPalToast === 'function') {
             showPawPalToast(`Xác nhận thành công! Bạn vừa tích được +${pointsEarned} Paw Points.`, 'success');
-            setTimeout(() => location.reload(), 1800);
+            setTimeout(() => location.reload(), 1200);
         } else {
             location.reload();
         }
