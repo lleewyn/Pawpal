@@ -123,21 +123,35 @@ function normalizePetList(pets) {
     if (!Array.isArray(pets)) return [];
 
     const map = new Map();
+    const findExisting = (pet, sig) => {
+        if (pet._supabaseId && map.has(`db:${pet._supabaseId}`)) return map.get(`db:${pet._supabaseId}`);
+        if (pet.id && map.has(`id:${pet.id}`)) return map.get(`id:${pet.id}`);
+        if (map.has(`sig:${sig}`)) return map.get(`sig:${sig}`);
+        return null;
+    };
+
     pets.map(normalizePetAvatar).forEach((pet) => {
         if (!pet) return;
         const signature = getPetSignature(pet);
-        const key = `sig:${signature}`;
-        const existing = map.get(key);
-        if (!existing) {
-            map.set(key, { ...pet, __signature: signature });
-            return;
+        const existing = findExisting(pet, signature);
+        
+        let mergedPet = { ...pet, __signature: signature };
+        if (existing) {
+            mergedPet = {
+                ...existing,
+                ...pet, // later pet overrides earlier
+                __signature: signature,
+                _supabaseId: pet._supabaseId || existing._supabaseId || null,
+            };
+            // Xóa key cũ
+            if (existing._supabaseId) map.delete(`db:${existing._supabaseId}`);
+            if (existing.id) map.delete(`id:${existing.id}`);
+            map.delete(`sig:${existing.__signature}`);
         }
-        map.set(key, {
-            ...existing,
-            ...pet,
-            __signature: signature,
-            _supabaseId: pet._supabaseId || existing._supabaseId || null,
-        });
+        
+        if (mergedPet._supabaseId) map.set(`db:${mergedPet._supabaseId}`, mergedPet);
+        else if (mergedPet.id) map.set(`id:${mergedPet.id}`, mergedPet);
+        else map.set(`sig:${signature}`, mergedPet);
     });
 
     return Array.from(map.values()).map(({ __signature, ...pet }) => pet);
@@ -209,24 +223,41 @@ function mergePetLists(serverPets, localPets, targetUserId) {
         return false;
     };
 
+    const findExisting = (pet, sig) => {
+        if (pet._supabaseId && map.has(`db:${pet._supabaseId}`)) return map.get(`db:${pet._supabaseId}`);
+        if (pet.id && map.has(`id:${pet.id}`)) return map.get(`id:${pet.id}`);
+        if (map.has(`sig:${sig}`)) return map.get(`sig:${sig}`);
+        return null;
+    };
+
     const upsert = (pet, priority) => {
         if (!pet || !shouldKeep(pet)) return;
         const sig = signatureOf(pet);
-        const key = `sig:${sig}`;
-        const existing = map.get(key);
-        if (!existing) {
-            map.set(key, { ...pet, __priority: priority, __signature: sig });
-            return;
+        const existing = findExisting(pet, sig);
+        
+        let mergedPet = { ...pet, __priority: priority, __signature: sig };
+        
+        if (existing) {
+            if (priority >= (existing.__priority || 0)) {
+                mergedPet = {
+                    ...existing,
+                    ...pet,
+                    __priority: priority,
+                    __signature: sig,
+                    _supabaseId: pet._supabaseId || existing._supabaseId || null
+                };
+            } else {
+                mergedPet = existing;
+            }
+            // Xóa key cũ
+            if (existing._supabaseId) map.delete(`db:${existing._supabaseId}`);
+            if (existing.id) map.delete(`id:${existing.id}`);
+            map.delete(`sig:${existing.__signature}`);
         }
-        if (priority >= (existing.__priority || 0)) {
-            map.set(key, {
-                ...existing,
-                ...pet,
-                __priority: priority,
-                __signature: sig,
-                _supabaseId: pet._supabaseId || existing._supabaseId || null
-            });
-        }
+        
+        if (mergedPet._supabaseId) map.set(`db:${mergedPet._supabaseId}`, mergedPet);
+        else if (mergedPet.id) map.set(`id:${mergedPet.id}`, mergedPet);
+        else map.set(`sig:${sig}`, mergedPet);
     };
 
     serverPets.forEach(pet => upsert(pet, 1));
