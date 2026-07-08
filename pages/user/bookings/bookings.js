@@ -487,10 +487,12 @@ function getBookingScheduledAt(booking) {
 }
 
 export function formatPrice(price) {
+    const numPrice = Number(price);
+    if (!numPrice || numPrice <= 0) return 'Giá theo thực tế';
     return new Intl.NumberFormat('vi-VN', {
         style: 'currency',
         currency: 'VND'
-    }).format(Number(price) || 0);
+    }).format(numPrice);
 }
 
 window.BookingsData = {
