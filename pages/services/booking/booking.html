@@ -389,11 +389,12 @@
                                 <div class="summary-divider"></div>
                                 
                                 <!-- Voucher Input -->
-                                <div class="booking-voucher-section mb-3 mt-2">
+                                <div class="booking-voucher-section mb-3 mt-2 position-relative">
                                     <div class="d-flex gap-2 align-items-center">
-                                        <input type="text" id="bookingVoucherInput" placeholder="Mã giảm giá..." class="form-control form-control-sm">
-                                        <button type="button" id="btnApplyBookingVoucher" class="btn btn-secondary btn-sm px-3">Áp dụng</button>
+                                        <input type="text" id="bookingVoucherInput" placeholder="Mã giảm giá..." class="form-control form-control-sm" autocomplete="off">
+                                        <button type="button" id="btnApplyBookingVoucher" class="btn btn-secondary btn-sm px-3" style="white-space: nowrap;">Áp dụng</button>
                                     </div>
+                                    <div id="bookingVoucherDropdown" class="dropdown-menu shadow w-100" style="max-height: 250px; overflow-y: auto; display: none; position: absolute; top: 100%; left: 0; z-index: 1000; padding: 0;"></div>
                                     <div id="bookingVoucherMessage" class="mt-1" style="display:none; font-size: 0.8rem;"></div>
                                 </div>
 

@@ -13,6 +13,46 @@ let selectedService = null;
 let bookingVouchers = null;
 let appliedBookingVoucher = null;
 
+function renderVoucherDropdown() {
+    const dropdown = document.getElementById('bookingVoucherDropdown');
+    const input = document.getElementById('bookingVoucherInput');
+    if (!dropdown || !input) return;
+
+    if (!bookingVouchers || bookingVouchers.length === 0) {
+        dropdown.innerHTML = '<div class="px-3 py-2 text-muted small">Không có mã giảm giá nào</div>';
+        return;
+    }
+
+    const validVouchers = bookingVouchers.filter(v => 
+        v.active && (v.applicableFor.includes('all') || v.applicableFor.includes('services'))
+    );
+
+    if (validVouchers.length === 0) {
+        dropdown.innerHTML = '<div class="px-3 py-2 text-muted small">Không có mã phù hợp cho dịch vụ</div>';
+        return;
+    }
+
+    let html = '';
+    validVouchers.forEach(v => {
+        html += `
+            <div class="dropdown-item voucher-dropdown-item" style="cursor:pointer; padding: 10px 16px; border-bottom: 1px solid #eee; white-space: normal;" data-code="${v.code}">
+                <div class="fw-bold text-primary-custom" style="font-size: 0.95rem;">${v.code}</div>
+                <div class="text-muted" style="font-size: 0.85rem; margin-top: 2px;">${v.description}</div>
+                <div class="text-muted mt-1" style="font-size: 0.75rem; color: #e67e22 !important;">Đơn tối thiểu: ${v.minOrderValue.toLocaleString('vi-VN')}đ</div>
+            </div>
+        `;
+    });
+    dropdown.innerHTML = html;
+
+    dropdown.querySelectorAll('.voucher-dropdown-item').forEach(item => {
+        item.addEventListener('click', () => {
+            input.value = item.getAttribute('data-code');
+            dropdown.style.display = 'none';
+            handleApplyBookingVoucher();
+        });
+    });
+}
+
 async function handleApplyBookingVoucher() {
     const input = document.getElementById('bookingVoucherInput');
     const msg = document.getElementById('bookingVoucherMessage');
@@ -138,8 +178,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnApplyBookingVoucher) {
         btnApplyBookingVoucher.addEventListener('click', handleApplyBookingVoucher);
         const voucherInput = document.getElementById('bookingVoucherInput');
+        const voucherDropdown = document.getElementById('bookingVoucherDropdown');
+
         voucherInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleApplyBookingVoucher();
+        });
+
+        voucherInput.addEventListener('focus', async () => {
+            if (!bookingVouchers) {
+                try {
+                    const res = await fetch('/data/vouchers.json');
+                    if (res.ok) bookingVouchers = await res.json();
+                    else bookingVouchers = [];
+                } catch(e) {
+                    bookingVouchers = [];
+                }
+            }
+            renderVoucherDropdown();
+            voucherDropdown.style.display = 'block';
+        });
+
+        document.addEventListener('click', (e) => {
+            if (voucherInput && voucherDropdown) {
+                if (!voucherInput.contains(e.target) && !voucherDropdown.contains(e.target)) {
+                    voucherDropdown.style.display = 'none';
+                }
+            }
         });
     }
 
