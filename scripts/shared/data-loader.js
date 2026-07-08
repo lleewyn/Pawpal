@@ -455,6 +455,12 @@ async function loadServices() {
             if (svc.service_category === 'PET_HOTEL') category = 'hotel';
             else if (svc.service_category === 'PET_TAXI') category = 'taxi';
 
+            // Override bad DB data based on name or code
+            const name = String(svc.service_name || '').toLowerCase();
+            const code = String(svc.service_code || '').toUpperCase();
+            if (code.startsWith('HTL') || name.includes('phòng') || name.includes('lưu trú') || name.includes('daycare')) category = 'hotel';
+            if (code.startsWith('TAX') || name.includes('taxi')) category = 'taxi';
+
             // Find prices for this service
             const svcPrices = pricesData.filter(p => p.service_id === svc.id);
             const prices = {};
