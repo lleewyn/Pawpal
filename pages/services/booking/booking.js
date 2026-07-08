@@ -10,6 +10,88 @@ let initDiagnostics = "Not initialized yet.";
 const MEMBER_DISCOUNT_PERCENT = 0.05; // 5%
 const MEMBER_DISCOUNT_TEXT = 'Thành viên được giảm thêm';
 let selectedService = null;
+let bookingVouchers = null;
+let appliedBookingVoucher = null;
+
+async function handleApplyBookingVoucher() {
+    const input = document.getElementById('bookingVoucherInput');
+    const msg = document.getElementById('bookingVoucherMessage');
+    const code = input.value.trim().toUpperCase();
+
+    if (!code) {
+        msg.textContent = 'Vui lòng nhập mã giảm giá';
+        msg.style.color = 'red';
+        msg.style.display = 'block';
+        return;
+    }
+
+    if (appliedBookingVoucher && appliedBookingVoucher.code === code) {
+        appliedBookingVoucher = null;
+        input.value = '';
+        msg.textContent = 'Đã gỡ mã giảm giá';
+        msg.style.color = 'var(--bs-gray-600)';
+        msg.style.display = 'block';
+        document.getElementById('btnApplyBookingVoucher').textContent = 'Áp dụng';
+        updateSummary();
+        if (document.getElementById('step4') && !document.getElementById('step4').classList.contains('d-none')) {
+            renderStep4Confirm();
+        }
+        return;
+    }
+
+    if (!bookingVouchers) {
+        try {
+            const res = await fetch('/data/vouchers.json');
+            if (res.ok) bookingVouchers = await res.json();
+            else bookingVouchers = [];
+        } catch(e) {
+            bookingVouchers = [];
+        }
+    }
+
+    const voucher = bookingVouchers.find(v => v.code === code && v.active);
+    if (!voucher) {
+        msg.textContent = 'Mã không hợp lệ hoặc đã hết hạn';
+        msg.style.color = 'red';
+        msg.style.display = 'block';
+        return;
+    }
+
+    if (!voucher.applicableFor.includes('all') && !voucher.applicableFor.includes('services')) {
+        msg.textContent = 'Mã không áp dụng cho dịch vụ';
+        msg.style.color = 'red';
+        msg.style.display = 'block';
+        return;
+    }
+
+    const basePrice = calculateDynamicPrice(selectedService, bookingState.petWeight);
+    let subtotal = basePrice;
+    if (selectedService.category === 'hotel') {
+        subtotal = basePrice * (bookingState.nights || 1);
+        bookingState.addons.forEach(addon => {
+            if (addon.perNight) subtotal += addon.price * (bookingState.nights || 1);
+            else subtotal += addon.price;
+        });
+    }
+
+    if (subtotal < voucher.minOrderValue) {
+        msg.textContent = `Đơn tối thiểu ${voucher.minOrderValue.toLocaleString('vi-VN')}đ`;
+        msg.style.color = 'red';
+        msg.style.display = 'block';
+        return;
+    }
+
+    appliedBookingVoucher = voucher;
+    msg.textContent = 'Áp dụng mã thành công!';
+    msg.style.color = 'green';
+    msg.style.display = 'block';
+    document.getElementById('btnApplyBookingVoucher').textContent = 'Gỡ bỏ';
+    updateSummary();
+    if (document.getElementById('step4') && !document.getElementById('step4').classList.contains('d-none')) {
+        renderStep4Confirm();
+    }
+}
+
 let bookingState = {
     step: 1,
     ownerName: '',
@@ -51,6 +133,15 @@ loadBookingConfig();
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('=== BOOKING MODULE INITIALIZING ===');
+
+    const btnApplyBookingVoucher = document.getElementById('btnApplyBookingVoucher');
+    if (btnApplyBookingVoucher) {
+        btnApplyBookingVoucher.addEventListener('click', handleApplyBookingVoucher);
+        const voucherInput = document.getElementById('bookingVoucherInput');
+        voucherInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleApplyBookingVoucher();
+        });
+    }
 
     // Load services from CSV using DataLoader (with direct fallback)
     try {
@@ -1183,16 +1274,16 @@ function updateSummary() {
 
     // Price
     const basePrice = calculateDynamicPrice(selectedService, bookingState.petWeight);
-    let totalPrice = basePrice;
+    let subtotal = basePrice;
 
     if (selectedService.category === 'hotel') {
-        totalPrice = basePrice * (bookingState.nights || 1);
+        subtotal = basePrice * (bookingState.nights || 1);
         // Addons
         bookingState.addons.forEach(addon => {
             if (addon.perNight) {
-                totalPrice += addon.price * (bookingState.nights || 1);
+                subtotal += addon.price * (bookingState.nights || 1);
             } else {
-                totalPrice += addon.price;
+                subtotal += addon.price;
             }
         });
     }
@@ -1200,20 +1291,46 @@ function updateSummary() {
     const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
     const isMember = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
 
-    const finalPrice = isMember ? Math.round(totalPrice * (1 - MEMBER_DISCOUNT_PERCENT)) : totalPrice;
+    let memberDiscount = 0;
+    if (isMember) {
+        memberDiscount = Math.round(subtotal * MEMBER_DISCOUNT_PERCENT);
+    }
+    
+    let voucherDiscount = 0;
+    if (appliedBookingVoucher) {
+        if (appliedBookingVoucher.type === 'fixed') {
+            voucherDiscount = appliedBookingVoucher.value;
+        } else if (appliedBookingVoucher.type === 'percentage') {
+            voucherDiscount = Math.round(subtotal * (appliedBookingVoucher.value / 100));
+            if (appliedBookingVoucher.maxDiscount && voucherDiscount > appliedBookingVoucher.maxDiscount) {
+                voucherDiscount = appliedBookingVoucher.maxDiscount;
+            }
+        }
+    }
+
+    let totalDiscount = memberDiscount + voucherDiscount;
+    const finalPrice = Math.max(0, subtotal - totalDiscount);
     const prefix = (!bookingState.petWeight && selectedService.prices) ? 'Từ ' : '';
 
     const sumSubtotalRow = document.getElementById('sumSubtotalRow');
     const sumDiscountRow = document.getElementById('sumDiscountRow');
 
-    if (isMember) {
+    if (isMember || appliedBookingVoucher) {
         sumSubtotalRow.classList.remove('d-none');
-        document.getElementById('sumSubtotalVal').textContent = `${prefix}${totalPrice.toLocaleString('vi-VN')}đ`;
+        document.getElementById('sumSubtotalVal').textContent = `${prefix}${subtotal.toLocaleString('vi-VN')}đ`;
 
-        const memberDiscount = Math.round(totalPrice * MEMBER_DISCOUNT_PERCENT);
         sumDiscountRow.classList.remove('d-none');
-        document.getElementById('sumDiscountLabel').textContent = `${MEMBER_DISCOUNT_TEXT} (-${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}%)`;
-        document.getElementById('sumDiscountVal').textContent = `-${memberDiscount.toLocaleString('vi-VN')}đ`;
+        let discountLabel = '';
+        if (isMember && appliedBookingVoucher) {
+            discountLabel = `Giảm giá (TV & Voucher)`;
+        } else if (isMember) {
+            discountLabel = `${MEMBER_DISCOUNT_TEXT} (-${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}%)`;
+        } else {
+            discountLabel = `Voucher (-${appliedBookingVoucher.code})`;
+        }
+        
+        document.getElementById('sumDiscountLabel').textContent = discountLabel;
+        document.getElementById('sumDiscountVal').textContent = `-${totalDiscount.toLocaleString('vi-VN')}đ`;
     } else {
         sumSubtotalRow.classList.add('d-none');
         sumDiscountRow.classList.add('d-none');
@@ -1263,13 +1380,36 @@ function renderStep4Confirm() {
     const isMember = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
 
     const discount = isMember ? Math.round(subtotal * MEMBER_DISCOUNT_PERCENT) : 0;
-    const finalTotal = subtotal - discount;
+    
+    let voucherDiscount = 0;
+    if (appliedBookingVoucher) {
+        if (appliedBookingVoucher.type === 'fixed') {
+            voucherDiscount = appliedBookingVoucher.value;
+        } else if (appliedBookingVoucher.type === 'percentage') {
+            voucherDiscount = Math.round(subtotal * (appliedBookingVoucher.value / 100));
+            if (appliedBookingVoucher.maxDiscount && voucherDiscount > appliedBookingVoucher.maxDiscount) {
+                voucherDiscount = appliedBookingVoucher.maxDiscount;
+            }
+        }
+    }
+
+    let totalDiscount = discount + voucherDiscount;
+    const finalTotal = Math.max(0, subtotal - totalDiscount);
 
     if (isMember) {
         billLines += `
             <div class="summary-row" style="color: #27ae60;">
                 <span class="sum-label">Khấu trừ thành viên (Bạc -${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}%)</span>
                 <span class="sum-value">-${discount.toLocaleString('vi-VN')}đ</span>
+            </div>
+        `;
+    }
+
+    if (appliedBookingVoucher) {
+        billLines += `
+            <div class="summary-row" style="color: #27ae60;">
+                <span class="sum-label">Voucher (${appliedBookingVoucher.code})</span>
+                <span class="sum-value">-${voucherDiscount.toLocaleString('vi-VN')}đ</span>
             </div>
         `;
     }
