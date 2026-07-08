@@ -246,6 +246,23 @@ function renderBookings(status) {
     if (!bookingsList || !emptyState) return;
 
     let filteredBookings = [...allBookings];
+    
+    // Loại bỏ các lịch hẹn trùng lặp (lỗi do bấm Xác nhận nhiều lần lúc trước)
+    const uniqueBookings = [];
+    const seen = new Set();
+    for (const b of filteredBookings) {
+        const petKey = String(b.petId || b.petName || b.pet_profile?.pet_name || 'pet');
+        const srvKey = String(b.service || b.serviceName || b.service?.service_name || 'srv');
+        const dateKey = String(b.date || b.schedule?.date || '');
+        const timeKey = String(b.timeStart || b.time || b.schedule?.slot || '');
+        const key = `${petKey}-${srvKey}-${dateKey}-${timeKey}`.toLowerCase();
+        
+        if (!seen.has(key)) {
+            seen.add(key);
+            uniqueBookings.push(b);
+        }
+    }
+    filteredBookings = uniqueBookings;
     if (status !== 'all') {
         const allowedStatuses = statusAliases[status] || [status];
         filteredBookings = filteredBookings.filter((booking) => allowedStatuses.includes(resolveBookingStatus(booking)));
