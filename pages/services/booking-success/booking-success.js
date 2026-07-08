@@ -29,8 +29,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (targetUser) {
         const passwordSetupCard = document.getElementById('passwordSetupCard');
         const memberActions = document.getElementById('memberActions');
-        if (passwordSetupCard) passwordSetupCard.style.display = 'block';
-        if (memberActions) memberActions.style.display = 'none';
+        if (passwordSetupCard) {
+            passwordSetupCard.style.display = '';
+            passwordSetupCard.classList.remove('d-none');
+        }
+        if (memberActions) {
+            memberActions.style.display = '';
+            memberActions.classList.add('d-none');
+        }
 
         const setupLink = document.querySelector('#passwordSetupCard a.btn-cta');
         if (setupLink) {
@@ -39,8 +45,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
         const passwordSetupCard = document.getElementById('passwordSetupCard');
         const memberActions = document.getElementById('memberActions');
-        if (passwordSetupCard) passwordSetupCard.style.display = 'none';
-        if (memberActions) memberActions.style.display = 'block';
+        if (passwordSetupCard) {
+            passwordSetupCard.style.display = '';
+            passwordSetupCard.classList.add('d-none');
+        }
+        if (memberActions) {
+            memberActions.style.display = '';
+            memberActions.classList.remove('d-none');
+        }
     }
 
     const myBookingsLink = document.querySelector('a[href*="/pages/user/bookings/bookings.html"]');
