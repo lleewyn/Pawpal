@@ -13,6 +13,10 @@
       "destination": "/pages/public/landing/landing.html"
     },
     {
+      "source": "/pages/public/landing/landing",
+      "destination": "/pages/public/landing/landing.html"
+    },
+    {
       "source": "/pages/shop/shop",
       "destination": "/pages/shop/shop.html"
     },

@@ -69,13 +69,18 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
         const dbPaymentMethod = dbPayment?.payment_method?.toLowerCase() || 'cod';
         const paymentMethod = existing?.paymentMethod || dbPaymentMethod;
 
+        const dbStatus = mapOrderStatus(o.order_status);
+        const isLocalTerminal = existing && (existing.status === 'completed' || existing.status === 'cancelled');
+        const finalStatus = isLocalTerminal ? existing.status : dbStatus;
+        const finalOrderStatus = isLocalTerminal ? (existing.orderStatus || existing.order_status) : o.order_status;
+
         const order = {
             id:          o.order_code || o.id,
             _supabaseId: o.id,
             userId:      currentUser.id,
             userPhone:   currentUser.phone,
-            status:      mapOrderStatus(o.order_status),
-            orderStatus: o.order_status,
+            status:      finalStatus,
+            orderStatus: finalOrderStatus,
             paymentStatus,
             paymentMethod: paymentMethod,
             products,

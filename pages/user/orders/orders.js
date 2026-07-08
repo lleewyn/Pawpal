@@ -77,11 +77,20 @@ async function syncOrdersFromSupabase(currentUser) {
             };
         });
 
-        // Preserve pointsAwarded từ local
+        // Preserve trạng thái cuối cùng và điểm từ local
         const local = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
         const withFlags = orders.map(o => {
             const existing = local.find(l => String(l.id) === String(o.id));
-            return { ...o, pointsAwarded: existing?.pointsAwarded || false, pointsEarned: existing?.pointsEarned || 0 };
+            const isLocalTerminal = existing && (existing.status === 'completed' || existing.status === 'cancelled');
+            
+            return { 
+                ...o, 
+                status: isLocalTerminal ? existing.status : o.status,
+                orderStatus: isLocalTerminal ? (existing.orderStatus || existing.order_status) : o.orderStatus,
+                timeline: (isLocalTerminal && existing.timeline) ? existing.timeline : o.timeline,
+                pointsAwarded: existing?.pointsAwarded || false, 
+                pointsEarned: existing?.pointsEarned || 0 
+            };
         });
 
         const others = local.filter(l =>
