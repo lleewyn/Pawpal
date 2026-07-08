@@ -1055,7 +1055,9 @@ function setupStepActions() {
             });
             renderServices(categoryToRender);
         } else if (targetStep === 3) {
+            const timeSlotLabel = document.getElementById('timeSlotLabel');
             if (selectedService.category === 'hotel') {
+                if (timeSlotLabel) timeSlotLabel.innerHTML = 'Chọn giờ check-in <span class="required">*</span>';
                 document.getElementById('hotelDateRange').classList.remove('d-none');
                 document.getElementById('hotelAddonsSection').classList.remove('d-none');
                 document.getElementById('spaSchedule').classList.remove('d-none');
@@ -1064,6 +1066,7 @@ function setupStepActions() {
                 renderTimeslots();
                 renderStaff();
             } else {
+                if (timeSlotLabel) timeSlotLabel.innerHTML = 'Chọn khung giờ <span class="required">*</span>';
                 document.getElementById('hotelDateRange').classList.add('d-none');
                 document.getElementById('hotelAddonsSection').classList.add('d-none');
                 document.getElementById('spaSchedule').classList.remove('d-none');
