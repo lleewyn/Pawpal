@@ -695,6 +695,20 @@ function setupScheduleSelection() {
     if (checkOutInput) checkOutInput.min = todayStr;
     if (bookingDateInput) bookingDateInput.min = todayStr;
 
+    const timeslotGrid = document.getElementById('timeslotGrid');
+    const staffList    = document.getElementById('staffList');
+
+    function setScheduleLocked(locked) {
+        [timeslotGrid, staffList].forEach(el => {
+            if (!el) return;
+            el.style.opacity        = locked ? '0.4' : '';
+            el.style.pointerEvents  = locked ? 'none' : '';
+        });
+    }
+
+    // Lock on initial load
+    setScheduleLocked(true);
+
     if (checkInInput && checkOutInput) {
         const onDateChange = () => {
             const inDate = checkInInput.value;
@@ -716,14 +730,19 @@ function setupScheduleSelection() {
                     const totalPrice = calculatedPrice * nights;
                     document.getElementById('hotelTotalPrice').textContent = `Tạm tính: ${totalPrice.toLocaleString('vi-VN')}đ`;
 
+                    setScheduleLocked(false);
+                    renderTimeslots();
                     validateStep3();
                     updateSummary();
                 } else {
                     alert('Ngày check-out phải sau ngày check-in.');
                     checkOutInput.value = '';
                     document.getElementById('hotelNightsDisplay').classList.add('d-none');
+                    setScheduleLocked(true);
                     validateStep3();
                 }
+            } else {
+                setScheduleLocked(true);
             }
         };
 
@@ -732,21 +751,6 @@ function setupScheduleSelection() {
     }
 
     if (bookingDateInput) {
-        // Disable timeslot + staff section until date is picked
-        const timeslotGrid = document.getElementById('timeslotGrid');
-        const staffList    = document.getElementById('staffList');
-
-        function setScheduleLocked(locked) {
-            [timeslotGrid, staffList].forEach(el => {
-                if (!el) return;
-                el.style.opacity        = locked ? '0.4' : '';
-                el.style.pointerEvents  = locked ? 'none' : '';
-            });
-        }
-
-        // Lock on initial load
-        setScheduleLocked(true);
-
         bookingDateInput.addEventListener('change', () => {
             bookingState.date = bookingDateInput.value;
             // Unlock only when a valid date is chosen
@@ -988,7 +992,7 @@ function renderStaff() {
 function validateStep3() {
     let isValid = false;
     if (selectedService.category === 'hotel') {
-        isValid = bookingState.date !== '' && bookingState.checkOutDate !== '';
+        isValid = bookingState.date !== '' && bookingState.checkOutDate !== '' && bookingState.timeSlot !== '' && bookingState.staff !== '';
     } else {
         isValid = bookingState.date !== '' && bookingState.timeSlot !== '' && bookingState.staff !== '';
     }
@@ -1054,11 +1058,17 @@ function setupStepActions() {
             if (selectedService.category === 'hotel') {
                 document.getElementById('hotelDateRange').classList.remove('d-none');
                 document.getElementById('hotelAddonsSection').classList.remove('d-none');
-                document.getElementById('spaSchedule').classList.add('d-none');
+                document.getElementById('spaSchedule').classList.remove('d-none');
+                const spaDateGroup = document.querySelector('#spaSchedule .booking-date');
+                if (spaDateGroup) spaDateGroup.classList.add('d-none');
+                renderTimeslots();
+                renderStaff();
             } else {
                 document.getElementById('hotelDateRange').classList.add('d-none');
                 document.getElementById('hotelAddonsSection').classList.add('d-none');
                 document.getElementById('spaSchedule').classList.remove('d-none');
+                const spaDateGroup = document.querySelector('#spaSchedule .booking-date');
+                if (spaDateGroup) spaDateGroup.classList.remove('d-none');
                 renderTimeslots();
                 renderStaff();
             }
