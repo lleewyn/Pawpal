@@ -51,7 +51,13 @@ function buildStructuredAddressLabel(address) {
 }
 
 function normalizeCheckoutAddress(address, fallbackUser = {}) {
-    if (!address) return null;
+    if (!address || typeof address !== 'string' && !address.street && !address.address) return null;
+    
+    // Bỏ qua các địa chỉ dạng placeholder
+    const addressStr = typeof address === 'string' ? address : (address.street || address.address || '');
+    if (addressStr.toLowerCase() === 'chưa thiết lập' || addressStr.toLowerCase() === 'chua thiet lap' || addressStr.trim() === '') {
+        return null;
+    }
 
     if (typeof address === 'string') {
         const parts = address.split(',').map((part) => part.trim()).filter(Boolean);
