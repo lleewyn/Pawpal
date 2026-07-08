@@ -456,7 +456,7 @@
             doSubmitAll();
         });
 
-        function doSubmitAll() {
+        async function doSubmitAll() {
             if (!navigator.onLine) {
                 offlineBanner && offlineBanner.classList.add('visible');
                 autoSaveDraft();
@@ -514,6 +514,31 @@
             const allReviews = getStoredReviews();
             allReviews.push(...newReviews);
             saveStoredReviews(allReviews);
+
+            // Supabase integration
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (db) {
+                const customerId = getCurrentUserId();
+                if (customerId !== 'GUEST' && customerId.length >= 32) { // check valid UUID
+                    for (const rv of newReviews) {
+                        try {
+                            const { error: dbErr } = await db.from('review').insert({
+                                customer_id: customerId,
+                                product_id: rv.productId.length >= 32 ? rv.productId : null, // Handle UUID check
+                                review_type: 'PRODUCT',
+                                rating: rv.rating,
+                                review_content: rv.comment,
+                                image_urls: rv.media.map(m => m.src),
+                                review_status: 'APPROVED', // Default as per plan
+                                created_at: rv.createdAt
+                            });
+                            if (dbErr) console.warn('[ReviewHandler] Supabase insert failed:', dbErr);
+                        } catch (err) {
+                            console.warn('[ReviewHandler] Supabase insert error:', err);
+                        }
+                    }
+                }
+            }
 
             // Lock toàn đơn
             markOrderReviewed(orderId);
