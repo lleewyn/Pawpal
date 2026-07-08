@@ -1,5 +1,17 @@
 [
   {
+    "id": "BKG-GUEST-001",
+    "userId": null,
+    "userPhone": "0999888777",
+    "petId": "PET-001",
+    "serviceName": "Tắm sấy trọn gói",
+    "date": "2026-07-20",
+    "time": "14:00",
+    "status": "upcoming",
+    "price": 250000,
+    "branch": "PawPal Chi nhánh Quận 1"
+  },
+  {
     "id": "BKG-1001",
     "userId": "USER-001",
     "petId": "PET-001",

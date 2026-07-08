@@ -1,5 +1,77 @@
 [
   {
+    "id": "ORD-GUEST-001",
+    "userId": null,
+    "userPhone": "0999888777",
+    "status": "completed",
+    "paymentStatus": "paid",
+    "paymentMethod": "vnpay",
+    "createdAt": "2026-06-01T10:00:00",
+    "updatedAt": "2026-06-05T10:00:00",
+    "delivery": {
+      "name": "Khách Vãng Lai",
+      "phone": "0999888777",
+      "address": "123 Đường Test, Quận 1, TP.HCM"
+    },
+    "products": [
+      {
+        "id": "PROD-001",
+        "name": "Thức ăn cho chó Royal Canin Adult 15kg",
+        "image": "/assets/images/shop/products/TP-SUP-09.png",
+        "quantity": 1,
+        "price": 225000,
+        "total": 225000
+      }
+    ],
+    "pricing": {
+      "subtotal": 225000,
+      "shippingFee": 30000,
+      "discount": 0,
+      "total": 255000
+    },
+    "timeline": [
+      { "status": "placed", "timestamp": "2026-06-01T10:00:00", "title": "Đơn hàng đã đặt", "description": null },
+      { "status": "delivered", "timestamp": "2026-06-04T10:00:00", "title": "Đã giao hàng", "description": null },
+      { "status": "completed", "timestamp": "2026-06-05T10:00:00", "title": "Đã hoàn thành", "description": null }
+    ],
+    "allowedActions": ["return_order"]
+  },
+  {
+    "id": "ORD-GUEST-002",
+    "userId": null,
+    "userPhone": "0999888777",
+    "status": "placed",
+    "paymentStatus": "unpaid",
+    "paymentMethod": "cod",
+    "createdAt": "2026-07-08T10:00:00",
+    "updatedAt": "2026-07-08T10:00:00",
+    "delivery": {
+      "name": "Khách Vãng Lai",
+      "phone": "0999888777",
+      "address": "123 Đường Test, Quận 1, TP.HCM"
+    },
+    "products": [
+      {
+        "id": "PROD-002",
+        "name": "Đồ chơi gặm xương cao su",
+        "image": "/assets/images/shop/products/pk-dochoi-01.jpg",
+        "quantity": 1,
+        "price": 400000,
+        "total": 400000
+      }
+    ],
+    "pricing": {
+      "subtotal": 400000,
+      "shippingFee": 30000,
+      "discount": 0,
+      "total": 430000
+    },
+    "timeline": [
+      { "status": "placed", "timestamp": "2026-07-08T10:00:00", "title": "Đơn hàng đã đặt", "description": null }
+    ],
+    "allowedActions": ["cancel_order"]
+  },
+  {
     "id": "ORD-2026-001",
     "userId": "USER-001",
     "status": "shipping",
