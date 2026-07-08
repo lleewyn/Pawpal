@@ -1,9 +1,14 @@
 {
   "scripts": {
-    "dev": "npx serve -p 3000"
+    "dev": "node server.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.110.1",
     "bootstrap": "^5.3.3",
-    "glob": "^13.0.6"
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "glob": "^13.0.6",
+    "jsonwebtoken": "^9.0.3"
   }
 }

@@ -65,6 +65,39 @@ async function initBlogDetail() {
 
         setupTOC(contentEl);
         setupShareBtns();
+
+        // Render Related Posts
+        const relatedContainer = document.getElementById('related-posts-container');
+        if (relatedContainer) {
+            // Find blogs in the same category, excluding current one
+            let relatedBlogs = blogs.filter(b => b.categorySlug === blog.categorySlug && b.id !== blog.id);
+            if (relatedBlogs.length < 3) {
+                // If not enough, pad with other blogs
+                const otherBlogs = blogs.filter(b => b.categorySlug !== blog.categorySlug && b.id !== blog.id);
+                relatedBlogs = [...relatedBlogs, ...otherBlogs];
+            }
+            // Take up to 3
+            relatedBlogs = relatedBlogs.slice(0, 3);
+            
+            relatedContainer.innerHTML = relatedBlogs.map(b => {
+                const bReadingTime = Math.max(2, Math.ceil(b.content.length / 1000)) + ' phút đọc';
+                return `
+                <div class="col-md-4">
+                    <article class="blog-card standard-card h-100">
+                        <a href="blog-detail.html?slug=${b.slug}" class="card-img-link position-relative d-block overflow-hidden rounded-top-3">
+                            <img src="${b.thumbnail}" alt="${b.title}" class="w-100 h-100 object-fit-cover related-post-img-wrapper" style="max-height: 200px;">
+                        </a>
+                        <div class="card-content mt-3 p-3">
+                            <h4 class="card-title fs-6 fw-bold">
+                                <a href="blog-detail.html?slug=${b.slug}" class="text-dark text-decoration-none">${b.title}</a>
+                            </h4>
+                            <span class="card-date text-muted small">${formatDate(b.date)} &bull; ${bReadingTime}</span>
+                        </div>
+                    </article>
+                </div>
+                `;
+            }).join('');
+        }
     }
 
     function setupShareBtns() {

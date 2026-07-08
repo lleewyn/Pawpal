@@ -1836,17 +1836,131 @@ function initFab() {
         closeBtn.addEventListener('click', () => chatPanel.classList.remove('open'));
     }
 
+    // Ngăn scroll của messages bị "cướp" bởi trang bên dưới
+    if (messages) {
+        messages.addEventListener('wheel', (e) => {
+            e.stopPropagation();
+        }, { passive: true });
+    }
+
+    const GEMINI_API_KEY = "AIzaSyDWkR8qFUKBmpu3GZi2GP2OYQpA-TUSkcg";
+    let conversationHistory = [];
+
     // Send message
-    function sendMessage() {
+    async function sendMessage() {
         if (!input || !input.value.trim()) return;
         const text = input.value.trim();
         input.value = '';
         appendMessage(text, 'user');
         showTyping();
-        setTimeout(() => {
+        
+        // Gọi Backend Vercel Serverless Function
+        try {
+            // Lấy Access Token từ Supabase Client để backend xác thực
+            let token = "";
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (db) {
+                // Do PawPal dùng persistSession: false, thử đọc session từ Supabase trước
+                const { data } = await db.auth.getSession();
+                if (data && data.session) {
+                    token = data.session.access_token;
+                }
+            }
+            // Nếu không có session Supabase, thử lấy user từ localStorage (cơ chế auth riêng của PawPal)
+            if (!token) {
+                try {
+                    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+                    if (currentUser && (currentUser.id || currentUser._supabaseId)) {
+                        // Dùng id của user làm token tạm để backend biết user đã đăng nhập
+                        token = 'local:' + (currentUser._supabaseId || currentUser.id);
+                        console.log('[Chat] Dùng local auth, userId:', currentUser._supabaseId || currentUser.id);
+                    }
+                } catch(e) {}
+            }
+            
+            // Xây dựng history nếu chưa có
+            if (conversationHistory.length === 0) {
+                // Không cần getChatbotContext() ở frontend nữa, backend sẽ lo phần ngữ cảnh (system_instruction)
+            }
+            
+            conversationHistory.push({
+                "role": "user",
+                "content": text
+            });
+
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                body: JSON.stringify({ messages: conversationHistory })
+            });
+
             removeTyping();
-            appendMessage(getBotReply(text), 'bot');
-        }, 900 + Math.random() * 600);
+
+            // Đọc SSE streaming response
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            
+            // Tạo bubble bot ngay để stream vào đó
+            let botBubble = null;
+            let fullReply = '';
+            
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                
+                const text = decoder.decode(value, { stream: true });
+                const lines = text.split('\n');
+                
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+                    try {
+                        const parsed = JSON.parse(line.slice(6));
+                        
+                        if (parsed.done) {
+                            // Xong - lưu vào history
+                            if (fullReply) {
+                                conversationHistory.push({ "role": "model", "content": fullReply });
+                            }
+                            break;
+                        }
+                        
+                        if (parsed.reply) {
+                            // Lỗi thân thiện (rate limit, etc.)
+                            fullReply = parsed.reply;
+                            if (!botBubble) {
+                                botBubble = document.createElement('div');
+                                botBubble.className = 'fab-chat-bubble fab-chat-bubble--bot';
+                                messages.appendChild(botBubble);
+                            }
+                            botBubble.innerHTML = fullReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                            scrollToBottom();
+                        } else if (parsed.chunk) {
+                            // Chunk text từ streaming
+                            fullReply += parsed.chunk;
+                            if (!botBubble) {
+                                botBubble = document.createElement('div');
+                                botBubble.className = 'fab-chat-bubble fab-chat-bubble--bot';
+                                messages.appendChild(botBubble);
+                            }
+                            botBubble.innerHTML = fullReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                            scrollToBottom();
+                        }
+                    } catch(e) { /* ignore parse errors on partial chunks */ }
+                }
+            }
+            
+            // Fallback nếu không nhận được gì
+            if (!fullReply && !botBubble) {
+                appendMessage('Xin lỗi, hệ thống PawPal AI đang gặp sự cố kết nối. Quý khách vui lòng thử lại sau.', 'bot');
+            }
+        } catch (error) {
+            console.error("Chatbot request failed", error);
+            removeTyping();
+            appendMessage("Xin lỗi, không thể kết nối tới PawPal AI lúc này.", 'bot');
+        }
     }
 
     if (sendBtn) sendBtn.addEventListener('click', sendMessage);
@@ -1857,6 +1971,14 @@ function initFab() {
     }
 
     window.__pawpalFabInitialized = true;
+
+    function scrollToBottom() {
+        if (messages) {
+            requestAnimationFrame(() => {
+                messages.scrollTop = messages.scrollHeight;
+            });
+        }
+    }
 
     function appendMessage(text, type) {
         const bubble = document.createElement('div');
@@ -1869,7 +1991,7 @@ function initFab() {
         }
         if (messages) {
             messages.appendChild(bubble);
-            messages.scrollTop = messages.scrollHeight;
+            scrollToBottom();
         }
     }
 
@@ -1880,7 +2002,7 @@ function initFab() {
         typing.innerHTML = '<span></span><span></span><span></span>';
         if (messages) {
             messages.appendChild(typing);
-            messages.scrollTop = messages.scrollHeight;
+            scrollToBottom();
         }
     }
 
@@ -1888,25 +2010,8 @@ function initFab() {
         const t = document.getElementById('fabTyping');
         if (t) t.remove();
     }
-
-    // Simple rule-based replies — thay bằng API call sau
-    function getBotReply(text) {
-        const t = text.toLowerCase();
-        if (t.match(/spa|grooming|tắm|cắt/))
-            return 'Dịch vụ Spa và Grooming của PawPal bao gồm tắm, cắt tỉa, vệ sinh tai và móng. Giá từ <strong>120.000đ</strong>. Bạn muốn đặt lịch không?';
-        if (t.match(/hotel|lưu trú|gửi/))
-            return 'Pet Hotel có phòng riêng, điều hòa, camera 24/7. Giá từ <strong>180.000đ/đêm</strong>. Yêu cầu vaccine đầy đủ.';
-        if (t.match(/giá|bao nhiêu|phí/))
-            return 'Bạn có thể xem bảng giá đầy đủ tại <a href="/pages/services/services.html" style="color:#7c3aed">trang dịch vụ</a>. Cần tư vấn dịch vụ cụ thể nào?';
-        if (t.match(/chuẩn bị|mang gì|cần gì/))
-            return 'Cần mang: sổ tiêm phòng, đồ ăn riêng (nếu có), đồ chơi yêu thích của bé. Chúng tôi lo phần còn lại!';
-        if (t.match(/đặt lịch|booking/))
-            return 'Bạn có thể đặt lịch ngay tại <a href="/pages/services/booking/booking.html" style="color:#7c3aed">trang đặt lịch</a> — xác nhận tức thì qua SMS/Zalo.';
-        if (t.match(/giờ|mở cửa|thời gian/))
-            return 'PawPal mở cửa <strong>8:00–20:00</strong> mỗi ngày. Pet Hotel hoạt động 24/7.';
-        return 'Cảm ơn bạn đã nhắn tin!  Để được tư vấn chi tiết hơn, bạn có thể gọi hotline <strong>0774 561 496</strong> hoặc chat Zalo nhé.';
-    }
 }
+
 
 // Gọi initFab sau khi footerInjected (fab inject cùng lúc với footer)
 document.addEventListener('footerInjected', function () {

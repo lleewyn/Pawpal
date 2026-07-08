@@ -400,9 +400,9 @@
 .pet-reminder-card .reminder-item.green .time { color: #2e7d32; }
 
 .pet-reminder-card .link-view-all {
-    font-family: var(--font-primary);
+    font-family: 'Inter', var(--font-primary);
     font-size: 0.9rem;
-    font-weight: 800;
+    font-weight: 600;
     color: var(--color-primary-dark);
     text-decoration: none;
     display: block;

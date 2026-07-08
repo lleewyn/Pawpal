@@ -55,7 +55,7 @@
 
         try {
             window['SupabaseClient'] = window['supabase'].createClient(config.url, config.anonKey, {
-                auth: { persistSession: false, autoRefreshToken: false },
+                auth: { persistSession: true, autoRefreshToken: true },
             });
             setStatus(true, true, null);
             console.log('[SupabaseClient] Khởi tạo thành công ✓');

@@ -200,7 +200,10 @@
         return badWords.some(w => lowerText.includes(w));
     }
 
-    function processChatInput(userInput, onReplyCallback) {
+    const GEMINI_API_KEY = "AIzaSyDWkR8qFUKBmpu3GZi2GP2OYQpA-TUSkcg";
+    let conversationHistory = [];
+
+    async function processChatInput(userInput, onReplyCallback) {
         if (chatBlockedUntil && Date.now() < chatBlockedUntil) {
             const minutesLeft = Math.ceil((chatBlockedUntil - Date.now()) / 60000);
             return {
@@ -225,19 +228,50 @@
             };
         }
 
-        // Tạo câu trả lời AI giả lập
-        setTimeout(() => {
-            let replyText = 'PawPal nghe đây ạ. Hiện tại câu hỏi này chúng tôi sẽ gửi cho CSKH giải đáp ngay nhé!';
-            const query = userInput.toLowerCase();
-
-            if (query.includes('lịch hẹn') || query.includes('bông')) {
-                replyText = 'Lịch hẹn tắm của bé Bông lúc 14:00 hôm nay đã được xác nhận thành công rồi đó ạ.';
-            } else if (query.includes('đơn hàng') || query.includes('2026')) {
-                replyText = 'Đơn hàng #ORD-2026 của bạn đang được đơn vị giao hàng vận chuyển rồi ạ.';
+        // Gọi Backend Vercel Serverless Function
+        try {
+            // Lấy Access Token từ Supabase Client để backend xác thực
+            let token = "";
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (db) {
+                const { data } = await db.auth.getSession();
+                if (data && data.session) {
+                    token = data.session.access_token;
+                }
             }
+            
+            conversationHistory.push({
+                "role": "user",
+                "content": userInput
+            });
 
-            onReplyCallback(replyText);
-        }, 1000);
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                body: JSON.stringify({ messages: conversationHistory })
+            });
+
+            const data = await response.json();
+
+            if (data.reply) {
+                const botReply = data.reply;
+                conversationHistory.push({
+                    "role": "model",
+                    "content": botReply
+                });
+                const htmlReply = botReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                if (onReplyCallback) onReplyCallback(htmlReply);
+            } else {
+                console.error("Backend Error:", data);
+                if (onReplyCallback) onReplyCallback("Xin lỗi, hệ thống PawPal AI đang gặp sự cố. Quý khách vui lòng thử lại sau.");
+            }
+        } catch (error) {
+            console.error("Chatbot request failed", error);
+            if (onReplyCallback) onReplyCallback("Xin lỗi, không thể kết nối tới PawPal AI lúc này.");
+        }
 
         return { error: false };
     }
