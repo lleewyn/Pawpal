@@ -619,10 +619,7 @@ window.handleGuestBookingAction = function(bookingId, action) {
 
     showActionConfirm(title, desc, phone, () => {
         if (action === 'cancel') {
-            // Sau khi xác nhận + OTP → hủy thẳng, không hỏi lại lần 2
-            showOTPModal(phone, () => {
-                confirmCancelBooking(bookingId);
-            });
+            confirmCancelBooking(bookingId);
         } else {
             showChangeScheduleModal(bookingId, phone);
         }
@@ -1077,8 +1074,9 @@ function confirmCancelBooking(bookingId) {
         const db = window.SupabaseClient;
         if (db) {
             const isUUID = typeof bookingId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingId);
-            let query = db.from('service_booking').update({ status: 'CANCELLED', updated_at: new Date().toISOString() });
-            query = isUUID ? query.eq('id', bookingId) : query.eq('booking_code', bookingId);
+            // Fix: Sử dụng bảng 'appointment' thay vì 'service_booking' (cấu trúc mới)
+            let query = db.from('appointment').update({ appointment_status: 'CANCELLED', updated_at: new Date().toISOString() });
+            query = isUUID ? query.eq('id', bookingId) : query.eq('appointment_code', bookingId);
             query.then(({error}) => { if (error) console.warn('[ReturnGuest] Cancel booking sync error:', error); });
         }
     }
@@ -1402,6 +1400,25 @@ function showChangeScheduleModal(bookingId, phone) {
             bookings[idx].changeCount = (bookings[idx].changeCount || 0) + 1;
             localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
         }
+
+        // Call Supabase OR API
+        if (window.API && typeof window.API.updateBookingStatus === 'function') {
+            window.API.updateBookingStatus(bookingId, 'CONFIRMED').catch(e => console.warn(e));
+        } else {
+            const db = window.SupabaseClient;
+            if (db) {
+                const isUUID = typeof bookingId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingId);
+                let query = db.from('appointment').update({ 
+                    appointment_date: selDate,
+                    appointment_time: selTime,
+                    appointment_status: 'CONFIRMED', 
+                    updated_at: new Date().toISOString() 
+                });
+                query = isUUID ? query.eq('id', bookingId) : query.eq('appointment_code', bookingId);
+                query.then(({error}) => { if (error) console.warn('[ReturnGuest] Change booking sync error:', error); });
+            }
+        }
+
         modal.hide();
         showToast('Đã đổi lịch hẹn thành công!', 'success');
         showUpsellModal(phone);
