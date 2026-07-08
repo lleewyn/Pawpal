@@ -231,6 +231,18 @@ async function loadBookings(status) {
             if (pet.id) currentPetMap.set(String(pet.id), pet);
         });
 
+        // Safety fallback: Nếu localStorage bị cũ, thiếu pet (như PET-006), ta tải bù từ pets.json
+        try {
+            const rawPets = await fetch('/data/pets.json').then(r => r.json());
+            (Array.isArray(rawPets) ? rawPets : []).forEach(pet => {
+                if (pet.id && !currentPetMap.has(String(pet.id))) {
+                    currentPetMap.set(String(pet.id), pet);
+                }
+            });
+        } catch(e) {
+            console.warn('Could not load fallback pets', e);
+        }
+
         renderBookings(status);
     } catch (error) {
         console.error('Cannot load bookings:', error);
