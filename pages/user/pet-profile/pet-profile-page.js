@@ -49,6 +49,7 @@ export async function initPetProfilePage() {
         setupAvatar();
         setupSpeciesToggle();
         setupDeleteModal();
+        loadUpcomingBookings();
     } catch (e) {
         console.error('Error during initPetProfilePage:', e);
     }
@@ -535,3 +536,68 @@ window.resetPetForm = resetPetForm;
 window.editPet = function(id) {
     openPetFormModal(id);
 };
+
+function loadUpcomingBookings() {
+    const listEl = document.getElementById('pet-reminders-list');
+    if (!listEl) return;
+    
+    try {
+        const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || '{}');
+        
+        // Lọc các booking của user hiện tại, trạng thái 'pending' hoặc 'confirmed', và thời gian >= hiện tại (cho chênh lệch 1 ngày)
+        const now = new Date();
+        now.setHours(0, 0, 0, 0); // Bỏ qua giờ để so sánh ngày
+        
+        let upcoming = bookings.filter(b => {
+            if (b.userId !== currentUser.id && b.customerPhone !== currentUser.phone) return false;
+            if (b.status !== 'pending' && b.status !== 'confirmed') return false;
+            
+            if (!b.date) return false;
+            const bDate = new Date(b.date);
+            bDate.setHours(0, 0, 0, 0);
+            return bDate.getTime() >= now.getTime();
+        });
+        
+        // Sắp xếp ngày gần nhất
+        upcoming.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+        // Lấy 3 lịch gần nhất
+        upcoming = upcoming.slice(0, 3);
+        
+        if (upcoming.length === 0) {
+            listEl.innerHTML = '<p class="text-muted" style="font-size: 0.85rem; padding: 10px;">Không có lịch hẹn nào sắp tới.</p>';
+            return;
+        }
+        
+        listEl.innerHTML = upcoming.map(b => {
+            const bDate = new Date(b.date);
+            const diffDays = Math.floor((bDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            
+            let timeText = '';
+            if (diffDays === 0) timeText = 'Hôm nay';
+            else if (diffDays === 1) timeText = 'Ngày mai';
+            else if (diffDays <= 7) timeText = `Trong ${diffDays} ngày tới`;
+            else timeText = bDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+            
+            if (b.time) {
+                timeText += ` (${b.time})`;
+            }
+            
+            const isUrgent = diffDays <= 2;
+            const itemClass = isUrgent ? 'yellow' : 'green';
+            const title = b.serviceName || 'Dịch vụ';
+            
+            return `
+                <div class="reminder-item ${itemClass}">
+                    <div class="title">${title} ${b.petName ? '- ' + b.petName : ''}</div>
+                    <div class="time">${timeText}</div>
+                </div>
+            `;
+        }).join('');
+        
+    } catch (e) {
+        console.error('Lỗi khi loadUpcomingBookings:', e);
+        listEl.innerHTML = '<p class="text-muted" style="font-size: 0.85rem; padding: 10px;">Lỗi tải dữ liệu.</p>';
+    }
+}

@@ -657,30 +657,42 @@ window.handleGuestCancelOrder = function(orderId) {
 window.handleGuestConfirmOrder = async function(orderId) {
     if (!confirm('Bạn xác nhận đã nhận hàng thành công?')) return;
     
-    const db = window.SupabaseClient;
-    if (!db) return showToast('Lỗi hệ thống (Supabase chưa sẵn sàng)', 'error');
-    
-    try {
-        const { error } = await db.from('sales_order')
-            .update({ order_status: 'COMPLETED' })
-            .eq('id', orderId);
-            
-        if (error) throw error;
+    // Update local state immediately
+    const order = rgLastSearchState.orders.find(o => o.id === orderId);
+    if (order) {
+        order.status = 'completed';
+        order.updatedAt = new Date().toISOString();
         
-        showToast('Đã xác nhận nhận hàng!', 'success');
-        
-        // Update local state so it reflects immediately
-        const order = rgLastSearchState.orders.find(o => o.id === orderId);
-        if (order) {
-            order.status = 'completed';
-            order.updatedAt = new Date().toISOString();
+        const allOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+        const index = allOrders.findIndex(o => String(o.id) === String(order.id));
+        if (index !== -1) {
+            allOrders[index].status = 'completed';
+            allOrders[index].orderStatus = 'COMPLETED';
+        } else {
+            allOrders.push({ ...order, status: 'completed', orderStatus: 'COMPLETED' });
         }
-        
-        // Cập nhật lại UI
-        renderResults(rgLastSearchState.bookings, rgLastSearchState.orders);
-    } catch (err) {
-        console.error('[ReturnGuest] Lỗi khi xác nhận đơn hàng:', err);
-        showToast('Lỗi khi xác nhận đơn hàng.', 'error');
+        localStorage.setItem('pawpal_orders', JSON.stringify(allOrders));
+    }
+    
+    // Cập nhật lại UI
+    renderResults(rgLastSearchState.bookings, rgLastSearchState.orders);
+    showToast('Đã xác nhận nhận hàng!', 'success');
+
+    // Cập nhật lên Supabase
+    if (window.API && typeof window.API.updateOrderStatus === 'function') {
+        window.API.updateOrderStatus(orderId, 'COMPLETED').catch(err => {
+            console.warn('[ReturnGuest] Failed to sync completed status:', err);
+        });
+    } else {
+        const db = window.SupabaseClient;
+        if (db) {
+            const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+            let query = db.from('sales_order').update({ order_status: 'COMPLETED', updated_at: new Date().toISOString() });
+            query = isUUID ? query.eq('id', orderId) : query.eq('order_code', orderId);
+            query.then(({error}) => {
+                if (error) console.warn('[ReturnGuest] Sync error:', error);
+            });
+        }
     }
 };
 
@@ -1036,29 +1048,72 @@ function showCancelConfirmModal(bookingId, phone) {
 }
 
 function confirmCancelBooking(bookingId) {
+    const booking = rgLastSearchState.bookings.find(b => b.id === bookingId);
+    if (!booking) {
+        showToast('Không tìm thấy lịch hẹn.', 'error');
+        return;
+    }
+
+    // Cập nhật trạng thái hiển thị local
+    booking.status = 'cancelled';
+    booking.cancelCount = (booking.cancelCount || 0) + 1;
+    
+    // Lưu vào localStorage pawpal_bookings
     const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-    const idx = bookings.findIndex(b => b.id === bookingId);
+    const idx = bookings.findIndex(b => String(b.id) === String(bookingId));
     if (idx !== -1) {
         bookings[idx].status = 'cancelled';
         bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
         localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
+    } else {
+        bookings.push({ ...booking, status: 'cancelled' });
+        localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
     }
+
+    // Call Supabase OR API
+    if (window.API && typeof window.API.updateBookingStatus === 'function') {
+        window.API.updateBookingStatus(bookingId, 'CANCELLED').catch(e => console.warn(e));
+    } else {
+        const db = window.SupabaseClient;
+        if (db) {
+            const isUUID = typeof bookingId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingId);
+            let query = db.from('service_booking').update({ status: 'CANCELLED', updated_at: new Date().toISOString() });
+            query = isUUID ? query.eq('id', bookingId) : query.eq('booking_code', bookingId);
+            query.then(({error}) => { if (error) console.warn('[ReturnGuest] Cancel booking sync error:', error); });
+        }
+    }
+
     showToast('Đã hủy lịch hẹn thành công!', 'success');
-    setTimeout(() => showUpsellModal(document.getElementById('rg-phone')?.value?.trim() || ''), 250);
-    // Re-search để cập nhật UI
-    setTimeout(() => document.getElementById('rg-form').dispatchEvent(new Event('submit')), 1000);
+    renderResults(rgLastSearchState.bookings, rgLastSearchState.orders);
+    
+    const phone = document.getElementById('rg-phone')?.value?.trim() || '';
+    if (phone) setTimeout(() => showUpsellModal(phone), 250);
 }
 
 // ── Cancel Order ──────────────────────────────────────────────────────────
 function confirmCancelOrder(orderId) {
-    const orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-    const idx = orders.findIndex(o => o.id === orderId);
-    if (idx === -1) {
-        showToast('Không tìm thấy đơn hàng.', 'error');
+    const order = rgLastSearchState.orders.find(o => o.id === orderId);
+    if (!order) {
+        showToast('Không tìm thấy đơn hàng trong kết quả tra cứu.', 'error');
         return;
     }
 
-    const order = orders[idx];
+    // Cập nhật trạng thái hiển thị local
+    order.status = 'cancelled';
+    order.orderStatus = 'CANCELLED';
+    order.updatedAt = new Date().toISOString();
+    
+    // Cập nhật pawpal_orders nếu có
+    const orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+    const idx = orders.findIndex(o => String(o.id) === String(orderId));
+    if (idx !== -1) {
+        orders[idx].status = 'cancelled';
+        orders[idx].orderStatus = 'CANCELLED';
+        localStorage.setItem('pawpal_orders', JSON.stringify(orders));
+    } else {
+        orders.push({ ...order, status: 'cancelled', orderStatus: 'CANCELLED' });
+        localStorage.setItem('pawpal_orders', JSON.stringify(orders));
+    }
 
     // Hoàn tồn kho
     try {
@@ -1110,25 +1165,40 @@ function confirmCancelOrder(orderId) {
         } catch (_) {}
     }
 
-    // Cập nhật trạng thái đơn hàng
-    orders[idx].status = 'cancelled';
-    orders[idx].updatedAt = new Date().toISOString();
-    if (!Array.isArray(orders[idx].timeline)) orders[idx].timeline = [];
-    orders[idx].timeline.push({
-        status: 'cancelled',
-        timestamp: new Date().toISOString(),
-        title: 'Đã hủy',
-        description: isPaidOnline
-            ? `Khách hàng hủy đơn. Yêu cầu hoàn tiền ${fmtPrice(order.pricing?.total || 0)} đã được ghi nhận.`
-            : 'Khách hàng hủy đơn hàng'
-    });
-    localStorage.setItem('pawpal_orders', JSON.stringify(orders));
+    // Cập nhật lại timeline trong local storage (nếu có)
+    const finalOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+    const finalIdx = finalOrders.findIndex(o => String(o.id) === String(orderId));
+    if (finalIdx !== -1) {
+        if (!Array.isArray(finalOrders[finalIdx].timeline)) finalOrders[finalIdx].timeline = [];
+        finalOrders[finalIdx].timeline.push({
+            status: 'cancelled',
+            timestamp: new Date().toISOString(),
+            title: 'Đã hủy',
+            description: isPaidOnline
+                ? `Khách hàng hủy đơn. Yêu cầu hoàn tiền ${fmtPrice(order.pricing?.total || 0)} đã được ghi nhận.`
+                : 'Khách hàng hủy đơn hàng'
+        });
+        localStorage.setItem('pawpal_orders', JSON.stringify(finalOrders));
+    }
+
+    // Call Supabase OR API
+    if (window.API && typeof window.API.updateOrderStatus === 'function') {
+        window.API.updateOrderStatus(orderId, 'CANCELLED').catch(e => console.warn(e));
+    } else {
+        const db = window.SupabaseClient;
+        if (db) {
+            const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+            let query = db.from('sales_order').update({ order_status: 'CANCELLED', updated_at: new Date().toISOString() });
+            query = isUUID ? query.eq('id', orderId) : query.eq('order_code', orderId);
+            query.then(({error}) => { if (error) console.warn('[ReturnGuest] Cancel order sync error:', error); });
+        }
+    }
 
     const toastMsg = isPaidOnline
         ? 'Đã hủy đơn hàng. Yêu cầu hoàn tiền đã được ghi nhận!'
         : 'Đã hủy đơn hàng thành công!';
     showToast(toastMsg, 'success');
-    setTimeout(() => document.getElementById('rg-form').dispatchEvent(new Event('submit')), 1200);
+    renderResults(rgLastSearchState.bookings, rgLastSearchState.orders);
 }
 
 function normalizeOrderStatus(status) {

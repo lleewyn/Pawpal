@@ -352,7 +352,7 @@
     justify-content: space-between;
 }
 .pet-reminder-card h3 {
-    font-family: var(--font-primary);
+    font-family: var(--font-heading);
     font-size: 1.3rem;
     color: #2f433a;
     font-weight: 700;
