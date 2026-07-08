@@ -68,7 +68,7 @@ async function syncBookingsFromSupabase(currentUser) {
                 petBreed:        b.pet_profile?.breed         || '',
                 changeCount:     b.change_count               || 0,
                 note:            b.note || '',
-                price:           getPriceFromMatrix(b.service?.service_price_matrix, b.pet_profile?.species),
+                price:           getPriceFromMatrix(b.service?.service_price_matrix, b.pet_profile?.species) || localBooking?.price || 0,
                 // Giữ nguyên flag đã tích điểm để tránh cộng lại
                 pointsAwarded:   localBooking?.pointsAwarded  || false,
                 pointsEarned:    localBooking?.pointsEarned   || 0,

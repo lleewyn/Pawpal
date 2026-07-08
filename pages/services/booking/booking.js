@@ -1293,14 +1293,19 @@ function setupConfirmation() {
     const confirmBtn = document.getElementById('confirmBookingBtn');
 
     if (policyChk && confirmBtn) {
-        policyChk.addEventListener('change', () => {
-            confirmBtn.disabled = !policyChk.checked;
-        });
+        // Tránh add event listener nhiều lần khi chuyển đổi step
+        if (!confirmBtn.dataset.listenerAttached) {
+            confirmBtn.dataset.listenerAttached = 'true';
+            
+            policyChk.addEventListener('change', () => {
+                confirmBtn.disabled = !policyChk.checked;
+            });
 
-        confirmBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            processBookingSubmit();
-        });
+            confirmBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                processBookingSubmit();
+            });
+        }
     }
 }
 
