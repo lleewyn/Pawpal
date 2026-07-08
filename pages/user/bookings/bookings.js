@@ -76,13 +76,18 @@ async function syncBookingsFromSupabase(currentUser) {
             };
         });
 
-        // Replace bookings của user này trong localStorage
-        const local   = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-        const others  = local.filter(b =>
-            String(b.userId) !== String(currentUser.id) &&
-            String(b.userId) !== String(customerId)
-        );
-        localStorage.setItem('pawpal_bookings', JSON.stringify([...bookings, ...others]));
+        // Merge bookings từ Supabase vào local thay vì ghi đè hoàn toàn
+        const local = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        const merged = local.map(lb => {
+            const fromSb = bookings.find(b => String(b.id) === String(lb.id) || String(b._supabaseId) === String(lb._supabaseId));
+            return fromSb ? { ...lb, ...fromSb } : lb;
+        });
+        bookings.forEach(b => {
+            if (!merged.some(m => String(m.id) === String(b.id) || String(m._supabaseId) === String(b._supabaseId))) {
+                merged.push(b);
+            }
+        });
+        localStorage.setItem('pawpal_bookings', JSON.stringify(merged));
         console.log('[Bookings] ✅ Synced từ Supabase:', bookings.length, 'lịch hẹn');
     } catch (err) {
         console.warn('[Bookings] Supabase sync error:', err.message);

@@ -355,7 +355,7 @@
     font-family: var(--font-primary);
     font-size: 1.3rem;
     color: #2f433a;
-    font-weight: 800;
+    font-weight: 700;
     margin-bottom: 18px;
     letter-spacing: 0.2px;
 }
@@ -382,7 +382,7 @@
 }
 .pet-reminder-card .reminder-item .title {
     font-family: var(--font-primary);
-    font-weight: 800;
+    font-weight: 600;
     font-size: 0.9rem;
     line-height: 1.35;
     color: #2d4038;
@@ -394,7 +394,7 @@
     font-family: var(--font-primary);
     font-size: 0.78rem;
     margin-top: 4px;
-    font-weight: 700;
+    font-weight: 500;
 }
 .pet-reminder-card .reminder-item.yellow .time { color: #8c5a12; }
 .pet-reminder-card .reminder-item.green .time { color: #2e7d32; }
