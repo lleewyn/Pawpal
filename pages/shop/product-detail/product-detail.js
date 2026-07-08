@@ -968,6 +968,21 @@ function renderProductDetails(product) {
                             </div>
                             <div class="review-content">
                                 <p>${r.content}</p>
+                                ${r.hasMedia && r.media ? `
+                                <div class="review-media-list mt-2" style="display:flex; gap:10px;">
+                                    ${r.media.map(m => `<img src="${m}" alt="Review image" style="width:80px;height:80px;object-fit:cover;border-radius:4px;cursor:pointer;">`).join('')}
+                                </div>
+                                ` : ''}
+                                ${r.hasReply ? `
+                                <div class="seller-reply mt-3" style="background:#f0f9f4; border-left:3px solid var(--color-primary); padding:10px 14px; border-radius:8px;">
+                                    <div class="reply-header mb-1" style="font-weight:600; font-size:0.9rem; color:var(--color-primary);">
+                                        Phản hồi từ Pawpal:
+                                    </div>
+                                    <div class="reply-content" style="font-size:0.9rem; color:#444;">
+                                        ${r.shopReply}
+                                    </div>
+                                </div>
+                                ` : ''}
                             </div>
                         </div>
                     `;

@@ -575,8 +575,10 @@ async function getProductReviews(productId) {
             customerName: Array.isArray(r.customer?.customer_profile)
                 ? (r.customer.customer_profile[0]?.full_name || 'Khách hàng')
                 : (r.customer?.customer_profile?.full_name || 'Khách hàng'),
-            hasMedia: false,
-            hasReply: false
+            hasMedia: r.image_urls && r.image_urls.length > 0,
+            media: r.image_urls || [],
+            hasReply: !!r.shop_reply,
+            shopReply: r.shop_reply || ''
         }));
     } catch (err) {
         console.error('Error fetching product reviews:', err);
