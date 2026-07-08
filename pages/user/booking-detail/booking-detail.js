@@ -388,33 +388,15 @@ function checkBookingModifiability(booking) {
     const btnChange = document.getElementById('btnChangeSchedule');
     const btnCancel = document.getElementById('btnCancelBooking');
 
+    const scheduledAt = getBookingScheduledAt(booking);
+    if (!scheduledAt) {
+        btnChange.classList.add('d-none');
+        btnCancel.classList.add('d-none');
+        return;
+    }
+
     const now = new Date();
-    let bookingDateTime;
-
-    const dateStr = booking.date || booking.schedule?.date;
-
-    if (booking.timeStart && dateStr) {
-        const [year, month, day] = dateStr.split('-');
-        const [hours, minutes] = booking.timeStart.split(':');
-        bookingDateTime = new Date(year, month - 1, day, hours, minutes);
-    } else if (dateStr) {
-        bookingDateTime = new Date(dateStr);
-        bookingDateTime.setHours(9, 0, 0, 0);
-    } else {
-        // Không có ngày → ẩn cả hai nút, không crash
-        btnChange.classList.add('d-none');
-        btnCancel.classList.add('d-none');
-        return;
-    }
-
-    // Guard: nếu parse ra NaN thì cũng ẩn nút
-    if (isNaN(bookingDateTime.getTime())) {
-        btnChange.classList.add('d-none');
-        btnCancel.classList.add('d-none');
-        return;
-    }
-
-    const diffMinutes = (bookingDateTime - now) / (1000 * 60);
+    const diffMinutes = (scheduledAt - now) / (1000 * 60);
     const changeLimitReached = (booking.changeCount || 0) >= 2;
 
     const currentStatus = resolveBookingStatus(booking);
