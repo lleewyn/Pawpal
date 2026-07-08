@@ -32,7 +32,12 @@ INSERT INTO public.appointment (id, appointment_code, customer_id, pet_id, servi
 VALUES ('6b352c8b-393e-4fe7-b6a6-7107dbbc5f77', 'BKG-2026-GUEST1', 'd0000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', '2026-07-15', '14:00:00', 'CONFIRMED', 'UNPAID', 0, now(), now())
 ON CONFLICT (id) DO NOTHING;
 
--- 4. Lịch hẹn: Đã hoàn thành 
-INSERT INTO public.appointment (id, appointment_code, customer_id, pet_id, service_id, appointment_date, appointment_time, appointment_status, payment_status, change_count, created_at, updated_at)
-VALUES ('938d3d31-a622-4d3e-9d34-193fd3e960c8', 'BKG-2026-GUEST2', 'd0000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', '2026-07-01', '08:00:00', 'COMPLETED', 'PAID', 0, now(), now())
+-- 4. Lịch hẹn: Đã hoàn thành (Gán nhân viên d0000000-5555-5555-5555-555555555555)
+INSERT INTO public.appointment (id, appointment_code, customer_id, pet_id, service_id, staff_id, appointment_date, appointment_time, appointment_status, payment_status, change_count, created_at, updated_at)
+VALUES ('938d3d31-a622-4d3e-9d34-193fd3e960c8', 'BKG-2026-GUEST2', 'd0000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001', 'd0000000-5555-5555-5555-555555555555', '2026-07-01', '08:00:00', 'COMPLETED', 'PAID', 0, now(), now())
+ON CONFLICT (id) DO NOTHING;
+
+-- 5. Nhật ký chăm sóc (Care Log) cho lịch hẹn BKG-2026-GUEST2
+INSERT INTO public.care_log (id, appointment_id, pet_id, care_action_id, description, health_status, recorded_at, created_at, updated_at)
+VALUES ('27907ac8-0465-4c9c-83ed-bd6e9ccca486', '938d3d31-a622-4d3e-9d34-193fd3e960c8', '20000000-0000-0000-0000-000000000001', '90000000-1111-2222-3333-444444444444', 'Bé đã được tắm gội sạch sẽ và thơm tho. Bé rất ngoan, không quấy khóc.', 'Khỏe mạnh, da dẻ tốt, không có dấu hiệu nấm rận.', '2026-07-01 09:30:00', now(), now())
 ON CONFLICT (id) DO NOTHING;
