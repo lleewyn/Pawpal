@@ -1,6 +1,6 @@
 [
   {
-    "id": "USER-ADMIN",
+    "id": "d0000000-0000-0000-0000-000000000000",
     "name": "Admin PawPal",
     "phone": "0900000000",
     "email": "admin@pawpal.vn",
@@ -25,7 +25,7 @@
     "avatar": "/assets/images/avatars/admin.jpg"
   },
   {
-    "id": "USER-001",
+    "id": "d0000000-0000-0000-0000-000000000001",
     "name": "Lê Lệ Quyên",
     "phone": "0901234567",
     "email": "nguyenvana@gmail.com",
@@ -47,12 +47,11 @@
       "google": "nguyenvana@gmail.com",
       "facebook": null
     },
-    "avatar": "/assets/images/avatars/user1.jpg"
-    ,
+    "avatar": "/assets/images/avatars/user1.jpg",
     "tier": "Bạc"
   },
   {
-    "id": "USER-GUEST-DEMO",
+    "id": "d0000000-0000-0000-0000-000000000003",
     "name": "Khách Vãng Lai Demo",
     "phone": "0987654321",
     "email": null,
@@ -78,7 +77,7 @@
     "tier": "Thành viên Mới"
   },
   {
-    "id": "USER-GUEST-002",
+    "id": "d0000000-0000-0000-0000-000000000003",
     "name": "Trần Thị Bích",
     "phone": "0912345678",
     "email": null,
@@ -104,7 +103,7 @@
     "tier": "Thành viên Mới"
   },
   {
-    "id": "USER-003",
+    "id": "d0000000-0000-0000-0000-000000000004",
     "name": "Nguyễn Thị Bích Phượng",
     "phone": "0798833157",
     "email": "bphuong157@gmail.com",
@@ -130,7 +129,7 @@
     "tier": "Thành viên Mới"
   },
   {
-    "id": "USER-004",
+    "id": "d0000000-0000-0000-0000-000000000005",
     "name": "Nguyễn Lê Thi",
     "phone": "0834562948",
     "email": "lthi@gmail.com",
@@ -156,7 +155,7 @@
     "tier": "Thành viên Mới"
   },
   {
-    "id": "USER-005",
+    "id": "d0000000-0000-0000-0000-000000000006",
     "name": "Nguyễn Lê Nhật Khanh",
     "phone": "0972163376",
     "email": "khanh@gmail.com",
@@ -182,7 +181,7 @@
     "tier": "Bạc"
   },
   {
-    "id": "USER-GUEST-003",
+    "id": "d0000000-0000-0000-0000-000000000007",
     "name": "Lê Lệ Quyên",
     "phone": "0774561497",
     "email": null,
