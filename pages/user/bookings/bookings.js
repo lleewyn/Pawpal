@@ -539,21 +539,25 @@ function openQuickRescheduleModal(booking) {
     modalEl.id = 'quickRescheduleBookingModal';
     modalEl.className = 'modal fade';
     modalEl.tabIndex = -1;
+    const isHotelBooking = String(booking.serviceCategory || booking.category || booking.service_type || '').toLowerCase() === 'hotel' || String(serviceName).toLowerCase().includes('hotel');
+    
     modalEl.innerHTML = `
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Đổi lịch hẹn</h5>
+                    <h5 class="modal-title">${isHotelBooking ? 'Đổi ngày lưu trú' : 'Đổi lịch hẹn'}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted small mb-3">Chọn ngày, giờ và nhân viên mới cho lịch <strong>${serviceName}</strong> của <strong>${petName}</strong>.</p>
+                    <p class="text-muted small mb-3">${isHotelBooking ? 'Pet Hotel chỉ cần đổi ngày, không cần chọn giờ hay nhân viên.' : `Chọn ngày, giờ và nhân viên mới cho lịch <strong>${serviceName}</strong> của <strong>${petName}</strong>.`}</p>
                     <label class="form-label fw-semibold">Chọn ngày</label>
                     <input type="date" id="quickRescheduleDate" class="form-control mb-3" min="${minDate}">
+                    ${isHotelBooking ? '' : `
                     <label class="form-label fw-semibold">Chọn giờ</label>
                     <div class="d-flex flex-wrap gap-2 mb-3" id="quickRescheduleSlots">${slotOptions}</div>
                     <label class="form-label fw-semibold">Chọn nhân viên</label>
                     <div class="mb-3" id="quickRescheduleStaffs" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:12px;">${staffOptions}</div>
+                    `}
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Hủy</button>
@@ -567,38 +571,49 @@ function openQuickRescheduleModal(booking) {
     modal.show();
 
     let selectedDate = '';
-    let selectedSlot = '';
-    let selectedStaff = '';
+    let selectedSlot = isHotelBooking ? '' : '';
+    let selectedStaff = isHotelBooking ? 'Bảo mẫu khách sạn' : '';
     const refreshState = () => {
-        modalEl.querySelectorAll('.quick-slot-btn, .quick-staff-btn').forEach((btn) => btn.classList.remove('active'));
-        modalEl.querySelectorAll('.quick-slot-btn').forEach((btn) => {
-            if (btn.dataset.slot === selectedSlot) btn.classList.add('active');
-        });
-        modalEl.querySelectorAll('.quick-staff-btn').forEach((btn) => {
-            if (btn.dataset.staff === selectedStaff) btn.classList.add('active');
-        });
-        modalEl.querySelector('#quickConfirmRescheduleBtn').disabled = !(selectedDate && selectedSlot && selectedStaff);
+        if (!isHotelBooking) {
+            modalEl.querySelectorAll('.quick-slot-btn, .quick-staff-btn').forEach((btn) => btn.classList.remove('active'));
+            modalEl.querySelectorAll('.quick-slot-btn').forEach((btn) => {
+                if (btn.dataset.slot === selectedSlot) btn.classList.add('active');
+            });
+            modalEl.querySelectorAll('.quick-staff-btn').forEach((btn) => {
+                if (btn.dataset.staff === selectedStaff) btn.classList.add('active');
+            });
+        }
+        modalEl.querySelector('#quickConfirmRescheduleBtn').disabled = isHotelBooking ? !selectedDate : !(selectedDate && selectedSlot && selectedStaff);
     };
 
     modalEl.querySelector('#quickRescheduleDate').addEventListener('change', (e) => {
         selectedDate = e.target.value;
         refreshState();
     });
-    modalEl.querySelectorAll('.quick-slot-btn').forEach((btn) => {
-        btn.addEventListener('click', () => { selectedSlot = btn.dataset.slot; refreshState(); });
-    });
-    modalEl.querySelectorAll('.quick-staff-btn').forEach((btn) => {
-        btn.addEventListener('click', () => { selectedStaff = btn.dataset.staff; refreshState(); });
-    });
+    if (!isHotelBooking) {
+        modalEl.querySelectorAll('.quick-slot-btn').forEach((btn) => {
+            btn.addEventListener('click', () => { selectedSlot = btn.dataset.slot; refreshState(); });
+        });
+        modalEl.querySelectorAll('.quick-staff-btn').forEach((btn) => {
+            btn.addEventListener('click', () => { selectedStaff = btn.dataset.staff; refreshState(); });
+        });
+    }
 
     modalEl.querySelector('#quickConfirmRescheduleBtn').addEventListener('click', async () => {
         const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
         const idx = bookings.findIndex((b) => String(b.id || b._id) === String(bookingId));
         if (idx !== -1) {
             bookings[idx].date = selectedDate;
-            bookings[idx].time = selectedSlot;
-            bookings[idx].timeStart = selectedSlot;
-            bookings[idx].staff = selectedStaff;
+            if (!isHotelBooking) {
+                bookings[idx].time = selectedSlot;
+                bookings[idx].timeStart = selectedSlot;
+                bookings[idx].staff = selectedStaff;
+            } else {
+                bookings[idx].time = '';
+                bookings[idx].timeStart = '';
+                bookings[idx].timeEnd = '';
+                bookings[idx].staff = 'Bảo mẫu khách sạn';
+            }
             bookings[idx].changeCount = (bookings[idx].changeCount || 0) + 1;
             localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
         }
