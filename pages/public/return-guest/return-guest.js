@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             orders = mergedOrders;
             
-            showToast('Đã tìm thấy dữ liệu từ Supabase.', 'success');
+            showToast('Đã tìm thấy kết quả tra cứu.', 'success');
         }
 
         btn.disabled    = false;
