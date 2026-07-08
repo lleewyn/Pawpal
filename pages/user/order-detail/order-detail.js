@@ -854,8 +854,17 @@ function confirmReceived() {
     const modal = new bootstrap.Modal(el);
     modal.show();
 
-    document.getElementById('confirmReceivedBtn').addEventListener('click', () => {
+    document.getElementById('confirmReceivedBtn').addEventListener('click', function() {
+        this.disabled = true;
+        this.innerHTML = 'Đang xử lý...';
         modal.hide();
+
+        // Ẩn/disable nút Xác nhận ở ngoài màn hình chính để tránh bấm liên tục
+        const mainBtns = document.querySelectorAll('.btn-cta[onclick="confirmReceived()"]');
+        mainBtns.forEach(btn => {
+            btn.disabled = true;
+            btn.style.display = 'none';
+        });
 
         // Cộng điểm Paw Points trước khi chuyển trạng thái (idempotent)
         awardLoyaltyPoints(currentOrder);
@@ -891,7 +900,7 @@ window.confirmReceived = confirmReceived;
 
 function saveOrderToLocalStorage(order) {
     const allOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-    const index = allOrders.findIndex(o => o.id === order.id);
+    const index = allOrders.findIndex(o => String(o.id) === String(order.id));
     if (index !== -1) {
         allOrders[index] = order;
     } else {

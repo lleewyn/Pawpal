@@ -215,6 +215,9 @@
         /* Ensure drawer sits above the sticky header */
         z-index: 1202;
         overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
         display: flex;
         flex-direction: column;
     }
@@ -274,7 +277,7 @@
     .nav-menu .nav-link {
         display: block;
         width: 100%;
-        padding: 14px 0;
+        padding: 12px 0;
         font-size: 0.95rem;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.9);
@@ -289,6 +292,15 @@
     .nav-menu .nav-link.active {
         color: var(--color-accent) !important;
         font-weight: 700;
+    }
+
+    .nav-menu .dropdown-menu.show {
+        padding-bottom: 6px;
+    }
+
+    .nav-menu .dropdown-menu .dropdown-item {
+        padding-left: 10px;
+        padding-right: 0;
     }
 
     .nav-menu a::before { display: none; }

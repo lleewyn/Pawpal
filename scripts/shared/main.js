@@ -164,6 +164,17 @@ function initMobileNavigation() {
         if (e.key === 'Escape') closeDrawer();
     });
 
+    // Ensure the drawer starts closed on mobile and never inherits a stale open state.
+    nav.classList.remove('show');
+    toggleBtn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+    nav.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
+    nav.querySelectorAll('.dropdown-toggle').forEach(dt => {
+        dt.setAttribute('aria-expanded', 'false');
+        const svg = dt.querySelector('svg');
+        if (svg) svg.style.transform = 'rotate(0deg)';
+    });
+
     function openDrawer() {
         nav.classList.add('show');
         toggleBtn.setAttribute('aria-expanded', 'true');
