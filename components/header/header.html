@@ -102,7 +102,7 @@
                     </li>
 
                     <!-- Mobile only - Logged-in User -->
-                    <li class="nav-item mobile-drawer-only mobile-user-only mobile-account-group" style="display: none;">
+                    <li class="nav-item mobile-drawer-only mobile-user-only mobile-account-group d-none" >
                         <button type="button" class="nav-link mobile-account-toggle" aria-expanded="false">
                             <span>Tài khoản của tôi</span>
                             <svg class="mobile-account-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -119,17 +119,17 @@
                             <a href="/pages/user/loyalty/loyalty.html" class="nav-link mobile-account-child">Paw Points</a>
                             <a href="/pages/user/settings/settings.html" class="nav-link mobile-account-child">Cài đặt</a>
                             <a href="/pages/shop/cart/cart.html" class="nav-link mobile-account-child">
-                                Giỏ hàng của tôi <span class="cart-badge-mobile" style="color: var(--color-danger); font-weight: 700;"></span>
+                                Giỏ hàng của tôi <span class="cart-badge-mobile cart-badge-mobile-custom" ></span>
                             </a>
                         </div>
                     </li>
-                    <li class="nav-item mobile-drawer-only mobile-user-only mobile-logout-separate" style="display: none;">
-                        <a href="#" class="nav-link mobile-logout-btn" style="color: var(--color-danger) !important;">Đăng xuất</a>
+                    <li class="nav-item mobile-drawer-only mobile-user-only mobile-logout-separate d-none" >
+                        <a href="#" class="nav-link mobile-logout-btn text-danger-custom" >Đăng xuất</a>
                     </li>
 
                     <!-- Mobile only - Temporary Account -->
-                    <li class="nav-item mobile-drawer-only mobile-temp-only" style="display: none; padding: 14px 0;">
-                        <div class="temp-account-warning" style="margin: 0; background: var(--color-accent-light); color: var(--color-accent-dark); padding: 8px 12px; border-radius: var(--border-radius-pill); font-size: var(--fs-small); font-weight: 600; display: inline-flex; align-items: center; gap: 8px; width: fit-content;">
+                    <li class="nav-item mobile-drawer-only mobile-temp-only mobile-temp-item-padding" >
+                        <div class="temp-account-warning temp-account-warning-custom" >
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -138,11 +138,11 @@
                             <span>Tài khoản tạm</span>
                         </div>
                     </li>
-                    <li class="nav-item mobile-drawer-only mobile-temp-only" style="display: none;">
+                    <li class="nav-item mobile-drawer-only mobile-temp-only d-none" >
                         <a href="/pages/public/login/login.html?action=setup-password" class="nav-link nav-link-cta-mobile">Kích hoạt tài khoản</a>
                     </li>
-                    <li class="nav-item mobile-drawer-only mobile-temp-only" style="display: none;">
-                        <a href="#" class="nav-link mobile-logout-btn" style="color: var(--color-danger) !important;">Đăng xuất</a>
+                    <li class="nav-item mobile-drawer-only mobile-temp-only d-none" >
+                        <a href="#" class="nav-link mobile-logout-btn text-danger-custom" >Đăng xuất</a>
                     </li>
                 </ul>
 

@@ -4644,3 +4644,25 @@ white-space: nowrap;
     right: 16px !important;
     margin-top: 0 !important;
 }
+
+/* --- Extracted Inline Styles --- */
+.rma-refund-account-custom { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e2e8f0; font-size: 0.88rem; }
+.text-primary-light { color: var(--color-primary-light); }
+.empty-icon-diary-custom { color: var(--color-primary-light); display: inline-flex; justify-content: center; margin-bottom: var(--space-sm); }
+.mb-md { margin-bottom: var(--space-md); }
+.text-primary-custom { color: var(--color-primary); }
+.login-otp-text { font-size: var(--fs-small); color: var(--color-text-light); }
+.password-strength-text { font-size: 0.85rem; color: var(--color-text-light); margin-top: 6px; }
+.landing-hero-img-custom { border-radius: 12px; box-shadow: 0 32px 64px rgba(0,0,0,0.35); border: 2px solid rgba(255,255,255,0.12); }
+.header-placeholder-light { min-height: 110px; background: var(--color-bg-light); }
+.contact-map-iframe { border: 0; border-radius: var(--card-border-radius); }
+.blog-overlay-gradient { background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); }
+.text-danger-custom { color: var(--color-danger) !important; }
+.btn-favorite-custom { background: none; border: 1px solid var(--color-border); border-radius: 50%; width: 40px; height: 40px; cursor: pointer; transition: all 0.3s ease; }
+.footer-brand-description { font-size: 0.85rem; line-height: 1.6; margin-bottom: 20px; color: rgba(255,255,255,0.7); }
+.booking-summary-total-row { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--color-border); }
+.cart-badge-mobile-custom { color: var(--color-danger); font-weight: 700; }
+.mobile-temp-item-padding { display: none; padding: 14px 0; }
+.temp-account-warning-custom { margin: 0; background: var(--color-accent-light); color: var(--color-accent-dark); padding: 8px 12px; border-radius: var(--border-radius-pill); font-size: var(--fs-small); font-weight: 600; display: inline-flex; align-items: center; gap: 8px; width: fit-content; }
+.mt-minus-10 { margin-top: -10px; }
+.amenities-list-custom { list-style: disc; padding-left: 20px; color: var(--color-text); line-height: 1.6; }

@@ -1359,3 +1359,31 @@
     color:#b45309;
      font-weight:600;
 }
+
+
+/* Extracted from booking.html */
+
+        .quick-add-pet-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 3200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.48);
+            backdrop-filter: blur(6px);
+        }
+        .quick-add-pet-modal.active { display: flex; }
+        .quick-add-pet-dialog {
+            width: min(760px, 100%);
+            background: #fff;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22);
+        }
+        .pet-select-card-add {
+            border: 1px dashed rgba(42, 89, 68, 0.35);
+            background: rgba(42, 89, 68, 0.04);
+        }
+    

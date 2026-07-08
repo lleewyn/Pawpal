@@ -15,31 +15,7 @@
     <link rel="stylesheet" href="../../../styles/style.css">
     <!-- Components -->
     <link rel="stylesheet" href="booking.css">
-    <style>
-        .quick-add-pet-modal {
-            position: fixed;
-            inset: 0;
-            z-index: 3200;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.48);
-            backdrop-filter: blur(6px);
-        }
-        .quick-add-pet-modal.active { display: flex; }
-        .quick-add-pet-dialog {
-            width: min(760px, 100%);
-            background: #fff;
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22);
-        }
-        .pet-select-card-add {
-            border: 1px dashed rgba(42, 89, 68, 0.35);
-            background: rgba(42, 89, 68, 0.04);
-        }
-    </style>
+    
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
@@ -323,9 +299,9 @@
                                 <p class="timeslot-label" id="timeSlotLabel">Chọn khung giờ <span class="required">*</span></p>
                                 <div class="timeslot-availability">
                                     <span class="avail-dot avail-open"></span> Còn trống
-                                    <span class="avail-dot avail-busy" class="ms-3"></span> Đã đầy
-                                    <span class="avail-dot avail-held" class="ms-3"></span> Đang giữ chỗ
-                                    <span class="avail-dot avail-soon" class="ms-3"></span> Quá gần (< 2
+                                    <span class="avail-dot avail-busy ms-3"></span> Đã đầy
+                                    <span class="avail-dot avail-held ms-3"></span> Đang giữ chỗ
+                                    <span class="avail-dot avail-soon ms-3"></span> Quá gần (< 2
                                         tiếng) </div>
                                         <div class="timeslot-grid" id="timeslotGrid">
                                             <!-- Injected by JS -->
@@ -415,11 +391,11 @@
                                     <span class="sum-label">Tạm tính</span>
                                     <span class="sum-value" id="sumSubtotalVal">—</span>
                                 </div>
-                                <div class="summary-row" id="sumDiscountRow" class="d-none" style="color: var(--color-primary);">
+                                <div class="summary-row text-primary-custom" id="sumDiscountRow" class="d-none" >
                                     <span class="sum-label" id="sumDiscountLabel">Giảm giá</span>
                                     <span class="sum-value" id="sumDiscountVal">—</span>
                                 </div>
-                                <div class="summary-row price-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--color-border);">
+                                <div class="summary-row price-row booking-summary-total-row" >
                                     <span class="sum-label">Tổng tiền</span>
                                     <span class="sum-value price-val" id="sumPriceVal">—</span>
                                 </div>
