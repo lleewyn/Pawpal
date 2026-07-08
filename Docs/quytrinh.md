@@ -230,7 +230,14 @@ Khách hàng có thể theo dõi trạng thái phiếu theo thời gian thực: 
 Hoàn tiền: Pawpal thông báo số tiền và phương thức hoàn trả về đúng tài khoản/ví ban đầu.
 Quy trình kết thúc khi phiếu hậu mãi chuyển sang "Hoàn tất"; lúc này Pawpal tự động điều chỉnh lại toàn bộ điểm Paw Points phát sinh từ giao dịch đó, bao gồm cả điểm tích lũy mua sắm và điểm thưởng từ đánh giá (nếu có).
 
-Đối với khách vãng lai, PawPal hỗ trợ tra cứu lịch dịch vụ và đơn hàng bằng số điện thoại tại trang tra cứu công khai. Sau khi nhập số điện thoại hợp lệ, hệ thống tổng hợp dữ liệu liên quan từ lịch đặt dịch vụ và đơn hàng, sau đó hiển thị danh sách kết quả cùng trạng thái tương ứng. Với các đơn hàng vật lý còn trong thời hạn áp dụng, khách hàng có thể chọn chức năng đổi trả để mở form yêu cầu, trong đó hệ thống cho phép lựa chọn hình thức xử lý, nhập lý do và đính kèm hình ảnh hoặc video minh chứng. Sau khi gửi yêu cầu thành công, PawPal tạo phiếu đổi trả và cho phép người dùng theo dõi trạng thái xử lý ngay trên giao diện tra cứu. Trước khi cho phép thực hiện các thao tác nhạy cảm như đổi lịch hoặc cập nhật thông tin liên quan, PawPal yêu cầu xác thực OTP để đảm bảo người yêu cầu là chủ sở hữu số điện thoại đang tra cứu. Khi xác thực thành công, khách vãng lai có thể tiếp tục các thao tác được hệ thống cho phép. Nếu số điện thoại thuộc về một tài khoản đã tồn tại, hệ thống mới gợi ý người dùng đăng nhập hoặc thiết lập mật khẩu để quản lý thông tin đầy đủ hơn trong khu vực thành viên.
+**Đối với khách vãng lai (chưa có tài khoản):**
+Quy trình yêu cầu đổi trả được thực hiện tuần tự qua các bước sau tại trang Tra cứu công khai:
+- **Bước 1 - Tra cứu:** Khách hàng nhập số điện thoại mua hàng vào trang tra cứu.
+- **Bước 2 - Xác thực:** Hệ thống yêu cầu xác thực mã OTP gửi về số điện thoại để đảm bảo tính bảo mật. (Lưu ý: Nếu hệ thống nhận diện số điện thoại này thuộc về một tài khoản đã tồn tại, sẽ có thông báo gợi ý khách đăng nhập để quản lý dễ dàng hơn).
+- **Bước 3 - Hiển thị thông tin:** Sau khi xác thực OTP thành công, hệ thống hiển thị toàn bộ danh sách lịch dịch vụ và đơn hàng liên quan đến số điện thoại đó.
+- **Bước 4 - Yêu cầu đổi trả:** Đối với những đơn hàng vật lý còn trong thời hạn hỗ trợ, khách hàng nhấn chọn "Yêu cầu đổi trả".
+- **Bước 5 - Điền thông tin:** Khách hàng điền form yêu cầu tương tự như thành viên (chọn hình thức đổi/hoàn tiền, nhập lý do, đính kèm ảnh/video minh chứng).
+- **Bước 6 - Theo dõi phiếu:** Gửi yêu cầu thành công, PawPal cấp ngay một mã phiếu hậu mãi. Khách vãng lai có thể dùng chính số điện thoại này để theo dõi tiến độ xử lý phiếu ở những lần tra cứu tiếp theo.
 Quy tắc nghiệp vụ
 Chỉ áp dụng cho sản phẩm vật lý mua tại Shop (thức ăn, phụ kiện, đồ chơi...). Không áp dụng đổi trả đối với các dịch vụ đã thực hiện xong (Spa, Hotel).
 Yêu cầu phải được gửi trong vòng 07 ngày kể từ ngày đơn hàng chuyển sang trạng thái "Hoàn thành". Quá thời hạn này, nút "Yêu cầu Đổi trả" sẽ tự động ẩn.
