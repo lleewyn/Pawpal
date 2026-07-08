@@ -600,8 +600,8 @@ function openQuickRescheduleModal(booking) {
     modalEl.id = 'quickRescheduleBookingModal';
     modalEl.className = 'modal fade';
     modalEl.tabIndex = -1;
-    const isHotelBooking = String(booking.serviceCategory || booking.category || booking.service_type || '').toLowerCase() === 'hotel' || String(serviceName).toLowerCase().includes('hotel');
-    
+    // Bỏ check hotel theo yêu cầu của user, luôn hiển thị chọn giờ và nhân viên
+    const isHotelBooking = false;
     modalEl.innerHTML = `
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
