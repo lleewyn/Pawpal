@@ -159,66 +159,59 @@ module.exports = async function handler(req, res) {
             history: history
         });
 
-        // 2. Gửi tin nhắn mới nhất
+        // 2. Bắt đầu Stream request
         const userMsg = messages[messages.length - 1].content;
+        const streamResult = await chat.sendMessageStream(userMsg);
         
-        // Thử detect function call trước bằng non-streaming call nhanh
-        let response = await chat.sendMessage(userMsg);
-        
-        // 3. Xử lý Function Calling (Intent Routing)
-        const calls = typeof response.response.functionCalls === 'function' ? response.response.functionCalls() : response.response.functionCalls;
-        if (calls && calls.length > 0) {
-            const call = calls[0];
-            const toolName = call.name;
-            const toolArgs = call.args;
-            
-            console.log(`[Function Calling] Gemini wants to call: ${toolName}`, toolArgs);
-            let toolResult;
+        // Chuẩn bị header cho SSE streaming
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
 
-            if (toolName === 'get_user_orders') {
-                toolResult = await dbTools.get_user_orders(userId);
-            } else if (toolName === 'get_user_bookings') {
-                toolResult = await dbTools.get_user_bookings(userId);
-            } else if (toolName === 'search_store_info') {
-                toolResult = await dbTools.search_store_info(toolArgs.query);
-            }
+        for await (const chunk of streamResult.stream) {
+            const calls = typeof chunk.functionCalls === 'function' ? chunk.functionCalls() : chunk.functionCalls;
+            if (calls && calls.length > 0) {
+                const call = calls[0];
+                const toolName = call.name;
+                const toolArgs = call.args;
+                
+                console.log(`[Function Calling] Gemini wants to call: ${toolName}`, toolArgs);
+                let toolResult;
 
-            // Với function calling → dùng streaming cho response cuối cùng
-            const streamResult = await chat.sendMessageStream([{
-                functionResponse: {
-                    name: toolName,
-                    response: { result: toolResult }
+                if (toolName === 'get_user_orders') {
+                    toolResult = await dbTools.get_user_orders(userId);
+                } else if (toolName === 'get_user_bookings') {
+                    toolResult = await dbTools.get_user_bookings(userId);
+                } else if (toolName === 'search_store_info') {
+                    toolResult = await dbTools.search_store_info(toolArgs.query);
                 }
-            }]);
-            
-            // Stream response về client
-            res.setHeader('Content-Type', 'text/event-stream');
-            res.setHeader('Cache-Control', 'no-cache');
-            res.setHeader('Connection', 'keep-alive');
-            
-            for await (const chunk of streamResult.stream) {
-                const chunkText = chunk.text();
-                if (chunkText) {
-                    res.write(`data: ${JSON.stringify({ chunk: chunkText })}\n\n`);
+
+                // Có function call -> Gọi lại Gemini bằng streaming và trả thẳng về client
+                const secondStream = await chat.sendMessageStream([{
+                    functionResponse: {
+                        name: toolName,
+                        response: { result: toolResult }
+                    }
+                }]);
+                
+                for await (const secondChunk of secondStream.stream) {
+                    const text = typeof secondChunk.text === 'function' ? secondChunk.text() : '';
+                    if (text) {
+                        res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
+                    }
                 }
+                break; // Xử lý xong function call thì thoát vòng lặp ngoài
             }
-            res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-            res.end();
-        } else {
-            // Không có function calling → stream ngay từ đầu
-            const streamResult = await chat.sendMessageStream(userMsg);
-            // Lấy lại nếu đã non-stream ở trên, cần dùng stream mới
-            // Thực ra response đã có rồi, dùng text() trực tiếp
-            const textResponse = response.response.text();
             
-            // Stream response về client
-            res.setHeader('Content-Type', 'text/event-stream');
-            res.setHeader('Cache-Control', 'no-cache');
-            res.setHeader('Connection', 'keep-alive');
-            res.write(`data: ${JSON.stringify({ chunk: textResponse })}\n\n`);
-            res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-            res.end();
+            // Nếu không phải function call, stream thẳng text về client
+            const text = typeof chunk.text === 'function' ? chunk.text() : '';
+            if (text) {
+                res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
+            }
         }
+
+        res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+        res.end();
 
     } catch (error) {
         console.error("Backend Error:", error);
