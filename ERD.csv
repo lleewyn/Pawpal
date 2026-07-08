@@ -357,6 +357,7 @@ STT	Thực thể	Thuộc tính	Kiểu dữ liệu	Độ dài	Khóa	Null	Unique
 		rating	SMALLINT	2 bytes		No	No
 		review_content	TEXT			Yes	No
 		image_urls	JSONB			Yes	No
+		shop_reply	TEXT			Yes	No
 		review_status	VARCHAR	20		No	No
 		created_at	TIMESTAMP	8 bytes		No	No
 		updated_at	TIMESTAMP	8 bytes		No	No
@@ -385,3 +386,18 @@ STT	Thực thể	Thuộc tính	Kiểu dữ liệu	Độ dài	Khóa	Null	Unique
 		is_read	BOOLEAN	1		No	No
 		sent_at	TIMESTAMP	8 bytes		No	No
 		read_at	TIMESTAMP	8 bytes		Yes	No
+45	support_ticket	id	UUID	16 bytes	PK	No	Yes
+		user_id	UUID	16 bytes	FK	Yes	No
+		title	VARCHAR	200		No	No
+		type	VARCHAR	50		No	No
+		priority	VARCHAR	20		No	No
+		status	VARCHAR	20		No	No
+		rating	SMALLINT	2 bytes		Yes	No
+		created_at	TIMESTAMP	8 bytes		No	No
+		updated_at	TIMESTAMP	8 bytes		No	No
+46	support_ticket_message	id	UUID	16 bytes	PK	No	Yes
+		ticket_id	UUID	16 bytes	FK	No	No
+		sender_type	VARCHAR	20		No	No
+		agent_name	VARCHAR	100		Yes	No
+		content	TEXT			No	No
+		created_at	TIMESTAMP	8 bytes		No	No
