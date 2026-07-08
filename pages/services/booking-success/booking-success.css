@@ -131,16 +131,17 @@
 /* Member Actions */
 .member-actions {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-width: 320px;
+    flex-direction: row;
+    justify-content: center;
+    gap: 16px;
+    max-width: 100%;
     margin: 0 auto;
 }
 
 .member-actions .btn-cta,
 .member-actions .btn-green-outline {
-    display: block;
-    width: 100%;
+    flex: 1;
+    max-width: 250px;
     text-align: center;
     padding: 12px;
     font-size: 0.95rem;
