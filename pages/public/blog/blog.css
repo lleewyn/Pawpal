@@ -560,17 +560,57 @@
         padding: var(--space-lg);
     }
 
+    .blog-hero-shell {
+        gap: var(--space-md);
+    }
+
     .blog-hero-title {
-        font-size: 2.35rem;
+        max-width: 100%;
+        font-size: clamp(1.95rem, 8vw, 2.4rem);
+        line-height: 1.08;
     }
 
     .blog-hero-stats {
         grid-template-columns: 1fr;
     }
 
+    #blog-hero-spotlight-wrapper {
+        display: none;
+    }
+
     .blog-search-form,
     .blog-cta-actions {
         flex-direction: column;
+    }
+
+    .blog-search-form input,
+    .blog-search-form .btn-cta,
+    .blog-cta-actions a {
+        width: 100%;
+    }
+
+    .blog-search-form input {
+        flex: 0 0 auto;
+        flex-basis: auto;
+        min-height: 48px;
+        height: auto;
+        align-self: stretch;
+    }
+
+    #blog-hero-spotlight-wrapper .blog-hero-spotlight {
+        margin-top: 4px;
+    }
+
+    #blog-hero-spotlight-wrapper .blog-hero-spotlight .img-wrapper {
+        aspect-ratio: 16 / 9;
+    }
+
+    #blog-hero-spotlight-wrapper .blog-hero-spotlight .card-content {
+        padding: var(--space-sm);
+    }
+
+    #blog-hero-spotlight-wrapper .blog-hero-spotlight .card-title {
+        font-size: 1.3rem;
     }
 
     .trending-rank {
@@ -579,6 +619,20 @@
 }
 
 @media (max-width: 640px) {
+    .blog-hero-section {
+        padding-top: var(--space-lg);
+    }
+
+    .blog-hero-shell {
+        padding: 18px;
+        gap: 18px;
+    }
+
+    .blog-kicker {
+        min-height: 34px;
+        font-size: 0.7rem;
+    }
+
     .btn-filter-pill,
     .btn-filter-tag {
         min-height: 38px;
@@ -586,11 +640,36 @@
     }
 
     .blog-hero-title {
-        font-size: 2rem;
+        font-size: clamp(1.8rem, 7vw, 2rem);
     }
 
     .blog-card-small,
     .news-list-item {
         padding: var(--space-sm);
+    }
+
+    .blog-search-form input {
+        min-height: 48px;
+        font-size: 0.95rem;
+    }
+
+    #blog-hero-spotlight-wrapper .blog-hero-spotlight .card-meta-line,
+    #blog-hero-spotlight-wrapper .blog-hero-spotlight .card-excerpt {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .blog-hero-shell {
+        padding: 16px;
+    }
+
+    .blog-search-form input,
+    .blog-search-form .btn-cta {
+        min-width: 0;
+    }
+
+    .blog-hero-stats .hero-stat-card {
+        padding: 0.8rem;
     }
 }

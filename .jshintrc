@@ -1,0 +1,10 @@
+{
+  "esversion": 11,
+  "browser": true,
+  "undef": false,
+  "unused": false,
+  "asi": true,
+  "expr": true,
+  "boss": true,
+  "-W097": true
+}

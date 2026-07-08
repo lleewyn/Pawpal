@@ -5,7 +5,7 @@
  */
 
 export const API = {
-    DATA_VERSION: '2026-07-04-v13-guest-data',
+    DATA_VERSION: '2026-07-04-v14-guest-data',
     USE_BACKEND: false, // Thiết lập false để ngắt kết nối backend MongoDB, chuyển hoàn toàn sang Mock offline bằng LocalStorage và tệp tin JSON tĩnh.
 
     getBaseUrl() {
@@ -86,20 +86,6 @@ export const API = {
         }
 
         // Tắt hoàn toàn việc seed dữ liệu từ JSON để sử dụng Supabase
-        // Xoá bỏ dữ liệu mock cũ
-        const mockKeys = [
-            'pawpal_pets',
-            'pawpal_pets_supabase_synced',
-            'pawpal_orders',
-            'pawpal_orders_seeded',
-            'pawpal_bookings',
-            'pawpal_notifications',
-            'pawpal_vouchers',
-            'pawpal_returns',
-            'pawpal_pet_tracker_logs'
-        ];
-        mockKeys.forEach(key => localStorage.removeItem(key));
-        
         safeWrite('pawpal_mock_data_version', this.DATA_VERSION);
     },
 

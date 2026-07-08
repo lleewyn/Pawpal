@@ -63,6 +63,35 @@ seedLocalStorageIfNeeded();
     }
 })();
 
+document.addEventListener('DOMContentLoaded', function initMobileSidebarOverlay() {
+    const toggleBtn = document.getElementById('dashboardSidebarToggle');
+    const backdrop = document.getElementById('dashboardSidebarBackdrop');
+    // Bỏ tìm sidebar tĩnh vì components.js có thể ghi đè div#user-sidebar
+    if (!toggleBtn || !backdrop) return;
+
+    const setOpen = (open) => {
+        document.body.classList.toggle('dashboard-sidebar-open', open);
+        backdrop.hidden = !open;
+        toggleBtn.setAttribute('aria-expanded', String(open));
+    };
+
+    toggleBtn.addEventListener('click', () => {
+        setOpen(!document.body.classList.contains('dashboard-sidebar-open'));
+    });
+
+    backdrop.addEventListener('click', () => setOpen(false));
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 1024) setOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') setOpen(false);
+    });
+
+    setOpen(false);
+});
+
 // Load sidebar synchronously if #user-sidebar exists
 (function loadSidebar() {
     const sidebarContainer = document.getElementById('user-sidebar');

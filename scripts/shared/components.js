@@ -20,11 +20,11 @@
     function getRootPath() {
         // Detect xem script components.js đang được load từ đâu.
         // Cả server (http/https) và file:// đều có thể xử lý bằng cách dùng src của thẻ script.
-        var scripts = document.querySelectorAll('script[src]');
-        for (var i = 0; i < scripts.length; i++) {
-            var src = scripts[i].src;
-            var marker = '/scripts/shared/components.js';
-            var idx = src.indexOf(marker);
+        const scripts = document.querySelectorAll('script[src]');
+        for (let i = 0; i < scripts.length; i++) {
+            const src = scripts[i].src;
+            const marker = '/scripts/shared/components.js';
+            const idx = src.indexOf(marker);
             if (idx !== -1) {
                 return src.substring(0, idx) + '/';
             }
@@ -36,12 +36,12 @@
         }
 
         // Fallback cho file:// khi không có script src rõ ràng.
-        var depth = window.location.pathname.split('/').filter(Boolean).length;
+        const depth = window.location.pathname.split('/').filter(Boolean).length;
         return depth <= 1 ? './' : '../'.repeat(Math.max(0, depth - 1));
     }
 
     // Expose globally for other scripts
-    window.pawpalGetRootPath = getRootPath;
+    window['pawpalGetRootPath'] = getRootPath;
 
     function cleanInjectedHtml(html) {
         // Dùng DOMParser để an toàn hơn — tránh regex xoá nhầm nội dung HTML

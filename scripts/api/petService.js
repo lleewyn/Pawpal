@@ -299,7 +299,7 @@ export async function getPets(userId) {
     const targetUserId = userId || currentUser?.id || null;
     const localPets = normalizePetList(JSON.parse(localStorage.getItem('pawpal_pets') || '[]'));
 
-    const db = window.SupabaseClient;
+    const db = window['SupabaseClient'];
     if (db && currentUser) {
         try {
             const customerId = await getSupabaseCustomerId(db, currentUser);
@@ -362,9 +362,9 @@ export async function getPets(userId) {
                 localStorage.setItem('pawpal_pets', JSON.stringify(deduped));
 
                 // Nếu chỉ có pet từ lịch hẹn cũ, sync ngược lên Supabase để cố định hồ sơ
-                if (appointmentPets.length && window.API && window.API.savePets) {
+                if (appointmentPets.length && window['API'] && window['API'].savePets) {
                     try {
-                        await window.API.savePets(deduped);
+                        await window['API'].savePets(deduped);
                     } catch (syncErr) {
                         console.warn('[petService] Backfill pets to Supabase failed:', syncErr?.message || syncErr);
                     }
@@ -411,7 +411,7 @@ export async function savePets(pets) {
         localStorage.setItem('pawpal_pets', JSON.stringify(normalizedPets));
 
         // ── Sync lên Supabase ──────────────────────────────────────────────
-        const db = window.SupabaseClient;
+        const db = window['SupabaseClient'];
         if (db && currentUser) {
             try {
                 const customerId = await getSupabaseCustomerId(db, currentUser);
@@ -483,7 +483,7 @@ export async function deletePet(petId) {
     localStorage.setItem('pawpal_pets', JSON.stringify(updatedPets));
 
     // Sync lên Supabase
-    const db = window.SupabaseClient;
+    const db = window['SupabaseClient'];
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (db && currentUser) {
         try {
@@ -521,7 +521,7 @@ export async function restorePet(petId) {
     localStorage.setItem('pawpal_pets', JSON.stringify(updatedPets));
 
     // Sync lên Supabase
-    const db = window.SupabaseClient;
+    const db = window['SupabaseClient'];
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (db && currentUser) {
         try {

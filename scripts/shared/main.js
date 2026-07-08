@@ -133,6 +133,7 @@ function initMobileNavigation() {
     // Close on overlay click (click outside drawer)
     // We'll create an overlay element when opening the drawer and remove it on close.
     let mobileOverlay = null;
+    let scrollLockY = 0;
     function createOverlay() {
         if (mobileOverlay) return;
         mobileOverlay = document.createElement('div');
@@ -164,6 +165,16 @@ function initMobileNavigation() {
         if (e.key === 'Escape') closeDrawer();
     });
 
+    // If the viewport changes across the breakpoint, always reset the drawer state.
+    let wasMobile = window.innerWidth < 1250;
+    window.addEventListener('resize', () => {
+        const isMobile = window.innerWidth < 1250;
+        if (isMobile !== wasMobile) {
+            closeDrawer();
+        }
+        wasMobile = isMobile;
+    });
+
     // Ensure the drawer starts closed on mobile and never inherits a stale open state.
     nav.classList.remove('show');
     toggleBtn.setAttribute('aria-expanded', 'false');
@@ -176,6 +187,7 @@ function initMobileNavigation() {
     });
 
     function openDrawer() {
+        scrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
         nav.classList.add('show');
         toggleBtn.setAttribute('aria-expanded', 'true');
         document.body.style.overflow = 'hidden';
@@ -217,14 +229,16 @@ function initMobileNavigation() {
     const dropdownToggles = nav.querySelectorAll('.dropdown-toggle');
     dropdownToggles.forEach(dt => {
         if (dt.dataset.mobileDropdownBound === 'true') return;
-        dt.addEventListener('click', () => {
-            // after bootstrap or custom toggle behavior, flip the SVG
+        
+        dt.addEventListener('click', (e) => {
+            // Wait for Bootstrap to toggle the class
             setTimeout(() => {
-                const expanded = dt.getAttribute('aria-expanded') === 'true' || dt.classList.contains('show');
+                const expanded = dt.classList.contains('show');
                 const svg = dt.querySelector('svg');
                 if (svg) svg.style.transform = expanded ? 'rotate(180deg)' : 'rotate(0deg)';
-            }, 40);
+            }, 50);
         });
+        
         dt.dataset.mobileDropdownBound = 'true';
     });
 

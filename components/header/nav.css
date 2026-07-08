@@ -197,7 +197,8 @@
 
     .mobile-nav-toggle {
         display: block;
-        z-index: 1002;
+        position: relative;
+        z-index: 1205;
     }
 
     /* Drawer — hidden by default */
@@ -214,15 +215,27 @@
         transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
         /* Ensure drawer sits above the sticky header */
         z-index: 1202;
+        visibility: hidden;
+        pointer-events: none;
         overflow-y: auto;
-        overscroll-behavior: contain;
+        overflow-x: hidden;
+        overscroll-behavior-y: contain;
         -webkit-overflow-scrolling: touch;
-        touch-action: pan-y;
+        touch-action: auto;
+        min-height: 0;
         display: flex;
         flex-direction: column;
     }
 
-    .nav-menu.show { transform: translateX(0); }
+    .nav-menu.show {
+        transform: translateX(0);
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .mobile-nav-overlay {
+        z-index: 1201;
+    }
 
     .nav-menu ul,
     .nav-menu .navbar-nav {
@@ -231,6 +244,7 @@
         gap: 16px;
         width: 100%;
         margin-bottom: auto;
+        min-height: 0;
     }
 
     /* Mobile Dropdown styles */
@@ -306,6 +320,9 @@
     .nav-menu a::before { display: none; }
     .nav-menu .dropdown-toggle::after { display: none !important; }
     .nav-menu .nav-link-cta-mobile { color: var(--color-accent) !important; }
+    .nav-menu .nav-link-cta-mobile {
+        padding-top: 14px;
+    }
     .nav-menu li.nav-item.mobile-drawer-only:not(.mobile-user-only):not(.mobile-temp-only),
     .nav-menu li.nav-item.mobile-guest-only {
         display: list-item !important;

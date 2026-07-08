@@ -436,7 +436,7 @@
 /* ── Responsive: ≤768px ──────────────────────────────────────────────── */
 @media (max-width: 768px) {
     .orders-page-wrapper {
-        padding: var(--space-lg) var(--space-md);
+        padding: var(--space-md) var(--space-md) var(--space-lg);
     }
 
     .orders-stats {

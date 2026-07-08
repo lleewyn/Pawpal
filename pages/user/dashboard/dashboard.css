@@ -101,6 +101,40 @@
     top: calc(var(--space-lg) + 80px);
 }
 
+.dashboard-sidebar-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: var(--space-sm);
+    padding: 8px 16px;
+    border: 1px solid rgba(42, 89, 68, 0.18);
+    border-radius: 999px;
+    background: var(--color-bg-white);
+    color: var(--color-primary-dark);
+    font-weight: 700;
+    box-shadow: var(--shadow-card);
+}
+
+.dashboard-sidebar-toggle-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dashboard-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(16, 35, 28, 0.38);
+    backdrop-filter: blur(2px);
+    z-index: 1098;
+    opacity: 0;
+    transition: opacity 220ms ease;
+}
+
+body.dashboard-sidebar-open .dashboard-sidebar-backdrop {
+    opacity: 1;
+}
+
 .sidebar-title {
     font-family: var(--font-heading);
     font-size: var(--fs-h6);
@@ -867,12 +901,26 @@ input:checked + .slider:before {
 /* Responsive - tuân thủ design.md breakpoints */
 @media (max-width: 1024px) {
     .dashboard-sidebar {
-    min-height: 300px;
-        position: static;
-        margin-bottom: var(--space-md);
+        min-height: 300px;
+        position: fixed;
+        top: 128px;
+        left: 12px;
+        width: min(320px, calc(100vw - 24px));
+        max-height: calc(100dvh - 144px);
+        overflow-y: auto;
+        margin-bottom: 0;
+        z-index: 1101;
+        transform: translateX(calc(-100% - 24px));
+        transition: transform 240ms ease;
+        will-change: transform;
     }
+
+    body.dashboard-sidebar-open .dashboard-sidebar {
+        transform: translateX(0);
+    }
+
     .dashboard-container {
-        padding: var(--space-lg) 0;
+        padding: var(--space-md) 0 var(--space-lg);
     }
     .dashboard-grid {
         grid-template-columns: 1fr;
@@ -914,11 +962,15 @@ input:checked + .slider:before {
         border-bottom: none;
         padding-bottom: 0;
     }
+
+    .dashboard-sidebar-toggle {
+        margin-left: 12px;
+    }
 }
 
 @media (max-width: 640px) {
     .dashboard-container {
-        padding: var(--space-md) 0;
+        padding: var(--space-sm) 0 var(--space-md);
     }
 
     .sidebar-nav {
