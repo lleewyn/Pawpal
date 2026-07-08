@@ -583,7 +583,7 @@ function initProfileEditForm(user) {
         renderAddresses(editingAddresses);
     });
 
-    saveButton.addEventListener('click', () => {
+    saveButton.addEventListener('click', async () => {
         const updatedName = nameInput.value.trim();
         const updatedEmail = emailInput.value.trim();
         const updatedPhone = phoneInput.value.trim();
@@ -605,6 +605,36 @@ function initProfileEditForm(user) {
             addresses: addresses,
             address: buildAddressLabel(addresses[0]) || ''
         };
+
+        // Sync to Supabase
+        const db = window.SupabaseClient;
+        if (db && updatedUser.id) {
+            saveButton.disabled = true;
+            try {
+                await db.from('customer').update({ email: updatedEmail || null, phone_main: updatedPhone }).eq('id', updatedUser.id);
+                await db.from('customer_profile').update({ full_name: updatedName }).eq('customer_id', updatedUser.id);
+
+                for (const addr of addresses) {
+                    const addrPayload = {
+                        customer_id: updatedUser.id,
+                        receiver_name: addr.name,
+                        receiver_phone: addr.phone,
+                        street_address: addr.street,
+                        province: addr.city,
+                        is_default: addr.isDefault
+                    };
+                    if (addr.id && !addr.id.startsWith('addr-')) {
+                        await db.from('customer_address').update(addrPayload).eq('id', addr.id);
+                    } else {
+                        await db.from('customer_address').insert(addrPayload);
+                    }
+                }
+            } catch (err) {
+                console.warn('[Dashboard] Supabase sync profile failed:', err.message);
+            }
+            saveButton.disabled = false;
+        }
+
         updateCurrentUserRecord(updatedUser);
         loadProfileData(updatedUser);
         if (modalInstance) modalInstance.hide();
@@ -633,7 +663,7 @@ function initAddressEditForm(user) {
         viewCard.classList.remove('d-none');
     });
 
-    btnSave.addEventListener('click', () => {
+    btnSave.addEventListener('click', async () => {
         const updatedAddress = addressInput.value.trim();
         const normalizedPrimary = normalizeAddressEntry(updatedAddress, user);
         const otherAddresses = getStructuredAddresses(user).slice(1);
@@ -642,6 +672,30 @@ function initAddressEditForm(user) {
             address: updatedAddress,
             addresses: normalizedPrimary ? [normalizedPrimary, ...otherAddresses] : otherAddresses
         };
+
+        // Sync to Supabase
+        const db = window.SupabaseClient;
+        if (db && updatedUser.id && normalizedPrimary) {
+            btnSave.disabled = true;
+            try {
+                const addrPayload = {
+                    customer_id: updatedUser.id,
+                    receiver_name: normalizedPrimary.name,
+                    receiver_phone: normalizedPrimary.phone,
+                    street_address: normalizedPrimary.street,
+                    province: normalizedPrimary.city,
+                    is_default: true
+                };
+                if (normalizedPrimary.id && !normalizedPrimary.id.startsWith('addr-')) {
+                    await db.from('customer_address').update(addrPayload).eq('id', normalizedPrimary.id);
+                } else {
+                    await db.from('customer_address').insert(addrPayload);
+                }
+            } catch (err) {
+                console.warn('[Dashboard] Supabase sync address failed:', err.message);
+            }
+            btnSave.disabled = false;
+        }
 
         updateCurrentUserRecord(updatedUser);
         loadProfileData(updatedUser);
