@@ -5,7 +5,7 @@
  */
 
 export const API = {
-    DATA_VERSION: '2026-07-04-v11-fix-user-matching',
+    DATA_VERSION: '2026-07-04-v12-guest-data',
     USE_BACKEND: false, // Thiết lập false để ngắt kết nối backend MongoDB, chuyển hoàn toàn sang Mock offline bằng LocalStorage và tệp tin JSON tĩnh.
 
     getBaseUrl() {

@@ -1082,5 +1082,101 @@
         "description": "Giao hàng thành công"
       }
     ]
+  },
+  {
+    "id": "ORD-2026-GUEST1",
+    "userId": null,
+    "userPhone": "0987654321",
+    "status": "preparing",
+    "paymentStatus": "paid",
+    "paymentMethod": "momo",
+    "createdAt": "2026-07-08T10:00:00",
+    "updatedAt": "2026-07-08T10:30:00",
+    "delivery": {
+      "name": "Guest Test",
+      "phone": "0987654321",
+      "address": "123 Test Street"
+    },
+    "products": [
+      {
+        "id": "PROD-001",
+        "name": "Thức ăn cho chó Royal Canin Adult 15kg",
+        "image": "/assets/images/shop/products/TP-SUP-09.png",
+        "quantity": 1,
+        "price": 225000,
+        "total": 225000
+      }
+    ],
+    "pricing": {
+      "subtotal": 225000,
+      "shippingFee": 30000,
+      "discount": 0,
+      "total": 255000
+    },
+    "timeline": [
+      {
+        "status": "placed",
+        "timestamp": "2026-07-08T10:00:00",
+        "title": "Đặt hàng thành công",
+        "description": "Đơn hàng đã được ghi nhận trên hệ thống."
+      },
+      {
+        "status": "preparing",
+        "timestamp": "2026-07-08T10:30:00",
+        "title": "Đang chuẩn bị hàng",
+        "description": "PawPal đang đóng gói đơn hàng của bạn."
+      }
+    ]
+  },
+  {
+    "id": "ORD-2026-GUEST2",
+    "userId": null,
+    "userPhone": "0987654321",
+    "status": "completed",
+    "paymentStatus": "paid",
+    "paymentMethod": "cod",
+    "createdAt": "2026-07-01T10:00:00",
+    "updatedAt": "2026-07-04T10:30:00",
+    "delivery": {
+      "name": "Guest Test",
+      "phone": "0987654321",
+      "address": "123 Test Street"
+    },
+    "products": [
+      {
+        "id": "PROD-002",
+        "name": "Đồ chơi gặm xương cao su",
+        "image": "/assets/images/shop/products/pk-dochoi-01.jpg",
+        "quantity": 1,
+        "price": 400000,
+        "total": 400000
+      }
+    ],
+    "pricing": {
+      "subtotal": 400000,
+      "shippingFee": 30000,
+      "discount": 0,
+      "total": 430000
+    },
+    "timeline": [
+      {
+        "status": "placed",
+        "timestamp": "2026-07-01T10:00:00",
+        "title": "Đặt hàng thành công",
+        "description": "Đơn hàng đã được ghi nhận trên hệ thống."
+      },
+      {
+        "status": "delivered",
+        "timestamp": "2026-07-03T10:30:00",
+        "title": "Đã giao hàng",
+        "description": "Đơn hàng đã được giao thành công."
+      },
+      {
+        "status": "completed",
+        "timestamp": "2026-07-04T10:30:00",
+        "title": "Hoàn thành",
+        "description": "Khách hàng xác nhận đã nhận hàng"
+      }
+    ]
   }
 ]

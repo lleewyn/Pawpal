@@ -330,5 +330,35 @@
     "price": 320000,
     "branch": "PawPal Chi nhánh Quận 10",
     "staff": "Lê Hoàng Tiến"
+  },
+  {
+    "id": "BKG-2026-GUEST1",
+    "userId": null,
+    "phone": "0987654321",
+    "petId": "PET-001",
+    "petName": "Guest Pet 1",
+    "serviceName": "Tắm sấy trọn gói",
+    "date": "2026-07-15",
+    "time": "14:00",
+    "status": "upcoming",
+    "price": 250000,
+    "branch": "PawPal Chi nhánh Quận 1",
+    "createdAt": "2026-07-08T10:00:00",
+    "updatedAt": "2026-07-08T10:00:00"
+  },
+  {
+    "id": "BKG-2026-GUEST2",
+    "userId": null,
+    "phone": "0987654321",
+    "petId": "PET-001",
+    "petName": "Guest Pet 1",
+    "serviceName": "Khách sạn thú cưng (3 ngày)",
+    "date": "2026-07-01",
+    "time": "08:00",
+    "status": "completed",
+    "price": 1200000,
+    "branch": "PawPal Chi nhánh Quận 1",
+    "createdAt": "2026-06-25T10:00:00",
+    "updatedAt": "2026-07-04T10:00:00"
   }
 ]
