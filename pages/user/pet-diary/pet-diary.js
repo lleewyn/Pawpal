@@ -80,21 +80,20 @@ async function handlePetChange(e) {
     const petId = e.target.value;
     const emptyState = document.getElementById('emptyState');
     const diaryContent = document.getElementById('diaryContent');
+    const dashboardState = document.getElementById('dashboardState');
 
     if (!petId) {
-        const dashboardState = document.getElementById('dashboardState');
-        if (dashboardState) dashboardState.style.display = 'block';
+        if (dashboardState) dashboardState.classList.remove('d-none');
         if (typeof renderActiveServicesDashboard === 'function') {
             renderActiveServicesDashboard();
         }
-        if (diaryContent) diaryContent.style.display = 'none';
+        if (diaryContent) diaryContent.classList.add('d-none');
         return;
     }
 
-    const dashboardState = document.getElementById('dashboardState');
-    if (dashboardState) dashboardState.style.display = 'none';
-    if (emptyState) emptyState.style.display = 'none';
-    if (diaryContent) diaryContent.style.display = 'block';
+    if (dashboardState) dashboardState.classList.add('d-none');
+    if (emptyState) emptyState.classList.add('d-none');
+    if (diaryContent) diaryContent.classList.remove('d-none');
 
     currentPetId = petId;
     await loadPetDiary(petId);
@@ -729,16 +728,16 @@ async function renderActiveServicesDashboard() {
     });
 
     if (activeSessions.length === 0) {
-        dashboardState.style.display = 'block';
-        emptyState.style.display = 'block';
-        activeContainer.style.display = 'none';
+        dashboardState.classList.remove('d-none');
+        emptyState.classList.remove('d-none');
+        activeContainer.classList.add('d-none');
         return;
     }
 
     // Has active services
-    dashboardState.style.display = 'block';
-    emptyState.style.display = 'none';
-    activeContainer.style.display = 'block';
+    dashboardState.classList.remove('d-none');
+    emptyState.classList.add('d-none');
+    activeContainer.classList.remove('d-none');
     grid.innerHTML = '';
 
     activeSessions.forEach(item => {
