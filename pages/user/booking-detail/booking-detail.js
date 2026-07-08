@@ -933,9 +933,17 @@ function resolveBookingStatus(booking) {
         return rawStatus;
     }
 
-    const serviceCategory = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase();
-    if (serviceCategory === 'hotel') {
-        return rawStatus === 'confirmed' ? 'confirmed' : 'confirmed';
+    const isHotel = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase() === 'hotel' || String(booking?.service || booking?.serviceName || '').toLowerCase().includes('hotel');
+    
+    if (isHotel && booking.dateEnd) {
+        const endDate = new Date(`${booking.dateEnd}T12:00:00`);
+        const now = Date.now();
+        if (!Number.isNaN(endDate.getTime())) {
+            if (now > endDate.getTime() + 4 * 3600000) return 'completed';
+            const startDate = new Date(`${booking.date}T12:00:00`);
+            if (now >= startDate.getTime()) return 'in-progress';
+            return 'confirmed';
+        }
     }
 
     const scheduledAt = getBookingScheduledAt(booking);
@@ -954,8 +962,8 @@ function resolveBookingStatus(booking) {
 
 function getBookingScheduledAt(booking) {
     if (!booking?.date) return null;
-    const serviceCategory = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase();
-    const time = booking.timeStart || booking.time || (serviceCategory === 'hotel' ? '12:00' : '09:00');
+    const isHotel = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase() === 'hotel' || String(booking?.service || booking?.serviceName || '').toLowerCase().includes('hotel');
+    const time = booking.timeStart || booking.time || (isHotel ? '12:00' : '09:00');
     const scheduled = new Date(`${booking.date}T${time}:00`);
     return Number.isNaN(scheduled.getTime()) ? null : scheduled;
 }
