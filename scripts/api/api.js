@@ -85,104 +85,22 @@ export const API = {
             if (pets) safeWrite('pawpal_pets', mergeById(pets, localPets));
         }
 
-        const localBookings = safeReadArray('pawpal_bookings');
-        if (shouldRefreshMockData || localBookings.length === 0 || !localBookings.some(booking => booking.userId)) {
-            const bookings = await this.getJSON('/data/bookings.json');
-            if (bookings) safeWrite('pawpal_bookings', mergeById(bookings, localBookings));
-        }
-
-        const localOrders = safeReadArray('pawpal_orders');
-        const orders = await this.getJSON('/data/orders.json');
-        if (orders) {
-            // Bỏ qua merge từ JSON nếu đã sync từ Supabase cho user hiện tại
-            const ordersSyncedPhone = localStorage.getItem('pawpal_orders_supabase_synced');
-            const currentPhone = safeReadObject('pawpal_current_user')?.phone;
-            const ordersAlreadySynced = ordersSyncedPhone && currentPhone && ordersSyncedPhone === String(currentPhone);
-
-            const hasNewSeedOrders = orders.some(seed => !localOrders.some(l => String(l.id) === String(seed.id)));
-            if (!ordersAlreadySynced && (shouldRefreshMockData || localOrders.length === 0 || !localOrders.some(order => order.userId) || hasNewSeedOrders)) {
-                // When refreshing, seed data wins for product fields (image, name, price),
-                // but preserve user-modified fields like status (e.g. cancelled orders)
-                const mergedOrders = orders.map(seedOrder => {
-                    const local = localOrders.find(o => String(o.id) === String(seedOrder.id));
-                    if (!local) return seedOrder;
-                    // Keep seed product data fresh, only preserve user-action fields
-                    return {
-                        ...seedOrder,
-                        status:        local.status,
-                        paymentStatus: local.paymentStatus,
-                        updatedAt:     local.updatedAt,
-                        // Giữ lại field tích điểm loyalty đã xử lý
-                        pointsAwarded: local.pointsAwarded,
-                        pointsEarned:  local.pointsEarned,
-                        // Giữ lại userId/userPhone để filter đúng
-                        userId:        local.userId    || seedOrder.userId,
-                        userPhone:     local.userPhone || seedOrder.userPhone,
-                        timeline:      local.timeline  || seedOrder.timeline,
-                    };
-                });
-                localOrders.forEach(local => {
-                    if (!mergedOrders.some(o => String(o.id) === String(local.id))) {
-                        mergedOrders.push(local);
-                    }
-                });
-                safeWrite('pawpal_orders', mergedOrders);
-                safeWrite('pawpal_orders_seeded', 'true');
-            }
-        }
-
-        // Normalize orders on every startup so older cached records keep working.
-        const normalizedOrders = normalizeOrders(safeReadArray('pawpal_orders'));
+        // Tắt hoàn toàn việc seed dữ liệu từ JSON để sử dụng Supabase
+        // Xoá bỏ dữ liệu mock cũ
+        const mockKeys = [
+            'pawpal_users_db',
+            'pawpal_pets',
+            'pawpal_pets_supabase_synced',
+            'pawpal_orders',
+            'pawpal_orders_seeded',
+            'pawpal_bookings',
+            'pawpal_notifications',
+            'pawpal_vouchers',
+            'pawpal_returns',
+            'pawpal_pet_tracker_logs'
+        ];
+        mockKeys.forEach(key => localStorage.removeItem(key));
         
-        // Tự động hoàn thành đơn hàng đã giao (delivered) quá 3 ngày (72 giờ)
-        let updatedOrders = false;
-        const finalOrders = normalizedOrders.map(order => {
-            if (order.status === 'delivered') {
-                const deliveredEntry = Array.isArray(order.timeline)
-                    ? order.timeline.slice().reverse().find(t => t.status === 'delivered')
-                    : null;
-                const deliveredAt = deliveredEntry ? new Date(deliveredEntry.timestamp) : new Date(order.updatedAt || order.createdAt || 0);
-                const daysPassed = (Date.now() - deliveredAt.getTime()) / (1000 * 60 * 60 * 24);
-                
-                if (daysPassed >= 3) {
-                    order.status = 'completed';
-                    order.updatedAt = new Date().toISOString().slice(0, 19);
-                    
-                    if (!Array.isArray(order.timeline)) {
-                        order.timeline = [];
-                    }
-                    order.timeline.push({
-                        status: 'completed',
-                        timestamp: order.updatedAt,
-                        title: 'Đã hoàn thành (Tự động)',
-                        description: 'Hệ thống tự động hoàn thành đơn hàng sau 3 ngày kể từ khi giao hàng thành công.'
-                    });
-                    updatedOrders = true;
-                }
-            }
-            return order;
-        });
-
-        if (updatedOrders) {
-            safeWrite('pawpal_orders', finalOrders);
-        } else if (normalizedOrders.length) {
-            safeWrite('pawpal_orders', normalizedOrders);
-        }
-
-        const localReturns = safeReadArray('pawpal_returns');
-        if (shouldRefreshMockData || localReturns.length === 0) {
-            const returns = await this.getJSON(`/data/returns.json?v=${this.DATA_VERSION}`);
-            if (returns) safeWrite('pawpal_returns', mergeById(returns, localReturns));
-        }
-
-        const localCareLogs = safeReadObject('pawpal_pet_tracker_logs') || {};
-        if (shouldRefreshMockData || Object.keys(localCareLogs).length === 0) {
-            const careLogs = await this.getJSON(`/data/care-logs.json?v=${this.DATA_VERSION}`);
-            if (careLogs) {
-                safeWrite('pawpal_pet_tracker_logs', mergeCareLogs(careLogs, localCareLogs));
-            }
-        }
-
         safeWrite('pawpal_mock_data_version', this.DATA_VERSION);
     },
 
