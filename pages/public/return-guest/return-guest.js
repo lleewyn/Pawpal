@@ -903,6 +903,15 @@ window.handleGuestViewCareLog = async function(bookingId) {
     modal.show();
 
     try {
+        const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/i.test(bookingId);
+        if (!isUUID) {
+            timelineWrapper.innerHTML = `
+                <div class="text-center p-4 text-muted">
+                    Chưa có nhật ký chăm sóc nào được ghi nhận cho dịch vụ này.
+                </div>`;
+            return;
+        }
+
         const { data, error } = await db.from('care_log')
             .select(`
                 id,
