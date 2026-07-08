@@ -263,6 +263,28 @@ function renderBookings(status) {
         }
     }
     filteredBookings = uniqueBookings;
+    
+    // Cập nhật số lượng trên các tab bộ lọc
+    const counts = { all: uniqueBookings.length, confirmed: 0, 'in-progress': 0, completed: 0, cancelled: 0 };
+    uniqueBookings.forEach(booking => {
+        const resolved = resolveBookingStatus(booking);
+        // 'accepted' cũng được tính vào 'in-progress' trên giao diện (tuỳ logic, nhưng theo statusAliases thì accepted đứng riêng lẻ, 'in-progress' là ['in-progress'])
+        // Để linh hoạt, ta kiểm tra theo statusAliases:
+        Object.keys(counts).forEach(key => {
+            if (key !== 'all' && statusAliases[key] && statusAliases[key].includes(resolved)) {
+                counts[key]++;
+            }
+        });
+    });
+
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        const tabStatus = tab.dataset.status;
+        if (!tab.dataset.originalText) {
+            tab.dataset.originalText = tab.innerText.replace(/\(\d+\)/g, '').trim();
+        }
+        const count = counts[tabStatus] || 0;
+        tab.innerText = `${tab.dataset.originalText} (${count})`;
+    });
     if (status !== 'all') {
         const allowedStatuses = statusAliases[status] || [status];
         filteredBookings = filteredBookings.filter((booking) => allowedStatuses.includes(resolveBookingStatus(booking)));
