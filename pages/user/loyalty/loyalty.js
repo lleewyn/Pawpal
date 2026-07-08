@@ -27,72 +27,76 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentUser = await syncLoyaltyFromSupabase(currentUser);
     }
 
-    // Tải vouchers từ JSON file
+    // Tải vouchers từ API (Supabase) hoặc JSON file
     let vouchersMock = [];
     try {
-        // Thử fetch từ absolute path
-        const response = await fetch('/data/vouchers-redeem.json');
-        console.log('Fetch vouchers-redeem.json:', response.status, response.ok);
-        
-        if (response.ok) {
-            const vouchersData = await response.json();
-            window.PawPalVoucherRedeemSeed = vouchersData;
-            console.log('Loaded vouchers data:', vouchersData.length, 'items');
-            
-            // Bảng quy đổi điểm theo spec
-            const POINTS_TABLE = [
-                { points: 50,   maxValue: 9999     },
-                { points: 100,  maxValue: 29999    },
-                { points: 300,  maxValue: 59999    },
-                { points: 500,  maxValue: 99999    },
-                { points: 1000, maxValue: Infinity }
-            ];
-            function calcPointsCost(v) {
-                const val = v.type === 'fixed' ? v.value : (v.maxDiscount || v.value || 0);
-                const row = POINTS_TABLE.find(t => val <= t.maxValue);
-                return row ? row.points : Math.ceil(val / 150);
-            }
-
-            // Transform từ format JSON sang format UI
-            vouchersMock = vouchersData
-                .map((v, idx) => ({
-                    id: `VOUCHER-${idx}`,
-                    name: v.name || v.id || `VOUCHER-${idx + 1}`,
-                    value: v.type === 'fixed'
-                        ? `${new Intl.NumberFormat('vi-VN').format(v.value)}đ`
-                        : v.type === 'percentage'
-                        ? `Giảm ${v.value}% (Tối đa ${new Intl.NumberFormat('vi-VN').format(v.maxDiscount || 0)})`
-                        : v.description,
-                    pointsCost: calcPointsCost(v),
-                    quantity: Number.isFinite(Number(v.quantity)) ? Number(v.quantity) : Math.max(10, 50 - idx * 5),
-                    terms: [
-                        `Áp dụng cho: ${(v.applicableFor || []).join(', ') || 'Tất cả'}`,
-                        v.minOrderValue ? `Đơn tối thiểu: ${new Intl.NumberFormat('vi-VN').format(Number(v.minOrderValue) || 0)}đ` : null,
-                        v.maxDiscount ? `Giảm tối đa: ${new Intl.NumberFormat('vi-VN').format(Number(v.maxDiscount) || 0)}đ` : null
-                    ].filter(Boolean).join(' • ')
-                }));
-
-            // Lưu luôn danh sách đã transform để luồng đổi quà dùng đúng id UI
-            window.PawPalVoucherRedeemList = vouchersMock;
-
-            if (!vouchersMock.length) {
-                vouchersMock = [{
-                    id: 'VOUCHER-DEMO-1',
-                    name: 'Voucher đổi điểm giảm 50.000đ',
-                    value: 'Giảm 50.000đ',
-                    pointsCost: 100,
-                    quantity: 1,
-                    terms: 'Áp dụng cho: Tất cả'
-                }];
-                window.PawPalVoucherRedeemList = vouchersMock;
-            }
-            
-            console.log('Transformed vouchers:', vouchersMock.length, 'items');
+        let apiVouchers = [];
+        if (window.API && typeof window.API.getVouchers === 'function') {
+            apiVouchers = await window.API.getVouchers();
         } else {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            const response = await fetch('/data/vouchers-redeem.json');
+            if (response.ok) {
+                apiVouchers = await response.json();
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
         }
+
+        window.PawPalVoucherRedeemSeed = apiVouchers;
+        
+        const POINTS_TABLE = [
+            { points: 50,   maxValue: 9999     },
+            { points: 100,  maxValue: 29999    },
+            { points: 300,  maxValue: 59999    },
+            { points: 500,  maxValue: 99999    },
+            { points: 1000, maxValue: Infinity }
+        ];
+        function calcPointsCost(v) {
+            if (v.pointsCost > 0) return v.pointsCost;
+            const val = v.type === 'fixed' ? v.value : (v.maxDiscount || v.value || 0);
+            const row = POINTS_TABLE.find(t => val <= t.maxValue);
+            return row ? row.points : Math.ceil(val / 150);
+        }
+
+        vouchersMock = apiVouchers
+            .filter(v => calcPointsCost(v) > 0) // Chỉ hiện voucher cần điểm
+            .map((v, idx) => ({
+                id: v.id || `VOUCHER-${idx}`,
+                code: v.code || `CODE-${idx}`,
+                name: v.name || v.id || `VOUCHER-${idx + 1}`,
+                value: v.type === 'fixed'
+                    ? `${new Intl.NumberFormat('vi-VN').format(v.value)}đ`
+                    : v.type === 'percentage'
+                    ? `Giảm ${v.value}% (Tối đa ${new Intl.NumberFormat('vi-VN').format(v.maxDiscount || 0)})`
+                    : v.description,
+                pointsCost: calcPointsCost(v),
+                quantity: v.maxUsage ? Math.max(0, v.maxUsage - (v.usageCount || 0)) : (Number.isFinite(Number(v.quantity)) ? Number(v.quantity) : Math.max(10, 50 - idx * 5)),
+                terms: [
+                    `Áp dụng cho: ${(v.applicableFor || []).join(', ') || 'Tất cả'}`,
+                    v.minOrderValue ? `Đơn tối thiểu: ${new Intl.NumberFormat('vi-VN').format(Number(v.minOrderValue) || 0)}đ` : null,
+                    v.maxDiscount ? `Giảm tối đa: ${new Intl.NumberFormat('vi-VN').format(Number(v.maxDiscount) || 0)}đ` : null
+                ].filter(Boolean).join(' • '),
+                _raw: v
+            }));
+
+        window.PawPalVoucherRedeemList = vouchersMock;
+
+        if (!vouchersMock.length) {
+            vouchersMock = [{
+                id: 'VOUCHER-DEMO-1',
+                code: 'DEMO50',
+                name: 'Voucher đổi điểm giảm 50.000đ',
+                value: 'Giảm 50.000đ',
+                pointsCost: 100,
+                quantity: 1,
+                terms: 'Áp dụng cho: Tất cả'
+            }];
+            window.PawPalVoucherRedeemList = vouchersMock;
+        }
+        
+        console.log('Transformed vouchers:', vouchersMock.length, 'items');
     } catch (error) {
-        console.error('Lỗi tải vouchers từ JSON:', error);
+        console.error('Lỗi tải vouchers:', error);
         vouchersMock = [];
     }
 
@@ -288,6 +292,18 @@ async function persistLoyaltyRedemption(user, voucherInfo) {
         user.points,
         `Đổi ưu đãi ${voucherInfo.name}`
     );
+
+    const voucherId = voucherInfo._raw?.id || voucherInfo.id;
+    if (voucherId && voucherId.length >= 32) { // check if valid uuid
+        const { error: cvErr } = await db.from('customer_voucher').insert({
+            customer_id: customerId,
+            voucher_id: voucherId,
+            acquired_method: 'PROMOTION',
+            voucher_status: 'AVAILABLE',
+            acquired_at: new Date().toISOString()
+        });
+        if (cvErr) console.warn('[Loyalty] customer_voucher insert failed:', cvErr);
+    }
 }
 
 // Hàm hiển thị toàn bộ nội dung trang Loyalty
@@ -434,12 +450,44 @@ function renderLoyaltyPage(user, vouchers) {
     }
 }
 
-function renderMyVouchers(user) {
+async function renderMyVouchers(user) {
     const container = document.getElementById('my-vouchers-list');
     if (!container) return;
 
-    const myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]')
-        .filter(v => v.ownerPhone === user.phone);
+    let myVouchers = [];
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+
+    if (db && user.id) {
+        try {
+            const { data, error } = await db
+                .from('customer_voucher')
+                .select(`
+                    id, acquired_at, voucher_status,
+                    voucher ( voucher_code, voucher_name, required_points, end_date )
+                `)
+                .eq('customer_id', user.id)
+                .order('acquired_at', { ascending: false });
+
+            if (!error && data) {
+                myVouchers = data.map(cv => ({
+                    code: cv.voucher?.voucher_code || 'VOUCHER',
+                    name: cv.voucher?.voucher_name || 'Voucher ưu đãi',
+                    pointsCost: cv.voucher?.required_points || 0,
+                    createdAt: cv.acquired_at,
+                    validUntil: cv.voucher?.end_date,
+                    status: cv.voucher_status || 'AVAILABLE'
+                }));
+            }
+        } catch (err) {
+            console.warn('[Loyalty] get my_vouchers error:', err);
+        }
+    }
+
+    // Fallback to local
+    if (!myVouchers.length) {
+        myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]')
+            .filter(v => v.ownerPhone === user.phone);
+    }
 
     if (!myVouchers.length) {
         container.innerHTML = `
@@ -677,8 +725,8 @@ async function doRedeem(voucherInfo, user, sliderContainer, resetUI) {
             user.points = users[userIdx].points;
             localStorage.setItem('pawpal_current_user', JSON.stringify(user));
 
-            // Sinh mã voucher đưa vào "Voucher của tôi"
-            const voucherCode = 'PAWPAL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            // Sinh mã voucher đưa vào "Voucher của tôi" (Dự phòng ở localStorage)
+            const voucherCode = voucherInfo.code || ('PAWPAL-' + Math.random().toString(36).substring(2, 8).toUpperCase());
             const myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]');
             const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
             myVouchers.push({

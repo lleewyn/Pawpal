@@ -516,8 +516,10 @@ function cancelOrder(orderId) {
     const modal = new bootstrap.Modal(el);
     modal.show();
 
-    document.getElementById('orders-cancel-confirm').addEventListener('click', () => {
+    document.getElementById('orders-cancel-confirm').addEventListener('click', async () => {
         modal.hide();
+
+        const db = window.SupabaseClient;
 
         if (Array.isArray(order.products)) {
             try {
@@ -537,7 +539,23 @@ function cancelOrder(orderId) {
             }
         }
 
-        if (order.paymentMethod && order.paymentMethod !== 'cod' && order.paymentStatus === 'paid') {
+        const isPaid = order.paymentMethod && order.paymentMethod !== 'cod' && order.paymentStatus === 'paid';
+        const newPaymentStatus = isPaid ? 'pending_refund' : 'cancelled';
+
+        if (db) {
+            try {
+                const { error: cancelErr } = await db.from('sales_order').update({
+                    order_status: 'CANCELLED',
+                    payment_status: isPaid ? 'PENDING_REFUND' : 'CANCELLED',
+                    updated_at: new Date().toISOString()
+                }).eq('id', order.id);
+                if (cancelErr) console.warn('[Orders] Supabase cancel error:', cancelErr);
+            } catch (err) {
+                console.warn('[Orders] Supabase cancel exception:', err);
+            }
+        }
+
+        if (isPaid) {
             const refunds = JSON.parse(localStorage.getItem('pawpal_refunds') || '[]');
             refunds.push({
                 orderId: order.id,
@@ -550,6 +568,7 @@ function cancelOrder(orderId) {
         }
 
         order.status = 'cancelled';
+        order.paymentStatus = newPaymentStatus;
         order.updatedAt = new Date().toISOString();
         saveOrderToLocalStorage(order);
 

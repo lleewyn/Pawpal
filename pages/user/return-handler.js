@@ -232,7 +232,7 @@ function setupDrawerListeners() {
     });
 
     // Submit Yêu cầu đổi trả
-    submitBtn.addEventListener('click', () => {
+    submitBtn.addEventListener('click', async () => {
         const checkedItems = document.querySelectorAll('.rma-product-checkbox:checked');
         const reason = document.getElementById('rma-reason').value;
         const file = fileInput.files[0];
@@ -251,7 +251,6 @@ function setupDrawerListeners() {
             return;
         }
 
-        // Lưu thông tin yêu cầu đổi trả (Giả lập LocalStorage)
         const returnType = document.querySelector('input[name="return_type"]:checked').value;
         const returnData = {
             orderId: currentRmaOrder.id,
@@ -271,12 +270,62 @@ function setupDrawerListeners() {
             })
         };
 
+        // UI Loading state
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = 'Đang gửi...';
+        submitBtn.disabled = true;
+
+        // Gọi Supabase API
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
+        const customerId = currentUser ? currentUser.id : null;
+
+        if (db) {
+            try {
+                // Thêm vào bảng return_request
+                const { data: rData, error: rErr } = await db.from('return_request').insert([{
+                    sales_order_id: currentRmaOrder.id,
+                    customer_id: customerId,
+                    reason: reason,
+                    return_type: returnType.toUpperCase(),
+                    request_status: 'REVIEWING',
+                    description: returnData.description,
+                    refund_account: returnData.refundAccount
+                }]).select();
+
+                if (rErr) throw rErr;
+                
+                if (rData && rData.length > 0) {
+                    const newRmaId = rData[0].id;
+                    returnData.rmaId = newRmaId; // Đồng bộ ID từ DB để lưu vào localStorage fallback
+
+                    // Thêm vào bảng return_request_detail
+                    const details = returnData.products.map(p => ({
+                        return_request_id: newRmaId,
+                        product_id: p.id,
+                        quantity: p.quantity,
+                        unit_price: p.price
+                    }));
+
+                    const { error: dErr } = await db.from('return_request_detail').insert(details);
+                    if (dErr) throw dErr;
+                }
+            } catch (err) {
+                console.error('[ReturnHandler] Lỗi khi tạo RMA trên Supabase:', err);
+                // Vẫn tiếp tục lưu vào localStorage (Fallback)
+            }
+        }
+
         // Không trừ điểm ngay — điểm sẽ được trừ khi admin chuyển RMA sang 'completed'
         // (Logic trừ điểm đặt tại return-detail.js khi cập nhật status)
 
         const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
         returnsList.push(returnData);
         localStorage.setItem('pawpal_returns', JSON.stringify(returnsList));
+
+        // Khôi phục UI
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
 
         // Đóng Drawer
         closeDrawer();

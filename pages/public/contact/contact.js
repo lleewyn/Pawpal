@@ -53,9 +53,7 @@ function validatePayload(payload) {
     return null;
 }
 
-function saveContactTicket(payload) {
-    const tickets = JSON.parse(localStorage.getItem('pawpal_support_tickets') || '[]');
-    const ticketId = `CT-${Date.now()}`;
+async function saveContactTicket(payload) {
     const serviceMap = {
         spa: 'Spa và Grooming',
         hotel: 'Khách sạn thú cưng',
@@ -63,31 +61,26 @@ function saveContactTicket(payload) {
         other: 'Khác'
     };
 
-    tickets.unshift({
-        id: ticketId,
-        title: `Liên hệ từ ${payload.fullName}`,
-        type: 'contact',
-        priority: 'normal',
-        status: 'pending',
-        name: payload.fullName,
-        phone: payload.phoneNumber,
-        serviceInterest: payload.serviceInterest,
-        serviceInterestLabel: serviceMap[payload.serviceInterest] || 'Không chọn',
-        messages: [
-            {
-                sender: 'user',
-                text: payload.message,
-                time: new Date().toISOString()
-            }
-        ],
-        createdAt: new Date().toISOString()
-    });
+    const title = `Liên hệ từ ${payload.fullName}`;
+    const type = 'contact';
+    const content = `Họ tên: ${payload.fullName}
+Số điện thoại: ${payload.phoneNumber}
+Dịch vụ quan tâm: ${serviceMap[payload.serviceInterest] || 'Không chọn'}
 
-    localStorage.setItem('pawpal_support_tickets', JSON.stringify(tickets));
-    return ticketId;
+Tin nhắn:
+${payload.message}`;
+
+    // Gọi hàm hỗ trợ Supabase
+    if (window.PawPalSupport && window.PawPalSupport.createTicket) {
+        const result = await window.PawPalSupport.createTicket(title, type, content);
+        return result ? result.id : `CT-${Date.now()}`;
+    }
+
+    // Fallback: Nếu không load được support-handler
+    return `CT-${Date.now()}`;
 }
 
-function handleSubmit(event) {
+async function handleSubmit(event) {
     event.preventDefault();
 
     const payload = buildTicketPayload();
@@ -97,13 +90,25 @@ function handleSubmit(event) {
         return;
     }
 
-    const ticketId = saveContactTicket(payload);
+    const submitBtn = document.querySelector('.btn-submit');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Đang gửi...';
+    }
+
+    const ticketId = await saveContactTicket(payload);
     const form = document.getElementById('contactForm');
     if (form) form.reset();
 
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Gửi tin nhắn';
+    }
+
+    const shortId = ticketId.length > 10 ? ticketId.substring(0, 8) : ticketId;
     showFeedback(
         'success',
-        `PawPal đã nhận tin nhắn của bạn. Mã hỗ trợ: ${ticketId}. Chúng tôi sẽ phản hồi sớm nhất.`
+        `PawPal đã nhận tin nhắn của bạn. Mã hỗ trợ: #${shortId}. Chúng tôi sẽ phản hồi sớm nhất.`
     );
 }
 

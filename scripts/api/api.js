@@ -761,11 +761,14 @@ export const API = {
             
             // Map db columns to frontend properties
             const mappedVouchers = (data || []).map(v => ({
+                id: v.id,
                 code: v.voucher_code,
+                name: v.voucher_name || v.voucher_code,
                 type: v.type || 'percentage',
                 value: v.discount_value || 0,
                 minOrderValue: v.minimum_order_amount || 0,
                 maxDiscount: v.max_discount,
+                pointsCost: v.required_points || 0,
                 validFrom: v.start_date,
                 validUntil: v.end_date,
                 usageCount: v.usage_count || 0,

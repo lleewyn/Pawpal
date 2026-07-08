@@ -746,12 +746,30 @@ function cancelOrder() {
     const modal = new bootstrap.Modal(el);
     modal.show();
 
-    document.getElementById('confirmCancelOrderBtn').addEventListener('click', () => {
+    document.getElementById('confirmCancelOrderBtn').addEventListener('click', async () => {
         modal.hide();
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         restoreStockForOrder(currentOrder);
 
+        const isPaidOnline = currentOrder.paymentMethod && currentOrder.paymentMethod !== 'cod' && currentOrder.paymentStatus === 'paid';
+        const newPaymentStatus = isPaidOnline ? 'pending_refund' : 'cancelled';
+
+        if (db) {
+            try {
+                const { error: cancelErr } = await db.from('sales_order').update({
+                    order_status: 'CANCELLED',
+                    payment_status: isPaidOnline ? 'PENDING_REFUND' : 'CANCELLED',
+                    note: cancelReason ? `[Lý do hủy: ${cancelReason}]` : null,
+                    updated_at: new Date().toISOString()
+                }).eq('id', currentOrder.id);
+                if (cancelErr) console.warn('[OrderDetail] Supabase cancel error:', cancelErr);
+            } catch (err) {
+                console.warn('[OrderDetail] Supabase cancel exception:', err);
+            }
+        }
+
         // Ghi nhận yêu cầu hoàn tiền nếu đã thanh toán online
-        if (currentOrder.paymentMethod && currentOrder.paymentMethod !== 'cod' && currentOrder.paymentStatus === 'paid') {
+        if (isPaidOnline) {
             const refunds = JSON.parse(localStorage.getItem('pawpal_refunds') || '[]');
             const subtotal = toNumber(currentOrder.pricing?.subtotal);
             const shippingFee = toNumber(currentOrder.pricing?.shippingFee);
@@ -761,14 +779,14 @@ function cancelOrder() {
                 amount: resolveOrderTotal(currentOrder.pricing, subtotal, shippingFee, discount),
                 paymentMethod: currentOrder.paymentMethod,
                 status: 'pending_refund',
+                reason: cancelReason,
                 createdAt: new Date().toISOString()
             });
             localStorage.setItem('pawpal_refunds', JSON.stringify(refunds));
-            // Cập nhật trạng thái thanh toán để UI hiển thị "Đang xử lý hoàn tiền"
-            currentOrder.paymentStatus = 'pending_refund';
         }
 
         currentOrder.status = 'cancelled';
+        currentOrder.paymentStatus = newPaymentStatus;
         const orderTimeline = Array.isArray(currentOrder.timeline) ? currentOrder.timeline : (currentOrder.timeline = []);
         orderTimeline.push({
             status: 'cancelled',
