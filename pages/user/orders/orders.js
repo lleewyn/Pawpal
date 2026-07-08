@@ -232,6 +232,12 @@ function applyFilters() {
         });
     }
 
+    filtered.sort((a, b) => {
+        const dateA = new Date(a.createdAt || 0);
+        const dateB = new Date(b.createdAt || 0);
+        return dateB - dateA;
+    });
+
     ordersState.filteredOrders = filtered;
     renderOrders();
 }
@@ -353,26 +359,16 @@ function createOrderCard(order) {
             </button>
         `;
     } else if (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment' || normalizedStatus === 'preparing') {
-        if (isPaid && isOnline) {
-            // Đã thanh toán online, chờ admin xác nhận — không cho hủy, chỉ liên hệ hotline
-            footerButtonsHTML = `
-                ${detailActionHTML}
-                <button class="btn-track-order" onclick="contactHotline('${orderId}')">
-                    Liên hệ hotline
-                </button>
-            `;
-        } else {
-            // Chưa thanh toán hoặc đang chuẩn bị — cho hủy
-            footerButtonsHTML = `
-                ${detailActionHTML}
-                <button class="btn-track-order" onclick="contactHotline('${orderId}')">
-                    Liên hệ hotline
-                </button>
-                <button class="btn-track-order text-danger border-danger" onclick="cancelOrder('${orderId}')">
-                    Hủy đơn hàng
-                </button>
-            `;
-        }
+        // Cho phép hủy đơn hàng dù chưa thanh toán hay đã thanh toán online
+        footerButtonsHTML = `
+            ${detailActionHTML}
+            <button class="btn-track-order" onclick="contactHotline('${orderId}')">
+                Liên hệ hotline
+            </button>
+            <button class="btn-track-order text-danger border-danger" onclick="cancelOrder('${orderId}')">
+                Hủy đơn hàng
+            </button>
+        `;
     } else if (normalizedStatus === 'completed') {
         footerButtonsHTML = `
             ${detailActionHTML}

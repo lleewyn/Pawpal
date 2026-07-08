@@ -355,43 +355,80 @@ async function supabaseRegister(name, phone, password) {
     if (!db) return { success: false, offline: true };
 
     try {
-        const { data: newCustomers, error: custErr } = await db
+        // 1. Kiểm tra xem SĐT đã tồn tại chưa
+        const { data: existingCust, error: checkErr } = await db
             .from('customer')
-            .insert({
-                email:          null,
-                password_hash:  password,
-                account_status: 'ACTIVE',
-                phone_main:     phone,
-                registered_at:  new Date().toISOString(),
-            })
-            .select('id')
+            .select('id, password_hash')
+            .eq('phone_main', phone)
             .limit(1);
 
-        if (custErr) {
-            console.error('[Login] supabaseRegister customer error:', custErr.message);
-            return { success: false, error: custErr.message };
+        if (checkErr) throw checkErr;
+
+        let customerId;
+
+        if (existingCust && existingCust.length > 0) {
+            const cust = existingCust[0];
+            // Nếu đã có mật khẩu => Tài khoản thành viên đã tồn tại
+            if (cust.password_hash) {
+                return { success: false, error: 'Số điện thoại này đã được đăng ký tài khoản.' };
+            }
+
+            // Nếu chưa có mật khẩu => Khách vãng lai -> Thăng cấp thành Thành viên
+            const { error: updateErr } = await db
+                .from('customer')
+                .update({
+                    password_hash: password,
+                    registered_at: new Date().toISOString()
+                })
+                .eq('id', cust.id);
+                
+            if (updateErr) throw updateErr;
+            customerId = cust.id;
+
+            // Cập nhật lại tên cho Khách vãng lai
+            if (name) {
+                await db.from('customer_profile').update({ full_name: name }).eq('customer_id', customerId);
+            }
+        } else {
+            // Trường hợp 3: Chưa có dữ liệu gì => Tạo mới hoàn toàn
+            const { data: newCustomers, error: custErr } = await db
+                .from('customer')
+                .insert({
+                    email:          null,
+                    password_hash:  password,
+                    account_status: 'ACTIVE',
+                    phone_main:     phone,
+                    registered_at:  new Date().toISOString(),
+                })
+                .select('id')
+                .limit(1);
+
+            if (custErr) throw custErr;
+            customerId = newCustomers[0].id;
+
+            await db.from('customer_profile').insert({
+                customer_id: customerId,
+                full_name:   name,
+            });
         }
 
-        const customerId = newCustomers[0].id;
+        // 3. Khởi tạo hạng thành viên nếu chưa có
+        const { data: existingMembership } = await db.from('customer_membership').select('id').eq('customer_id', customerId).limit(1);
+        if (!existingMembership || existingMembership.length === 0) {
+            const { data: tiers } = await db
+                .from('membership_tier')
+                .select('id')
+                .eq('tier_name', 'Đồng')
+                .limit(1);
 
-        await db.from('customer_profile').insert({
-            customer_id: customerId,
-            full_name:   name,
-        });
-
-        const { data: tiers } = await db
-            .from('membership_tier')
-            .select('id')
-            .eq('tier_name', 'Đồng')
-            .limit(1);
-
-        const tierId = tiers?.[0]?.id;
-        if (tierId) {
-            await db.from('customer_membership').insert({
-                customer_id:        customerId,
-                membership_tier_id: tierId,
-                total_paw_points:   50,
-            });
+            const tierId = tiers?.[0]?.id;
+            if (tierId) {
+                await db.from('customer_membership').insert({
+                    customer_id:        customerId,
+                    membership_tier_id: tierId,
+                    total_paw_points:   50,
+                });
+            }
         }
 
         const user = {

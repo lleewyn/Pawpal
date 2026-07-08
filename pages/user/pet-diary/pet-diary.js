@@ -167,7 +167,7 @@ async function syncPetDiaryFromSupabase(pet) {
                 recorded_at,
                 care_action ( action_name ),
                 appointment ( appointment_code, appointment_date, appointment_status, service (service_name) ),
-                care_log_media ( media_url, staff ( full_name ) )
+                care_log_media ( media_url, Staff ( full_name ) )
             `)
             .eq('pet_id', petUuid)
             .order('recorded_at', { ascending: false });
@@ -195,7 +195,7 @@ async function syncPetDiaryFromSupabase(pet) {
             }
 
             const mediaUrl = log.care_log_media?.[0]?.media_url || null;
-            const staffName = log.care_log_media?.[0]?.staff?.full_name || 'Nhân viên PawPal';
+            const staffName = log.care_log_media?.[0]?.Staff?.full_name || 'Nhân viên PawPal';
 
             sessionsMap[aptId].timeline.push({
                 id: log.id,

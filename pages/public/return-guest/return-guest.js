@@ -201,8 +201,9 @@ async function loadSupabaseGuestResults(phone) {
                 created_at,
                 updated_at,
                 note,
-                customer_address!inner ( receiver_name, receiver_phone, province, street_address ),
-                sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, image_urls, sku ) )
+                customer_address!inner ( receiver_name, receiver_phone, street_address, province ),
+                sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, sku, image_urls ) ),
+                payment ( payment_method, transaction_status )
             `)
             .eq('customer_address.receiver_phone', normPhone)
             .order('created_at', { ascending: false });
@@ -222,7 +223,7 @@ async function loadSupabaseGuestResults(phone) {
                 payment_status,
                 note,
                 customer!inner ( id, phone_main, customer_profile ( full_name ) ),
-                service ( id, service_name ),
+                service ( id, service_name, service_price_matrix ( unit_price ) ),
                 pet_profile ( id, pet_name )
             `)
             .eq('customer.phone_main', normPhone)
@@ -271,6 +272,10 @@ function mapSupabaseOrderRow(row) {
             discount: row.discount_amount || 0,
             total: row.total_amount || (products.reduce((acc, p) => acc + p.total, 0) + (row.shipping_fee || 0) - (row.discount_amount || 0)),
         },
+        payment: {
+            method: (Array.isArray(row.payment) ? row.payment[0]?.payment_method : row.payment?.payment_method) || 'cod',
+            status: (Array.isArray(row.payment) ? row.payment[0]?.status : row.payment?.status) || 'pending'
+        },
         delivery: {
             name: addr.receiver_name || '',
             phone: addr.receiver_phone || '',
@@ -285,14 +290,16 @@ function mapSupabaseOrderRow(row) {
 function mapSupabaseBookingRow(row) {
     return {
         id: row.appointment_code || row.id,
+        _supabaseId: row.id,                   // UUID thực, dùng cho Supabase queries
         serviceName: row.service?.service_name || 'Dịch vụ',
         date: row.appointment_date,
         time: row.appointment_time,
         timeStart: row.appointment_time,
-        status: row.appointment_status || 'pending',
+        status: String(row.appointment_status || 'pending').toLowerCase(),
         paymentStatus: row.payment_status || 'pending',
         note: row.note || '',
         petName: row.pet_profile?.pet_name || (Array.isArray(row.customer?.customer_profile) ? row.customer.customer_profile[0]?.full_name : row.customer?.customer_profile?.full_name) || 'Bé cưng',
+        price: (Array.isArray(row.service?.service_price_matrix) && row.service.service_price_matrix.length > 0) ? row.service.service_price_matrix[0].unit_price : 0,
         branch: '',
         staff: '',
     };
@@ -388,8 +395,8 @@ function fmtDate(d) {
 
 /** Tính trạng thái booking dựa vào thời gian thực — copy từ bookings.js */
 function resolveBookingStatus(booking) {
-    const rawStatus = booking?.status || 'upcoming';
-    if (['cancelled', 'completed', 'in-progress', 'accepted'].includes(rawStatus)) {
+    const rawStatus = (booking?.status || 'upcoming').toLowerCase();
+    if (['pending', 'cancelled', 'completed', 'in-progress', 'accepted'].includes(rawStatus)) {
         return rawStatus;
     }
     try {
@@ -424,6 +431,8 @@ function canCancelOrder(o) {
     if (!['pending', 'pending_payment', 'preparing'].includes(status)) return false;
     // Đơn đang xử lý hoàn tiền hoặc đã hoàn tiền → không cho hủy lần 2
     if (o.paymentStatus === 'pending_refund' || o.paymentStatus === 'refunded') return false;
+    
+    // Cho phép hủy bất kể thanh toán COD hay Online (sẽ chuyển sang trạng thái chờ hoàn tiền)
     return true;
 }
 
@@ -438,6 +447,10 @@ function canReturnOrder(o) {
     const daysDiff = (new Date() - new Date(updatedAt)) / (1000 * 60 * 60 * 24);
     return daysDiff <= 7;
 }
+function canConfirmOrder(o) {
+    return o.status === 'delivered';
+}
+
 function canModifyBooking(b) {
     if (!['pending', 'confirmed', 'upcoming'].includes(b.status)) return false;
     if ((b.changeCount || 0) >= 2) return false;
@@ -481,7 +494,7 @@ function buildBookingCard(b) {
                 </div>
             </div>
             <div style="text-align:right">
-                <div class="rg-item-price">${fmtPrice(b.price)}</div>
+                <div class="rg-item-price">${b.price > 0 ? fmtPrice(b.price) : 'Giá theo thực tế'}</div>
                 ${badge(BOOKING_STATUS, resolvedStatus)}
             </div>
         </div>
@@ -496,18 +509,18 @@ function buildBookingCard(b) {
                 <div class="rg-summary-value">${esc(b.note)}</div>
             </div>` : ''}
         </div>
-        ${canModifyBooking(b) || canCancelBooking(b) ? `
-        <div class="rg-actions">
+        ${canModifyBooking(b) || canCancelBooking(b) || ['in-progress', 'completed'].includes(resolvedStatus) ? `
+        <div class="rg-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
             ${canCancelBooking(b) ? `
-            <button class="btn-green-outline" onclick="handleGuestBookingAction('${esc(b.id)}', 'cancel')">
+            <button class="btn-track-order text-danger border-danger" onclick="handleGuestBookingAction('${esc(b.id)}', 'cancel')">
                 Hủy lịch
             </button>` : ''}
             ${canModifyBooking(b) ? `
-            <button class="btn-green-outline" onclick="handleGuestBookingAction('${esc(b.id)}', 'change')">
+            <button class="btn-track-order" onclick="handleGuestBookingAction('${esc(b.id)}', 'change')">
                 Đổi lịch
             </button>` : ''}
             ${['in-progress', 'completed'].includes(resolvedStatus) ? `
-            <button class="btn-cta" onclick="handleGuestViewCareLog('${esc(b.id)}')">
+            <button class="btn-track-order" onclick="handleGuestViewCareLog('${esc(b._supabaseId || b.id)}')">
                 Nhật ký chăm sóc
             </button>` : ''}
         </div>` : ''}
@@ -515,9 +528,6 @@ function buildBookingCard(b) {
 }
 
 function buildOrderCard(o) {
-    const first   = o.products?.[0];
-    const name    = esc(first?.name || 'Sản phẩm');
-    const extra   = o.products?.length > 1 ? ` +${o.products.length - 1} sản phẩm` : '';
     const address = esc(o.delivery?.address || '');
 
     // Trạng thái thanh toán — đọc cả hai cấu trúc dữ liệu
@@ -539,13 +549,23 @@ function buildOrderCard(o) {
         paymentColor = 'inherit';
     }
 
+    const productsHtml = (o.products || []).map(p => `
+        <div style="display: flex; gap: 15px; margin-bottom: 12px; align-items: flex-start;">
+            <img src="${p.image}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color, #eee);" onerror="this.src='/assets/images/shop/products/placeholder.webp'">
+            <div style="flex: 1; font-size: 0.95em; text-align: left; min-width: 0;">
+                <div style="font-weight: 500; color: var(--text-color); line-height: 1.4; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${esc(p.name)}</div>
+                <div style="color: #666;">${fmtPrice(p.price)} <span style="margin: 0 4px;">x</span> ${p.quantity}</div>
+            </div>
+            <div style="font-weight: 600; color: var(--color-primary); white-space: nowrap; padding-left: 10px;">${fmtPrice(p.price * p.quantity)}</div>
+        </div>
+    `).join('');
+
     return `
     <div class="rg-item" data-type="order">
         <div class="rg-item-header">
             <div>
                 <h4 class="rg-item-name">Đơn hàng: ${esc(o.id)}</h4>
                 <div class="rg-item-meta">
-                    <span>${name}${extra}</span>
                     <span>Ngày đặt: ${fmtDate(o.createdAt)}</span>
                     ${o.delivery?.name ? `<span>Nhận: ${esc(o.delivery.name)}</span>` : ''}
                 </div>
@@ -554,6 +574,10 @@ function buildOrderCard(o) {
                 <div class="rg-item-price">${fmtPrice(o.pricing?.total)}</div>
                 ${badge(ORDER_STATUS, o.status)}
             </div>
+        </div>
+        <hr class="rg-divider">
+        <div class="rg-products" style="padding: var(--space-md);">
+            ${productsHtml}
         </div>
         <hr class="rg-divider">
         <div class="rg-summary">
@@ -566,14 +590,18 @@ function buildOrderCard(o) {
                 <div class="rg-summary-value" style="color:${paymentColor};font-weight:500;">${paymentLabel}</div>
             </div>
         </div>
-        <div class="rg-actions">
+        <div class="rg-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
             ${canCancelOrder(o) ? `
-            <button class="btn-green-outline" onclick="handleGuestCancelOrder('${esc(o.id)}')">
+            <button class="btn-track-order text-danger border-danger" onclick="handleGuestCancelOrder('${esc(o.id)}')">
                 Hủy đơn hàng
             </button>` : ''}
+            ${canConfirmOrder(o) ? `
+            <button class="btn-track-order" onclick="handleGuestConfirmOrder('${esc(o.id)}')">
+                Xác nhận đơn hàng
+            </button>` : ''}
             ${canReturnOrder(o) ? `
-            <button class="btn-green-outline" onclick="handleGuestReturnRequest('${esc(o.id)}')">
-                Yêu cầu đổi trả
+            <button class="btn-track-order" onclick="handleGuestReturnRequest('${esc(o.id)}')">
+                Yêu cầu trả hàng/hoàn tiền
             </button>` : ''}
         </div>
     </div>`;
@@ -624,6 +652,36 @@ window.handleGuestCancelOrder = function(orderId) {
         phone,
         () => { confirmCancelOrder(orderId); }
     );
+};
+
+window.handleGuestConfirmOrder = async function(orderId) {
+    if (!confirm('Bạn xác nhận đã nhận hàng thành công?')) return;
+    
+    const db = window.SupabaseClient;
+    if (!db) return showToast('Lỗi hệ thống (Supabase chưa sẵn sàng)', 'error');
+    
+    try {
+        const { error } = await db.from('sales_order')
+            .update({ order_status: 'COMPLETED' })
+            .eq('id', orderId);
+            
+        if (error) throw error;
+        
+        showToast('Đã xác nhận nhận hàng!', 'success');
+        
+        // Update local state so it reflects immediately
+        const order = rgLastSearchState.orders.find(o => o.id === orderId);
+        if (order) {
+            order.status = 'completed';
+            order.updatedAt = new Date().toISOString();
+        }
+        
+        // Cập nhật lại UI
+        renderResults(rgLastSearchState.bookings, rgLastSearchState.orders);
+    } catch (err) {
+        console.error('[ReturnGuest] Lỗi khi xác nhận đơn hàng:', err);
+        showToast('Lỗi khi xác nhận đơn hàng.', 'error');
+    }
 };
 
 window.handleGuestReturnRequest = function(orderId) {
@@ -852,12 +910,15 @@ window.handleGuestViewCareLog = async function(bookingId) {
                 health_status,
                 recorded_at,
                 care_action ( action_name ),
-                care_log_media ( media_url, staff ( full_name ) )
+                care_log_media ( media_url )
             `)
             .eq('appointment_id', bookingId)
             .order('recorded_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+            console.error('[ReturnGuest] care_log query error:', error);
+            throw error;
+        }
 
         if (!data || data.length === 0) {
             timelineWrapper.innerHTML = `
@@ -871,7 +932,7 @@ window.handleGuestViewCareLog = async function(bookingId) {
             const time = new Date(log.recorded_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
             const date = new Date(log.recorded_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
             const mediaUrl = log.care_log_media?.[0]?.media_url;
-            const staffName = log.care_log_media?.[0]?.staff?.full_name || 'Nhân viên PawPal';
+            const staffName = 'Nhân viên PawPal';
             const isUrgent = log.health_status !== 'Tốt' && log.health_status !== 'Bình thường' && log.health_status != null;
 
             return `
