@@ -359,8 +359,8 @@ function renderAppliedVoucherUI() {
 }
 
 function renderVoucherHints() {
-    const container = document.getElementById('voucher-hints');
-    if (!container) return;
+    const dropdown = document.getElementById('checkoutVoucherDropdown');
+    if (!dropdown) return;
 
     const subtotal = calculateSubtotal();
     const vouchers = [...checkoutState.vouchers, ...checkoutState.myVouchers];
@@ -372,12 +372,14 @@ function renderVoucherHints() {
         return true;
     });
 
-    container.innerHTML = visibleVouchers.map(voucher => {
+    if (visibleVouchers.length === 0) {
+        dropdown.innerHTML = '<div class="px-3 py-2 text-muted small">Không có mã giảm giá nào</div>';
+        return;
+    }
+
+    dropdown.innerHTML = visibleVouchers.map(voucher => {
         const minimum = Number(voucher.minOrderValue || 0);
         const isEligible = subtotal >= minimum;
-        const label = minimum > 0
-            ? `Áp dụng cho đơn hàng từ ${formatCurrency(minimum)}`
-            : 'Áp dụng cho mọi đơn hàng';
         
         let discountText = voucher.type === 'percentage'
             ? `-${voucher.value}%`
@@ -388,21 +390,23 @@ function renderVoucherHints() {
         }
 
         return `
-            <button type="button"
-                class="voucher-hint-item ${isEligible ? 'is-eligible' : ''}"
-                data-voucher-code="${voucher.code}">
-                <span class="voucher-hint-code">${voucher.code}</span>
-                <span class="voucher-hint-meta">${label} · ${discountText}</span>
-            </button>
+            <div class="dropdown-item voucher-dropdown-item ${isEligible ? '' : 'opacity-50'}" style="cursor:${isEligible ? 'pointer' : 'not-allowed'}; padding: 10px 16px; border-bottom: 1px solid #eee; white-space: normal;" data-voucher-code="${voucher.code}" data-eligible="${isEligible}">
+                <div class="fw-bold text-primary-custom" style="font-size: 0.95rem;">${voucher.code} <span class="ms-2 badge ${isEligible ? 'bg-success' : 'bg-secondary'}">${isEligible ? 'Đủ ĐK' : 'Chưa đủ ĐK'}</span></div>
+                <div class="text-muted" style="font-size: 0.85rem; margin-top: 2px;">Giảm ${discountText}</div>
+                <div class="text-muted mt-1" style="font-size: 0.75rem; color: #e67e22 !important;">Đơn tối thiểu: ${formatCurrency(minimum)}</div>
+            </div>
         `;
     }).join('');
 
-    container.querySelectorAll('.voucher-hint-item').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const input = document.getElementById('voucher-input');
-            if (input) {
-                input.value = btn.dataset.voucherCode || '';
-                input.focus();
+    dropdown.querySelectorAll('.voucher-dropdown-item').forEach(item => {
+        item.addEventListener('click', () => {
+            if (item.dataset.eligible === 'true') {
+                const input = document.getElementById('voucher-input');
+                if (input) {
+                    input.value = item.dataset.voucherCode || '';
+                    dropdown.style.display = 'none';
+                    applyVoucher();
+                }
             }
         });
     });
@@ -1341,14 +1345,33 @@ function setupEventListeners() {
     }
     
     // Voucher
+    const voucherInput = document.getElementById('voucher-input');
+    const voucherDropdown = document.getElementById('checkoutVoucherDropdown');
+
     document.getElementById('apply-voucher-btn').addEventListener('click', applyVoucher);
     document.getElementById('remove-voucher-btn').addEventListener('click', removeVoucher);
-    document.getElementById('voucher-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            applyVoucher();
-        }
-    });
+    
+    if (voucherInput) {
+        voucherInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyVoucher();
+            }
+        });
+
+        voucherInput.addEventListener('focus', () => {
+            renderVoucherHints();
+            if (voucherDropdown) voucherDropdown.style.display = 'block';
+        });
+
+        document.addEventListener('click', (e) => {
+            if (voucherInput && voucherDropdown) {
+                if (!voucherInput.contains(e.target) && !voucherDropdown.contains(e.target)) {
+                    voucherDropdown.style.display = 'none';
+                }
+            }
+        });
+    }
     
     // Invoice checkbox
     document.getElementById('invoice-checkbox').addEventListener('change', (e) => {

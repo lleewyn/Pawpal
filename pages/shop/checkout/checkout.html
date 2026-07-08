@@ -273,18 +273,13 @@
                             </div>
 
                             <!-- Voucher Section -->
-                            <div class="voucher-section mb-3">
+                            <div class="voucher-section mb-3 position-relative">
                                 <label for="voucher-input" class="form-label fw-semibold">Mã giảm giá</label>
                                 <div class="input-group">
-                                    <input list="voucher-list" type="text" class="form-control" id="voucher-input" placeholder="Nhập mã giảm giá hoặc chọn mã có sẵn">
-                                    <button class="btn btn-outline-primary" type="button" id="apply-voucher-btn">Áp dụng</button>
+                                    <input type="text" class="form-control" id="voucher-input" placeholder="Nhập mã giảm giá..." autocomplete="off">
+                                    <button class="btn btn-outline-primary" type="button" id="apply-voucher-btn" style="white-space: nowrap;">Áp dụng</button>
                                 </div>
-                                <datalist id="voucher-list">
-                                    <option value="PAWFIRST10">PAWFIRST10</option>
-                                    <option value="FREESHIP">FREESHIP</option>
-                                    <option value="SUMMER50">SUMMER50</option>
-                                </datalist>
-                                <div id="voucher-hints" class="voucher-hints mt-2"></div>
+                                <div id="checkoutVoucherDropdown" class="dropdown-menu shadow w-100" style="max-height: 250px; overflow-y: auto; display: none; position: absolute; top: 100%; left: 0; z-index: 1000; padding: 0;"></div>
 
                                 <!-- Applied Voucher Badge -->
                                 <div id="applied-voucher" class="applied-voucher mt-2 d-none">
