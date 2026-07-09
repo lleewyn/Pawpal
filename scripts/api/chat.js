@@ -157,12 +157,12 @@ const dbTools = {
             });
             
             if (error || !data || data.length === 0) {
-                return { context: "PawPal cung cấp Spa, Pet Hotel, và Bán lẻ. Mở cửa 8h-20h. Vui lòng liên hệ hotline để biết chi tiết." };
+                return { context: "PawPal cung cấp dịch vụ Spa, Grooming, Pet Hotel, Pet Taxi (đưa đón tận nhà), và cửa hàng Bán lẻ đồ dùng thú cưng. Mở cửa 8h-20h. Vui lòng liên hệ hotline để biết chi tiết." };
             }
             return { context: data.map(d => d.content).join("\n") };
         } catch (e) {
             console.error("RAG Error:", e);
-            return { context: "Dữ liệu kiến thức không khả dụng." };
+            return { context: "PawPal cung cấp dịch vụ Spa, Grooming, Pet Hotel, Pet Taxi (đưa đón tận nhà), và cửa hàng Bán lẻ đồ dùng thú cưng. Mở cửa 8h-20h. Vui lòng liên hệ hotline để biết chi tiết." };
         }
     }
 };
