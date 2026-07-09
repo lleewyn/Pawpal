@@ -1420,8 +1420,7 @@ h1, h2, h3, h4, h5, h6 {
         width: 100%;
         margin: 0;
         padding: 0;
-        flex: 1 1 auto;
-        min-height: 0;
+        flex: 0 0 auto;
     }
 
     /* Mobile Dropdown styles */
