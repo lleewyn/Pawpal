@@ -109,29 +109,24 @@ const dbTools = {
     },
     get_services_price: async () => {
         try {
-            const filePath = path.join(process.cwd(), 'data', 'dichvu.csv');
-            if (fs.existsSync(filePath)) {
-                const csvData = fs.readFileSync(filePath, 'utf8');
-                const lines = csvData.split('\n').slice(0, 25).join('\n'); // Lấy 25 dòng đầu
-                return { context: "Dữ liệu bảng giá (định dạng CSV):\n" + lines };
+            const { data, error } = await supabase.from('service_price_matrix').select('*').limit(30);
+            if (error) throw error;
+            if (data && data.length > 0) {
+                return { context: "Dữ liệu bảng giá:\n" + JSON.stringify(data) };
             }
             return { error: "Không tìm thấy dữ liệu giá dịch vụ" };
         } catch (e) {
-            return { error: "Lỗi đọc file giá dịch vụ" };
+            return { error: "Lỗi đọc dữ liệu giá dịch vụ từ Supabase" };
         }
     },
     get_pet_profile: async (user_id) => {
         if (!user_id) return { error: "Yêu cầu đăng nhập để xem hồ sơ thú cưng" };
         try {
-            const filePath = path.join(process.cwd(), 'data', 'pets.json');
-            if (fs.existsSync(filePath)) {
-                const pets = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-                const userPets = pets.filter(p => p.userId === 'USER-001' || p.userId === user_id);
-                return userPets.length ? userPets : { message: "Bạn chưa có hồ sơ thú cưng nào" };
-            }
-            return { error: "Không tìm thấy dữ liệu thú cưng" };
+            const { data, error } = await supabase.from('pet_profile').select('*').eq('customer_id', user_id);
+            if (error) throw error;
+            return data && data.length ? data : { message: "Bạn chưa có hồ sơ thú cưng nào trên hệ thống" };
         } catch (e) {
-            return { error: "Lỗi đọc dữ liệu thú cưng" };
+            return { error: "Lỗi đọc dữ liệu thú cưng từ Supabase" };
         }
     },
     cancel_booking: async (user_id, appointment_id) => {
