@@ -11,10 +11,6 @@
   ],
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api"
-    },
-    {
       "source": "/pages/public/landing",
       "destination": "/pages/public/landing/landing.html"
     },
