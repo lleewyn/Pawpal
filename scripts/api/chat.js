@@ -3,7 +3,39 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { createClient } = require('@supabase/supabase-js');
 const jwt = require('jsonwebtoken');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Quản lý API Key xoay vòng từ Supabase
+const getGenAI = async () => {
+    try {
+        // Lấy các key có provider là 'gemini' và đang active từ bảng api_keys
+        const { data, error } = await supabase
+            .from('api_keys')
+            .select('key_value')
+            .eq('provider', 'gemini')
+            .eq('is_active', true);
+
+        if (error || !data || data.length === 0) {
+            console.warn("[API Key Rotation] Không tìm thấy key trong database. Đang fallback về file .env");
+            // Fallback: Lấy từ biến môi trường
+            const envKeys = Object.keys(process.env)
+                .filter(key => key.startsWith('GEMINI_API_KEY'))
+                .map(key => process.env[key])
+                .filter(Boolean);
+            
+            if (envKeys.length === 0) return null;
+
+            const randomKey = envKeys[Math.floor(Math.random() * envKeys.length)];
+            return new GoogleGenerativeAI(randomKey);
+        }
+
+        // Nếu lấy thành công từ Supabase, chọn ngẫu nhiên 1 key (Round-robin/Random)
+        const randomKeyObj = data[Math.floor(Math.random() * data.length)];
+        console.log(`[API Key Rotation] Đang dùng 1 trong ${data.length} keys từ Database.`);
+        return new GoogleGenerativeAI(randomKeyObj.key_value);
+    } catch (err) {
+        console.error("Lỗi khi lấy API key từ Supabase:", err);
+        return null;
+    }
+};
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -141,6 +173,11 @@ module.exports = async function handler(req, res) {
             systemInstruction += `Khách hàng hiện đã đăng nhập (Đã xác thực, ID hệ thống: ${userId}). Khi khách hỏi thông tin cá nhân, HÃY ƯU TIÊN GỌI CÁC TOOL get_user_orders hoặc get_user_bookings để kiểm tra hệ thống thay vì trả lời chung chung.\n`;
         } else {
             systemInstruction += `Khách hàng hiện Tạm Vãng Lai (chưa đăng nhập). Nếu khách hỏi về đơn hàng hoặc lịch hẹn riêng tư, hãy yêu cầu họ đăng nhập hoặc cung cấp mã đơn qua số Hotline.\n`;
+        }
+
+        const genAI = await getGenAI();
+        if (!genAI) {
+            return res.status(500).json({ error: "No Gemini API Key available" });
         }
 
         const model = genAI.getGenerativeModel({ 
