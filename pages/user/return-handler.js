@@ -284,7 +284,7 @@ function setupDrawerListeners() {
             try {
                 // Thêm vào bảng return_request
                 const { data: rData, error: rErr } = await db.from('return_request').insert([{
-                    sales_order_id: currentRmaOrder.id,
+                    sales_order_id: currentRmaOrder._supabaseId || currentRmaOrder.id,
                     customer_id: customerId,
                     reason: reason,
                     return_type: returnType.toUpperCase(),

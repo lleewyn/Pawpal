@@ -159,6 +159,7 @@ export const API = {
 
         // Offline path — không gọi lại initData()
         const localBookings = safeReadArray('pawpal_bookings');
+        console.log('[DEBUG] localBookings returned from API:', localBookings.map(b => ({ id: b.id, name: b.serviceName, price: b.price })));
         return localBookings.filter(matchBooking);
     },
 

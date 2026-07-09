@@ -35,8 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorBox  = document.getElementById('rg-error');
     const resultsEl = document.getElementById('rg-results');
 
-    errorBox.style.display  = 'none';
-    resultsEl.style.display = 'none';
+    errorBox.classList.add('d-none');
+    resultsEl.classList.add('d-none');
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -73,7 +73,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             bookings = mergedBookings;
             
+            const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
             const mergedOrders = [...sbOrders];
+            mergedOrders.forEach(mo => {
+                const lo = localOrders.find(l => l.id === mo.id);
+                if (lo && (lo.status === 'completed' || lo.status === 'return_pending')) {
+                    mo.status = lo.status;
+                }
+            });
             for (const o of orders) {
                 if (!sbOrderIds.has(o.id)) mergedOrders.push(o);
             }
@@ -106,19 +113,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 orders = fo;
                 showToast('Kết quả lấy từ dữ liệu gốc (file). Nếu bạn dùng dữ liệu local cũ, thử xóa cache và reload.', 'info');
             } else {
-                resultsEl.style.display = 'none';
-                errorBox.style.display  = 'block';
+                resultsEl.classList.add('d-none');
+                errorBox.classList.remove('d-none');
                 return;
             }
         }
 
-        errorBox.style.display  = 'none';
-        resultsEl.style.display = 'block';
+        errorBox.classList.add('d-none');
+        resultsEl.classList.remove('d-none');
         if (memberUser) {
             errorBox.innerHTML = `
                 Số điện thoại này thuộc tài khoản thành viên. Mình vẫn hiển thị kết quả tra cứu bên dưới, nhưng nếu muốn xem đầy đủ lịch sử cá nhân thì hãy vào trang cá nhân.
             `;
-            errorBox.style.display = 'block';
+            errorBox.classList.remove('d-none');
         }
         rgLastSearchState = {
             phone,
@@ -448,7 +455,16 @@ function canReturnOrder(o) {
     return daysDiff <= 7;
 }
 function canConfirmOrder(o) {
-    return o.status === 'delivered';
+    if (o.status !== 'delivered') return false;
+    // Đã có RMA rồi → ẩn nút xác nhận
+    const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
+    if (returnsList.some(r => r.orderId === o.id)) return false;
+    // Nếu order local đang là completed hoặc return_pending thì ẩn
+    const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+    const localOrder = localOrders.find(lo => lo.id === o.id);
+    if (localOrder && (localOrder.status === 'completed' || localOrder.status === 'return_pending')) return false;
+    
+    return true;
 }
 
 function canModifyBooking(b) {
@@ -480,9 +496,10 @@ function buildBookingCard(b) {
     const staff   = esc(b.staff || 'Chưa phân công');
     const branch  = esc(b.branch || '');
     const resolvedStatus = resolveBookingStatus(b);
+    const cancelClass = resolvedStatus === 'cancelled' ? ' rg-item-cancelled' : '';
 
     return `
-    <div class="rg-item" data-type="booking">
+    <div class="rg-item${cancelClass}" data-type="booking">
         <div class="rg-item-header">
             <div>
                 <h4 class="rg-item-name">${service}</h4>
@@ -560,8 +577,11 @@ function buildOrderCard(o) {
         </div>
     `).join('');
 
+    const normalizedStatus = normalizeOrderStatus(o.status);
+    const cancelClass = normalizedStatus === 'cancelled' ? ' rg-item-cancelled' : '';
+
     return `
-    <div class="rg-item" data-type="order">
+    <div class="rg-item${cancelClass}" data-type="order">
         <div class="rg-item-header">
             <div>
                 <h4 class="rg-item-name">Đơn hàng: ${esc(o.id)}</h4>
@@ -590,7 +610,13 @@ function buildOrderCard(o) {
                 <div class="rg-summary-value" style="color:${paymentColor};font-weight:500;">${paymentLabel}</div>
             </div>
         </div>
-        <div class="rg-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+        <div class="rg-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; align-items: center;">
+            ${(JSON.parse(localStorage.getItem('pawpal_returns') || '[]').some(r => r.orderId === o.id)) ? `
+            <div style="flex: 1; text-align: left;">
+                <span style="display: inline-block; padding: 6px 12px; background: #fff3cd; color: #856404; border-radius: 4px; border: 1px solid #ffeeba; font-size: 0.9em;">
+                    Đã yêu cầu đổi trả. <a href="/pages/user/return-detail/return-detail.html?orderId=${esc(o.id)}" style="color: #533f03; text-decoration: underline; font-weight: 500;">Xem chi tiết</a>
+                </span>
+            </div>` : ''}
             ${canCancelOrder(o) ? `
             <button class="btn-track-order text-danger border-danger" onclick="handleGuestCancelOrder('${esc(o.id)}')">
                 Hủy đơn hàng
@@ -652,81 +678,96 @@ window.handleGuestCancelOrder = function(orderId) {
 };
 
 window.handleGuestConfirmOrder = async function(orderId) {
-    if (!confirm('Bạn xác nhận đã nhận hàng thành công?')) return;
-    
-    // Update local state immediately
-    const order = rgLastSearchState.orders.find(o => o.id === orderId);
-    if (order) {
-        order.status = 'completed';
-        order.updatedAt = new Date().toISOString();
-        
-        const allOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-        const index = allOrders.findIndex(o => String(o.id) === String(order.id));
-        if (index !== -1) {
-            allOrders[index].status = 'completed';
-            allOrders[index].orderStatus = 'COMPLETED';
-        } else {
-            allOrders.push({ ...order, status: 'completed', orderStatus: 'COMPLETED' });
-        }
-        localStorage.setItem('pawpal_orders', JSON.stringify(allOrders));
-    }
-    
-    // Cập nhật lại UI
-    renderResults(rgLastSearchState.bookings, rgLastSearchState.orders);
-    showToast('Đã xác nhận nhận hàng!', 'success');
+    const phone = document.getElementById('rg-phone').value.trim();
+    if (!phone) { showToast('Vui lòng nhập số điện thoại trước.', 'info'); return; }
 
-    // Cập nhật lên Supabase
-    if (window.API && typeof window.API.updateOrderStatus === 'function') {
-        window.API.updateOrderStatus(orderId, 'COMPLETED').catch(err => {
-            console.warn('[ReturnGuest] Failed to sync completed status:', err);
-        });
-    } else {
-        const db = window.SupabaseClient;
-        if (db) {
-            const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
-            let query = db.from('sales_order').update({ order_status: 'COMPLETED', updated_at: new Date().toISOString() });
-            query = isUUID ? query.eq('id', orderId) : query.eq('order_code', orderId);
-            query.then(({error}) => {
-                if (error) console.warn('[ReturnGuest] Sync error:', error);
-            });
+    showSendOTPConfirm(
+        'Xác nhận đơn hàng',
+        'Bạn xác nhận đã nhận hàng thành công?',
+        phone,
+        () => {
+            // Update local state immediately
+            const order = rgLastSearchState.orders.find(o => o.id === orderId);
+            if (order) {
+                order.status = 'completed';
+                order.updatedAt = new Date().toISOString();
+                
+                const allOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+                const index = allOrders.findIndex(o => String(o.id) === String(order.id));
+                if (index !== -1) {
+                    allOrders[index].status = 'completed';
+                    allOrders[index].orderStatus = 'COMPLETED';
+                } else {
+                    allOrders.push({ ...order, status: 'completed', orderStatus: 'COMPLETED' });
+                }
+                localStorage.setItem('pawpal_orders', JSON.stringify(allOrders));
+            }
+            
+            // Cập nhật lại UI
+            renderResults(rgLastSearchState.bookings, rgLastSearchState.orders);
+            showToast('Đã xác nhận nhận hàng!', 'success');
+
+            // Cập nhật lên Supabase
+            if (window.API && typeof window.API.updateOrderStatus === 'function') {
+                window.API.updateOrderStatus(orderId, 'COMPLETED').catch(err => {
+                    console.warn('[ReturnGuest] Failed to sync completed status:', err);
+                });
+            } else {
+                const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (db) {
+                    const isUUID = typeof orderId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+                    let query = db.from('sales_order').update({ order_status: 'DELIVERED', payment_status: 'PAID', updated_at: new Date().toISOString() });
+                    query = isUUID ? query.eq('id', orderId) : query.eq('order_code', orderId);
+                    query.then(({error}) => {
+                        if (error) console.warn('[ReturnGuest] Sync error:', error);
+                    });
+                }
+            }
         }
-    }
+    );
 };
 
 window.handleGuestReturnRequest = function(orderId) {
     const phone = document.getElementById('rg-phone').value.trim();
     if (!phone) { showToast('Vui lòng nhập số điện thoại trước.', 'info'); return; }
 
-    // Tìm đơn từ kết quả search hiện tại (đã merge localStorage + seed)
-    const order = (rgLastSearchState.orders || []).find(o => o.id === orderId)
-                || JSON.parse(localStorage.getItem('pawpal_orders') || '[]').find(o => o.id === orderId);
+    showSendOTPConfirm(
+        'Yêu cầu đổi trả',
+        'Bạn có muốn gửi yêu cầu đổi trả cho đơn hàng này?',
+        phone,
+        () => {
+            // Tìm đơn từ kết quả search hiện tại (đã merge localStorage + seed)
+            const order = (rgLastSearchState.orders || []).find(o => o.id === orderId)
+                        || JSON.parse(localStorage.getItem('pawpal_orders') || '[]').find(o => o.id === orderId);
 
-    if (!order) {
-        showToast('Không tìm thấy đơn hàng.', 'error');
-        return;
-    }
+            if (!order) {
+                showToast('Không tìm thấy đơn hàng.', 'error');
+                return;
+            }
 
-    // Sync đơn vào localStorage để openRMADrawer đọc được
-    try {
-        const stored = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-        if (!stored.find(o => o.id === orderId)) {
-            stored.unshift(order);
-            localStorage.setItem('pawpal_orders', JSON.stringify(stored));
+            // Sync đơn vào localStorage để openRMADrawer đọc được
+            try {
+                const stored = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+                if (!stored.find(o => o.id === orderId)) {
+                    stored.unshift(order);
+                    localStorage.setItem('pawpal_orders', JSON.stringify(stored));
+                }
+            } catch (_) {}
+
+            // Mở RMA drawer
+            if (typeof openRMADrawer === 'function') {
+                openRMADrawer(orderId);
+            } else {
+                const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
+                const existing = returnsList.find(r => r.orderId === orderId);
+                if (existing) {
+                    window.location.href = `/pages/user/return-detail/return-detail.html?orderId=${orderId}`;
+                } else {
+                    showToast('Vui lòng liên hệ Hotline: 1900 xxxx để được hỗ trợ đổi trả.', 'info');
+                }
+            }
         }
-    } catch (_) {}
-
-    // Mở RMA drawer
-    if (typeof openRMADrawer === 'function') {
-        openRMADrawer(orderId);
-    } else {
-        const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
-        const existing = returnsList.find(r => r.orderId === orderId);
-        if (existing) {
-            window.location.href = `/pages/user/return-detail/return-detail.html?orderId=${orderId}`;
-        } else {
-            showToast('Vui lòng liên hệ Hotline: 1900 xxxx để được hỗ trợ đổi trả.', 'info');
-        }
-    }
+    );
 };
 
 // ── Bước 1: Xác nhận hành động (Đồng ý → tự gửi OTP) ────────────────────

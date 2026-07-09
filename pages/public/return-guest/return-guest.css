@@ -143,6 +143,11 @@
     overflow: hidden;
 }
 
+.rg-item-cancelled {
+    opacity: 0.6;
+    filter: grayscale(0.8);
+}
+
 .rg-item-header {
     display: flex;
     justify-content: space-between;

@@ -139,6 +139,29 @@ async function syncLoyaltyFromSupabase(user) {
         const membership = data.customer_membership?.[0] || {};
         const tier = membership.membership_tier || {};
 
+        // Tính tổng chi tiêu từ appointment và sales_order
+        let totalSpend = user.spend || 0;
+        try {
+            const customerId = data.id || user.id;
+            const [apptRes, orderRes] = await Promise.all([
+                db.from('appointment').select('total_price').eq('customer_id', customerId).eq('payment_status', 'PAID'),
+                db.from('sales_order').select('total_amount').eq('customer_id', customerId).eq('payment_status', 'PAID')
+            ]);
+            
+            let sum = 0;
+            if (!apptRes.error && apptRes.data) {
+                sum += apptRes.data.reduce((acc, curr) => acc + (Number(curr.total_price) || 0), 0);
+            }
+            if (!orderRes.error && orderRes.data) {
+                sum += orderRes.data.reduce((acc, curr) => acc + (Number(curr.total_amount) || 0), 0);
+            }
+            if (sum > 0) {
+                totalSpend = sum;
+            }
+        } catch (calcErr) {
+            console.warn('[Loyalty] Error calculating total spend:', calcErr);
+        }
+
         const updatedUser = {
             ...user,
             id: data.id || user.id,
@@ -147,6 +170,7 @@ async function syncLoyaltyFromSupabase(user) {
             phone: data.phone_main || user.phone,
             points: membership.total_paw_points ?? user.points ?? 0,
             tier: tier.tier_name || user.tier || 'Đồng',
+            spend: totalSpend,
             _source: 'supabase',
         };
 

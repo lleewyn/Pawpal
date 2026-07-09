@@ -1923,6 +1923,7 @@ async function insertBookingToSupabase(bookingRecord, currentUser) {
         appointment_status: 'PENDING',
         payment_status: 'PENDING',
         note: bookingRecord.note || null,
+        total_price: bookingRecord.price,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
     };

@@ -8,28 +8,73 @@ import { API } from '/scripts/api/api.js';
 // ============================================================
 // SUPABASE SYNC — load bookings từ Supabase vào localStorage
 // ============================================================
+async function repairLocalBookingsPrices() {
+    try {
+        const local = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        const needsRepair = local.filter(b => !Number(b.price) || Number(b.price) <= 0);
+        if (!needsRepair.length) return;
+
+        // Fetch dichvu.csv
+        const response = await fetch('/data/dichvu.csv').catch(() => fetch('../../data/dichvu.csv'));
+        if (!response.ok) return;
+        const csvText = await response.text();
+        const lines = csvText.split('\n').filter(line => line.trim());
+        const headers = lines[0].split(',').map(h => h.trim());
+        const services = lines.slice(1).map(line => {
+            const values = line.split(',').map(v => v.trim());
+            const item = {};
+            headers.forEach((h, i) => item[h] = values[i] || '');
+            return item;
+        });
+
+        let updated = false;
+        local.forEach(b => {
+            if (!Number(b.price) || Number(b.price) <= 0) {
+                const srv = services.find(s => s['Tên dịch vụ'] === b.serviceName);
+                if (srv) {
+                    const p1 = parseInt(srv['Giá <5kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
+                    const p2 = parseInt(srv['Giá 5-10kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
+                    const p3 = parseInt(srv['Giá 10-20kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
+                    const p4 = parseInt(srv['Giá >20kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
+                    const validPrices = [p1, p2, p3, p4].filter(p => p > 0);
+                    if (validPrices.length) {
+                        b.price = Math.min(...validPrices);
+                        updated = true;
+                    }
+                }
+            }
+        });
+        if (updated) localStorage.setItem('pawpal_bookings', JSON.stringify(local));
+    } catch (e) {
+        console.warn('Failed to repair local booking prices:', e);
+    }
+}
+
 async function syncBookingsFromSupabase(currentUser) {
-    const db = window.SupabaseClient;
+    let db = window.SupabaseClient;
+    if (!db && window.getSupabaseClient) {
+        db = window.getSupabaseClient();
+    }
     if (!db || !currentUser) return;
 
     try {
-        // Tìm customer UUID nếu dùng mock id
         let customerId = currentUser.id;
-        if (currentUser._source !== 'supabase') {
+        if (currentUser._source !== 'supabase' && currentUser.phone) {
             const { data: found } = await db
                 .from('customer')
                 .select('id')
                 .eq('phone_main', currentUser.phone)
                 .limit(1);
-            if (!found?.length) return;
-            customerId = found[0].id;
+            if (found && found.length > 0) {
+                customerId = found[0].id;
+            }
         }
 
         const { data, error } = await db
             .from('appointment')
             .select(`
                 id, appointment_code, appointment_date, appointment_time,
-                appointment_status, payment_status, note, change_count,
+                appointment_status, payment_status, note, change_count, total_price,
                 service ( 
                     service_name, service_category, estimated_duration,
                     service_price_matrix ( unit_price, pet_species )
@@ -39,14 +84,27 @@ async function syncBookingsFromSupabase(currentUser) {
             .eq('customer_id', customerId)
             .order('appointment_date', { ascending: false });
 
-        if (error) { console.error('[Bookings] Supabase error:', error.message); return; }
+        console.log('[DEBUG] Raw data from Supabase:', data);
+
+        if (error) {
+            console.error('[Bookings] Lỗi tải lịch hẹn:', error);
+            return;
+        }
 
         const bookings = (data || []).map(b => {
             // Preserve pointsAwarded flag từ localStorage để tránh cộng điểm lại
+            const srv = Array.isArray(b.service) ? b.service[0] : b.service;
+            const pet = Array.isArray(b.pet_profile) ? b.pet_profile[0] : b.pet_profile;
+
             const existing = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
             const localBooking = existing.find(lb =>
                 String(lb.id) === String(b.appointment_code || b.id) ||
-                String(lb._supabaseId) === String(b.id)
+                String(lb._supabaseId) === String(b.id) ||
+                (
+                    lb.date === b.appointment_date && 
+                    (lb.timeStart === b.appointment_time?.slice(0, 5) || lb.time === b.appointment_time?.slice(0, 5)) && 
+                    lb.serviceName === (srv?.service_name || '')
+                )
             );
 
             return {
@@ -60,25 +118,36 @@ async function syncBookingsFromSupabase(currentUser) {
                 status:          mapAppointmentStatus(b.appointment_status),
                 bookingStatus:   b.appointment_status,
                 paymentStatus:   b.payment_status,
-                service:         b.service?.service_name      || '',
-                serviceName:     b.service?.service_name      || '',
-                serviceCategory: b.service?.service_category  || '',
-                petId:           b.pet_profile?.pet_code      || b.pet_profile?.id || '',
-                petName:         b.pet_profile?.pet_name      || '',
-                petBreed:        b.pet_profile?.breed         || '',
+                service:         srv?.service_name      || '',
+                serviceName:     srv?.service_name      || '',
+                serviceCategory: srv?.service_category  || '',
+                petId:           pet?.pet_code      || pet?.id || '',
+                petName:         pet?.pet_name      || '',
+                petBreed:        pet?.breed         || '',
                 changeCount:     b.change_count               || 0,
                 note:            b.note || '',
-                price:           getPriceFromMatrix(b.service?.service_price_matrix, b.pet_profile?.species) || localBooking?.price || 0,
+                price:           b.total_price || localBooking?.price || getPriceFromMatrix(srv?.service_price_matrix, pet?.species) || 0,
                 // Giữ nguyên flag đã tích điểm để tránh cộng lại
                 pointsAwarded:   localBooking?.pointsAwarded  || false,
                 pointsEarned:    localBooking?.pointsEarned   || 0,
-                _source:         'supabase',
+                _source:         'supabase'
             };
         });
 
+        console.log('[DEBUG] Bookings from Supabase parsed:', bookings.map(b => ({ id: b.id, service: b.serviceName, total_price: b.price })));
+
         // Merge bookings từ Supabase vào local thay vì ghi đè hoàn toàn
         const local = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-        const merged = local.map(lb => {
+        
+        // Lọc bỏ những booking đã từng đồng bộ (_supabaseId) nhưng giờ không còn trên Supabase (đã bị xoá)
+        const validLocal = local.filter(lb => {
+            if (lb._supabaseId || lb._source === 'supabase') {
+                return bookings.some(b => String(b._supabaseId) === String(lb._supabaseId) || String(b.id) === String(lb.id));
+            }
+            return true;
+        });
+
+        const merged = validLocal.map(lb => {
             const fromSb = bookings.find(b => String(b.id) === String(lb.id) || String(b._supabaseId) === String(lb._supabaseId));
             return fromSb ? { ...lb, ...fromSb } : lb;
         });
@@ -162,6 +231,7 @@ export const statusLabels = {
 };
 
 const statusAliases = {
+    pending: ['pending'],
     confirmed: ['confirmed', 'upcoming'],
     accepted: ['accepted'],
     'in-progress': ['in-progress'],
@@ -214,12 +284,20 @@ function initFilterTabs() {
 
 async function loadBookings(status) {
     try {
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || { id: 'USER-001', phone: '0901234567' };
+    
+    // Sửa giá nếu bị mất từ trước
+    await repairLocalBookingsPrices();
 
-        // Sync từ Supabase trước
-        if (window.SupabaseClient && currentUser) {
-            await syncBookingsFromSupabase(currentUser);
-        }
+    // 2) Đồng bộ từ Supabase về LocalStorage
+    let db = window.SupabaseClient;
+    if (!db && window.getSupabaseClient) {
+        db = window.getSupabaseClient();
+    }
+    
+    if (db && currentUser) {
+        await syncBookingsFromSupabase(currentUser);
+    }
 
         await API.initData();
         allBookings = currentUser ? await API.getUserBookings(currentUser.id) : [];
@@ -260,8 +338,8 @@ function renderBookings(status) {
     let filteredBookings = [...allBookings];
     
     // Loại bỏ các lịch hẹn trùng lặp (lỗi do bấm Xác nhận nhiều lần lúc trước)
-    const uniqueBookings = [];
-    const seen = new Set();
+    // Ưu tiên giữ lại lịch hẹn có nguồn từ Supabase hoặc có giá tiền hợp lệ
+    const uniqueMap = new Map();
     for (const b of filteredBookings) {
         const petKey = String(b.petId || b.petName || b.pet_profile?.pet_name || 'pet');
         const srvKey = String(b.service || b.serviceName || b.service?.service_name || 'srv');
@@ -269,16 +347,26 @@ function renderBookings(status) {
         const timeKey = String(b.timeStart || b.time || b.schedule?.slot || '');
         const key = `${petKey}-${srvKey}-${dateKey}-${timeKey}`.toLowerCase();
         
-        if (!seen.has(key)) {
-            seen.add(key);
-            uniqueBookings.push(b);
+        if (!uniqueMap.has(key)) {
+            uniqueMap.set(key, b);
+        } else {
+            // Đã có trùng lặp, ta sẽ ưu tiên bản ghi từ supabase hoặc bản ghi có giá tiền hợp lệ
+            const existing = uniqueMap.get(key);
+            const existingHasPrice = Number(existing.price) > 0;
+            const newHasPrice = Number(b.price) > 0;
+            
+            if (!existingHasPrice && newHasPrice) {
+                uniqueMap.set(key, b); // Ghi đè bằng bản ghi có giá
+            } else if (b._source === 'supabase' && existing._source !== 'supabase') {
+                uniqueMap.set(key, b); // Ưu tiên supabase
+            }
         }
     }
-    filteredBookings = uniqueBookings;
+    filteredBookings = Array.from(uniqueMap.values());
     
     // Cập nhật số lượng trên các tab bộ lọc
-    const counts = { all: uniqueBookings.length, confirmed: 0, 'in-progress': 0, completed: 0, cancelled: 0 };
-    uniqueBookings.forEach(booking => {
+    const counts = { all: filteredBookings.length, pending: 0, confirmed: 0, 'in-progress': 0, completed: 0, cancelled: 0 };
+    filteredBookings.forEach(booking => {
         const resolved = resolveBookingStatus(booking);
         // 'accepted' cũng được tính vào 'in-progress' trên giao diện (tuỳ logic, nhưng theo statusAliases thì accepted đứng riêng lẻ, 'in-progress' là ['in-progress'])
         // Để linh hoạt, ta kiểm tra theo statusAliases:
@@ -301,7 +389,7 @@ function renderBookings(status) {
         const allowedStatuses = statusAliases[status] || [status];
         filteredBookings = filteredBookings.filter((booking) => allowedStatuses.includes(resolveBookingStatus(booking)));
     } else {
-        const statusOrder = { upcoming: 1, confirmed: 1, accepted: 2, 'in-progress': 3, completed: 4, cancelled: 5 };
+        const statusOrder = { pending: 1, upcoming: 2, confirmed: 2, accepted: 3, 'in-progress': 4, completed: 5, cancelled: 6 };
         filteredBookings.sort((a, b) => (statusOrder[resolveBookingStatus(a)] || 99) - (statusOrder[resolveBookingStatus(b)] || 99));
     }
 
@@ -328,7 +416,7 @@ function createBookingCard(booking) {
         && !['in-progress', 'completed', 'cancelled'].includes(normalizedStatus)
         && !isChangeLimited;
     const canCancel = diffMinutes >= 120
-        && ['confirmed', 'accepted'].includes(normalizedStatus)
+        && ['pending', 'confirmed', 'accepted'].includes(normalizedStatus)
         && cancelCount < 3;
     
     const petKey = String(booking.petId || '');
@@ -499,7 +587,11 @@ function getBookingScheduledAt(booking) {
 }
 
 export function formatPrice(price) {
-    const numPrice = Number(price);
+    if (!price && price !== 0) return 'Giá theo thực tế';
+    let numPrice = Number(price);
+    if (isNaN(numPrice) && typeof price === 'string') {
+        numPrice = Number(price.replace(/[^\d]/g, ''));
+    }
     if (!numPrice || numPrice <= 0) return 'Giá theo thực tế';
     return new Intl.NumberFormat('vi-VN', {
         style: 'currency',
