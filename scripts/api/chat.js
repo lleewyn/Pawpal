@@ -24,12 +24,15 @@ const getGenAI = async () => {
             if (envKeys.length === 0) return null;
 
             const randomKey = envKeys[Math.floor(Math.random() * envKeys.length)];
+            const keyPrefix = randomKey.substring(0, 15);
+            console.log(`[API Key Rotation - Fallback] Đang dùng key bắt đầu bằng: ${keyPrefix}...`);
             return new GoogleGenerativeAI(randomKey);
         }
 
         // Nếu lấy thành công từ Supabase, chọn ngẫu nhiên 1 key (Round-robin/Random)
         const randomKeyObj = data[Math.floor(Math.random() * data.length)];
-        console.log(`[API Key Rotation] Đang dùng 1 trong ${data.length} keys từ Database.`);
+        const keyPrefix = randomKeyObj.key_value.substring(0, 15);
+        console.log(`[API Key Rotation] Đang dùng key bắt đầu bằng: ${keyPrefix}... (tổng số: ${data.length} keys)`);
         return new GoogleGenerativeAI(randomKeyObj.key_value);
     } catch (err) {
         console.error("Lỗi khi lấy API key từ Supabase:", err);
