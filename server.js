@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const chatApi = require('./api/chat.js');
+const chatApi = require('./scripts/api/chat.js');
 
 const app = express();
 const port = 3000;
