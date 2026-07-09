@@ -92,7 +92,7 @@ const dbTools = {
             .select('*')
             .eq('customer_id', user_id)
             .order('created_at', { ascending: false })
-            .limit(3);
+            .limit(10);
         if (error) return { error: error.message };
         return data && data.length ? data : { message: "Không tìm thấy đơn hàng nào" };
     },
@@ -173,7 +173,7 @@ const toolsDeclaration = [
         functionDeclarations: [
             {
                 name: "get_user_orders",
-                description: "Lấy 3 đơn hàng mua sắm gần nhất của khách hàng (chỉ dùng khi khách hỏi về đơn hàng của họ).",
+                description: "Lấy lên đến 10 đơn hàng mua sắm gần nhất của khách (dùng khi khách hỏi về đơn hàng của họ, bao gồm cả đơn thành công và đã hủy).",
             },
             {
                 name: "get_user_bookings",
