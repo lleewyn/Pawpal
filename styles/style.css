@@ -1583,6 +1583,33 @@ h1, h2, h3, h4, h5, h6 {
     }
 
     .nav-item.dropdown .dropdown-menu .dropdown-divider { display: none; }
+
+    /* Mobile Account Submenu Toggle */
+    .mobile-account-submenu {
+        display: none;
+        flex-direction: column;
+        padding-left: 1.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .mobile-account-group.open .mobile-account-submenu {
+        display: flex;
+    }
+
+    .mobile-account-chevron {
+        transition: transform 0.3s ease;
+    }
+
+    .mobile-account-group.open .mobile-account-chevron {
+        transform: rotate(180deg);
+    }
+
+    .mobile-account-toggle {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
 }
 
 .search-bar input:focus {
