@@ -39,11 +39,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const passwordSetupCard = document.getElementById('passwordSetupCard');
         const memberActions = document.getElementById('memberActions');
         if (passwordSetupCard) {
-            passwordSetupCard.style.display = '';
+            passwordSetupCard.style.display = 'block';
             passwordSetupCard.classList.remove('d-none');
         }
         if (memberActions) {
-            memberActions.style.display = '';
+            memberActions.style.display = 'none';
             memberActions.classList.add('d-none');
         }
 
@@ -57,11 +57,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const passwordSetupCard = document.getElementById('passwordSetupCard');
         const memberActions = document.getElementById('memberActions');
         if (passwordSetupCard) {
-            passwordSetupCard.style.display = '';
+            passwordSetupCard.style.display = 'none';
             passwordSetupCard.classList.add('d-none');
         }
         if (memberActions) {
-            memberActions.style.display = '';
+            memberActions.style.display = 'flex';
             memberActions.classList.remove('d-none');
         }
     }
