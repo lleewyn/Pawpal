@@ -614,7 +614,7 @@ function buildOrderCard(o) {
             ${(JSON.parse(localStorage.getItem('pawpal_returns') || '[]').some(r => r.orderId === o.id)) ? `
             <div style="flex: 1; text-align: left;">
                 <span style="display: inline-block; padding: 6px 12px; background: #fff3cd; color: #856404; border-radius: 4px; border: 1px solid #ffeeba; font-size: 0.9em;">
-                    Đã yêu cầu đổi trả. <a href="/pages/user/return-detail/return-detail.html?orderId=${esc(o.id)}" style="color: #533f03; text-decoration: underline; font-weight: 500;">Xem chi tiết</a>
+                    Đã yêu cầu đổi trả. <a href="javascript:void(0)" onclick="showGuestReturnDetail('${esc(o.id)}')" style="color: #533f03; text-decoration: underline; font-weight: 500; cursor: pointer;">Xem chi tiết</a>
                 </span>
             </div>` : ''}
             ${canCancelOrder(o) ? `
@@ -1534,3 +1534,75 @@ function showToast(msg, type = 'info') {
     setTimeout(() => t.classList.add('show'), 10);
     setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 4000);
 }
+
+// --- HIỂN THỊ POPUP CHI TIẾT ĐỔI TRẢ CHO KHÁCH VÃNG LAI ---
+window.showGuestReturnDetail = function(orderId) {
+    const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
+    const ret = returnsList.find(r => r.orderId === orderId);
+    if (!ret) {
+        showToast('Không tìm thấy thông tin đổi trả!', 'error');
+        return;
+    }
+
+    let itemsHtml = '';
+    if (ret.items && ret.items.length) {
+        itemsHtml = ret.items.map(i => `
+            <div class="mb-3 p-3 border rounded" style="background: #fafafa">
+                <div class="fw-bold mb-1">${i.name} (SL: ${i.quantity})</div>
+                <div class="small text-muted mb-1">Tình trạng: ${i.condition}</div>
+                <div class="small">Lý do: <span class="fw-medium">${i.reason}</span></div>
+            </div>
+        `).join('');
+    }
+
+    let refundInfoHtml = '';
+    if (ret.refundMethod === 'VNPAY') {
+        refundInfoHtml = `<div class="mt-3 p-3 bg-light rounded border">
+            <h6 class="fw-bold mb-2">Thông tin nhận tiền (VNPAY/Chuyển khoản)</h6>
+            <div class="small"><strong>Ngân hàng:</strong> ${ret.refundBank}</div>
+            <div class="small"><strong>Số TK:</strong> ${ret.refundAccount}</div>
+            <div class="small"><strong>Chủ TK:</strong> ${ret.refundName}</div>
+        </div>`;
+    }
+
+    const modalHtml = `
+        <div class="modal fade" id="guestReturnDetailModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header border-bottom bg-light">
+                        <h5 class="modal-title fw-bold text-primary">Chi tiết Yêu cầu Đổi trả</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                            <div>
+                                <div class="text-muted small text-uppercase fw-semibold mb-1">Mã đơn hàng</div>
+                                <div class="fw-bold fs-5">${orderId}</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-warning text-dark px-3 py-2 fs-6 rounded-pill">Đang chờ xử lý</span>
+                            </div>
+                        </div>
+                        <div class="mb-4 d-flex justify-content-between text-muted small">
+                            <span><strong>Ngày gửi yêu cầu:</strong> ${ret.createdAt || 'Gần đây'}</span>
+                            <span><strong>Kiểu yêu cầu:</strong> ${ret.requestType === 'refund' ? 'Hoàn tiền' : 'Đổi sản phẩm'}</span>
+                        </div>
+                        <h6 class="fw-bold mb-3 text-secondary">Sản phẩm đổi/trả:</h6>
+                        ${itemsHtml}
+                        ${refundInfoHtml}
+                    </div>
+                    <div class="modal-footer border-top-0 bg-light rounded-bottom">
+                        <button type="button" class="btn-cta w-100 py-2 rounded-pill shadow-sm" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const existing = document.getElementById('guestReturnDetailModal');
+    if (existing) existing.remove();
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('guestReturnDetailModal'));
+    modal.show();
+};

@@ -224,11 +224,11 @@ module.exports = async function handler(req, res) {
         
         const userId = await getUserIdFromToken(authHeader);
         
-        let systemInstruction = "Bạn là Trợ lý AI của cửa hàng chăm sóc thú cưng PawPal. Nhiệm vụ của bạn là tư vấn nhiệt tình, thân thiện bằng tiếng Việt. Sử dụng Emoji dễ thương và định dạng văn bản (in đậm, danh sách) để câu trả lời thêm sinh động và nổi bật, dễ đọc.\n";
+        let systemInstruction = "Bạn là Trợ lý AI của cửa hàng chăm sóc thú cưng PawPal. Nhiệm vụ của bạn là tư vấn nhiệt tình, thân thiện bằng tiếng Việt. KHÔNG SỬ DỤNG EMOJI. Chỉ dùng định dạng in đậm (**text**) để làm nổi bật các thông tin quan trọng.\n";
         
         systemInstruction += "QUY TẮC QUAN TRỌNG NHẤT (GUARDRAILS):\n";
         systemInstruction += "- XÁC NHẬN TRƯỚC KHI THỰC THI: Mọi thao tác hủy lịch hẹn (cancel_booking) BẮT BUỘC phải hỏi lại khách: 'Bạn có chắc chắn muốn hủy lịch hẹn [Mã] không?'. Chỉ gọi Tool khi khách nói đồng ý.\n";
-        systemInstruction += "- ĐỊNH DẠNG ĐẸP MẮT: Khi liệt kê đơn hàng, lịch hẹn, hoặc thú cưng, hãy dùng Emoji (🐾, 📅, 🐶, v.v.), viết đậm các thông tin quan trọng như tên dịch vụ, mã, trạng thái để nổi bật.\n";
+        systemInstruction += "- ĐỊNH DẠNG ĐẸP MẮT: Khi liệt kê đơn hàng, lịch hẹn, hoặc thú cưng, TUYỆT ĐỐI KHÔNG DÙNG EMOJI. Hãy viết đậm (**text**) các thông tin quan trọng như Tên dịch vụ, Mã, Trạng thái, Tổng tiền để dễ đọc.\n";
         systemInstruction += "- KHÔNG ẢO GIÁC: Chỉ trả lời dựa trên dữ liệu thật do Tools trả về. Nếu Tool báo lỗi hoặc trống, phải nói thật là không tìm thấy, tuyệt đối không bịa dữ liệu.\n";
         systemInstruction += "- NGOÀI PHẠM VI (OUT-OF-SCOPE): Nếu khách hỏi vấn đề không liên quan đến thú cưng hoặc PawPal, hãy từ chối lịch sự.\n\n";
 

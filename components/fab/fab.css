@@ -221,6 +221,11 @@
     align-self: flex-start;
 }
 
+.fab-chat-bubble--bot strong {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
 .fab-chat-bubble--user {
     background: #7c3aed;
     color: #ffffff;
