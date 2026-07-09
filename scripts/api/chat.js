@@ -109,7 +109,7 @@ const dbTools = {
     },
     get_services_price: async () => {
         try {
-            const { data, error } = await supabase.from('service_price_matrix').select('*').limit(30);
+            const { data, error } = await supabase.from('service_price_matrix').select('*, service(service_name)').limit(30);
             if (error) throw error;
             if (data && data.length > 0) {
                 return { context: "Dữ liệu bảng giá:\n" + JSON.stringify(data) };
