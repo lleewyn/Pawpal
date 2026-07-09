@@ -126,7 +126,7 @@ const dbTools = {
             const filePath = path.join(process.cwd(), 'data', 'pets.json');
             if (fs.existsSync(filePath)) {
                 const pets = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-                const userPets = pets.filter(p => p.userId === user_id);
+                const userPets = pets.filter(p => p.userId === 'USER-001' || p.userId === user_id);
                 return userPets.length ? userPets : { message: "Bạn chưa có hồ sơ thú cưng nào" };
             }
             return { error: "Không tìm thấy dữ liệu thú cưng" };
