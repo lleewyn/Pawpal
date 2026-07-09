@@ -1844,7 +1844,43 @@ function initFab() {
     }
 
     const GEMINI_API_KEY = "AIzaSyDWkR8qFUKBmpu3GZi2GP2OYQpA-TUSkcg";
+    
+    // --- KHÔI PHỤC LỊCH SỬ CHAT TỪ LOCALSTORAGE ---
+    let currentUserId = 'guest';
+    try {
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+        if (currentUser && (currentUser.id || currentUser._supabaseId)) {
+            currentUserId = currentUser._supabaseId || currentUser.id;
+        }
+    } catch(e) {}
+    
+    const CHAT_HISTORY_KEY = `pawpal_chat_history_${currentUserId}`;
     let conversationHistory = [];
+    try {
+        const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+        if (savedHistory) {
+            conversationHistory = JSON.parse(savedHistory);
+        }
+    } catch(e) {}
+
+    function saveChatHistory() {
+        if (conversationHistory.length > 50) {
+            conversationHistory = conversationHistory.slice(-50); // Giữ tối đa 50 tin nhắn
+        }
+        localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(conversationHistory));
+    }
+
+    // Hiển thị lịch sử nếu có
+    if (conversationHistory.length > 0 && messages) {
+        messages.innerHTML = ''; // Xóa lời chào mặc định
+        conversationHistory.forEach(msg => {
+            const bubble = document.createElement('div');
+            bubble.className = `fab-chat-bubble fab-chat-bubble--${msg.role === 'user' ? 'user' : 'bot'}`;
+            bubble.innerHTML = msg.role === 'model' ? msg.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>') : msg.content;
+            messages.appendChild(bubble);
+        });
+        setTimeout(() => scrollToBottom(), 100);
+    }
 
     // Send message
     async function sendMessage() {
@@ -1887,6 +1923,7 @@ function initFab() {
                 "role": "user",
                 "content": text
             });
+            saveChatHistory();
 
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -1928,6 +1965,7 @@ function initFab() {
                             // Xong - lưu vào history
                             if (fullReply) {
                                 conversationHistory.push({ "role": "model", "content": fullReply });
+                                saveChatHistory();
                             }
                             break;
                         }
