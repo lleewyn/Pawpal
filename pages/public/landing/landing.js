@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 document.addEventListener('DOMContentLoaded', function() {
 
-        // Smart Loader: hide as soon as DOM is ready, cancel show-timer if fast enough
+        // Trình tải thông minh: ẩn ngay khi DOM sẵn sàng, hủy timer nếu tải đủ nhanh
         (function () {
             function hideLoader() {
                 clearTimeout(window._loaderTimeout);
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function() {
 
         (function () {
-            // Update Hero Availability
+            // Cập nhật tình trạng khả dụng trên màn hình chính
             function updateHeroAvailability() {
                 const el = document.getElementById('heroAvailability');
                 if (!el) return;
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.innerHTML = `Hôm nay còn trống: <strong style="color:#ffffff; font-weight:700;">${spaSlots} slot Spa</strong> | <strong style="color:#ffffff; font-weight:700;">${hotelRooms} phòng Hotel</strong> <span style="opacity:0.6">(Cập nhật ${timeStr})</span>`;
             }
 
-            // Update Footer CTA Urgency
+            // Cập nhật mức độ khẩn cấp ở Footer
             function updateCtaUrgency() {
                 const el = document.getElementById('ctaUrgency');
                 if (!el) return;
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.innerHTML = `<span class="urgency-dot"></span><span>Hôm nay còn <strong>${totalSlots} slot</strong> trống — Đặt ngay!</span>`;
             }
 
-            // Init và auto-update
+            // Khởi tạo và tự động cập nhật
             updateHeroAvailability();
             updateCtaUrgency();
             setInterval(updateHeroAvailability, 300000); // 5 phút
@@ -73,12 +73,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     const d = el.dataset;
                     if (!d.id || d.id === featured.dataset.id) return;
 
-                    // Animate out
+                    // Hiệu ứng ẩn đi
                     featured.style.transition = 'opacity 0.2s ease';
                     featured.style.opacity = '0';
 
                     setTimeout(function () {
-                        // Update featured content
+                        // Cập nhật nội dung nổi bật
                         document.getElementById('svcFeaturedImgEl').src = d.img;
                         document.getElementById('svcFeaturedImgEl').alt = d.title;
                         document.getElementById('svcFeaturedTitle').innerHTML = d.title;
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         featured.href = d.href || '#';
                         featured.dataset.id = d.id;
 
-                        // Active state on mini cards — highlight the one now in stack that matches featured
+                        // Trạng thái active trên thẻ mini — làm nổi bật thẻ khớp với nội dung chính
                         miniItems.forEach(function(m) {
                             m.classList.remove('svc-active');
                             // Show all mini cards
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                         el.classList.add('svc-active');
 
-                        // Animate in
+                        // Hiệu ứng hiện ra
                         featured.style.opacity = '1';
                     }, 200);
                 }
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 miniItems.forEach(function(item) {
                     item.style.cursor = 'pointer';
                     item.addEventListener('click', function(e) {
-                        // Only swap, don't navigate (navigation handled by featured card)
+                        // Chỉ đổi nội dung, không chuyển trang
                         e.preventDefault();
                         swapFeatured(item);
                     });
@@ -134,18 +134,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (carousel) {
                 console.log('Found #heroCarousel element');
 
-                // Track transition events
+                // Theo dõi sự kiện chuyển đổi
                 carousel.addEventListener('slide.bs.carousel', function (e) {
                     console.log('Carousel slide event triggered. Moving to index:', e.to);
                 });
 
-                // Check images inside carousel
+                // Kiểm tra ảnh bên trong carousel
                 const images = carousel.querySelectorAll('img');
                 console.log('Number of images in carousel:', images.length);
                 images.forEach((img, i) => {
                     console.log(`Image ${i + 1} src:`, img.src);
 
-                    // Check if already loaded
+                    // Kiểm tra nếu đã tải xong
                     if (img.complete) {
                         if (img.naturalWidth === 0) {
                             console.error(`Image ${i + 1} (${img.src}) failed to load (naturalWidth is 0)`);
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
 
-                    // Error listener
+                    // Bắt lỗi
                     img.addEventListener('error', function () {
                         console.error(`Image ${i + 1} (${img.src}) failed to load`);
                     });
@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 // ── Product Loading ──────────────────────────────────────────
-// Load real products from sanpham.csv and render into landing grid
+// Tải sản phẩm thật từ dữ liệu và hiển thị lên lưới sản phẩm (grid) trang chủ
 (async function() {
     const grid = document.getElementById('productGrid');
     if (!grid) return;
@@ -202,23 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const toast = document.createElement('div');
         toast.textContent = message;
-        toast.style.cssText = `
-            position: fixed;
-            right: 24px;
-            bottom: 24px;
-            transform: translateY(8px);
-            background: var(--color-success, #2d8a57);
-            color: #fff;
-            padding: 12px 20px;
-            border-radius: 999px;
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 9999;
-            box-shadow: 0 10px 24px rgba(0,0,0,0.18);
-            pointer-events: none;
-            opacity: 1;
-            transition: opacity 0.35s ease, transform 0.35s ease;
-        `;
+        toast.className = 'cart-toast';
         document.body.appendChild(toast);
         requestAnimationFrame(() => {
             toast.style.transform = 'translateY(0)';
@@ -290,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
-    // Wait for DataLoader
+    // Chờ DataLoader tải xong
     let attempts = 0;
     while (!window.DataLoader && attempts < 20) {
         await new Promise(r => setTimeout(r, 100));
@@ -301,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const products = await window.DataLoader.loadProducts();
     if (!products || !products.length) return;
 
-    // Show 10 featured products (on sale / highest rated)
+    // Hiển thị 10 sản phẩm nổi bật (đang giảm giá / đánh giá cao nhất)
     const featured = products
         .filter(p => p.stock > 0)
         .sort((a, b) => (b.rating || 0) - (a.rating || 0))
@@ -394,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
     });
 
-    // Sub-filter tabs
+    // Các tab lọc phụ
     document.querySelectorAll('.shop-sub-filter-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             document.querySelectorAll('.shop-sub-filter-btn').forEach(b => b.classList.remove('active'));

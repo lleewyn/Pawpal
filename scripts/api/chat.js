@@ -2,6 +2,8 @@ require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { createClient } = require('@supabase/supabase-js');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const path = require('path');
 
 // Quản lý API Key xoay vòng từ Supabase
 const getGenAI = async () => {
@@ -26,14 +28,14 @@ const getGenAI = async () => {
             const randomKey = envKeys[Math.floor(Math.random() * envKeys.length)];
             const keyPrefix = randomKey.substring(0, 15);
             console.log(`[API Key Rotation - Fallback] Đang dùng key bắt đầu bằng: ${keyPrefix}...`);
-            return new GoogleGenerativeAI(randomKey);
+            return { genAI: new GoogleGenerativeAI(randomKey), keyPrefix };
         }
 
         // Nếu lấy thành công từ Supabase, chọn ngẫu nhiên 1 key (Round-robin/Random)
         const randomKeyObj = data[Math.floor(Math.random() * data.length)];
         const keyPrefix = randomKeyObj.key_value.substring(0, 15);
         console.log(`[API Key Rotation] Đang dùng key bắt đầu bằng: ${keyPrefix}... (tổng số: ${data.length} keys)`);
-        return new GoogleGenerativeAI(randomKeyObj.key_value);
+        return { genAI: new GoogleGenerativeAI(randomKeyObj.key_value), keyPrefix };
     } catch (err) {
         console.error("Lỗi khi lấy API key từ Supabase:", err);
         return null;
@@ -105,11 +107,49 @@ const dbTools = {
         if (error) return { error: error.message };
         return data && data.length ? data : { message: "Không có lịch hẹn nào sắp tới" };
     },
-    search_store_info: async (query) => {
+    get_services_price: async () => {
+        try {
+            const filePath = path.join(process.cwd(), 'data', 'dichvu.csv');
+            if (fs.existsSync(filePath)) {
+                const csvData = fs.readFileSync(filePath, 'utf8');
+                const lines = csvData.split('\n').slice(0, 25).join('\n'); // Lấy 25 dòng đầu
+                return { context: "Dữ liệu bảng giá (định dạng CSV):\n" + lines };
+            }
+            return { error: "Không tìm thấy dữ liệu giá dịch vụ" };
+        } catch (e) {
+            return { error: "Lỗi đọc file giá dịch vụ" };
+        }
+    },
+    get_pet_profile: async (user_id) => {
+        if (!user_id) return { error: "Yêu cầu đăng nhập để xem hồ sơ thú cưng" };
+        try {
+            const filePath = path.join(process.cwd(), 'data', 'pets.json');
+            if (fs.existsSync(filePath)) {
+                const pets = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                const userPets = pets.filter(p => p.userId === user_id);
+                return userPets.length ? userPets : { message: "Bạn chưa có hồ sơ thú cưng nào" };
+            }
+            return { error: "Không tìm thấy dữ liệu thú cưng" };
+        } catch (e) {
+            return { error: "Lỗi đọc dữ liệu thú cưng" };
+        }
+    },
+    cancel_booking: async (user_id, appointment_id) => {
+        if (!user_id) return { error: "Yêu cầu đăng nhập để thao tác" };
+        const { data, error } = await supabase
+            .from('appointment')
+            .update({ status: 'CANCELLED' })
+            .eq('id', appointment_id)
+            .eq('customer_id', user_id)
+            .select();
+        if (error) return { error: error.message };
+        return data && data.length ? { success: true, message: `Đã hủy thành công lịch hẹn ${appointment_id}` } : { error: "Không tìm thấy lịch hẹn hoặc bạn không có quyền hủy" };
+    },
+    search_store_info: async (query, genAI_instance) => {
         // Thực hiện RAG: Nhúng câu hỏi thành vector, so khớp trong DB
         try {
             // Lấy mô hình text-embedding của Google
-            const embeddingModel = genAI.getGenerativeModel({ model: "gemini-embedding-2" });
+            const embeddingModel = genAI_instance.getGenerativeModel({ model: "gemini-embedding-2" });
             const result = await embeddingModel.embedContent(query);
             const embedding = result.embedding.values;
             
@@ -145,6 +185,25 @@ const toolsDeclaration = [
                 description: "Lấy 3 lịch hẹn Spa/Grooming/Hotel gần nhất của khách hàng (chỉ dùng khi khách hỏi về lịch hẹn của họ).",
             },
             {
+                name: "get_services_price",
+                description: "Lấy bảng giá các dịch vụ Spa, Grooming, Hotel của PawPal (Sử dụng khi khách hỏi về giá cả, bảng giá, bao nhiêu tiền).",
+            },
+            {
+                name: "get_pet_profile",
+                description: "Lấy hồ sơ thú cưng của khách hàng đang đăng nhập.",
+            },
+            {
+                name: "cancel_booking",
+                description: "Hủy một lịch hẹn cụ thể. BẮT BUỘC phải hỏi lại người dùng để xác nhận trước khi gọi hàm này.",
+                parameters: {
+                    type: "OBJECT",
+                    properties: {
+                        appointment_id: { type: "STRING", description: "Mã lịch hẹn cần hủy" }
+                    },
+                    required: ["appointment_id"]
+                }
+            },
+            {
                 name: "search_store_info",
                 description: "Tìm kiếm thông tin chung về cửa hàng PawPal, ví dụ: bảng giá, giờ mở cửa, chính sách hoàn tiền, loại dịch vụ.",
                 parameters: {
@@ -168,21 +227,26 @@ module.exports = async function handler(req, res) {
         const { messages } = req.body;
         const authHeader = req.headers['authorization'];
         
-        // 1. Xác thực người dùng (Lấy user_id từ token)
         const userId = await getUserIdFromToken(authHeader);
         
         let systemInstruction = "Bạn là Trợ lý AI của cửa hàng chăm sóc thú cưng PawPal. Nhiệm vụ của bạn là tư vấn nhiệt tình, thân thiện bằng tiếng Việt. Tuyệt đối không dùng markdown phức tạp ngoài in đậm (**text**).\n";
+        
+        systemInstruction += "QUY TẮC QUAN TRỌNG NHẤT (GUARDRAILS):\n";
+        systemInstruction += "- XÁC NHẬN TRƯỚC KHI THỰC THI: Mọi thao tác hủy lịch hẹn (cancel_booking) BẮT BUỘC phải hỏi lại khách: 'Bạn có chắc chắn muốn hủy lịch hẹn [Mã] không?'. Chỉ gọi Tool khi khách nói đồng ý.\n";
+        systemInstruction += "- KHÔNG ẢO GIÁC: Chỉ trả lời dựa trên dữ liệu thật do Tools trả về. Nếu Tool báo lỗi hoặc trống, phải nói thật là không tìm thấy, tuyệt đối không bịa dữ liệu.\n";
+        systemInstruction += "- NGOÀI PHẠM VI (OUT-OF-SCOPE): Nếu khách hỏi vấn đề không liên quan đến thú cưng hoặc PawPal, hãy từ chối lịch sự.\n\n";
+
         if (userId) {
-            systemInstruction += `Khách hàng hiện đã đăng nhập (Đã xác thực, ID hệ thống: ${userId}). Khi khách hỏi thông tin cá nhân, HÃY ƯU TIÊN GỌI CÁC TOOL get_user_orders hoặc get_user_bookings để kiểm tra hệ thống thay vì trả lời chung chung.\n`;
+            systemInstruction += `Trạng thái: Đã đăng nhập (ID: ${userId}). Khi khách hỏi thông tin cá nhân (đơn hàng, lịch hẹn, thú cưng), HÃY ƯU TIÊN GỌI TOOL tương ứng.\n`;
         } else {
-            systemInstruction += `Khách hàng hiện Tạm Vãng Lai (chưa đăng nhập). Nếu khách hỏi về đơn hàng hoặc lịch hẹn riêng tư, hãy yêu cầu họ đăng nhập hoặc cung cấp mã đơn qua số Hotline.\n`;
+            systemInstruction += `Trạng thái: Khách Vãng Lai. Nếu khách yêu cầu lấy dữ liệu cá nhân, HÃY TỪ CHỐI gọi Tool và yêu cầu họ đăng nhập.\n`;
         }
 
-        const genAI = await getGenAI();
-        if (!genAI) {
-            return res.status(500).json({ error: "No Gemini API Key available" });
-        }
-
+        const genAIResult = await getGenAI();
+        if (!genAIResult) return res.status(500).json({ error: 'System AI Error: No API Keys available' });
+        
+        const { genAI, keyPrefix } = genAIResult;
+        
         const model = genAI.getGenerativeModel({ 
             model: "gemini-2.5-flash",
             systemInstruction: systemInstruction,
@@ -207,6 +271,8 @@ module.exports = async function handler(req, res) {
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
+        // Trả Header Key Prefix về Frontend
+        res.setHeader('X-API-Key-Used', keyPrefix);
 
         for await (const chunk of streamResult.stream) {
             const calls = typeof chunk.functionCalls === 'function' ? chunk.functionCalls() : chunk.functionCalls;
@@ -222,8 +288,14 @@ module.exports = async function handler(req, res) {
                     toolResult = await dbTools.get_user_orders(userId);
                 } else if (toolName === 'get_user_bookings') {
                     toolResult = await dbTools.get_user_bookings(userId);
+                } else if (toolName === 'get_services_price') {
+                    toolResult = await dbTools.get_services_price();
+                } else if (toolName === 'get_pet_profile') {
+                    toolResult = await dbTools.get_pet_profile(userId);
+                } else if (toolName === 'cancel_booking') {
+                    toolResult = await dbTools.cancel_booking(userId, toolArgs.appointment_id);
                 } else if (toolName === 'search_store_info') {
-                    toolResult = await dbTools.search_store_info(toolArgs.query);
+                    toolResult = await dbTools.search_store_info(toolArgs.query, genAI);
                 }
 
                 // Có function call -> Gọi lại Gemini bằng streaming và trả thẳng về client

@@ -254,6 +254,11 @@
                 body: JSON.stringify({ messages: conversationHistory })
             });
 
+            const apiKeyUsed = response.headers.get('X-API-Key-Used');
+            if (apiKeyUsed) {
+                console.log(`[PawPal AI] Đang sử dụng API Key bắt đầu bằng: ${apiKeyUsed}...`);
+            }
+
             const data = await response.json();
 
             if (data.reply) {

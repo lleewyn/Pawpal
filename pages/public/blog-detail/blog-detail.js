@@ -1,4 +1,3 @@
-// blog-detail.js
 async function initBlogDetail() {
     function formatDate(dateStr) {
         const d = new Date(dateStr);
@@ -66,17 +65,17 @@ async function initBlogDetail() {
         setupTOC(contentEl);
         setupShareBtns();
 
-        // Render Related Posts
+        // Render bài viết liên quan
         const relatedContainer = document.getElementById('related-posts-container');
         if (relatedContainer) {
-            // Find blogs in the same category, excluding current one
+            // Tìm các bài viết cùng danh mục, loại trừ bài hiện tại
             let relatedBlogs = blogs.filter(b => b.categorySlug === blog.categorySlug && b.id !== blog.id);
             if (relatedBlogs.length < 3) {
-                // If not enough, pad with other blogs
+                // Nếu không đủ, lấy thêm các bài viết khác
                 const otherBlogs = blogs.filter(b => b.categorySlug !== blog.categorySlug && b.id !== blog.id);
                 relatedBlogs = [...relatedBlogs, ...otherBlogs];
             }
-            // Take up to 3
+            // Lấy tối đa 3 bài
             relatedBlogs = relatedBlogs.slice(0, 3);
             
             relatedContainer.innerHTML = relatedBlogs.map(b => {

@@ -10,8 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="../../../styles/style.css">
-    <!-- Components -->
-    <!-- Specific Page Styles -->
     <link rel="stylesheet" href="../../../styles/public/blog.css">
     <link rel="stylesheet" href="blog-detail.css">
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
@@ -41,7 +39,7 @@
                     <ol class="breadcrumb" id="blog-breadcrumb">
                         <li class="breadcrumb-item"><a href="../landing/landing.html">Trang chủ</a></li>
                         <li class="breadcrumb-item"><a href="../blog/blog.html">Cẩm nang</a></li>
-                        <!-- Dynamic breadcrumbs will be injected here -->
+                        <!-- Đường dẫn sẽ được render vào đây -->
                     </ol>
                 </nav>
 
@@ -50,7 +48,7 @@
                     
                     <div class="blog-hero-meta">
                         <div class="meta-author" id="blog-author-meta">
-                            <!-- Dynamic author info -->
+                            <!-- Thông tin tác giả sẽ được render vào đây -->
                         </div>
                         
                         <div class="meta-actions">
@@ -64,7 +62,7 @@
                     </div>
                     
                     <div class="blog-hero-cover mt-4" id="blog-hero-cover">
-                        <!-- Dynamic cover image -->
+                        <!-- Ảnh bìa sẽ được render vào đây -->
                     </div>
                 </div>
             </div>
@@ -74,17 +72,17 @@
         <div class="container mt-5">
             <div class="row g-5">
                 
-                <!-- Main Content (70%) -->
+                <!-- Nội dung chính (70%) -->
                 <div class="col-lg-8">
                     <article class="blog-article-content" id="blog-content">
-                        <!-- Dynamic content will be injected here -->
+                        <!-- Nội dung bài viết sẽ được render vào đây -->
                     </article>
 
                     <!-- Tags và Author -->
                     <div class="blog-footer-meta mt-5 pt-4 border-top">
                         <div class="blog-tags mb-4" id="blog-tags">
                             <strong>Tags:</strong>
-                            <!-- Dynamic tags -->
+                            <!-- Thẻ tags sẽ được render vào đây -->
                         </div>
                         
                         <div class="author-box p-4 bg-light rounded-4 d-flex gap-4 align-items-center">
@@ -96,11 +94,11 @@
                         </div>
                     </div>
 
-                    <!-- Comments Section -->
+                    <!-- Khu vực bình luận -->
                     <div class="blog-comments mt-5">
                         <h4 class="mb-4">Bình luận (3)</h4>
                         
-                        <!-- Comment Form -->
+                        <!-- Form bình luận -->
                         <div class="comment-form-wrapper p-4 border rounded-4 mb-5">
                             <h5 class="mb-3">Để lại bình luận của bạn</h5>
                             <form>
@@ -121,7 +119,7 @@
                             </form>
                         </div>
 
-                        <!-- Comment List -->
+                        <!-- Danh sách bình luận -->
                         <div class="comment-list">
                             <div class="comment-item d-flex gap-3 mb-4">
                                 <div class="comment-avatar">
@@ -137,7 +135,7 @@
                                 </div>
                             </div>
                             
-                            <!-- Reply -->
+                            <!-- Phản hồi -->
                             <div class="comment-item reply d-flex gap-3 mb-4 ms-5 border-start border-3 border-primary ps-4">
                                 <div class="comment-avatar">
                                     <img src="../../../assets/images/publics/cat7.jpg" class="rounded-circle author-box-avatar">
@@ -168,10 +166,10 @@
                     </div>
                 </div>
 
-                <!-- Sidebar (30%) -->
+                <!-- Cột bên -->
                 <div class="col-lg-4">
                     <aside class="blog-sidebar sticky-top author-box-desc">
-                        <!-- Search Box -->
+                        <!-- Khung tìm kiếm -->
                         <div class="sidebar-widget bg-white border rounded-4 p-4 mb-4 shadow-sm">
                             <h5 class="widget-title mb-3 fs-6 fw-bold">Tìm kiếm bài viết</h5>
                             <div class="input-group">
@@ -182,7 +180,7 @@
                             </div>
                         </div>
 
-                        <!-- Table of Contents -->
+                        <!-- Mục lục -->
                         <div class="sidebar-widget toc-widget bg-light border rounded-4 p-4 mb-4">
                             <h5 class="widget-title mb-3 fs-6 fw-bold">Nội dung chính</h5>
                             <nav id="toc-nav" class="nav flex-column">
@@ -193,7 +191,7 @@
                             </nav>
                         </div>
 
-                        <!-- Trending Widget -->
+                        <!-- Widget thịnh hành -->
                         <div class="sidebar-widget bg-white border rounded-4 p-4 mb-4 shadow-sm">
                             <h5 class="widget-title mb-4 fs-6 fw-bold">Bài viết xem nhiều</h5>
                             <div class="d-flex flex-column gap-3">
@@ -221,7 +219,7 @@
                             </div>
                         </div>
 
-                        <!-- Ads Banner -->
+                        <!-- Banner quảng cáo -->
                         <div class="sidebar-widget rounded-4 overflow-hidden position-relative">
                             <img src="../../../assets/images/publics/cat6.jpg" class="img-fluid w-100 related-post-thumb"  alt="Spa Banner">
                             <div class="position-absolute w-100 h-100 top-0 start-0 d-flex flex-column justify-content-end p-4 blog-overlay-gradient" >

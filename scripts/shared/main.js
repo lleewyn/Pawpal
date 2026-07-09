@@ -1899,6 +1899,11 @@ function initFab() {
 
             removeTyping();
 
+            const apiKeyUsed = response.headers.get('X-API-Key-Used');
+            if (apiKeyUsed) {
+                console.log(`[PawPal AI] Đang sử dụng API Key bắt đầu bằng: ${apiKeyUsed}...`);
+            }
+
             // Đọc SSE streaming response
             const reader = response.body.getReader();
             const decoder = new TextDecoder();

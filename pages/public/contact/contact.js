@@ -76,7 +76,7 @@ ${payload.message}`;
         return result ? result.id : `CT-${Date.now()}`;
     }
 
-    // Fallback: Nếu không load được support-handler
+    // Dự phòng: Nếu không load được support-handler
     return `CT-${Date.now()}`;
 }
 

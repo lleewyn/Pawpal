@@ -212,12 +212,12 @@ async function initBlog() {
 
     const blogs = await window.DataLoader.loadBlogs();
     
-    // Categorize blogs based on categorySlug
+    // Phân loại blog dựa trên categorySlug
     const tips = blogs.filter(b => b.categorySlug === 'tips');
     const news = blogs.filter(b => b.categorySlug === 'news');
     const promo = blogs.filter(b => b.categorySlug === 'promo');
     
-    // Spotlight section
+    // Khu vực nổi bật
     const spotlightWrapper = document.querySelector('#blog-hero-spotlight-wrapper');
     if (spotlightWrapper && blogs.length > 0) {
         // Find "Có nên tắm cho chó" or just pick the most viewed overall
@@ -225,7 +225,7 @@ async function initBlog() {
         spotlightWrapper.innerHTML = createBlogCard(spotlightBlog, 'spotlight');
     }
 
-    // Latest section
+    // Khu vực mới nhất
     const latestGrid = document.querySelector('#latest-grid-wrapper');
     const standardGrid = document.querySelector('#blog-card-grid');
     if (latestGrid && tips.length > 0) {
@@ -246,14 +246,14 @@ async function initBlog() {
         }
     }
 
-    // Trending section (sort by views)
+    // Khu vực xu hướng (sắp xếp theo lượt xem)
     const trendingList = document.querySelector('#trending-list-wrapper');
     if (trendingList) {
         const topTrending = [...blogs].sort((a, b) => b.viewCount - a.viewCount).slice(0, 3);
         trendingList.innerHTML = topTrending.map((b, i) => createBlogCard(b, 'trending', i + 1)).join('');
     }
 
-    // News & Promo sections
+    // Khu vực Tin tức & Khuyến mãi
     const promoList = document.querySelector('#blog-promo-list');
     if (promoList) {
         promoList.innerHTML = promo.map(b => createBlogCard(b, 'news')).join('');
@@ -264,10 +264,10 @@ async function initBlog() {
         newsList.innerHTML = news.map(b => createBlogCard(b, 'news')).join('');
     }
 
-    // Re-bind entries for filtering
+    // Ràng buộc lại dữ liệu để lọc
     entries = [...document.querySelectorAll('.blog-entry')];
 
-    // Handle URL params
+    // Xử lý tham số URL
     const urlParams = new URLSearchParams(window.location.search);
     const categoryParam = urlParams.get('category');
     if (categoryParam) {

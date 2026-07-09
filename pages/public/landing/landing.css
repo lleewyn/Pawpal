@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Hero Section — Asymmetric Split Layout
+   Khu vực Hero — Bố cục chia không đối xứng
    ========================================================================== */
 
 
@@ -22,7 +22,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    /* Fallback background */
+    /* Hình nền dự phòng */
     background-color: var(--color-primary);
     background-image: url('https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=1800&q=80');
     background-size: cover;
@@ -51,7 +51,7 @@
 .hero-overlay {
     position: absolute;
     inset: 0;
-    /* Asymmetric gradient: heavier on left for text legibility, lighter on right for image */
+    /* Gradient không đối xứng: tối hơn bên trái cho chữ, sáng hơn bên phải cho ảnh */
     background: linear-gradient(
         105deg,
         rgba(22, 55, 40, 0.82) 0%,
@@ -180,7 +180,7 @@
     50% { opacity: 0.6; transform: scale(0.85); }
 }
 
-/* Hero Title — left-aligned, Lora warm editorial scale */
+/* Tiêu đề Hero — căn trái, dùng font Lora */
 .hero-title {
     font-family: var(--font-heading);
     font-size: clamp(2.4rem, 4.8vw, 4.5rem); /* Reduced slightly to ensure it fits perfectly on exactly 2 lines */
@@ -323,7 +323,7 @@
     margin-right: 4px;
 }
 
-/* Live availability widget */
+/* Tiện ích (widget) trạng thái phòng/spa trực tiếp */
 .hero-status-widget {
     display: inline-flex;
     align-items: center;
@@ -570,7 +570,7 @@
     transform: scale(1.3);
 }
 
-/* Prev / Next navigation buttons */
+/* Nút điều hướng Trái / Phải */
 .hero-carousel-prev,
 .hero-carousel-next {
     position: absolute;
@@ -615,7 +615,7 @@
     
 }
 
-/* Pulse animations */
+/* Hiệu ứng nhịp đập (pulse) */
 @keyframes pulse {
     0% { width: 100%; height: 100%; opacity: 0.8; }
     100% { width: 250%; height: 250%; opacity: 0; }
@@ -791,7 +791,7 @@
     user-select: none;
 }
 
-/* Mobile: collapse to 2×2 grid */
+/* Trên di động: thu gọn thành lưới 2x2 */
 @media (max-width: 768px) {
     .features-strip {
         display: grid;
@@ -1573,7 +1573,7 @@
     padding: 0;
 }
 
-/* Shop Section Redesign Styles */
+/* Thiết kế lại phần Mua sắm (Shop) */
 .shop-header-highlight .shop-header-badge {
     background-color: var(--color-accent-light);
     color: var(--color-accent-dark);
@@ -1797,7 +1797,7 @@
     
 }
 
-/* Glassmorphism Badges */
+/* Thẻ huy hiệu dạng kính mờ (Glassmorphism) */
 .tag-badge {
     position: absolute;
     top: 12px;
@@ -2602,7 +2602,7 @@
     align-items: center;
 }
 
-/* Tracker section heading */
+/* Tracker section */
 .tracker-text-col h2 {
     font-family: var(--font-heading);
     font-size: var(--fs-section-title);
@@ -2623,7 +2623,7 @@
     line-height: 1.7;
 }
 
-/* Tracker Benefits Bullets */
+/* Tracker */
 .tracker-benefits {
     display: flex;
     flex-direction: column;
@@ -2650,11 +2650,11 @@
     flex-shrink: 0;
 }
 
-/* Interactive Timeline Controls */
+/* Timeline*/
 .timeline-indicators {
     display: flex;
     flex-direction: column;
-    gap: 12px; /* Restored gap between cards */
+    gap: 12px; 
     position: relative;
 }
 
@@ -2680,16 +2680,16 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background-color: var(--color-primary); /* Green dot */
+    background-color: var(--color-primary); 
     z-index: 2;
     transition: var(--transition-smooth);
-    margin-top: 20px; /* Centered with first line of card text */
+    margin-top: 20px; 
     opacity: 0.6;
 }
 
 .timeline-indicator-item.active .indicator-dot {
-    background-color: var(--color-primary); /* Green active dot */
-    box-shadow: 0 0 0 5px rgba(42, 89, 68, 0.18); /* Green outer ring */
+    background-color: var(--color-primary); 
+    box-shadow: 0 0 0 5px rgba(42, 89, 68, 0.18); 
     transform: scale(1.2);
     opacity: 1;
 }
@@ -2697,9 +2697,9 @@
 .rail-line {
     width: 2px;
     position: absolute;
-    top: 28px; /* start below dot */
-    bottom: -16px; /* stretch down across the gap to meet the next dot */
-    background-color: #d8d0c5; /* Thin vertical connector line */
+    top: 28px;
+    bottom: -16px; 
+    background-color: #d8d0c5;
     z-index: 1;
 }
 
@@ -4299,4 +4299,23 @@
 /* Extracted from landing.html */
 .ui-element-5 {
     aspect-ratio: 12/5;
+}
+
+/* Thông báo thêm vào giỏ hàng (Cart Toast) */
+.cart-toast {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    transform: translateY(8px);
+    background: var(--color-success, #2d8a57);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 9999;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.35s ease, transform 0.35s ease;
 }

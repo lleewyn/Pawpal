@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if ((supabaseResults.bookings && supabaseResults.bookings.length) ||
             (supabaseResults.orders && supabaseResults.orders.length)) {
             
-            // Merge Supabase results with local results, preferring Supabase if duplicate ID
+            // Gộp kết quả từ Supabase với kết quả local, ưu tiên Supabase nếu trùng ID
             const sbBookings = supabaseResults.bookings || [];
             const sbOrders = supabaseResults.orders || [];
             
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.textContent = 'Tìm kiếm';
 
         if (!bookings.length && !orders.length) {
-            // Fallback: try reading raw data files (ignore localStorage overrides)
+            // Dự phòng: thử đọc dữ liệu gốc (bỏ qua dữ liệu ghi đè trong localStorage)
             const rawBookings = await fetchJSON(resolveAppUrl('../../../data/bookings.json')) || [];
             const rawOrders = await fetchJSON(resolveAppUrl('../../../data/orders.json')) || [];
             const normPhone = normalizePhone(phone);
@@ -1108,7 +1108,7 @@ function confirmCancelBooking(bookingId) {
         localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
     }
 
-    // Call Supabase OR API
+    // Gọi API hoặc kết nối Supabase
     if (window.API && typeof window.API.updateBookingStatus === 'function') {
         window.API.updateBookingStatus(bookingId, 'CANCELLED').catch(e => console.warn(e));
     } else {
@@ -1220,7 +1220,7 @@ function confirmCancelOrder(orderId) {
         localStorage.setItem('pawpal_orders', JSON.stringify(finalOrders));
     }
 
-    // Call Supabase OR API
+    // Gọi API hoặc kết nối Supabase
     if (window.API && typeof window.API.updateOrderStatus === 'function') {
         window.API.updateOrderStatus(orderId, 'CANCELLED').catch(e => console.warn(e));
     } else {
@@ -1442,7 +1442,7 @@ function showChangeScheduleModal(bookingId, phone) {
             localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
         }
 
-        // Call Supabase OR API
+        // Gọi API hoặc kết nối Supabase
         if (window.API && typeof window.API.updateBookingStatus === 'function') {
             window.API.updateBookingStatus(bookingId, 'CONFIRMED').catch(e => console.warn(e));
         } else {

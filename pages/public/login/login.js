@@ -460,7 +460,7 @@ function handleLoginRouting() {
     let action = params.get('action');
     let token  = params.get('token');
 
-    // Fallback từ hash nếu server redirect làm mất query params
+    // Dự phòng từ hash nếu server chuyển hướng làm mất query params
     if (!action && hash) {
         const hashClean = hash.substring(1);
         if (hashClean === 'register' || hashClean === 'login') {
@@ -496,7 +496,7 @@ function handleLoginRouting() {
         document.getElementById('tabRegister').classList.add('active');
         document.getElementById('tabLogin').classList.remove('active');
 
-        // Prefill phone từ query param (vd: từ footer signup)
+        // Tự động điền số điện thoại từ query param (vd: từ footer đăng ký)
         const phoneParamForRegister = params.get('phone') || null;
         if (phoneParamForRegister) {
             const regPhoneInput = document.getElementById('registerPhone');
@@ -540,7 +540,7 @@ function handleLoginRouting() {
         document.getElementById('tabRegister').classList.remove('active');
     }
 
-    // Guest activation / verify OTP entry point
+    // Điểm truy cập cho Khách vãng lai kích hoạt tài khoản / nhập OTP
     if (action === 'guest-activate' || action === 'guest-verify-otp') {
         const phoneParam = params.get('phone') || null;
         if (phoneParam && loginForm) {

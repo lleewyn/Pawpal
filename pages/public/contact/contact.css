@@ -29,7 +29,7 @@
 
 .contact-grid {
     display: grid;
-    /* Asymmetric grid: 1fr for info (approx 4 parts), 1.8fr for form (approx 8 parts) */
+    /* Lưới không đối xứng: 1 phần cho info, 1.8 phần cho form */
     grid-template-columns: 1fr 1.8fr;
     gap: var(--space-xl);
 }
@@ -149,12 +149,12 @@
     font-weight: 600;
     font-size: var(--fs-body);
     cursor: pointer;
-    align-self: center; /* Center the button */
+    align-self: center; /* Căn giữa nút bấm */
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .btn-submit:hover {
-    background-color: #e6a83a; /* Darker amber */
+    background-color: #e6a83a; /* Màu vàng hổ phách đậm hơn */
     
 }
 
@@ -170,13 +170,13 @@
 }
 
 
-/* Extracted from contact.html */
+/* Trích xuất từ contact.html */
 .ui-bg-box-4 {
     min-height:110px;
     background:var(--color-bg-light);
 }
 
-/* Extracted from contact.html */
+/* Trích xuất từ contact.html */
 .ui-border-1 {
     border:0;
      border-radius: var(--card-border-radius);
