@@ -257,6 +257,19 @@ function navigateGallery(direction) {
  * Handle Add to Cart - Add product to cart and stay on page
  */
 function handleAddToCart() {
+    // Check if user is logged in
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    if (!currentUser) {
+        if(typeof showToast === 'function') {
+            showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
+        } else if(window.Notifications) {
+            Notifications.showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
+        } else {
+            alert('Vui lòng đăng nhập để thêm vào giỏ hàng');
+        }
+        return;
+    }
+
     const product = getCurrentProduct();
     const quantity = parseInt(document.getElementById('quantity').value) || 1;
     
@@ -324,6 +337,19 @@ function handleBuyNow() {
 }
 
 function handleCardAddToCart(product) {
+    // Check if user is logged in
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    if (!currentUser) {
+        if(typeof showToast === 'function') {
+            showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
+        } else if(window.Notifications) {
+            Notifications.showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
+        } else {
+            alert('Vui lòng đăng nhập để thêm vào giỏ hàng');
+        }
+        return;
+    }
+    
     if (!product || !product.inStock) {
         showToast('Sản phẩm không khả dụng', 'error');
         return;

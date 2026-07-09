@@ -13,8 +13,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
     let targetUser = null;
+    let targetPhone = '';
 
     if (!isLoggedMember) {
+        if (currentBooking && currentBooking.customer && currentBooking.customer.phone_main) {
+            targetPhone = currentBooking.customer.phone_main;
+        } else if (currentBooking && currentBooking.ownerPhone) {
+            targetPhone = currentBooking.ownerPhone;
+        }
+        
         if (currentBooking && currentBooking.customer_id) {
             targetUser = users.find(u => String(u.id) === String(currentBooking.customer_id) && u.is_temporary) || null;
         } else if (currentBooking && currentBooking.userId) {
@@ -24,9 +31,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (currentBooking) {
             targetUser = users.find(u => u.phone === currentBooking.ownerPhone && u.is_temporary) || null;
         }
+        
+        if (!targetPhone && targetUser) targetPhone = targetUser.phone;
     }
 
-    if (targetUser) {
+    if (!isLoggedMember) {
         const passwordSetupCard = document.getElementById('passwordSetupCard');
         const memberActions = document.getElementById('memberActions');
         if (passwordSetupCard) {
@@ -40,7 +49,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const setupLink = document.querySelector('#passwordSetupCard a.btn-cta');
         if (setupLink) {
-            setupLink.href = `/pages/public/login/login.html?action=guest-activate&phone=${encodeURIComponent(targetUser.phone)}`;
+            setupLink.href = targetPhone
+                ? `/pages/public/login/login.html?action=guest-activate&phone=${encodeURIComponent(targetPhone)}`
+                : `/pages/public/login/login.html?action=guest-activate`;
         }
     } else {
         const passwordSetupCard = document.getElementById('passwordSetupCard');

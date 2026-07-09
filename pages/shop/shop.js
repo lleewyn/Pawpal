@@ -1029,6 +1029,18 @@ function addToCart(productId) {
     const product = state.products.find(p => String(p.id) === String(productId));
     if (!product || !product.inStock) return;
     
+    // Check if user is logged in
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    if (!currentUser) {
+        if(window.Notifications) {
+            Notifications.showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
+        } else {
+            alert('Vui lòng đăng nhập để thêm vào giỏ hàng');
+        }
+        return;
+    }
+
+    
     // Get cart from localStorage
     let cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
     
