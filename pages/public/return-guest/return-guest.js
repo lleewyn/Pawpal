@@ -1069,7 +1069,7 @@ function showCancelConfirmModal(bookingId, phone) {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Quay lại</button>
-                    <button type="button" class="btn-cta" id="rg-cancel-confirm">Xác nhận hủy</button>
+                    <button type="button" class="btn-cta" id="rg-cancel-confirm">Gửi OTP</button>
                 </div>
             </div>
         </div>`;
