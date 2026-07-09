@@ -100,10 +100,10 @@ const dbTools = {
         if (!user_id) return { error: "Yêu cầu đăng nhập để xem lịch hẹn" };
         const { data, error } = await supabase
             .from('appointment')
-            .select('*')
+            .select('*, service(service_name)')
             .eq('customer_id', user_id)
             .order('created_at', { ascending: false })
-            .limit(3);
+            .limit(5);
         if (error) return { error: error.message };
         return data && data.length ? data : { message: "Không có lịch hẹn nào sắp tới" };
     },
@@ -224,10 +224,11 @@ module.exports = async function handler(req, res) {
         
         const userId = await getUserIdFromToken(authHeader);
         
-        let systemInstruction = "Bạn là Trợ lý AI của cửa hàng chăm sóc thú cưng PawPal. Nhiệm vụ của bạn là tư vấn nhiệt tình, thân thiện bằng tiếng Việt. Tuyệt đối không dùng markdown phức tạp ngoài in đậm (**text**).\n";
+        let systemInstruction = "Bạn là Trợ lý AI của cửa hàng chăm sóc thú cưng PawPal. Nhiệm vụ của bạn là tư vấn nhiệt tình, thân thiện bằng tiếng Việt. Sử dụng Emoji dễ thương và định dạng văn bản (in đậm, danh sách) để câu trả lời thêm sinh động và nổi bật, dễ đọc.\n";
         
         systemInstruction += "QUY TẮC QUAN TRỌNG NHẤT (GUARDRAILS):\n";
         systemInstruction += "- XÁC NHẬN TRƯỚC KHI THỰC THI: Mọi thao tác hủy lịch hẹn (cancel_booking) BẮT BUỘC phải hỏi lại khách: 'Bạn có chắc chắn muốn hủy lịch hẹn [Mã] không?'. Chỉ gọi Tool khi khách nói đồng ý.\n";
+        systemInstruction += "- ĐỊNH DẠNG ĐẸP MẮT: Khi liệt kê đơn hàng, lịch hẹn, hoặc thú cưng, hãy dùng Emoji (🐾, 📅, 🐶, v.v.), viết đậm các thông tin quan trọng như tên dịch vụ, mã, trạng thái để nổi bật.\n";
         systemInstruction += "- KHÔNG ẢO GIÁC: Chỉ trả lời dựa trên dữ liệu thật do Tools trả về. Nếu Tool báo lỗi hoặc trống, phải nói thật là không tìm thấy, tuyệt đối không bịa dữ liệu.\n";
         systemInstruction += "- NGOÀI PHẠM VI (OUT-OF-SCOPE): Nếu khách hỏi vấn đề không liên quan đến thú cưng hoặc PawPal, hãy từ chối lịch sự.\n\n";
 
@@ -243,7 +244,7 @@ module.exports = async function handler(req, res) {
         const { genAI, keyPrefix } = genAIResult;
         
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.5-flash",
+            model: "gemini-3.5-flash",
             systemInstruction: systemInstruction,
             tools: toolsDeclaration
         });
