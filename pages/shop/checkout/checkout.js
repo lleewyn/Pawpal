@@ -176,12 +176,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadData() {
     try {
         // Load delivery options
-        const deliveryResponse = await fetch('/data/delivery-options.json');
-        checkoutState.deliveryOptions = await deliveryResponse.json();
+        if (window.API && typeof window.API.getDeliveryOptions === 'function') {
+            checkoutState.deliveryOptions = await window.API.getDeliveryOptions();
+        } else {
+            const deliveryResponse = await fetch('/data/delivery-options.json');
+            checkoutState.deliveryOptions = await deliveryResponse.json();
+        }
         
         // Load payment methods
-        const paymentResponse = await fetch('/data/payment-methods.json');
-        checkoutState.paymentMethods = await paymentResponse.json();
+        if (window.API && typeof window.API.getPaymentMethods === 'function') {
+            checkoutState.paymentMethods = await window.API.getPaymentMethods();
+        } else {
+            const paymentResponse = await fetch('/data/payment-methods.json');
+            checkoutState.paymentMethods = await paymentResponse.json();
+        }
         
         await loadVouchers();
         

@@ -153,26 +153,82 @@ let holdTimerInterval = null;
 let holdExpirationTime = null;
 let heldSlot = '';
 
-function loadBookingConfig() {
+async function loadBookingConfig() {
     try {
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', '/data/booking-config.json', false);
-        xhr.send(null);
-        if (xhr.status >= 200 && xhr.status < 300) {
-            const config = JSON.parse(xhr.responseText);
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) {
+            console.warn('[booking] Supabase Client not initialized, falling back to mock booking config');
+            const res = await fetch('/data/booking-config.json');
+            const config = await res.json();
             window.PawPalBookingConfig = config;
             return config;
         }
+        
+        const { data: staffsData, error: staffsErr } = await db.from('staff')
+            .select('*')
+            .order('id', { ascending: true });
+            
+        const { data: scheduleData, error: scheduleErr } = await db.from('staff_schedule')
+            .select('start_time, end_time');
+            
+        if (staffsErr) {
+            throw new Error(staffsErr.message);
+        }
+        
+        // Sinh ra khung giờ từ lịch làm việc
+        let generatedSlots = new Set();
+        if (scheduleData && scheduleData.length > 0) {
+            scheduleData.forEach(schedule => {
+                if (!schedule.start_time || !schedule.end_time) return;
+                let startHour = parseInt(schedule.start_time.split(':')[0], 10);
+                let endHour = parseInt(schedule.end_time.split(':')[0], 10);
+                // Tạo các khung giờ mỗi 1 tiếng từ startHour đến trước endHour
+                for (let i = startHour; i < endHour; i++) {
+                    let hourStr = i.toString().padStart(2, '0') + ':00';
+                    generatedSlots.add(hourStr);
+                }
+            });
+        }
+        
+        let finalSlots = Array.from(generatedSlots).sort();
+        // Fallback mặc định nếu bảng schedule đang trống
+        if (finalSlots.length === 0) {
+            finalSlots = ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
+        }
+        
+        const staffsArray = (staffsData || []).map(s => ({
+            id: s.id,
+            name: s.full_name,
+            desc: s.specialization || 'Chuyên viên PawPal'
+        }));
+        
+        // Thêm tuỳ chọn "Phân bố ngẫu nhiên" lên đầu
+        staffsArray.unshift({
+            id: 'random',
+            name: 'Phân bố ngẫu nhiên',
+            desc: 'PawPal tự động chọn chuyên viên trống lịch'
+        });
+        
+        const config = {
+            slots: finalSlots,
+            staffs: staffsArray
+        };
+        window.PawPalBookingConfig = config;
+        return config;
     } catch (error) {
-        console.warn('[booking] Cannot load booking-config.json:', error);
+        console.warn('[booking] Cannot load booking-config from Supabase, falling back to JSON:', error);
+        const res = await fetch('/data/booking-config.json');
+        const config = await res.json().catch(() => null);
+        window.PawPalBookingConfig = config;
+        return config;
     }
-    return null;
 }
-
-loadBookingConfig();
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('=== BOOKING MODULE INITIALIZING ===');
+    
+    // Load config from Supabase (or fallback)
+    await loadBookingConfig();
 
     const btnApplyBookingVoucher = document.getElementById('btnApplyBookingVoucher');
     if (btnApplyBookingVoucher) {

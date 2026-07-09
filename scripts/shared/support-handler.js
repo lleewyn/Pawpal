@@ -3,9 +3,7 @@
  */
 
 (function() {
-    const TICKETS_KEY = 'pawpal_tickets';
-    const TICKETS_SEED_VERSION_KEY = 'pawpal_support_seed_version';
-    const TICKETS_SEED_VERSION = '2026-06-28-support-seed-v2-fix-accents';
+
 
     // Dữ liệu câu hỏi FAQ mẫu
     const faqData = [
@@ -29,69 +27,7 @@
         }
     ];
 
-    const SUPPORT_TICKETS_URL = '/data/support-tickets.json';
 
-    function readSupportTicketsSeed() {
-        try {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', SUPPORT_TICKETS_URL, false);
-            xhr.send(null);
-            if (xhr.status >= 200 && xhr.status < 300) {
-                return JSON.parse(xhr.responseText);
-            }
-        } catch (error) {
-            console.warn('[support-handler] Cannot load support tickets seed:', error);
-        }
-        return [];
-    }
-
-    const initialTickets = readSupportTicketsSeed();
-
-    function seedTicketsIfNeeded() {
-        try {
-            const raw = localStorage.getItem(TICKETS_KEY);
-            const stored = raw ? JSON.parse(raw) : null;
-            const hasStoredTickets = Array.isArray(stored) && stored.length > 0;
-            const isOldVersion = localStorage.getItem(TICKETS_SEED_VERSION_KEY) !== TICKETS_SEED_VERSION;
-
-            if (!hasStoredTickets || isOldVersion) {
-                const merged = Array.isArray(initialTickets) ? initialTickets.map(seed => {
-                    const local = Array.isArray(stored) ? stored.find(s => String(s.id) === String(seed.id)) : null;
-                    return local ? { ...seed, status: local.status, rating: local.rating, ratingComment: local.ratingComment } : seed;
-                }) : [];
-                if (Array.isArray(stored)) {
-                    stored.forEach(local => {
-                        if (!merged.some(m => String(m.id) === String(local.id))) merged.push(local);
-                    });
-                }
-                localStorage.setItem(TICKETS_KEY, JSON.stringify(merged));
-                localStorage.setItem(TICKETS_SEED_VERSION_KEY, TICKETS_SEED_VERSION);
-            }
-        } catch (error) {
-            console.warn('[support-handler] Cannot seed support tickets:', error);
-        }
-    }
-
-    seedTicketsIfNeeded();
-
-    function getTickets() {
-        try {
-            const stored = JSON.parse(localStorage.getItem(TICKETS_KEY));
-            if (Array.isArray(stored) && stored.length > 0) {
-                return stored;
-            }
-            localStorage.setItem(TICKETS_KEY, JSON.stringify(initialTickets));
-            return initialTickets;
-        } catch {
-            localStorage.setItem(TICKETS_KEY, JSON.stringify(initialTickets));
-            return initialTickets;
-        }
-    }
-
-    function saveTickets(tickets) {
-        localStorage.setItem(TICKETS_KEY, JSON.stringify(tickets));
-        document.dispatchEvent(new CustomEvent('tickets_updated'));
-    }
 
     // 1. Phân loại độ ưu tiên SLAs khẩn cấp (US 15-5)
     function detectPriority(title, content) {
@@ -101,94 +37,7 @@
         return isUrgent ? 'Cao' : 'Trung bình';
     }
 
-    // 2. Tạo ticket mới
-    function createTicket(title, type, content, files = []) {
-        const tickets = getTickets();
-        const priority = detectPriority(title, content);
-        const ticketId = 'TK-' + Math.floor(10000 + Math.random() * 90000);
 
-        const newTicket = {
-            id: ticketId,
-            title: title,
-            type: type,
-            priority: priority,
-            status: 'pending',
-            messages: [
-                {
-                    sender: 'user',
-                    text: content,
-                    time: new Date().toISOString(),
-                    attachments: files
-                }
-            ],
-            rating: null,
-            ratingComment: ''
-        };
-
-        tickets.push(newTicket);
-        saveTickets(tickets);
-
-        // Mô phỏng SMS link nếu là tài khoản tạm/chưa đăng nhập (US 15-7)
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
-        if (!currentUser || currentUser.is_temporary) {
-            console.log(`[SMS CSKH] Gui tokenized link check ticket cho sdt: "pawpal.vn/support-guest?token=${ticketId}"`);
-        }
-
-        return newTicket;
-    }
-
-    // 3. Phản hồi thêm tin nhắn trong ticket
-    function sendTicketReply(ticketId, text) {
-        const tickets = getTickets();
-        const ticket = tickets.find(t => t.id === ticketId);
-        if (!ticket) return;
-
-        ticket.messages.push({
-            sender: 'user',
-            text: text,
-            time: new Date().toISOString()
-        });
-
-        // Đổi lại status nếu đang completed thành processing
-        if (ticket.status === 'completed') {
-            ticket.status = 'processing';
-        }
-
-        saveTickets(tickets);
-
-        // Giả lập bot/nhân viên rep sau 2 giây
-        setTimeout(() => {
-            simulateCSKHResponse(ticketId);
-        }, 2000);
-    }
-
-    function simulateCSKHResponse(ticketId) {
-        const tickets = getTickets();
-        const ticket = tickets.find(t => t.id === ticketId);
-        if (!ticket) return;
-
-        ticket.status = 'processing';
-        ticket.messages.push({
-            sender: 'cskh',
-            agent: 'Nguyễn Văn B',
-            text: 'PawPal đã nhận được phản hồi từ bạn rồi ạ. Chúng tôi đang giải quyết gấp nhé!',
-            time: new Date().toISOString()
-        });
-        saveTickets(tickets);
-    }
-
-    // 4. Đóng và đánh giá Ticket (US 15-6)
-    function closeAndRateTicket(ticketId, rating, comment = '') {
-        const tickets = getTickets();
-        const ticket = tickets.find(t => t.id === ticketId);
-        if (!ticket) return;
-
-        ticket.status = 'completed';
-        ticket.rating = rating;
-        ticket.ratingComment = comment;
-
-        saveTickets(tickets);
-    }
 
     // 5. Bộ lọc chat AI và khoá chat 15 phút (US 15-2)
     let badWordsViolationCount = 0;

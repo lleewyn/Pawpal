@@ -688,6 +688,87 @@ export const API = {
             console.error('[API] Error fetching vouchers from Supabase:', err);
             return [];
         }
+    },
+
+    async getDeliveryOptions() {
+        try {
+            const db = window.SupabaseClient;
+            if (!db) {
+                console.warn('[API] Supabase Client not initialized, falling back to mock delivery options');
+                const res = await fetch('/data/delivery-options.json');
+                return await res.json();
+            }
+            
+            const { data, error } = await db.from('delivery_option_config')
+                .select('*')
+                .eq('available', true)
+                .order('fee', { ascending: true });
+                
+            if (error) {
+                if (error.code === '42P01') {
+                    // Table does not exist yet, fallback to JSON gracefully
+                    const res = await fetch('/data/delivery-options.json');
+                    return await res.json();
+                }
+                throw error;
+            }
+            
+            return (data || []).map(d => ({
+                id: d.id,
+                name: d.name,
+                description: d.description,
+                fee: Number(d.fee),
+                estimatedDays: d.estimated_days,
+                icon: d.icon,
+                available: d.available
+            }));
+        } catch (err) {
+            console.error('[API] getDeliveryOptions failed:', err);
+            const res = await fetch('/data/delivery-options.json');
+            return await res.json().catch(() => []);
+        }
+    },
+
+    async getPaymentMethods() {
+        try {
+            const db = window.SupabaseClient;
+            if (!db) {
+                console.warn('[API] Supabase Client not initialized, falling back to mock payment methods');
+                const res = await fetch('/data/payment-methods.json');
+                return await res.json();
+            }
+            
+            const { data, error } = await db.from('payment_method_config')
+                .select('*')
+                .eq('available', true)
+                .order('id', { ascending: true });
+                
+            if (error) {
+                if (error.code === '42P01') {
+                    // Table does not exist yet, fallback to JSON gracefully
+                    const res = await fetch('/data/payment-methods.json');
+                    return await res.json();
+                }
+                throw error;
+            }
+            
+            return (data || []).map(p => ({
+                id: p.id,
+                name: p.name,
+                shortName: p.short_name,
+                description: p.description,
+                icon: p.icon,
+                fee: Number(p.fee),
+                available: p.available,
+                requiresInfo: p.requires_info,
+                redirectUrl: p.redirect_url,
+                bankInfo: p.bank_info
+            }));
+        } catch (err) {
+            console.error('[API] getPaymentMethods failed:', err);
+            const res = await fetch('/data/payment-methods.json');
+            return await res.json().catch(() => []);
+        }
     }
 };
 
