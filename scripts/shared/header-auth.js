@@ -182,7 +182,13 @@
     function setMobileGroupVisibility(elements, isVisible) {
         elements.forEach(el => {
             const item = el.closest('.nav-item') || el;
-            item.style.setProperty('display', isVisible ? '' : 'none', 'important');
+            if (isVisible) {
+                item.classList.remove('d-none');
+                item.style.setProperty('display', '', 'important');
+            } else {
+                item.classList.add('d-none');
+                item.style.setProperty('display', 'none', 'important');
+            }
         });
     }
 
@@ -205,8 +211,14 @@
 
         loginLinks.forEach((link) => {
             const label = (link.textContent || '').trim().toLowerCase();
-            if (label.includes('??ng nh?p') || label.includes('??ng k?') || label.includes('login') || label.includes('register')) {
-                link.style.setProperty('display', isUser ? 'none' : '', 'important');
+            if (label.includes('đăng nhập') || label.includes('đăng ký') || label.includes('login') || label.includes('register')) {
+                if (isUser) {
+                    link.classList.add('d-none');
+                    link.style.setProperty('display', 'none', 'important');
+                } else {
+                    link.classList.remove('d-none');
+                    link.style.setProperty('display', '', 'important');
+                }
             }
         });
 
