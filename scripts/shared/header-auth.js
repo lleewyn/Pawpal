@@ -543,9 +543,12 @@
         if (toggle.dataset.bound === '1') return;
         toggle.dataset.bound = '1';
 
-        toggle.addEventListener('click', () => {
+        toggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             const isOpen = accountGroup.classList.toggle('open');
             toggle.setAttribute('aria-expanded', String(isOpen));
+            console.log('Toggle clicked, isOpen:', isOpen);
         });
     }
 
