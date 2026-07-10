@@ -8,6 +8,7 @@ const path = require('path');
 // --- BỘ NHỚ ĐỆM (CACHE) ĐỂ TỐI ƯU TỐC ĐỘ VERCEL ---
 let cachedApiKeys = null;
 let lastKeysFetchTime = 0;
+let currentKeyIndex = 0;
 const validUsersCache = new Map();
 
 // Quản lý API Key xoay vòng từ Supabase
@@ -16,10 +17,11 @@ const getGenAI = async () => {
         // Cache API Keys trong 10 phút để tránh gọi Supabase liên tục trên mỗi tin nhắn
         const CACHE_TTL = 10 * 60 * 1000;
         if (cachedApiKeys && (Date.now() - lastKeysFetchTime < CACHE_TTL)) {
-            const randomKeyObj = cachedApiKeys[Math.floor(Math.random() * cachedApiKeys.length)];
-            const keyPrefix = randomKeyObj.key_value.substring(0, 15);
-            console.log(`[API Key Rotation - CACHED] Đang dùng key bắt đầu bằng: ${keyPrefix}...`);
-            return { genAI: new GoogleGenerativeAI(randomKeyObj.key_value), keyPrefix };
+            const keyObj = cachedApiKeys[currentKeyIndex % cachedApiKeys.length];
+            currentKeyIndex++;
+            const keyPrefix = keyObj.key_value.substring(0, 15);
+            console.log(`[API Key Rotation - CACHED] Đang dùng key bắt đầu bằng: ${keyPrefix}... (thứ tự: ${(currentKeyIndex-1) % cachedApiKeys.length + 1}/${cachedApiKeys.length})`);
+            return { genAI: new GoogleGenerativeAI(keyObj.key_value), keyPrefix };
         }
 
         // Lấy các key có provider là 'gemini' và đang active từ bảng api_keys
@@ -39,20 +41,24 @@ const getGenAI = async () => {
             
             if (envKeys.length === 0) return null;
 
-            const randomKey = envKeys[Math.floor(Math.random() * envKeys.length)];
-            const keyPrefix = randomKey.substring(0, 15);
+            const selectedKey = envKeys[currentKeyIndex % envKeys.length];
+            currentKeyIndex++;
+            const keyPrefix = selectedKey.substring(0, 15);
             console.log(`[API Key Rotation - Fallback] Đang dùng key bắt đầu bằng: ${keyPrefix}...`);
-            return { genAI: new GoogleGenerativeAI(randomKey), keyPrefix };
+            return { genAI: new GoogleGenerativeAI(selectedKey), keyPrefix };
         }
 
         // Nếu lấy thành công từ Supabase, lưu vào RAM Cache
         cachedApiKeys = data;
         lastKeysFetchTime = Date.now();
 
-        const randomKeyObj = data[Math.floor(Math.random() * data.length)];
-        const keyPrefix = randomKeyObj.key_value.substring(0, 15);
-        console.log(`[API Key Rotation] Đang dùng key bắt đầu bằng: ${keyPrefix}... (tổng số: ${data.length} keys)`);
-        return { genAI: new GoogleGenerativeAI(randomKeyObj.key_value), keyPrefix };
+        // Xoay vòng theo thứ tự (Sequential Round-Robin) thay vì ngẫu nhiên
+        const keyObj = data[currentKeyIndex % data.length];
+        currentKeyIndex++; // Tăng index cho lần sau
+        
+        const keyPrefix = keyObj.key_value.substring(0, 15);
+        console.log(`[API Key Rotation] Đang dùng key bắt đầu bằng: ${keyPrefix}... (tổng số: ${data.length} keys, thứ tự: ${(currentKeyIndex-1) % data.length + 1}/${data.length})`);
+        return { genAI: new GoogleGenerativeAI(keyObj.key_value), keyPrefix };
     } catch (err) {
         console.error("Lỗi khi lấy API key từ Supabase:", err);
         return null;
