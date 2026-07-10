@@ -2042,6 +2042,11 @@ function initFab() {
 
     window.__pawpalFabInitialized = true;
 
+    window.pawpalAIAsk = function(btn) {
+        if (!input) return;
+        input.value = btn.innerText;
+        sendMessage();
+    };
     function scrollToBottom() {
         if (messages) {
             requestAnimationFrame(() => {

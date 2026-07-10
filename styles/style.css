@@ -450,7 +450,7 @@ h1, h2, h3, h4, h5, h6 {
     position: fixed;
     right: 84px;
     bottom: 28px;
-    width: 320px;
+    width: 380px;
     height: 480px;
     background: var(--color-bg-white);
     border-radius: var(--card-border-radius);
