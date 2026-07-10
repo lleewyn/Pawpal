@@ -256,7 +256,7 @@ module.exports = async function handler(req, res) {
 
         try {
             const model = genAI.getGenerativeModel({ 
-                model: "gemini-3.5-flash",
+                model: "gemini-1.5-flash",
                 systemInstruction: systemInstruction,
                 tools: toolsDeclaration
             });
@@ -264,9 +264,9 @@ module.exports = async function handler(req, res) {
             // 2. Bắt đầu Stream request
             streamResult = await chat.sendMessageStream(userMsg);
         } catch (err1) {
-            console.warn("[API] gemini-3.5-flash failed (" + err1.message + "), falling back to gemini-2.5-flash");
+            console.warn("[API] gemini-1.5-flash failed (" + err1.message + "), falling back to gemini-1.5-flash-8b");
             const fallbackModel = genAI.getGenerativeModel({ 
-                model: "gemini-2.5-flash",
+                model: "gemini-1.5-flash-8b",
                 systemInstruction: systemInstruction,
                 tools: toolsDeclaration
             });
@@ -304,18 +304,23 @@ module.exports = async function handler(req, res) {
                 }
 
                 // Có function call -> Gọi lại Gemini bằng streaming và trả thẳng về client
-                const secondStream = await chat.sendMessageStream([{
-                    functionResponse: {
-                        name: toolName,
-                        response: { result: toolResult }
+                try {
+                    const secondStream = await chat.sendMessageStream([{
+                        functionResponse: {
+                            name: toolName,
+                            response: { result: toolResult }
+                        }
+                    }]);
+                    
+                    for await (const secondChunk of secondStream.stream) {
+                        const text = typeof secondChunk.text === 'function' ? secondChunk.text() : '';
+                        if (text) {
+                            res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
+                        }
                     }
-                }]);
-                
-                for await (const secondChunk of secondStream.stream) {
-                    const text = typeof secondChunk.text === 'function' ? secondChunk.text() : '';
-                    if (text) {
-                        res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
-                    }
+                } catch (toolErr) {
+                    console.error("[API] Function calling second stream failed:", toolErr.message);
+                    res.write(`data: ${JSON.stringify({ error: toolErr.message, reply: 'PawPal đã tìm thấy thông tin nhưng gặp lỗi khi đọc dữ liệu. Quý khách vui lòng thử lại sau.' })}\n\n`);
                 }
                 break; // Xử lý xong function call thì thoát vòng lặp ngoài
             }
