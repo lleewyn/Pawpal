@@ -129,17 +129,6 @@ const dbTools = {
             return { error: "Lỗi đọc dữ liệu thú cưng từ Supabase" };
         }
     },
-    cancel_booking: async (user_id, appointment_id) => {
-        if (!user_id) return { error: "Yêu cầu đăng nhập để thao tác" };
-        const { data, error } = await supabase
-            .from('appointment')
-            .update({ status: 'CANCELLED' })
-            .eq('id', appointment_id)
-            .eq('customer_id', user_id)
-            .select();
-        if (error) return { error: error.message };
-        return data && data.length ? { success: true, message: `Đã hủy thành công lịch hẹn ${appointment_id}` } : { error: "Không tìm thấy lịch hẹn hoặc bạn không có quyền hủy" };
-    },
     search_store_info: async (query, genAI_instance) => {
         // Thực hiện RAG: Nhúng câu hỏi thành vector, so khớp trong DB
         try {
@@ -188,17 +177,6 @@ const toolsDeclaration = [
                 description: "Lấy hồ sơ thú cưng của khách hàng đang đăng nhập.",
             },
             {
-                name: "cancel_booking",
-                description: "Hủy một lịch hẹn cụ thể. BẮT BUỘC phải hỏi lại người dùng để xác nhận trước khi gọi hàm này.",
-                parameters: {
-                    type: "OBJECT",
-                    properties: {
-                        appointment_id: { type: "STRING", description: "Mã lịch hẹn cần hủy" }
-                    },
-                    required: ["appointment_id"]
-                }
-            },
-            {
                 name: "search_store_info",
                 description: "Tìm kiếm thông tin chung về cửa hàng PawPal, ví dụ: bảng giá, giờ mở cửa, chính sách hoàn tiền, loại dịch vụ.",
                 parameters: {
@@ -227,7 +205,6 @@ module.exports = async function handler(req, res) {
         let systemInstruction = "Bạn là Trợ lý AI siêu cấp đáng yêu của cửa hàng chăm sóc thú cưng PawPal. Xưng hô với khách hàng là 'sen' (hoặc 'sen' kèm tên nếu khách xưng tên), xưng mình là 'PawPal', gọi thú cưng là 'bé cưng' hoặc 'boss'. Hãy tư vấn thật nhiệt tình, thân thiện, dễ thương và đáng yêu bằng tiếng Việt. KHÔNG SỬ DỤNG EMOJI. Chỉ dùng định dạng in đậm (**text**) để làm nổi bật các thông tin quan trọng.\n";
         
         systemInstruction += "QUY TẮC QUAN TRỌNG NHẤT (GUARDRAILS):\n";
-        systemInstruction += "- XÁC NHẬN TRƯỚC KHI THỰC THI: Mọi thao tác hủy lịch hẹn (cancel_booking) BẮT BUỘC phải hỏi lại khách: 'Bạn có chắc chắn muốn hủy lịch hẹn [Mã] không?'. Chỉ gọi Tool khi khách nói đồng ý.\n";
         systemInstruction += "- ĐỊNH DẠNG ĐẸP MẮT: Khi liệt kê đơn hàng, lịch hẹn, hoặc thú cưng, TUYỆT ĐỐI KHÔNG DÙNG EMOJI. Hãy viết đậm (**text**) các thông tin quan trọng như Tên dịch vụ, Mã, Trạng thái, Tổng tiền để dễ đọc.\n";
         systemInstruction += "- KHÔNG ẢO GIÁC: Chỉ trả lời dựa trên dữ liệu thật do Tools trả về. Nếu Tool báo lỗi hoặc trống, phải nói thật là không tìm thấy, tuyệt đối không bịa dữ liệu.\n";
         systemInstruction += "- NGOÀI PHẠM VI (OUT-OF-SCOPE): Nếu khách hỏi vấn đề không liên quan đến thú cưng hoặc PawPal, hãy từ chối lịch sự.\n\n";
@@ -298,8 +275,6 @@ module.exports = async function handler(req, res) {
                     toolResult = await dbTools.get_services_price();
                 } else if (toolName === 'get_pet_profile') {
                     toolResult = await dbTools.get_pet_profile(userId);
-                } else if (toolName === 'cancel_booking') {
-                    toolResult = await dbTools.cancel_booking(userId, toolArgs.appointment_id);
                 } else if (toolName === 'search_store_info') {
                     toolResult = await dbTools.search_store_info(toolArgs.query, genAI);
                 }
