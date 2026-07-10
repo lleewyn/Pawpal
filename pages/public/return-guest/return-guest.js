@@ -40,99 +40,109 @@ document.addEventListener('DOMContentLoaded', () => {
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const phone = document.getElementById('rg-phone').value.trim();
-        if (!phone) return;
+        try {
+            const phone = document.getElementById('rg-phone').value.trim();
+            if (!phone) return;
 
-        const btn = form.querySelector('button[type=submit]');
-        btn.disabled    = true;
-        btn.textContent = 'Đang tìm...';
+            const btn = form.querySelector('button[type=submit]');
+            btn.disabled    = true;
+            btn.textContent = 'Đang tìm...';
 
-        const data     = await loadData();
-        const normPhone = normalizePhone(phone);
-        const memberUser = (data.users || []).find(u =>
-            normalizePhone(u.phone) === normPhone && !u.is_temporary
-        );
-
-        let bookings = findBookingsByPhone(phone, data);
-        let orders   = findOrdersByPhone(phone, data);
-
-        const supabaseResults = await loadSupabaseGuestResults(phone);
-        if ((supabaseResults.bookings && supabaseResults.bookings.length) ||
-            (supabaseResults.orders && supabaseResults.orders.length)) {
-            
-            // Gộp kết quả từ Supabase với kết quả local, ưu tiên Supabase nếu trùng ID
-            const sbBookings = supabaseResults.bookings || [];
-            const sbOrders = supabaseResults.orders || [];
-            
-            const sbBookingIds = new Set(sbBookings.map(b => b.id));
-            const sbOrderIds = new Set(sbOrders.map(o => o.id));
-            
-            const mergedBookings = [...sbBookings];
-            for (const b of bookings) {
-                if (!sbBookingIds.has(b.id)) mergedBookings.push(b);
-            }
-            bookings = mergedBookings;
-            
-            const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-            const mergedOrders = [...sbOrders];
-            mergedOrders.forEach(mo => {
-                const lo = localOrders.find(l => l.id === mo.id);
-                if (lo && (lo.status === 'completed' || lo.status === 'return_pending')) {
-                    mo.status = lo.status;
-                }
-            });
-            for (const o of orders) {
-                if (!sbOrderIds.has(o.id)) mergedOrders.push(o);
-            }
-            orders = mergedOrders;
-            
-            showToast('Đã tìm thấy kết quả tra cứu.', 'success');
-        }
-
-        btn.disabled    = false;
-        btn.textContent = 'Tìm kiếm';
-
-        if (!bookings.length && !orders.length) {
-            // Dự phòng: thử đọc dữ liệu gốc (bỏ qua dữ liệu ghi đè trong localStorage)
-            const rawBookings = await fetchJSON(resolveAppUrl('../../../data/bookings.json')) || [];
-            const rawOrders = await fetchJSON(resolveAppUrl('../../../data/orders.json')) || [];
+            const data     = await loadData();
             const normPhone = normalizePhone(phone);
-            const fb = (rawBookings || []).filter(b =>
-                normalizePhone(b.phone) === normPhone ||
-                normalizePhone(b.customerPhone) === normPhone ||
-                normalizePhone(b.ownerPhone) === normPhone
-            ).map(b => ({ ...b }));
-            const fo = (rawOrders || []).filter(o =>
-                normalizePhone(o.delivery?.phone) === normPhone ||
-                normalizePhone(o.phone) === normPhone ||
-                normalizePhone(o.userPhone) === normPhone
-            ).map(o => ({ ...o }));
+            const memberUser = (data.users || []).find(u =>
+                normalizePhone(u.phone) === normPhone && !u.is_temporary
+            );
 
-            if (fb.length || fo.length) {
-                bookings = fb;
-                orders = fo;
-                showToast('Kết quả lấy từ dữ liệu gốc (file). Nếu bạn dùng dữ liệu local cũ, thử xóa cache và reload.', 'info');
-            } else {
-                resultsEl.classList.add('d-none');
+            let bookings = findBookingsByPhone(phone, data);
+            let orders   = findOrdersByPhone(phone, data);
+
+            const supabaseResults = await loadSupabaseGuestResults(phone);
+            if ((supabaseResults.bookings && supabaseResults.bookings.length) ||
+                (supabaseResults.orders && supabaseResults.orders.length)) {
+                
+                // Gộp kết quả từ Supabase với kết quả local, ưu tiên Supabase nếu trùng ID
+                const sbBookings = supabaseResults.bookings || [];
+                const sbOrders = supabaseResults.orders || [];
+                
+                const sbBookingIds = new Set(sbBookings.map(b => b.id));
+                const sbOrderIds = new Set(sbOrders.map(o => o.id));
+                
+                const mergedBookings = [...sbBookings];
+                for (const b of bookings) {
+                    if (!sbBookingIds.has(b.id)) mergedBookings.push(b);
+                }
+                bookings = mergedBookings;
+                
+                const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+                const mergedOrders = [...sbOrders];
+                mergedOrders.forEach(mo => {
+                    const lo = localOrders.find(l => l.id === mo.id);
+                    if (lo && (lo.status === 'completed' || lo.status === 'return_pending')) {
+                        mo.status = lo.status;
+                    }
+                });
+                for (const o of orders) {
+                    if (!sbOrderIds.has(o.id)) mergedOrders.push(o);
+                }
+                orders = mergedOrders;
+                
+                showToast('Đã tìm thấy kết quả tra cứu.', 'success');
+            }
+
+            btn.disabled    = false;
+            btn.textContent = 'Tìm kiếm';
+
+            if (!bookings.length && !orders.length) {
+                // Dự phòng: thử đọc dữ liệu gốc (bỏ qua dữ liệu ghi đè trong localStorage)
+                const rawBookings = await fetchJSON(resolveAppUrl('../../../data/bookings.json')) || [];
+                const rawOrders = await fetchJSON(resolveAppUrl('../../../data/orders.json')) || [];
+                const normPhone = normalizePhone(phone);
+                const fb = (rawBookings || []).filter(b =>
+                    normalizePhone(b.phone) === normPhone ||
+                    normalizePhone(b.customerPhone) === normPhone ||
+                    normalizePhone(b.ownerPhone) === normPhone
+                ).map(b => ({ ...b }));
+                const fo = (rawOrders || []).filter(o =>
+                    normalizePhone(o.delivery?.phone) === normPhone ||
+                    normalizePhone(o.phone) === normPhone ||
+                    normalizePhone(o.userPhone) === normPhone
+                ).map(o => ({ ...o }));
+
+                if (fb.length || fo.length) {
+                    bookings = fb;
+                    orders = fo;
+                    showToast('Kết quả lấy từ dữ liệu gốc (file). Nếu bạn dùng dữ liệu local cũ, thử xóa cache và reload.', 'info');
+                } else {
+                    resultsEl.classList.add('d-none');
+                    errorBox.classList.remove('d-none');
+                    return;
+                }
+            }
+
+            errorBox.classList.add('d-none');
+            resultsEl.classList.remove('d-none');
+            if (memberUser) {
+                errorBox.innerHTML = `
+                    Số điện thoại này thuộc tài khoản thành viên. Mình vẫn hiển thị kết quả tra cứu bên dưới, nhưng nếu muốn xem đầy đủ lịch sử cá nhân thì hãy vào trang cá nhân.
+                `;
                 errorBox.classList.remove('d-none');
-                return;
+            }
+            rgLastSearchState = {
+                phone,
+                bookings,
+                orders,
+            };
+            renderResults(bookings, orders);
+        } catch (fatalErr) {
+            console.error(fatalErr);
+            alert("Error in submit handler: " + fatalErr.message + "\n" + fatalErr.stack);
+            const btn = form.querySelector('button[type=submit]');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Tìm kiếm';
             }
         }
-
-        errorBox.classList.add('d-none');
-        resultsEl.classList.remove('d-none');
-        if (memberUser) {
-            errorBox.innerHTML = `
-                Số điện thoại này thuộc tài khoản thành viên. Mình vẫn hiển thị kết quả tra cứu bên dưới, nhưng nếu muốn xem đầy đủ lịch sử cá nhân thì hãy vào trang cá nhân.
-            `;
-            errorBox.classList.remove('d-none');
-        }
-        rgLastSearchState = {
-            phone,
-            bookings,
-            orders,
-        };
-        renderResults(bookings, orders);
     });
 });
 
@@ -251,6 +261,10 @@ async function loadSupabaseGuestResults(phone) {
 }
 
 function mapSupabaseOrderRow(row) {
+    const normalizeImageUrl = (url) => {
+        if (!url) return '/assets/images/shop/products/placeholder.webp';
+        return url.startsWith('http') || url.startsWith('/') ? url : `/assets/images/shop/products/${url}`;
+    };
     const addr = row.customer_address || {};
     const products = Array.isArray(row.sales_order_detail)
         ? row.sales_order_detail.map((detail) => ({
