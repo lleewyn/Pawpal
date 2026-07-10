@@ -1914,7 +1914,16 @@ function initFab() {
         showTyping();
         
         // Gọi Backend Vercel Serverless Function
+        let aiTimerSeconds = 0;
+        let aiTimerInterval = null;
+        let finalReplyForConsole = '';
+        
         try {
+            aiTimerInterval = setInterval(() => {
+                aiTimerSeconds++;
+                console.log(`[PawPal AI] Đang xử lý... ${aiTimerSeconds} giây`);
+            }, 1000);
+
             // Lấy Access Token từ Supabase Client để backend xác thực
             let token = "";
             const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -2026,10 +2035,16 @@ function initFab() {
             if (!fullReply && !botBubble) {
                 appendMessage('Xin lỗi, hệ thống PawPal AI đang gặp sự cố kết nối. Quý khách vui lòng thử lại sau.', 'bot');
             }
+            finalReplyForConsole = fullReply;
         } catch (error) {
             console.error("Chatbot request failed", error);
             removeTyping();
             appendMessage("Xin lỗi, không thể kết nối tới PawPal AI lúc này.", 'bot');
+        } finally {
+            if (aiTimerInterval) clearInterval(aiTimerInterval);
+            if (aiTimerSeconds > 0) {
+                console.log(`[PawPal AI] Xử lý xong sau ${aiTimerSeconds} giây. Phản hồi:`, finalReplyForConsole || "Không có phản hồi (hoặc lỗi)");
+            }
         }
     }
 
