@@ -5,9 +5,23 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 
+// --- BỘ NHỚ ĐỆM (CACHE) ĐỂ TỐI ƯU TỐC ĐỘ VERCEL ---
+let cachedApiKeys = null;
+let lastKeysFetchTime = 0;
+const validUsersCache = new Map();
+
 // Quản lý API Key xoay vòng từ Supabase
 const getGenAI = async () => {
     try {
+        // Cache API Keys trong 10 phút để tránh gọi Supabase liên tục trên mỗi tin nhắn
+        const CACHE_TTL = 10 * 60 * 1000;
+        if (cachedApiKeys && (Date.now() - lastKeysFetchTime < CACHE_TTL)) {
+            const randomKeyObj = cachedApiKeys[Math.floor(Math.random() * cachedApiKeys.length)];
+            const keyPrefix = randomKeyObj.key_value.substring(0, 15);
+            console.log(`[API Key Rotation - CACHED] Đang dùng key bắt đầu bằng: ${keyPrefix}...`);
+            return { genAI: new GoogleGenerativeAI(randomKeyObj.key_value), keyPrefix };
+        }
+
         // Lấy các key có provider là 'gemini' và đang active từ bảng api_keys
         const { data, error } = await supabase
             .from('api_keys')
@@ -31,7 +45,10 @@ const getGenAI = async () => {
             return { genAI: new GoogleGenerativeAI(randomKey), keyPrefix };
         }
 
-        // Nếu lấy thành công từ Supabase, chọn ngẫu nhiên 1 key (Round-robin/Random)
+        // Nếu lấy thành công từ Supabase, lưu vào RAM Cache
+        cachedApiKeys = data;
+        lastKeysFetchTime = Date.now();
+
         const randomKeyObj = data[Math.floor(Math.random() * data.length)];
         const keyPrefix = randomKeyObj.key_value.substring(0, 15);
         console.log(`[API Key Rotation] Đang dùng key bắt đầu bằng: ${keyPrefix}... (tổng số: ${data.length} keys)`);
@@ -58,6 +75,11 @@ const getUserIdFromToken = async (authHeader) => {
         const userId = token.replace('local:', '');
         if (!userId) return null;
         
+        // Trả về luôn nếu đã cache trong 15 phút qua (tránh gọi Supabase liên tục)
+        if (validUsersCache.has(userId) && (Date.now() - validUsersCache.get(userId) < 15 * 60 * 1000)) {
+            return userId;
+        }
+
         // Verify userId này có thực sự tồn tại trong bảng customer trên Supabase DB không
         // Nếu ai đó giả mạo userId, bước này sẽ loại bỏ
         const { data, error } = await supabase
@@ -70,6 +92,8 @@ const getUserIdFromToken = async (authHeader) => {
             console.warn('[Auth] local userId không hợp lệ hoặc không tồn tại:', userId);
             return null;
         }
+        
+        validUsersCache.set(userId, Date.now()); // Lưu vào bộ nhớ đệm
         console.log('[Auth] ✅ Xác thực thành công userId từ DB:', userId);
         return userId;
     }
