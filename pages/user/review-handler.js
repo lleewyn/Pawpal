@@ -583,11 +583,11 @@
             u.points = (u.points || 0) + amount;
             localStorage.setItem('pawpal_current_user', JSON.stringify(u));
 
-            const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+            const users = JSON.parse('[]' || '[]');
             const idx = users.findIndex(usr => usr.phone === u.phone);
             if (idx !== -1) {
                 users[idx].points = u.points;
-                localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+                /* localStorage.setItem pawpal_users_db removed */
             }
 
             const el = document.getElementById('headerPoints');

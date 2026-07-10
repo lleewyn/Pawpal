@@ -213,109 +213,9 @@ function buildPetFromBooking(booking, fallbackPhone = null) {
 }
 
 async function migrateGuestPetsToMember(user, fallbackPhone = null) {
-    if (!user) return;
-
-    const resolvedPhone = String(fallbackPhone || user.phone || user.phone_main || '').trim();
-    const pets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-    const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-    const migrated = [];
-    const seen = new Set();
-
-    const pushUnique = (pet) => {
-        if (!pet) return;
-        const key = String(pet.id || `${pet.name}|${pet.breed}|${pet.weight}|${pet.createdAt || ''}`).toLowerCase();
-        if (seen.has(key)) return;
-        seen.add(key);
-        migrated.push({ ...pet });
-    };
-
-    pets.forEach((pet) => {
-        const ownsByPhone = resolvedPhone && (String(pet.userId) === resolvedPhone || String(pet.ownerPhone) === resolvedPhone);
-        const ownsByTempUser = user?.id && String(pet.userId) === String(user.id);
-        if (ownsByPhone || ownsByTempUser) {
-            pushUnique({
-                ...pet,
-                userId: user.id || pet.userId || resolvedPhone || null,
-                isArchived: false,
-            });
-        } else {
-            pushUnique(pet);
-        }
-    });
-
-    const embeddedPet = buildGuestPetFromUser(user, resolvedPhone);
-    if (embeddedPet) {
-        const alreadyExists = migrated.some((pet) =>
-            String(pet.id).toLowerCase() === String(embeddedPet.id).toLowerCase() ||
-            String(pet.name || '').trim().toLowerCase() === String(embeddedPet.name || '').trim().toLowerCase()
-        );
-        if (!alreadyExists) {
-            migrated.unshift({
-                ...embeddedPet,
-                userId: user.id || resolvedPhone || embeddedPet.userId || null,
-            });
-        }
-    }
-
-    bookings.forEach((booking) => {
-        const bookingPhone = String(booking.ownerPhone || booking.userPhone || booking.phone || '').trim();
-        const bookingUserId = String(booking.userId || '').trim();
-        const matchesUser = (user?.id && bookingUserId && bookingUserId === String(user.id)) || (resolvedPhone && bookingPhone === resolvedPhone);
-        if (!matchesUser) return;
-
-        const bookingPet = buildPetFromBooking(booking, resolvedPhone);
-        if (!bookingPet) return;
-
-        const alreadyExists = migrated.some((pet) =>
-            String(pet.id || '').toLowerCase() === String(bookingPet.id || '').toLowerCase() ||
-            String(pet.name || '').trim().toLowerCase() === String(bookingPet.name || '').trim().toLowerCase()
-        );
-        if (!alreadyExists) {
-            migrated.push({
-                ...bookingPet,
-                userId: user.id || resolvedPhone || bookingPet.userId || null,
-            });
-        }
-    });
-
-    localStorage.setItem('pawpal_pets', JSON.stringify(migrated));
-    localStorage.removeItem('pawpal_pets_supabase_synced');
-
-    if (window.API && window.API.savePets) {
-        try {
-            await window.API.savePets(migrated);
-        } catch (error) {
-            console.warn('[Login] Failed to sync migrated guest pets:', error);
-        }
-    }
-
-    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-    if (db && user.id) {
-        try {
-            const rows = migrated
-                .filter((pet) => String(pet.userId) === String(user.id))
-                .map((pet) => ({
-                    customer_id: user.id,
-                    pet_code: pet.id || null,
-                    pet_name: pet.name || '',
-                    species: pet.species || 'other',
-                    breed: pet.breed || '',
-                    gender: pet.gender || '',
-                    date_of_birth: pet.dateOfBirth || pet.dob || pet.date_of_birth || null,
-                    color: pet.color || '',
-                    weight: pet.weight || null,
-                    avatar_url: pet.avatar || pet.avatar_url || '',
-                    notes: pet.notes || pet.allergies || '',
-                    status: pet.isArchived ? 'ARCHIVED' : 'ACTIVE',
-                }));
-
-            if (rows.length) {
-                await db.from('pet_profile').upsert(rows, { onConflict: 'pet_code' });
-            }
-        } catch (error) {
-            console.warn('[Login] Failed to upsert migrated guest pets to Supabase:', error);
-        }
-    }
+    // Pet data is now natively synced to Supabase when a guest books via insertBookingToSupabase.
+    // There is no need to migrate from localStorage.
+    return Promise.resolve();
 }
 
 /**
@@ -452,7 +352,7 @@ async function supabaseRegister(name, phone, password) {
     }
 }
 
-// --- ĐIỀU HƯỚNG SECTION THEO URL (US 2-1, US 1-1, US 1-2) ---
+// --- ĐIỀU HƯỚNG SECTION THEO URL  ---
 function handleLoginRouting() {
     const params = new URLSearchParams(window.location.search);
     const hash   = window.location.hash;
@@ -632,7 +532,7 @@ function initAuthForms() {
     const loginPassword     = document.getElementById('loginPassword');
 
     if (btnLoginContinue) {
-        btnLoginContinue.addEventListener('click', (e) => {
+        btnLoginContinue.addEventListener('click', async (e) => {
             e.preventDefault();
             const phoneVal = loginPhone.value.trim();
             const feedback = document.getElementById('loginPhoneFeedback');
@@ -643,77 +543,89 @@ function initAuthForms() {
                 return;
             }
             loginPhone.classList.remove('is-invalid');
+            
+            // Show loading state
+            const originalText = btnLoginContinue.innerHTML;
+            btnLoginContinue.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            btnLoginContinue.disabled = true;
 
-            const users = getUsers();
-            const user  = users.find(u => u.phone === phoneVal);
+            try {
+                const user = await supabaseResolveUserByPhone(phoneVal);
 
-            if (!user) {
-                showErrorBanner(
-                    'Số điện thoại chưa được đăng ký. Vui lòng <a href="?action=register" class="text-decoration-underline fw-bold" style="color:var(--color-danger);">Đăng ký ngay</a>',
-                    loginForm
-                );
-            } else if (user.is_temporary) {
-                // Tài khoản tạm → hỏi gửi OTP kích hoạt
-                loginStepPhone.classList.add('d-none');
-                const loginStepSendOTP    = document.getElementById('loginStepSendOTP');
-                const loginOtpPhoneDisplay = document.getElementById('loginOtpPhoneDisplay');
-                if (loginOtpPhoneDisplay) loginOtpPhoneDisplay.textContent = phoneVal;
-                if (loginStepSendOTP) loginStepSendOTP.classList.remove('d-none');
+                if (!user) {
+                    showErrorBanner(
+                        'Số điện thoại chưa được đăng ký. Vui lòng <a href="?action=register" class="text-decoration-underline fw-bold" style="color:var(--color-danger);">Đăng ký ngay</a>',
+                        loginForm
+                    );
+                } else if (user.is_temporary) {
+                    // Tài khoản tạm → hỏi gửi OTP kích hoạt
+                    loginStepPhone.classList.add('d-none');
+                    const loginStepSendOTP    = document.getElementById('loginStepSendOTP');
+                    const loginOtpPhoneDisplay = document.getElementById('loginOtpPhoneDisplay');
+                    if (loginOtpPhoneDisplay) loginOtpPhoneDisplay.textContent = phoneVal;
+                    if (loginStepSendOTP) loginStepSendOTP.classList.remove('d-none');
 
-                const btnChangePhoneOtp = document.getElementById('btnChangePhoneOtp');
-                if (btnChangePhoneOtp) {
-                    btnChangePhoneOtp.onclick = () => {
-                        loginStepSendOTP.classList.add('d-none');
-                        loginStepPhone.classList.remove('d-none');
-                        loginForm.classList.add('active-form');
-                        loginForm.style.opacity = '1';
-                        loginPhone.focus();
-                    };
+                    const btnChangePhoneOtp = document.getElementById('btnChangePhoneOtp');
+                    if (btnChangePhoneOtp) {
+                        btnChangePhoneOtp.onclick = () => {
+                            loginStepSendOTP.classList.add('d-none');
+                            loginStepPhone.classList.remove('d-none');
+                            loginForm.classList.add('active-form');
+                            loginForm.style.opacity = '1';
+                            loginPhone.focus();
+                        };
+                    }
+
+                    const btnSendOTPGuest = document.getElementById('btnSendOTPGuest');
+                    if (btnSendOTPGuest) {
+                        btnSendOTPGuest.onclick = () => {
+                            loginForm.style.opacity = '0';
+                            setTimeout(() => {
+                                loginForm.classList.remove('active-form');
+                                if (authTabs) authTabs.style.display = 'none';
+
+                                const forgotOtpSection = document.getElementById('forgotOtpSection');
+                                forgotOtpSection.classList.remove('d-none');
+                                forgotOtpSection.style.opacity = '1';
+                                forgotOtpSection.querySelector('.form-title').textContent    = 'Xác thực kích hoạt tài khoản';
+                                forgotOtpSection.querySelector('.form-subtitle').textContent = 'Mã OTP đã được gửi đến SĐT của bạn.';
+
+                                window.isGuestActivationFlow = true;
+                                window.guestActivationPhone  = user.phone;
+
+                                showToast('info', 'Mã OTP xác thực: 555666', 15000);
+
+                                const forgotOtpInputs = document.querySelectorAll('.forgot-otp-input');
+                                forgotOtpInputs.forEach((input, idx) => {
+                                    input.value    = '';
+                                    input.disabled = idx > 0;
+                                });
+                                forgotOtpInputs[0].focus();
+
+                                if (typeof window.startForgotOtpTimerFn === 'function') window.startForgotOtpTimerFn();
+                            }, 300);
+                        };
+                    }
+
+                    const btnSkipGuestSetup = document.getElementById('btnSkipGuestSetup');
+                    if (btnSkipGuestSetup) {
+                        btnSkipGuestSetup.onclick = () => {
+                            window.location.href = '/pages/public/landing/landing.html';
+                        };
+                    }
+                } else {
+                    // Thành viên chính thức → nhập mật khẩu
+                    loginStepPhone.classList.add('d-none');
+                    loginStepPassword.classList.remove('d-none');
+                    if (loginPhoneDisplay) loginPhoneDisplay.textContent = phoneVal;
+                    loginPassword.focus();
                 }
-
-                const btnSendOTPGuest = document.getElementById('btnSendOTPGuest');
-                if (btnSendOTPGuest) {
-                    btnSendOTPGuest.onclick = () => {
-                        loginForm.style.opacity = '0';
-                        setTimeout(() => {
-                            loginForm.classList.remove('active-form');
-                            if (authTabs) authTabs.style.display = 'none';
-
-                            const forgotOtpSection = document.getElementById('forgotOtpSection');
-                            forgotOtpSection.classList.remove('d-none');
-                            forgotOtpSection.style.opacity = '1';
-                            forgotOtpSection.querySelector('.form-title').textContent    = 'Xác thực kích hoạt tài khoản';
-                            forgotOtpSection.querySelector('.form-subtitle').textContent = 'Mã OTP đã được gửi đến SĐT của bạn.';
-
-                            window.isGuestActivationFlow = true;
-                            window.guestActivationPhone  = user.phone;
-
-                            showToast('info', 'Mã OTP xác thực: 555666', 15000);
-
-                            const forgotOtpInputs = document.querySelectorAll('.forgot-otp-input');
-                            forgotOtpInputs.forEach((input, idx) => {
-                                input.value    = '';
-                                input.disabled = idx > 0;
-                            });
-                            forgotOtpInputs[0].focus();
-
-                            if (typeof window.startForgotOtpTimerFn === 'function') window.startForgotOtpTimerFn();
-                        }, 300);
-                    };
-                }
-
-                const btnSkipGuestSetup = document.getElementById('btnSkipGuestSetup');
-                if (btnSkipGuestSetup) {
-                    btnSkipGuestSetup.onclick = () => {
-                        window.location.href = '/pages/public/landing/landing.html';
-                    };
-                }
-            } else {
-                // Thành viên chính thức → nhập mật khẩu
-                loginStepPhone.classList.add('d-none');
-                loginStepPassword.classList.remove('d-none');
-                if (loginPhoneDisplay) loginPhoneDisplay.textContent = phoneVal;
-                loginPassword.focus();
+            } catch (err) {
+                console.error('Lỗi khi kiểm tra số điện thoại trên Supabase', err);
+                showErrorBanner('Đã có lỗi xảy ra. Vui lòng thử lại sau.', loginForm);
+            } finally {
+                btnLoginContinue.innerHTML = originalText;
+                btnLoginContinue.disabled = false;
             }
         });
     }

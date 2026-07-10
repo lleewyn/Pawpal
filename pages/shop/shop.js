@@ -1025,24 +1025,16 @@ function toggleWishlist(productId) {
 // Cart Management
 // ══════════════════════════════════════════════════════════════════════════
 
-function addToCart(productId) {
+async function addToCart(productId) {
     const product = state.products.find(p => String(p.id) === String(productId));
     if (!product || !product.inStock) return;
     
-    // Check if user is logged in
+    // Get cart from Supabase API
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    if (!currentUser) {
-        if(window.Notifications) {
-            Notifications.showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
-        } else {
-            alert('Vui lòng đăng nhập để thêm vào giỏ hàng');
-        }
-        return;
+    let cart = [];
+    if (window.API && typeof window.API.getUserCart === 'function') {
+        cart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
     }
-
-    
-    // Get cart from localStorage
-    let cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
     
     // Check if product already in cart
     const existingItem = cart.find(item => item.id === productId);
@@ -1061,19 +1053,25 @@ function addToCart(productId) {
     if (window.saveCart) {
         window.saveCart(cart);
     } else {
-        localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+        if (window.API && typeof window.API.saveUserCart === 'function') {
+            await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
+        }
     }
     showToast(`Đã thêm ${product.name} vào giỏ hàng`, 'success');
     
     // Update cart badge if exists
-    updateCartBadge();
+    await updateCartBadge();
     if (typeof window.updateCartBadge === 'function') {
         setTimeout(() => window.updateCartBadge(), 50);
     }
 }
 
-function updateCartBadge() {
-    const cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+async function updateCartBadge() {
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    let cart = [];
+    if (window.API && typeof window.API.getUserCart === 'function') {
+        cart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
+    }
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     const cartBadge = document.querySelector('.cart-badge');
     if (cartBadge) {

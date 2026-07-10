@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Đảm bảo đồng bộ points từ Users DB
-    const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+    const users = JSON.parse('[]' || '[]');
     const userInDb = currentUser.phone ? users.find(u => u.phone === currentUser.phone) : null;
     if (userInDb) {
         currentUser.points = userInDb.points;
@@ -737,13 +737,13 @@ function triggerRedeem(voucherId, user, sliderContainer) {
 
 async function doRedeem(voucherInfo, user, sliderContainer, resetUI) {
     // Trừ điểm trong Database
-    const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+    const users = JSON.parse('[]' || '[]');
     const userIdx = users.findIndex(u => u.phone === user.phone);
     
     if (userIdx !== -1) {
         if (users[userIdx].points >= voucherInfo.pointsCost) {
             users[userIdx].points -= voucherInfo.pointsCost;
-            localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+            /* localStorage.setItem pawpal_users_db removed */
             
             // Cập nhật session user
             user.points = users[userIdx].points;

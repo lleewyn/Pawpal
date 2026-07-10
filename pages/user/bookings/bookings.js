@@ -5,191 +5,14 @@
 
 import { API } from '/scripts/api/api.js';
 
-// ============================================================
-// SUPABASE SYNC — load bookings từ Supabase vào localStorage
-// ============================================================
-async function repairLocalBookingsPrices() {
-    try {
-        const local = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-        const needsRepair = local.filter(b => !Number(b.price) || Number(b.price) <= 0);
-        if (!needsRepair.length) return;
 
-        // Fetch dichvu.csv
-        const response = await fetch('/data/dichvu.csv').catch(() => fetch('../../data/dichvu.csv'));
-        if (!response.ok) return;
-        const csvText = await response.text();
-        const lines = csvText.split('\n').filter(line => line.trim());
-        const headers = lines[0].split(',').map(h => h.trim());
-        const services = lines.slice(1).map(line => {
-            const values = line.split(',').map(v => v.trim());
-            const item = {};
-            headers.forEach((h, i) => item[h] = values[i] || '');
-            return item;
-        });
-
-        let updated = false;
-        local.forEach(b => {
-            if (!Number(b.price) || Number(b.price) <= 0) {
-                const srv = services.find(s => s['Tên dịch vụ'] === b.serviceName);
-                if (srv) {
-                    const p1 = parseInt(srv['Giá <5kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
-                    const p2 = parseInt(srv['Giá 5-10kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
-                    const p3 = parseInt(srv['Giá 10-20kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
-                    const p4 = parseInt(srv['Giá >20kg (VNĐ)']?.replace(/[^\d]/g, '') || '0', 10);
-                    const validPrices = [p1, p2, p3, p4].filter(p => p > 0);
-                    if (validPrices.length) {
-                        b.price = Math.min(...validPrices);
-                        updated = true;
-                    }
-                }
-            }
-        });
-        if (updated) localStorage.setItem('pawpal_bookings', JSON.stringify(local));
-    } catch (e) {
-        console.warn('Failed to repair local booking prices:', e);
-    }
-}
-
-async function syncBookingsFromSupabase(currentUser) {
-    let db = window.SupabaseClient;
-    if (!db && window.getSupabaseClient) {
-        db = window.getSupabaseClient();
-    }
-    if (!db || !currentUser) return;
-
-    try {
-        let customerId = currentUser.id;
-        if (currentUser._source !== 'supabase' && currentUser.phone) {
-            const { data: found } = await db
-                .from('customer')
-                .select('id')
-                .eq('phone_main', currentUser.phone)
-                .limit(1);
-            if (found && found.length > 0) {
-                customerId = found[0].id;
-            }
-        }
-
-        const { data, error } = await db
-            .from('appointment')
-            .select(`
-                id, appointment_code, appointment_date, appointment_time,
-                appointment_status, payment_status, note, change_count, total_price,
-                service ( 
-                    service_name, service_category, estimated_duration,
-                    service_price_matrix ( unit_price, pet_species )
-                ),
-                pet_profile ( id, pet_code, pet_name, breed, species )
-            `)
-            .eq('customer_id', customerId)
-            .order('appointment_date', { ascending: false });
-
-        console.log('[DEBUG] Raw data from Supabase:', data);
-
-        if (error) {
-            console.error('[Bookings] Lỗi tải lịch hẹn:', error);
-            return;
-        }
-
-        const bookings = (data || []).map(b => {
-            // Preserve pointsAwarded flag từ localStorage để tránh cộng điểm lại
-            const srv = Array.isArray(b.service) ? b.service[0] : b.service;
-            const pet = Array.isArray(b.pet_profile) ? b.pet_profile[0] : b.pet_profile;
-
-            const existing = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-            const localBooking = existing.find(lb =>
-                String(lb.id) === String(b.appointment_code || b.id) ||
-                String(lb._supabaseId) === String(b.id) ||
-                (
-                    lb.date === b.appointment_date && 
-                    (lb.timeStart === b.appointment_time?.slice(0, 5) || lb.time === b.appointment_time?.slice(0, 5)) && 
-                    lb.serviceName === (srv?.service_name || '')
-                )
-            );
-
-            return {
-                id:              b.appointment_code || b.id,
-                _supabaseId:     b.id,
-                userId:          currentUser.id,
-                _supabaseUserId: customerId,
-                date:            b.appointment_date,
-                time:            b.appointment_time?.slice(0, 5) || '',
-                timeStart:       b.appointment_time?.slice(0, 5) || '',
-                status:          mapAppointmentStatus(b.appointment_status),
-                bookingStatus:   b.appointment_status,
-                paymentStatus:   b.payment_status,
-                service:         srv?.service_name      || '',
-                serviceName:     srv?.service_name      || '',
-                serviceCategory: srv?.service_category  || '',
-                petId:           pet?.pet_code      || pet?.id || '',
-                petName:         pet?.pet_name      || '',
-                petBreed:        pet?.breed         || '',
-                changeCount:     b.change_count               || 0,
-                note:            b.note || '',
-                price:           b.total_price || localBooking?.price || getPriceFromMatrix(srv?.service_price_matrix, pet?.species) || 0,
-                // Giữ nguyên flag đã tích điểm để tránh cộng lại
-                pointsAwarded:   localBooking?.pointsAwarded  || false,
-                pointsEarned:    localBooking?.pointsEarned   || 0,
-                _source:         'supabase'
-            };
-        });
-
-        console.log('[DEBUG] Bookings from Supabase parsed:', bookings.map(b => ({ id: b.id, service: b.serviceName, total_price: b.price })));
-
-        // Merge bookings từ Supabase vào local thay vì ghi đè hoàn toàn
-        const local = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-        
-        // Lọc bỏ những booking đã từng đồng bộ (_supabaseId) nhưng giờ không còn trên Supabase (đã bị xoá)
-        const validLocal = local.filter(lb => {
-            if (lb._supabaseId || lb._source === 'supabase') {
-                return bookings.some(b => String(b._supabaseId) === String(lb._supabaseId) || String(b.id) === String(lb.id));
-            }
-            return true;
-        });
-
-        const merged = validLocal.map(lb => {
-            const fromSb = bookings.find(b => String(b.id) === String(lb.id) || String(b._supabaseId) === String(lb._supabaseId));
-            return fromSb ? { ...lb, ...fromSb } : lb;
-        });
-        bookings.forEach(b => {
-            if (!merged.some(m => String(m.id) === String(b.id) || String(m._supabaseId) === String(b._supabaseId))) {
-                merged.push(b);
-            }
-        });
-        localStorage.setItem('pawpal_bookings', JSON.stringify(merged));
-        console.log('[Bookings] ✅ Synced từ Supabase:', bookings.length, 'lịch hẹn');
-    } catch (err) {
-        console.warn('[Bookings] Supabase sync error:', err.message);
-    }
-}
-
-function mapAppointmentStatus(status) {
-    const map = {
-        'PENDING':   'pending',
-        'CONFIRMED': 'confirmed',
-        'COMPLETED': 'completed',
-        'CANCELLED': 'cancelled',
-        'NO_SHOW':   'cancelled',
-    };
-    return map[status] || 'pending';
-}
-
-/**
- * Lấy giá từ service_price_matrix theo species của pet.
- * Fallback về giá đầu tiên nếu không match species.
- */
-function getPriceFromMatrix(priceMatrix, petSpecies) {
-    if (!priceMatrix || !priceMatrix.length) return 0;
-    const match = priceMatrix.find(p => p.pet_species === petSpecies);
-    return (match || priceMatrix[0])?.unit_price || 0;
-}
 
 // ── Sync cancel lên Supabase ───────────────────────────────────────────────
 async function cancelOnSupabase(bookingId) {
     const db = window.SupabaseClient;
     if (!db) return;
     try {
-        const local = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        const local = JSON.parse('[]' || '[]');
         const booking = local.find(b => String(b.id) === String(bookingId) || String(b._id) === String(bookingId));
         const supabaseId = booking?._supabaseId;
         if (supabaseId) {
@@ -205,7 +28,7 @@ async function rescheduleOnSupabase(bookingId, date, time) {
     const db = window.SupabaseClient;
     if (!db) return;
     try {
-        const local = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        const local = JSON.parse('[]' || '[]');
         const booking = local.find(b => String(b.id) === String(bookingId) || String(b._id) === String(bookingId));
         const supabaseId = booking?._supabaseId;
         if (supabaseId) {
@@ -286,18 +109,8 @@ async function loadBookings(status) {
     try {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || { id: 'USER-001', phone: '0901234567' };
     
-    // Sửa giá nếu bị mất từ trước
-    await repairLocalBookingsPrices();
-
-    // 2) Đồng bộ từ Supabase về LocalStorage
-    let db = window.SupabaseClient;
-    if (!db && window.getSupabaseClient) {
-        db = window.getSupabaseClient();
-    }
-    
-    if (db && currentUser) {
-        await syncBookingsFromSupabase(currentUser);
-    }
+    // (Sửa giá bị mất - đã loại bỏ)
+    // (Đồng bộ từ Supabase về LocalStorage - đã loại bỏ)
 
         await API.initData();
         allBookings = currentUser ? await API.getUserBookings(currentUser.id) : [];
@@ -642,12 +455,12 @@ function openQuickCancelModal(booking) {
     modal.show();
 
     modalEl.querySelector('#quickConfirmCancelBtn').addEventListener('click', async () => {
-        const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        const bookings = JSON.parse('[]' || '[]');
         const idx = bookings.findIndex((b) => String(b.id || b._id) === String(bookingId));
         if (idx !== -1) {
             bookings[idx].status = 'cancelled';
             bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
-            localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
+            /* localStorage.setItem removed */
         }
         await cancelOnSupabase(bookingId);
         modal.hide();
@@ -753,7 +566,7 @@ function openQuickRescheduleModal(booking) {
     }
 
     modalEl.querySelector('#quickConfirmRescheduleBtn').addEventListener('click', async () => {
-        const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        const bookings = JSON.parse('[]' || '[]');
         const idx = bookings.findIndex((b) => String(b.id || b._id) === String(bookingId));
         if (idx !== -1) {
             bookings[idx].date = selectedDate;
@@ -768,7 +581,7 @@ function openQuickRescheduleModal(booking) {
                 bookings[idx].staff = 'Bảo mẫu khách sạn';
             }
             bookings[idx].changeCount = (bookings[idx].changeCount || 0) + 1;
-            localStorage.setItem('pawpal_bookings', JSON.stringify(bookings));
+            /* localStorage.setItem removed */
         }
         await rescheduleOnSupabase(bookingId, selectedDate, selectedSlot);
         modal.hide();

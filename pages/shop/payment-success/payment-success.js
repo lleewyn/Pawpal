@@ -110,7 +110,7 @@ function setupGuestActivationCard(order) {
         return;
     }
 
-    const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+    const users = JSON.parse('[]' || '[]');
     const tempUser = users.find(u => u.phone === order.shipping.phone && u.is_temporary);
     if (!tempUser) {
         card.classList.add('d-none');

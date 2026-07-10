@@ -272,13 +272,13 @@ function awardLoyaltyPoints(order) {
     if (pointsEarned <= 0) return;
 
     // Cập nhật users_db
-    const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+    const users = JSON.parse('[]' || '[]');
     const idx = users.findIndex(u => u.phone === user.phone);
     if (idx !== -1) {
         users[idx].points  = (users[idx].points  || 0) + pointsEarned;
         users[idx].spend   = (users[idx].spend   || 0) + grandTotal;
         users[idx].lastTransactionAt = new Date().toISOString();
-        localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+        /* localStorage.setItem pawpal_users_db removed */
 
         // Sync session
         user.points  = users[idx].points;

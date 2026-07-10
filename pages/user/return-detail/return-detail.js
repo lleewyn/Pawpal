@@ -103,22 +103,7 @@ async function initReturnDetail() {
         const supabaseRow = await loadReturnRequestFromSupabase(orderId);
         if (supabaseRow) {
             rmaData = normalizeReturnRequestRow(supabaseRow);
-            if (rmaData) {
-                try {
-                    const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
-                    const updatedList = returnsList.filter((item) => item.rmaId !== rmaData.rmaId);
-                    updatedList.push(rmaData);
-                    localStorage.setItem('pawpal_returns', JSON.stringify(updatedList));
-                } catch (err) {
-                    console.warn('[ReturnDetail] Cannot cache Supabase return request:', err);
-                }
-            }
         }
-    }
-
-    if (!rmaData) {
-        const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
-        rmaData = returnsList.find((item) => item.orderId === orderId);
     }
 
     if (!rmaData) {
@@ -129,33 +114,25 @@ async function initReturnDetail() {
 
     // Fallback cho các yêu cầu cũ: nếu products bị lưu thiếu thì lấy lại từ đơn gốc
     if (!Array.isArray(rmaData.products) || rmaData.products.length === 0 || rmaData.products.every((p) => !p || !p.name)) {
-        try {
-            const storedOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-            const sourceOrder = Array.isArray(storedOrders)
-                ? storedOrders.find((item) => String(item.id) === String(orderId))
-                : null;
-            if (sourceOrder && Array.isArray(sourceOrder.products) && sourceOrder.products.length) {
-                rmaData.products = sourceOrder.products.map((product) => ({
-                    id: product.id,
-                    name: product.name,
-                    image: product.image || '/assets/images/shop/products/placeholder.webp',
-                    quantity: Number(product.quantity) || 1,
-                    price: Number(product.price) || 0,
-                    total: Number(product.total) || (Number(product.price) || 0) * (Number(product.quantity) || 1)
-                }));
-            }
-        } catch (error) {
-            console.warn('return-detail products fallback error:', error);
-        }
+        // Since we removed local orders, if products are missing we just have a placeholder
+        rmaData.products = [{
+            id: 'PROD-UNKNOWN',
+            name: 'Sản phẩm',
+            image: '/assets/images/shop/products/placeholder.webp',
+            quantity: 1,
+            price: 0,
+            total: 0
+        }];
     }
 
     // Bug 2 + 4: Trừ điểm khi RMA status = 'completed' (chưa trừ trước đó)
     if (rmaData.status === 'completed' && rmaData.type === 'refund' && !rmaData.pointsDeducted) {
         deductPointsForRefund(rmaData);
-        // Đánh dấu đã trừ để tránh trừ lại khi reload
-        rmaData.pointsDeducted = true;
-        const updatedList = returnsList.map(r => r.rmaId === rmaData.rmaId ? rmaData : r);
-        localStorage.setItem('pawpal_returns', JSON.stringify(updatedList));
+        // Supabase update for pointsDeducted should be here instead of local storage
+        if (window.getSupabaseClient) {
+            const db = window.getSupabaseClient();
+            db.from('return_request').update({ points_deducted: true }).eq('rma_id', rmaData.rmaId).then();
+        }
     }
 
     document.getElementById('rma-id-title').textContent = `Yêu cầu đổi trả #${rmaData.rmaId}`;
@@ -275,11 +252,11 @@ function deductPointsForRefund(rmaData) {
     currentUser.points = Math.max(0, (currentUser.points || 0) - pointsToDeduct);
     localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
 
-    const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+    const users = JSON.parse('[]' || '[]');
     const uIdx = users.findIndex(u => u.phone === currentUser.phone);
     if (uIdx !== -1) {
         users[uIdx].points = currentUser.points;
-        localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+        /* localStorage.setItem pawpal_users_db removed */
     }
     console.log(`[RMA] Đã trừ ${pointsToDeduct} điểm. Số dư mới: ${currentUser.points}`);
 }

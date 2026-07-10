@@ -13,16 +13,9 @@ function openRMADrawer(orderId) {
         currentRmaOrder = ordersState.allOrders.find(o => o.id === orderId);
     }
 
-    // Fallback: lấy từ localStorage khi đang ở trang chi tiết đơn hàng
-    if (!currentRmaOrder) {
-        try {
-            const storedOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-            if (Array.isArray(storedOrders)) {
-                currentRmaOrder = storedOrders.find(o => String(o.id) === String(orderId));
-            }
-        } catch (error) {
-            console.warn('openRMADrawer localStorage lookup error:', error);
-        }
+    // Fallback: Nếu không tìm thấy, lấy từ backend (order có thể được fetch độc lập)
+    if (!currentRmaOrder && window.SupabaseClient) {
+        // Tạm thời để trống, return-detail hoặc orders sẽ lo liệu việc fetch nếu rmaOrder chưa có.
     }
     
     // Safe fallback if the order list is unavailable
@@ -318,10 +311,6 @@ function setupDrawerListeners() {
 
         // Không trừ điểm ngay — điểm sẽ được trừ khi admin chuyển RMA sang 'completed'
         // (Logic trừ điểm đặt tại return-detail.js khi cập nhật status)
-
-        const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
-        returnsList.push(returnData);
-        localStorage.setItem('pawpal_returns', JSON.stringify(returnsList));
 
         // Khôi phục UI
         submitBtn.innerHTML = originalText;

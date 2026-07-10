@@ -256,19 +256,9 @@ function navigateGallery(direction) {
 /**
  * Handle Add to Cart - Add product to cart and stay on page
  */
-function handleAddToCart() {
-    // Check if user is logged in
+async function handleAddToCart() {
+    // Guest cart allowed, so we don't block unauthenticated users anymore
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    if (!currentUser) {
-        if(typeof showToast === 'function') {
-            showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
-        } else if(window.Notifications) {
-            Notifications.showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
-        } else {
-            alert('Vui lòng đăng nhập để thêm vào giỏ hàng');
-        }
-        return;
-    }
 
     const product = getCurrentProduct();
     const quantity = parseInt(document.getElementById('quantity').value) || 1;
@@ -288,9 +278,9 @@ function handleAddToCart() {
         return;
     }
     
-    addProductToCart(product, quantity);
+    await addProductToCart(product, quantity);
     showToast('Đã thêm sản phẩm vào giỏ hàng', 'success');
-    updateCartBadge();
+    await updateCartBadge();
 }
 
 /**
@@ -336,19 +326,8 @@ function handleBuyNow() {
     }, 500);
 }
 
-function handleCardAddToCart(product) {
-    // Check if user is logged in
+async function handleCardAddToCart(product) {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    if (!currentUser) {
-        if(typeof showToast === 'function') {
-            showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
-        } else if(window.Notifications) {
-            Notifications.showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
-        } else {
-            alert('Vui lòng đăng nhập để thêm vào giỏ hàng');
-        }
-        return;
-    }
     
     if (!product || !product.inStock) {
         showToast('Sản phẩm không khả dụng', 'error');
@@ -542,9 +521,13 @@ async function bindRelatedProductCards() {
     });
 }
 
-function addProductToCart(product, quantity) {
+async function addProductToCart(product, quantity) {
     // Get existing cart
-    let cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    let cart = [];
+    if (window.API && typeof window.API.getUserCart === 'function') {
+        cart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
+    }
     
     // Check if product already in cart
     const existingIndex = cart.findIndex(item => item.id === product.id);
@@ -571,22 +554,21 @@ function addProductToCart(product, quantity) {
         });
     }
     
-    // Save to localStorage
-    if (window.saveCart) {
-        window.saveCart(cart);
-    } else {
-        localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+    // Save to API
+    if (window.API && typeof window.API.saveUserCart === 'function') {
+        await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
     }
-    
-
-
 }
 
 /**
  * Update cart badge count in header
  */
-function updateCartBadge() {
-    const cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+async function updateCartBadge() {
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    let cart = [];
+    if (window.API && typeof window.API.getUserCart === 'function') {
+        cart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
+    }
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     
     // Find cart badge element (if exists in header)

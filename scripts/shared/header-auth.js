@@ -5,7 +5,7 @@
 (function() {
     function getUsers() {
         try {
-            return JSON.parse(localStorage.getItem('pawpal_users_db')) || [];
+            return JSON.parse('[]') || [];
         } catch {
             return [];
         }

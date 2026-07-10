@@ -128,10 +128,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
         } else {
-            // Load cart from localStorage (normal cart)
-            checkoutState.cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+            // Load cart from Supabase (normal cart)
+            if (window.API && typeof window.API.getUserCart === 'function') {
+                checkoutState.cart = await window.API.getUserCart(checkoutState.user?.id || checkoutState.user?.phone || null);
+            } else {
+                checkoutState.cart = [];
+            }
             
-            if (checkoutState.cart.length === 0) {
+            if (!checkoutState.cart || checkoutState.cart.length === 0) {
                 window.location.href = '/pages/shop/shop.html';
                 return;
             }
@@ -1010,11 +1014,11 @@ async function handleCheckout() {
         checkoutState.user = updatedUser;
         localStorage.setItem('pawpal_current_user', JSON.stringify(updatedUser));
 
-        const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+        const users = JSON.parse('[]' || '[]');
         const userIndex = users.findIndex((user) => String(user.id) === String(updatedUser.id));
         if (userIndex !== -1) {
             users[userIndex] = { ...users[userIndex], ...updatedUser };
-            localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+            /* localStorage.setItem pawpal_users_db removed */
         }
     }
     
@@ -1076,7 +1080,9 @@ async function handleCheckout() {
             sessionStorage.removeItem('pawpal_buynow_cart');
             sessionStorage.removeItem('pawpal_is_buynow');
         } else {
-            if(window.saveCart) { window.saveCart([]); } else { localStorage.removeItem('pawpal_cart'); }
+            if (window.API && typeof window.API.saveUserCart === 'function') {
+                await window.API.saveUserCart(checkoutState.user?.id || checkoutState.user?.phone || null, []);
+            }
         }
         window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${orderData.orderId}`;
     } else if (['momo', 'vnpay', 'zalopay', 'vietqr'].includes(checkoutState.selectedPayment)) {
@@ -1092,7 +1098,9 @@ async function handleCheckout() {
             sessionStorage.removeItem('pawpal_buynow_cart');
             sessionStorage.removeItem('pawpal_is_buynow');
         } else {
-            if(window.saveCart) { window.saveCart([]); } else { localStorage.removeItem('pawpal_cart'); }
+            if (window.API && typeof window.API.saveUserCart === 'function') {
+                await window.API.saveUserCart(checkoutState.user?.id || checkoutState.user?.phone || null, []);
+            }
         }
         window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${orderData.orderId}`;
     }
@@ -1299,7 +1307,9 @@ function verifyPaymentSimulation() {
                     sessionStorage.removeItem('pawpal_buynow_cart');
                     sessionStorage.removeItem('pawpal_is_buynow');
                 } else {
-                    if(window.saveCart) { window.saveCart([]); } else { localStorage.removeItem('pawpal_cart'); }
+                    if (window.API && typeof window.API.saveUserCart === 'function') {
+                        await window.API.saveUserCart(checkoutState.user?.id || checkoutState.user?.phone || null, []);
+                    }
                 }
                 
                 setTimeout(() => {
@@ -1323,11 +1333,11 @@ function finalizePendingPointsUsage() {
     if (!checkoutState.user || !checkoutState.pointsUsed) return;
 
     try {
-        const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+        const users = JSON.parse('[]' || '[]');
         const ui = users.findIndex(u => String(u.phone) === String(checkoutState.user.phone));
         if (ui !== -1) {
             users[ui].points = Math.max(0, (users[ui].points || 0) - checkoutState.pointsUsed);
-            localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+            /* localStorage.setItem pawpal_users_db removed */
         }
         const sessionUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (sessionUser) {
@@ -1496,7 +1506,7 @@ function saveOrderToUserHistory(orderData) {
 }
 
 function createGuestTempUserForOrder(orderData) {
-    const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+    const users = JSON.parse('[]' || '[]');
     let tempUser = users.find(u => u.phone === orderData.shipping.phone && u.is_temporary);
 
     if (!tempUser) {
@@ -1508,7 +1518,7 @@ function createGuestTempUserForOrder(orderData) {
             points: 0
         };
         users.push(tempUser);
-        localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+        /* localStorage.setItem pawpal_users_db removed */
     }
 
     const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');

@@ -219,7 +219,7 @@ function mergePetLists(serverPets, localPets, targetUserId) {
     const map = new Map();
 
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    const dbUsers = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
+    const dbUsers = JSON.parse('[]' || '[]');
     const dbUser = dbUsers.find(u =>
         String(u.id) === String(targetUserId) ||
         (currentUser?.phone && String(u.phone) === String(currentUser.phone))
@@ -294,12 +294,10 @@ function mergePetLists(serverPets, localPets, targetUserId) {
     return Array.from(map.values()).map(({ __priority, __signature, ...pet }) => pet);
 }
 
-export async function getPets(userId) {
+export async function getPets(targetUserId) {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    const targetUserId = userId || currentUser?.id || null;
-    const localPets = normalizePetList(JSON.parse(localStorage.getItem('pawpal_pets') || '[]'));
-
     const db = window['SupabaseClient'];
+    
     if (db && currentUser) {
         try {
             const customerId = await getSupabaseCustomerId(db, currentUser);
@@ -357,58 +355,21 @@ export async function getPets(userId) {
                         .filter(Boolean)
                     : [];
 
-                const merged = mergePetLists([...supabasePets, ...appointmentPets], localPets, targetUserId);
-                const deduped = normalizePetList(merged);
-                localStorage.setItem('pawpal_pets', JSON.stringify(deduped));
-
-                // Nếu chỉ có pet từ lịch hẹn cũ, sync ngược lên Supabase để cố định hồ sơ
-                if (appointmentPets.length && window['API'] && window['API'].savePets) {
-                    try {
-                        await window['API'].savePets(deduped);
-                    } catch (syncErr) {
-                        console.warn('[petService] Backfill pets to Supabase failed:', syncErr?.message || syncErr);
-                    }
-                }
-
+                const deduped = normalizePetList([...supabasePets, ...appointmentPets]);
                 return deduped;
             }
         } catch (err) {
-            console.warn('[petService] Supabase getPets error, fallback localStorage:', err.message);
+            console.warn('[petService] Supabase getPets error:', err.message);
         }
     }
-
-    if (!targetUserId) return localPets;
-
-    const dbUsers = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
-    const dbUser = dbUsers.find(u =>
-        String(u.id) === String(targetUserId) ||
-        (currentUser?.phone && String(u.phone) === String(currentUser.phone))
-    );
-    const knownIds = new Set(
-        [targetUserId, dbUser?.id, currentUser?.id]
-            .filter(Boolean)
-            .map(String)
-    );
-    const currentPhone = currentUser?.phone ? String(currentUser.phone) : null;
-
-    return localPets.filter((pet) => {
-        const petUserId = pet.userId?._id || pet.userId;
-        if (petUserId && knownIds.has(String(petUserId))) return true;
-        if (pet.userLegacyId && knownIds.has(String(pet.userLegacyId))) return true;
-        if (!currentPhone) return false;
-        if (pet.ownerPhone && String(pet.ownerPhone) === currentPhone) return true;
-        if (pet.phone && String(pet.phone) === currentPhone) return true;
-        return false;
-    });
+    
+    return [];
 }
 
 export async function savePets(pets) {
     try {
         const normalizedPets = normalizePetList(pets);
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-
-        // Luôn lưu localStorage ngay lập tức (offline-first)
-        localStorage.setItem('pawpal_pets', JSON.stringify(normalizedPets));
 
         // ── Sync lên Supabase ──────────────────────────────────────────────
         const db = window['SupabaseClient'];
@@ -438,35 +399,16 @@ export async function savePets(pets) {
                                     .insert(row)
                                     .select('id')
                                     .limit(1);
-                                // Cập nhật _supabaseId vào localStorage
                                 if (inserted?.[0]) {
                                     pet._supabaseId = inserted[0].id;
                                 }
                             }
                         }
                     }
-                    // Lưu lại với _supabaseId đã cập nhật
-                    localStorage.setItem('pawpal_pets', JSON.stringify(normalizedPets));
                     console.log('[petService] savePets → Supabase OK');
                 }
             } catch (err) {
                 console.warn('[petService] Supabase savePets error:', err.message);
-            }
-        }
-
-        // Sync lên MongoDB nếu backend bật
-        if (API.USE_BACKEND) {
-            const existing = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-            const byLegacyId = new Map(existing.map((item) => [String(item.id), item]));
-            for (const pet of normalizedPets) {
-                const current = byLegacyId.get(String(pet.id));
-                const payload = buildPetPayload(pet, currentUser, current);
-                const targetId = pet._id || current?._id;
-                if (targetId) {
-                    await API.request(`/api/pets/${targetId}`, { method: 'PUT', body: JSON.stringify(payload) });
-                } else {
-                    await API.request('/api/pets', { method: 'POST', body: JSON.stringify(payload) });
-                }
             }
         }
 
@@ -478,76 +420,38 @@ export async function savePets(pets) {
 }
 
 export async function deletePet(petId) {
-    const pets = JSON.parse(localStorage.getItem('pawpal_pets')) || [];
-    const updatedPets = pets.map(p => p.id === petId ? { ...p, isArchived: true } : p);
-    localStorage.setItem('pawpal_pets', JSON.stringify(updatedPets));
-
     // Sync lên Supabase
     const db = window['SupabaseClient'];
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (db && currentUser) {
         try {
-            const pet = pets.find(p => p.id === petId);
-            const supabaseId = pet?._supabaseId;
-            if (supabaseId) {
-                await db.from('pet_profile').update({ status: 'INACTIVE' }).eq('id', supabaseId);
-            } else {
-                const customerId = await getSupabaseCustomerId(db, currentUser);
-                if (customerId) {
-                    await db.from('pet_profile').update({ status: 'INACTIVE' })
-                        .eq('customer_id', customerId).eq('pet_code', petId);
-                }
+            // Find pet _supabaseId by fetching from supabase or from DOM
+            const { data: found } = await db.from('pet_profile').select('id, customer_id').eq('pet_code', petId).limit(1);
+            if (found && found.length > 0) {
+                await db.from('pet_profile').update({ status: 'INACTIVE' }).eq('id', found[0].id);
             }
             console.log('[petService] deletePet → Supabase OK');
         } catch (err) {
             console.warn('[petService] Supabase deletePet error:', err.message);
         }
     }
-
-    // MongoDB fallback
-    if (API.USE_BACKEND) {
-        const pet = pets.find((item) => item.id === petId);
-        if (pet?._id) {
-            const payload = buildPetPayload({ ...pet, isArchived: true }, currentUser, pet);
-            await API.request(`/api/pets/${pet._id}`, { method: 'PUT', body: JSON.stringify(payload) });
-        }
-    }
     return true;
 }
 
 export async function restorePet(petId) {
-    const pets = JSON.parse(localStorage.getItem('pawpal_pets')) || [];
-    const updatedPets = pets.map(p => p.id === petId ? { ...p, isArchived: false } : p);
-    localStorage.setItem('pawpal_pets', JSON.stringify(updatedPets));
-
     // Sync lên Supabase
     const db = window['SupabaseClient'];
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (db && currentUser) {
         try {
-            const pet = pets.find(p => p.id === petId);
-            const supabaseId = pet?._supabaseId;
-            if (supabaseId) {
-                await db.from('pet_profile').update({ status: 'ACTIVE' }).eq('id', supabaseId);
-            } else {
-                const customerId = await getSupabaseCustomerId(db, currentUser);
-                if (customerId) {
-                    await db.from('pet_profile').update({ status: 'ACTIVE' })
-                        .eq('customer_id', customerId).eq('pet_code', petId);
-                }
+            // Find pet _supabaseId by fetching from supabase or from DOM
+            const { data: found } = await db.from('pet_profile').select('id, customer_id').eq('pet_code', petId).limit(1);
+            if (found && found.length > 0) {
+                await db.from('pet_profile').update({ status: 'ACTIVE' }).eq('id', found[0].id);
             }
             console.log('[petService] restorePet → Supabase OK');
         } catch (err) {
             console.warn('[petService] Supabase restorePet error:', err.message);
-        }
-    }
-
-    // MongoDB fallback
-    if (API.USE_BACKEND) {
-        const pet = pets.find((item) => item.id === petId);
-        if (pet?._id) {
-            const payload = buildPetPayload({ ...pet, isArchived: false }, currentUser, pet);
-            await API.request(`/api/pets/${pet._id}`, { method: 'PUT', body: JSON.stringify(payload) });
         }
     }
     return true;

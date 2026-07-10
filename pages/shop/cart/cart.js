@@ -151,9 +151,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Tải sản phẩm từ CSV
             products = await window.DataLoader.loadProducts();
             
-            // Lấy giỏ hàng từ localStorage (offline-first, tránh duplicate)
+            // Lấy giỏ hàng từ Supabase
             const currentUser = getCurrentUser();
-            const fetchedCart = currentUser ? await window.API.getUserCart(currentUser.id || currentUser.phone || null) : JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
+            const fetchedCart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
             const localCart = restoreCartFromBackup(fetchedCart);
             cart = localCart.map(normalizeCartItem);
             
@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function setupCheckoutEvent() {
         const btnProceed = document.getElementById('btn-proceed-checkout');
         if (btnProceed) {
-            btnProceed.addEventListener('click', (e) => {
+            btnProceed.addEventListener('click', async (e) => {
                 // Lọc ra các sản phẩm được tích chọn
                 const selectedItems = cart.filter(item => selectedIds.has(normalizeId(item.id)));
                 
@@ -244,9 +244,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 localStorage.setItem('pawpal_cart_unselected_backup', JSON.stringify(unselectedItems));
                 
                 // Cập nhật lại giỏ hàng chính chỉ gồm các sản phẩm được chọn để trang checkout xử lý
-                if (window.saveCart) window.saveCart(selectedItems); else if (window.saveCart) window.saveCart(selectedItems); else localStorage.setItem('pawpal_cart', JSON.stringify(selectedItems));
+                if (window.saveCart) window.saveCart(selectedItems);
                 const currentUser = getCurrentUser();
-                window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, selectedItems);
+                await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, selectedItems);
                 
                 // Clear any lingering "buy now" state so checkout loads the normal cart
                 sessionStorage.removeItem('pawpal_is_buynow');
@@ -537,15 +537,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 300);
     }
 
-    // Lưu giỏ hàng vào localStorage
-    function saveCart() {
+    // Lưu giỏ hàng
+    async function saveCart() {
         if (window.saveCart) {
             window.saveCart(cart);
         } else {
-            localStorage.setItem('pawpal_cart', JSON.stringify(cart));
             const currentUser = getCurrentUser();
             if (window.API && typeof window.API.saveUserCart === 'function') {
-                window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
+                await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
             }
         }
     }
@@ -739,7 +738,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        if (window.saveCart) window.saveCart(mergedCart); else if (window.saveCart) window.saveCart(mergedCart); else localStorage.setItem('pawpal_cart', JSON.stringify(mergedCart));
         const currentUser = getCurrentUser();
         if (window.API && typeof window.API.saveUserCart === 'function') {
             window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, mergedCart);

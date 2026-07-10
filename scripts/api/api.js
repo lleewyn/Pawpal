@@ -49,159 +49,200 @@ export const API = {
     },
 
     async initData() {
-        const shouldRefreshMockData = (window.PawpalStorage ? window.PawpalStorage.get('pawpal_mock_data_version') : localStorage.getItem('pawpal_mock_data_version')) !== this.DATA_VERSION;
-
-        const localUsers = safeReadArray('pawpal_users_db');
-        if (shouldRefreshMockData || localUsers.length === 0 || localUsers.length <= 3) {
-            const users = await this.getJSON('/data/users.json');
-            if (users) {
-                const mergedUsers = mergeById(users, localUsers);
-                safeWrite('pawpal_users_db', mergedUsers);
-
-                const currentUser = safeReadObject('pawpal_current_user');
-                if (currentUser) {
-                    const richUser = mergedUsers.find(user => sameUser(user, currentUser));
-                    if (richUser) {
-                        // Bảo vệ các field user-action: không để seed ghi đè trạng thái đã kích hoạt
-                        const safeUser = {
-                            ...richUser,
-                            is_temporary: currentUser.is_temporary,
-                            password:     currentUser.password     !== undefined ? currentUser.password     : richUser.password,
-                            points:       currentUser.points       !== undefined ? currentUser.points       : richUser.points,
-                        };
-                        safeWrite('pawpal_current_user', safeUser);
-                    }
-                }
-            }
-        }
-
-        const localPets = safeReadArray('pawpal_pets');
-        const petsSyncedPhone = localStorage.getItem('pawpal_pets_supabase_synced');
-        const currentPhone = safeReadObject('pawpal_current_user')?.phone;
-        const petsAlreadySynced = petsSyncedPhone && currentPhone && petsSyncedPhone === String(currentPhone);
-
-        if (!petsAlreadySynced && (shouldRefreshMockData || localPets.length === 0 || !localPets.some(pet => pet.userId))) {
-            const pets = await this.getJSON(`/data/pets.json?v=${this.DATA_VERSION}`);
-            if (pets) safeWrite('pawpal_pets', mergeById(pets, localPets));
-        }
-
         // Tắt hoàn toàn việc seed dữ liệu từ JSON để sử dụng Supabase
-        safeWrite('pawpal_mock_data_version', this.DATA_VERSION);
     },
 
     async getUserPets(userId) {
-        const pets = await this.request(`/api/pets`);
-        const currentUser = safeReadObject('pawpal_current_user');
-        const dbUsers = safeReadArray('pawpal_users_db');
-        const matchingUsers = dbUsers.filter(u =>
-            sameUserId(u.id, userId) ||
-            (currentUser && sameUserId(u.phone, currentUser.phone))
-        );
-
-        // Tập hợp tất cả id có thể của user
-        const knownIds = new Set(
-            [userId, currentUser?.id, ...matchingUsers.map(u => u.id)]
-                .filter(Boolean)
-                .map(String)
-        );
-        const currentPhone = currentUser?.phone ? String(currentUser.phone) : null;
-
-        const matchPet = (pet) => {
-            const petUserId = pet.userId?._id || pet.userId;
-            if (petUserId && knownIds.has(String(petUserId))) return true;
-            if (pet.userLegacyId && knownIds.has(String(pet.userLegacyId))) return true;
-            if (!currentPhone) return false;
-            if (pet.ownerPhone && String(pet.ownerPhone) === currentPhone) return true;
-            if (pet.phone && String(pet.phone) === currentPhone) return true;
-            return false;
-        };
-
-        if (Array.isArray(pets)) {
-            return pets.filter(matchPet);
+        const db = window.SupabaseClient;
+        if (!db || !userId) return [];
+        try {
+            const { data, error } = await db
+                .from('pet_profile')
+                .select('*')
+                .eq('customer_id', userId);
+            
+            if (error) {
+                console.error('[API] Supabase getUserPets error:', error.message);
+                return [];
+            }
+            // Map keys back to frontend format if needed
+            return (data || []).map(p => ({
+                id: p.id,
+                name: p.pet_name,
+                type: p.pet_type,
+                breed: p.breed,
+                age: p.age,
+                weight: p.weight,
+                gender: p.gender,
+                note: p.note,
+                image: p.image_url || '/assets/images/placeholder.webp'
+            }));
+        } catch (err) {
+            console.error('[API] Supabase getUserPets failed:', err);
+            return [];
         }
-
-        // Offline path — không gọi lại initData()
-        const localPets = safeReadArray('pawpal_pets');
-        return localPets.filter(matchPet);
     },
 
     async getUserBookings(userId) {
-        const bookings = await this.request(`/api/bookings`);
-        const currentUser = safeReadObject('pawpal_current_user');
-        const dbUsers = safeReadArray('pawpal_users_db');
-        const matchingUsers = dbUsers.filter(u =>
-            sameUserId(u.id, userId) ||
-            (currentUser && sameUserId(u.phone, currentUser.phone))
-        );
+        const db = window.SupabaseClient;
+        if (!db || !userId) return [];
+        try {
+            const { data, error } = await db
+                .from('appointment')
+                .select(`
+                    id, appointment_code, appointment_date, appointment_time,
+                    appointment_status, payment_status, note, change_count, total_price,
+                    service ( 
+                        service_name, service_category, estimated_duration,
+                        service_price_matrix ( unit_price, pet_species )
+                    ),
+                    pet_profile ( id, pet_code, pet_name, breed, species )
+                `)
+                .eq('customer_id', userId)
+                .order('appointment_date', { ascending: false });
+                
+            if (error) {
+                console.error('[API] Supabase getUserBookings error:', error.message);
+                return [];
+            }
 
-        // Tập hợp tất cả id có thể của user
-        const knownIds = new Set(
-            [userId, currentUser?.id, ...matchingUsers.map(u => u.id)]
-                .filter(Boolean)
-                .map(String)
-        );
-        const currentPhone = currentUser?.phone ? String(currentUser.phone) : null;
+            const mapAppointmentStatus = (status) => {
+                if (!status) return 'upcoming';
+                const s = status.toUpperCase();
+                if (s === 'PENDING' || s === 'CONFIRMED') return 'upcoming';
+                if (s === 'COMPLETED' || s === 'DONE') return 'completed';
+                if (s === 'CANCELLED') return 'cancelled';
+                return 'upcoming';
+            };
 
-        const matchBooking = (booking) => {
-            const bookingUserId = booking.userId?._id || booking.userId;
-            if (bookingUserId && knownIds.has(String(bookingUserId))) return true;
-            if (booking.userLegacyId && knownIds.has(String(booking.userLegacyId))) return true;
-            if (!currentPhone) return false;
-            if (booking.phone && String(booking.phone) === currentPhone) return true;
-            if (booking.userPhone && String(booking.userPhone) === currentPhone) return true;
-            if (booking.delivery?.phone && String(booking.delivery.phone) === currentPhone) return true;
-            return false;
-        };
+            const getPriceFromMatrix = (matrix, species) => {
+                if (!matrix || !Array.isArray(matrix)) return 0;
+                if (!species) species = 'other';
+                const row = matrix.find(m => m.pet_species?.toLowerCase() === species.toLowerCase());
+                if (row) return row.unit_price;
+                return matrix[0]?.unit_price || 0;
+            };
 
-        if (Array.isArray(bookings)) {
-            return bookings.filter(matchBooking);
+            return (data || []).map(b => {
+                const srv = Array.isArray(b.service) ? b.service[0] : b.service;
+                const pet = Array.isArray(b.pet_profile) ? b.pet_profile[0] : b.pet_profile;
+
+                return {
+                    id:              b.appointment_code || b.id,
+                    _supabaseId:     b.id,
+                    userId:          userId,
+                    date:            b.appointment_date,
+                    time:            b.appointment_time?.slice(0, 5) || '',
+                    timeStart:       b.appointment_time?.slice(0, 5) || '',
+                    status:          mapAppointmentStatus(b.appointment_status),
+                    bookingStatus:   b.appointment_status,
+                    paymentStatus:   b.payment_status,
+                    service:         srv?.service_name      || '',
+                    serviceName:     srv?.service_name      || '',
+                    serviceCategory: srv?.service_category  || '',
+                    petId:           pet?.pet_code      || pet?.id || '',
+                    petName:         pet?.pet_name      || '',
+                    petBreed:        pet?.breed         || '',
+                    changeCount:     b.change_count     || 0,
+                    note:            b.note             || '',
+                    price:           b.total_price      || getPriceFromMatrix(srv?.service_price_matrix, pet?.species) || 0,
+                    _source:         'supabase'
+                };
+            });
+        } catch (err) {
+            console.error('[API] Supabase getUserBookings failed:', err);
+            return [];
         }
-
-        // Offline path — không gọi lại initData()
-        const localBookings = safeReadArray('pawpal_bookings');
-        console.log('[DEBUG] localBookings returned from API:', localBookings.map(b => ({ id: b.id, name: b.serviceName, price: b.price })));
-        return localBookings.filter(matchBooking);
     },
 
     async getUserOrders(userId) {
-        const orders = await this.request(`/api/orders`);
-        const currentUser = safeReadObject('pawpal_current_user');
-        const dbUsers = safeReadArray('pawpal_users_db');
-        const matchingUsers = dbUsers.filter(u =>
-            sameUserId(u.id, userId) ||
-            (currentUser && sameUserId(u.phone, currentUser.phone))
-        );
+        const db = window.SupabaseClient;
+        if (!db || !userId) return [];
+        try {
+            const { data, error } = await db
+                .from('sales_order')
+                .select(`
+                    id, order_code, order_status, payment_status,
+                    subtotal, shipping_fee, discount_amount, total_amount,
+                    created_at, updated_at, note,
+                    sales_order_detail (
+                        id, quantity, unit_price, discount_amount, subtotal,
+                        product ( id, product_name, image_urls, sku )
+                    ),
+                    customer_address ( receiver_name, receiver_phone, province, street_address )
+                `)
+                .eq('customer_id', userId)
+                .order('created_at', { ascending: false });
 
-        // Tập hợp tất cả id có thể của user hiện tại để match rộng nhất
-        const knownIds = new Set(
-            [userId, currentUser?.id, ...matchingUsers.map(u => u.id)]
-                .filter(Boolean)
-                .map(String)
-        );
-        const currentPhone = currentUser?.phone ? String(currentUser.phone) : null;
+            if (error) { 
+                console.error('[API] Supabase getUserOrders error:', error.message); 
+                return []; 
+            }
 
-        const matchOrder = (order) => {
-            // Match theo userId (bất kỳ variant nào)
-            const orderUserId = order.userId?._id || order.userId;
-            if (orderUserId && knownIds.has(String(orderUserId))) return true;
-            if (order.userLegacyId && knownIds.has(String(order.userLegacyId))) return true;
+            const normalizeImageUrl = (url) => {
+                if (!url) return '';
+                if (!url.startsWith('http') && !url.startsWith('/')) return '/' + url;
+                return url;
+            };
 
-            // Match theo phone (ưu tiên nhất vì orders.js lưu userPhone)
-            if (!currentPhone) return false;
-            if (order.userPhone && String(order.userPhone) === currentPhone) return true;
-            if (order.delivery?.phone && String(order.delivery.phone) === currentPhone) return true;
-            if (order.shipping?.phone && String(order.shipping.phone) === currentPhone) return true;
+            const mapOrderStatus = (status) => {
+                return {
+                    'PENDING':   'placed',
+                    'CONFIRMED': 'preparing',
+                    'PACKING':   'preparing',
+                    'PREPARING': 'preparing',
+                    'SHIPPING':  'shipping',
+                    'SHIPPED':   'shipping',
+                    'DELIVERED': 'delivered',
+                    'COMPLETED': 'completed',
+                    'CANCELLED': 'cancelled',
+                    'RETURNED':  'cancelled',
+                }[status] || 'placed';
+            };
 
-            return false;
-        };
-
-        if (Array.isArray(orders)) {
-            return orders.filter(matchOrder);
+            const orders = (data || []).map(o => {
+                const details = o.sales_order_detail || [];
+                const products = details.map(d => ({
+                    id:       d.product?.id || '',
+                    name:     d.product?.product_name || 'Sản phẩm',
+                    sku:      d.product?.sku || '',
+                    image:    normalizeImageUrl(d.product?.image_urls?.[0]),
+                    quantity: d.quantity,
+                    price:    d.unit_price,
+                    total:    d.subtotal,
+                }));
+                const addr = o.customer_address;
+                return {
+                    id:          o.order_code || o.id,
+                    _supabaseId: o.id,
+                    userId:      userId,
+                    status:      mapOrderStatus(o.order_status),
+                    orderStatus: o.order_status,
+                    paymentStatus: (o.payment_status || '').toLowerCase(),
+                    paymentMethod: 'cod',
+                    products,
+                    pricing: {
+                        subtotal:    o.subtotal,
+                        shippingFee: o.shipping_fee,
+                        discount:    o.discount_amount,
+                        total:       o.total_amount,
+                    },
+                    shipping: addr ? {
+                        name:    addr.receiver_name  || '',
+                        phone:   addr.receiver_phone || '',
+                        address: [addr.street_address, addr.province].filter(Boolean).join(', '),
+                    } : {},
+                    note:      o.note || '',
+                    createdAt: o.created_at,
+                    updatedAt: o.updated_at,
+                    _source:   'supabase',
+                };
+            });
+            return orders;
+        } catch (err) {
+            console.error('[API] Supabase getUserOrders failed:', err);
+            return [];
         }
-
-        // Offline path — không gọi lại initData(), dùng localStorage trực tiếp
-        const localOrders = safeReadArray('pawpal_orders');
-        return localOrders.filter(matchOrder);
     },
 
     async getCareLogs() {
@@ -212,44 +253,57 @@ export const API = {
     },
 
     async getUserCart(userId) {
-        if (!userId) return safeReadArray('pawpal_cart');
-
         const db = window.SupabaseClient;
-        if (!db) return safeReadArray('pawpal_cart');
+        if (!db) return [];
 
         try {
             const resolveCustomerId = async () => {
-                const isUuidLike = typeof userId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
-                if (isUuidLike) return userId;
+                if (userId) {
+                    const isUuidLike = typeof userId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+                    if (isUuidLike) return userId;
 
-                const currentUser = safeReadObject('pawpal_current_user') || {};
-                const phone = currentUser.phone || currentUser.phone_main || (typeof userId === 'string' && /^0\d{9}$/.test(userId) ? userId : null);
-                const email = currentUser.email || (typeof userId === 'string' && userId.includes('@') ? userId : null);
+                    const currentUser = safeReadObject('pawpal_current_user') || {};
+                    const phone = currentUser.phone || currentUser.phone_main || (typeof userId === 'string' && /^0\d{9}$/.test(userId) ? userId : null);
+                    const email = currentUser.email || (typeof userId === 'string' && userId.includes('@') ? userId : null);
 
-                let query = db.from('customer').select('id').limit(1);
-                if (phone) query = query.eq('phone_main', phone);
-                else if (email) query = query.eq('email', email);
-                else return null;
+                    let query = db.from('customer').select('id').limit(1);
+                    if (phone) query = query.eq('phone_main', phone);
+                    else if (email) query = query.eq('email', email);
+                    else return null;
 
-                const { data, error } = await query;
-                if (error || !data?.length) return null;
-                return data[0].id;
+                    const { data, error } = await query;
+                    if (error || !data?.length) return null;
+                    return data[0].id;
+                } else {
+                    let guestId = localStorage.getItem('pawpal_guest_customer_id');
+                    if (guestId) return guestId;
+
+                    // Try creating an anonymous customer
+                    const { data: newCust, error } = await db.from('customer').insert({
+                        account_status: 'GUEST',
+                        registered_at: new Date().toISOString()
+                    }).select('id').single();
+                    
+                    if (!error && newCust) {
+                        localStorage.setItem('pawpal_guest_customer_id', newCust.id);
+                        return newCust.id;
+                    }
+                    return null;
+                }
             };
 
             const customerId = await resolveCustomerId();
-            if (!customerId) return safeReadArray('pawpal_cart');
+            if (!customerId) return [];
 
             const { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', customerId).single();
             if (cartError && cartError.code !== 'PGRST116') {
                 console.error('Error fetching cart:', cartError);
-                return safeReadArray('pawpal_cart');
+                return [];
             }
 
             if (cartData) {
                 const { data: items, error: itemsError } = await db.from('cart_item').select('product_id, quantity').eq('cart_id', cartData.id);
                 if (!itemsError && items) {
-                    // Translate UUID back to product_code if needed, but products are loaded with UUID as .id now!
-                    // Wait, frontend uses UUID for product_id now.
                     return items.map(item => ({ id: item.product_id, qty: item.quantity }));
                 }
             }
@@ -257,41 +311,51 @@ export const API = {
             console.error('Error getUserCart:', err);
         }
         
-        return safeReadArray('pawpal_cart');
+        return [];
     },
 
     async saveUserCart(userId, items) {
         const itemArray = Array.isArray(items) ? items : [];
-        localStorage.setItem('pawpal_cart', JSON.stringify(itemArray));
-
-        if (!userId) {
-            return { success: true, data: itemArray };
-        }
-
         const db = window.SupabaseClient;
         if (!db) return { success: false, error: 'No Supabase client' };
 
         try {
             const resolveCustomerId = async () => {
-                const isUuidLike = typeof userId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
-                if (isUuidLike) return userId;
+                if (userId) {
+                    const isUuidLike = typeof userId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+                    if (isUuidLike) return userId;
 
-                const currentUser = safeReadObject('pawpal_current_user') || {};
-                const phone = currentUser.phone || currentUser.phone_main || (typeof userId === 'string' && /^0\d{9}$/.test(userId) ? userId : null);
-                const email = currentUser.email || (typeof userId === 'string' && userId.includes('@') ? userId : null);
+                    const currentUser = safeReadObject('pawpal_current_user') || {};
+                    const phone = currentUser.phone || currentUser.phone_main || (typeof userId === 'string' && /^0\d{9}$/.test(userId) ? userId : null);
+                    const email = currentUser.email || (typeof userId === 'string' && userId.includes('@') ? userId : null);
 
-                let query = db.from('customer').select('id').limit(1);
-                if (phone) query = query.eq('phone_main', phone);
-                else if (email) query = query.eq('email', email);
-                else return null;
+                    let query = db.from('customer').select('id').limit(1);
+                    if (phone) query = query.eq('phone_main', phone);
+                    else if (email) query = query.eq('email', email);
+                    else return null;
 
-                const { data, error } = await query;
-                if (error || !data?.length) return null;
-                return data[0].id;
+                    const { data, error } = await query;
+                    if (error || !data?.length) return null;
+                    return data[0].id;
+                } else {
+                    let guestId = localStorage.getItem('pawpal_guest_customer_id');
+                    if (guestId) return guestId;
+
+                    const { data: newCust, error } = await db.from('customer').insert({
+                        account_status: 'GUEST',
+                        registered_at: new Date().toISOString()
+                    }).select('id').single();
+                    
+                    if (!error && newCust) {
+                        localStorage.setItem('pawpal_guest_customer_id', newCust.id);
+                        return newCust.id;
+                    }
+                    return null;
+                }
             };
 
             const customerId = await resolveCustomerId();
-            if (!customerId) return { success: true, data: itemArray };
+            if (!customerId) return { success: false, error: 'Could not resolve customer ID' };
 
             // 1. Get or create cart for user
             let { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', customerId).single();
@@ -311,7 +375,7 @@ export const API = {
                     cart_id: cartData.id,
                     product_id: item.id,
                     quantity: item.qty || 1,
-                    unit_price: 0, // Simplified for now, backend could recalc
+                    unit_price: 0,
                     subtotal: 0
                 }));
                 const { error: itemsError } = await db.from('cart_item').insert(insertItems);

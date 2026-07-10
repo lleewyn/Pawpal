@@ -123,7 +123,7 @@ async function _syncUserPets(db, currentUser) {
         _source: 'supabase',
     }));
 
-    const localPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+    const localPets = JSON.parse('[]' || '[]');
     const signatureOf = (pet) => {
         return [
             String(pet?.name || '').trim().toLowerCase(),
@@ -149,7 +149,7 @@ async function _syncUserPets(db, currentUser) {
     });
 
     const mergedPets = [...pets, ...otherPets];
-    localStorage.setItem('pawpal_pets', JSON.stringify(mergedPets));
+    /* localStorage.setItem pawpal_pets removed */
     localStorage.setItem('pawpal_pets_supabase_synced', String(currentUser.phone));
     console.log('[Dashboard] Pets synced:', pets.length, 'pets');
 }
@@ -188,9 +188,9 @@ async function _syncUserBookings(db, currentUser) {
         _source:         'supabase',
     }));
 
-    const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+    const localBookings = JSON.parse('[]' || '[]');
     const otherBookings = localBookings.filter(b => String(b.userId) !== String(currentUser.id));
-    localStorage.setItem('pawpal_bookings', JSON.stringify([...bookings, ...otherBookings]));
+    /* localStorage.setItem removed */
     console.log('[Dashboard] Bookings synced:', bookings.length, 'bookings');
 }
 

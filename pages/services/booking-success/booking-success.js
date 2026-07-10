@@ -7,32 +7,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
     const isLoggedMember = Boolean(currentUser && !currentUser.is_temporary);
 
-    const booking = await resolveBookingByCode(bookingCode);
-    const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-    const currentBooking = booking || localBookings.find(b => String(b.id) === String(bookingCode));
-
-    const users = JSON.parse(localStorage.getItem('pawpal_users_db') || '[]');
-    let targetUser = null;
+    const currentBooking = await resolveBookingByCode(bookingCode);
     let targetPhone = '';
 
     if (!isLoggedMember) {
         if (currentBooking && currentBooking.customer && currentBooking.customer.phone_main) {
             targetPhone = currentBooking.customer.phone_main;
-        } else if (currentBooking && currentBooking.ownerPhone) {
-            targetPhone = currentBooking.ownerPhone;
+        } else if (currentUser && currentUser.phone) {
+            targetPhone = currentUser.phone;
         }
-        
-        if (currentBooking && currentBooking.customer_id) {
-            targetUser = users.find(u => String(u.id) === String(currentBooking.customer_id) && u.is_temporary) || null;
-        } else if (currentBooking && currentBooking.userId) {
-            targetUser = users.find(u => String(u.id) === String(currentBooking.userId) && u.is_temporary) || null;
-        } else if (currentUser && currentUser.is_temporary) {
-            targetUser = currentUser;
-        } else if (currentBooking) {
-            targetUser = users.find(u => u.phone === currentBooking.ownerPhone && u.is_temporary) || null;
-        }
-        
-        if (!targetPhone && targetUser) targetPhone = targetUser.phone;
     }
 
     if (!isLoggedMember) {
@@ -86,7 +69,8 @@ async function resolveBookingByCode(bookingCode) {
             .from('appointment')
             .select(`
                 id, appointment_code, customer_id, appointment_date, appointment_time,
-                appointment_status, payment_status, note
+                appointment_status, payment_status, note,
+                customer ( phone_main )
             `)
             .eq('appointment_code', bookingCode)
             .limit(1);

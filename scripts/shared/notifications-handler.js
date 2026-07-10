@@ -40,7 +40,7 @@
 
     function getPetName() {
         try {
-            const pets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+            const pets = JSON.parse('[]' || '[]');
             if (Array.isArray(pets) && pets.length > 0) {
                 return pets[0].name;
             }
