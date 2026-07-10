@@ -176,12 +176,12 @@ const dbTools = {
             });
             
             if (error || !data || data.length === 0) {
-                return { context: "PawPal cung cấp dịch vụ Spa, Grooming, Pet Hotel, Pet Taxi (đưa đón tận nhà), và cửa hàng Bán lẻ đồ dùng thú cưng. Mở cửa 8h-20h. Vui lòng liên hệ hotline để biết chi tiết." };
+                return { context: "PawPal cung cấp dịch vụ chăm sóc cho chó, mèo, THỎ, và các thú cưng nhỏ khác. Các dịch vụ bao gồm: Spa, Grooming, Pet Hotel, Pet Taxi (đưa đón tận nhà), và cửa hàng Bán lẻ đồ dùng. Mở cửa 8h-20h. Vui lòng liên hệ hotline để biết chi tiết." };
             }
             return { context: data.map(d => d.content).join("\n") };
         } catch (e) {
             console.error("RAG Error:", e);
-            return { context: "PawPal cung cấp dịch vụ Spa, Grooming, Pet Hotel, Pet Taxi (đưa đón tận nhà), và cửa hàng Bán lẻ đồ dùng thú cưng. Mở cửa 8h-20h. Vui lòng liên hệ hotline để biết chi tiết." };
+            return { context: "PawPal cung cấp dịch vụ chăm sóc cho chó, mèo, THỎ, và các thú cưng nhỏ khác. Các dịch vụ bao gồm: Spa, Grooming, Pet Hotel, Pet Taxi (đưa đón tận nhà), và cửa hàng Bán lẻ đồ dùng. Mở cửa 8h-20h. Vui lòng liên hệ hotline để biết chi tiết." };
         }
     }
 };
@@ -235,6 +235,7 @@ module.exports = async function handler(req, res) {
         let systemInstruction = "Bạn là Trợ lý AI siêu cấp đáng yêu của cửa hàng chăm sóc thú cưng PawPal. Xưng hô với khách hàng là 'sen' (hoặc 'sen' kèm tên nếu khách xưng tên), xưng mình là 'PawPal', gọi thú cưng là 'bé cưng' hoặc 'boss'. Hãy tư vấn thật nhiệt tình, thân thiện, dễ thương và đáng yêu bằng tiếng Việt. KHÔNG SỬ DỤNG EMOJI. Chỉ dùng định dạng in đậm (**text**) để làm nổi bật các thông tin quan trọng.\n";
         
         systemInstruction += "QUY TẮC QUAN TRỌNG NHẤT (GUARDRAILS):\n";
+        systemInstruction += "- ĐỐI TƯỢNG PHỤC VỤ: PawPal nhận chăm sóc tất cả thú cưng bao gồm Chó, Mèo, Thỏ, Hamster, v.v. Không bao giờ nói PawPal chỉ nhận chó mèo.\n";
         systemInstruction += "- ĐỊNH DẠNG ĐẸP MẮT: Khi liệt kê đơn hàng, lịch hẹn, hoặc thú cưng, TUYỆT ĐỐI KHÔNG DÙNG EMOJI. Hãy viết đậm (**text**) các thông tin quan trọng như Tên dịch vụ, Mã, Trạng thái, Tổng tiền để dễ đọc.\n";
         systemInstruction += "- KHÔNG ẢO GIÁC: Chỉ trả lời dựa trên dữ liệu thật do Tools trả về. Nếu Tool báo lỗi hoặc trống, phải nói thật là không tìm thấy, tuyệt đối không bịa dữ liệu.\n";
         systemInstruction += "- NGOÀI PHẠM VI (OUT-OF-SCOPE): Nếu khách hỏi vấn đề không liên quan đến thú cưng hoặc PawPal, hãy từ chối lịch sự.\n\n";
