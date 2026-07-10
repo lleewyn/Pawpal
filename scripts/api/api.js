@@ -245,6 +245,61 @@ export const API = {
         }
     },
 
+    async getUserReviews(userId) {
+        const db = window.SupabaseClient;
+        if (!db || !userId) return [];
+        try {
+            const { data, error } = await db.from('review').select('*').eq('customer_id', userId);
+            if (error) { 
+                console.error('[API] Supabase getUserReviews error:', error.message); 
+                return []; 
+            }
+            return data || [];
+        } catch (err) {
+            console.error('[API] Supabase getUserReviews failed:', err);
+            return [];
+        }
+    },
+
+    async getUserVouchers(userId) {
+        const db = window.SupabaseClient;
+        if (!db || !userId) return [];
+        try {
+            const { data, error } = await db.from('customer_voucher')
+                .select(`
+                    id, 
+                    is_used, 
+                    used_at,
+                    voucher ( id, code, discount_amount, discount_type, min_order_amount, valid_from, valid_to, description )
+                `)
+                .eq('customer_id', userId);
+            if (error) { 
+                console.error('[API] Supabase getUserVouchers error:', error.message); 
+                return []; 
+            }
+            
+            return (data || []).map(row => {
+                const v = row.voucher || {};
+                return {
+                    id: row.id,
+                    voucherId: v.id,
+                    code: v.code,
+                    discountAmount: v.discount_amount,
+                    discountType: v.discount_type,
+                    minOrderAmount: v.min_order_amount,
+                    validFrom: v.valid_from,
+                    validTo: v.valid_to,
+                    description: v.description,
+                    isUsed: row.is_used,
+                    usedAt: row.used_at
+                };
+            });
+        } catch (err) {
+            console.error('[API] Supabase getUserVouchers failed:', err);
+            return [];
+        }
+    },
+
     async getCareLogs() {
         const careLogs = await this.request('/api/care-logs');
         if (careLogs && typeof careLogs === 'object') return careLogs;

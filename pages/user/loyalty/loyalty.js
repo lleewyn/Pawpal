@@ -479,38 +479,8 @@ async function renderMyVouchers(user) {
     if (!container) return;
 
     let myVouchers = [];
-    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-
-    if (db && user.id) {
-        try {
-            const { data, error } = await db
-                .from('customer_voucher')
-                .select(`
-                    id, acquired_at, voucher_status,
-                    voucher ( voucher_code, voucher_name, required_points, end_date )
-                `)
-                .eq('customer_id', user.id)
-                .order('acquired_at', { ascending: false });
-
-            if (!error && data) {
-                myVouchers = data.map(cv => ({
-                    code: cv.voucher?.voucher_code || 'VOUCHER',
-                    name: cv.voucher?.voucher_name || 'Voucher ưu đãi',
-                    pointsCost: cv.voucher?.required_points || 0,
-                    createdAt: cv.acquired_at,
-                    validUntil: cv.voucher?.end_date,
-                    status: cv.voucher_status || 'AVAILABLE'
-                }));
-            }
-        } catch (err) {
-            console.warn('[Loyalty] get my_vouchers error:', err);
-        }
-    }
-
-    // Fallback to local
-    if (!myVouchers.length) {
-        myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]')
-            .filter(v => v.ownerPhone === user.phone);
+    if (window.API && typeof window.API.getUserVouchers === 'function' && user.id) {
+        myVouchers = await window.API.getUserVouchers(user.id);
     }
 
     if (!myVouchers.length) {
@@ -736,39 +706,14 @@ function triggerRedeem(voucherId, user, sliderContainer) {
 }
 
 async function doRedeem(voucherInfo, user, sliderContainer, resetUI) {
-    // Trừ điểm trong Database
-    const users = JSON.parse('[]' || '[]');
-    const userIdx = users.findIndex(u => u.phone === user.phone);
-    
-    if (userIdx !== -1) {
-        if (users[userIdx].points >= voucherInfo.pointsCost) {
-            users[userIdx].points -= voucherInfo.pointsCost;
-            /* localStorage.setItem pawpal_users_db removed */
-            
-            // Cập nhật session user
-            user.points = users[userIdx].points;
-            localStorage.setItem('pawpal_current_user', JSON.stringify(user));
+    if (user.points >= voucherInfo.pointsCost) {
+        user.points -= voucherInfo.pointsCost;
+        
+        // Cập nhật session user
+        localStorage.setItem('pawpal_current_user', JSON.stringify(user));
 
-            // Sinh mã voucher đưa vào "Voucher của tôi" (Dự phòng ở localStorage)
-            const voucherCode = voucherInfo.code || ('PAWPAL-' + Math.random().toString(36).substring(2, 8).toUpperCase());
-            const myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]');
-            const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-            myVouchers.push({
-                ownerPhone: user.phone,
-                code: voucherCode,
-                name: voucherInfo.name,
-                pointsCost: voucherInfo.pointsCost,
-                type: voucherInfo.type,
-                value: voucherInfo.value,
-                minOrderValue: voucherInfo.minOrderValue,
-                maxDiscount: voucherInfo.maxDiscount,
-                applicableFor: voucherInfo.applicableFor,
-                validUntil: expiryDate,
-                createdAt: new Date().toISOString(),
-                source: 'loyalty'
-            });
-            localStorage.setItem('pawpal_my_vouchers', JSON.stringify(myVouchers));
-            localStorage.setItem('pawpal_applied_voucher_code', voucherCode);
+        const voucherCode = voucherInfo.code || ('PAWPAL-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+        localStorage.setItem('pawpal_applied_voucher_code', voucherCode);
 
             // Hiển thị giao diện thành công (button or footer)
             try {
@@ -799,11 +744,10 @@ async function doRedeem(voucherInfo, user, sliderContainer, resetUI) {
             setTimeout(() => {
                 location.reload();
             }, 1500);
-        } else {
-            // Không đủ điểm — thông báo rõ ràng
-            resetUI();
-            showToast('error', `Số điểm hiện tại chưa đủ để đổi ưu đãi này. Cần ${voucherInfo.pointsCost} điểm, bạn đang có ${users[userIdx].points} điểm.`);
-        }
+    } else {
+        // Không đủ điểm — thông báo rõ ràng
+        resetUI();
+        showToast('error', `Số điểm hiện tại chưa đủ để đổi ưu đãi này. Cần ${voucherInfo.pointsCost} điểm, bạn đang có ${user.points} điểm.`);
     }
 }
 

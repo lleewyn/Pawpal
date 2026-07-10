@@ -521,13 +521,13 @@ window.editPet = function(id) {
     openPetFormModal(id);
 };
 
-function loadUpcomingBookings() {
+async function loadUpcomingBookings() {
     const listEl = document.getElementById('pet-reminders-list');
     if (!listEl) return;
     
     try {
-        const bookings = JSON.parse('[]' || '[]');
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || '{}');
+        const bookings = currentUser?.id ? await API.getUserBookings(currentUser.id) : [];
         
         // Lọc các booking của user hiện tại, trạng thái 'pending' hoặc 'confirmed', và thời gian >= hiện tại (cho chênh lệch 1 ngày)
         const now = new Date();

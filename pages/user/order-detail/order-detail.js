@@ -190,6 +190,10 @@ async function loadOrderDetail() {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (window.SupabaseClient && currentUser) {
             await syncSingleOrderFromSupabase(orderId, currentUser);
+            // Fetch all reviews for this user to check batch review status
+            if (!window.pawpalReviews) {
+                window.pawpalReviews = await API.getUserReviews(currentUser.id);
+            }
         }
 
         // First try localStorage cache (orders created by the app)

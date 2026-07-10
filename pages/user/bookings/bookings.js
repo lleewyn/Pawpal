@@ -12,8 +12,7 @@ async function cancelOnSupabase(bookingId) {
     const db = window.SupabaseClient;
     if (!db) return;
     try {
-        const local = JSON.parse('[]' || '[]');
-        const booking = local.find(b => String(b.id) === String(bookingId) || String(b._id) === String(bookingId));
+        const booking = allBookings.find(b => String(b.id) === String(bookingId) || String(b._id) === String(bookingId));
         const supabaseId = booking?._supabaseId;
         if (supabaseId) {
             await db.from('appointment').update({ appointment_status: 'CANCELLED' }).eq('id', supabaseId);
@@ -28,8 +27,7 @@ async function rescheduleOnSupabase(bookingId, date, time) {
     const db = window.SupabaseClient;
     if (!db) return;
     try {
-        const local = JSON.parse('[]' || '[]');
-        const booking = local.find(b => String(b.id) === String(bookingId) || String(b._id) === String(bookingId));
+        const booking = allBookings.find(b => String(b.id) === String(bookingId) || String(b._id) === String(bookingId));
         const supabaseId = booking?._supabaseId;
         if (supabaseId) {
             await db.from('appointment').update({

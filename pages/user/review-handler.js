@@ -56,6 +56,9 @@
 
     /** Check toàn bộ đơn đã được submit batch chưa */
     function hasOrderReviewed(orderId) {
+        if (window.pawpalReviews) {
+            return window.pawpalReviews.some(r => String(r.sales_order_id) === String(orderId) || String(r.order_id) === String(orderId) || String(r.sales_order_code) === String(orderId));
+        }
         try {
             const list = JSON.parse(localStorage.getItem(ORDER_REVIEWED_KEY) || '[]');
             return list.includes(String(orderId));
