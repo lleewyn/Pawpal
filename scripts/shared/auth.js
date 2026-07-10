@@ -306,7 +306,6 @@ function initAdminQuickAddCustomer() {
 
 // --- 5. SHARED INIT (dùng cho mọi trang, không phải login) ---
 function initAuthShared() {
-    initMockDatabase();
     enforceTemporaryAccountLock();
     initAdminQuickAddCustomer();
 }

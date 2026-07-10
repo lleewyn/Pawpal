@@ -109,8 +109,6 @@ async function loadBookings(status) {
     try {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || { id: 'USER-001', phone: '0901234567' };
     
-    // (Sửa giá bị mất - đã loại bỏ)
-    // (Đồng bộ từ Supabase về LocalStorage - đã loại bỏ)
 
         await API.initData();
         allBookings = currentUser ? await API.getUserBookings(currentUser.id) : [];
@@ -150,7 +148,6 @@ function renderBookings(status) {
 
     let filteredBookings = [...allBookings];
     
-    // Loại bỏ các lịch hẹn trùng lặp (lỗi do bấm Xác nhận nhiều lần lúc trước)
     // Ưu tiên giữ lại lịch hẹn có nguồn từ Supabase hoặc có giá tiền hợp lệ
     const uniqueMap = new Map();
     for (const b of filteredBookings) {

@@ -1882,6 +1882,29 @@ function initFab() {
         setTimeout(() => scrollToBottom(), 100);
     }
 
+    const clearBtn = document.getElementById('fabChatClear');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử trò chuyện này?')) {
+                conversationHistory = [];
+                localStorage.removeItem(CHAT_HISTORY_KEY);
+                if (messages) {
+                    messages.innerHTML = `
+                        <div class="fab-chat-bubble fab-chat-bubble--bot">
+                            Xin chào! Tôi là trợ lý AI của PawPal <br>
+                            Bạn cần tư vấn về dịch vụ nào?
+                        </div>
+                        <div class="fab-chat-suggestions">
+                            <button class="fab-chat-suggest" onclick="pawpalAIAsk(this)">Dịch vụ Spa và Grooming</button>
+                            <button class="fab-chat-suggest" onclick="pawpalAIAsk(this)">Pet Hotel giá bao nhiêu?</button>
+                            <button class="fab-chat-suggest" onclick="pawpalAIAsk(this)">Cần chuẩn bị gì khi gửi bé?</button>
+                        </div>
+                    `;
+                }
+            }
+        });
+    }
+
     // Send message
     async function sendMessage() {
         if (!input || !input.value.trim()) return;
@@ -1968,6 +1991,10 @@ function initFab() {
                                 saveChatHistory();
                             }
                             break;
+                        }
+
+                        if (parsed.error) {
+                            console.error("[PawPal AI Error]", parsed.error);
                         }
                         
                         if (parsed.reply) {

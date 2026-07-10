@@ -243,25 +243,35 @@ module.exports = async function handler(req, res) {
         
         const { genAI, keyPrefix } = genAIResult;
         
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-3.5-flash",
-            systemInstruction: systemInstruction,
-            tools: toolsDeclaration
-        });
-
         // Gemini SDK requires history in a specific format
         const history = messages.slice(0, -1).map(m => ({
             role: m.role, // 'user' or 'model'
             parts: [{ text: m.content }]
         }));
 
-        const chat = model.startChat({
-            history: history
-        });
-
-        // 2. Bắt đầu Stream request
         const userMsg = messages[messages.length - 1].content;
-        const streamResult = await chat.sendMessageStream(userMsg);
+        let streamResult;
+        let chat;
+
+        try {
+            const model = genAI.getGenerativeModel({ 
+                model: "gemini-3.5-flash",
+                systemInstruction: systemInstruction,
+                tools: toolsDeclaration
+            });
+            chat = model.startChat({ history: history });
+            // 2. Bắt đầu Stream request
+            streamResult = await chat.sendMessageStream(userMsg);
+        } catch (err1) {
+            console.warn("[API] gemini-3.5-flash failed (" + err1.message + "), falling back to gemini-2.5-flash");
+            const fallbackModel = genAI.getGenerativeModel({ 
+                model: "gemini-2.5-flash",
+                systemInstruction: systemInstruction,
+                tools: toolsDeclaration
+            });
+            chat = fallbackModel.startChat({ history: history });
+            streamResult = await chat.sendMessageStream(userMsg);
+        }
         
         // Chuẩn bị header cho SSE streaming
         res.setHeader('Content-Type', 'text/event-stream');
@@ -332,9 +342,9 @@ module.exports = async function handler(req, res) {
         
         // Xử lý lỗi rate limit của Gemini API (429 / RESOURCE_EXHAUSTED)
         if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('retryDelay') || msg.includes('quota')) {
-            res.write(`data: ${JSON.stringify({ reply: 'PawPal AI đang bận xử lý nhiều yêu cầu cùng lúc. Bạn vui lòng thử lại sau vài giây nhé! 🐾' })}\n\n`);
+            res.write(`data: ${JSON.stringify({ error: msg, reply: 'PawPal AI đang bận xử lý nhiều yêu cầu cùng lúc. Bạn vui lòng thử lại sau vài giây nhé! 🐾' })}\n\n`);
         } else {
-            res.write(`data: ${JSON.stringify({ reply: 'Xin lỗi, hệ thống PawPal AI đang gặp sự cố. Quý khách vui lòng thử lại sau.' })}\n\n`);
+            res.write(`data: ${JSON.stringify({ error: msg, reply: 'Xin lỗi, hệ thống PawPal AI đang gặp sự cố. Quý khách vui lòng thử lại sau.' })}\n\n`);
         }
         res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
         res.end();
