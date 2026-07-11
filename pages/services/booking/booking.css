@@ -7,20 +7,6 @@
     margin: 0 auto;
 }
 
-.booking-summary-col .summary-card {
-    position: sticky;
-    top: 96px; 
-    max-height: calc(100vh - 120px);
-    overflow: auto;
-}
-
-@media (max-width: 991px) {
-    .booking-summary-col .summary-card {
-        position: static;
-        max-height: none;
-        overflow: visible;
-    }
-}
 .booking-stepper {
     display: flex;
     align-items: center;
@@ -832,7 +818,11 @@
     color: #ffffff;
 }
 
-.booking-summary-col { position: sticky; top: 100px; }
+.booking-summary-col { 
+    position: sticky; 
+    top: 100px; 
+    align-self: flex-start;
+}
 
 .summary-card {
     background: rgba(255, 255, 255, 0.85);
