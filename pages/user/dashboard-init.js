@@ -1,6 +1,4 @@
 
-
-
 (function () {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
     if (!currentUser) {

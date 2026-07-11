@@ -1,8 +1,3 @@
-// ==========================================================================
-// services.js — Public Services Page Script (Section 3.1.4)
-// ==========================================================================
-
-
 
 let allServices = [];
 let filteredServices = [];
@@ -219,13 +214,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     initServicesFilterControls();
     initServicesAccordions();
 
-    // Load services from CSV using DataLoader
     try {
         if (window.DataLoader && typeof window.DataLoader.loadServices === 'function') {
             allServices = await window.DataLoader.loadServices();
             console.log(` Loaded ${allServices.length} services`);
 
-            // Apply URL filter if present
             const urlParams = new URLSearchParams(window.location.search);
             const categoryParam = urlParams.get('category');
             if (categoryParam) {
@@ -233,7 +226,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (catRadio) catRadio.checked = true;
             }
 
-            // Apply initial filters and render
             applyFilters();
             updateServicesFilterCount();
         } else {
@@ -246,7 +238,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Show error message if loading fails
 function showErrorMessage() {
     const grid = document.getElementById('servicesGrid');
     if (grid) {
@@ -259,7 +250,6 @@ function showErrorMessage() {
     }
 }
 
-// 1. Filter Logic
 window.applyFilters = function () {
     const searchVal = document.getElementById('searchServiceInput')?.value.trim().toLowerCase() || '';
     const categoryFilter = document.querySelector('input[name="categoryFilter"]:checked')?.value || 'all';
@@ -269,7 +259,6 @@ window.applyFilters = function () {
     const selectedRatings = [...document.querySelectorAll('.rating-star-check:checked')].map(c => parseInt(c.value));
 
     filteredServices = allServices.filter(service => {
-        // 0. Search text filter
         let matchesSearch = true;
         if (searchVal) {
             const nameMatch = service.name.toLowerCase().includes(searchVal);
@@ -277,10 +266,8 @@ window.applyFilters = function () {
             matchesSearch = nameMatch || descMatch;
         }
 
-        // 1. Category filter
         const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter;
 
-        // 1.5. Pet type filter
         let matchesPet = true;
         if (petFilter !== 'all') {
             const petType = service.petType.toLowerCase();
@@ -295,7 +282,6 @@ window.applyFilters = function () {
             }
         }
 
-        // 2. Price bucket filter
         let matchesPrice = true;
         if (priceBucketFilter === 'under-150') {
             matchesPrice = service.price < 150000;
@@ -305,7 +291,6 @@ window.applyFilters = function () {
             matchesPrice = service.price > 300000;
         }
 
-        // 3. Rating filter (multi-select checkbox)
         let matchesRating = true;
         if (!ratingAllChecked && selectedRatings.length > 0) {
             matchesRating = selectedRatings.some(star => Math.floor(service.rating) === star);
@@ -314,7 +299,6 @@ window.applyFilters = function () {
         return matchesSearch && matchesCategory && matchesPet && matchesPrice && matchesRating;
     });
 
-    // Handle sorting before rendering
     const sortBy = document.querySelector('input[name="sortFilter"]:checked')?.value || 'default';
         if (sortBy === 'price-asc') {
         filteredServices.sort((a, b) => a.price - b.price);
@@ -333,7 +317,6 @@ window.applyFilters = function () {
     }
 };
 
-// 2. Render Services Dynamic Grid
 function renderServices() {
     const grid = document.getElementById('servicesGrid');
     if (!grid) return;
@@ -356,21 +339,17 @@ function renderServices() {
     const likedServiceIds = loadServiceWishlistIds();
 
     grid.innerHTML = paginatedServices.map(service => {
-        // Map category slug to display label (avoid ampersand)
         let displayCategory = 'Dịch vụ';
         if (service.category === 'spa') displayCategory = 'Spa và Làm đẹp';
         else if (service.category === 'hotel') displayCategory = 'Khách sạn thú cưng';
         else if (service.category === 'taxi') displayCategory = 'Taxi đưa đón';
 
-        // Format prices
         const formattedPrice = service.price.toLocaleString('vi-VN');
         const priceUnit = service.priceDisplay.includes('đêm') ? ' / đêm' : '';
 
-        // Member price (Silver 5% discount)
         const memberPrice = Math.round(service.price * 0.95);
         const formattedMemberPrice = memberPrice.toLocaleString('vi-VN');
 
-        // Safely replace ampersand in descriptions or benefits
         const sanitizedDesc = service.description.replace(/&/g, 'và');
         const sanitizedName = service.name.replace(/&/g, 'và');
 
@@ -430,7 +409,6 @@ function renderServices() {
         `;
     }).join('');
 
-    // Trigger GSAP fade-in for dynamic cards
     const cards = grid.querySelectorAll('.service-card');
     if (cards.length > 0 && typeof gsap !== 'undefined') {
         gsap.fromTo(cards,
@@ -452,7 +430,6 @@ function renderServices() {
     renderPagination();
 }
 
-// 2.5 Pagination
 function renderPagination() {
     const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
     const pageNumbers = document.getElementById('pageNumbers');
@@ -531,7 +508,6 @@ function createPageButton(page) {
     return btn;
 }
 
-// 3. Clear Filters
 window.clearFilters = function () {
     const searchInput = document.getElementById('searchServiceInput');
     if (searchInput) searchInput.value = '';
@@ -613,7 +589,6 @@ window.applyQuickServiceFocus = function (focusKey) {
     focusServicesResult();
 };
 
-// 4. Update Price Display Text
 window.updatePriceDisplay = function (val) {
     const display = document.getElementById('priceDisplay');
     if (display) {
@@ -621,12 +596,10 @@ window.updatePriceDisplay = function (val) {
     }
 };
 
-// 5. Rating checkbox handlers
 window.handleRatingAllChange = function (checkbox) {
     if (checkbox.checked) {
         document.querySelectorAll('.rating-star-check').forEach(c => c.checked = false);
     } else {
-        // Không cho bỏ chọn "Tất cả" khi không có sao nào được chọn
         checkbox.checked = true;
     }
     applyFilters();
@@ -639,7 +612,6 @@ window.handleRatingStarChange = function () {
     applyFilters();
 };
 
-// 6. Accordion Toggle Logic
 window.toggleAccordion = function (id) {
     const accordion = document.getElementById(id);
     if (!accordion) return;
