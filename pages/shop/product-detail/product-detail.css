@@ -1,14 +1,9 @@
-/* ==========================================================================
-   product-detail.css — Product Detail Page Styles (US 8-2)
-   ========================================================================== */
 
-/* ── Product Detail Page Container ─────────────────────────────────────── */
 .product-detail-page {
     background: #f4faf7;
     min-height: 100vh;
 }
 
-/* ── Breadcrumb ────────────────────────────────────────────────────────── */
 .breadcrumb-section {
     padding: var(--space-md) 0;
     background: #f4faf7;
@@ -43,7 +38,6 @@
     color: var(--color-text-light);
 }
 
-/* ── Product Detail Section ────────────────────────────────────────────── */
 .product-detail-section {
     padding: var(--space-lg) 0;
 }
@@ -54,7 +48,6 @@
     gap: var(--space-lg);
 }
 
-/* ── Product Images Column ─────────────────────────────────────────────── */
 .product-images-column {
     align-self: start;
 }
@@ -160,7 +153,6 @@
     object-fit: cover;
 }
 
-/* ── Product Info Column ───────────────────────────────────────────────── */
 .product-info-column {
     padding: 0;
 }
@@ -236,7 +228,6 @@
     stroke: currentColor;
 }
 
-/* ── Product Price Block ───────────────────────────────────────────────── */
 .product-price-block {
     margin-bottom: var(--space-lg);
     display: flex;
@@ -270,7 +261,6 @@
     margin: 0;
 }
 
-/* ── Product Description Short ─────────────────────────────────────────── */
 .product-description-short {
     font-size: var(--fs-body);
     color: var(--color-text-dark);
@@ -280,7 +270,6 @@
     border-bottom: 1px solid var(--color-border);
 }
 
-/* ── Product Actions ───────────────────────────────────────────────────── */
 .product-actions {
     display: flex;
     flex-direction: column;
@@ -351,7 +340,6 @@
     outline: none;
 }
 
-/* Remove default spin buttons for number input */
 .quantity-controls input::-webkit-outer-spin-button,
 .quantity-controls input::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -398,7 +386,6 @@
     stroke: currentColor;
 }
 
-/* Buy Now Button */
 .btn-buy-now {
     width: 100%;
     padding: 0 16px;
@@ -438,7 +425,6 @@
 }
 
 
-/* ── Product Meta ──────────────────────────────────────────────────────── */
 .product-meta {
     display: flex;
     flex-direction: column;
@@ -475,7 +461,6 @@
     stroke: currentColor;
 }
 
-/* ── Product Share ─────────────────────────────────────────────────────── */
 .product-share {
     display: flex;
     align-items: center;
@@ -547,7 +532,6 @@
     color: #ffffff;
 }
 
-/* ── Stock Countdown ───────────────────────────────────────────────────── */
 .stock-countdown {
     display: flex;
     align-items: center;
@@ -565,7 +549,6 @@
     font-weight: 700;
 }
 
-/* ── Image Zoom Overlay ────────────────────────────────────────────────── */
 .image-zoom-overlay {
     position: absolute;
     top: 0;
@@ -595,7 +578,7 @@
     opacity: 0;
 }
 
-/* ── Product Tabs Section ──────────────────────────────────────────────── */
+
 .product-tabs-section {
     padding: var(--space-lg) 0;
     background: #f4faf7;
@@ -665,7 +648,6 @@
     display: block;
 }
 
-/* ── Description Tab ───────────────────────────────────────────────────── */
 .desc-meta-row {
     border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
@@ -718,7 +700,7 @@
     font-size: 1.2em;
 }
 
-/* ── Specifications Table ──────────────────────────────────────────────── */
+
 .specifications-table {
     margin-top: var(--space-md);
 }
@@ -745,7 +727,7 @@
     color: var(--color-text-light);
 }
 
-/* ── Reviews Section ───────────────────────────────────────────────────── */
+
 .product-reviews-section {
     padding: var(--space-lg) 0;
     background: var(--color-bg-white);
@@ -761,9 +743,9 @@
     font-weight: 700;
 }
 
-/* Review styles removed and unified in styles/components/reviews.css */
 
-/* ── Related Products Section ──────────────────────────────────────────── */
+
+
 .related-products-section,
 .you-may-like-section,
 .recently-viewed-section {
@@ -799,7 +781,7 @@
     gap: var(--space-md);
 }
 
-/* Product Card */
+
 .product-card {
     background: var(--color-bg-white);
     border: 1px solid var(--color-border);
@@ -835,7 +817,7 @@
     
 }
 
-/* Product Card Badges */
+
 .product-badge-hot,
 .product-badge-new,
 .product-badge-best {
@@ -1029,7 +1011,7 @@
 }
 
 .product-card .product-buy-now:hover {
-    background: #d68b00; /* slightly darker accent */
+    background: #d68b00; 
 }
 
 .product-card .product-buy-now:disabled {
@@ -1037,7 +1019,7 @@
     cursor: not-allowed;
 }
 
-/* Responsive */
+
 @media (max-width: 1400px) {
 
     .related-products-grid,
@@ -1074,7 +1056,7 @@
     }
 }
 
-/* ── Responsive ────────────────────────────────────────────────────────── */
+
 @media (max-width: 1024px) {
     .product-detail-layout {
         grid-template-columns: 1fr;
@@ -1139,7 +1121,7 @@
     }
 }
 
-/* ── Accessibility ─────────────────────────────────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
 
     .product-wishlist-btn-large,
@@ -1150,9 +1132,9 @@
     }
 }
 
-/* Review enhancements removed and unified in styles/components/reviews.css */
 
-/* ── Product Detail: Service-style Layout ──────────────────────────────── */
+
+
 .pd-gallery-card {
     background: var(--color-bg-white);
     border: var(--border-card);
@@ -1306,13 +1288,13 @@
 
 
 
-/* Extracted from product-detail.html */
+
 .ui-bg-box-10 {
     min-height:110px;
     background:#f4faf7;
 }
 
-/* Extracted from product-detail.html */
+
 .ui-bg-box-11 {
     background: none;
      border: 1px solid var(--color-border);
@@ -1323,42 +1305,42 @@
      transition: all 0.3s ease;
 }
 
-/* Extracted from product-detail.html */
+
 .ui-text-format-8 {
     font-size: 13px;
 }
 
-/* Extracted from product-detail.html */
+
 .ui-box-12 {
     width: 65%;
 }
 
-/* Extracted from product-detail.html */
+
 .ui-box-13 {
     width: 20%;
 }
 
-/* Extracted from product-detail.html */
+
 .ui-box-14 {
     width: 10%;
 }
 
-/* Extracted from product-detail.html */
+
 .ui-box-15 {
     width: 3%;
 }
 
-/* Extracted from product-detail.html */
+
 .ui-box-16 {
     width: 2%;
 }
 
-/* Extracted from product-detail.html */
+
 .ui-spacing-5 {
     margin-bottom: 0;
 }
 
-/* Extracted from product-detail.html */
+
 .ui-text-format-9 {
     margin-bottom: 0;
      font-size: 1.15em;

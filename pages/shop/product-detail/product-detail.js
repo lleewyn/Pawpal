@@ -1,13 +1,10 @@
-/**
- * Product Detail Page JavaScript
- * Handles "Add to Cart" and "Buy Now" functionality
- */
+
 
 let currentLoadedProduct = null;
 let cachedProducts = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Load dynamic product data if id exists in URL
+    
     try {
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
@@ -22,22 +19,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // Reviews are loaded dynamically inside renderProductDetails
+        
     } catch (e) {
         console.error('Failed to load product data:', e);
     }
 
-    // Get buttons
+    
     const addToCartBtn = document.getElementById('addToCartBtn');
     const buyNowBtn = document.getElementById('buyNowBtn');
     const quantityInput = document.getElementById('quantity');
     
-    // Add to Cart functionality (existing)
+    
     if (addToCartBtn) {
         addToCartBtn.addEventListener('click', handleAddToCart);
     }
     
-    // Buy Now functionality (new)
+    
     if (buyNowBtn) {
         buyNowBtn.addEventListener('click', handleBuyNow);
     }
@@ -125,7 +122,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Favorite Product functionality
+    
     const favoriteProductBtn = document.getElementById('favoriteProductBtn');
     const wishlistBtn = document.getElementById('wishlistBtn');
 
@@ -197,11 +194,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Related products wishlist buttons
+    
     ensureWishlistButtons();
     bindRelatedProductCards();
 
-    // Quantity controls
+    
     const decreaseQtyBtn = document.getElementById('decreaseQty');
     const increaseQtyBtn = document.getElementById('increaseQty');
 
@@ -224,7 +221,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Update breadcrumb
+    
     setTimeout(() => {
         const product = getCurrentProduct();
         const breadcrumbProduct = document.getElementById('breadcrumbProduct');
@@ -233,7 +230,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }, 100);
 
-    // Gallery arrows navigation
+    
     const galleryPrev = document.getElementById('galleryPrev');
     const galleryNext = document.getElementById('galleryNext');
     if (galleryPrev && galleryNext) {
@@ -253,11 +250,9 @@ function navigateGallery(direction) {
     thumbnails[currentGalleryIndex].click();
 }
 
-/**
- * Handle Add to Cart - Add product to cart and stay on page
- */
+
 async function handleAddToCart() {
-    // Guest cart allowed, so we don't block unauthenticated users anymore
+    
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
 
     const product = getCurrentProduct();
@@ -283,9 +278,7 @@ async function handleAddToCart() {
     await updateCartBadge();
 }
 
-/**
- * Handle Buy Now - Add product to cart and redirect to checkout
- */
+
 function handleBuyNow() {
     const product = getCurrentProduct();
     const quantity = parseInt(document.getElementById('quantity').value) || 1;
@@ -359,23 +352,21 @@ function handleCardBuyNow(product) {
     window.location.href = '/pages/shop/checkout/checkout.html?buynow=true';
 }
 
-/**
- * Get current product data from page
- */
+
 function getCurrentProduct() {
     if (currentLoadedProduct) return currentLoadedProduct;
     
     try {
-        // Try to get from URL params first
+        
         const urlParams = new URLSearchParams(window.location.search);
         let productId = urlParams.get('id');
         
-        // If no ID in URL, generate a temporary ID
+        
         if (!productId) {
             productId = 'prod_' + Date.now();
         }
         
-        // Get product data from page elements with safe fallbacks
+        
         const titleElement = document.getElementById('productTitle');
         const brandElement = document.getElementById('productBrand');
         const priceElement = document.getElementById('productPrice');
@@ -430,15 +421,15 @@ async function bindRelatedProductCards() {
     const products = await getProductCatalog();
     if (!products || products.length === 0) return;
 
-    // Get random products for 'You May Like' (5 items)
+    
     const youMayLikeProducts = [...products].sort(() => 0.5 - Math.random()).slice(0, 5);
     
-    // Get related products from same category (5 items)
+    
     const currentCategory = (typeof currentLoadedProduct !== 'undefined' && currentLoadedProduct) ? currentLoadedProduct.category : 'food-dry';
     const currentId = (typeof currentLoadedProduct !== 'undefined' && currentLoadedProduct) ? currentLoadedProduct.id : -1;
     let relatedProducts = products.filter(p => p.category === currentCategory && String(p.id) !== String(currentId)).slice(0, 5);
     
-    // Fallback if not enough related products
+    
     if (relatedProducts.length < 5) {
         const more = products.filter(p => !relatedProducts.includes(p) && String(p.id) !== String(currentId)).slice(0, 5 - relatedProducts.length);
         relatedProducts.push(...more);
@@ -522,27 +513,27 @@ async function bindRelatedProductCards() {
 }
 
 async function addProductToCart(product, quantity) {
-    // Get existing cart
+    
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     let cart = [];
     if (window.API && typeof window.API.getUserCart === 'function') {
         cart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
     }
     
-    // Check if product already in cart
+    
     const existingIndex = cart.findIndex(item => item.id === product.id);
     
     if (existingIndex >= 0) {
-        // Update quantity
+        
         cart[existingIndex].quantity += quantity;
         
-        // Check stock limit
+        
         if (cart[existingIndex].quantity > product.stock) {
             cart[existingIndex].quantity = product.stock;
             showToast(`Đã cập nhật số lượng tối đa: ${product.stock}`, 'warning');
         }
     } else {
-        // Add new product
+        
         cart.push({
             id: product.id,
             name: product.name,
@@ -554,15 +545,13 @@ async function addProductToCart(product, quantity) {
         });
     }
     
-    // Save to API
+    
     if (window.API && typeof window.API.saveUserCart === 'function') {
         await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
     }
 }
 
-/**
- * Update cart badge count in header
- */
+
 async function updateCartBadge() {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     let cart = [];
@@ -571,7 +560,7 @@ async function updateCartBadge() {
     }
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     
-    // Find cart badge element (if exists in header)
+    
     const cartBadge = document.querySelector('.cart-badge');
     if (cartBadge) {
         cartBadge.textContent = totalItems;
@@ -581,13 +570,11 @@ async function updateCartBadge() {
     }
 }
 
-/**
- * Parse price from formatted text (e.g., "250.000₫" -> 250000)
- */
+
 function parsePriceFromText(priceText) {
     if (!priceText) return 0;
     
-    // Remove all non-numeric characters except digits
+    
     const numericOnly = priceText.toString().replace(/[^0-9]/g, '');
     const price = parseInt(numericOnly) || 0;
     
@@ -595,9 +582,7 @@ function parsePriceFromText(priceText) {
     return price;
 }
 
-/**
- * Show toast notification
- */
+
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = `toast-notification toast-${type}`;
@@ -625,11 +610,10 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// Add animation styles
+
 const style = document.createElement('style');
 
-// ============================================================
-// (Removed duplicate loadProductReviewsFromSupabase function)
+
 
 function renderReviewItem(r) {
     const name    = r.customer?.customer_profile?.[0]?.full_name || r.customer?.customer_profile?.full_name || 'Khách hàng';
@@ -683,7 +667,7 @@ function updateReviewSummary(reviews) {
     if (avgEl)   avgEl.textContent   = avg.toFixed(1);
     if (countEl) countEl.textContent = `Dựa trên ${reviews.length} đánh giá`;
 
-    // Cập nhật star bars
+    
     [5,4,3,2,1].forEach(star => {
         const barFill = document.getElementById(`star${star}Fill`);
         const pctEl   = document.getElementById(`star${star}Pct`);
@@ -718,26 +702,26 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Render loaded product to the DOM
+
 function renderProductDetails(product) {
-    // Update Breadcrumb
+    
     const breadcrumbCategory = document.getElementById('breadcrumbCategory');
     const breadcrumbProduct = document.getElementById('breadcrumbProduct');
     if (breadcrumbCategory) breadcrumbCategory.textContent = product.categoryName || 'Sản phẩm';
     if (breadcrumbProduct) breadcrumbProduct.textContent = product.name;
 
-    // Update Product Info
+    
     const mainImage = document.getElementById('mainImage');
     if (mainImage) {
         mainImage.src = product.image;
         mainImage.alt = product.name;
     }
     
-    // Generate Thumbnails
+    
     const thumbnailsContainer = document.getElementById('thumbnails');
     if (thumbnailsContainer && product.image) {
         thumbnailsContainer.innerHTML = '';
-        // Use product.images or fallback to single image
+        
         const gallery = (product.images && product.images.length > 0) 
             ? product.images 
             : [product.image];
@@ -835,7 +819,7 @@ function renderProductDetails(product) {
     const productBrandMeta = document.getElementById('productBrandMeta');
     if (productBrandMeta) productBrandMeta.textContent = product.brand;
     
-    // Dynamic Description block
+    
     const dynamicDetailsContainer = document.getElementById('dynamicProductDetails');
     if (dynamicDetailsContainer) {
         let detailsHtml = '';
@@ -875,7 +859,7 @@ function renderProductDetails(product) {
         dynamicDetailsContainer.innerHTML = detailsHtml;
     }
     
-    // Dynamic Reviews block
+    
     const averageScore = document.getElementById('averageScore');
     const totalReviewsCount = document.getElementById('totalReviewsCount');
     
@@ -886,7 +870,7 @@ function renderProductDetails(product) {
     if (totalReviewsCount) {
         totalReviewsCount.textContent = `Dựa trên ${product.reviewCount || 0} đánh giá`;
     }
-    // Load and render dynamic reviews from Supabase
+    
     if (window.DataLoader && window.DataLoader.getProductReviews) {
         window.DataLoader.getProductReviews(product.id).then(reviews => {
             const container = document.getElementById('reviewsContainer');
@@ -895,7 +879,7 @@ function renderProductDetails(product) {
             if (!reviews || reviews.length === 0) {
                 container.innerHTML = '<div class="text-center py-4 text-secondary">Chưa có đánh giá nào cho sản phẩm này.</div>';
                 
-                // Reset bars to 0
+                
                 for(let i=1; i<=5; i++) {
                     const bar = document.getElementById('bar'+i);
                     const pct = document.getElementById('pct'+i);
@@ -907,7 +891,7 @@ function renderProductDetails(product) {
                 return;
             }
             
-            // Calculate stats
+            
             let sum = 0;
             let counts = {1:0, 2:0, 3:0, 4:0, 5:0};
             reviews.forEach(r => {
@@ -919,7 +903,7 @@ function renderProductDetails(product) {
             if (averageScore) averageScore.textContent = avg.toFixed(1);
             if (totalReviewsCount) totalReviewsCount.textContent = `Dựa trên ${reviews.length} đánh giá`;
             
-            // Update bars
+            
             for(let i=1; i<=5; i++) {
                 const pct = Math.round((counts[i] / reviews.length) * 100);
                 const bar = document.getElementById('bar'+i);
@@ -928,13 +912,13 @@ function renderProductDetails(product) {
                 if(pctLabel) pctLabel.textContent = pct + '%';
             }
             
-            // Pagination and Filtering logic
+            
             window.allProductReviews = reviews;
             window.filteredReviews = reviews;
             window.currentReviewPage = 1;
             window.reviewsPerPage = 5;
 
-            // Define render functions globally for easy access
+            
             window.renderReviewsPage = function() {
                 const start = (window.currentReviewPage - 1) * window.reviewsPerPage;
                 const end = start + window.reviewsPerPage;
@@ -1013,7 +997,7 @@ function renderProductDetails(product) {
                 paginationWrapper.style.display = 'block';
                 let html = '';
                 
-                // Prev button
+                
                 html += `
                     <li class="page-item ${window.currentReviewPage === 1 ? 'disabled' : ''}">
                         <a class="page-link" href="#" data-page="${window.currentReviewPage - 1}" aria-label="Previous">
@@ -1022,7 +1006,7 @@ function renderProductDetails(product) {
                     </li>
                 `;
                 
-                // Page numbers
+                
                 for (let i = 1; i <= totalPages; i++) {
                     html += `
                         <li class="page-item ${window.currentReviewPage === i ? 'active' : ''}">
@@ -1031,7 +1015,7 @@ function renderProductDetails(product) {
                     `;
                 }
                 
-                // Next button
+                
                 html += `
                     <li class="page-item ${window.currentReviewPage === totalPages ? 'disabled' : ''}">
                         <a class="page-link" href="#" data-page="${window.currentReviewPage + 1}" aria-label="Next">
@@ -1042,7 +1026,7 @@ function renderProductDetails(product) {
                 
                 paginationUl.innerHTML = html;
                 
-                // Add event listeners to pagination links
+                
                 paginationUl.querySelectorAll('.page-link').forEach(link => {
                     link.addEventListener('click', function(e) {
                         e.preventDefault();
@@ -1056,11 +1040,11 @@ function renderProductDetails(product) {
                 });
             };
 
-            // Setup Filter Chips
+            
             const chips = document.querySelectorAll('.review-filter-chip');
             chips.forEach(chip => {
                 chip.addEventListener('click', function() {
-                    // Update active class
+                    
                     chips.forEach(c => c.classList.remove('active'));
                     this.classList.add('active');
                     
@@ -1077,12 +1061,12 @@ function renderProductDetails(product) {
                 });
             });
 
-            // Initial render
+            
             window.renderReviewsPage();
         });
     }
 
-    // Disable buttons if out of stock
+    
     const addToCartBtn = document.getElementById('addToCartBtn');
     const buyNowBtn = document.getElementById('buyNowBtn');
     if (product.stock <= 0) {

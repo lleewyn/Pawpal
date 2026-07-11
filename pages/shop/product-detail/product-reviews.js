@@ -1,16 +1,9 @@
-/**
- * product-reviews.js — QUY TRÌNH 3.1.11 US 11-7
- * Reviews public page on product-detail:
- *   - Filter by star / media (no page reload)
- *   - Lightbox on image click
- *   - Helpful button
- *   - Load-more (client-side)
- */
+
 
 (function () {
     'use strict';
 
-    // ── Lightbox (same pattern as review-handler.js) ────────────────────────
+    
     const Lightbox = (function () {
         let overlay, mediaEl, prevBtn, nextBtn;
         let items = [], idx = 0;
@@ -76,11 +69,11 @@
         return { open };
     })();
 
-    // ── State ───────────────────────────────────────────────────────────────
+    
     let allReviewEls = [];
     let activeFilter = 'all';
 
-    // ── Init ────────────────────────────────────────────────────────────────
+    
     function init() {
         allReviewEls = Array.from(document.querySelectorAll('.review-item'));
         if (!allReviewEls.length) return;
@@ -90,7 +83,7 @@
         bindHelpful();
     }
 
-    // ── Filter tabs (US 11-7 AC7.1 và AC7.2) ────────────────────────────────
+    
     function bindFilterTabs() {
         const tabs = document.querySelectorAll('.filter-tab[data-filter]');
         tabs.forEach(tab => {
@@ -122,15 +115,15 @@
         });
     }
 
-    // ── Lightbox on review images (US 11-7 AC7.3) ──────────────────────────
+    
     function bindLightbox() {
         document.querySelectorAll('.reviews-list').forEach(container => {
             container.addEventListener('click', e => {
-                // Find clicked review image
+                
                 const imgEl = e.target.closest('img.review-photo, .review-media-list img');
                 if (!imgEl) return;
 
-                // Collect all media in this review item
+                
                 const reviewItem = imgEl.closest('.review-item');
                 if (!reviewItem) return;
 
@@ -144,7 +137,7 @@
         });
     }
 
-    // ── Helpful button ──────────────────────────────────────────────────────
+    
     function bindHelpful() {
         document.querySelectorAll('.reviews-list').forEach(container => {
             container.addEventListener('click', e => {
@@ -155,11 +148,11 @@
                 btn.style.color   = 'var(--color-primary)';
                 btn.style.fontWeight = '600';
 
-                // Extract count from button text: "Hữu ích? (3)" or just "Hữu ích?"
+                
                 const match = btn.textContent.match(/\((\d+)\)/);
                 const count = match ? parseInt(match[1], 10) + 1 : 1;
 
-                // Rebuild inner content
+                
                 btn.innerHTML = `
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
@@ -170,7 +163,7 @@
         });
     }
 
-    // ── Boot ────────────────────────────────────────────────────────────────
+    
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {

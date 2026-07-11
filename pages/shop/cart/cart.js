@@ -1,21 +1,15 @@
-/**
- * cart.js — Xử lý logic giỏ hàng PawPal
- */
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Đợi DataLoader sẵn sàng
     if (!window.DataLoader) {
         console.error(' DataLoader không tìm thấy');
         return;
     }
 
-    // Đợi window.API sẵn sàng (api.js là module, load song song với cart.js)
     if (!window.API) {
         await new Promise(resolve => {
             const check = setInterval(() => {
                 if (window.API) { clearInterval(check); resolve(); }
             }, 20);
-            // Timeout sau 3s để tránh treo vô hạn
             setTimeout(() => { clearInterval(check); resolve(); }, 3000);
         });
     }
@@ -27,10 +21,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cartEmptyState = document.getElementById('cart-empty-state');
     const btnClearCart = document.getElementById('btn-clear-cart');
     
-    // Header elements
     const cartCountHeader = document.getElementById('cart-count-header');
     
-    // Voucher elements
     const voucherInput = document.getElementById('voucher-input');
     const btnApplyVoucher = document.getElementById('btn-apply-voucher');
     const myVouchersList = document.getElementById('my-vouchers-list');
@@ -39,7 +31,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const discountCodeLabel = document.getElementById('discount-code-label');
     const cartDiscount = document.getElementById('cart-discount');
     
-    // Select all checkbox
     const selectAllItems = document.getElementById('select-all-items');
 
     let products = [];
@@ -47,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let vouchers = [];
     let myVouchers = [];
     let appliedVoucher = null;
-    let selectedIds = new Set(); // Store IDs of selected items
+    let selectedIds = new Set(); 
 
     function getCurrentUser() {
         if (typeof window.getCurrentUser === 'function') {
@@ -140,29 +131,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         return categoryMap[value] || value;
     }
 
-    // Format tiền tệ Việt Nam
     function formatPrice(price) {
         return price.toLocaleString('vi-VN') + 'đ';
     }
 
-    // Tải dữ liệu giỏ hàng, sản phẩm và voucher
     async function initCart() {
         try {
-            // Tải sản phẩm từ CSV
             products = await window.DataLoader.loadProducts();
             
-            // Lấy giỏ hàng từ Supabase
             const currentUser = getCurrentUser();
             const fetchedCart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
             const localCart = restoreCartFromBackup(fetchedCart);
             cart = localCart.map(normalizeCartItem);
             
-            // Mặc định chọn tất cả sản phẩm
             cart.forEach(item => {
                 selectedIds.add(normalizeId(item.id));
             });
 
-            // Tải danh sách voucher
             try {
                 if (window.API && typeof window.API.getVouchers === 'function') {
                     vouchers = await window.API.getVouchers();
@@ -189,7 +174,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Thiết lập sự kiện chọn tất cả
     function setupSelectAllEvent() {
         if (selectAllItems) {
             selectAllItems.addEventListener('change', (e) => {
@@ -200,7 +184,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     selectedIds.clear();
                 }
                 
-                // Cập nhật các checkbox con
                 document.querySelectorAll('.item-checkbox').forEach(cb => {
                     cb.checked = isChecked;
                 });
@@ -210,7 +193,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Thiết lập sự kiện áp dụng voucher
     function setupVoucherEvents() {
         if (btnApplyVoucher) {
             btnApplyVoucher.addEventListener('click', applyVoucherCode);
@@ -225,12 +207,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Thiết lập sự kiện trước khi sang trang thanh toán
     function setupCheckoutEvent() {
         const btnProceed = document.getElementById('btn-proceed-checkout');
         if (btnProceed) {
             btnProceed.addEventListener('click', async (e) => {
-                // Lọc ra các sản phẩm được tích chọn
                 const selectedItems = cart.filter(item => selectedIds.has(normalizeId(item.id)));
                 
                 if (selectedItems.length === 0) {
@@ -239,20 +219,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return;
                 }
 
-                // Lưu lại giỏ hàng thanh toán và các phần không chọn (để phục hồi sau)
                 const unselectedItems = cart.filter(item => !selectedIds.has(normalizeId(item.id)));
                 localStorage.setItem('pawpal_cart_unselected_backup', JSON.stringify(unselectedItems));
                 
-                // Cập nhật lại giỏ hàng chính chỉ gồm các sản phẩm được chọn để trang checkout xử lý
                 if (window.saveCart) window.saveCart(selectedItems);
                 const currentUser = getCurrentUser();
                 await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, selectedItems);
                 
-                // Clear any lingering "buy now" state so checkout loads the normal cart
                 sessionStorage.removeItem('pawpal_is_buynow');
                 sessionStorage.removeItem('pawpal_buynow_cart');
                 
-                // Nếu có mã giảm giá đã áp dụng, lưu vào localStorage để checkout.html tự nhận diện
                 if (appliedVoucher) {
                     localStorage.setItem('pawpal_applied_voucher_code', appliedVoucher.code);
                 } else {
@@ -262,7 +238,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Hàm áp dụng mã voucher
     function applyVoucherCode(selectedCode) {
         const code = (selectedCode || voucherInput.value).trim().toUpperCase();
         if (!code) {
@@ -288,7 +263,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Tính tổng tiền các sản phẩm được chọn để kiểm tra minOrderValue
         let checkedSubtotal = 0;
         cart.forEach(item => {
             if (selectedIds.has(normalizeId(item.id))) {
@@ -321,21 +295,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Hiển thị giỏ hàng
     function renderCart() {
         if (!cart || cart.length === 0) {
             showEmptyState();
             return;
         }
 
-        // Lọc những sản phẩm thực sự hợp lệ và còn tồn tại
         const cartItemsData = cart.map(item => {
             const product = products.find(p => isSameCartItemId(p.id, item.id));
             if (product) {
                 return { ...product, quantity: getItemQuantity(item), qty: getItemQuantity(item) };
             }
 
-            // Fallback cho các mặt hàng được lưu trực tiếp từ đơn hàng/nguồn ngoài catalogue
             return {
                 ...item,
                 name: item.name || `Sản phẩm ${item.id}`,
@@ -393,7 +364,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </button>
             `;
 
-            // Gắn sự kiện cho các nút trong dòng
             const btnMinus = row.querySelector('.btn-qty-minus');
             const btnPlus = row.querySelector('.btn-qty-plus');
             const btnRemove = row.querySelector('.btn-remove-cart-item');
@@ -410,7 +380,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     selectedIds.delete(normalizeId(item.id));
                 }
                 
-                // Cập nhật trạng thái selectAll
                 if (selectAllItems) {
                     selectAllItems.checked = selectedIds.size === cart.length;
                 }
@@ -421,7 +390,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             cartItemsList.appendChild(row);
         });
 
-        // Đồng bộ trạng thái selectAll ban đầu
         if (selectAllItems) {
             selectAllItems.checked = selectedIds.size === cart.length;
         }
@@ -429,7 +397,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         calculateTotals();
     }
 
-    // Tính toán lại tổng tiền
     function calculateSelectedSubtotal() {
         return cart.reduce((sum, item) => {
             if (!selectedIds.has(normalizeId(item.id))) {
@@ -454,20 +421,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // Tổng số lượng sản phẩm hiển thị trên tiêu đề chính
         if (cartCountHeader) {
             cartCountHeader.textContent = cart.reduce((sum, item) => sum + getItemQuantity(item), 0);
         }
 
         cartSubtotal.textContent = formatPrice(subtotal);
 
-        // Tính giảm giá voucher
         let discount = 0;
         if (appliedVoucher) {
             const validation = validateVoucherCode(appliedVoucher.code, subtotal);
             if (!validation.valid) {
-                // Giữ voucher đã chọn trong state, chỉ tạm thời không tính giảm
-                // để khi tăng số lượng lên đủ điều kiện sẽ tự áp lại ngay.
                 discount = 0;
             } else {
                 appliedVoucher = validation.voucher;
@@ -488,7 +451,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const grandTotal = Math.max(0, subtotal - discount);
         cartGrandTotal.textContent = formatPrice(grandTotal);
 
-        // Cập nhật badge giỏ hàng trên header
         if (typeof window.updateCartBadge === 'function') {
             window.updateCartBadge();
         }
@@ -496,7 +458,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderVoucherHighlights();
     }
 
-    // Hiển thị trạng thái trống
     function showEmptyState() {
         cartContentRow.classList.add('d-none');
         cartEmptyState.classList.remove('d-none');
@@ -505,13 +466,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Cập nhật số lượng sản phẩm
     function updateQuantity(productId, newQty) {
         if (newQty < 1) return;
 
         const item = cart.find(i => isSameCartItemId(i.id, productId));
         if (item) {
-            // Cap theo stock nếu có
             const maxQty = (item.stock != null && item.stock > 0) ? item.stock : newQty;
             if (newQty > maxQty) {
                 showToast(`Chỉ còn ${maxQty} sản phẩm trong kho`, 'warning');
@@ -524,11 +483,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Xóa một sản phẩm
     function removeCartItem(productId, rowElement) {
         rowElement.classList.add('item-removed');
         
-        // Đợi hiệu ứng chuyển động hoàn tất rồi mới xóa
         setTimeout(() => {
             cart = cart.filter(i => !isSameCartItemId(i.id, productId));
             selectedIds.delete(normalizeId(productId));
@@ -537,7 +494,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 300);
     }
 
-    // Lưu giỏ hàng
     async function saveCart() {
         if (window.saveCart) {
             window.saveCart(cart);
@@ -549,7 +505,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Xóa toàn bộ giỏ hàng
         if (btnClearCart) {
             btnClearCart.addEventListener('click', () => {
                 if (confirm('Bạn có chắc chắn muốn xóa toàn bộ sản phẩm trong giỏ hàng?')) {
@@ -760,6 +715,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
-    // Khởi tạo
     await initCart();
 });

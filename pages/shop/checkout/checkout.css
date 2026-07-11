@@ -1,8 +1,4 @@
-﻿/* ==========================================================================
-   Checkout Page Styles
-   ========================================================================== */
-
-/* Checkout Steps Indicator */
+﻿
 .checkout-steps {
   display: flex;
   justify-content: center;
@@ -51,7 +47,6 @@
   font-size: 1.2rem;
 }
 
-/* Checkout Sections */
 .checkout-section {
   background: var(--color-bg-white);
   border: var(--border-card);
@@ -71,7 +66,6 @@
   color: var(--color-danger);
 }
 
-/* Delivery Options */
 .delivery-options {
   display: flex;
   flex-direction: column;
@@ -131,7 +125,6 @@
   color: var(--color-success);
 }
 
-/* PawPoints Section */
 .pawpoints-content {
   padding: var(--space-sm) 0;
 }
@@ -154,7 +147,6 @@
   cursor: not-allowed;
 }
 
-/* Payment Methods */
 .payment-methods {
   display: flex;
   flex-direction: column;
@@ -190,8 +182,6 @@
   transition: all 0.3s ease;
 }
 
-.payment-method-card:hover {
-}
 
 .payment-method-card.selected {
   border-color: var(--color-accent);
@@ -225,7 +215,6 @@
   margin-bottom: 0;
 }
 
-/* Trust Badges */
 .trust-badges {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -253,7 +242,6 @@
   color: var(--color-text-dark);
 }
 
-/* Order Summary */
 .order-summary-sticky {
   position: sticky;
   top: 120px;
@@ -342,7 +330,6 @@
   white-space: nowrap;
 }
 
-/* Voucher Section */
 .voucher-section .input-group {
   margin-bottom: 0;
 }
@@ -435,7 +422,6 @@
   color: var(--color-danger);
 }
 
-/* Order Totals */
 .order-totals {
   padding-top: var(--space-sm);
 }
@@ -467,7 +453,6 @@
   color: var(--color-accent);
 }
 
-/* Responsive */
 @media (max-width: 991px) {
   .order-summary-sticky {
     position: static;
@@ -511,13 +496,11 @@
 }
 
 
-/* Extracted from checkout.html */
 .ui-bg-box-7 {
     min-height:110px;
     background:#f4faf7;
 }
 
-/* Extracted from checkout.html */
 .ui-element-7 {
     vertical-align: text-top;
 }

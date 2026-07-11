@@ -1,6 +1,4 @@
-/**
- * Payment Success Page JavaScript
- */
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -11,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
-    // Load order data
     const orderData = JSON.parse(localStorage.getItem('pawpal_current_order') || 'null');
     
     if (!orderData) {
@@ -25,15 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Display order info
         displayOrderInfo(resolvedOrder);
         setupGuestActivationCard(resolvedOrder);
 
-        // Setup tracking link based on user auth status
         setupTrackingLink(resolvedOrder);
     });
     
-    // Setup copy button
     document.getElementById('btn-copy-order').addEventListener('click', copyOrderId);
 });
 
@@ -123,8 +117,6 @@ function setupGuestActivationCard(order) {
 }
 
 function setupTrackingLink(order) {
-    // Find any anchor that links to the orders list and convert it into a direct
-    // link to the created order's detail. Match both absolute and relative hrefs.
     const anchors = Array.from(document.querySelectorAll('a'));
     const trackBtns = anchors.filter(a => {
         const href = a.getAttribute('href') || '';
@@ -136,7 +128,6 @@ function setupTrackingLink(order) {
     const isSamePhone = currentUser && order.shipping && currentUser.phone === order.shipping.phone;
 
     trackBtns.forEach(btn => {
-        // Prefer linking to the order detail page with the normalized `id` if available
         const id = order.id || order.orderId || order.orderID || orderIdFrom(order);
         if (isLoggedInUser) {
             if (id) {
@@ -155,19 +146,15 @@ function orderIdFrom(order) {
 }
 
 function displayOrderInfo(order) {
-    // Order ID
     document.getElementById('order-id').textContent = order.orderId;
     
-    // Shipping address
     const shipping = order.shipping;
     document.getElementById('shipping-address').textContent = 
         `${shipping.name}, ${shipping.phone}\n${shipping.address}, ${shipping.district}, ${shipping.city}`;
     
-    // Order time
     const now = new Date();
     document.getElementById('order-time').textContent = formatDateTime(now);
     
-    // Payment method
     const paymentMethodNames = {
         cod: 'Thanh toán khi nhận hàng (COD)',
         momo: 'Ví điện tử MoMo',
@@ -177,7 +164,6 @@ function displayOrderInfo(order) {
     document.getElementById('payment-method').textContent = 
         paymentMethodNames[order.payment.method] || order.payment.method;
     
-    // Products list
     const productsContainer = document.getElementById('order-products');
     productsContainer.innerHTML = '';
     
@@ -195,18 +181,15 @@ function displayOrderInfo(order) {
         productsContainer.appendChild(itemDiv);
     });
     
-    // Totals
     document.getElementById('subtotal').textContent = formatCurrency(order.pricing.subtotal);
     document.getElementById('shipping-fee').textContent = 
         order.pricing.shippingFee === 0 ? 'Miễn phí' : formatCurrency(order.pricing.shippingFee);
     
-    // Points discount (conditional)
     if (order.pricing.pointsDiscount > 0) {
         document.getElementById('points-row').classList.remove('d-none');
         document.getElementById('points-discount').textContent = `-${formatCurrency(order.pricing.pointsDiscount)}`;
     }
     
-    // Voucher discount (conditional)
     if (order.pricing.voucherDiscount > 0) {
         document.getElementById('voucher-row').classList.remove('d-none');
         document.getElementById('voucher-discount').textContent = `-${formatCurrency(order.pricing.voucherDiscount)}`;

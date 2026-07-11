@@ -1,11 +1,4 @@
-/**
- * Checkout Page JavaScript
- * Handles checkout flow, order summary, vouchers, points, etc.
- */
 
-// ============================================================================
-// Global State
-// ============================================================================
 const checkoutState = {
     cart: [],
     products: [],
@@ -53,7 +46,6 @@ function buildStructuredAddressLabel(address) {
 function normalizeCheckoutAddress(address, fallbackUser = {}) {
     if (!address || typeof address !== 'string' && !address.street && !address.address) return null;
     
-    // Bỏ qua các địa chỉ dạng placeholder
     const addressStr = typeof address === 'string' ? address : (address.street || address.address || '');
     if (addressStr.toLowerCase() === 'chưa thiết lập' || addressStr.toLowerCase() === 'chua thiet lap' || addressStr.trim() === '') {
         return null;
@@ -108,19 +100,16 @@ function getCheckoutUserAddresses(user) {
     }));
 }
 
-// ============================================================================
-// Initialize
-// ============================================================================
+
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Load user data
         checkoutState.user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         
-        // Check if this is a "buy now" checkout
         const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
         
         if (isBuyNow) {
-            // Load cart from sessionStorage (buy now cart)
             checkoutState.cart = JSON.parse(sessionStorage.getItem('pawpal_buynow_cart') || '[]');
             
             if (checkoutState.cart.length === 0) {
@@ -128,7 +117,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
         } else {
-            // Load cart from Supabase (normal cart)
             if (window.API && typeof window.API.getUserCart === 'function') {
                 checkoutState.cart = await window.API.getUserCart(checkoutState.user?.id || checkoutState.user?.phone || null);
             } else {
@@ -141,17 +129,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
-        // Load data
         await loadData();
         await loadProducts();
 
-        // Load loyalty vouchers for current user
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         checkoutState.user = checkoutState.user || currentUser;
         checkoutState.myVouchers = JSON.parse(localStorage.getItem('pawpal_my_vouchers') || '[]')
             .filter(v => currentUser && v.ownerPhone === currentUser.phone);
         
-        // Initialize UI
         initializeShippingForm();
         renderDeliveryOptions();
         renderPaymentMethods();
@@ -160,12 +145,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderVoucherHints();
         renderOrderSummary();
         
-        // Show PawPoints section if user logged in và có điểm
         if (checkoutState.user && (checkoutState.user.points || checkoutState.user.pawPoints)) {
             initializePawPoints();
         }
         
-        // Setup event listeners
         setupEventListeners();
         
     } catch (error) {
@@ -174,12 +157,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// ============================================================================
-// Load Data
-// ============================================================================
+
 async function loadData() {
     try {
-        // Load delivery options
         if (window.API && typeof window.API.getDeliveryOptions === 'function') {
             checkoutState.deliveryOptions = await window.API.getDeliveryOptions();
         } else {
@@ -187,7 +167,6 @@ async function loadData() {
             checkoutState.deliveryOptions = await deliveryResponse.json();
         }
         
-        // Load payment methods
         if (window.API && typeof window.API.getPaymentMethods === 'function') {
             checkoutState.paymentMethods = await window.API.getPaymentMethods();
         } else {
@@ -231,16 +210,12 @@ async function loadProducts() {
 
 function validateCheckoutCart() {
     if (!checkoutState.products || checkoutState.products.length === 0) {
-        // Products chưa load → skip validation, cho phép tiếp tục
         return { valid: true };
     }
 
     for (const item of checkoutState.cart) {
-        // So sánh id dạng string để tránh NaN khi id có dạng "PROD-010"
         const product = checkoutState.products.find(p => String(p.id) === String(item.id));
         if (!product) {
-            // Sản phẩm không có trong catalog hiện tại → skip, không block
-            // (có thể là sản phẩm từ reorder cũ hoặc catalog chưa load đủ)
             continue;
         }
 
@@ -249,20 +224,17 @@ function validateCheckoutCart() {
             return { valid: false, message: `Sản phẩm "${product.name}" chỉ còn ${remaining} trong kho. Vui lòng điều chỉnh số lượng.` };
         }
 
-        // Không block vì giá thay đổi — chỉ cảnh báo
     }
 
     if (checkoutState.appliedVoucher) {
         const validation = validateVoucher(checkoutState.appliedVoucher.code, false);
         if (!validation.valid) {
-            // Giữ mã đã chọn, chỉ tạm thời không tính giảm giá cho đến khi đơn đủ điều kiện lại
             checkoutState.totals.voucherDiscount = 0;
             renderAppliedVoucherUI();
             updateOrderTotals();
         }
     }
 
-    // Recalculate totals using latest product prices and voucher eligibility
     updateOrderTotals();
     if (checkoutState.totals.grandTotal <= 0) {
         return { valid: false, message: 'Tổng thanh toán không hợp lệ. Vui lòng kiểm tra lại đơn hàng.' };
@@ -281,14 +253,12 @@ function validateVoucher(code, showMessage = true) {
         return { valid: false, message: 'Mã giảm giá không tồn tại' };
     }
     
-    // Check expiry
     const now = new Date();
     const expiry = new Date(voucher.validUntil);
     if (now > expiry) {
         return { valid: false, message: 'Mã giảm giá đã hết hạn' };
     }
     
-    // Check minimum order value
     const subtotal = calculateSubtotal();
     if (subtotal < voucher.minOrderValue) {
         return { 
@@ -297,18 +267,14 @@ function validateVoucher(code, showMessage = true) {
         };
     }
     
-    // Check usage limit
     if (voucher.usageCount >= voucher.maxUsage) {
         return { valid: false, message: 'Mã giảm giá đã hết lượt sử dụng' };
     }
-
-    // Check applicability by category
     if (voucher.applicableFor && !voucher.applicableFor.includes('all')) {
         const cartCategories = checkoutState.cart.map(item => {
             const product = checkoutState.products.find(p => String(p.id) === String(item.id));
             const rawCat = product ? String(product.categoryName || product.category || item.categoryName || item.category || '').toLowerCase().trim() : '';
             
-            // Cố gắng ánh xạ về category cơ bản
             if (rawCat.includes('thực phẩm') || rawCat.includes('thuc pham') || rawCat.includes('thức ăn') || rawCat.includes('thuc an') || rawCat.includes('food') || rawCat.includes('pate') || rawCat.includes('hạt')) return 'food';
             if (rawCat.includes('đồ chơi') || rawCat.includes('do choi') || rawCat.includes('toy')) return 'toys';
             if (rawCat.includes('vệ sinh') || rawCat.includes('ve sinh') || rawCat.includes('cát') || rawCat.includes('cat')) return 'hygiene';
@@ -323,7 +289,6 @@ function validateVoucher(code, showMessage = true) {
         }
     }
     
-    // Calculate discount
     let discount = 0;
     if (voucher.type === 'fixed') {
         discount = voucher.value;
@@ -453,10 +418,8 @@ function initializeShippingForm() {
     if (checkoutState.user) {
         checkoutState.user.addresses = getCheckoutUserAddresses(checkoutState.user);
 
-        // Show save address checkbox
         document.getElementById('save-address-section').classList.remove('d-none');
         
-        // Auto-fill user data
         document.getElementById('fullName').value = checkoutState.user.name || '';
         document.getElementById('phone').value = checkoutState.user.phone || '';
         const primaryAddress = checkoutState.user.addresses[0];
@@ -466,7 +429,6 @@ function initializeShippingForm() {
             document.getElementById('address').value = checkoutState.user.address || '';
         }
         
-        // Load saved addresses if exists
         if (checkoutState.user.addresses && checkoutState.user.addresses.length > 0) {
             populateSavedAddresses();
         }
@@ -478,7 +440,6 @@ function populateSavedAddresses() {
     const section = document.getElementById('saved-addresses-section');
     dropdown.innerHTML = '<option value="">-- Chọn địa chỉ đã lưu --</option>';
     
-    // Add addresses to dropdown
     checkoutState.user.addresses.forEach(addr => {
         const option = document.createElement('option');
         option.value = addr.id;
@@ -486,16 +447,13 @@ function populateSavedAddresses() {
         dropdown.appendChild(option);
     });
     
-    // Add "new address" option
     const newOption = document.createElement('option');
     newOption.value = 'new';
     newOption.textContent = '+ Thêm địa chỉ mới';
     dropdown.appendChild(newOption);
     
-    // Show section
     section.classList.remove('d-none');
     
-    // Set default address
     const defaultAddr = checkoutState.user.addresses.find(a => a.isDefault);
     if (defaultAddr) {
         dropdown.value = defaultAddr.id;
@@ -559,21 +517,16 @@ function selectDeliveryOption(deliveryId, fee) {
     checkoutState.selectedDelivery = deliveryId;
     checkoutState.totals.shippingFee = fee;
     
-    // Update UI
     document.querySelectorAll('.delivery-option').forEach(el => el.classList.remove('selected'));
     document.querySelector(`#delivery-${deliveryId}`).closest('.delivery-option').classList.add('selected');
     document.querySelector(`#delivery-${deliveryId}`).checked = true;
     
-    // Update label in summary
     const option = checkoutState.deliveryOptions.find(o => o.id === deliveryId);
     document.getElementById('delivery-label').textContent = `(${option.name})`;
     
     updateOrderTotals();
 }
 
-// ============================================================================
-// Payment Methods
-// ============================================================================
 function renderPaymentMethods() {
     const container = document.getElementById('payment-methods');
     container.innerHTML = '';
@@ -681,14 +634,11 @@ function initializePawPoints() {
     const section = document.getElementById('pawpoints-section');
     section.classList.remove('d-none');
     
-    // Đọc points từ cả hai field để tương thích dữ liệu cũ (pawPoints) và mới (points)
     const userPoints = checkoutState.user.points || checkoutState.user.pawPoints || 0;
     const orderTotal = calculateSubtotal();
     
-    // Set max points (min of user balance or order total / 1000)
     const maxPoints = Math.min(userPoints, Math.floor(orderTotal / 1000));
     
-    // Update UI
     document.getElementById('user-points').textContent = userPoints;
     document.getElementById('points-value-equivalent').textContent = formatCurrency(userPoints * 1000);
     document.getElementById('points-max-label').textContent = formatCurrency(maxPoints * 1000);
@@ -697,7 +647,6 @@ function initializePawPoints() {
     slider.max = maxPoints;
     slider.value = Math.min(Number(localStorage.getItem(PENDING_POINTS_KEY) || 0), maxPoints);
     
-    // Enable slider when checkbox checked
     const checkbox = document.getElementById('use-points-checkbox');
     checkbox.addEventListener('change', (e) => {
         slider.disabled = !e.target.checked;
@@ -718,7 +667,6 @@ function initializePawPoints() {
         }
     });
     
-    // Slider input
     slider.addEventListener('input', (e) => {
         const points = parseInt(e.target.value);
         updatePointsDisplay(points);
@@ -834,7 +782,6 @@ function updateOrderTotals() {
     checkoutState.totals.subtotal = subtotal;
     checkoutState.totals.voucherDiscount = calculateVoucherDiscount();
     
-    // Calculate grand total
     const grandTotal = subtotal 
         + checkoutState.totals.shippingFee 
         - checkoutState.totals.pointsDiscount 
@@ -842,12 +789,10 @@ function updateOrderTotals() {
     
     checkoutState.totals.grandTotal = Math.max(0, grandTotal);
     
-    // Update UI
     document.getElementById('subtotal').textContent = formatCurrency(subtotal);
     document.getElementById('shipping-fee').textContent = 
         checkoutState.totals.shippingFee === 0 ? 'Miễn phí' : formatCurrency(checkoutState.totals.shippingFee);
     
-    // Show/hide points row
     if (checkoutState.totals.pointsDiscount > 0) {
         document.getElementById('points-row').classList.remove('d-none');
         document.getElementById('points-discount').textContent = `-${formatCurrency(checkoutState.totals.pointsDiscount)}`;
@@ -855,7 +800,6 @@ function updateOrderTotals() {
         document.getElementById('points-row').classList.add('d-none');
     }
     
-    // Show/hide voucher row
     if (checkoutState.totals.voucherDiscount > 0) {
         document.getElementById('voucher-row').classList.remove('d-none');
         document.getElementById('voucher-discount').textContent = `-${formatCurrency(checkoutState.totals.voucherDiscount)}`;
@@ -879,7 +823,6 @@ async function applyVoucher() {
         return;
     }
     
-    // Validate voucher
     const result = validateVoucher(code);
     
     if (result.valid) {
@@ -887,13 +830,10 @@ async function applyVoucher() {
         checkoutState.totals.voucherDiscount = result.discount;
         localStorage.setItem('pawpal_applied_voucher_code', code);
         
-        // Show applied badge
         renderAppliedVoucherUI();
         
-        // Clear input
         input.value = '';
         
-        // Update totals
         updateOrderTotals();
         
         showToast(`Áp dụng mã ${code} thành công! Tiết kiệm ${formatCurrency(result.discount)}.`, 'success');
@@ -925,7 +865,6 @@ function validateCheckoutForm() {
         return false;
     }
     
-    // Validate invoice if checked
     const invoiceChecked = document.getElementById('invoice-checkbox').checked;
     if (invoiceChecked) {
         const companyName = document.getElementById('companyName').value;
@@ -944,10 +883,9 @@ function validateCheckoutForm() {
 // Checkout
 // ============================================================================
 async function handleCheckout() {
-    // Double-submit guard — disable nút ngay lập tức
     const btnCheckout = document.getElementById('btn-checkout');
     if (btnCheckout) {
-        if (btnCheckout.disabled) return;       // đã submit, bỏ qua
+        if (btnCheckout.disabled) return;      
         btnCheckout.disabled = true;
         btnCheckout.dataset.originalText = btnCheckout.textContent;
         btnCheckout.textContent = 'Đang xử lý...';
@@ -1018,11 +956,9 @@ async function handleCheckout() {
         const userIndex = users.findIndex((user) => String(user.id) === String(updatedUser.id));
         if (userIndex !== -1) {
             users[userIndex] = { ...users[userIndex], ...updatedUser };
-            /* localStorage.setItem pawpal_users_db removed */
         }
     }
     
-    // Add invoice if checked
     const invoiceChecked = document.getElementById('invoice-checkbox').checked;
     if (invoiceChecked) {
         orderData.invoice = {
@@ -1034,18 +970,15 @@ async function handleCheckout() {
         };
     }
     
-    // Validate cart and voucher again before committing order
     updateOrderTotals();
     const validation = validateCheckoutCart();
     if (!validation.valid) {
         showToast(validation.message, 'error');
-        // redirect back to checkout form area if needed
         document.getElementById('shipping-form').scrollIntoView({ behavior: 'smooth' });
         restoreBtn();
         return;
     }
 
-    // Sync with Supabase API
     if (window.API && window.API.submitOrder) {
         const response = await window.API.submitOrder(orderData);
         if (response && !response.success) {
@@ -1058,20 +991,15 @@ async function handleCheckout() {
         }
     }
 
-    // Save current order to localStorage (fallback/simulate API)
     localStorage.setItem('pawpal_current_order', JSON.stringify(orderData));
 
-    // Save to user's orders list (legacy support)
     saveOrderToUserHistory(orderData);
 
-    // Create a temporary guest user record when a guest checks out
     if (!checkoutState.user) {
         createGuestTempUserForOrder(orderData);
     }
     
-    // Route based on payment method
     if (checkoutState.selectedPayment === 'cod') {
-        // COD: Clear checkout state and go to success page
         localStorage.removeItem('pawpal_cart_unselected_backup');
         localStorage.removeItem('pawpal_applied_voucher_code');
         localStorage.removeItem(PENDING_POINTS_KEY);
@@ -1086,10 +1014,8 @@ async function handleCheckout() {
         }
         window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${orderData.orderId}`;
     } else if (['momo', 'vnpay', 'zalopay', 'vietqr'].includes(checkoutState.selectedPayment)) {
-        // Online QR payment: Show QR modal
         showQRPaymentModal(orderData);
     } else {
-        // Bank transfer: Clear checkout state and go to success page
         localStorage.removeItem('pawpal_cart_unselected_backup');
         localStorage.removeItem('pawpal_applied_voucher_code');
         localStorage.removeItem(PENDING_POINTS_KEY);
@@ -1112,7 +1038,7 @@ async function handleCheckout() {
 let qrPaymentState = {
     orderData: null,
     timerInterval: null,
-    timeRemaining: 900, // 15 minutes in seconds
+    timeRemaining: 900, 
     paymentVerified: false
 };
 
@@ -1121,7 +1047,7 @@ const paymentMethodConfig = {
         name: 'Ví điện tử MoMo',
         color: '#A72930',
         instruction: 'Quét mã QR bằng ứng dụng MoMo',
-        timeout: 900 // 15 minutes
+        timeout: 900 
     },
     vnpay: {
         name: 'Cổng thanh toán VNPay',
@@ -1133,37 +1059,32 @@ const paymentMethodConfig = {
         name: 'Thanh toán qua ZaloPay',
         color: '#0084FF',
         instruction: 'Quét mã QR bằng ứng dụng Zalo hoặc ZaloPay',
-        timeout: 600 // 10 minutes
+        timeout: 600
     },
     vietqr: {
         name: 'Quét mã VietQR',
         color: '#2A5944',
         instruction: 'Quét mã QR qua ứng dụng Mobile Banking của ngân hàng',
-        timeout: 1200 // 20 minutes
+        timeout: 1200 
     }
 };
 
 function generateMockQRCode(orderId, amount) {
-    // Generate a data URL for a mock QR code image
-    // In production, this would use a QR code library like qrcode.js
     const canvas = document.createElement('canvas');
     canvas.width = 200;
     canvas.height = 200;
     const ctx = canvas.getContext('2d');
     
-    // Draw a simple pattern to simulate QR code
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, 200, 200);
     
     ctx.fillStyle = '#000000';
     
-    // Position detection patterns (3 corners)
     const patterns = [
         [0, 0], [150, 0], [0, 150]
     ];
     
     patterns.forEach(([x, y]) => {
-        // Outer square
         ctx.fillRect(x, y, 50, 50);
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(x + 10, y + 10, 30, 30);
@@ -1171,7 +1092,6 @@ function generateMockQRCode(orderId, amount) {
         ctx.fillRect(x + 15, y + 15, 20, 20);
     });
     
-    // Random data pattern
     ctx.fillStyle = '#000000';
     for (let i = 0; i < 100; i++) {
         const x = Math.random() * 100 + 50;
@@ -1192,12 +1112,10 @@ function showQRPaymentModal(orderData) {
     const methodId = orderData.payment.method;
     const config = paymentMethodConfig[methodId];
     
-    // Update modal content
     document.getElementById('qr-method-name').textContent = config.name;
     document.getElementById('qr-method-desc').textContent = `Đơn hàng #${orderData.orderId}`;
     document.getElementById('qr-instruction').textContent = config.instruction;
     
-    // Set logo
     const qrLogo = document.getElementById('qr-logo');
     qrLogo.className = `qr-logo ${methodId}`;
     qrLogo.src = `/assets/images/shared/payment_${methodId === 'vietqr' ? 'VietQR' : methodId}.png`;
@@ -1205,23 +1123,18 @@ function showQRPaymentModal(orderData) {
         qrLogo.classList.add('d-none');
     };
     
-    // Generate and display QR code
     const qrCode = generateMockQRCode(orderData.orderId, orderData.pricing.grandTotal);
     document.getElementById('qr-code-image').src = qrCode;
     
-    // Enable confirm button
     document.getElementById('btn-confirm-payment').disabled = false;
     
-    // Clear any previous status messages
     const statusMsg = document.getElementById('payment-status-message');
     statusMsg.className = 'payment-status-message';
     statusMsg.textContent = '';
     
-    // Show modal
     document.getElementById('qr-backdrop').classList.add('show');
     document.getElementById('payment-qr-modal').classList.add('show');
     
-    // Start timer
     startQRTimer();
 }
 
@@ -1275,8 +1188,6 @@ function handleQRExpired() {
 }
 
 function verifyPaymentSimulation() {
-    // Simulate payment verification deterministically for the demo flow.
-    // Online payment should not randomly fail and force a reload.
     const willSucceed = true;
     const delay = 1800;
     
@@ -1300,7 +1211,6 @@ function verifyPaymentSimulation() {
                 statusMsg.className = 'payment-status-message show success';
                 statusMsg.innerHTML = ' Thanh toán thành công!';
                 
-                // Clear checkout state
                 localStorage.removeItem('pawpal_cart_unselected_backup');
                 const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
                 if (isBuyNow) {
@@ -1337,7 +1247,6 @@ function finalizePendingPointsUsage() {
         const ui = users.findIndex(u => String(u.phone) === String(checkoutState.user.phone));
         if (ui !== -1) {
             users[ui].points = Math.max(0, (users[ui].points || 0) - checkoutState.pointsUsed);
-            /* localStorage.setItem pawpal_users_db removed */
         }
         const sessionUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (sessionUser) {
@@ -1351,7 +1260,6 @@ function finalizePendingPointsUsage() {
     }
 }
 function setupEventListeners() {
-    // Address dropdown
     const addressDropdown = document.getElementById('address-dropdown');
     if (addressDropdown) {
         addressDropdown.addEventListener('change', (e) => {
@@ -1368,7 +1276,6 @@ function setupEventListeners() {
         });
     }
     
-    // Voucher
     const voucherInput = document.getElementById('voucher-input');
     const voucherDropdown = document.getElementById('checkoutVoucherDropdown');
 
@@ -1397,7 +1304,6 @@ function setupEventListeners() {
         });
     }
     
-    // Invoice checkbox
     document.getElementById('invoice-checkbox').addEventListener('change', (e) => {
         const form = document.getElementById('invoice-form');
         if (e.target.checked) {
@@ -1413,10 +1319,8 @@ function setupEventListeners() {
         }
     });
     
-    // Checkout button
     document.getElementById('btn-checkout').addEventListener('click', handleCheckout);
     
-    // QR Payment Modal
     document.getElementById('btn-close-qr').addEventListener('click', hideQRPaymentModal);
     document.getElementById('btn-cancel-qr').addEventListener('click', hideQRPaymentModal);
     document.getElementById('qr-backdrop').addEventListener('click', hideQRPaymentModal);
@@ -1431,7 +1335,6 @@ function setupEventListeners() {
 // Utilities
 // ============================================================================
 function saveOrderToUserHistory(orderData) {
-    // Get existing orders
     let orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
 
     const toNumber = (value, fallback = 0) => {
@@ -1439,11 +1342,8 @@ function saveOrderToUserHistory(orderData) {
         return Number.isFinite(n) ? n : fallback;
     };
     
-    // Normalize order object and add new order to beginning of array (newest first)
-    // Normalize shape to match order-detail expectations
     const subtotal    = toNumber(orderData.pricing?.subtotal, 0);
     const shippingFee = toNumber(orderData.pricing?.shippingFee, 0);
-    // Gom cả voucherDiscount + pointsDiscount vào 1 field `discount` để order-detail đọc đúng
     const discount = toNumber(
         orderData.pricing?.discount
         ?? (toNumber(orderData.pricing?.voucherDiscount) + toNumber(orderData.pricing?.pointsDiscount)),
@@ -1462,9 +1362,7 @@ function saveOrderToUserHistory(orderData) {
         id: orderData.orderId || orderData.id || generateOrderId(),
         userId: resolvedUserId,
         userPhone: resolvedUserPhone,
-        // order-detail expects `delivery` object
         delivery: orderData.shipping || {},
-        // order-detail expects `products` array with `name`, `image`, `quantity`, `total`
         products: (orderData.items || []).map(item => {
             const qty = toNumber(item.quantity ?? item.qty, 1);
             const unitPrice = toNumber(item.price ?? item.unitPrice ?? item.salePrice, 0);
@@ -1486,11 +1384,8 @@ function saveOrderToUserHistory(orderData) {
         paymentMethod: orderData.payment?.method || null,
         paymentStatus: (() => {
             const method = orderData.payment?.method;
-            // COD: chờ thanh toán khi nhận hàng
             if (method === 'cod') return 'pending_payment';
-            // Online đã qua QR verify: paid
             if (orderData.payment?.status === 'paid') return 'paid';
-            // Mặc định: chờ xử lý
             return orderData.payment?.status || 'pending';
         })(),
         timeline: orderData.timeline || [],
@@ -1499,7 +1394,6 @@ function saveOrderToUserHistory(orderData) {
     };
     orders.unshift(normalized);
     
-    // Save back to localStorage
     localStorage.setItem('pawpal_orders', JSON.stringify(orders));
     
     console.log('Order saved to history:', orderData.orderId);
@@ -1518,7 +1412,6 @@ function createGuestTempUserForOrder(orderData) {
             points: 0
         };
         users.push(tempUser);
-        /* localStorage.setItem pawpal_users_db removed */
     }
 
     const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
@@ -1570,7 +1463,6 @@ function generateOrderId() {
 }
 
 function showToast(message, type = 'info') {
-    // Simple toast implementation
     const toast = document.createElement('div');
     toast.className = `toast-notification toast-${type}`;
     toast.textContent = message;

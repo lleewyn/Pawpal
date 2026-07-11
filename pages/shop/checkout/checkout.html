@@ -6,16 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="view-transition" content="same-origin">
     <title>PawPal - Thanh toán</title>
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap"
         rel="stylesheet">
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <!-- Custom Style -->
     <link rel="stylesheet" href="../../../styles/style.css">
     <!-- Components -->
     <link rel="stylesheet" href="payment-qr.css">
@@ -38,7 +35,6 @@
     <main class="checkout-page">
         <div class="container-lg py-4 py-md-5">
 
-            <!-- Checkout Steps Indicator -->
             <div class="checkout-steps mb-4">
                 <div class="step completed">
                     <div class="step-indicator">1</div>
@@ -54,17 +50,13 @@
                 </div>
             </div>
 
-            <!-- Main Checkout Content -->
             <div class="row g-4">
 
-                <!-- Left Section: Forms (60%) -->
                 <div class="col-lg-7">
 
-                    <!-- Shipping Address Section -->
                     <div class="checkout-section mb-4">
                         <h2 class="section-title">Địa chỉ giao hàng</h2>
 
-                        <!-- Saved Addresses Dropdown (for logged-in users) -->
                         <div id="saved-addresses-section" class="mb-3 d-none">
                             <label class="form-label">Chọn từ địa chỉ đã lưu</label>
                             <select id="address-dropdown" class="form-select">
@@ -72,7 +64,6 @@
                             </select>
                         </div>
 
-                        <!-- Manual Address Form -->
                         <form id="shipping-form" class="address-form">
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -133,15 +124,12 @@
                         </form>
                     </div>
 
-                    <!-- Delivery Options Section -->
                     <div class="checkout-section mb-4">
                         <h2 class="section-title">Phương thức vận chuyển</h2>
                         <div id="delivery-options" class="delivery-options">
-                            <!-- Will be populated by JS -->
                         </div>
                     </div>
 
-                    <!-- PawPoints Section (for logged-in members) -->
                     <div id="pawpoints-section" class="checkout-section mb-4 d-none">
                         <h2 class="section-title">Sử dụng PawPoints</h2>
                         <div class="pawpoints-content">
@@ -172,11 +160,9 @@
                         </div>
                     </div>
 
-                    <!-- Payment Methods Section -->
                     <div class="checkout-section mb-4">
                         <h2 class="section-title">Phương thức thanh toán</h2>
                         <div id="payment-methods" class="payment-methods">
-                            <!-- Will be populated by JS -->
                         </div>
                         <div class="form-check mt-3">
                             <input class="form-check-input" type="checkbox" id="savePaymentMethod">
@@ -186,7 +172,6 @@
                         </div>
                     </div>
 
-                    <!-- Invoice Section (Optional) -->
                     <div class="checkout-section mb-4">
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="invoice-checkbox">
@@ -227,7 +212,6 @@
                         </div>
                     </div>
 
-                    <!-- Trust Badges -->
                     <div class="trust-badges mt-4">
                         <div class="trust-badge">
                             <svg class="trust-icon" width="32" height="32" fill="currentColor" viewBox="0 0 24 24">
@@ -261,18 +245,14 @@
 
                 </div>
 
-                <!-- Right Section: Order Summary (40%) -->
                 <div class="col-lg-5">
                     <div class="order-summary-sticky">
                         <div class="checkout-section">
                             <h2 class="section-title">Tóm tắt đơn hàng</h2>
 
-                            <!-- Products List -->
                             <div id="order-items" class="order-items mb-3">
-                                <!-- Will be populated by JS -->
                             </div>
 
-                            <!-- Voucher Section -->
                             <div class="voucher-section mb-3 position-relative">
                                 <label for="voucher-input" class="form-label fw-semibold">Mã giảm giá</label>
                                 <div class="input-group">
@@ -281,7 +261,6 @@
                                 </div>
                                 <div id="checkoutVoucherDropdown" class="dropdown-menu shadow w-100" style="max-height: 250px; overflow-y: auto; display: none; position: absolute; top: 100%; left: 0; z-index: 1000; padding: 0;"></div>
 
-                                <!-- Applied Voucher Badge -->
                                 <div id="applied-voucher" class="applied-voucher mt-2 d-none">
                                     <span class="voucher-code" id="voucher-code-display"></span>
                                     <span class="voucher-amount" id="voucher-amount"></span>
@@ -289,7 +268,6 @@
                                 </div>
                             </div>
 
-                            <!-- Order Totals -->
                             <div class="order-totals">
                                 <div class="total-row">
                                     <span>Tổng tiền hàng:</span>
@@ -315,7 +293,6 @@
                                 </div>
                             </div>
 
-                            <!-- Checkout Button -->
                             <button type="button" class="btn btn-primary btn-lg w-100 mt-3" id="btn-checkout">
                                 Xác nhận đặt hàng (COD)
                             </button>
@@ -335,7 +312,6 @@
 
         </div>
 
-        <!-- QR Payment Modal -->
         <div class="payment-qr-backdrop" id="qr-backdrop"></div>
         <div class="payment-qr-modal" id="payment-qr-modal">
             <button type="button" class="btn-close-qr" id="btn-close-qr">&times;</button>

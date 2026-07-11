@@ -1,6 +1,3 @@
-/**
- * Payment Failed Page JavaScript
- */
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
