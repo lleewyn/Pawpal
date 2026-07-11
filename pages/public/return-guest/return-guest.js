@@ -1,6 +1,3 @@
-/* ==========================================================================
-   return-guest.js — Tra cứu lịch dịch vụ / đơn hàng
-   ========================================================================== */
 
 const BOOKING_STATUS = {
     upcoming:      { label: 'Đã xác nhận',    cls: 'rg-badge-confirmed' },
@@ -29,7 +26,6 @@ let rgLastSearchState = {
     orders: [],
 };
 
-// ── Init ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     const form      = document.getElementById('rg-form');
     const errorBox  = document.getElementById('rg-error');
@@ -48,86 +44,27 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled    = true;
             btn.textContent = 'Đang tìm...';
 
-            const data     = await loadData();
-            const normPhone = normalizePhone(phone);
-            const memberUser = (data.users || []).find(u =>
-                normalizePhone(u.phone) === normPhone && !u.is_temporary
-            );
-
-            let bookings = findBookingsByPhone(phone, data);
-            let orders   = findOrdersByPhone(phone, data);
-
             const supabaseResults = await loadSupabaseGuestResults(phone);
-            if ((supabaseResults.bookings && supabaseResults.bookings.length) ||
-                (supabaseResults.orders && supabaseResults.orders.length)) {
-                
-                // Gộp kết quả từ Supabase với kết quả local, ưu tiên Supabase nếu trùng ID
-                const sbBookings = supabaseResults.bookings || [];
-                const sbOrders = supabaseResults.orders || [];
-                
-                const sbBookingIds = new Set(sbBookings.map(b => b.id));
-                const sbOrderIds = new Set(sbOrders.map(o => o.id));
-                
-                const mergedBookings = [...sbBookings];
-                for (const b of bookings) {
-                    if (!sbBookingIds.has(b.id)) mergedBookings.push(b);
-                }
-                bookings = mergedBookings;
-                
-                const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-                const mergedOrders = [...sbOrders];
-                mergedOrders.forEach(mo => {
-                    const lo = localOrders.find(l => l.id === mo.id);
-                    if (lo && (lo.status === 'completed' || lo.status === 'return_pending')) {
-                        mo.status = lo.status;
-                    }
-                });
-                for (const o of orders) {
-                    if (!sbOrderIds.has(o.id)) mergedOrders.push(o);
-                }
-                orders = mergedOrders;
-                
+            let bookings = supabaseResults.bookings || [];
+            let orders = supabaseResults.orders || [];
+
+            if (bookings.length > 0 || orders.length > 0) {
                 showToast('Đã tìm thấy kết quả tra cứu.', 'success');
+            } else {
+                resultsEl.classList.add('d-none');
+                errorBox.classList.remove('d-none');
+                errorBox.innerHTML = 'Không tìm thấy thông tin đơn hàng/lịch hẹn cho số điện thoại này.';
+                btn.disabled    = false;
+                btn.textContent = 'Tìm kiếm';
+                return;
             }
 
             btn.disabled    = false;
             btn.textContent = 'Tìm kiếm';
 
-            if (!bookings.length && !orders.length) {
-                // Dự phòng: thử đọc dữ liệu gốc (bỏ qua dữ liệu ghi đè trong localStorage)
-                const rawBookings = await fetchJSON(resolveAppUrl('../../../data/bookings.json')) || [];
-                const rawOrders = await fetchJSON(resolveAppUrl('../../../data/orders.json')) || [];
-                const normPhone = normalizePhone(phone);
-                const fb = (rawBookings || []).filter(b =>
-                    normalizePhone(b.phone) === normPhone ||
-                    normalizePhone(b.customerPhone) === normPhone ||
-                    normalizePhone(b.ownerPhone) === normPhone
-                ).map(b => ({ ...b }));
-                const fo = (rawOrders || []).filter(o =>
-                    normalizePhone(o.delivery?.phone) === normPhone ||
-                    normalizePhone(o.phone) === normPhone ||
-                    normalizePhone(o.userPhone) === normPhone
-                ).map(o => ({ ...o }));
-
-                if (fb.length || fo.length) {
-                    bookings = fb;
-                    orders = fo;
-                    showToast('Kết quả lấy từ dữ liệu gốc (file). Nếu bạn dùng dữ liệu local cũ, thử xóa cache và reload.', 'info');
-                } else {
-                    resultsEl.classList.add('d-none');
-                    errorBox.classList.remove('d-none');
-                    return;
-                }
-            }
-
             errorBox.classList.add('d-none');
             resultsEl.classList.remove('d-none');
-            if (memberUser) {
-                errorBox.innerHTML = `
-                    Số điện thoại này thuộc tài khoản thành viên. Mình vẫn hiển thị kết quả tra cứu bên dưới, nhưng nếu muốn xem đầy đủ lịch sử cá nhân thì hãy vào trang cá nhân.
-                `;
-                errorBox.classList.remove('d-none');
-            }
+            
             rgLastSearchState = {
                 phone,
                 bookings,
@@ -146,53 +83,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ── Data ──────────────────────────────────────────────────────────────────
 function resolveAppUrl(path) {
     return new URL(path, window.location.href).href;
 }
 
-async function loadData() {
-    const [bookingsRaw, ordersRaw, usersRaw, petsRaw] = await Promise.all([
-        fetchJSON(resolveAppUrl('../../../data/bookings.json')),
-        fetchJSON(resolveAppUrl('../../../data/orders.json')),
-        fetchJSON(resolveAppUrl('../../../data/users.json')),
-        fetchJSON(resolveAppUrl('../../../data/pets.json')),
-    ]);
 
-    // Merge với localStorage để phản ánh thay đổi user đã thực hiện
-    const localBookings = [];
-    const localOrders   = safeParseArray('pawpal_orders');
-    const localPets     = safeParseArray('pawpal_pets');
-
-    const bookingsMap = new Map((bookingsRaw || []).map(b => [b.id, b]));
-    localBookings.forEach(b => { if (b.id) bookingsMap.set(b.id, b); });
-
-    const ordersMap = new Map((ordersRaw || []).map(o => [o.id, o]));
-    localOrders.forEach(o => { if (o.id) ordersMap.set(o.id, o); });
-
-    // Merge pets: seed từ file + user tự thêm từ localStorage
-    const petsMap = new Map((petsRaw || []).map(p => [p.id, p]));
-    localPets.forEach(p => { if (p.id) petsMap.set(p.id, p); });
-
-    return {
-        bookings: [...bookingsMap.values()],
-        orders:   [...ordersMap.values()],
-        users:    usersRaw || [],
-        pets:     [...petsMap.values()],
-    };
-}
-
-async function fetchJSON(url) {
-    try {
-        const r = await fetch(url);
-        return r.ok ? await r.json() : [];
-    } catch (_) { return []; }
-}
-
-function safeParseArray(key) {
-    try { return JSON.parse(localStorage.getItem(key) || '[]') || []; }
-    catch (_) { return []; }
-}
 
 function normalizePhone(p) {
     return String(p || '').replace(/\D/g, '').replace(/^84/, '0');
@@ -311,7 +206,7 @@ function mapSupabaseOrderRow(row) {
 function mapSupabaseBookingRow(row) {
     return {
         id: row.appointment_code || row.id,
-        _supabaseId: row.id,                   // UUID thực, dùng cho Supabase queries
+        _supabaseId: row.id,                  
         serviceName: row.service?.service_name || 'Dịch vụ',
         date: row.appointment_date,
         time: row.appointment_time,
@@ -344,38 +239,8 @@ function mapOrderStatus(status) {
     }[String(status || '').toUpperCase()] || String(status || 'pending').toLowerCase();
 }
 
-// ── Search ────────────────────────────────────────────────────────────────
-function findBookingsByPhone(phone, { bookings, users, pets }) {
-    const norm = normalizePhone(phone);
-    const user = users.find(u => normalizePhone(u.phone) === norm);
 
-    return bookings
-        .filter(b =>
-            normalizePhone(b.phone) === norm ||
-            normalizePhone(b.customerPhone) === norm ||
-            normalizePhone(b.ownerPhone) === norm ||
-            (user && String(b.userId) === String(user.id))
-        )
-        .map(b => {
-            const pet = pets.find(p => String(p.id) === String(b.petId));
-            return { ...b, petName: pet?.name || b.petName || 'Bé cưng' };
-        });
-}
 
-function findOrdersByPhone(phone, { orders, users }) {
-    const norm = normalizePhone(phone);
-    const user = users.find(u => normalizePhone(u.phone) === norm);
-
-    return orders.filter(o =>
-        normalizePhone(o.delivery?.phone) === norm ||
-        normalizePhone(o.shipping?.phone) === norm ||
-        normalizePhone(o.phone) === norm ||
-        normalizePhone(o.userPhone) === norm ||
-        (user && String(o.userId) === String(user.id))
-    );
-}
-
-// ── Render ────────────────────────────────────────────────────────────────
 function renderResults(bookings, orders) {
     const tabsEl = document.getElementById('rg-tabs');
     const listEl = document.getElementById('rg-list');
@@ -401,7 +266,6 @@ function renderResults(bookings, orders) {
         orders.map(o => buildOrderCard(o)).join('');
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────
 function badge(statusMap, status) {
     const normalized = normalizeOrderStatus(status);
     const s = statusMap[normalized] || { label: normalized, cls: 'rg-badge-pending' };
@@ -414,7 +278,6 @@ function fmtDate(d) {
     catch (_) { return d; }
 }
 
-/** Tính trạng thái booking dựa vào thời gian thực — copy từ bookings.js */
 function resolveBookingStatus(booking) {
     const rawStatus = (booking?.status || 'upcoming').toLowerCase();
     if (['pending', 'cancelled', 'completed', 'in-progress', 'accepted'].includes(rawStatus)) {
@@ -453,15 +316,14 @@ function canCancelOrder(o) {
     // Đơn đang xử lý hoàn tiền hoặc đã hoàn tiền → không cho hủy lần 2
     if (o.paymentStatus === 'pending_refund' || o.paymentStatus === 'refunded') return false;
     
-    // Cho phép hủy bất kể thanh toán COD hay Online (sẽ chuyển sang trạng thái chờ hoàn tiền)
     return true;
 }
 
 function canReturnOrder(o) {
     if (o.status !== 'completed') return false;
-    // Đã có RMA rồi → không cho yêu cầu thêm
-    const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
-    if (returnsList.some(r => r.orderId === o.id)) return false;
+    // Đã có RMA rồi → không cho yêu cầu thêm (trạng thái là return_pending)
+    if (o.status === 'return_pending') return false;
+    
     // Trong vòng 7 ngày kể từ ngày hoàn thành
     const updatedAt = o.updatedAt || o.createdAt;
     if (!updatedAt) return false;
@@ -470,14 +332,6 @@ function canReturnOrder(o) {
 }
 function canConfirmOrder(o) {
     if (o.status !== 'delivered') return false;
-    // Đã có RMA rồi → ẩn nút xác nhận
-    const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
-    if (returnsList.some(r => r.orderId === o.id)) return false;
-    // Nếu order local đang là completed hoặc return_pending thì ẩn
-    const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-    const localOrder = localOrders.find(lo => lo.id === o.id);
-    if (localOrder && (localOrder.status === 'completed' || localOrder.status === 'return_pending')) return false;
-    
     return true;
 }
 
@@ -501,7 +355,6 @@ function canCancelBooking(b) {
     } catch (_) { return false; }
 }
 
-// ── Cards ─────────────────────────────────────────────────────────────────
 function buildBookingCard(b) {
     const pet     = esc(b.petName || 'Bé cưng');
     const service = esc(b.serviceName || b.service || 'Dịch vụ');
@@ -524,7 +377,7 @@ function buildBookingCard(b) {
                     ${branch ? `<span>${branch}</span>` : ''}
                 </div>
             </div>
-            <div style="text-align:right">
+            <div class="text-end">
                 <div class="rg-item-price">${b.price > 0 ? fmtPrice(b.price) : 'Giá theo thực tế'}</div>
                 ${badge(BOOKING_STATUS, resolvedStatus)}
             </div>
@@ -541,7 +394,7 @@ function buildBookingCard(b) {
             </div>` : ''}
         </div>
         ${canModifyBooking(b) || canCancelBooking(b) || ['in-progress', 'completed'].includes(resolvedStatus) ? `
-        <div class="rg-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;">
+        <div class="rg-actions" class="rg-actions-flex">
             ${canCancelBooking(b) ? `
             <button class="btn-track-order text-danger border-danger" onclick="handleGuestBookingAction('${esc(b.id)}', 'cancel')">
                 Hủy lịch
@@ -581,13 +434,13 @@ function buildOrderCard(o) {
     }
 
     const productsHtml = (o.products || []).map(p => `
-        <div style="display: flex; gap: 15px; margin-bottom: 12px; align-items: flex-start;">
-            <img src="${p.image}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color, #eee);" onerror="this.src='/assets/images/shop/products/placeholder.webp'">
-            <div style="flex: 1; font-size: 0.95em; text-align: left; min-width: 0;">
-                <div style="font-weight: 500; color: var(--text-color); line-height: 1.4; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${esc(p.name)}</div>
-                <div style="color: #666;">${fmtPrice(p.price)} <span style="margin: 0 4px;">x</span> ${p.quantity}</div>
+        <div class="rg-product-item-flex">
+            <img src="${p.image}" class="rg-product-image" onerror="this.src='/assets/images/shop/products/placeholder.webp'">
+            <div class="rg-product-details">
+                <div class="rg-product-name">${esc(p.name)}</div>
+                <div class="rg-product-price-qty">${fmtPrice(p.price)} <span class="mx-1">x</span> ${p.quantity}</div>
             </div>
-            <div style="font-weight: 600; color: var(--color-primary); white-space: nowrap; padding-left: 10px;">${fmtPrice(p.price * p.quantity)}</div>
+            <div class="rg-product-total">${fmtPrice(p.price * p.quantity)}</div>
         </div>
     `).join('');
 
@@ -604,13 +457,13 @@ function buildOrderCard(o) {
                     ${o.delivery?.name ? `<span>Nhận: ${esc(o.delivery.name)}</span>` : ''}
                 </div>
             </div>
-            <div style="text-align:right">
+            <div class="text-end">
                 <div class="rg-item-price">${fmtPrice(o.pricing?.total)}</div>
                 ${badge(ORDER_STATUS, o.status)}
             </div>
         </div>
         <hr class="rg-divider">
-        <div class="rg-products" style="padding: var(--space-md);">
+        <div class="rg-products p-md">
             ${productsHtml}
         </div>
         <hr class="rg-divider">
@@ -624,11 +477,11 @@ function buildOrderCard(o) {
                 <div class="rg-summary-value" style="color:${paymentColor};font-weight:500;">${paymentLabel}</div>
             </div>
         </div>
-        <div class="rg-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; align-items: center;">
-            ${(JSON.parse(localStorage.getItem('pawpal_returns') || '[]').some(r => r.orderId === o.id)) ? `
-            <div style="flex: 1; text-align: left;">
-                <span style="display: inline-block; padding: 6px 12px; background: #fff3cd; color: #856404; border-radius: 4px; border: 1px solid #ffeeba; font-size: 0.9em;">
-                    Đã yêu cầu đổi trả. <a href="javascript:void(0)" onclick="showGuestReturnDetail('${esc(o.id)}')" style="color: #533f03; text-decoration: underline; font-weight: 500; cursor: pointer;">Xem chi tiết</a>
+        <div class="rg-actions rg-actions-center">
+            ${(o.status === 'return_pending') ? `
+            <div class="flex-grow-1 text-start">
+                <span class="rg-return-alert">
+                    Đã yêu cầu đổi trả.
                 </span>
             </div>` : ''}
             ${canCancelOrder(o) ? `
@@ -647,7 +500,6 @@ function buildOrderCard(o) {
     </div>`;
 }
 
-// ── Actions ───────────────────────────────────────────────────────────────
 window.handleGuestBookingAction = function(bookingId, action) {
     const phone = document.getElementById('rg-phone').value.trim();
     if (!phone) { showToast('Vui lòng nhập số điện thoại trước.', 'info'); return; }
@@ -671,8 +523,7 @@ window.handleGuestCancelOrder = function(orderId) {
     if (!phone) { showToast('Vui lòng nhập số điện thoại trước.', 'info'); return; }
 
     // Tìm đơn để kiểm tra trạng thái thanh toán
-    const orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-    const order = orders.find(o => o.id === orderId);
+    const order = rgLastSearchState.orders.find(o => o.id === orderId);
     const isPaidOnline = order
         && (order.paymentStatus === 'paid' || order.payment?.status === 'paid')
         && order.paymentMethod !== 'cod'
@@ -705,16 +556,6 @@ window.handleGuestConfirmOrder = async function(orderId) {
             if (order) {
                 order.status = 'completed';
                 order.updatedAt = new Date().toISOString();
-                
-                const allOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-                const index = allOrders.findIndex(o => String(o.id) === String(order.id));
-                if (index !== -1) {
-                    allOrders[index].status = 'completed';
-                    allOrders[index].orderStatus = 'COMPLETED';
-                } else {
-                    allOrders.push({ ...order, status: 'completed', orderStatus: 'COMPLETED' });
-                }
-                localStorage.setItem('pawpal_orders', JSON.stringify(allOrders));
             }
             
             // Cập nhật lại UI
@@ -750,35 +591,19 @@ window.handleGuestReturnRequest = function(orderId) {
         'Bạn có muốn gửi yêu cầu đổi trả cho đơn hàng này?',
         phone,
         () => {
-            // Tìm đơn từ kết quả search hiện tại (đã merge localStorage + seed)
-            const order = (rgLastSearchState.orders || []).find(o => o.id === orderId)
-                        || JSON.parse(localStorage.getItem('pawpal_orders') || '[]').find(o => o.id === orderId);
+            // Tìm đơn từ kết quả search hiện tại
+            const order = (rgLastSearchState.orders || []).find(o => o.id === orderId);
 
             if (!order) {
                 showToast('Không tìm thấy đơn hàng.', 'error');
                 return;
             }
 
-            // Sync đơn vào localStorage để openRMADrawer đọc được
-            try {
-                const stored = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-                if (!stored.find(o => o.id === orderId)) {
-                    stored.unshift(order);
-                    localStorage.setItem('pawpal_orders', JSON.stringify(stored));
-                }
-            } catch (_) {}
-
-            // Mở RMA drawer
+            // Chuyển hướng tới trang chi tiết đổi trả (nếu có openRMADrawer thì gọi)
             if (typeof openRMADrawer === 'function') {
                 openRMADrawer(orderId);
             } else {
-                const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
-                const existing = returnsList.find(r => r.orderId === orderId);
-                if (existing) {
-                    window.location.href = `/pages/user/return-detail/return-detail.html?orderId=${orderId}`;
-                } else {
-                    showToast('Vui lòng liên hệ Hotline: 1900 xxxx để được hỗ trợ đổi trả.', 'info');
-                }
+                window.location.href = `/pages/user/return-detail/return-detail.html?orderId=${orderId}`;
             }
         }
     );
@@ -878,7 +703,7 @@ function showOTPModal(phone, onSuccess) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center py-4">
-                    <p class="text-muted small mb-4">Mã OTP 6 số đã được gửi đến <strong>${esc(phone)}</strong>.<br><span class="text-muted" style="font-size:0.8rem">(Mã test: 555666)</span></p>
+                    <p class="text-muted small mb-4">Mã OTP 6 số đã được gửi đến <strong>${esc(phone)}</strong>.<br><span class="text-muted" class="rg-otp-hint">(Mã test: 555666)</span></p>
                     <div class="otp-inputs-wrapper mb-3">
                         ${Array.from({length:6}, (_,i) =>
                             `<input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric"${i>0?' disabled':''}>`
@@ -1011,17 +836,17 @@ window.handleGuestViewCareLog = async function(bookingId) {
             return `
                 <div class="timeline-item ${isUrgent ? 'timeline-item-urgent' : ''}" style="display:flex; margin-bottom:1.5rem; position:relative;">
                     <div style="width: 12px; height: 12px; border-radius: 50%; background: ${isUrgent ? 'var(--color-danger)' : 'var(--color-primary)'}; position: absolute; left: -6px; top: 6px;"></div>
-                    <div style="border-left: 2px solid #e2e8f0; padding-left: 1.5rem; width: 100%;">
-                        <div style="font-size: 0.85rem; color: #64748b;">${time} - ${date}</div>
+                    <div class="rg-timeline-content">
+                        <div class="rg-timeline-time">${time} - ${date}</div>
                         <h5 style="margin: 0.25rem 0; font-weight: 600; color: ${isUrgent ? 'var(--color-danger)' : 'inherit'}">
                             ${esc(log.care_action?.action_name || 'Cập nhật')}
                         </h5>
-                        <p style="margin-bottom: 0.5rem;">${esc(log.description)}</p>
-                        <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.5rem;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                        <p class="mb-2">${esc(log.description)}</p>
+                        <div class="rg-timeline-meta">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                             ${esc(staffName)}
                         </div>
-                        ${mediaUrl ? `<img src="${normalizeImageUrl(mediaUrl)}" alt="Photo" style="max-width: 100%; border-radius: 8px; margin-top: 0.5rem; max-height: 200px; object-fit: cover;">` : ''}
+                        ${mediaUrl ? `<img src="${normalizeImageUrl(mediaUrl)}" alt="Photo" class="rg-timeline-img">` : ''}
                     </div>
                 </div>
             `;
@@ -1048,8 +873,8 @@ function getOrCreateGuestCareLogModal() {
                         <h5 class="modal-title" id="guestCareLogTitle">Nhật ký chăm sóc</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body" style="padding-left: 2rem;">
-                        <div id="guestCareLogTimeline" style="position: relative; border-left: 2px solid transparent;"></div>
+                    <div class="modal-body ps-4">
+                        <div id="guestCareLogTimeline" class="rg-timeline-wrapper"></div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Đóng</button>
@@ -1109,9 +934,6 @@ function confirmCancelBooking(bookingId) {
     // Cập nhật trạng thái hiển thị local
     booking.status = 'cancelled';
     booking.cancelCount = (booking.cancelCount || 0) + 1;
-    
-    // Lưu vào localStorage pawpal_bookings
-    
 
     // Gọi API hoặc kết nối Supabase
     if (window.API && typeof window.API.updateBookingStatus === 'function') {
@@ -1146,90 +968,6 @@ function confirmCancelOrder(orderId) {
     order.status = 'cancelled';
     order.orderStatus = 'CANCELLED';
     order.updatedAt = new Date().toISOString();
-    
-    // Cập nhật pawpal_orders nếu có
-    const orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-    const idx = orders.findIndex(o => String(o.id) === String(orderId));
-    if (idx !== -1) {
-        orders[idx].status = 'cancelled';
-        orders[idx].orderStatus = 'CANCELLED';
-
-        // Trừ điểm Paw Points nếu đơn đã cộng điểm (pointsAwarded)
-        if (order.pointsAwarded && order.pointsEarned > 0) {
-            // Point sync should now happen through Supabase in a real app.
-            // For guest/offline mode we skip it since pawpal_users_db is removed.
-        }
-        localStorage.setItem('pawpal_orders', JSON.stringify(orders));
-    } else {
-        orders.push({ ...order, status: 'cancelled', orderStatus: 'CANCELLED' });
-        localStorage.setItem('pawpal_orders', JSON.stringify(orders));
-    }
-
-    // Hoàn tồn kho
-    try {
-        const storedProducts = JSON.parse(localStorage.getItem('pawpal_products') || '[]');
-        if (storedProducts.length && Array.isArray(order.products)) {
-            order.products.forEach(item => {
-                const pi = storedProducts.findIndex(p => String(p.id) === String(item.id));
-                if (pi !== -1) {
-                    storedProducts[pi].stock = (Number(storedProducts[pi].stock) || 0) + (Number(item.quantity) || 0);
-                    storedProducts[pi].inStock = true;
-                }
-            });
-            localStorage.setItem('pawpal_products', JSON.stringify(storedProducts));
-        }
-    } catch (_) {}
-
-    // Ghi nhận hoàn tiền nếu đã thanh toán online
-    const isPaidOnline = (order.paymentStatus === 'paid' || order.payment?.status === 'paid')
-                      && order.paymentMethod && order.paymentMethod !== 'cod';
-    if (isPaidOnline) {
-        const refunds = JSON.parse(localStorage.getItem('pawpal_refunds') || '[]');
-        refunds.push({
-            orderId: order.id,
-            amount: order.pricing?.total || 0,
-            paymentMethod: order.paymentMethod,
-            status: 'pending_refund',
-            createdAt: new Date().toISOString()
-        });
-        localStorage.setItem('pawpal_refunds', JSON.stringify(refunds));
-        orders[idx].paymentStatus = 'pending_refund';
-    }
-
-    // Trừ điểm Paw Points nếu đơn đã cộng điểm (pointsAwarded)
-    if (order.pointsAwarded && order.pointsEarned > 0) {
-        try {
-            const users = JSON.parse('[]' || '[]');
-            const phone = order.delivery?.phone || order.userPhone || '';
-            const ui = users.findIndex(u => u.phone === phone);
-            if (ui !== -1) {
-                users[ui].points = Math.max(0, (users[ui].points || 0) - order.pointsEarned);
-                /* localStorage.setItem pawpal_users_db removed */
-                // Sync session nếu đang đăng nhập
-                const sessionUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-                if (sessionUser && sessionUser.phone === phone) {
-                    sessionUser.points = users[ui].points;
-                    localStorage.setItem('pawpal_current_user', JSON.stringify(sessionUser));
-                }
-            }
-        } catch (_) {}
-    }
-
-    // Cập nhật lại timeline trong local storage (nếu có)
-    const finalOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-    const finalIdx = finalOrders.findIndex(o => String(o.id) === String(orderId));
-    if (finalIdx !== -1) {
-        if (!Array.isArray(finalOrders[finalIdx].timeline)) finalOrders[finalIdx].timeline = [];
-        finalOrders[finalIdx].timeline.push({
-            status: 'cancelled',
-            timestamp: new Date().toISOString(),
-            title: 'Đã hủy',
-            description: isPaidOnline
-                ? `Khách hàng hủy đơn. Yêu cầu hoàn tiền ${fmtPrice(order.pricing?.total || 0)} đã được ghi nhận.`
-                : 'Khách hàng hủy đơn hàng'
-        });
-        localStorage.setItem('pawpal_orders', JSON.stringify(finalOrders));
-    }
 
     // Gọi API hoặc kết nối Supabase
     if (window.API && typeof window.API.updateOrderStatus === 'function') {
@@ -1273,18 +1011,18 @@ function showChangeScheduleModal(bookingId, phone) {
 
     // Disabled cho đến khi chọn ngày
     const slotsHtml = slots.map(s =>
-        `<button class="rg-slot-time" data-time="${s}" disabled style="opacity:0.4;cursor:not-allowed;">${s}</button>`
+        `<button class="rg-slot-time" data-time="${s}" disabled class="rg-slot-disabled">${s}</button>`
     ).join('');
 
     const staffHtml = staffs.map(s => {
         const initials = s.name === 'Phân bổ ngẫu nhiên' ? '🎲' : s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
         return `
             <div class="rg-staff-card" data-name="${s.name}" tabindex="-1" role="button"
-                style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:not-allowed;opacity:0.4;transition:all .2s;pointer-events:none;">
-                <div style="width:36px;height:36px;border-radius:50%;background:#e8f5e9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:#2e7d32;flex-shrink:0;">${initials}</div>
+                class="rg-staff-slot-disabled">
+                <div class="rg-staff-avatar">${initials}</div>
                 <div>
-                    <div style="font-weight:700;font-size:0.88rem;color:#2e7d32;">${s.name}</div>
-                    <div style="font-size:0.75rem;color:#64748b;">${s.desc}</div>
+                    <div class="rg-staff-name">${s.name}</div>
+                    <div class="rg-staff-desc">${s.desc}</div>
                 </div>
             </div>`;
     }).join('');
@@ -1307,19 +1045,19 @@ function showChangeScheduleModal(bookingId, phone) {
                 <div class="modal-body">
                     <p class="text-muted small mb-3">Chọn ngày trước, sau đó chọn giờ và nhân viên.</p>
 
-                    <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn ngày</div>
-                    <input type="date" id="rg-date-picker" class="form-control mb-4" min="${minDate}" style="max-width:220px;">
+                    <div class="mb-1 fw-semibold" class="rg-label-sm">Chọn ngày</div>
+                    <input type="date" id="rg-date-picker" class="form-control mb-4" min="${minDate}" class="rg-date-input">
 
-                    <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn giờ</div>
+                    <div class="mb-1 fw-semibold" class="rg-label-sm">Chọn giờ</div>
                     <div class="rg-time-grid mb-3" id="rg-slot-grid">${slotsHtml}</div>
-                    <div id="rg-hold-banner" class="d-none mb-3" style="font-size:0.82rem;padding:8px 12px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;color:#7a5c00;">
+                    <div id="rg-hold-banner" class="d-none mb-3" class="rg-hold-banner">
                         ⏳ <strong>Giữ chỗ tạm thời:</strong> Giờ <strong id="rg-hold-label"></strong> được giữ riêng cho bạn trong <strong id="rg-hold-countdown"></strong>
                     </div>
 
-                    <div class="mb-1 fw-semibold" style="font-size:0.88rem;">Chọn nhân viên</div>
-                    <div id="rg-staff-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:12px;">${staffHtml}</div>
+                    <div class="mb-1 fw-semibold" class="rg-label-sm">Chọn nhân viên</div>
+                    <div id="rg-staff-list" class="rg-staff-grid">${staffHtml}</div>
 
-                    <div class="rg-slot-selected mt-2 d-none" id="rg-slot-info" style="font-size:0.85rem;color:#2e7d32;display:flex;align-items:center;gap:6px;">
+                    <div class="rg-slot-selected mt-2 d-none" id="rg-slot-info" class="rg-slot-info-box">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                         Đã chọn: <strong id="rg-slot-text"></strong>
                     </div>
@@ -1484,8 +1222,8 @@ function showUpsellModal(phone) {
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-body text-center py-4 px-4">
-                        <div style="font-size:2.2rem;margin-bottom:12px">🐾</div>
-                        <h5 class="fw-bold mb-2" style="color:var(--color-primary-dark)">Thao tác thành công!</h5>
+                        <div class="rg-success-icon">🐾</div>
+                        <h5 class="fw-bold mb-2" class="rg-success-title">Thao tác thành công!</h5>
                         <p class="text-muted mb-4">Thiết lập mật khẩu để quản lý lịch hẹn, tích điểm Paw Points và nhận nhiều ưu đãi thành viên.</p>
                         <div class="d-flex flex-column gap-2">
                             <button class="btn-cta w-100" id="rg-upsell-setup">Thiết lập mật khẩu ngay</button>
@@ -1537,74 +1275,3 @@ function showToast(msg, type = 'info') {
     setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 4000);
 }
 
-// --- HIỂN THỊ POPUP CHI TIẾT ĐỔI TRẢ CHO KHÁCH VÃNG LAI ---
-window.showGuestReturnDetail = function(orderId) {
-    const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
-    const ret = returnsList.find(r => r.orderId === orderId);
-    if (!ret) {
-        showToast('Không tìm thấy thông tin đổi trả!', 'error');
-        return;
-    }
-
-    let itemsHtml = '';
-    if (ret.items && ret.items.length) {
-        itemsHtml = ret.items.map(i => `
-            <div class="mb-3 p-3 border rounded" style="background: #fafafa">
-                <div class="fw-bold mb-1">${i.name} (SL: ${i.quantity})</div>
-                <div class="small text-muted mb-1">Tình trạng: ${i.condition}</div>
-                <div class="small">Lý do: <span class="fw-medium">${i.reason}</span></div>
-            </div>
-        `).join('');
-    }
-
-    let refundInfoHtml = '';
-    if (ret.refundMethod === 'VNPAY') {
-        refundInfoHtml = `<div class="mt-3 p-3 bg-light rounded border">
-            <h6 class="fw-bold mb-2">Thông tin nhận tiền (VNPAY/Chuyển khoản)</h6>
-            <div class="small"><strong>Ngân hàng:</strong> ${ret.refundBank}</div>
-            <div class="small"><strong>Số TK:</strong> ${ret.refundAccount}</div>
-            <div class="small"><strong>Chủ TK:</strong> ${ret.refundName}</div>
-        </div>`;
-    }
-
-    const modalHtml = `
-        <div class="modal fade" id="guestReturnDetailModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header border-bottom bg-light">
-                        <h5 class="modal-title fw-bold text-primary">Chi tiết Yêu cầu Đổi trả</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
-                            <div>
-                                <div class="text-muted small text-uppercase fw-semibold mb-1">Mã đơn hàng</div>
-                                <div class="fw-bold fs-5">${orderId}</div>
-                            </div>
-                            <div class="text-end">
-                                <span class="badge bg-warning text-dark px-3 py-2 fs-6 rounded-pill">Đang chờ xử lý</span>
-                            </div>
-                        </div>
-                        <div class="mb-4 d-flex justify-content-between text-muted small">
-                            <span><strong>Ngày gửi yêu cầu:</strong> ${ret.createdAt || 'Gần đây'}</span>
-                            <span><strong>Kiểu yêu cầu:</strong> ${ret.requestType === 'refund' ? 'Hoàn tiền' : 'Đổi sản phẩm'}</span>
-                        </div>
-                        <h6 class="fw-bold mb-3 text-secondary">Sản phẩm đổi/trả:</h6>
-                        ${itemsHtml}
-                        ${refundInfoHtml}
-                    </div>
-                    <div class="modal-footer border-top-0 bg-light rounded-bottom">
-                        <button type="button" class="btn-cta w-100 py-2 rounded-pill shadow-sm" data-bs-dismiss="modal">Đóng</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    const existing = document.getElementById('guestReturnDetailModal');
-    if (existing) existing.remove();
-
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    const modal = new bootstrap.Modal(document.getElementById('guestReturnDetailModal'));
-    modal.show();
-};
