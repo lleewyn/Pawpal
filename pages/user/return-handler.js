@@ -1,24 +1,19 @@
-/**
- * RETURN HANDLER JS - Triển khai luồng đổi trả hàng (Quy trình 3.1.12)
- * - Tối giản logic JS, tập trung hiển thị UI/UX và animation
- * - Tuân thủ 100% design.md (không emoji, dùng text char •, ->)
- */
+
 
 let currentRmaOrder = null;
 
-// Khởi tạo Drawer HTML và chèn vào container
 function openRMADrawer(orderId) {
-    // Tìm thông tin đơn hàng từ danh sách đã load (ordersState có sẵn trong scope toàn cục ở orders.html)
+    
     if (typeof ordersState !== 'undefined' && ordersState.allOrders) {
         currentRmaOrder = ordersState.allOrders.find(o => o.id === orderId);
     }
 
-    // Fallback: Nếu không tìm thấy, lấy từ backend (order có thể được fetch độc lập)
+    
     if (!currentRmaOrder && window.SupabaseClient) {
-        // Tạm thời để trống, return-detail hoặc orders sẽ lo liệu việc fetch nếu rmaOrder chưa có.
+        
     }
     
-    // Safe fallback if the order list is unavailable
+    
     if (!currentRmaOrder) {
         currentRmaOrder = {
             id: orderId,
@@ -35,7 +30,7 @@ function openRMADrawer(orderId) {
 
     const container = document.getElementById('rma-drawer-container') || createRmaDrawerContainer();
 
-    // Render cấu trúc Drawer
+    
     container.innerHTML = `
         <div class="rma-drawer-overlay" id="rma-overlay"></div>
         <div class="rma-drawer" id="rma-drawer">
@@ -126,19 +121,18 @@ function openRMADrawer(orderId) {
         </div>
     `;
 
-    // Trigger animations bằng cách thêm class sau 50ms
+    
     setTimeout(() => {
         document.getElementById('rma-overlay').classList.add('is-open');
         document.getElementById('rma-drawer').classList.add('is-open');
     }, 50);
 
-    // Đăng ký sự kiện điều khiển
+    
     setupDrawerListeners();
 }
 
 window.openRMADrawer = openRMADrawer;
 
-// Thiết lập sự kiện lắng nghe cho Drawer
 function setupDrawerListeners() {
     const overlay = document.getElementById('rma-overlay');
     const drawer = document.getElementById('rma-drawer');
@@ -147,19 +141,19 @@ function setupDrawerListeners() {
     const uploadTrigger = document.getElementById('rma-upload-trigger');
     const submitBtn = document.getElementById('rma-submit-btn');
 
-    // Hàm đóng Drawer kèm transition mượt mà
+    
     const closeDrawer = () => {
         overlay.classList.remove('is-open');
         drawer.classList.remove('is-open');
         setTimeout(() => {
             document.getElementById('rma-drawer-container').innerHTML = '';
-        }, 400); // khớp transition CSS
+        }, 400); 
     };
 
     overlay.addEventListener('click', closeDrawer);
     closeBtn.addEventListener('click', closeDrawer);
 
-    // Đổi style Radio Cards khi click chọn
+    
     const cardExchange = document.getElementById('radio-card-exchange');
     const cardRefund = document.getElementById('radio-card-refund');
 
@@ -177,12 +171,12 @@ function setupDrawerListeners() {
         document.getElementById('rma-refund-account-group').style.display = 'block';
     });
 
-    // Kích hoạt upload file
+    
     uploadTrigger.addEventListener('click', () => {
         fileInput.click();
     });
 
-    // Preview hình ảnh khi upload
+    
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         const warningEl = document.getElementById('rma-upload-warning');
@@ -193,15 +187,15 @@ function setupDrawerListeners() {
 
         if (!file) return;
 
-        // Kiểm tra dung lượng (5MB)
+        
         if (file.size > 5 * 1024 * 1024) {
             warningEl.textContent = 'Dung lượng file vượt quá giới hạn 5MB. Vui lòng chọn file nhỏ hơn.';
             warningEl.style.display = 'block';
-            fileInput.value = ''; // Reset input
+            fileInput.value = ''; 
             return;
         }
 
-        // Tạo preview nếu là hình ảnh
+        
         if (file.type.startsWith('image/')) {
             const reader = new FileReader();
             reader.onload = (event) => {
@@ -214,7 +208,7 @@ function setupDrawerListeners() {
             };
             reader.readAsDataURL(file);
         } else {
-            // Video preview đơn giản
+            
             previewContainer.innerHTML = `
                 <div style="position: relative; font-size: 0.8rem; background: var(--color-primary-light); padding: 6px; border-radius: 6px; border: 1px solid var(--color-border);">
                      ${file.name}
@@ -224,20 +218,20 @@ function setupDrawerListeners() {
         }
     });
 
-    // Submit Yêu cầu đổi trả
+    
     submitBtn.addEventListener('click', async () => {
         const checkedItems = document.querySelectorAll('.rma-product-checkbox:checked');
         const reason = document.getElementById('rma-reason').value;
         const file = fileInput.files[0];
         const warningEl = document.getElementById('rma-upload-warning');
 
-        // Bắt buộc chọn ít nhất 1 sản phẩm
+        
         if (checkedItems.length === 0) {
             alert('Vui lòng chọn ít nhất một sản phẩm cần đổi trả!');
             return;
         }
 
-        // Bắt buộc ảnh minh chứng đối với lỗi do shop (broken hoặc wrong_item)
+        
         if ((reason === 'broken' || reason === 'wrong_item') && !file) {
             warningEl.textContent = 'Lý do này bắt buộc phải tải lên hình ảnh hoặc video thực tế của sản phẩm làm minh chứng.';
             warningEl.style.display = 'block';
@@ -249,11 +243,11 @@ function setupDrawerListeners() {
             orderId: currentRmaOrder.id,
             rmaId: 'RMA-' + Math.floor(10000 + Math.random() * 90000),
             createdAt: new Date().toISOString(),
-            status: 'reviewing', // Bắt đầu ở bước Chờ kiểm duyệt — điểm chỉ trừ khi status = 'completed'
+            status: 'reviewing', 
             reason: reason,
             type: returnType,
             description: document.getElementById('rma-desc').value,
-            // Lưu thêm thông tin TK hoàn tiền cho COD refund
+            
             refundAccount: returnType === 'refund'
                 ? (document.getElementById('rma-refund-account')?.value?.trim() || '')
                 : '',
@@ -263,19 +257,19 @@ function setupDrawerListeners() {
             })
         };
 
-        // UI Loading state
+        
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = 'Đang gửi...';
         submitBtn.disabled = true;
 
-        // Gọi Supabase API
+        
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
         const customerId = currentUser ? currentUser.id : null;
 
         if (db) {
             try {
-                // Thêm vào bảng return_request
+                
                 const { data: rData, error: rErr } = await db.from('return_request').insert([{
                     sales_order_id: currentRmaOrder._supabaseId || currentRmaOrder.id,
                     customer_id: customerId,
@@ -290,9 +284,9 @@ function setupDrawerListeners() {
                 
                 if (rData && rData.length > 0) {
                     const newRmaId = rData[0].id;
-                    returnData.rmaId = newRmaId; // Đồng bộ ID từ DB để lưu vào localStorage fallback
+                    returnData.rmaId = newRmaId; 
 
-                    // Thêm vào bảng return_request_detail
+                    
                     const details = returnData.products.map(p => ({
                         return_request_id: newRmaId,
                         product_id: p.id,
@@ -305,34 +299,34 @@ function setupDrawerListeners() {
                 }
             } catch (err) {
                 console.error('[ReturnHandler] Lỗi khi tạo RMA trên Supabase:', err);
-                // Vẫn tiếp tục lưu vào localStorage (Fallback)
+                
             }
         }
 
-        // Không trừ điểm ngay — điểm sẽ được trừ khi admin chuyển RMA sang 'completed'
-        // (Logic trừ điểm đặt tại return-detail.js khi cập nhật status)
+        
+        
 
-        // Khôi phục UI
+        
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
 
-        // Đóng Drawer
+        
         closeDrawer();
 
-        // Nếu đang ở trang tra cứu vãng lai → không redirect, chỉ refresh kết quả
+        
         const isGuestLookup = window.location.pathname.includes('return-guest');
         if (isGuestLookup) {
             setTimeout(() => {
-                // Re-submit form tra cứu để cập nhật lại danh sách
+                
                 const searchForm = document.getElementById('rg-form');
                 if (searchForm) searchForm.dispatchEvent(new Event('submit'));
-                // Hiện toast xác nhận
+                
                 if (typeof showToast === 'function') {
                     showToast('Yêu cầu đổi trả đã được ghi nhận thành công!', 'success');
                 }
             }, 200);
         } else {
-            // Trang thành viên → redirect đến chi tiết đổi trả
+            
             setTimeout(() => {
                 window.location.href = `/pages/user/return-detail/return-detail.html?orderId=${currentRmaOrder.id}`;
             }, 100);
@@ -347,7 +341,7 @@ function createRmaDrawerContainer() {
         return container;
     }
 
-    // Xóa file đã tải lên
+    
 function removeRmaFile() {
     const fileInput = document.getElementById('rma-file-input');
     const previewContainer = document.getElementById('rma-preview-container');

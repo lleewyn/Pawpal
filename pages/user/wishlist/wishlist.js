@@ -1,6 +1,5 @@
-// ==========================================================================
-// wishlist.js - Wishlist Page Logic
-// ==========================================================================
+
+
 
 (function () {
     'use strict';
@@ -92,7 +91,7 @@
             finalProductIds = serverWishlist.productIds || [];
             finalServiceIds = serverWishlist.serviceIds || [];
             
-            // Cập nhật lại local cache
+            
             saveWishlistRaw(getProductWishlistStorageKey(), finalProductIds);
             saveWishlistRaw(getServiceWishlistStorageKey(), finalServiceIds);
         } else {
@@ -106,7 +105,7 @@
             finalProductIds = [...new Set(productIdsRaw.map(String))];
             finalServiceIds = [...new Set(serviceIdsRaw.map(String))];
             
-            // Xoá pawpal_wishlist chung nếu có
+            
             if (getProductWishlistStorageKey() !== 'pawpal_wishlist') {
                 saveWishlistRaw(getProductWishlistStorageKey(), finalProductIds);
                 localStorage.removeItem('pawpal_wishlist');
@@ -310,7 +309,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Đợi window.API sẵn sàng (api-global.js là module, có thể chạy sau)
+        
         function runWhenReady() {
             if (window.API && window.DataLoader) {
                 bindTabs();

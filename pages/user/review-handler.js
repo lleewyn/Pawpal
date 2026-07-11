@@ -1,35 +1,13 @@
-/**
- * review-handler.js — QUY TRÌNH 3.1.11: ĐÁNH GIÁ  (Shopee-style batch)
- *
- * Covers:
- *   US 11-1  Hiển thị nút "Đánh giá" / "Xem đánh giá"
- *   US 11-2  Batch form tất cả sản phẩm trong 1 lần + kiểm tra quyền sở hữu
- *   US 11-3  Star rating (default 5★), nhận xét, upload ảnh/video per product
- *   US 11-4  Confirm-on-button 2-tap + 5s countdown
- *   US 11-6  Cộng điểm Paw Points + toast
- *   US 11-7  Lightbox xem ảnh upload
- *   US 11-8  Offline draft auto-save + auto-retry
- *
- * Public API (global):
- *   ReviewHandler.init(orderId, products)   — gọi từ order-detail.js
- *   ReviewHandler.hasOrderReviewed(orderId) — check toàn đơn đã reviewed chưa
- *   ReviewHandler.Lightbox                  — lightbox singleton
- *
- * Storage:
- *   pawpal_reviews         — array of review objects (per-product)
- *   pawpal_reviewed        — array of { orderId, productId, hasMedia } (backwards compat)
- *   pawpal_order_reviewed  — array of orderId đã submit batch (new)
- *   pawpal_review_draft_<orderId> — draft cho toàn đơn
- */
+
 
 (function (global) {
     'use strict';
 
-    // ── Storage helpers ─────────────────────────────────────────────────────
+    
     const DRAFT_KEY_PREFIX  = 'pawpal_review_draft_';
     const REVIEWS_KEY       = 'pawpal_reviews';
-    const REVIEWED_KEY      = 'pawpal_reviewed';          // per-product (compat)
-    const ORDER_REVIEWED_KEY = 'pawpal_order_reviewed';   // per-order batch lock
+    const REVIEWED_KEY      = 'pawpal_reviewed';          
+    const ORDER_REVIEWED_KEY = 'pawpal_order_reviewed';   
 
     function saveDraft(orderId, data) {
         try { localStorage.setItem(DRAFT_KEY_PREFIX + orderId, JSON.stringify(data)); } catch (_) {}
@@ -54,7 +32,7 @@
         try { localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews)); } catch (_) {}
     }
 
-    /** Check toàn bộ đơn đã được submit batch chưa */
+    
     function hasOrderReviewed(orderId) {
         if (window.pawpalReviews) {
             return window.pawpalReviews.some(r => String(r.sales_order_id) === String(orderId) || String(r.order_id) === String(orderId) || String(r.sales_order_code) === String(orderId));
@@ -75,7 +53,7 @@
         } catch (_) {}
     }
 
-    /** Backwards-compat: ghi per-product entry vào pawpal_reviewed */
+    
     function markProductReviewedCompat(orderId, productId, hasMedia) {
         try {
             const list = JSON.parse(localStorage.getItem(REVIEWED_KEY) || '[]');
@@ -84,7 +62,7 @@
         } catch (_) {}
     }
 
-    // ── Paw Points Toast ────────────────────────────────────────────────────
+    
     function showPawPointsToast(points) {
         let toast = document.getElementById('paw-points-toast');
         if (!toast) {
@@ -103,7 +81,7 @@
         setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // ── Lightbox (Singleton) ────────────────────────────────────────────────
+    
     const Lightbox = (function () {
         let overlay, mediaEl, prevBtn, nextBtn, closeBtn;
         let items = [], currentIndex = 0;
@@ -174,16 +152,16 @@
         return { open };
     })();
 
-    // ── Star Emotion Labels ─────────────────────────────────────────────────
+    
     const EMOTIONS = ['', 'Rất tệ', 'Tệ', 'Bình thường', 'Hài lòng', 'Rất hài lòng'];
 
-    // ── Build HTML cho 1 product row trong batch form ───────────────────────
+    
     function buildProductRowHTML(product, draft) {
         const pid     = product.id;
         const defRating = (draft && draft[pid] && draft[pid].rating) ? draft[pid].rating : 5;
         const defComment = (draft && draft[pid] && draft[pid].comment) ? draft[pid].comment : '';
 
-        // Build radio inputs — checked state dựa trên draft hoặc default 5
+        
         const starInputs = [5, 4, 3, 2, 1].map(v => `
             <input type="radio" name="rating-${pid}" id="star${v}-${pid}" value="${v}" ${defRating === v ? 'checked' : ''}>
             <label for="star${v}-${pid}" aria-label="${v} sao — ${EMOTIONS[v]}" title="${EMOTIONS[v]}">&#9733;</label>
@@ -244,7 +222,7 @@
         </div>`;
     }
 
-    // ── Build toàn bộ batch form section ───────────────────────────────────
+    
     function buildBatchFormHTML(orderId, products, draft) {
         const rows = products.map(p => buildProductRowHTML(p, draft)).join('');
 
@@ -281,7 +259,7 @@
         </div>`;
     }
 
-    // ── Build "Đã đánh giá" section ──────────────────────────────────────────
+    
     function buildReviewedHTML(productCount) {
         return `
         <div class="batch-reviewed-done" id="batch-reviewed-done">
@@ -293,7 +271,7 @@
         </div>`;
     }
 
-    // ── Wire upload zone cho 1 product ──────────────────────────────────────
+    
     function wireUploadZone(pid, uploadedFilesMap) {
         uploadedFilesMap[pid] = [];
 
@@ -306,7 +284,7 @@
 
         if (!toggleBtn || !zone) return;
 
-        // Toggle collapse
+        
         toggleBtn.addEventListener('click', () => {
             const isHidden = zone.hidden;
             zone.hidden = !isHidden;
@@ -316,7 +294,7 @@
                 : '📷 Thêm ảnh/video';
         });
 
-        // Click & drag-drop
+        
         dropArea.addEventListener('click', () => fileInput.click());
         dropArea.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
         dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('drag-over'); });
@@ -384,7 +362,7 @@
         }
     }
 
-    // ── Wire toàn bộ batch form ─────────────────────────────────────────────
+    
     function wireBatchForm(orderId, products) {
         const section    = document.getElementById(`batch-review-section-${orderId}`);
         const submitBtn  = document.getElementById(`batch-submit-btn-${orderId}`);
@@ -392,14 +370,14 @@
 
         if (!section || !submitBtn) return;
 
-        // uploadedFilesMap: { [productId]: Array<{ file, src, type }> }
+        
         const uploadedFilesMap = {};
 
-        // Wire star + textarea + upload per product
+        
         products.forEach(product => {
             const pid = product.id;
 
-            // Star rating
+            
             section.querySelectorAll(`input[name="rating-${pid}"]`).forEach(radio => {
                 radio.addEventListener('change', () => {
                     const emotionEl = document.getElementById(`batch-emotion-${pid}`);
@@ -408,7 +386,7 @@
                 });
             });
 
-            // Textarea char counter
+            
             const textarea = document.getElementById(`batch-comment-${pid}`);
             const counter  = document.getElementById(`batch-char-${pid}`);
             if (textarea && counter) {
@@ -418,11 +396,11 @@
                 });
             }
 
-            // Upload zone
+            
             wireUploadZone(pid, uploadedFilesMap);
         });
 
-        // Auto-save draft (tất cả products)
+        
         function autoSaveDraft() {
             const draftData = {};
             products.forEach(product => {
@@ -437,7 +415,7 @@
             saveDraft(orderId, draftData);
         }
 
-        // Offline detection
+        
         let pendingOfflineSubmit = null;
         window.addEventListener('online', () => {
             offlineBanner && offlineBanner.classList.remove('visible');
@@ -447,9 +425,9 @@
             offlineBanner && offlineBanner.classList.add('visible');
         });
 
-        // Submit ngay khi bấm — không cần 2-tap xác nhận
+        
         submitBtn.addEventListener('click', () => {
-            // Security check
+            
             const userId = getCurrentUserId();
             if (!userId || userId === 'GUEST') {
                 showToast('Bạn cần đăng nhập để gửi đánh giá.', 'error');
@@ -484,7 +462,7 @@
                 const rating      = ratingInput ? parseInt(ratingInput.value, 10) : 5;
                 const comment     = textarea ? textarea.value.trim() : '';
                 const files       = uploadedFilesMap[pid] || [];
-                // Xác định user có chủ ý chọn sao không (default = 5 và chưa từng change)
+                
                 const isDefaultRating = !ratingInput || (rating === 5);
 
                 const review = {
@@ -506,33 +484,33 @@
 
                 newReviews.push(review);
 
-                // Backwards-compat per-product entry
+                
                 markProductReviewedCompat(orderId, pid, files.length > 0);
 
-                // Paw Points: 5 pts nếu có ảnh, 1 pt nếu không
+                
                 totalPoints += files.length > 0 ? 5 : 1;
             });
 
-            // Persist reviews
+            
             const allReviews = getStoredReviews();
             allReviews.push(...newReviews);
             saveStoredReviews(allReviews);
 
-            // Supabase integration
+            
             const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (db) {
                 const customerId = getCurrentUserId();
-                if (customerId !== 'GUEST' && customerId.length >= 32) { // check valid UUID
+                if (customerId !== 'GUEST' && customerId.length >= 32) { 
                     for (const rv of newReviews) {
                         try {
                             const { error: dbErr } = await db.from('review').insert({
                                 customer_id: customerId,
-                                product_id: rv.productId.length >= 32 ? rv.productId : null, // Handle UUID check
+                                product_id: rv.productId.length >= 32 ? rv.productId : null, 
                                 review_type: 'PRODUCT',
                                 rating: rv.rating,
                                 review_content: rv.comment,
                                 image_urls: rv.media.map(m => m.src),
-                                review_status: 'APPROVED', // Default as per plan
+                                review_status: 'APPROVED', 
                                 created_at: rv.createdAt
                             });
                             if (dbErr) console.warn('[ReviewHandler] Supabase insert failed:', dbErr);
@@ -543,25 +521,25 @@
                 }
             }
 
-            // Lock toàn đơn
+            
             markOrderReviewed(orderId);
             clearDraft(orderId);
 
-            // Paw Points
+            
             addPawPoints(totalPoints);
             showPawPointsToast(totalPoints);
 
-            // Update UI → replace section với "Đã đánh giá"
+            
             section.outerHTML = buildReviewedHTML(products.length);
 
-            // Trigger event để order-detail.js update nút actions
+            
             window.dispatchEvent(new CustomEvent('pawpal:reviewSubmitted', { detail: { orderId } }));
 
             console.log(`[ReviewHandler] Batch submitted ${newReviews.length} reviews for order ${orderId}, +${totalPoints} pts`);
         }
     }
 
-    // ── Utility: current user ───────────────────────────────────────────────
+    
     function getCurrentUserId() {
         try {
             const u = JSON.parse(localStorage.getItem('pawpal_current_user'));
@@ -590,7 +568,7 @@
             const idx = users.findIndex(usr => usr.phone === u.phone);
             if (idx !== -1) {
                 users[idx].points = u.points;
-                /* localStorage.setItem pawpal_users_db removed */
+                
             }
 
             const el = document.getElementById('headerPoints');
@@ -612,21 +590,17 @@
         setTimeout(() => t.remove(), 3500);
     }
 
-    // ── Public API ──────────────────────────────────────────────────────────
+    
 
-    /**
-     * init — inject batch review form cho toàn bộ products trong đơn
-     * @param {string} orderId
-     * @param {Array}  products — array of { id, name, image, deliveredDate? }
-     */
+    
     function init(orderId, products) {
         if (!orderId || !products || !products.length) return;
 
-        // Nếu đơn đã reviewed → inject trạng thái "Đã đánh giá" tĩnh
+        
         const container = _getOrCreateReviewContainer();
         if (!container) return;
 
-        // Heading
+        
         if (!document.querySelector('.order-reviews-heading')) {
             const heading = document.createElement('h3');
             heading.className = 'order-reviews-heading';
@@ -636,14 +610,14 @@
         }
 
         if (hasOrderReviewed(orderId)) {
-            // Đã reviewed → show done state
+            
             const done = document.createElement('div');
             done.innerHTML = buildReviewedHTML(products.length);
             container.appendChild(done.firstElementChild);
             return;
         }
 
-        // Chưa reviewed → build batch form
+        
         const draft = loadDraft(orderId);
         const wrap  = document.createElement('div');
         wrap.innerHTML = buildBatchFormHTML(orderId, products, draft);
@@ -652,9 +626,9 @@
         wireBatchForm(orderId, products);
     }
 
-    /** Tìm / tạo container chứa batch review section */
+    
     function _getOrCreateReviewContainer() {
-        // Ưu tiên đặt review section sau .products-list
+        
         const productsList = document.querySelector('.products-list, #products-list');
         if (productsList && productsList.parentNode) {
             let reviewContainer = document.getElementById('order-review-container');
@@ -669,7 +643,7 @@
         return document.querySelector('.order-detail-main') || document.body;
     }
 
-    // Expose
+    
     global.ReviewHandler = { init, hasOrderReviewed, Lightbox };
 
 })(window);

@@ -1,8 +1,6 @@
-/* ==========================================================================
-   wishlist.css — Wishlist Page Styles
-   ========================================================================== */
 
-/* ── Wishlist Header ───────────────────────────────────────────────────── */
+
+
 .wishlist-header {
     margin-bottom: var(--space-lg);
 }
@@ -37,7 +35,7 @@
     color: #ffffff;
 }
 
-/* ── Empty State ───────────────────────────────────────────────────────── */
+
 .empty-wishlist {
     text-align: center;
     padding: var(--space-xl) var(--space-md);
@@ -67,14 +65,14 @@
     margin-right: auto;
 }
 
-/* ── Wishlist Grid ─────────────────────────────────────────────────────── */
+
 .wishlist-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: var(--space-md);
 }
 
-/* ── Wishlist Card ─────────────────────────────────────────────────────── */
+
 .wishlist-card {
     position: relative;
     display: flex;
@@ -289,7 +287,7 @@
     border-color: var(--color-primary);
 }
 
-/* ── Responsive ────────────────────────────────────────────────────────── */
+
 @media (max-width: 768px) {
     .wishlist-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -303,7 +301,7 @@
     }
 }
 
-/* ── Accessibility ─────────────────────────────────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
     .wishlist-card,
     .wishlist-card-image,
@@ -312,7 +310,6 @@
     }
 }
 
-/* Extracted from wishlist.html */
 .site-header-custom {
     min-height: 110px;
     background: var(--color-bg-light);

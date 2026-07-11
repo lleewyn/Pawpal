@@ -1,6 +1,6 @@
 
 
-// Authentication Guard
+
 (function () {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
     if (!currentUser) {
@@ -13,7 +13,7 @@
 document.addEventListener('DOMContentLoaded', function initMobileSidebarOverlay() {
     const toggleBtn = document.getElementById('dashboardSidebarToggle');
     const backdrop = document.getElementById('dashboardSidebarBackdrop');
-    // Bỏ tìm sidebar tĩnh vì components.js có thể ghi đè div#user-sidebar
+    
     if (!toggleBtn || !backdrop) return;
 
     const setOpen = (open) => {
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function initMobileSidebarOverlay(
     setOpen(false);
 });
 
-// Load sidebar synchronously if #user-sidebar exists
+
 (function loadSidebar() {
     const sidebarContainer = document.getElementById('user-sidebar');
     if (!sidebarContainer) return;
@@ -60,10 +60,10 @@ document.addEventListener('DOMContentLoaded', function initMobileSidebarOverlay(
     }
 })();
 
-// ── Breadcrumb Auto-Inject ──────────────────────────────────────────────────
+
 (function injectBreadcrumb() {
-    // Map path segments → breadcrumb config
-    // { label, parent: { label, href } | null }
+    
+    
     const BREADCRUMB_MAP = {
         'dashboard':      { label: 'Tổng quan tài khoản', parent: null },
         'pet-profile':    { label: 'Hồ sơ của tôi',       parent: null },
@@ -80,16 +80,16 @@ document.addEventListener('DOMContentLoaded', function initMobileSidebarOverlay(
         'support-create': { label: 'Gửi yêu cầu mới',     parent: { label: 'Yêu cầu hỗ trợ', href: '../support-tickets/support-tickets.html' } },
     };
 
-    // Detect current page from URL
+    
     const pathParts = window.location.pathname.split('/').filter(Boolean);
-    // e.g. ["pages","user","support-tickets","support-tickets.html"]
+    
     const pageFolder = pathParts.find(p => BREADCRUMB_MAP[p]) || null;
     if (!pageFolder) return;
 
     const config = BREADCRUMB_MAP[pageFolder];
 
-    // Build breadcrumb HTML — only show for pages that have a parent (sub-pages)
-    // Top-level pages already have sidebar navigation, no breadcrumb needed
+    
+    
     if (!config.parent) return;
 
     const items = [
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function initMobileSidebarOverlay(
     nav.className = 'user-breadcrumb';
     nav.innerHTML = `<ol class="breadcrumb">${items.join('')}</ol>`;
 
-    // Inject: try col-lg-9 first (sidebar layout), then orders-main-content / order-detail-main
+    
     function tryInject() {
         const targets = [
             document.querySelector('.col-lg-9'),
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function initMobileSidebarOverlay(
         }
     }
 
-    // Run after DOM is ready
+    
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', tryInject);
     } else {

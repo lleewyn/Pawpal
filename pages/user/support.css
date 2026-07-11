@@ -1,9 +1,5 @@
-/* ==========================================================================
-   PawPal — Customer Support & Help Center CSS
-   Tuân thủ 100% DESIGN.md: Không gradient, dùng token color, spacing & radius
-   ========================================================================== */
 
-/* Bento Grid FAQ Topics */
+
 .bento-grid-faq {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -58,7 +54,6 @@
     margin: 0;
 }
 
-/* Accordion FAQ */
 .faq-accordion-container {
     display: flex;
     flex-direction: column;
@@ -116,7 +111,6 @@
     line-height: 1.6;
 }
 
-/* Floating Chat Button */
 .chat-floating-btn {
     position: fixed;
     bottom: 30px;
@@ -141,7 +135,6 @@
     background-color: var(--color-primary-dark);
 }
 
-/* Chat Drawer Panel */
 .chat-drawer {
     position: fixed;
     top: 0;
@@ -293,7 +286,6 @@
     background-color: var(--color-primary-dark);
 }
 
-/* Ticket Timeline view */
 .ticket-timeline-wrapper {
     display: flex;
     flex-direction: column;
@@ -328,7 +320,6 @@
     font-size: var(--fs-small);
 }
 
-/* Star rating system inside ticket detail */
 .star-rating-holder {
     display: flex;
     gap: var(--space-xs);
@@ -348,11 +339,6 @@
     color: var(--color-accent);
 }
 
-/* ========================================================================== 
-   Support Tickets Table Badges — Custom Status & Priority Colors
-   ========================================================================== */
-
-/* Status Badges */
 .badge-status {
     display: inline-block;
     padding: 6px 12px;
@@ -380,7 +366,6 @@
     border: 1px solid rgba(34, 197, 94, 0.2);
 }
 
-/* Priority Badges */
 .badge-priority {
     display: inline-block;
     padding: 6px 12px;
@@ -402,7 +387,6 @@
     border: 1px solid rgba(79, 122, 104, 0.2);
 }
 
-/* ── Tickets Table ───────────────────────────────────────────────────────── */
 .tickets-table-wrapper {
     background: var(--color-bg-white);
     border-radius: var(--card-border-radius);
@@ -511,7 +495,6 @@
     }
 }
 
-/* Form styles from support-create */
 .support-form-select {
     border: 1px solid var(--color-border);
     border-radius: var(--card-border-radius);
@@ -529,7 +512,6 @@
     font-size: var(--fs-small);
 }
 
-/* support-tickets.css Extracted */
 .tickets-title {
     font-family: var(--font-heading); color: var(--color-primary-dark); margin: 0;
 }
