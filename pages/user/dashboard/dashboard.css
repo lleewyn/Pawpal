@@ -1,10 +1,7 @@
-/* ===================================================================
-   PawPal User Dashboard - US 2-3
-   Tuân thủ 100% DESIGN.md - Không hardcode, không gradient, không 50/50
-   =================================================================== */
 
-/* Container */
-/* ── User Breadcrumb (auto-injected) ──────────────────────────────────────── */
+
+
+
 .user-breadcrumb {
     margin-bottom: var(--space-md);
 }
@@ -51,7 +48,7 @@
     font-weight: 500;
 }
 
-/* ── Breadcrumb ───────────────────────────────────────────────────────── */
+
 .breadcrumb {
     display: flex;
     flex-wrap: wrap;
@@ -89,7 +86,7 @@
     padding: 20px 0;
 }
 
-/* Content Panel */
+
 .dashboard-content-panel {
     background: var(--color-bg-white);
     border-radius: var(--card-border-radius);
@@ -113,7 +110,7 @@
     font-weight: 600;
 }
 
-/* Profile Info Display */
+
 .profile-info-section {
     display: flex;
     flex-direction: column;
@@ -149,9 +146,7 @@
     font-weight: 700;
 }
 
-/* =========================================
-   DASHBOARD WIDGETS (US Dashboard Layout)
-   ========================================= */
+
 
 .dashboard-welcome {
     margin-bottom: var(--space-md);
@@ -164,7 +159,7 @@
     margin: 0;
 }
 
-/* Stats Bar */
+
 .dashboard-stats {
     display: flex;
     gap: var(--space-md);
@@ -198,7 +193,7 @@
     margin-top: 4px;
 }
 
-/* Grid Layout 2fr 1fr */
+
 .dashboard-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -206,7 +201,7 @@
     align-items: start;
 }
 
-/* Dashboard Widget */
+
 .dashboard-widget {
     background: var(--color-bg-white);
     border: var(--border-card);
@@ -264,7 +259,7 @@
     margin: 0;
 }
 
-/* Settings Card */
+
 .settings-card {
     background: var(--color-bg-white);
     border: var(--border-card);
@@ -309,7 +304,7 @@
     background-color: var(--color-bg-light);
 }
 
-/* Security Form */
+
 .settings-form .form-label,
 .security-form .form-label {
     font-weight: 600;
@@ -318,11 +313,9 @@
     margin-bottom: var(--space-xs);
 }
 
-/* --------------------------------------------------
-   Settings tab specific helpers (fix layout glitches)
-   -------------------------------------------------- */
 
-/* Form control variants used on settings page */
+
+
 .form-control-custom {
     width: 100%;
     padding: 10px 14px;
@@ -362,10 +355,10 @@
 }
 .btn-submit-custom:disabled { background:#cbd5e1; color:#94a3b8; cursor:not-allowed; }
 
-/* Social link items */
+
 .social-link-item-custom { display:flex; justify-content:space-between; align-items:center; padding:12px; border:1px solid var(--color-border); border-radius:12px; background:#fff; }
 
-/* Switch visual */
+
 .switch-custom { position:relative; display:inline-block; width:40px; height:22px; }
 .switch-custom input { opacity:0; width:0; height:0; }
 .slider-custom { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#cbd5e1; border-radius:22px; transition:0.25s; }
@@ -373,22 +366,22 @@
 .switch-custom input:checked + .slider-custom { background: var(--color-primary); }
 .switch-custom input:checked + .slider-custom:before { transform: translateX(18px); }
 
-/* Unit toggle */
+
 .unit-toggle-buttons { display:flex; background:#e6eef3; border-radius:8px; padding:3px; }
 .unit-btn { border:none; border-radius:6px; padding:6px 12px; font-size:0.85rem; font-weight:700; cursor:pointer; background:transparent; color:var(--color-text-light); }
 .unit-btn.active { background:#ffffff; color:var(--color-text-dark); box-shadow:0 1px 3px rgba(0,0,0,0.08); }
 
-/* Ensure small inline buttons don't collapse */
+
 .unit-btn, .btn-toggle-password-custom, .btn-social-action-custom { min-height:32px; min-width:40px; display:inline-flex; align-items:center; justify-content:center; }
 
-/* Small helper to reset unintended browser focus outlines */
+
 button:focus { outline: 3px solid rgba(16,185,129,0.12); outline-offset: 2px; }
 
 @media (max-width: 991px) {
     .settings-grid-custom { grid-template-columns: 1fr; }
 }
 
-/* Fix for small/collapsed cancel button and select input on Settings page */
+
 .btn-cancel-custom {
     display: inline-flex;
     align-items: center;
@@ -455,7 +448,7 @@ button:focus { outline: 3px solid rgba(16,185,129,0.12); outline-offset: 2px; }
     box-shadow: 0 0 0 3px rgba(42, 89, 68, 0.08);
 }
 
-/* Password Input Wrapper */
+
 .password-input-wrapper {
     position: relative;
 }
@@ -484,7 +477,7 @@ button:focus { outline: 3px solid rgba(16,185,129,0.12); outline-offset: 2px; }
     color: var(--color-primary);
 }
 
-/* AC2.3.1: Password Strength Bar */
+
 .password-strength-bar {
     width: 100%;
     height: 6px;
@@ -500,7 +493,7 @@ button:focus { outline: 3px solid rgba(16,185,129,0.12); outline-offset: 2px; }
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Strength states - tuân thủ design.md colors */
+
 .strength-bar-fill.weak {
     width: 33%;
     background-color: var(--color-danger);
@@ -527,7 +520,7 @@ button:focus { outline: 3px solid rgba(16,185,129,0.12); outline-offset: 2px; }
     font-weight: 700;
 }
 
-/* Warning Alert - US 2-3 Requirement */
+
 .alert-warning-custom {
     background-color: var(--color-accent-light);
     border: 1px solid var(--color-accent);
@@ -542,12 +535,12 @@ button:focus { outline: 3px solid rgba(16,185,129,0.12); outline-offset: 2px; }
     color: var(--color-accent-dark);
 }
 
-/* Required star */
+
 .required-star {
     color: var(--color-danger);
 }
 
-/* Invalid feedback */
+
 .invalid-feedback {
     color: var(--color-danger);
     font-size: var(--fs-small);
@@ -563,9 +556,7 @@ button:focus { outline: 3px solid rgba(16,185,129,0.12); outline-offset: 2px; }
     box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
-/* =========================================
-   NEW PROFILE UI STYLES (Grid & Address)
-   ========================================= */
+
 
 .profile-grid-display {
     display: grid;
@@ -614,9 +605,7 @@ button:focus { outline: 3px solid rgba(16,185,129,0.12); outline-offset: 2px; }
     line-height: 1.5;
 }
 
-/* =========================================
-   SETTINGS UI (Social & Toggles)
-   ========================================= */
+
 
 .settings-toggle-item {
     display: flex;
@@ -645,7 +634,7 @@ button:focus { outline: 3px solid rgba(16,185,129,0.12); outline-offset: 2px; }
     margin-top: 4px;
 }
 
-/* Toggle Switch Styling */
+
 .switch {
     position: relative;
     display: inline-block;
@@ -693,7 +682,7 @@ input:checked + .slider:before {
     border-radius: 24px;
 }
 
-/* Social Links */
+
 .social-links-list {
     display: flex;
     flex-direction: column;
@@ -782,7 +771,7 @@ input:checked + .slider:before {
     color: var(--color-danger);
 }
 
-/* Responsive - tuân thủ design.md breakpoints */
+
 @media (max-width: 1024px) {
     .dashboard-container {
         padding: var(--space-md) 0 var(--space-lg);
@@ -839,9 +828,7 @@ input:checked + .slider:before {
 
 }
 
-/* ==========================================================================
-   REDESIGNED USER DASHBOARD STYLES (Mockup Compatibility)
-   ========================================================================== */
+
 
 .dashboard-welcome-banner {
     background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
@@ -853,7 +840,7 @@ input:checked + .slider:before {
     box-shadow: var(--shadow-card);
 }
 
-/* Background paw watermark */
+
 .dashboard-welcome-banner::after {
     content: "";
     position: absolute;
@@ -923,7 +910,7 @@ input:checked + .slider:before {
     text-transform: uppercase;
 }
 
-/* Sections */
+
 .dashboard-section-wrapper {
     background: var(--color-bg-white);
     border: var(--border-card);
@@ -964,7 +951,7 @@ input:checked + .slider:before {
     color: var(--color-primary);
 }
 
-/* Pet list horizontal */
+
 .pets-horizontal-list {
     display: flex;
     align-items: center;
@@ -1048,13 +1035,13 @@ input:checked + .slider:before {
     background-color: var(--color-primary-light);
 }
 
-/* Improve small outline button appearance for dashboard (Hoãn lịch) */
+
 .booking-actions .btn.btn-outline-secondary.btn-sm {
     font-family: var(--font-body);
     text-transform: none;
     letter-spacing: normal;
     color: var(--color-text-light);
-    background-color: #f3f4f3; /* subtle light bg for visibility */
+    background-color: #f3f4f3; 
     border-color: rgba(0,0,0,0.12);
     padding: 8px 12px;
     border-radius: 8px;
@@ -1065,7 +1052,7 @@ input:checked + .slider:before {
     border-color: var(--color-border);
 }
 
-/* Redesigned upcoming appointments card */
+
 .upcoming-booking-card {
     display: flex;
     align-items: center;
@@ -1142,7 +1129,7 @@ input:checked + .slider:before {
     margin-top: 12px;
 }
 
-/* Bottom layout grid */
+
 .dashboard-bottom-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1243,7 +1230,7 @@ input:checked + .slider:before {
     font-size: 0.85rem;
 }
 
-/* Recent orders styling */
+
 .recent-orders-list-custom {
     display: flex;
     flex-direction: column;
@@ -1322,7 +1309,7 @@ input:checked + .slider:before {
     color: #475569;
 }
 
-/* Responsive Overrides */
+
 @media (max-width: 991px) {
     .dashboard-bottom-grid {
         grid-template-columns: 1fr;
@@ -1341,9 +1328,7 @@ input:checked + .slider:before {
         justify-content: space-between;
     }
 }
-/* ==========================================================================
-   SETTINGS TAB REDESIGN (Mockup Alignment)
-   ========================================================================== */
+
 
 .settings-grid-custom {
     display: grid;
@@ -1376,7 +1361,7 @@ input:checked + .slider:before {
     margin-bottom: 18px;
 }
 
-/* When a settings card is collapsed, subtly change header background to indicate state */
+
 .settings-card-custom.collapsed .settings-card-header-custom {
     background: linear-gradient(90deg, rgba(242,247,244,0.7), rgba(242,247,244,0.7));
     border-bottom-color: transparent;
@@ -1522,7 +1507,7 @@ input:checked + .slider:before {
     cursor: not-allowed;
 }
 
-/* Social Links */
+
 .social-links-list-custom {
     display: flex;
     flex-direction: column;
@@ -1572,7 +1557,7 @@ input:checked + .slider:before {
     transition: all 0.2s ease;
 }
 
-/* Notification Toggles */
+
 .notifications-form-custom {
     display: flex;
     flex-direction: column;
@@ -1585,7 +1570,7 @@ input:checked + .slider:before {
     padding: 12px;
     font-weight: 700;
     color: #ffffff;
-    background: #f59e0b; /* Amber accent */
+    background: #f59e0b; 
     transition: background 0.2s, transform 0.1s;
     cursor: pointer;
     font-size: 0.85rem;
@@ -1599,7 +1584,7 @@ input:checked + .slider:before {
     transform: scale(0.99);
 }
 
-/* Languages and Units Select box */
+
 .select-wrapper-custom {
     position: relative;
     display: flex;
@@ -1615,7 +1600,7 @@ input:checked + .slider:before {
     background-size: 16px;
 }
 
-/* Responsive Custom Breakpoint */
+
 @media (max-width: 991px) {
     .settings-grid-custom {
         grid-template-columns: 1fr;

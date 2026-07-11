@@ -1,21 +1,12 @@
-/**
- * dashboard.js - User Dashboard Logic
- * US 2-3: Đổi mật khẩu với thanh đo độ mạnh
- * Tuan thu design.md
- */
+
 
 import { API } from '/scripts/api/api.js';
 
-// Keys are declared at the top; don't redeclare here to avoid duplicate identifier errors.
 
-// ============================================================
-// SUPABASE DASHBOARD — logic nội bộ (thay thế supabase-dashboard.js)
-// ============================================================
 
-/**
- * Sync toàn bộ dữ liệu user từ Supabase vào localStorage.
- * Gọi trong DOMContentLoaded nếu window.SupabaseClient có mặt.
- */
+
+
+
 async function syncFromSupabase(currentUser) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db || !currentUser?.id) {
@@ -149,7 +140,7 @@ async function _syncUserPets(db, currentUser) {
     });
 
     const mergedPets = [...pets, ...otherPets];
-    /* localStorage.setItem pawpal_pets removed */
+    
     localStorage.setItem('pawpal_pets_supabase_synced', String(currentUser.phone));
     console.log('[Dashboard] Pets synced:', pets.length, 'pets');
 }
@@ -190,7 +181,7 @@ async function _syncUserBookings(db, currentUser) {
 
     const localBookings = JSON.parse('[]' || '[]');
     const otherBookings = localBookings.filter(b => String(b.userId) !== String(currentUser.id));
-    /* localStorage.setItem removed */
+    
     console.log('[Dashboard] Bookings synced:', bookings.length, 'bookings');
 }
 
@@ -430,7 +421,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Sync dữ liệu từ Supabase nếu có client
+    
     if (window.SupabaseClient) {
         await syncFromSupabase(currentUser);
     }
@@ -480,12 +471,12 @@ function loadProfileData(user) {
 
 function getMemberTierLabel(user) {
     if (!user) return 'Thành viên';
-    // Prefer explicit tier property if present
+    
     if (user.tier && typeof user.tier === 'string' && user.tier.trim() !== '') {
         return user.tier;
     }
 
-    // Fallback by points thresholds
+    
     const points = Number(user.points) || 0;
     if (points >= 5000) return 'Kim cương';
     if (points >= 1000) return 'Vàng';
@@ -606,7 +597,7 @@ function initProfileEditForm(user) {
             address: buildAddressLabel(addresses[0]) || ''
         };
 
-        // Sync to Supabase
+        
         const db = window.SupabaseClient;
         if (db && updatedUser.id) {
             saveButton.disabled = true;
@@ -673,7 +664,7 @@ function initAddressEditForm(user) {
             addresses: normalizedPrimary ? [normalizedPrimary, ...otherAddresses] : otherAddresses
         };
 
-        // Sync to Supabase
+        
         const db = window.SupabaseClient;
         if (db && updatedUser.id && normalizedPrimary) {
             btnSave.disabled = true;

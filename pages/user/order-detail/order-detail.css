@@ -1,11 +1,6 @@
-/* ===================================
-   ORDER DETAIL PAGE - Tuân thủ 100% design.md
-   - NO emoji icons
-   - Layout 65/35 (KHÔNG 50/50)
-   - Timeline với pulse animation
-   =================================== */
 
-/* Layout Wrapper */
+
+
 .orders-page-wrapper {
     display: grid;
     grid-template-columns: 280px 1fr;
@@ -20,7 +15,7 @@
     min-width: 0;
 }
 
-/* Order Header */
+
 .order-detail-header {
     display: flex;
     justify-content: space-between;
@@ -50,7 +45,7 @@
     color: var(--color-text-light);
 }
 
-/* Info Cards */
+
 .info-card {
     background: var(--color-bg-white);
     border-radius: var(--card-border-radius);
@@ -95,7 +90,7 @@
     color: var(--color-text-dark);
 }
 
-/* Payment Status */
+
 .payment-status {
     display: inline-block;
     padding: 4px 12px;
@@ -114,7 +109,7 @@
     color: var(--color-danger);
 }
 
-/* Status Badge */
+
 .status-badge {
     padding: 6px 14px;
     border-radius: var(--border-radius-pill);
@@ -129,15 +124,15 @@
 .status-delivered, .status-completed { background: var(--color-success-light); color: var(--color-success); }
 .status-cancelled { background: var(--color-danger-light); color: var(--color-danger); }
 
-/* 2-Column Grid: 65/35 Split */
+
 .detail-grid {
     display: grid;
-    grid-template-columns: 1.86fr 1fr; /* 65% : 35% - Asymmetric! */
+    grid-template-columns: 1.86fr 1fr; 
     gap: var(--space-lg);
     margin-top: var(--space-lg);
 }
 
-/* Products Section */
+
 .products-section h3 {
     font-family: var(--font-heading);
     font-size: var(--fs-h3);
@@ -154,7 +149,7 @@
     margin-bottom: var(--space-md);
 }
 
-/* Product Item */
+
 .product-item {
     display: flex;
     align-items: center;
@@ -198,7 +193,7 @@
     font-family: var(--font-body);
 }
 
-/* Order Summary Box */
+
 .order-summary-box {
     background: #f4faf7;
     border-radius: var(--card-border-radius);
@@ -244,7 +239,7 @@
     color: var(--color-danger) !important;
 }
 
-/* Order Actions */
+
 .order-actions {
     display: flex;
     flex-direction: column;
@@ -306,7 +301,7 @@
     border-color: #f7d08a;
 }
 
-/* Guest Notice Banner */
+
 .guest-notice-banner {
     display: none;
     align-items: center;
@@ -331,7 +326,7 @@
     color: var(--color-text-dark);
 }
 
-/* Timeline Section */
+
 .timeline-section h3 {
     font-family: var(--font-heading);
     font-size: var(--fs-h3);
@@ -354,13 +349,13 @@
     padding-bottom: 0;
 }
 
-/* Connecting line for each item except the last one */
+
 .timeline-item:not(:last-child)::after {
     content: '';
     position: absolute;
-    left: -25px; /* Center is at -24px */
-    top: 25px; /* Leaves a small gap below the dot (5px top + 16px height + 4px gap) */
-    bottom: -1px; /* Leaves a 4px gap above the next dot (which is at top: 5px) */
+    left: -25px; 
+    top: 25px; 
+    bottom: -1px; 
     width: 2px;
     background: var(--color-border);
     z-index: 1;
@@ -368,7 +363,7 @@
 
 .timeline-dot {
     position: absolute;
-    left: -32px; /* Center is at -24px (-32 + 8) */
+    left: -32px; 
     top: 5px;
     width: 16px;
     height: 16px;
@@ -385,7 +380,7 @@
 
 .timeline-item.completed:not(:last-child)::after {
     background: var(--color-success);
-    opacity: 0.5; /* Lighter line for completed segments */
+    opacity: 0.5; 
 }
 
 .timeline-item.active .timeline-dot {
@@ -434,7 +429,7 @@
     white-space: pre-line;
 }
 
-/* Responsive */
+
 @media (max-width: 1024px) {
     .orders-page-wrapper {
         grid-template-columns: 1fr;
@@ -483,16 +478,14 @@
     }
 }
 
-/* ==========================================================================
-   Review Integration — order-detail page (US 11-1, 11-2)
-   ========================================================================== */
 
-/* Wrapper dưới mỗi product-item chứa nút + accordion */
+
+
 .product-review-zone {
-    padding-left: calc(80px + var(--space-sm)); /* align với text (sau ảnh) */
+    padding-left: calc(80px + var(--space-sm)); 
 }
 
-/* Section heading cho phần reviews của completed orders */
+
 .order-reviews-heading {
     font-family: var(--font-heading);
     font-size: var(--fs-h3);
@@ -504,19 +497,19 @@
     border-top: 2px solid var(--color-border);
 }
 
-/* Khi product-item có review bên dưới, bỏ border-bottom */
+
 .product-item.has-review {
     border-bottom: none;
 }
 
-/* Responsive: ≤640px */
+
 @media (max-width: 640px) {
     .product-review-zone {
         padding-left: 0;
     }
 }
 
-/* Refactored inline styles */
+
 .back-to-orders-link {
     color: var(--color-primary);
     text-decoration: none;
@@ -587,7 +580,7 @@
     margin: 0; font-size: 0.95rem; color: #333;
 }
 
-/* ── Improved Review Modal ─────────────────────────────────────── */
+
 .review-modal-item {
     border-bottom: 1px solid #f0f0f0;
     padding: 16px 0;
@@ -652,7 +645,7 @@
     cursor: pointer;
 }
 
-/* ── Batch Review Section ──────────────────────────────────────── */
+
 .order-review-container {
     margin-top: var(--space-md, 16px);
 }
@@ -676,7 +669,7 @@
     margin-bottom: var(--space-md, 16px);
 }
 
-/* Product row */
+
 .batch-review-product {
     margin-bottom: 8px;
 }
@@ -713,7 +706,7 @@
     margin-top: 2px;
 }
 
-/* Star rating */
+
 .batch-star-group {
     display: flex;
     align-items: center;
@@ -750,7 +743,7 @@
     min-width: 90px;
 }
 
-/* Comment */
+
 .batch-comment-group {
     position: relative;
     margin-bottom: 12px;
@@ -780,7 +773,7 @@
     color: #aaa;
 }
 
-/* Upload section */
+
 .batch-upload-section {
     margin-bottom: 8px;
 }
@@ -803,7 +796,7 @@
     margin-top: 10px;
 }
 
-/* Divider between products */
+
 .batch-product-divider {
     border: none;
     border-top: 1px solid #f0f0f0;
@@ -813,7 +806,7 @@
     display: none;
 }
 
-/* Submit area */
+
 .batch-submit-wrap {
     text-align: center;
     padding-top: 8px;
@@ -830,7 +823,7 @@
     margin-top: 10px;
 }
 
-/* Batch submit button */
+
 .btn-batch-submit {
     position: relative;
     display: inline-flex;
@@ -881,7 +874,7 @@
     to { stroke-dashoffset: 0; }
 }
 
-/* Offline banner */
+
 .review-offline-banner {
     display: none;
     align-items: center;
@@ -896,7 +889,7 @@
 }
 .review-offline-banner.visible { display: flex; }
 
-/* Done state */
+
 .batch-reviewed-done {
     display: flex;
     align-items: center;
@@ -934,24 +927,24 @@
     color: #4d7c0f;
 }
 
-/* Extracted from order-detail.html */
+
 .ui-box-17 {
     min-height:300px;
 }
 
-/* Extracted from order-detail.html */
+
 .ui-spacing-6 {
     text-align:center;
     padding:20px;
     color:#999;
 }
 
-/* Extracted from order-detail.html */
+
 .ui-spacing-7 {
     margin-bottom: var(--space-md);
 }
 
-/* Extracted from order-detail.html */
+
 .ui-box-18 {
     width: 16px;
      height: 16px;

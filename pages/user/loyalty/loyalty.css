@@ -1,8 +1,5 @@
-/* ==========================================================================
-   PawPal — Loyalty & Membership Styles (Quy trình 3.1.13)
-   ========================================================================== */
 
-/* Warning Expiring Points Banner */
+
 .loyalty-warning-banner {
     display: none;
     background-color: var(--color-accent-light);
@@ -30,7 +27,6 @@
     line-height: 1;
 }
 
-/* Virtual Loyalty Card */
 .pawpass-card-wrapper {
     position: relative;
     width: 340px;
@@ -90,7 +86,6 @@
     transition: all 0.5s ease;
 }
 
-/* Metallic Themes */
 .pawpass-virtual-card.tier-silver {
     background: linear-gradient(135deg, #94a3b8 0%, #cbd5e1 45%, #f1f5f9 65%, #64748b 100%);
     color: #0f172a;
@@ -269,7 +264,6 @@
     line-height: 1;
 }
 
-/* Details Panel below Virtual Card */
 .loyalty-card-details-panel {
     background-color: var(--color-primary-light);
     border: 1px solid var(--color-border);
@@ -320,7 +314,6 @@
     font-style: italic;
 }
 
-/* Voucher Cards Grid */
 .vouchers-section-title {
     font-family: var(--font-heading);
     font-size: var(--fs-h3);
@@ -331,18 +324,17 @@
 
 .vouchers-grid-wrapper {
     display: grid;
-    /* Fixed two columns layout on desktop */
+    
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
 }
 
 @media (max-width: 900px) {
     .vouchers-grid-wrapper {
-        grid-template-columns: 1fr; /* collapse to 1 column on narrower screens */
+        grid-template-columns: 1fr; 
     }
 }
 
-/* Shopee-style horizontal voucher card */
 .voucher-card-shopee {
     display: flex;
     align-items: center;
@@ -427,7 +419,6 @@
     min-width: max-content;
 }
 
-/* Voucher status labels (for old voucher-card, keeping for compatibility) */
 .voucher-status-label {
     display: block;
     text-align: center;
@@ -452,7 +443,6 @@
     font-weight: 600;
 }
 
-/* Slide to Redeem horizontal bar */
 .slider-container {
     position: relative;
     height: 44px;
@@ -524,7 +514,6 @@
     font-weight: bold;
 }
 
-/* Redeem button (replacement for slider) */
 .redeem-btn {
     display: inline-flex;
     align-items: center;
@@ -552,7 +541,6 @@
     transform: none;
 }
 
-/* Redeem Success Button */
 .redeem-success-btn {
     text-align: center;
     background-color: var(--color-success);
@@ -571,7 +559,6 @@
     100% { transform: scale(1); }
 }
 
-/* My Vouchers */
 .my-vouchers-title {
     font-family: var(--font-heading);
     font-size: var(--fs-h2);
@@ -651,13 +638,11 @@
     background: var(--color-bg-muted);
 }
 
-/* Grayscale state for out of stock */
 .voucher-card.out-of-stock {
     filter: grayscale(100%);
     opacity: 0.6;
 }
 
-/* General Layout adjustments */
 .dashboard-content-panel {
     background-color: var(--color-bg-white);
     border: 2px solid var(--color-border);
@@ -665,9 +650,6 @@
     padding: var(--space-md);
 }
 
-
-
-/* Replaced from inline styles */
 .loyalty-top-flex {
     display: flex;
     flex-wrap: wrap;
@@ -754,7 +736,6 @@
     margin: 0;
 }
 
-/* Redeem confirmation modal */
 #redeem-confirm-modal .modal-content {
     border: none;
     border-radius: 20px;

@@ -1,9 +1,7 @@
-/**
- * loyalty.js — Xử lý nghiệp vụ Ưu đãi và Thành viên (Quy trình 3.1.13)
- */
+
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Tải thông tin người dùng từ localStorage
+    
     let currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
     if (!currentUser) {
         currentUser = {
@@ -14,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
-    // Đảm bảo đồng bộ points từ Users DB
+    
     const users = JSON.parse('[]' || '[]');
     const userInDb = currentUser.phone ? users.find(u => u.phone === currentUser.phone) : null;
     if (userInDb) {
@@ -27,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentUser = await syncLoyaltyFromSupabase(currentUser);
     }
 
-    // Tải vouchers từ API (Supabase) hoặc JSON file
+    
     let vouchersMock = [];
     try {
         let apiVouchers = [];
@@ -59,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         vouchersMock = apiVouchers
-            .filter(v => calcPointsCost(v) > 0) // Chỉ hiện voucher cần điểm
+            .filter(v => calcPointsCost(v) > 0) 
             .map((v, idx) => ({
                 id: v.id || `VOUCHER-${idx}`,
                 code: v.code || `CODE-${idx}`,
@@ -100,11 +98,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         vouchersMock = [];
     }
 
-    // Cập nhật giao diện
+    
     renderLoyaltyPage(currentUser, vouchersMock);
     renderMyVouchers(currentUser);
 
-    // Kiểm tra xem có quà nào đang chờ khôi phục luồng đổi quà không (US 13-3)
+    
     checkPendingRedeem(currentUser);
 });
 
@@ -139,7 +137,7 @@ async function syncLoyaltyFromSupabase(user) {
         const membership = data.customer_membership?.[0] || {};
         const tier = membership.membership_tier || {};
 
-        // Tính tổng chi tiêu từ appointment và sales_order
+        
         let totalSpend = user.spend || 0;
         try {
             const customerId = data.id || user.id;
@@ -318,7 +316,7 @@ async function persistLoyaltyRedemption(user, voucherInfo) {
     );
 
     const voucherId = voucherInfo._raw?.id || voucherInfo.id;
-    if (voucherId && voucherId.length >= 32) { // check if valid uuid
+    if (voucherId && voucherId.length >= 32) { 
         const { error: cvErr } = await db.from('customer_voucher').insert({
             customer_id: customerId,
             voucher_id: voucherId,
@@ -330,10 +328,10 @@ async function persistLoyaltyRedemption(user, voucherInfo) {
     }
 }
 
-// Hàm hiển thị toàn bộ nội dung trang Loyalty
+
 function renderLoyaltyPage(user, vouchers) {
-    // 1. Phân hạng dựa trên tổng chi tiêu
-    // Bạc: < 5tr, Vàng: 5tr - 15tr, Kim Cương: > 15tr
+    
+    
     let tierName = 'Hạng Bạc (Silver)';
     let tierClass = 'tier-silver';
     let nextTierName = 'Hạng Vàng';
@@ -352,11 +350,11 @@ function renderLoyaltyPage(user, vouchers) {
         nextTierLimit = 15000000;
     }
 
-    // 2. Banner cảnh báo điểm sắp hết hạn (US 13-5)
+    
     const warningBanner = document.getElementById('loyalty-warning-banner');
     if (warningBanner) {
         if (user.points >= 50) {
-            // Tính ngày hết hạn động: lastTransactionAt + 12 tháng
+            
             const lastTx = user.lastTransactionAt || user.createdAt || null;
             const expiryDate = lastTx
                 ? new Date(new Date(lastTx).getTime() + 365 * 24 * 60 * 60 * 1000)
@@ -382,7 +380,7 @@ function renderLoyaltyPage(user, vouchers) {
         }
     }
 
-    // 3. Render Virtual Card và Progress
+    
     const cardEl = document.getElementById('loyalty-card-wrapper');
     if (cardEl) {
         const progressPercent = Math.min((currentSpend / nextTierLimit) * 100, 100);
@@ -393,7 +391,7 @@ function renderLoyaltyPage(user, vouchers) {
             upgradeText = 'Bạn đã đạt cấp bậc cao nhất của PawPal!';
         }
 
-        // Multipliers và Perks mapping
+        
         let pointsMultiplier = "1x Points";
         let mainPerk = "Cập nhật Care-Log";
         if (tierClass === 'tier-gold') {
@@ -453,13 +451,13 @@ function renderLoyaltyPage(user, vouchers) {
         `;
     }
 
-    // 4. Render danh sách voucher
+    
     const gridEl = document.getElementById('vouchers-grid');
     if (gridEl) {
         gridEl.innerHTML = vouchers.map(v => renderVoucherCard(v, user)).join('');
         
-        // Gắn sự kiện click cho các nút Đổi (nếu đủ điểm)
-        // Dùng event delegation trên grid để tránh sai selector
+        
+        
         gridEl.addEventListener('click', (e) => {
             const btn = e.target.closest('.redeem-btn');
             if (!btn || btn.disabled) return;
@@ -515,7 +513,7 @@ function renderMyVoucherCard(voucher) {
     `;
 }
 
-// Render từng voucher card
+
 function renderVoucherCard(voucher, user) {
     const isOutOfStock = voucher.quantity <= 0;
     const isInsufficientPoints = user.points < voucher.pointsCost;
@@ -556,7 +554,7 @@ function renderVoucherCard(voucher, user) {
     `;
 }
 
-// Hàm khởi tạo Slider kéo trượt bằng touch/mouse event
+
 function initSlider(voucherId, user) {
     const container = document.getElementById(`slider-${voucherId}`);
     if (!container) return;
@@ -581,13 +579,13 @@ function initSlider(voucherId, user) {
         const x = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
         currentX = x - startX;
 
-        // Giới hạn khoảng kéo từ 0 đến maxDrag
+        
         if (currentX < 0) currentX = 0;
         if (currentX > maxDrag) currentX = maxDrag;
 
         handle.style.transform = `translateX(${currentX}px)`;
         
-        // Mờ dần dòng chữ hướng dẫn
+        
         const opacity = 1 - (currentX / maxDrag);
         text.style.opacity = opacity;
     };
@@ -596,13 +594,13 @@ function initSlider(voucherId, user) {
         if (!isDragging) return;
         isDragging = false;
 
-        // Nếu kéo qua 90% hành trình, coi như đổi thành công
+        
         if (currentX >= maxDrag * 0.9) {
             handle.style.transform = `translateX(${maxDrag}px)`;
             text.style.opacity = '0';
             triggerRedeem(voucherId, user, container);
         } else {
-            // Trả về vị trí cÅ© mượt mà
+            
             handle.style.transition = 'transform 0.3s ease';
             handle.style.transform = 'translateX(0px)';
             text.style.transition = 'opacity 0.3s ease';
@@ -620,9 +618,9 @@ function initSlider(voucherId, user) {
     document.addEventListener('touchend', onEnd);
 }
 
-// Hàm xử lý đổi quà
+
 function triggerRedeem(voucherId, user, sliderContainer) {
-    // helper to reset UI (slider or button)
+    
     const resetUI = () => {
         try {
             const handle = sliderContainer && sliderContainer.querySelector && sliderContainer.querySelector('.slider-handle');
@@ -633,7 +631,7 @@ function triggerRedeem(voucherId, user, sliderContainer) {
             if (text) {
                 text.style.opacity = '1';
             }
-            // if sliderContainer itself is a button element
+            
             if (sliderContainer && sliderContainer.classList && sliderContainer.classList.contains('redeem-btn')) {
                 sliderContainer.disabled = false;
             } else if (sliderContainer) {
@@ -641,19 +639,19 @@ function triggerRedeem(voucherId, user, sliderContainer) {
                 if (btn) btn.disabled = false;
             }
         } catch (e) {
-            // ignore
+            
         }
     };
 
-    // 1. Kiểm tra tài khoản tạm (US 13-3)
+    
     if (user.is_temporary) {
         resetUI();
-        // Mở popup bảo mật tài khoản
+        
         showSecurityModal(voucherId);
         return;
     }
 
-    // 2. Mô phỏng 5% lỗi hệ thống để kiểm thử Rollback (US 13-4)
+    
     const isSystemError = Math.random() < 0.05;
     if (isSystemError) {
         resetUI();
@@ -661,12 +659,12 @@ function triggerRedeem(voucherId, user, sliderContainer) {
         return;
     }
 
-    // 3. Tiến hành đổi điểm — hiện modal xác nhận trước
+    
     const vouchersList = Object.fromEntries((window.PawPalVoucherRedeemList || []).map(v => [v.id, v]));
     const voucherInfo = vouchersList[voucherId];
     if (!voucherInfo) return;
 
-    // Modal xác nhận
+    
     const confirmId = 'redeem-confirm-modal';
     const existingModal = document.getElementById(confirmId);
     if (existingModal) existingModal.remove();
@@ -709,51 +707,51 @@ async function doRedeem(voucherInfo, user, sliderContainer, resetUI) {
     if (user.points >= voucherInfo.pointsCost) {
         user.points -= voucherInfo.pointsCost;
         
-        // Cập nhật session user
+        
         localStorage.setItem('pawpal_current_user', JSON.stringify(user));
 
         const voucherCode = voucherInfo.code || ('PAWPAL-' + Math.random().toString(36).substring(2, 8).toUpperCase());
         localStorage.setItem('pawpal_applied_voucher_code', voucherCode);
 
-            // Hiển thị giao diện thành công (button or footer)
+            
             try {
                 if (sliderContainer) {
                     sliderContainer.innerHTML = `<div class="redeem-success-btn">Đã đổi thành công!</div>`;
                 }
             } catch (e) {
-                // ignore
+                
             }
             
-            // Cập nhật số điểm hiển thị
+            
             const pointsDisplay = document.getElementById('current-points-display');
             if (pointsDisplay) {
                 pointsDisplay.innerHTML = `${user.points} <span class="points-unit">Paw Points</span>`;
             }
 
-            // Persist loyalty update to Supabase if available
+            
             if (window.getSupabaseClient || window.SupabaseClient) {
                 await persistLoyaltyRedemption(user, voucherInfo);
             }
 
-            // Toast báo thành công
+            
             showToast('success', `Đổi điểm thành công! Mã ưu đãi của bạn: ${voucherCode}`);
 
             renderMyVouchers(user);
 
-            // Reload lại danh sách voucher sau 1.5 giây để cập nhật trạng thái các voucher khác (ví dụ: thiếu điểm sau khi trừ)
+            
             setTimeout(() => {
                 location.reload();
             }, 1500);
     } else {
-        // Không đủ điểm — thông báo rõ ràng
+        
         resetUI();
         showToast('error', `Số điểm hiện tại chưa đủ để đổi ưu đãi này. Cần ${voucherInfo.pointsCost} điểm, bạn đang có ${user.points} điểm.`);
     }
 }
 
-// Hiển thị Modal bảo mật tài khoản tạm (US 13-3)
+
 function showSecurityModal(voucherId) {
-    // Tạo modal động bằng JS nếu chưa có
+    
     let modalEl = document.getElementById('security-auth-modal');
     if (!modalEl) {
         const modalHtml = `
@@ -786,14 +784,14 @@ function showSecurityModal(voucherId) {
     const bootstrapModal = new bootstrap.Modal(modalEl);
     bootstrapModal.show();
 
-    // Ràng buộc sự kiện nút chuyển hướng
+    
     const btnRedirect = document.getElementById('btn-redirect-setup-pwd');
     btnRedirect.onclick = () => {
-        // Lưu voucherId cần đổi vào sessionStorage để sau khi đặt mật khẩu thành công thì quay lại đổi ngay
+        
         sessionStorage.setItem('pending_redeem_voucher', voucherId);
         bootstrapModal.hide();
         
-        // Đẩy đi tới trang thiết lập mật khẩu
+        
         const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
         let tokenObj = tokens.find(t => t.phone === currentUser.phone);
@@ -807,14 +805,14 @@ function showSecurityModal(voucherId) {
     };
 }
 
-// Kiểm tra xem có yêu cầu đổi quà nào đang chờ khôi phục sau khi đổi pass không (US 13-3 / AC3.2)
+
 function checkPendingRedeem(user) {
     const pendingVoucherId = sessionStorage.getItem('pending_redeem_voucher');
     if (pendingVoucherId && !user.is_temporary) {
         sessionStorage.removeItem('pending_redeem_voucher');
         showToast('info', 'Chào mừng bạn trở thành thành viên chính thức! Hệ thống đang tự động khôi phục yêu cầu đổi ưu đãi của bạn...');
         
-        // Tự động trigger đổi quà sau 2 giây
+        
         setTimeout(() => {
             const voucherCard = document.querySelector(`.voucher-card[data-id="${pendingVoucherId}"]`);
             if (voucherCard) {

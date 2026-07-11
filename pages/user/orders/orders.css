@@ -1,11 +1,6 @@
-/* ==========================================================================
-   ORDERS PAGE — Tuân thủ 100% design.md
-   - Token-first, không hardcode màu/spacing
-   - Asymmetric layout 280px sidebar + 1fr
-   - Không dùng emoji, dùng SVG monochrome
-   ========================================================================== */
 
-/* ── Layout ───────────────────────────────────────────────────────────── */
+
+
 .orders-page-wrapper {
     display: grid;
     grid-template-columns: 280px 1fr;
@@ -20,7 +15,7 @@
     min-width: 0;
 }
 
-/* ── Breadcrumb removed to dashboard.css ── *//* ── Quick Stats ──────────────────────────────────────────────────────── */
+
 .orders-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -52,7 +47,7 @@
     color: var(--color-text-light);
 }
 
-/* ── Search Bar ───────────────────────────────────────────────────────── */
+
 .orders-search {
     display: flex;
     gap: var(--space-sm);
@@ -94,7 +89,7 @@
     background: var(--color-primary-dark);
 }
 
-/* ── Tab Navigation (sticky) ──────────────────────────────────────────── */
+
 .orders-tabs {
     display: flex;
     gap: var(--space-xs);
@@ -143,14 +138,14 @@
     opacity: 0.8;
 }
 
-/* ── Orders List ──────────────────────────────────────────────────────── */
+
 .orders-list {
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
 }
 
-/* ── Order Card ───────────────────────────────────────────────────────── */
+
 .order-card {
     background: var(--color-bg-white);
     border-radius: var(--card-border-radius);
@@ -166,7 +161,7 @@
     box-shadow: var(--shadow-card-hover);
 }
 
-/* Card Header */
+
 .order-card-header {
     display: flex;
     justify-content: space-between;
@@ -194,7 +189,7 @@
     color: var(--color-text-light);
 }
 
-/* Status Badge */
+
 .status-badge {
     padding: 6px 14px;
     border-radius: var(--border-radius-pill);
@@ -230,7 +225,7 @@
     color: var(--color-danger);
 }
 
-/* Card Body */
+
 .order-card-body {
     margin-bottom: var(--space-sm);
     display: grid;
@@ -336,7 +331,7 @@
     font-family: var(--font-body);
 }
 
-/* Card Footer */
+
 .order-card-footer {
     display: flex;
     gap: var(--space-sm);
@@ -362,9 +357,9 @@
     box-shadow: 0 6px 14px rgba(47, 122, 79, 0.22);
 }
 
-/* Button classes removed (migrated to button.css) */
 
-/* ── Pagination ───────────────────────────────────────────────────────── */
+
+
 .pagination {
     display: flex;
     justify-content: center;
@@ -403,7 +398,7 @@
     cursor: not-allowed;
 }
 
-/* ── Empty State ──────────────────────────────────────────────────────── */
+
 .empty-state {
     text-align: center;
     padding: var(--space-xl);
@@ -422,7 +417,7 @@
     margin-bottom: var(--space-sm);
 }
 
-/* ── Responsive: ≤1024px ─────────────────────────────────────────────── */
+
 @media (max-width: 1024px) {
     .orders-page-wrapper {
         grid-template-columns: 1fr;
@@ -433,7 +428,7 @@
     }
 }
 
-/* ── Responsive: ≤768px ──────────────────────────────────────────────── */
+
 @media (max-width: 768px) {
     .orders-page-wrapper {
         padding: var(--space-md) var(--space-md) var(--space-lg);
@@ -459,7 +454,7 @@
     }
 }
 
-/* ── Responsive: ≤640px ──────────────────────────────────────────────── */
+
 @media (max-width: 640px) {
     .orders-tabs {
         top: 60px;
@@ -474,7 +469,7 @@
     }
 }
 
-/* Appended rules from inline styles */
+
 .order-card-body {
     cursor: pointer;
 }
@@ -487,18 +482,18 @@
 }
 
 
-/* Extracted from orders.html */
+
 .ui-box-19 {
     min-height:300px;
 }
 
-/* Extracted from orders.html */
+
 .ui-spacing-8 {
     text-align:center;
     padding:20px;
     color:#999;
 }
-/* Order review / notice badges */
+
 .order-reviewed-note,
 .order-warning-text {
     display: inline-flex;
@@ -537,7 +532,7 @@
     box-shadow: 0 8px 18px rgba(36, 95, 68, 0.16);
 }
 
-/* Quick review modal on orders page */
+
 .quick-review-list {
     display: grid;
     gap: 16px;

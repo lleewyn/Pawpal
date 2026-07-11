@@ -1,12 +1,6 @@
-/* ===================================
-   RETURN FORM - Slide-out Panel
-   Tuân thủ 100% design.md
-   - NO emoji
-   - Slide từ phải qua
-   - File upload với validation
-   =================================== */
 
-/* Overlay */
+
+
 .return-panel-overlay {
     position: fixed;
     top: 0;
@@ -26,7 +20,7 @@
     opacity: 1;
 }
 
-/* Slide-out Panel */
+
 .return-panel {
     position: fixed;
     right: -40%;
@@ -45,7 +39,7 @@
     right: 0;
 }
 
-/* Panel Header */
+
 .return-panel-header {
     display: flex;
     justify-content: space-between;
@@ -84,14 +78,14 @@
     color: var(--color-danger);
 }
 
-/* Panel Body */
+
 .return-panel-body {
     flex: 1;
     overflow-y: auto;
     padding: var(--space-lg);
 }
 
-/* Form Section */
+
 .form-section {
     margin-bottom: var(--space-lg);
 }
@@ -109,7 +103,7 @@
     margin-left: 4px;
 }
 
-/* Radio Cards */
+
 .radio-cards {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -161,7 +155,7 @@
     color: var(--color-text-dark);
 }
 
-/* Products Checklist */
+
 .products-checklist {
     display: flex;
     flex-direction: column;
@@ -217,7 +211,7 @@
     color: var(--color-text-light);
 }
 
-/* Select and Textarea */
+
 select,
 textarea {
     width: 100%;
@@ -249,7 +243,7 @@ textarea {
     margin-top: 4px;
 }
 
-/* File Upload Zone */
+
 .file-upload-zone {
     border: 2px dashed var(--color-border);
     border-radius: var(--card-border-radius);
@@ -293,7 +287,7 @@ textarea {
     color: var(--color-text-light);
 }
 
-/* File Preview List */
+
 .file-preview-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -339,7 +333,7 @@ textarea {
     
 }
 
-/* Error Message */
+
 .error-message {
     display: none;
     color: var(--color-danger);
@@ -350,14 +344,14 @@ textarea {
     border-radius: var(--card-border-radius);
 }
 
-/* Submit Button */
+
 .btn-submit-return {
     width: 100%;
     padding: 14px 24px;
     margin-top: var(--space-md);
 }
 
-/* Responsive */
+
 @media (max-width: 1024px) {
     .return-panel {
         width: 60%;

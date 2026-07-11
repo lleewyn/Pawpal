@@ -6,26 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết đơn hàng - PawPal</title>
     
-    <!-- Fonts -->
+    
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     
-    <!-- Bootstrap CSS — cần cho header responsive (d-lg-none, d-flex...) -->
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- Global CSS -->
+    
     <link rel="stylesheet" href="../../../styles/style.css">
     
-    <!-- Components -->
+    
     <link rel="stylesheet" href="../../../components/ui/review-form.css">
     <link rel="stylesheet" href="../../../components/ui/reviews.css">
     <link rel="stylesheet" href="../return-detail/return-detail.css">
     <link rel="stylesheet" href="return-form.css">
-    <!-- Page-specific -->
+    
     <link rel="stylesheet" href="../dashboard/dashboard.css">
     <link rel="stylesheet" href="/components/user-sidebar/user-sidebar.css">
     <link rel="stylesheet" href="order-detail.css">
 
-    <!-- Scripts -->
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../../../scripts/api/supabase-client.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
@@ -39,10 +39,10 @@
     <script src="../return-handler.js" defer></script>
 </head>
 <body>
-    <!-- Header -->
+    
     <header id="site-header"></header>
 
-    <!-- Main Content -->
+    
     <div class="orders-page-wrapper">
         <button type="button" class="dashboard-sidebar-toggle d-lg-none" id="dashboardSidebarToggle" aria-controls="user-sidebar" aria-expanded="false">
             <span class="dashboard-sidebar-toggle-icon" aria-hidden="true">
@@ -51,23 +51,23 @@
             <span class="dashboard-sidebar-toggle-text">Tài khoản</span>
         </button>
         <div class="dashboard-sidebar-backdrop" id="dashboardSidebarBackdrop" hidden></div>
-        <!-- User Sidebar -->
+        
         <div id="user-sidebar">
             <div class="dashboard-sidebar ui-box-17">
                 <p class="ui-spacing-6">Loading...</p>
             </div>
         </div>
 
-        <!-- Main Content -->
+        
         <main class="order-detail-main">
-            <!-- Back link -->
+            
             <div  class="mb-md">
                 <a href="../orders/orders.html" class="back-to-orders-link">
                     <i data-lucide="chevron-left" class="ui-box-18"></i> Quay lại danh sách đơn hàng
                 </a>
             </div>
 
-            <!-- Order Header -->
+            
             <header class="order-detail-header">
                 <div class="order-header-left">
                     <h4 class="order-title">
@@ -78,12 +78,12 @@
                 <span class="status-badge" id="order-status-badge">...</span>
             </header>
 
-            <!-- 2 Column Layout: Products + Timeline -->
+            
             <div class="detail-grid">
-                <!-- Left: Delivery, Payment, Products và Summary (65%) -->
+                
                 <div class="order-main-content">
                     
-                    <!-- Thông tin giao nhận -->
+                    
                     <section class="info-card delivery-info">
                         <h3 class="section-title-with-icon"><i data-lucide="map-pin"></i> Thông tin giao nhận</h3>
                         <div class="info-grid">
@@ -102,7 +102,7 @@
                         </div>
                     </section>
 
-                    <!-- Phương thức thanh toán -->
+                    
                     <section class="info-card payment-info">
                         <h3 class="section-title-with-icon"><i data-lucide="credit-card"></i> Phương thức thanh toán</h3>
                         <div class="info-grid">
@@ -121,10 +121,10 @@
                         <h3 class="mb-md" ><i data-lucide="package"></i> Thông tin sản phẩm</h3>
                         
                         <div class="products-list products-list-clean" id="products-list">
-                            <!-- Products rendered by JS -->
+                            
                         </div>
 
-                        <!-- Order Summary -->
+                        
                         <div class="order-summary-box summary-box-clean">
                             <div class="summary-row">
                                 <span>Tạm tính:</span>
@@ -145,12 +145,12 @@
                             </div>
                         </div>
 
-                        <!-- Action Buttons -->
+                        
                         <div class="order-actions actions-clean" id="order-actions">
-                            <!-- Buttons rendered by JS based on status -->
+                            
                         </div>
 
-                        <!-- Guest Notice Banner -->
+                        
                         <div class="guest-notice-banner" id="guest-notice">
                             <div class="notice-content">
                                 <p><strong>Bạn đang xem với quyền hạn hạn chế</strong></p>
@@ -164,36 +164,36 @@
                     </section>
                 </div>
 
-                <!-- Right: Timeline (35%) -->
+                
                 <aside class="timeline-section info-card">
                     <h3 class="mb-md" ><i data-lucide="clock"></i> Lịch sử trạng thái</h3>
                     <div class="timeline" id="order-timeline">
-                        <!-- Timeline rendered by JS -->
+                        
                     </div>
                 </aside>
             </div>
         </main>
     </div>
 
-    <!-- Footer -->
+    
     <footer id="site-footer"></footer>
 
-    <!-- FAB -->
+    
     <div id="rma-drawer-container"></div>
 
-    <!-- Return Form Slide-out Panel -->
+    
     <div class="return-panel-overlay" id="return-panel-overlay">
         <aside class="return-panel" id="return-panel">
-            <!-- Header -->
+            
             <header class="return-panel-header">
                 <h2>Yêu cầu đổi trả</h2>
                 <button class="panel-close-btn" id="close-return-panel">×</button>
             </header>
 
-            <!-- Body -->
+            
             <div class="return-panel-body">
                 <form id="return-form">
-                    <!-- Hình thức đổi trả -->
+                    
                     <section class="form-section">
                         <label class="form-label">Hình thức đổi trả</label>
                         <div class="radio-cards">
@@ -214,15 +214,15 @@
                         </div>
                     </section>
 
-                    <!-- Chọn sản phẩm -->
+                    
                     <section class="form-section">
                         <label class="form-label">Chọn sản phẩm muốn đổi trả</label>
                         <div class="products-checklist" id="return-products-list">
-                            <!-- Rendered by JS -->
+                            
                         </div>
                     </section>
 
-                    <!-- Lý do -->
+                    
                     <section class="form-section">
                         <label class="form-label" for="return-reason">
                             Lý do đổi trả <span class="required">*</span>
@@ -232,7 +232,7 @@
                         </select>
                     </section>
 
-                    <!-- Mô tả chi tiết -->
+                    
                     <section class="form-section">
                         <label class="form-label" for="return-description">
                             Mô tả chi tiết
@@ -245,7 +245,7 @@
                         <span class="char-counter" id="char-counter">0/500</span>
                     </section>
 
-                    <!-- Upload ảnh/video -->
+                    
                     <section class="form-section">
                         <label class="form-label">
                             Ảnh/Video minh chứng
@@ -267,7 +267,7 @@
                         <p class="error-message" id="file-error"></p>
                     </section>
 
-                    <!-- Submit Button -->
+                    
                     <button type="submit" class="btn-cta btn-submit-return">
                         Gửi yêu cầu hoàn trả
                     </button>
