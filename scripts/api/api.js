@@ -90,7 +90,7 @@ export const API = {
                     appointment_status, payment_status, note, change_count, total_price,
                     service ( 
                         service_name, service_category, estimated_duration,
-                        service_price_matrix ( unit_price, pet_species )
+                        service_price_matrix ( unit_price )
                     ),
                     pet_profile ( id, pet_code, pet_name, breed, species )
                 `)
@@ -159,7 +159,7 @@ export const API = {
                 .from('sales_order')
                 .select(`
                     id, order_code, order_status, payment_status,
-                    subtotal, shipping_fee, discount_amount, total_amount,
+                    shipping_fee, discount_amount, total_amount,
                     created_at, updated_at, note,
                     sales_order_detail (
                         id, quantity, unit_price, discount_amount, subtotal,
