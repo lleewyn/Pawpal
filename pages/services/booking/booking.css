@@ -1,4 +1,3 @@
-
 .booking-page-body { background-color: #f4faf7; }
 
 .booking-main { padding: 32px 20px 60px; }
@@ -6,17 +5,10 @@
 .booking-layout {
     max-width: 1160px;
     margin: 0 auto;
-    gap: 24px;
-    align-items: start;
-.booking-layout {
-    max-width: 1160px;
-    margin: 0 auto;
     display: grid;
     grid-template-columns: 1fr 360px;
     gap: 24px;
     align-items: start;
-}
-    align-self: start;
 }
 
 .booking-summary-col .summary-card {
