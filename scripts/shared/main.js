@@ -1,24 +1,25 @@
 function initApp() {
     console.log('[main.js] initApp');
-    initLookup();
-    initPremiumMotion();
-    initTimelineTracker();
-    initBookingWidget();
+    if (typeof initLookup === 'function') initLookup();
+    if (typeof initPremiumMotion === 'function') initPremiumMotion();
+    if (typeof initTimelineTracker === 'function') initTimelineTracker();
+    if (typeof initBookingWidget === 'function') initBookingWidget();
     
-    initFaqAccordion();
-    initShopFilter();
-    initCuteEnhancements();
-    initDraggableServicesCarousel();
-    initPetIdCardTilt();
-    initTestimonialsCarousel();
-    initExpertsCarousel();
-    initInteractivePawPass();
-    initProcessTimeline();
-    initServicesGrid();
-    initFab();
+    if (typeof initFaqAccordion === 'function') initFaqAccordion();
+    if (typeof initShopFilter === 'function') initShopFilter();
+    if (typeof initCuteEnhancements === 'function') initCuteEnhancements();
+    if (typeof initDraggableServicesCarousel === 'function') initDraggableServicesCarousel();
+    if (typeof initPetIdCardTilt === 'function') initPetIdCardTilt();
+    if (typeof initTestimonialsCarousel === 'function') initTestimonialsCarousel();
+    if (typeof initExpertsCarousel === 'function') initExpertsCarousel();
+    if (typeof initInteractivePawPass === 'function') initInteractivePawPass();
+    if (typeof initProcessTimeline === 'function') initProcessTimeline();
+    if (typeof initServicesGrid === 'function') initServicesGrid();
+    if (typeof initFab === 'function') initFab();
+    
     // Gọi lại init sau khi header đã inject; fallback này giúp tránh lỡ nhịp event
-    setTimeout(initActiveNav, 50);
-    setTimeout(initMobileNavigation, 50);
+    if (typeof initActiveNav === 'function') setTimeout(initActiveNav, 50);
+    if (typeof initMobileNavigation === 'function') setTimeout(initMobileNavigation, 50);
 }
 
 // Run nav init after header is injected by components.js
