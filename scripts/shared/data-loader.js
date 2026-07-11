@@ -166,6 +166,8 @@ async function loadProducts() {
         console.log(` Loaded ${rawProducts.length} products from Supabase`);
         const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
         
+        const knownBrands = ['Royal Canin', 'Pedigree', 'Me-O', 'Whiskas', "Hill's", 'Purina', 'Kong', 'Taste of the Wild', 'Frontline', 'Furminator', 'Nylabone', 'Hartz', "King's Pet", 'Inaba', 'Nutrience', 'Zenith', 'Orijen', 'Acana', 'GimCat', 'Gimborn', 'TropiClean', 'Bio-Pharmachemie'];
+
         const products = rawProducts.map(item => {
             const sale = Number(item.sale_price) < Number(item.cost_price);
             let images = [];
@@ -185,11 +187,23 @@ async function loadProducts() {
                 }
             }
 
+            // Guess brand from product_name
+            let detectedBrand = 'PawPal';
+            if (item.product_name) {
+                const lowerName = item.product_name.toLowerCase();
+                for (const b of knownBrands) {
+                    if (lowerName.includes(b.toLowerCase())) {
+                        detectedBrand = b;
+                        break;
+                    }
+                }
+            }
+
             return {
                 id: item.id,
                 sku: item.sku,
                 name: item.product_name,
-                brand: 'PawPal', // Simplified
+                brand: detectedBrand,
                 category: item.category_id,
                 categoryName: item.product_category?.category_name || 'Khác',
                 price: Number(item.sale_price),

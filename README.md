@@ -67,43 +67,196 @@ Truy cập hệ thống tại: `http://localhost:3000`
 
 ```text
 Pawpal/
-|-- components/              # Các component HTML tái sử dụng dùng chung
-|   |-- header.html          # Thanh điều hướng chính
-|   |-- footer.html          # Chân trang
-|   |-- user-sidebar.html    # Thanh sidebar cho phân hệ user
-|   `-- fab.html             # Nút Floating Action Button
+|-- api/
+|   `-- chat.js              # Endpoint backend xử lý Chatbot AI (nếu có)
 |
-|-- pages/                   # Giao diện HTML của dự án
-|   |-- admin/               # Dành cho Quản trị viên & Nhân viên (Quản lý đơn hàng, user, logs)
-|   |-- public/              # Dành cho Khách (Landing page, Đăng nhập, Giới thiệu, Blog)
-|   |-- services/            # Dành cho Dịch vụ (Danh sách dịch vụ Spa/Hotel, Booking chi tiết)
-|   |-- shop/                # Cửa hàng (Sản phẩm, Giỏ hàng, Checkout, Chi tiết sản phẩm)
-|   `-- user/                # Dành cho Khách hàng đã đăng nhập
-|       |-- dashboard/       # Bảng điều khiển cá nhân
-|       |-- orders/          # Lịch sử đơn hàng, chi tiết đơn hàng
-|       |-- pet-profile/     # Quản lý hồ sơ và sổ sức khỏe thú cưng
-|       |-- wishlist/        # Danh sách yêu thích
-|       `-- loyalty/         # Hệ thống tích điểm & thành viên
+|-- components/              # Các UI Component độc lập tái sử dụng
+|   |-- fab/                 # Nút Floating Action Button (Mở Chatbot/Hỗ trợ)
+|   |   |-- fab.css          # Style CSS của nút FAB
+|   |   |-- fab.html         # Khung giao diện HTML của nút
+|   |   `-- fab.js           # Logic hiển thị và bắt sự kiện click
+|   |-- footer/              # Chân trang (Footer)
+|   |   |-- footer.css       # Định dạng chân trang
+|   |   |-- footer.html      # Nội dung các cột link, logo chân trang
+|   |   `-- footer.js        # Script xử lý ở chân trang
+|   |-- header/              # Thanh điều hướng chính (Header)
+|   |   |-- header.css       # Style cho thanh menu, thanh tìm kiếm
+|   |   |-- header.html      # HTML của thanh navbar, logo, biểu tượng giỏ hàng
+|   |   `-- header.js        # Logic mở dropdown, kiểm tra đăng nhập trên header
+|   `-- user-sidebar/        # Thanh điều hướng dọc của khách hàng (Sidebar)
+|       |-- user-sidebar.css # Style Sidebar
+|       |-- user-sidebar.html# HTML các menu (Tổng quan, Đơn hàng, Thú cưng...)
+|       `-- user-sidebar.js  # Script tô màu (active) menu đang được chọn
 |
-|-- scripts/                 # Logic JavaScript của ứng dụng
-|   |-- api/                 # Kết nối và thao tác với Supabase Database (api.js)
-|   |-- shared/              # Tiện ích dùng chung (main.js, auth.js, data-loader.js,...)
-|   |-- auth/                # Xử lý đăng nhập, xác thực JWT, phân quyền
-|   `-- sync_static.js       # Script Node.js đồng bộ component tĩnh (header/footer)
+|-- data/                    # Thư mục chứa dữ liệu tĩnh Mock/Seed (JSON, CSV)
+|   `-- (pets.json, dichvu.csv, sanpham.csv, orders.json,...)
 |
-|-- styles/                  # Định dạng CSS theo kiến trúc module
-|   |-- tokens/              # Chứa các biến CSS cốt lõi (colors.css, spacing.css, typography.css)
-|   |-- components/          # CSS cho từng component (button.css, modal.css, nav.css,...)
-|   |-- pages/               # CSS đặc thù cho từng trang (shop, user, admin,...)
-|   `-- style.css            # File CSS tổng hợp (được tự động biên dịch)
+|-- pages/                   # Giao diện chính của ứng dụng
+|   |-- admin/               # Phân hệ dành cho Quản trị viên
+|   |-- public/              # Các trang công khai (Không cần đăng nhập)
+|   |   |-- about/           # Trang Giới thiệu về Pawpal
+|   |   |   |-- about.css
+|   |   |   `-- about.html
+|   |   |-- blog/            # Trang danh sách bài viết/Cẩm nang
+|   |   |   |-- blog.css
+|   |   |   |-- blog.html
+|   |   |   `-- blog.js
+|   |   |-- blog-detail/     # Xem chi tiết 1 bài viết Blog
+|   |   |   |-- blog-detail.css
+|   |   |   |-- blog-detail.html
+|   |   |   `-- blog-detail.js
+|   |   |-- contact/         # Trang Liên hệ & Bản đồ
+|   |   |   |-- contact.css
+|   |   |   |-- contact.html
+|   |   |   `-- contact.js
+|   |   |-- landing/         # Trang chủ chính (Landing Page)
+|   |   |   |-- landing.css
+|   |   |   |-- landing.html
+|   |   |   `-- landing.js
+|   |   |-- login/           # Trang Đăng nhập & Đăng ký
+|   |   |   |-- login.css
+|   |   |   |-- login.html
+|   |   |   `-- login.js
+|   |   `-- return-guest/    # Trang tra cứu đơn đổi trả dành cho khách vãng lai
+|   |       |-- return-guest.css
+|   |       |-- return-guest.html
+|   |       `-- return-guest.js
+|   |-- services/            # Phân hệ Dịch vụ & Đặt lịch (Spa, Hotel)
+|   |   |-- services.css     # Style cho danh mục dịch vụ
+|   |   |-- services.html    # Trang hiển thị danh sách các gói dịch vụ
+|   |   |-- services.js      # Fetch data và render dịch vụ
+|   |   |-- booking/         # Luồng điền thông tin đặt lịch
+|   |   |   |-- booking.css
+|   |   |   |-- booking.html
+|   |   |   `-- booking.js
+|   |   |-- booking-success/ # Trang thông báo sau khi đặt lịch thành công
+|   |   |   |-- booking-success.css
+|   |   |   |-- booking-success.html
+|   |   |   `-- booking-success.js
+|   |   `-- service-detail/  # Trang thông tin chi tiết 1 dịch vụ
+|   |       |-- service-detail.css
+|   |       |-- service-detail.html
+|   |       `-- service-detail.js
+|   |-- shop/                # Phân hệ Cửa hàng (Mua sắm sản phẩm)
+|   |   |-- payment-result.css # Style hiển thị kết quả giao dịch chung
+|   |   |-- shop.css         # Style trang danh sách sản phẩm
+|   |   |-- shop.html        # Trang cửa hàng tổng hợp (Shop)
+|   |   |-- shop.js          # Logic lọc, tìm kiếm, fetch sản phẩm
+|   |   |-- cart/            # Trang quản lý Giỏ hàng
+|   |   |   |-- cart.css
+|   |   |   |-- cart.html
+|   |   |   `-- cart.js
+|   |   |-- checkout/        # Trang thanh toán đơn hàng (Checkout)
+|   |   |   |-- checkout.css
+|   |   |   |-- checkout.html
+|   |   |   |-- checkout.js
+|   |   |   `-- payment-qr.css # Style cho modal QR Code thanh toán
+|   |   |-- payment-failed/  # Trang thông báo Thanh toán thất bại
+|   |   |   |-- payment-failed.css
+|   |   |   |-- payment-failed.html
+|   |   |   `-- payment-failed.js
+|   |   |-- payment-success/ # Trang thông báo Thanh toán thành công
+|   |   |   |-- payment-success.css
+|   |   |   |-- payment-success.html
+|   |   |   `-- payment-success.js
+|   |   `-- product-detail/  # Xem chi tiết 1 sản phẩm cụ thể
+|   |       |-- product-detail.css
+|   |       |-- product-detail.html
+|   |       |-- product-detail.js
+|   |       `-- product-reviews.js # Xử lý tính năng Đánh giá sản phẩm (Review)
+|   `-- user/                # Phân hệ Quản lý tài khoản 
+|       |-- dashboard-init.js # Khởi tạo dữ liệu cho luồng user dashboard
+|       |-- return-handler.js # Module xử lý đổi trả hàng hóa
+|       |-- review-handler.js # Module xử lý đánh giá sản phẩm/dịch vụ
+|       |-- support.css       # Style cho tính năng Gửi yêu cầu hỗ trợ 
+|       |-- booking-detail/  # Chi tiết một đơn đặt lịch chăm sóc
+|       |   |-- booking-detail.css
+|       |   |-- booking-detail.html
+|       |   `-- booking-detail.js
+|       |-- bookings/        # Danh sách lịch sử các lần đặt lịch
+|       |   |-- bookings.css
+|       |   |-- bookings.html
+|       |   `-- bookings.js
+|       |-- dashboard/       # Trang Tổng quan tài khoản (Dashboard chính)
+|       |   |-- dashboard.css
+|       |   |-- dashboard.html
+|       |   `-- dashboard.js
+|       |-- loyalty/         # Hệ thống hạng thành viên & Đổi điểm (Paw Points)
+|       |   |-- loyalty.css
+|       |   |-- loyalty.html
+|       |   `-- loyalty.js
+|       |-- order-detail/    # Xem chi tiết lịch trình 1 đơn hàng đã mua
+|       |   |-- order-detail.css
+|       |   |-- order-detail.html
+|       |   |-- order-detail.js
+|       |   `-- return-form.css # Form điền lý do khi nhấn nút Trả hàng
+|       |-- orders/          # Danh sách lịch sử mua hàng
+|       |   |-- orders.css
+|       |   |-- orders.html
+|       |   `-- orders.js
+|       |-- pet-diary/       # Sổ Nhật ký sức khỏe/chăm sóc thú cưng
+|       |   |-- pet-diary-init.js
+|       |   |-- pet-diary.css
+|       |   |-- pet-diary.html
+|       |   `-- pet-diary.js
+|       |-- pet-profile/     # Quản lý danh sách Thú cưng cá nhân
+|       |   |-- pet-add.css  # Form Thêm mới Thú cưng
+|       |   |-- pet-add.js
+|       |   |-- pet-form.css # CSS form cập nhật thông tin thú cưng
+|       |   |-- pet-profile-init.js
+|       |   |-- pet-profile-page.js
+|       |   |-- pet-profile.css
+|       |   |-- pet-profile.html
+|       |   `-- pet-profile.js
+|       |-- return-detail/   # Xem tiến trình xử lý một yêu cầu Trả hàng
+|       |   |-- return-detail.css
+|       |   |-- return-detail.html
+|       |   `-- return-detail.js
+|       |-- settings/        # Cài đặt tài khoản (Đổi mật khẩu, Sửa Profile)
+|       |   |-- settings.css
+|       |   |-- settings.html
+|       |   `-- settings.js
+|       |-- support-create/  # Tạo mới một Yêu cầu Hỗ trợ (Ticket)
+|       |   `-- support-create.html
+|       |-- support-tickets/ # Lịch sử các Ticket đã gửi cho admin
+|       |   |-- support-tickets.css
+|       |   |-- support-tickets.html
+|       |   `-- support-tickets.js
+|       `-- wishlist/        # Trang chứa Sản phẩm/Dịch vụ Yêu thích
+|           |-- wishlist.css
+|           |-- wishlist.html
+|           `-- wishlist.js
+|
+|-- scripts/                 # Core Logic JavaScript của toàn bộ dự án
+|   |-- api/                 # Thư mục xử lý Database và Backend APIs
+|   |   |-- api-global.js    # Khai báo biến toàn cục liên quan đến API
+|   |   |-- api.js           # Lớp Data Access thực thi truy vấn tới Supabase
+|   |   |-- chat.js          # Giao tiếp LLM trả lời khách hàng
+|   |   |-- index.js         # Export file
+|   |   |-- petService.js    # Module API tách biệt chuyên xử lý cho Pet
+|   |   `-- supabase-client.js # Khởi tạo & nạp key kết nối Supabase
+|   |-- rag/                 # RAG/AI Data Logic
+|   |   |-- embed_data.js    # Script node js chuyển text thành Vector AI
+|   |   |-- fix_vector_dimensions.sql # Script DB sửa lỗi độ dài Vector
+|   |   `-- setup_vector_db.sql # Script DB tạo bảng Vector Match
+|   `-- shared/              # Script và Thư viện Dùng chung 
+|       |-- auth.js          # Hệ thống Quản lý Đăng nhập & Phiên (Session)
+|       |-- components.js    # Xử lý Load Header/Footer/Sidebar tĩnh bằng JS
+|       |-- data-loader.js   # Module nạp dữ liệu từ File JSON (nếu không dùng DB)
+|       |-- main.js          # Core Script chạy đầu tiên khi mở web
+|       |-- notifications-handler.js # Xử lý Hiển thị thông báo (Toast)
+|       `-- support-handler.js # Module tiện ích dùng cho CSKH
+|
+|-- styles/                  # Định dạng giao diện CSS
+|   `-- style.css            # Tập tin CSS duy nhất, kết hợp style toàn trang
 |
 |-- assets/                  # Tài nguyên tĩnh
-|   |-- images/              # Hình ảnh sản phẩm, dịch vụ, banner
-|   `-- icons/               # SVG/Icons
+|   `-- images/              # Kho Hình ảnh minh họa, Logo, Icon, Banner
 |
-|-- Docs/                    # Tài liệu đặc tả kỹ thuật, UI/UX, hướng dẫn phát triển
-|-- server.js                # Server Node.js (Express) để chạy app local và mock API
-`-- package.json             # Quản lý thư viện và scripts (npm run dev, npm run sync)
+|-- Docs/                    # Chứa tài liệu System Design, Đặc tả kỹ thuật
+|-- index.html               # Entry point (Thường redirect ngay sang Landing page)
+|-- server.js                # Code Node.js Express server chạy local backend
+`-- package.json             # File cấu hình NPM (scripts npm run dev, cài đặt lib)
 ```
 
 ---

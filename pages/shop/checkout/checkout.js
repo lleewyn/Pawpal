@@ -1196,7 +1196,7 @@ function verifyPaymentSimulation() {
     statusMsg.innerHTML = '<div class="payment-verification-spinner"></div> Đang xác nhận thanh toán...';
     
     return new Promise(resolve => {
-        setTimeout(() => {
+        setTimeout(async () => {
             if (willSucceed) {
                 qrPaymentState.paymentVerified = true;
                 qrPaymentState.orderData.payment.status = 'paid';
