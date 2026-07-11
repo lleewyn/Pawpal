@@ -1,4 +1,4 @@
-// ==========================================================================
+﻿// ==========================================================================
 // PawPal — Booking Page Script (Section 3.1.4)
 // ==========================================================================
 
@@ -6,8 +6,7 @@ import { getPets, savePets } from '../../../scripts/api/petService.js';
 
 let allServices = [];
 let initDiagnostics = "Not initialized yet.";
-// Member discount config (change these to adjust member discount globally)
-const MEMBER_DISCOUNT_PERCENT = 0.05; // 5%
+const MEMBER_DISCOUNT_PERCENT = 0.05;
 const MEMBER_DISCOUNT_TEXT = 'Thành viên được giảm thêm';
 let selectedService = null;
 let bookingVouchers = null;
@@ -35,10 +34,10 @@ function renderVoucherDropdown() {
     let html = '';
     validVouchers.forEach(v => {
         html += `
-            <div class="dropdown-item voucher-dropdown-item" style="cursor:pointer; padding: 10px 16px; border-bottom: 1px solid #eee; white-space: normal;" data-code="${v.code}">
-                <div class="fw-bold text-primary-custom" style="font-size: 0.95rem;">${v.code}</div>
-                <div class="text-muted" style="font-size: 0.85rem; margin-top: 2px;">${v.description}</div>
-                <div class="text-muted mt-1" style="font-size: 0.75rem; color: #e67e22 !important;">Đơn tối thiểu: ${v.minOrderValue.toLocaleString('vi-VN')}đ</div>
+            <div class="dropdown-item voucher-dropdown-item"  data-code="${v.code}">
+                <div class="fw-bold text-primary-custom voucher-dropdown-title">${v.code}</div>
+                <div class="text-muted voucher-dropdown-desc">${v.description}</div>
+                <div class="text-muted mt-1 voucher-dropdown-min">Đơn tối thiểu: ${v.minOrderValue.toLocaleString('vi-VN')}đ</div>
             </div>
         `;
     });
@@ -47,7 +46,7 @@ function renderVoucherDropdown() {
     dropdown.querySelectorAll('.voucher-dropdown-item').forEach(item => {
         item.addEventListener('click', () => {
             input.value = item.getAttribute('data-code');
-            dropdown.style.display = 'none';
+            dropdown.classList.add('d-none');
             handleApplyBookingVoucher();
         });
     });
@@ -60,8 +59,7 @@ async function handleApplyBookingVoucher() {
 
     if (!code) {
         msg.textContent = 'Vui lòng nhập mã giảm giá';
-        msg.style.color = 'red';
-        msg.style.display = 'block';
+        msg.className = 'voucher-msg text-danger-custom'; msg.classList.remove('d-none');
         return;
     }
 
@@ -69,8 +67,7 @@ async function handleApplyBookingVoucher() {
         appliedBookingVoucher = null;
         input.value = '';
         msg.textContent = 'Đã gỡ mã giảm giá';
-        msg.style.color = 'var(--bs-gray-600)';
-        msg.style.display = 'block';
+        msg.className = 'voucher-msg text-muted-custom'; msg.classList.remove('d-none');
         document.getElementById('btnApplyBookingVoucher').textContent = 'Áp dụng';
         updateSummary();
         if (document.getElementById('step4') && !document.getElementById('step4').classList.contains('d-none')) {
@@ -92,15 +89,13 @@ async function handleApplyBookingVoucher() {
     const voucher = bookingVouchers.find(v => v.code === code && v.active);
     if (!voucher) {
         msg.textContent = 'Mã không hợp lệ hoặc đã hết hạn';
-        msg.style.color = 'red';
-        msg.style.display = 'block';
+        msg.className = 'voucher-msg text-danger-custom'; msg.classList.remove('d-none');
         return;
     }
 
     if (!voucher.applicableFor.includes('all') && !voucher.applicableFor.includes('services')) {
         msg.textContent = 'Mã không áp dụng cho dịch vụ';
-        msg.style.color = 'red';
-        msg.style.display = 'block';
+        msg.className = 'voucher-msg text-danger-custom'; msg.classList.remove('d-none');
         return;
     }
 
@@ -116,15 +111,13 @@ async function handleApplyBookingVoucher() {
 
     if (subtotal < voucher.minOrderValue) {
         msg.textContent = `Đơn tối thiểu ${voucher.minOrderValue.toLocaleString('vi-VN')}đ`;
-        msg.style.color = 'red';
-        msg.style.display = 'block';
+        msg.className = 'voucher-msg text-danger-custom'; msg.classList.remove('d-none');
         return;
     }
 
     appliedBookingVoucher = voucher;
     msg.textContent = 'Áp dụng mã thành công!';
-    msg.style.color = 'green';
-    msg.style.display = 'block';
+    msg.className = 'voucher-msg text-success-custom'; msg.classList.remove('d-none');
     document.getElementById('btnApplyBookingVoucher').textContent = 'Gỡ bỏ';
     updateSummary();
     if (document.getElementById('step4') && !document.getElementById('step4').classList.contains('d-none')) {
@@ -175,14 +168,12 @@ async function loadBookingConfig() {
             throw new Error(staffsErr.message);
         }
         
-        // Sinh ra khung giờ từ lịch làm việc
         let generatedSlots = new Set();
         if (scheduleData && scheduleData.length > 0) {
             scheduleData.forEach(schedule => {
                 if (!schedule.start_time || !schedule.end_time) return;
                 let startHour = parseInt(schedule.start_time.split(':')[0], 10);
                 let endHour = parseInt(schedule.end_time.split(':')[0], 10);
-                // Tạo các khung giờ mỗi 1 tiếng từ startHour đến trước endHour
                 for (let i = startHour; i < endHour; i++) {
                     let hourStr = i.toString().padStart(2, '0') + ':00';
                     generatedSlots.add(hourStr);
@@ -191,7 +182,6 @@ async function loadBookingConfig() {
         }
         
         let finalSlots = Array.from(generatedSlots).sort();
-        // Fallback mặc định nếu bảng schedule đang trống
         if (finalSlots.length === 0) {
             finalSlots = ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
         }
@@ -202,7 +192,6 @@ async function loadBookingConfig() {
             desc: s.specialization || 'Chuyên viên PawPal'
         }));
         
-        // Thêm tuỳ chọn "Phân bố ngẫu nhiên" lên đầu
         staffsArray.unshift({
             id: 'random',
             name: 'Phân bố ngẫu nhiên',
@@ -227,7 +216,6 @@ async function loadBookingConfig() {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('=== BOOKING MODULE INITIALIZING ===');
     
-    // Load config from Supabase (or fallback)
     await loadBookingConfig();
 
     const btnApplyBookingVoucher = document.getElementById('btnApplyBookingVoucher');
@@ -251,19 +239,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
             renderVoucherDropdown();
-            voucherDropdown.style.display = 'block';
+            voucherDropdown.classList.remove('d-none');
         });
 
         document.addEventListener('click', (e) => {
             if (voucherInput && voucherDropdown) {
                 if (!voucherInput.contains(e.target) && !voucherDropdown.contains(e.target)) {
-                    voucherDropdown.style.display = 'none';
+                    voucherdropdown.classList.add('d-none');
                 }
             }
         });
     }
 
-    // Load services from CSV using DataLoader (with direct fallback)
     try {
         if (window.DataLoader && typeof window.DataLoader.loadServices === 'function') {
             allServices = await window.DataLoader.loadServices();
@@ -284,24 +271,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Error loading services:', error);
     }
 
-    // Determine current user state
     const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
     const isMemberUser = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
     if (isMemberUser) {
-        // Logged in member
         const resolvedPets = await getPets(currentUser.id || currentUser.phone || currentUser.phone_main || null);
         const activePets = (Array.isArray(resolvedPets) ? resolvedPets : []).filter(p => !p.isArchived);
 
         if (activePets.length === 0) {
-            // Logged in member but has no pets -> show guest flow for quick creation
             document.getElementById('memberFlow').classList.add('d-none');
             document.getElementById('guestFlow').classList.remove('d-none');
-            document.getElementById('guestInfoNote').classList.add('d-none'); // Hide note as they already have an account
-            
+            document.getElementById('guestInfoNote').classList.add('d-none'); 
             bookingState.isMemberWithNoPets = true;
-            bookingState.isGuest = true; // Use guest validation logic
+            bookingState.isGuest = true; 
             
-            // Prefill guest form with member info
             const ownerNameInput = document.getElementById('ownerName');
             const ownerPhoneInput = document.getElementById('ownerPhone');
             
@@ -317,7 +299,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             setupGuestValidation();
             bindQuickAddPetModal(currentUser);
         } else {
-            // Normal member flow
             document.getElementById('memberFlow').classList.remove('d-none');
             document.getElementById('guestFlow').classList.add('d-none');
             document.getElementById('guestInfoNote').classList.add('d-none');
@@ -325,7 +306,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             bindQuickAddPetModal(currentUser);
         }
     } else {
-        // Guest flow
         document.getElementById('memberFlow').classList.add('d-none');
         document.getElementById('guestFlow').classList.remove('d-none');
         document.getElementById('guestInfoNote').classList.remove('d-none');
@@ -339,7 +319,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupConfirmation();
     validateStep1();
 
-    // Parse URL parameter ?service=SPA01 (from details/services page)
     const urlParams = new URLSearchParams(window.location.search);
     const preselectedServiceId = urlParams.get('service');
     if (preselectedServiceId && allServices.length > 0) {
@@ -349,7 +328,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             bookingState.serviceId = preselectedServiceId;
             const foundGroup = getServiceGroup(found);
 
-            // Set the active category tab
             const tabs = document.querySelectorAll('.svc-type-tab');
             tabs.forEach(tab => {
                 if (tab.dataset.type === foundGroup) {
@@ -359,11 +337,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
 
-            // Enable Step 2's next button
             const step2Next = document.getElementById('step2Next');
             if (step2Next) step2Next.disabled = false;
 
-            // Pre-render services list with this category and selection
             renderServices(foundGroup);
             updateSummary();
         }
@@ -401,7 +377,6 @@ async function loadMemberPets(user) {
     bookingState.ownerName = resolvedName;
     bookingState.ownerPhone = resolvedPhone;
 
-    // Attach validation listeners
     ['memberOwnerName', 'memberOwnerPhone'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -421,9 +396,9 @@ async function loadMemberPets(user) {
 
     const renderEmpty = () => {
         listContainer.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 20px; background: rgba(0,0,0,0.03); border-radius: 8px;">
-                <p style="margin: 0; color: var(--text-light);">B?n ch?a c? h? s? b? c?ng n?o.</p>
-                <button type="button" class="btn-green-outline btn-sm" id="addPetInlineBtn" style="margin-top: 10px; display: inline-block; padding: 6px 14px; font-size: 0.85rem;">+ Thêm hồ sơ bé cưng</button>
+            <div class="empty-pet-container">
+                <p class="empty-pet-text">B?n ch?a c? h? s? b? c?ng n?o.</p>
+                <button type="button" class="btn-green-outline btn-sm" id="addPetInlineBtn" class="empty-pet-btn">+ Thêm hồ sơ bé cưng</button>
             </div>
         `;
     };
@@ -453,7 +428,6 @@ async function loadMemberPets(user) {
         });
         activePets = dedupedPets;
         if (activePets.length > 0) {
-            /* localStorage.setItem pawpal_pets removed */
         }
     } catch (error) {
         console.warn('[booking] Load pets from Supabase failed, fallback to localStorage:', error);
@@ -500,8 +474,8 @@ async function loadMemberPets(user) {
 
     listContainer.innerHTML = activePets.map(pet => `
         <div class="pet-select-card" data-pet-id="${pet.id}" data-name="${pet.name}" data-type="${pet.species}" data-breed="${pet.breed}" data-weight="${pet.weight}" tabindex="0" role="button">
-            <div class="pet-avatar-placeholder" style="font-size: 1.5rem; width: 44px; height: 44px; overflow: hidden; border-radius: 50%;">
-                <img src="${getPetAvatar(pet)}" alt="${pet.name}" style="width: 100%; height: 100%; object-fit: cover;">
+            <div class="pet-avatar-placeholder" >
+                <img src="${getPetAvatar(pet)}" alt="${pet.name}" >
             </div>
             <div class="pet-select-details">
                 <span class="pet-select-name">${pet.name}</span>
@@ -510,7 +484,6 @@ async function loadMemberPets(user) {
         </div>
     `).join('');
 
-    // Attach click events
     listContainer.querySelectorAll('.pet-select-card').forEach(card => {
         card.addEventListener('click', () => {
             listContainer.querySelectorAll('.pet-select-card').forEach(c => c.classList.remove('selected'));
@@ -529,10 +502,10 @@ async function loadMemberPets(user) {
     const addCard = document.createElement('button');
     addCard.type = 'button';
     addCard.className = 'pet-select-card pet-select-card-add';
-    addCard.style.justifyContent = 'center';
-    addCard.style.gap = '10px';
+    
+    addCard.classList.add('flex-center');
     addCard.innerHTML = `
-        <div class="pet-avatar-placeholder" style="font-size: 1.5rem; width: 44px; height: 44px; display:flex;align-items:center;justify-content:center;">+</div>
+        <div class="pet-avatar-placeholder" >+</div>
         <div class="pet-select-details">
             <span class="pet-select-name">Thêm bé mới</span>
             <span class="pet-select-meta">Tạo hồ sơ ngay tại trang đặt lịch</span>
@@ -658,12 +631,10 @@ function setupGuestValidation() {
     const petTypeOtherGroup = document.getElementById('petTypeOtherGroup');
     if (petTypeEl) {
         petTypeEl.addEventListener('change', () => {
-            // Toggle visibility of specific species input when 'Khác' selected
             if (petTypeEl.value === 'Khác') {
                 petTypeOtherGroup && petTypeOtherGroup.classList.remove('d-none');
             } else {
                 petTypeOtherGroup && petTypeOtherGroup.classList.add('d-none');
-                // clear any previous warnings/errors
                 const otherErr = document.getElementById('petTypeOtherErr');
                 const otherWarn = document.getElementById('petTypeOtherWarn');
                 if (otherErr) { otherErr.textContent = ''; otherErr.classList.add('d-none'); }
@@ -671,7 +642,6 @@ function setupGuestValidation() {
             }
             validateStep1();
         });
-        // initialize visibility on load
         if (petTypeEl.value === 'Khác') petTypeOtherGroup && petTypeOtherGroup.classList.remove('d-none');
     }
 }
@@ -690,7 +660,6 @@ function validateGuestInput(id, isBlur = false) {
         isValid = false;
         errMsg = 'Vui lòng nhập họ và tên';
     } else if (id === 'ownerPhone' || id === 'memberOwnerPhone') {
-        // Chấp nhận mọi SĐT 10 số bắt đầu bằng 0 — không restrict đầu số
         const phoneRegex = /^0[0-9]{9}$/;
         if (!val) {
             isValid = false;
@@ -705,16 +674,13 @@ function validateGuestInput(id, isBlur = false) {
     } else if (id === 'petTypeOther') {
         const petTypeSelect = document.getElementById('petType');
         const warnEl = document.getElementById('petTypeOtherWarn');
-        // If user selected 'Khác', require this field; otherwise ignore
         if (petTypeSelect && petTypeSelect.value === 'Khác') {
             if (!val) {
                 isValid = false;
                 errMsg = 'Vui lòng nhập loài cụ thể';
             } else {
-                // check for weird characters (letters, spaces, hyphen, apostrophe allowed)
                 const safeRe = /^[\p{L}\s\-']+$/u;
                 if (!safeRe.test(val)) {
-                    // show warning but do not block submission
                     if (warnEl) { warnEl.classList.remove('d-none'); }
                 } else {
                     if (warnEl) { warnEl.classList.add('d-none'); }
@@ -742,7 +708,6 @@ function validateGuestInput(id, isBlur = false) {
             errEl.classList.remove('d-none');
         }
     } else {
-        // Luôn clear error ngay khi input hợp lệ — dù là input hay blur event
         el.classList.remove('is-invalid');
         errEl.textContent = '';
         errEl.classList.add('d-none');
@@ -771,7 +736,6 @@ function validateStep1() {
 
         const phoneRegex = /^0[0-9]{9}$/;
         isValid = ownerName && ownerPhone && phoneRegex.test(ownerPhone) && petName && petType && !isNaN(petWeight) && petWeight > 0;
-        // If 'Khác' selected, require petTypeOtherVal
         if (isValid && petType === 'Khác') {
             isValid = petTypeOtherVal.length > 0;
         }
@@ -780,7 +744,6 @@ function validateStep1() {
     document.getElementById('step1Next').disabled = !isValid;
 }
 
-// Setup service rendering in step 2
 function setupServiceSelection() {
     const listContainer = document.getElementById('svcSelectList');
     const tabs = document.querySelectorAll('.svc-type-tab');
@@ -790,7 +753,7 @@ function setupServiceSelection() {
         tab.addEventListener('click', () => {
             tabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
-            if (searchInput) searchInput.value = ''; // Reset search
+            if (searchInput) searchInput.value = ''; 
             renderServices(tab.dataset.type);
         });
     });
@@ -820,7 +783,6 @@ function renderServices(type, searchQuery = '') {
     const listContainer = document.getElementById('svcSelectList');
     if (!listContainer) return;
 
-    // Filter services by category type (spa vs hotel)
     let filtered = allServices.filter(s => getServiceGroup(s) === type);
 
     if (searchQuery) {
@@ -833,7 +795,7 @@ function renderServices(type, searchQuery = '') {
 
     if (filtered.length === 0) {
         listContainer.innerHTML = `
-            <p style="text-align: center; color: var(--text-light); padding: 20px;">
+            <p class="svc-empty-text">
                 Không tìm thấy dịch vụ nào phù hợp với tìm kiếm của bạn.
             </p>
         `;
@@ -855,11 +817,11 @@ function renderServices(type, searchQuery = '') {
                 <div class="svc-select-radio"></div>
                 <div class="svc-select-info">
                     <span class="svc-select-name">${service.name}</span>
-                    <p class="svc-select-meta" style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--color-text-light);">${service.description}</p>
+                    <p class="svc-select-meta" class="svc-select-meta-custom">${service.description}</p>
                 </div>
                 <div class="svc-select-price">
                     <div class="svc-price-main">${formattedPrice}đ${priceUnit}</div>
-                    <div class="svc-price-duration" style="color: var(--color-primary); font-size: 0.8rem; font-weight: 600;">${formattedMemberPrice}đ (${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}% giảm cho thành viên)</div>
+                    <div class="svc-price-duration" class="svc-price-duration-custom">${formattedMemberPrice}đ (${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}% giảm cho thành viên)</div>
                 </div>
             </div>
         `;
@@ -880,7 +842,6 @@ function renderServices(type, searchQuery = '') {
     });
 }
 
-// Calculate dynamic price based on weight
 function calculateDynamicPrice(service, weight) {
     if (!service.prices) return service.price;
     
@@ -895,12 +856,10 @@ function calculateDynamicPrice(service, weight) {
 
 // Step 3: Date và Staff selection
 function setupScheduleSelection() {
-    // Check-in and check-out dates for Hotel
     const checkInInput = document.getElementById('checkInDate');
     const checkOutInput = document.getElementById('checkOutDate');
     const bookingDateInput = document.getElementById('bookingDate');
 
-    // Set minimum date to today
     const todayStr = new Date().toISOString().split('T')[0];
     if (checkInInput) checkInInput.min = todayStr;
     if (checkOutInput) checkOutInput.min = todayStr;
@@ -912,12 +871,11 @@ function setupScheduleSelection() {
     function setScheduleLocked(locked) {
         [timeslotGrid, staffList].forEach(el => {
             if (!el) return;
-            el.style.opacity        = locked ? '0.4' : '';
-            el.style.pointerEvents  = locked ? 'none' : '';
+            locked ? el.classList.add('section-locked') : el.classList.remove('section-locked');
+            
         });
     }
 
-    // Lock on initial load
     setScheduleLocked(true);
 
     if (checkInInput && checkOutInput) {
@@ -964,14 +922,12 @@ function setupScheduleSelection() {
     if (bookingDateInput) {
         bookingDateInput.addEventListener('change', () => {
             bookingState.date = bookingDateInput.value;
-            // Unlock only when a valid date is chosen
             setScheduleLocked(!bookingDateInput.value);
             renderTimeslots();
             validateStep3();
         });
     }
 
-    // Addons checkbox changes
     const addonCheckboxes = ['addonMeal', 'addonWalk', 'addonPlay', 'addonBath'];
     addonCheckboxes.forEach(id => {
         const chk = document.getElementById(id);
@@ -1006,14 +962,11 @@ function updateAddons() {
     }
 
     if (document.getElementById('addonBath')?.checked) {
-        // Addon Bath reduction - 20% off base Spa standard price
-        // Mock Spa base price as 120,000 VNĐ
         const bathPrice = Math.round(120000 * 0.8);
         bookingState.addons.push({ name: 'Tắm vệ sinh lưu trú', price: bathPrice, perNight: false });
     }
 }
 
-// Global scope updateAddonQty for quantities
 window.updateAddonQty = function (id, delta) {
     const input = document.getElementById(id);
     if (!input) return;
@@ -1034,11 +987,9 @@ function renderTimeslots() {
         ? window.PawPalBookingConfig.slots
         : ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
 
-    // Check if slots are too close to current time (under 2 hours)
     const now = new Date();
     const isToday = bookingState.date === now.toISOString().split('T')[0];
 
-    // Determine busy slots from existing bookings instead of randomizing
     const existingBookings = JSON.parse('[]' || '[]');
 
     grid.innerHTML = slots.map(slot => {
@@ -1050,12 +1001,11 @@ function renderTimeslots() {
             slotTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
             const diffMinutes = (slotTime - now) / (1000 * 60);
-            if (diffMinutes < 120) { // under 2 hours
+            if (diffMinutes < 120) { 
                 isTooSoon = true;
             }
         }
 
-        // Occupancy: check existing bookings matching date and start time (simple overlap)
         const isBusy = existingBookings.some(b => b.date === bookingState.date && b.timeStart === slot);
 
         let statusClass = 'open';
@@ -1068,34 +1018,25 @@ function renderTimeslots() {
         return `<button class="timeslot-btn slot-${statusClass} ${tooSoonClass}" ${disabled} data-slot="${slot}">${slot}</button>`;
     }).join('');
 
-    // Re-apply selected / held classes if bookingState has a selected slot or a held slot
     grid.querySelectorAll('.timeslot-btn').forEach(btn => {
         const slot = btn.dataset.slot;
-        // mark selected if it matches bookingState
         if (bookingState.timeSlot && bookingState.timeSlot === slot) {
             btn.classList.add('selected');
         }
-        // mark held if it matches heldSlot
         if (heldSlot && heldSlot === slot) {
             btn.classList.add('held');
         }
-
-        // Attach click events only for enabled buttons
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             if (btn.disabled) return;
 
-            // Deselect others and remove previous selected marker
             grid.querySelectorAll('.timeslot-btn').forEach(b => b.classList.remove('selected'));
 
-            // Mark clicked as selected and visually held
             btn.classList.add('selected');
             btn.classList.add('held');
 
-            // Update booking state
             bookingState.timeSlot = btn.dataset.slot;
 
-            // Start Hold Timer (clears previous holds inside)
             startHoldTimer(bookingState.timeSlot);
 
             renderStaff();
@@ -1109,7 +1050,6 @@ function startHoldTimer(slot) {
     if (holdTimerInterval) {
         clearInterval(holdTimerInterval);
     }
-    // Remove held class from previous held slot button if any
     if (heldSlot) {
         const prevBtn = document.querySelector(`.timeslot-btn[data-slot="${heldSlot}"]`);
         if (prevBtn) {
@@ -1121,7 +1061,6 @@ function startHoldTimer(slot) {
     const holdBanner = document.getElementById('bookingHoldBanner');
     holdBanner.classList.remove('d-none');
 
-    // Set 15 minutes hold time
     const duration = 15 * 60;
     let timeRemaining = duration;
 
@@ -1132,7 +1071,6 @@ function startHoldTimer(slot) {
     };
 
     updateTimerDisplay();
-    // Track current held slot so we can clear class later
     heldSlot = slot;
     const currentBtn = document.querySelector(`.timeslot-btn[data-slot="${slot}"]`);
     if (currentBtn) currentBtn.classList.add('held');
@@ -1142,11 +1080,10 @@ function startHoldTimer(slot) {
         if (timeRemaining <= 0) {
             clearInterval(holdTimerInterval);
             holdBanner.innerHTML = ` <strong>Hết thời gian giữ chỗ!</strong> Khung giờ <strong>${slot}</strong> đã tự động giải phóng. Vui lòng chọn lại.`;
-            holdBanner.style.color = '#856404';
-            holdBanner.style.background = '#fff3cd';
-            holdBanner.style.borderColor = '#ffeeba';
+            holdBanner.classList.add('booking-hold-banner-warning');
+            
+            
 
-            // Deselect slot and remove held marker
             bookingState.timeSlot = '';
             document.querySelectorAll('.timeslot-btn').forEach(b => b.classList.remove('selected'));
             const heldBtn = document.querySelector(`.timeslot-btn[data-slot="${slot}"]`);
@@ -1178,10 +1115,10 @@ function renderStaff() {
         const initials = staff.name === 'Phân bổ ngẫu nhiên' ? '' : staff.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
         return `
             <div class="staff-card ${isSelected}" data-name="${staff.name}" tabindex="0" role="button">
-                <div class="staff-card-avatar" style="font-size: 1.1rem;">${initials}</div>
+                <div class="staff-card-avatar" class="staff-card-avatar-custom">${initials}</div>
                 <div class="staff-card-info">
-                    <span class="staff-select-name" style="font-weight:700; display:block; color:var(--color-primary-dark); font-size:0.9rem; margin-bottom: 2px;">${staff.name}</span>
-                    <span class="staff-card-status" style="font-size:0.75rem; color: var(--color-text-light); line-height: 1.2; display: block;">${staff.desc}</span>
+                    <span class="staff-select-name staff-select-name-custom">${staff.name}</span>
+                    <span class="staff-card-status staff-card-status-custom">${staff.desc}</span>
                 </div>
             </div>
         `;
@@ -1210,7 +1147,6 @@ function validateStep3() {
     document.getElementById('step3Next').disabled = !isValid;
 }
 
-// Step actions (next / back)
 function setupStepActions() {
     const nextButtons = {
         1: document.getElementById('step1Next'),
@@ -1234,12 +1170,8 @@ function setupStepActions() {
     const stepsIndicator = document.getElementById('bookingStepper').querySelectorAll('.step');
 
     const goToStep = (targetStep) => {
-        // Hide all panels
         Object.values(panels).forEach(p => p.classList.remove('active'));
-        // Show target panel
         panels[targetStep].classList.add('active');
-
-        // Update stepper indicator class
         stepsIndicator.forEach((indicator, index) => {
             if (index + 1 < targetStep) {
                 indicator.classList.add('completed');
@@ -1518,7 +1450,7 @@ function renderStep4Confirm() {
 
     if (isMember) {
         billLines += `
-            <div class="summary-row" style="color: #27ae60;">
+            <div class="summary-row summary-row-success">
                 <span class="sum-label">Khấu trừ thành viên (Bạc -${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}%)</span>
                 <span class="sum-value">-${discount.toLocaleString('vi-VN')}đ</span>
             </div>
@@ -1527,7 +1459,7 @@ function renderStep4Confirm() {
 
     if (appliedBookingVoucher) {
         billLines += `
-            <div class="summary-row" style="color: #27ae60;">
+            <div class="summary-row summary-row-success">
                 <span class="sum-label">Voucher (${appliedBookingVoucher.code})</span>
                 <span class="sum-value">-${voucherDiscount.toLocaleString('vi-VN')}đ</span>
             </div>
@@ -1536,24 +1468,24 @@ function renderStep4Confirm() {
 
     const container = document.getElementById('confirmSummary');
     container.innerHTML = `
-        <div class="confirm-bill-card" style="background: rgba(0,0,0,0.02); border: 1px solid var(--color-border); border-radius: var(--card-border-radius); padding: 20px; margin-bottom: 20px;">
-            <h4 style="font-family: var(--font-heading); color: var(--color-primary-dark); margin-top:0; margin-bottom: 15px;">Chi tiết hóa đơn</h4>
+        <div class="confirm-bill-card">
+            <h4 class="confirm-bill-title">Chi tiết hóa đơn</h4>
             
             ${billLines}
             
-            <div class="summary-divider" style="margin: 15px 0; border-top: 1px solid var(--color-border);"></div>
+            <div class="summary-divider summary-divider-custom"></div>
             
-            <div class="summary-row price-row" style="font-size: 1.2rem; font-weight: bold; color: var(--color-primary-dark);">
+            <div class="summary-row price-row summary-row-total">
                 <span class="sum-label">Tổng tiền hóa đơn:</span>
-                <span class="sum-value" style="color: var(--color-primary);">${finalTotal.toLocaleString('vi-VN')} VNĐ</span>
+                <span class="sum-value">${finalTotal.toLocaleString('vi-VN')} VNĐ</span>
             </div>
 
-            <div class="summary-row price-row" style="font-size: 1.1rem; font-weight: bold; margin-top: 8px;">
+            <div class="summary-row price-row summary-row-paid">
                 <span class="sum-label">Chi phí đặt cọc:</span>
-                <span class="sum-value" style="color: #27ae60; font-size: 1.3rem;">0 VNĐ</span>
+                <span class="sum-value">0 VNĐ</span>
             </div>
 
-            <div class="alert-bill-note" style="margin-top: 15px; padding: 12px; border: 1px dashed #e67e22; background: rgba(230,126,34,0.08); border-radius: 8px; font-size: 0.85rem; color: #d35400; line-height: 1.5;">
+            <div class="alert-bill-note">
                 ️ <strong>Cảnh báo:</strong> Mức giá hiện tại chỉ là dự kiến dựa trên số cân nặng tự khai báo (${bookingState.petWeight}kg). Nhân viên sẽ tiến hành cân lại thực tế tại quầy để áp giá chuẩn nhất theo quy định.
             </div>
         </div>
@@ -1589,7 +1521,7 @@ async function processBookingSubmit() {
     // Disable button and show spinner
     if (confirmBtn) {
         confirmBtn.disabled = true;
-        confirmBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="margin-right:8px;"></span>Đang xử lý đặt lịch...`;
+        confirmBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" class="btn-spinner-icon"></span>Đang xử lý đặt lịch...`;
     }
 
     // Save booking database representation
@@ -1739,21 +1671,21 @@ function showTempAccountActivationToast(phone, token) {
 
     const toast = document.createElement('div');
     toast.className = 'toast-custom toast-success';
-    toast.style.minWidth = '320px';
+    toast.classList.add('toast-custom');
 
     // For guest activation flow, point to login with guest-activate action so user receives OTP first
     const origin = window.location.origin || 'http://localhost:3000';
     const setupUrl = `${origin}/pages/public/login/login.html?action=guest-activate&phone=${encodeURIComponent(phone)}`;
 
     toast.innerHTML = `
-        <div class="toast-content" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
+        <div class="toast-content toast-content-col">
+            <div class="toast-content-row">
                 <span class="toast-icon"></span>
                 <strong>[SMS Gateway] Gửi đến ${phone}:</strong>
             </div>
-            <div style="font-size: 0.85rem; line-height: 1.4; color: rgba(255,255,255,0.95);">
+            <div class="toast-desc-text">
                 Chào mừng bạn đến với PawPal! Tài khoản tạm của bạn đã được khởi tạo. Đặt mật khẩu ngay trong 48h để nhận 50 điểm thưởng và quản lý lịch hẹn trực tuyến: 
-                <a href="${setupUrl}" target="_blank" style="color: #f1c40f; text-decoration: underline; word-break: break-all;">${setupUrl}</a>
+                <a href="${setupUrl}" target="_blank" class="toast-link-yellow">${setupUrl}</a>
             </div>
         </div>
     `;
@@ -2071,3 +2003,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+

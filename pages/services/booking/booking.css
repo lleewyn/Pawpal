@@ -1,10 +1,6 @@
-/* ==========================================================================
-   Booking Page — booking.css
-   ========================================================================== */
 
 .booking-page-body { background-color: #f4faf7; }
 
-/* ── Layout ── */
 .booking-main { padding: 32px 20px 60px; }
 
 .booking-layout {
@@ -20,20 +16,16 @@
     gap: 24px;
     align-items: start;
 }
-}
-    /* Ensure the summary column aligns with the main schedule column and stays visible */
     align-self: start;
 }
 
-/* Make the summary card sticky so it stays in view while scrolling */
 .booking-summary-col .summary-card {
     position: sticky;
-    top: 96px; /* adjust as needed to sit below header/stepper */
+    top: 96px; 
     max-height: calc(100vh - 120px);
     overflow: auto;
 }
 
-/* Responsive: disable sticky on small screens so layout stacks naturally */
 @media (max-width: 991px) {
     .booking-layout {
         grid-template-columns: 1fr;
@@ -44,7 +36,6 @@
         overflow: visible;
     }
 }
-/* ── Stepper ── */
 .booking-stepper {
     display: flex;
     align-items: center;
@@ -134,7 +125,6 @@
 
 .step-line.done { background: var(--color-accent); }
 
-/* ── Step Panels ── */
 .booking-step-panel {
     display: none;
     background: var(--color-bg-white);
@@ -182,7 +172,6 @@
     font-weight: 500;
 }
 
-/* ── Step 1: Service selection ── */
 .svc-type-tabs {
     display: flex;
     gap: 10px;
@@ -213,7 +202,6 @@
     color: #ffffff;
 }
 
-/* Service select cards */
 .svc-select-list {
     display: flex;
     flex-direction: column;
@@ -239,8 +227,7 @@
     z-index: 2;
 }
 
-.svc-select-card:hover {
-}
+
 
 .svc-select-card.selected {
     border-color: var(--color-primary);
@@ -319,7 +306,6 @@
     color: #94a3b8;
 }
 
-/* ── Step 2: Form ── */
 .booking-form {
     display: block;
 }
@@ -376,8 +362,7 @@
 .booking-form .form-group textarea,
 .spa-schedule .form-group input,
 .hotel-date-range .form-group input {
-    padding: 8px 12px; /* Reduced vertical padding */
-    border: 1px solid rgba(42,89,68,0.15);
+    padding: 8px 12px; 
     border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 0.95rem;
@@ -424,10 +409,8 @@
     font-weight: 500;
 }
 
-/* ── Step 3: Schedule ── */
 .hotel-date-range { margin-bottom: 20px; }
 
-/* Đảm bảo ngày check-in / check-out hiển thị 2 cột cạnh nhau */
 .hotel-date-range .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -457,10 +440,7 @@
 
 .spa-schedule { display: flex; flex-direction: column; gap: 20px; }
 
-/* Desktop: lay out date/timeslot and staff selection side-by-side */
 @media (min-width: 992px) {
-    /* Single-column flow: date -> timeslot -> banner -> staff (stacked vertically)
-       so staff selection appears under the timeslot on desktop as requested. */
     .spa-schedule {
         display: grid;
         grid-template-columns: 1fr;
@@ -478,12 +458,10 @@
     .spa-schedule > .booking-hold-banner { grid-area: banner; }
     .spa-schedule > .staff-selection { grid-area: staff; }
 
-    /* Allow timeslot grid to scroll if tall; staff list flows below naturally */
     .spa-schedule .timeslot-section { max-height: 520px; overflow: auto; padding-right: 6px; }
     .spa-schedule .staff-selection { max-height: none; overflow: visible; }
 }
 
-/* Make the booking date label and input inline on wide screens only */
 @media (min-width: 992px) {
     .spa-schedule .form-group.booking-date {
         display: flex;
@@ -494,7 +472,7 @@
 
     .spa-schedule .form-group.booking-date label {
         flex: 0 0 120px;
-        margin-bottom: 0; /* override stacked label styles */
+        margin-bottom: 0; 
         font-weight: 700;
     }
 
@@ -508,8 +486,6 @@
         border: 1px solid rgba(42,89,68,0.08);
         background: #ffffff;
     }
-
-    /* reduce gap between date row and timeslot grid */
     .spa-schedule .timeslot-section { margin-top: 6px; }
 }
 
@@ -618,7 +594,6 @@
 }
 
 .timeslot-btn.held {
-    /* Held (temporary) state — make it visually distinct with a warm amber treatment. */
     background: linear-gradient(180deg, #fff7e6 0%, #fff1cc 100%);
     border-color: #f59e0b;
     color: #92400e;
@@ -626,14 +601,12 @@
     transform: translateY(-1px);
 }
 
-/* Busy slots (already full) */
 .timeslot-btn.slot-busy {
     background: #f1f5f9;
     color: #94a3b8;
     border-color: #cbd5e1;
 }
 
-/* Slots too close to now (<2h) */
 .timeslot-btn.slot-soon {
     background: #fff7ed;
     color: #92400e;
@@ -655,7 +628,6 @@
     text-decoration: none;
 }
 
-/* Slot quá gần giờ hiện tại (< 2 tiếng) */
 .timeslot-btn.too-soon:disabled {
     background: #fff7ed;
     color: #fdba74;
@@ -663,7 +635,6 @@
     text-decoration: none;
 }
 
-/* Legend dot cho too-soon */
 .avail-soon  { background: #fdba74; }
 
 .booking-hold-banner-row {
@@ -705,7 +676,6 @@
     color: #b45309;
 }
 
-/* ── Step 4: Confirm ── */
 .confirm-summary {
     background: var(--color-bg-light);
     border-radius: var(--card-border-radius);
@@ -832,7 +802,6 @@
     transform: none;
 }
 
-/* ── Step Actions ── */
 .step-actions {
     display: flex;
     gap: 12px;
@@ -850,7 +819,6 @@
     box-shadow: none;
 }
 
-/* ── btn-green-outline ── */
 .btn-green-outline {
     display: inline-flex;
     align-items: center;
@@ -873,7 +841,6 @@
     color: #ffffff;
 }
 
-/* ── Summary Sidebar ── */
 .booking-summary-col { position: sticky; top: 100px; }
 
 .summary-card {
@@ -973,7 +940,6 @@
     font-weight: 600;
 }
 
-/* Trust badges */
 .trust-badges {
     background: var(--color-bg-white);
     border-radius: var(--card-border-radius);
@@ -996,7 +962,6 @@
 
 .trust-icon { font-size: 1rem; flex-shrink: 0; }
 
-/* Hotline */
 .booking-hotline {
     background: var(--color-primary-light);
     border-radius: var(--card-border-radius);
@@ -1021,7 +986,6 @@
 
 .hotline-link:hover { color: var(--color-accent-dark); }
 
-/* ── Success Modal ── */
 .success-modal {
     position: fixed;
     inset: 0;
@@ -1144,12 +1108,10 @@
     .btn-step-back { width: 100%; }
 }
 
-/* Trường hợp rất nhỏ (ví dụ < 420px) vẫn cho hiển thị 1 cột */
 @media (max-width: 420px) {
     .hotel-date-range .form-row { grid-template-columns: 1fr; }
 }
 
-/* ── Addons Section ── */
 .hotel-addons-section .addon-item {
     display: flex;
     align-items: center;
@@ -1231,7 +1193,6 @@
     margin: 0;
 }
 
-/* ── Member Flow Pet Cards ── */
 .pet-cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -1354,40 +1315,36 @@
 }
 
 
-/* Extracted from booking.html */
 .ui-element-6 {
     color:#b45309;
      font-weight:600;
 }
 
 
-/* Extracted from booking.html */
-
-        .quick-add-pet-modal {
-            position: fixed;
-            inset: 0;
-            z-index: 3200;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.48);
-            backdrop-filter: blur(6px);
-        }
-        .quick-add-pet-modal.active { display: flex; }
-        .quick-add-pet-dialog {
-            width: min(760px, 100%);
-            background: #fff;
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22);
-        }
-        .pet-select-card-add {
-            border: 1px dashed rgba(42, 89, 68, 0.35);
-            background: rgba(42, 89, 68, 0.04);
-        }
+.quick-add-pet-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 3200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.48);
+    backdrop-filter: blur(6px);
+}
+.quick-add-pet-modal.active { display: flex; }
+.quick-add-pet-dialog {
+    width: min(760px, 100%);
+    background: #fff;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22);
+}
+.pet-select-card-add {
+    border: 1px dashed rgba(42, 89, 68, 0.35);
+    background: rgba(42, 89, 68, 0.04);
+}
     
-/* --- Quick Add Pet Modal Inner Styles --- */
 .quick-add-pet-dialog {
     position: relative;
     max-height: 90vh;
@@ -1522,3 +1479,50 @@
     transform: translateY(-1px);
     box-shadow: 0 6px 16px rgba(42, 89, 68, 0.3);
 }
+
+/* --- Refactored JS Inline Styles --- */
+.voucher-dropdown-item { cursor: pointer; padding: 10px 16px; border-bottom: 1px solid #eee; white-space: normal; }
+.voucher-dropdown-title { font-size: 0.95rem; }
+.voucher-dropdown-desc { font-size: 0.85rem; margin-top: 2px; }
+.voucher-dropdown-min { font-size: 0.75rem; color: #e67e22 !important; }
+
+.text-danger-custom { color: red !important; }
+.text-success-custom { color: green !important; }
+.text-muted-custom { color: var(--bs-gray-600) !important; }
+
+.empty-pet-container { grid-column: 1/-1; text-align: center; padding: 20px; background: rgba(0,0,0,0.03); border-radius: 8px; }
+.empty-pet-text { margin: 0; color: var(--text-light); }
+.empty-pet-btn { margin-top: 10px; display: inline-block; padding: 6px 14px; font-size: 0.85rem; }
+
+.pet-avatar-placeholder { font-size: 1.5rem; width: 44px; height: 44px; overflow: hidden; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.pet-avatar-placeholder img { width: 100%; height: 100%; object-fit: cover; }
+.pet-select-card-add.flex-center { justify-content: center; gap: 10px; }
+
+.svc-empty-text { text-align: center; color: var(--text-light); padding: 20px; }
+.svc-select-meta-custom { margin: 4px 0 0 0; font-size: 0.85rem; color: var(--color-text-light); }
+.svc-price-duration-custom { color: var(--color-primary); font-size: 0.8rem; font-weight: 600; }
+
+.section-locked { opacity: 0.4; pointer-events: none; }
+
+.booking-hold-banner-warning { color: #856404 !important; background: #fff3cd !important; border-color: #ffeeba !important; }
+
+.staff-card-avatar-custom { font-size: 1.1rem; }
+.staff-select-name-custom { font-weight: 700; display: block; color: var(--color-primary-dark); font-size: 0.9rem; margin-bottom: 2px; }
+.staff-card-status-custom { font-size: 0.75rem; color: var(--color-text-light); line-height: 1.2; display: block; }
+
+.summary-row-success { color: #27ae60; }
+.confirm-bill-card { background: rgba(0,0,0,0.02); border: 1px solid var(--color-border); border-radius: var(--card-border-radius); padding: 20px; margin-bottom: 20px; }
+.confirm-bill-title { font-family: var(--font-heading); color: var(--color-primary-dark); margin-top: 0; margin-bottom: 15px; }
+.summary-divider-custom { margin: 15px 0; border-top: 1px solid var(--color-border); }
+.summary-row-total { font-size: 1.2rem; font-weight: bold; color: var(--color-primary-dark); }
+.summary-row-total .sum-value { color: var(--color-primary); }
+.summary-row-paid { font-size: 1.1rem; font-weight: bold; margin-top: 8px; }
+.summary-row-paid .sum-value { color: #27ae60; font-size: 1.3rem; }
+.alert-bill-note { margin-top: 15px; padding: 12px; border: 1px dashed #e67e22; background: rgba(230,126,34,0.08); border-radius: 8px; font-size: 0.85rem; color: #d35400; line-height: 1.5; }
+
+.btn-spinner-icon { margin-right: 8px; }
+.toast-custom { min-width: 320px; }
+.toast-content-col { flex-direction: column; align-items: flex-start; gap: 8px; }
+.toast-content-row { display: flex; align-items: center; gap: 8px; }
+.toast-desc-text { font-size: 0.85rem; line-height: 1.4; color: rgba(255,255,255,0.95); }
+.toast-link-yellow { color: #f1c40f; text-decoration: underline; word-break: break-all; }
