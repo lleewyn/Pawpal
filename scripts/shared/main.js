@@ -17,20 +17,16 @@ function initApp() {
     if (typeof initServicesGrid === 'function') initServicesGrid();
     if (typeof initFab === 'function') initFab();
     
-    
     if (typeof initActiveNav === 'function') setTimeout(initActiveNav, 50);
     if (typeof initMobileNavigation === 'function') setTimeout(initMobileNavigation, 50);
 }
-
 
 document.addEventListener('headerInjected', function () {
     initActiveNav();
     initMobileNavigation();
 
-    
     document.querySelectorAll('.nav-item.dropdown > .nav-link').forEach(link => {
         link.addEventListener('click', function(e) {
-            
             if (window.innerWidth >= 1250 && this.href && !this.href.endsWith('#')) {
                 window.location.href = this.href;
             }
@@ -55,7 +51,6 @@ function initSharedComponents() {
     document.head.appendChild(script);
 }
 
-
 function initActiveNav() {
     const nav = document.getElementById('primaryNavigation');
     if (!nav) return;
@@ -67,7 +62,6 @@ function initActiveNav() {
 
     const links = navList.querySelectorAll('a.nav-link');
 
-    
     links.forEach(link => {
         link.classList.remove('active');
         link.removeAttribute('aria-current');
@@ -75,14 +69,12 @@ function initActiveNav() {
         link.style.fontWeight = '';
     });
 
-    
     if (currentPath.includes('/pages/user/') || currentPath.includes('/user/')) {
         return;
     }
 
     let matched = null;
 
-    
     if (currentPath === '/' || currentPath.includes('index.html') || currentPath.includes('landing.html')) {
         matched = navList.querySelector('a.nav-link[href*="landing.html"]');
     } else if (
@@ -110,12 +102,10 @@ function initActiveNav() {
     if (matched) {
         matched.classList.add('active');
         matched.setAttribute('aria-current', 'page');
-        
         matched.style.color = 'var(--color-accent)';
         matched.style.fontWeight = '700';
     }
 }
-
 
 function initMobileNavigation() {
     const toggleBtn = document.getElementById('mobileNavToggle');
@@ -126,8 +116,6 @@ function initMobileNavigation() {
         return;
     }
 
-    
-    
     let mobileOverlay = null;
     let scrollLockY = 0;
     function createOverlay() {
@@ -141,9 +129,7 @@ function initMobileNavigation() {
         mobileOverlay.style.opacity = '0';
         mobileOverlay.style.transition = 'opacity 220ms ease';
         document.body.appendChild(mobileOverlay);
-        
         mobileOverlay.addEventListener('click', closeDrawer);
-        
         requestAnimationFrame(() => mobileOverlay.style.opacity = '1');
     }
 
@@ -156,12 +142,10 @@ function initMobileNavigation() {
         }, 240);
     }
 
-    
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeDrawer();
     });
 
-    
     let wasMobile = window.innerWidth < 1250;
     window.addEventListener('resize', () => {
         const isMobile = window.innerWidth < 1250;
@@ -171,7 +155,6 @@ function initMobileNavigation() {
         wasMobile = isMobile;
     });
 
-    
     nav.classList.remove('show');
     toggleBtn.setAttribute('aria-expanded', 'false');
     document.body.style.overflow = '';
@@ -188,7 +171,6 @@ function initMobileNavigation() {
         toggleBtn.setAttribute('aria-expanded', 'true');
         document.body.style.overflow = 'hidden';
         createOverlay();
-        
         nav.querySelectorAll('.dropdown-toggle svg').forEach(svg => svg.style.transform = 'rotate(0deg)');
     }
 
@@ -197,11 +179,9 @@ function initMobileNavigation() {
         toggleBtn.setAttribute('aria-expanded', 'false');
         document.body.style.overflow = '';
         removeOverlay();
-        
         nav.querySelectorAll('.dropdown-toggle svg').forEach(svg => svg.style.transform = 'rotate(0deg)');
     }
 
-    
     toggleBtn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -213,7 +193,6 @@ function initMobileNavigation() {
         }
     };
 
-    
     nav.querySelectorAll('a').forEach(link => {
         if (!link.classList.contains('dropdown-toggle') && link.dataset.mobileNavCloseBound !== 'true') {
             link.addEventListener('click', closeDrawer);
@@ -221,13 +200,11 @@ function initMobileNavigation() {
         }
     });
 
-    
     const dropdownToggles = nav.querySelectorAll('.dropdown-toggle');
     dropdownToggles.forEach(dt => {
         if (dt.dataset.mobileDropdownBound === 'true') return;
         
         dt.addEventListener('click', (e) => {
-            
             setTimeout(() => {
                 const expanded = dt.classList.contains('show');
                 const svg = dt.querySelector('svg');
@@ -242,7 +219,6 @@ function initMobileNavigation() {
     nav.dataset.mobileNavReady = 'true';
 }
 
-
 function initTimelineTracker() {
     const indicators = document.querySelectorAll('.timeline-indicator-item');
     const phoneCards = document.querySelectorAll('.phone-timeline-card');
@@ -254,16 +230,12 @@ function initTimelineTracker() {
     let autoPlayInterval;
 
     function setActiveStep(index) {
-        
         indicators.forEach(ind => ind.classList.remove('active'));
-        
         indicators[index].classList.add('active');
 
-        
         phoneCards.forEach((card, i) => {
             if (i === index) {
                 card.classList.add('active');
-                
                 
                 if (phoneScreen) {
                     const containerRect = phoneScreen.getBoundingClientRect();
@@ -283,20 +255,15 @@ function initTimelineTracker() {
         activeIndex = index;
     }
 
-    
     indicators.forEach((indicator, index) => {
         indicator.addEventListener('click', () => {
-            
             clearInterval(autoPlayInterval);
             setActiveStep(index);
         });
     });
 
-    
-    
     setActiveStep(0);
 }
-
 
 function initBookingWidget() {
     const bookingWidget = document.getElementById('booking');
@@ -306,12 +273,10 @@ function initBookingWidget() {
 
     if (!bookingWidget || triggerButtons.length === 0) return;
 
-    
     triggerButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             bookingWidget.classList.add('open');
-            
             
             const firstInput = bookingWidget.querySelector('input');
             if (firstInput) {
@@ -320,7 +285,6 @@ function initBookingWidget() {
         });
     });
 
-    
     const closeModal = () => {
         bookingWidget.classList.remove('open');
     };
@@ -336,14 +300,12 @@ function initBookingWidget() {
         overlay.addEventListener('click', closeModal);
     }
 
-    
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && bookingWidget.classList.contains('open')) {
             closeModal();
         }
     });
 }
-
 
 function initPricingModal() {
     const pricingModal = document.getElementById('pricingModal');
@@ -355,13 +317,11 @@ function initPricingModal() {
 
     if (!pricingModal || !openBtn) return;
 
-    
     openBtn.addEventListener('click', (e) => {
         e.preventDefault();
         pricingModal.classList.add('open');
     });
 
-    
     const closePricing = () => {
         pricingModal.classList.remove('open');
     };
@@ -369,19 +329,16 @@ function initPricingModal() {
     if (closeBtn) closeBtn.addEventListener('click', closePricing);
     if (overlay) overlay.addEventListener('click', closePricing);
 
-    
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && pricingModal.classList.contains('open')) {
             closePricing();
         }
     });
 
-    
     if (pricingBookBtn && bookingWidget) {
         pricingBookBtn.addEventListener('click', (e) => {
             e.preventDefault();
             closePricing();
-            
             
             bookingWidget.classList.add('open');
             const firstInput = bookingWidget.querySelector('input');
@@ -391,7 +348,6 @@ function initPricingModal() {
         });
     }
 
-    
     const tabButtons = pricingModal.querySelectorAll('.pricing-tab-btn');
     const tabContents = pricingModal.querySelectorAll('.pricing-tab-content');
 
@@ -399,11 +355,9 @@ function initPricingModal() {
         button.addEventListener('click', () => {
             const targetTabId = button.getAttribute('data-tab');
             
-            
             tabButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
 
-            
             tabContents.forEach(content => {
                 if (content.id === targetTabId) {
                     content.classList.add('active');
@@ -414,7 +368,6 @@ function initPricingModal() {
         });
     });
 }
-
 
 function initFaqAccordion() {
     const faqQuestions = document.querySelectorAll('.faq-question');
@@ -427,7 +380,6 @@ function initFaqAccordion() {
             const answer = item.querySelector('.faq-answer');
             const isOpen = item.classList.contains('active');
 
-            
             document.querySelectorAll('.faq-item').forEach(otherItem => {
                 if (otherItem !== item) {
                     otherItem.classList.remove('active');
@@ -442,14 +394,12 @@ function initFaqAccordion() {
                 }
             });
 
-            
             if (isOpen) {
                 answer.style.maxHeight = '0';
                 item.classList.remove('active');
                 btn.setAttribute('aria-expanded', 'false');
             } else {
                 item.classList.add('active');
-                
                 answer.style.maxHeight = answer.scrollHeight + 'px';
                 btn.setAttribute('aria-expanded', 'true');
             }
@@ -458,20 +408,17 @@ function initFaqAccordion() {
 }
 
 function initShopFilter() {
-    
     const grid = document.getElementById('productGrid');
     if (!grid) return;
 
     if (window.DataLoader && typeof window.DataLoader.loadProducts === 'function') {
         window.DataLoader.loadProducts().then(allProducts => {
             grid.innerHTML = allProducts.map(product => {
-                
                 let mappedCategory = '';
                 if (['food-dry', 'food-wet', 'bones'].includes(product.category)) mappedCategory = 'thucan';
                 else if (['hygiene', 'grooming', 'health'].includes(product.category)) mappedCategory = 'vesinh';
-                else mappedCategory = 'phukien'; 
+                else mappedCategory = 'phukien'; // toys, clothes, bowls, accessories, furniture, other
 
-                
                 let marketingTags = [];
                 if (product.badge === 'new') marketingTags.push('hangmoi');
                 if (product.badge === 'best') marketingTags.push('banchay');
@@ -520,10 +467,8 @@ function initShopFilter() {
                 `;
             }).join('');
 
-            
             setupShopLandingActions(grid);
 
-            
             setupFilterInteractions();
         }).catch(err => {
             console.error('Error loading products for landing:', err);
@@ -537,7 +482,6 @@ function initShopFilter() {
 function setupShopLandingActions(grid) {
     const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
 
-    
     function getCart() { return JSON.parse(localStorage.getItem('pawpal_cart') || '[]'); }
     function saveCart(cart) { 
         if (window.saveCart) {
@@ -548,7 +492,6 @@ function setupShopLandingActions(grid) {
         }
     }
 
-    
     function getWishlistStorageKey() {
         const user = getCurrentWishlistUser();
         return user && user.phone ? `pawpal_wishlist_${user.phone}` : 'pawpal_wishlist_guest';
@@ -565,7 +508,6 @@ function setupShopLandingActions(grid) {
     }
     function saveWishlist(wl) { localStorage.setItem(getWishlistStorageKey(), JSON.stringify(wl.map(String))); }
 
-    
     function miniToast(msg, type) {
         if (typeof window.showGlobalToast === 'function') { window.showGlobalToast(type || 'success', msg); return; }
         const t = document.createElement('div');
@@ -575,7 +517,6 @@ function setupShopLandingActions(grid) {
         setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 2000);
     }
 
-    
     grid.querySelectorAll('.product-wishlist-btn').forEach(btn => {
         const id = btn.dataset.productId;
         const wl = getWishlist();
@@ -599,7 +540,6 @@ function setupShopLandingActions(grid) {
         });
     });
 
-    
     grid.querySelectorAll('.product-quick-add').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -610,14 +550,12 @@ function setupShopLandingActions(grid) {
             if (existing) { existing.qty = (existing.qty || 1) + 1; }
             else { cart.push({ id, qty: 1 }); }
             saveCart(cart);
-            
             const badge = document.querySelector('.cart-count');
             if (badge) badge.textContent = cart.reduce((s, i) => s + (i.qty || 1), 0);
             miniToast('Đã thêm vào giỏ hàng 🛒');
         });
     });
 
-    
     grid.querySelectorAll('.product-buy-now').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -701,8 +639,8 @@ function setupFilterInteractions() {
 
     if (products.length === 0) return;
 
-    let activeMarketingStatus = 'all'; 
-    let activeCategory = 'all';        
+    let activeMarketingStatus = 'all'; // default to all on page load
+    let activeCategory = 'all';        // default to all on page load
 
     function applyFilter() {
         let count = 0;
@@ -766,24 +704,20 @@ function setupFilterInteractions() {
         });
     });
 
-    
     applyFilter();
 }
 
-
 function initCuteEnhancements() {
-    
     window.addEventListener('load', () => {
         const loader = document.getElementById('cute-loader');
         if (loader) {
             loader.classList.add('hidden');
             setTimeout(() => {
                 loader.style.display = 'none';
-            }, 600); 
+            }, 600); // wait for fade out transition
         }
     });
 
-    
     let idleTimer;
     const ctaBtns = document.querySelectorAll('.btn-cta');
     
@@ -797,15 +731,12 @@ function initCuteEnhancements() {
         }, 3000);
     };
 
-    
     ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'].forEach(evt => {
         window.addEventListener(evt, resetIdleTimer, { passive: true });
     });
 
-    
     resetIdleTimer();
 }
-
 
 function initDraggableServicesCarousel() {
     const wrappers = document.querySelectorAll('.services-arched-wrapper');
@@ -826,8 +757,8 @@ function initDraggableServicesCarousel() {
             isDown = true;
             wrapper.classList.add('is-scrolling');
             wrapper.style.cursor = 'grabbing';
-            wrapper.style.scrollSnapType = 'none'; 
-            wrapper.style.scrollBehavior = 'auto'; 
+            wrapper.style.scrollSnapType = 'none'; // Vô hiệu hóa snap khi đang kéo
+            wrapper.style.scrollBehavior = 'auto'; // Instant response during drag
             startX = e.pageX - wrapper.offsetLeft;
             scrollLeft = wrapper.scrollLeft;
         });
@@ -838,7 +769,7 @@ function initDraggableServicesCarousel() {
             wrapper.classList.remove('is-scrolling');
             wrapper.style.cursor = 'grab';
             wrapper.style.scrollBehavior = 'smooth';
-            wrapper.style.scrollSnapType = 'x mandatory'; 
+            wrapper.style.scrollSnapType = 'x mandatory'; // Kích hoạt lại snap sau khi nhả chuột
         };
 
         wrapper.addEventListener('mouseleave', endDrag);
@@ -848,11 +779,10 @@ function initDraggableServicesCarousel() {
             if (!isDown) return;
             e.preventDefault();
             const x = e.pageX - wrapper.offsetLeft;
-            const walk = (x - startX) * 1.5; 
+            const walk = (x - startX) * 1.5; // Scroll speed multiplier
             wrapper.scrollLeft = scrollLeft - walk;
         });
 
-        
         wrapper.addEventListener('touchstart', (e) => {
             isDown = true;
             wrapper.style.scrollSnapType = 'none';
@@ -868,13 +798,12 @@ function initDraggableServicesCarousel() {
         });
     });
 
-    
     if (prevBtn && nextBtn) {
         prevBtn.addEventListener('click', () => {
             wrappers.forEach(wrapper => {
                 wrapper.style.scrollBehavior = 'smooth';
                 const card = wrapper.querySelector('.arched-card');
-                const cardWidth = card ? card.offsetWidth + 30 : 320; 
+                const cardWidth = card ? card.offsetWidth + 30 : 320; // card width + gap
                 wrapper.scrollLeft -= cardWidth; 
             });
         });
@@ -890,7 +819,6 @@ function initDraggableServicesCarousel() {
     }
 }
 
-
 function initPetIdCardTilt() {
     const card = document.getElementById('petPassportCard');
     if (!card) return;
@@ -900,14 +828,11 @@ function initPetIdCardTilt() {
         const cardWidth = cardRect.width;
         const cardHeight = cardRect.height;
         
-        
         const centerX = cardRect.left + cardWidth / 2;
         const centerY = cardRect.top + cardHeight / 2;
         
-        
         const mouseX = e.clientX - centerX;
         const mouseY = e.clientY - centerY;
-        
         
         const rotateX = -12 * (mouseY / (cardHeight / 2));
         const rotateY = 12 * (mouseX / (cardWidth / 2));
@@ -919,7 +844,6 @@ function initPetIdCardTilt() {
         card.style.transform = 'rotateX(0) rotateY(0) scale(1)';
     });
 }
-
 
 function initTestimonialsCarousel() {
     const track = document.querySelector('.testimonials-carousel-track');
@@ -936,19 +860,16 @@ function initTestimonialsCarousel() {
     
     const totalCards = cards.length;
 
-    
     cards.forEach(card => {
         const clone = card.cloneNode(true);
         track.appendChild(clone);
     });
-    
     for (let i = totalCards - 1; i >= 0; i--) {
         const clone = cards[i].cloneNode(true);
         track.insertBefore(clone, track.firstChild);
     }
 
     const allCards = track.querySelectorAll('.testimonial-card');
-    
     
     let positionIndex = totalCards;
 
@@ -960,7 +881,6 @@ function initTestimonialsCarousel() {
         
         track.style.transform = `translateX(${offset}px)`;
 
-        
         allCards.forEach((card, idx) => {
             if (idx === positionIndex) {
                 card.classList.add('active-center');
@@ -978,7 +898,6 @@ function initTestimonialsCarousel() {
         positionIndex++;
         updateSlider();
 
-        
         setTimeout(() => {
             if (positionIndex >= totalCards * 2) {
                 positionIndex = totalCards;
@@ -1006,15 +925,12 @@ function initTestimonialsCarousel() {
     nextBtn.addEventListener('click', handleNext);
     prevBtn.addEventListener('click', handlePrev);
 
-    
     updateSlider(true);
 
-    
     window.addEventListener('resize', () => {
         updateSlider(true);
     });
 }
-
 
 function initExpertsCarousel() {
     const track = document.querySelector('.experts-carousel-track');
@@ -1031,7 +947,6 @@ function initExpertsCarousel() {
 
     const totalCards = cards.length;
 
-    
     cards.forEach(card => {
         const clone = card.cloneNode(true);
         track.appendChild(clone);
@@ -1052,7 +967,6 @@ function initExpertsCarousel() {
         
         track.style.transform = `translateX(${offset}px)`;
 
-        
         allCards.forEach((card, idx) => {
             if (idx === positionIndex) {
                 card.classList.add('highlighted-expert');
@@ -1104,12 +1018,9 @@ function initExpertsCarousel() {
     });
 }
 
-
 function initPremiumMotion() {
-    
     if (typeof Lenis === 'undefined') {
         console.warn('Lenis is not loaded — skipping smooth scroll.');
-        
     }
 
     let lenis = null;
@@ -1134,7 +1045,6 @@ function initPremiumMotion() {
         }
     }
 
-    
     if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
         console.warn('GSAP or ScrollTrigger is not loaded — skipping animations.');
         return;
@@ -1142,20 +1052,16 @@ function initPremiumMotion() {
 
     gsap.registerPlugin(ScrollTrigger);
 
-    
     document.documentElement.classList.add('gsap-ready');
 
-    
     if (lenis) {
         lenis.on('scroll', () => {
             ScrollTrigger.update();
         });
     }
 
-    
     const heroTl = gsap.timeline({
         onComplete: () => {
-            
             document.documentElement.classList.add('hero-animated');
         }
     });
@@ -1190,8 +1096,6 @@ function initPremiumMotion() {
         }, '-=0.8');
     }
 
-    
-    
     gsap.utils.toArray('.section-header').forEach((header) => {
         gsap.from(header, {
             scrollTrigger: {
@@ -1207,7 +1111,6 @@ function initPremiumMotion() {
         });
     });
 
-    
     if (document.querySelector('.feature-item')) {
         gsap.from('.feature-item', {
             scrollTrigger: {
@@ -1224,24 +1127,22 @@ function initPremiumMotion() {
         });
     }
 
-    
     if (document.querySelector('.arched-card')) {
         gsap.from('.arched-card', {
             scrollTrigger: {
                 trigger: '.services-section',
-                start: 'top 85%', 
+                start: 'top 85%', // Changed from 80% to be consistent with others
                 toggleActions: 'play none none none',
             },
             opacity: 0,
-            y: 40, 
+            y: 40, // Changed from x: 50 to avoid flex overflow bug
             stagger: 0.1,
             duration: 1.0,
             ease: 'power3.out',
-            clearProps: "all" 
+            clearProps: "all" // Ensure inline styles are cleared after animation to prevent layout bugs
         });
     }
 
-    
     if (document.querySelector('.safety-card')) {
         gsap.from('.safety-card', {
             scrollTrigger: {
@@ -1258,7 +1159,6 @@ function initPremiumMotion() {
         });
     }
 
-    
     if (document.querySelector('.experts-carousel-container')) {
         gsap.from('.experts-carousel-container', {
             scrollTrigger: {
@@ -1274,7 +1174,6 @@ function initPremiumMotion() {
         });
     }
 
-    
     if (document.querySelector('.step-card')) {
         gsap.from('.step-card', {
             scrollTrigger: {
@@ -1292,11 +1191,9 @@ function initPremiumMotion() {
         });
     }
 
-    
     const guardians = document.querySelectorAll('.safety-guardian');
     guardians.forEach(guardian => {
         guardian.style.cursor = 'grab';
-        
         
         const img = guardian.querySelector('img');
         if (img) {
@@ -1304,20 +1201,17 @@ function initPremiumMotion() {
         }
 
         guardian.addEventListener('pointerdown', (e) => {
-            
             if (e.button !== 0 && e.pointerType === 'mouse') return;
             
             guardian.style.cursor = 'grabbing';
-            
             const originalTransition = guardian.style.transition;
             const originalAnimation = guardian.style.animation;
             
             guardian.style.transition = 'none';
-            guardian.style.animation = 'none'; 
+            guardian.style.animation = 'none'; // Stop floating animation entirely when grabbed
             
             const parent = guardian.offsetParent || guardian.parentElement;
             const parentRect = parent.getBoundingClientRect();
-            
             
             const section = document.querySelector('.safety-section');
             const sectionRect = section.getBoundingClientRect();
@@ -1330,19 +1224,15 @@ function initPremiumMotion() {
             guardian.setPointerCapture(e.pointerId);
             
             const onPointerMove = (moveEvent) => {
-                
                 let left = moveEvent.clientX - parentRect.left - shiftX;
                 let top = moveEvent.clientY - parentRect.top - shiftY;
-                
                 
                 const sectionTopInParent = sectionRect.top - parentRect.top;
                 const sectionBottomInParent = sectionRect.bottom - parentRect.top;
                 
-                
                 const minTop = sectionTopInParent;
                 const maxTop = sectionBottomInParent - guardianRect.height;
                 top = Math.max(minTop, Math.min(top, maxTop));
-                
                 
                 const minLeft = sectionRect.left - parentRect.left;
                 const maxLeft = sectionRect.right - parentRect.left - guardianRect.width;
@@ -1360,7 +1250,6 @@ function initPremiumMotion() {
                 
                 guardian.style.transition = originalTransition;
                 
-                
                 guardian.removeEventListener('pointermove', onPointerMove);
                 guardian.removeEventListener('pointerup', onPointerUp);
             };
@@ -1370,16 +1259,13 @@ function initPremiumMotion() {
         });
     });
 
-    
     window.addEventListener('load', () => {
         ScrollTrigger.refresh();
     });
-    
     setTimeout(() => {
         ScrollTrigger.refresh();
     }, 500);
 }
-
 
 function initInteractivePawPass() {
     const virtualCard = document.getElementById('pawpassVirtualCard');
@@ -1387,12 +1273,10 @@ function initInteractivePawPass() {
     
     if (!virtualCard || tierCards.length === 0) return;
 
-    
     const cardTierText = document.getElementById('virtualCardTier');
     const cardPointsText = document.getElementById('virtualCardPoints');
     const cardPerkText = document.getElementById('virtualCardPerk');
 
-    
     const tierData = {
         silver: {
             tierName: 'Hạng Bạc',
@@ -1418,7 +1302,6 @@ function initInteractivePawPass() {
         const data = tierData[tierKey];
         if (!data) return;
 
-        
         const elementsToAnimate = [cardTierText, cardPointsText, cardPerkText];
         elementsToAnimate.forEach(el => {
             if (el) {
@@ -1428,17 +1311,13 @@ function initInteractivePawPass() {
         });
 
         setTimeout(() => {
-            
             virtualCard.classList.remove('tier-silver', 'tier-gold', 'tier-diamond');
-            
             virtualCard.classList.add(data.className);
 
-            
             if (cardTierText) cardTierText.textContent = data.tierName;
             if (cardPointsText) cardPointsText.textContent = data.pointsMultiplier;
             if (cardPerkText) cardPerkText.textContent = data.primaryPerk;
 
-            
             elementsToAnimate.forEach(el => {
                 if (el) {
                     el.style.transition = 'all 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
@@ -1449,17 +1328,13 @@ function initInteractivePawPass() {
         }, 150);
     }
 
-    
     tierCards.forEach(card => {
         const tier = card.getAttribute('data-tier');
         
         const selectTier = () => {
-            
             tierCards.forEach(c => c.classList.remove('active'));
-            
             card.classList.add('active');
 
-            
             updateVirtualCard(tier);
         };
 
@@ -1467,7 +1342,6 @@ function initInteractivePawPass() {
         card.addEventListener('mouseenter', selectTier);
     });
 
-    
     const cardWrapper = document.querySelector('.pawpass-card-wrapper');
     if (cardWrapper && virtualCard) {
         cardWrapper.addEventListener('mousemove', (e) => {
@@ -1475,12 +1349,10 @@ function initInteractivePawPass() {
             const x = e.clientX - rect.left - (rect.width / 2);
             const y = e.clientY - rect.top - (rect.height / 2);
             
-            
             const rotateX = -(y / (rect.height / 2)) * 12;
             const rotateY = (x / (rect.width / 2)) * 12;
             
             virtualCard.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.03)`;
-            
             
             const shimmer = virtualCard.querySelector('.card-shimmer');
             if (shimmer) {
@@ -1502,8 +1374,6 @@ function initInteractivePawPass() {
 
 
 
-
-
 window.openLookupModal  = openLookupModal;
 window.closeLookupModal = closeLookupModal;
 window.switchLookupTab  = switchLookupTab;
@@ -1511,14 +1381,12 @@ window.submitLookup     = submitLookup;
 
 function initLookup() {
     const overlay = document.getElementById('lookupModal');
-    if (!overlay) return; 
+    if (!overlay) return; // Không có modal trên trang này -> bỏ qua
 
-    
     overlay.addEventListener('click', function (e) {
         if (e.target === overlay) closeLookupModal();
     });
 
-    
     const phoneInput = document.getElementById('lookupPhone');
     if (phoneInput) {
         phoneInput.addEventListener('keydown', function (e) {
@@ -1526,14 +1394,12 @@ function initLookup() {
         });
     }
 
-    
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && overlay.classList.contains('open')) {
             closeLookupModal();
         }
     });
 }
-
 
 var _lookupCurrentTab = 'orders';
 var _lookupLastResults = { orders: [], bookings: [] };
@@ -1591,7 +1457,6 @@ function submitLookup() {
     resultsEl.style.display = 'block';
     resultsEl.innerHTML = '<div class="lookup-empty"><div class="lookup-empty-icon"></div><p>Đang tìm kiếm...</p></div>';
 
-    
     setTimeout(function () {
         const data = _getLookupMockData(phone);
         _lookupLastResults = data;
@@ -1651,7 +1516,6 @@ function _resetLookup() {
 }
 
 function _getLookupMockData(phone) {
-    
     return {
         orders: [
             { id: '#DH-20240601', meta: 'Thức ăn Royal Canin · 01/06/2024', status: 'Đã giao', statusClass: 'lookup-status-done' },
@@ -1671,7 +1535,6 @@ function _escLookup(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
 }
-
 
 function initProcessTimeline() {
     const track = document.getElementById('processTrack');
@@ -1704,7 +1567,6 @@ function initProcessTimeline() {
         setActive(index);
     }
 
-    
     if (prevBtn) {
         prevBtn.addEventListener('click', () => {
             const next = Math.max(0, currentIndex - 1);
@@ -1719,7 +1581,6 @@ function initProcessTimeline() {
         });
     }
 
-    
     let isDown = false, startX, scrollLeft;
     track.addEventListener('mousedown', (e) => {
         isDown = true;
@@ -1736,7 +1597,6 @@ function initProcessTimeline() {
         track.scrollLeft = scrollLeft - (x - startX) * 1.5;
     });
 
-    
     track.addEventListener('touchstart', (e) => {
         startX = e.touches[0].pageX - track.offsetLeft;
         scrollLeft = track.scrollLeft;
@@ -1746,7 +1606,6 @@ function initProcessTimeline() {
         track.scrollLeft = scrollLeft - (x - startX);
     }, { passive: true });
 
-    
     track.addEventListener('scrollend', () => {
         const stepW = getStepWidth();
         const center = track.scrollLeft + track.offsetWidth / 2;
@@ -1760,10 +1619,8 @@ function initProcessTimeline() {
         setActive(closest);
     });
 
-    
     setActive(0);
 }
-
 
 
 
@@ -1771,7 +1628,6 @@ async function initServicesGrid() {
     const grid = document.getElementById('svcLandingGrid');
     if (!grid) return;
 
-    
     if (window.DataLoader && typeof window.DataLoader.loadServices === 'function') {
         try {
             const allServices = await window.DataLoader.loadServices();
@@ -1867,9 +1723,7 @@ async function initServicesGrid() {
 
     tabButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            
             tabButtons.forEach(b => b.classList.remove('active'));
-            
             btn.classList.add('active');
 
             activeCategory = btn.getAttribute('data-category');
@@ -1877,6 +1731,5 @@ async function initServicesGrid() {
         });
     });
 
-    
     applyFilter();
 }

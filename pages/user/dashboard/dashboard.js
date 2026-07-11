@@ -1,9 +1,5 @@
 
-
 import { API } from '/scripts/api/api.js';
-
-
-
 
 
 
@@ -140,7 +136,6 @@ async function _syncUserPets(db, currentUser) {
     });
 
     const mergedPets = [...pets, ...otherPets];
-    
     localStorage.setItem('pawpal_pets_supabase_synced', String(currentUser.phone));
     console.log('[Dashboard] Pets synced:', pets.length, 'pets');
 }
@@ -181,7 +176,6 @@ async function _syncUserBookings(db, currentUser) {
 
     const localBookings = JSON.parse('[]' || '[]');
     const otherBookings = localBookings.filter(b => String(b.userId) !== String(currentUser.id));
-    
     console.log('[Dashboard] Bookings synced:', bookings.length, 'bookings');
 }
 
@@ -421,7 +415,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    
     if (window.SupabaseClient) {
         await syncFromSupabase(currentUser);
     }
@@ -471,12 +464,10 @@ function loadProfileData(user) {
 
 function getMemberTierLabel(user) {
     if (!user) return 'Thành viên';
-    
     if (user.tier && typeof user.tier === 'string' && user.tier.trim() !== '') {
         return user.tier;
     }
 
-    
     const points = Number(user.points) || 0;
     if (points >= 5000) return 'Kim cương';
     if (points >= 1000) return 'Vàng';
@@ -597,7 +588,6 @@ function initProfileEditForm(user) {
             address: buildAddressLabel(addresses[0]) || ''
         };
 
-        
         const db = window.SupabaseClient;
         if (db && updatedUser.id) {
             saveButton.disabled = true;
@@ -664,7 +654,6 @@ function initAddressEditForm(user) {
             addresses: normalizedPrimary ? [normalizedPrimary, ...otherAddresses] : otherAddresses
         };
 
-        
         const db = window.SupabaseClient;
         if (db && updatedUser.id && normalizedPrimary) {
             btnSave.disabled = true;

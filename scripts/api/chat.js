@@ -12,7 +12,6 @@ const validUsersCache = new Map();
 
 const getGenAI = async () => {
     try {
-        
         const CACHE_TTL = 10 * 60 * 1000;
         if (cachedApiKeys && (Date.now() - lastKeysFetchTime < CACHE_TTL)) {
             const keyObj = cachedApiKeys[currentKeyIndex % cachedApiKeys.length];
@@ -22,7 +21,6 @@ const getGenAI = async () => {
             return { genAI: new GoogleGenerativeAI(keyObj.key_value), keyPrefix };
         }
 
-        
         const { data, error } = await supabase
             .from('api_keys')
             .select('key_value')
@@ -31,7 +29,6 @@ const getGenAI = async () => {
 
         if (error || !data || data.length === 0) {
             console.warn("[API Key Rotation] Không tìm thấy key trong database. Đang fallback về file .env");
-            
             const envKeys = Object.keys(process.env)
                 .filter(key => key.startsWith('GEMINI_API_KEY'))
                 .map(key => process.env[key])
@@ -46,13 +43,11 @@ const getGenAI = async () => {
             return { genAI: new GoogleGenerativeAI(selectedKey), keyPrefix };
         }
 
-        
         cachedApiKeys = data;
         lastKeysFetchTime = Date.now();
 
-        
         const keyObj = data[currentKeyIndex % data.length];
-        currentKeyIndex++; 
+        currentKeyIndex++; // Tăng index cho lần sau
         
         const keyPrefix = keyObj.key_value.substring(0, 15);
         console.log(`[API Key Rotation] Đang dùng key bắt đầu bằng: ${keyPrefix}... (tổng số: ${data.length} keys, thứ tự: ${(currentKeyIndex-1) % data.length + 1}/${data.length})`);
@@ -71,19 +66,14 @@ const getUserIdFromToken = async (authHeader) => {
     if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
     const token = authHeader.split(' ')[1];
     
-    
-    
     if (token.startsWith('local:')) {
         const userId = token.replace('local:', '');
         if (!userId) return null;
-        
         
         if (validUsersCache.has(userId) && (Date.now() - validUsersCache.get(userId) < 15 * 60 * 1000)) {
             return userId;
         }
 
-        
-        
         const { data, error } = await supabase
             .from('customer')
             .select('id')
@@ -95,11 +85,10 @@ const getUserIdFromToken = async (authHeader) => {
             return null;
         }
         
-        validUsersCache.set(userId, Date.now()); 
+        validUsersCache.set(userId, Date.now()); // Lưu vào bộ nhớ đệm
         console.log('[Auth] ✅ Xác thực thành công userId từ DB:', userId);
         return userId;
     }
-    
     
     const { data: { user }, error } = await supabase.auth.getUser(token);
     if (error || !user) {
@@ -155,14 +144,10 @@ const dbTools = {
         }
     },
     search_store_info: async (query, genAI_instance) => {
-        
         try {
-            
             const embeddingModel = genAI_instance.getGenerativeModel({ model: "gemini-embedding-2" });
             const result = await embeddingModel.embedContent(query);
             const embedding = result.embedding.values;
-            
-            
             
             const { data, error } = await supabase.rpc('match_documents', {
                 query_embedding: embedding,
@@ -245,9 +230,8 @@ module.exports = async function handler(req, res) {
         
         const { genAI, keyPrefix } = genAIResult;
         
-        
         const history = messages.slice(0, -1).map(m => ({
-            role: m.role, 
+            role: m.role, // 'user' or 'model'
             parts: [{ text: m.content }]
         }));
 
@@ -262,7 +246,6 @@ module.exports = async function handler(req, res) {
                 tools: toolsDeclaration
             });
             chat = model.startChat({ history: history });
-            
             streamResult = await chat.sendMessageStream(userMsg);
         } catch (err1) {
             console.warn("[API] gemini-3.5-flash failed (" + err1.message + "), falling back to gemini-2.5-flash");
@@ -275,11 +258,9 @@ module.exports = async function handler(req, res) {
             streamResult = await chat.sendMessageStream(userMsg);
         }
         
-        
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
-        
         res.setHeader('X-API-Key-Used', keyPrefix);
 
         for await (const chunk of streamResult.stream) {
@@ -304,7 +285,6 @@ module.exports = async function handler(req, res) {
                     toolResult = await dbTools.search_store_info(toolArgs.query, genAI);
                 }
 
-                
                 try {
                     const secondStream = await chat.sendMessageStream([{
                         functionResponse: {
@@ -323,9 +303,8 @@ module.exports = async function handler(req, res) {
                     console.error("[API] Function calling second stream failed:", toolErr.message);
                     res.write(`data: ${JSON.stringify({ error: toolErr.message, reply: 'PawPal đã tìm thấy thông tin nhưng gặp lỗi khi đọc dữ liệu. Quý khách vui lòng thử lại sau.' })}\n\n`);
                 }
-                break; 
+                break; // Xử lý xong function call thì thoát vòng lặp ngoài
             }
-            
             
             const text = typeof chunk.text === 'function' ? chunk.text() : '';
             if (text) {
@@ -341,10 +320,8 @@ module.exports = async function handler(req, res) {
         
         const msg = error.message || '';
         
-        
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
-        
         
         if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('retryDelay') || msg.includes('quota')) {
             res.write(`data: ${JSON.stringify({ error: msg, reply: 'PawPal AI đang bận xử lý nhiều yêu cầu cùng lúc. Bạn vui lòng thử lại sau vài giây nhé! 🐾' })}\n\n`);

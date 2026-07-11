@@ -1,4 +1,3 @@
- 
 
 import { getPets, savePets, deletePet as deletePetService, restorePet as restorePetService } from '../../../scripts/api/petService.js';
 import { generatePetId, calcAge, showToast } from '../pet-profile/pet-profile.js';
@@ -15,10 +14,11 @@ export async function initPetProfilePage() {
     console.log('Pet Profile Page init...');
     
     try {
-        
         console.log('Waiting for API.initData()...');
         await API.initData();
         console.log('API.initData() finished.');
+
+
 
         console.log('Waiting for renderPetGrids()...');
         await renderPetGrids();
@@ -138,7 +138,6 @@ async function renderPetGrids() {
     
     console.log('activePets:', activePets.length, 'archivedPets:', archivedPets.length);
 
-    
     if (activeGrid) {
         activeGrid.innerHTML = '';
         if (activePets.length === 0) {
@@ -146,7 +145,6 @@ async function renderPetGrids() {
         } else {
             document.getElementById('emptyStateActive').classList.add('d-none');
             activePets.forEach(pet => activeGrid.appendChild(createPetCard(pet)));
-            
             
             const addCard = document.createElement('div');
             addCard.className = 'pet-card pet-card-add-new';
@@ -175,7 +173,6 @@ async function renderPetGrids() {
         }
     }
 
-    
     if (archiveGrid) {
         archiveGrid.innerHTML = '';
         if (archivedPets.length === 0) {
@@ -255,7 +252,6 @@ function getSpeciesName(pet) {
         }
     }
 
-    
     if (pet.breed && pet.breed.trim() !== '') {
         return `${speciesName} ${pet.breed.trim()}`;
     }
@@ -339,7 +335,6 @@ function setupForm() {
             return;
         }
 
-        
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
         const allPetsForDup = await getPets();
         const sameNamePets = allPetsForDup.filter(p =>
@@ -350,7 +345,6 @@ function setupForm() {
         );
 
         if (sameNamePets.length > 0) {
-            
             if (!color.trim()) {
                 const colorField = document.getElementById('color');
                 const colorError = colorField?.nextElementSibling;
@@ -446,6 +440,7 @@ function setupTabs() {
     }
 }
 
+
 let petToDeleteId = null;
 
 window.deletePet = async function(id) {
@@ -455,7 +450,6 @@ window.deletePet = async function(id) {
 
     petToDeleteId = id;
     document.getElementById('deletePetName').textContent = pet.name;
-    
     
     const modal = document.getElementById('deleteConfirmModal');
     modal.classList.add('active');
@@ -483,7 +477,6 @@ function setupDeleteModal() {
     if (confirmBtn) {
         confirmBtn.addEventListener('click', confirmDelete);
     }
-    
     
     const modalOverlay = document.getElementById('deleteConfirmModal');
     if (modalOverlay) {
@@ -515,9 +508,8 @@ async function loadUpcomingBookings() {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || '{}');
         const bookings = currentUser?.id ? await API.getUserBookings(currentUser.id) : [];
         
-        
         const now = new Date();
-        now.setHours(0, 0, 0, 0); 
+        now.setHours(0, 0, 0, 0); // Bỏ qua giờ để so sánh ngày
         
         let upcoming = bookings.filter(b => {
             if (b.userId !== currentUser.id && b.customerPhone !== currentUser.phone) return false;
@@ -529,9 +521,7 @@ async function loadUpcomingBookings() {
             return bDate.getTime() >= now.getTime();
         });
         
-        
         upcoming.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        
         
         upcoming = upcoming.slice(0, 3);
         

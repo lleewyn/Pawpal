@@ -1,5 +1,4 @@
 
-
 const dataCache = {
     products: null,
     services: null,
@@ -13,28 +12,23 @@ function parseCSV(csvText) {
     let field = '';
     let inQuotes = false;
     
-    
     for (let i = 0; i < csvText.length; i++) {
         const char = csvText[i];
         const nextChar = csvText[i + 1];
         
         if (char === '"') {
             if (inQuotes && nextChar === '"') {
-                
                 field += '"';
-                i++; 
+                i++; // Bỏ qua ký tự nháy tiếp theo
             } else {
-                
                 inQuotes = !inQuotes;
             }
         } else if (char === '\t' && !inQuotes) {
-            
             row.push(field.trim());
             field = '';
         } else if ((char === '\r' || char === '\n') && !inQuotes) {
-            
             if (char === '\r' && nextChar === '\n') {
-                i++; 
+                i++; // Bỏ qua ký tự \n đi kèm sau \r
             }
             if (field || row.length > 0) {
                 row.push(field.trim());
@@ -47,14 +41,12 @@ function parseCSV(csvText) {
         }
     }
     
-    
     if (field || row.length > 0) {
         row.push(field.trim());
         data.push(row);
     }
     
     if (data.length === 0) return [];
-    
     
     const headers = data[0].map(h => {
         let cleaned = h.trim();
@@ -63,7 +55,6 @@ function parseCSV(csvText) {
         }
         return cleaned;
     });
-    
     
     const result = [];
     for (let i = 1; i < data.length; i++) {
@@ -86,7 +77,6 @@ function parseCSV(csvText) {
 
 function transformProductData(rawData) {
     return rawData.map((item, index) => {
-        
         const categoryMap = {
             'Thức ăn khô': 'food-dry',
             'Thức ăn ướt': 'food-wet',
@@ -104,24 +94,19 @@ function transformProductData(rawData) {
         
         const category = categoryMap[item['Danh mục (Category)']] || 'other';
         
-        
         const price = parseInt(item['Giá sau tích điểm']?.replace(/\./g, '').replace(/[^\d]/g, '') || item['Giá bán lẻ']?.replace(/\./g, '').replace(/[^\d]/g, '') || '0');
         const originalPrice = parseInt(item['Giá bán lẻ']?.replace(/\./g, '').replace(/[^\d]/g, '') || '0');
         
-        
         const sale = price < originalPrice;
-        
         
         const stock = parseInt(item['Số lượng tồn kho (Inventory)'] || '0');
         const inStock = item['Trạng thái']?.toLowerCase().includes('còn hàng') || item['Trạng thái']?.toLowerCase() === 'available';
-        
         
         let badge = null;
         const label = item['Nhãn sản phẩm']?.toLowerCase() || '';
         if (label.includes('bán chạy')) badge = 'best';
         else if (label.includes('mới')) badge = 'new';
         else if (label.includes('khuyên dùng')) badge = 'hot';
-        
         
         const rating = parseFloat(item['Đánh giá (Rating)'] || '4.5');
         const reviewCount = parseInt(item['Lượt đánh giá (Review Count)'] || '0');
@@ -195,7 +180,7 @@ async function loadProducts() {
                 id: item.id,
                 sku: item.sku,
                 name: item.product_name,
-                brand: 'PawPal', 
+                brand: 'PawPal', // Simplified
                 category: item.category_id,
                 categoryName: item.product_category?.category_name || 'Khác',
                 price: Number(item.sale_price),
@@ -218,7 +203,6 @@ async function loadProducts() {
                 description: item.description || ''
             };
         });
-        
         
         dataCache.products = products;
         return products;
@@ -272,9 +256,7 @@ async function loadComponent(placeholderId, componentPath) {
         const response = await fetch(componentPath);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const html = await response.text();
-        
         el.innerHTML = html;
-        
         el.querySelectorAll('script').forEach(function(oldScript) {
             const newScript = document.createElement('script');
             Array.from(oldScript.attributes).forEach(function(attr) {
@@ -283,7 +265,6 @@ async function loadComponent(placeholderId, componentPath) {
             newScript.textContent = oldScript.textContent;
             oldScript.parentNode.replaceChild(newScript, oldScript);
         });
-        
         (function tryLucide() {
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
@@ -330,7 +311,38 @@ function transformServiceData(rawData) {
         const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
         const cleanImagePath = (rawPath) => {
             const trimmed = rawPath.trim();
-            return trimmed.replace(/^\
+            return trimmed.replace(/^\/*/, '');
+        };
+        const serviceImages = item['Hình ảnh'] ? item['Hình ảnh'].split(',').map(s => rootPath + cleanImagePath(s)) : [rootPath + 'assets/images/services/spa.png'];
+
+        return {
+            id: index + 1,
+            dbId: null,
+            serviceId: item['Mã dịch vụ (Service ID)'] || `SVC-${index + 1}`,
+            name: item['Tên dịch vụ'] || 'Dịch vụ',
+            category: category,
+            rawCategory: rawCategory,
+            petType: item['Loại thú cưng'] || 'Tất cả',
+            weightClass: validPrices.length > 0 ? 'Tùy chọn cân nặng' : 'Tất cả',
+            price: basePrice,
+            prices: prices,
+            priceDisplay: category === 'hotel' ? 'đêm' : '',
+            memberPrice: item['Giá ưu đãi thành viên (VNĐ)'] || '',
+            duration: item['Thời gian thực hiện (Duration)'] || '',
+            rating: rating,
+            reviewCount: reviewCount,
+            description: item['Mô tả chi tiết (Description)'] || '',
+            benefits: item['Lợi ích chính (Key Benefits)'] || '',
+            checklist: item['Quy trình thực hiện (Checklist)'] || '',
+            amenities: item['Tiện ích / Cơ sở vật chất (Amenities)'] || '',
+            groomerLevel: item['Cấp độ nhân viên thực hiện (Groomer Level)'] || '',
+            image: serviceImages[0],
+            images: serviceImages,
+            status: item['Trạng thái kinh doanh'] || 'Đang phục vụ'
+        };
+    });
+}
+
 async function loadServices() {
     if (dataCache.services) {
         console.log(' Using cached services data');
@@ -342,7 +354,6 @@ async function loadServices() {
         if (!supabase) throw new Error("Supabase client not found");
 
         console.log('Loading services from Supabase...');
-        
         const { data: servicesData, error: servicesError } = await supabase
             .from('service')
             .select('*')
@@ -350,19 +361,91 @@ async function loadServices() {
 
         if (servicesError) throw servicesError;
 
-        
         const { data: pricesData, error: pricesError } = await supabase
             .from('service_price_matrix')
             .select('*');
 
         if (pricesError) throw pricesError;
 
-        
         const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
         const cleanImagePath = (rawPath) => {
             if (!rawPath) return '';
             const trimmed = rawPath.trim();
-            return rootPath + trimmed.replace(/^\
+            return rootPath + trimmed.replace(/^\/*/, '');
+        };
+
+        const services = servicesData.map((svc, index) => {
+            let category = 'spa';
+            if (svc.service_category === 'PET_HOTEL') category = 'hotel';
+            else if (svc.service_category === 'PET_TAXI') category = 'taxi';
+
+            const name = String(svc.service_name || '').toLowerCase();
+            const code = String(svc.service_code || '').toUpperCase();
+            if (code.startsWith('HTL') || name.includes('phòng') || name.includes('lưu trú') || name.includes('daycare')) category = 'hotel';
+            if (code.startsWith('TAX') || name.includes('taxi')) category = 'taxi';
+
+            const svcPrices = pricesData.filter(p => p.service_id === svc.id);
+            const prices = {};
+            let basePrice = 0;
+            
+            if (svcPrices.length > 0) {
+                svcPrices.forEach(p => {
+                    let label = '';
+                    if (p.weight_to < 5) label = '< 5kg';
+                    else if (p.weight_from >= 5 && p.weight_to <= 10) label = '5 - 10kg';
+                    else if (p.weight_from >= 10 && p.weight_to <= 20) label = '10 - 20kg';
+                    else if (p.weight_from >= 20) label = '> 20kg';
+                    else label = 'Khác';
+                    
+                    if (label) prices[label] = p.unit_price;
+                });
+                const validPrices = Object.values(prices).filter(p => p > 0);
+                if (validPrices.length > 0) {
+                    basePrice = Math.min(...validPrices);
+                }
+            }
+
+            let imageList = [cleanImagePath(svc.thumbnail_url)];
+            if (svc.images && Array.isArray(svc.images) && svc.images.length > 0) {
+                imageList = svc.images.map(img => cleanImagePath(img));
+            }
+
+            return {
+                id: index + 1,
+                dbId: svc.id,
+                serviceId: svc.service_code,
+                name: svc.service_name,
+                category: category,
+                rawCategory: svc.service_category,
+                petType: svc.pet_type || 'Tất cả',
+                weightClass: basePrice > 0 ? 'Tùy chọn cân nặng' : 'Tất cả',
+                price: basePrice,
+                prices: prices,
+                priceDisplay: category === 'hotel' ? 'đêm' : '',
+                memberPrice: '', // We don't have this in DB yet
+                duration: svc.estimated_duration ? `${svc.estimated_duration} phút` : '',
+                rating: parseFloat(svc.rating || 4.8),
+                reviewCount: parseInt(svc.review_count || 0),
+                description: svc.description || '',
+                benefits: svc.benefits || '',
+                checklist: svc.checklist || '',
+                amenities: svc.amenities || '',
+                groomerLevel: svc.groomer_level || '',
+                image: imageList[0],
+                images: imageList,
+                status: svc.status === 'ACTIVE' ? 'Đang phục vụ' : 'Ngưng phục vụ'
+            };
+        });
+        
+        console.log(` Transformed ${services.length} services from DB`);
+        dataCache.services = services;
+        return services;
+    } catch (error) {
+        console.error(' Error loading services from DB:', error);
+        return [];
+    }
+}
+
 async function getServiceById(serviceId) {
     const services = await loadServices();
     const service = services.find(s => s.serviceId === serviceId);

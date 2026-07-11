@@ -1,6 +1,4 @@
 
-
-
 (function () {
     'use strict';
 
@@ -91,7 +89,6 @@
             finalProductIds = serverWishlist.productIds || [];
             finalServiceIds = serverWishlist.serviceIds || [];
             
-            
             saveWishlistRaw(getProductWishlistStorageKey(), finalProductIds);
             saveWishlistRaw(getServiceWishlistStorageKey(), finalServiceIds);
         } else {
@@ -104,7 +101,6 @@
             ];
             finalProductIds = [...new Set(productIdsRaw.map(String))];
             finalServiceIds = [...new Set(serviceIdsRaw.map(String))];
-            
             
             if (getProductWishlistStorageKey() !== 'pawpal_wishlist') {
                 saveWishlistRaw(getProductWishlistStorageKey(), finalProductIds);
@@ -309,7 +305,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        
         function runWhenReady() {
             if (window.API && window.DataLoader) {
                 bindTabs();

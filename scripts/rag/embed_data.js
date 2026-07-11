@@ -35,11 +35,9 @@ async function runEmbedding() {
     for (const doc of knowledgeBase) {
         try {
             console.log(`Embedding text: "${doc.content.substring(0, 30)}..."`);
-            
             const result = await model.embedContent(doc.content);
             const embedding = result.embedding.values;
 
-            
             const { error } = await supabase
                 .from('document_embeddings')
                 .insert({

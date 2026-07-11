@@ -1,5 +1,4 @@
 
-
 import { getTrackerLogs, saveTrackerLogs, calcAge, fmtDate, showToast } from '../pet-profile/pet-profile.js';
 import { getPets } from '/scripts/api/petService.js';
 
@@ -25,7 +24,6 @@ export async function initPetDiary() {
         petSelector.addEventListener('change', handlePetChange);
     }
 
-    
     const urlParams = new URLSearchParams(window.location.search);
     const petIdFromUrl = urlParams.get('id');
     const sessionIdFromUrl = urlParams.get('sessionId');
@@ -112,10 +110,8 @@ async function loadPetDiary(petId) {
     if (!logs) {
         logs = getOrSeedTrackerLogs(pet);
     } else {
-        
         const localLogs = getTrackerLogs()[pet.id] || {};
         logs.chatMessages = localLogs.chatMessages || {};
-        
         
         const allLogs = getTrackerLogs();
         allLogs[pet.id] = logs;
@@ -148,7 +144,6 @@ async function syncPetDiaryFromSupabase(pet) {
 
     try {
         const petUuid = pet._supabaseId || pet.id;
-        
         
         const { data, error } = await db.from('care_log')
             .select(`
@@ -354,7 +349,6 @@ function renderTimeline(timeline) {
 
     if (emptyTimeline) emptyTimeline.classList.add('d-none');
 
-    
     const sorted = [...timeline].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     wrapper.innerHTML = sorted.map(item => buildTimelineItemHtml(item)).join('');
@@ -439,7 +433,6 @@ function resolveTimelineImageUrl(item) {
     let rawImage = candidates.find(value => typeof value === 'string' && value.trim() !== '')
         || getTimelineFallbackImage(item);
 
-    
     if (rawImage && !rawImage.startsWith('http') && !rawImage.startsWith('data:') && !rawImage.startsWith('/')) {
         rawImage = '/' + rawImage;
     }
@@ -465,6 +458,7 @@ function getTimelineFallbackImage(item) {
 
     return TIMELINE_FALLBACK_IMAGES.default;
 }
+
 
 function buildChatBoxHtml(noteId) {
     return `
@@ -541,7 +535,6 @@ function sendChatMessage(noteId) {
     appendChatMessage(noteId, newMsg);
     input.value = '';
 
-    
     setTimeout(() => {
         const reply = {
             id: Date.now(),
@@ -569,6 +562,7 @@ function appendChatMessage(noteId, msg) {
     container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
 }
 
+
 function buildInvoiceBlockHtml(invoice) {
     return `
         <div class="timeline-invoice-block">
@@ -594,6 +588,7 @@ function buildInvoiceBlockHtml(invoice) {
         </div>
     `;
 }
+
 
 function renderHistorySidebar(sessions) {
     const container = document.getElementById('historyList');
@@ -665,6 +660,7 @@ async function openSessionFromUrlOrFallback(sessionId) {
     }
 }
 
+
 function formatTimestamp(isoStr, mode = 'full') {
     if (!isoStr) return '';
     const d = new Date(isoStr);
@@ -688,6 +684,7 @@ function escapeHtml(text) {
     div.textContent = String(text ?? '');
     return div.innerHTML;
 }
+
 
 async function renderActiveServicesDashboard() {
     const dashboardState = document.getElementById('dashboardState');
@@ -715,7 +712,6 @@ async function renderActiveServicesDashboard() {
         return;
     }
 
-    
     dashboardState.classList.remove('d-none');
     emptyState.classList.add('d-none');
     activeContainer.classList.remove('d-none');

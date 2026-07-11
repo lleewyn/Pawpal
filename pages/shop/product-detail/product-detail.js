@@ -1,10 +1,8 @@
 
-
 let currentLoadedProduct = null;
 let cachedProducts = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
-    
     try {
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
@@ -19,21 +17,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        
     } catch (e) {
         console.error('Failed to load product data:', e);
     }
 
-    
     const addToCartBtn = document.getElementById('addToCartBtn');
     const buyNowBtn = document.getElementById('buyNowBtn');
     const quantityInput = document.getElementById('quantity');
     
-    
     if (addToCartBtn) {
         addToCartBtn.addEventListener('click', handleAddToCart);
     }
-    
     
     if (buyNowBtn) {
         buyNowBtn.addEventListener('click', handleBuyNow);
@@ -122,7 +116,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    
     const favoriteProductBtn = document.getElementById('favoriteProductBtn');
     const wishlistBtn = document.getElementById('wishlistBtn');
 
@@ -194,11 +187,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    
     ensureWishlistButtons();
     bindRelatedProductCards();
 
-    
     const decreaseQtyBtn = document.getElementById('decreaseQty');
     const increaseQtyBtn = document.getElementById('increaseQty');
 
@@ -221,7 +212,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    
     setTimeout(() => {
         const product = getCurrentProduct();
         const breadcrumbProduct = document.getElementById('breadcrumbProduct');
@@ -230,7 +220,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }, 100);
 
-    
     const galleryPrev = document.getElementById('galleryPrev');
     const galleryNext = document.getElementById('galleryNext');
     if (galleryPrev && galleryNext) {
@@ -250,9 +239,7 @@ function navigateGallery(direction) {
     thumbnails[currentGalleryIndex].click();
 }
 
-
 async function handleAddToCart() {
-    
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
 
     const product = getCurrentProduct();
@@ -277,7 +264,6 @@ async function handleAddToCart() {
     showToast('Đã thêm sản phẩm vào giỏ hàng', 'success');
     await updateCartBadge();
 }
-
 
 function handleBuyNow() {
     const product = getCurrentProduct();
@@ -352,20 +338,16 @@ function handleCardBuyNow(product) {
     window.location.href = '/pages/shop/checkout/checkout.html?buynow=true';
 }
 
-
 function getCurrentProduct() {
     if (currentLoadedProduct) return currentLoadedProduct;
     
     try {
-        
         const urlParams = new URLSearchParams(window.location.search);
         let productId = urlParams.get('id');
-        
         
         if (!productId) {
             productId = 'prod_' + Date.now();
         }
-        
         
         const titleElement = document.getElementById('productTitle');
         const brandElement = document.getElementById('productBrand');
@@ -421,14 +403,11 @@ async function bindRelatedProductCards() {
     const products = await getProductCatalog();
     if (!products || products.length === 0) return;
 
-    
     const youMayLikeProducts = [...products].sort(() => 0.5 - Math.random()).slice(0, 5);
-    
     
     const currentCategory = (typeof currentLoadedProduct !== 'undefined' && currentLoadedProduct) ? currentLoadedProduct.category : 'food-dry';
     const currentId = (typeof currentLoadedProduct !== 'undefined' && currentLoadedProduct) ? currentLoadedProduct.id : -1;
     let relatedProducts = products.filter(p => p.category === currentCategory && String(p.id) !== String(currentId)).slice(0, 5);
-    
     
     if (relatedProducts.length < 5) {
         const more = products.filter(p => !relatedProducts.includes(p) && String(p.id) !== String(currentId)).slice(0, 5 - relatedProducts.length);
@@ -513,27 +492,22 @@ async function bindRelatedProductCards() {
 }
 
 async function addProductToCart(product, quantity) {
-    
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     let cart = [];
     if (window.API && typeof window.API.getUserCart === 'function') {
         cart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
     }
     
-    
     const existingIndex = cart.findIndex(item => item.id === product.id);
     
     if (existingIndex >= 0) {
-        
         cart[existingIndex].quantity += quantity;
-        
         
         if (cart[existingIndex].quantity > product.stock) {
             cart[existingIndex].quantity = product.stock;
             showToast(`Đã cập nhật số lượng tối đa: ${product.stock}`, 'warning');
         }
     } else {
-        
         cart.push({
             id: product.id,
             name: product.name,
@@ -545,12 +519,10 @@ async function addProductToCart(product, quantity) {
         });
     }
     
-    
     if (window.API && typeof window.API.saveUserCart === 'function') {
         await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
     }
 }
-
 
 async function updateCartBadge() {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
@@ -559,7 +531,6 @@ async function updateCartBadge() {
         cart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
     }
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    
     
     const cartBadge = document.querySelector('.cart-badge');
     if (cartBadge) {
@@ -570,10 +541,8 @@ async function updateCartBadge() {
     }
 }
 
-
 function parsePriceFromText(priceText) {
     if (!priceText) return 0;
-    
     
     const numericOnly = priceText.toString().replace(/[^0-9]/g, '');
     const price = parseInt(numericOnly) || 0;
@@ -581,7 +550,6 @@ function parsePriceFromText(priceText) {
     console.log('Parsed price:', priceText, '->', price);
     return price;
 }
-
 
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
@@ -610,9 +578,7 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-
 const style = document.createElement('style');
-
 
 
 function renderReviewItem(r) {
@@ -667,7 +633,6 @@ function updateReviewSummary(reviews) {
     if (avgEl)   avgEl.textContent   = avg.toFixed(1);
     if (countEl) countEl.textContent = `Dựa trên ${reviews.length} đánh giá`;
 
-    
     [5,4,3,2,1].forEach(star => {
         const barFill = document.getElementById(`star${star}Fill`);
         const pctEl   = document.getElementById(`star${star}Pct`);
@@ -702,26 +667,21 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-
 function renderProductDetails(product) {
-    
     const breadcrumbCategory = document.getElementById('breadcrumbCategory');
     const breadcrumbProduct = document.getElementById('breadcrumbProduct');
     if (breadcrumbCategory) breadcrumbCategory.textContent = product.categoryName || 'Sản phẩm';
     if (breadcrumbProduct) breadcrumbProduct.textContent = product.name;
 
-    
     const mainImage = document.getElementById('mainImage');
     if (mainImage) {
         mainImage.src = product.image;
         mainImage.alt = product.name;
     }
     
-    
     const thumbnailsContainer = document.getElementById('thumbnails');
     if (thumbnailsContainer && product.image) {
         thumbnailsContainer.innerHTML = '';
-        
         const gallery = (product.images && product.images.length > 0) 
             ? product.images 
             : [product.image];
@@ -819,7 +779,6 @@ function renderProductDetails(product) {
     const productBrandMeta = document.getElementById('productBrandMeta');
     if (productBrandMeta) productBrandMeta.textContent = product.brand;
     
-    
     const dynamicDetailsContainer = document.getElementById('dynamicProductDetails');
     if (dynamicDetailsContainer) {
         let detailsHtml = '';
@@ -859,7 +818,6 @@ function renderProductDetails(product) {
         dynamicDetailsContainer.innerHTML = detailsHtml;
     }
     
-    
     const averageScore = document.getElementById('averageScore');
     const totalReviewsCount = document.getElementById('totalReviewsCount');
     
@@ -870,7 +828,6 @@ function renderProductDetails(product) {
     if (totalReviewsCount) {
         totalReviewsCount.textContent = `Dựa trên ${product.reviewCount || 0} đánh giá`;
     }
-    
     if (window.DataLoader && window.DataLoader.getProductReviews) {
         window.DataLoader.getProductReviews(product.id).then(reviews => {
             const container = document.getElementById('reviewsContainer');
@@ -878,7 +835,6 @@ function renderProductDetails(product) {
             
             if (!reviews || reviews.length === 0) {
                 container.innerHTML = '<div class="text-center py-4 text-secondary">Chưa có đánh giá nào cho sản phẩm này.</div>';
-                
                 
                 for(let i=1; i<=5; i++) {
                     const bar = document.getElementById('bar'+i);
@@ -891,7 +847,6 @@ function renderProductDetails(product) {
                 return;
             }
             
-            
             let sum = 0;
             let counts = {1:0, 2:0, 3:0, 4:0, 5:0};
             reviews.forEach(r => {
@@ -903,7 +858,6 @@ function renderProductDetails(product) {
             if (averageScore) averageScore.textContent = avg.toFixed(1);
             if (totalReviewsCount) totalReviewsCount.textContent = `Dựa trên ${reviews.length} đánh giá`;
             
-            
             for(let i=1; i<=5; i++) {
                 const pct = Math.round((counts[i] / reviews.length) * 100);
                 const bar = document.getElementById('bar'+i);
@@ -912,13 +866,11 @@ function renderProductDetails(product) {
                 if(pctLabel) pctLabel.textContent = pct + '%';
             }
             
-            
             window.allProductReviews = reviews;
             window.filteredReviews = reviews;
             window.currentReviewPage = 1;
             window.reviewsPerPage = 5;
 
-            
             window.renderReviewsPage = function() {
                 const start = (window.currentReviewPage - 1) * window.reviewsPerPage;
                 const end = start + window.reviewsPerPage;
@@ -997,7 +949,6 @@ function renderProductDetails(product) {
                 paginationWrapper.style.display = 'block';
                 let html = '';
                 
-                
                 html += `
                     <li class="page-item ${window.currentReviewPage === 1 ? 'disabled' : ''}">
                         <a class="page-link" href="#" data-page="${window.currentReviewPage - 1}" aria-label="Previous">
@@ -1006,7 +957,6 @@ function renderProductDetails(product) {
                     </li>
                 `;
                 
-                
                 for (let i = 1; i <= totalPages; i++) {
                     html += `
                         <li class="page-item ${window.currentReviewPage === i ? 'active' : ''}">
@@ -1014,7 +964,6 @@ function renderProductDetails(product) {
                         </li>
                     `;
                 }
-                
                 
                 html += `
                     <li class="page-item ${window.currentReviewPage === totalPages ? 'disabled' : ''}">
@@ -1025,7 +974,6 @@ function renderProductDetails(product) {
                 `;
                 
                 paginationUl.innerHTML = html;
-                
                 
                 paginationUl.querySelectorAll('.page-link').forEach(link => {
                     link.addEventListener('click', function(e) {
@@ -1040,11 +988,9 @@ function renderProductDetails(product) {
                 });
             };
 
-            
             const chips = document.querySelectorAll('.review-filter-chip');
             chips.forEach(chip => {
                 chip.addEventListener('click', function() {
-                    
                     chips.forEach(c => c.classList.remove('active'));
                     this.classList.add('active');
                     
@@ -1061,12 +1007,10 @@ function renderProductDetails(product) {
                 });
             });
 
-            
             window.renderReviewsPage();
         });
     }
 
-    
     const addToCartBtn = document.getElementById('addToCartBtn');
     const buyNowBtn = document.getElementById('buyNowBtn');
     if (product.stock <= 0) {

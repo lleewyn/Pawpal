@@ -1,9 +1,7 @@
 
-
 (function() {
 
 
-    
     const faqData = [
         {
             id: 'faq-1',
@@ -27,7 +25,6 @@
 
 
 
-    
     function detectPriority(title, content) {
         const keywords = ['sức khỏe', 'hotel', 'chấn thương', 'mất tiền', 'trừ tiền', 'sự cố', 'momo', 'chuyển khoản'];
         const text = (title + ' ' + content).toLowerCase();
@@ -37,7 +34,6 @@
 
 
 
-    
     let badWordsViolationCount = 0;
     let chatBlockedUntil = null;
 
@@ -62,7 +58,7 @@
         if (checkBadWords(userInput)) {
             badWordsViolationCount++;
             if (badWordsViolationCount >= 3) {
-                chatBlockedUntil = Date.now() + 15 * 60 * 1000; 
+                chatBlockedUntil = Date.now() + 15 * 60 * 1000; // Khóa 15 phút
                 badWordsViolationCount = 0;
                 return {
                     error: true,
@@ -75,9 +71,7 @@
             };
         }
 
-        
         try {
-            
             let token = "";
             const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (db) {
@@ -129,9 +123,7 @@
     }
 
     
-    
-    
-    let cachedTickets = []; 
+    let cachedTickets = []; // RAM cache to support getTickets synchronously for old UI
 
     async function loadTickets() {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -145,14 +137,12 @@
             query = query.is('user_id', null);
         }
         
-        
         const { data: ticketsData, error: tErr } = await query;
             
         if (tErr) {
             console.error('[Support] Lỗi load tickets', tErr);
             return cachedTickets;
         }
-        
         
         const { data: msgsData, error: mErr } = await db
             .from('support_ticket_message')
@@ -185,12 +175,10 @@
             messages: msgsByTicket[t.id] || []
         }));
         
-        
         document.dispatchEvent(new CustomEvent('tickets_updated'));
         return cachedTickets;
     }
 
-    
     function sbGetTickets() {
         return cachedTickets;
     }
@@ -203,7 +191,6 @@
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
         const userId = currentUser ? currentUser.id : null;
         
-        
         const { data: tData, error: tErr } = await db.from('support_ticket').insert([{
             title, type, priority, status: 'pending', user_id: userId
         }]).select();
@@ -214,7 +201,6 @@
         }
         
         const newTicketId = tData[0].id;
-        
         
         await db.from('support_ticket_message').insert([{
             ticket_id: newTicketId,
@@ -245,7 +231,6 @@
         
         await loadTickets();
         
-        
         setTimeout(async () => {
             await db.from('support_ticket_message').insert([{
                 ticket_id: ticketId,
@@ -270,7 +255,6 @@
         
         await loadTickets();
     }
-    
 window.PawPalSupport = {
         faq: faqData,
         getTickets: sbGetTickets,

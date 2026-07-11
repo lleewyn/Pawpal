@@ -1,5 +1,4 @@
 
-
 window.PawpalStorage = {
     KEYS: {
         CURRENT_USER: 'pawpal_current_user',
@@ -17,7 +16,6 @@ window.PawpalStorage = {
             try {
                 return JSON.parse(data);
             } catch (e) {
-                
                 return data;
             }
         } catch (e) {
@@ -63,7 +61,6 @@ function logout() {
     window.location.href = '/pages/public/landing/landing.html';
 }
 
-
 function showToast(type, message, duration = 5000) {
     const container = document.getElementById('toastContainer');
     if (!container) {
@@ -89,7 +86,6 @@ function showToast(type, message, duration = 5000) {
     container.insertAdjacentHTML('beforeend', toastHtml);
     const toastElement = document.getElementById(toastId);
 
-    
     toastElement.offsetHeight;
     toastElement.classList.add('show');
 
@@ -108,7 +104,6 @@ function removeToast(toastElement) {
     setTimeout(() => toastElement.remove(), 300);
 }
 
-
 function showErrorBanner(message, parentForm) {
     const existingBanner = parentForm.querySelector('.auth-error-banner');
     if (existingBanner) existingBanner.remove();
@@ -124,12 +119,10 @@ function showErrorBanner(message, parentForm) {
     }, 7000);
 }
 
-
 function enforceTemporaryAccountLock() {
     const currentUser = getCurrentUser();
     const isTemp = currentUser && currentUser.is_temporary;
 
-    
     const currentPath = window.location.pathname.toLowerCase();
     if (isTemp && currentPath.includes('/pages/user/')) {
         const tokens = window.PawpalStorage.get(TEMP_TOKENS_KEY, []);
@@ -147,7 +140,6 @@ function enforceTemporaryAccountLock() {
         return;
     }
 
-    
     document.addEventListener('headerInjected', () => applyLockingUI(isTemp));
     applyLockingUI(isTemp);
 }
@@ -196,7 +188,6 @@ function showLockedTooltip(targetElement) {
     }, 4000);
 }
 
-
 function showAdminToast(message) {
     let toastContainer = document.querySelector('.toast-container');
     if (!toastContainer) {
@@ -221,7 +212,6 @@ function showAdminToast(message) {
     bsToast.show();
     toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
 }
-
 
 function initAdminQuickAddCustomer() {
     const btnQuickAdd = document.getElementById('btnAdminQuickAddCustomer');
@@ -272,7 +262,6 @@ function initAdminQuickAddCustomer() {
                 saveUsers(users);
             }
 
-            
             const token  = 'token-dynamic-' + Math.random().toString(36).substr(2, 9);
             const tokens = window.PawpalStorage.get(TEMP_TOKENS_KEY, []);
             tokens.push({ token, phone, createdAt: Date.now() });
@@ -295,12 +284,10 @@ function initAdminQuickAddCustomer() {
     });
 }
 
-
 function initAuthShared() {
     enforceTemporaryAccountLock();
     initAdminQuickAddCustomer();
 }
-
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAuthShared);

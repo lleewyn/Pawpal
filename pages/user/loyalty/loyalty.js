@@ -1,7 +1,5 @@
 
-
 document.addEventListener('DOMContentLoaded', async () => {
-    
     let currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
     if (!currentUser) {
         currentUser = {
@@ -12,7 +10,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
-    
     const users = JSON.parse('[]' || '[]');
     const userInDb = currentUser.phone ? users.find(u => u.phone === currentUser.phone) : null;
     if (userInDb) {
@@ -25,7 +22,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentUser = await syncLoyaltyFromSupabase(currentUser);
     }
 
-    
     let vouchersMock = [];
     try {
         let apiVouchers = [];
@@ -57,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         vouchersMock = apiVouchers
-            .filter(v => calcPointsCost(v) > 0) 
+            .filter(v => calcPointsCost(v) > 0) // Chỉ hiện voucher cần điểm
             .map((v, idx) => ({
                 id: v.id || `VOUCHER-${idx}`,
                 code: v.code || `CODE-${idx}`,
@@ -98,11 +94,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         vouchersMock = [];
     }
 
-    
     renderLoyaltyPage(currentUser, vouchersMock);
     renderMyVouchers(currentUser);
 
-    
     checkPendingRedeem(currentUser);
 });
 
@@ -137,7 +131,6 @@ async function syncLoyaltyFromSupabase(user) {
         const membership = data.customer_membership?.[0] || {};
         const tier = membership.membership_tier || {};
 
-        
         let totalSpend = user.spend || 0;
         try {
             const customerId = data.id || user.id;
@@ -316,7 +309,7 @@ async function persistLoyaltyRedemption(user, voucherInfo) {
     );
 
     const voucherId = voucherInfo._raw?.id || voucherInfo.id;
-    if (voucherId && voucherId.length >= 32) { 
+    if (voucherId && voucherId.length >= 32) { // check if valid uuid
         const { error: cvErr } = await db.from('customer_voucher').insert({
             customer_id: customerId,
             voucher_id: voucherId,
@@ -328,10 +321,7 @@ async function persistLoyaltyRedemption(user, voucherInfo) {
     }
 }
 
-
 function renderLoyaltyPage(user, vouchers) {
-    
-    
     let tierName = 'Hạng Bạc (Silver)';
     let tierClass = 'tier-silver';
     let nextTierName = 'Hạng Vàng';
@@ -350,11 +340,9 @@ function renderLoyaltyPage(user, vouchers) {
         nextTierLimit = 15000000;
     }
 
-    
     const warningBanner = document.getElementById('loyalty-warning-banner');
     if (warningBanner) {
         if (user.points >= 50) {
-            
             const lastTx = user.lastTransactionAt || user.createdAt || null;
             const expiryDate = lastTx
                 ? new Date(new Date(lastTx).getTime() + 365 * 24 * 60 * 60 * 1000)
@@ -380,7 +368,6 @@ function renderLoyaltyPage(user, vouchers) {
         }
     }
 
-    
     const cardEl = document.getElementById('loyalty-card-wrapper');
     if (cardEl) {
         const progressPercent = Math.min((currentSpend / nextTierLimit) * 100, 100);
@@ -391,7 +378,6 @@ function renderLoyaltyPage(user, vouchers) {
             upgradeText = 'Bạn đã đạt cấp bậc cao nhất của PawPal!';
         }
 
-        
         let pointsMultiplier = "1x Points";
         let mainPerk = "Cập nhật Care-Log";
         if (tierClass === 'tier-gold') {
@@ -451,12 +437,9 @@ function renderLoyaltyPage(user, vouchers) {
         `;
     }
 
-    
     const gridEl = document.getElementById('vouchers-grid');
     if (gridEl) {
         gridEl.innerHTML = vouchers.map(v => renderVoucherCard(v, user)).join('');
-        
-        
         
         gridEl.addEventListener('click', (e) => {
             const btn = e.target.closest('.redeem-btn');
@@ -513,7 +496,6 @@ function renderMyVoucherCard(voucher) {
     `;
 }
 
-
 function renderVoucherCard(voucher, user) {
     const isOutOfStock = voucher.quantity <= 0;
     const isInsufficientPoints = user.points < voucher.pointsCost;
@@ -554,7 +536,6 @@ function renderVoucherCard(voucher, user) {
     `;
 }
 
-
 function initSlider(voucherId, user) {
     const container = document.getElementById(`slider-${voucherId}`);
     if (!container) return;
@@ -579,12 +560,10 @@ function initSlider(voucherId, user) {
         const x = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
         currentX = x - startX;
 
-        
         if (currentX < 0) currentX = 0;
         if (currentX > maxDrag) currentX = maxDrag;
 
         handle.style.transform = `translateX(${currentX}px)`;
-        
         
         const opacity = 1 - (currentX / maxDrag);
         text.style.opacity = opacity;
@@ -594,13 +573,11 @@ function initSlider(voucherId, user) {
         if (!isDragging) return;
         isDragging = false;
 
-        
         if (currentX >= maxDrag * 0.9) {
             handle.style.transform = `translateX(${maxDrag}px)`;
             text.style.opacity = '0';
             triggerRedeem(voucherId, user, container);
         } else {
-            
             handle.style.transition = 'transform 0.3s ease';
             handle.style.transform = 'translateX(0px)';
             text.style.transition = 'opacity 0.3s ease';
@@ -618,9 +595,7 @@ function initSlider(voucherId, user) {
     document.addEventListener('touchend', onEnd);
 }
 
-
 function triggerRedeem(voucherId, user, sliderContainer) {
-    
     const resetUI = () => {
         try {
             const handle = sliderContainer && sliderContainer.querySelector && sliderContainer.querySelector('.slider-handle');
@@ -631,7 +606,6 @@ function triggerRedeem(voucherId, user, sliderContainer) {
             if (text) {
                 text.style.opacity = '1';
             }
-            
             if (sliderContainer && sliderContainer.classList && sliderContainer.classList.contains('redeem-btn')) {
                 sliderContainer.disabled = false;
             } else if (sliderContainer) {
@@ -639,19 +613,15 @@ function triggerRedeem(voucherId, user, sliderContainer) {
                 if (btn) btn.disabled = false;
             }
         } catch (e) {
-            
         }
     };
 
-    
     if (user.is_temporary) {
         resetUI();
-        
         showSecurityModal(voucherId);
         return;
     }
 
-    
     const isSystemError = Math.random() < 0.05;
     if (isSystemError) {
         resetUI();
@@ -659,12 +629,10 @@ function triggerRedeem(voucherId, user, sliderContainer) {
         return;
     }
 
-    
     const vouchersList = Object.fromEntries((window.PawPalVoucherRedeemList || []).map(v => [v.id, v]));
     const voucherInfo = vouchersList[voucherId];
     if (!voucherInfo) return;
 
-    
     const confirmId = 'redeem-confirm-modal';
     const existingModal = document.getElementById(confirmId);
     if (existingModal) existingModal.remove();
@@ -707,51 +675,41 @@ async function doRedeem(voucherInfo, user, sliderContainer, resetUI) {
     if (user.points >= voucherInfo.pointsCost) {
         user.points -= voucherInfo.pointsCost;
         
-        
         localStorage.setItem('pawpal_current_user', JSON.stringify(user));
 
         const voucherCode = voucherInfo.code || ('PAWPAL-' + Math.random().toString(36).substring(2, 8).toUpperCase());
         localStorage.setItem('pawpal_applied_voucher_code', voucherCode);
 
-            
             try {
                 if (sliderContainer) {
                     sliderContainer.innerHTML = `<div class="redeem-success-btn">Đã đổi thành công!</div>`;
                 }
             } catch (e) {
-                
             }
-            
             
             const pointsDisplay = document.getElementById('current-points-display');
             if (pointsDisplay) {
                 pointsDisplay.innerHTML = `${user.points} <span class="points-unit">Paw Points</span>`;
             }
 
-            
             if (window.getSupabaseClient || window.SupabaseClient) {
                 await persistLoyaltyRedemption(user, voucherInfo);
             }
 
-            
             showToast('success', `Đổi điểm thành công! Mã ưu đãi của bạn: ${voucherCode}`);
 
             renderMyVouchers(user);
 
-            
             setTimeout(() => {
                 location.reload();
             }, 1500);
     } else {
-        
         resetUI();
         showToast('error', `Số điểm hiện tại chưa đủ để đổi ưu đãi này. Cần ${voucherInfo.pointsCost} điểm, bạn đang có ${user.points} điểm.`);
     }
 }
 
-
 function showSecurityModal(voucherId) {
-    
     let modalEl = document.getElementById('security-auth-modal');
     if (!modalEl) {
         const modalHtml = `
@@ -784,13 +742,10 @@ function showSecurityModal(voucherId) {
     const bootstrapModal = new bootstrap.Modal(modalEl);
     bootstrapModal.show();
 
-    
     const btnRedirect = document.getElementById('btn-redirect-setup-pwd');
     btnRedirect.onclick = () => {
-        
         sessionStorage.setItem('pending_redeem_voucher', voucherId);
         bootstrapModal.hide();
-        
         
         const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
@@ -805,13 +760,11 @@ function showSecurityModal(voucherId) {
     };
 }
 
-
 function checkPendingRedeem(user) {
     const pendingVoucherId = sessionStorage.getItem('pending_redeem_voucher');
     if (pendingVoucherId && !user.is_temporary) {
         sessionStorage.removeItem('pending_redeem_voucher');
         showToast('info', 'Chào mừng bạn trở thành thành viên chính thức! Hệ thống đang tự động khôi phục yêu cầu đổi ưu đãi của bạn...');
-        
         
         setTimeout(() => {
             const voucherCard = document.querySelector(`.voucher-card[data-id="${pendingVoucherId}"]`);

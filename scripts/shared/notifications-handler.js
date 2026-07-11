@@ -1,5 +1,4 @@
 
-
 (function () {
     const NOTI_KEY = 'pawpal_notifications';
     const NOTI_SEED_URL = '/data/notifications.json';
@@ -199,7 +198,6 @@
         const toastElement = document.getElementById(toastId);
         if (!toastElement) return;
 
-        
         toastElement.offsetHeight;
         toastElement.classList.add('show');
 
@@ -235,7 +233,6 @@
     }
 
     function deleteNotification(id) {
-        
         const confirmId = 'noti-delete-confirm-modal';
         const existing = document.getElementById(confirmId);
         if (existing) existing.remove();

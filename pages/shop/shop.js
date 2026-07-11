@@ -1,4 +1,5 @@
 
+
 const brandCatalog = [
     { id: 1, name: 'Royal Canin', logo: '/assets/images/shop/brand/royal-canin.png', slug: 'royal-canin' },
     { id: 2, name: 'Pedigree', logo: '/assets/images/shop/brand/Pedigree.png', slug: 'pedigree' },
@@ -13,6 +14,7 @@ const brandCatalog = [
     { id: 11, name: 'Nylabone', logo: '/assets/images/shop/brand/Nylabone.png', slug: 'nylabone' },
     { id: 12, name: 'Hartz', logo: '/assets/images/shop/brand/Hartz.png', slug: 'hartz' },
 ];
+
 
 let state = {
     products: [],
@@ -206,10 +208,8 @@ function initResponsiveCategorySection() {
 }
 
 
-
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('=== SHOP PAGE LOADING ===');
-    
     
     try {
         console.log('Loading products from DataLoader...');
@@ -218,12 +218,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.isLoading = false;
         state.wishlist = loadWishlist();
         
-        
         initSuggestionsSidebar();
         initCategoryGrid();
         initResponsiveCategorySection();
         initFilters();
-        
         
         const urlParams = new URLSearchParams(window.location.search);
         const categoryParam = urlParams.get('category');
@@ -236,14 +234,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             state.filters.category = selectedCats;
             
-            
             const categoryFilters = document.getElementById('categoryFilters');
             if (categoryFilters) {
                 categoryFilters.querySelectorAll('input[type="checkbox"]').forEach(cb => {
                     if (cb.value === 'all') cb.checked = false;
                     else cb.checked = selectedCats.includes(cb.value);
                 });
-                
                 
                 const checked = categoryFilters.querySelectorAll('input[type="checkbox"]:checked');
                 if (checked.length === 0) {
@@ -252,7 +248,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         }
-        
 
         initToolbar();
         initBrands();
@@ -264,7 +259,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error(' Error loading products:', error);
         state.isLoading = false;
-        
         
         const grid = document.getElementById('productsGrid');
         if (grid) {
@@ -281,14 +275,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+
 function initSuggestionsSidebar() {
     const suggestionsList = document.getElementById('suggestionsList');
-    
     
     const suggestions = state.products
         .filter(p => p.inStock)
         .sort((a, b) => {
-            
             if (a.sale && !b.sale) return -1;
             if (!a.sale && b.sale) return 1;
             return 0;
@@ -317,7 +310,6 @@ function initSuggestionsSidebar() {
 }
 
 
-
 function initCategoryGrid() {
     const categoryCards = document.querySelectorAll('.category-card');
     categoryCards.forEach(card => {
@@ -327,7 +319,6 @@ function initCategoryGrid() {
             state.filters.category = category === 'all' ? 'all' : [category];
             state.currentPage = 1;
 
-            
             const categoryFilters = document.getElementById('categoryFilters');
             if (categoryFilters) {
                 categoryFilters.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -344,7 +335,6 @@ function initCategoryGrid() {
 
 
 function initFilters() {
-    
     const categoryFilters = document.getElementById('categoryFilters');
     const categories = [
         { value: 'all', label: 'Tất cả' },
@@ -372,7 +362,6 @@ function initFilters() {
         `;
     }).join('');
     
-    
     const brandFilters = document.getElementById('brandFilters');
     const brands = [...new Set(state.products.map(p => p.brand))].slice(0, 10);
     brandFilters.innerHTML = brands.map(brand => {
@@ -384,7 +373,6 @@ function initFilters() {
             </label>
         `;
     }).join('');
-    
     
     categoryFilters.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
         checkbox.addEventListener('change', (e) => {
@@ -412,7 +400,6 @@ function initFilters() {
         });
     });
     
-    
     brandFilters.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
         checkbox.addEventListener('change', () => {
             state.filters.brands = Array.from(brandFilters.querySelectorAll('input[type="checkbox"]:checked'))
@@ -423,7 +410,6 @@ function initFilters() {
             closeShopSidebarIfCompact();
         });
     });
-    
     
     const PRICE_BUCKETS = {
         'all':        [0, 10000000],
@@ -445,7 +431,6 @@ function initFilters() {
         });
     });
     
-    
     document.getElementById('filterInStock').addEventListener('change', (e) => {
         state.filters.inStock = e.target.checked;
         applyFilters();
@@ -460,7 +445,6 @@ function initFilters() {
         closeShopSidebarIfCompact();
     });
     
-    
     document.getElementById('btnClearFilters').addEventListener('click', () => {
         state.sort = 'default';
         state.filters = {
@@ -473,7 +457,6 @@ function initFilters() {
             search: ''
         };
 
-        
         const defaultSort = document.querySelector('input[name="sortFilter"][value="default"]');
         if (defaultSort) defaultSort.checked = true;
         categoryFilters.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -504,10 +487,8 @@ function applyFiltersDebounced() {
 }
 
 
-
 function applyFilters() {
     let filtered = [...state.products];
-    
     
     if (state.filters.category && state.filters.category !== 'all') {
         const cats = Array.isArray(state.filters.category) ? state.filters.category : [state.filters.category];
@@ -529,26 +510,21 @@ function applyFilters() {
         filtered = filtered.filter(p => mappedCats.includes(p.category) || mappedCats.includes(p.categoryName));
     }
     
-    
     if (state.filters.brands.length > 0) {
         filtered = filtered.filter(p => state.filters.brands.includes(p.brand));
     }
-    
     
     filtered = filtered.filter(p => 
         p.price >= state.filters.priceMin && p.price <= state.filters.priceMax
     );
     
-    
     if (state.filters.inStock) {
         filtered = filtered.filter(p => p.inStock);
     }
     
-    
     if (state.filters.onSale) {
         filtered = filtered.filter(p => p.sale);
     }
-    
     
     if (state.filters.search) {
         const searchLower = state.filters.search.toLowerCase();
@@ -557,7 +533,6 @@ function applyFilters() {
             p.brand.toLowerCase().includes(searchLower)
         );
     }
-    
     
     filtered = applySort(filtered);
     
@@ -584,9 +559,7 @@ function applySort(products) {
 }
 
 
-
 function initToolbar() {
-    
     const searchInput = document.getElementById('searchInput');
     let searchTimeout;
     searchInput.addEventListener('input', (e) => {
@@ -600,7 +573,6 @@ function initToolbar() {
         }, 300);
     });
     
-    
     document.querySelectorAll('input[name="sortFilter"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             state.sort = e.target.value;
@@ -612,20 +584,16 @@ function initToolbar() {
 }
 
 
-
 function renderProducts() {
     const grid = document.getElementById('productsGrid');
     const emptyState = document.getElementById('emptyState');
     const resultCount = document.getElementById('resultCount');
     
-    
     const startIndex = (state.currentPage - 1) * state.itemsPerPage;
     const endIndex = startIndex + state.itemsPerPage;
     const paginatedProducts = state.filteredProducts.slice(startIndex, endIndex);
     
-    
     resultCount.textContent = `Hiển thị ${paginatedProducts.length} sản phẩm`;
-    
     
     if (paginatedProducts.length === 0) {
         grid.classList.add('d-none');
@@ -640,7 +608,6 @@ function renderProducts() {
         emptyState.classList.add('d-none');
         grid.innerHTML = paginatedProducts.map(product => createProductCardHTML(product)).join('');
         
-        
         grid.querySelectorAll('.product-wishlist-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -648,13 +615,12 @@ function renderProducts() {
                 const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
                 if (!user) {
                     showToast('Vui lòng đăng nhập để sử dụng tính năng yêu thích', 'warning');
-                    return; 
+                    return; // KHÔNG đổi màu icon
                 }
                 toggleWishlist(btn.dataset.productId);
                 btn.classList.toggle('active');
             });
         });
-        
         
         grid.querySelectorAll('.product-quick-add').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -664,7 +630,6 @@ function renderProducts() {
             });
         });
 
-        
         grid.querySelectorAll('.product-buy-now').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -679,13 +644,11 @@ function renderProducts() {
         });
     }
     
-    
     renderPagination();
 }
 
 function createProductCardHTML(product) {
     const isInWishlist = state.wishlist.includes(product.id);
-    
     
     const rating = product.rating || 5.0;
     const reviewCount = product.reviewCount || 0;
@@ -703,7 +666,6 @@ function createProductCardHTML(product) {
         }
     }
     
-    
     let badgeHTML = '';
     if (product.badge) {
         const badgeClass = product.badge === 'best' ? 'badge-best' : product.badge === 'new' ? 'badge-new' : 'badge-hot';
@@ -711,7 +673,6 @@ function createProductCardHTML(product) {
         badgeHTML = `<div class="product-badge ${badgeClass}">${badgeText}</div>`;
     }
 
-    
     let stockHTML = '';
     if (product.inStock && product.stock > 0 && product.stock <= 10) {
         stockHTML = `<div class="product-stock-warning">Chỉ còn ${product.stock} SP!</div>`;
@@ -764,7 +725,6 @@ function createProductCardHTML(product) {
 }
 
 
-
 function renderPagination() {
     const totalPages = Math.ceil(state.filteredProducts.length / state.itemsPerPage);
     const pageNumbers = document.getElementById('pageNumbers');
@@ -778,7 +738,6 @@ function renderPagination() {
     }
     
     paginationWrapper.classList.remove('d-none');
-    
     
     pagePrev.disabled = state.currentPage === 1;
     pageNext.disabled = state.currentPage === totalPages;
@@ -799,16 +758,12 @@ function renderPagination() {
         }
     };
     
-    
     pageNumbers.innerHTML = '';
-    
     
     pageNumbers.appendChild(createPageButton(1));
     
-    
     let startPage = Math.max(2, state.currentPage - 1);
     let endPage = Math.min(totalPages - 1, state.currentPage + 1);
-    
     
     if (startPage > 2) {
         const ellipsis = document.createElement('div');
@@ -817,11 +772,9 @@ function renderPagination() {
         pageNumbers.appendChild(ellipsis);
     }
     
-    
     for (let i = startPage; i <= endPage; i++) {
         pageNumbers.appendChild(createPageButton(i));
     }
-    
     
     if (endPage < totalPages - 1) {
         const ellipsis = document.createElement('div');
@@ -829,7 +782,6 @@ function renderPagination() {
         ellipsis.textContent = '...';
         pageNumbers.appendChild(ellipsis);
     }
-    
     
     if (totalPages > 1) {
         pageNumbers.appendChild(createPageButton(totalPages));
@@ -849,7 +801,6 @@ function createPageButton(pageNum) {
 }
 
 
-
 function initBrands() {
     const brandsGrid = document.getElementById('brandsGrid');
     brandsGrid.innerHTML = brandCatalog.map(brand => `
@@ -858,14 +809,12 @@ function initBrands() {
         </a>
     `).join('');
     
-    
     brandsGrid.querySelectorAll('.brand-card').forEach(card => {
         card.addEventListener('click', (e) => {
             e.preventDefault();
             const brandName = card.dataset.brand;
             state.filters.brands = [brandName];
             state.currentPage = 1;
-            
             
             document.querySelectorAll('#brandFilters input[type="checkbox"]').forEach(cb => {
                 cb.checked = cb.value === brandName;
@@ -877,7 +826,6 @@ function initBrands() {
         });
     });
 }
-
 
 
 function initMobileFilter() {
@@ -939,7 +887,6 @@ function closeShopSidebarIfCompact() {
 }
 
 
-
 function getWishlistStorageKey() {
     const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     return user && user.phone ? `pawpal_wishlist_${user.phone}` : 'pawpal_wishlist_guest';
@@ -985,11 +932,9 @@ function toggleWishlist(productId) {
 }
 
 
-
 async function addToCart(productId) {
     const product = state.products.find(p => String(p.id) === String(productId));
     if (!product || !product.inStock) return;
-    
     
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     let cart = [];
@@ -997,11 +942,9 @@ async function addToCart(productId) {
         cart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
     }
     
-    
     const existingItem = cart.find(item => item.id === productId);
     if (existingItem) {
         existingItem.quantity++;
-        
         if (!existingItem.name) {
             Object.assign(existingItem, product);
         }
@@ -1019,7 +962,6 @@ async function addToCart(productId) {
         }
     }
     showToast(`Đã thêm ${product.name} vào giỏ hàng`, 'success');
-    
     
     await updateCartBadge();
     if (typeof window.updateCartBadge === 'function') {
@@ -1044,7 +986,6 @@ async function updateCartBadge() {
         cartBadgeMobile.textContent = totalItems > 0 ? `(${totalItems})` : '';
     }
 }
-
 
 
 function formatPrice(price) {
@@ -1089,7 +1030,6 @@ function renderNoResultsSuggestions() {
 }
 
 function showToast(message, type = 'info') {
-    
     const toast = document.createElement('div');
     toast.className = `toast-notification toast-${type}`;
     toast.textContent = message;
@@ -1116,7 +1056,6 @@ function showToast(message, type = 'info') {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
-
 
 const style = document.createElement('style');
 style.textContent = `

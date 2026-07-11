@@ -1,8 +1,6 @@
 
-
 let currentOrder = null;
-let isGuest = false; 
-
+let isGuest = false; // Giả định: false = Member, true = Guest
 
 async function syncSingleOrderFromSupabase(orderId, currentUser) {
     const db = window.SupabaseClient;
@@ -15,7 +13,6 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
             customerId = found[0].id;
         }
 
-        
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
         let query = db
             .from('sales_order')
@@ -124,7 +121,6 @@ function normalizeImageUrl(url) {
     return url;
 }
 
-
 function buildTimelineFromStatus(orderStatus, createdAt, updatedAt) {
     const statusFlow = [
         { status: 'placed',    title: 'Đặt hàng thành công',  desc: 'Đơn hàng đã được ghi nhận.' },
@@ -139,7 +135,6 @@ function buildTimelineFromStatus(orderStatus, createdAt, updatedAt) {
     const statusOrder = statusFlow.map(s => s.status);
     const currentIdx = statusOrder.indexOf(localStatus);
 
-    
     if (localStatus === 'cancelled') {
         return [
             { status: 'placed',    title: 'Đặt hàng thành công', timestamp: createdAt,  description: '' },
@@ -147,13 +142,12 @@ function buildTimelineFromStatus(orderStatus, createdAt, updatedAt) {
         ];
     }
 
-    
     return statusFlow.slice(0, Math.max(currentIdx + 1, 1)).map((step, idx) => ({
         status:      step.status,
         title:       step.title,
         timestamp:   idx === 0 ? createdAt : (idx === currentIdx ? (updatedAt || createdAt) : null),
         description: idx === currentIdx ? step.desc : '',
-    })).filter(s => s.timestamp); 
+    })).filter(s => s.timestamp); // bỏ bước chưa có timestamp
 }
 
 function resolveDataUrl(path) {
@@ -161,12 +155,10 @@ function resolveDataUrl(path) {
     return new URL(path, scriptSrc).href;
 }
 
-
 function getOrderIdFromURL() {
     const params = new URLSearchParams(window.location.search);
     return params.get('id');
 }
-
 
 async function loadOrderDetail() {
     const orderId = getOrderIdFromURL();
@@ -180,17 +172,14 @@ async function loadOrderDetail() {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         if (window.SupabaseClient && currentUser) {
             await syncSingleOrderFromSupabase(orderId, currentUser);
-            
             if (!window.pawpalReviews) {
                 window.pawpalReviews = await API.getUserReviews(currentUser.id);
             }
         }
 
-        
         const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
         currentOrder = Array.isArray(localOrders) ? localOrders.find(o => String(o.id) === String(orderId)) : null;
 
-        
         if (!currentOrder) {
             const response = await fetch(resolveDataUrl('../../../data/orders.json'));
             const orders = await response.json();
@@ -202,9 +191,7 @@ async function loadOrderDetail() {
             return;
         }
         
-        
         checkAutoComplete();
-        
         
         renderOrderHeader();
         renderDeliveryInfo();
@@ -213,7 +200,6 @@ async function loadOrderDetail() {
         renderSummary();
         renderTimeline();
         renderActions();
-        
         
         if ((currentOrder.status === 'completed') && typeof ReviewHandler !== 'undefined') {
             const orderTimeline = Array.isArray(currentOrder.timeline) ? currentOrder.timeline : [];
@@ -225,12 +211,10 @@ async function loadOrderDetail() {
             ReviewHandler.init(currentOrder.id, products);
             scrollToReviewAnchor();
 
-            
             if (window.location.hash === '#reviews' && ReviewHandler.hasOrderReviewed(currentOrder.id)) {
                 setTimeout(() => showOrderReviewsModal(currentOrder.id), 300);
             }
 
-            
             window.addEventListener('pawpal:reviewSubmitted', (e) => {
                 if (String(e.detail.orderId) === String(currentOrder.id)) {
                     renderActions();
@@ -244,9 +228,7 @@ async function loadOrderDetail() {
     }
 }
 
-
 function awardLoyaltyPoints(order) {
-    
     if (order.pointsAwarded) return;
 
     const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
@@ -257,33 +239,27 @@ function awardLoyaltyPoints(order) {
     );
     if (grandTotal <= 0) return;
 
-    
     const pointsEarned = Math.floor(grandTotal / 1000);
     if (pointsEarned <= 0) return;
 
-    
     const users = JSON.parse('[]' || '[]');
     const idx = users.findIndex(u => u.phone === user.phone);
     if (idx !== -1) {
         users[idx].points  = (users[idx].points  || 0) + pointsEarned;
         users[idx].spend   = (users[idx].spend   || 0) + grandTotal;
         users[idx].lastTransactionAt = new Date().toISOString();
-        
 
-        
         user.points  = users[idx].points;
         user.spend   = users[idx].spend;
         user.lastTransactionAt = users[idx].lastTransactionAt;
         localStorage.setItem('pawpal_current_user', JSON.stringify(user));
     }
 
-    
     order.pointsAwarded  = true;
     order.pointsEarned   = pointsEarned;
 
     console.log(`[Loyalty] +${pointsEarned} Paw Points cho đơn ${order.id} (${grandTotal.toLocaleString('vi-VN')}đ)`);
 }
-
 
 function checkAutoComplete() {
     if (currentOrder.status !== 'delivered') return;
@@ -297,10 +273,8 @@ function checkAutoComplete() {
     const hoursPassed = (now - deliveredTime) / (1000 * 60 * 60);
     
     if (hoursPassed >= 72) {
-        
         awardLoyaltyPoints(currentOrder);
 
-        
         currentOrder.status = 'completed';
         orderTimeline.push({
             status: 'completed',
@@ -309,19 +283,15 @@ function checkAutoComplete() {
             description: 'Tự động hoàn thành sau 3 ngày giao hàng'
         });
         currentOrder.timeline = orderTimeline;
-        
         saveOrderToLocalStorage(currentOrder);
         console.log('Đơn hàng tự động hoàn thành');
     }
 }
 
-
 function renderOrderHeader() {
     document.getElementById('order-id').textContent = currentOrder.id;
     document.getElementById('order-created-date').textContent = 
         'Đặt ngày ' + formatDate(currentOrder.createdAt);
-    
-    
     
     const ONLINE_METHODS = ['vnpay', 'momo', 'zalopay', 'vietqr'];
     const payMethod = (currentOrder.paymentMethod || currentOrder.payment?.method || '').toLowerCase();
@@ -329,7 +299,7 @@ function renderOrderHeader() {
     const isPendingOnlinePaid = (currentOrder.status === 'pending' || currentOrder.status === 'pending_payment')
                              && isPaid && ONLINE_METHODS.includes(payMethod);
 
-    const displayStatus = isPendingOnlinePaid ? 'preparing'   
+    const displayStatus = isPendingOnlinePaid ? 'preparing'   // dùng class xanh/vàng thay vì đỏ
                         : currentOrder.status === 'pending' ? 'pending_payment'
                         : currentOrder.status;
     const displayLabel  = isPendingOnlinePaid ? 'Đã thanh toán — Chờ xác nhận'
@@ -340,15 +310,12 @@ function renderOrderHeader() {
     statusBadge.className = `status-badge status-${displayStatus}`;
 }
 
-
 function renderDeliveryInfo() {
-    
     const delivery = currentOrder.delivery || currentOrder.shipping || {};
     document.getElementById('receiver-name').textContent = delivery.name || '—';
     document.getElementById('receiver-phone').textContent = delivery.phone || '—';
     document.getElementById('receiver-address').textContent = delivery.address || delivery.street || '—';
 }
-
 
 function renderPaymentInfo() {
     const methodLabels = {
@@ -369,7 +336,6 @@ function renderPaymentInfo() {
         statusElement.className = 'payment-status unpaid';
     }
 }
-
 
 function renderProducts() {
     const container = document.getElementById('products-list');
@@ -395,11 +361,9 @@ function renderProducts() {
     `).join('');
 }
 
-
 function renderSummary() {
     const subtotal    = toNumber(currentOrder.pricing?.subtotal);
     const shippingFee = toNumber(currentOrder.pricing?.shippingFee);
-    
     const discount = toNumber(currentOrder.pricing?.discount)
                   || toNumber(currentOrder.pricing?.voucherDiscount)
                    + toNumber(currentOrder.pricing?.pointsDiscount);
@@ -417,17 +381,14 @@ function renderSummary() {
         formatCurrency(total);
 }
 
-
 function renderTimeline() {
     const container = document.getElementById('order-timeline');
-    
     
     const statusOrder = ['placed', 'confirmed', 'preparing', 'shipping', 'delivered', 'completed'];
     const currentIndex = statusOrder.indexOf(currentOrder.status);
     
     container.innerHTML = currentOrder.timeline.map((item, index) => {
         let itemClass = 'timeline-item';
-        
         
         const itemStatusIndex = statusOrder.indexOf(item.status);
         if (itemStatusIndex < currentIndex) {
@@ -453,19 +414,16 @@ function renderTimeline() {
     }).join('');
 }
 
-
 function renderActions() {
     const actionsContainer = document.getElementById('order-actions');
     const guestNotice = document.getElementById('guest-notice');
     const statusNotes = [];
     
     if (isGuest) {
-        
         actionsContainer.classList.add('d-none');
         guestNotice.classList.remove('d-none');
         return;
     }
-    
     
     let buttons = [];
     
@@ -473,26 +431,21 @@ function renderActions() {
         case 'placed':
         case 'pending':
         case 'pending_payment': {
-            
             const isPaid   = currentOrder.paymentStatus === 'paid'
                           || currentOrder.payment?.status === 'paid';
-            
             const ONLINE_METHODS = ['vnpay', 'momo', 'zalopay', 'vietqr'];
             const payMethod = (currentOrder.paymentMethod || currentOrder.payment?.method || '').toLowerCase();
             const isCOD     = payMethod === 'cod';
             const isOnline  = ONLINE_METHODS.includes(payMethod);
 
             if (isPaid && isOnline) {
-                
             } else if (!isPaid && isOnline) {
-                
                 buttons.push(`
                     <button class="btn-cta" onclick="payNow()">
                         Thanh toán ngay
                     </button>
                 `);
             }
-            
 
             buttons.push(`
                 <button class="btn-danger-outline" onclick="cancelOrder()">
@@ -530,7 +483,6 @@ function renderActions() {
             break;
 
         case 'completed': {
-            
             const completedEntry = currentOrder.timeline
                 ? currentOrder.timeline.slice().reverse().find(t => t.status === 'completed')
                 : null;
@@ -538,11 +490,9 @@ function renderActions() {
             const daysPassed = (Date.now() - completedAt.getTime()) / (1000 * 60 * 60 * 24);
             const withinReturnWindow = daysPassed <= 7;
 
-            
             const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
             const alreadyReturned = returnsList.some(r => r.orderId === currentOrder.id);
 
-            
             const orderAlreadyReviewed = typeof ReviewHandler !== 'undefined'
                 ? ReviewHandler.hasOrderReviewed(currentOrder.id)
                 : false;
@@ -573,7 +523,6 @@ function renderActions() {
                 `);
             }
             
-            
             if (orderAlreadyReviewed) {
                 buttons.push(`
                     <button class="btn-review border-0" onclick="showOrderReviewsModal('${currentOrder.id}')">
@@ -582,7 +531,6 @@ function renderActions() {
                 `);
             }
 
-            
             buttons.push(`
                 <button class="btn-view-detail border-0" onclick="reorder('${currentOrder.id}')">
                     Mua lại
@@ -592,7 +540,6 @@ function renderActions() {
         }
 
         case 'cancelled': {
-            
             const isPaidCancelled = currentOrder.paymentStatus === 'paid'
                                  || currentOrder.payment?.status === 'paid';
             const isRefunded      = currentOrder.paymentStatus === 'refunded';
@@ -622,7 +569,6 @@ function renderActions() {
         }
 
         case 'return_pending': {
-            
             const rmaList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
             const rma = rmaList.find(r => String(r.orderId) === String(currentOrder.id));
             if (rma) {
@@ -648,14 +594,11 @@ function renderActions() {
     actionsContainer.style.display = buttons.length > 0 ? 'flex' : 'none';
 }
 
-
 function payNow() {
-    
     const ONLINE_METHODS = ['vnpay', 'momo', 'zalopay', 'vietqr'];
     const payMethod = (currentOrder.paymentMethod || currentOrder.payment?.method || '').toLowerCase();
-    if (!ONLINE_METHODS.includes(payMethod)) return; 
+    if (!ONLINE_METHODS.includes(payMethod)) return; // Guard: COD/unknown không gọi được
 
-    
     currentOrder.shipping = currentOrder.delivery || currentOrder.shipping || {};
     currentOrder.items = (currentOrder.products || []).map(p => ({
         productId: p.id,
@@ -667,16 +610,14 @@ function payNow() {
     }));
     localStorage.setItem('pawpal_current_order', JSON.stringify(currentOrder));
 
-    
     window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${currentOrder.id}`;
 }
 
 function restoreStockForOrder(order) {
-    
     if (!order || !Array.isArray(order.products)) return;
     try {
         const storedProducts = JSON.parse(localStorage.getItem('pawpal_products') || '[]');
-        if (!storedProducts.length) return; 
+        if (!storedProducts.length) return; // không có cache sản phẩm, bỏ qua
 
         order.products.forEach(item => {
             const idx = storedProducts.findIndex(p => String(p.id) === String(item.id));
@@ -692,7 +633,6 @@ function restoreStockForOrder(order) {
 }
 
 function cancelOrder() {
-    
     const isPaidOnline = (currentOrder.paymentStatus === 'paid' || currentOrder.payment?.status === 'paid')
                       && currentOrder.paymentMethod !== 'cod';
     const refundAmount = (() => {
@@ -763,7 +703,6 @@ function cancelOrder() {
             }
         }
 
-        
         if (isPaidOnline) {
             const refunds = JSON.parse(localStorage.getItem('pawpal_refunds') || '[]');
             const subtotal = toNumber(currentOrder.pricing?.subtotal);
@@ -854,14 +793,12 @@ function confirmReceived() {
         this.innerHTML = 'Đang xử lý...';
         modal.hide();
 
-        
         const mainBtns = document.querySelectorAll('.btn-cta[onclick="confirmReceived()"]');
         mainBtns.forEach(btn => {
             btn.disabled = true;
             btn.style.display = 'none';
         });
 
-        
         awardLoyaltyPoints(currentOrder);
         const pointsEarned = currentOrder.pointsEarned || 0;
 
@@ -881,7 +818,6 @@ function confirmReceived() {
             });
         }
 
-        
         if (pointsEarned > 0 && typeof showPawPalToast === 'function') {
             showPawPalToast(`Xác nhận thành công! Bạn vừa tích được +${pointsEarned} Paw Points.`, 'success');
             setTimeout(() => location.reload(), 1200);
@@ -913,7 +849,6 @@ function showOrderReviewsModal(orderId) {
         return;
     }
 
-    
     function getProductName(productId) {
         if (!currentOrder || !Array.isArray(currentOrder.products)) return '';
         const p = currentOrder.products.find(x => String(x.id) === String(productId));
@@ -959,7 +894,6 @@ function showOrderReviewsModal(orderId) {
             </div>`;
     }).join('');
 
-    
     const existing = document.getElementById('review-modal-overlay');
     if (existing) existing.remove();
 
@@ -975,7 +909,6 @@ function showOrderReviewsModal(orderId) {
         </div>
     `);
 
-    
     document.getElementById('review-modal-overlay').addEventListener('click', function(e) {
         if (e.target === this) this.remove();
     });
@@ -1058,7 +991,6 @@ function updateCartBadgeCount() {
     }
 }
 
-
 function showError(message) {
     document.querySelector('.order-detail-main').innerHTML = `
         <div class="empty-state">
@@ -1070,7 +1002,6 @@ function showError(message) {
         </div>
     `;
 }
-
 
 function formatCurrency(amount) {
     const value = Number(amount);
@@ -1095,7 +1026,6 @@ function resolveOrderTotal(pricing, subtotal = 0, shippingFee = 0, discount = 0)
     return fallbackTotal > 0 ? fallbackTotal : 0;
 }
 
-
 function formatDate(dateString) {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('vi-VN', {
@@ -1106,7 +1036,6 @@ function formatDate(dateString) {
         minute: '2-digit'
     }).format(date);
 }
-
 
 function getStatusLabel(status) {
     const labels = {
@@ -1126,14 +1055,10 @@ function getStatusLabel(status) {
     return labels[status] || status;
 }
 
-
 document.addEventListener('DOMContentLoaded', () => {
-    
-    
     
     const params = new URLSearchParams(window.location.search);
     isGuest = params.get('guest') === 'true';
-    
     
     loadOrderDetail();
 });

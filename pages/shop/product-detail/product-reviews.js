@@ -1,9 +1,7 @@
 
-
 (function () {
     'use strict';
 
-    
     const Lightbox = (function () {
         let overlay, mediaEl, prevBtn, nextBtn;
         let items = [], idx = 0;
@@ -69,11 +67,9 @@
         return { open };
     })();
 
-    
     let allReviewEls = [];
     let activeFilter = 'all';
 
-    
     function init() {
         allReviewEls = Array.from(document.querySelectorAll('.review-item'));
         if (!allReviewEls.length) return;
@@ -83,7 +79,6 @@
         bindHelpful();
     }
 
-    
     function bindFilterTabs() {
         const tabs = document.querySelectorAll('.filter-tab[data-filter]');
         tabs.forEach(tab => {
@@ -115,15 +110,12 @@
         });
     }
 
-    
     function bindLightbox() {
         document.querySelectorAll('.reviews-list').forEach(container => {
             container.addEventListener('click', e => {
-                
                 const imgEl = e.target.closest('img.review-photo, .review-media-list img');
                 if (!imgEl) return;
 
-                
                 const reviewItem = imgEl.closest('.review-item');
                 if (!reviewItem) return;
 
@@ -137,7 +129,6 @@
         });
     }
 
-    
     function bindHelpful() {
         document.querySelectorAll('.reviews-list').forEach(container => {
             container.addEventListener('click', e => {
@@ -148,11 +139,9 @@
                 btn.style.color   = 'var(--color-primary)';
                 btn.style.fontWeight = '600';
 
-                
                 const match = btn.textContent.match(/\((\d+)\)/);
                 const count = match ? parseInt(match[1], 10) + 1 : 1;
 
-                
                 btn.innerHTML = `
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
@@ -163,7 +152,6 @@
         });
     }
 
-    
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {

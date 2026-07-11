@@ -225,7 +225,6 @@ function ensureSupportReady(callback) {
                             btn.innerHTML = 'Đang gửi...';
                         }
 
-                        
                         await window.PawPalSupport.createTicket(title, type, content, files);
                         
                         if (btn) {

@@ -1,18 +1,13 @@
 
-
 let currentRmaOrder = null;
 
 function openRMADrawer(orderId) {
-    
     if (typeof ordersState !== 'undefined' && ordersState.allOrders) {
         currentRmaOrder = ordersState.allOrders.find(o => o.id === orderId);
     }
 
-    
     if (!currentRmaOrder && window.SupabaseClient) {
-        
     }
-    
     
     if (!currentRmaOrder) {
         currentRmaOrder = {
@@ -30,7 +25,6 @@ function openRMADrawer(orderId) {
 
     const container = document.getElementById('rma-drawer-container') || createRmaDrawerContainer();
 
-    
     container.innerHTML = `
         <div class="rma-drawer-overlay" id="rma-overlay"></div>
         <div class="rma-drawer" id="rma-drawer">
@@ -121,13 +115,11 @@ function openRMADrawer(orderId) {
         </div>
     `;
 
-    
     setTimeout(() => {
         document.getElementById('rma-overlay').classList.add('is-open');
         document.getElementById('rma-drawer').classList.add('is-open');
     }, 50);
 
-    
     setupDrawerListeners();
 }
 
@@ -141,19 +133,17 @@ function setupDrawerListeners() {
     const uploadTrigger = document.getElementById('rma-upload-trigger');
     const submitBtn = document.getElementById('rma-submit-btn');
 
-    
     const closeDrawer = () => {
         overlay.classList.remove('is-open');
         drawer.classList.remove('is-open');
         setTimeout(() => {
             document.getElementById('rma-drawer-container').innerHTML = '';
-        }, 400); 
+        }, 400); // khớp transition CSS
     };
 
     overlay.addEventListener('click', closeDrawer);
     closeBtn.addEventListener('click', closeDrawer);
 
-    
     const cardExchange = document.getElementById('radio-card-exchange');
     const cardRefund = document.getElementById('radio-card-refund');
 
@@ -171,12 +161,10 @@ function setupDrawerListeners() {
         document.getElementById('rma-refund-account-group').style.display = 'block';
     });
 
-    
     uploadTrigger.addEventListener('click', () => {
         fileInput.click();
     });
 
-    
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         const warningEl = document.getElementById('rma-upload-warning');
@@ -187,15 +175,13 @@ function setupDrawerListeners() {
 
         if (!file) return;
 
-        
         if (file.size > 5 * 1024 * 1024) {
             warningEl.textContent = 'Dung lượng file vượt quá giới hạn 5MB. Vui lòng chọn file nhỏ hơn.';
             warningEl.style.display = 'block';
-            fileInput.value = ''; 
+            fileInput.value = ''; // Reset input
             return;
         }
 
-        
         if (file.type.startsWith('image/')) {
             const reader = new FileReader();
             reader.onload = (event) => {
@@ -208,7 +194,6 @@ function setupDrawerListeners() {
             };
             reader.readAsDataURL(file);
         } else {
-            
             previewContainer.innerHTML = `
                 <div style="position: relative; font-size: 0.8rem; background: var(--color-primary-light); padding: 6px; border-radius: 6px; border: 1px solid var(--color-border);">
                      ${file.name}
@@ -218,20 +203,17 @@ function setupDrawerListeners() {
         }
     });
 
-    
     submitBtn.addEventListener('click', async () => {
         const checkedItems = document.querySelectorAll('.rma-product-checkbox:checked');
         const reason = document.getElementById('rma-reason').value;
         const file = fileInput.files[0];
         const warningEl = document.getElementById('rma-upload-warning');
 
-        
         if (checkedItems.length === 0) {
             alert('Vui lòng chọn ít nhất một sản phẩm cần đổi trả!');
             return;
         }
 
-        
         if ((reason === 'broken' || reason === 'wrong_item') && !file) {
             warningEl.textContent = 'Lý do này bắt buộc phải tải lên hình ảnh hoặc video thực tế của sản phẩm làm minh chứng.';
             warningEl.style.display = 'block';
@@ -243,11 +225,10 @@ function setupDrawerListeners() {
             orderId: currentRmaOrder.id,
             rmaId: 'RMA-' + Math.floor(10000 + Math.random() * 90000),
             createdAt: new Date().toISOString(),
-            status: 'reviewing', 
+            status: 'reviewing', // Bắt đầu ở bước Chờ kiểm duyệt — điểm chỉ trừ khi status = 'completed'
             reason: reason,
             type: returnType,
             description: document.getElementById('rma-desc').value,
-            
             refundAccount: returnType === 'refund'
                 ? (document.getElementById('rma-refund-account')?.value?.trim() || '')
                 : '',
@@ -257,19 +238,16 @@ function setupDrawerListeners() {
             })
         };
 
-        
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = 'Đang gửi...';
         submitBtn.disabled = true;
 
-        
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
         const customerId = currentUser ? currentUser.id : null;
 
         if (db) {
             try {
-                
                 const { data: rData, error: rErr } = await db.from('return_request').insert([{
                     sales_order_id: currentRmaOrder._supabaseId || currentRmaOrder.id,
                     customer_id: customerId,
@@ -284,9 +262,8 @@ function setupDrawerListeners() {
                 
                 if (rData && rData.length > 0) {
                     const newRmaId = rData[0].id;
-                    returnData.rmaId = newRmaId; 
+                    returnData.rmaId = newRmaId; // Đồng bộ ID từ DB để lưu vào localStorage fallback
 
-                    
                     const details = returnData.products.map(p => ({
                         return_request_id: newRmaId,
                         product_id: p.id,
@@ -299,34 +276,25 @@ function setupDrawerListeners() {
                 }
             } catch (err) {
                 console.error('[ReturnHandler] Lỗi khi tạo RMA trên Supabase:', err);
-                
             }
         }
 
-        
-        
 
-        
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
 
-        
         closeDrawer();
 
-        
         const isGuestLookup = window.location.pathname.includes('return-guest');
         if (isGuestLookup) {
             setTimeout(() => {
-                
                 const searchForm = document.getElementById('rg-form');
                 if (searchForm) searchForm.dispatchEvent(new Event('submit'));
-                
                 if (typeof showToast === 'function') {
                     showToast('Yêu cầu đổi trả đã được ghi nhận thành công!', 'success');
                 }
             }, 200);
         } else {
-            
             setTimeout(() => {
                 window.location.href = `/pages/user/return-detail/return-detail.html?orderId=${currentRmaOrder.id}`;
             }, 100);
@@ -341,7 +309,6 @@ function createRmaDrawerContainer() {
         return container;
     }
 
-    
 function removeRmaFile() {
     const fileInput = document.getElementById('rma-file-input');
     const previewContainer = document.getElementById('rma-preview-container');

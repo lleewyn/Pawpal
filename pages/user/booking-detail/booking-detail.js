@@ -1,8 +1,6 @@
 
-
 import { API } from '/scripts/api/api.js';
 import { statusLabels, formatDate, formatPrice } from '../bookings/bookings.js';
-
 
 
 function mapBookingStatus(status) {
@@ -14,7 +12,6 @@ function getBookingPrice(priceMatrix, petSpecies) {
     const match = priceMatrix.find(p => p.pet_species === petSpecies);
     return (match || priceMatrix[0])?.unit_price || 0;
 }
-
 
 async function cancelBookingOnSupabase(booking) {
     const db = window.SupabaseClient;
@@ -28,7 +25,6 @@ async function cancelBookingOnSupabase(booking) {
         console.warn('[BookingDetail] cancelBookingOnSupabase error:', err.message);
     }
 }
-
 
 async function rescheduleBookingOnSupabase(booking) {
     const db = window.SupabaseClient;
@@ -73,7 +69,6 @@ async function loadBookingDetail(bookingId) {
 
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
 
-    
     const userBookings = currentUser ? await API.getUserBookings(currentUser.id) : [];
     currentBooking = userBookings.find((b) => String(b.id || b._id) === String(bookingId) || b.code === bookingId);
 
@@ -106,10 +101,8 @@ async function loadBookingDetail(bookingId) {
     renderServiceReviewSection(currentBooking);
     checkBookingModifiability(currentBooking);
 
-    
     awardBookingLoyaltyPoints(currentBooking, currentUser);
 
-    
     if (window.location.hash === '#service-review') {
         setTimeout(() => {
             const target = document.getElementById('serviceReviewSection')
@@ -317,7 +310,6 @@ function checkBookingModifiability(booking) {
     btnCancel.classList.toggle('d-none', !canCancel);
 }
 
-
 function handleChangeSchedule() {
     const btnChange = document.getElementById('btnChangeSchedule');
     if (!btnChange || btnChange.disabled) {
@@ -327,7 +319,6 @@ function handleChangeSchedule() {
 
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (currentUser && currentUser.is_temporary) {
-        
         showGuestOTPModal(currentUser, () => showChangeScheduleModal(currentUser));
         return;
     }
@@ -351,7 +342,6 @@ function showChangeScheduleModal(user = null) {
         { name: 'Lê Hoàng Tiến',     desc: 'Chuyên viên cắt tỉa Grooming',              id: 'staff3' }
     ];
 
-    
     const slotsHtml = slots.map(s =>
         `<button class="slot-time-btn" data-time="${s}" disabled style="opacity:0.4;cursor:not-allowed;">${s}</button>`
     ).join('');
@@ -448,7 +438,6 @@ function showChangeScheduleModal(user = null) {
             countdown.textContent = `${m}:${s}`;
             if (remaining <= 0) {
                 clearHoldTimer();
-                
                 selectedTime = null;
                 modalEl.querySelectorAll('.slot-time-btn').forEach(b => b.classList.remove('active'));
                 banner.innerHTML = `<strong>Hết thời gian giữ chỗ!</strong> Vui lòng chọn lại giờ.`;
@@ -463,7 +452,6 @@ function showChangeScheduleModal(user = null) {
         holdInterval = setInterval(tick, 1000);
     }
 
-    
     modalEl.addEventListener('hidden.bs.modal', () => clearHoldTimer());
 
     function enableTimeAndStaff() {
@@ -500,11 +488,9 @@ function showChangeScheduleModal(user = null) {
     document.getElementById('changeDatePicker').addEventListener('change', (e) => {
         selectedDate = e.target.value;
         if (!isHotelBooking) {
-            
             selectedTime = null;
             clearHoldTimer();
             modalEl.querySelectorAll('.slot-time-btn').forEach(b => b.classList.remove('active'));
-            
             enableTimeAndStaff();
         }
         refresh();
@@ -557,7 +543,7 @@ function showChangeScheduleModal(user = null) {
         currentBooking.changeCount = (currentBooking.changeCount || 0) + 1;
         if (notes) currentBooking.note = `Yêu cầu đổi lịch: ${notes}`;
 
-        rescheduleBookingOnSupabase(currentBooking); 
+        rescheduleBookingOnSupabase(currentBooking); // sync Supabase
         showToast('Đã thay đổi lịch hẹn thành công!', 'success');
         renderBookingDetail(currentBooking);
         checkBookingModifiability(currentBooking);
@@ -569,12 +555,10 @@ function showChangeScheduleModal(user = null) {
     });
 }
 
-
 function handleCancelBooking() {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
 
     if (currentUser && currentUser.is_temporary) {
-        
         showCancelConfirmModal(() => {
             showGuestOTPModal(currentUser, () => {
                 confirmCancelBooking(() => showUpsellPasswordModal(currentUser));
@@ -583,7 +567,6 @@ function handleCancelBooking() {
         return;
     }
 
-    
     showCancelConfirmModal(() => {
         confirmCancelBooking(null);
     });
@@ -598,7 +581,6 @@ function showCancelConfirmModal(onConfirm) {
         onConfirm();
     };
 }
-
 
 function showGuestOTPModal(user, onSuccess) {
     const modalId = 'guestOtpModal';
@@ -648,18 +630,16 @@ function showGuestOTPModal(user, onSuccess) {
     });
 }
 
-
 function confirmCancelBooking(onDone) {
     const bookings = JSON.parse('[]' || '[]');
     const idx = bookings.findIndex(b => b.id === currentBooking.id);
     if (idx !== -1) {
         bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
         bookings[idx].status = 'cancelled';
-        
     }
 
     currentBooking.status = 'cancelled';
-    cancelBookingOnSupabase(currentBooking); 
+    cancelBookingOnSupabase(currentBooking); // sync Supabase (không await để không block UI)
     showToast('Đã hủy lịch hẹn thành công', 'success');
 
     if (onDone) {
@@ -668,7 +648,6 @@ function confirmCancelBooking(onDone) {
         setTimeout(() => { window.location.href = '../bookings/bookings.html'; }, 1500);
     }
 }
-
 
 function showUpsellPasswordModal(user) {
     const modalId = 'upsellPasswordModal';
@@ -679,7 +658,7 @@ function showUpsellPasswordModal(user) {
     modalEl.id = modalId;
     modalEl.className = 'modal fade';
     modalEl.tabIndex = -1;
-    modalEl.setAttribute('data-bs-backdrop', 'static'); 
+    modalEl.setAttribute('data-bs-backdrop', 'static'); // không đóng khi click ngoài
     modalEl.innerHTML = `
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -700,7 +679,6 @@ function showUpsellPasswordModal(user) {
     modal.show();
 
     document.getElementById('upsellSetupBtn').addEventListener('click', () => {
-        
         const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
         let tokenObj = tokens.find(t => t.phone === user.phone);
         if (!tokenObj) {
@@ -721,7 +699,6 @@ function showUpsellPasswordModal(user) {
     });
 }
 
-
 function showErrorBanner() {
     const banner = document.getElementById('errorBanner');
     if (bannerTimeout) clearTimeout(bannerTimeout);
@@ -735,10 +712,8 @@ function closeErrorBanner() {
     setTimeout(() => banner.classList.add('d-none'), 300);
 }
 
-
 function showToast(message, type = 'info') {
     let container = document.getElementById('toastContainer');
-    
     if (!container) {
         container = document.createElement('div');
         container.id = 'toastContainer';
@@ -756,7 +731,6 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-
 function awardBookingLoyaltyPoints(booking, user) {
     if (!booking || !user || user.is_temporary) return;
 
@@ -770,36 +744,30 @@ function awardBookingLoyaltyPoints(booking, user) {
     const pointsEarned = Math.floor(price / 10000);
     if (pointsEarned <= 0) return;
 
-    
     const users = JSON.parse('[]' || '[]');
     const idx = users.findIndex(u => u.phone === user.phone);
     if (idx !== -1) {
         users[idx].points = (users[idx].points || 0) + pointsEarned;
         users[idx].spend  = (users[idx].spend  || 0) + price;
         users[idx].lastTransactionAt = new Date().toISOString();
-        
 
-        
         user.points = users[idx].points;
         user.spend  = users[idx].spend;
         user.lastTransactionAt = users[idx].lastTransactionAt;
         localStorage.setItem('pawpal_current_user', JSON.stringify(user));
     }
 
-    
     booking.pointsAwarded = true;
     booking.pointsEarned  = pointsEarned;
     const bookings = JSON.parse('[]' || '[]');
     const bi = bookings.findIndex(b => b.id === booking.id);
     if (bi !== -1) {
         bookings[bi] = { ...bookings[bi], pointsAwarded: true, pointsEarned };
-        
     }
 
     showToast(`Bạn vừa tích được +${pointsEarned} Paw Points cho dịch vụ này!`, 'success');
     console.log(`[Loyalty] +${pointsEarned} Paw Points cho booking ${booking.id} (${price.toLocaleString('vi-VN')}đ)`);
 }
-
 
 window.handleChangeSchedule = handleChangeSchedule;
 window.handleCancelBooking = handleCancelBooking;

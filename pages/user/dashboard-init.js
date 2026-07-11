@@ -1,4 +1,5 @@
 
+
 (function () {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
     if (!currentUser) {
@@ -11,7 +12,6 @@
 document.addEventListener('DOMContentLoaded', function initMobileSidebarOverlay() {
     const toggleBtn = document.getElementById('dashboardSidebarToggle');
     const backdrop = document.getElementById('dashboardSidebarBackdrop');
-    
     if (!toggleBtn || !backdrop) return;
 
     const setOpen = (open) => {
@@ -37,7 +37,6 @@ document.addEventListener('DOMContentLoaded', function initMobileSidebarOverlay(
     setOpen(false);
 });
 
-
 (function loadSidebar() {
     const sidebarContainer = document.getElementById('user-sidebar');
     if (!sidebarContainer) return;
@@ -58,10 +57,7 @@ document.addEventListener('DOMContentLoaded', function initMobileSidebarOverlay(
     }
 })();
 
-
 (function injectBreadcrumb() {
-    
-    
     const BREADCRUMB_MAP = {
         'dashboard':      { label: 'Tổng quan tài khoản', parent: null },
         'pet-profile':    { label: 'Hồ sơ của tôi',       parent: null },
@@ -78,16 +74,12 @@ document.addEventListener('DOMContentLoaded', function initMobileSidebarOverlay(
         'support-create': { label: 'Gửi yêu cầu mới',     parent: { label: 'Yêu cầu hỗ trợ', href: '../support-tickets/support-tickets.html' } },
     };
 
-    
     const pathParts = window.location.pathname.split('/').filter(Boolean);
-    
     const pageFolder = pathParts.find(p => BREADCRUMB_MAP[p]) || null;
     if (!pageFolder) return;
 
     const config = BREADCRUMB_MAP[pageFolder];
 
-    
-    
     if (!config.parent) return;
 
     const items = [
@@ -100,7 +92,6 @@ document.addEventListener('DOMContentLoaded', function initMobileSidebarOverlay(
     nav.className = 'user-breadcrumb';
     nav.innerHTML = `<ol class="breadcrumb">${items.join('')}</ol>`;
 
-    
     function tryInject() {
         const targets = [
             document.querySelector('.col-lg-9'),
@@ -113,7 +104,6 @@ document.addEventListener('DOMContentLoaded', function initMobileSidebarOverlay(
         }
     }
 
-    
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', tryInject);
     } else {

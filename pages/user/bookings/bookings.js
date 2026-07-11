@@ -1,7 +1,5 @@
 
-
 import { API } from '/scripts/api/api.js';
-
 
 
 
@@ -18,7 +16,6 @@ async function cancelOnSupabase(bookingId) {
         console.warn('[Bookings] cancelOnSupabase error:', err.message);
     }
 }
-
 
 async function rescheduleOnSupabase(bookingId, date, time) {
     const db = window.SupabaseClient;
@@ -115,7 +112,6 @@ async function loadBookings(status) {
             if (pet.id) currentPetMap.set(String(pet.id), pet);
         });
 
-        
         try {
             const rawPets = await fetch('/data/pets.json').then(r => r.json());
             (Array.isArray(rawPets) ? rawPets : []).forEach(pet => {
@@ -143,7 +139,6 @@ function renderBookings(status) {
 
     let filteredBookings = [...allBookings];
     
-    
     const uniqueMap = new Map();
     for (const b of filteredBookings) {
         const petKey = String(b.petId || b.petName || b.pet_profile?.pet_name || 'pet');
@@ -155,26 +150,22 @@ function renderBookings(status) {
         if (!uniqueMap.has(key)) {
             uniqueMap.set(key, b);
         } else {
-            
             const existing = uniqueMap.get(key);
             const existingHasPrice = Number(existing.price) > 0;
             const newHasPrice = Number(b.price) > 0;
             
             if (!existingHasPrice && newHasPrice) {
-                uniqueMap.set(key, b); 
+                uniqueMap.set(key, b); // Ghi đè bằng bản ghi có giá
             } else if (b._source === 'supabase' && existing._source !== 'supabase') {
-                uniqueMap.set(key, b); 
+                uniqueMap.set(key, b); // Ưu tiên supabase
             }
         }
     }
     filteredBookings = Array.from(uniqueMap.values());
     
-    
     const counts = { all: filteredBookings.length, pending: 0, confirmed: 0, 'in-progress': 0, completed: 0, cancelled: 0 };
     filteredBookings.forEach(booking => {
         const resolved = resolveBookingStatus(booking);
-        
-        
         Object.keys(counts).forEach(key => {
             if (key !== 'all' && statusAliases[key] && statusAliases[key].includes(resolved)) {
                 counts[key]++;
@@ -452,7 +443,6 @@ function openQuickCancelModal(booking) {
         if (idx !== -1) {
             bookings[idx].status = 'cancelled';
             bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
-            
         }
         await cancelOnSupabase(bookingId);
         modal.hide();
@@ -497,7 +487,6 @@ function openQuickRescheduleModal(booking) {
     modalEl.id = 'quickRescheduleBookingModal';
     modalEl.className = 'modal fade';
     modalEl.tabIndex = -1;
-    
     const isHotelBooking = false;
     modalEl.innerHTML = `
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -573,7 +562,6 @@ function openQuickRescheduleModal(booking) {
                 bookings[idx].staff = 'Bảo mẫu khách sạn';
             }
             bookings[idx].changeCount = (bookings[idx].changeCount || 0) + 1;
-            
         }
         await rescheduleOnSupabase(bookingId, selectedDate, selectedSlot);
         modal.hide();

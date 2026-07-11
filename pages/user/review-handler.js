@@ -1,13 +1,11 @@
 
-
 (function (global) {
     'use strict';
 
-    
     const DRAFT_KEY_PREFIX  = 'pawpal_review_draft_';
     const REVIEWS_KEY       = 'pawpal_reviews';
-    const REVIEWED_KEY      = 'pawpal_reviewed';          
-    const ORDER_REVIEWED_KEY = 'pawpal_order_reviewed';   
+    const REVIEWED_KEY      = 'pawpal_reviewed';          // per-product (compat)
+    const ORDER_REVIEWED_KEY = 'pawpal_order_reviewed';   // per-order batch lock
 
     function saveDraft(orderId, data) {
         try { localStorage.setItem(DRAFT_KEY_PREFIX + orderId, JSON.stringify(data)); } catch (_) {}
@@ -32,7 +30,6 @@
         try { localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews)); } catch (_) {}
     }
 
-    
     function hasOrderReviewed(orderId) {
         if (window.pawpalReviews) {
             return window.pawpalReviews.some(r => String(r.sales_order_id) === String(orderId) || String(r.order_id) === String(orderId) || String(r.sales_order_code) === String(orderId));
@@ -53,7 +50,6 @@
         } catch (_) {}
     }
 
-    
     function markProductReviewedCompat(orderId, productId, hasMedia) {
         try {
             const list = JSON.parse(localStorage.getItem(REVIEWED_KEY) || '[]');
@@ -62,7 +58,6 @@
         } catch (_) {}
     }
 
-    
     function showPawPointsToast(points) {
         let toast = document.getElementById('paw-points-toast');
         if (!toast) {
@@ -81,7 +76,6 @@
         setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    
     const Lightbox = (function () {
         let overlay, mediaEl, prevBtn, nextBtn, closeBtn;
         let items = [], currentIndex = 0;
@@ -152,16 +146,13 @@
         return { open };
     })();
 
-    
     const EMOTIONS = ['', 'Rất tệ', 'Tệ', 'Bình thường', 'Hài lòng', 'Rất hài lòng'];
 
-    
     function buildProductRowHTML(product, draft) {
         const pid     = product.id;
         const defRating = (draft && draft[pid] && draft[pid].rating) ? draft[pid].rating : 5;
         const defComment = (draft && draft[pid] && draft[pid].comment) ? draft[pid].comment : '';
 
-        
         const starInputs = [5, 4, 3, 2, 1].map(v => `
             <input type="radio" name="rating-${pid}" id="star${v}-${pid}" value="${v}" ${defRating === v ? 'checked' : ''}>
             <label for="star${v}-${pid}" aria-label="${v} sao — ${EMOTIONS[v]}" title="${EMOTIONS[v]}">&#9733;</label>
@@ -222,7 +213,6 @@
         </div>`;
     }
 
-    
     function buildBatchFormHTML(orderId, products, draft) {
         const rows = products.map(p => buildProductRowHTML(p, draft)).join('');
 
@@ -259,7 +249,6 @@
         </div>`;
     }
 
-    
     function buildReviewedHTML(productCount) {
         return `
         <div class="batch-reviewed-done" id="batch-reviewed-done">
@@ -271,7 +260,6 @@
         </div>`;
     }
 
-    
     function wireUploadZone(pid, uploadedFilesMap) {
         uploadedFilesMap[pid] = [];
 
@@ -284,7 +272,6 @@
 
         if (!toggleBtn || !zone) return;
 
-        
         toggleBtn.addEventListener('click', () => {
             const isHidden = zone.hidden;
             zone.hidden = !isHidden;
@@ -294,7 +281,6 @@
                 : '📷 Thêm ảnh/video';
         });
 
-        
         dropArea.addEventListener('click', () => fileInput.click());
         dropArea.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
         dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('drag-over'); });
@@ -362,7 +348,6 @@
         }
     }
 
-    
     function wireBatchForm(orderId, products) {
         const section    = document.getElementById(`batch-review-section-${orderId}`);
         const submitBtn  = document.getElementById(`batch-submit-btn-${orderId}`);
@@ -370,14 +355,11 @@
 
         if (!section || !submitBtn) return;
 
-        
         const uploadedFilesMap = {};
 
-        
         products.forEach(product => {
             const pid = product.id;
 
-            
             section.querySelectorAll(`input[name="rating-${pid}"]`).forEach(radio => {
                 radio.addEventListener('change', () => {
                     const emotionEl = document.getElementById(`batch-emotion-${pid}`);
@@ -386,7 +368,6 @@
                 });
             });
 
-            
             const textarea = document.getElementById(`batch-comment-${pid}`);
             const counter  = document.getElementById(`batch-char-${pid}`);
             if (textarea && counter) {
@@ -396,11 +377,9 @@
                 });
             }
 
-            
             wireUploadZone(pid, uploadedFilesMap);
         });
 
-        
         function autoSaveDraft() {
             const draftData = {};
             products.forEach(product => {
@@ -415,7 +394,6 @@
             saveDraft(orderId, draftData);
         }
 
-        
         let pendingOfflineSubmit = null;
         window.addEventListener('online', () => {
             offlineBanner && offlineBanner.classList.remove('visible');
@@ -425,9 +403,7 @@
             offlineBanner && offlineBanner.classList.add('visible');
         });
 
-        
         submitBtn.addEventListener('click', () => {
-            
             const userId = getCurrentUserId();
             if (!userId || userId === 'GUEST') {
                 showToast('Bạn cần đăng nhập để gửi đánh giá.', 'error');
@@ -462,7 +438,6 @@
                 const rating      = ratingInput ? parseInt(ratingInput.value, 10) : 5;
                 const comment     = textarea ? textarea.value.trim() : '';
                 const files       = uploadedFilesMap[pid] || [];
-                
                 const isDefaultRating = !ratingInput || (rating === 5);
 
                 const review = {
@@ -484,33 +459,29 @@
 
                 newReviews.push(review);
 
-                
                 markProductReviewedCompat(orderId, pid, files.length > 0);
 
-                
                 totalPoints += files.length > 0 ? 5 : 1;
             });
 
-            
             const allReviews = getStoredReviews();
             allReviews.push(...newReviews);
             saveStoredReviews(allReviews);
 
-            
             const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (db) {
                 const customerId = getCurrentUserId();
-                if (customerId !== 'GUEST' && customerId.length >= 32) { 
+                if (customerId !== 'GUEST' && customerId.length >= 32) { // check valid UUID
                     for (const rv of newReviews) {
                         try {
                             const { error: dbErr } = await db.from('review').insert({
                                 customer_id: customerId,
-                                product_id: rv.productId.length >= 32 ? rv.productId : null, 
+                                product_id: rv.productId.length >= 32 ? rv.productId : null, // Handle UUID check
                                 review_type: 'PRODUCT',
                                 rating: rv.rating,
                                 review_content: rv.comment,
                                 image_urls: rv.media.map(m => m.src),
-                                review_status: 'APPROVED', 
+                                review_status: 'APPROVED', // Default as per plan
                                 created_at: rv.createdAt
                             });
                             if (dbErr) console.warn('[ReviewHandler] Supabase insert failed:', dbErr);
@@ -521,25 +492,20 @@
                 }
             }
 
-            
             markOrderReviewed(orderId);
             clearDraft(orderId);
 
-            
             addPawPoints(totalPoints);
             showPawPointsToast(totalPoints);
 
-            
             section.outerHTML = buildReviewedHTML(products.length);
 
-            
             window.dispatchEvent(new CustomEvent('pawpal:reviewSubmitted', { detail: { orderId } }));
 
             console.log(`[ReviewHandler] Batch submitted ${newReviews.length} reviews for order ${orderId}, +${totalPoints} pts`);
         }
     }
 
-    
     function getCurrentUserId() {
         try {
             const u = JSON.parse(localStorage.getItem('pawpal_current_user'));
@@ -568,7 +534,6 @@
             const idx = users.findIndex(usr => usr.phone === u.phone);
             if (idx !== -1) {
                 users[idx].points = u.points;
-                
             }
 
             const el = document.getElementById('headerPoints');
@@ -590,17 +555,13 @@
         setTimeout(() => t.remove(), 3500);
     }
 
-    
 
-    
     function init(orderId, products) {
         if (!orderId || !products || !products.length) return;
 
-        
         const container = _getOrCreateReviewContainer();
         if (!container) return;
 
-        
         if (!document.querySelector('.order-reviews-heading')) {
             const heading = document.createElement('h3');
             heading.className = 'order-reviews-heading';
@@ -610,14 +571,12 @@
         }
 
         if (hasOrderReviewed(orderId)) {
-            
             const done = document.createElement('div');
             done.innerHTML = buildReviewedHTML(products.length);
             container.appendChild(done.firstElementChild);
             return;
         }
 
-        
         const draft = loadDraft(orderId);
         const wrap  = document.createElement('div');
         wrap.innerHTML = buildBatchFormHTML(orderId, products, draft);
@@ -626,9 +585,7 @@
         wireBatchForm(orderId, products);
     }
 
-    
     function _getOrCreateReviewContainer() {
-        
         const productsList = document.querySelector('.products-list, #products-list');
         if (productsList && productsList.parentNode) {
             let reviewContainer = document.getElementById('order-review-container');
@@ -643,7 +600,6 @@
         return document.querySelector('.order-detail-main') || document.body;
     }
 
-    
     global.ReviewHandler = { init, hasOrderReviewed, Lightbox };
 
 })(window);

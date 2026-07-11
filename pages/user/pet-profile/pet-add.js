@@ -1,5 +1,4 @@
 
-
 document.addEventListener('DOMContentLoaded', () => {
     const otherRadio = document.getElementById('other');
     const otherWrap = document.getElementById('otherSpeciesWrap');
@@ -10,8 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    
-    
 });
 
 function resetPetForm() {

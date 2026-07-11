@@ -1,10 +1,6 @@
 
-
 (function () {
-    
     function getRootPath() {
-        
-        
         const scripts = document.querySelectorAll('script[src]');
         for (let i = 0; i < scripts.length; i++) {
             const src = scripts[i].src;
@@ -15,23 +11,18 @@
             }
         }
 
-        
         if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
             return '/';
         }
 
-        
         const depth = window.location.pathname.split('/').filter(Boolean).length;
         return depth <= 1 ? './' : '../'.repeat(Math.max(0, depth - 1));
     }
 
-    
     window['pawpalGetRootPath'] = getRootPath;
 
     function cleanInjectedHtml(html) {
-        
         var rootPath = getRootPath();
-        
         
         html = html.replace(/(src|href)="\/([^"]*)"/g, function(match, attr, p1) {
             if (p1.startsWith('/') || p1.startsWith('http') || p1.startsWith('data:')) return match;
@@ -41,14 +32,12 @@
         var parser = new DOMParser();
         var doc = parser.parseFromString(html, 'text/html');
 
-        
         doc.querySelectorAll('script').forEach(function (s) {
             if (s.textContent.includes('live-server') || (s.src && s.src.includes('live-server'))) {
                 s.remove();
             }
         });
 
-        
         var walker = doc.createTreeWalker(doc.body || doc.documentElement, NodeFilter.SHOW_COMMENT);
         var toRemove = [];
         while (walker.nextNode()) {
@@ -58,14 +47,12 @@
         }
         toRemove.forEach(function (node) { node.remove(); });
 
-        
         var headTags = '';
         if (doc.head) {
             doc.head.querySelectorAll('link[rel="stylesheet"], style').forEach(function(node) {
                 headTags += node.outerHTML + '\n';
             });
         }
-        
         
         return headTags + (doc.body || doc.documentElement).innerHTML.trim();
     }
@@ -117,7 +104,6 @@
         }
 
         var cacheKey = 'pawpal_component_' + targetId;
-        
         var isSidebar = targetId === 'user-sidebar';
         var cached = (targetId !== 'site-header' && targetId !== 'site-fab' && targetId !== 'site-footer' && !isSidebar) ? sessionStorage.getItem(cacheKey) : null;
         if (cached) {
@@ -149,9 +135,7 @@
                 console.log('[components.js] injected', targetId);
 
                 if (isSidebar) {
-                    
                     el.innerHTML = cleanedHtml;
-                    
                     el.querySelectorAll('script').forEach(function(oldScript) {
                         var newScript = document.createElement('script');
                         Array.from(oldScript.attributes).forEach(function(attr) {
@@ -160,13 +144,11 @@
                         newScript.textContent = oldScript.textContent;
                         oldScript.parentNode.replaceChild(newScript, oldScript);
                     });
-                    
                     initLucideIcons();
                     document.dispatchEvent(new CustomEvent('sidebarInjected'));
                     return;
                 }
 
-                
                 try { sessionStorage.setItem(cacheKey, cleanedHtml); } catch(e) {}
                 el.outerHTML = cleanedHtml;
                 if (targetId === 'site-header') {
@@ -221,7 +203,6 @@
         injectComponent('site-header', root + 'components/header/header.html');
         injectComponent('site-footer', root + 'components/footer/footer.html');
         injectComponent('site-fab', root + 'components/fab/fab.html');
-        
         injectComponent('user-sidebar', root + 'components/user-sidebar/user-sidebar.html');
         
         initLucideIcons();

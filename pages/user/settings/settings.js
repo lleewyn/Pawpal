@@ -1,5 +1,4 @@
 
-
 const PAWPAL_USERS_KEY = 'pawpal_users_db';
 const CURRENT_USER_KEY = 'pawpal_current_user';
 
@@ -24,7 +23,6 @@ function updateCurrentUserRecord(updatedUser) {
     }
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
 }
-
 
 function showToast(type, message, duration = 5000) {
     const container = document.getElementById('toastContainer');
@@ -95,12 +93,10 @@ function showToast(type, message, duration = 5000) {
     container.insertAdjacentHTML('beforeend', toastHtml);
     const toastElement = document.getElementById(toastId);
 
-    
     toastElement.querySelector('.toast-close').addEventListener('click', () => {
         removeToast(toastElement);
     });
 
-    
     setTimeout(() => {
         removeToast(toastElement);
     }, duration);
@@ -115,7 +111,6 @@ function removeToast(toastElement) {
     }, 300);
 }
 
-
 document.addEventListener('DOMContentLoaded', () => {
     const currentUser = getCurrentUser();
     if (!currentUser) {
@@ -123,7 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    
     if (currentUser.is_temporary) {
         const warning = document.getElementById('tempAccountWarning');
         if (warning) {
@@ -131,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    
     initPasswordStrengthMeter();
     initChangePasswordForm();
     initPasswordToggles();
@@ -140,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initSocialAccounts(currentUser);
     initPasswordAccordion();
 });
-
 
 function initPasswordStrengthMeter() {
     const newPassword = document.getElementById('newPassword');
@@ -154,7 +146,6 @@ function initPasswordStrengthMeter() {
     newPassword.addEventListener('input', () => {
         const password = newPassword.value;
         const strength = calculatePasswordStrength(password);
-        
         
         if (seg1) seg1.className = 'strength-bar-segment';
         if (seg2) seg2.className = 'strength-bar-segment';
@@ -199,7 +190,6 @@ function calculatePasswordStrength(password) {
     return { score: Math.min(score, 4) };
 }
 
-
 function initChangePasswordForm() {
     const form = document.getElementById('changePasswordForm');
     const currentPassword = document.getElementById('currentPassword');
@@ -241,7 +231,6 @@ function initChangePasswordForm() {
         btnSubmit.disabled = true;
         btnSubmit.textContent = 'Đang cập nhật...';
 
-        
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (db) {
             const lookupId = currentUser._source === 'supabase' ? currentUser.id : null;
@@ -254,7 +243,6 @@ function initChangePasswordForm() {
                     .eq('id', lookupId);
                 supaError = error;
             } else {
-                
                 const { error } = await db
                     .from('customer')
                     .update({ password_hash: newPassword.value })
@@ -272,7 +260,6 @@ function initChangePasswordForm() {
             console.log('[Settings] ✅ Password updated in Supabase');
         }
 
-        
         const userIdx = users.findIndex(u => String(u.phone) === String(currentUser.phone));
         if (userIdx !== -1) {
             users[userIdx].password = newPassword.value;
@@ -332,7 +319,6 @@ function validateChangePasswordForm() {
     btnSubmit.disabled = !(isPasswordValid && isConfirmValid && isCurrentValid);
 }
 
-
 function initPasswordToggles() {
     document.querySelectorAll('.btn-toggle-password-custom').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -349,7 +335,6 @@ function initPasswordToggles() {
         });
     });
 }
-
 
 function initPasswordAccordion() {
     const toggleBtn = document.getElementById('togglePasswordBtn');
@@ -372,7 +357,6 @@ function initPasswordAccordion() {
         });
     }
 }
-
 
 function initNotificationSettings(user) {
     const form = document.getElementById('notificationSettingsForm');
@@ -402,7 +386,6 @@ function initNotificationSettings(user) {
         showToast('success', 'Cài đặt thông báo của bạn đã được lưu.');
     });
 }
-
 
 function initLanguageAndUnit(user) {
     const languageSelect = document.getElementById('languageSelect');
@@ -455,7 +438,6 @@ function initLanguageAndUnit(user) {
     }
 }
 
-
 function initSocialAccounts(user) {
     const googleStatus = document.getElementById('googleLinkStatus');
     const facebookStatus = document.getElementById('facebookLinkStatus');
@@ -473,7 +455,6 @@ function initSocialAccounts(user) {
             const isConnected = btn.classList.contains('disconnect-btn');
             
             if (isConnected) {
-                
                 statusEl.textContent = 'Chưa liên kết';
                 btn.textContent = 'Liên kết';
                 btn.className = 'btn-social-action-custom connect-btn';
@@ -481,7 +462,6 @@ function initSocialAccounts(user) {
                 btn.style.color = 'var(--color-primary, #2a5944)';
                 showToast('success', `Đã hủy liên kết tài khoản ${nameEl.textContent}`);
             } else {
-                
                 const mockEmail = user.email || `${user.name.toLowerCase().replace(/\s+/g, '')}@gmail.com`;
                 statusEl.textContent = mockEmail;
                 btn.textContent = 'Huỷ';

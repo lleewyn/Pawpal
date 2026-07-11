@@ -93,7 +93,7 @@ async function initReturnDetail() {
 
     if (!orderId) {
         alert('Không tìm thấy mã đơn hàng.');
-        window.location.href = '/pages/user/orders/orders.html'; 
+        window.location.href = '/pages/user/orders/orders.html'; // Bug 7: absolute path
         return;
     }
 
@@ -112,9 +112,7 @@ async function initReturnDetail() {
         return;
     }
 
-    
     if (!Array.isArray(rmaData.products) || rmaData.products.length === 0 || rmaData.products.every((p) => !p || !p.name)) {
-        
         rmaData.products = [{
             id: 'PROD-UNKNOWN',
             name: 'Sản phẩm',
@@ -125,10 +123,8 @@ async function initReturnDetail() {
         }];
     }
 
-    
     if (rmaData.status === 'completed' && rmaData.type === 'refund' && !rmaData.pointsDeducted) {
         deductPointsForRefund(rmaData);
-        
         if (window.getSupabaseClient) {
             const db = window.getSupabaseClient();
             db.from('return_request').update({ points_deducted: true }).eq('rma_id', rmaData.rmaId).then();
@@ -173,7 +169,6 @@ async function initReturnDetail() {
     document.getElementById('rma-reason-text').textContent = reasonsMap[rmaData.reason] || rmaData.reason;
     document.getElementById('rma-description-text').textContent = rmaData.description || 'Không có mô tả chi tiết.';
 
-    
     const refundWrapper = document.getElementById('rma-refund-wrapper');
     const refundAccountEl = document.getElementById('rma-refund-account-display');
     if (refundWrapper && refundAccountEl && rmaData.type === 'refund') {
@@ -183,7 +178,6 @@ async function initReturnDetail() {
             : 'Nhân viên CSKH sẽ liên hệ trong vòng 24 giờ.';
     }
 
-    
     const shippingBox = document.getElementById('rma-shipping-box');
     if (shippingBox) {
         if (rmaData.status === 'approved' || rmaData.status === 'shipping_return') {
@@ -205,7 +199,7 @@ async function initReturnDetail() {
 
     const statusOrder = timelineSteps.map(s => s.key);
     let activeIdx = statusOrder.indexOf(rmaData.status);
-    if (activeIdx === -1) activeIdx = 0; 
+    if (activeIdx === -1) activeIdx = 0; // fallback
 
     const timelineContainer = document.getElementById('rma-timeline');
     timelineContainer.innerHTML = timelineSteps.map((step, idx) => {
@@ -235,16 +229,13 @@ function deductPointsForRefund(rmaData) {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (!currentUser) return;
 
-    
     const returnTotalValue = (rmaData.products || []).reduce((sum, p) =>
         sum + (p.total || ((p.price || 0) * (p.quantity || 1))), 0);
     let pointsToDeduct = Math.floor(returnTotalValue / 10000);
 
-    
     const reviewed = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
     const reviewsForOrder = reviewed.filter(r => r.orderId === rmaData.orderId);
     reviewsForOrder.forEach(r => {
-        
         pointsToDeduct += r.hasMedia ? 5 : 1;
     });
 
@@ -255,13 +246,11 @@ function deductPointsForRefund(rmaData) {
     const uIdx = users.findIndex(u => u.phone === currentUser.phone);
     if (uIdx !== -1) {
         users[uIdx].points = currentUser.points;
-        
     }
     console.log(`[RMA] Đã trừ ${pointsToDeduct} điểm. Số dư mới: ${currentUser.points}`);
 }
 
 function getStatusLabel(status) {
-    
     const statusMap = {
         placed:          'Đã gửi yêu cầu',
         reviewing:       'Đang kiểm duyệt',

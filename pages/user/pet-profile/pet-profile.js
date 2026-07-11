@@ -1,5 +1,4 @@
 
-
 const STORAGE_KEY = 'pawpal_pets';
 const TRACKER_LOGS_KEY = 'pawpal_pet_tracker_logs';
 
@@ -44,7 +43,6 @@ export function showToast(msg, type = 'success') {
         setTimeout(() => toast.remove(), 400);
     }, 3000);
 }
-
 
 
 

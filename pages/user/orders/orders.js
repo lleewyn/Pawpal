@@ -1,5 +1,4 @@
 
-
 import { API } from '/scripts/api/api.js';
 
 const ordersState = {
@@ -20,7 +19,6 @@ async function loadOrders() {
             return;
         }
 
-        
         if (!window.SupabaseClient) {
             await new Promise(r => setTimeout(r, 500));
         }
@@ -65,7 +63,6 @@ function updateStats() {
     const totalSpent = ordersState.allOrders
         .filter((order) => order.paymentStatus === 'paid')
         .reduce((sum, order) => {
-            
             const amount = toNumber(order.pricing?.total)
                         || toNumber(order.pricing?.grandTotal);
             return sum + amount;
@@ -150,13 +147,11 @@ function createOrderCard(order) {
     const remainingCount = order.products.length - 1;
     const normalizedStatus = normalizeOrderStatus(order.status);
 
-    
     const isPaid = order.paymentStatus === 'paid' || order.payment?.status === 'paid';
     const ONLINE_METHODS = ['vnpay', 'momo', 'zalopay', 'vietqr'];
     const payMethod = (order.paymentMethod || order.payment?.method || '').toLowerCase();
     const isOnline  = ONLINE_METHODS.includes(payMethod);
 
-    
     const isPendingConfirm = (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && isPaid && isOnline;
     const displayStatusLabel = isPendingConfirm ? 'Chờ xác nhận' : getStatusLabel(normalizedStatus);
     const displayStatusClass = isPendingConfirm ? 'status-preparing' : `status-${normalizedStatus}`;
@@ -166,7 +161,6 @@ function createOrderCard(order) {
         ? order.products.reduce((sum, product) => sum + (Number(product.quantity) || 1), 0)
         : 0;
     const paymentLabel = getPaymentMethodLabel(order.paymentMethod);
-    
     const orderReviewedList = JSON.parse(localStorage.getItem('pawpal_order_reviewed') || '[]');
     const orderAlreadyReviewed = isCompleted && orderReviewedList.includes(String(orderId));
 
@@ -180,7 +174,6 @@ function createOrderCard(order) {
     const alreadyReturned = returnsList.some((item) => String(item.orderId) === String(orderId));
 
     const reviewedList = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
-    
 
     let returnActionHTML = '';
     const statusNoticeChips = [];
@@ -222,7 +215,6 @@ function createOrderCard(order) {
         paymentLabel,
         normalizedStatus === 'shipping' ? 'Đang giao tới bạn' : '',
         normalizedStatus === 'completed' ? 'Đơn đã hoàn tất' : '',
-        
         (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && isPaid && isOnline ? 'Đã thanh toán — chờ xác nhận' :
         (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && !isPaid ? 'Chờ thanh toán' : '',
         normalizedStatus === 'preparing' ? 'Shop đang đóng gói' : ''
@@ -243,7 +235,6 @@ function createOrderCard(order) {
             </button>
         `;
     } else if (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment' || normalizedStatus === 'preparing') {
-        
         footerButtonsHTML = `
             ${detailActionHTML}
             <button class="btn-track-order" onclick="contactHotline('${orderId}')">
@@ -746,7 +737,6 @@ function getStatusLabel(status) {
 function normalizeOrderStatus(status) {
     if (status === 'pending') return 'pending_payment';
     if (status === 'confirmed') return 'preparing';
-    
     return status;
 }
 
