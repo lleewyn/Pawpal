@@ -3,21 +3,8 @@
 @import url('../components/fab/fab.css');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* --- CORE_STYLES_START --- */
-
-/* ==========================================================================
-   PawPal — Global Entry Point
-   Chứa: Design Tokens + Base Reset + Utilities
-   Components được import riêng trong từng trang qua <link>
-   ========================================================================== */
-
-
-/* ==========================================================================
-   Design Tokens — Colors
-   ========================================================================== */
-
 :root {
-    /* Brand */
+    
     --color-primary:       hsl(155, 28%, 35%);
     --color-primary-light: hsl(155, 20%, 96%);
     --color-primary-dark:  hsl(155, 30%, 25%);
@@ -25,7 +12,7 @@
     --color-accent-light:  hsl(38, 50%, 95%);
     --color-accent-dark:   hsl(38, 65%, 40%);
 
-    /* Semantic */
+    
     --color-danger:        hsl(0, 72%, 51%);
     --color-danger-light:  hsl(0, 72%, 96%);
     --color-id-danger:     hsl(0, 72%, 51%);
@@ -37,7 +24,7 @@
     --color-neutral-light: hsl(156, 8%, 96%);
     --color-neutral-dark:  hsl(156, 8%, 25%);
 
-    /* Base UI */
+    
     --color-text-dark:   #2d3732;
     --color-text-light:  #606f66;
     --color-text-muted:  #6b7280;
@@ -47,20 +34,15 @@
     --color-bg-white:    #ffffff;
     --color-bg-light:    #FAF9F6;
 
-    /* Live indicator */
+    
     --color-live:    #22c55e;
     --color-live-dark: #15803d;
     --color-live-bg: #dcfce7;
 
-    /* CTA on dark backgrounds */
+    
     --color-cta-dark:   #D4900A;
     --color-cta-darker: #B87A08;
 }
-
-
-/* ==========================================================================
-   Design Tokens — Typography
-   ========================================================================== */
 
 :root {
     --font-heading:  'Lora', Georgia, serif;
@@ -77,7 +59,7 @@
     --fs-small:     0.875rem;
     --fs-caption:   0.75rem;
 
-    /* Legacy aliases */
+    
     --fs-hero-title:    var(--fs-display);
     --fs-section-title: var(--fs-h2);
     --fs-sub-title:     var(--fs-h3);
@@ -86,41 +68,36 @@
     --fs-desc-hero:     var(--fs-body-lg);
 }
 
-
-/* ==========================================================================
-   Design Tokens — Spacing, Shadows, Radius, Containers
-   ========================================================================== */
-
 :root {
-    /* Transitions */
+    
     --transition-smooth: all 0.6s cubic-bezier(0.32, 0.72, 0, 1);
 
-    /* Shadows */
+    
     --shadow-sm: 0 2px 4px rgba(42,89,68,0.04), 0 1px 2px rgba(42,89,68,0.02);
     --shadow-md: 0 4px 8px -2px rgba(42,89,68,0.06), 0 2px 4px -2px rgba(42,89,68,0.03);
     --shadow-lg: 0 10px 20px -4px rgba(42,89,68,0.08), 0 4px 8px -4px rgba(42,89,68,0.03);
     --shadow-card:       0 2px 8px rgba(42,89,68,0.05), 0 1px 3px rgba(42,89,68,0.03);
     --shadow-card-hover: 0 8px 24px rgba(42,89,68,0.10), 0 2px 6px rgba(42,89,68,0.05);
 
-    /* Card borders */
-    --border-card:       1px solid rgba(42, 89, 68, 0.08);   /* card trên nền sáng */
-    --border-card-dark:  1px solid rgba(255, 255, 255, 0.08); /* card trên nền tối */
+    
+    --border-card:       1px solid rgba(42, 89, 68, 0.08);   
+    --border-card-dark:  1px solid rgba(255, 255, 255, 0.08); 
 
-    /* Border Radius */
-    --border-radius-lg:   24px;   /* deprecated — dùng --card-border-radius */
-    --border-radius-md:   16px;   /* deprecated */
-    --border-radius-sm:   8px;    /* deprecated */
+    
+    --border-radius-lg:   24px;   
+    --border-radius-md:   16px;   
+    --border-radius-sm:   8px;    
     --border-radius-pill: 100px;
     --card-border-radius: 10px;
 
-    /* Containers */
+    
     --container-hero:    1600px;
     --container-xl:      1400px;
     --container-md:      1280px;
     --container-sm:      800px;
     --container-padding: 40px;
 
-    /* Spacing */
+    
     --space-xs: 8px;
     --space-sm: 16px;
     --space-md: 24px;
@@ -146,11 +123,6 @@
     }
 }
 
-
-/* ==========================================================================
-   Base Reset & Global Styles
-   ========================================================================== */
-
 *, *::before, *::after {
     margin: 0;
     padding: 0;
@@ -162,7 +134,6 @@ html {
     overscroll-behavior-y: none;
 }
 
-/* Lenis smooth scroll */
 html.lenis, html.lenis body { height: auto; }
 .lenis-smooth            { scroll-behavior: auto !important; }
 .lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
@@ -196,12 +167,6 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
 }
 
-
-/* ==========================================================================
-   Base Utilities
-   ========================================================================== */
-
-/* Layout */
 .container-wrapper {
     width: 100%;
     max-width: var(--container-xl);
@@ -227,7 +192,6 @@ h1, h2, h3, h4, h5, h6 {
 .full-width  { width: 100%; }
 .center-block{ margin-inline: auto; }
 
-/* Text */
 .text-center { text-align: center; }
 .text-right  { text-align: right; }
 .text-muted  { color: var(--color-text-muted); }
@@ -245,14 +209,12 @@ h1, h2, h3, h4, h5, h6 {
     border: 0;
 }
 
-/* Accent italic — used in headings */
 .accent-italic {
     font-family: var(--font-heading);
     font-style: italic;
     color: var(--color-accent-dark);
 }
 
-/* Section header common pattern */
 .section-header {
     max-width: 640px;
     margin-bottom: var(--space-lg);
@@ -277,7 +239,6 @@ h1, h2, h3, h4, h5, h6 {
     line-height: 1.6;
 }
 
-/* Button helpers */
 .btn-reset {
     background: transparent;
     border: none;
@@ -287,7 +248,6 @@ h1, h2, h3, h4, h5, h6 {
     cursor: pointer;
 }
 
-/* Card helpers */
 .card-base {
     background-color: var(--color-bg-white);
     border: 1px solid rgba(34, 77, 49, 0.1);
@@ -295,7 +255,6 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: var(--shadow-card);
 }
 
-/* View Transitions */
 @keyframes vt-fade-in  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes vt-fade-out { from { opacity: 1; } to { opacity: 0; } }
 @keyframes vt-slide-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -303,20 +262,19 @@ h1, h2, h3, h4, h5, h6 {
 
 ::view-transition-old(root) { animation: 180ms ease-out both vt-fade-out; }
 ::view-transition-new(root) { animation: 280ms ease-out both vt-slide-in; }
-\n/* Extracted Inline Styles Utility Classes */\n.rounded-lg { border-radius: var(--border-radius-lg) !important; }\n.text-primary { color: var(--color-primary) !important; }\n.rounded-pill { border-radius: var(--border-radius-pill) !important; }\n.font-heading { font-family: var(--font-heading) !important; }\n.text-primary-dark { color: var(--color-primary-dark) !important; }\n.fs-h3 { font-size: var(--fs-h3) !important; }\n.fs-h4 { font-size: var(--fs-h4) !important; }\n.fs-small { font-size: var(--fs-small) !important; }\n.bg-bg-light { background-color: var(--color-bg-light) !important; }\n.text-accent { color: var(--color-accent) !important; }\n.bg-success { background-color: var(--color-success) !important; }\n.bg-accent { background-color: var(--color-accent) !important; }\n.bg-border { background-color: var(--color-border) !important; }\n.rounded-card-border-radius { border-radius: var(--card-border-radius) !important; }\n.text-success { color: var(--color-success) !important; }\n.bg-bg-white { background-color: var(--color-bg-white) !important; }\n.fs-h2 { font-size: var(--fs-h2) !important; }\n.fs-body { font-size: var(--fs-body) !important; }\n
-/* Custom Utilities for return-guest */
+\n\n.rounded-lg { border-radius: var(--border-radius-lg) !important; }\n.text-primary { color: var(--color-primary) !important; }\n.rounded-pill { border-radius: var(--border-radius-pill) !important; }\n.font-heading { font-family: var(--font-heading) !important; }\n.text-primary-dark { color: var(--color-primary-dark) !important; }\n.fs-h3 { font-size: var(--fs-h3) !important; }\n.fs-h4 { font-size: var(--fs-h4) !important; }\n.fs-small { font-size: var(--fs-small) !important; }\n.bg-bg-light { background-color: var(--color-bg-light) !important; }\n.text-accent { color: var(--color-accent) !important; }\n.bg-success { background-color: var(--color-success) !important; }\n.bg-accent { background-color: var(--color-accent) !important; }\n.bg-border { background-color: var(--color-border) !important; }\n.rounded-card-border-radius { border-radius: var(--card-border-radius) !important; }\n.text-success { color: var(--color-success) !important; }\n.bg-bg-white { background-color: var(--color-bg-white) !important; }\n.fs-h2 { font-size: var(--fs-h2) !important; }\n.fs-body { font-size: var(--fs-body) !important; }\n
+
 .h-48px { height: 48px !important; }
 .border-dashed { border-style: dashed !important; border-color: var(--color-border) !important; }
 .cursor-pointer { cursor: pointer !important; }
 .transition-color { transition: color 0.3s ease !important; }
 .transition-transform { transition: transform 0.3s ease !important; }
-\n/* Custom utilities extracted */\n.rounded-pill { border-radius: var(--border-radius-pill) !important; }\n.font-heading { font-family: var(--font-heading) !important; }\n.text-primary-dark { color: var(--color-primary-dark) !important; }\n.fs-h3 { font-size: var(--fs-h3) !important; }\n.fs-h4 { font-size: var(--fs-h4) !important; }\n.fs-small { font-size: var(--fs-small) !important; }\n.bg-bg-light { background-color: var(--color-bg-light) !important; }\n.text-accent { color: var(--color-accent) !important; }\n.text-primary { color: var(--color-primary) !important; }\n.bg-success { background-color: var(--color-success) !important; }\n.bg-accent { background-color: var(--color-accent) !important; }\n.bg-border { background-color: var(--color-border) !important; }\n.rounded-card-border-radius { border-radius: var(--card-border-radius) !important; }\n
+\n\n.rounded-pill { border-radius: var(--border-radius-pill) !important; }\n.font-heading { font-family: var(--font-heading) !important; }\n.text-primary-dark { color: var(--color-primary-dark) !important; }\n.fs-h3 { font-size: var(--fs-h3) !important; }\n.fs-h4 { font-size: var(--fs-h4) !important; }\n.fs-small { font-size: var(--fs-small) !important; }\n.bg-bg-light { background-color: var(--color-bg-light) !important; }\n.text-accent { color: var(--color-accent) !important; }\n.text-primary { color: var(--color-primary) !important; }\n.bg-success { background-color: var(--color-success) !important; }\n.bg-accent { background-color: var(--color-accent) !important; }\n.bg-border { background-color: var(--color-border) !important; }\n.rounded-card-border-radius { border-radius: var(--card-border-radius) !important; }\n
 .border-dashed { border-style: dashed !important; border-color: var(--color-border) !important; }
 .cursor-pointer { cursor: pointer !important; }
 .transition-color { transition: color 0.3s ease !important; }
 .transition-transform { transition: transform 0.3s ease !important; }
 
-/* Additional custom utilities */
 .text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .align-baseline-custom { vertical-align: -2px !important; }
 .min-h-110px { min-height: 110px !important; }
@@ -331,23 +289,6 @@ h1, h2, h3, h4, h5, h6 {
 
 .max-w-1000px { max-width: 1000px !important; }
 .hero-carousel-inner { box-shadow: 0 32px 64px rgba(0,0,0,0.35) !important; border: 2px solid rgba(255,255,255,0.12) !important; }
-
-
-/* =========================================
-   COMPONENTS CSS (Appended)
-   ========================================= */
-
-
-
-
-
-
-
-
-/* --- FROM: components\ui\button.css --- */
-/* ==========================================================================
-   PawPal — Button Components
-   ========================================================================== */
 
 .btn-cta {
     display: inline-flex;
@@ -490,13 +431,12 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 8px 24px rgba(220, 38, 38, 0.25);
 }
 
-/* ── Disabled state: tất cả btn-cta ── */
 .btn-cta:disabled {
     opacity: 0.42;
     cursor: not-allowed;
     box-shadow: none;
     transform: none !important;
-    pointer-events: auto; /* giữ cursor not-allowed hiển thị */
+    pointer-events: auto; 
 }
 
 .btn-cta:disabled:hover {
@@ -532,7 +472,6 @@ h1, h2, h3, h4, h5, h6 {
     opacity: 0.6;
 }
 
-/* ── Order Action Buttons ───────────────────────────────────────────────────────── */
 .btn-view-detail,
 .btn-track-order,
 .btn-review {
@@ -582,10 +521,6 @@ h1, h2, h3, h4, h5, h6 {
     background: var(--color-primary-light);
 }
 
-/* --- END: components\ui\button.css --- */
-
-/* --- FROM: components\ui\chat.css --- */
-
 .zalo-float-btn:hover {
     background-color: #0050CC;
     
@@ -604,7 +539,6 @@ h1, h2, h3, h4, h5, h6 {
     50%       { transform: translateY(-6px); }
 }
 
-/* Online indicator */
 .zalo-float-btn::before {
     content: '';
     position: absolute;
@@ -623,15 +557,8 @@ h1, h2, h3, h4, h5, h6 {
     75%, 100% { transform: scale(2); opacity: 0; }
 }
 
-/* --- END: components\ui\chat.css --- */
+﻿
 
-/* --- FROM: components\ui\filter.css --- */
-﻿/* ==========================================================================
-   PawPal — Filter Sidebar
-   Dùng chung: services.html, shop.html
-   ========================================================================== */
-
-/* ── Sidebar 3-zone layout (shared) ─────────────────────────────────── */
 .sidebar-header {
     flex-shrink: 0;
     display: flex;
@@ -764,7 +691,6 @@ h1, h2, h3, h4, h5, h6 {
     color: #ffffff;
 }
 
-/* Price range (shop only) */
 .price-range-wrapper {
     display: flex;
     flex-direction: column;
@@ -836,15 +762,6 @@ h1, h2, h3, h4, h5, h6 {
     background: var(--color-primary-light);
 }
 
-/* --- END: components\\ui\\filter.css --- */
-
-/* --- FROM: components\\ui\\modal.css --- */
-/* ==========================================================================
-   PawPal — Notification & Status Components
-   Gồm: Notification Bar, Header dropdown and Notifications page
-   ========================================================================== */
-
-/* Notification Bar (simple banner shown above header) */
 .notification-bar {
     width: 100%;
     box-sizing: border-box;
@@ -873,7 +790,6 @@ h1, h2, h3, h4, h5, h6 {
     overflow-wrap: anywhere;
 }
 
-/* Toast Notification Container */
 .toast-container,
 .toast-container-custom {
     position: fixed;
@@ -905,7 +821,6 @@ h1, h2, h3, h4, h5, h6 {
     pointer-events: auto;
 }
 
-/* Compatibility: some scripts use .toast-custom / .toast-container-custom */
 .toast-custom {
     background: var(--color-bg-white);
     color: var(--color-text-dark);
@@ -958,7 +873,6 @@ h1, h2, h3, h4, h5, h6 {
     .toast { min-width: auto; width: 100%; }
 }
 
-/* Notification Bell & Dropdown on Header */
 .notification-menu-wrapper { position: relative; display: inline-block; }
 .notification-btn { transition: transform 0.2s ease, opacity 0.2s ease; }
 .notification-btn:hover {  opacity: 0.85; }
@@ -1009,7 +923,6 @@ h1, h2, h3, h4, h5, h6 {
 .notification-item-dropdown .item-time { font-size:var(--fs-caption); color:var(--color-text-light); }
 .view-all-notifications { text-align:center; padding:10px; display:block; font-weight:700; color:var(--color-primary); text-decoration:none; }
 
-/* Notifications Page Styling (kept minimal and scoped) */
 .notifications-page-container { font-family: var(--font-primary); }
 .notifications-tabs {
     display: flex;
@@ -1049,7 +962,6 @@ h1, h2, h3, h4, h5, h6 {
 .notification-page-item .item-title { font-weight:700; color:var(--color-primary-dark); }
 .notification-page-item .item-body { color:var(--color-text-dark); }
 
-
 .notification-page-item .btn-delete-item {
     background: none;
     border: none;
@@ -1065,7 +977,6 @@ h1, h2, h3, h4, h5, h6 {
     opacity: 1;
 }
 
-/* Privacy Settings Toggle Switches */
 .setting-item-row {
     display: flex;
     justify-content: space-between;
@@ -1097,7 +1008,6 @@ h1, h2, h3, h4, h5, h6 {
     margin: 0;
 }
 
-/* Custom Switch Toggle */
 .custom-switch {
     position: relative;
     display: inline-block;
@@ -1164,12 +1074,6 @@ input:checked + .switch-slider:before {
     content: "★";
 }
 
-/* --- END: components\ui\notification.css --- */
-
-
-
-
-/* Custom Scrollbar for Notification List */
 .notification-list { 
     max-height: 400px; 
     overflow-y: auto; 
@@ -1269,7 +1173,6 @@ input:checked + .switch-slider:before {
     text-decoration: underline;
 }
 
-/* --- NOTIFICATION FIXES --- */
 .notification-dropdown {
     z-index: 9999 !important;
 }
@@ -1303,7 +1206,6 @@ input:checked + .switch-slider:before {
     margin-top: 0 !important;
 }
 
-/* --- Extracted Inline Styles --- */
 .rma-refund-account-custom { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e2e8f0; font-size: 0.88rem; }
 .text-primary-light { color: var(--color-primary-light); }
 .empty-icon-diary-custom { color: var(--color-primary-light); display: inline-flex; justify-content: center; margin-bottom: var(--space-sm); }
@@ -1325,17 +1227,6 @@ input:checked + .switch-slider:before {
 .mt-minus-10 { margin-top: -10px; }
 .amenities-list-custom { list-style: disc; padding-left: 20px; color: var(--color-text); line-height: 1.6; }
 
-
-/* ==========================================================================
-   Reviews Component (Restored)
-   ========================================================================== */
-
-/* ==========================================================================
-   reviews.css — Shared Reviews Component (Unified)
-   Combines Summary Block from Services and Review Item from Shop
-   ========================================================================== */
-
-/* ── 1. Reviews Section Wrapper ────────────────────────────────────────── */
 .reviews-section-card {
     background: var(--color-bg-white);
     border: var(--border-card);
@@ -1355,7 +1246,6 @@ input:checked + .switch-slider:before {
     font-weight: 700;
 }
 
-/* ── 2. Reviews Summary Block (From Service Detail) ────────────────────── */
 .reviews-summary-block {
     display: grid;
     grid-template-columns: 1fr 1.5fr;
@@ -1434,7 +1324,6 @@ input:checked + .switch-slider:before {
     font-weight: 600;
 }
 
-/* ── 3. Review Filter Chips (From Service Detail) ──────────────────────── */
 .review-chips-wrapper {
     display: flex;
     flex-wrap: wrap;
@@ -1461,7 +1350,6 @@ input:checked + .switch-slider:before {
     color: #ffffff;
 }
 
-/* ── 4. Reviews List and Items (From Product Detail) ───────────────────── */
 .reviews-list-container,
 .reviews-list {
     display: flex;
@@ -1603,7 +1491,6 @@ input:checked + .switch-slider:before {
     box-shadow: var(--shadow-card-hover);
 }
 
-/* Seller Reply */
 .seller-reply {
     margin: 12px 0 12px 52px;
     padding: 12px 16px;
@@ -1626,7 +1513,6 @@ input:checked + .switch-slider:before {
     line-height: 1.6;
 }
 
-/* Review Actions */
 .review-actions {
     display: flex;
     gap: 12px;
@@ -1661,7 +1547,6 @@ input:checked + .switch-slider:before {
     stroke: currentColor;
 }
 
-/* Load More Reviews */
 .reviews-load-more {
     display: flex;
     flex-direction: column;
@@ -1710,7 +1595,6 @@ input:checked + .switch-slider:before {
     color: var(--color-text-light);
 }
 
-/* Responsive Overrides */
 @media (max-width: 768px) {
     .reviews-summary-block {
         grid-template-columns: 1fr;
@@ -1727,22 +1611,6 @@ input:checked + .switch-slider:before {
     display: none;
 }
 
-/* ==========================================================================
-   Review Form Component (Restored)
-   ========================================================================== */
-
-/* ==========================================================================
-   Review Form Component — QUY TRÌNH 3.1.11
-   Tuân thủ 100% design.md:
-   - Token-first: không hardcode màu, spacing, radius trên cards/panels
-   - Accordion inline, không popup chặn màn hình
-   - Star rating hover animation
-   - Confirm-on-button 2-tap + 5s countdown
-   - Offline auto-save banner
-   - Lightbox toàn màn hình
-   ========================================================================== */
-
-/* ── Review Accordion Wrapper ─────────────────────────────────────────── */
 .review-accordion {
     overflow: hidden;
     max-height: 0;
@@ -1776,7 +1644,6 @@ input:checked + .switch-slider:before {
     margin-top: var(--space-sm);
 }
 
-/* ── Review Form Card ─────────────────────────────────────────────────── */
 .review-form-card {
     background: var(--color-bg-light);
     border: var(--border-card);
@@ -1785,7 +1652,6 @@ input:checked + .switch-slider:before {
     position: relative;
 }
 
-/* Product context header */
 .review-product-context {
     display: flex;
     align-items: center;
@@ -1840,7 +1706,6 @@ white-space: nowrap;
     margin-top: 2px;
 }
 
-/* ── Star Rating ──────────────────────────────────────────────────────── */
 .star-rating-group {
     display: flex;
     flex-direction: column;
@@ -1859,7 +1724,6 @@ white-space: nowrap;
     margin-left: 2px;
 }
 
-/* Row-reverse: leftmost DOM star = highest value, hover sáng trái->phải */
 .star-picker {
     display: flex;
     flex-direction: row-reverse;
@@ -1910,7 +1774,6 @@ white-space: nowrap;
     display: block;
 }
 
-/* ── Form Fields ──────────────────────────────────────────────────────── */
 .review-form-field {
     display: flex;
     flex-direction: column;
@@ -1951,7 +1814,6 @@ white-space: nowrap;
     align-self: flex-end;
 }
 
-/* ── File Upload Zone ─────────────────────────────────────────────────── */
 .review-upload-zone {
     border: 2px dashed var(--color-border);
     border-radius: var(--card-border-radius);
@@ -2005,7 +1867,6 @@ white-space: nowrap;
     display: block;
 }
 
-/* ── File Preview Thumbnails ──────────────────────────────────────────── */
 .review-preview-list {
     display: flex;
     flex-wrap: wrap;
@@ -2031,7 +1892,6 @@ white-space: nowrap;
     object-fit: cover;
 }
 
-/* Remove button: skeuomorphic dark overlay — hardcode allowed */
 .preview-thumb .remove-thumb {
     position: absolute;
     top: 2px;
@@ -2055,7 +1915,6 @@ white-space: nowrap;
     background: rgba(0, 0, 0, 0.85);
 }
 
-/* ── Submit — Confirm-on-button (US 11-4) ─────────────────────────────── */
 .review-submit-wrap {
     display: flex;
     align-items: center;
@@ -2101,7 +1960,6 @@ white-space: nowrap;
     cursor: not-allowed;
 }
 
-/* Confirm state: animation keyframe — hardcode allowed per design.md §15.3 */
 .btn-review-submit.confirm-pending {
     background: #e05a20;
     animation: btn-pulse-confirm 1.2s ease infinite;
@@ -2112,7 +1970,6 @@ white-space: nowrap;
     50%       { box-shadow: 0 0 0 8px rgba(224, 90, 32, 0); }
 }
 
-/* SVG countdown ring — drawn by JS */
 .btn-review-submit .confirm-ring {
     position: absolute;
     inset: 0;
@@ -2127,7 +1984,6 @@ white-space: nowrap;
     height: 100%;
 }
 
-/* ── Collapse Button ──────────────────────────────────────────────────── */
 .btn-collapse-review {
     display: inline-flex;
     align-items: center;
@@ -2147,8 +2003,6 @@ white-space: nowrap;
     color: var(--color-text-dark);
 }
 
-/* ── Offline Banner (US 11-8) ─────────────────────────────────────────── */
-/* Uses accent-light hue for warning; color tokens closest to amber warning */
 .review-offline-banner {
     display: none;
     align-items: center;
@@ -2172,7 +2026,6 @@ white-space: nowrap;
     color: var(--color-accent-dark);
 }
 
-/* ── Reviewed Label (US 11-1 AC1.2) ──────────────────────────────────── */
 .reviewed-label {
     display: inline-flex;
     align-items: center;
@@ -2187,7 +2040,6 @@ white-space: nowrap;
     font-family: var(--font-body);
 }
 
-/* ── Paw Points Toast (US 11-6) ───────────────────────────────────────── */
 .paw-points-toast {
     position: fixed;
     bottom: 80px;
@@ -2221,7 +2073,6 @@ white-space: nowrap;
     line-height: 1;
 }
 
-/* ── Write Review Button (order cards + order-detail) ─────────────────── */
 .btn-write-review {
     display: inline-flex;
     align-items: center;
@@ -2246,8 +2097,6 @@ white-space: nowrap;
     color: #fff;
 }
 
-/* ── Lightbox (US 11-7 AC7.3) ────────────────────────────────────────── */
-/* Dark overlay — hardcode allowed (darkroom treatment) */
 .review-lightbox-overlay {
     position: fixed;
     inset: 0;
@@ -2339,7 +2188,6 @@ white-space: nowrap;
     pointer-events: none;
 }
 
-/* ── Focus Visible (Accessibility) ───────────────────────────────────── */
 .btn-review-submit:focus-visible,
 .btn-write-review:focus-visible,
 .btn-collapse-review:focus-visible,
@@ -2350,7 +2198,6 @@ white-space: nowrap;
     outline-offset: 2px;
 }
 
-/* ── Responsive: ≤640px ───────────────────────────────────────────────── */
 @media (max-width: 640px) {
     .review-form-card {
         padding: var(--space-sm);
