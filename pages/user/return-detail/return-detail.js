@@ -93,7 +93,7 @@ async function initReturnDetail() {
 
     if (!orderId) {
         alert('Không tìm thấy mã đơn hàng.');
-        window.location.href = '/pages/user/orders/orders.html'; // Bug 7: absolute path
+        window.location.href = '/pages/user/orders/orders.html'; 
         return;
     }
 
@@ -112,9 +112,9 @@ async function initReturnDetail() {
         return;
     }
 
-    // Fallback cho các yêu cầu cũ: nếu products bị lưu thiếu thì lấy lại từ đơn gốc
+    
     if (!Array.isArray(rmaData.products) || rmaData.products.length === 0 || rmaData.products.every((p) => !p || !p.name)) {
-        // Since we removed local orders, if products are missing we just have a placeholder
+        
         rmaData.products = [{
             id: 'PROD-UNKNOWN',
             name: 'Sản phẩm',
@@ -125,10 +125,10 @@ async function initReturnDetail() {
         }];
     }
 
-    // Bug 2 + 4: Trừ điểm khi RMA status = 'completed' (chưa trừ trước đó)
+    
     if (rmaData.status === 'completed' && rmaData.type === 'refund' && !rmaData.pointsDeducted) {
         deductPointsForRefund(rmaData);
-        // Supabase update for pointsDeducted should be here instead of local storage
+        
         if (window.getSupabaseClient) {
             const db = window.getSupabaseClient();
             db.from('return_request').update({ points_deducted: true }).eq('rma_id', rmaData.rmaId).then();
@@ -173,7 +173,7 @@ async function initReturnDetail() {
     document.getElementById('rma-reason-text').textContent = reasonsMap[rmaData.reason] || rmaData.reason;
     document.getElementById('rma-description-text').textContent = rmaData.description || 'Không có mô tả chi tiết.';
 
-    // Hiển thị thông tin TK hoàn tiền nếu có
+    
     const refundWrapper = document.getElementById('rma-refund-wrapper');
     const refundAccountEl = document.getElementById('rma-refund-account-display');
     if (refundWrapper && refundAccountEl && rmaData.type === 'refund') {
@@ -183,7 +183,7 @@ async function initReturnDetail() {
             : 'Nhân viên CSKH sẽ liên hệ trong vòng 24 giờ.';
     }
 
-    // Bug 7 (G7): Hiển thị hướng dẫn gửi hàng khi đã duyệt
+    
     const shippingBox = document.getElementById('rma-shipping-box');
     if (shippingBox) {
         if (rmaData.status === 'approved' || rmaData.status === 'shipping_return') {
@@ -205,7 +205,7 @@ async function initReturnDetail() {
 
     const statusOrder = timelineSteps.map(s => s.key);
     let activeIdx = statusOrder.indexOf(rmaData.status);
-    if (activeIdx === -1) activeIdx = 0; // fallback
+    if (activeIdx === -1) activeIdx = 0; 
 
     const timelineContainer = document.getElementById('rma-timeline');
     timelineContainer.innerHTML = timelineSteps.map((step, idx) => {
@@ -231,21 +231,20 @@ if (document.readyState === 'loading') {
     initReturnDetail();
 }
 
-// Bug 2+4: Trừ điểm mua sắm + điểm đánh giá khi hoàn tiền được xác nhận
 function deductPointsForRefund(rmaData) {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (!currentUser) return;
 
-    // Điểm mua sắm: 10.000đ = 1 điểm
+    
     const returnTotalValue = (rmaData.products || []).reduce((sum, p) =>
         sum + (p.total || ((p.price || 0) * (p.quantity || 1))), 0);
     let pointsToDeduct = Math.floor(returnTotalValue / 10000);
 
-    // Điểm thưởng từ đánh giá: nếu có review cho đơn này, trừ thêm
+    
     const reviewed = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
     const reviewsForOrder = reviewed.filter(r => r.orderId === rmaData.orderId);
     reviewsForOrder.forEach(r => {
-        // +5 điểm nếu có ảnh, +1 điểm nếu chỉ có text
+        
         pointsToDeduct += r.hasMedia ? 5 : 1;
     });
 
@@ -256,13 +255,13 @@ function deductPointsForRefund(rmaData) {
     const uIdx = users.findIndex(u => u.phone === currentUser.phone);
     if (uIdx !== -1) {
         users[uIdx].points = currentUser.points;
-        /* localStorage.setItem pawpal_users_db removed */
+        
     }
     console.log(`[RMA] Đã trừ ${pointsToDeduct} điểm. Số dư mới: ${currentUser.points}`);
 }
 
 function getStatusLabel(status) {
-    // Bug 6: Bỏ key trùng 'reviewing'
+    
     const statusMap = {
         placed:          'Đã gửi yêu cầu',
         reviewing:       'Đang kiểm duyệt',

@@ -1,6 +1,4 @@
-/* ==========================================================================
-   pet-diary.js — Pet Diary & Service Tracking (ĐÃ SỬA)
-   ========================================================================== */
+
 
 import { getTrackerLogs, saveTrackerLogs, calcAge, fmtDate, showToast } from '../pet-profile/pet-profile.js';
 import { getPets } from '/scripts/api/petService.js';
@@ -19,7 +17,6 @@ const TIMELINE_FALLBACK_IMAGES = {
 let currentPetId = null;
 let currentSessionId = null;
 
-// ── Init ──────────────────────────────────────────────────────────────────────
 export async function initPetDiary() {
     await populatePetSelector();
 
@@ -28,7 +25,7 @@ export async function initPetDiary() {
         petSelector.addEventListener('change', handlePetChange);
     }
 
-    // Handle ?id= URL param
+    
     const urlParams = new URLSearchParams(window.location.search);
     const petIdFromUrl = urlParams.get('id');
     const sessionIdFromUrl = urlParams.get('sessionId');
@@ -45,7 +42,6 @@ export async function initPetDiary() {
     }
 }
 
-// ── Pet Selector ──────────────────────────────────────────────────────────────
 async function populatePetSelector() {
     const selector = document.getElementById('petSelector');
     if (!selector) return;
@@ -75,7 +71,6 @@ function getSpeciesDisplay(pet) {
     return map[pet.species] || 'Thú cưng';
 }
 
-// ── Handle Pet Change ─────────────────────────────────────────────────────────
 async function handlePetChange(e) {
     const petId = e.target.value;
     const emptyState = document.getElementById('emptyState');
@@ -99,7 +94,6 @@ async function handlePetChange(e) {
     await loadPetDiary(petId);
 }
 
-// ── Load Diary ────────────────────────────────────────────────────────────────
 async function loadPetDiary(petId) {
     const pets = await getPets();
     const pet = pets.find(p => String(p.id) === String(petId));
@@ -118,11 +112,11 @@ async function loadPetDiary(petId) {
     if (!logs) {
         logs = getOrSeedTrackerLogs(pet);
     } else {
-        // Lấy lại tin nhắn từ local storage để không bị mất chat giả lập
+        
         const localLogs = getTrackerLogs()[pet.id] || {};
         logs.chatMessages = localLogs.chatMessages || {};
         
-        // Lưu cache lại vào localStorage
+        
         const allLogs = getTrackerLogs();
         allLogs[pet.id] = logs;
         saveTrackerLogs(allLogs);
@@ -148,7 +142,6 @@ async function loadPetDiary(petId) {
     }
 }
 
-// ── Supabase Sync ─────────────────────────────────────────────────────────────
 async function syncPetDiaryFromSupabase(pet) {
     const db = window.SupabaseClient;
     if (!db) return null;
@@ -156,7 +149,7 @@ async function syncPetDiaryFromSupabase(pet) {
     try {
         const petUuid = pet._supabaseId || pet.id;
         
-        // Fetch care_log with appointment, care_action, care_log_media
+        
         const { data, error } = await db.from('care_log')
             .select(`
                 id,
@@ -242,7 +235,6 @@ function mapAppointmentStatus(status) {
     return map[status] || status || 'Đang thực hiện';
 }
 
-// ── Tracker Logs ──────────────────────────────────────────────────────────────
 function getOrSeedTrackerLogs(pet) {
     const allLogs = getTrackerLogs();
     if (allLogs[pet.id]) return allLogs[pet.id];
@@ -319,7 +311,6 @@ function seedDemoLogs(pet) {
     return { currentSession, history };
 }
 
-// ── Render: Pet Info Card (ĐÃ SỬA) ───────────────────────────────────────────
 function renderPetInfoCard(pet) {
     const container = document.getElementById('petInfoCard');
     if (!container) return;
@@ -349,7 +340,6 @@ function renderPetInfoCard(pet) {
         </div>
     `;
 }
-// ── Render: Timeline ──────────────────────────────────────────────────────────
 
 function renderTimeline(timeline) {
     const wrapper = document.getElementById('timelineWrapper');
@@ -364,7 +354,7 @@ function renderTimeline(timeline) {
 
     if (emptyTimeline) emptyTimeline.classList.add('d-none');
 
-    // Sort newest-to-oldest (AC3.2.1)
+    
     const sorted = [...timeline].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     wrapper.innerHTML = sorted.map(item => buildTimelineItemHtml(item)).join('');
@@ -449,7 +439,7 @@ function resolveTimelineImageUrl(item) {
     let rawImage = candidates.find(value => typeof value === 'string' && value.trim() !== '')
         || getTimelineFallbackImage(item);
 
-    // Chuẩn hóa đường dẫn tương đối thành tuyệt đối từ thư mục gốc (để không bị lỗi 404 do ghép nối sai đường dẫn trang)
+    
     if (rawImage && !rawImage.startsWith('http') && !rawImage.startsWith('data:') && !rawImage.startsWith('/')) {
         rawImage = '/' + rawImage;
     }
@@ -475,8 +465,6 @@ function getTimelineFallbackImage(item) {
 
     return TIMELINE_FALLBACK_IMAGES.default;
 }
-
-// ── Chat Box ──────────────────────────────────────────────────────────────────
 
 function buildChatBoxHtml(noteId) {
     return `
@@ -553,7 +541,7 @@ function sendChatMessage(noteId) {
     appendChatMessage(noteId, newMsg);
     input.value = '';
 
-    // Demo auto-reply after 2s
+    
     setTimeout(() => {
         const reply = {
             id: Date.now(),
@@ -581,8 +569,6 @@ function appendChatMessage(noteId, msg) {
     container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
 }
 
-// ── Invoice Block ─────────────────────────────────────────────────────────────
-
 function buildInvoiceBlockHtml(invoice) {
     return `
         <div class="timeline-invoice-block">
@@ -608,8 +594,6 @@ function buildInvoiceBlockHtml(invoice) {
         </div>
     `;
 }
-
-// ── Render: History Sidebar ───────────────────────────────────────────────────
 
 function renderHistorySidebar(sessions) {
     const container = document.getElementById('historyList');
@@ -681,8 +665,6 @@ async function openSessionFromUrlOrFallback(sessionId) {
     }
 }
 
-// ── Utilities ─────────────────────────────────────────────────────────────────
-
 function formatTimestamp(isoStr, mode = 'full') {
     if (!isoStr) return '';
     const d = new Date(isoStr);
@@ -706,7 +688,6 @@ function escapeHtml(text) {
     div.textContent = String(text ?? '');
     return div.innerHTML;
 }
-
 
 async function renderActiveServicesDashboard() {
     const dashboardState = document.getElementById('dashboardState');
@@ -734,7 +715,7 @@ async function renderActiveServicesDashboard() {
         return;
     }
 
-    // Has active services
+    
     dashboardState.classList.remove('d-none');
     emptyState.classList.add('d-none');
     activeContainer.classList.remove('d-none');

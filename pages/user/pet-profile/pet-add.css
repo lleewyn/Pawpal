@@ -1,4 +1,4 @@
-/* ── Pet Add Page Styling ── */
+
 :root {
     --green-dark:   hsl(155, 30%, 22%);
     --green-mid:    hsl(155, 28%, 35%);
@@ -29,14 +29,14 @@
     padding: 0;
 }
 
-/* ── Page wrapper ── */
+
 .pet-add-page .page-wrap {
     width: 100%;
     max-width: 850px;
     padding: 24px 24px 48px 24px;
 }
 
-/* ── Back link ── */
+
 .pet-add-page .back-link {
     display: inline-flex;
     align-items: center;
@@ -52,7 +52,7 @@
 .pet-add-page .back-link svg { transition: transform .2s; }
 .pet-add-page .back-link:hover svg { transform: translateX(-3px); }
 
-/* ── Page title ── */
+
 .pet-add-page .page-title {
     font-family: var(--font-heading);
     font-size: 1.75rem;
@@ -67,7 +67,7 @@
     margin-bottom: 18px;
 }
 
-/* ── Avatar upload ── */
+
 .pet-add-page .avatar-upload {
     display: flex;
     flex-direction: column;
@@ -115,7 +115,7 @@
 }
 .pet-add-page #avatar-input { display: none; }
 
-/* ── Section label ── */
+
 .pet-add-page .form-section {
     margin-bottom: 18px;
 }
@@ -130,7 +130,7 @@
     border-bottom: 1px solid var(--border);
 }
 
-/* ── Grid ── */
+
 .pet-add-page .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -138,7 +138,7 @@
 }
 .pet-add-page .form-grid .full { grid-column: 1 / -1; }
 
-/* ── Field ── */
+
 .pet-add-page .field { display: flex; flex-direction: column; gap: 6px; }
 .pet-add-page .field label {
     font-size: 0.82rem;
@@ -180,7 +180,7 @@
 .pet-add-page .field textarea { resize: vertical; min-height: 80px; }
 .pet-add-page .field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235a6b62' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; cursor: pointer; }
 
-/* ── Chip selector (loài, giới tính) ── */
+
 .pet-add-page .chip-group {
     display: flex;
     flex-wrap: wrap;
@@ -212,7 +212,7 @@
     color: var(--green-dark);
 }
 
-/* ── Vaccine toggle ── */
+
 .pet-add-page .toggle-row {
     display: flex;
     align-items: center;
@@ -252,14 +252,14 @@
 .pet-add-page .toggle-switch input:checked + .toggle-track { background: var(--green-mid); }
 .pet-add-page .toggle-switch input:checked + .toggle-track::before { transform: translateX(18px); }
 
-/* ── Hint text ── */
+
 .pet-add-page .field-hint {
     font-size: 0.75rem;
     color: var(--text-light);
     margin-top: 2px;
 }
 
-/* ── Actions ── */
+
 .pet-add-page .form-actions {
     display: flex;
     align-items: center;
@@ -303,7 +303,7 @@
 .pet-add-page .btn-save:hover { background: var(--gold-dark); color: #fff;  }
 .pet-add-page .btn-save:active { transform: translateY(0); }
 
-/* ── Responsive ── */
+
 @media (max-width: 560px) {
     .pet-add-page .form-grid { grid-template-columns: 1fr; }
     .pet-add-page .form-grid .full { grid-column: 1; }
@@ -311,7 +311,6 @@
     .pet-add-page .btn-cancel, .pet-add-page .btn-save { width: 100%; justify-content: center; }
 }
 
-/* Extracted from inline styles pet-profile */
 .pet-profile-action-section {
     display: flex; justify-content: flex-end; padding-right: 16px; margin-bottom: 24px;
 }
@@ -325,7 +324,6 @@
     margin-bottom: var(--space-sm);
 }
 
-/* Pet Offer Card */
 .pet-offer-card {
     background-color: #fef9c3; border: 1px solid #fef08a; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-shadow: var(--shadow-card);
 }
@@ -339,7 +337,6 @@
     background-color: #064e3b; color: #fff; border: none; border-radius: 20px; padding: 10px 24px; font-weight: 700; display: inline-block; width: max-content; font-size: 0.85rem; text-decoration: none; align-self: flex-end;
 }
 
-/* Pet Reminder Card */
 .pet-reminder-card {
     background: linear-gradient(180deg, #ffffff 0%, #fbfdfb 100%);
     border: 1px solid rgba(79, 119, 102, 0.18);
@@ -414,7 +411,6 @@
     border: 1px solid rgba(79, 119, 102, 0.14);
 }
 
-/* Modal Cleanups */
 .pet-form-modal-shell {
     width: min(920px, calc(100vw - 24px));
     max-height: min(86vh, 840px);
@@ -450,7 +446,6 @@
     font-size: 0.875rem;
 }
 
-/* JS Add Card */
 .add-card-icon {
     width: 48px; height: 48px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #475569;
 }

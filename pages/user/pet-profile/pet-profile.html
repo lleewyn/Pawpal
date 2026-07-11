@@ -5,24 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="view-transition" content="same-origin">
     <title>Hồ sơ của tôi - PawPal</title>
-    <!-- Google Fonts -->
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
-    <!-- Bootstrap CSS -->
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom Style -->
+    
     <link rel="stylesheet" href="../../../styles/style.css">
-    <!-- Components -->
+    
     <link rel="stylesheet" href="../../../components/ui/review-form.css">
     <link rel="stylesheet" href="../../../components/ui/reviews.css">
-    <!-- Page Specific Style -->
+    
     <link rel="stylesheet" href="../dashboard/dashboard.css">
     <link rel="stylesheet" href="/components/user-sidebar/user-sidebar.css">
     <link rel="stylesheet" href="pet-form.css">
     <link rel="stylesheet" href="pet-add.css">
 
-    <!-- Scripts -->
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../../../scripts/api/supabase-client.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
@@ -52,30 +52,30 @@
             </button>
             <div class="dashboard-sidebar-backdrop" id="dashboardSidebarBackdrop" hidden></div>
             <div class="row g-4">
-                <!-- Sidebar Navigation -->
+                
                 <div class="col-lg-3">
                     <div id="user-sidebar">
-                        <!-- Sidebar will be loaded here -->
+                        
                         <div class="dashboard-sidebar">
                             <p class="text-center p-4 text-muted">Loading...</p>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Main Content -->
+                
                 <div class="col-lg-9">
-                    <!-- Tab switcher -->
+                    
                     <div class="d-flex gap-2 mb-4">
                         <button class="tab-btn active" data-tab="active">Đang hoạt động</button>
                         <button class="tab-btn" data-tab="archive">Kho lưu trữ</button>
                     </div>
 
-                    <!-- Pet Cards Grid - Active -->
+                    
                     <div id="activeTab">
                         <div class="pet-cards-grid" id="activePetGrid">
-                            <!-- Active pet cards will be rendered here -->
+                            
                         </div>
-                        <!-- Empty State -->
+                        
                         <div class="empty-state d-none" id="emptyStateActive">
                             <div class="empty-state-icon ui-spacing-11">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -90,12 +90,12 @@
                         </div>
                     </div>
 
-                    <!-- Pet Cards Grid - Archive -->
+                    
                     <div id="archiveTab" class="hide-initial">
                         <div class="pet-cards-grid" id="archivePetGrid">
-                            <!-- Archived pet cards will be rendered here -->
+                            
                         </div>
-                        <!-- Empty State Archive -->
+                        
                         <div class="empty-state d-none" id="emptyStateArchive">
                             <div class="empty-state-icon ui-spacing-12">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -109,10 +109,10 @@
                         </div>
                     </div>
 
-                    <!-- Bottom Grid for Offers and Reminders -->
+                    
                     <div class="pet-profile-bottom-grid mt-5">
                         <div class="row g-4">
-                            <!-- Left: Offers -->
+                            
                             <div class="col-md-7">
                                 <div class="pet-offer-card">
                                     <div>
@@ -122,13 +122,13 @@
                                     <a href="../../services/booking/booking.html" class="btn-offer-cta">Đặt ngay</a>
                                 </div>
                             </div>
-                            <!-- Right: Reminders -->
+                            
                             <div class="col-md-5">
                                 <div class="pet-reminder-card">
                                     <div>
                                         <h3>Nhắc nhở</h3>
                                         <div class="reminder-list" id="pet-reminders-list">
-                                            <!-- JS sẽ render các lịch hẹn sắp tới vào đây -->
+                                            
                                         </div>
                                     </div>
                                     <a href="../bookings/bookings.html" class="link-view-all">Xem tất cả lịch hẹn</a>
@@ -143,10 +143,10 @@
         </div>
     </main>
 
-    <!-- Add/Edit Pet Modal -->
+    
     <div class="modal-overlay" id="petFormModal">
         <div class="modal-content modal-content-large pet-form-modal-shell pet-add-page">
-            <!-- Close Button -->
+            
             <button class="modal-close" onclick="document.getElementById('petFormModal').classList.remove('active'); if (!document.getElementById('petId').value) resetPetForm(); return false;" aria-label="Đóng">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -156,7 +156,7 @@
             <div class="page-wrap">
                     <input type="hidden" id="petId" value="">
 
-                    <!-- Avatar -->
+                    
                     <div class="avatar-upload">
                         <div class="avatar-circle" id="avatarCircle" onclick="document.getElementById('avatar-input').click()">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -170,7 +170,7 @@
                     </div>
 
                     <form id="petForm" novalidate>
-                        <!-- Thông tin cơ bản -->
+                        
                         <div class="form-section">
                             <div class="section-label">Thông tin cơ bản</div>
                             <div class="form-grid">
@@ -214,7 +214,7 @@
                             </div>
                         </div>
 
-                        <!-- Thể chất và Y tế -->
+                        
                         <div class="form-section">
                             <div class="section-label">Thể chất và Y tế</div>
                             <div class="form-grid">
@@ -257,7 +257,7 @@
                             </div>
                         </div>
 
-                        <!-- Ghi chú chăm sóc -->
+                        
                         <div class="form-section">
                             <div class="section-label">Ghi chú chăm sóc</div>
                             <div class="form-grid">
@@ -268,7 +268,7 @@
                             </div>
                         </div>
 
-                        <!-- Actions -->
+                        
                         <div class="form-actions">
                             <button type="button" class="btn-cancel" onclick="document.getElementById('petFormModal').classList.remove('active'); if (!document.getElementById('petId').value) resetPetForm();">Huỷ</button>
                             <button type="submit" class="btn-save">
@@ -281,7 +281,7 @@
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
+    
     <div class="modal-overlay" id="deleteConfirmModal">
         <div class="modal-content modal-content-small">
             <div class="modal-header">
@@ -304,7 +304,7 @@
         </div>
     </div>
 
-    <!-- Success Animation Overlay -->
+    
     <div class="success-overlay d-none" id="successOverlay" >
         <p class="success-message">Lưu thông tin bé thành công!</p>
         <div class="animal-sprite text-primary-custom" id="animalSprite" ></div>
@@ -312,7 +312,7 @@
 
     <div id="site-footer"></div>
 
-    <!-- Toast Container -->
+    
     <div class="toast-container-custom" id="toastContainer"></div>
 
     <div id="site-fab"></div>

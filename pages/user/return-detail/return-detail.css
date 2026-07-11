@@ -1,8 +1,5 @@
-/* ==========================================================================
-   Return and RMA Styles - Tuân thủ 100% design.md
-   ========================================================================== */
 
-/* Slide-out Panel (Drawer) */
+
 .info-card {
     background: var(--color-bg-white);
     border-radius: var(--card-border-radius);
@@ -105,7 +102,6 @@
     gap: var(--space-md);
 }
 
-/* Form Groups */
 .rma-form-group {
     display: flex;
     flex-direction: column;
@@ -119,7 +115,6 @@
     font-size: var(--fs-body);
 }
 
-/* Radio Cards */
 .rma-radio-cards {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -162,7 +157,6 @@
     color: var(--color-text-light);
 }
 
-/* Upload Zone */
 .rma-upload-zone {
     border: 2px dashed var(--color-border);
     border-radius: var(--card-border-radius);
@@ -202,7 +196,6 @@
     border: 1px solid var(--color-border);
 }
 
-/* Checklist items in Drawer */
 .rma-product-item {
     display: flex;
     align-items: center;
@@ -242,7 +235,6 @@
     margin: 0;
 }
 
-/* Timeline Stepper */
 .rma-timeline {
     display: flex;
     flex-direction: column;
@@ -311,10 +303,9 @@
     color: var(--color-text-light);
 }
 
-/* Info Banner for instructions */
 .rma-instruction-box {
     background-color: var(--color-info-light);
-    border: 1px solid rgba(210, 60, 48, 0.08); /* Green tinted border custom */
+    border: 1px solid rgba(210, 60, 48, 0.08); 
     border-radius: var(--card-border-radius);
     padding: var(--space-md);
     color: var(--color-text-dark);
@@ -342,7 +333,6 @@
     margin-bottom: var(--space-xs);
 }
 
-/* Warning & Error alert styles */
 .rma-alert-error {
     background-color: var(--color-danger-light);
     color: var(--color-danger);
@@ -353,7 +343,6 @@
     font-weight: 600;
 }
 
-/* Custom buttons */
 .rma-btn-submit {
     padding: 12px var(--space-md);
     background-color: var(--color-primary);
@@ -376,7 +365,6 @@
     cursor: not-allowed;
 }
 
-/* Extracted inline styles */
 .rma-back-link {
     color: var(--color-primary);
     text-decoration: none;

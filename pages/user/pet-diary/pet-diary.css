@@ -1,8 +1,5 @@
-/* ==========================================================================
-   pet-diary.css — Pet Diary Page Styles (US 7-1, 7-2, 7-3)
-   ========================================================================== */
 
-/* ── Page Container ──────────────────────────────────────────────────── */
+
 .pet-diary-body,
 body {
     background-color: #f4faf7;
@@ -14,12 +11,9 @@ body {
     min-height: 60vh;
 }
 
-/* ── Page Header ──────────────────────────────────────────────────────── */
 .pet-diary-header {
     margin-bottom: var(--space-md);
 }
-
-
 
 .pet-diary-subtitle {
     font-size: var(--fs-small);
@@ -27,7 +21,6 @@ body {
     margin: 0;
 }
 
-/* ── Pet Selector ──────────────────────────────────────────────────────── */
 .pet-selector-wrapper {
     background: var(--color-bg-white);
     padding: var(--space-md);
@@ -52,7 +45,6 @@ body {
     box-shadow: 0 0 0 3px rgba(229, 169, 60, 0.1);
 }
 
-/* ── Empty State ──────────────────────────────────────────────────────── */
 .empty-state-diary {
     text-align: center;
     padding: var(--space-xl);
@@ -82,7 +74,6 @@ body {
     margin: 0;
 }
 
-/* ── Pet Info Card ──────────────────────────────────────────────────────── */
 .pet-info-card {
     background: var(--color-bg-white);
     padding: var(--space-md);
@@ -122,9 +113,6 @@ body {
     gap: 4px;
 }
 
-
-
-/* ── Timeline Section ──────────────────────────────────────────────────── */
 .timeline-header {
     margin-bottom: var(--space-md);
 }
@@ -141,7 +129,6 @@ body {
     padding-left: var(--space-md);
 }
 
-/* Timeline vertical line */
 .timeline-wrapper::before {
     content: '';
     position: absolute;
@@ -161,7 +148,6 @@ body {
     margin-bottom: 0;
 }
 
-/* Timeline dot */
 .timeline-dot {
     position: absolute;
     left: -19px;
@@ -250,7 +236,6 @@ body {
     width: fit-content;
 }
 
-/* ── Urgent Timeline Item (AC1.4 - US 7-1) ──────────────────────────── */
 .timeline-item-urgent .timeline-dot {
     border-color: var(--color-danger);
     background: var(--color-danger-light);
@@ -288,7 +273,6 @@ body {
     font-size: 1.2rem;
 }
 
-/* ── Chat Box (AC1.4 - US 7-1) ────────────────────────────────────────── */
 .urgent-chat-box {
     margin-top: var(--space-md);
     padding: var(--space-md);
@@ -402,7 +386,6 @@ body {
     background: var(--color-primary-dark);
     
 
-/* ── Appointment Status Badge (adds small pill like 'Chờ xác nhận') ───────────────── */
 .appointment-card {
     position: relative;
 }
@@ -438,8 +421,6 @@ body {
     }
 }
 
-/* If you want to remove the pending status from the UI entirely,
-   hide the status badge. Keep this rule last so it overrides other styles. */
 .status-badge,
 .appointment-card .status-badge {
     display: none !important;
@@ -458,7 +439,6 @@ body {
     transform: none;
 }
 
-/* ── Invoice Block (AC1.5 - US 7-1) ────────────────────────────────────── */
 .timeline-invoice-block {
     margin-top: var(--space-md);
     padding: var(--space-md);
@@ -548,7 +528,6 @@ body {
     margin-top: var(--space-sm);
 }
 
-/* ── History Sidebar ────────────────────────────────────────────────────── */
 .history-sidebar {
     position: sticky;
     top: 120px;
@@ -611,7 +590,6 @@ body {
     font-weight: 600;
 }
 
-/* ── Empty Timeline ────────────────────────────────────────────────────── */
 .empty-timeline {
     text-align: center;
     padding: var(--space-xl);
@@ -632,7 +610,6 @@ body {
     margin: 0;
 }
 
-/* ── Responsive ────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
     .stream-content {
         grid-template-columns: 1fr;
@@ -667,7 +644,6 @@ body {
     }
 }
 
-/* ── Active Services Dashboard (Empty State) ───────────────────────── */
 .active-services-title {
     text-align: center;
     color: var(--color-primary-dark);
@@ -755,7 +731,6 @@ body {
     color: #ffffff;
 }
 
-/* ── Pet Info Avatar Placeholder ────────────────────────────────────── */
 .pet-info-avatar-placeholder {
     width: 80px;
     height: 80px;
@@ -769,7 +744,6 @@ body {
     color: var(--color-text-light);
 }
 
-/* ── History Status Variants ────────────────────────────────────────── */
 .history-status.status-active {
     color: var(--color-success);
 }
@@ -786,7 +760,6 @@ body {
     margin: 0;
 }
 
-/* ── Invoice Paid / Unpaid Badge ────────────────────────────────────── */
 .invoice-status-badge.invoice-paid {
     background: var(--color-success);
     color: #ffffff;
@@ -797,7 +770,6 @@ body {
     color: #ffffff;
 }
 
-/* ── Accessibility ────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
     .timeline-item-urgent .timeline-dot {
         animation: none;
@@ -810,8 +782,6 @@ body {
     }
 }
 
-
-/* Extracted from pet-diary.html */
 .ui-spacing-9 {
     color: var(--color-primary-light);
      display: inline-flex;
@@ -819,7 +789,6 @@ body {
      margin-bottom: var(--space-sm);
 }
 
-/* Extracted from pet-diary.html */
 .ui-element-11 {
     color: var(--color-primary-light);
 }

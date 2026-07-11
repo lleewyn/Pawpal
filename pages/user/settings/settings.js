@@ -1,6 +1,4 @@
-/**
- * settings.js - Settings Tab Logic
- */
+
 
 const PAWPAL_USERS_KEY = 'pawpal_users_db';
 const CURRENT_USER_KEY = 'pawpal_current_user';
@@ -27,7 +25,7 @@ function updateCurrentUserRecord(updatedUser) {
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
 }
 
-// Toast notification helper
+
 function showToast(type, message, duration = 5000) {
     const container = document.getElementById('toastContainer');
     if (!container) {
@@ -97,12 +95,12 @@ function showToast(type, message, duration = 5000) {
     container.insertAdjacentHTML('beforeend', toastHtml);
     const toastElement = document.getElementById(toastId);
 
-    // Close button event
+    
     toastElement.querySelector('.toast-close').addEventListener('click', () => {
         removeToast(toastElement);
     });
 
-    // Auto remove
+    
     setTimeout(() => {
         removeToast(toastElement);
     }, duration);
@@ -117,7 +115,7 @@ function removeToast(toastElement) {
     }, 300);
 }
 
-// Dom Loaded Initialization
+
 document.addEventListener('DOMContentLoaded', () => {
     const currentUser = getCurrentUser();
     if (!currentUser) {
@@ -125,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Check temp account warning banner
+    
     if (currentUser.is_temporary) {
         const warning = document.getElementById('tempAccountWarning');
         if (warning) {
@@ -133,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Initialize widgets & settings
+    
     initPasswordStrengthMeter();
     initChangePasswordForm();
     initPasswordToggles();
@@ -143,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initPasswordAccordion();
 });
 
-// Password strength meter logic
+
 function initPasswordStrengthMeter() {
     const newPassword = document.getElementById('newPassword');
     const strengthLabel = document.getElementById('strengthLabel');
@@ -157,7 +155,7 @@ function initPasswordStrengthMeter() {
         const password = newPassword.value;
         const strength = calculatePasswordStrength(password);
         
-        // Clear all segments classes
+        
         if (seg1) seg1.className = 'strength-bar-segment';
         if (seg2) seg2.className = 'strength-bar-segment';
         if (seg3) seg3.className = 'strength-bar-segment';
@@ -201,7 +199,7 @@ function calculatePasswordStrength(password) {
     return { score: Math.min(score, 4) };
 }
 
-// Validate and update password form
+
 function initChangePasswordForm() {
     const form = document.getElementById('changePasswordForm');
     const currentPassword = document.getElementById('currentPassword');
@@ -243,7 +241,7 @@ function initChangePasswordForm() {
         btnSubmit.disabled = true;
         btnSubmit.textContent = 'Đang cập nhật...';
 
-        // Update lên Supabase — dùng phone_main vì id có thể là mock ID
+        
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (db) {
             const lookupId = currentUser._source === 'supabase' ? currentUser.id : null;
@@ -256,7 +254,7 @@ function initChangePasswordForm() {
                     .eq('id', lookupId);
                 supaError = error;
             } else {
-                // Fallback: tìm theo phone_main
+                
                 const { error } = await db
                     .from('customer')
                     .update({ password_hash: newPassword.value })
@@ -274,7 +272,7 @@ function initChangePasswordForm() {
             console.log('[Settings] ✅ Password updated in Supabase');
         }
 
-        // Cập nhật localStorage
+        
         const userIdx = users.findIndex(u => String(u.phone) === String(currentUser.phone));
         if (userIdx !== -1) {
             users[userIdx].password = newPassword.value;
@@ -334,7 +332,7 @@ function validateChangePasswordForm() {
     btnSubmit.disabled = !(isPasswordValid && isConfirmValid && isCurrentValid);
 }
 
-// Password toggle eye icon
+
 function initPasswordToggles() {
     document.querySelectorAll('.btn-toggle-password-custom').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -352,7 +350,7 @@ function initPasswordToggles() {
     });
 }
 
-// Accordion collapse/expand for Password
+
 function initPasswordAccordion() {
     const toggleBtn = document.getElementById('togglePasswordBtn');
     const formContainer = document.getElementById('passwordFormContainer');
@@ -375,7 +373,7 @@ function initPasswordAccordion() {
     }
 }
 
-// Notification Settings switch
+
 function initNotificationSettings(user) {
     const form = document.getElementById('notificationSettingsForm');
     const emailCheckbox = document.getElementById('notifyEmail');
@@ -405,7 +403,7 @@ function initNotificationSettings(user) {
     });
 }
 
-// Language and weight unit switcher
+
 function initLanguageAndUnit(user) {
     const languageSelect = document.getElementById('languageSelect');
     const unitKgBtn = document.getElementById('unitKgBtn');
@@ -457,7 +455,7 @@ function initLanguageAndUnit(user) {
     }
 }
 
-// Social Accounts disconnect/connect toggles
+
 function initSocialAccounts(user) {
     const googleStatus = document.getElementById('googleLinkStatus');
     const facebookStatus = document.getElementById('facebookLinkStatus');
@@ -475,7 +473,7 @@ function initSocialAccounts(user) {
             const isConnected = btn.classList.contains('disconnect-btn');
             
             if (isConnected) {
-                // Perform disconnect
+                
                 statusEl.textContent = 'Chưa liên kết';
                 btn.textContent = 'Liên kết';
                 btn.className = 'btn-social-action-custom connect-btn';
@@ -483,7 +481,7 @@ function initSocialAccounts(user) {
                 btn.style.color = 'var(--color-primary, #2a5944)';
                 showToast('success', `Đã hủy liên kết tài khoản ${nameEl.textContent}`);
             } else {
-                // Perform connect (mock email binding)
+                
                 const mockEmail = user.email || `${user.name.toLowerCase().replace(/\s+/g, '')}@gmail.com`;
                 statusEl.textContent = mockEmail;
                 btn.textContent = 'Huỷ';

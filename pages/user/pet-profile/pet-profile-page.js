@@ -1,6 +1,4 @@
- /* ==========================================================================
-   pet-profile-page.js — Main logic
-   ========================================================================== */
+ 
 
 import { getPets, savePets, deletePet as deletePetService, restorePet as restorePetService } from '../../../scripts/api/petService.js';
 import { generatePetId, calcAge, showToast } from '../pet-profile/pet-profile.js';
@@ -17,12 +15,10 @@ export async function initPetProfilePage() {
     console.log('Pet Profile Page init...');
     
     try {
-        // Đảm bảo dữ liệu API đã nạp vào localStorage
+        
         console.log('Waiting for API.initData()...');
         await API.initData();
         console.log('API.initData() finished.');
-
-
 
         console.log('Waiting for renderPetGrids()...');
         await renderPetGrids();
@@ -129,7 +125,6 @@ function resetPetForm() {
     document.querySelectorAll('.error-msg').forEach(el => el.classList.add('d-none'));
 }
 
-// Render danh sách
 async function renderPetGrids() {
     console.log('renderPetGrids: Calling getPets()...');
     const pets = await getPets();
@@ -143,7 +138,7 @@ async function renderPetGrids() {
     
     console.log('activePets:', activePets.length, 'archivedPets:', archivedPets.length);
 
-    // Active
+    
     if (activeGrid) {
         activeGrid.innerHTML = '';
         if (activePets.length === 0) {
@@ -152,7 +147,7 @@ async function renderPetGrids() {
             document.getElementById('emptyStateActive').classList.add('d-none');
             activePets.forEach(pet => activeGrid.appendChild(createPetCard(pet)));
             
-            // Append the "Thêm bé mới" action card at the end of active grid
+            
             const addCard = document.createElement('div');
             addCard.className = 'pet-card pet-card-add-new';
             addCard.style.border = '2px dashed #cbd5e1';
@@ -180,7 +175,7 @@ async function renderPetGrids() {
         }
     }
 
-    // Archive
+    
     if (archiveGrid) {
         archiveGrid.innerHTML = '';
         if (archivedPets.length === 0) {
@@ -244,7 +239,6 @@ function createPetCard(pet, isArchived = false) {
     return card;
 }
 
-// Hàm lấy tên loài + giống (hỗ trợ loài "Khác")
 function getSpeciesName(pet) {
     if (!pet) return 'Thú cưng';
 
@@ -261,7 +255,7 @@ function getSpeciesName(pet) {
         }
     }
 
-    // Kết hợp với giống (breed)
+    
     if (pet.breed && pet.breed.trim() !== '') {
         return `${speciesName} ${pet.breed.trim()}`;
     }
@@ -269,7 +263,6 @@ function getSpeciesName(pet) {
     return speciesName;
 }
 
-// Form
 function setupForm() {
     const form = document.getElementById('petForm');
     if (!form) return;
@@ -346,7 +339,7 @@ function setupForm() {
             return;
         }
 
-        // Kiểm tra tên trùng trong cùng tài khoản (quy trình 3.1.3)
+        
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
         const allPetsForDup = await getPets();
         const sameNamePets = allPetsForDup.filter(p =>
@@ -357,7 +350,7 @@ function setupForm() {
         );
 
         if (sameNamePets.length > 0) {
-            // Yêu cầu thêm điểm phân biệt: màu lông
+            
             if (!color.trim()) {
                 const colorField = document.getElementById('color');
                 const colorError = colorField?.nextElementSibling;
@@ -453,11 +446,8 @@ function setupTabs() {
     }
 }
 
-
-// Biến toàn cục để lưu ID pet đang xóa
 let petToDeleteId = null;
 
-// Hàm mở modal xác nhận xóa
 window.deletePet = async function(id) {
     const pets = await getPets();
     const pet = pets.find(p => p.id === id);
@@ -466,19 +456,17 @@ window.deletePet = async function(id) {
     petToDeleteId = id;
     document.getElementById('deletePetName').textContent = pet.name;
     
-    // Hiển thị modal
+    
     const modal = document.getElementById('deleteConfirmModal');
     modal.classList.add('active');
 };
 
-// Đóng modal
 window.closeDeleteModal = function() {
     const modal = document.getElementById('deleteConfirmModal');
     modal.classList.remove('active');
     petToDeleteId = null;
 };
 
-// Xác nhận xóa
 async function confirmDelete() {
     if (!petToDeleteId) return;
 
@@ -490,14 +478,13 @@ async function confirmDelete() {
     closeDeleteModal();
 }
 
-// Khởi tạo sự kiện cho nút Xóa trong modal (chạy 1 lần khi init)
 function setupDeleteModal() {
     const confirmBtn = document.getElementById('btnConfirmDelete');
     if (confirmBtn) {
         confirmBtn.addEventListener('click', confirmDelete);
     }
     
-    // Đóng modal khi click overlay
+    
     const modalOverlay = document.getElementById('deleteConfirmModal');
     if (modalOverlay) {
         modalOverlay.addEventListener('click', (e) => {
@@ -508,7 +495,6 @@ function setupDeleteModal() {
     }
 }
 
-// Global functions
 window.restorePet = async function(id) {
     await restorePetService(id);
     showToast('Đã khôi phục');
@@ -529,9 +515,9 @@ async function loadUpcomingBookings() {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || '{}');
         const bookings = currentUser?.id ? await API.getUserBookings(currentUser.id) : [];
         
-        // Lọc các booking của user hiện tại, trạng thái 'pending' hoặc 'confirmed', và thời gian >= hiện tại (cho chênh lệch 1 ngày)
+        
         const now = new Date();
-        now.setHours(0, 0, 0, 0); // Bỏ qua giờ để so sánh ngày
+        now.setHours(0, 0, 0, 0); 
         
         let upcoming = bookings.filter(b => {
             if (b.userId !== currentUser.id && b.customerPhone !== currentUser.phone) return false;
@@ -543,10 +529,10 @@ async function loadUpcomingBookings() {
             return bDate.getTime() >= now.getTime();
         });
         
-        // Sắp xếp ngày gần nhất
+        
         upcoming.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         
-        // Lấy 3 lịch gần nhất
+        
         upcoming = upcoming.slice(0, 3);
         
         if (upcoming.length === 0) {

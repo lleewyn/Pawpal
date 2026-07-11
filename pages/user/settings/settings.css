@@ -1,17 +1,14 @@
 
 
-/* Extracted from settings.html */
 .ui-clickable-1 {
     cursor: pointer;
 }
 
-/* Extracted from settings.html */
 .ui-element-15 {
     transition: transform 0.3s ease;
      transform: rotate(180deg);
 }
 
-/* Extracted from settings.html */
 .ui-bg-box-19 {
     background:none;
      border:none;
@@ -20,7 +17,6 @@
      cursor:pointer;
 }
 
-/* Extracted from settings.html */
 .ui-bg-box-20 {
     background-color: #ea4335;
      color:#fff;
@@ -32,7 +28,6 @@
      height:32px;
 }
 
-/* Extracted from settings.html */
 .ui-bg-box-21 {
     background:#f1f5f9;
      border:none;
@@ -42,7 +37,6 @@
      font-weight:600;
 }
 
-/* Extracted from settings.html */
 .ui-bg-box-22 {
     background-color: #1877f2;
      color:#fff;
@@ -54,7 +48,6 @@
      height:32px;
 }
 
-/* Extracted from settings.html */
 .ui-bg-box-23 {
     display:flex;
      justify-content:space-between;
@@ -65,27 +58,23 @@
      background: #f8fafc;
 }
 
-/* Extracted from settings.html */
 .ui-element-16 {
     display:flex;
      flex-direction:column;
 }
 
-/* Extracted from settings.html */
 .ui-text-format-20 {
     font-weight:700;
      color:var(--color-text-dark);
      font-size:0.85rem;
 }
 
-/* Extracted from settings.html */
 .ui-text-format-21 {
     font-size:0.75rem;
      color:var(--color-text-light);
      margin-top:2px;
 }
 
-/* Extracted from settings.html */
 .ui-bg-box-24 {
     width:100%;
      border:none;
@@ -97,7 +86,6 @@
      transition:background 0.2s;
 }
 
-/* Extracted from settings.html */
 .ui-text-format-22 {
     font-weight:600;
      color:var(--color-text-dark);
@@ -106,7 +94,6 @@
      display:block;
 }
 
-/* Extracted from settings.html */
 .ui-bg-box-25 {
     width:100%;
      padding:10px 14px;
@@ -117,7 +104,6 @@
      color:var(--color-text-dark);
 }
 
-/* Extracted from settings.html */
 .ui-bg-box-26 {
     display:flex;
      justify-content:space-between;
@@ -129,21 +115,18 @@
      margin-top:16px;
 }
 
-/* Extracted from settings.html */
 .ui-spacing-14 {
     display:flex;
      flex-direction:column;
      padding-right:12px;
 }
 
-/* Extracted from settings.html */
 .ui-text-format-23 {
     font-size:0.7rem;
      color:var(--color-text-light);
      margin-top:2px;
 }
 
-/* Extracted from settings.html */
 .ui-bg-box-27 {
     display:flex;
      background:#e2e8f0;
@@ -152,7 +135,6 @@
      flex-shrink:0;
 }
 
-/* Extracted from settings.html */
 .ui-bg-box-28 {
     border:none;
      border-radius:6px;
@@ -165,7 +147,6 @@
      transition:all 0.2s;
 }
 
-/* Extracted from settings.html */
 .ui-bg-box-29 {
     border:none;
      border-radius:6px;
@@ -178,7 +159,6 @@
      transition:all 0.2s;
 }
 
-/* Extracted from settings.html */
 .ui-element-17 {
     position:fixed;
     top:96px;

@@ -225,7 +225,7 @@ function ensureSupportReady(callback) {
                             btn.innerHTML = 'Đang gửi...';
                         }
 
-                        // Gọi Supabase
+                        
                         await window.PawPalSupport.createTicket(title, type, content, files);
                         
                         if (btn) {
