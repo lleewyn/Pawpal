@@ -106,16 +106,12 @@ async function loadSupabaseGuestResults(phone) {
                 order_code,
                 order_status,
                 payment_status,
-                subtotal,
-                shipping_fee,
-                discount_amount,
                 total_amount,
                 created_at,
                 updated_at,
                 note,
                 customer_address!inner ( receiver_name, receiver_phone, street_address, province ),
-                sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, sku, image_urls ) ),
-                payment ( payment_method, transaction_status )
+                sales_order_detail ( id, quantity, unit_price, discount_amount, subtotal, product ( id, product_name, sku, image_urls ) )
             `)
             .eq('customer_address.receiver_phone', normPhone)
             .order('created_at', { ascending: false });

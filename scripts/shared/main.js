@@ -627,8 +627,8 @@ function setupFilterInteractions() {
 
     if (products.length === 0) return;
 
-    let activeMarketingStatus = 'all'; // default to all on page load
-    let activeCategory = 'all';        // default to all on page load
+    let activeMarketingStatus = 'all'; 
+    let activeCategory = 'all';        
 
     function applyFilter() {
         let count = 0;
