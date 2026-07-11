@@ -1,22 +1,15 @@
-/* ==========================================================================
-   Bookings Management Pages — bookings.css
-   User Story: US 5-1 (Thay đổi lịch), US 6-1, US 6-2 (Hủy lịch)
-   ========================================================================== */
 
-/* ══════════════════════════════════════════════════════════════
-   Layout Structure
-   ══════════════════════════════════════════════════════════════ */
+
+
 
 .bookings-container,
 .booking-detail-container {
-    padding: 20px 0; /* 20px top/bottom */
+    padding: 20px 0; 
     background: #f4faf7;
     min-height: 60vh;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   Bookings List Page
-   ══════════════════════════════════════════════════════════════ */
+
 
 
 
@@ -25,7 +18,7 @@
     font-size: var(--fs-body);
 }
 
-/* ── Filter Tabs ── */
+
 .filter-tabs {
     display: flex;
     gap: var(--space-xs);
@@ -62,7 +55,7 @@
     outline-offset: 2px;
 }
 
-/* ── Bookings List ── */
+
 .bookings-list {
     display: flex;
     flex-direction: column;
@@ -70,7 +63,7 @@
 }
 
 
-/* ── Booking Card ── */
+
 .booking-card {
     background: var(--color-bg-white);
     border: var(--border-card);
@@ -95,14 +88,14 @@
     border-color: var(--color-primary);
 }
 
-/* US 6-2: Cancelled bookings appear "dimmer" */
+
 .booking-card.status-cancelled {
     background: var(--color-neutral-lighter);
     opacity: 0.8;
 }
 
 .booking-card.status-cancelled:hover {
-     /* Less pronounced hover */
+     
     opacity: 0.85;
 }
 
@@ -233,7 +226,7 @@
     outline-offset: 2px;
 }
 
-/* Nút viết đánh giá dịch vụ — nổi bật hơn link thông thường */
+
 .btn-write-service-review {
     padding: 6px 14px;
     border: 1.5px solid var(--color-primary);
@@ -251,7 +244,7 @@
     text-decoration: none !important;
 }
 
-/* Badge "Đã đánh giá" hiển thị sau khi submit */
+
 .booking-reviewed-badge {
     display: inline-flex;
     align-items: center;
@@ -279,7 +272,7 @@
 }
 
 
-/* ── Status Badges ── */
+
 .badge-status {
     padding: 6px 14px;
     border-radius: var(--border-radius-pill);
@@ -318,7 +311,7 @@
     color: var(--color-danger);
 }
 
-/* ── Empty State ── */
+
 .empty-state {
     text-align: center;
     padding: var(--space-xl) var(--space-md);
@@ -344,9 +337,7 @@
     margin-bottom: var(--space-md);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   Booking Detail Page
-   ══════════════════════════════════════════════════════════════ */
+
 
 
 
@@ -384,7 +375,7 @@
 }
 
 
-/* ── Summary Card ── */
+
 .booking-summary-card {
     background: var(--color-bg-white);
     border: var(--border-card);
@@ -439,7 +430,7 @@
     font-weight: 700;
 }
 
-/* ── Action Buttons Section ── */
+
 .action-buttons-section {
     display: flex;
     gap: var(--space-sm);
@@ -450,7 +441,7 @@
 .btn-cancel-booking {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-xs); /* 8px */
+    gap: var(--space-xs); 
     padding: 10px 20px;
     border-radius: var(--border-radius-pill);
     font-family: var(--font-primary);
@@ -478,10 +469,10 @@
 }
 
 
-/* US 5-1: Disabled State for Change Schedule Button */
+
 .btn-change-schedule:disabled {
-    background: var(--color-neutral-light); /* hsl(156, 8%, 96%) */
-    color: var(--color-neutral); /* hsl(156, 8%, 46%) */
+    background: var(--color-neutral-light); 
+    color: var(--color-neutral); 
     cursor: not-allowed;
     opacity: 0.6;
     transform: none;
@@ -494,7 +485,7 @@
     box-shadow: none;
 }
 
-/* Cancel Button */
+
 .btn-cancel-booking {
     background: transparent;
     color: var(--color-danger);
@@ -519,7 +510,7 @@
     color: var(--color-neutral);
 }
 
-/* ── Policy Note ── */
+
 .policy-note {
     background: var(--color-primary-light);
     border: 1px solid var(--color-primary);
@@ -557,21 +548,19 @@
 }
 
 
-/* ══════════════════════════════════════════════════════════════
-   Error Banner (US 5-1 Requirement)
-   ══════════════════════════════════════════════════════════════ */
+
 
 .error-banner {
     position: fixed;
-    top: 110px; /* Below header */
+    top: 110px; 
     left: 0;
     right: 0;
     z-index: 1000;
     
-    /* Background đỏ đậm theo yêu cầu US 5-1: "banner màu đỏ rực" */
-    background: var(--color-danger); /* hsl(0, 72%, 51%) */
+    
+    background: var(--color-danger); 
     color: #ffffff;
-    padding: var(--space-sm) var(--space-md); /* 16px 24px */
+    padding: var(--space-sm) var(--space-md); 
     
     font-family: var(--font-primary);
     font-size: 0.95rem;
@@ -580,10 +569,10 @@
     
     box-shadow: var(--shadow-card);
     
-    /* Animation */
+    
     animation: slideDown 0.5s cubic-bezier(0.32, 0.72, 0, 1);
     
-    /* Auto hide after 7 seconds */
+    
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
@@ -603,7 +592,7 @@
     }
 }
 
-/* Accessibility: Respect reduced motion */
+
 @media (prefers-reduced-motion: reduce) {
     .error-banner {
         animation: none;
@@ -668,14 +657,12 @@
 }
 
 
-/* ══════════════════════════════════════════════════════════════
-   Responsive Design
-   ══════════════════════════════════════════════════════════════ */
+
 
 @media (max-width: 1024px) {
     .bookings-container,
     .booking-detail-container {
-        padding: 48px 0; /* Giảm từ 64px */
+        padding: 48px 0; 
     }
     
     .filter-tabs {
@@ -731,7 +718,7 @@
     }
     
     .booking-card {
-        padding: var(--space-sm); /* Giảm padding */
+        padding: var(--space-sm); 
     }
     
     .booking-summary-card {
@@ -748,7 +735,7 @@
     }
     
     .error-banner {
-        top: 80px; /* Adjust for smaller header */
+        top: 80px; 
         padding: 12px 16px;
         font-size: 0.875rem;
     }
@@ -766,9 +753,7 @@
     }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   Accessibility - Focus States
-   ══════════════════════════════════════════════════════════════ */
+
 
 .filter-tab:focus-visible,
 .btn-change-schedule:focus-visible,
@@ -780,9 +765,7 @@
     outline-offset: 2px;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   Modal Overrides (for Cancel Confirmation)
-   ══════════════════════════════════════════════════════════════ */
+
 
 .modal-content {
     border-radius: var(--card-border-radius);
@@ -828,12 +811,12 @@
 }
 
 
-/* Extracted from bookings.html */
+
 .ui-element-10 {
     color: var(--color-primary-light);
 }
 
-/* Quick Reschedule Modal Buttons */
+
 .quick-slot-btn, .quick-staff-btn {
     padding: 8px 16px;
     border-radius: var(--border-radius-pill);

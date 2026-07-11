@@ -1,5 +1,5 @@
 
-/* booking-detail.css */
+
 .text-accent {
     color: var(--color-accent) !important;
 }
@@ -15,7 +15,6 @@
     line-height: 1.5;
 }
 
-/* Action buttons on booking detail */
 .action-buttons-section {
     display: flex;
     gap: 12px;
@@ -167,12 +166,10 @@
     justify-content: flex-end;
 }
 
-/* Hide header status badge (moved into summary) */
 .header-title-row .badge-status {
     display: none !important;
 }
 
-/* ── Slot Picker (Change Schedule Modal) ────────────────────────────────── */
 .slot-day-tabs {
     display: flex;
     gap: 8px;

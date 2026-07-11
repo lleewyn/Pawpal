@@ -1,13 +1,10 @@
-/* ==========================================================================
-   Bookings List Page
-   Loads seeded bookings from /data/bookings.json through the API cache.
-   ========================================================================== */
+
 
 import { API } from '/scripts/api/api.js';
 
 
 
-// ── Sync cancel lên Supabase ───────────────────────────────────────────────
+
 async function cancelOnSupabase(bookingId) {
     const db = window.SupabaseClient;
     if (!db) return;
@@ -22,7 +19,7 @@ async function cancelOnSupabase(bookingId) {
     }
 }
 
-// ── Sync reschedule lên Supabase ───────────────────────────────────────────
+
 async function rescheduleOnSupabase(bookingId, date, time) {
     const db = window.SupabaseClient;
     if (!db) return;
@@ -118,7 +115,7 @@ async function loadBookings(status) {
             if (pet.id) currentPetMap.set(String(pet.id), pet);
         });
 
-        // Safety fallback: Nếu localStorage bị cũ, thiếu pet (như PET-006), ta tải bù từ pets.json
+        
         try {
             const rawPets = await fetch('/data/pets.json').then(r => r.json());
             (Array.isArray(rawPets) ? rawPets : []).forEach(pet => {
@@ -146,7 +143,7 @@ function renderBookings(status) {
 
     let filteredBookings = [...allBookings];
     
-    // Ưu tiên giữ lại lịch hẹn có nguồn từ Supabase hoặc có giá tiền hợp lệ
+    
     const uniqueMap = new Map();
     for (const b of filteredBookings) {
         const petKey = String(b.petId || b.petName || b.pet_profile?.pet_name || 'pet');
@@ -158,26 +155,26 @@ function renderBookings(status) {
         if (!uniqueMap.has(key)) {
             uniqueMap.set(key, b);
         } else {
-            // Đã có trùng lặp, ta sẽ ưu tiên bản ghi từ supabase hoặc bản ghi có giá tiền hợp lệ
+            
             const existing = uniqueMap.get(key);
             const existingHasPrice = Number(existing.price) > 0;
             const newHasPrice = Number(b.price) > 0;
             
             if (!existingHasPrice && newHasPrice) {
-                uniqueMap.set(key, b); // Ghi đè bằng bản ghi có giá
+                uniqueMap.set(key, b); 
             } else if (b._source === 'supabase' && existing._source !== 'supabase') {
-                uniqueMap.set(key, b); // Ưu tiên supabase
+                uniqueMap.set(key, b); 
             }
         }
     }
     filteredBookings = Array.from(uniqueMap.values());
     
-    // Cập nhật số lượng trên các tab bộ lọc
+    
     const counts = { all: filteredBookings.length, pending: 0, confirmed: 0, 'in-progress': 0, completed: 0, cancelled: 0 };
     filteredBookings.forEach(booking => {
         const resolved = resolveBookingStatus(booking);
-        // 'accepted' cũng được tính vào 'in-progress' trên giao diện (tuỳ logic, nhưng theo statusAliases thì accepted đứng riêng lẻ, 'in-progress' là ['in-progress'])
-        // Để linh hoạt, ta kiểm tra theo statusAliases:
+        
+        
         Object.keys(counts).forEach(key => {
             if (key !== 'all' && statusAliases[key] && statusAliases[key].includes(resolved)) {
                 counts[key]++;
@@ -455,7 +452,7 @@ function openQuickCancelModal(booking) {
         if (idx !== -1) {
             bookings[idx].status = 'cancelled';
             bookings[idx].cancelCount = (bookings[idx].cancelCount || 0) + 1;
-            /* localStorage.setItem removed */
+            
         }
         await cancelOnSupabase(bookingId);
         modal.hide();
@@ -500,7 +497,7 @@ function openQuickRescheduleModal(booking) {
     modalEl.id = 'quickRescheduleBookingModal';
     modalEl.className = 'modal fade';
     modalEl.tabIndex = -1;
-    // Bỏ check hotel theo yêu cầu của user, luôn hiển thị chọn giờ và nhân viên
+    
     const isHotelBooking = false;
     modalEl.innerHTML = `
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -576,7 +573,7 @@ function openQuickRescheduleModal(booking) {
                 bookings[idx].staff = 'Bảo mẫu khách sạn';
             }
             bookings[idx].changeCount = (bookings[idx].changeCount || 0) + 1;
-            /* localStorage.setItem removed */
+            
         }
         await rescheduleOnSupabase(bookingId, selectedDate, selectedSlot);
         modal.hide();

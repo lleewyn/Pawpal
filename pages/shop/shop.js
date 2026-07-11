@@ -1,7 +1,4 @@
 
-
-
-
 const brandCatalog = [
     { id: 1, name: 'Royal Canin', logo: '/assets/images/shop/brand/royal-canin.png', slug: 'royal-canin' },
     { id: 2, name: 'Pedigree', logo: '/assets/images/shop/brand/Pedigree.png', slug: 'pedigree' },
@@ -16,8 +13,6 @@ const brandCatalog = [
     { id: 11, name: 'Nylabone', logo: '/assets/images/shop/brand/Nylabone.png', slug: 'nylabone' },
     { id: 12, name: 'Hartz', logo: '/assets/images/shop/brand/Hartz.png', slug: 'hartz' },
 ];
-
-
 
 let state = {
     products: [],
@@ -286,8 +281,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-
-
 function initSuggestionsSidebar() {
     const suggestionsList = document.getElementById('suggestionsList');
     
@@ -348,7 +341,6 @@ function initCategoryGrid() {
         });
     });
 }
-
 
 
 function initFilters() {
