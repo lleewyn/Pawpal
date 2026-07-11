@@ -311,6 +311,11 @@
     margin-top: 0;
 }
 
+.booking-layout {
+    max-width: 1160px;
+    margin: 0 auto;
+}
+
 .booking-form .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -348,6 +353,7 @@
 .spa-schedule .form-group input,
 .hotel-date-range .form-group input {
     padding: 8px 12px; 
+    border: 1px solid rgba(42,89,68,0.15);
     border-radius: var(--card-border-radius);
     font-family: var(--font-primary);
     font-size: 0.95rem;
