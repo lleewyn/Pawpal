@@ -1,6 +1,3 @@
-// ==========================================================================
-// service-detail.js — Public Service Detail Interactive Logic (Section 3.1.4)
-// ==========================================================================
 
 let serviceData = null;
 let selectedPetType = 'Chó';
@@ -13,7 +10,6 @@ let currentImageIndex = 0;
 let autoSlideTimer = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Parse URL ID
     const urlParams = new URLSearchParams(window.location.search);
     const serviceId = urlParams.get('id');
 
@@ -22,7 +18,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 2. Load Service Data
     try {
         if (window.DataLoader && typeof window.DataLoader.getServiceById === 'function') {
             serviceData = await window.DataLoader.getServiceById(serviceId);
@@ -31,7 +26,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            // Populate Details
             updateBreadcrumb();
             populateServiceInfo();
             setupGallery();
@@ -44,7 +38,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             setupRelatedServices();
             setupConfigurator();
 
-            // Initial Price Recalculation
             recalculatePrice();
         } else {
             console.error('DataLoader not initialized');
@@ -56,7 +49,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Show fallback if service id is invalid
 function showNotFound() {
     const main = document.querySelector('.service-detail-main');
     if (main) {
@@ -90,7 +82,6 @@ function updateBreadcrumb() {
     }
 }
 
-// 1. Populate Service Info text
 function populateServiceInfo() {
     document.getElementById('detailServiceId').textContent = serviceData.serviceId;
     document.getElementById('detailServiceTitle').textContent = serviceData.name.replace(/&/g, 'và');
@@ -123,7 +114,6 @@ function populateServiceInfo() {
     }
 }
 
-// 2. Set up gallery và thumbnails
 function setupGallery() {
     const mainImg = document.getElementById('mainShowcaseImg');
     mainImg.onerror = function () {
@@ -135,10 +125,8 @@ function setupGallery() {
     const thumbsContainer = document.getElementById('galleryThumbnails');
     if (!thumbsContainer) return;
 
-    // Build image list based on category
     let rawImages = Array.isArray(serviceData.images) && serviceData.images.length > 0 ? [...serviceData.images] : [serviceData.image];
 
-    // Unique images only
     rawImages = [...new Set(rawImages)];
 
     galleryImages = rawImages.map(url => url);
@@ -159,7 +147,6 @@ function setupGallery() {
         });
     });
 
-    // Arrow navigation
     const prevBtn = document.getElementById('galleryPrev');
     const nextBtn = document.getElementById('galleryNext');
     if (prevBtn) prevBtn.addEventListener('click', () => navigateGallery(-1));
@@ -208,17 +195,13 @@ function resetAutoSlide() {
     startAutoSlide();
 }
 
-// 3. Set up configuration selection pill buttons
 function setupConfigurator() {
-    // A. Pet Type Option (Hidden as per user request - weight is enough)
     const rawPet = serviceData.petType;
     if (rawPet.includes('/') || rawPet.toLowerCase().includes('và')) {
-        selectedPetType = 'Tất cả'; // Default
+        selectedPetType = 'Tất cả';
     } else {
         selectedPetType = rawPet.includes('Chó') ? 'Chó' : (rawPet.includes('Mèo') ? 'Mèo' : 'Tất cả');
     }
-
-    // B. Weight Class Options
     const weightOptions = document.getElementById('weightClassOptions');
     const availableWeights = Object.keys(serviceData.prices).filter(w => serviceData.prices[w] > 0);
 
@@ -243,27 +226,18 @@ function setupConfigurator() {
 
 }
 
-// 4. Calculate prices with weight and staff surcharge
 function recalculatePrice() {
     let finalPrice = serviceData.prices && serviceData.prices[selectedWeight] ? serviceData.prices[selectedWeight] : serviceData.price;
 
-
-
-    // B. Weight level surcharge is now handled directly by the exact price from CSV
-
-    // C. Calculate member tier prices
     const silverPrice = Math.round(finalPrice * 0.95);
     const goldPrice = Math.round(finalPrice * 0.90);
     const diamondPrice = Math.round(finalPrice * 0.85);
-
-    // D. Update UI
     animatePriceChange('detailBasePrice', finalPrice);
     animatePriceChange('priceTierSilver', silverPrice);
     animatePriceChange('priceTierGold', goldPrice);
     animatePriceChange('priceTierDiamond', diamondPrice);
     animatePriceChange('stickyPriceVal', finalPrice);
 
-    // E. Update booking URLs
     const bookingParams = new URLSearchParams({
         service: serviceData.serviceId,
         petType: selectedPetType,
@@ -279,7 +253,6 @@ function recalculatePrice() {
     }
 }
 
-// Simple text transition for price update
 function animatePriceChange(elementId, newPrice) {
     const el = document.getElementById(elementId);
     if (el) {
@@ -287,9 +260,7 @@ function animatePriceChange(elementId, newPrice) {
     }
 }
 
-// 5. Populate benefits and timeline checklist
 function setupTimelineAndBenefits() {
-    // Benefits
     const benefitsList = document.getElementById('benefitsList');
     let benefits = [
         'Nuôi dưỡng chuyên sâu làn da và lông thú cưng',
@@ -303,7 +274,6 @@ function setupTimelineAndBenefits() {
 
     benefitsList.innerHTML = benefits.map(b => `<li>${b.replace(/&/g, 'và')}</li>`).join('');
 
-    // Timeline
     const timeline = document.getElementById('checklistTimeline');
     let checklist = [
         { step: 'Kiểm tra sơ bộ', desc: 'Tiếp nhận bé, phân tích tình trạng da lông và tư vấn' },
@@ -343,7 +313,6 @@ function setupTimelineAndBenefits() {
         </div>
     `).join('');
 
-    // Toggle logic
     const toggleBtn = document.getElementById('timelineToggleBtn');
     if (toggleBtn && checklist.length > MAX_VISIBLE_STEPS) {
         toggleBtn.hidden = false;
@@ -380,7 +349,6 @@ function setupTimelineAndBenefits() {
         toggleBtn.hidden = true;
     }
 
-    // GSAP ScrollTrigger to activate steps on scroll
     setTimeout(() => {
         if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
             checklist.forEach((item, idx) => {
@@ -395,13 +363,11 @@ function setupTimelineAndBenefits() {
                 }
             });
         } else {
-            // Fallback: make all active
             document.querySelectorAll('.timeline-step-item').forEach(el => el.classList.add('active'));
         }
     }, 400);
 }
 
-// 6. Amenities
 function setupAmenities() {
     const amenitiesSection = document.getElementById('amenitiesSection');
     const amenitiesGrid = document.getElementById('amenitiesGrid');
@@ -414,7 +380,6 @@ function setupAmenities() {
             amenitiesSection.style.display = 'block';
             amenitiesGrid.innerHTML = items.map(item => `<li>${item}</li>`).join('');
             
-            // Optional GSAP animation
             if (typeof gsap !== 'undefined') {
                 gsap.from(amenitiesGrid.children, {
                     scrollTrigger: {
@@ -436,7 +401,6 @@ function setupAmenities() {
     }
 }
 
-// 7. FAQs accordion
 function setupFAQs() {
     const container = document.getElementById('faqList');
     if (!container) return;
@@ -459,7 +423,6 @@ function setupFAQs() {
         </div>
     `).join('');
 
-    // Register global toggle function
     window.toggleFaqAccordion = function (id) {
         const panel = document.getElementById(id);
         const trigger = panel.previousElementSibling;
@@ -491,14 +454,11 @@ function setupFAQs() {
     };
 }
 
-// 8. Reviews section setup (matches shop reviews)
 let reviewsList = [];
 async function setupReviews() {
-    // Populate score block
     document.getElementById('averageScore').textContent = serviceData.rating.toFixed(1);
     document.getElementById('totalReviewsCount').textContent = `Dựa trên ${serviceData.reviewCount} lượt đánh giá thực tế`;
 
-    // Try to load reviews dynamically
     if (window.DataLoader && window.DataLoader.getServiceReviews) {
         const dynamicReviews = await window.DataLoader.getServiceReviews(serviceData.dbId);
         if (dynamicReviews && dynamicReviews.length > 0) {
@@ -506,7 +466,6 @@ async function setupReviews() {
         }
     }
     
-    // Fallback if no dynamic reviews exist yet
     if (reviewsList.length === 0) {
         const reviews = Array.isArray(serviceData.reviews) ? serviceData.reviews : [];
         if (reviews.length > 0) {
@@ -549,7 +508,6 @@ async function setupReviews() {
 
     renderReviewList('all');
 
-    // Set up filter clickers and update counts
     const chips = document.querySelectorAll('.review-filter-chip');
     chips.forEach(chip => {
         const filterType = chip.getAttribute('data-filter');
@@ -559,7 +517,6 @@ async function setupReviews() {
         else if (filterType === '4') count = reviewsList.filter(r => r.rating >= 4).length;
         else if (filterType === 'media') count = reviewsList.filter(r => r.images && r.images.length > 0).length;
         
-        // Update chip text with count
         if (count >= 0) {
             const originalText = chip.textContent.replace(/\s*\(\d+\)$/, '');
             chip.textContent = `${originalText} (${count})`;
@@ -572,7 +529,6 @@ async function setupReviews() {
         });
     });
 
-    // Setup Lightbox Close
     document.getElementById('btnLightboxClose').addEventListener('click', () => {
         document.getElementById('lightboxModal').classList.add('d-none');
     });
@@ -651,7 +607,6 @@ function renderReviewList(filter) {
     }).join('');
 }
 
-// Open Lightbox
 window.openLightbox = function (src) {
     const modal = document.getElementById('lightboxModal');
     const img = document.getElementById('lightboxImg');
@@ -659,13 +614,11 @@ window.openLightbox = function (src) {
     modal.classList.remove('d-none');
 };
 
-// Vote Helpful click
 window.voteHelpful = function (btnId) {
     const btn = document.getElementById(btnId);
     if (!btn) return;
 
     btn.classList.toggle('active');
-    // Using string matching to find and update count, as the structure has text and svg
     const htmlStr = btn.innerHTML;
     const match = htmlStr.match(/Hữu ích \((\d+)\)/);
     if (match) {
@@ -679,7 +632,6 @@ window.voteHelpful = function (btnId) {
     }
 };
 
-// 9. Sticky Bottom Booking Bar Trigger
 function setupStickyBarTrigger() {
     const bar = document.getElementById('stickyBookingBar');
     if (!bar) return;
@@ -693,7 +645,6 @@ function setupStickyBarTrigger() {
     }, { passive: true });
 }
 
-// 10. Wishlist and Share action
 function setupWishlistAndShare() {
     const likeBtn = document.getElementById('btnLikeService');
     const shareBtn = document.getElementById('btnShareService');
@@ -703,7 +654,6 @@ function setupWishlistAndShare() {
     const serviceKey = phone ? `pawpal_wishlist_services_${phone}` : 'pawpal_wishlist_services_guest';
     const productKey = phone ? `pawpal_wishlist_${phone}` : 'pawpal_wishlist_guest';
 
-    // Check if liked in localStorage
     const savedWishlist = JSON.parse(localStorage.getItem(serviceKey) || '[]');
     currentLikedState = savedWishlist.includes(String(serviceData.dbId));
 
@@ -732,7 +682,6 @@ function setupWishlistAndShare() {
     });
 
     shareBtn.addEventListener('click', () => {
-        // Copy current page URL to clipboard
         navigator.clipboard.writeText(window.location.href).then(() => {
             showToast('Đã sao chép liên kết chia sẻ dịch vụ!');
         }).catch(err => {
@@ -754,7 +703,6 @@ function updateLikeButtonUI() {
     }
 }
 
-// Toast Helper
 function showToast(message) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
@@ -791,7 +739,6 @@ function showToast(message) {
     }, 3000);
 }
 
-// 11. Related Services
 async function setupRelatedServices() {
     const container = document.getElementById('relatedServicesGrid');
     if (!container) return;

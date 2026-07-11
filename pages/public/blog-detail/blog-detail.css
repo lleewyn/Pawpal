@@ -1,6 +1,3 @@
-/* ==========================================================================
-   Chi tiết bài viết
-   ========================================================================== */
 
 .blog-breadcrumb {
     padding: var(--space-md) 0;
@@ -64,7 +61,6 @@
     font-size: 0.9rem;
 }
 
-/* Kiểu chữ và khoảng cách cho nội dung bài viết */
 .blog-article-content {
     font-size: 1.125rem;
     line-height: 1.8;
@@ -102,7 +98,6 @@
     margin-bottom: 0.75rem;
 }
 
-/* Trích dẫn */
 .blog-article-content .blog-quote {
     font-family: 'Lora', serif;
     font-size: 1.3rem;
@@ -116,7 +111,6 @@
     text-align: center;
 }
 
-/* Ghi đè Bootstrap cho Blog Detail */
 .text-primary {
     color: var(--color-primary, #2E5C50) !important;
 }
@@ -137,7 +131,6 @@
     color: #fff;
 }
 
-/* Hộp sản phẩm bên trong bài viết */
 .blog-product-box {
     border: 1px solid rgba(0,0,0,0.08);
     border-radius: 1rem;
@@ -157,7 +150,6 @@
     object-fit: cover;
 }
 
-/* Thẻ (Tags) */
 .blog-tags .btn-filter-tag {
     display: inline-block;
     padding: 0.4rem 1rem;
@@ -178,7 +170,6 @@
     border-color: var(--primary-color);
 }
 
-/* Mục lục ở cột bên */
 .toc-widget .nav-link {
     border-left: 2px solid transparent;
     transition: all 0.3s ease;
@@ -195,7 +186,6 @@
     background-color: rgba(46, 92, 80, 0.05);
 }
 
-/* Bình luận */
 .comment-form-wrapper {
     background-color: #f8f9fa;
 }
@@ -233,7 +223,6 @@
     border-color: var(--primary-color);
 }
 
-/* Khoảng cách theo kích thước màn hình (Responsive) */
 @media (max-width: 991.98px) {
     .blog-article-content h2 {
         margin-top: 2rem;
@@ -245,73 +234,61 @@
 }
 
 
-/* Trích xuất từ blog-detail.html */
 .post-meta-avatar {
     max-height: 500px;
      object-fit: cover;
 }
 
-/* Trích xuất từ blog-detail.html */
 .post-meta-author {
     font-size: 0.85rem;
 }
 
-/* Trích xuất từ blog-detail.html */
 .post-meta-date {
     width: 80px;
      height: 80px;
      object-fit: cover;
 }
 
-/* Trích xuất từ blog-detail.html */
 .post-meta-comments {
     width: 45px;
      height: 45px;
 }
 
-/* Trích xuất từ blog-detail.html */
 .author-box-avatar {
     width: 45px;
      height: 45px;
      object-fit: cover;
 }
 
-/* Trích xuất từ blog-detail.html */
 .author-box-desc {
     top: 100px;
      z-index: 10;
 }
 
-/* Trích xuất từ blog-detail.html */
 .trending-post-thumb {
     width: 70px;
      height: 50px;
      object-fit: cover;
 }
 
-/* Trích xuất từ blog-detail.html */
 .trending-post-title {
     font-size: 0.85rem;
      line-height: 1.4;
 }
 
-/* Trích xuất từ blog-detail.html */
 .trending-post-date {
     font-size: 0.75rem;
 }
 
-/* Trích xuất từ blog-detail.html */
 .related-post-thumb {
     height: 300px;
      object-fit: cover;
 }
 
-/* Trích xuất từ blog-detail.html */
 .related-post-overlay {
     background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
 }
 
-/* Trích xuất từ blog-detail.html */
 .related-post-img-wrapper {
     aspect-ratio: 16/9;
      transition: transform 0.3s ease;

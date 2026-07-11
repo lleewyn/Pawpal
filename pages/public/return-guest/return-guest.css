@@ -1,6 +1,3 @@
-/* ==========================================================================
-   Tra cứu lịch / đơn hàng
-   ========================================================================== */
 
 .rg-page {
     background: #f4faf7;
@@ -344,7 +341,6 @@
 .otp-input.otp-error { border-color: var(--color-danger); }
 
 
-/* ── Refactored Inline CSS from return-guest.js ── */
 .rg-actions-flex {
     display: flex;
      gap: 10px;

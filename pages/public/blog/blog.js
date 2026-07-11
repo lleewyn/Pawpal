@@ -212,20 +212,16 @@ async function initBlog() {
 
     const blogs = await window.DataLoader.loadBlogs();
     
-    // Phân loại blog dựa trên categorySlug
     const tips = blogs.filter(b => b.categorySlug === 'tips');
     const news = blogs.filter(b => b.categorySlug === 'news');
     const promo = blogs.filter(b => b.categorySlug === 'promo');
     
-    // Khu vực nổi bật
     const spotlightWrapper = document.querySelector('#blog-hero-spotlight-wrapper');
     if (spotlightWrapper && blogs.length > 0) {
-        // Find "Có nên tắm cho chó" or just pick the most viewed overall
         const spotlightBlog = blogs.find(b => b.title.includes('tắm cho chó')) || blogs[0];
         spotlightWrapper.innerHTML = createBlogCard(spotlightBlog, 'spotlight');
     }
 
-    // Khu vực mới nhất
     const latestGrid = document.querySelector('#latest-grid-wrapper');
     const standardGrid = document.querySelector('#blog-card-grid');
     if (latestGrid && tips.length > 0) {
@@ -246,7 +242,6 @@ async function initBlog() {
         }
     }
 
-    // Khu vực xu hướng (sắp xếp theo lượt xem)
     const trendingList = document.querySelector('#trending-list-wrapper');
     if (trendingList) {
         const topTrending = [...blogs].sort((a, b) => b.viewCount - a.viewCount).slice(0, 3);
@@ -264,10 +259,8 @@ async function initBlog() {
         newsList.innerHTML = news.map(b => createBlogCard(b, 'news')).join('');
     }
 
-    // Ràng buộc lại dữ liệu để lọc
     entries = [...document.querySelectorAll('.blog-entry')];
 
-    // Xử lý tham số URL
     const urlParams = new URLSearchParams(window.location.search);
     const categoryParam = urlParams.get('category');
     if (categoryParam) {

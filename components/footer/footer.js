@@ -11,7 +11,6 @@
             input.focus();
             return;
         }
-        // Chuyển hướng tới trang đăng ký và điền sẵn SĐT
         const origin = window.location.origin || '';
         window.location.href = origin + '/pages/public/login/login.html?action=register&phone=' + encodeURIComponent(phone);
     });

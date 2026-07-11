@@ -406,7 +406,6 @@ function buildBookingCard(b) {
 function buildOrderCard(o) {
     const address = esc(o.delivery?.address || '');
 
-    // Trạng thái thanh toán — đọc cả hai cấu trúc dữ liệu
     const isPaid = o.paymentStatus === 'paid' || o.payment?.status === 'paid';
     const isPendingRefund = o.paymentStatus === 'pending_refund';
     const isRefunded = o.paymentStatus === 'refunded';
@@ -909,18 +908,15 @@ function confirmCancelBooking(bookingId) {
         return;
     }
 
-    // Cập nhật trạng thái hiển thị local
     booking.status = 'cancelled';
     booking.cancelCount = (booking.cancelCount || 0) + 1;
 
-    // Gọi API hoặc kết nối Supabase
     if (window.API && typeof window.API.updateBookingStatus === 'function') {
         window.API.updateBookingStatus(bookingId, 'CANCELLED').catch(e => console.warn(e));
     } else {
         const db = window.SupabaseClient;
         if (db) {
             const isUUID = typeof bookingId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingId);
-            // Fix: Sử dụng bảng 'appointment' thay vì 'service_booking' (cấu trúc mới)
             let query = db.from('appointment').update({ appointment_status: 'CANCELLED', updated_at: new Date().toISOString() });
             query = isUUID ? query.eq('id', bookingId) : query.eq('appointment_code', bookingId);
             query.then(({error}) => { if (error) console.warn('[ReturnGuest] Cancel booking sync error:', error); });
@@ -934,7 +930,6 @@ function confirmCancelBooking(bookingId) {
     if (phone) setTimeout(() => showUpsellModal(phone), 250);
 }
 
-// ── Cancel Order ──────────────────────────────────────────────────────────
 function confirmCancelOrder(orderId) {
     const order = rgLastSearchState.orders.find(o => o.id === orderId);
     if (!order) {
@@ -942,12 +937,10 @@ function confirmCancelOrder(orderId) {
         return;
     }
 
-    // Cập nhật trạng thái hiển thị local
     order.status = 'cancelled';
     order.orderStatus = 'CANCELLED';
     order.updatedAt = new Date().toISOString();
 
-    // Gọi API hoặc kết nối Supabase
     if (window.API && typeof window.API.updateOrderStatus === 'function') {
         window.API.updateOrderStatus(orderId, 'CANCELLED').catch(e => console.warn(e));
     } else {
@@ -1150,7 +1143,6 @@ function showChangeScheduleModal(bookingId, phone) {
         clearHoldTimer();
         
 
-        // Gọi API hoặc kết nối Supabase
         if (window.API && typeof window.API.updateBookingStatus === 'function') {
             window.API.updateBookingStatus(bookingId, 'CONFIRMED').catch(e => console.warn(e));
         } else {
@@ -1175,7 +1167,6 @@ function showChangeScheduleModal(bookingId, phone) {
     });
 }
 
-// ── Upsell mật khẩu ───────────────────────────────────────────────────────
 function showUpsellModal(phone) {
     setTimeout(() => {
         const existing = document.getElementById('rg-upsell-modal');
@@ -1231,7 +1222,6 @@ function restoreLastSearchResults() {
     }
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────
 function showToast(msg, type = 'info') {
     const container = document.getElementById('toastContainer');
     if (!container) return;

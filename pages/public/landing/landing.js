@@ -12,13 +12,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 document.addEventListener('DOMContentLoaded', function() {
 
-        //Ẩn ngay khi DOM sẵn sàng, hủy timer nếu tải đủ nhanh
         (function () {
             function hideLoader() {
                 clearTimeout(window._loaderTimeout);
                 var loader = document.getElementById('cute-loader');
                 if (!loader) return;
-                if (loader.style.display === 'none') return; // Never shown, do nothing
+                if (loader.style.display === 'none') return;
                 loader.style.opacity = '0';
                 loader.style.transition = 'opacity 0.3s ease';
                 setTimeout(function () { loader.style.display = 'none'; }, 300);
@@ -35,7 +34,6 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function() {
 
         (function () {
-            // Cập nhật tình trạng khả dụng trên màn hình chính
             function updateHeroAvailability() {
                 const el = document.getElementById('heroAvailability');
                 if (!el) return;
@@ -48,22 +46,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.innerHTML = `Hôm nay còn trống: <strong style="color:#ffffff; font-weight:700;">${spaSlots} slot Spa</strong> | <strong style="color:#ffffff; font-weight:700;">${hotelRooms} phòng Hotel</strong> <span style="opacity:0.6">(Cập nhật ${timeStr})</span>`;
             }
 
-            // Cập nhật mức độ khẩn cấp ở Footer
             function updateCtaUrgency() {
                 const el = document.getElementById('ctaUrgency');
                 if (!el) return;
 
-                const totalSlots = Math.floor(Math.random() * 8) + 3; // 3-10 slots
+                const totalSlots = Math.floor(Math.random() * 8) + 3; 
                 el.innerHTML = `<span class="urgency-dot"></span><span>Hôm nay còn <strong>${totalSlots} slot</strong> trống — Đặt ngay!</span>`;
             }
 
-            // Khởi tạo và tự động cập nhật
             updateHeroAvailability();
             updateCtaUrgency();
-            setInterval(updateHeroAvailability, 300000); // 5 phút
-            setInterval(updateCtaUrgency, 180000); // 3 phút
+            setInterval(updateHeroAvailability, 300000); 
+            setInterval(updateCtaUrgency, 180000); 
 
-            // ── Service Featured Swap 
             (function initSvcSwap() {
                 const featured   = document.getElementById('svcFeatured');
                 const miniItems  = document.querySelectorAll('.svc-mini-item');
@@ -73,12 +68,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     const d = el.dataset;
                     if (!d.id || d.id === featured.dataset.id) return;
 
-                    // Hiệu ứng ẩn đi
                     featured.style.transition = 'opacity 0.2s ease';
                     featured.style.opacity = '0';
 
                     setTimeout(function () {
-                        // Cập nhật nội dung nổi bật
                         document.getElementById('svcFeaturedImgEl').src = d.img;
                         document.getElementById('svcFeaturedImgEl').alt = d.title;
                         document.getElementById('svcFeaturedTitle').innerHTML = d.title;
@@ -94,18 +87,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             badge.style.display = 'none';
                         }
 
-                        // Update href
                         featured.href = d.href || '#';
                         featured.dataset.id = d.id;
 
-                        // Trạng thái active trên thẻ mini
                         miniItems.forEach(function(m) {
                             m.classList.remove('svc-active');
                             m.style.display = '';
                         });
                         el.classList.add('svc-active');
 
-                        // Hiệu ứng hiện ra
                         featured.style.opacity = '1';
                     }, 200);
                 }
@@ -113,7 +103,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 miniItems.forEach(function(item) {
                     item.style.cursor = 'pointer';
                     item.addEventListener('click', function(e) {
-                        // Chỉ đổi nội dung, không chuyển trang
                         e.preventDefault();
                         swapFeatured(item);
                     });
@@ -132,18 +121,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (carousel) {
                 console.log('Found #heroCarousel element');
 
-                // Theo dõi sự kiện chuyển đổi
                 carousel.addEventListener('slide.bs.carousel', function (e) {
                     console.log('Carousel slide event triggered. Moving to index:', e.to);
                 });
 
-                // Kiểm tra ảnh bên trong carousel
                 const images = carousel.querySelectorAll('img');
                 console.log('Number of images in carousel:', images.length);
                 images.forEach((img, i) => {
                     console.log(`Image ${i + 1} src:`, img.src);
 
-                    // Kiểm tra nếu đã tải xong
                     if (img.complete) {
                         if (img.naturalWidth === 0) {
                             console.error(`Image ${i + 1} (${img.src}) failed to load (naturalWidth is 0)`);
@@ -167,8 +153,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
 
 
-// ── Product Loading ──────────────────────────────────────────
-// Tải sản phẩm thật từ dữ liệu và hiển thị lên lưới sản phẩm  trang chủ
 (async function() {
     const grid = document.getElementById('productGrid');
     if (!grid) return;
@@ -271,7 +255,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
-    // Chờ DataLoader tải xong
     let attempts = 0;
     while (!window.DataLoader && attempts < 20) {
         await new Promise(r => setTimeout(r, 100));
@@ -282,7 +265,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const products = await window.DataLoader.loadProducts();
     if (!products || !products.length) return;
 
-    // Hiển thị 10 sản phẩm nổi bật
     const featured = products
         .filter(p => p.stock > 0)
         .sort((a, b) => (b.rating || 0) - (a.rating || 0))
@@ -290,51 +272,55 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const detailBase = '/pages/shop/product-detail/product-detail.html';
 
-    grid.innerHTML = featured.map(p => {
-        const hasDiscount = p.originalPrice && p.originalPrice > p.price;
-        const oldPrice = hasDiscount
-            ? `<span class="price-old">${Number(p.originalPrice).toLocaleString('vi-VN')}đ</span>`
-            : '';
-        const stars = '★'.repeat(Math.round(p.rating || 5));
-        const sold = p.soldCount ? `(${Number(p.soldCount).toLocaleString('vi-VN')} đã bán)` : '';
+    const renderProducts = (items) => {
+        grid.innerHTML = items.map(p => {
+            const hasDiscount = p.originalPrice && p.originalPrice > p.price;
+            const oldPrice = hasDiscount
+                ? `<span class="price-old">${Number(p.originalPrice).toLocaleString('vi-VN')}đ</span>`
+                : '';
+            const stars = '★'.repeat(Math.round(p.rating || 5));
+            const sold = p.soldCount ? `(${Number(p.soldCount).toLocaleString('vi-VN')} đã bán)` : '';
 
-        return `
-        <div class="product-card" data-product-id="${p.id}">
-            <button class="product-wishlist-btn" data-product-id="${p.id}" aria-label="Thêm vào yêu thích">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-            </button>
-            <a href="${detailBase}?id=${p.id}" class="product-card-link">
-                <div class="product-image-box">
-                    <img src="${p.image || '/assets/images/shop/products/placeholder.webp'}"
-                        alt="${p.name}" loading="lazy"
-                        onerror="this.src='/assets/images/shop/products/placeholder.webp'">
-                </div>
-                <div class="product-info">
-                    <h3>${p.name}</h3>
-                    <div class="product-meta">
-                        <span class="rating-stars" style="color:#f59e0b">${stars}</span>
-                        <span class="rating-score">${p.rating || '5.0'}</span>
-                        <span class="sold-count">${sold}</span>
+            return `
+            <div class="product-card" data-product-id="${p.id}">
+                <button class="product-wishlist-btn" data-product-id="${p.id}" aria-label="Thêm vào yêu thích">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </button>
+                <a href="${detailBase}?id=${p.id}" class="product-card-link" style="text-decoration:none;color:inherit">
+                    <div class="product-image-box">
+                        <img src="${p.image || '/assets/images/shop/products/placeholder.webp'}"
+                            alt="${p.name}" loading="lazy"
+                            onerror="this.src='/assets/images/shop/products/placeholder.webp'">
                     </div>
-                    <div class="product-info-footer">
-                        <div class="product-price">
-                            <span class="price-current">${Number(p.price).toLocaleString('vi-VN')}đ</span>
-                            ${oldPrice}
+                    <div class="product-info">
+                        <h3>${p.name}</h3>
+                        <div class="product-meta">
+                            <span class="rating-stars" style="color:#f59e0b">${stars}</span>
+                            <span class="rating-score">${p.rating || '5.0'}</span>
+                            <span class="sold-count">${sold}</span>
+                        </div>
+                        <div class="product-info-footer">
+                            <div class="product-price">
+                                <span class="price-current">${Number(p.price).toLocaleString('vi-VN')}đ</span>
+                                ${oldPrice}
+                            </div>
                         </div>
                     </div>
+                </a>
+                <div class="product-card-actions">
+                    <button class="add-to-cart-btn" data-product-id="${p.id}"
+                        aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
+                    <button class="buy-now-btn" data-product-id="${p.id}"
+                        aria-label="Mua ngay">Mua ngay</button>
                 </div>
-            </a>
-            <div class="product-card-actions">
-                <button class="add-to-cart-btn" data-product-id="${p.id}"
-                    aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
-                <button class="buy-now-btn" data-product-id="${p.id}"
-                    aria-label="Mua ngay">Mua ngay</button>
-            </div>
-        </div>`;
-    }).join('');
-    syncWishlistButtons();
+            </div>`;
+        }).join('');
+        syncWishlistButtons();
+    };
+
+    renderProducts(featured);
 
     grid.addEventListener('click', (event) => {
         const wishlistBtn = event.target.closest('.product-wishlist-btn');
@@ -375,7 +361,29 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
     });
 
-    // Các tab lọc phụ
+    document.querySelectorAll('.shop-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.shop-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const tab = btn.dataset.tab;
+            let filtered;
+            
+            if (tab === 'hangmoi') {
+                filtered = [...products].sort((a,b) => String(b.id).localeCompare(String(a.id))).slice(0, 10);
+            } else if (tab === 'banchay') {
+                filtered = [...products].sort((a,b) => (b.soldCount || 0) - (a.soldCount || 0)).slice(0, 10);
+            } else if (tab === 'khuyenmai') {
+                filtered = products.filter(p => p.originalPrice > p.price).slice(0, 10);
+                if (!filtered.length) filtered = featured;
+            } else {
+                filtered = featured;
+            }
+            
+            document.querySelectorAll('.shop-sub-filter-btn').forEach(b => b.classList.remove('active'));
+            renderProducts(filtered);
+        });
+    });
+
     document.querySelectorAll('.shop-sub-filter-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             document.querySelectorAll('.shop-sub-filter-btn').forEach(b => b.classList.remove('active'));
@@ -402,87 +410,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!filtered.length) filtered = featured.slice(0, 10);
             }
 
-            grid.innerHTML = filtered.map(p => {
-                const hasDiscount = p.originalPrice && p.originalPrice > p.price;
-                const oldPrice = hasDiscount
-                    ? `<span class="price-old">${Number(p.originalPrice).toLocaleString('vi-VN')}đ</span>`
-                    : '';
-                return `
-                <div class="product-card" data-product-id="${p.id}">
-                    <button class="product-wishlist-btn" data-product-id="${p.id}" aria-label="Thêm vào yêu thích">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                        </svg>
-                    </button>
-                    <a href="${detailBase}?id=${p.id}" class="product-card-link" style="text-decoration:none;color:inherit">
-                        <div class="product-image-box">
-                            <img src="${p.image || '/assets/images/shop/products/placeholder.webp'}"
-                                alt="${p.name}" loading="lazy"
-                                onerror="this.src='/assets/images/shop/products/placeholder.webp'">
-                        </div>
-                        <div class="product-info">
-                            <h3>${p.name}</h3>
-                            <div class="product-info-footer">
-                                <div class="product-price">
-                                    <span class="price-current">${Number(p.price).toLocaleString('vi-VN')}đ</span>
-                                    ${oldPrice}
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                    <div class="product-card-actions">
-                        <button class="add-to-cart-btn" data-product-id="${p.id}"
-                            aria-label="Thêm vào giỏ hàng">Thêm vào giỏ</button>
-                        <button class="buy-now-btn" data-product-id="${p.id}"
-                            aria-label="Mua ngay">Mua ngay</button>
-                    </div>
-                </div>`;
-            }).join('');
-            syncWishlistButtons();
-
-            grid.addEventListener('click', (event) => {
-                const wishlistBtn = event.target.closest('.product-wishlist-btn');
-                const addBtn = event.target.closest('.add-to-cart-btn');
-                const buyBtn = event.target.closest('.buy-now-btn');
-                if (!wishlistBtn && !addBtn && !buyBtn) return;
-
-                event.preventDefault();
-                event.stopPropagation();
-
-                if (wishlistBtn) {
-                    const active = toggleWishlist(wishlistBtn.dataset.productId);
-                    wishlistBtn.classList.toggle('active', active);
-                    return;
-                }
-
-                const btn = addBtn || buyBtn;
-                const id = btn.dataset.productId;
-                const product = products.find(item => String(item.id) === String(id));
-                if (!product) return;
-
-                if (buyBtn) {
-                    const buyNowCart = [{
-                        ...product,
-                        quantity: 1,
-                        qty: 1
-                    }];
-                    sessionStorage.setItem('pawpal_buynow_cart', JSON.stringify(buyNowCart));
-                    sessionStorage.setItem('pawpal_is_buynow', 'true');
-                    window.location.href = checkoutPage;
-                    return;
-                }
-
-                const cart = getCart();
-                upsertCartItem(cart, id, product, 1);
-                saveCart(cart);
-                showCartToast(`Đã thêm ${product.name} vào giỏ hàng`);
-                if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
-            });
+            renderProducts(filtered);
         });
     });
 })();
 
-// ── Service Loading ──────────────────────────────────────────
 (async function() {
     const svcGrid = document.getElementById('svcLandingGrid');
     const svcTabBar = document.getElementById('svcTabBar');
@@ -538,7 +470,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }).join('');
     };
 
-    // Diverse mix for "All" tab
     const getMixedServices = () => {
         const spa = services.filter(s => s.category === 'spa').slice(0, 5);
         const hotel = services.filter(s => s.category === 'hotel').slice(0, 4);
@@ -546,10 +477,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return [...spa, ...hotel, ...taxi];
     };
 
-    // Initial render (mixed categories)
     renderServices(getMixedServices());
 
-    // Tab filtering
     if (svcTabBar) {
         const tabs = svcTabBar.querySelectorAll('.shop-tab-btn');
         tabs.forEach(tab => {
@@ -574,3 +503,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 })();
+
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
+        if (currentUser) {
+            const ctaNote = document.querySelector('.cta-note');
+            const btnPointsStart = document.querySelector('.btn-points-start');
+            
+            if (ctaNote) {
+                ctaNote.textContent = 'Khám phá quyền lợi hạng thẻ PawPass của bạn';
+            }
+            
+            if (btnPointsStart) {
+                btnPointsStart.href = '/pages/user/loyalty/loyalty.html';
+                const textSpan = btnPointsStart.querySelector('span:first-child');
+                const badgeSpan = btnPointsStart.querySelector('.points-badge');
+                
+                if (textSpan) textSpan.textContent = 'Xem Điểm Thưởng';
+                if (badgeSpan) {
+                    badgeSpan.textContent = `${currentUser.points || 0} pts`;
+                }
+            }
+        }
+    } catch (e) {
+        console.error('Error updating membership CTA', e);
+    }
+});

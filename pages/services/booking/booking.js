@@ -1,6 +1,3 @@
-// ==========================================================================
-// PawPal — Booking Page Script (Section 3.1.4)
-// ==========================================================================
 
 import { getPets, savePets } from '../../../scripts/api/petService.js';
 
@@ -833,7 +830,6 @@ function renderServices(type, searchQuery = '') {
         `;
     }).join('');
 
-    // Attach click events
     listContainer.querySelectorAll('.svc-select-card').forEach(card => {
         card.addEventListener('click', () => {
             listContainer.querySelectorAll('.svc-select-card').forEach(c => c.classList.remove('selected'));
@@ -860,7 +856,6 @@ function calculateDynamicPrice(service, weight) {
     return targetPrice;
 }
 
-// Step 3: Date và Staff selection
 function setupScheduleSelection() {
     const checkInInput = document.getElementById('checkInDate');
     const checkOutInput = document.getElementById('checkOutDate');
@@ -1130,7 +1125,6 @@ function renderStaff() {
         `;
     }).join('');
 
-    // Attach click events
     listContainer.querySelectorAll('.staff-card').forEach(card => {
         card.addEventListener('click', () => {
             listContainer.querySelectorAll('.staff-card').forEach(c => c.classList.remove('selected'));
@@ -1260,13 +1254,11 @@ function setupStepActions() {
         goToStep(4);
     });
 
-    // Back click
     backButtons[2].addEventListener('click', () => goToStep(1));
     backButtons[3].addEventListener('click', () => goToStep(2));
     backButtons[4].addEventListener('click', () => goToStep(3));
 }
 
-// Update sidebar summary details
 function updateSummary() {
     const summaryEmpty = document.getElementById('summaryEmpty');
     const summaryContent = document.getElementById('summaryContent');
@@ -1280,18 +1272,15 @@ function updateSummary() {
     summaryEmpty.classList.add('d-none');
     summaryContent.classList.remove('d-none');
 
-    // Set details
     const sumService = document.getElementById('sumService');
     const sumPet = document.getElementById('sumPet');
     const sumOwner = document.getElementById('sumOwner');
     const sumStaff = document.getElementById('sumStaff');
     const sumDate = document.getElementById('sumDate');
 
-    // Service
     sumService.classList.remove('d-none');
     document.getElementById('sumServiceVal').textContent = selectedService.name;
 
-    // Pet
     if (bookingState.petName) {
         sumPet.classList.remove('d-none');
         document.getElementById('sumPetVal').textContent = `${bookingState.petName} (${bookingState.petWeight}kg)`;
@@ -1299,7 +1288,6 @@ function updateSummary() {
         sumPet.classList.add('d-none');
     }
 
-    // Owner
     if (bookingState.ownerName) {
         sumOwner.classList.remove('d-none');
         document.getElementById('sumOwnerVal').textContent = `${bookingState.ownerName} • ${bookingState.ownerPhone}`;
@@ -1307,7 +1295,6 @@ function updateSummary() {
         sumOwner.classList.add('d-none');
     }
 
-    // Staff
     if (selectedService.category === 'spa' && bookingState.staff) {
         sumStaff.classList.remove('d-none');
         document.getElementById('sumStaffVal').textContent = bookingState.staff;
@@ -1315,7 +1302,6 @@ function updateSummary() {
         sumStaff.classList.add('d-none');
     }
 
-    // Date
     if (bookingState.date) {
         sumDate.classList.remove('d-none');
         let dateText = formatDate(bookingState.date);
@@ -1329,13 +1315,11 @@ function updateSummary() {
         sumDate.classList.add('d-none');
     }
 
-    // Price
     const basePrice = calculateDynamicPrice(selectedService, bookingState.petWeight);
     let subtotal = basePrice;
 
     if (selectedService.category === 'hotel') {
         subtotal = basePrice * (bookingState.nights || 1);
-        // Addons
         bookingState.addons.forEach(addon => {
             if (addon.perNight) {
                 subtotal += addon.price * (bookingState.nights || 1);
@@ -1396,7 +1380,6 @@ function updateSummary() {
     document.getElementById('sumPriceVal').textContent = `${prefix}${finalPrice.toLocaleString('vi-VN')}đ`;
 }
 
-// Render Step 4 bill details
 function renderStep4Confirm() {
     const basePrice = calculateDynamicPrice(selectedService, bookingState.petWeight);
     let subtotal = basePrice;
@@ -1496,7 +1479,6 @@ function renderStep4Confirm() {
     `;
 }
 
-// Step 4 policy validation check
 function setupConfirmation() {
     const policyChk = document.getElementById('policyCheck');
     const confirmBtn = document.getElementById('confirmBookingBtn');
@@ -1576,7 +1558,6 @@ async function processBookingSubmit() {
         createdAt: new Date().toISOString()
     };
 
-    // Sync booking to Supabase
     let finalBookingId = newBookingId;
     let customerId = currentUser ? currentUser.id : null;
 
@@ -1584,10 +1565,8 @@ async function processBookingSubmit() {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         const dbUser = currentUser || { phone: bookingState.ownerPhone, name: bookingState.ownerName };
 
-        // Ensure customer exists in Supabase
         customerId = await getSupabaseCustomerId(dbUser);
 
-        // Ensure pet exists in Supabase if this is a new pet
         let finalPetId = bookingState.petId || null;
         if (customerId && !finalPetId) {
             try {
@@ -1609,7 +1588,6 @@ async function processBookingSubmit() {
             }
         }
 
-        // Assign the resolved petId for insertion
         bookingRecord.petId = finalPetId;
 
         const synced = await insertBookingToSupabase(bookingRecord, dbUser);
@@ -1622,10 +1600,8 @@ async function processBookingSubmit() {
         }
     }
 
-    // Handle vãng lai registration tokens
     let generatedToken = null;
     if (!currentUser) {
-        // Tạo token kích hoạt tài khoản có hiệu lực 48 giờ
         generatedToken = 'token-temp-' + Math.floor(100000 + Math.random() * 900000);
         const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
         tokens.push({
@@ -1641,15 +1617,11 @@ async function processBookingSubmit() {
         }
     }
 
-    // Trigger clear hold timer
     if (holdTimerInterval) {
         clearInterval(holdTimerInterval);
     }
-
-    // Store the created booking ID in session storage to display on success page
     sessionStorage.setItem('last_booking_id', finalBookingId);
 
-    // Simulate API request delay
     setTimeout(() => {
         confirmBtn.innerHTML = ` Đặt lịch thành công!`;
         let url = `../booking-success/booking-success.html?code=${finalBookingId}`;
@@ -1658,7 +1630,6 @@ async function processBookingSubmit() {
     }, 1200);
 }
 
-// Show toast SMS simulation for guest account setup
 function showTempAccountActivationToast(phone, token) {
     let container = document.getElementById('toastContainer');
     if (!container) {
@@ -1672,7 +1643,6 @@ function showTempAccountActivationToast(phone, token) {
     toast.className = 'toast-custom toast-success';
     toast.style.minWidth = '320px';
 
-    // For guest activation flow, point to login with guest-activate action so user receives OTP first
     const origin = window.location.origin || 'http://localhost:3000';
     const setupUrl = `${origin}/pages/public/login/login.html?action=guest-activate&phone=${encodeURIComponent(phone)}`;
 
@@ -1693,11 +1663,10 @@ function showTempAccountActivationToast(phone, token) {
     setTimeout(() => toast.classList.add('show'), 100);
 }
 
-// Helper time calculation
 function calculateEndTime(startTime, durationStr) {
     if (!startTime) return null;
     const [h, m] = startTime.split(':').map(Number);
-    let durationMinutes = 60; // default 1h
+    let durationMinutes = 60;
 
     if (durationStr.includes('phút')) {
         durationMinutes = parseInt(durationStr.replace(/[^\d]/g, ''));
@@ -1885,14 +1854,12 @@ async function insertBookingToSupabase(bookingRecord, currentUser) {
     }
 }
 
-// Format date (DD/MM/YYYY)
 function formatDate(dateString) {
     if (!dateString) return '';
     const [year, month, day] = dateString.split('-');
     return `${day}/${month}/${year}`;
 }
 
-// === DIRECT CSV LOAD FALLBACKS ===
 function parseCSVDirectly(csvText) {
     const lines = csvText.trim().split('\n');
     if (lines.length === 0) return [];

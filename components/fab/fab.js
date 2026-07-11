@@ -1,10 +1,7 @@
-/**
- * Nút FAB — Chatbot AI + Cuộn lên đầu trang
- */
+
 function initFab() {
     if (window.__pawpalFabInitialized) return;
 
-    // ── Hiển thị nút cuộn lên đầu trang ──
     const bookingBtn = document.getElementById('fabBookingBtn');
     if (bookingBtn) {
         window.addEventListener('scroll', () => {
@@ -16,7 +13,6 @@ function initFab() {
         }, { passive: true });
     }
 
-    // ── AI Chatbot Panel ──
     const aiBtn    = document.getElementById('fabAiBtn');
     const chatPanel = document.getElementById('fabChatPanel');
     const closeBtn = document.getElementById('fabChatClose');
@@ -45,7 +41,6 @@ function initFab() {
 
     const GEMINI_API_KEY = "AIzaSyDWkR8qFUKBmpu3GZi2GP2OYQpA-TUSkcg";
     
-    // --- KHÔI PHỤC LỊCH SỬ CHAT TỪ LOCALSTORAGE ---
     let currentUserId = 'guest';
     try {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
@@ -65,14 +60,13 @@ function initFab() {
 
     function saveChatHistory() {
         if (conversationHistory.length > 50) {
-            conversationHistory = conversationHistory.slice(-50); // Giữ tối đa 50 tin nhắn
+            conversationHistory = conversationHistory.slice(-50); 
         }
         localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(conversationHistory));
     }
 
-    // Hiển thị lịch sử nếu có
     if (conversationHistory.length > 0 && messages) {
-        messages.innerHTML = ''; // Xóa lời chào mặc định
+        messages.innerHTML = ''; 
         conversationHistory.forEach(msg => {
             const bubble = document.createElement('div');
             bubble.className = `fab-chat-bubble fab-chat-bubble--${msg.role === 'user' ? 'user' : 'bot'}`;
@@ -105,7 +99,6 @@ function initFab() {
         });
     }
 
-    // Gửi tin nhắn
     async function sendMessage() {
         if (!input || !input.value.trim()) return;
         const text = input.value.trim();
@@ -113,7 +106,6 @@ function initFab() {
         appendMessage(text, 'user');
         showTyping();
         
-        // Gọi Backend Vercel Serverless Function
         let aiTimerSeconds = 0;
         let aiTimerInterval = null;
         let finalReplyForConsole = '';
@@ -124,29 +116,24 @@ function initFab() {
                 console.log(`[PawPal AI] Đang xử lý... ${aiTimerSeconds} giây`);
             }, 1000);
 
-            // Lấy Access Token từ Supabase Client để backend xác thực
             let token = "";
             const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (db) {
-                // Do PawPal dùng persistSession: false, thử đọc session từ Supabase trước
                 const { data } = await db.auth.getSession();
                 if (data && data.session) {
                     token = data.session.access_token;
                 }
             }
-            // Nếu không có session Supabase, thử lấy user từ localStorage (cơ chế auth riêng của PawPal)
             if (!token) {
                 try {
                     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
                     if (currentUser && (currentUser.id || currentUser._supabaseId)) {
-                        // Dùng id của user làm token tạm để backend biết user đã đăng nhập
                         token = 'local:' + (currentUser._supabaseId || currentUser.id);
                         console.log('[Chat] Dùng local auth, userId:', currentUser._supabaseId || currentUser.id);
                     }
                 } catch(e) {}
             }
             
-            // Xây dựng history nếu chưa có
             if (conversationHistory.length === 0) {
             }
             
@@ -172,11 +159,9 @@ function initFab() {
                 console.log(`[PawPal AI] Đang sử dụng API Key bắt đầu bằng: ${apiKeyUsed}...`);
             }
 
-            // Đọc SSE streaming response
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             
-            // Tạo bubble bot ngay để stream vào đó
             let botBubble = null;
             let fullReply = '';
             
@@ -193,7 +178,6 @@ function initFab() {
                         const parsed = JSON.parse(line.slice(6));
                         
                         if (parsed.done) {
-                            // Xong lưu vào history
                             if (fullReply) {
                                 conversationHistory.push({ "role": "model", "content": fullReply });
                                 saveChatHistory();
@@ -206,7 +190,6 @@ function initFab() {
                         }
                         
                         if (parsed.reply) {
-                            // Lỗi thân thiện 
                             fullReply = parsed.reply;
                             if (!botBubble) {
                                 botBubble = document.createElement('div');
@@ -216,7 +199,6 @@ function initFab() {
                             botBubble.innerHTML = fullReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
                             scrollToBottom();
                         } else if (parsed.chunk) {
-                            // Chunk text từ streaming
                             fullReply += parsed.chunk;
                             if (!botBubble) {
                                 botBubble = document.createElement('div');
@@ -226,11 +208,10 @@ function initFab() {
                             botBubble.innerHTML = fullReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
                             scrollToBottom();
                         }
-                    } catch(e) { /* Bỏ qua lỗi parse khi nhận chunk chưa hoàn chỉnh */ }
+                    } catch(e) { }
                 }
             }
             
-            // Fallback nếu không nhận được gì
             if (!fullReply && !botBubble) {
                 appendMessage('Xin lỗi, hệ thống PawPal AI đang gặp sự cố kết nối. Quý khách vui lòng thử lại sau.', 'bot');
             }
@@ -273,7 +254,6 @@ function initFab() {
         const bubble = document.createElement('div');
         bubble.className = `fab-chat-bubble fab-chat-bubble--${type}`;
         bubble.innerHTML = text;
-        // Xóa gợi ý ở tin nhắn đầu tiên của người dùng
         if (type === 'user') {
             const sug = messages && messages.querySelector('.fab-chat-suggestions');
             if (sug) sug.remove();
@@ -302,7 +282,6 @@ function initFab() {
 }
 
 
-// Gọi initF sau khi footerInjected (fab inject cùng lúc với footer)
 document.addEventListener('footerInjected', function () {
     setTimeout(initFab, 100);
 });

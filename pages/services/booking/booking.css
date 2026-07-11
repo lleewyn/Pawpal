@@ -1461,7 +1461,6 @@
     box-shadow: 0 6px 16px rgba(42, 89, 68, 0.3);
 }
 
-/* --- Refactored JS Inline Styles --- */
 .voucher-dropdown-item { cursor: pointer; padding: 10px 16px; border-bottom: 1px solid #eee; white-space: normal; }
 .voucher-dropdown-title { font-size: 0.95rem; }
 .voucher-dropdown-desc { font-size: 0.85rem; margin-top: 2px; }

@@ -1,10 +1,8 @@
-// Lấy giá trị từ input theo ID
 function getValue(id) {
     const el = document.getElementById(id);
     return el ? el.value.trim() : '';
 }
 
-// Hiển thị thông báo (toast) phản hồi
 function showFeedback(type, message) {
     let container = document.getElementById('contactToastContainer');
     if (!container) {
@@ -34,7 +32,6 @@ function showFeedback(type, message) {
     }, 4000);
 }
 
-// Thu thập dữ liệu từ form liên hệ
 function buildTicketPayload() {
     const fullName = getValue('fullName');
     const phoneNumber = getValue('phoneNumber');
@@ -49,7 +46,6 @@ function buildTicketPayload() {
     };
 }
 
-// Kiểm tra tính hợp lệ của dữ liệu form
 function validatePayload(payload) {
     if (!payload.fullName) return 'Vui lòng nhập họ và tên.';
     if (!payload.phoneNumber) return 'Vui lòng nhập số điện thoại.';
@@ -57,7 +53,6 @@ function validatePayload(payload) {
     return null;
 }
 
-// Lưu thông tin liên hệ thành một ticket hỗ trợ
 async function saveContactTicket(payload) {
     const serviceMap = {
         spa: 'Spa và Grooming',
@@ -75,17 +70,14 @@ Dịch vụ quan tâm: ${serviceMap[payload.serviceInterest] || 'Không chọn'}
 Tin nhắn:
 ${payload.message}`;
 
-    // Gọi hàm hỗ trợ Supabase
     if (window.PawPalSupport && window.PawPalSupport.createTicket) {
         const result = await window.PawPalSupport.createTicket(title, type, content);
         return result ? result.id : `CT-${Date.now()}`;
     }
 
-    // Dự phòng: Nếu không load được support-handler
     return `CT-${Date.now()}`;
 }
 
-// Xử lý sự kiện gửi form liên hệ
 async function handleSubmit(event) {
     event.preventDefault();
 

@@ -32,14 +32,12 @@
     <div id="site-header"></div>
 
     <main class="blog-detail-main pb-5">
-        <!-- 1. Breadcrumbs và Header -->
         <div class="blog-detail-header-wrapper">
             <div class="container">
                 <nav aria-label="breadcrumb" class="blog-breadcrumb">
                     <ol class="breadcrumb" id="blog-breadcrumb">
                         <li class="breadcrumb-item"><a href="../landing/landing.html">Trang chủ</a></li>
                         <li class="breadcrumb-item"><a href="../blog/blog.html">Cẩm nang</a></li>
-                        <!-- Đường dẫn sẽ được render vào đây -->
                     </ol>
                 </nav>
 
@@ -48,7 +46,6 @@
                     
                     <div class="blog-hero-meta">
                         <div class="meta-author" id="blog-author-meta">
-                            <!-- Thông tin tác giả sẽ được render vào đây -->
                         </div>
                         
                         <div class="meta-actions">
@@ -62,27 +59,21 @@
                     </div>
                     
                     <div class="blog-hero-cover mt-4" id="blog-hero-cover">
-                        <!-- Ảnh bìa sẽ được render vào đây -->
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. Main Content và Sidebar -->
         <div class="container mt-5">
             <div class="row g-5">
                 
-                <!-- Nội dung chính (70%) -->
                 <div class="col-lg-8">
                     <article class="blog-article-content" id="blog-content">
-                        <!-- Nội dung bài viết sẽ được render vào đây -->
                     </article>
 
-                    <!-- Tags và Author -->
                     <div class="blog-footer-meta mt-5 pt-4 border-top">
                         <div class="blog-tags mb-4" id="blog-tags">
                             <strong>Tags:</strong>
-                            <!-- Thẻ tags sẽ được render vào đây -->
                         </div>
                         
                         <div class="author-box p-4 bg-light rounded-4 d-flex gap-4 align-items-center">
@@ -94,11 +85,9 @@
                         </div>
                     </div>
 
-                    <!-- Khu vực bình luận -->
                     <div class="blog-comments mt-5">
                         <h4 class="mb-4">Bình luận (3)</h4>
                         
-                        <!-- Form bình luận -->
                         <div class="comment-form-wrapper p-4 border rounded-4 mb-5">
                             <h5 class="mb-3">Để lại bình luận của bạn</h5>
                             <form>
@@ -119,7 +108,6 @@
                             </form>
                         </div>
 
-                        <!-- Danh sách bình luận -->
                         <div class="comment-list">
                             <div class="comment-item d-flex gap-3 mb-4">
                                 <div class="comment-avatar">
@@ -135,7 +123,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Phản hồi -->
                             <div class="comment-item reply d-flex gap-3 mb-4 ms-5 border-start border-3 border-primary ps-4">
                                 <div class="comment-avatar">
                                     <img src="../../../assets/images/publics/cat7.jpg" class="rounded-circle author-box-avatar">
@@ -166,10 +153,8 @@
                     </div>
                 </div>
 
-                <!-- Cột bên -->
                 <div class="col-lg-4">
                     <aside class="blog-sidebar sticky-top author-box-desc">
-                        <!-- Khung tìm kiếm -->
                         <div class="sidebar-widget bg-white border rounded-4 p-4 mb-4 shadow-sm">
                             <h5 class="widget-title mb-3 fs-6 fw-bold">Tìm kiếm bài viết</h5>
                             <div class="input-group">
@@ -180,7 +165,6 @@
                             </div>
                         </div>
 
-                        <!-- Mục lục -->
                         <div class="sidebar-widget toc-widget bg-light border rounded-4 p-4 mb-4">
                             <h5 class="widget-title mb-3 fs-6 fw-bold">Nội dung chính</h5>
                             <nav id="toc-nav" class="nav flex-column">
@@ -191,7 +175,6 @@
                             </nav>
                         </div>
 
-                        <!-- Widget thịnh hành -->
                         <div class="sidebar-widget bg-white border rounded-4 p-4 mb-4 shadow-sm">
                             <h5 class="widget-title mb-4 fs-6 fw-bold">Bài viết xem nhiều</h5>
                             <div class="d-flex flex-column gap-3">
@@ -219,7 +202,6 @@
                             </div>
                         </div>
 
-                        <!-- Banner quảng cáo -->
                         <div class="sidebar-widget rounded-4 overflow-hidden position-relative">
                             <img src="../../../assets/images/publics/cat6.jpg" class="img-fluid w-100 related-post-thumb"  alt="Spa Banner">
                             <div class="position-absolute w-100 h-100 top-0 start-0 d-flex flex-column justify-content-end p-4 blog-overlay-gradient" >
@@ -233,11 +215,9 @@
             </div>
         </div>
 
-        <!-- 3. Related Posts -->
         <div class="container mt-5 pt-5 border-top">
             <h3 class="mb-4 fw-bold">Bài Viết Liên Quan</h3>
             <div class="row g-4" id="related-posts-container">
-                <!-- JS sẽ render các bài viết liên quan vào đây -->
             </div>
         </div>
     </main>

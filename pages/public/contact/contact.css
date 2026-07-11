@@ -1,12 +1,8 @@
-/* ==========================================================================
-   Liên hệ
-   ========================================================================== */
 
 .contact-page-body {
     background-color: #f4faf7;
 }
 
-/* --- Hero Section --- */
 .contact-hero {
     background-color: #f4faf7;
     padding: var(--space-md) 0;
@@ -21,7 +17,6 @@
     line-height: 1.2;
 }
 
-/* --- Main Layout --- */
 .contact-main {
     padding: var(--space-xl) 0;
     background-color: #f4faf7;
@@ -29,12 +24,10 @@
 
 .contact-grid {
     display: grid;
-    /* Lưới không đối xứng: 1 phần cho info, 1.8 phần cho form */
     grid-template-columns: 1fr 1.8fr;
     gap: var(--space-xl);
 }
 
-/* --- Left Column: Info --- */
 .contact-info {
     display: flex;
     flex-direction: column;
@@ -87,7 +80,6 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
-/* --- Right Column: Form --- */
 .contact-form-wrapper {
     background: #eef7f2;
     padding: var(--space-xl);
@@ -149,16 +141,14 @@
     font-weight: 600;
     font-size: var(--fs-body);
     cursor: pointer;
-    align-self: center; /* Căn giữa nút bấm */
+    align-self: center; 
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .btn-submit:hover {
-    background-color: #e6a83a; /* Màu vàng hổ phách đậm hơn */
-    
+    background-color: #e6a83a; 
 }
 
-/* --- Responsive --- */
 @media (max-width: 1024px) {
     .contact-grid {
         grid-template-columns: 1fr;
@@ -170,13 +160,11 @@
 }
 
 
-/* Trích xuất từ contact.html */
 .ui-bg-box-4 {
     min-height:110px;
     background:var(--color-bg-light);
 }
 
-/* Trích xuất từ contact.html */
 .ui-border-1 {
     border:0;
      border-radius: var(--card-border-radius);

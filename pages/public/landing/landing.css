@@ -1,11 +1,4 @@
-/* ==========================================================================
-   Khu vực Hero — Bố cục chia không đối xứng
-   ========================================================================== */
 
-
-/*
- * Dự phòng an toàn cho GSAP — Đảm bảo nội dung luôn hiển thị ngay cả khi thư viện GSAP chưa khởi tạo.
- */
 .hero-title,
 .hero-desc,
 .hero-actions,
@@ -55,7 +48,6 @@
     z-index: 2;
 }
 
-/* ── Grid container: 45% copy / 55% visual ── */
 .hero-container {
     position: relative;
     max-width: 1600px;
@@ -94,7 +86,7 @@
 .hero-container--centered .hero-title {
     text-align: center;
     font-size: clamp(2rem, 4vw, 3.2rem);
-    white-space: nowrap;
+    white-space: normal;
     max-width: 100%;
 }
 
@@ -261,7 +253,6 @@
     transform: scale(0.98);
 }
 
-/* Social proof */
 .hero-social-proof {
     display: flex;
     align-items: center;
@@ -702,9 +693,7 @@
 
 
 
-/* ==========================================================================
-   Khu vực Tiện ích 
-   ========================================================================== */
+
 .features-section {
     background-color: var(--color-primary-dark);
     padding: 0;
@@ -785,9 +774,6 @@
 }
 
 
-/* ==========================================================================
-   Services Section 
-   ========================================================================== */
 
 .services-section {
     background-color: #f4faf7;
@@ -933,7 +919,6 @@
     padding: 3px 8px;
 }
 
-/* Ảnh thẻ rộng */
 .svc-card--wide {
     flex-direction: row;
     align-items: stretch;
@@ -1046,7 +1031,6 @@
     color: var(--color-accent-dark);
 }
 
-/* Nút CTA nổi bật — thu hút sự chú ý hơn */
 .svc-cta-btn {
     display: inline-flex;
     align-items: center;
@@ -1127,10 +1111,6 @@
 .services-arched-wrapper { display: none; }
 .arched-card { display: none; }
 
-
-/* ==========================================================================
-   Experts Section 
-   ========================================================================== */
 
 .experts-section {
     background-color: #f4faf7;
@@ -1344,9 +1324,7 @@
         padding: var(--space-sm);
     }
 }
-/* ==========================================================================
-   Process Section
-   ========================================================================== */
+
 
 .process-section {
     background-color: #f4faf7;
@@ -1477,9 +1455,6 @@
 }
 
 
-/* ==========================================================================
-   Shopping Showcase Section
-   ========================================================================== */
 
 .shop-section {
     background-color: #f4faf7;
@@ -1996,9 +1971,6 @@
 }
 
 
-/* ==========================================================================
-   Testimonials Section
-   ========================================================================== */
 
 .testimonials-section {
     background-color: var(--color-primary-dark);
@@ -2039,7 +2011,7 @@
 .testimonials-carousel-wrapper {
     overflow: hidden;
     width: 100%;
-    max-width: 1020px; /* 3 thẻ × 320px + khoảng trống */
+    max-width: 1020px;
     padding: 20px 0;
 }
 
@@ -2199,9 +2171,6 @@
 
 
 
-/* ==========================================================================
-   Pet ID Showcase Section & Glassmorphic Passport Card
-   ========================================================================== */
 
 .pet-id-showcase-section {
     background-color: #f4faf7;
@@ -2221,15 +2190,13 @@
     align-items: center;
 }
 
-/* Cột chứa thẻ Pet ID */
 .pet-id-card-col {
     display: flex;
     justify-content: center;
     align-items: center;
-    perspective: 1000px; /* Bật chiều sâu 3D */
+    perspective: 1000px; 
 }
 
-/* Thẻ Glassmorphic Passport */
 .pet-passport-card {
     background: rgba(255, 255, 255, 0.65);
     backdrop-filter: blur(25px);
@@ -2250,7 +2217,6 @@
     box-shadow: var(--shadow-card);
 }
 
-/* Header thẻ */
 .passport-header {
     display: flex;
     justify-content: space-between;
@@ -2500,9 +2466,6 @@
 
 
 
-/* ==========================================================================
-   Timeline Tracker Section
-   ========================================================================== */
 
 .tracker-section {
     background-color: #f4faf7;
@@ -2686,7 +2649,6 @@
     color: var(--color-primary-dark);
 }
 
-/* Khung giả lập điện thoại (Mockup) */
 .tracker-mockup-col {
     display: flex;
     justify-content: center;
@@ -2883,10 +2845,6 @@
     border: 1px solid rgba(229, 169, 60, 0.15);
 }
 
-
-/* ==========================================================================
-   Membership & Loyalty Program Section
-   ========================================================================== */
 
 .membership-section {
     background-color: #f4faf7;
@@ -3435,7 +3393,6 @@
 }
 
 
-/* Khu vực CTA phía dưới */
 .membership-cta-bottom {
     margin-top: 24px;
 }
@@ -3523,9 +3480,6 @@
 }
 
 
-/* ==========================================================================
-   Responsive & Adaptive Media Queries
-   ========================================================================== */
 
 
 @media (max-width: 1024px) {
@@ -3706,9 +3660,6 @@
     .safety-stat { padding: 0; }
 }
 
-/* ==========================================================================
-   Grid Layout Responsive Fixes
-   ========================================================================== */
 
 @media (max-width: 1024px) {
     .features-container {
@@ -3864,9 +3815,6 @@
 }
 
 
-/* ==========================================================================
-   FAQ Section
-   ========================================================================== */
 
 .faq-section {
     background-color: #f4faf7;
@@ -4158,9 +4106,7 @@
     transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
-/* ==========================================================================
-   Dịch Vụ Landing Card (Compact Grid)
-   ========================================================================== */
+
 .svc-landing-card {
     display: flex;
     flex-direction: column;

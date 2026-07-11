@@ -197,9 +197,7 @@ async function migrateGuestPetsToMember(user, fallbackPhone = null) {
     return Promise.resolve();
 }
 
-/**
- * Kiểm tra phone đã tồn tại trên Supabase chưa (dùng trước khi đăng ký).
- */
+
 async function supabaseCheckPhone(phone) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) return { exists: false, offline: true };
@@ -223,17 +221,12 @@ async function supabaseCheckPhone(phone) {
     }
 }
 
-/**
- * Đăng ký tài khoản mới qua Supabase.
- * Insert vào customer + customer_profile + customer_membership.
- * Trả về { success, user, error, offline }
- */
+
 async function supabaseRegister(name, phone, password) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) return { success: false, offline: true };
 
     try {
-        // 1. Kiểm tra xem SĐT đã tồn tại chưa
         const { data: existingCust, error: checkErr } = await db
             .from('customer')
             .select('id, password_hash')
@@ -290,7 +283,6 @@ async function supabaseRegister(name, phone, password) {
             });
         }
 
-        // 3. Khởi tạo hạng thành viên nếu chưa có
         const { data: existingMembership } = await db.from('customer_membership').select('id').eq('customer_id', customerId).limit(1);
         if (!existingMembership || existingMembership.length === 0) {
             const { data: tiers } = await db
@@ -330,7 +322,6 @@ async function supabaseRegister(name, phone, password) {
     }
 }
 
-// --- ĐIỀU HƯỚNG SECTION THEO URL  ---
 function handleLoginRouting() {
     const params = new URLSearchParams(window.location.search);
     const hash   = window.location.hash;
@@ -338,7 +329,6 @@ function handleLoginRouting() {
     let action = params.get('action');
     let token  = params.get('token');
 
-    // Dự phòng từ hash nếu server chuyển hướng làm mất query params
     if (!action && hash) {
         const hashClean = hash.substring(1);
         if (hashClean === 'register' || hashClean === 'login') {
@@ -359,7 +349,7 @@ function handleLoginRouting() {
     const authTabs             = document.getElementById('authTabs');
 
     if (!loginForm) return;
-    // Reset về trạng thái mặc định
+    
     loginForm.classList.remove('active-form');
     registerForm.classList.remove('active-form');
     otpSection.classList.add('d-none');
@@ -373,7 +363,6 @@ function handleLoginRouting() {
         document.getElementById('tabRegister').classList.add('active');
         document.getElementById('tabLogin').classList.remove('active');
 
-        // Tự động điền số điện thoại từ query param
         const phoneParamForRegister = params.get('phone') || null;
         if (phoneParamForRegister) {
             const regPhoneInput = document.getElementById('registerPhone');
@@ -388,7 +377,7 @@ function handleLoginRouting() {
             try {
                 if (regNameInput && !regNameInput.value.trim()) regNameInput.focus();
                 else if (regPassInput) regPassInput.focus();
-            } catch (e) { /* ignore focus errors */ }
+            } catch (e) { }
         }, 60);
 
     } else if (action === 'setup-password' && token) {
@@ -398,7 +387,7 @@ function handleLoginRouting() {
 
         if (tokenData) {
             const timeElapsed = Date.now() - tokenData.createdAt;
-            const limit = 48 * 60 * 60 * 1000; // 48 giờ
+            const limit = 48 * 60 * 60 * 1000;
             if (timeElapsed <= limit) {
                 setupPasswordSection.classList.remove('d-none');
                 setupPasswordSection.dataset.phone = tokenData.phone;
@@ -411,13 +400,11 @@ function handleLoginRouting() {
         }
 
     } else {
-        // Mặc định: login
         loginForm.classList.add('active-form');
         document.getElementById('tabLogin').classList.add('active');
         document.getElementById('tabRegister').classList.remove('active');
     }
 
-    // Điểm truy cập cho Khách vãng lai kích hoạt tài khoản / nhập OTP
     if (action === 'guest-activate' || action === 'guest-verify-otp') {
         const phoneParam = params.get('phone') || null;
         if (phoneParam && loginForm) {
@@ -464,18 +451,15 @@ function handleLoginRouting() {
     }
 }
 
-// --- KHỞI TẠO TOÀN BỘ FORM LOGIN / REGISTER ---
 function initAuthForms() {
     const loginForm = document.getElementById('loginForm');
     if (!loginForm) return;
 
-    // Khai báo sớm — dùng chung toàn hàm
     const registerForm = document.getElementById('registerForm');
     const authTabs     = document.getElementById('authTabs');
     const tabLogin     = document.getElementById('tabLogin');
     const tabRegister  = document.getElementById('tabRegister');
 
-    // Chuyển đổi tab
     tabLogin.addEventListener('click', () => {
         window.history.pushState({}, '', '?action=login');
         handleLoginRouting();
@@ -485,7 +469,6 @@ function initAuthForms() {
         handleLoginRouting();
     });
 
-    // --- AN/HIỆN MẬT KHẨU ---
     document.querySelectorAll('.btn-toggle-password').forEach(btn => {
         btn.addEventListener('click', () => {
             const input = btn.previousElementSibling;
@@ -499,7 +482,6 @@ function initAuthForms() {
         });
     });
 
-    // --- ĐĂNG NHẬP  ---
     const btnLoginContinue  = document.getElementById('btnLoginContinue');
     const loginStepPhone    = document.getElementById('loginStepPhone');
     const loginStepPassword = document.getElementById('loginStepPassword');
@@ -521,7 +503,6 @@ function initAuthForms() {
             }
             loginPhone.classList.remove('is-invalid');
             
-            // Hiển thị trạng thái đang tải
             const originalText = btnLoginContinue.innerHTML;
             btnLoginContinue.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
             btnLoginContinue.disabled = true;
@@ -535,7 +516,6 @@ function initAuthForms() {
                         loginForm
                     );
                 } else if (user.is_temporary) {
-                    // Tài khoản tạm → hỏi gửi OTP kích hoạt
                     loginStepPhone.classList.add('d-none');
                     const loginStepSendOTP    = document.getElementById('loginStepSendOTP');
                     const loginOtpPhoneDisplay = document.getElementById('loginOtpPhoneDisplay');
@@ -591,7 +571,6 @@ function initAuthForms() {
                         };
                     }
                 } else {
-                    // Thành viên chính thức → nhập mật khẩu
                     loginStepPhone.classList.add('d-none');
                     loginStepPassword.classList.remove('d-none');
                     if (loginPhoneDisplay) loginPhoneDisplay.textContent = phoneVal;
@@ -631,11 +610,9 @@ function initAuthForms() {
         });
     }
 
-    // --- XỬ LÝ ĐĂNG NHẬP ---
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Nếu đang ở bước phone, delegate sang Continue
         if (loginStepPassword && loginStepPassword.classList.contains('d-none')) {
             if (btnLoginContinue) btnLoginContinue.click();
             return;
@@ -651,7 +628,6 @@ function initAuthForms() {
             return;
         }
 
-        // --- Thử đăng nhập qua Supabase ---
         if (window.SupabaseClient) {
             const result = await supabaseLogin(phone, password);
 
@@ -680,13 +656,11 @@ function initAuthForms() {
             }
         }
 
-        // --- Fallback: localStorage (offline / chưa cấu hình Supabase) ---
         console.warn('[Login] ⚠️ Dùng LOCAL STORAGE — Supabase không khả dụng hoặc chưa cấu hình');
         const users       = getUsers();
         const userByPhone = users.find(u => u.phone === phone);
 
         if (!userByPhone) {
-            // Kiểm tra Supabase xem phone có tồn tại không
             if (window.SupabaseClient) {
                 const check = await supabaseCheckPhone(phone);
                 if (!check.offline && !check.exists) {
@@ -738,7 +712,6 @@ function initAuthForms() {
         }
     });
 
-    // --- ĐĂNG KÝ  ---
     const regName            = document.getElementById('registerName');
     const regPhone           = document.getElementById('registerPhone');
     const regPassword        = document.getElementById('registerPassword');
@@ -770,7 +743,6 @@ function initAuthForms() {
         });
     }
 
-    // Thanh đo độ mạnh mật khẩu
     const pwdStrengthFill = document.getElementById('registerPasswordStrengthFill');
     const pwdStrengthText = document.getElementById('registerPasswordStrengthText');
     const pwdStrengthWrap = document.getElementById('registerPasswordStrength');
@@ -839,7 +811,6 @@ function initAuthForms() {
         input.addEventListener('blur',  validateRegisterForm);
     });
 
-    // --- OTP ĐĂNG KÝ ---
     const otpSection  = document.getElementById('otpSection');
     const otpTimer    = document.getElementById('otpTimer');
     const btnResendOtp = document.getElementById('btnResendOtp');
@@ -904,7 +875,7 @@ function initAuthForms() {
 
     function startOtpTimer() {
         if (otpCountdownInterval) clearInterval(otpCountdownInterval);
-        let duration = 10; // Đổi thành 10s để dễ test
+        let duration = 10; 
         btnResendOtp.disabled = true;
         otpCountdownInterval = setInterval(() => {
             const m = Math.floor(duration / 60), s = duration % 60;
@@ -939,7 +910,6 @@ function initAuthForms() {
         const congratsSection = document.getElementById('congratsSection');
         congratsSection.classList.remove('d-none');
 
-        // Thử register lên Supabase trước
         let newUser = null;
 
         if (window.SupabaseClient) {
@@ -953,7 +923,6 @@ function initAuthForms() {
             }
         }
 
-        // Fallback: lưu localStorage
         if (!newUser) {
             const users   = getUsers();
             let userIdx   = users.findIndex(u => u.phone === regPhone.value.trim());
@@ -980,7 +949,6 @@ function initAuthForms() {
         }, stepTime);
     }
 
-    // --- THIẾT LẬP MẬT KHẨU TỪ LINK SMS  ---
     const setupPasswordForm  = document.getElementById('setupPasswordForm');
     const setupPass          = document.getElementById('setupPassword');
     const setupConfirm       = document.getElementById('setupConfirmPassword');
@@ -1012,7 +980,6 @@ function initAuthForms() {
             const token = document.getElementById('setupPasswordSection').dataset.token;
             const users = getUsers();
             
-            // Ưu tiên tìm tài khoản tạm cho số điện thoại này
             let idx = users.findIndex(u => u.phone === phone && u.is_temporary);
             if (idx === -1) {
                 idx = users.findIndex(u => u.phone === phone);
@@ -1044,7 +1011,6 @@ function initAuthForms() {
         });
     }
 
-    // Gửi lại link kích hoạt khi hết hạn
     const btnRequestNewLink = document.getElementById('btnRequestNewLink');
     if (btnRequestNewLink) {
         btnRequestNewLink.addEventListener('click', () => {
@@ -1062,7 +1028,6 @@ function initAuthForms() {
         });
     }
 
-    // --- QUÊN MẬT KHẨU  ---
     const triggerForgot           = document.getElementById('triggerForgot');
     const forgotPhoneSection      = document.getElementById('forgotPhoneSection');
     const btnForgotBackToLogin    = document.getElementById('btnForgotBackToLogin');
@@ -1081,7 +1046,6 @@ function initAuthForms() {
     let forgotOtpInterval = null;
 
     if (triggerForgot && forgotPhoneSection) {
-        // Mở màn quên mật khẩu
         triggerForgot.addEventListener('click', (e) => {
             e.preventDefault();
             loginForm.style.opacity = '0';
@@ -1096,7 +1060,6 @@ function initAuthForms() {
             }, 300);
         });
 
-        // Quay lại login
         btnForgotBackToLogin.addEventListener('click', () => {
             forgotPhoneSection.style.opacity = '0';
             setTimeout(() => {
@@ -1108,7 +1071,6 @@ function initAuthForms() {
             }, 300);
         });
 
-        // Validate SĐT quên mật khẩu
         forgotPhone.addEventListener('blur', () => {
             const v = forgotPhone.value.trim();
             if (v.length > 0 && !/^0[0-9]{9}$/.test(v)) forgotPhone.classList.add('is-invalid');
@@ -1116,7 +1078,6 @@ function initAuthForms() {
         });
         forgotPhone.addEventListener('input', () => forgotPhone.classList.remove('is-invalid'));
 
-        // B1: Gửi OTP
         forgotPhoneForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const phone = forgotPhone.value.trim();
@@ -1143,14 +1104,12 @@ function initAuthForms() {
             if (typeof window.startForgotOtpTimerFn === 'function') window.startForgotOtpTimerFn();
         });
 
-        // Quay lại nhập SĐT
         btnForgotOtpBack.addEventListener('click', () => {
             forgotOtpSection.classList.add('d-none');
             forgotPhoneSection.classList.remove('d-none');
             if (forgotOtpInterval) clearInterval(forgotOtpInterval);
         });
 
-        // B2: Xử lý nhập OTP
         forgotOtpInputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
                 if (!/^[0-9]$/.test(e.target.value)) { e.target.value = ''; return; }
@@ -1172,7 +1131,7 @@ function initAuthForms() {
 
         function startForgotOtpTimer() {
             if (forgotOtpInterval) clearInterval(forgotOtpInterval);
-            let duration = 10; // Đổi thành 10s để dễ test
+            let duration = 10; 
             btnForgotResendOtp.disabled = true;
             forgotOtpInterval = setInterval(() => {
                 const m = Math.floor(duration / 60), s = duration % 60;
@@ -1211,7 +1170,6 @@ function initAuthForms() {
             }
         }
 
-        // B3: Mật khẩu mới
         function validateForgotNewPasswordForm() {
             const passwordPolicy  = /^(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
             const isPassValid     = passwordPolicy.test(forgotNewPassword.value);
@@ -1234,7 +1192,6 @@ function initAuthForms() {
             const users   = getUsers();
             const isGuest = window.isGuestActivationFlow === true;
             
-            // Nếu là luồng kích hoạt của khách, ưu tiên tìm tài khoản tạm
             let userIdx = -1;
             if (isGuest) {
                 userIdx = users.findIndex(u => u.phone === phone && u.is_temporary);
@@ -1258,7 +1215,6 @@ function initAuthForms() {
 
             users[userIdx] = updatedUser;
 
-            // Đồng bộ lên Supabase nếu có
             const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (db) {
                 try {
@@ -1300,7 +1256,6 @@ function initAuthForms() {
     } 
 } 
 
-// --- ENTRY POINT ---
 function initLoginPage() {
     handleLoginRouting();
     initAuthForms();

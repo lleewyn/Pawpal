@@ -76,7 +76,6 @@
     font-family: monospace;
 }
 
-/* Password Setup Form for Guest */
 .password-setup-card {
     background: #fdfaf6;
     border: 1px solid rgba(229, 169, 60, 0.25);
@@ -85,7 +84,7 @@
     margin-top: 20px;
     margin-bottom: 30px;
     text-align: left;
-    display: none; /* Shown dynamically if guest */
+    display: none; 
 }
 
 .setup-title {
