@@ -73,8 +73,16 @@
         }
         toRemove.forEach(function (node) { node.remove(); });
 
-        // Trả về innerHTML của body (vì DOMParser wrap vào <html><body>)
-        return (doc.body || doc.documentElement).innerHTML.trim();
+        // Extract <link> and <style> tags that DOMParser moved to <head>
+        var headTags = '';
+        if (doc.head) {
+            doc.head.querySelectorAll('link[rel="stylesheet"], style').forEach(function(node) {
+                headTags += node.outerHTML + '\n';
+            });
+        }
+        
+        // Trả về innerHTML của body kèm theo các thẻ head bị parser bốc lên trên
+        return headTags + (doc.body || doc.documentElement).innerHTML.trim();
     }
 
     function ensureHeaderAuth() {
@@ -85,9 +93,9 @@
         } catch (e) {
             currentUser = null;
         }
-        if (!document.querySelector('script[src*="header-auth.js"]')) {
+        if (!document.querySelector('script[src*="header.js"]')) {
             var authScript = document.createElement('script');
-            authScript.src = rootPath + 'scripts/shared/header-auth.js';
+            authScript.src = rootPath + 'components/header/header.js';
             authScript.defer = true;
             document.head.appendChild(authScript);
         }
@@ -102,6 +110,16 @@
             supportScript.src = rootPath + 'scripts/shared/support-handler.js';
             supportScript.defer = true;
             document.head.appendChild(supportScript);
+        }
+    }
+
+    function ensureFabJS() {
+        var rootPath = getRootPath();
+        if (!document.querySelector('script[src*="fab.js"]')) {
+            var fabScript = document.createElement('script');
+            fabScript.src = rootPath + 'components/fab/fab.js';
+            fabScript.defer = true;
+            document.head.appendChild(fabScript);
         }
     }
 
@@ -129,6 +147,7 @@
                 document.dispatchEvent(new CustomEvent('footerInjected'));
             }
             if (targetId === 'site-fab') {
+                ensureFabJS();
                 document.dispatchEvent(new CustomEvent('footerInjected'));
             }
             return;
@@ -175,6 +194,7 @@
                     document.dispatchEvent(new CustomEvent('footerInjected'));
                 }
                 if (targetId === 'site-fab') {
+                    ensureFabJS();
                     document.dispatchEvent(new CustomEvent('footerInjected'));
                 }
             })

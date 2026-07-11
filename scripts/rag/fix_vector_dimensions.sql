@@ -1,5 +1,4 @@
 -- Do API Model Embedding mới nhất của Google xuất ra vector 3072 chiều (thay vì 768), 
--- bạn vui lòng chạy đoạn mã này để nới rộng cột và cập nhật lại hàm tìm kiếm nhé:
 
 -- 1. Xóa index cũ (nếu có)
 drop index if exists document_embeddings_embedding_idx;

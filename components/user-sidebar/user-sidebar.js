@@ -1,4 +1,4 @@
-// Auto-detect current page and set active state
+// Tự động nhận diện trang hiện tại và đặt trạng thái active
 (function() {
     const currentPath = window.location.pathname.toLowerCase();
     const urlParams = new URLSearchParams(window.location.search);
@@ -11,29 +11,29 @@
             const linkPath = href.toLowerCase();
             const linkTab = link.getAttribute('data-tab');
             
-            // Check if on dashboard page with specific tab
+            // Kiểm tra nếu đang ở trang dashboard với tab cụ thể
             if (currentPath.includes('dashboard') && linkPath.includes('dashboard')) {
                 if (linkTab === currentTab) {
                     link.classList.add('active');
                 }
                 
-                // Add smooth tab switching for dashboard internal tabs
+                // Thêm hiệu ứng chuyển tab mượt mà cho dashboard
                 if (linkPath.includes('dashboard') && linkTab) {
                     link.addEventListener('click', function(e) {
                         e.preventDefault();
                         
-                        // Update URL without reload
+                        // Cập nhật URL mà không cần tải lại trang
                         const newUrl = linkTab === 'profile' 
                             ? '/pages/user/dashboard.html' 
                             : `/pages/user/dashboard.html?tab=${linkTab}`;
                         window.history.pushState({}, '', newUrl);
                         
-                        // Hide all tabs
+                        // Ẩn tất cả các tab
                         document.querySelectorAll('.dashboard-content-panel').forEach(panel => {
-                            panel.style.display = 'none';
+                            panel.classList.add('d-none');
                         });
                         
-                        // Show target tab
+                        // Hiển thị tab mục tiêu
                         const tabMap = {
                             'profile': 'profileTab',
                             'security': 'securityTab'
@@ -41,16 +41,16 @@
                         const targetTabId = tabMap[linkTab] || 'profileTab';
                         const targetTab = document.getElementById(targetTabId);
                         if (targetTab) {
-                            targetTab.style.display = 'block';
+                            targetTab.classList.remove('d-none');
                         }
                         
-                        // Update active states
+                        // Cập nhật trạng thái active
                         navLinks.forEach(l => l.classList.remove('active'));
                         link.classList.add('active');
                     });
                 }
             } 
-            // Check other pages
+            // Kiểm tra các trang khác
             else if (currentPath.includes('pet-profile') && linkPath.includes('pet-profile')) {
                 link.classList.add('active');
             } else if (currentPath.includes('pet-diary') && linkPath.includes('pet-diary')) {

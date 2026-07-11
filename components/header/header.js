@@ -169,7 +169,7 @@
         const cartBadge = document.querySelector('.cart-badge');
         if (cartBadge) {
             cartBadge.textContent = totalItems;
-            cartBadge.style.display = totalItems > 0 ? 'flex' : 'none';
+            if(totalItems > 0) { cartBadge.classList.add('d-flex'); cartBadge.classList.remove('d-none'); } else { cartBadge.classList.add('d-none'); cartBadge.classList.remove('d-flex'); }
         }
         
         // Badge trên mobile nav drawer
@@ -184,10 +184,10 @@
             const item = el.closest('.nav-item') || el;
             if (isVisible) {
                 item.classList.remove('d-none');
-                item.style.setProperty('display', '', 'important');
+                item.classList.remove('d-none');
             } else {
                 item.classList.add('d-none');
-                item.style.setProperty('display', 'none', 'important');
+                item.classList.add('d-none');
             }
         });
     }
@@ -214,10 +214,10 @@
             if (label.includes('đăng nhập') || label.includes('đăng ký') || label.includes('login') || label.includes('register')) {
                 if (isUser) {
                     link.classList.add('d-none');
-                    link.style.setProperty('display', 'none', 'important');
+                    link.classList.add('d-none');
                 } else {
                     link.classList.remove('d-none');
-                    link.style.setProperty('display', '', 'important');
+                    link.classList.remove('d-none');
                 }
             }
         });
@@ -303,8 +303,8 @@
             if (primaryNavigation) primaryNavigation.classList.add('nav-auth-user');
             // User đã đăng nhập chính thức
             // Ẩn: Tra cứu, Đăng nhập, Đăng ký và divider
-            if (lookupBtn) lookupBtn.style.display = 'none';
-            if (lookupDivider) lookupDivider.style.display = 'none';
+            if (lookupBtn) lookupBtn.classList.add('d-none');
+            if (lookupDivider) lookupDivider.classList.add('d-none');
             
             // Thay bằng: Giỏ hàng + Avatar + Tên + Dropdown
             const userName = String(user.name || user.full_name || '').trim() || user.phone || 'Khách hàng';
@@ -312,7 +312,7 @@
             
             authActions.innerHTML = `
                 <div class="notification-menu-wrapper me-3">
-                    <button class="notification-btn position-relative" id="headerNotificationBtn" title="Thông báo" style="background: none; border: none; display: flex; align-items: center; justify-content: center; color: var(--color-text-dark); padding: 0;">
+                    <button class="notification-btn position-relative" id="headerNotificationBtn" title="Thông báo">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -324,7 +324,7 @@
                             <span>Thông báo</span>
                             <button class="btn-mark-all-read" id="btnMarkAllRead">Đọc tất cả</button>
                         </div>
-                        <div class="dropdown-divider" style="margin: 0;"></div>
+                        <div class="dropdown-divider"></div>
                         <div class="notification-list" id="headerNotificationList">
                             ${renderNotifications()}
                         </div>
@@ -333,7 +333,7 @@
                         </div>
                     </div>
                 </div>
-                <a href="${root}pages/shop/cart/cart.html" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi" style="display: flex; align-items: center; justify-content: center; color: var(--color-text-dark); transition: var(--transition-smooth);">
+                <a href="${root}pages/shop/cart/cart.html" class="cart-btn position-relative me-3" id="headerCartBtn" title="Giỏ hàng của tôi">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="9" cy="21" r="1"></circle>
                         <circle cx="20" cy="21" r="1"></circle>
@@ -438,14 +438,14 @@
             syncMobileAuthLinks('user');
             setupMobileAccountToggle();
             
-            // Attach dropdown toggle handler
+            // Gắn sự kiện đóng mở dropdown
             setupUserDropdown();
             
         } else if (user && user.is_temporary) {
             if (primaryNavigation) primaryNavigation.classList.add('nav-auth-temp');
             // Tài khoản tạm: hiển thị như chưa đăng nhập (không show badge/nút kích hoạt)
-            if (lookupBtn) lookupBtn.style.display = '';
-            if (lookupDivider) lookupDivider.style.display = '';
+            if (lookupBtn) lookupBtn.classList.remove('d-none');
+            if (lookupDivider) lookupDivider.classList.remove('d-none');
 
             authActions.innerHTML = `
                 <a href="${root}pages/public/login/login.html" class="login-btn">
@@ -471,8 +471,8 @@
         } else {
             if (primaryNavigation) primaryNavigation.classList.add('nav-auth-guest');
             // Chưa đăng nhập: Giữ nguyên UI mặc định
-            if (lookupBtn) lookupBtn.style.display = '';
-            if (lookupDivider) lookupDivider.style.display = '';
+            if (lookupBtn) lookupBtn.classList.remove('d-none');
+            if (lookupDivider) lookupDivider.classList.remove('d-none');
             
             // Khôi phục nút Đăng nhập / Đăng ký cho guest (ẩn giỏ hàng theo yêu cầu)
             authActions.innerHTML = `
@@ -506,7 +506,7 @@
         const notiDropdown = document.getElementById('notificationDropdown');
         
         if (toggle && dropdown) {
-            // Toggle dropdown
+            // Đóng/mở dropdown
             toggle.addEventListener('click', (e) => {
                 e.stopPropagation();
                 dropdown.classList.toggle('show');
@@ -522,7 +522,7 @@
             });
         }
         
-        // Close dropdown when clicking outside
+        // Đóng dropdown khi click ra ngoài (ngoại trừ dropdown)
         document.addEventListener('click', (e) => {
             if (dropdown && !e.target.closest('.user-menu-wrapper')) {
                 dropdown.classList.remove('show');
@@ -569,7 +569,7 @@
         });
     }
     
-    // Run when header is injected
+    // Chạy khi header được chèn vào HTML
     document.addEventListener('headerInjected', updateHeaderAuth);
     
     // Also run if header already exists (for pages that don't use components.js)
@@ -579,6 +579,6 @@
         updateHeaderAuth();
     }
     
-    // Listen for auth state changes
+    // Lắng nghe thay đổi trạng thái đăng nhập
     document.addEventListener('auth_state_changed', updateHeaderAuth);
 })();

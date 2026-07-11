@@ -914,11 +914,6 @@
     display: block;
     transition: transform 0.5s ease;
 }
-
-.svc-card:hover .svc-card-img img {
-    
-}
-
 .svc-card-overlay {
     position: absolute;
     inset: 0;
@@ -1233,9 +1228,6 @@
     transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.exp-cell:hover .exp-img img {
-    
-}
 
 .exp-cell:hover {
     transform: translateY(-6px);
@@ -1485,9 +1477,6 @@
     transition: transform 0.5s ease;
 }
 
-.process-step:hover .process-step-img img {
-    
-}
 
 /* Dot với số */
 .process-step-dot {
@@ -1793,9 +1782,6 @@
     transition: var(--transition-smooth);
 }
 
-.product-card:hover .product-image-box img {
-    
-}
 
 /* Thẻ huy hiệu dạng kính mờ (Glassmorphism) */
 .tag-badge {
@@ -3660,18 +3646,7 @@
         min-width: 240px;
         transform: none !important;
         margin-top: 0 !important;
-    }
-    
-    .arched-card:hover {
-        
-    }
-
-
-    
-    .product-grid {
-        /* Bootstrap handles responsive 2-column */
-    }
-    
+    }  
     .testimonials-grid {
         grid-template-columns: 1fr;
         gap: 20px;
@@ -3680,26 +3655,6 @@
     .testimonials-grid .testimonial-card:first-child {
         grid-row: span 1;
         padding: 40px 30px;
-    }
-    
-    .footer-container {
-        /* Bootstrap handles responsive stacking */
-    }
-
-    .experts-carousel-wrapper {
-        /* removed — carousel replaced with editorial grid */
-    }
-    .experts-carousel-track {
-        /* removed — carousel replaced with editorial grid */
-    }
-    .experts-carousel-track .expert-card {
-        /* removed */
-    }
-    .expert-card, .expert-card.highlighted-expert {
-        /* removed */
-    }
-    .experts-nav-btn {
-        /* removed */
     }
 }
 
@@ -3731,18 +3686,7 @@
         width: 100%;
         text-align: center;
     }
-
-
-    
-    .footer-container {
-        /* Bootstrap handles responsive stacking */
-    }
 }
-
-
-
-
-
 
 
 /* Safety & Commitment Section */
@@ -4319,3 +4263,4 @@
     opacity: 1;
     transition: opacity 0.35s ease, transform 0.35s ease;
 }
+

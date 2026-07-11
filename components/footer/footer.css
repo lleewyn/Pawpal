@@ -2,7 +2,7 @@
    PawPal — Footer & Footer CTA Banner
    ========================================================================== */
 
-/* Footer CTA Banner */
+/* Banner kêu gọi hành động ở Footer */
 .footer-cta-banner {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
     padding: 40px var(--container-padding);
@@ -93,7 +93,7 @@
     
 }
 
-/* Main Footer */
+/* Footer chính */
 .main-footer {
     background-color: var(--color-primary-dark);
     color: rgba(255, 255, 255, 0.75);
@@ -262,7 +262,7 @@
     font-size: 0.8rem;
 }
 
-/* Map capsule (in footer) */
+/* Khung bản đồ (trong footer) */
 .footer-map-section {
     margin-top: 30px;
     position: relative;
@@ -421,20 +421,20 @@
 }
 
 
-/* Extracted from footer.html */
+/* Trích xuất từ footer.html */
 .ui-spacing-1 {
     display: block;
      margin-bottom: 16px;
 }
 
-/* Extracted from footer.html */
+/* Trích xuất từ footer.html */
 .ui-logo-1 {
     height: 52px;
      width: auto;
      object-fit: contain;
 }
 
-/* Extracted from footer.html */
+/* Trích xuất từ footer.html */
 .ui-text-format-1 {
     font-size: 0.85rem;
      line-height: 1.6;
@@ -442,33 +442,33 @@
      color: rgba(255,255,255,0.7);
 }
 
-/* Extracted from footer.html */
+/* Trích xuất từ footer.html */
 .ui-text-format-2 {
     opacity: 0.8;
      pointer-events: none;
      font-size: 0.85rem;
 }
 
-/* Extracted from footer.html */
+/* Trích xuất từ footer.html */
 .ui-spacing-2 {
     margin-bottom: 20px;
 }
 
-/* Extracted from footer.html */
+/* Trích xuất từ footer.html */
 .ui-flex-row-1 {
     display: flex;
      gap: 8px;
      margin-top: 10px;
 }
 
-/* Extracted from footer.html */
+/* Trích xuất từ footer.html */
 .ui-logo-2 {
     height: 24px;
      width: auto;
      object-fit: contain;
 }
 
-/* Extracted from footer.html */
+/* Trích xuất từ footer.html */
 .ui-box-1 {
     border:0;
      width:100%;
