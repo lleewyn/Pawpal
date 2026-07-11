@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PawPal Login & Registration Page Styles
+   PawPal Login 
    ========================================================================== */
 
 .login-page-body {
@@ -14,7 +14,6 @@
     align-items: center;
 }
 
-/* Glassmorphic Panel */
 .glassmorphic-panel {
     background: rgba(255, 255, 255, 0.78);
     backdrop-filter: blur(16px);
@@ -30,7 +29,6 @@
     box-shadow: 0 20px 40px rgba(42, 89, 68, 0.08);
 }
 
-/* Tabs */
 .auth-tabs {
     display: flex;
     border-bottom: 2px solid var(--color-border);
@@ -72,7 +70,6 @@
 
 .auth-tab-btn.active::after { transform: scaleX(1); }
 
-/* Form layouts */
 .auth-form { display: none; }
 .auth-form.active-form { display: block; }
 
@@ -91,7 +88,6 @@
     margin-bottom: var(--space-md);
 }
 
-/* Form inputs */
 .form-label {
     font-weight: 600;
     color: var(--color-text-dark);
@@ -128,7 +124,6 @@
     font-weight: 500;
 }
 
-/* Password toggle */
 .password-input-wrapper { position: relative; }
 .password-input-wrapper .form-control { padding-right: 46px; }
 
@@ -149,7 +144,6 @@
 
 .btn-toggle-password:hover { color: var(--color-primary); }
 
-/* Forgot password link */
 .forgot-pass-link {
     font-size: 0.85rem;
     color: var(--color-primary);
@@ -162,7 +156,6 @@
     color: var(--color-primary-dark);
 }
 
-/* ========== Password Requirements Checklist ========== */
 .pw-req-list {
     list-style: none;
     padding: 0;
@@ -198,7 +191,6 @@
     color: var(--color-success);
 }
 
-/* ========== Password Strength Bar ========== */
 .password-strength-bar {
     height: 4px;
     border-radius: 2px;
@@ -228,7 +220,6 @@
 .strength-label.medium { color: var(--color-accent-dark); }
 .strength-label.strong { color: var(--color-success); }
 
-/* ========== 2-Step Login: Phone Display ========== */
 .login-phone-display {
     display: flex;
     align-items: center;
@@ -262,7 +253,6 @@
 
 .btn-change-phone:hover { color: var(--color-primary-dark); }
 
-/* ========== SMS Login Link ========== */
 .btn-sms-login {
     display: block;
     background: none;
@@ -281,7 +271,6 @@
 
 .btn-sms-login:hover { color: var(--color-primary-dark); }
 
-/* ========== OTP Inputs ========== */
 .otp-inputs-wrapper {
     display: flex;
     justify-content: space-between;
@@ -324,7 +313,7 @@
     font-size: 1.05rem;
 }
 
-/* ========== Congrats Section ========== */
+/* ========== Khu vực Chúc mừng ========== */
 .congrats-icon-wrapper {
     display: flex;
     justify-content: center;
@@ -369,10 +358,9 @@
     color: var(--color-text-light);
 }
 
-/* ========== Setup Password / Terms Checkbox ========== */
+/* ========== Cài đặt Mật khẩu / Checkbox Điều khoản ========== */
 .setup-terms-check {
-    padding: var(--space-sm) var(--space-md);
-    /* Tăng khoảng cách bên trái để checkbox không quá sát viền */
+    padding: var(--space-sm) var(--space-md);   
     padding-left: calc(var(--space-md) + 8px);
     background-color: var(--color-primary-light);
     border-radius: var(--card-border-radius);
@@ -404,13 +392,13 @@
 
 .terms-link:hover { color: var(--color-primary-dark); }
 
-/* ========== Expired Section ========== */
+/* ========== Khu vực Hết hạn ========== */
 .expired-icon-wrapper {
     display: flex;
     justify-content: center;
 }
 
-/* ========== Back Button ========== */
+/* ========== Nút Quay lại ========== */
 .btn-back-link {
     background: none;
     border: none;
@@ -430,15 +418,14 @@
     transform: translateX(-4px);
 }
 
-/* ========== Footer Note ========== */
+/* ========== Ghi chú cuối trang ========== */
 .form-note-footer {
     font-size: 0.75rem;
     color: var(--color-text-light);
     line-height: 1.4;
 }
 
-/* ========== Error Banner ========== */
-/* DESIGN.md 15.6: Không dùng border một bên + border-radius */
+/* ========== Banner báo lỗi ========== */
 .auth-error-banner {
     background-color: var(--color-danger-light);
     border: 1px solid rgba(220, 53, 53, 0.35);
@@ -455,7 +442,7 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ========== Toast Notification System ========== */
+/* ========== Hệ thống thông báo  ========== */
 .toast-container-custom {
     position: fixed;
     bottom: var(--space-lg);
@@ -467,7 +454,6 @@
     max-width: 400px;
 }
 
-/* DESIGN.md 15.6: Không dùng border một bên + border-radius */
 .toast-custom {
     background: var(--color-bg-white);
     border-radius: var(--card-border-radius);
@@ -520,7 +506,6 @@
     to   { opacity: 1; transform: translateX(0); }
 }
 
-/* ========== Locked nav links for temp accounts ========== */
 .nav-link.nav-link-locked {
     position: relative;
     opacity: 0.45;
@@ -560,7 +545,6 @@
     to   { opacity: 1; transform: translate(-50%, -100%); }
 }
 
-/* ========== Responsive ========== */
 @media (max-width: 640px) {
     .glassmorphic-panel { padding: var(--space-md); }
 
@@ -583,18 +567,15 @@
 }
 
 
-/* Extracted from login.html */
 .ui-text-format-6 {
     font-size:var(--fs-small);
     color:var(--color-text-light);
 }
 
-/* Extracted from login.html */
 .ui-spacing-4 {
     margin-top:8px;
 }
 
-/* Extracted from login.html */
 .ui-bg-box-5 {
     height:8px;
     background:#eef2f0;
@@ -602,7 +583,6 @@
     overflow:hidden;
 }
 
-/* Extracted from login.html */
 .ui-bg-box-6 {
     width:0%;
     height:100%;
@@ -610,7 +590,6 @@
     transition:width .25s ease;
 }
 
-/* Extracted from login.html */
 .ui-text-format-7 {
     font-size:0.85rem;
     color:var(--color-text-light);

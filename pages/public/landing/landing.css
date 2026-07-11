@@ -3918,7 +3918,6 @@
     color: var(--color-primary);
 }
 
-/* Icon — dùng CSS thay vì ký tự + */
 .faq-icon {
     flex-shrink: 0;
     width: 24px;
@@ -3938,7 +3937,6 @@
     transition: all 0.25s ease;
 }
 
-/* Horizontal bar */
 .faq-icon::before {
     width: 10px;
     height: 1.5px;
@@ -3947,7 +3945,6 @@
     transform: translate(-50%, -50%);
 }
 
-/* Vertical bar */
 .faq-icon::after {
     width: 1.5px;
     height: 10px;
@@ -3956,7 +3953,6 @@
     transform: translate(-50%, -50%);
 }
 
-/* Active state — icon becomes × */
 .faq-item.active .faq-icon {
     border-color: var(--color-primary);
     background: var(--color-primary);
@@ -3975,7 +3971,6 @@
     color: var(--color-primary);
 }
 
-/* Answer */
 .faq-answer {
     max-height: 0;
     overflow: hidden;
@@ -3996,7 +3991,6 @@
     .faq-question span:first-child { font-size: var(--fs-small); }
 }
 
-/* Sửa lỗi: modal đặt lịch/bảng giá không chiếm không gian bố cục */
 #booking:not(.open),
 #pricingModal:not(.open) {
     display: none !important;
@@ -4006,7 +4000,6 @@
 }
 
 
-/* ── Shop Section — Product Card Actions (wishlist, add-to-cart, buy-now) ── */
 .product-card {
     position: relative;
 }
@@ -4067,7 +4060,6 @@
     z-index: 5;
 }
 
-/* Các thẻ sản phẩm landing: nút tim đặt góc trên bên phải giống thẻ dịch vụ */
 .product-card {
     position: relative;
 }
@@ -4135,23 +4127,19 @@
 }
 
 
-/* Extracted from landing.html */
 .ui-box-8 {
     max-width: 1000px;
 }
 
-/* Extracted from landing.html */
 .ui-border-2 {
     box-shadow: 0 32px 64px rgba(0,0,0,0.35);
      border: 2px solid rgba(255,255,255,0.12);
 }
 
-/* Extracted from landing.html */
 .ui-element-5 {
     aspect-ratio: 12/5;
 }
 
-/* Thông báo thêm vào giỏ hàng (Cart Toast) */
 .cart-toast {
     position: fixed;
     right: 24px;

@@ -37,10 +37,8 @@
         <div class="container booking-layout">
             <div class="row g-4">
 
-                <!-- ── LEFT: Stepper + Form ── -->
                 <div class="col-12 col-lg-7 booking-form-col">
 
-                    <!-- Progress Stepper -->
                     <div class="booking-stepper" id="bookingStepper">
                         <div class="step active" data-step="1" tabindex="0" role="button">
                             <div class="step-circle">1</div>
@@ -69,7 +67,6 @@
                             <h2>Thông tin <span class="accent-italic">bé cưng</span></h2>
                         </div>
 
-                        <!-- Luồng Thành viên (Member Flow) -->
                         <div id="memberFlow" class="booking-form d-none">
                             <div class="form-section-title mt-0">Thông tin liên hệ</div>
                             <div class="form-row mb-4">
@@ -88,11 +85,10 @@
                             <div class="form-section-title">Chọn bé cưng</div>
                             <p class="mb-3 text-secondary fs-small">Chọn bé cưng của bạn để đặt lịch nhanh chóng:</p>
                             <div class="pet-cards-grid" id="memberPetList">
-                                <!-- Pet cards will be injected here -->
                             </div>
                         </div>
 
-                        <!-- Luồng Vãng lai (Guest Flow) -->
+                        <!-- Luồng Vãng lai  -->
                         <div id="guestFlow">
                             <form id="petInfoForm" class="booking-form" novalidate>
                                 <div class="form-section-title">Thông tin chủ nuôi</div>
@@ -172,14 +168,12 @@
                             <h2>Chọn <span class="accent-italic">dịch vụ</span></h2>
                         </div>
 
-                        <!-- Service type tabs -->
                         <div class="svc-type-tabs" id="svcTypeTabs">
                             <button class="svc-type-tab active" data-type="spa">️ Spa và Grooming</button>
                             <button class="svc-type-tab" data-type="hotel"> Pet Hotel</button>
                             <button class="svc-type-tab" data-type="taxi"> Pet Taxi</button>
                         </div>
 
-                        <!-- Service Search -->
                         <div class="booking-form mb-3">
                             <div class="form-group position-relative">
                                 <input type="text" id="svcSearchInput" placeholder="Tìm kiếm dịch vụ (vd: Tắm dưỡng, Khử mùi...)" class="w-100 ps-4">
@@ -187,9 +181,7 @@
                             </div>
                         </div>
 
-                        <!-- Service cards list -->
                         <div class="svc-select-list" id="svcSelectList" data-lenis-prevent>
-                            <!-- Injected by JS -->
                         </div>
 
                         <div class="step-actions">
@@ -204,7 +196,6 @@
                             <h2>Chọn <span class="accent-italic">lịch và nhân viên</span></h2>
                         </div>
 
-                        <!-- Hotel: check-in / check-out -->
                         <div class="hotel-date-range" id="hotelDateRange" class="d-none">
                             <div class="form-row">
                                 <div class="form-group">
@@ -222,7 +213,6 @@
                                 <span id="hotelTotalPrice" class="nights-price"></span>
                             </div>
 
-                            <!-- Hotel Addons -->
                             <div class="hotel-addons-section mt-4" id="hotelAddonsSection" class="d-none">
                                 <p class="timeslot-label mb-2">Dịch vụ mở rộng</p>
 
@@ -288,7 +278,6 @@
                             </div>
                         </div>
 
-                        <!-- Spa: date + time slot -->
                         <div class="spa-schedule" id="spaSchedule">
                             <div class="form-group booking-date">
                                 <label for="bookingDate">Chọn ngày <span class="required">*</span></label>
@@ -304,7 +293,6 @@
                                     <span class="avail-dot avail-soon ms-3"></span> Quá gần (< 2
                                         tiếng) </div>
                                         <div class="timeslot-grid" id="timeslotGrid">
-                                            <!-- Injected by JS -->
                                         </div>
                                 </div>
 
@@ -314,7 +302,6 @@
                                 <div class="staff-selection" id="staffSelection">
                                     <p class="timeslot-label">Chọn nhân viên thực hiện <span class="required">*</span></p>
                                     <div class="staff-list" id="staffList">
-                                        <!-- Injected by JS -->
                                     </div>
                                 </div>
                             </div>
@@ -332,7 +319,6 @@
                             </div>
 
                             <div class="confirm-summary" id="confirmSummary">
-                                <!-- Injected by JS -->
                             </div>
 
                             <div class="confirm-policy">
@@ -355,7 +341,6 @@
 
                     </div>
 
-                    <!-- ── RIGHT: Summary Sidebar ── -->
                     <aside class="col-12 col-lg-5 booking-summary-col" id="bookingSummary">
                         <div class="summary-card">
                             <h4 class="summary-title">Tóm tắt đặt lịch</h4>
@@ -388,7 +373,6 @@
                                 </div>
                                 <div class="summary-divider"></div>
                                 
-                                <!-- Voucher Input -->
                                 <div class="booking-voucher-section mb-3 mt-2 position-relative">
                                     <div class="d-flex gap-2 align-items-center">
                                         <input type="text" id="bookingVoucherInput" placeholder="Mã giảm giá..." class="form-control form-control-sm" autocomplete="off">
@@ -414,7 +398,6 @@
                             </div>
                         </div>
 
-                        <!-- Trust badges -->
                         <div class="trust-badges">
                             <div class="trust-item">
                                 <span>Thông tin được bảo mật</span>
@@ -427,7 +410,6 @@
                             </div>
                         </div>
 
-                        <!-- Hotline -->
                         <div class="booking-hotline">
                             <p>Cần hỗ trợ?</p>
                             <a href="tel:0987654321" class="hotline-link"> 0987 654 321</a>
@@ -436,7 +418,6 @@
                 </div>
     </main>
 
-    <!-- ══ SUCCESS MODAL ══ -->
     <div id="successModal" class="success-modal">
         <div class="success-modal-overlay"></div>
         <div class="success-modal-content">

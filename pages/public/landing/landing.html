@@ -12,14 +12,14 @@
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap"
         rel="stylesheet">
-    <!-- Bootstrap 5 CSS — load trước để custom CSS có thể override -->
+    <!-- Bootstrap 5 CSS — tải trước để CSS tùy chỉnh có thể ghi đè -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom Style -->
+    <!-- Style chung -->
     <link rel="stylesheet" href="../../../styles/style.css">
-    <!-- Components -->
+    <!-- Thành phần (Components) -->
     <link rel="stylesheet" href="../../../components/ui/review-form.css">
     <link rel="stylesheet" href="../../../components/ui/reviews.css">
-    <!-- Page Specific Style -->
+    <!-- Style riêng của trang -->
     <link rel="stylesheet" href="landing.css">
 
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
@@ -41,14 +41,10 @@
 </head>
 
 <body>
-    <!-- Trình tải thông minh: chỉ hiện nếu tải trang quá 300ms -->
-
     <div id="site-header" class="min-h-110px bg-bg-light"></div>
 
-    <!-- Nội dung chính -->
     <main>
-
-        <!-- Khu vực nổi bật (Hero) -->
+        <!-- Khu vực nổi bật -->
         <section class="hero-section" id="hero">
             <div class="hero-video-bg">
                 <iframe
@@ -126,7 +122,7 @@
                     </div>
                 </div>
 
-                <!-- 3. Tags + buttons + social proof + status -->
+                <!-- 3. Tags + nút bấm + bằng chứng xã hội + trạng thái -->
                 <div class="hero-copy hero-copy--bottom">
                     <div class="hero-pet-tags">
                         <span class="pet-tag"> Chó</span>
@@ -170,7 +166,6 @@
             </div>
         </section>
 
-
         <!-- Thanh tính năng -->
         <section class="features-section" aria-label="Điểm nổi bật">
             <div class="features-strip">
@@ -204,7 +199,6 @@
         <section class="services-section" id="services">
             <div class="services-container">
 
-                <!-- Tiêu đề khu vực -->
                 <div class="section-header text-center">
                     <h2>Dịch vụ <span class="accent-italic">PawPal</span></h2>
                 </div>
@@ -217,7 +211,7 @@
                     <button class="shop-tab-btn" data-category="taxi">Pet Taxi</button>
                 </div>
 
-                <!-- Lưới Dịch vụ — render từ dữ liệu thực tế -->
+                <!-- Lưới Dịch vụ render từ dữ liệu thực tế -->
                 <div class="product-grid mt-4" id="svcLandingGrid"></div>
 
                 <!-- Nút hành động -->
@@ -225,7 +219,7 @@
                     <a href="../../services/services.html" class="btn-green-outline">Xem tất cả dịch vụ</a>
                 </div>
 
-            </div><!-- /.services-container -->
+            </div>
         </section>
 
         <!-- Khu vực Mua sắm -->
@@ -277,7 +271,7 @@
                     </div>
                 </div>
 
-                <!-- Shop Promo Banner -->
+                <!-- Banner khuyến mãi Cửa hàng -->
                 <div class="shop-promo-banner">
                     <div class="promo-banner-content">
                         <span class="promo-badge">Những Lựa Chọn Mới Nhất</span>
@@ -300,14 +294,14 @@
                     </div>
                 </div>
 
-                <!-- Shop Category Tab Bar (Clean, standard tabs) -->
+                <!-- Thanh Tab danh mục Cửa hàng -->
                 <div class="shop-tab-bar">
                     <button class="shop-tab-btn" data-tab="hangmoi">Sản phẩm mới</button>
                     <button class="shop-tab-btn" data-tab="banchay">Sản phẩm bán chạy</button>
                     <button class="shop-tab-btn" data-tab="khuyenmai">Khuyến mãi</button>
                 </div>
 
-                <!-- Secondary Sub-Filter Row (Tags: Bán chạy, Hàng mới, Khuyến mãi) -->
+                <!-- Bộ lọc phụ (Bán chạy, Hàng mới, Khuyến mãi) -->
                 <div class="shop-sub-filters">
                     <button class="shop-sub-filter-btn" data-tag="thucan"> Thức ăn</button>
                     <button class="shop-sub-filter-btn" data-tag="phukien"> Đồ dùng và Phụ kiện</button>
@@ -315,7 +309,7 @@
                 </div>
 
                 <div class="product-grid" id="productGrid">
-                    <!-- Rendered by JS from sanpham.csv -->
+                    <!-- Được render bằng JS từ sanpham.csv -->
                 </div>
 
                 <div class="shop-action text-center">
@@ -385,7 +379,7 @@
                             </div>
 
                             <div class="phone-timeline">
-                                <!-- Card 1 -->
+                                <!-- Thẻ 1 -->
                                 <div class="phone-timeline-card active" id="phone-card-1">
                                     <div class="card-meta">
                                         <span class="card-dot"></span>
@@ -397,7 +391,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Card 2 -->
+                                <!-- Thẻ 2 -->
                                 <div class="phone-timeline-card" id="phone-card-2">
                                     <div class="card-meta">
                                         <span class="card-dot"></span>
@@ -409,7 +403,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Card 3 -->
+                                <!-- Thẻ 3 -->
                                 <div class="phone-timeline-card" id="phone-card-3">
                                     <div class="card-meta">
                                         <span class="card-dot"></span>
@@ -430,7 +424,7 @@
         <section class="safety-section">
             <div class="safety-container">
 
-                <!-- Statement: cam kết chính -->
+                <!-- Cam kết chính -->
                 <div class="safety-statement">
                     <p class="safety-statement-lead">Nếu bé có bất kỳ sự cố sức khỏe nào<br>trong thời gian ở PawPal</p>
                     <p class="safety-statement-bold">CHÚNG TÔI CHỊU <span class="safety-highlight">100%</span> CHI PHÍ Y
@@ -438,10 +432,10 @@
                     <p class="safety-statement-sub">Không điều khoản. Không ngoại lệ.</p>
                 </div>
 
-                <!-- Divider -->
+                <!-- Đường phân cách -->
                 <div class="safety-divider"></div>
 
-                <!-- 2 stat items -->
+                <!-- 2 mục thống kê -->
                 <div class="safety-stats">
                     <div class="safety-stat">
                         <span class="safety-stat-num">2×/ngày</span>
@@ -465,10 +459,10 @@
                     <h2>Đội ngũ <span class="accent-italic">chuyên gia</span></h2>
                 </div>
 
-                <!-- Bento grid: 3 columns, 2 rows — ảnh và text xen kẽ -->
+                <!-- Lưới Bento: 3 cột, 2 hàng — ảnh và text xen kẽ -->
                 <div class="experts-bento">
 
-                    <!-- Col 1: ảnh trên, text dưới -->
+                    <!-- Cột 1: ảnh trên, text dưới -->
                     <div class="exp-cell exp-cell--img-top">
                         <div class="exp-img exp-img--landscape">
                             <img src="../../../assets/images/experts/expert-1.jpg" alt="Minh Tuấn" loading="eager">
@@ -485,7 +479,7 @@
                         </div>
                     </div>
 
-                    <!-- Col 2: text trên, ảnh dưới -->
+                    <!-- Cột 2: text trên, ảnh dưới -->
                     <div class="exp-cell exp-cell--text-top">
                         <div class="exp-info">
                             <span class="cert-badge"> IACP</span>
@@ -502,7 +496,7 @@
                         </div>
                     </div>
 
-                    <!-- Col 3: ảnh trên, text dưới -->
+                    <!-- Cột 3: ảnh trên, text dưới -->
                     <div class="exp-cell exp-cell--img-top">
                         <div class="exp-img exp-img--portrait">
                             <img src="../../../assets/images/experts/expert-3.jpg" alt="Nhật Khanh Cute" loading="lazy">
@@ -519,8 +513,7 @@
                         </div>
                     </div>
 
-                </div><!-- /.experts-bento -->
-
+                </div>
                 <!-- CTA -->
                 <div class="experts-cta text-center">
                     <a href="../../services/tie/booking.html" class="btn-green-outline">
@@ -540,7 +533,7 @@
                 </div>
 
                 <div class="process-steps">
-                    <!-- Step 1 -->
+                    <!-- Bước 1 -->
                     <div class="process-step">
                         <div class="process-step-img">
                             <img src="https://images.unsplash.com/photo-1583512603805-3cc6b41f3edb?auto=format&fit=crop&w=600&q=80"
@@ -554,7 +547,7 @@
                         </div>
                     </div>
 
-                    <!-- Step 2 -->
+                    <!-- Bước 2 -->
                     <div class="process-step">
                         <div class="process-step-img">
                             <img src="https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=600&q=80"
@@ -568,7 +561,7 @@
                         </div>
                     </div>
 
-                    <!-- Step 3 -->
+                    <!-- Bước 3 -->
                     <div class="process-step">
                         <div class="process-step-img">
                             <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=600&q=80"
@@ -582,7 +575,7 @@
                         </div>
                     </div>
 
-                    <!-- Step 4 -->
+                    <!-- Bước 4 -->
                     <div class="process-step">
                         <div class="process-step-img">
                             <img src="https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=600&q=80"
@@ -613,14 +606,14 @@
             </div>
         </section>
 
-        <!-- Khu vực Thành viên & Tích điểm -->
+        <!-- Khu vực Thành viên Tích điểm -->
         <section class="membership-section">
             <div class="container membership-container-full">
                 <div class="section-header text-center">
                     <h2>Khách hàng <span class="accent-italic">thân thiết</span></h2>
                 </div>
 
-                <!-- Horizontal Steps Progress -->
+                <!-- Tiến trình các bước nằm ngang -->
                 <div class="membership-steps-flow">
                     <div class="membership-step-item">
                         <span class="membership-step-num">01</span>
@@ -638,9 +631,9 @@
                     </div>
                 </div>
 
-                <!-- Interactive Virtual Card Showcase -->
+                <!-- Trưng bày Thẻ ảo tương tác -->
                 <div class="pawpass-showcase-container">
-                    <!-- Left Column: Dynamic Virtual Wallet Card -->
+                    <!-- Cột trái: Thẻ Ví ảo động -->
                     <div class="pawpass-left-visual">
                         <div class="pawpass-card-wrapper">
                             <div id="pawpassVirtualCard" class="pawpass-virtual-card tier-gold">
@@ -673,9 +666,9 @@
                         </div>
                     </div>
 
-                    <!-- Right Column: 3 Distinct Tier Cards Displaying Contents Directly -->
+                    <!-- Cột phải: 3 Thẻ Hạng hiển thị nội dung trực tiếp -->
                     <div class="pawpass-right-selection">
-                        <!-- Card 1: Hạng Bạc -->
+                        <!-- Thẻ 1: Hạng Bạc -->
                         <div class="tier-card-interactive tier-silver" data-tier="silver">
                             <div class="card-header-row">
                                 <div class="card-title-group">
@@ -710,7 +703,7 @@
                             </ul>
                         </div>
 
-                        <!-- Card 2: Hạng Vàng -->
+                        <!-- Thẻ 2: Hạng Vàng -->
                         <div class="tier-card-interactive tier-gold active" data-tier="gold">
                             <span class="tab-popular-tag">HOT</span>
                             <div class="card-header-row">
@@ -753,7 +746,7 @@
                             </ul>
                         </div>
 
-                        <!-- Card 3: Hạng Kim Cương -->
+                        <!-- Thẻ 3: Hạng Kim Cương -->
                         <div class="tier-card-interactive tier-diamond" data-tier="diamond">
                             <div class="card-header-row">
                                 <div class="card-title-group">
@@ -797,7 +790,7 @@
                     </div>
                 </div>
 
-                <!-- Bottom CTA -->
+                <!-- CTA bên dưới -->
                 <div class="membership-cta-bottom text-center">
                     <p class="cta-note">Đăng ký hôm nay — nhận ngay 50 Paw Points chào mừng</p>
                     <a href="../login/login.html" class="btn-points-start">
@@ -813,7 +806,7 @@
             </div>
         </section>
 
-        <!-- Booking Modal Container -->
+        <!--  Đặt lịch -->
         <div id="booking" class="booking-modal">
             <div class="booking-modal-overlay" id="bookingOverlay"></div>
             <div class="booking-modal-content">
@@ -844,94 +837,7 @@
             </div>
         </div>
 
-        <!-- Pricing Modal Container -->
-        <div id="pricingModal" class="pricing-modal">
-            <div class="pricing-modal-overlay" id="pricingOverlay"></div>
-            <div class="pricing-modal-content">
-                <div class="pricing-modal-header">
-                    <h3>Bảng Giá Dịch Vụ Chi Tiết</h3>
-                    <button class="pricing-modal-close" id="closePricingBtn">&times;</button>
-                </div>
-                <div class="pricing-modal-body">
-                    <div class="pricing-tabs">
-                        <button class="pricing-tab-btn active" data-tab="spa-pricing">Spa và Grooming</button>
-                        <button class="pricing-tab-btn" data-tab="hotel-pricing">Pet Hotel</button>
-                    </div>
-
-                    <div class="pricing-tab-content active" id="spa-pricing">
-                        <table class="pricing-table">
-                            <thead>
-                                <tr>
-                                    <th>Cân nặng của bé</th>
-                                    <th>Tắm cơ bản</th>
-                                    <th>Combo toàn diện (Tắm + Cắt tỉa)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Dưới 5kg</td>
-                                    <td>150.000đ</td>
-                                    <td>350.000đ</td>
-                                </tr>
-                                <tr>
-                                    <td>5kg - 10kg</td>
-                                    <td>200.000đ</td>
-                                    <td>450.000đ</td>
-                                </tr>
-                                <tr>
-                                    <td>10kg - 20kg</td>
-                                    <td>300.000đ</td>
-                                    <td>600.000đ</td>
-                                </tr>
-                                <tr>
-                                    <td>Trên 20kg</td>
-                                    <td>Từ 400.000đ</td>
-                                    <td>Từ 750.000đ</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <p class="pricing-note">* Bảng giá áp dụng chung cho cả chó và mèo. Giá thực tế có thể dao động
-                            nhẹ tùy theo tình trạng xơ rối lông của bé.</p>
-                    </div>
-
-                    <div class="pricing-tab-content" id="hotel-pricing">
-                        <table class="pricing-table">
-                            <thead>
-                                <tr>
-                                    <th>Hạng phòng</th>
-                                    <th>Đặc điểm nổi bật</th>
-                                    <th>Giá / Đêm</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Standard Room</td>
-                                    <td>Khử khuẩn tự động, đệm sưởi êm ấm</td>
-                                    <td>350.000đ</td>
-                                </tr>
-                                <tr>
-                                    <td>Deluxe Room</td>
-                                    <td>Có camera riêng để Sen theo dõi 24/7</td>
-                                    <td>500.000đ</td>
-                                </tr>
-                                <tr>
-                                    <td>Royal Suite</td>
-                                    <td>Sân chơi kính riêng biệt, bữa ăn thiết kế riêng</td>
-                                    <td>800.000đ</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <p class="pricing-note">* Đã bao gồm 3 bữa ăn tiêu chuẩn dinh dưỡng cao và thời gian vui chơi
-                            tương tác hàng ngày.</p>
-                    </div>
-                </div>
-                <div class="pricing-modal-footer">
-                    <a href="../../services/booking/booking.html" class="btn-cta text-center w-100 d-block"
-                        id="pricingBookBtn">Đặt lịch chăm sóc ngay</a>
-                </div>
-            </div>
-        </div>
-
+        
         <!-- Khu vực đánh giá -->
         <section class="testimonials-section">
             <div class="testimonials-container">
@@ -950,7 +856,6 @@
 
                     <div class="testimonials-carousel-wrapper">
                         <div class="testimonials-carousel-track">
-                            <!-- Review 1 -->
                             <div class="testimonial-card">
                                 <div class="testimonial-rating-row">
                                     <div class="card-stars"></div>
@@ -970,7 +875,6 @@
                                 </div>
                             </div>
 
-                            <!-- Review 2 -->
                             <div class="testimonial-card">
                                 <div class="testimonial-rating-row">
                                     <div class="card-stars"></div>
@@ -989,7 +893,6 @@
                                 </div>
                             </div>
 
-                            <!-- Review 3 -->
                             <div class="testimonial-card">
                                 <div class="testimonial-rating-row">
                                     <div class="card-stars"></div>
@@ -1008,7 +911,6 @@
                                 </div>
                             </div>
 
-                            <!-- Review 4 -->
                             <div class="testimonial-card">
                                 <div class="testimonial-rating-row">
                                     <div class="card-stars"></div>
@@ -1028,7 +930,6 @@
                                 </div>
                             </div>
 
-                            <!-- Review 5 -->
                             <div class="testimonial-card">
                                 <div class="testimonial-rating-row">
                                     <div class="card-stars"></div>
@@ -1047,7 +948,6 @@
                                 </div>
                             </div>
 
-                            <!-- Review 6 -->
                             <div class="testimonial-card">
                                 <div class="testimonial-rating-row">
                                     <div class="card-stars"></div>
@@ -1081,7 +981,7 @@
 
     </main>
 
-    <!-- Khu vực Câu hỏi thường gặp (FAQ) -->
+    <!-- Khu vực Câu hỏi thường gặp -->
     <section class="faq-section" id="faq">
         <div class="faq-container">
             <div class="section-header text-center">
@@ -1168,9 +1068,6 @@
     </section>
 
     <div id="site-footer"></div>
-
-    <!-- Diagnostics for Carousel and Image Loading -->
-
 
     <div id="site-fab"></div>
     

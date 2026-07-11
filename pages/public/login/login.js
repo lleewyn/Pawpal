@@ -1,24 +1,4 @@
-/**
- * login.js — UI logic riêng của trang login/register PawPal.
- * Phụ thuộc vào: /scripts/shared/auth.js (phải load trước)
- *
- * Chứa:
- *  - supabaseLogin()        — đăng nhập qua Supabase
- *  - supabaseCheckPhone()   — kiểm tra phone tồn tại trên Supabase
- *  - supabaseRegister()     — đăng ký tài khoản mới qua Supabase
- *  - handleLoginRouting()   — điều hướng section theo URL param
- *  - initAuthForms()        — toàn bộ form login, register, OTP, forgot password, setup password
- *  - initLoginPage()        — entry point, chỉ chạy trên trang login.html
- */
 
-// ============================================================
-// SUPABASE AUTH — logic nội bộ (thay thế supabase-auth.js)
-// ============================================================
-
-/**
- * Đăng nhập bằng phone + password qua Supabase.
- * Trả về { success, user, error, offline }
- */
 async function supabaseLogin(phone, password) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) return { success: false, offline: true };
@@ -83,7 +63,7 @@ async function supabaseLogin(phone, password) {
             _source:      'supabase',
         };
 
-            console.log('[Login] ✅ Login từ SUPABASE DATABASE — user:', user.name, '| phone:', user.phone, '| points:', user.points);
+            console.log('[Login] Login từ SUPABASE DATABASE — user:', user.name, '| phone:', user.phone, '| points:', user.points);
         return { success: true, user };
 
     } catch (err) {
@@ -213,14 +193,12 @@ function buildPetFromBooking(booking, fallbackPhone = null) {
 }
 
 async function migrateGuestPetsToMember(user, fallbackPhone = null) {
-    // Pet data is now natively synced to Supabase when a guest books via insertBookingToSupabase.
-    // There is no need to migrate from localStorage.
+
     return Promise.resolve();
 }
 
 /**
  * Kiểm tra phone đã tồn tại trên Supabase chưa (dùng trước khi đăng ký).
- * Trả về { exists, isTemporary, offline, error }
  */
 async function supabaseCheckPhone(phone) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -380,8 +358,7 @@ function handleLoginRouting() {
     const setupExpiredSection  = document.getElementById('setupExpiredSection');
     const authTabs             = document.getElementById('authTabs');
 
-    if (!loginForm) return; // Không ở trang login.html
-
+    if (!loginForm) return;
     // Reset về trạng thái mặc định
     loginForm.classList.remove('active-form');
     registerForm.classList.remove('active-form');
@@ -396,7 +373,7 @@ function handleLoginRouting() {
         document.getElementById('tabRegister').classList.add('active');
         document.getElementById('tabLogin').classList.remove('active');
 
-        // Tự động điền số điện thoại từ query param (vd: từ footer đăng ký)
+        // Tự động điền số điện thoại từ query param
         const phoneParamForRegister = params.get('phone') || null;
         if (phoneParamForRegister) {
             const regPhoneInput = document.getElementById('registerPhone');
@@ -498,7 +475,7 @@ function initAuthForms() {
     const tabLogin     = document.getElementById('tabLogin');
     const tabRegister  = document.getElementById('tabRegister');
 
-    // Tab switching
+    // Chuyển đổi tab
     tabLogin.addEventListener('click', () => {
         window.history.pushState({}, '', '?action=login');
         handleLoginRouting();
@@ -522,7 +499,7 @@ function initAuthForms() {
         });
     });
 
-    // --- ĐĂNG NHẬP MULTI-STEP (US 2-1) ---
+    // --- ĐĂNG NHẬP  ---
     const btnLoginContinue  = document.getElementById('btnLoginContinue');
     const loginStepPhone    = document.getElementById('loginStepPhone');
     const loginStepPassword = document.getElementById('loginStepPassword');
@@ -544,7 +521,7 @@ function initAuthForms() {
             }
             loginPhone.classList.remove('is-invalid');
             
-            // Show loading state
+            // Hiển thị trạng thái đang tải
             const originalText = btnLoginContinue.innerHTML;
             btnLoginContinue.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
             btnLoginContinue.disabled = true;
@@ -654,7 +631,7 @@ function initAuthForms() {
         });
     }
 
-    // --- SUBMIT LOGIN (US 2-1) ---
+    // --- XỬ LÝ ĐĂNG NHẬP ---
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -674,7 +651,7 @@ function initAuthForms() {
             return;
         }
 
-        // --- Thử đăng nhập qua Supabase trước, fallback về localStorage ---
+        // --- Thử đăng nhập qua Supabase ---
         if (window.SupabaseClient) {
             const result = await supabaseLogin(phone, password);
 
@@ -700,7 +677,6 @@ function initAuthForms() {
                     showErrorBanner('Tài khoản đã bị khóa. Vui lòng liên hệ hỗ trợ.', loginForm);
                     return;
                 }
-                // Lỗi kết nối → fallback localStorage bên dưới
             }
         }
 
@@ -762,7 +738,7 @@ function initAuthForms() {
         }
     });
 
-    // --- ĐĂNG KÝ — Validation (US 1-1 / AC1.1.1) ---
+    // --- ĐĂNG KÝ  ---
     const regName            = document.getElementById('registerName');
     const regPhone           = document.getElementById('registerPhone');
     const regPassword        = document.getElementById('registerPassword');
@@ -794,7 +770,7 @@ function initAuthForms() {
         });
     }
 
-    // Password strength meter
+    // Thanh đo độ mạnh mật khẩu
     const pwdStrengthFill = document.getElementById('registerPasswordStrengthFill');
     const pwdStrengthText = document.getElementById('registerPasswordStrengthText');
     const pwdStrengthWrap = document.getElementById('registerPasswordStrength');
@@ -863,7 +839,7 @@ function initAuthForms() {
         input.addEventListener('blur',  validateRegisterForm);
     });
 
-    // --- OTP ĐĂNG KÝ (US 1-1 / AC1.1.2) ---
+    // --- OTP ĐĂNG KÝ ---
     const otpSection  = document.getElementById('otpSection');
     const otpTimer    = document.getElementById('otpTimer');
     const btnResendOtp = document.getElementById('btnResendOtp');
@@ -873,7 +849,6 @@ function initAuthForms() {
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Kiểm tra phone đã tồn tại chưa (Supabase trước, localStorage fallback)
         let phoneAlreadyExists = false;
 
         if (window.SupabaseClient) {
@@ -929,7 +904,7 @@ function initAuthForms() {
 
     function startOtpTimer() {
         if (otpCountdownInterval) clearInterval(otpCountdownInterval);
-        let duration = 10; // Changed to 10s for easier testing
+        let duration = 10; // Đổi thành 10s để dễ test
         btnResendOtp.disabled = true;
         otpCountdownInterval = setInterval(() => {
             const m = Math.floor(duration / 60), s = duration % 60;
@@ -1005,7 +980,7 @@ function initAuthForms() {
         }, stepTime);
     }
 
-    // --- THIẾT LẬP MẬT KHẨU TỪ LINK SMS (US 1-2 / AC1.2.2) ---
+    // --- THIẾT LẬP MẬT KHẨU TỪ LINK SMS  ---
     const setupPasswordForm  = document.getElementById('setupPasswordForm');
     const setupPass          = document.getElementById('setupPassword');
     const setupConfirm       = document.getElementById('setupConfirmPassword');
@@ -1037,7 +1012,7 @@ function initAuthForms() {
             const token = document.getElementById('setupPasswordSection').dataset.token;
             const users = getUsers();
             
-            // Prioritize finding the temporary account for this phone
+            // Ưu tiên tìm tài khoản tạm cho số điện thoại này
             let idx = users.findIndex(u => u.phone === phone && u.is_temporary);
             if (idx === -1) {
                 idx = users.findIndex(u => u.phone === phone);
@@ -1087,7 +1062,7 @@ function initAuthForms() {
         });
     }
 
-    // --- QUÊN MẬT KHẨU — 3 BƯỚC (US 2-2) ---
+    // --- QUÊN MẬT KHẨU  ---
     const triggerForgot           = document.getElementById('triggerForgot');
     const forgotPhoneSection      = document.getElementById('forgotPhoneSection');
     const btnForgotBackToLogin    = document.getElementById('btnForgotBackToLogin');
@@ -1175,7 +1150,7 @@ function initAuthForms() {
             if (forgotOtpInterval) clearInterval(forgotOtpInterval);
         });
 
-        // B2: OTP input handling
+        // B2: Xử lý nhập OTP
         forgotOtpInputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
                 if (!/^[0-9]$/.test(e.target.value)) { e.target.value = ''; return; }
@@ -1197,7 +1172,7 @@ function initAuthForms() {
 
         function startForgotOtpTimer() {
             if (forgotOtpInterval) clearInterval(forgotOtpInterval);
-            let duration = 10; // Changed to 10s for easier testing
+            let duration = 10; // Đổi thành 10s để dễ test
             btnForgotResendOtp.disabled = true;
             forgotOtpInterval = setInterval(() => {
                 const m = Math.floor(duration / 60), s = duration % 60;
@@ -1259,7 +1234,7 @@ function initAuthForms() {
             const users   = getUsers();
             const isGuest = window.isGuestActivationFlow === true;
             
-            // If it's a guest activation flow, prioritize finding the temporary account
+            // Nếu là luồng kích hoạt của khách, ưu tiên tìm tài khoản tạm
             let userIdx = -1;
             if (isGuest) {
                 userIdx = users.findIndex(u => u.phone === phone && u.is_temporary);
@@ -1322,16 +1297,13 @@ function initAuthForms() {
                     : '/pages/user/dashboard/dashboard.html';
             }, 2000);
         });
-    } // end if (triggerForgot)
-} // end initAuthForms()
+    } 
+} 
 
-// --- ENTRY POINT — Chỉ chạy trên trang login.html ---
+// --- ENTRY POINT ---
 function initLoginPage() {
-    // initMockDatabase đã chạy trong auth.js (initAuthShared)
     handleLoginRouting();
     initAuthForms();
-
-    // Intercept click link login.html khi đang ở chính trang login.html
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a');
         if (!link) return;

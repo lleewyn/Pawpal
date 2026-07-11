@@ -33,17 +33,12 @@
                 <div class="col-lg-5 col-md-8 col-sm-10">
                     <div class="auth-card-wrapper glassmorphic-panel">
 
-                        <!-- Tabs Đăng nhập / Đăng ký -->
                         <div class="auth-tabs" id="authTabs">
                             <button class="auth-tab-btn active" id="tabLogin">Đăng nhập</button>
                             <button class="auth-tab-btn" id="tabRegister">Đăng ký</button>
                         </div>
 
-                        <!-- ====================================================
-                             1. ĐĂNG NHẬP (US 2-1)
-                             Bước 1: Nhập SĐT — Bước 2: Nhập mật khẩu (ẩn ban đầu)
-                        ==================================================== -->
-                        <form id="loginForm" class="auth-form active-form" novalidate>
+e>
                             <h3 class="form-title">Chào mừng trở lại!</h3>
 
                             <!-- Bước 1: SĐT + nút Tiếp tục -->
@@ -58,7 +53,7 @@
                                 </button>
                             </div>
 
-                            <!-- Bước 1b: Xác nhận gửi OTP (tài khoản tạm) -->
+                            <!-- Bước 1b: Xác nhận gửi OTP -->
                             <div id="loginStepSendOTP" class="d-none">
                                 <div class="login-phone-display mb-4">
                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.16 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.36 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.34 1.85.573 2.81.7A2 2 0 0122 14.92v2z"/></svg>
@@ -104,9 +99,6 @@
                             </div>
                         </form>
 
-                        <!-- ====================================================
-                             2. ĐĂNG KÝ (US 1-1)
-                        ==================================================== -->
                         <form id="registerForm" class="auth-form" novalidate>
                             <h3 class="form-title">Tạo tài khoản mới</h3>
 
@@ -159,9 +151,7 @@
                             </p>
                         </form>
 
-                        <!-- ====================================================
-                             3. OTP XÁC THỰC ĐĂNG KÝ (US 1-1 / AC1.1.2)
-                        ==================================================== -->
+                    
                         <div id="otpSection" class="auth-step-section d-none">
                             <h3 class="form-title text-center">Xác thực OTP</h3>
                             <p class="form-subtitle text-center">Mã xác thực 6 số đã được gửi đến SĐT của bạn.</p>
@@ -185,9 +175,6 @@
                             </div>
                         </div>
 
-                        <!-- ====================================================
-                             4. CHÚC MỪNG ĐĂNG KÝ THÀNH CÔNG (US 1-1)
-                        ==================================================== -->
                         <div id="congratsSection" class="auth-step-section d-none text-center">
                             <div class="congrats-icon-wrapper">
                                 <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -206,9 +193,7 @@
                             <p class="redirect-hint">Đang tự động chuyển hướng về trang chủ...</p>
                         </div>
 
-                        <!-- ====================================================
-                             5. THIẾT LẬP MẬT KHẨU — TÀI KHOẢN TẠM (US 2-4 / US 1-2)
-                        ==================================================== -->
+ 
                         <div id="setupPasswordSection" class="auth-step-section d-none">
                             <h3 class="form-title text-center">Kích hoạt tài khoản thành viên</h3>
                             <p class="form-subtitle text-center mb-4">Thiết lập mật khẩu để bảo mật thông tin chăm sóc và lịch trình của bé cưng.</p>
@@ -249,9 +234,7 @@
                             </form>
                         </div>
 
-                        <!-- ====================================================
-                             6. LINK THIẾT LẬP MẬT KHẨU HẾT HẠN (US 1-2)
-                        ==================================================== -->
+
                         <div id="setupExpiredSection" class="auth-step-section d-none text-center">
                             <div class="expired-icon-wrapper my-3">
                                 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -274,9 +257,7 @@
                             </button>
                         </div>
 
-                        <!-- ====================================================
-                             7. QUÊN MẬT KHẨU — Bước 1: Nhập SĐT (US 2-2)
-                        ==================================================== -->
+
                         <div id="forgotPhoneSection" class="auth-step-section d-none">
                             <button type="button" class="btn-back-link mb-4" id="btnForgotBackToLogin">
                                 Quay lại đăng nhập
@@ -295,9 +276,6 @@
                             </form>
                         </div>
 
-                        <!-- ====================================================
-                             8. QUÊN MẬT KHẨU — Bước 2: Nhập OTP (US 2-2)
-                        ==================================================== -->
                         <div id="forgotOtpSection" class="auth-step-section d-none">
                             <button type="button" class="btn-back-link mb-4" id="btnForgotOtpBack">
                                 Đổi số điện thoại
@@ -324,9 +302,7 @@
                             </div>
                         </div>
 
-                        <!-- ====================================================
-                             9. QUÊN MẬT KHẨU — Bước 3: Mật khẩu mới (US 2-2)
-                        ==================================================== -->
+
                         <div id="forgotNewPasswordSection" class="auth-step-section d-none">
                             <h3 class="form-title">Thiết lập mật khẩu mới</h3>
 
@@ -359,7 +335,7 @@
                             </form>
                         </div>
 
-                    </div><!-- /.auth-card-wrapper -->
+                    </div>
                 </div>
             </div>
         </div>

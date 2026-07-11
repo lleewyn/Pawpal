@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 document.addEventListener('DOMContentLoaded', function() {
 
-        // Trình tải thông minh: ẩn ngay khi DOM sẵn sàng, hủy timer nếu tải đủ nhanh
+        //Ẩn ngay khi DOM sẵn sàng, hủy timer nếu tải đủ nhanh
         (function () {
             function hideLoader() {
                 clearTimeout(window._loaderTimeout);
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setInterval(updateHeroAvailability, 300000); // 5 phút
             setInterval(updateCtaUrgency, 180000); // 3 phút
 
-            // ── Service Featured Swap ──────────────────────────────────────
+            // ── Service Featured Swap 
             (function initSvcSwap() {
                 const featured   = document.getElementById('svcFeatured');
                 const miniItems  = document.querySelectorAll('.svc-mini-item');
@@ -98,10 +98,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         featured.href = d.href || '#';
                         featured.dataset.id = d.id;
 
-                        // Trạng thái active trên thẻ mini — làm nổi bật thẻ khớp với nội dung chính
+                        // Trạng thái active trên thẻ mini
                         miniItems.forEach(function(m) {
                             m.classList.remove('svc-active');
-                            // Show all mini cards
                             m.style.display = '';
                         });
                         el.classList.add('svc-active');
@@ -120,7 +119,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 });
             })();
-            // ─────────────────────────────────────────────────────────────────
 
         })();
     
@@ -154,7 +152,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
 
-                    // Bắt lỗi
                     img.addEventListener('error', function () {
                         console.error(`Image ${i + 1} (${img.src}) failed to load`);
                     });
@@ -171,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 // ── Product Loading ──────────────────────────────────────────
-// Tải sản phẩm thật từ dữ liệu và hiển thị lên lưới sản phẩm (grid) trang chủ
+// Tải sản phẩm thật từ dữ liệu và hiển thị lên lưới sản phẩm  trang chủ
 (async function() {
     const grid = document.getElementById('productGrid');
     if (!grid) return;
@@ -285,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const products = await window.DataLoader.loadProducts();
     if (!products || !products.length) return;
 
-    // Hiển thị 10 sản phẩm nổi bật (đang giảm giá / đánh giá cao nhất)
+    // Hiển thị 10 sản phẩm nổi bật
     const featured = products
         .filter(p => p.stock > 0)
         .sort((a, b) => (b.rating || 0) - (a.rating || 0))
@@ -308,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
             </button>
-            <a href="${detailBase}?id=${p.id}" class="product-card-link" style="text-decoration:none;color:inherit">
+            <a href="${detailBase}?id=${p.id}" class="product-card-link">
                 <div class="product-image-box">
                     <img src="${p.image || '/assets/images/shop/products/placeholder.webp'}"
                         alt="${p.name}" loading="lazy"

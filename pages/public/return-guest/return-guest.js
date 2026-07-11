@@ -311,9 +311,7 @@ function esc(s) {
 
 function canCancelOrder(o) {
     const status = normalizeOrderStatus(o.status);
-    // Chỉ cho hủy khi đơn chưa được giao / chưa hoàn thành
     if (!['pending', 'pending_payment', 'preparing'].includes(status)) return false;
-    // Đơn đang xử lý hoàn tiền hoặc đã hoàn tiền → không cho hủy lần 2
     if (o.paymentStatus === 'pending_refund' || o.paymentStatus === 'refunded') return false;
     
     return true;
@@ -321,10 +319,8 @@ function canCancelOrder(o) {
 
 function canReturnOrder(o) {
     if (o.status !== 'completed') return false;
-    // Đã có RMA rồi → không cho yêu cầu thêm (trạng thái là return_pending)
     if (o.status === 'return_pending') return false;
     
-    // Trong vòng 7 ngày kể từ ngày hoàn thành
     const updatedAt = o.updatedAt || o.createdAt;
     if (!updatedAt) return false;
     const daysDiff = (new Date() - new Date(updatedAt)) / (1000 * 60 * 60 * 24);
@@ -522,7 +518,6 @@ window.handleGuestCancelOrder = function(orderId) {
     const phone = document.getElementById('rg-phone').value.trim();
     if (!phone) { showToast('Vui lòng nhập số điện thoại trước.', 'info'); return; }
 
-    // Tìm đơn để kiểm tra trạng thái thanh toán
     const order = rgLastSearchState.orders.find(o => o.id === orderId);
     const isPaidOnline = order
         && (order.paymentStatus === 'paid' || order.payment?.status === 'paid')
@@ -551,18 +546,15 @@ window.handleGuestConfirmOrder = async function(orderId) {
         'Bạn xác nhận đã nhận hàng thành công?',
         phone,
         () => {
-            // Update local state immediately
             const order = rgLastSearchState.orders.find(o => o.id === orderId);
             if (order) {
                 order.status = 'completed';
                 order.updatedAt = new Date().toISOString();
             }
             
-            // Cập nhật lại UI
             renderResults(rgLastSearchState.bookings, rgLastSearchState.orders);
             showToast('Đã xác nhận nhận hàng!', 'success');
 
-            // Cập nhật lên Supabase
             if (window.API && typeof window.API.updateOrderStatus === 'function') {
                 window.API.updateOrderStatus(orderId, 'COMPLETED').catch(err => {
                     console.warn('[ReturnGuest] Failed to sync completed status:', err);
@@ -591,7 +583,6 @@ window.handleGuestReturnRequest = function(orderId) {
         'Bạn có muốn gửi yêu cầu đổi trả cho đơn hàng này?',
         phone,
         () => {
-            // Tìm đơn từ kết quả search hiện tại
             const order = (rgLastSearchState.orders || []).find(o => o.id === orderId);
 
             if (!order) {
@@ -599,7 +590,6 @@ window.handleGuestReturnRequest = function(orderId) {
                 return;
             }
 
-            // Chuyển hướng tới trang chi tiết đổi trả (nếu có openRMADrawer thì gọi)
             if (typeof openRMADrawer === 'function') {
                 openRMADrawer(orderId);
             } else {
@@ -609,7 +599,6 @@ window.handleGuestReturnRequest = function(orderId) {
     );
 };
 
-// ── Bước 1: Xác nhận hành động (Đồng ý → tự gửi OTP) ────────────────────
 function showActionConfirm(title, desc, phone, onConfirm) {
     const existing = document.getElementById('rg-action-confirm-modal');
     if (existing) existing.remove();
@@ -641,12 +630,11 @@ function showActionConfirm(title, desc, phone, onConfirm) {
 
     document.getElementById('rg-action-confirm-btn').addEventListener('click', () => {
         modal.hide();
-        // Sau khi đồng ý → tự động gửi OTP (không cần user nhấn "Gửi OTP" nữa)
         showOTPModal(phone, onConfirm);
     });
 }
 
-// ── Bước 2: Xác nhận gửi OTP (dùng cho hủy đơn hàng) ────────────────────
+
 function showSendOTPConfirm(title, desc, phone, onConfirm) {
     const existing = document.getElementById('rg-send-otp-modal');
     if (existing) existing.remove();
@@ -683,7 +671,6 @@ function showSendOTPConfirm(title, desc, phone, onConfirm) {
     });
 }
 
-// ── OTP Modal ─────────────────────────────────────────────────────────────
 function showOTPModal(phone, onSuccess) {
     if (rgOtpFlowActive) return;
     rgOtpFlowActive = true;
@@ -731,7 +718,6 @@ function showOTPModal(phone, onSuccess) {
     const confirmBtn = document.getElementById('rg-otp-confirm');
     const errorEl = document.getElementById('rg-otp-error');
 
-    // Auto-focus và navigate giữa các ô
     inputs.forEach((input, idx) => {
         input.addEventListener('input', () => {
             input.value = input.value.replace(/\D/g, '').slice(0, 1);
@@ -743,7 +729,6 @@ function showOTPModal(phone, onSuccess) {
                 inputs[idx + 1].focus();
             }
 
-            // Kiểm tra đủ 6 số
             const code = [...inputs].map(i => i.value).join('');
             confirmBtn.disabled = code.length < 6;
         });
@@ -771,7 +756,6 @@ function showOTPModal(phone, onSuccess) {
     });
 }
 
-// ── Guest Care Log Modal ──────────────────────────────────────────────────
 window.handleGuestViewCareLog = async function(bookingId) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) {
@@ -783,7 +767,6 @@ window.handleGuestViewCareLog = async function(bookingId) {
     const timelineWrapper = document.getElementById('guestCareLogTimeline');
     timelineWrapper.innerHTML = '<div class="text-center p-4"><div class="spinner-border text-primary" role="status"></div></div>';
     
-    // Tìm booking trong danh sách search
     const booking = (rgLastSearchState.bookings || []).find(b => b.id === bookingId) || (rgLastSearchState.bookings || []).find(b => b._supabaseId === bookingId);
     if (booking) {
         document.getElementById('guestCareLogTitle').innerHTML = `Nhật ký chăm sóc: <strong>${esc(booking.petName)}</strong> - <strong>${esc(booking.serviceName || booking.service)}</strong>`;
@@ -886,7 +869,6 @@ function getOrCreateGuestCareLogModal() {
     return new bootstrap.Modal(el);
 }
 
-// ── Cancel Booking Modal ──────────────────────────────────────────────────
 function showCancelConfirmModal(bookingId, phone) {
     const existing = document.getElementById('rg-cancel-modal');
     if (existing) existing.remove();
@@ -990,11 +972,9 @@ function confirmCancelOrder(orderId) {
 }
 
 function normalizeOrderStatus(status) {
-    // Không cần remap nữa — ORDER_STATUS đã có đủ các trạng thái
     return status || 'pending';
 }
 
-// ── Change Schedule Modal ─────────────────────────────────────────────────
 function showChangeScheduleModal(bookingId, phone) {
     const existing = document.getElementById('rg-change-modal');
     if (existing) existing.remove();
@@ -1009,7 +989,6 @@ function showChangeScheduleModal(bookingId, phone) {
         { name: 'Lê Hoàng Tiến',     desc: 'Chuyên viên cắt tỉa Grooming',              id: 'staff3' }
     ];
 
-    // Disabled cho đến khi chọn ngày
     const slotsHtml = slots.map(s =>
         `<button class="rg-slot-time" data-time="${s}" disabled class="rg-slot-disabled">${s}</button>`
     ).join('');

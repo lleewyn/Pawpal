@@ -4,7 +4,7 @@ function initApp() {
     initPremiumMotion();
     initTimelineTracker();
     initBookingWidget();
-    initPricingModal();
+    
     initFaqAccordion();
     initShopFilter();
     initCuteEnhancements();
