@@ -7,13 +7,9 @@ const DEFAULT_PET_AVATARS = {
     other: '/assets/images/publics/pet.jpg'
 };
 
-// ============================================================
-// SUPABASE HELPERS — đọc/ghi pet_profile
-// ============================================================
 
-/**
- * Map từ row Supabase → format pet của PawPal
- */
+
+
 function mapSupabasePet(row, currentUser) {
     return {
         id:          row.pet_code || row.id,
@@ -36,9 +32,7 @@ function mapSupabasePet(row, currentUser) {
     };
 }
 
-/**
- * Map từ format PawPal → row Supabase để insert/update
- */
+
 function mapToSupabaseRow(pet, customerId) {
     return {
         customer_id:         customerId,
@@ -58,11 +52,7 @@ function mapToSupabaseRow(pet, customerId) {
     };
 }
 
-/**
- * Lấy UUID Supabase của customer hiện tại.
- * Ưu tiên _source=supabase → dùng id trực tiếp.
- * Nếu mock id → tra cứu theo phone_main.
- */
+
 async function getSupabaseCustomerId(db, currentUser) {
     if (!currentUser) return null;
 
@@ -70,12 +60,12 @@ async function getSupabaseCustomerId(db, currentUser) {
     const currentEmail = currentUser.email || null;
     const currentId = currentUser.id || null;
 
-    // Nếu id đã là UUID thật thì dùng trực tiếp
+    
     if (typeof currentId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentId)) {
         return currentId;
     }
 
-    // Fallback: tra cứu theo phone / email
+    
     let query = db.from('customer').select('id').limit(1);
     if (currentPhone) {
         query = query.eq('phone_main', currentPhone);
@@ -167,11 +157,11 @@ function normalizePetList(pets) {
         if (existing) {
             mergedPet = {
                 ...existing,
-                ...pet, // later pet overrides earlier
+                ...pet, 
                 __signature: signature,
                 _supabaseId: pet._supabaseId || existing._supabaseId || null,
             };
-            // Xóa key cũ
+            
             if (existing._supabaseId) map.delete(`db:${existing._supabaseId}`);
             if (existing.id) map.delete(`id:${existing.id}`);
             map.delete(`sig:${existing.__signature}`);
@@ -277,7 +267,7 @@ function mergePetLists(serverPets, localPets, targetUserId) {
             } else {
                 mergedPet = existing;
             }
-            // Xóa key cũ
+            
             if (existing._supabaseId) map.delete(`db:${existing._supabaseId}`);
             if (existing.id) map.delete(`id:${existing.id}`);
             map.delete(`sig:${existing.__signature}`);
@@ -371,7 +361,7 @@ export async function savePets(pets) {
         const normalizedPets = normalizePetList(pets);
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
 
-        // ── Sync lên Supabase ──────────────────────────────────────────────
+        
         const db = window['SupabaseClient'];
         if (db && currentUser) {
             try {
@@ -380,10 +370,10 @@ export async function savePets(pets) {
                     for (const pet of normalizedPets) {
                         const row = mapToSupabaseRow(pet, customerId);
                         if (pet._supabaseId) {
-                            // Update row đã tồn tại
+                            
                             await db.from('pet_profile').update(row).eq('id', pet._supabaseId);
                         } else {
-                            // Insert mới — kiểm tra pet_code trùng trước
+                            
                             const { data: existing } = await db
                                 .from('pet_profile')
                                 .select('id')
@@ -420,12 +410,12 @@ export async function savePets(pets) {
 }
 
 export async function deletePet(petId) {
-    // Sync lên Supabase
+    
     const db = window['SupabaseClient'];
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (db && currentUser) {
         try {
-            // Find pet _supabaseId by fetching from supabase or from DOM
+            
             const { data: found } = await db.from('pet_profile').select('id, customer_id').eq('pet_code', petId).limit(1);
             if (found && found.length > 0) {
                 await db.from('pet_profile').update({ status: 'INACTIVE' }).eq('id', found[0].id);
@@ -439,12 +429,12 @@ export async function deletePet(petId) {
 }
 
 export async function restorePet(petId) {
-    // Sync lên Supabase
+    
     const db = window['SupabaseClient'];
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (db && currentUser) {
         try {
-            // Find pet _supabaseId by fetching from supabase or from DOM
+            
             const { data: found } = await db.from('pet_profile').select('id, customer_id').eq('pet_code', petId).limit(1);
             if (found && found.length > 0) {
                 await db.from('pet_profile').update({ status: 'ACTIVE' }).eq('id', found[0].id);

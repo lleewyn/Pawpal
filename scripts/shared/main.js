@@ -17,20 +17,20 @@ function initApp() {
     if (typeof initServicesGrid === 'function') initServicesGrid();
     if (typeof initFab === 'function') initFab();
     
-    // Gọi lại init sau khi header đã inject; fallback này giúp tránh lỡ nhịp event
+    
     if (typeof initActiveNav === 'function') setTimeout(initActiveNav, 50);
     if (typeof initMobileNavigation === 'function') setTimeout(initMobileNavigation, 50);
 }
 
-// Run nav init after header is injected by components.js
+
 document.addEventListener('headerInjected', function () {
     initActiveNav();
     initMobileNavigation();
 
-    // Cho phép bấm trực tiếp vào mục cha (Desktop) để chuyển trang
+    
     document.querySelectorAll('.nav-item.dropdown > .nav-link').forEach(link => {
         link.addEventListener('click', function(e) {
-            // Trên Desktop (>1250px), click thẳng vào link sẽ chuyển trang luôn
+            
             if (window.innerWidth >= 1250 && this.href && !this.href.endsWith('#')) {
                 window.location.href = this.href;
             }
@@ -55,10 +55,7 @@ function initSharedComponents() {
     document.head.appendChild(script);
 }
 
-/**
- * Active Nav — tự động gắn class "active" vào nav link khớp với URL hiện tại.
- * Xóa toàn bộ active hardcode trong HTML, JS tự xử lý khi load trang.
- */
+
 function initActiveNav() {
     const nav = document.getElementById('primaryNavigation');
     if (!nav) return;
@@ -70,7 +67,7 @@ function initActiveNav() {
 
     const links = navList.querySelectorAll('a.nav-link');
 
-    // Xóa hết active cũ
+    
     links.forEach(link => {
         link.classList.remove('active');
         link.removeAttribute('aria-current');
@@ -78,14 +75,14 @@ function initActiveNav() {
         link.style.fontWeight = '';
     });
 
-    // Các trang trong khu vực tài khoản người dùng không nên sáng mục public nav
+    
     if (currentPath.includes('/pages/user/') || currentPath.includes('/user/')) {
         return;
     }
 
     let matched = null;
 
-    // Logic mới: So khớp linh hoạt cho toàn bộ các trang con
+    
     if (currentPath === '/' || currentPath.includes('index.html') || currentPath.includes('landing.html')) {
         matched = navList.querySelector('a.nav-link[href*="landing.html"]');
     } else if (
@@ -113,15 +110,13 @@ function initActiveNav() {
     if (matched) {
         matched.classList.add('active');
         matched.setAttribute('aria-current', 'page');
-        // Force style just in case CSS isn't applying correctly (fallback)
+        
         matched.style.color = 'var(--color-accent)';
         matched.style.fontWeight = '700';
     }
 }
 
-/**
- * Mobile Navigation — Custom toggle (không dùng Bootstrap Collapse)
- */
+
 function initMobileNavigation() {
     const toggleBtn = document.getElementById('mobileNavToggle');
     const nav = document.getElementById('primaryNavigation');
@@ -131,8 +126,8 @@ function initMobileNavigation() {
         return;
     }
 
-    // Close on overlay click (click outside drawer)
-    // We'll create an overlay element when opening the drawer and remove it on close.
+    
+    
     let mobileOverlay = null;
     let scrollLockY = 0;
     function createOverlay() {
@@ -146,9 +141,9 @@ function initMobileNavigation() {
         mobileOverlay.style.opacity = '0';
         mobileOverlay.style.transition = 'opacity 220ms ease';
         document.body.appendChild(mobileOverlay);
-        // clicking overlay closes drawer
+        
         mobileOverlay.addEventListener('click', closeDrawer);
-        // small delay to allow transition
+        
         requestAnimationFrame(() => mobileOverlay.style.opacity = '1');
     }
 
@@ -161,12 +156,12 @@ function initMobileNavigation() {
         }, 240);
     }
 
-    // Close on ESC
+    
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeDrawer();
     });
 
-    // If the viewport changes across the breakpoint, always reset the drawer state.
+    
     let wasMobile = window.innerWidth < 1250;
     window.addEventListener('resize', () => {
         const isMobile = window.innerWidth < 1250;
@@ -176,7 +171,7 @@ function initMobileNavigation() {
         wasMobile = isMobile;
     });
 
-    // Ensure the drawer starts closed on mobile and never inherits a stale open state.
+    
     nav.classList.remove('show');
     toggleBtn.setAttribute('aria-expanded', 'false');
     document.body.style.overflow = '';
@@ -193,7 +188,7 @@ function initMobileNavigation() {
         toggleBtn.setAttribute('aria-expanded', 'true');
         document.body.style.overflow = 'hidden';
         createOverlay();
-        // reset carets when opening
+        
         nav.querySelectorAll('.dropdown-toggle svg').forEach(svg => svg.style.transform = 'rotate(0deg)');
     }
 
@@ -202,11 +197,11 @@ function initMobileNavigation() {
         toggleBtn.setAttribute('aria-expanded', 'false');
         document.body.style.overflow = '';
         removeOverlay();
-        // reset carets when closing
+        
         nav.querySelectorAll('.dropdown-toggle svg').forEach(svg => svg.style.transform = 'rotate(0deg)');
     }
 
-    // Toggle open/close (stop propagation so document click doesn't immediately close it)
+    
     toggleBtn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -218,7 +213,7 @@ function initMobileNavigation() {
         }
     };
 
-    // Close when nav link clicked (trừ dropdown toggle)
+    
     nav.querySelectorAll('a').forEach(link => {
         if (!link.classList.contains('dropdown-toggle') && link.dataset.mobileNavCloseBound !== 'true') {
             link.addEventListener('click', closeDrawer);
@@ -226,13 +221,13 @@ function initMobileNavigation() {
         }
     });
 
-    // Rotate caret icons for any dropdown toggles when they expand/collapse
+    
     const dropdownToggles = nav.querySelectorAll('.dropdown-toggle');
     dropdownToggles.forEach(dt => {
         if (dt.dataset.mobileDropdownBound === 'true') return;
         
         dt.addEventListener('click', (e) => {
-            // Wait for Bootstrap to toggle the class
+            
             setTimeout(() => {
                 const expanded = dt.classList.contains('show');
                 const svg = dt.querySelector('svg');
@@ -247,9 +242,7 @@ function initMobileNavigation() {
     nav.dataset.mobileNavReady = 'true';
 }
 
-/**
- * Timeline Tracker và Phone Mockup Linkage
- */
+
 function initTimelineTracker() {
     const indicators = document.querySelectorAll('.timeline-indicator-item');
     const phoneCards = document.querySelectorAll('.phone-timeline-card');
@@ -261,17 +254,17 @@ function initTimelineTracker() {
     let autoPlayInterval;
 
     function setActiveStep(index) {
-        // Remove active class from all indicators
+        
         indicators.forEach(ind => ind.classList.remove('active'));
-        // Add active to current
+        
         indicators[index].classList.add('active');
 
-        // Update phone cards active state
+        
         phoneCards.forEach((card, i) => {
             if (i === index) {
                 card.classList.add('active');
                 
-                // Scroll only the phone-screen container, avoiding body/window scrolling
+                
                 if (phoneScreen) {
                     const containerRect = phoneScreen.getBoundingClientRect();
                     const cardRect = card.getBoundingClientRect();
@@ -290,23 +283,21 @@ function initTimelineTracker() {
         activeIndex = index;
     }
 
-    // Set click handlers for indicators
+    
     indicators.forEach((indicator, index) => {
         indicator.addEventListener('click', () => {
-            // Stop autoplay when user manually interacts
+            
             clearInterval(autoPlayInterval);
             setActiveStep(index);
         });
     });
 
-    // Auto-play was causing an unexpected auto-scroll bug, removed per request.
-    // Initialize state only
+    
+    
     setActiveStep(0);
 }
 
-/**
- * Booking Widget Popup Interaction
- */
+
 function initBookingWidget() {
     const bookingWidget = document.getElementById('booking');
     const triggerButtons = document.querySelectorAll('a[href="#booking"]');
@@ -315,13 +306,13 @@ function initBookingWidget() {
 
     if (!bookingWidget || triggerButtons.length === 0) return;
 
-    // Open Modal
+    
     triggerButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             bookingWidget.classList.add('open');
             
-            // Focus on first input with slight delay for transition
+            
             const firstInput = bookingWidget.querySelector('input');
             if (firstInput) {
                 setTimeout(() => firstInput.focus(), 150);
@@ -329,7 +320,7 @@ function initBookingWidget() {
         });
     });
 
-    // Close Modal function
+    
     const closeModal = () => {
         bookingWidget.classList.remove('open');
     };
@@ -345,7 +336,7 @@ function initBookingWidget() {
         overlay.addEventListener('click', closeModal);
     }
 
-    // Escape key support for accessibility
+    
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && bookingWidget.classList.contains('open')) {
             closeModal();
@@ -353,9 +344,7 @@ function initBookingWidget() {
     });
 }
 
-/**
- * Pricing Modal Tab-switching và Pop-up Interaction
- */
+
 function initPricingModal() {
     const pricingModal = document.getElementById('pricingModal');
     const openBtn = document.getElementById('openPricingBtn');
@@ -366,13 +355,13 @@ function initPricingModal() {
 
     if (!pricingModal || !openBtn) return;
 
-    // Open Pricing Modal
+    
     openBtn.addEventListener('click', (e) => {
         e.preventDefault();
         pricingModal.classList.add('open');
     });
 
-    // Close Pricing Modal
+    
     const closePricing = () => {
         pricingModal.classList.remove('open');
     };
@@ -380,20 +369,20 @@ function initPricingModal() {
     if (closeBtn) closeBtn.addEventListener('click', closePricing);
     if (overlay) overlay.addEventListener('click', closePricing);
 
-    // Escape key support
+    
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && pricingModal.classList.contains('open')) {
             closePricing();
         }
     });
 
-    // Pricing book button links to booking modal
+    
     if (pricingBookBtn && bookingWidget) {
         pricingBookBtn.addEventListener('click', (e) => {
             e.preventDefault();
             closePricing();
             
-            // Open booking modal
+            
             bookingWidget.classList.add('open');
             const firstInput = bookingWidget.querySelector('input');
             if (firstInput) {
@@ -402,7 +391,7 @@ function initPricingModal() {
         });
     }
 
-    // Tab switching logic
+    
     const tabButtons = pricingModal.querySelectorAll('.pricing-tab-btn');
     const tabContents = pricingModal.querySelectorAll('.pricing-tab-content');
 
@@ -410,11 +399,11 @@ function initPricingModal() {
         button.addEventListener('click', () => {
             const targetTabId = button.getAttribute('data-tab');
             
-            // Reset buttons
+            
             tabButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
 
-            // Reset content sections
+            
             tabContents.forEach(content => {
                 if (content.id === targetTabId) {
                     content.classList.add('active');
@@ -426,9 +415,7 @@ function initPricingModal() {
     });
 }
 
-/**
- * FAQ Accordion Interaction
- */
+
 function initFaqAccordion() {
     const faqQuestions = document.querySelectorAll('.faq-question');
 
@@ -440,7 +427,7 @@ function initFaqAccordion() {
             const answer = item.querySelector('.faq-answer');
             const isOpen = item.classList.contains('active');
 
-            // Close all other items first (accordion behavior)
+            
             document.querySelectorAll('.faq-item').forEach(otherItem => {
                 if (otherItem !== item) {
                     otherItem.classList.remove('active');
@@ -455,14 +442,14 @@ function initFaqAccordion() {
                 }
             });
 
-            // Toggle current item
+            
             if (isOpen) {
                 answer.style.maxHeight = '0';
                 item.classList.remove('active');
                 btn.setAttribute('aria-expanded', 'false');
             } else {
                 item.classList.add('active');
-                // Calculate correct scrollHeight after adding active class (which applies padding)
+                
                 answer.style.maxHeight = answer.scrollHeight + 'px';
                 btn.setAttribute('aria-expanded', 'true');
             }
@@ -471,20 +458,20 @@ function initFaqAccordion() {
 }
 
 function initShopFilter() {
-    // Dynamically load products if grid exists and DataLoader is available
+    
     const grid = document.getElementById('productGrid');
     if (!grid) return;
 
     if (window.DataLoader && typeof window.DataLoader.loadProducts === 'function') {
         window.DataLoader.loadProducts().then(allProducts => {
             grid.innerHTML = allProducts.map(product => {
-                // Determine mapped category for tabs (thucan, phukien, vesinh)
+                
                 let mappedCategory = '';
                 if (['food-dry', 'food-wet', 'bones'].includes(product.category)) mappedCategory = 'thucan';
                 else if (['hygiene', 'grooming', 'health'].includes(product.category)) mappedCategory = 'vesinh';
-                else mappedCategory = 'phukien'; // toys, clothes, bowls, accessories, furniture, other
+                else mappedCategory = 'phukien'; 
 
-                // Determine marketing tags for filtering only
+                
                 let marketingTags = [];
                 if (product.badge === 'new') marketingTags.push('hangmoi');
                 if (product.badge === 'best') marketingTags.push('banchay');
@@ -533,10 +520,10 @@ function initShopFilter() {
                 `;
             }).join('');
 
-            // Gắn event listeners cho wishlist, add-to-cart, buy-now
+            
             setupShopLandingActions(grid);
 
-            // Call setup logic after rendering
+            
             setupFilterInteractions();
         }).catch(err => {
             console.error('Error loading products for landing:', err);
@@ -550,7 +537,7 @@ function initShopFilter() {
 function setupShopLandingActions(grid) {
     const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
 
-    // Helper: lấy giỏ hàng từ localStorage
+    
     function getCart() { return JSON.parse(localStorage.getItem('pawpal_cart') || '[]'); }
     function saveCart(cart) { 
         if (window.saveCart) {
@@ -561,7 +548,7 @@ function setupShopLandingActions(grid) {
         }
     }
 
-    // Helper: lấy wishlist
+    
     function getWishlistStorageKey() {
         const user = getCurrentWishlistUser();
         return user && user.phone ? `pawpal_wishlist_${user.phone}` : 'pawpal_wishlist_guest';
@@ -578,7 +565,7 @@ function setupShopLandingActions(grid) {
     }
     function saveWishlist(wl) { localStorage.setItem(getWishlistStorageKey(), JSON.stringify(wl.map(String))); }
 
-    // Helper: toast nhỏ
+    
     function miniToast(msg, type) {
         if (typeof window.showGlobalToast === 'function') { window.showGlobalToast(type || 'success', msg); return; }
         const t = document.createElement('div');
@@ -588,7 +575,7 @@ function setupShopLandingActions(grid) {
         setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 2000);
     }
 
-    // Wishlist buttons
+    
     grid.querySelectorAll('.product-wishlist-btn').forEach(btn => {
         const id = btn.dataset.productId;
         const wl = getWishlist();
@@ -612,7 +599,7 @@ function setupShopLandingActions(grid) {
         });
     });
 
-    // Add to cart buttons
+    
     grid.querySelectorAll('.product-quick-add').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -623,14 +610,14 @@ function setupShopLandingActions(grid) {
             if (existing) { existing.qty = (existing.qty || 1) + 1; }
             else { cart.push({ id, qty: 1 }); }
             saveCart(cart);
-            // Update cart count badge nếu có
+            
             const badge = document.querySelector('.cart-count');
             if (badge) badge.textContent = cart.reduce((s, i) => s + (i.qty || 1), 0);
             miniToast('Đã thêm vào giỏ hàng 🛒');
         });
     });
 
-    // Buy now buttons
+    
     grid.querySelectorAll('.product-buy-now').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -714,8 +701,8 @@ function setupFilterInteractions() {
 
     if (products.length === 0) return;
 
-    let activeMarketingStatus = 'all'; // default to all on page load
-    let activeCategory = 'all';        // default to all on page load
+    let activeMarketingStatus = 'all'; 
+    let activeCategory = 'all';        
 
     function applyFilter() {
         let count = 0;
@@ -779,26 +766,24 @@ function setupFilterInteractions() {
         });
     });
 
-    // Run initial filter
+    
     applyFilter();
 }
 
-/**
- * Cute UI Enhancements (Loader, Wiggle)
- */
+
 function initCuteEnhancements() {
-    // Hide Loader on load
+    
     window.addEventListener('load', () => {
         const loader = document.getElementById('cute-loader');
         if (loader) {
             loader.classList.add('hidden');
             setTimeout(() => {
                 loader.style.display = 'none';
-            }, 600); // wait for fade out transition
+            }, 600); 
         }
     });
 
-    // Wiggle idle timer (3 seconds)
+    
     let idleTimer;
     const ctaBtns = document.querySelectorAll('.btn-cta');
     
@@ -812,18 +797,16 @@ function initCuteEnhancements() {
         }, 3000);
     };
 
-    // Listen for user interactions to reset timer
+    
     ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'].forEach(evt => {
         window.addEventListener(evt, resetIdleTimer, { passive: true });
     });
 
-    // Start timer initially
+    
     resetIdleTimer();
 }
 
-/**
- * Draggable Curved Carousel for Services
- */
+
 function initDraggableServicesCarousel() {
     const wrappers = document.querySelectorAll('.services-arched-wrapper');
     const prevBtn = document.querySelector('.carousel-prev');
@@ -843,8 +826,8 @@ function initDraggableServicesCarousel() {
             isDown = true;
             wrapper.classList.add('is-scrolling');
             wrapper.style.cursor = 'grabbing';
-            wrapper.style.scrollSnapType = 'none'; // Vô hiệu hóa snap khi đang kéo
-            wrapper.style.scrollBehavior = 'auto'; // Instant response during drag
+            wrapper.style.scrollSnapType = 'none'; 
+            wrapper.style.scrollBehavior = 'auto'; 
             startX = e.pageX - wrapper.offsetLeft;
             scrollLeft = wrapper.scrollLeft;
         });
@@ -855,7 +838,7 @@ function initDraggableServicesCarousel() {
             wrapper.classList.remove('is-scrolling');
             wrapper.style.cursor = 'grab';
             wrapper.style.scrollBehavior = 'smooth';
-            wrapper.style.scrollSnapType = 'x mandatory'; // Kích hoạt lại snap sau khi nhả chuột
+            wrapper.style.scrollSnapType = 'x mandatory'; 
         };
 
         wrapper.addEventListener('mouseleave', endDrag);
@@ -865,11 +848,11 @@ function initDraggableServicesCarousel() {
             if (!isDown) return;
             e.preventDefault();
             const x = e.pageX - wrapper.offsetLeft;
-            const walk = (x - startX) * 1.5; // Scroll speed multiplier
+            const walk = (x - startX) * 1.5; 
             wrapper.scrollLeft = scrollLeft - walk;
         });
 
-        // Touch support for mobile swipe
+        
         wrapper.addEventListener('touchstart', (e) => {
             isDown = true;
             wrapper.style.scrollSnapType = 'none';
@@ -885,13 +868,13 @@ function initDraggableServicesCarousel() {
         });
     });
 
-    // Arrow Navigation controls all rows in sync
+    
     if (prevBtn && nextBtn) {
         prevBtn.addEventListener('click', () => {
             wrappers.forEach(wrapper => {
                 wrapper.style.scrollBehavior = 'smooth';
                 const card = wrapper.querySelector('.arched-card');
-                const cardWidth = card ? card.offsetWidth + 30 : 320; // card width + gap
+                const cardWidth = card ? card.offsetWidth + 30 : 320; 
                 wrapper.scrollLeft -= cardWidth; 
             });
         });
@@ -907,9 +890,7 @@ function initDraggableServicesCarousel() {
     }
 }
 
-/**
- * 3D Mouse Hover Tilt Effect for Pet ID Card
- */
+
 function initPetIdCardTilt() {
     const card = document.getElementById('petPassportCard');
     if (!card) return;
@@ -919,15 +900,15 @@ function initPetIdCardTilt() {
         const cardWidth = cardRect.width;
         const cardHeight = cardRect.height;
         
-        // Calculate coordinate center of the card
+        
         const centerX = cardRect.left + cardWidth / 2;
         const centerY = cardRect.top + cardHeight / 2;
         
-        // Calculate distance from cursor to center
+        
         const mouseX = e.clientX - centerX;
         const mouseY = e.clientY - centerY;
         
-        // Map to rotation degrees (-12 to 12 degrees max for elegance)
+        
         const rotateX = -12 * (mouseY / (cardHeight / 2));
         const rotateY = 12 * (mouseX / (cardWidth / 2));
         
@@ -939,9 +920,7 @@ function initPetIdCardTilt() {
     });
 }
 
-/**
- * Infinite Loop Carousel for Customer Testimonials
- */
+
 function initTestimonialsCarousel() {
     const track = document.querySelector('.testimonials-carousel-track');
     const cards = document.querySelectorAll('.testimonials-carousel-track .testimonial-card');
@@ -957,12 +936,12 @@ function initTestimonialsCarousel() {
     
     const totalCards = cards.length;
 
-    // Clone cards at the beginning and the end to support infinite scroll
+    
     cards.forEach(card => {
         const clone = card.cloneNode(true);
         track.appendChild(clone);
     });
-    // Append in reverse order or standard order to keep index matching correct
+    
     for (let i = totalCards - 1; i >= 0; i--) {
         const clone = cards[i].cloneNode(true);
         track.insertBefore(clone, track.firstChild);
@@ -970,7 +949,7 @@ function initTestimonialsCarousel() {
 
     const allCards = track.querySelectorAll('.testimonial-card');
     
-    // Position starts at the first original card (after totalCards prepended clones)
+    
     let positionIndex = totalCards;
 
     function updateSlider(instant = false) {
@@ -981,7 +960,7 @@ function initTestimonialsCarousel() {
         
         track.style.transform = `translateX(${offset}px)`;
 
-        // Highlight center active card
+        
         allCards.forEach((card, idx) => {
             if (idx === positionIndex) {
                 card.classList.add('active-center');
@@ -999,7 +978,7 @@ function initTestimonialsCarousel() {
         positionIndex++;
         updateSlider();
 
-        // Safe transition check
+        
         setTimeout(() => {
             if (positionIndex >= totalCards * 2) {
                 positionIndex = totalCards;
@@ -1027,18 +1006,16 @@ function initTestimonialsCarousel() {
     nextBtn.addEventListener('click', handleNext);
     prevBtn.addEventListener('click', handlePrev);
 
-    // Initial positioning
+    
     updateSlider(true);
 
-    // Refresh layout dynamically on resize
+    
     window.addEventListener('resize', () => {
         updateSlider(true);
     });
 }
 
-/**
- * Infinite Loop Carousel for Experts
- */
+
 function initExpertsCarousel() {
     const track = document.querySelector('.experts-carousel-track');
     const cards = document.querySelectorAll('.experts-carousel-track .expert-card');
@@ -1054,7 +1031,7 @@ function initExpertsCarousel() {
 
     const totalCards = cards.length;
 
-    // Clone cards to support infinite scroll
+    
     cards.forEach(card => {
         const clone = card.cloneNode(true);
         track.appendChild(clone);
@@ -1075,7 +1052,7 @@ function initExpertsCarousel() {
         
         track.style.transform = `translateX(${offset}px)`;
 
-        // Highlight center active card
+        
         allCards.forEach((card, idx) => {
             if (idx === positionIndex) {
                 card.classList.add('highlighted-expert');
@@ -1127,14 +1104,12 @@ function initExpertsCarousel() {
     });
 }
 
-/**
- * Premium Motion System (Lenis Smooth Scroll và GSAP ScrollTrigger)
- */
+
 function initPremiumMotion() {
-    // 1. Initialize Lenis if library is available
+    
     if (typeof Lenis === 'undefined') {
         console.warn('Lenis is not loaded — skipping smooth scroll.');
-        // Vẫn chạy GSAP nếu có, không return sớm
+        
     }
 
     let lenis = null;
@@ -1159,7 +1134,7 @@ function initPremiumMotion() {
         }
     }
 
-    // 2. Connect GSAP and ScrollTrigger if available
+    
     if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
         console.warn('GSAP or ScrollTrigger is not loaded — skipping animations.');
         return;
@@ -1167,20 +1142,20 @@ function initPremiumMotion() {
 
     gsap.registerPlugin(ScrollTrigger);
 
-    // Đánh dấu GSAP đã sẵn sàng — tắt CSS fallback opacity:1
+    
     document.documentElement.classList.add('gsap-ready');
 
-    // Sync ScrollTrigger with Lenis scroll events if lenis loaded
+    
     if (lenis) {
         lenis.on('scroll', () => {
             ScrollTrigger.update();
         });
     }
 
-    // 3. Hero Section Load Animations
+    
     const heroTl = gsap.timeline({
         onComplete: () => {
-            // Đánh dấu hero đã animated xong
+            
             document.documentElement.classList.add('hero-animated');
         }
     });
@@ -1215,8 +1190,8 @@ function initPremiumMotion() {
         }, '-=0.8');
     }
 
-    // 4. Scroll-Triggered Reveal Animations for Sections
-    // Batch reveal section headers
+    
+    
     gsap.utils.toArray('.section-header').forEach((header) => {
         gsap.from(header, {
             scrollTrigger: {
@@ -1232,7 +1207,7 @@ function initPremiumMotion() {
         });
     });
 
-    // Batch reveal feature items
+    
     if (document.querySelector('.feature-item')) {
         gsap.from('.feature-item', {
             scrollTrigger: {
@@ -1249,24 +1224,24 @@ function initPremiumMotion() {
         });
     }
 
-    // Batch reveal services cards
+    
     if (document.querySelector('.arched-card')) {
         gsap.from('.arched-card', {
             scrollTrigger: {
                 trigger: '.services-section',
-                start: 'top 85%', // Changed from 80% to be consistent with others
+                start: 'top 85%', 
                 toggleActions: 'play none none none',
             },
             opacity: 0,
-            y: 40, // Changed from x: 50 to avoid flex overflow bug
+            y: 40, 
             stagger: 0.1,
             duration: 1.0,
             ease: 'power3.out',
-            clearProps: "all" // Ensure inline styles are cleared after animation to prevent layout bugs
+            clearProps: "all" 
         });
     }
 
-    // Batch reveal safety commitment cards
+    
     if (document.querySelector('.safety-card')) {
         gsap.from('.safety-card', {
             scrollTrigger: {
@@ -1283,7 +1258,7 @@ function initPremiumMotion() {
         });
     }
 
-    // Batch reveal experts carousel
+    
     if (document.querySelector('.experts-carousel-container')) {
         gsap.from('.experts-carousel-container', {
             scrollTrigger: {
@@ -1299,7 +1274,7 @@ function initPremiumMotion() {
         });
     }
 
-    // Batch reveal step cards
+    
     if (document.querySelector('.step-card')) {
         gsap.from('.step-card', {
             scrollTrigger: {
@@ -1317,33 +1292,33 @@ function initPremiumMotion() {
         });
     }
 
-    // Make safety guardians draggable inside safety section
+    
     const guardians = document.querySelectorAll('.safety-guardian');
     guardians.forEach(guardian => {
         guardian.style.cursor = 'grab';
         
-        // Prevent default drag events on image
+        
         const img = guardian.querySelector('img');
         if (img) {
             img.addEventListener('dragstart', (e) => e.preventDefault());
         }
 
         guardian.addEventListener('pointerdown', (e) => {
-            // Only left mouse button or touch
+            
             if (e.button !== 0 && e.pointerType === 'mouse') return;
             
             guardian.style.cursor = 'grabbing';
-            // Store current transitions to restore later
+            
             const originalTransition = guardian.style.transition;
             const originalAnimation = guardian.style.animation;
             
             guardian.style.transition = 'none';
-            guardian.style.animation = 'none'; // Stop floating animation entirely when grabbed
+            guardian.style.animation = 'none'; 
             
             const parent = guardian.offsetParent || guardian.parentElement;
             const parentRect = parent.getBoundingClientRect();
             
-            // Grandparent section bounds for dragging constraints
+            
             const section = document.querySelector('.safety-section');
             const sectionRect = section.getBoundingClientRect();
             
@@ -1355,20 +1330,20 @@ function initPremiumMotion() {
             guardian.setPointerCapture(e.pointerId);
             
             const onPointerMove = (moveEvent) => {
-                // Determine new coordinates relative to the parent offset container
+                
                 let left = moveEvent.clientX - parentRect.left - shiftX;
                 let top = moveEvent.clientY - parentRect.top - shiftY;
                 
-                // Keep the guardian within the vertical bounds of the section
+                
                 const sectionTopInParent = sectionRect.top - parentRect.top;
                 const sectionBottomInParent = sectionRect.bottom - parentRect.top;
                 
-                // Constrain top và bottom
+                
                 const minTop = sectionTopInParent;
                 const maxTop = sectionBottomInParent - guardianRect.height;
                 top = Math.max(minTop, Math.min(top, maxTop));
                 
-                // Constrain left và right (can be moved anywhere horizontally within viewport section boundary)
+                
                 const minLeft = sectionRect.left - parentRect.left;
                 const maxLeft = sectionRect.right - parentRect.left - guardianRect.width;
                 left = Math.max(minLeft, Math.min(left, maxLeft));
@@ -1384,7 +1359,7 @@ function initPremiumMotion() {
                 guardian.style.cursor = 'grab';
                 
                 guardian.style.transition = originalTransition;
-                // Leave it where it is, do not restore old animations to prevent jumping back
+                
                 
                 guardian.removeEventListener('pointermove', onPointerMove);
                 guardian.removeEventListener('pointerup', onPointerUp);
@@ -1395,31 +1370,29 @@ function initPremiumMotion() {
         });
     });
 
-    // Refresh ScrollTrigger to calculate correct layout offsets
+    
     window.addEventListener('load', () => {
         ScrollTrigger.refresh();
     });
-    // Fallback refresh
+    
     setTimeout(() => {
         ScrollTrigger.refresh();
     }, 500);
 }
 
-/**
- * Interactive PawPass Loyalty Card Previewer
- */
+
 function initInteractivePawPass() {
     const virtualCard = document.getElementById('pawpassVirtualCard');
     const tierCards = document.querySelectorAll('.tier-card-interactive');
     
     if (!virtualCard || tierCards.length === 0) return;
 
-    // Card text fields
+    
     const cardTierText = document.getElementById('virtualCardTier');
     const cardPointsText = document.getElementById('virtualCardPoints');
     const cardPerkText = document.getElementById('virtualCardPerk');
 
-    // Data definition for each tier to update the virtual card
+    
     const tierData = {
         silver: {
             tierName: 'Hạng Bạc',
@@ -1445,7 +1418,7 @@ function initInteractivePawPass() {
         const data = tierData[tierKey];
         if (!data) return;
 
-        // Animate out card content slightly before updating
+        
         const elementsToAnimate = [cardTierText, cardPointsText, cardPerkText];
         elementsToAnimate.forEach(el => {
             if (el) {
@@ -1455,17 +1428,17 @@ function initInteractivePawPass() {
         });
 
         setTimeout(() => {
-            // Remove all tier classes
+            
             virtualCard.classList.remove('tier-silver', 'tier-gold', 'tier-diamond');
-            // Add new tier class
+            
             virtualCard.classList.add(data.className);
 
-            // Update text values
+            
             if (cardTierText) cardTierText.textContent = data.tierName;
             if (cardPointsText) cardPointsText.textContent = data.pointsMultiplier;
             if (cardPerkText) cardPerkText.textContent = data.primaryPerk;
 
-            // Animate in updated content
+            
             elementsToAnimate.forEach(el => {
                 if (el) {
                     el.style.transition = 'all 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
@@ -1476,17 +1449,17 @@ function initInteractivePawPass() {
         }, 150);
     }
 
-    // Set up click/hover listeners on the tier cards
+    
     tierCards.forEach(card => {
         const tier = card.getAttribute('data-tier');
         
         const selectTier = () => {
-            // Reset active states for cards
+            
             tierCards.forEach(c => c.classList.remove('active'));
-            // Set current active card
+            
             card.classList.add('active');
 
-            // Update virtual card
+            
             updateVirtualCard(tier);
         };
 
@@ -1494,7 +1467,7 @@ function initInteractivePawPass() {
         card.addEventListener('mouseenter', selectTier);
     });
 
-    // 3D Card Hover Tilt effect for the virtual card
+    
     const cardWrapper = document.querySelector('.pawpass-card-wrapper');
     if (cardWrapper && virtualCard) {
         cardWrapper.addEventListener('mousemove', (e) => {
@@ -1502,13 +1475,13 @@ function initInteractivePawPass() {
             const x = e.clientX - rect.left - (rect.width / 2);
             const y = e.clientY - rect.top - (rect.height / 2);
             
-            // Limit tilt values for sub-milliradian elegance
+            
             const rotateX = -(y / (rect.height / 2)) * 12;
             const rotateY = (x / (rect.width / 2)) * 12;
             
             virtualCard.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.03)`;
             
-            // Highlight reflective sweep based on cursor location
+            
             const shimmer = virtualCard.querySelector('.card-shimmer');
             if (shimmer) {
                 const percentX = (e.clientX - rect.left) / rect.width * 100;
@@ -1528,14 +1501,9 @@ function initInteractivePawPass() {
 
 
 
-// =============================================================================
-// Lookup — Tra cứu đơn hàng và lịch hẹn (khách vãng lai)
-// Chạy trên mọi page có header. Nếu không có #lookupModal thì tự bỏ qua.
-// TODO: Thay getMockData() bằng fetch('/api/lookup?phone=...') khi có backend.
-// =============================================================================
 
-// Expose ra window vì main.js load dưới dạng type="module" (scoped)
-// -> onclick="openLookupModal()" trong HTML cần hàm ở global scope
+
+
 window.openLookupModal  = openLookupModal;
 window.closeLookupModal = closeLookupModal;
 window.switchLookupTab  = switchLookupTab;
@@ -1543,14 +1511,14 @@ window.submitLookup     = submitLookup;
 
 function initLookup() {
     const overlay = document.getElementById('lookupModal');
-    if (!overlay) return; // Không có modal trên trang này -> bỏ qua
+    if (!overlay) return; 
 
-    // Đóng khi click ra ngoài modal box
+    
     overlay.addEventListener('click', function (e) {
         if (e.target === overlay) closeLookupModal();
     });
 
-    // Enter để submit khi đang focus input
+    
     const phoneInput = document.getElementById('lookupPhone');
     if (phoneInput) {
         phoneInput.addEventListener('keydown', function (e) {
@@ -1558,7 +1526,7 @@ function initLookup() {
         });
     }
 
-    // Escape đóng modal (chỉ register 1 lần ở đây, không đăng ký global)
+    
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && overlay.classList.contains('open')) {
             closeLookupModal();
@@ -1566,7 +1534,7 @@ function initLookup() {
     });
 }
 
-// ── State (scoped via closure không cần thiết vì app này không module) ────────
+
 var _lookupCurrentTab = 'orders';
 var _lookupLastResults = { orders: [], bookings: [] };
 
@@ -1623,7 +1591,7 @@ function submitLookup() {
     resultsEl.style.display = 'block';
     resultsEl.innerHTML = '<div class="lookup-empty"><div class="lookup-empty-icon"></div><p>Đang tìm kiếm...</p></div>';
 
-    // TODO: Thay bằng fetch('/api/lookup?phone=' + encodeURIComponent(phone)).then(...)
+    
     setTimeout(function () {
         const data = _getLookupMockData(phone);
         _lookupLastResults = data;
@@ -1683,7 +1651,7 @@ function _resetLookup() {
 }
 
 function _getLookupMockData(phone) {
-    // Mock data — xóa và thay bằng API khi backend sẵn sàng
+    
     return {
         orders: [
             { id: '#DH-20240601', meta: 'Thức ăn Royal Canin · 01/06/2024', status: 'Đã giao', statusClass: 'lookup-status-done' },
@@ -1704,9 +1672,7 @@ function _escLookup(str) {
         .replace(/"/g, '&quot;');
 }
 
-/**
- * Process Timeline — horizontal scroll with nav buttons and active state
- */
+
 function initProcessTimeline() {
     const track = document.getElementById('processTrack');
     if (!track) return;
@@ -1738,7 +1704,7 @@ function initProcessTimeline() {
         setActive(index);
     }
 
-    // Nav buttons
+    
     if (prevBtn) {
         prevBtn.addEventListener('click', () => {
             const next = Math.max(0, currentIndex - 1);
@@ -1753,7 +1719,7 @@ function initProcessTimeline() {
         });
     }
 
-    // Drag to scroll
+    
     let isDown = false, startX, scrollLeft;
     track.addEventListener('mousedown', (e) => {
         isDown = true;
@@ -1770,7 +1736,7 @@ function initProcessTimeline() {
         track.scrollLeft = scrollLeft - (x - startX) * 1.5;
     });
 
-    // Touch
+    
     track.addEventListener('touchstart', (e) => {
         startX = e.touches[0].pageX - track.offsetLeft;
         scrollLeft = track.scrollLeft;
@@ -1780,7 +1746,7 @@ function initProcessTimeline() {
         track.scrollLeft = scrollLeft - (x - startX);
     }, { passive: true });
 
-    // Update active on scroll end
+    
     track.addEventListener('scrollend', () => {
         const stepW = getStepWidth();
         const center = track.scrollLeft + track.offsetWidth / 2;
@@ -1794,20 +1760,18 @@ function initProcessTimeline() {
         setActive(closest);
     });
 
-    // Init
+    
     setActive(0);
 }
 
 
 
-/**
- * Services Grid — Handle category tabs filtering for landing page (Dynamic)
- */
+
 async function initServicesGrid() {
     const grid = document.getElementById('svcLandingGrid');
     if (!grid) return;
 
-    // Dynamically load services
+    
     if (window.DataLoader && typeof window.DataLoader.loadServices === 'function') {
         try {
             const allServices = await window.DataLoader.loadServices();
@@ -1903,9 +1867,9 @@ async function initServicesGrid() {
 
     tabButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Remove active from all tabs
+            
             tabButtons.forEach(b => b.classList.remove('active'));
-            // Add active to clicked tab
+            
             btn.classList.add('active');
 
             activeCategory = btn.getAttribute('data-category');
@@ -1913,6 +1877,6 @@ async function initServicesGrid() {
         });
     });
 
-    // Initial filter
+    
     applyFilter();
 }

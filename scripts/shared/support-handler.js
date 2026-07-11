@@ -1,11 +1,9 @@
-/**
- * support-handler.js — Quản lý nghiệp vụ hỗ trợ khách hàng, Chatbot AI và Tickets
- */
+
 
 (function() {
 
 
-    // Dữ liệu câu hỏi FAQ mẫu
+    
     const faqData = [
         {
             id: 'faq-1',
@@ -29,7 +27,7 @@
 
 
 
-    // 1. Phân loại độ ưu tiên SLAs khẩn cấp (US 15-5)
+    
     function detectPriority(title, content) {
         const keywords = ['sức khỏe', 'hotel', 'chấn thương', 'mất tiền', 'trừ tiền', 'sự cố', 'momo', 'chuyển khoản'];
         const text = (title + ' ' + content).toLowerCase();
@@ -39,7 +37,7 @@
 
 
 
-    // 5. Bộ lọc chat AI và khoá chat 15 phút (US 15-2)
+    
     let badWordsViolationCount = 0;
     let chatBlockedUntil = null;
 
@@ -64,7 +62,7 @@
         if (checkBadWords(userInput)) {
             badWordsViolationCount++;
             if (badWordsViolationCount >= 3) {
-                chatBlockedUntil = Date.now() + 15 * 60 * 1000; // Khóa 15 phút
+                chatBlockedUntil = Date.now() + 15 * 60 * 1000; 
                 badWordsViolationCount = 0;
                 return {
                     error: true,
@@ -77,9 +75,9 @@
             };
         }
 
-        // Gọi Backend Vercel Serverless Function
+        
         try {
-            // Lấy Access Token từ Supabase Client để backend xác thực
+            
             let token = "";
             const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (db) {
@@ -130,10 +128,10 @@
         return { error: false };
     }
 
-    // Xuất ra toàn cục
     
-    // --- BẮT ĐẦU KẾT NỐI SUPABASE ---
-    let cachedTickets = []; // RAM cache to support getTickets synchronously for old UI
+    
+    
+    let cachedTickets = []; 
 
     async function loadTickets() {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -147,7 +145,7 @@
             query = query.is('user_id', null);
         }
         
-        // Fetch tickets
+        
         const { data: ticketsData, error: tErr } = await query;
             
         if (tErr) {
@@ -155,7 +153,7 @@
             return cachedTickets;
         }
         
-        // Fetch messages
+        
         const { data: msgsData, error: mErr } = await db
             .from('support_ticket_message')
             .select('*')
@@ -187,12 +185,12 @@
             messages: msgsByTicket[t.id] || []
         }));
         
-        // Dispatch update
+        
         document.dispatchEvent(new CustomEvent('tickets_updated'));
         return cachedTickets;
     }
 
-    // Sync getter for old UI
+    
     function sbGetTickets() {
         return cachedTickets;
     }
@@ -205,7 +203,7 @@
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
         const userId = currentUser ? currentUser.id : null;
         
-        // Insert ticket
+        
         const { data: tData, error: tErr } = await db.from('support_ticket').insert([{
             title, type, priority, status: 'pending', user_id: userId
         }]).select();
@@ -217,7 +215,7 @@
         
         const newTicketId = tData[0].id;
         
-        // Insert first message
+        
         await db.from('support_ticket_message').insert([{
             ticket_id: newTicketId,
             sender_type: 'user',
@@ -247,7 +245,7 @@
         
         await loadTickets();
         
-        // Simulate response
+        
         setTimeout(async () => {
             await db.from('support_ticket_message').insert([{
                 ticket_id: ticketId,
@@ -272,7 +270,7 @@
         
         await loadTickets();
     }
-    // --- KẾT THÚC KẾT NỐI SUPABASE ---
+    
 window.PawPalSupport = {
         faq: faqData,
         getTickets: sbGetTickets,

@@ -1,12 +1,8 @@
-/**
- * Mock API layer for PawPal.
- * JSON files in /data are the source of demo data. localStorage is only a writable cache
- * so user actions such as editing pets or cancelling orders can still work without a backend.
- */
+
 
 export const API = {
     DATA_VERSION: '2026-07-04-v14-guest-data',
-    USE_BACKEND: false, // Thiết lập false để ngắt kết nối backend MongoDB, chuyển hoàn toàn sang Mock offline bằng LocalStorage và tệp tin JSON tĩnh.
+    USE_BACKEND: false, 
 
     getBaseUrl() {
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -49,7 +45,7 @@ export const API = {
     },
 
     async initData() {
-        // Tắt hoàn toàn việc seed dữ liệu từ JSON để sử dụng Supabase
+        
     },
 
     async getUserPets(userId) {
@@ -65,7 +61,7 @@ export const API = {
                 console.error('[API] Supabase getUserPets error:', error.message);
                 return [];
             }
-            // Map keys back to frontend format if needed
+            
             return (data || []).map(p => ({
                 id: p.id,
                 name: p.pet_name,
@@ -303,7 +299,7 @@ export const API = {
     async getCareLogs() {
         const careLogs = await this.request('/api/care-logs');
         if (careLogs && typeof careLogs === 'object') return careLogs;
-        // Offline path — không gọi lại initData()
+        
         return safeReadObject('pawpal_pet_tracker_logs') || {};
     },
 
@@ -333,7 +329,7 @@ export const API = {
                     let guestId = localStorage.getItem('pawpal_guest_customer_id');
                     if (guestId) return guestId;
 
-                    // Try creating an anonymous customer
+                    
                     const { data: newCust, error } = await db.from('customer').insert({
                         account_status: 'GUEST',
                         registered_at: new Date().toISOString()
@@ -412,7 +408,7 @@ export const API = {
             const customerId = await resolveCustomerId();
             if (!customerId) return { success: false, error: 'Could not resolve customer ID' };
 
-            // 1. Get or create cart for user
+            
             let { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', customerId).single();
             
             if (!cartData) {
@@ -421,10 +417,10 @@ export const API = {
                 cartData = newCart;
             }
 
-            // 2. Clear old items
+            
             await db.from('cart_item').delete().eq('cart_id', cartData.id);
 
-            // 3. Insert new items
+            
             if (itemArray.length > 0) {
                 const insertItems = itemArray.map(item => ({
                     cart_id: cartData.id,
@@ -469,7 +465,7 @@ export const API = {
             }
         }
 
-        // Offline fallback
+        
         const currentUser = safeReadObject('pawpal_current_user');
         const userPhone = currentUser?.phone ? String(currentUser.phone) : null;
         const productKey  = userPhone ? `pawpal_wishlist_${userPhone}` : 'pawpal_wishlist_guest';
@@ -536,7 +532,7 @@ export const API = {
             }
         }
 
-        // Dù server thành công hay không, luôn lưu localStorage theo key của user
+        
         const currentUser = safeReadObject('pawpal_current_user');
         const userPhone = currentUser?.phone ? String(currentUser.phone) : null;
         if (userPhone) {
@@ -554,7 +550,7 @@ export const API = {
         if (Array.isArray(users)) {
             return users.find(user => sameUserId(user._id || user.id, userId) || sameUserId(user.legacyId, userId)) || null;
         }
-        // Offline path — không gọi lại initData()
+        
         const localUsers = safeReadArray('pawpal_users_db');
         return localUsers.find(user => sameUserId(user.id, userId)) || null;
     },
@@ -630,8 +626,8 @@ export const API = {
                 }
             }
 
-            // 0. Handle shipping address
-            let shippingAddressId = 'f0000000-0000-0000-2222-000000000001'; // Fallback
+            
+            let shippingAddressId = 'f0000000-0000-0000-2222-000000000001'; 
             if (orderData.shipping && customerId) {
                 const { data: addrData, error: addrError } = await db.from('customer_address').insert({
                     customer_id: customerId,
@@ -649,7 +645,7 @@ export const API = {
                 }
             }
 
-            // 1. Map orderData to sales_order
+            
             const salesOrder = {
                 order_code: orderData.orderId,
                 customer_id: customerId,
@@ -665,7 +661,7 @@ export const API = {
             const { data: newOrder, error: orderError } = await db.from('sales_order').insert(salesOrder).select('id').single();
             if (orderError) throw orderError;
 
-            // 1.5. Map payment to payment table
+            
             const paymentMethodStr = String(orderData.payment?.method || 'cod').toUpperCase();
             const paymentCode = 'PAY-' + Date.now();
             const paymentInsert = {
@@ -679,7 +675,7 @@ export const API = {
             const { error: payError } = await db.from('payment').insert(paymentInsert);
             if (payError) console.error('[API] Failed to insert payment:', payError);
 
-            // 2. Map items to sales_order_detail
+            
             if (orderData.items && orderData.items.length > 0) {
                 const orderDetails = orderData.items.map(item => ({
                     order_id: newOrder.id,
@@ -782,7 +778,7 @@ export const API = {
                 
             if (error) throw error;
             
-            // Map db columns to frontend properties
+            
             const mappedVouchers = (data || []).map(v => ({
                 id: v.id,
                 code: v.voucher_code,
@@ -825,7 +821,7 @@ export const API = {
                 
             if (error) {
                 if (error.code === '42P01') {
-                    // Table does not exist yet, fallback to JSON gracefully
+                    
                     const res = await fetch('/data/delivery-options.json');
                     return await res.json();
                 }
@@ -864,7 +860,7 @@ export const API = {
                 
             if (error) {
                 if (error.code === '42P01') {
-                    // Table does not exist yet, fallback to JSON gracefully
+                    
                     const res = await fetch('/data/payment-methods.json');
                     return await res.json();
                 }
@@ -935,10 +931,10 @@ function mergeById(seedItems, localItems) {
         if (item && item.id) {
             const local = merged.get(String(item.id));
             if (local) {
-                // Local (user-modified) wins cho các field action — seed chỉ cung cấp metadata tĩnh
+                
                 merged.set(String(item.id), {
                     ...item,
-                    // Booking user-action fields
+                    
                     status:      local.status      ?? item.status,
                     date:        local.date        ?? item.date,
                     time:        local.time        ?? item.time,
@@ -948,7 +944,7 @@ function mergeById(seedItems, localItems) {
                     changeCount: local.changeCount ?? item.changeCount,
                     cancelCount: local.cancelCount ?? item.cancelCount,
                     note:        local.note        ?? item.note,
-                    // Loyalty
+                    
                     pointsAwarded: local.pointsAwarded ?? item.pointsAwarded,
                     pointsEarned:  local.pointsEarned  ?? item.pointsEarned,
                 });
@@ -1018,5 +1014,5 @@ function sameUserId(a, b) {
 
 API.initData();
 
-// Expose ra window để các script non-module (cart.js, wishlist.js, landing.js...) dùng được
+
 window.API = API;

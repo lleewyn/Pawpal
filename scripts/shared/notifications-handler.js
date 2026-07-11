@@ -1,6 +1,4 @@
-/**
- * notifications-handler.js - Quan ly thong bao va su kien thoi gian thuc
- */
+
 
 (function () {
     const NOTI_KEY = 'pawpal_notifications';
@@ -201,7 +199,7 @@
         const toastElement = document.getElementById(toastId);
         if (!toastElement) return;
 
-        // Force reflow and trigger animation to show the toast
+        
         toastElement.offsetHeight;
         toastElement.classList.add('show');
 
@@ -237,7 +235,7 @@
     }
 
     function deleteNotification(id) {
-        // Hiện confirm trước khi xóa (spec: "hỏi xác nhận một lần")
+        
         const confirmId = 'noti-delete-confirm-modal';
         const existing = document.getElementById(confirmId);
         if (existing) existing.remove();

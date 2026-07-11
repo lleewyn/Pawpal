@@ -1,13 +1,5 @@
-/**
- * auth.js — Shared authentication core của PawPal.
- * Chứa: database helpers, session management, toast/banner UI,
- * session protection cho tài khoản tạm.
- *
- * Logic UI riêng của trang login (form, OTP, routing) nằm trong:
- * → /pages/public/login/login.js
- */
 
-// --- 0. CENTRALIZED STORAGE HELPER ---
+
 window.PawpalStorage = {
     KEYS: {
         CURRENT_USER: 'pawpal_current_user',
@@ -25,7 +17,7 @@ window.PawpalStorage = {
             try {
                 return JSON.parse(data);
             } catch (e) {
-                // If it's not valid JSON, it might just be a raw string
+                
                 return data;
             }
         } catch (e) {
@@ -51,7 +43,6 @@ window.PawpalStorage = {
     }
 };
 
-// --- 1. SESSION MANAGEMENT ---
 const CURRENT_USER_KEY = window.PawpalStorage.KEYS.CURRENT_USER;
 
 function getCurrentUser() {
@@ -72,7 +63,7 @@ function logout() {
     window.location.href = '/pages/public/landing/landing.html';
 }
 
-// --- 2. TOAST NOTIFICATION SYSTEM ---
+
 function showToast(type, message, duration = 5000) {
     const container = document.getElementById('toastContainer');
     if (!container) {
@@ -98,7 +89,7 @@ function showToast(type, message, duration = 5000) {
     container.insertAdjacentHTML('beforeend', toastHtml);
     const toastElement = document.getElementById(toastId);
 
-    // Force reflow and trigger animation to show the toast
+    
     toastElement.offsetHeight;
     toastElement.classList.add('show');
 
@@ -117,7 +108,7 @@ function removeToast(toastElement) {
     setTimeout(() => toastElement.remove(), 300);
 }
 
-// --- ERROR BANNER DISPLAY ---
+
 function showErrorBanner(message, parentForm) {
     const existingBanner = parentForm.querySelector('.auth-error-banner');
     if (existingBanner) existingBanner.remove();
@@ -133,12 +124,12 @@ function showErrorBanner(message, parentForm) {
     }, 7000);
 }
 
-// --- 3. SESSION PROTECTION — KHÓA TÀI KHOẢN TẠM (US 1-2) ---
+
 function enforceTemporaryAccountLock() {
     const currentUser = getCurrentUser();
     const isTemp = currentUser && currentUser.is_temporary;
 
-    // Tài khoản tạm truy cập thẳng vào trang /user/ → đẩy ra ngoài
+    
     const currentPath = window.location.pathname.toLowerCase();
     if (isTemp && currentPath.includes('/pages/user/')) {
         const tokens = window.PawpalStorage.get(TEMP_TOKENS_KEY, []);
@@ -156,7 +147,7 @@ function enforceTemporaryAccountLock() {
         return;
     }
 
-    // Chờ header inject xong để khóa nav links
+    
     document.addEventListener('headerInjected', () => applyLockingUI(isTemp));
     applyLockingUI(isTemp);
 }
@@ -205,7 +196,7 @@ function showLockedTooltip(targetElement) {
     }, 4000);
 }
 
-// --- ADMIN TOAST (dùng trong admin quick-add) ---
+
 function showAdminToast(message) {
     let toastContainer = document.querySelector('.toast-container');
     if (!toastContainer) {
@@ -231,7 +222,7 @@ function showAdminToast(message) {
     toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
 }
 
-// --- 4. ADMIN QUICK ADD CUSTOMER (US 1-3) ---
+
 function initAdminQuickAddCustomer() {
     const btnQuickAdd = document.getElementById('btnAdminQuickAddCustomer');
     if (!btnQuickAdd) return;
@@ -281,7 +272,7 @@ function initAdminQuickAddCustomer() {
                 saveUsers(users);
             }
 
-            // Tạo token kích hoạt tài khoản
+            
             const token  = 'token-dynamic-' + Math.random().toString(36).substr(2, 9);
             const tokens = window.PawpalStorage.get(TEMP_TOKENS_KEY, []);
             tokens.push({ token, phone, createdAt: Date.now() });
@@ -304,13 +295,13 @@ function initAdminQuickAddCustomer() {
     });
 }
 
-// --- 5. SHARED INIT (dùng cho mọi trang, không phải login) ---
+
 function initAuthShared() {
     enforceTemporaryAccountLock();
     initAdminQuickAddCustomer();
 }
 
-// Chạy shared init trên mọi trang
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAuthShared);
 } else {

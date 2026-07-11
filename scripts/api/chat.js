@@ -5,16 +5,14 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 
-// --- BỘ NHỚ ĐỆM (CACHE) ĐỂ TỐI ƯU TỐC ĐỘ VERCEL ---
 let cachedApiKeys = null;
 let lastKeysFetchTime = 0;
 let currentKeyIndex = 0;
 const validUsersCache = new Map();
 
-// Quản lý API Key xoay vòng từ Supabase
 const getGenAI = async () => {
     try {
-        // Cache API Keys trong 10 phút để tránh gọi Supabase liên tục trên mỗi tin nhắn
+        
         const CACHE_TTL = 10 * 60 * 1000;
         if (cachedApiKeys && (Date.now() - lastKeysFetchTime < CACHE_TTL)) {
             const keyObj = cachedApiKeys[currentKeyIndex % cachedApiKeys.length];
@@ -24,7 +22,7 @@ const getGenAI = async () => {
             return { genAI: new GoogleGenerativeAI(keyObj.key_value), keyPrefix };
         }
 
-        // Lấy các key có provider là 'gemini' và đang active từ bảng api_keys
+        
         const { data, error } = await supabase
             .from('api_keys')
             .select('key_value')
@@ -33,7 +31,7 @@ const getGenAI = async () => {
 
         if (error || !data || data.length === 0) {
             console.warn("[API Key Rotation] Không tìm thấy key trong database. Đang fallback về file .env");
-            // Fallback: Lấy từ biến môi trường
+            
             const envKeys = Object.keys(process.env)
                 .filter(key => key.startsWith('GEMINI_API_KEY'))
                 .map(key => process.env[key])
@@ -48,13 +46,13 @@ const getGenAI = async () => {
             return { genAI: new GoogleGenerativeAI(selectedKey), keyPrefix };
         }
 
-        // Nếu lấy thành công từ Supabase, lưu vào RAM Cache
+        
         cachedApiKeys = data;
         lastKeysFetchTime = Date.now();
 
-        // Xoay vòng theo thứ tự (Sequential Round-Robin) thay vì ngẫu nhiên
+        
         const keyObj = data[currentKeyIndex % data.length];
-        currentKeyIndex++; // Tăng index cho lần sau
+        currentKeyIndex++; 
         
         const keyPrefix = keyObj.key_value.substring(0, 15);
         console.log(`[API Key Rotation] Đang dùng key bắt đầu bằng: ${keyPrefix}... (tổng số: ${data.length} keys, thứ tự: ${(currentKeyIndex-1) % data.length + 1}/${data.length})`);
@@ -67,27 +65,25 @@ const getGenAI = async () => {
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Sử dụng service role key để backend có toàn quyền truy xuất DB an toàn (vì chạy server-side)
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Kiểm tra user token qua Supabase
 const getUserIdFromToken = async (authHeader) => {
     if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
     const token = authHeader.split(' ')[1];
     
-    // Hỗ trợ local auth token (PawPal dùng custom auth, không dùng Supabase Auth)
-    // Format: 'local:<userId>' - lấy từ localStorage['pawpal_current_user'].id
+    
+    
     if (token.startsWith('local:')) {
         const userId = token.replace('local:', '');
         if (!userId) return null;
         
-        // Trả về luôn nếu đã cache trong 15 phút qua (tránh gọi Supabase liên tục)
+        
         if (validUsersCache.has(userId) && (Date.now() - validUsersCache.get(userId) < 15 * 60 * 1000)) {
             return userId;
         }
 
-        // Verify userId này có thực sự tồn tại trong bảng customer trên Supabase DB không
-        // Nếu ai đó giả mạo userId, bước này sẽ loại bỏ
+        
+        
         const { data, error } = await supabase
             .from('customer')
             .select('id')
@@ -99,12 +95,12 @@ const getUserIdFromToken = async (authHeader) => {
             return null;
         }
         
-        validUsersCache.set(userId, Date.now()); // Lưu vào bộ nhớ đệm
+        validUsersCache.set(userId, Date.now()); 
         console.log('[Auth] ✅ Xác thực thành công userId từ DB:', userId);
         return userId;
     }
     
-    // Gọi Supabase để verify JWT token an toàn (nếu có Supabase Auth)
+    
     const { data: { user }, error } = await supabase.auth.getUser(token);
     if (error || !user) {
         console.error("Auth error:", error);
@@ -113,7 +109,6 @@ const getUserIdFromToken = async (authHeader) => {
     return user.id;
 };
 
-// Định nghĩa các Tools (Function Calling)
 const dbTools = {
     get_user_orders: async (user_id) => {
         if (!user_id) return { error: "Yêu cầu đăng nhập để xem đơn hàng" };
@@ -160,15 +155,15 @@ const dbTools = {
         }
     },
     search_store_info: async (query, genAI_instance) => {
-        // Thực hiện RAG: Nhúng câu hỏi thành vector, so khớp trong DB
+        
         try {
-            // Lấy mô hình text-embedding của Google
+            
             const embeddingModel = genAI_instance.getGenerativeModel({ model: "gemini-embedding-2" });
             const result = await embeddingModel.embedContent(query);
             const embedding = result.embedding.values;
             
-            // Tìm kiếm vector trên bảng document_embeddings (yêu cầu hàm match_documents trong SQL)
-            // Nếu chưa có hàm match_documents, tạm fallback về tìm full-text cơ bản hoặc trả về câu rỗng.
+            
+            
             const { data, error } = await supabase.rpc('match_documents', {
                 query_embedding: embedding,
                 match_threshold: 0.7,
@@ -186,7 +181,6 @@ const dbTools = {
     }
 };
 
-// Khai báo tool schema cho Gemini
 const toolsDeclaration = [
     {
         functionDeclarations: [
@@ -251,9 +245,9 @@ module.exports = async function handler(req, res) {
         
         const { genAI, keyPrefix } = genAIResult;
         
-        // Gemini SDK requires history in a specific format
+        
         const history = messages.slice(0, -1).map(m => ({
-            role: m.role, // 'user' or 'model'
+            role: m.role, 
             parts: [{ text: m.content }]
         }));
 
@@ -268,7 +262,7 @@ module.exports = async function handler(req, res) {
                 tools: toolsDeclaration
             });
             chat = model.startChat({ history: history });
-            // 2. Bắt đầu Stream request
+            
             streamResult = await chat.sendMessageStream(userMsg);
         } catch (err1) {
             console.warn("[API] gemini-3.5-flash failed (" + err1.message + "), falling back to gemini-2.5-flash");
@@ -281,11 +275,11 @@ module.exports = async function handler(req, res) {
             streamResult = await chat.sendMessageStream(userMsg);
         }
         
-        // Chuẩn bị header cho SSE streaming
+        
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
-        // Trả Header Key Prefix về Frontend
+        
         res.setHeader('X-API-Key-Used', keyPrefix);
 
         for await (const chunk of streamResult.stream) {
@@ -310,7 +304,7 @@ module.exports = async function handler(req, res) {
                     toolResult = await dbTools.search_store_info(toolArgs.query, genAI);
                 }
 
-                // Có function call -> Gọi lại Gemini bằng streaming và trả thẳng về client
+                
                 try {
                     const secondStream = await chat.sendMessageStream([{
                         functionResponse: {
@@ -329,10 +323,10 @@ module.exports = async function handler(req, res) {
                     console.error("[API] Function calling second stream failed:", toolErr.message);
                     res.write(`data: ${JSON.stringify({ error: toolErr.message, reply: 'PawPal đã tìm thấy thông tin nhưng gặp lỗi khi đọc dữ liệu. Quý khách vui lòng thử lại sau.' })}\n\n`);
                 }
-                break; // Xử lý xong function call thì thoát vòng lặp ngoài
+                break; 
             }
             
-            // Nếu không phải function call, stream thẳng text về client
+            
             const text = typeof chunk.text === 'function' ? chunk.text() : '';
             if (text) {
                 res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
@@ -347,11 +341,11 @@ module.exports = async function handler(req, res) {
         
         const msg = error.message || '';
         
-        // Tất cả lỗi đều trả về SSE format để frontend streaming reader xử lý được
+        
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
         
-        // Xử lý lỗi rate limit của Gemini API (429 / RESOURCE_EXHAUSTED)
+        
         if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('retryDelay') || msg.includes('quota')) {
             res.write(`data: ${JSON.stringify({ error: msg, reply: 'PawPal AI đang bận xử lý nhiều yêu cầu cùng lúc. Bạn vui lòng thử lại sau vài giây nhé! 🐾' })}\n\n`);
         } else {

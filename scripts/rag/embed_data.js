@@ -2,11 +2,9 @@ require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { createClient } = require('@supabase/supabase-js');
 
-// Config
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-// Dữ liệu mẫu (Knowledge Base) của cửa hàng PawPal
 const knowledgeBase = [
     {
         content: "Cửa hàng chăm sóc thú cưng PawPal mở cửa từ 8:00 sáng đến 20:00 tối các ngày trong tuần. Riêng dịch vụ Pet Hotel hoạt động 24/7 có nhân viên trực đêm.",
@@ -37,11 +35,11 @@ async function runEmbedding() {
     for (const doc of knowledgeBase) {
         try {
             console.log(`Embedding text: "${doc.content.substring(0, 30)}..."`);
-            // 1. Dùng Gemini để chuyển đổi Text thành Vector (768 chiều)
+            
             const result = await model.embedContent(doc.content);
             const embedding = result.embedding.values;
 
-            // 2. Lưu vào Supabase Database
+            
             const { error } = await supabase
                 .from('document_embeddings')
                 .insert({

@@ -1,9 +1,5 @@
-/**
- * data-loader.js — Load and parse CSV data
- * Centralized data loading for products and services
- */
 
-// Cache for loaded data
+
 const dataCache = {
     products: null,
     services: null,
@@ -11,39 +7,34 @@ const dataCache = {
     blogCategories: null
 };
 
-/**
- * Parse CSV text to array of objects
- * @param {string} csvText - Raw CSV text
- * @returns {Array<Object>} - Array of objects
- */
 function parseCSV(csvText) {
     const data = [];
     let row = [];
     let field = '';
     let inQuotes = false;
     
-    // Duyệt qua từng ký tự để phân tích trạng thái ngoặc kép và dấu phân tách hàng/cột
+    
     for (let i = 0; i < csvText.length; i++) {
         const char = csvText[i];
         const nextChar = csvText[i + 1];
         
         if (char === '"') {
             if (inQuotes && nextChar === '"') {
-                // Xử lý ký tự ngoặc kép lồng nhau bên trong ô dữ liệu ("" -> ")
+                
                 field += '"';
-                i++; // Bỏ qua ký tự nháy tiếp theo
+                i++; 
             } else {
-                // Đổi trạng thái (đang ở trong hoặc ngoài cặp dấu ngoặc kép)
+                
                 inQuotes = !inQuotes;
             }
         } else if (char === '\t' && !inQuotes) {
-            // Hết một cột (dấu tab phân tách ngoài ngoặc kép)
+            
             row.push(field.trim());
             field = '';
         } else if ((char === '\r' || char === '\n') && !inQuotes) {
-            // Hết một dòng dữ liệu (ngoài ngoặc kép)
+            
             if (char === '\r' && nextChar === '\n') {
-                i++; // Bỏ qua ký tự \n đi kèm sau \r
+                i++; 
             }
             if (field || row.length > 0) {
                 row.push(field.trim());
@@ -56,7 +47,7 @@ function parseCSV(csvText) {
         }
     }
     
-    // Nạp nốt trường cuối cùng nếu dòng cuối không có ký tự xuống dòng
+    
     if (field || row.length > 0) {
         row.push(field.trim());
         data.push(row);
@@ -64,7 +55,7 @@ function parseCSV(csvText) {
     
     if (data.length === 0) return [];
     
-    // Lấy tiêu đề cột từ hàng đầu tiên và loại bỏ dấu ngoặc kép bao quanh nếu có
+    
     const headers = data[0].map(h => {
         let cleaned = h.trim();
         if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
@@ -73,7 +64,7 @@ function parseCSV(csvText) {
         return cleaned;
     });
     
-    // Áp các hàng dữ liệu tương ứng vào tiêu đề cột tương ứng
+    
     const result = [];
     for (let i = 1; i < data.length; i++) {
         const rowData = data[i];
@@ -93,14 +84,9 @@ function parseCSV(csvText) {
     return result;
 }
 
-/**
- * Transform raw CSV product data to app format
- * @param {Array<Object>} rawData - Parsed CSV data
- * @returns {Array<Object>} - Transformed product objects
- */
 function transformProductData(rawData) {
     return rawData.map((item, index) => {
-        // Map from Vietnamese category name in CSV to category slug
+        
         const categoryMap = {
             'Thức ăn khô': 'food-dry',
             'Thức ăn ướt': 'food-wet',
@@ -118,25 +104,25 @@ function transformProductData(rawData) {
         
         const category = categoryMap[item['Danh mục (Category)']] || 'other';
         
-        // Parse prices
+        
         const price = parseInt(item['Giá sau tích điểm']?.replace(/\./g, '').replace(/[^\d]/g, '') || item['Giá bán lẻ']?.replace(/\./g, '').replace(/[^\d]/g, '') || '0');
         const originalPrice = parseInt(item['Giá bán lẻ']?.replace(/\./g, '').replace(/[^\d]/g, '') || '0');
         
-        // Determine if on sale
+        
         const sale = price < originalPrice;
         
-        // Parse stock
+        
         const stock = parseInt(item['Số lượng tồn kho (Inventory)'] || '0');
         const inStock = item['Trạng thái']?.toLowerCase().includes('còn hàng') || item['Trạng thái']?.toLowerCase() === 'available';
         
-        // Determine badge
+        
         let badge = null;
         const label = item['Nhãn sản phẩm']?.toLowerCase() || '';
         if (label.includes('bán chạy')) badge = 'best';
         else if (label.includes('mới')) badge = 'new';
         else if (label.includes('khuyên dùng')) badge = 'hot';
         
-        // Parse rating
+        
         const rating = parseFloat(item['Đánh giá (Rating)'] || '4.5');
         const reviewCount = parseInt(item['Lượt đánh giá (Review Count)'] || '0');
         
@@ -174,10 +160,6 @@ function transformProductData(rawData) {
     });
 }
 
-/**
- * Load products from CSV file
- * @returns {Promise<Array<Object>>} - Promise resolving to products array
- */
 async function loadProducts() {
     if (dataCache.products) {
         return dataCache.products;
@@ -213,7 +195,7 @@ async function loadProducts() {
                 id: item.id,
                 sku: item.sku,
                 name: item.product_name,
-                brand: 'PawPal', // Simplified
+                brand: 'PawPal', 
                 category: item.category_id,
                 categoryName: item.product_category?.category_name || 'Khác',
                 price: Number(item.sale_price),
@@ -237,7 +219,7 @@ async function loadProducts() {
             };
         });
         
-        // Cache the data
+        
         dataCache.products = products;
         return products;
     } catch (error) {
@@ -246,11 +228,6 @@ async function loadProducts() {
     }
 }
 
-/**
- * Get a single product by ID
- * @param {number} productId - Product ID
- * @returns {Promise<Object|null>} - Promise resolving to product object or null
- */
 async function getProductById(productId) {
     const products = await loadProducts();
     const product = products.find(p => p.id === productId);
@@ -264,31 +241,16 @@ async function getProductById(productId) {
     return product;
 }
 
-/**
- * Get products by category
- * @param {string} category - Category slug
- * @returns {Promise<Array<Object>>} - Promise resolving to products array
- */
 async function getProductsByCategory(category) {
     const products = await loadProducts();
     return products.filter(p => p.category === category);
 }
 
-/**
- * Get products by brand
- * @param {string} brand - Brand name
- * @returns {Promise<Array<Object>>} - Promise resolving to products array
- */
 async function getProductsByBrand(brand) {
     const products = await loadProducts();
     return products.filter(p => p.brand === brand);
 }
 
-/**
- * Search products by keyword
- * @param {string} keyword - Search keyword
- * @returns {Promise<Array<Object>>} - Promise resolving to products array
- */
 async function searchProducts(keyword) {
     const products = await loadProducts();
     const lowerKeyword = keyword.toLowerCase();
@@ -300,12 +262,6 @@ async function searchProducts(keyword) {
     );
 }
 
-/**
- * Load an HTML component into a placeholder element.
- * Re-executes any <script> tags found inside the injected HTML.
- * @param {string} placeholderId - ID of the element to inject content into
- * @param {string} componentPath - URL path to the component HTML file
- */
 async function loadComponent(placeholderId, componentPath) {
     const el = document.getElementById(placeholderId);
     if (!el) {
@@ -316,9 +272,9 @@ async function loadComponent(placeholderId, componentPath) {
         const response = await fetch(componentPath);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const html = await response.text();
-        // Use innerHTML so the element itself stays in the DOM (avoids outerHTML ID loss)
+        
         el.innerHTML = html;
-        // Re-execute <script> tags — innerHTML parsing skips script execution
+        
         el.querySelectorAll('script').forEach(function(oldScript) {
             const newScript = document.createElement('script');
             Array.from(oldScript.attributes).forEach(function(attr) {
@@ -327,7 +283,7 @@ async function loadComponent(placeholderId, componentPath) {
             newScript.textContent = oldScript.textContent;
             oldScript.parentNode.replaceChild(newScript, oldScript);
         });
-        // Re-render Lucide icons — retry until library is loaded
+        
         (function tryLucide() {
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
@@ -341,11 +297,6 @@ async function loadComponent(placeholderId, componentPath) {
     }
 }
 
-/**
- * Transform raw CSV service data to app format
- * @param {Array<Object>} rawData - Parsed CSV data
- * @returns {Array<Object>} - Transformed service objects
- */
 function transformServiceData(rawData) {
     return rawData.map((item, index) => {
         const rawCategory = item['Phân loại'] || '';
@@ -379,42 +330,7 @@ function transformServiceData(rawData) {
         const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
         const cleanImagePath = (rawPath) => {
             const trimmed = rawPath.trim();
-            return trimmed.replace(/^\/*/, '');
-        };
-        const serviceImages = item['Hình ảnh'] ? item['Hình ảnh'].split(',').map(s => rootPath + cleanImagePath(s)) : [rootPath + 'assets/images/services/spa.png'];
-
-        return {
-            id: index + 1,
-            dbId: null,
-            serviceId: item['Mã dịch vụ (Service ID)'] || `SVC-${index + 1}`,
-            name: item['Tên dịch vụ'] || 'Dịch vụ',
-            category: category,
-            rawCategory: rawCategory,
-            petType: item['Loại thú cưng'] || 'Tất cả',
-            weightClass: validPrices.length > 0 ? 'Tùy chọn cân nặng' : 'Tất cả',
-            price: basePrice,
-            prices: prices,
-            priceDisplay: category === 'hotel' ? 'đêm' : '',
-            memberPrice: item['Giá ưu đãi thành viên (VNĐ)'] || '',
-            duration: item['Thời gian thực hiện (Duration)'] || '',
-            rating: rating,
-            reviewCount: reviewCount,
-            description: item['Mô tả chi tiết (Description)'] || '',
-            benefits: item['Lợi ích chính (Key Benefits)'] || '',
-            checklist: item['Quy trình thực hiện (Checklist)'] || '',
-            amenities: item['Tiện ích / Cơ sở vật chất (Amenities)'] || '',
-            groomerLevel: item['Cấp độ nhân viên thực hiện (Groomer Level)'] || '',
-            image: serviceImages[0],
-            images: serviceImages,
-            status: item['Trạng thái kinh doanh'] || 'Đang phục vụ'
-        };
-    });
-}
-
-/**
- * Load services from CSV file
- * @returns {Promise<Array<Object>>} - Promise resolving to services array
- */
+            return trimmed.replace(/^\
 async function loadServices() {
     if (dataCache.services) {
         console.log(' Using cached services data');
@@ -426,7 +342,7 @@ async function loadServices() {
         if (!supabase) throw new Error("Supabase client not found");
 
         console.log('Loading services from Supabase...');
-        // 1. Fetch services
+        
         const { data: servicesData, error: servicesError } = await supabase
             .from('service')
             .select('*')
@@ -434,104 +350,19 @@ async function loadServices() {
 
         if (servicesError) throw servicesError;
 
-        // 2. Fetch prices
+        
         const { data: pricesData, error: pricesError } = await supabase
             .from('service_price_matrix')
             .select('*');
 
         if (pricesError) throw pricesError;
 
-        // 3. Transform to match frontend expectations
+        
         const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
         const cleanImagePath = (rawPath) => {
             if (!rawPath) return '';
             const trimmed = rawPath.trim();
-            return rootPath + trimmed.replace(/^\/*/, '');
-        };
-
-        const services = servicesData.map((svc, index) => {
-            // Determine category
-            let category = 'spa';
-            if (svc.service_category === 'PET_HOTEL') category = 'hotel';
-            else if (svc.service_category === 'PET_TAXI') category = 'taxi';
-
-            // Override bad DB data based on name or code
-            const name = String(svc.service_name || '').toLowerCase();
-            const code = String(svc.service_code || '').toUpperCase();
-            if (code.startsWith('HTL') || name.includes('phòng') || name.includes('lưu trú') || name.includes('daycare')) category = 'hotel';
-            if (code.startsWith('TAX') || name.includes('taxi')) category = 'taxi';
-
-            // Find prices for this service
-            const svcPrices = pricesData.filter(p => p.service_id === svc.id);
-            const prices = {};
-            let basePrice = 0;
-            
-            // Format prices for UI
-            if (svcPrices.length > 0) {
-                // Group by weight range
-                svcPrices.forEach(p => {
-                    let label = '';
-                    if (p.weight_to < 5) label = '< 5kg';
-                    else if (p.weight_from >= 5 && p.weight_to <= 10) label = '5 - 10kg';
-                    else if (p.weight_from >= 10 && p.weight_to <= 20) label = '10 - 20kg';
-                    else if (p.weight_from >= 20) label = '> 20kg';
-                    else label = 'Khác';
-                    
-                    if (label) prices[label] = p.unit_price;
-                });
-                const validPrices = Object.values(prices).filter(p => p > 0);
-                if (validPrices.length > 0) {
-                    basePrice = Math.min(...validPrices);
-                }
-            }
-
-            // Images
-            let imageList = [cleanImagePath(svc.thumbnail_url)];
-            if (svc.images && Array.isArray(svc.images) && svc.images.length > 0) {
-                imageList = svc.images.map(img => cleanImagePath(img));
-            }
-
-            return {
-                id: index + 1,
-                dbId: svc.id,
-                serviceId: svc.service_code,
-                name: svc.service_name,
-                category: category,
-                rawCategory: svc.service_category,
-                petType: svc.pet_type || 'Tất cả',
-                weightClass: basePrice > 0 ? 'Tùy chọn cân nặng' : 'Tất cả',
-                price: basePrice,
-                prices: prices,
-                priceDisplay: category === 'hotel' ? 'đêm' : '',
-                memberPrice: '', // We don't have this in DB yet
-                duration: svc.estimated_duration ? `${svc.estimated_duration} phút` : '',
-                rating: parseFloat(svc.rating || 4.8),
-                reviewCount: parseInt(svc.review_count || 0),
-                description: svc.description || '',
-                benefits: svc.benefits || '',
-                checklist: svc.checklist || '',
-                amenities: svc.amenities || '',
-                groomerLevel: svc.groomer_level || '',
-                image: imageList[0],
-                images: imageList,
-                status: svc.status === 'ACTIVE' ? 'Đang phục vụ' : 'Ngưng phục vụ'
-            };
-        });
-        
-        console.log(` Transformed ${services.length} services from DB`);
-        dataCache.services = services;
-        return services;
-    } catch (error) {
-        console.error(' Error loading services from DB:', error);
-        return [];
-    }
-}
-
-/**
- * Get a single service by Service ID
- * @param {string} serviceId - Service ID (e.g. SPA01)
- * @returns {Promise<Object|null>} - Promise resolving to service object or null
- */
+            return rootPath + trimmed.replace(/^\
 async function getServiceById(serviceId) {
     const services = await loadServices();
     const service = services.find(s => s.serviceId === serviceId);
@@ -545,11 +376,6 @@ async function getServiceById(serviceId) {
     return service;
 }
 
-/**
- * Fetch product reviews by product ID
- * @param {string} productId - The product UUID
- * @returns {Promise<Array>} - List of reviews with customer names
- */
 async function getProductReviews(productId) {
     if (!window.SupabaseClient) {
         console.warn('Supabase not available for fetching reviews.');
@@ -655,10 +481,6 @@ async function getServiceReviews(serviceId) {
     }
 }
 
-/**
- * Load blog categories from Supabase
- * @returns {Promise<Array<Object>>}
- */
 async function loadBlogCategories() {
     if (dataCache.blogCategories) return dataCache.blogCategories;
 
@@ -677,10 +499,6 @@ async function loadBlogCategories() {
     }
 }
 
-/**
- * Load blog posts from Supabase
- * @returns {Promise<Array<Object>>}
- */
 async function loadBlogs() {
     if (dataCache.blogs) return dataCache.blogs;
 
@@ -717,7 +535,6 @@ async function loadBlogs() {
     }
 }
 
-// Export functions for use in other modules
 window.DataLoader = {
     loadProducts,
     getProductById,

@@ -1,25 +1,10 @@
-/**
- * components.js — Inject shared header và footer vào tất cả page
- *
- * Cách dùng trong HTML:
- *   <div id="site-header"></div>   <- header inject vào đây
- *   <div id="site-footer"></div>   <- footer inject vào đây
- *
- * Dùng absolute path /components/ để hoạt động đúng trên cả Vite
- * lẫn Live Server (miễn là cả hai đều serve từ root của project).
- * Fallback: tự detect root từ src của thẻ <script> hiện tại.
- */
+
 
 (function () {
-    /**
-     * Tìm root path của project bằng cách đọc src của chính script này.
-     * Ví dụ: src = "/scripts/shared/components.js"
-     *        -> root = "/"  (absolute, luôn đúng)
-     * Fallback về relative nếu không detect được.
-     */
+    
     function getRootPath() {
-        // Detect xem script components.js đang được load từ đâu.
-        // Cả server (http/https) và file:// đều có thể xử lý bằng cách dùng src của thẻ script.
+        
+        
         const scripts = document.querySelectorAll('script[src]');
         for (let i = 0; i < scripts.length; i++) {
             const src = scripts[i].src;
@@ -30,24 +15,24 @@
             }
         }
 
-        // Nếu không tìm được marker, fallback an toàn.
+        
         if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
             return '/';
         }
 
-        // Fallback cho file:// khi không có script src rõ ràng.
+        
         const depth = window.location.pathname.split('/').filter(Boolean).length;
         return depth <= 1 ? './' : '../'.repeat(Math.max(0, depth - 1));
     }
 
-    // Expose globally for other scripts
+    
     window['pawpalGetRootPath'] = getRootPath;
 
     function cleanInjectedHtml(html) {
-        // Dùng DOMParser để an toàn hơn — tránh regex xoá nhầm nội dung HTML
+        
         var rootPath = getRootPath();
         
-        // Convert absolute paths inside components to proper relative paths
+        
         html = html.replace(/(src|href)="\/([^"]*)"/g, function(match, attr, p1) {
             if (p1.startsWith('/') || p1.startsWith('http') || p1.startsWith('data:')) return match;
             return attr + '="' + rootPath + p1 + '"';
@@ -56,14 +41,14 @@
         var parser = new DOMParser();
         var doc = parser.parseFromString(html, 'text/html');
 
-        // Xoá tất cả <script> có chứa "live-server" trong nội dung
+        
         doc.querySelectorAll('script').forEach(function (s) {
             if (s.textContent.includes('live-server') || (s.src && s.src.includes('live-server'))) {
                 s.remove();
             }
         });
 
-        // Xoá comment <!-- Code injected by live-server -->
+        
         var walker = doc.createTreeWalker(doc.body || doc.documentElement, NodeFilter.SHOW_COMMENT);
         var toRemove = [];
         while (walker.nextNode()) {
@@ -73,7 +58,7 @@
         }
         toRemove.forEach(function (node) { node.remove(); });
 
-        // Extract <link> and <style> tags that DOMParser moved to <head>
+        
         var headTags = '';
         if (doc.head) {
             doc.head.querySelectorAll('link[rel="stylesheet"], style').forEach(function(node) {
@@ -81,7 +66,7 @@
             });
         }
         
-        // Trả về innerHTML của body kèm theo các thẻ head bị parser bốc lên trên
+        
         return headTags + (doc.body || doc.documentElement).innerHTML.trim();
     }
 
@@ -132,7 +117,7 @@
         }
 
         var cacheKey = 'pawpal_component_' + targetId;
-        // Only use cache for non-header, non-fab, non-sidebar components
+        
         var isSidebar = targetId === 'user-sidebar';
         var cached = (targetId !== 'site-header' && targetId !== 'site-fab' && targetId !== 'site-footer' && !isSidebar) ? sessionStorage.getItem(cacheKey) : null;
         if (cached) {
@@ -164,9 +149,9 @@
                 console.log('[components.js] injected', targetId);
 
                 if (isSidebar) {
-                    // Use innerHTML for sidebar to keep the container element (preserves #user-sidebar id)
+                    
                     el.innerHTML = cleanedHtml;
-                    // Re-execute <script> tags — innerHTML doesn't run them
+                    
                     el.querySelectorAll('script').forEach(function(oldScript) {
                         var newScript = document.createElement('script');
                         Array.from(oldScript.attributes).forEach(function(attr) {
@@ -175,13 +160,13 @@
                         newScript.textContent = oldScript.textContent;
                         oldScript.parentNode.replaceChild(newScript, oldScript);
                     });
-                    // Render icons after sidebar is ready
+                    
                     initLucideIcons();
                     document.dispatchEvent(new CustomEvent('sidebarInjected'));
                     return;
                 }
 
-                // Cache for this session (non-sidebar components)
+                
                 try { sessionStorage.setItem(cacheKey, cleanedHtml); } catch(e) {}
                 el.outerHTML = cleanedHtml;
                 if (targetId === 'site-header') {
@@ -236,7 +221,7 @@
         injectComponent('site-header', root + 'components/header/header.html');
         injectComponent('site-footer', root + 'components/footer/footer.html');
         injectComponent('site-fab', root + 'components/fab/fab.html');
-        // Inject user sidebar if placeholder exists on the page
+        
         injectComponent('user-sidebar', root + 'components/user-sidebar/user-sidebar.html');
         
         initLucideIcons();

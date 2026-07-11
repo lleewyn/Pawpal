@@ -1,14 +1,4 @@
-/**
- * supabase-client.js
- * Khởi tạo Supabase client dùng chung cho toàn dự án.
- *
- * Cách dùng:
- *   - Trang HTML phải load CDN trước file này:
- *     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
- *   - Sau đó load file này (defer):
- *     <script src="/scripts/api/supabase-client.js" defer></script>
- *   - Truy cập client qua: window.SupabaseClient
- */
+
 
 (function () {
     const FALLBACK_URL = 'https://ralnsebcwdqelikykxic.supabase.co';
