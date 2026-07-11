@@ -1,4 +1,4 @@
-﻿// ==========================================================================
+// ==========================================================================
 // PawPal — Booking Page Script (Section 3.1.4)
 // ==========================================================================
 
@@ -22,7 +22,7 @@ function renderVoucherDropdown() {
         return;
     }
 
-    const validVouchers = bookingVouchers.filter(v => 
+    const validVouchers = bookingVouchers.filter(v =>
         v.active && (v.applicableFor.includes('all') || v.applicableFor.includes('services'))
     );
 
@@ -34,10 +34,10 @@ function renderVoucherDropdown() {
     let html = '';
     validVouchers.forEach(v => {
         html += `
-            <div class="dropdown-item voucher-dropdown-item"  data-code="${v.code}">
-                <div class="fw-bold text-primary-custom voucher-dropdown-title">${v.code}</div>
-                <div class="text-muted voucher-dropdown-desc">${v.description}</div>
-                <div class="text-muted mt-1 voucher-dropdown-min">Đơn tối thiểu: ${v.minOrderValue.toLocaleString('vi-VN')}đ</div>
+            <div class="dropdown-item voucher-dropdown-item" style="cursor:pointer; padding: 10px 16px; border-bottom: 1px solid #eee; white-space: normal;" data-code="${v.code}">
+                <div class="fw-bold text-primary-custom" style="font-size: 0.95rem;">${v.code}</div>
+                <div class="text-muted" style="font-size: 0.85rem; margin-top: 2px;">${v.description}</div>
+                <div class="text-muted mt-1" style="font-size: 0.75rem; color: #e67e22 !important;">Đơn tối thiểu: ${v.minOrderValue.toLocaleString('vi-VN')}đ</div>
             </div>
         `;
     });
@@ -46,7 +46,7 @@ function renderVoucherDropdown() {
     dropdown.querySelectorAll('.voucher-dropdown-item').forEach(item => {
         item.addEventListener('click', () => {
             input.value = item.getAttribute('data-code');
-            dropdown.classList.add('d-none');
+            dropdown.style.display = 'none';
             handleApplyBookingVoucher();
         });
     });
@@ -59,7 +59,8 @@ async function handleApplyBookingVoucher() {
 
     if (!code) {
         msg.textContent = 'Vui lòng nhập mã giảm giá';
-        msg.className = 'voucher-msg text-danger-custom'; msg.classList.remove('d-none');
+        msg.style.color = 'red';
+        msg.style.display = 'block';
         return;
     }
 
@@ -67,7 +68,8 @@ async function handleApplyBookingVoucher() {
         appliedBookingVoucher = null;
         input.value = '';
         msg.textContent = 'Đã gỡ mã giảm giá';
-        msg.className = 'voucher-msg text-muted-custom'; msg.classList.remove('d-none');
+        msg.style.color = 'var(--bs-gray-600)';
+        msg.style.display = 'block';
         document.getElementById('btnApplyBookingVoucher').textContent = 'Áp dụng';
         updateSummary();
         if (document.getElementById('step4') && !document.getElementById('step4').classList.contains('d-none')) {
@@ -81,7 +83,7 @@ async function handleApplyBookingVoucher() {
             const res = await fetch('/data/vouchers.json');
             if (res.ok) bookingVouchers = await res.json();
             else bookingVouchers = [];
-        } catch(e) {
+        } catch (e) {
             bookingVouchers = [];
         }
     }
@@ -89,13 +91,15 @@ async function handleApplyBookingVoucher() {
     const voucher = bookingVouchers.find(v => v.code === code && v.active);
     if (!voucher) {
         msg.textContent = 'Mã không hợp lệ hoặc đã hết hạn';
-        msg.className = 'voucher-msg text-danger-custom'; msg.classList.remove('d-none');
+        msg.style.color = 'red';
+        msg.style.display = 'block';
         return;
     }
 
     if (!voucher.applicableFor.includes('all') && !voucher.applicableFor.includes('services')) {
         msg.textContent = 'Mã không áp dụng cho dịch vụ';
-        msg.className = 'voucher-msg text-danger-custom'; msg.classList.remove('d-none');
+        msg.style.color = 'red';
+        msg.style.display = 'block';
         return;
     }
 
@@ -111,13 +115,15 @@ async function handleApplyBookingVoucher() {
 
     if (subtotal < voucher.minOrderValue) {
         msg.textContent = `Đơn tối thiểu ${voucher.minOrderValue.toLocaleString('vi-VN')}đ`;
-        msg.className = 'voucher-msg text-danger-custom'; msg.classList.remove('d-none');
+        msg.style.color = 'red';
+        msg.style.display = 'block';
         return;
     }
 
     appliedBookingVoucher = voucher;
     msg.textContent = 'Áp dụng mã thành công!';
-    msg.className = 'voucher-msg text-success-custom'; msg.classList.remove('d-none');
+    msg.style.color = 'green';
+    msg.style.display = 'block';
     document.getElementById('btnApplyBookingVoucher').textContent = 'Gỡ bỏ';
     updateSummary();
     if (document.getElementById('step4') && !document.getElementById('step4').classList.contains('d-none')) {
@@ -156,18 +162,18 @@ async function loadBookingConfig() {
             window.PawPalBookingConfig = config;
             return config;
         }
-        
+
         const { data: staffsData, error: staffsErr } = await db.from('staff')
             .select('*')
             .order('id', { ascending: true });
-            
+
         const { data: scheduleData, error: scheduleErr } = await db.from('staff_schedule')
             .select('start_time, end_time');
-            
+
         if (staffsErr) {
             throw new Error(staffsErr.message);
         }
-        
+
         let generatedSlots = new Set();
         if (scheduleData && scheduleData.length > 0) {
             scheduleData.forEach(schedule => {
@@ -180,24 +186,24 @@ async function loadBookingConfig() {
                 }
             });
         }
-        
+
         let finalSlots = Array.from(generatedSlots).sort();
         if (finalSlots.length === 0) {
             finalSlots = ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
         }
-        
+
         const staffsArray = (staffsData || []).map(s => ({
             id: s.id,
             name: s.full_name,
             desc: s.specialization || 'Chuyên viên PawPal'
         }));
-        
+
         staffsArray.unshift({
             id: 'random',
             name: 'Phân bố ngẫu nhiên',
             desc: 'PawPal tự động chọn chuyên viên trống lịch'
         });
-        
+
         const config = {
             slots: finalSlots,
             staffs: staffsArray
@@ -215,7 +221,7 @@ async function loadBookingConfig() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('=== BOOKING MODULE INITIALIZING ===');
-    
+
     await loadBookingConfig();
 
     const btnApplyBookingVoucher = document.getElementById('btnApplyBookingVoucher');
@@ -234,18 +240,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const res = await fetch('/data/vouchers.json');
                     if (res.ok) bookingVouchers = await res.json();
                     else bookingVouchers = [];
-                } catch(e) {
+                } catch (e) {
                     bookingVouchers = [];
                 }
             }
             renderVoucherDropdown();
-            voucherDropdown.classList.remove('d-none');
+            voucherDropdown.style.display = 'block';
         });
 
         document.addEventListener('click', (e) => {
             if (voucherInput && voucherDropdown) {
                 if (!voucherInput.contains(e.target) && !voucherDropdown.contains(e.target)) {
-                    voucherdropdown.classList.add('d-none');
+                    voucherDropdown.style.display = 'none';
                 }
             }
         });
@@ -280,22 +286,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (activePets.length === 0) {
             document.getElementById('memberFlow').classList.add('d-none');
             document.getElementById('guestFlow').classList.remove('d-none');
-            document.getElementById('guestInfoNote').classList.add('d-none'); 
+            document.getElementById('guestInfoNote').classList.add('d-none');
             bookingState.isMemberWithNoPets = true;
-            bookingState.isGuest = true; 
-            
+            bookingState.isGuest = true;
+
             const ownerNameInput = document.getElementById('ownerName');
             const ownerPhoneInput = document.getElementById('ownerPhone');
-            
+
             const resolvedName = resolveCurrentUserName(currentUser);
             const resolvedPhone = resolveCurrentUserPhone(currentUser);
-            
+
             if (ownerNameInput) ownerNameInput.value = resolvedName;
             if (ownerPhoneInput) ownerPhoneInput.value = resolvedPhone;
-            
+
             bookingState.ownerName = resolvedName;
             bookingState.ownerPhone = resolvedPhone;
-            
+
             setupGuestValidation();
             bindQuickAddPetModal(currentUser);
         } else {
@@ -370,7 +376,7 @@ async function loadMemberPets(user) {
     const mPhoneInput = document.getElementById('memberOwnerPhone');
     const resolvedName = resolveCurrentUserName(user);
     const resolvedPhone = resolveCurrentUserPhone(user);
-    
+
     if (mNameInput) mNameInput.value = resolvedName;
     if (mPhoneInput) mPhoneInput.value = resolvedPhone;
 
@@ -396,9 +402,9 @@ async function loadMemberPets(user) {
 
     const renderEmpty = () => {
         listContainer.innerHTML = `
-            <div class="empty-pet-container">
-                <p class="empty-pet-text">B?n ch?a c? h? s? b? c?ng n?o.</p>
-                <button type="button" class="btn-green-outline btn-sm" id="addPetInlineBtn" class="empty-pet-btn">+ Thêm hồ sơ bé cưng</button>
+            <div style="grid-column: 1/-1; text-align: center; padding: 20px; background: rgba(0,0,0,0.03); border-radius: 8px;">
+                <p style="margin: 0; color: var(--text-light);">B?n ch?a c? h? s? b? c?ng n?o.</p>
+                <button type="button" class="btn-green-outline btn-sm" id="addPetInlineBtn" style="margin-top: 10px; display: inline-block; padding: 6px 14px; font-size: 0.85rem;">+ Thêm hồ sơ bé cưng</button>
             </div>
         `;
     };
@@ -459,7 +465,7 @@ async function loadMemberPets(user) {
 
     function getSpeciesAndBreed(pet) {
         let speciesName = '';
-        switch(pet.species) {
+        switch (pet.species) {
             case 'dog': speciesName = 'Chó'; break;
             case 'cat': speciesName = 'Mèo'; break;
             case 'rabbit': speciesName = 'Thỏ'; break;
@@ -474,8 +480,8 @@ async function loadMemberPets(user) {
 
     listContainer.innerHTML = activePets.map(pet => `
         <div class="pet-select-card" data-pet-id="${pet.id}" data-name="${pet.name}" data-type="${pet.species}" data-breed="${pet.breed}" data-weight="${pet.weight}" tabindex="0" role="button">
-            <div class="pet-avatar-placeholder" >
-                <img src="${getPetAvatar(pet)}" alt="${pet.name}" >
+            <div class="pet-avatar-placeholder" style="font-size: 1.5rem; width: 44px; height: 44px; overflow: hidden; border-radius: 50%;">
+                <img src="${getPetAvatar(pet)}" alt="${pet.name}" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
             <div class="pet-select-details">
                 <span class="pet-select-name">${pet.name}</span>
@@ -502,10 +508,10 @@ async function loadMemberPets(user) {
     const addCard = document.createElement('button');
     addCard.type = 'button';
     addCard.className = 'pet-select-card pet-select-card-add';
-    
-    addCard.classList.add('flex-center');
+    addCard.style.justifyContent = 'center';
+    addCard.style.gap = '10px';
     addCard.innerHTML = `
-        <div class="pet-avatar-placeholder" >+</div>
+        <div class="pet-avatar-placeholder" style="font-size: 1.5rem; width: 44px; height: 44px; display:flex;align-items:center;justify-content:center;">+</div>
         <div class="pet-select-details">
             <span class="pet-select-name">Thêm bé mới</span>
             <span class="pet-select-meta">Tạo hồ sơ ngay tại trang đặt lịch</span>
@@ -724,7 +730,7 @@ function validateStep1() {
         const mName = document.getElementById('memberOwnerName')?.value.trim() || '';
         const mPhone = document.getElementById('memberOwnerPhone')?.value.trim() || '';
         const phoneRegex = /^0[0-9]{9}$/;
-        
+
         isValid = bookingState.petId !== null && mName && mPhone && phoneRegex.test(mPhone);
     } else {
         const ownerName = document.getElementById('ownerName').value.trim();
@@ -753,7 +759,7 @@ function setupServiceSelection() {
         tab.addEventListener('click', () => {
             tabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
-            if (searchInput) searchInput.value = ''; 
+            if (searchInput) searchInput.value = '';
             renderServices(tab.dataset.type);
         });
     });
@@ -787,15 +793,15 @@ function renderServices(type, searchQuery = '') {
 
     if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        filtered = filtered.filter(s => 
-            s.name.toLowerCase().includes(query) || 
+        filtered = filtered.filter(s =>
+            s.name.toLowerCase().includes(query) ||
             s.description.toLowerCase().includes(query)
         );
     }
 
     if (filtered.length === 0) {
         listContainer.innerHTML = `
-            <p class="svc-empty-text">
+            <p style="text-align: center; color: var(--text-light); padding: 20px;">
                 Không tìm thấy dịch vụ nào phù hợp với tìm kiếm của bạn.
             </p>
         `;
@@ -817,11 +823,11 @@ function renderServices(type, searchQuery = '') {
                 <div class="svc-select-radio"></div>
                 <div class="svc-select-info">
                     <span class="svc-select-name">${service.name}</span>
-                    <p class="svc-select-meta" class="svc-select-meta-custom">${service.description}</p>
+                    <p class="svc-select-meta" style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--color-text-light);">${service.description}</p>
                 </div>
                 <div class="svc-select-price">
                     <div class="svc-price-main">${formattedPrice}đ${priceUnit}</div>
-                    <div class="svc-price-duration" class="svc-price-duration-custom">${formattedMemberPrice}đ (${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}% giảm cho thành viên)</div>
+                    <div class="svc-price-duration" style="color: var(--color-primary); font-size: 0.8rem; font-weight: 600;">${formattedMemberPrice}đ (${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}% giảm cho thành viên)</div>
                 </div>
             </div>
         `;
@@ -844,13 +850,13 @@ function renderServices(type, searchQuery = '') {
 
 function calculateDynamicPrice(service, weight) {
     if (!service.prices) return service.price;
-    
+
     let targetPrice = service.price;
     if (weight < 5 && service.prices['< 5kg']) targetPrice = service.prices['< 5kg'];
     else if (weight >= 5 && weight < 10 && service.prices['5 - 10kg']) targetPrice = service.prices['5 - 10kg'];
     else if (weight >= 10 && weight < 20 && service.prices['10 - 20kg']) targetPrice = service.prices['10 - 20kg'];
     else if (weight >= 20 && service.prices['> 20kg']) targetPrice = service.prices['> 20kg'];
-    
+
     return targetPrice;
 }
 
@@ -866,13 +872,13 @@ function setupScheduleSelection() {
     if (bookingDateInput) bookingDateInput.min = todayStr;
 
     const timeslotGrid = document.getElementById('timeslotGrid');
-    const staffList    = document.getElementById('staffList');
+    const staffList = document.getElementById('staffList');
 
     function setScheduleLocked(locked) {
         [timeslotGrid, staffList].forEach(el => {
             if (!el) return;
-            locked ? el.classList.add('section-locked') : el.classList.remove('section-locked');
-            
+            el.style.opacity = locked ? '0.4' : '';
+            el.style.pointerEvents = locked ? 'none' : '';
         });
     }
 
@@ -1001,7 +1007,7 @@ function renderTimeslots() {
             slotTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
             const diffMinutes = (slotTime - now) / (1000 * 60);
-            if (diffMinutes < 120) { 
+            if (diffMinutes < 120) {
                 isTooSoon = true;
             }
         }
@@ -1080,9 +1086,9 @@ function startHoldTimer(slot) {
         if (timeRemaining <= 0) {
             clearInterval(holdTimerInterval);
             holdBanner.innerHTML = ` <strong>Hết thời gian giữ chỗ!</strong> Khung giờ <strong>${slot}</strong> đã tự động giải phóng. Vui lòng chọn lại.`;
-            holdBanner.classList.add('booking-hold-banner-warning');
-            
-            
+            holdBanner.style.color = '#856404';
+            holdBanner.style.background = '#fff3cd';
+            holdBanner.style.borderColor = '#ffeeba';
 
             bookingState.timeSlot = '';
             document.querySelectorAll('.timeslot-btn').forEach(b => b.classList.remove('selected'));
@@ -1115,10 +1121,10 @@ function renderStaff() {
         const initials = staff.name === 'Phân bổ ngẫu nhiên' ? '' : staff.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
         return `
             <div class="staff-card ${isSelected}" data-name="${staff.name}" tabindex="0" role="button">
-                <div class="staff-card-avatar" class="staff-card-avatar-custom">${initials}</div>
+                <div class="staff-card-avatar" style="font-size: 1.1rem;">${initials}</div>
                 <div class="staff-card-info">
-                    <span class="staff-select-name staff-select-name-custom">${staff.name}</span>
-                    <span class="staff-card-status staff-card-status-custom">${staff.desc}</span>
+                    <span class="staff-select-name" style="font-weight:700; display:block; color:var(--color-primary-dark); font-size:0.9rem; margin-bottom: 2px;">${staff.name}</span>
+                    <span class="staff-card-status" style="font-size:0.75rem; color: var(--color-text-light); line-height: 1.2; display: block;">${staff.desc}</span>
                 </div>
             </div>
         `;
@@ -1227,7 +1233,6 @@ function setupStepActions() {
 
     // Next click
     nextButtons[1].addEventListener('click', () => {
-        // Collect step 1 data if guest
         const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
         const isMemberUser = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
         if (!isMemberUser) {
@@ -1347,7 +1352,7 @@ function updateSummary() {
     if (isMember) {
         memberDiscount = Math.round(subtotal * MEMBER_DISCOUNT_PERCENT);
     }
-    
+
     let voucherDiscount = 0;
     if (appliedBookingVoucher) {
         if (appliedBookingVoucher.type === 'fixed') {
@@ -1380,7 +1385,7 @@ function updateSummary() {
         } else {
             discountLabel = `Voucher (-${appliedBookingVoucher.code})`;
         }
-        
+
         document.getElementById('sumDiscountLabel').textContent = discountLabel;
         document.getElementById('sumDiscountVal').textContent = `-${totalDiscount.toLocaleString('vi-VN')}đ`;
     } else {
@@ -1402,7 +1407,6 @@ function renderStep4Confirm() {
             <span class="sum-value">${selectedService.price.toLocaleString('vi-VN')}đ</span>
         </div>
     `;
-
 
     if (selectedService.category === 'hotel') {
         const nights = bookingState.nights || 1;
@@ -1432,7 +1436,7 @@ function renderStep4Confirm() {
     const isMember = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
 
     const discount = isMember ? Math.round(subtotal * MEMBER_DISCOUNT_PERCENT) : 0;
-    
+
     let voucherDiscount = 0;
     if (appliedBookingVoucher) {
         if (appliedBookingVoucher.type === 'fixed') {
@@ -1450,7 +1454,7 @@ function renderStep4Confirm() {
 
     if (isMember) {
         billLines += `
-            <div class="summary-row summary-row-success">
+            <div class="summary-row" style="color: #27ae60;">
                 <span class="sum-label">Khấu trừ thành viên (Bạc -${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}%)</span>
                 <span class="sum-value">-${discount.toLocaleString('vi-VN')}đ</span>
             </div>
@@ -1459,7 +1463,7 @@ function renderStep4Confirm() {
 
     if (appliedBookingVoucher) {
         billLines += `
-            <div class="summary-row summary-row-success">
+            <div class="summary-row" style="color: #27ae60;">
                 <span class="sum-label">Voucher (${appliedBookingVoucher.code})</span>
                 <span class="sum-value">-${voucherDiscount.toLocaleString('vi-VN')}đ</span>
             </div>
@@ -1468,24 +1472,24 @@ function renderStep4Confirm() {
 
     const container = document.getElementById('confirmSummary');
     container.innerHTML = `
-        <div class="confirm-bill-card">
-            <h4 class="confirm-bill-title">Chi tiết hóa đơn</h4>
+        <div class="confirm-bill-card" style="background: rgba(0,0,0,0.02); border: 1px solid var(--color-border); border-radius: var(--card-border-radius); padding: 20px; margin-bottom: 20px;">
+            <h4 style="font-family: var(--font-heading); color: var(--color-primary-dark); margin-top:0; margin-bottom: 15px;">Chi tiết hóa đơn</h4>
             
             ${billLines}
             
-            <div class="summary-divider summary-divider-custom"></div>
+            <div class="summary-divider" style="margin: 15px 0; border-top: 1px solid var(--color-border);"></div>
             
-            <div class="summary-row price-row summary-row-total">
+            <div class="summary-row price-row" style="font-size: 1.2rem; font-weight: bold; color: var(--color-primary-dark);">
                 <span class="sum-label">Tổng tiền hóa đơn:</span>
-                <span class="sum-value">${finalTotal.toLocaleString('vi-VN')} VNĐ</span>
+                <span class="sum-value" style="color: var(--color-primary);">${finalTotal.toLocaleString('vi-VN')} VNĐ</span>
             </div>
 
-            <div class="summary-row price-row summary-row-paid">
+            <div class="summary-row price-row" style="font-size: 1.1rem; font-weight: bold; margin-top: 8px;">
                 <span class="sum-label">Chi phí đặt cọc:</span>
-                <span class="sum-value">0 VNĐ</span>
+                <span class="sum-value" style="color: #27ae60; font-size: 1.3rem;">0 VNĐ</span>
             </div>
 
-            <div class="alert-bill-note">
+            <div class="alert-bill-note" style="margin-top: 15px; padding: 12px; border: 1px dashed #e67e22; background: rgba(230,126,34,0.08); border-radius: 8px; font-size: 0.85rem; color: #d35400; line-height: 1.5;">
                 ️ <strong>Cảnh báo:</strong> Mức giá hiện tại chỉ là dự kiến dựa trên số cân nặng tự khai báo (${bookingState.petWeight}kg). Nhân viên sẽ tiến hành cân lại thực tế tại quầy để áp giá chuẩn nhất theo quy định.
             </div>
         </div>
@@ -1498,10 +1502,9 @@ function setupConfirmation() {
     const confirmBtn = document.getElementById('confirmBookingBtn');
 
     if (policyChk && confirmBtn) {
-        // Tránh add event listener nhiều lần khi chuyển đổi step
         if (!confirmBtn.dataset.listenerAttached) {
             confirmBtn.dataset.listenerAttached = 'true';
-            
+
             policyChk.addEventListener('change', () => {
                 confirmBtn.disabled = !policyChk.checked;
             });
@@ -1514,17 +1517,14 @@ function setupConfirmation() {
     }
 }
 
-// Final Submit
 async function processBookingSubmit() {
     const confirmBtn = document.getElementById('confirmBookingBtn');
 
-    // Disable button and show spinner
     if (confirmBtn) {
         confirmBtn.disabled = true;
-        confirmBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" class="btn-spinner-icon"></span>Đang xử lý đặt lịch...`;
+        confirmBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="margin-right:8px;"></span>Đang xử lý đặt lịch...`;
     }
 
-    // Save booking database representation
     const bookings = JSON.parse('[]' || '[]');
     const newBookingId = 'BP-' + Math.floor(100000 + Math.random() * 900000);
 
@@ -1540,7 +1540,6 @@ async function processBookingSubmit() {
     const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
     const isMember = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
 
-    // Nếu user đã đăng nhập nhưng state chưa có tên/phone, ưu tiên dùng currentUser
     if (isMember) {
         bookingState.ownerName = bookingState.ownerName || resolveCurrentUserName(currentUser);
         bookingState.ownerPhone = bookingState.ownerPhone || resolveCurrentUserPhone(currentUser);
@@ -1551,7 +1550,7 @@ async function processBookingSubmit() {
     const bookingRecord = {
         id: newBookingId,
         appointment_code: null,
-        userId: currentUser ? currentUser.id : null, // gán sau nếu là guest mới tạo
+        userId: currentUser ? currentUser.id : null,
         petId: bookingState.petId || null,
         ownerName: bookingState.ownerName,
         ownerPhone: bookingState.ownerPhone,
@@ -1580,14 +1579,14 @@ async function processBookingSubmit() {
     // Sync booking to Supabase
     let finalBookingId = newBookingId;
     let customerId = currentUser ? currentUser.id : null;
-    
+
     if (window.getSupabaseClient || window.SupabaseClient) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         const dbUser = currentUser || { phone: bookingState.ownerPhone, name: bookingState.ownerName };
-        
+
         // Ensure customer exists in Supabase
         customerId = await getSupabaseCustomerId(dbUser);
-        
+
         // Ensure pet exists in Supabase if this is a new pet
         let finalPetId = bookingState.petId || null;
         if (customerId && !finalPetId) {
@@ -1605,11 +1604,11 @@ async function processBookingSubmit() {
                 if (insertedPet && insertedPet[0]) {
                     finalPetId = insertedPet[0].id;
                 }
-            } catch(e) {
+            } catch (e) {
                 console.warn('[Booking] Could not create pet in Supabase', e);
             }
         }
-        
+
         // Assign the resolved petId for insertion
         bookingRecord.petId = finalPetId;
 
@@ -1671,21 +1670,21 @@ function showTempAccountActivationToast(phone, token) {
 
     const toast = document.createElement('div');
     toast.className = 'toast-custom toast-success';
-    toast.classList.add('toast-custom');
+    toast.style.minWidth = '320px';
 
     // For guest activation flow, point to login with guest-activate action so user receives OTP first
     const origin = window.location.origin || 'http://localhost:3000';
     const setupUrl = `${origin}/pages/public/login/login.html?action=guest-activate&phone=${encodeURIComponent(phone)}`;
 
     toast.innerHTML = `
-        <div class="toast-content toast-content-col">
-            <div class="toast-content-row">
+        <div class="toast-content" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
                 <span class="toast-icon"></span>
                 <strong>[SMS Gateway] Gửi đến ${phone}:</strong>
             </div>
-            <div class="toast-desc-text">
+            <div style="font-size: 0.85rem; line-height: 1.4; color: rgba(255,255,255,0.95);">
                 Chào mừng bạn đến với PawPal! Tài khoản tạm của bạn đã được khởi tạo. Đặt mật khẩu ngay trong 48h để nhận 50 điểm thưởng và quản lý lịch hẹn trực tuyến: 
-                <a href="${setupUrl}" target="_blank" class="toast-link-yellow">${setupUrl}</a>
+                <a href="${setupUrl}" target="_blank" style="color: #f1c40f; text-decoration: underline; word-break: break-all;">${setupUrl}</a>
             </div>
         </div>
     `;
@@ -1993,7 +1992,7 @@ async function loadServicesDirectly() {
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.addon-qty-control button').forEach(btn => {
-        btn.addEventListener('click', function(e) {
+        btn.addEventListener('click', function (e) {
             e.preventDefault();
             const target = this.getAttribute('data-target');
             const delta = parseInt(this.getAttribute('data-delta'), 10);
@@ -2003,5 +2002,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
-
-
