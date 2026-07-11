@@ -159,7 +159,7 @@ export const API = {
                 .from('sales_order')
                 .select(`
                     id, order_code, order_status, payment_status,
-                    shipping_fee, discount_amount, total_amount,
+                    total_amount,
                     created_at, updated_at, note,
                     sales_order_detail (
                         id, quantity, unit_price, discount_amount, subtotal,
