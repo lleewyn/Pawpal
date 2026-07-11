@@ -1,4 +1,6 @@
 
+import { API } from '/scripts/api/api.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     let currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
     if (!currentUser) {
@@ -25,16 +27,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     let vouchersMock = [];
     try {
         let apiVouchers = [];
-        if (window.API && typeof window.API.getVouchers === 'function') {
-            apiVouchers = await window.API.getVouchers();
-        } else {
-            const response = await fetch('/data/vouchers-redeem.json');
-            if (response.ok) {
-                apiVouchers = await response.json();
-            } else {
-                throw new Error(`HTTP ${response.status}`);
-            }
+        if (typeof API.getVouchers === 'function') {
+            apiVouchers = await API.getVouchers();
         }
+        console.log('[loyalty] apiVouchers:', apiVouchers);
 
         window.PawPalVoucherRedeemSeed = apiVouchers;
         
@@ -59,9 +55,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 code: v.code || `CODE-${idx}`,
                 name: v.name || v.id || `VOUCHER-${idx + 1}`,
                 value: v.type === 'fixed'
-                    ? `${new Intl.NumberFormat('vi-VN').format(v.value)}đ`
+                    ? `Giảm ${new Intl.NumberFormat('vi-VN').format(v.value)}đ`
                     : v.type === 'percentage'
-                    ? `Giảm ${v.value}% (Tối đa ${new Intl.NumberFormat('vi-VN').format(v.maxDiscount || 0)})`
+                    ? `Giảm ${v.value}%`
                     : v.description,
                 pointsCost: calcPointsCost(v),
                 quantity: v.maxUsage ? Math.max(0, v.maxUsage - (v.usageCount || 0)) : (Number.isFinite(Number(v.quantity)) ? Number(v.quantity) : Math.max(10, 50 - idx * 5)),
@@ -76,15 +72,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.PawPalVoucherRedeemList = vouchersMock;
 
         if (!vouchersMock.length) {
-            vouchersMock = [{
-                id: 'VOUCHER-DEMO-1',
-                code: 'DEMO50',
-                name: 'Voucher đổi điểm giảm 50.000đ',
-                value: 'Giảm 50.000đ',
-                pointsCost: 100,
-                quantity: 1,
-                terms: 'Áp dụng cho: Tất cả'
-            }];
             window.PawPalVoucherRedeemList = vouchersMock;
         }
         
@@ -439,19 +426,27 @@ function renderLoyaltyPage(user, vouchers) {
 
     const gridEl = document.getElementById('vouchers-grid');
     if (gridEl) {
-        gridEl.innerHTML = vouchers.map(v => renderVoucherCard(v, user)).join('');
-        
-        gridEl.addEventListener('click', (e) => {
-            const btn = e.target.closest('.redeem-btn');
-            if (!btn || btn.disabled) return;
-            const card = btn.closest('.voucher-card-shopee');
-            if (!card) return;
-            const vId = card.dataset.id;
-            const vInfo = vouchers.find(v => v.id === vId);
-            if (!vInfo) return;
-            btn.disabled = true;
-            triggerRedeem(vId, user, btn);
-        });
+        if (!vouchers || vouchers.length === 0) {
+            gridEl.innerHTML = `
+                <div class="empty-state text-center py-5 w-100" style="grid-column: 1 / -1;">
+                    <p class="text-muted mb-0">Hiện tại chưa có ưu đãi điểm thưởng nào từ PawPal.</p>
+                </div>
+            `;
+        } else {
+            gridEl.innerHTML = vouchers.map(v => renderVoucherCard(v, user)).join('');
+            
+            gridEl.addEventListener('click', (e) => {
+                const btn = e.target.closest('.redeem-btn');
+                if (!btn || btn.disabled) return;
+                const card = btn.closest('.voucher-card-shopee');
+                if (!card) return;
+                const vId = card.dataset.id;
+                const vInfo = vouchers.find(v => v.id === vId);
+                if (!vInfo) return;
+                btn.disabled = true;
+                triggerRedeem(vId, user, btn);
+            });
+        }
     }
 }
 
@@ -460,8 +455,8 @@ async function renderMyVouchers(user) {
     if (!container) return;
 
     let myVouchers = [];
-    if (window.API && typeof window.API.getUserVouchers === 'function' && user.id) {
-        myVouchers = await window.API.getUserVouchers(user.id);
+    if (typeof API.getUserVouchers === 'function' && user.id) {
+        myVouchers = await API.getUserVouchers(user.id);
     }
 
     if (!myVouchers.length) {

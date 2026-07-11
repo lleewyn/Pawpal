@@ -7,7 +7,9 @@ const ordersState = {
     currentTab: 'all',
     currentPage: 1,
     ordersPerPage: 10,
-    searchQuery: ''
+    searchQuery: '',
+    returns: [],
+    reviews: []
 };
 
 async function loadOrders() {
@@ -46,6 +48,20 @@ async function loadOrders() {
             ? uniqueOrders.filter((order) => order._source === 'supabase' || order._supabaseId)
             : uniqueOrders;
         ordersState.filteredOrders = ordersState.allOrders;
+
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (db) {
+            try {
+                const [returnsRes, reviewsRes] = await Promise.all([
+                    db.from('return_request').select('sales_order_id').eq('customer_id', currentUser.id),
+                    db.from('review').select('sales_order_id').eq('customer_id', currentUser.id)
+                ]);
+                if (returnsRes.data) ordersState.returns = returnsRes.data.map(r => r.sales_order_id);
+                if (reviewsRes.data) ordersState.reviews = reviewsRes.data.map(r => r.sales_order_id);
+            } catch(e) {
+                console.error('Error fetching returns/reviews', e);
+            }
+        }
 
         updateStats();
         updateTabCounts();
@@ -161,8 +177,7 @@ function createOrderCard(order) {
         ? order.products.reduce((sum, product) => sum + (Number(product.quantity) || 1), 0)
         : 0;
     const paymentLabel = getPaymentMethodLabel(order.paymentMethod);
-    const orderReviewedList = JSON.parse(localStorage.getItem('pawpal_order_reviewed') || '[]');
-    const orderAlreadyReviewed = isCompleted && orderReviewedList.includes(String(orderId));
+    const orderAlreadyReviewed = isCompleted && ordersState.reviews.includes(String(orderId));
 
     const reviewActionHTML = isCompleted
         ? orderAlreadyReviewed
@@ -170,10 +185,7 @@ function createOrderCard(order) {
             : `<a class="btn-review" href="/pages/user/order-detail/order-detail.html?id=${orderId}#reviews" aria-label="Đánh giá đơn hàng ${orderId}">Đánh giá</a>`
         : '';
 
-    const returnsList = JSON.parse(localStorage.getItem('pawpal_returns') || '[]');
-    const alreadyReturned = returnsList.some((item) => String(item.orderId) === String(orderId));
-
-    const reviewedList = JSON.parse(localStorage.getItem('pawpal_reviewed') || '[]');
+    const alreadyReturned = ordersState.returns.includes(String(orderId));
 
     let returnActionHTML = '';
     const statusNoticeChips = [];

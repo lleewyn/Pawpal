@@ -484,11 +484,15 @@ function setupShopLandingActions(grid) {
 
     function getCart() { return JSON.parse(localStorage.getItem('pawpal_cart') || '[]'); }
     function saveCart(cart) { 
-        if (window.saveCart) {
+        if (window.saveCart && window.saveCart !== saveCart) {
             window.saveCart(cart);
         } else {
             localStorage.setItem('pawpal_cart', JSON.stringify(cart));
             if (window.updateCartBadge) window.updateCartBadge();
+            const user = getCurrentWishlistUser();
+            if (user && user.id && window.API && window.API.saveUserCart) {
+                window.API.saveUserCart(user.id, cart);
+            }
         }
     }
 
@@ -506,7 +510,13 @@ function setupShopLandingActions(grid) {
         }
         return merged;
     }
-    function saveWishlist(wl) { localStorage.setItem(getWishlistStorageKey(), JSON.stringify(wl.map(String))); }
+    function saveWishlist(wl) { 
+        localStorage.setItem(getWishlistStorageKey(), JSON.stringify(wl.map(String)));
+        const user = getCurrentWishlistUser();
+        if (user && user.id && window.API && window.API.saveUserWishlist) {
+            window.API.saveUserWishlist(user.id, { productIds: wl.map(String) });
+        }
+    }
 
     function miniToast(msg, type) {
         if (typeof window.showGlobalToast === 'function') { window.showGlobalToast(type || 'success', msg); return; }
@@ -1457,8 +1467,8 @@ function submitLookup() {
     resultsEl.style.display = 'block';
     resultsEl.innerHTML = '<div class="lookup-empty"><div class="lookup-empty-icon"></div><p>Đang tìm kiếm...</p></div>';
 
-    setTimeout(function () {
-        const data = _getLookupMockData(phone);
+    setTimeout(async function () {
+        const data = await _getLookupData(phone);
         _lookupLastResults = data;
         _renderLookupResults(data);
 
@@ -1515,17 +1525,39 @@ function _resetLookup() {
     switchLookupTab('orders', document.querySelector('.lookup-tab[data-tab="orders"]'));
 }
 
-function _getLookupMockData(phone) {
-    return {
-        orders: [
-            { id: '#DH-20240601', meta: 'Thức ăn Royal Canin · 01/06/2024', status: 'Đã giao', statusClass: 'lookup-status-done' },
-            { id: '#DH-20240520', meta: 'Vòng cổ chống bọ chét · 20/05/2024', status: 'Đang xử lý', statusClass: 'lookup-status-pending' },
-        ],
-        bookings: [
-            { id: '#LH-20240615', meta: 'Spa và Grooming · 15/06/2024 · 09:00', status: 'Xác nhận', statusClass: 'lookup-status-done' },
-            { id: '#LH-20240510', meta: 'Lưu trú Hotel · 10/05/2024', status: 'Đã hoàn thành', statusClass: 'lookup-status-done' },
-        ],
-    };
+async function _getLookupData(phone) {
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (!db) return { orders: [], bookings: [] };
+
+    let customerId = null;
+    const { data: cData } = await db.from('customer').select('id').eq('phone_main', phone).maybeSingle();
+    if (cData) customerId = cData.id;
+
+    let orders = [];
+    let bookings = [];
+
+    if (customerId) {
+        const { data: oData } = await db.from('sales_order').select('id, order_code, order_status, created_at, total_amount').eq('customer_id', customerId).order('created_at', { ascending: false });
+        if (oData) {
+            orders = oData.map(o => ({
+                id: o.order_code,
+                meta: `${new Intl.NumberFormat('vi-VN').format(o.total_amount)}đ · ${new Date(o.created_at).toLocaleDateString('vi-VN')}`,
+                status: o.order_status,
+                statusClass: o.order_status === 'COMPLETED' ? 'lookup-status-done' : 'lookup-status-pending'
+            }));
+        }
+
+        const { data: aData } = await db.from('appointment').select('id, appointment_code, appointment_status, appointment_date, appointment_time, service (service_name)').eq('customer_id', customerId).order('appointment_date', { ascending: false });
+        if (aData) {
+            bookings = aData.map(a => ({
+                id: a.appointment_code,
+                meta: `${a.service?.[0]?.service_name || 'Dịch vụ'} · ${new Date(a.appointment_date).toLocaleDateString('vi-VN')} · ${a.appointment_time || ''}`,
+                status: a.appointment_status,
+                statusClass: (a.appointment_status === 'COMPLETED' || a.appointment_status === 'CONFIRMED') ? 'lookup-status-done' : 'lookup-status-pending'
+            }));
+        }
+    }
+    return { orders, bookings };
 }
 
 function _escLookup(str) {

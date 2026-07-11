@@ -1,14 +1,6 @@
 
 export const API = {
     DATA_VERSION: '2026-07-04-v14-guest-data',
-    USE_BACKEND: false, // Thiết lập false để ngắt kết nối backend MongoDB, chuyển hoàn toàn sang Mock offline bằng LocalStorage và tệp tin JSON tĩnh.
-
-    getBaseUrl() {
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            return window.PAWPAL_API_BASE_URL || 'http://localhost:4000';
-        }
-        return '';
-    },
 
     async getJSON(url) {
         try {
@@ -47,7 +39,7 @@ export const API = {
     },
 
     async getUserPets(userId) {
-        const db = window.SupabaseClient;
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !userId) return [];
         try {
             const { data, error } = await db
@@ -77,7 +69,7 @@ export const API = {
     },
 
     async getUserBookings(userId) {
-        const db = window.SupabaseClient;
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !userId) return [];
         try {
             const { data, error } = await db
@@ -149,7 +141,7 @@ export const API = {
     },
 
     async getUserOrders(userId) {
-        const db = window.SupabaseClient;
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !userId) return [];
         try {
             const { data, error } = await db
@@ -239,7 +231,7 @@ export const API = {
     },
 
     async getUserReviews(userId) {
-        const db = window.SupabaseClient;
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !userId) return [];
         try {
             const { data, error } = await db.from('review').select('*').eq('customer_id', userId);
@@ -255,15 +247,15 @@ export const API = {
     },
 
     async getUserVouchers(userId) {
-        const db = window.SupabaseClient;
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !userId) return [];
         try {
             const { data, error } = await db.from('customer_voucher')
                 .select(`
                     id, 
-                    is_used, 
+                    voucher_status, 
                     used_at,
-                    voucher ( id, code, discount_amount, discount_type, min_order_amount, valid_from, valid_to, description )
+                    voucher ( id, voucher_code, discount_value, type, minimum_order_amount, start_date, end_date, description )
                 `)
                 .eq('customer_id', userId);
             if (error) { 
@@ -276,14 +268,14 @@ export const API = {
                 return {
                     id: row.id,
                     voucherId: v.id,
-                    code: v.code,
-                    discountAmount: v.discount_amount,
-                    discountType: v.discount_type,
-                    minOrderAmount: v.min_order_amount,
-                    validFrom: v.valid_from,
-                    validTo: v.valid_to,
+                    code: v.voucher_code,
+                    discountAmount: v.discount_value,
+                    discountType: v.type,
+                    minOrderAmount: v.minimum_order_amount,
+                    validFrom: v.start_date,
+                    validTo: v.end_date,
                     description: v.description,
-                    isUsed: row.is_used,
+                    isUsed: row.voucher_status === 'USED' || row.voucher_status === 'used',
                     usedAt: row.used_at
                 };
             });
@@ -300,7 +292,7 @@ export const API = {
     },
 
     async getUserCart(userId) {
-        const db = window.SupabaseClient;
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db) return [];
 
         try {
@@ -362,7 +354,7 @@ export const API = {
 
     async saveUserCart(userId, items) {
         const itemArray = Array.isArray(items) ? items : [];
-        const db = window.SupabaseClient;
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db) return { success: false, error: 'No Supabase client' };
 
         try {
@@ -439,7 +431,7 @@ export const API = {
             };
         }
 
-        const db = window.SupabaseClient;
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (db) {
             try {
                 const { data: wl } = await db.from('wishlist').select('id').eq('customer_id', userId).single();
@@ -478,7 +470,7 @@ export const API = {
             return { success: true, data: payload };
         }
 
-        const db = window.SupabaseClient;
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (db) {
             try {
                 let wlId = null;
@@ -574,7 +566,7 @@ export const API = {
     },
 
     async submitOrder(orderData) {
-        const db = window.SupabaseClient;
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db) {
             return { success: false, error: 'No Supabase connection' };
         }
@@ -682,7 +674,7 @@ export const API = {
     },
 
     async updateOrderPaymentStatus(orderId, paymentStatus) {
-        const db = window.SupabaseClient;
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !orderId) {
             return { success: false, error: 'No Supabase connection' };
         }
@@ -718,7 +710,7 @@ export const API = {
     },
 
     async updateOrderStatus(orderId, orderStatus) {
-        const db = window.SupabaseClient;
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db || !orderId) {
             return { success: false, error: 'No Supabase connection' };
         }
@@ -748,13 +740,10 @@ export const API = {
 
     async getVouchers() {
         try {
-            const db = window.SupabaseClient;
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (!db) {
-                console.warn('[API] Supabase Client not initialized, falling back to mock vouchers');
-                const res = await fetch('/data/vouchers.json');
-                const mockVouchers = await res.json();
-                console.log('[API] Đã tải danh sách voucher từ file tĩnh (Mock):', mockVouchers);
-                return mockVouchers;
+                console.error('[API] Supabase Client not initialized');
+                return [];
             }
             
             const { data, error } = await db.from('voucher')
@@ -791,11 +780,10 @@ export const API = {
 
     async getDeliveryOptions() {
         try {
-            const db = window.SupabaseClient;
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (!db) {
-                console.warn('[API] Supabase Client not initialized, falling back to mock delivery options');
-                const res = await fetch('/data/delivery-options.json');
-                return await res.json();
+                console.error('[API] Supabase Client not initialized');
+                return [];
             }
             
             const { data, error } = await db.from('delivery_option_config')
@@ -803,13 +791,7 @@ export const API = {
                 .eq('available', true)
                 .order('fee', { ascending: true });
                 
-            if (error) {
-                if (error.code === '42P01') {
-                    const res = await fetch('/data/delivery-options.json');
-                    return await res.json();
-                }
-                throw error;
-            }
+            if (error) throw error;
             
             return (data || []).map(d => ({
                 id: d.id,
@@ -829,7 +811,7 @@ export const API = {
 
     async getPaymentMethods() {
         try {
-            const db = window.SupabaseClient;
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (!db) {
                 console.warn('[API] Supabase Client not initialized, falling back to mock payment methods');
                 const res = await fetch('/data/payment-methods.json');

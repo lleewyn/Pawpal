@@ -19,7 +19,7 @@ function parseCSV(csvText) {
         if (char === '"') {
             if (inQuotes && nextChar === '"') {
                 field += '"';
-                i++; // Bỏ qua ký tự nháy tiếp theo
+                i++; 
             } else {
                 inQuotes = !inQuotes;
             }
@@ -28,7 +28,7 @@ function parseCSV(csvText) {
             field = '';
         } else if ((char === '\r' || char === '\n') && !inQuotes) {
             if (char === '\r' && nextChar === '\n') {
-                i++; // Bỏ qua ký tự \n đi kèm sau \r
+                i++; 
             }
             if (field || row.length > 0) {
                 row.push(field.trim());
@@ -157,7 +157,7 @@ async function loadProducts() {
         }
 
         console.log('Loading products from Supabase...');
-        const { data: rawProducts, error } = await db.from('product').select('*, product_category!inner(category_name)');
+        const { data: rawProducts, error } = await db.from('product').select('*, product_category!inner(category_name), inventory(quantity_in_stock)');
         
         if (error) {
             throw error;
@@ -175,6 +175,15 @@ async function loadProducts() {
             if (images.length === 0) images = [rootPath + 'assets/images/shop/products/placeholder.webp'];
 
             let badgeStr = item.badge ? String(item.badge).toLowerCase() : null;
+            
+            let stockCount = 0;
+            if (item.inventory) {
+                if (Array.isArray(item.inventory) && item.inventory.length > 0) {
+                    stockCount = Number(item.inventory[0].quantity_in_stock);
+                } else if (!Array.isArray(item.inventory)) {
+                    stockCount = Number(item.inventory.quantity_in_stock);
+                }
+            }
 
             return {
                 id: item.id,
@@ -188,8 +197,8 @@ async function loadProducts() {
                 oldPrice: sale ? Number(item.cost_price) : null,
                 image: images[0],
                 images: images,
-                inStock: item.status === 'ACTIVE' && Number(item.stock) > 0,
-                stock: Number(item.stock),
+                inStock: item.status === 'ACTIVE' && stockCount > 0,
+                stock: stockCount,
                 sale: sale,
                 badge: badgeStr,
                 trending: badgeStr === 'hot' || badgeStr === 'best',
