@@ -1,8 +1,6 @@
-/* ==========================================================================
-   shop.css — Shop Page Styles (US 8-1)
-   ========================================================================== */
 
-/* ── Shop Page Container ────────────────────────────────────────────── */
+
+
 .shop-page {
     background: #f4faf7;
     min-height: 100vh;
@@ -13,7 +11,7 @@ body.buy-now-modal-open {
     overflow: hidden;
 }
 
-/* Override Bootstrap container-xl for shop page */
+
 .shop-page .container-xl {
     max-width: 93% !important;
 }
@@ -181,7 +179,7 @@ body.buy-now-modal-open {
     box-shadow: 0 18px 40px rgba(224, 151, 22, 0.24);
 }
 
-/* ── Section Headers ─────────────────────────────────────────────────── */
+
 .section-title-shop {
     font-family: var(--font-heading);
     font-size: var(--fs-h2);
@@ -212,7 +210,7 @@ body.buy-now-modal-open {
     gap: 12px;
 }
 
-/* ── Shop by Category Grid ──────────────────────────────────────────── */
+
 .shop-by-category-section {
     padding: var(--space-md) 0;
     background: #f4faf7;
@@ -317,7 +315,7 @@ body.buy-now-modal-open {
     line-height: 1.4;
 }
 
-/* ── Main Shop Section (Sidebar + Products) ──────────────────────────── */
+
 .main-shop-section {
     padding: var(--space-md) 0 var(--space-xl) 0;
     background: #f4faf7;
@@ -330,7 +328,7 @@ body.buy-now-modal-open {
     gap: var(--space-md);
 }
 
-/* ── Sidebar Filters ──────────────────────────────────────────────────── */
+
 .shop-sidebar {
     position: sticky;
     top: 118px;
@@ -426,14 +424,14 @@ body.buy-now-modal-open {
     font-weight: 600;
 }
 
-/* ── Shop Content Area ────────────────────────────────────────────────── */
+
 .shop-content {
     min-width: 0;
     display: flex;
     flex-direction: column;
 }
 
-/* ── Toolbar ──────────────────────────────────────────────────────────── */
+
 .shop-toolbar {
     display: flex;
     justify-content: space-between;
@@ -524,7 +522,7 @@ body.buy-now-modal-open {
 }
 
 
-/* ── Products Grid ────────────────────────────────────────────────────── */
+
 .products-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -543,8 +541,7 @@ body.buy-now-modal-open {
     transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.product-card:hover {
-}
+
 
 .product-card-link {
     flex-direction: column;
@@ -612,8 +609,7 @@ body.buy-now-modal-open {
     pointer-events: none;
 }
 
-.product-card-link:hover .product-image {
-}
+
 
 .product-sale-badge {
     position: absolute;
@@ -665,7 +661,7 @@ body.buy-now-modal-open {
     flex: 1;
     display: flex;
     flex-direction: column;
-    /* Allow clicks to pass through to parent link */
+    
 }
 
 .product-brand {
@@ -789,7 +785,7 @@ body.buy-now-modal-open {
 }
 
 .product-buy-now:hover {
-    background: #d68b00; /* slightly darker accent */
+    background: #d68b00; 
 }
 
 .product-buy-now:disabled {
@@ -797,7 +793,7 @@ body.buy-now-modal-open {
     cursor: not-allowed;
 }
 
-/* ── Empty State ──────────────────────────────────────────────────────── */
+
 .empty-state-products {
     text-align: center;
     padding: var(--space-xl) var(--space-md);
@@ -827,7 +823,7 @@ body.buy-now-modal-open {
     margin-right: auto;
 }
 
-/* ── Pagination ───────────────────────────────────────────────────────── */
+
 .pagination-wrapper {
     margin-top: auto;
     padding-top: var(--space-lg);
@@ -906,7 +902,7 @@ body.buy-now-modal-open {
     color: var(--color-text-light);
 }
 
-/* ── Brands Section ───────────────────────────────────────────────────── */
+
 .brands-section {
     padding: var(--space-xl) 0;
     background: #f4faf7;
@@ -931,8 +927,7 @@ body.buy-now-modal-open {
     transition: all 0.3s ease;
 }
 
-.brand-card:hover {
-}
+
 
 .brand-logo {
     width: 100%;
@@ -941,7 +936,7 @@ body.buy-now-modal-open {
     object-fit: contain;
 }
 
-/* Phóng to riêng các logo bị nhỏ do dư nhiều khoảng trống trong ảnh gốc */
+
 .brand-card[data-brand="Me-O"] .brand-logo,
 .brand-card[data-brand="Royal Canin"] .brand-logo {
     transform: scale(1.6);
@@ -956,7 +951,7 @@ body.buy-now-modal-open {
     transform: scale(2.0);
 }
 
-/* ── Suggestions Sidebar (Right) ─────────────────────────────────────── */
+
 .suggestions-sidebar {
     position: sticky;
     top: 120px;
@@ -996,8 +991,7 @@ body.buy-now-modal-open {
     transition: all 0.3s ease;
 }
 
-.suggestion-card:hover {
-}
+
 
 .suggestion-image-wrapper {
     width: 60px;
@@ -1047,7 +1041,7 @@ body.buy-now-modal-open {
     margin-left: 4px;
 }
 
-/* ── Mobile Filter Drawer ─────────────────────────────────────────────── */
+
 .mobile-filter-overlay {
     display: block;
     position: fixed;
@@ -1078,7 +1072,7 @@ body.buy-now-modal-open {
     cursor: pointer;
 }
 
-/* ── Responsive Breakpoints ───────────────────────────────────────────── */
+
 @media (max-width: 1400px) {
     .shop-layout {
         grid-template-columns: 220px 1fr 280px;
@@ -1242,7 +1236,7 @@ body.buy-now-modal-open {
     }
 }
 
-/* ── Accessibility ────────────────────────────────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
     .category-card,
     .product-card,
@@ -1256,7 +1250,7 @@ body.buy-now-modal-open {
     }
 }
 
-/* Focus visible styles */
+
 .carousel-control-btn:focus-visible,
 .product-wishlist-btn:focus-visible,
 .btn-mobile-filter:focus-visible,
@@ -1270,7 +1264,7 @@ body.buy-now-modal-open {
 }
 
 
-/* Extracted from shop.html */
+
 .ui-bg-box-12 {
     min-height:110px;
     background:#f4faf7;
