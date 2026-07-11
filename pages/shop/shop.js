@@ -216,8 +216,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.products = await window.DataLoader.loadProducts();
         console.log(` Loaded ${state.products.length} products`);
         state.isLoading = false;
-        state.wishlist = loadWishlist();
-        
+        state.wishlist = [];
+        const u = getCurrentShopUser();
+        if (u && u.id && window.API && window.API.getUserWishlist) {
+            try {
+                const wl = await window.API.getUserWishlist(u.id);
+                if (wl && wl.productIds) state.wishlist = wl.productIds;
+            } catch(e) { console.warn('Failed to load wishlist', e); }
+        }
+
         initSuggestionsSidebar();
         initCategoryGrid();
         initResponsiveCategorySection();
@@ -887,103 +894,52 @@ function closeShopSidebarIfCompact() {
 }
 
 
-function getWishlistStorageKey() {
-    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    return user && user.phone ? `pawpal_wishlist_${user.phone}` : 'pawpal_wishlist_guest';
+function getCurrentShopUser() {
+    try { return JSON.parse(localStorage.getItem('pawpal_current_user')) || null; } catch { return null; }
 }
 
-function loadWishlist() {
-    try {
-        return JSON.parse(localStorage.getItem(getWishlistStorageKey()) || '[]');
-    } catch (e) {
-        console.error('Failed to load wishlist', e);
-        return [];
-    }
-}
-
-function saveWishlist() {
-    if (window.saveWishlist) {
-        const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        const phone = user ? user.phone : null;
-        const serviceKey = phone ? `pawpal_wishlist_services_${phone}` : 'pawpal_wishlist_services_guest';
-        const serviceIds = JSON.parse(localStorage.getItem(serviceKey) || '[]');
-        window.saveWishlist(state.wishlist, serviceIds);
-    } else {
-        localStorage.setItem(getWishlistStorageKey(), JSON.stringify(state.wishlist));
-    }
-}
-
-function toggleWishlist(productId) {
-    const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    if (!user) {
+async function toggleWishlist(productId) {
+    const user = getCurrentShopUser();
+    if (!user || !user.id) {
         showToast('Vui lòng đăng nhập để sử dụng tính năng yêu thích', 'warning');
         return;
     }
 
-    const index = state.wishlist.indexOf(productId);
-    if (index > -1) {
-        state.wishlist.splice(index, 1);
-        showToast('Đã xóa khỏi danh sách yêu thích', 'info');
-    } else {
-        state.wishlist.push(productId);
-        showToast('Đã thêm vào danh sách yêu thích', 'success');
+    if (window.API && window.API.toggleWishlist) {
+        const res = await window.API.toggleWishlist(user.id, productId);
+        if (res && res.success) {
+            if (res.action === 'added') {
+                if (!state.wishlist.includes(productId)) state.wishlist.push(productId);
+                showToast('Đã thêm vào danh sách yêu thích', 'success');
+            } else {
+                state.wishlist = state.wishlist.filter(id => id !== productId);
+                showToast('Đã xóa khỏi danh sách yêu thích', 'info');
+            }
+            renderProducts();
+        }
     }
-    saveWishlist();
 }
-
 
 async function addToCart(productId) {
     const product = state.products.find(p => String(p.id) === String(productId));
     if (!product || !product.inStock) return;
     
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    let cart = [];
-    if (window.API && typeof window.API.getUserCart === 'function') {
-        cart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
+    const user = getCurrentShopUser();
+    if (!user || !user.id) {
+        showToast('Vui lòng đăng nhập để sử dụng giỏ hàng', 'warning');
+        return;
     }
     
-    const existingItem = cart.find(item => item.id === productId);
-    if (existingItem) {
-        existingItem.quantity++;
-        if (!existingItem.name) {
-            Object.assign(existingItem, product);
+    if (window.API && window.API.addToCart) {
+        const res = await window.API.addToCart(user.id, productId, 1);
+        if (res && res.success) {
+            showToast(`Đã thêm ${product.name} vào giỏ hàng`, 'success');
+            if (typeof window.updateCartBadge === 'function') {
+                window.updateCartBadge();
+            }
+        } else {
+            showToast('Có lỗi xảy ra khi thêm vào giỏ hàng', 'error');
         }
-    } else {
-        cart.push({ 
-            ...product, 
-            quantity: 1 
-        });
-    }
-    if (window.saveCart) {
-        window.saveCart(cart);
-    } else {
-        if (window.API && typeof window.API.saveUserCart === 'function') {
-            await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
-        }
-    }
-    showToast(`Đã thêm ${product.name} vào giỏ hàng`, 'success');
-    
-    await updateCartBadge();
-    if (typeof window.updateCartBadge === 'function') {
-        setTimeout(() => window.updateCartBadge(), 50);
-    }
-}
-
-async function updateCartBadge() {
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    let cart = [];
-    if (window.API && typeof window.API.getUserCart === 'function') {
-        cart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
-    }
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    const cartBadge = document.querySelector('.cart-badge');
-    if (cartBadge) {
-        cartBadge.textContent = totalItems;
-        cartBadge.style.display = totalItems > 0 ? 'block' : 'none';
-    }
-    const cartBadgeMobile = document.querySelector('.cart-badge-mobile');
-    if (cartBadgeMobile) {
-        cartBadgeMobile.textContent = totalItems > 0 ? `(${totalItems})` : '';
     }
 }
 

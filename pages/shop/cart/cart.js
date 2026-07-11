@@ -137,10 +137,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function initCart() {
         try {
+            const currentUser = getCurrentUser();
+            if (!currentUser || !currentUser.id) {
+                if (typeof window.showGlobalToast === 'function') {
+                    window.showGlobalToast('warning', 'Vui lòng đăng nhập để xem giỏ hàng');
+                }
+                setTimeout(() => {
+                    window.location.href = '/pages/public/login/login.html';
+                }, 1500);
+                return;
+            }
+
             products = await window.DataLoader.loadProducts();
             
-            const currentUser = getCurrentUser();
-            const fetchedCart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
+            const fetchedCart = await window.API.getUserCart(currentUser.id);
             const localCart = restoreCartFromBackup(fetchedCart);
             cart = localCart.map(normalizeCartItem);
             
@@ -495,13 +505,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function saveCart() {
-        if (window.saveCart) {
-            window.saveCart(cart);
-        } else {
-            const currentUser = getCurrentUser();
-            if (window.API && typeof window.API.saveUserCart === 'function') {
-                await window.API.saveUserCart(currentUser?.id || currentUser?.phone || null, cart);
-            }
+        const currentUser = getCurrentUser();
+        if (currentUser && currentUser.id && window.API && window.API.saveUserCart) {
+            await window.API.saveUserCart(currentUser.id, cart);
         }
     }
 

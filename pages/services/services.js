@@ -5,60 +5,28 @@ let currentPage = 1;
 const itemsPerPage = 12;
 
 function getCurrentWishlistUser() {
-    if (typeof window.getCurrentUser === 'function') {
-        return window.getCurrentUser();
-    }
-    try {
-        return JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-    } catch {
-        return null;
-    }
+    try { return JSON.parse(localStorage.getItem('pawpal_current_user')) || null; } catch { return null; }
 }
 
-function requireWishlistUser() {
+async function toggleServiceWishlist(btn, serviceId) {
     const user = getCurrentWishlistUser();
-    if (!user) {
+    if (!user || !user.id) {
         showServiceWishlistToast('Vui lòng đăng nhập để thêm vào danh sách yêu thích');
-        return null;
+        return;
     }
-    return user;
-}
 
-function getServiceWishlistStorageKey(user = getCurrentWishlistUser()) {
-    const userKey = user?.id || user?.phone || user?.phone_main || user?.email;
-    return userKey ? `pawpal_wishlist_services_${String(userKey)}` : 'pawpal_wishlist_services';
-}
-
-function loadServiceWishlistIds() {
-    try {
-        return JSON.parse(localStorage.getItem(getServiceWishlistStorageKey()) || '[]').map(String);
-    } catch {
-        return [];
+    if (window.API && window.API.toggleWishlist) {
+        const res = await window.API.toggleWishlist(user.id, serviceId, true);
+        if (res && res.success) {
+            if (res.action === 'added') {
+                btn.classList.add('active');
+                showServiceWishlistToast('Đã thêm vào yêu thích ❤️');
+            } else {
+                btn.classList.remove('active');
+                showServiceWishlistToast('Đã bỏ khỏi yêu thích');
+            }
+        }
     }
-}
-
-function saveServiceWishlistIds(ids) {
-    if (window.saveWishlist) {
-        const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-        const phone = user ? user.phone : null;
-        const productKey = phone ? `pawpal_wishlist_${phone}` : 'pawpal_wishlist_guest';
-        const productIds = JSON.parse(localStorage.getItem(productKey) || '[]');
-        window.saveWishlist(productIds, ids.map(String));
-    } else {
-        localStorage.setItem(getServiceWishlistStorageKey(), JSON.stringify(ids.map(String)));
-    }
-}
-
-function toggleServiceWishlist(serviceId) {
-    const user = requireWishlistUser();
-    if (!user) return null;
-
-    const current = loadServiceWishlistIds();
-    const normalizedId = String(serviceId);
-    const exists = current.includes(normalizedId);
-    const next = exists ? current.filter((id) => id !== normalizedId) : [...current, normalizedId];
-    saveServiceWishlistIds(next);
-    return !exists;
 }
 
 function showServiceWishlistToast(message) {
@@ -208,6 +176,8 @@ function updateServicesFilterCount() {
     toggle.classList.toggle('is-active', activeCount > 0);
 }
 
+let currentWishlistServiceIds = [];
+
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('=== SERVICES PAGE LOADING ===');
     initResponsiveServicesSidebar();
@@ -215,6 +185,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     initServicesAccordions();
 
     try {
+        const u = getCurrentWishlistUser();
+        if (u && u.id && window.API && window.API.getUserWishlist) {
+            try {
+                const wl = await window.API.getUserWishlist(u.id);
+                if (wl && wl.serviceIds) currentWishlistServiceIds = wl.serviceIds;
+            } catch(e) { console.warn('Failed to load wishlist services', e); }
+        }
+
         if (window.DataLoader && typeof window.DataLoader.loadServices === 'function') {
             allServices = await window.DataLoader.loadServices();
             console.log(` Loaded ${allServices.length} services`);
@@ -336,7 +314,7 @@ function renderServices() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedServices = filteredServices.slice(startIndex, endIndex);
-    const likedServiceIds = loadServiceWishlistIds();
+    const likedServiceIds = currentWishlistServiceIds;
 
     grid.innerHTML = paginatedServices.map(service => {
         let displayCategory = 'Dịch vụ';
@@ -421,9 +399,7 @@ function renderServices() {
         button.addEventListener('click', (event) => {
             event.preventDefault();
             event.stopPropagation();
-            const added = toggleServiceWishlist(button.dataset.serviceId || '');
-            button.classList.toggle('active', added);
-            showServiceWishlistToast(added ? 'Đã thêm vào yêu thích' : 'Đã bỏ khỏi yêu thích');
+            toggleServiceWishlist(button, button.dataset.serviceId || '');
         });
     });
 

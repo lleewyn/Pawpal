@@ -292,239 +292,149 @@ export const API = {
     },
 
     async getUserCart(userId) {
+        if (!userId) return [];
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (!db) return [];
 
         try {
-            const resolveCustomerId = async () => {
-                if (userId) {
-                    const isUuidLike = typeof userId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
-                    if (isUuidLike) return userId;
+            const { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', userId).maybeSingle();
+            if (cartError || !cartData) return [];
 
-                    const currentUser = safeReadObject('pawpal_current_user') || {};
-                    const phone = currentUser.phone || currentUser.phone_main || (typeof userId === 'string' && /^0\d{9}$/.test(userId) ? userId : null);
-                    const email = currentUser.email || (typeof userId === 'string' && userId.includes('@') ? userId : null);
-
-                    let query = db.from('customer').select('id').limit(1);
-                    if (phone) query = query.eq('phone_main', phone);
-                    else if (email) query = query.eq('email', email);
-                    else return null;
-
-                    const { data, error } = await query;
-                    if (error || !data?.length) return null;
-                    return data[0].id;
-                } else {
-                    let guestId = localStorage.getItem('pawpal_guest_customer_id');
-                    if (guestId) return guestId;
-
-                    const { data: newCust, error } = await db.from('customer').insert({
-                        account_status: 'GUEST',
-                        registered_at: new Date().toISOString()
-                    }).select('id').single();
-                    
-                    if (!error && newCust) {
-                        localStorage.setItem('pawpal_guest_customer_id', newCust.id);
-                        return newCust.id;
-                    }
-                    return null;
-                }
-            };
-
-            const customerId = await resolveCustomerId();
-            if (!customerId) return [];
-
-            const { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', customerId).single();
-            if (cartError && cartError.code !== 'PGRST116') {
-                console.error('Error fetching cart:', cartError);
-                return [];
-            }
-
-            if (cartData) {
-                const { data: items, error: itemsError } = await db.from('cart_item').select('product_id, quantity').eq('cart_id', cartData.id);
-                if (!itemsError && items) {
-                    return items.map(item => ({ id: item.product_id, qty: item.quantity }));
-                }
+            const { data: items, error: itemsError } = await db.from('cart_item').select('product_id, quantity').eq('cart_id', cartData.id);
+            if (!itemsError && items) {
+                return items.map(item => ({ id: item.product_id, qty: item.quantity }));
             }
         } catch (err) {
             console.error('Error getUserCart:', err);
         }
-        
         return [];
     },
 
-    async saveUserCart(userId, items) {
-        const itemArray = Array.isArray(items) ? items : [];
+    async getOrCreateCart(userId) {
+        if (!userId) return null;
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db) return { success: false, error: 'No Supabase client' };
+        if (!db) return null;
 
-        try {
-            const resolveCustomerId = async () => {
-                if (userId) {
-                    const isUuidLike = typeof userId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
-                    if (isUuidLike) return userId;
-
-                    const currentUser = safeReadObject('pawpal_current_user') || {};
-                    const phone = currentUser.phone || currentUser.phone_main || (typeof userId === 'string' && /^0\d{9}$/.test(userId) ? userId : null);
-                    const email = currentUser.email || (typeof userId === 'string' && userId.includes('@') ? userId : null);
-
-                    let query = db.from('customer').select('id').limit(1);
-                    if (phone) query = query.eq('phone_main', phone);
-                    else if (email) query = query.eq('email', email);
-                    else return null;
-
-                    const { data, error } = await query;
-                    if (error || !data?.length) return null;
-                    return data[0].id;
-                } else {
-                    let guestId = localStorage.getItem('pawpal_guest_customer_id');
-                    if (guestId) return guestId;
-
-                    const { data: newCust, error } = await db.from('customer').insert({
-                        account_status: 'GUEST',
-                        registered_at: new Date().toISOString()
-                    }).select('id').single();
-                    
-                    if (!error && newCust) {
-                        localStorage.setItem('pawpal_guest_customer_id', newCust.id);
-                        return newCust.id;
-                    }
-                    return null;
-                }
-            };
-
-            const customerId = await resolveCustomerId();
-            if (!customerId) return { success: false, error: 'Could not resolve customer ID' };
-
-            let { data: cartData, error: cartError } = await db.from('cart').select('id').eq('customer_id', customerId).single();
-            
-            if (!cartData) {
-                const { data: newCart, error: insertError } = await db.from('cart').insert({ customer_id: customerId, cart_status: 'ACTIVE' }).select('id').single();
-                if (insertError) throw insertError;
-                cartData = newCart;
-            }
-
-            await db.from('cart_item').delete().eq('cart_id', cartData.id);
-
-            if (itemArray.length > 0) {
-                const insertItems = itemArray.map(item => ({
-                    cart_id: cartData.id,
-                    product_id: item.id,
-                    quantity: item.qty || 1,
-                    unit_price: 0,
-                    subtotal: 0
-                }));
-                const { error: itemsError } = await db.from('cart_item').insert(insertItems);
-                if (itemsError) throw itemsError;
-            }
-            return { success: true, data: itemArray };
-        } catch (err) {
-            console.error('Error saving cart to Supabase:', err);
-            return { success: false, error: err };
+        let { data: cartData } = await db.from('cart').select('id').eq('customer_id', userId).maybeSingle();
+        if (!cartData) {
+            const { data: newCart, error } = await db.from('cart').insert({ customer_id: userId, cart_status: 'ACTIVE' }).select('id').single();
+            if (error) return null;
+            cartData = newCart;
         }
+        return cartData;
+    },
+
+    async addToCart(userId, productId, quantity = 1) {
+        if (!userId) return { success: false, error: 'User not logged in' };
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return { success: false, error: 'No DB' };
+
+        const cart = await this.getOrCreateCart(userId);
+        if (!cart) return { success: false, error: 'Cannot create cart' };
+
+        const { data: existingItem } = await db.from('cart_item')
+            .select('id, quantity').eq('cart_id', cart.id).eq('product_id', productId).maybeSingle();
+
+        if (existingItem) {
+            const { error } = await db.from('cart_item')
+                .update({ quantity: existingItem.quantity + quantity })
+                .eq('id', existingItem.id);
+            return { success: !error, error };
+        } else {
+            const { error } = await db.from('cart_item')
+                .insert({ cart_id: cart.id, product_id: productId, quantity, unit_price: 0, subtotal: 0 });
+            return { success: !error, error };
+        }
+    },
+
+    async updateCartItemQuantity(userId, productId, quantity) {
+        if (!userId) return { success: false, error: 'User not logged in' };
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        const cart = await this.getOrCreateCart(userId);
+        if (!cart) return { success: false };
+
+        if (quantity <= 0) return this.removeFromCart(userId, productId);
+
+        const { error } = await db.from('cart_item')
+            .update({ quantity })
+            .eq('cart_id', cart.id).eq('product_id', productId);
+        return { success: !error, error };
+    },
+
+    async removeFromCart(userId, productId) {
+        if (!userId) return { success: false, error: 'User not logged in' };
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        const cart = await this.getOrCreateCart(userId);
+        if (!cart) return { success: false };
+
+        const { error } = await db.from('cart_item').delete().eq('cart_id', cart.id).eq('product_id', productId);
+        return { success: !error, error };
+    },
+
+    async clearCart(userId) {
+        if (!userId) return { success: false };
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        const cart = await this.getOrCreateCart(userId);
+        if (!cart) return { success: false };
+
+        const { error } = await db.from('cart_item').delete().eq('cart_id', cart.id);
+        return { success: !error, error };
     },
 
     async getUserWishlist(userId) {
-        if (!userId) {
-            return {
-                productIds: safeReadArray('pawpal_wishlist_guest'),
-                serviceIds: safeReadArray('pawpal_wishlist_services_guest')
-            };
-        }
-
+        if (!userId) return { productIds: [], serviceIds: [] };
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (db) {
-            try {
-                const { data: wl } = await db.from('wishlist').select('id').eq('customer_id', userId).single();
-                if (wl && wl.id) {
-                    const { data: items, error: itError } = await db.from('wishlist_item').select('product_id, service_id').eq('wishlist_id', wl.id);
-                    if (!itError && items) {
-                        return {
-                            productIds: items.map(i => i.product_id).filter(Boolean),
-                            serviceIds: items.map(i => i.service_id).filter(Boolean)
-                        };
-                    }
-                }
-            } catch (err) {
-                console.warn('[API] getUserWishlist Supabase error:', err);
-            }
-        }
+        if (!db) return { productIds: [], serviceIds: [] };
 
-        const currentUser = safeReadObject('pawpal_current_user');
-        const userPhone = currentUser?.phone ? String(currentUser.phone) : null;
-        const productKey  = userPhone ? `pawpal_wishlist_${userPhone}` : 'pawpal_wishlist_guest';
-        const serviceKey  = userPhone ? `pawpal_wishlist_services_${userPhone}` : 'pawpal_wishlist_services_guest';
-        return {
-            productIds: safeReadArray(productKey),
-            serviceIds: safeReadArray(serviceKey)
-        };
+        try {
+            const { data: wl } = await db.from('wishlist').select('id').eq('customer_id', userId).maybeSingle();
+            if (wl && wl.id) {
+                const { data: items, error: itError } = await db.from('wishlist_item').select('product_id, service_id').eq('wishlist_id', wl.id);
+                if (!itError && items) {
+                    return {
+                        productIds: items.map(i => i.product_id).filter(Boolean),
+                        serviceIds: items.map(i => i.service_id).filter(Boolean)
+                    };
+                }
+            }
+        } catch (err) {
+            console.warn('[API] getUserWishlist Supabase error:', err);
+        }
+        return { productIds: [], serviceIds: [] };
     },
 
-    async saveUserWishlist(userId, wishlist) {
-        const payload = {
-            productIds: Array.isArray(wishlist?.productIds) ? wishlist.productIds.map(String) : [],
-            serviceIds: Array.isArray(wishlist?.serviceIds) ? wishlist.serviceIds.map(String) : []
-        };
-        if (!userId) {
-            safeWrite('pawpal_wishlist_guest', payload.productIds);
-            safeWrite('pawpal_wishlist_services_guest', payload.serviceIds);
-            return { success: true, data: payload };
-        }
-
+    async getOrCreateWishlist(userId) {
+        if (!userId) return null;
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (db) {
-            try {
-                let wlId = null;
-                const { data: wl } = await db.from('wishlist').select('id').eq('customer_id', userId).single();
-                if (wl && wl.id) {
-                    wlId = wl.id;
-                } else {
-                    const newId = crypto.randomUUID();
-                    const { data: newWl, error: insertError } = await db.from('wishlist').insert({
-                        id: newId,
-                        customer_id: userId,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    }).select('id').single();
-                    if (!insertError && newWl) wlId = newWl.id;
-                }
-
-                if (wlId) {
-                    await db.from('wishlist_item').delete().eq('wishlist_id', wlId);
-
-                    const insertRows = [];
-                    payload.productIds.forEach(pid => {
-                        insertRows.push({ id: crypto.randomUUID(), wishlist_id: wlId, product_id: pid, service_id: null, added_at: new Date().toISOString() });
-                    });
-                    payload.serviceIds.forEach(sid => {
-                        insertRows.push({ id: crypto.randomUUID(), wishlist_id: wlId, product_id: null, service_id: sid, added_at: new Date().toISOString() });
-                    });
-
-                    if (insertRows.length > 0) {
-                        const { error: finalErr } = await db.from('wishlist_item').insert(insertRows);
-                        if (!finalErr) {
-                            console.log(`[Supabase] Đã đồng bộ thành công ${insertRows.length} mục yêu thích lên database!`);
-                        } else {
-                            console.error(`[Supabase] Lỗi khi insert wishlist_item:`, finalErr);
-                        }
-                    } else {
-                        console.log(`[Supabase] Đã xóa trống wishlist trên database!`);
-                    }
-                }
-            } catch (err) {
-                console.warn('[API] saveUserWishlist Supabase error:', err);
-            }
+        
+        let { data: wl } = await db.from('wishlist').select('id').eq('customer_id', userId).maybeSingle();
+        if (!wl) {
+            const { data: newWl, error } = await db.from('wishlist').insert({ customer_id: userId }).select('id').single();
+            if (error) return null;
+            wl = newWl;
         }
+        return wl;
+    },
 
-        const currentUser = safeReadObject('pawpal_current_user');
-        const userPhone = currentUser?.phone ? String(currentUser.phone) : null;
-        if (userPhone) {
-            safeWrite(`pawpal_wishlist_${userPhone}`, payload.productIds);
-            safeWrite(`pawpal_wishlist_services_${userPhone}`, payload.serviceIds);
+    async toggleWishlist(userId, itemId, isService = false) {
+        if (!userId) return { success: false, error: 'User not logged in' };
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        const wl = await this.getOrCreateWishlist(userId);
+        if (!wl) return { success: false };
+
+        const column = isService ? 'service_id' : 'product_id';
+        const { data: existing } = await db.from('wishlist_item')
+            .select('id').eq('wishlist_id', wl.id).eq(column, itemId).maybeSingle();
+
+        if (existing) {
+            const { error } = await db.from('wishlist_item').delete().eq('id', existing.id);
+            return { success: !error, action: 'removed' };
         } else {
-            safeWrite('pawpal_wishlist_guest', payload.productIds);
-            safeWrite('pawpal_wishlist_services_guest', payload.serviceIds);
+            const insertData = { wishlist_id: wl.id };
+            insertData[column] = itemId;
+            const { error } = await db.from('wishlist_item').insert(insertData);
+            return { success: !error, action: 'added' };
         }
-        return { success: true, data: payload };
     },
 
     async getUserById(userId) {

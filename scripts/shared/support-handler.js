@@ -123,7 +123,7 @@
     }
 
     
-    let cachedTickets = []; // RAM cache to support getTickets synchronously for old UI
+    let cachedTickets = []; 
 
     async function loadTickets() {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;

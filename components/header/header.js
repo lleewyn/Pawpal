@@ -112,58 +112,20 @@
         `).join('');
     }
 
-    // Định nghĩa hàm lưu giỏ hàng toàn cục
-    window.saveCart = function(cart) {
-        localStorage.setItem('pawpal_cart', JSON.stringify(cart));
+    window.updateCartBadge = async function() {
+        let totalItems = 0;
         const currentUser = (typeof window.getCurrentUser === 'function')
             ? window.getCurrentUser()
-            : JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            : (function() { try { return JSON.parse(localStorage.getItem('pawpal_current_user')) || null; } catch { return null; }})();
             
-        if (currentUser && window.API && window.API.saveUserCart) {
-            window.API.saveUserCart(currentUser.id || currentUser.phone || currentUser.phone_main || null, cart).then(() => {
-                if (window.updateCartBadge) window.updateCartBadge();
-            });
-        } else {
-            if (window.updateCartBadge) window.updateCartBadge();
+        if (currentUser && currentUser.id && window.API && window.API.getUserCart) {
+            try {
+                const cart = await window.API.getUserCart(currentUser.id);
+                totalItems = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
+            } catch (e) {
+                console.error("Failed to update cart badge", e);
+            }
         }
-    };
-
-    // Định nghĩa hàm lưu danh sách yêu thích toàn cục
-    window.saveWishlist = function(productIds, serviceIds = []) {
-        const currentUser = (typeof window.getCurrentUser === 'function')
-            ? window.getCurrentUser()
-            : JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-            
-        const phone = currentUser ? currentUser.phone : null;
-        const pKey = phone ? `pawpal_wishlist_${phone}` : 'pawpal_wishlist_guest';
-        const sKey = phone ? `pawpal_wishlist_services_${phone}` : 'pawpal_wishlist_services_guest';
-        
-        localStorage.setItem(pKey, JSON.stringify(productIds));
-        localStorage.setItem(sKey, JSON.stringify(serviceIds));
-        
-        if (currentUser && window.API && window.API.saveUserWishlist) {
-            window.API.saveUserWishlist(currentUser.id || currentUser.phone || currentUser.phone_main || null, {
-                productIds: productIds,
-                serviceIds: serviceIds
-            });
-        }
-    };
-
-    // Định nghĩa hàm cập nhật badge giỏ hàng toàn cục
-    window.updateCartBadge = async function(forceSync = false) {
-        let cart = [];
-        const currentUser = (typeof window.getCurrentUser === 'function')
-            ? window.getCurrentUser()
-            : JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-            
-        if (forceSync && currentUser && window.API && window.API.getUserCart) {
-            cart = await window.API.getUserCart(currentUser.id || currentUser.phone || currentUser.phone_main || null);
-            localStorage.setItem('pawpal_cart', JSON.stringify(cart));
-        } else {
-            cart = JSON.parse(localStorage.getItem('pawpal_cart') || '[]');
-        }
-        
-        const totalItems = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
         
         // Badge trên desktop header
         const cartBadge = document.querySelector('.cart-badge');
