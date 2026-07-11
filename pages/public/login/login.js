@@ -859,7 +859,7 @@ function initAuthForms() {
         }
 
         if (!phoneAlreadyExists) {
-            const users    = getUsers();
+            const users    = window.PawpalStorage.get(window.PawpalStorage.KEYS.USERS_DB, []);
             const existing = users.find(u => u.phone === regPhone.value.trim());
             if (existing && !existing.is_temporary) phoneAlreadyExists = true;
         }
