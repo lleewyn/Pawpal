@@ -813,9 +813,6 @@
     transition: transform 0.3s ease;
 }
 
-.product-card:hover .product-card-image img {
-    
-}
 
 
 .product-badge-hot,

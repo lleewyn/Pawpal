@@ -277,8 +277,7 @@ body.buy-now-modal-open {
     min-height: 80px;
 }
 
-.category-card:hover {
-}
+
 
 .category-card-icon-wrapper {
     width: 56px;
@@ -291,8 +290,7 @@ body.buy-now-modal-open {
     transition: all 0.3s ease;
 }
 
-.category-card:hover .category-card-icon-wrapper {
-}
+
 
 .category-card-icon {
     width: 24px;
@@ -301,8 +299,6 @@ body.buy-now-modal-open {
     transition: all 0.3s ease;
 }
 
-.category-card:hover .category-card-icon {
-}
 
 .category-card-image {
     width: 100%;
@@ -312,8 +308,6 @@ body.buy-now-modal-open {
     transition: all 0.3s ease;
 }
 
-.category-card:hover .category-card-image {
-}
 
 .category-card-label {
     font-size: 13px;

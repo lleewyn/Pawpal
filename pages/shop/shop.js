@@ -1,11 +1,6 @@
-/**
- * shop.js — Shop Page Interactive Logic (US 8-1)
- * Features: Category tabs, carousel, filters, search, sort, pagination
- */
 
-// ══════════════════════════════════════════════════════════════════════════
-// Static fallback data kept only for rendering support
-// ══════════════════════════════════════════════════════════════════════════
+
+
 
 const brandCatalog = [
     { id: 1, name: 'Royal Canin', logo: '/assets/images/shop/brand/royal-canin.png', slug: 'royal-canin' },
@@ -22,9 +17,7 @@ const brandCatalog = [
     { id: 12, name: 'Hartz', logo: '/assets/images/shop/brand/Hartz.png', slug: 'hartz' },
 ];
 
-// ══════════════════════════════════════════════════════════════════════════
-// State Management
-// ══════════════════════════════════════════════════════════════════════════
+
 
 let state = {
     products: [],
@@ -217,14 +210,12 @@ function initResponsiveCategorySection() {
     syncCategorySection();
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// Initialization
-// ══════════════════════════════════════════════════════════════════════════
+
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('=== SHOP PAGE LOADING ===');
     
-    // Load products from CSV
+    
     try {
         console.log('Loading products from DataLoader...');
         state.products = await window.DataLoader.loadProducts();
@@ -232,13 +223,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.isLoading = false;
         state.wishlist = loadWishlist();
         
-        // Initialize UI after data loaded
+        
         initSuggestionsSidebar();
         initCategoryGrid();
         initResponsiveCategorySection();
         initFilters();
         
-        // --- Parse URL parameters ---
+        
         const urlParams = new URLSearchParams(window.location.search);
         const categoryParam = urlParams.get('category');
         if (categoryParam) {
@@ -250,7 +241,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             state.filters.category = selectedCats;
             
-            // Update checkbox UI
+            
             const categoryFilters = document.getElementById('categoryFilters');
             if (categoryFilters) {
                 categoryFilters.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -258,7 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     else cb.checked = selectedCats.includes(cb.value);
                 });
                 
-                // If nothing was checked, fallback to all
+                
                 const checked = categoryFilters.querySelectorAll('input[type="checkbox"]:checked');
                 if (checked.length === 0) {
                     categoryFilters.querySelector('input[value="all"]').checked = true;
@@ -266,7 +257,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         }
-        // -----------------------------
+        
 
         initToolbar();
         initBrands();
@@ -279,7 +270,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error(' Error loading products:', error);
         state.isLoading = false;
         
-        // Show error message
+        
         const grid = document.getElementById('productsGrid');
         if (grid) {
             grid.innerHTML = `
@@ -295,18 +286,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// ══════════════════════════════════════════════════════════════════════════
-// Suggestions Sidebar
-// ══════════════════════════════════════════════════════════════════════════
+
 
 function initSuggestionsSidebar() {
     const suggestionsList = document.getElementById('suggestionsList');
     
-    // Get top 8 products for suggestions (in stock + mix of sale items)
+    
     const suggestions = state.products
         .filter(p => p.inStock)
         .sort((a, b) => {
-            // Prioritize sale items
+            
             if (a.sale && !b.sale) return -1;
             if (!a.sale && b.sale) return 1;
             return 0;
@@ -334,9 +323,7 @@ function initSuggestionsSidebar() {
     `).join('');
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// Category Grid
-// ══════════════════════════════════════════════════════════════════════════
+
 
 function initCategoryGrid() {
     const categoryCards = document.querySelectorAll('.category-card');
@@ -347,7 +334,7 @@ function initCategoryGrid() {
             state.filters.category = category === 'all' ? 'all' : [category];
             state.currentPage = 1;
 
-            // Sync sidebar checkboxes
+            
             const categoryFilters = document.getElementById('categoryFilters');
             if (categoryFilters) {
                 categoryFilters.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -362,12 +349,10 @@ function initCategoryGrid() {
     });
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// Filters
-// ══════════════════════════════════════════════════════════════════════════
+
 
 function initFilters() {
-    // Populate category filters
+    
     const categoryFilters = document.getElementById('categoryFilters');
     const categories = [
         { value: 'all', label: 'Tất cả' },
@@ -395,7 +380,7 @@ function initFilters() {
         `;
     }).join('');
     
-    // Populate brand filters
+    
     const brandFilters = document.getElementById('brandFilters');
     const brands = [...new Set(state.products.map(p => p.brand))].slice(0, 10);
     brandFilters.innerHTML = brands.map(brand => {
@@ -408,7 +393,7 @@ function initFilters() {
         `;
     }).join('');
     
-    // Category filter listeners
+    
     categoryFilters.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
         checkbox.addEventListener('change', (e) => {
             if (e.target.value === 'all') {
@@ -435,7 +420,7 @@ function initFilters() {
         });
     });
     
-    // Brand filter listeners
+    
     brandFilters.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
         checkbox.addEventListener('change', () => {
             state.filters.brands = Array.from(brandFilters.querySelectorAll('input[type="checkbox"]:checked'))
@@ -447,7 +432,7 @@ function initFilters() {
         });
     });
     
-    // Price range buckets
+    
     const PRICE_BUCKETS = {
         'all':        [0, 10000000],
         'under-100k': [0, 99999],
@@ -468,7 +453,7 @@ function initFilters() {
         });
     });
     
-    // Stock and sale filters
+    
     document.getElementById('filterInStock').addEventListener('change', (e) => {
         state.filters.inStock = e.target.checked;
         applyFilters();
@@ -483,7 +468,7 @@ function initFilters() {
         closeShopSidebarIfCompact();
     });
     
-    // Clear filters
+    
     document.getElementById('btnClearFilters').addEventListener('click', () => {
         state.sort = 'default';
         state.filters = {
@@ -496,7 +481,7 @@ function initFilters() {
             search: ''
         };
 
-        // Reset UI
+        
         const defaultSort = document.querySelector('input[name="sortFilter"][value="default"]');
         if (defaultSort) defaultSort.checked = true;
         categoryFilters.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -526,14 +511,12 @@ function applyFiltersDebounced() {
     }, 300);
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// Apply Filters Logic
-// ══════════════════════════════════════════════════════════════════════════
+
 
 function applyFilters() {
     let filtered = [...state.products];
     
-    // Category filter
+    
     if (state.filters.category && state.filters.category !== 'all') {
         const cats = Array.isArray(state.filters.category) ? state.filters.category : [state.filters.category];
         const catMapping = {
@@ -554,27 +537,27 @@ function applyFilters() {
         filtered = filtered.filter(p => mappedCats.includes(p.category) || mappedCats.includes(p.categoryName));
     }
     
-    // Brand filter
+    
     if (state.filters.brands.length > 0) {
         filtered = filtered.filter(p => state.filters.brands.includes(p.brand));
     }
     
-    // Price range filter
+    
     filtered = filtered.filter(p => 
         p.price >= state.filters.priceMin && p.price <= state.filters.priceMax
     );
     
-    // Stock filter
+    
     if (state.filters.inStock) {
         filtered = filtered.filter(p => p.inStock);
     }
     
-    // Sale filter
+    
     if (state.filters.onSale) {
         filtered = filtered.filter(p => p.sale);
     }
     
-    // Search filter
+    
     if (state.filters.search) {
         const searchLower = state.filters.search.toLowerCase();
         filtered = filtered.filter(p => 
@@ -583,7 +566,7 @@ function applyFilters() {
         );
     }
     
-    // Apply sort
+    
     filtered = applySort(filtered);
     
     state.filteredProducts = filtered;
@@ -608,12 +591,10 @@ function applySort(products) {
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// Toolbar (Search + Sort)
-// ══════════════════════════════════════════════════════════════════════════
+
 
 function initToolbar() {
-    // Search
+    
     const searchInput = document.getElementById('searchInput');
     let searchTimeout;
     searchInput.addEventListener('input', (e) => {
@@ -627,7 +608,7 @@ function initToolbar() {
         }, 300);
     });
     
-    // Sort
+    
     document.querySelectorAll('input[name="sortFilter"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             state.sort = e.target.value;
@@ -638,24 +619,22 @@ function initToolbar() {
     });
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// Render Products
-// ══════════════════════════════════════════════════════════════════════════
+
 
 function renderProducts() {
     const grid = document.getElementById('productsGrid');
     const emptyState = document.getElementById('emptyState');
     const resultCount = document.getElementById('resultCount');
     
-    // Pagination
+    
     const startIndex = (state.currentPage - 1) * state.itemsPerPage;
     const endIndex = startIndex + state.itemsPerPage;
     const paginatedProducts = state.filteredProducts.slice(startIndex, endIndex);
     
-    // Update result count
+    
     resultCount.textContent = `Hiển thị ${paginatedProducts.length} sản phẩm`;
     
-    // Render products or empty state
+    
     if (paginatedProducts.length === 0) {
         grid.classList.add('d-none');
         renderNoResultsSuggestions();
@@ -669,7 +648,7 @@ function renderProducts() {
         emptyState.classList.add('d-none');
         grid.innerHTML = paginatedProducts.map(product => createProductCardHTML(product)).join('');
         
-        // Attach wishlist button listeners
+        
         grid.querySelectorAll('.product-wishlist-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -677,14 +656,14 @@ function renderProducts() {
                 const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
                 if (!user) {
                     showToast('Vui lòng đăng nhập để sử dụng tính năng yêu thích', 'warning');
-                    return; // KHÔNG đổi màu icon
+                    return; 
                 }
                 toggleWishlist(btn.dataset.productId);
                 btn.classList.toggle('active');
             });
         });
         
-        // Attach quick add listeners
+        
         grid.querySelectorAll('.product-quick-add').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -693,7 +672,7 @@ function renderProducts() {
             });
         });
 
-        // Attach buy now listeners
+        
         grid.querySelectorAll('.product-buy-now').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -708,14 +687,14 @@ function renderProducts() {
         });
     }
     
-    // Render pagination
+    
     renderPagination();
 }
 
 function createProductCardHTML(product) {
     const isInWishlist = state.wishlist.includes(product.id);
     
-    // Create rating stars
+    
     const rating = product.rating || 5.0;
     const reviewCount = product.reviewCount || 0;
     const fullStars = Math.floor(rating);
@@ -732,7 +711,7 @@ function createProductCardHTML(product) {
         }
     }
     
-    // Badge mapping
+    
     let badgeHTML = '';
     if (product.badge) {
         const badgeClass = product.badge === 'best' ? 'badge-best' : product.badge === 'new' ? 'badge-new' : 'badge-hot';
@@ -740,7 +719,7 @@ function createProductCardHTML(product) {
         badgeHTML = `<div class="product-badge ${badgeClass}">${badgeText}</div>`;
     }
 
-    // Stock mapping
+    
     let stockHTML = '';
     if (product.inStock && product.stock > 0 && product.stock <= 10) {
         stockHTML = `<div class="product-stock-warning">Chỉ còn ${product.stock} SP!</div>`;
@@ -792,9 +771,7 @@ function createProductCardHTML(product) {
     `;
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// Pagination
-// ══════════════════════════════════════════════════════════════════════════
+
 
 function renderPagination() {
     const totalPages = Math.ceil(state.filteredProducts.length / state.itemsPerPage);
@@ -810,7 +787,7 @@ function renderPagination() {
     
     paginationWrapper.classList.remove('d-none');
     
-    // Prev/Next buttons
+    
     pagePrev.disabled = state.currentPage === 1;
     pageNext.disabled = state.currentPage === totalPages;
     
@@ -830,17 +807,17 @@ function renderPagination() {
         }
     };
     
-    // Page numbers
+    
     pageNumbers.innerHTML = '';
     
-    // Always show first page
+    
     pageNumbers.appendChild(createPageButton(1));
     
-    // Calculate range
+    
     let startPage = Math.max(2, state.currentPage - 1);
     let endPage = Math.min(totalPages - 1, state.currentPage + 1);
     
-    // Ellipsis before
+    
     if (startPage > 2) {
         const ellipsis = document.createElement('div');
         ellipsis.className = 'page-ellipsis';
@@ -848,12 +825,12 @@ function renderPagination() {
         pageNumbers.appendChild(ellipsis);
     }
     
-    // Middle pages
+    
     for (let i = startPage; i <= endPage; i++) {
         pageNumbers.appendChild(createPageButton(i));
     }
     
-    // Ellipsis after
+    
     if (endPage < totalPages - 1) {
         const ellipsis = document.createElement('div');
         ellipsis.className = 'page-ellipsis';
@@ -861,7 +838,7 @@ function renderPagination() {
         pageNumbers.appendChild(ellipsis);
     }
     
-    // Always show last page
+    
     if (totalPages > 1) {
         pageNumbers.appendChild(createPageButton(totalPages));
     }
@@ -879,9 +856,7 @@ function createPageButton(pageNum) {
     return button;
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// Brands Section
-// ══════════════════════════════════════════════════════════════════════════
+
 
 function initBrands() {
     const brandsGrid = document.getElementById('brandsGrid');
@@ -891,7 +866,7 @@ function initBrands() {
         </a>
     `).join('');
     
-    // Brand click filters
+    
     brandsGrid.querySelectorAll('.brand-card').forEach(card => {
         card.addEventListener('click', (e) => {
             e.preventDefault();
@@ -899,7 +874,7 @@ function initBrands() {
             state.filters.brands = [brandName];
             state.currentPage = 1;
             
-            // Update sidebar
+            
             document.querySelectorAll('#brandFilters input[type="checkbox"]').forEach(cb => {
                 cb.checked = cb.value === brandName;
             });
@@ -911,9 +886,7 @@ function initBrands() {
     });
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// Mobile Filter Drawer
-// ══════════════════════════════════════════════════════════════════════════
+
 
 function initMobileFilter() {
     const btnMobileFilter = document.getElementById('btnMobileFilter');
@@ -973,9 +946,7 @@ function closeShopSidebarIfCompact() {
     document.body.classList.remove('shop-filter-open');
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// Wishlist Management
-// ══════════════════════════════════════════════════════════════════════════
+
 
 function getWishlistStorageKey() {
     const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
@@ -1021,26 +992,24 @@ function toggleWishlist(productId) {
     saveWishlist();
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// Cart Management
-// ══════════════════════════════════════════════════════════════════════════
+
 
 async function addToCart(productId) {
     const product = state.products.find(p => String(p.id) === String(productId));
     if (!product || !product.inStock) return;
     
-    // Get cart from Supabase API
+    
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     let cart = [];
     if (window.API && typeof window.API.getUserCart === 'function') {
         cart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
     }
     
-    // Check if product already in cart
+    
     const existingItem = cart.find(item => item.id === productId);
     if (existingItem) {
         existingItem.quantity++;
-        // Fix for previously broken cart items that only had id and quantity
+        
         if (!existingItem.name) {
             Object.assign(existingItem, product);
         }
@@ -1059,7 +1028,7 @@ async function addToCart(productId) {
     }
     showToast(`Đã thêm ${product.name} vào giỏ hàng`, 'success');
     
-    // Update cart badge if exists
+    
     await updateCartBadge();
     if (typeof window.updateCartBadge === 'function') {
         setTimeout(() => window.updateCartBadge(), 50);
@@ -1084,9 +1053,7 @@ async function updateCartBadge() {
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// Utilities
-// ══════════════════════════════════════════════════════════════════════════
+
 
 function formatPrice(price) {
     return new Intl.NumberFormat('vi-VN', {
@@ -1130,7 +1097,7 @@ function renderNoResultsSuggestions() {
 }
 
 function showToast(message, type = 'info') {
-    // Simple toast notification
+    
     const toast = document.createElement('div');
     toast.className = `toast-notification toast-${type}`;
     toast.textContent = message;
@@ -1158,7 +1125,7 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// Add CSS animation
+
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideInUp {
