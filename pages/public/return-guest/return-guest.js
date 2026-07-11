@@ -256,7 +256,7 @@ function renderResults(bookings, orders) {
             btn.classList.add('active');
             const f = btn.dataset.filter;
             listEl.querySelectorAll('.rg-item').forEach(item => {
-                item.style.display = (f === 'all' || item.dataset.type === f) ? '' : 'none';
+                item.classList.toggle('d-none', !(f === 'all' || item.dataset.type === f));
             });
         });
     });
@@ -421,16 +421,16 @@ function buildOrderCard(o) {
     let paymentLabel, paymentColor;
     if (isRefunded) {
         paymentLabel = 'Đã hoàn tiền';
-        paymentColor = 'var(--color-success, #2d7d46)';
+        paymentColor = 'rg-text-success';
     } else if (isPendingRefund) {
         paymentLabel = 'Đang xử lý hoàn tiền';
-        paymentColor = '#d18b00';
+        paymentColor = 'rg-text-warning';
     } else if (isPaid) {
         paymentLabel = 'Đã thanh toán';
-        paymentColor = 'var(--color-success, #2d7d46)';
+        paymentColor = 'rg-text-success';
     } else {
         paymentLabel = 'Chưa thanh toán';
-        paymentColor = 'inherit';
+        paymentColor = 'rg-text-inherit';
     }
 
     const productsHtml = (o.products || []).map(p => `
@@ -474,7 +474,7 @@ function buildOrderCard(o) {
             </div>` : ''}
             <div>
                 <div class="rg-summary-label">Thanh toán</div>
-                <div class="rg-summary-value" style="color:${paymentColor};font-weight:500;">${paymentLabel}</div>
+                <div class="rg-summary-value fw-medium ${paymentColor}">${paymentLabel}</div>
             </div>
         </div>
         <div class="rg-actions rg-actions-center">
@@ -834,11 +834,11 @@ window.handleGuestViewCareLog = async function(bookingId) {
             const isUrgent = log.health_status !== 'Tốt' && log.health_status !== 'Bình thường' && log.health_status != null;
 
             return `
-                <div class="timeline-item ${isUrgent ? 'timeline-item-urgent' : ''}" style="display:flex; margin-bottom:1.5rem; position:relative;">
-                    <div style="width: 12px; height: 12px; border-radius: 50%; background: ${isUrgent ? 'var(--color-danger)' : 'var(--color-primary)'}; position: absolute; left: -6px; top: 6px;"></div>
+                <div class="rg-timeline-item-flex timeline-item ${isUrgent ? 'timeline-item-urgent' : ''}">
+                    <div class="rg-timeline-dot ${isUrgent ? 'rg-timeline-dot-urgent' : ''}"></div>
                     <div class="rg-timeline-content">
                         <div class="rg-timeline-time">${time} - ${date}</div>
-                        <h5 style="margin: 0.25rem 0; font-weight: 600; color: ${isUrgent ? 'var(--color-danger)' : 'inherit'}">
+                        <h5 class="rg-timeline-title ${isUrgent ? 'rg-timeline-title-urgent' : ''}">
                             ${esc(log.care_action?.action_name || 'Cập nhật')}
                         </h5>
                         <p class="mb-2">${esc(log.description)}</p>
@@ -1088,9 +1088,8 @@ function showChangeScheduleModal(bookingId, phone) {
         const label     = document.getElementById('rg-hold-label');
         const countdown = document.getElementById('rg-hold-countdown');
         label.textContent = slot;
-        banner.style.background = '#fff8e1';
-        banner.style.borderColor = '#ffe082';
-        banner.classList.remove('d-none');
+        banner.classList.add('rg-banner-hold');
+        banner.classList.remove('rg-banner-expired', 'd-none');
 
         function tick() {
             const m = Math.floor(remaining / 60).toString().padStart(2, '0');
@@ -1101,8 +1100,8 @@ function showChangeScheduleModal(bookingId, phone) {
                 selTime = null;
                 el.querySelectorAll('.rg-slot-time').forEach(b => b.classList.remove('active'));
                 banner.innerHTML = `⚠️ <strong>Hết thời gian giữ chỗ!</strong> Vui lòng chọn lại giờ.`;
-                banner.style.background = '#fff3cd';
-                banner.style.borderColor = '#ffeeba';
+                banner.classList.remove('rg-banner-hold');
+                banner.classList.add('rg-banner-expired');
                 banner.classList.remove('d-none');
                 refresh();
             }
@@ -1117,13 +1116,9 @@ function showChangeScheduleModal(bookingId, phone) {
     function enableTimeAndStaff() {
         el.querySelectorAll('.rg-slot-time').forEach(b => {
             b.disabled = false;
-            b.style.opacity = '';
-            b.style.cursor = '';
         });
         el.querySelectorAll('.rg-staff-card').forEach(c => {
-            c.style.opacity = '';
-            c.style.cursor = '';
-            c.style.pointerEvents = '';
+            c.classList.remove('rg-staff-slot-disabled');
             c.tabIndex = 0;
         });
     }
@@ -1167,11 +1162,9 @@ function showChangeScheduleModal(bookingId, phone) {
         card.addEventListener('click', () => {
             if (!selDate) return;
             el.querySelectorAll('.rg-staff-card').forEach(c => {
-                c.style.borderColor = '#e2e8f0';
-                c.style.background = '';
+                c.classList.remove('active');
             });
-            card.style.borderColor = '#4caf50';
-            card.style.background = '#e8f5e9';
+            card.classList.add('active');
             selStaff = card.dataset.name;
             refresh();
         });
@@ -1253,8 +1246,8 @@ function restoreLastSearchResults() {
     if (!resultsEl || !errorBox) return;
 
     if (rgLastSearchState.bookings.length || rgLastSearchState.orders.length) {
-        errorBox.style.display = 'none';
-        resultsEl.style.display = 'block';
+        errorBox.classList.add('d-none');
+        resultsEl.classList.remove('d-none');
         renderResults(rgLastSearchState.bookings, rgLastSearchState.orders);
         const phoneInput = document.getElementById('rg-phone');
         if (phoneInput && rgLastSearchState.phone) {

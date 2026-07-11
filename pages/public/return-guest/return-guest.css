@@ -1,5 +1,5 @@
 /* ==========================================================================
-   return-guest.css — Tra cứu lịch / đơn hàng
+   Tra cứu lịch / đơn hàng
    ========================================================================== */
 
 .rg-page {
@@ -14,7 +14,6 @@
     padding: 40px 40px 48px;
 }
 
-/* ── Heading ─────────────────────────────────────────────────────────── */
 .rg-title {
     font-family: var(--font-heading);
     font-size: var(--fs-h2);
@@ -23,7 +22,6 @@
     margin-bottom: 8px;
 }
 
-/* ── Form ────────────────────────────────────────────────────────────── */
 .rg-form {
     margin-bottom: 0;
 }
@@ -78,7 +76,6 @@
     border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
-/* ── Results ─────────────────────────────────────────────────────────── */
 .rg-results-title {
     font-family: var(--font-heading);
     font-size: var(--fs-h3);
@@ -86,7 +83,6 @@
     margin: 32px 0 16px;
 }
 
-/* ── Tabs ────────────────────────────────────────────────────────────── */
 .rg-tabs {
     display: flex;
     gap: 4px;
@@ -127,14 +123,12 @@
     border-radius: 3px 3px 0 0;
 }
 
-/* ── List ────────────────────────────────────────────────────────────── */
 .rg-list {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-/* ── Result Card ─────────────────────────────────────────────────────── */
 .rg-item {
     background: var(--color-bg-white);
     border: var(--border-card);
@@ -188,7 +182,6 @@
     text-align: right;
 }
 
-/* ── Status badge ────────────────────────────────────────────────────── */
 .rg-badge {
     display: inline-block;
     padding: 4px 10px;
@@ -205,7 +198,6 @@
 .rg-badge-cancelled   { background: var(--color-danger-light); color: var(--color-danger); }
 .rg-badge-shipping    { background: var(--color-accent-light); color: var(--color-accent-dark); }
 
-/* ── Divider + Summary grid ──────────────────────────────────────────── */
 .rg-divider {
     border: none;
     border-top: 1px dashed var(--color-border);
@@ -233,7 +225,6 @@
     color: var(--color-text-dark);
 }
 
-/* ── Actions ─────────────────────────────────────────────────────────── */
 .rg-actions {
     padding: 0 var(--space-md) var(--space-md);
     display: flex;
@@ -241,7 +232,6 @@
     justify-content: flex-end;
 }
 
-/* ── Responsive ──────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
     .rg-card {
         padding: 24px 16px 32px;
@@ -264,7 +254,6 @@
     }
 }
 
-/* ── Slot Picker ─────────────────────────────────────────────────────────── */
 .rg-day-tabs {
     display: flex;
     gap: 8px;
@@ -320,7 +309,6 @@
     border: 1px solid rgba(34,197,94,0.2);
 }
 
-/* ── OTP Inputs ──────────────────────────────────────────────────────────── */
 .otp-inputs-wrapper {
     display: flex;
     justify-content: space-between;
@@ -354,3 +342,205 @@
 }
 
 .otp-input.otp-error { border-color: var(--color-danger); }
+
+
+/* ── Refactored Inline CSS from return-guest.js ── */
+.rg-actions-flex {
+    display: flex;
+     gap: 10px;
+     justify-content: flex-end;
+     margin-top: 15px;
+    }
+.rg-product-item-flex {
+    display: flex;
+     gap: 15px;
+     margin-bottom: 12px;
+     align-items: flex-start;
+    }
+.rg-product-image {
+    width: 60px;
+     height: 60px;
+     object-fit: cover;
+     border-radius: 6px;
+     border: 1px solid var(--border-color, #eee);
+    }
+.rg-product-details {
+    flex: 1;
+     font-size: 0.95em;
+     text-align: left;
+     min-width: 0;
+    }
+.rg-product-name {
+    font-weight: 500;
+     color: var(--text-color);
+     line-height: 1.4;
+     margin-bottom: 4px;
+     display: -webkit-box;
+     -webkit-line-clamp: 2;
+     -webkit-box-orient: vertical;
+     overflow: hidden;
+    }
+.rg-product-price-qty {
+    color: #666;
+    }
+.rg-product-total {
+    font-weight: 600;
+     color: var(--color-primary);
+     white-space: nowrap;
+     padding-left: 10px;
+    }
+.p-md {
+    padding: var(--space-md);
+    }
+.rg-actions-center {
+    display: flex;
+     gap: 10px;
+     justify-content: flex-end;
+     margin-top: 15px;
+     align-items: center;
+    }
+.rg-return-alert {
+    display: inline-block;
+     padding: 6px 12px;
+     background: #fff3cd;
+     color: #856404;
+     border-radius: 4px;
+     border: 1px solid #ffeeba;
+     font-size: 0.9em;
+    }
+.rg-return-link {
+    color: #533f03;
+     text-decoration: underline;
+     font-weight: 500;
+     cursor: pointer;
+    }
+.rg-otp-hint {
+    font-size:0.8rem}
+.rg-timeline-item-flex {
+    display:flex;
+     margin-bottom:1.5rem;
+     position:relative;
+    }
+.rg-timeline-dot {
+    width: 12px;
+     height: 12px;
+     border-radius: 50%;
+     position: absolute;
+     left: -6px;
+     top: 6px;
+    }
+.rg-timeline-content {
+    border-left: 2px solid #e2e8f0;
+     padding-left: 1.5rem;
+     width: 100%;
+    }
+.rg-timeline-time {
+    font-size: 0.85rem;
+     color: #64748b;
+    }
+.rg-timeline-title {
+    margin: 0.25rem 0;
+     font-weight: 600;
+    }
+.rg-timeline-meta {
+    font-size: 0.85rem;
+     color: #64748b;
+     margin-bottom: 0.5rem;
+    }
+.me-1 {
+    margin-right:4px;
+    }
+.rg-timeline-img {
+    max-width: 100%;
+     border-radius: 8px;
+     margin-top: 0.5rem;
+     max-height: 200px;
+     object-fit: cover;
+    }
+.rg-timeline-wrapper {
+    position: relative;
+     border-left: 2px solid transparent;
+    }
+.rg-slot-disabled {
+    opacity:0.4;
+    cursor:not-allowed;
+    }
+.rg-staff-slot-disabled {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 14px;
+    border:1.5px solid #e2e8f0;
+    border-radius:10px;
+    cursor:not-allowed;
+    opacity:0.4;
+    transition:all .2s;
+    pointer-events:none;
+    }
+.rg-staff-avatar {
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    background:#e8f5e9;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    font-size:0.85rem;
+    color:#2e7d32;
+    flex-shrink:0;
+    }
+.rg-staff-name {
+    font-weight:700;
+    font-size:0.88rem;
+    color:#2e7d32;
+    }
+.rg-staff-desc {
+    font-size:0.75rem;
+    color:#64748b;
+    }
+.rg-label-sm {
+    font-size:0.88rem;
+    }
+.rg-date-input {
+    max-width:220px;
+    }
+.rg-hold-banner {
+    font-size:0.82rem;
+    padding:8px 12px;
+    background:#fff8e1;
+    border:1px solid #ffe082;
+    border-radius:8px;
+    color:#7a5c00;
+    }
+.rg-staff-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:8px;
+    margin-bottom:12px;
+    }
+.rg-slot-info-box {
+    font-size:0.85rem;
+    color:#2e7d32;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    }
+.rg-success-icon {
+    font-size:2.2rem;
+    margin-bottom:12px}
+.rg-success-title {
+    color:var(--color-primary-dark)}
+.rg-success-box {
+    background: #fafafa}
+
+/* --- Refactored JS Inline Styles --- */
+.rg-text-warning { color: #d18b00 !important; }
+.rg-text-success { color: var(--color-success, #2d7d46) !important; }
+.rg-text-inherit { color: inherit !important; }
+
+.rg-banner-hold { background: #fff8e1; border-color: #ffe082; }
+.rg-banner-expired { background: #fff3cd; border-color: #ffeeba; }
+
+.rg-timeline-dot-urgent { background: var(--color-danger, #dc3545) !important; }
+.rg-timeline-title-urgent { color: var(--color-danger, #dc3545) !important; }
