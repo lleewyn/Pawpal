@@ -64,7 +64,7 @@
     font-size: 0.9rem;
 }
 
-/* Kiểu chữ & Khoảng cách cho nội dung bài viết */
+/* Kiểu chữ và khoảng cách cho nội dung bài viết */
 .blog-article-content {
     font-size: 1.125rem;
     line-height: 1.8;
@@ -102,7 +102,7 @@
     margin-bottom: 0.75rem;
 }
 
-/* Trích dẫn (Blockquote) */
+/* Trích dẫn */
 .blog-article-content .blog-quote {
     font-family: 'Lora', serif;
     font-size: 1.3rem;

@@ -1,9 +1,12 @@
+// Khởi tạo trang chi tiết bài viết 
 async function initBlogDetail() {
+        // Định dạng ngày tháng năm
     function formatDate(dateStr) {
         const d = new Date(dateStr);
         return d.toLocaleDateString('vi-VN', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
+        // Tải dữ liệu bài viết từ URL slug
     async function loadBlogData() {
         const urlParams = new URLSearchParams(window.location.search);
         const slug = urlParams.get('slug');
@@ -99,6 +102,7 @@ async function initBlogDetail() {
         }
     }
 
+        // Cài đặt các nút chia sẻ mạng xã hội
     function setupShareBtns() {
         const shareBtns = document.querySelectorAll('.btn-share');
         shareBtns.forEach(btn => {
@@ -118,6 +122,7 @@ async function initBlogDetail() {
         });
     }
 
+        // Cài đặt Mục lục 
     function setupTOC(contentEl) {
         const headings = contentEl.querySelectorAll('h2, h3');
         const tocNav = document.getElementById('toc-nav');
@@ -184,6 +189,7 @@ async function initBlogDetail() {
     loadBlogData();
 }
 
+// Chạy hàm khởi tạo khi trang đã tải xong
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initBlogDetail);
 } else {

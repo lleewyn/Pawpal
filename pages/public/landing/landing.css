@@ -4,7 +4,7 @@
 
 
 /*
- * GSAP Safety Fallback — content always visible before GSAP initializes.
+ * Dự phòng an toàn cho GSAP — Đảm bảo nội dung luôn hiển thị ngay cả khi thư viện GSAP chưa khởi tạo.
  */
 .hero-title,
 .hero-desc,
@@ -22,11 +22,6 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    /* Hình nền dự phòng */
-    background-color: var(--color-primary);
-    background-image: url('https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=1800&q=80');
-    background-size: cover;
-    background-position: center;
 }
 
 .hero-video-bg {
@@ -51,7 +46,6 @@
 .hero-overlay {
     position: absolute;
     inset: 0;
-    /* Gradient không đối xứng: tối hơn bên trái cho chữ, sáng hơn bên phải cho ảnh */
     background: linear-gradient(
         105deg,
         rgba(22, 55, 40, 0.82) 0%,
@@ -75,7 +69,6 @@
     align-items: center;
 }
 
-/* ── Centered layout override ── */
 .hero-container--centered {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -141,13 +134,11 @@
     margin: 0 auto;
 }
 
-/* ── LEFT column ── */
 .hero-left {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
-/* Single eyebrow — used once on the whole page */
 .hero-eyebrow {
     display: inline-flex;
     align-items: center;
@@ -180,10 +171,10 @@
     50% { opacity: 0.6; transform: scale(0.85); }
 }
 
-/* Tiêu đề Hero — căn trái, dùng font Lora */
+/* Tiêu đề Hero*/
 .hero-title {
     font-family: var(--font-heading);
-    font-size: clamp(2.4rem, 4.8vw, 4.5rem); /* Reduced slightly to ensure it fits perfectly on exactly 2 lines */
+    font-size: clamp(2.4rem, 4.8vw, 4.5rem); 
     line-height: 1.2;
     font-weight: 600;
     color: #ffffff;
@@ -193,7 +184,6 @@
     margin: 0;
 }
 
-/* accent-italic trên nền tối Hero dùng amber sáng */
 .hero-title .accent-italic {
     color: var(--color-accent);
 }
@@ -238,7 +228,6 @@
     border-color: rgba(255,255,255,0.4);
 }
 
-/* Actions row: CTA + social proof side-by-side */
 .hero-actions {
     display: flex;
     align-items: center;
@@ -272,7 +261,7 @@
     transform: scale(0.98);
 }
 
-/* Social proof — compact, sits next to CTA */
+/* Social proof */
 .hero-social-proof {
     display: flex;
     align-items: center;
@@ -323,7 +312,6 @@
     margin-right: 4px;
 }
 
-/* Tiện ích (widget) trạng thái phòng/spa trực tiếp */
 .hero-status-widget {
     display: inline-flex;
     align-items: center;
@@ -341,7 +329,6 @@
     text-shadow: 0 1px 4px rgba(0,0,0,0.4);
 }
 
-/* Bottom row: social proof + separator + status widget side by side */
 .hero-bottom-row {
     display: flex;
     align-items: center;
@@ -371,20 +358,18 @@
     50% { box-shadow: 0 0 0 6px rgba(74, 222, 128, 0.10); }
 }
 
-/* ── RIGHT column: visual panel ── */
 .hero-right {
     display: flex;
     justify-content: flex-end;
     align-items: center;
 }
 
-/* Photo frame with floating badges */
 .hero-visual-frame {
     position: relative;
     width: 100%;
     max-width: 700px;
     border-radius: var(--card-border-radius);
-    overflow: visible; /* badges can overflow */
+    overflow: visible;
 }
 
 .hero-visual-frame img {
@@ -397,7 +382,6 @@
     border: 2px solid rgba(255,255,255,0.12);
 }
 
-/* Floating metric badges on the photo */
 .hero-badge {
     position: absolute;
     display: flex;
@@ -447,7 +431,6 @@
     margin-bottom: 2px;
 }
 
-/* Real-time tracker pill on photo */
 .hero-tracker-pill {
     position: absolute;
     bottom: 24px;
@@ -485,7 +468,6 @@
     animation: pulse-dot 2s ease-in-out infinite;
 }
 
-/* Hide floating badges on subsequent slides to avoid overlap with caption cards */
 #heroCarousel:has(.carousel-item:not(:first-child).active) .hero-badge,
 #heroCarousel:has(.carousel-item:not(:first-child).active) .hero-tracker-pill {
     opacity: 0;
@@ -500,7 +482,6 @@
     transform: translateX(-50%) scale(0.95);
 }
 
-/* ── Carousel Action Buttons ── */
 .carousel-action-btn {
     display: inline-flex;
     align-items: center;
@@ -535,8 +516,6 @@
     transform: translateX(4px);
 }
 
-
-/* ── Hero Carousel: Indicators & Controls ── */
 .hero-carousel-indicators {
     position: absolute;
     bottom: 14px;
@@ -615,7 +594,7 @@
     
 }
 
-/* Hiệu ứng nhịp đập (pulse) */
+/* Hiệu ứng nhịp đập */
 @keyframes pulse {
     0% { width: 100%; height: 100%; opacity: 0.8; }
     100% { width: 250%; height: 250%; opacity: 0; }
@@ -724,9 +703,7 @@
 
 
 /* ==========================================================================
-   Features Section — Horizontal Stat Strip (dark)
-   Intentionally DIFFERENT from hero (split-screen) and services (carousel light)
-   This dark bar creates visual rhythm: light hero → dark strip → light services
+   Khu vực Tiện ích 
    ========================================================================== */
 .features-section {
     background-color: var(--color-primary-dark);
@@ -791,7 +768,6 @@
     user-select: none;
 }
 
-/* Trên di động: thu gọn thành lưới 2x2 */
 @media (max-width: 768px) {
     .features-strip {
         display: grid;
@@ -810,7 +786,7 @@
 
 
 /* ==========================================================================
-   Services Section (Arched Style) — legacy classes kept for compat
+   Services Section 
    ========================================================================== */
 
 .services-section {
@@ -829,18 +805,16 @@
 
 .services-curved-bg { display: none; }
 
-/* ==========================================================================
-   Services Featured Grid Layout
-   ========================================================================== */
+
 
 .svc-grid {
     display: flex;
     flex-direction: column;
-    gap: 8px;  /* Giảm gap giữa các row */
+    gap: 8px;
     margin-top: 40px;
 }
 
-/* Row 1: 2 featured cards bằng nhau */
+
 .svc-row-top {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -848,14 +822,14 @@
     align-items: stretch;
 }
 
-/* Row 2: 3 cards equal width */
+
 .svc-row-bottom {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 12px;
 }
 
-/* Card dọc row 2 — ảnh trên, text dưới */
+
 .svc-card--vert {
     flex-direction: column;
 }
@@ -864,13 +838,13 @@
     height: 140px;
 }
 
-/* Featured card fills full height of row-top */
+
 .svc-card--featured {
     height: 100%;
     transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.35s ease;
 }
 
-/* Stack container - 2 mini cards bên phải, chiều cao bằng featured */
+
 .svc-stack {
     display: grid;
     grid-template-rows: 1fr 1fr;
@@ -878,7 +852,6 @@
     height: 100%;
 }
 
-/* ── Base card styles ── */
 .svc-card {
     display: flex;
     flex-direction: column;
@@ -900,7 +873,7 @@
     border-color: rgba(42, 89, 68, 0.2);
 }
 
-/* ── Image wrapper ── */
+
 .svc-card-img {
     position: relative;
     overflow: hidden;
@@ -921,12 +894,11 @@
     pointer-events: none;
 }
 
-/* Featured card image */
 .svc-card--featured .svc-card-img {
     height: 160px;
 }
 
-/* Mini card image — short */
+
 .svc-card--mini {
     flex-direction: row;
     align-items: stretch;
@@ -961,7 +933,7 @@
     padding: 3px 8px;
 }
 
-/* Wide card image */
+/* Ảnh thẻ rộng */
 .svc-card--wide {
     flex-direction: row;
     align-items: stretch;
@@ -973,7 +945,7 @@
     height: auto;
 }
 
-/* ── Card body ── */
+
 .svc-card-body {
     padding: 18px 20px;
     display: flex;
@@ -1005,7 +977,6 @@
     border-top: 1px dashed rgba(42, 89, 68, 0.1);
 }
 
-/* ── Typography ── */
 .svc-title {
     font-family: var(--font-heading);
     font-weight: 700;
@@ -1075,7 +1046,7 @@
     color: var(--color-accent-dark);
 }
 
-/* Featured CTA button — more prominent */
+/* Nút CTA nổi bật — thu hút sự chú ý hơn */
 .svc-cta-btn {
     display: inline-flex;
     align-items: center;
@@ -1097,7 +1068,6 @@
     transform: translateX(2px);
 }
 
-/* Badge — positioned on image */
 .svc-badge {
     display: inline-flex;
     align-items: center;
@@ -1124,28 +1094,23 @@
     display: none;
 }
 
-/* Active/selected mini card */
 .svc-mini-item.svc-active {
     border-color: var(--color-primary);
     box-shadow: 0 0 0 2px var(--color-primary);
 }
 
-/* ── Bottom row grid area ── */
 .svc-grid > .svc-card--wide { grid-column: 1 / -1; grid-row: 2; max-height: 140px; }
 
-/* ── Responsive ── */
 @media (max-width: 900px) {
     .svc-grid {
         gap: 12px;
     }
 
-    /* Row 1: 2 featured → 1 cột */
     .svc-row-top {
         grid-template-columns: 1fr;
         gap: 16px;
     }
 
-    /* Row 2: 3 → 2 cột */
     .svc-row-bottom {
         grid-template-columns: 1fr 1fr;
     }
@@ -1155,20 +1120,16 @@
     .services-container { padding: 0 16px; }
 
     .svc-card--featured .svc-card-img { height: 200px; }
-
-    /* Row 2: single column trên mobile nhỏ */
     .svc-row-bottom {
         grid-template-columns: 1fr;
     }
 }
-
-/* Legacy arched-card classes kept so other pages don't break */
 .services-arched-wrapper { display: none; }
 .arched-card { display: none; }
 
 
 /* ==========================================================================
-   Experts Section — Bento Grid (3 người, ảnh & text xen kẽ)
+   Experts Section 
    ========================================================================== */
 
 .experts-section {
@@ -1188,7 +1149,6 @@
     padding: 0 var(--container-padding);
 }
 
-/* --- Bento: 3 cột đều, mỗi cột flex column --- */
 .experts-bento {
     display: grid;
     grid-template-columns: 1fr 1.12fr 1fr;
@@ -1196,7 +1156,6 @@
     align-items: stretch;
 }
 
-/* Col chung */
 .exp-cell {
     display: flex;
     flex-direction: column;
@@ -1208,12 +1167,10 @@
     transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.35s ease;
 }
 
-/* Col 2: text ở trên, ảnh ở dưới — đẩy ảnh xuống cuối */
 .exp-cell--text-top {
     justify-content: stretch;
 }
 
-/* --- Ảnh variants — mỗi col tỉ lệ khác nhau --- */
 .exp-img {
     overflow: hidden;
     flex-shrink: 0;
@@ -1238,28 +1195,24 @@
     transform: translateY(-6px);
 }
 
-/* Col 1: landscape ngang */
 .exp-img--landscape {
     width: 100%;
     aspect-ratio: 4 / 3;
     height: auto;
 }
 
-/* Col 2: vuông */
 .exp-img--square {
     width: 100%;
     aspect-ratio: 2 / 1;
     height: auto;
 }
 
-/* Col 3: cùng tầm với col 1 */
 .exp-img--portrait {
     width: 100%;
     aspect-ratio: 4 / 3;
     height: auto;
 }
 
-/* --- Info block --- */
 .exp-info {
     display: flex;
     flex-direction: column;
@@ -1296,7 +1249,6 @@
     line-height: 1.55;
 }
 
-/* --- Stats capsules --- */
 .exp-stats {
     display: flex;
     flex-wrap: wrap;
@@ -1334,12 +1286,10 @@
     border-color: rgba(42, 89, 68, 0.08);
 }
 
-/* --- CTA --- */
 .experts-cta {
     margin-top: calc(var(--space-xl) + var(--space-sm));
 }
 
-/* --- Responsive --- */
 @media (max-width: 1024px) {
     .experts-bento {
         grid-template-columns: 1fr 1fr;
@@ -1354,7 +1304,6 @@
         transform: translateY(-6px);
     }
 
-    /* Trên tablet: col 3 span full width */
     .exp-cell:last-child {
         grid-column: 1 / -1;
         flex-direction: row;
@@ -1396,7 +1345,7 @@
     }
 }
 /* ==========================================================================
-   Process Section (Light Cream Background)
+   Process Section
    ========================================================================== */
 
 .process-section {
@@ -1424,7 +1373,6 @@
     margin-bottom: 12px;
 }
 
-/* 4-column grid, căn giữa */
 .process-steps {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1433,13 +1381,12 @@
     position: relative;
 }
 
-/* Connecting line chạy qua giữa các dots */
 .process-steps::before {
     content: '';
     position: absolute;
-    top: calc(240px + 24px); /* dưới ảnh + giữa dot */
-    left: calc(12.5%);       /* từ tâm cột 1 */
-    right: calc(12.5%);      /* đến tâm cột 4 */
+    top: calc(240px + 24px); 
+    left: calc(12.5%);      
+    right: calc(12.5%);     
     height: 2px;
     background: linear-gradient(to right, var(--color-accent), rgba(224,159,31,0.25));
     z-index: 0;
@@ -1453,7 +1400,6 @@
     text-align: center;
 }
 
-/* Ảnh */
 .process-step-img {
     width: 100%;
     aspect-ratio: 4/3;
@@ -1478,7 +1424,6 @@
 }
 
 
-/* Dot với số */
 .process-step-dot {
     width: 48px;
     height: 48px;
@@ -1498,7 +1443,6 @@
     box-shadow: 0 0 0 4px var(--color-accent-light);
 }
 
-/* Text */
 .process-step-info h3 {
     font-family: var(--font-primary);
     font-size: var(--fs-h4);
@@ -1553,7 +1497,7 @@
 }
 
 .shop-section .section-header {
-    margin-bottom: var(--space-md); /* Compact above banner */
+    margin-bottom: var(--space-md); 
 }
 
 .shop-section-wrapper {
@@ -1562,7 +1506,6 @@
     padding: 0;
 }
 
-/* Thiết kế lại phần Mua sắm (Shop) */
 .shop-header-highlight .shop-header-badge {
     background-color: var(--color-accent-light);
     color: var(--color-accent-dark);
@@ -1584,7 +1527,7 @@
     overflow: hidden;
     margin: 0 auto var(--space-md);
     max-width: 1400px;
-    height: 280px; /* Slimmer fixed height on desktop */
+    height: 280px;
     box-shadow: var(--shadow-lg);
     color: #ffffff;
     align-items: center;
@@ -1593,13 +1536,13 @@
 
 .promo-banner-content {
     flex: 1.2;
-    padding: 28px 40px; /* Reduced padding for compact layout */
+    padding: 28px 40px; 
     text-align: left;
 }
 
 .promo-banner-content h3 {
     font-family: var(--font-heading);
-    font-size: clamp(1.3rem, 2.2vw, 1.8rem); /* Slightly smaller heading size */
+    font-size: clamp(1.3rem, 2.2vw, 1.8rem); 
     line-height: 1.25;
     margin: 8px 0 10px;
     color: #ffffff;
@@ -1619,16 +1562,16 @@
 }
 
 .promo-banner-content p {
-    font-size: 0.88rem; /* Scaled down copy text */
+    font-size: 0.88rem; 
     line-height: 1.5;
     color: rgba(255, 255, 255, 0.75);
-    margin-bottom: 16px; /* Reduced gap */
+    margin-bottom: 16px; 
     max-width: 52ch;
 }
 
 .promo-btn {
     margin-top: 0;
-    padding: 6px 16px; /* Smaller button */
+    padding: 6px 16px; 
     font-size: 0.75rem;
 }
 
@@ -1649,7 +1592,7 @@
 @media (max-width: 1024px) {
     .shop-promo-banner {
         flex-direction: column;
-        height: auto; /* Let stack naturally on tablet/mobile */
+        height: auto; 
     }
     .promo-banner-content {
         padding: 30px 24px;
@@ -1673,7 +1616,6 @@
     }
 }
 
-/* Tab Bar */
 .shop-tab-bar {
     display: flex;
     justify-content: center;
@@ -1783,7 +1725,6 @@
 }
 
 
-/* Thẻ huy hiệu dạng kính mờ (Glassmorphism) */
 .tag-badge {
     position: absolute;
     top: 12px;
@@ -1812,7 +1753,6 @@
     background-color: var(--color-primary);
 }
 
-/* Reward Tip */
 .product-reward-tip {
     font-size: 0.7rem;
     color: var(--color-text-light);
@@ -2057,7 +1997,7 @@
 
 
 /* ==========================================================================
-   Testimonials Section (Dark Navy background)
+   Testimonials Section
    ========================================================================== */
 
 .testimonials-section {
@@ -2099,7 +2039,7 @@
 .testimonials-carousel-wrapper {
     overflow: hidden;
     width: 100%;
-    max-width: 1020px; /* 3 cards × 320px + gaps */
+    max-width: 1020px; /* 3 thẻ × 320px + khoảng trống */
     padding: 20px 0;
 }
 
@@ -2345,7 +2285,6 @@
     box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6);
 }
 
-/* Body thẻ */
 .passport-body {
     display: flex;
     gap: 24px;
@@ -2414,7 +2353,6 @@
     display: block;
 }
 
-/* Footer thẻ */
 .passport-footer {
     display: flex;
     flex-direction: column;
@@ -2461,7 +2399,6 @@
     opacity: 0.85;
 }
 
-/* Cột văn bản giới thiệu */
 .pet-id-text-col {
     display: flex;
     flex-direction: column;
@@ -2526,7 +2463,6 @@
     line-height: 1.6;
 }
 
-/* Timeline staff note */
 .card-staff-text {
     font-size: 0.78rem;
     font-weight: 500;
@@ -2539,8 +2475,7 @@
     display: inline-block;
 }
 
-/* Responsive cho Pet ID Showcase */
-/* Responsive cho Pet ID Showcase */
+
 @media (max-width: 1024px) {
     .pet-id-showcase-container {
         grid-template-columns: 1fr;
@@ -2563,9 +2498,7 @@
 }
 
 
-/* ==========================================================================
-   Landing Page — Sections (moved from style.css)
-   ========================================================================== */
+
 
 /* ==========================================================================
    Timeline Tracker Section
@@ -2588,7 +2521,6 @@
     align-items: center;
 }
 
-/* Tracker section */
 .tracker-text-col h2 {
     font-family: var(--font-heading);
     font-size: var(--fs-section-title);
@@ -2609,7 +2541,6 @@
     line-height: 1.7;
 }
 
-/* Tracker */
 .tracker-benefits {
     display: flex;
     flex-direction: column;
@@ -2636,7 +2567,6 @@
     flex-shrink: 0;
 }
 
-/* Timeline*/
 .timeline-indicators {
     display: flex;
     flex-direction: column;
@@ -2702,7 +2632,6 @@
     transition: var(--transition-smooth);
 }
 
-/* Thumbnail */
 .indicator-thumb {
     width: 56px;
     height: 56px;
@@ -2727,7 +2656,6 @@
     
 }
 
-/* Active / Hover card elevations and border colors */
 .timeline-indicator-item:hover .indicator-info {
     border-color: rgba(42, 89, 68, 0.15);
     box-shadow: var(--shadow-sm);
@@ -2758,7 +2686,7 @@
     color: var(--color-primary-dark);
 }
 
-/* Phone Mockup Frame */
+/* Khung giả lập điện thoại (Mockup) */
 .tracker-mockup-col {
     display: flex;
     justify-content: center;
@@ -2793,7 +2721,6 @@
     overflow: hidden;
 }
 
-/* Phone camera notch notch */
 .phone-mockup::before {
     content: '';
     position: absolute;
@@ -2816,7 +2743,6 @@
     padding: 30px 16px 16px;
     display: flex;
     flex-direction: column;
-    /* Hide scrollbar */
     scrollbar-width: none;
 }
 
@@ -2899,7 +2825,7 @@
 }
 
 .card-image-box {
-    position: relative; /* ensure relative positioning for live camera tag overlay */
+    position: relative; 
     border-radius: var(--card-border-radius);
     overflow: hidden;
     height: 140px;
@@ -2911,12 +2837,11 @@
     object-fit: cover;
 }
 
-/* Live Camera Tag in mockups */
 .live-camera-tag {
     position: absolute;
     top: 8px;
     left: 8px;
-    background-color: rgba(42, 89, 68, 0.85); /* Deep green translucent */
+    background-color: rgba(42, 89, 68, 0.85);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     color: #ffffff;
@@ -2936,7 +2861,7 @@
 .live-dot {
     width: 6px;
     height: 6px;
-    background-color: var(--color-danger); /* bright red */
+    background-color: var(--color-danger); 
     border-radius: 50%;
     animation: livePulse 1.5s infinite;
 }
@@ -2947,7 +2872,6 @@
     100% { transform: scale(0.9); opacity: 1; }
 }
 
-/* Pet ID Registration note */
 .pet-id-registration-note {
     font-size: 0.85rem;
     color: var(--color-accent-dark);
@@ -2999,7 +2923,7 @@
 @media (min-width: 992px) {
     .membership-main-title {
         white-space: nowrap;
-        font-size: 2.3rem; /* Force single line on desktop */
+        font-size: 2.3rem; 
     }
 }
 
@@ -3008,17 +2932,17 @@
     font-weight: 600;
     color: var(--color-text-light);
     max-width: 100%;
-    margin: 0 auto 4px auto; /* Reduced space below subtitle */
+    margin: 0 auto 4px auto; 
     line-height: 1.5;
 }
 
 @media (min-width: 992px) {
     .membership-subtext {
-        white-space: nowrap; /* Prevent subtitle wrapping on desktop */
+        white-space: nowrap; 
     }
 }
 
-/* Steps Flow (Restored to original pill styling, width optimized) */
+
 .membership-section .section-header {
     margin-bottom: var(--space-lg);
 }
@@ -3030,10 +2954,10 @@
     gap: 30px;
     background-color: rgba(42, 89, 68, 0.04);
     border-radius: var(--border-radius-pill);
-    padding: 10px 32px; /* Balanced left-right padding */
-    width: fit-content; /* Wrap tightly around content instead of static wide layout */
+    padding: 10px 32px;
+    width: fit-content; 
     max-width: 100%;
-    margin: 0 auto 36px auto; /* Increased bottom spacing to cards */
+    margin: 0 auto 36px auto; 
     border: var(--border-card);
 }
 
@@ -3051,15 +2975,12 @@
     transition: var(--transition-smooth);
 }
 
-.membership-step-item:hover .membership-step-num {
-    
-}
 
 .membership-step-label {
     font-size: 0.95rem;
     font-weight: 800;
     color: var(--color-primary-dark);
-    white-space: nowrap; /* Prevent step labels from wrapping internally */
+    white-space: nowrap; 
 }
 
 .membership-step-separator {
@@ -3072,7 +2993,6 @@
     padding: 0;
 }
 
-/* Interactive Card Showcase Layout */
 .membership-container-full {
     max-width: 1420px !important;
     width: 100%;
@@ -3089,7 +3009,6 @@
     width: 100%;
 }
 
-/* Left Column: Wallet Pass Visual */
 .pawpass-left-visual {
     display: flex;
     justify-content: center;
@@ -3109,7 +3028,7 @@
     position: relative;
     width: 100%;
     height: auto;
-    aspect-ratio: 1.7/1; /* Slightly wider ratio to reduce height */
+    aspect-ratio: 1.7/1; 
     border-radius: 20px;
     padding: 18px 24px;
     color: #ffffff;
@@ -3160,7 +3079,6 @@
     transition: all 0.5s ease;
 }
 
-/* Metallic Themes */
 .pawpass-virtual-card.tier-silver {
     background: linear-gradient(135deg, #94a3b8 0%, #cbd5e1 45%, #f1f5f9 65%, #64748b 100%);
     color: #0f172a;
@@ -3244,7 +3162,6 @@
     100% { background-position: -200% 0; }
 }
 
-/* Virtual Card Elements */
 .card-header-brand {
     display: flex;
     justify-content: space-between;
@@ -3358,7 +3275,6 @@
     opacity: 0.6;
 }
 
-/* Three Tier Card layout on the right */
 .pawpass-right-selection {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -3386,7 +3302,6 @@
     box-shadow: var(--shadow-card);
 }
 
-/* Specific Tiers Hover Borders & Shadows */
 .tier-card-interactive.tier-silver:hover,
 .tier-card-interactive.tier-silver.active {
     border-color: #cbd5e1;
@@ -3405,7 +3320,6 @@
     box-shadow: 0 12px 30px rgba(59, 130, 246, 0.15);
 }
 
-/* Dim down other cards when one card is hovered */
 .pawpass-right-selection:hover .tier-card-interactive:not(:hover) {
     opacity: 0.65;
     
@@ -3521,7 +3435,7 @@
 }
 
 
-/* Bottom CTA section */
+/* Khu vực CTA phía dưới */
 .membership-cta-bottom {
     margin-top: 24px;
 }
@@ -3574,7 +3488,6 @@
     margin-left: 4px;
 }
 
-/* Responsive adjustment for Membership split layout */
 @media (max-width: 1024px) {
     .membership-section {
         padding: var(--space-xl) 0;
@@ -3659,7 +3572,6 @@
 }
 
 @media (max-width: 768px) {
-    /* Mobile drawer header rules moved to shared style.css (.nav-menu drawer @ 991.98px) */
 
     .hero-title {
         font-size: clamp(2.2rem, 8vw, 3rem);
@@ -3689,7 +3601,6 @@
 }
 
 
-/* Safety & Commitment Section */
 .safety-section {
     background-color: var(--color-primary-dark);
     color: #ffffff;
@@ -3704,7 +3615,6 @@
     text-align: center;
 }
 
-/* Statement block */
 .safety-statement {
     margin-bottom: var(--space-sm);
 }
@@ -3741,7 +3651,6 @@
     color: rgba(255, 255, 255, 0.45);
 }
 
-/* Divider */
 .safety-divider {
     width: 48px;
     height: 1px;
@@ -3749,7 +3658,6 @@
     margin: var(--space-sm) auto;
 }
 
-/* Stats row */
 .safety-stats {
     display: flex;
     align-items: flex-start;
@@ -3864,7 +3772,6 @@
     }
 }
 
-/* Shop Features Inline Bar (Compact inline badges replacing subtitle) */
 .shop-features-inline {
     display: flex;
     justify-content: center;
@@ -3920,7 +3827,6 @@
     }
 }
 
-/* Secondary Sub-Filters */
 .shop-sub-filters {
     display: flex;
     justify-content: center;
@@ -4090,7 +3996,7 @@
     .faq-question span:first-child { font-size: var(--fs-small); }
 }
 
-/* Fix: booking/pricing modal không được chiếm không gian layout */
+/* Sửa lỗi: modal đặt lịch/bảng giá không chiếm không gian bố cục */
 #booking:not(.open),
 #pricingModal:not(.open) {
     display: none !important;
@@ -4161,7 +4067,7 @@
     z-index: 5;
 }
 
-/* Landing shop cards: wishlist sits on image top-right like service cards */
+/* Các thẻ sản phẩm landing: nút tim đặt góc trên bên phải giống thẻ dịch vụ */
 .product-card {
     position: relative;
 }

@@ -185,7 +185,7 @@ async function loadData() {
 async function fetchJSON(url) {
     try {
         const r = await fetch(url);
-        return r.ok ? r.json() : [];
+        return r.ok ? await r.json() : [];
     } catch (_) { return []; }
 }
 
