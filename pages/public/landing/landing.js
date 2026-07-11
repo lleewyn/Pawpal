@@ -481,3 +481,96 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 })();
+
+// ── Service Loading ──────────────────────────────────────────
+(async function() {
+    const svcGrid = document.getElementById('svcLandingGrid');
+    const svcTabBar = document.getElementById('svcTabBar');
+    if (!svcGrid || !window.DataLoader) return;
+
+    let services = [];
+    try {
+        services = await window.DataLoader.loadServices();
+    } catch(e) {
+        console.error('Failed to load services', e);
+        return;
+    }
+    if (!services || !services.length) return;
+
+    const renderServices = (items) => {
+        svcGrid.innerHTML = items.map(s => {
+            const formattedPrice = Number(s.price).toLocaleString('vi-VN');
+            const memberPrice = Math.round(Number(s.price) * 0.95).toLocaleString('vi-VN');
+            const sanitizedName = s.name.replace(/&/g, 'và');
+            const sanitizedDesc = s.description.replace(/&/g, 'và');
+
+            return `
+            <div class="svc-landing-card">
+                <button class="svc-landing-wishlist-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </button>
+                <div class="svc-landing-img-box">
+                    <img src="${s.image || '/assets/images/services/placeholder.webp'}" alt="${sanitizedName}" loading="lazy" onerror="this.src='/assets/images/services/placeholder.webp'">
+                </div>
+                <div class="svc-landing-body">
+                    <div class="svc-landing-header">
+                        <span class="svc-landing-id">${s.serviceId || 'SVC'}</span>
+                        <span class="svc-landing-rating">${Number(s.rating || 5.0).toFixed(1)} <span>(${s.reviewCount || 0})</span></span>
+                    </div>
+                    <h3 class="svc-landing-title">${sanitizedName}</h3>
+                    <p class="svc-landing-desc">${sanitizedDesc}</p>
+                    
+                    <div class="svc-landing-meta">
+                        ${s.petType || 'Tất cả'} &nbsp;&nbsp; ${s.weightClass || ''} &nbsp;&nbsp; ${s.duration || ''}
+                    </div>
+                    
+                    <div class="svc-landing-price-row">
+                        <div class="svc-landing-price">Từ ${formattedPrice}đ</div>
+                        <button class="svc-landing-book-btn" onclick="window.location.href='/pages/services/booking/booking.html?service=${s.serviceId || s.id}'">Đặt lịch</button>
+                    </div>
+                    <div class="svc-landing-member-price">
+                        TV Bạc: ${memberPrice}đ
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    };
+
+    // Diverse mix for "All" tab
+    const getMixedServices = () => {
+        const spa = services.filter(s => s.category === 'spa').slice(0, 5);
+        const hotel = services.filter(s => s.category === 'hotel').slice(0, 4);
+        const taxi = services.filter(s => s.category === 'taxi').slice(0, 2);
+        return [...spa, ...hotel, ...taxi];
+    };
+
+    // Initial render (mixed categories)
+    renderServices(getMixedServices());
+
+    // Tab filtering
+    if (svcTabBar) {
+        const tabs = svcTabBar.querySelectorAll('.shop-tab-btn');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const cat = tab.dataset.category;
+                
+                let filtered = services;
+                if (cat === 'all') {
+                    filtered = getMixedServices();
+                } else if (cat === 'spa') {
+                    filtered = services.filter(s => s.category === 'spa');
+                } else if (cat === 'hotel') {
+                    filtered = services.filter(s => s.category === 'hotel');
+                } else if (cat === 'taxi') {
+                    filtered = services.filter(s => s.category === 'taxi');
+                }
+                
+                renderServices(filtered.slice(0, 10));
+            });
+        });
+    }
+})();

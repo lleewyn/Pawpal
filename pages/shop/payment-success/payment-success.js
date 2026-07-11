@@ -42,7 +42,7 @@ async function resolveOrderData(orderId, fallbackOrder) {
             .from('sales_order')
             .select(`
                 id, order_code, customer_id, order_status, payment_status,
-                subtotal, shipping_fee, discount_amount, total_amount, created_at,
+                total_amount, created_at,
                 sales_order_detail (
                     id, quantity, unit_price, subtotal,
                     product ( id, product_name, image_urls )
@@ -104,16 +104,22 @@ function setupGuestActivationCard(order) {
         return;
     }
 
-    const users = JSON.parse('[]' || '[]');
-    const tempUser = users.find(u => u.phone === order.shipping.phone && u.is_temporary);
-    if (!tempUser) {
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    
+    if (currentUser && !currentUser.is_temporary) {
+        card.classList.add('d-none');
+        return;
+    }
+
+    const phone = order?.shipping?.phone;
+    if (!phone) {
         card.classList.add('d-none');
         return;
     }
 
     card.classList.remove('d-none');
-    phoneDisplay.textContent = tempUser.phone;
-    activateLink.href = `../../public/login/login.html?action=guest-activate&phone=${encodeURIComponent(tempUser.phone)}`;
+    phoneDisplay.textContent = phone;
+    activateLink.href = `/pages/public/login/login.html?action=guest-activate&phone=${encodeURIComponent(phone)}`;
 }
 
 function setupTrackingLink(order) {

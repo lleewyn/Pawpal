@@ -115,7 +115,7 @@ async function supabaseResolveUserByPhone(phone) {
             email:        c.email || '',
             password:     c.password_hash || '',
             role:         'customer',
-            is_temporary: c.account_status === 'INACTIVE',
+            is_temporary: !c.password_hash || c.account_status === 'INACTIVE',
             points:       membership.total_paw_points || 0,
             tier:         tier.tier_name || 'Đồng',
             gender:       profile.gender || '',

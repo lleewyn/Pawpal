@@ -637,11 +637,11 @@ function initializePawPoints() {
     const userPoints = checkoutState.user.points || checkoutState.user.pawPoints || 0;
     const orderTotal = calculateSubtotal();
     
-    const maxPoints = Math.min(userPoints, Math.floor(orderTotal / 1000));
+    const maxPoints = Math.min(userPoints, Math.floor(orderTotal / 150));
     
     document.getElementById('user-points').textContent = userPoints;
-    document.getElementById('points-value-equivalent').textContent = formatCurrency(userPoints * 1000);
-    document.getElementById('points-max-label').textContent = formatCurrency(maxPoints * 1000);
+    document.getElementById('points-value-equivalent').textContent = formatCurrency(userPoints * 150);
+    document.getElementById('points-max-label').textContent = formatCurrency(maxPoints * 150);
     
     const slider = document.getElementById('points-slider');
     slider.max = maxPoints;
@@ -661,7 +661,7 @@ function initializePawPoints() {
             const restoredPoints = Math.min(Number(localStorage.getItem(PENDING_POINTS_KEY) || slider.value || 0), maxPoints);
             slider.value = restoredPoints;
             checkoutState.pointsUsed = restoredPoints;
-            checkoutState.totals.pointsDiscount = restoredPoints * 1000;
+            checkoutState.totals.pointsDiscount = restoredPoints * 150;
             updatePointsDisplay(restoredPoints);
             updateOrderTotals();
         }
@@ -673,7 +673,7 @@ function initializePawPoints() {
         
         if (checkbox.checked) {
             checkoutState.pointsUsed = points;
-            checkoutState.totals.pointsDiscount = points * 1000;
+            checkoutState.totals.pointsDiscount = points * 150;
             localStorage.setItem(PENDING_POINTS_KEY, String(points));
             updateOrderTotals();
         }
@@ -681,7 +681,7 @@ function initializePawPoints() {
 }
 
 function updatePointsDisplay(points) {
-    const discount = points * 1000;
+    const discount = points * 150;
     const remaining = (checkoutState.user.points || checkoutState.user.pawPoints || 0) - points;
     
     document.getElementById('points-to-use').textContent = points;
@@ -701,7 +701,7 @@ function loadPersistedPoints() {
     slider.disabled = false;
     slider.value = savedPoints;
     checkoutState.pointsUsed = savedPoints;
-    checkoutState.totals.pointsDiscount = savedPoints * 1000;
+    checkoutState.totals.pointsDiscount = savedPoints * 150;
     updatePointsDisplay(savedPoints);
 }
 
