@@ -20,6 +20,21 @@
 
 ---
 
+## 🔑 Tài khoản kiểm thử 
+
+Để thuận tiện cho việc trải nghiệm đầy đủ các tính năng (như xem lịch sử đơn hàng, nhật ký chăm sóc, đặt lịch hẹn), bạn có thể sử dụng các thông tin sau (dữ liệu được đồng bộ trực tiếp từ Supabase):
+
+**1. Tài khoản Thành viên (Member)**
+- **Số điện thoại:** `0901234567`
+- **Mật khẩu:** `Password123`
+- *Lưu ý:* Tài khoản này đã có sẵn dữ liệu về các Đơn hàng và Lịch hẹn dịch vụ.
+
+**2. Khách vãng lai (Guest)**
+- **Số điện thoại tra cứu:** `0999888777`
+- *Lưu ý:* Dùng số điện thoại này tại trang **Tra cứu đơn hàng/lịch hẹn** dành cho khách vãng lai (không cần đăng nhập) để xem các đơn hàng đã đặt.
+
+---
+
 ## 🚀 Công Nghệ Sử Dụng
 
 - **Frontend:** HTML5, CSS3, Vanilla JavaScript, Bootstrap 5.3
