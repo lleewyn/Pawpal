@@ -1,6 +1,9 @@
 # 🐾 PawPal - Premium Pet Care Platform
 
 [![Tech Stack](https://img.shields.io/badge/tech--stack-HTML%20%7C%20CSS%20%7C%20JS%20%7C%20Node.js%20%7C%20Supabase-blue.svg)](#)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-View_Website-success.svg)](https://pawpalgr3.vercel.app/)
+
+🌍 **Trải nghiệm trực tiếp dự án tại:** [https://pawpalgr3.vercel.app/](https://pawpalgr3.vercel.app/)
 
 **PawPal** là một nền tảng chăm sóc thú cưng cao cấp, kết hợp giữa cửa hàng mua sắm tiện lợi và dịch vụ chăm sóc thú cưng hiện đại. PawPal tập trung vào trải nghiệm người dùng tối ưu, giao diện sang trọng, và các tính năng minh bạch giúp chủ nuôi an tâm tuyệt đối khi gửi gắm thú cưng.
 
@@ -8,12 +11,12 @@
 
 ## 🌟 Tính Năng Nổi Bật
 
-- 🛒 **Cửa hàng thú cưng (Pet Shop):** Mua sắm thức ăn, phụ kiện với giỏ hàng và danh sách yêu thích được đồng bộ thời gian thực qua cơ sở dữ liệu.
-- 📅 **Đặt lịch dịch vụ (Smart Booking):** Đặt lịch Spa, Khách sạn thú cưng, Khám sức khỏe dễ dàng.
-- 🐶 **Hồ sơ thú cưng (Pet ID):** Quản lý chi tiết thú cưng, theo dõi tình trạng sức khỏe, nhật ký chăm sóc (Transparency Care Log).
-- 🎁 **Khách hàng thân thiết (Loyalty):** Tích điểm, đổi voucher, và các hạng thành viên (PawPass).
-- 🔐 **Bảo mật & Đồng bộ:** Xác thực người dùng, đồng bộ dữ liệu giỏ hàng, wishlist và đơn hàng trực tiếp lên Supabase.
-- ⚙️ **Quản trị hệ thống (Admin):** Bảng điều khiển dành cho nhân viên quản lý đơn hàng, dịch vụ, chăm sóc khách hàng và cập nhật nhật ký thú cưng.
+- **Cửa hàng cho thú cưng:** Mua sắm thức ăn, phụ kiện với giỏ hàng và danh sách yêu thích được đồng bộ thời gian thực qua cơ sở dữ liệu.
+- **Đặt lịch dịch vụ:** Đặt lịch Spa, Khách sạn thú cưng, Khám sức khỏe dễ dàng.
+-**Hồ sơ thú cưng:** Quản lý chi tiết thú cưng, theo dõi dịch vụ thông qua nhật ký chăm sóc.
+- **Khách hàng thân thiết:** Tích điểm, đổi voucher, và các hạng thành viên (PawPass).
+- **Bảo mật & Đồng bộ:** Xác thực người dùng, đồng bộ dữ liệu giỏ hàng, wishlist và đơn hàng trực tiếp lên Supabase.
+- **Quản trị hệ thống:** Đang phát triển
 
 ---
 
@@ -68,10 +71,10 @@ Truy cập hệ thống tại: `http://localhost:3000`
 ```text
 Pawpal/
 |-- api/
-|   `-- chat.js              # Endpoint backend xử lý Chatbot AI (nếu có)
+|   `-- chat.js              # Endpoint backend xử lý Chatbot AI 
 |
 |-- components/              # Các UI Component độc lập tái sử dụng
-|   |-- fab/                 # Nút Floating Action Button (Mở Chatbot/Hỗ trợ)
+|   |-- fab/                 # Nút Floating Action Button 
 |   |   |-- fab.css          # Style CSS của nút FAB
 |   |   |-- fab.html         # Khung giao diện HTML của nút
 |   |   `-- fab.js           # Logic hiển thị và bắt sự kiện click
@@ -121,7 +124,7 @@ Pawpal/
 |   |       |-- return-guest.css
 |   |       |-- return-guest.html
 |   |       `-- return-guest.js
-|   |-- services/            # Phân hệ Dịch vụ & Đặt lịch (Spa, Hotel)
+|   |-- services/            # Phân hệ Dịch vụ và Đặt lịch (Spa, Hotel)
 |   |   |-- services.css     # Style cho danh mục dịch vụ
 |   |   |-- services.html    # Trang hiển thị danh sách các gói dịch vụ
 |   |   |-- services.js      # Fetch data và render dịch vụ
@@ -244,7 +247,7 @@ Pawpal/
 |       |-- components.js    # Xử lý Load Header/Footer/Sidebar tĩnh bằng JS
 |       |-- data-loader.js   # Module nạp dữ liệu từ File JSON (nếu không dùng DB)
 |       |-- main.js          # Core Script chạy đầu tiên khi mở web
-|       |-- notifications-handler.js # Xử lý Hiển thị thông báo (Toast)
+|       |-- notifications-handler.js # Xử lý Hiển thị thông báo 
 |       `-- support-handler.js # Module tiện ích dùng cho CSKH
 |
 |-- styles/                  # Định dạng giao diện CSS
@@ -254,7 +257,7 @@ Pawpal/
 |   `-- images/              # Kho Hình ảnh minh họa, Logo, Icon, Banner
 |
 |-- Docs/                    # Chứa tài liệu System Design, Đặc tả kỹ thuật
-|-- index.html               # Entry point (Thường redirect ngay sang Landing page)
+|-- index.html               # Entry point ( redirect ngay sang Landing page)
 |-- server.js                # Code Node.js Express server chạy local backend
 `-- package.json             # File cấu hình NPM (scripts npm run dev, cài đặt lib)
 ```
