@@ -154,7 +154,9 @@ async function loadSupabaseGuestResults(phone) {
 function mapSupabaseOrderRow(row) {
     const normalizeImageUrl = (url) => {
         if (!url) return '/assets/images/shop/products/placeholder.webp';
-        return url.startsWith('http') || url.startsWith('/') ? url : `/assets/images/shop/products/${url}`;
+        if (url.startsWith('http') || url.startsWith('/')) return url;
+        if (url.startsWith('assets/')) return '/' + url;
+        return `/assets/images/shop/products/${url}`;
     };
     const addr = row.customer_address || {};
     const products = Array.isArray(row.sales_order_detail)
