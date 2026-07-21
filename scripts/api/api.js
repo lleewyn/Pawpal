@@ -696,23 +696,35 @@ export const API = {
                 
             if (error) throw error;
             
-            const mappedVouchers = (data || []).map(v => ({
-                id: v.id,
-                code: v.voucher_code,
-                name: v.voucher_name || v.voucher_code,
-                type: v.type || 'percentage',
-                value: v.discount_value || 0,
-                minOrderValue: v.minimum_order_amount || 0,
-                maxDiscount: v.max_discount,
-                pointsCost: v.required_points || 0,
-                validFrom: v.start_date,
-                validUntil: v.end_date,
-                usageCount: v.usage_count || 0,
-                maxUsage: v.max_usage,
-                applicableFor: v.applicable_for || ['all'],
-                description: v.description,
-                active: v.is_active
-            }));
+            const mappedVouchers = (data || []).map(v => {
+                let maxDiscount = v.max_discount;
+                if (maxDiscount == null && v.description) {
+                    const match = v.description.match(/tối đa\s+([\d.,]+)(k|đ)/i);
+                    if (match) {
+                        let val = parseFloat(match[1].replace(/[.,]/g, ''));
+                        if (match[2].toLowerCase() === 'k') val *= 1000;
+                        maxDiscount = val;
+                    }
+                }
+                
+                return {
+                    id: v.id,
+                    code: v.voucher_code,
+                    name: v.voucher_name || v.voucher_code,
+                    type: v.type || 'percentage',
+                    value: v.discount_value || 0,
+                    minOrderValue: v.minimum_order_amount || 0,
+                    maxDiscount: maxDiscount,
+                    pointsCost: v.required_points || 0,
+                    validFrom: v.start_date,
+                    validUntil: v.end_date,
+                    usageCount: v.usage_count || 0,
+                    maxUsage: v.max_usage,
+                    applicableFor: v.applicable_for || ['all'],
+                    description: v.description,
+                    active: v.is_active
+                };
+            });
             
             console.log('[API] Đã tải danh sách voucher từ Supabase:', mappedVouchers);
             return mappedVouchers;
