@@ -388,7 +388,9 @@ function renderTimeline() {
     const statusOrder = ['placed', 'confirmed', 'preparing', 'shipping', 'delivered', 'completed'];
     const currentIndex = statusOrder.indexOf(currentOrder.status);
     
-    container.innerHTML = currentOrder.timeline.map((item, index) => {
+    const timeline = currentOrder.timeline || buildTimelineFromStatus(currentOrder.orderStatus || currentOrder.status, currentOrder.createdAt, currentOrder.updatedAt || currentOrder.createdAt);
+    
+    container.innerHTML = timeline.map((item, index) => {
         let itemClass = 'timeline-item';
         
         const itemStatusIndex = statusOrder.indexOf(item.status);
