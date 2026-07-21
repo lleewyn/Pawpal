@@ -499,22 +499,50 @@ function applyFilters() {
     
     if (state.filters.category && state.filters.category !== 'all') {
         const cats = Array.isArray(state.filters.category) ? state.filters.category : [state.filters.category];
+        
         const catMapping = {
-            'food-dry': 'c0000000-0000-0000-0000-000000000001',
-            'food-wet': 'c0000000-0000-0000-0000-000000000001',
-            'bones': 'c0000000-0000-0000-0000-000000000001',
-            'bowls': 'c0000000-0000-0000-0000-000000000002',
-            'toys': 'c0000000-0000-0000-0000-000000000002',
-            'clothes': 'c0000000-0000-0000-0000-000000000002',
-            'accessories': 'c0000000-0000-0000-0000-000000000004',
-            'furniture': 'c0000000-0000-0000-0000-000000000002',
-            'hygiene': 'c0000000-0000-0000-0000-000000000003',
-            'grooming': 'c0000000-0000-0000-0000-000000000003',
-            'health': 'c0000000-0000-0000-0000-000000000003',
-            'other': 'other'
+            'food-dry': { catId: 'c0000000-0000-0000-0000-000000000001', keywords: ['hạt', 'khô', 'dry'] },
+            'food-wet': { catId: 'c0000000-0000-0000-0000-000000000001', keywords: ['pate', 'sốt', 'ướt', 'lon', 'lon', 'pouches'] },
+            'bones': { catId: 'c0000000-0000-0000-0000-000000000001', keywords: ['xương', 'gặm', 'bánh thưởng', 'snack', 'súp thưởng'] },
+            'bowls': { catId: 'c0000000-0000-0000-0000-000000000002', keywords: ['bát', 'chén', 'khay ăn', 'bình nước'] },
+            'toys': { catId: 'c0000000-0000-0000-0000-000000000002', keywords: ['đồ chơi', 'bóng', 'cần câu', 'lật đật', 'chuông', 'thú nhồi', 'trêu', 'cắn', 'catnip'] },
+            'clothes': { catId: 'c0000000-0000-0000-0000-000000000002', keywords: ['áo', 'quần', 'mũ', 'nón', 'váy', 'giày', 'tất'] },
+            'furniture': { catId: 'c0000000-0000-0000-0000-000000000002', keywords: ['chuồng', 'giường', 'nệm', 'đệm', 'lồng', 'nhà', 'võng', 'chuột cào', 'trụ cào', 'nhà cây'] },
+            'accessories': { catId: 'c0000000-0000-0000-0000-000000000004', keywords: ['vòng', 'dây', 'túi', 'balo', 'kính', 'rọ mõm', 'yếm'] },
+            'hygiene': { catId: 'c0000000-0000-0000-0000-000000000003', keywords: ['cát', 'khay vệ sinh', 'tã', 'bỉm', 'xịt', 'khử mùi', 'sữa tắm', 'dầu gội', 'khăn', 'chậu', 'nhà vệ sinh'] },
+            'grooming': { catId: 'c0000000-0000-0000-0000-000000000003', keywords: ['lược', 'tông đơ', 'kéo', 'bấm móng', 'cạo', 'chải'] },
+            'health': { catId: 'c0000000-0000-0000-0000-000000000003', keywords: ['thuốc', 'nhỏ gáy', 'tẩy giun', 'vitamin', 'gel', 'dinh dưỡng', 'xịt rận', 'phòng rận', 'trị rận', 'canxi'] }
         };
-        const mappedCats = cats.map(c => catMapping[c] || c);
-        filtered = filtered.filter(p => mappedCats.includes(p.category) || mappedCats.includes(p.categoryName));
+
+        filtered = filtered.filter(p => {
+            const nameLower = p.name.toLowerCase();
+            return cats.some(c => {
+                if (c === 'other') {
+                    const matchesAny = Object.values(catMapping).some(m => 
+                        m.keywords && m.keywords.some(kw => nameLower.includes(kw))
+                    );
+                    return !matchesAny;
+                }
+                const map = catMapping[c];
+                if (!map) return p.category === c || p.categoryName === c;
+                
+                if (p.category !== map.catId && p.categoryName !== map.catId && p.categoryName !== 'Thực phẩm' && p.categoryName !== 'Đồ dùng' && p.categoryName !== 'Chăm sóc' && p.categoryName !== 'Phụ kiện') {
+                    // Weak check if UUIDs don't strictly match but we still want to filter by keywords
+                }
+                
+                // Allow matching by just keywords if category ID is a bit flaky, but ideally match both
+                const isCorrectCategory = p.category === map.catId || 
+                    (map.catId === 'c0000000-0000-0000-0000-000000000001' && p.categoryName === 'Thực phẩm') ||
+                    (map.catId === 'c0000000-0000-0000-0000-000000000002' && p.categoryName === 'Đồ dùng') ||
+                    (map.catId === 'c0000000-0000-0000-0000-000000000003' && p.categoryName === 'Vệ sinh') ||
+                    (map.catId === 'c0000000-0000-0000-0000-000000000004' && p.categoryName === 'Phụ kiện');
+                
+                if (map.keywords && map.keywords.length > 0) {
+                    return isCorrectCategory && map.keywords.some(kw => nameLower.includes(kw));
+                }
+                return isCorrectCategory;
+            });
+        });
     }
     
     if (state.filters.brands.length > 0) {
