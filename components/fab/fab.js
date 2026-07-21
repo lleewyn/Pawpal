@@ -89,9 +89,9 @@ function initFab() {
                             Bạn cần tư vấn về dịch vụ nào?
                         </div>
                         <div class="fab-chat-suggestions">
-                            <button class="fab-chat-suggest" onclick="pawpalAIAsk(this)">Dịch vụ Spa và Grooming</button>
-                            <button class="fab-chat-suggest" onclick="pawpalAIAsk(this)">Pet Hotel giá bao nhiêu?</button>
-                            <button class="fab-chat-suggest" onclick="pawpalAIAsk(this)">Cần chuẩn bị gì khi gửi bé?</button>
+                            <button class="fab-chat-suggest">Dịch vụ Spa và Grooming</button>
+                            <button class="fab-chat-suggest">Pet Hotel giá bao nhiêu?</button>
+                            <button class="fab-chat-suggest">Cần chuẩn bị gì khi gửi bé?</button>
                         </div>
                     `;
                 }
@@ -235,13 +235,19 @@ function initFab() {
         });
     }
 
+    if (messages) {
+        messages.addEventListener('click', (e) => {
+            const btn = e.target.closest('.fab-chat-suggest');
+            if (btn) {
+                if (!input) return;
+                input.value = btn.innerText || btn.textContent;
+                sendMessage();
+            }
+        });
+    }
+
     window.__pawpalFabInitialized = true;
 
-    window.pawpalAIAsk = function(btn) {
-        if (!input) return;
-        input.value = btn.innerText;
-        sendMessage();
-    };
     function scrollToBottom() {
         if (messages) {
             requestAnimationFrame(() => {
