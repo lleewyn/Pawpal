@@ -338,7 +338,6 @@ function initCategoryGrid() {
             document.getElementById('all-products').scrollIntoView({ behavior: 'smooth' });
         });
     });
-    });
 }
 
 const catMapping = {
