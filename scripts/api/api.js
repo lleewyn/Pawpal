@@ -328,6 +328,38 @@ export const API = {
         return cartData;
     },
 
+    async saveUserCart(userId, cartItems) {
+        if (!userId) return { success: false };
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        if (!db) return { success: false };
+
+        try {
+            const cart = await this.getOrCreateCart(userId);
+            if (!cart) return { success: false };
+
+            // First delete existing items
+            await db.from('cart_item').delete().eq('cart_id', cart.id);
+
+            // Then insert new items
+            if (cartItems && cartItems.length > 0) {
+                const itemsToInsert = cartItems.map(item => ({
+                    cart_id: cart.id,
+                    product_id: item.id,
+                    quantity: item.qty || item.quantity || 1,
+                    unit_price: item.price || 0,
+                    subtotal: (item.price || 0) * (item.qty || item.quantity || 1)
+                }));
+                const { error } = await db.from('cart_item').insert(itemsToInsert);
+                if (error) console.error('Error inserting cart items:', error);
+                return { success: !error };
+            }
+            return { success: true };
+        } catch (err) {
+            console.error('Error saveUserCart:', err);
+            return { success: false };
+        }
+    },
+
     async addToCart(userId, productId, quantity = 1) {
         if (!userId) return { success: false, error: 'User not logged in' };
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
