@@ -241,16 +241,16 @@ module.exports = async function handler(req, res) {
 
         try {
             const model = genAI.getGenerativeModel({ 
-                model: "gemini-1.5-flash",
+                model: "gemini-3.5-flash",
                 systemInstruction: systemInstruction,
                 tools: toolsDeclaration
             });
             chat = model.startChat({ history: history });
             streamResult = await chat.sendMessageStream([{text: userMsg}]);
         } catch (err1) {
-            console.warn("[API] gemini-1.5-flash failed (" + err1.message + "), falling back to gemini-1.5-pro");
+            console.warn("[API] gemini-3.5-flash failed (" + err1.message + "), falling back to gemini-2.5-flash");
             const fallbackModel = genAI.getGenerativeModel({ 
-                model: "gemini-1.5-pro",
+                model: "gemini-2.5-flash",
                 systemInstruction: systemInstruction,
                 tools: toolsDeclaration
             });
