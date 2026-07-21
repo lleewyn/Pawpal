@@ -1,3 +1,4 @@
+import { API } from '/scripts/api/api.js';
 
 let currentOrder = null;
 let isGuest = false; // Giả định: false = Member, true = Guest
