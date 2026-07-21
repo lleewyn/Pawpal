@@ -554,7 +554,7 @@ export const API = {
                 payment_code: paymentCode,
                 order_id: newOrder.id,
                 payment_type: 'PRODUCT',
-                payment_method: paymentMethodStr,
+                payment_method_id: paymentMethodStr,
                 amount: orderData.pricing?.grandTotal || orderData.pricing?.total || 0,
                 transaction_status: (orderData.payment?.status || 'PENDING').toUpperCase()
             };

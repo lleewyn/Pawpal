@@ -25,7 +25,7 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
                     product ( id, product_name, image_urls, sku )
                 ),
                 customer_address ( receiver_name, receiver_phone, province, street_address ),
-                payment ( payment_method, transaction_status )
+                payment ( payment_method_id, transaction_status )
             `)
             .eq('customer_id', customerId)
             .limit(1);
@@ -55,7 +55,7 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
         const paymentStatus = localPaymentStatus === 'paid' ? 'paid' : remotePaymentStatus;
         
         const dbPayment = o.payment && o.payment.length > 0 ? o.payment[0] : null;
-        const dbPaymentMethod = dbPayment?.payment_method?.toLowerCase() || 'cod';
+        const dbPaymentMethod = dbPayment?.payment_method_id?.toLowerCase() || 'cod';
         const paymentMethod = existing?.paymentMethod || dbPaymentMethod;
 
         const dbStatus = mapOrderStatus(o.order_status);
