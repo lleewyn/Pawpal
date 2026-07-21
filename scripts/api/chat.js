@@ -241,21 +241,21 @@ module.exports = async function handler(req, res) {
 
         try {
             const model = genAI.getGenerativeModel({ 
-                model: "gemini-3.5-flash",
+                model: "gemini-1.5-flash",
                 systemInstruction: systemInstruction,
                 tools: toolsDeclaration
             });
             chat = model.startChat({ history: history });
-            streamResult = await chat.sendMessageStream(userMsg);
+            streamResult = await chat.sendMessageStream([{text: userMsg}]);
         } catch (err1) {
-            console.warn("[API] gemini-3.5-flash failed (" + err1.message + "), falling back to gemini-2.5-flash");
+            console.warn("[API] gemini-1.5-flash failed (" + err1.message + "), falling back to gemini-1.5-pro");
             const fallbackModel = genAI.getGenerativeModel({ 
-                model: "gemini-2.5-flash",
+                model: "gemini-1.5-pro",
                 systemInstruction: systemInstruction,
                 tools: toolsDeclaration
             });
             chat = fallbackModel.startChat({ history: history });
-            streamResult = await chat.sendMessageStream(userMsg);
+            streamResult = await chat.sendMessageStream([{text: userMsg}]);
         }
         
         res.setHeader('Content-Type', 'text/event-stream');
@@ -294,9 +294,14 @@ module.exports = async function handler(req, res) {
                     }]);
                     
                     for await (const secondChunk of secondStream.stream) {
-                        const text = typeof secondChunk.text === 'function' ? secondChunk.text() : '';
-                        if (text) {
-                            res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
+                        try {
+                            const text = typeof secondChunk.text === 'function' ? secondChunk.text() : (secondChunk.text || '');
+                            if (text) {
+                                res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
+                            }
+                        } catch (textErr) {
+                            // Ignore text extraction errors (e.g. if model returns another function call)
+                            console.warn("Could not extract text from second chunk:", textErr.message);
                         }
                     }
                 } catch (toolErr) {
