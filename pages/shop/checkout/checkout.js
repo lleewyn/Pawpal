@@ -198,6 +198,15 @@ async function loadProducts() {
     try {
         if (window.DataLoader && typeof window.DataLoader.loadProducts === 'function') {
             checkoutState.products = await window.DataLoader.loadProducts();
+            
+            // Merge product details into cart items
+            checkoutState.cart = checkoutState.cart.map(item => {
+                const product = checkoutState.products.find(p => String(p.id) === String(item.id));
+                if (product) {
+                    return { ...product, quantity: item.qty || item.quantity || 1, qty: item.qty || item.quantity || 1 };
+                }
+                return { ...item, quantity: item.qty || item.quantity || 1, qty: item.qty || item.quantity || 1 };
+            });
         } else {
             console.warn('DataLoader không có sẵn, không thể tải sản phẩm');
             checkoutState.products = [];
