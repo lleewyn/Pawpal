@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-    const isMemberUser = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
+    const isMemberUser = Boolean(currentUser && (!currentUser.is_temporary));
     if (isMemberUser) {
         const resolvedPets = await getPets(currentUser.id || currentUser.phone || currentUser.phone_main || null);
         const activePets = (Array.isArray(resolvedPets) ? resolvedPets : []).filter(p => !p.isArchived);
@@ -723,7 +723,7 @@ function validateStep1() {
     const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
     let isValid = false;
 
-    if (currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main)) {
+    if (currentUser && (!currentUser.is_temporary)) {
         const mName = document.getElementById('memberOwnerName')?.value.trim() || '';
         const mPhone = document.getElementById('memberOwnerPhone')?.value.trim() || '';
         const phoneRegex = /^0[0-9]{9}$/;
@@ -1228,7 +1228,7 @@ function setupStepActions() {
     // Next click
     nextButtons[1].addEventListener('click', () => {
         const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-        const isMemberUser = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
+        const isMemberUser = Boolean(currentUser && (!currentUser.is_temporary));
         if (!isMemberUser) {
             bookingState.ownerName = document.getElementById('ownerName').value.trim();
             bookingState.ownerPhone = document.getElementById('ownerPhone').value.trim();
@@ -1330,7 +1330,7 @@ function updateSummary() {
     }
 
     const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-    const isMember = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
+    const isMember = Boolean(currentUser && (!currentUser.is_temporary));
 
     let memberDiscount = 0;
     if (isMember) {
@@ -1416,7 +1416,7 @@ function renderStep4Confirm() {
     }
 
     const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-    const isMember = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
+    const isMember = Boolean(currentUser && (!currentUser.is_temporary));
 
     const discount = isMember ? Math.round(subtotal * MEMBER_DISCOUNT_PERCENT) : 0;
 
@@ -1520,7 +1520,7 @@ async function processBookingSubmit() {
     }
 
     const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
-    const isMember = Boolean(currentUser && (!currentUser.is_temporary || currentUser._source === 'supabase' || currentUser.phone || currentUser.phone_main));
+    const isMember = Boolean(currentUser && (!currentUser.is_temporary));
 
     if (isMember) {
         bookingState.ownerName = bookingState.ownerName || resolveCurrentUserName(currentUser);
