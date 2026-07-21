@@ -197,6 +197,10 @@ export const API = {
                     total:    d.subtotal,
                 }));
                 const addr = o.customer_address;
+                const calculatedSubtotal = products.reduce((sum, p) => sum + (p.total || (p.price * p.quantity)), 0);
+                const discount = 0;
+                const shippingFee = Math.max(0, (o.total_amount || 0) - calculatedSubtotal + discount);
+                
                 return {
                     id:          o.order_code || o.id,
                     _supabaseId: o.id,
@@ -207,9 +211,9 @@ export const API = {
                     paymentMethod: 'cod',
                     products,
                     pricing: {
-                        subtotal:    o.subtotal,
-                        shippingFee: o.shipping_fee,
-                        discount:    o.discount_amount,
+                        subtotal:    calculatedSubtotal,
+                        shippingFee: shippingFee,
+                        discount:    discount,
                         total:       o.total_amount,
                     },
                     shipping: addr ? {

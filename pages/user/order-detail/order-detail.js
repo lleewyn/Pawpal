@@ -64,6 +64,13 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
         const finalStatus = isLocalTerminal ? existing.status : dbStatus;
         const finalOrderStatus = isLocalTerminal ? (existing.orderStatus || existing.order_status) : o.order_status;
 
+        const calculatedSubtotal = products.reduce((sum, p) => sum + (p.total || (p.price * p.quantity)), 0);
+        const subtotal = existing?.pricing?.subtotal || calculatedSubtotal;
+        const discount = existing?.pricing?.discount || 0;
+        const shippingFee = existing?.pricing?.shippingFee !== undefined 
+            ? existing.pricing.shippingFee 
+            : Math.max(0, (o.total_amount || 0) - subtotal + discount);
+
         const order = {
             id:          o.order_code || o.id,
             _supabaseId: o.id,
@@ -75,9 +82,9 @@ async function syncSingleOrderFromSupabase(orderId, currentUser) {
             paymentMethod: paymentMethod,
             products,
             pricing: {
-                subtotal:    o.subtotal,
-                shippingFee: o.shipping_fee,
-                discount:    o.discount_amount,
+                subtotal:    subtotal,
+                shippingFee: shippingFee,
+                discount:    discount,
                 total:       o.total_amount,
             },
             shipping: addr ? {
