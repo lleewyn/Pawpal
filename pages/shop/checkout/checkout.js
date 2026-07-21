@@ -654,9 +654,18 @@ function initializePawPoints() {
     
     const slider = document.getElementById('points-slider');
     slider.max = maxPoints;
-    slider.value = Math.min(Number(localStorage.getItem(PENDING_POINTS_KEY) || 0), maxPoints);
+    slider.min = 0; // Fix step/min issues
+    
+    let initialPoints = Math.min(Number(localStorage.getItem(PENDING_POINTS_KEY) || 0), maxPoints);
+    slider.value = initialPoints;
+    
+    // Call updatePointsDisplay to fix "0 points remaining" bug initially
+    updatePointsDisplay(initialPoints);
     
     const checkbox = document.getElementById('use-points-checkbox');
+    checkbox.checked = initialPoints > 0;
+    slider.disabled = !checkbox.checked;
+
     checkbox.addEventListener('change', (e) => {
         slider.disabled = !e.target.checked;
         if (!e.target.checked) {
@@ -667,17 +676,19 @@ function initializePawPoints() {
             localStorage.removeItem(PENDING_POINTS_KEY);
             updateOrderTotals();
         } else {
-            const restoredPoints = Math.min(Number(localStorage.getItem(PENDING_POINTS_KEY) || slider.value || 0), maxPoints);
-            slider.value = restoredPoints;
-            checkoutState.pointsUsed = restoredPoints;
-            checkoutState.totals.pointsDiscount = restoredPoints * 150;
-            updatePointsDisplay(restoredPoints);
+            // Automatically use max points when checked if not already set
+            const pointsToUse = maxPoints; 
+            slider.value = pointsToUse;
+            checkoutState.pointsUsed = pointsToUse;
+            checkoutState.totals.pointsDiscount = pointsToUse * 150;
+            localStorage.setItem(PENDING_POINTS_KEY, String(pointsToUse));
+            updatePointsDisplay(pointsToUse);
             updateOrderTotals();
         }
     });
     
     slider.addEventListener('input', (e) => {
-        const points = parseInt(e.target.value);
+        const points = parseInt(e.target.value) || 0;
         updatePointsDisplay(points);
         
         if (checkbox.checked) {
