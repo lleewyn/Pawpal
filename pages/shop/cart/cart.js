@@ -505,8 +505,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function saveCart() {
+        localStorage.setItem('pawpal_cart', JSON.stringify(cart));
         const currentUser = getCurrentUser();
-        if (currentUser && currentUser.id && window.API && window.API.saveUserCart) {
+        if (currentUser && currentUser.id && window.API && typeof window.API.saveUserCart === 'function') {
             await window.API.saveUserCart(currentUser.id, cart);
         }
     }
