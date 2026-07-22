@@ -457,7 +457,7 @@ function loadProfileData(user) {
     document.getElementById('profileDob').textContent = user.dob ? formatDateDisplay(user.dob) : 'Chưa cập nhật';
     document.getElementById('profileAddress').textContent = buildAddressLabel(primaryAddress) || user.address || 'Chưa thiết lập địa chỉ mặc định';
 
-    document.getElementById('welcomeName').textContent = user.name ? user.name.split(' ').pop() : 'bạn';
+    document.getElementById('welcomeName').textContent = (user.name && user.name !== user.phone) ? user.name.split(' ').pop() : 'bạn';
     document.getElementById('statPoints').textContent = user.points || 0;
     document.getElementById('statAccountType').textContent = user.is_temporary ? 'Tài khoản tạm' : getMemberTierLabel(user);
 }
