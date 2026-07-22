@@ -332,6 +332,7 @@ function canConfirmOrder(o) {
 function canModifyBooking(b) {
     if (!['pending', 'confirmed', 'upcoming'].includes(b.status)) return false;
     if ((b.changeCount || 0) >= 2) return false;
+    if (b.status === 'pending') return true;
     try {
         const [y, m, d] = (b.date || '').split('-');
         const [h, min]  = (b.timeStart || b.time || '09:00').split(':');
@@ -342,6 +343,7 @@ function canModifyBooking(b) {
 function canCancelBooking(b) {
     if (!['pending', 'confirmed', 'upcoming'].includes(b.status)) return false;
     if ((b.cancelCount || 0) >= 3) return false;
+    if (b.status === 'pending') return true;
     try {
         const [y, m, d] = (b.date || '').split('-');
         const [h, min]  = (b.timeStart || b.time || '09:00').split(':');

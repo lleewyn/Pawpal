@@ -208,10 +208,10 @@ function createBookingCard(booking) {
     const isChangeLimited = changeCount >= 2;
     const scheduledAt = getBookingScheduledAt(booking);
     const diffMinutes = scheduledAt ? (scheduledAt.getTime() - Date.now()) / (1000 * 60) : Number.POSITIVE_INFINITY;
-    const canModify = diffMinutes >= 120
+    const canModify = (diffMinutes >= 120 || normalizedStatus === 'pending')
         && !['in-progress', 'completed', 'cancelled'].includes(normalizedStatus)
         && !isChangeLimited;
-    const canCancel = diffMinutes >= 120
+    const canCancel = (diffMinutes >= 120 || normalizedStatus === 'pending')
         && ['pending', 'confirmed', 'accepted'].includes(normalizedStatus)
         && cancelCount < 3;
     
