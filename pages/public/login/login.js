@@ -1000,29 +1000,55 @@ function initAuthForms() {
                 idx = users.findIndex(u => u.phone === phone);
             }
             
-            if (idx !== -1) {
-                const localUser = { ...users[idx] };
-                const supabaseUser = await supabaseResolveUserByPhone(phone);
-                const activatedUser = ensureUserId({
-                    ...(supabaseUser || localUser),
-                    ...localUser,
-                    password: setupPass.value,
-                    is_temporary: false,
-                    points: ((supabaseUser?.points ?? localUser.points) || 0) + 50,
-                    _source: supabaseUser ? 'supabase' : (localUser._source || 'local'),
-                });
-
-                users[idx] = activatedUser;
-                saveUsers(users);
-                setCurrentUser(activatedUser);
-                await migrateGuestPetsToMember(activatedUser, phone);
-
-                const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
-                localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens.filter(t => t.token !== token)));
-
-                showToast('success', 'Kích hoạt tài khoản thành viên thành công! Bạn nhận thêm 50 điểm thưởng chào mừng.');
-                setTimeout(() => { window.location.href = '/pages/user/dashboard/dashboard.html'; }, 2000);
+            const supabaseUser = await supabaseResolveUserByPhone(phone);
+            
+            if (idx === -1 && !supabaseUser) {
+                showToast('error', 'Không tìm thấy thông tin tài khoản!');
+                return;
             }
+
+            const localUser = idx !== -1 ? { ...users[idx] } : {};
+            
+            const activatedUser = ensureUserId({
+                ...localUser,
+                ...(supabaseUser || {}),
+                phone: phone,
+                password: setupPass.value,
+                name: (supabaseUser && supabaseUser.name === supabaseUser.phone && localUser.name && localUser.name !== localUser.phone) ? localUser.name : (supabaseUser?.name || localUser.name),
+                is_temporary: false,
+                points: ((supabaseUser?.points ?? localUser.points) || 0) + 50,
+                _source: supabaseUser ? 'supabase' : (localUser._source || 'local'),
+            });
+
+            if (idx !== -1) {
+                users[idx] = activatedUser;
+            } else {
+                users.push(activatedUser);
+            }
+            
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (db) {
+                try {
+                    const updateData = { password_hash: setupPass.value, account_status: 'ACTIVE' };
+                    const { error: dbErr } = await db
+                        .from('customer')
+                        .update(updateData)
+                        .eq('phone_main', phone);
+                    if (dbErr) console.warn('[Login] Failed to update password on Supabase:', dbErr.message);
+                } catch (err) {
+                    console.error('[Login] Supabase update exception:', err);
+                }
+            }
+
+            saveUsers(users);
+            setCurrentUser(activatedUser);
+            await migrateGuestPetsToMember(activatedUser, phone);
+
+            const tokens = JSON.parse(localStorage.getItem(TEMP_TOKENS_KEY)) || [];
+            localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens.filter(t => t.token !== token)));
+
+            showToast('success', 'Kích hoạt tài khoản thành viên thành công! Bạn nhận thêm 50 điểm thưởng chào mừng.');
+            setTimeout(() => { window.location.href = '/pages/user/dashboard/dashboard.html'; }, 2000);
         });
     }
 
@@ -1221,10 +1247,11 @@ function initAuthForms() {
 
             const localUser = userIdx !== -1 ? { ...users[userIdx] } : {};
             const updatedUser = ensureUserId({
-                ...(supabaseUser || {}),
                 ...localUser,
+                ...(supabaseUser || {}),
                 phone: phone,
                 password: forgotNewPassword.value,
+                name: (supabaseUser && supabaseUser.name === supabaseUser.phone && localUser.name && localUser.name !== localUser.phone) ? localUser.name : (supabaseUser?.name || localUser.name),
                 is_temporary: isGuest ? false : Boolean(localUser.is_temporary),
                 points: isGuest ? ((supabaseUser?.points ?? localUser.points) || 0) + 50 : (localUser.points || supabaseUser?.points || 0),
                 _source: supabaseUser ? 'supabase' : (localUser._source || 'local'),
