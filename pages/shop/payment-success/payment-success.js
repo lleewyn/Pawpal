@@ -60,11 +60,11 @@ async function resolveOrderData(orderId, fallbackOrder) {
             orderId: row.order_code || row.id || orderId,
             id: row.order_code || row.id || orderId,
             shipping: {
-                name: shipping.receiver_name || '',
-                phone: shipping.receiver_phone || '',
-                address: shipping.street_address || '',
-                district: '',
-                city: shipping.province || '',
+                name: shipping.receiver_name || localOrder?.shipping?.name || '',
+                phone: shipping.receiver_phone || localOrder?.shipping?.phone || '',
+                address: shipping.street_address || localOrder?.shipping?.address || '',
+                district: localOrder?.shipping?.district || '',
+                city: shipping.province || localOrder?.shipping?.city || '',
             },
             payment: {
                 method: localOrder?.payment?.method || 'cod',
