@@ -1,3 +1,10 @@
+function getUsers() {
+    return JSON.parse(localStorage.getItem('pawpal_users') || '[]');
+}
+
+function saveUsers(users) {
+    localStorage.setItem('pawpal_users', JSON.stringify(users));
+}
 
 async function supabaseLogin(phone, password) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
