@@ -16,6 +16,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (currentUser && currentUser.phone) {
             targetPhone = currentUser.phone;
         }
+
+        if (!targetPhone) {
+            const token = urlParams.get('token');
+            if (token) {
+                const tokens = JSON.parse(localStorage.getItem('pawpal_temp_tokens') || '[]');
+                const tokenData = tokens.find(t => t.token === token);
+                if (tokenData && tokenData.phone) {
+                    targetPhone = tokenData.phone;
+                }
+            }
+        }
     }
 
     if (!isLoggedMember) {
