@@ -1200,20 +1200,26 @@ function initAuthForms() {
                 userIdx = users.findIndex(u => u.phone === phone);
             }
             
-            if (userIdx === -1) return;
-
-            const localUser = { ...users[userIdx] };
             const supabaseUser = await supabaseResolveUserByPhone(phone);
+
+            if (userIdx === -1 && !supabaseUser) return;
+
+            const localUser = userIdx !== -1 ? { ...users[userIdx] } : {};
             const updatedUser = ensureUserId({
-                ...(supabaseUser || localUser),
+                ...(supabaseUser || {}),
                 ...localUser,
+                phone: phone,
                 password: forgotNewPassword.value,
                 is_temporary: isGuest ? false : Boolean(localUser.is_temporary),
-                points: isGuest ? ((supabaseUser?.points ?? localUser.points) || 0) + 50 : (localUser.points || 0),
+                points: isGuest ? ((supabaseUser?.points ?? localUser.points) || 0) + 50 : (localUser.points || supabaseUser?.points || 0),
                 _source: supabaseUser ? 'supabase' : (localUser._source || 'local'),
             });
 
-            users[userIdx] = updatedUser;
+            if (userIdx !== -1) {
+                users[userIdx] = updatedUser;
+            } else {
+                users.push(updatedUser);
+            }
 
             const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (db) {
