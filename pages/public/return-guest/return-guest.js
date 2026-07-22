@@ -332,23 +332,13 @@ function canConfirmOrder(o) {
 function canModifyBooking(b) {
     if (!['pending', 'confirmed', 'upcoming'].includes(b.status)) return false;
     if ((b.changeCount || 0) >= 2) return false;
-    if (b.status === 'pending') return true;
-    try {
-        const [y, m, d] = (b.date || '').split('-');
-        const [h, min]  = (b.timeStart || b.time || '09:00').split(':');
-        return (new Date(y, m - 1, d, h, min) - new Date()) > 2 * 3600 * 1000;
-    } catch (_) { return false; }
+    return true;
 }
 
 function canCancelBooking(b) {
     if (!['pending', 'confirmed', 'upcoming'].includes(b.status)) return false;
     if ((b.cancelCount || 0) >= 3) return false;
-    if (b.status === 'pending') return true;
-    try {
-        const [y, m, d] = (b.date || '').split('-');
-        const [h, min]  = (b.timeStart || b.time || '09:00').split(':');
-        return (new Date(y, m - 1, d, h, min) - new Date()) > 2 * 3600 * 1000;
-    } catch (_) { return false; }
+    return true;
 }
 
 function buildBookingCard(b) {
