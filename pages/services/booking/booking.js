@@ -1732,6 +1732,7 @@ async function createSupabaseCustomer(currentUser) {
             await db.from('customer_profile').insert({
                 customer_id: customerId,
                 full_name: resolveCurrentUserName(currentUser),
+                gender: 'OTHER'
             });
         }
 
