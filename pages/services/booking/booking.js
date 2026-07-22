@@ -1570,21 +1570,32 @@ async function processBookingSubmit() {
         let finalPetId = bookingState.petId || null;
         if (customerId && !finalPetId) {
             try {
-                const petPayload = {
-                    customer_id: customerId,
-                    pet_code: `PET-${Date.now()}`,
-                    pet_name: bookingState.petName || 'Bé cưng',
-                    species: bookingState.petType || 'other',
-                    breed: bookingState.petBreed || '',
-                    weight: parseFloat(bookingState.petWeight) || 0,
-                    status: 'ACTIVE'
-                };
-                const { data: insertedPet } = await db.from('pet_profile').insert([petPayload]).select('id').limit(1);
-                if (insertedPet && insertedPet[0]) {
-                    finalPetId = insertedPet[0].id;
+                const petName = bookingState.petName || 'Bé cưng';
+                const { data: existingPets } = await db.from('pet_profile')
+                    .select('id')
+                    .eq('customer_id', customerId)
+                    .ilike('pet_name', petName)
+                    .limit(1);
+                
+                if (existingPets && existingPets.length > 0) {
+                    finalPetId = existingPets[0].id;
+                } else {
+                    const petPayload = {
+                        customer_id: customerId,
+                        pet_code: `PET-${Date.now()}`,
+                        pet_name: petName,
+                        species: bookingState.petType || 'other',
+                        breed: bookingState.petBreed || '',
+                        weight: parseFloat(bookingState.petWeight) || 0,
+                        status: 'ACTIVE'
+                    };
+                    const { data: insertedPet } = await db.from('pet_profile').insert([petPayload]).select('id').limit(1);
+                    if (insertedPet && insertedPet[0]) {
+                        finalPetId = insertedPet[0].id;
+                    }
                 }
             } catch (e) {
-                console.warn('[Booking] Could not create pet in Supabase', e);
+                console.warn('[Booking] Could not check or create pet in Supabase', e);
             }
         }
 
