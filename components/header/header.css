@@ -306,8 +306,8 @@
     .nav-menu .dropdown-menu .nav-item {
         border-bottom: none;
     }
-    .nav-menu li.nav-item.mobile-drawer-only:not(.mobile-user-only):not(.mobile-temp-only),
-    .nav-menu li.nav-item.mobile-guest-only {
+    .nav-menu li.nav-item.mobile-drawer-only:not(.mobile-user-only):not(.mobile-temp-only):not(.d-none),
+    .nav-menu li.nav-item.mobile-guest-only:not(.d-none) {
         display: list-item !important;
     }
     .header-actions { display: none !important; }
