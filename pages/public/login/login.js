@@ -6,6 +6,14 @@ function saveUsers(users) {
     localStorage.setItem('pawpal_users', JSON.stringify(users));
 }
 
+function ensureUserId(user) {
+    if (!user) return user;
+    if (!user.id) {
+        user.id = 'usr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    }
+    return user;
+}
+
 async function supabaseLogin(phone, password) {
     const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) return { success: false, offline: true };
