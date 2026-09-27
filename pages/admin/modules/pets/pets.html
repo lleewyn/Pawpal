@@ -1109,26 +1109,53 @@
                     </div>
                 </div>
 
-                <!-- CHECKLIST VỆ SINH 4 MỤC -->
+                <!-- CHECKLIST VỆ SINH 4 MỤC KÈM ẢNH CHỨNG MINH -->
                 <div>
-                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px;">Checklist vệ sinh và kiểm tra sức khỏe sơ bộ:</div>
-                    <div class="checklist-card-grid">
-                        <label class="checklist-checkbox-item">
-                            <input type="checkbox" id="chkEar" checked>
-                            <span>1. Vệ sinh tai sạch sẽ, không viêm</span>
-                        </label>
-                        <label class="checklist-checkbox-item">
-                            <input type="checkbox" id="chkNail" checked>
-                            <span>2. Móng cắt mài tròn nhẵn</span>
-                        </label>
-                        <label class="checklist-checkbox-item">
-                            <input type="checkbox" id="chkAnal" checked>
-                            <span>3. Tuyến hôi đã vắt sạch sẽ</span>
-                        </label>
-                        <label class="checklist-checkbox-item">
-                            <input type="checkbox" id="chkSkin" checked>
-                            <span>4. Da lông sạch, không có bọ ve nấm</span>
-                        </label>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px;">Checklist vệ sinh 4 mục kèm ảnh chụp kiểm chứng:</div>
+                    <div class="checklist-items-detailed-grid">
+                        <div class="checklist-detail-row">
+                            <label class="checklist-check-label">
+                                <input type="checkbox" id="chkEar" checked>
+                                <span>1. Vệ sinh tai sạch sẽ, không viêm</span>
+                            </label>
+                            <div class="checklist-photo-slot">
+                                <img src="/assets/images/publics/cat5.jpg" class="checklist-thumb-img" id="thumbEarImg" alt="Tai">
+                                <span class="btn-change-check-photo" title="Tải ảnh kiểm chứng">Đổi ảnh</span>
+                            </div>
+                        </div>
+
+                        <div class="checklist-detail-row">
+                            <label class="checklist-check-label">
+                                <input type="checkbox" id="chkNail" checked>
+                                <span>2. Móng cắt mài tròn nhẵn</span>
+                            </label>
+                            <div class="checklist-photo-slot">
+                                <img src="/assets/images/publics/handpaw.jpg" class="checklist-thumb-img" id="thumbNailImg" alt="Móng">
+                                <span class="btn-change-check-photo" title="Tải ảnh kiểm chứng">Đổi ảnh</span>
+                            </div>
+                        </div>
+
+                        <div class="checklist-detail-row">
+                            <label class="checklist-check-label">
+                                <input type="checkbox" id="chkAnal" checked>
+                                <span>3. Tuyến hôi đã vắt sạch sẽ</span>
+                            </label>
+                            <div class="checklist-photo-slot">
+                                <img src="/assets/images/publics/spa.jpg" class="checklist-thumb-img" id="thumbAnalImg" alt="Tuyến hôi">
+                                <span class="btn-change-check-photo" title="Tải ảnh kiểm chứng">Đổi ảnh</span>
+                            </div>
+                        </div>
+
+                        <div class="checklist-detail-row">
+                            <label class="checklist-check-label">
+                                <input type="checkbox" id="chkSkin" checked>
+                                <span>4. Da lông sạch, không nấm ve</span>
+                            </label>
+                            <div class="checklist-photo-slot">
+                                <img src="/assets/images/publics/pet2.jpg" class="checklist-thumb-img" id="thumbSkinImg" alt="Da lông">
+                                <span class="btn-change-check-photo" title="Tải ảnh kiểm chứng">Đổi ảnh</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1414,12 +1441,39 @@
                 </div>
 
                 <div>
-                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px;">Kết quả kiểm tra 4 mục vệ sinh:</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12.5px;">
-                        <div style="padding: 8px 10px; border-radius: var(--admin-radius); background-color: #F4FAF6; border: 1px solid #C3DEC7; color: #15803D; font-weight: 600;">✓ 1. Tai sạch sẽ, không viêm</div>
-                        <div style="padding: 8px 10px; border-radius: var(--admin-radius); background-color: #F4FAF6; border: 1px solid #C3DEC7; color: #15803D; font-weight: 600;">✓ 2. Móng mài tròn nhẵn</div>
-                        <div style="padding: 8px 10px; border-radius: var(--admin-radius); background-color: #F4FAF6; border: 1px solid #C3DEC7; color: #15803D; font-weight: 600;">✓ 3. Tuyến hôi sạch sẽ</div>
-                        <div style="padding: 8px 10px; border-radius: var(--admin-radius); background-color: #F4FAF6; border: 1px solid #C3DEC7; color: #15803D; font-weight: 600;">✓ 4. Da lông thông thoáng</div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px;">Kết quả kiểm tra 4 mục vệ sinh kèm ảnh chứng minh:</div>
+                    <div class="modal-checklist-grid">
+                        <div class="modal-checklist-item">
+                            <img src="/assets/images/publics/cat5.jpg" id="modalChkImgEar" class="modal-chk-img" alt="Ảnh tai">
+                            <div class="modal-chk-info">
+                                <span class="modal-chk-title">1. Tai sạch sẽ, không viêm</span>
+                                <span class="admin-badge badge-success" style="font-size: 11px;">Đạt chuẩn</span>
+                            </div>
+                        </div>
+
+                        <div class="modal-checklist-item">
+                            <img src="/assets/images/publics/handpaw.jpg" id="modalChkImgNail" class="modal-chk-img" alt="Ảnh móng">
+                            <div class="modal-chk-info">
+                                <span class="modal-chk-title">2. Móng mài tròn nhẵn</span>
+                                <span class="admin-badge badge-success" style="font-size: 11px;">Đạt chuẩn</span>
+                            </div>
+                        </div>
+
+                        <div class="modal-checklist-item">
+                            <img src="/assets/images/publics/spa.jpg" id="modalChkImgAnal" class="modal-chk-img" alt="Ảnh tuyến hôi">
+                            <div class="modal-chk-info">
+                                <span class="modal-chk-title">3. Tuyến hôi sạch sẽ</span>
+                                <span class="admin-badge badge-success" style="font-size: 11px;">Đạt chuẩn</span>
+                            </div>
+                        </div>
+
+                        <div class="modal-checklist-item">
+                            <img src="/assets/images/publics/pet2.jpg" id="modalChkImgSkin" class="modal-chk-img" alt="Ảnh da lông">
+                            <div class="modal-chk-info">
+                                <span class="modal-chk-title">4. Da lông thông thoáng</span>
+                                <span class="admin-badge badge-success" style="font-size: 11px;">Đạt chuẩn</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

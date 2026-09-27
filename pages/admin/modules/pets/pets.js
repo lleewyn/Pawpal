@@ -568,6 +568,11 @@
                 const imgAfterEl = document.getElementById('carelogModalImgAfter');
                 const msgEl = document.getElementById('carelogModalMessage');
 
+                const imgEar = document.getElementById('modalChkImgEar');
+                const imgNail = document.getElementById('modalChkImgNail');
+                const imgAnal = document.getElementById('modalChkImgAnal');
+                const imgSkin = document.getElementById('modalChkImgSkin');
+
                 if (careId === 'CL-002') {
                     if (titleEl) titleEl.textContent = 'Chi tiết ca làm: Cắt tỉa tạo kiểu Corgi mặt gấu';
                     if (timeEl) timeEl.textContent = 'Thời gian: 10/08/2026 10:00';
@@ -578,6 +583,10 @@
                     }
                     if (imgBeforeEl) imgBeforeEl.src = '/assets/images/publics/dogcute7.jpg';
                     if (imgAfterEl) imgAfterEl.src = '/assets/images/publics/dogcute3.jpg';
+                    if (imgEar) imgEar.src = '/assets/images/publics/catcute8.jpg';
+                    if (imgNail) imgNail.src = '/assets/images/publics/handpaw.jpg';
+                    if (imgAnal) imgAnal.src = '/assets/images/publics/spa.jpg';
+                    if (imgSkin) imgSkin.src = '/assets/images/publics/dogcute8.jpg';
                     if (msgEl) msgEl.textContent = 'Bé rất hợp tác trong ca làm, form lông cắt tỉa tròn trịa đáng yêu, tai và móng đã vệ sinh nhẵn bóng.';
                 } else {
                     if (titleEl) titleEl.textContent = 'Chi tiết ca làm: Tắm sấy dưỡng ẩm & Cắt mài móng';
@@ -589,6 +598,10 @@
                     }
                     if (imgBeforeEl) imgBeforeEl.src = '/assets/images/publics/dogcute3.jpg';
                     if (imgAfterEl) imgAfterEl.src = '/assets/images/publics/dogcute1.jpg';
+                    if (imgEar) imgEar.src = '/assets/images/publics/cat5.jpg';
+                    if (imgNail) imgNail.src = '/assets/images/publics/handpaw.jpg';
+                    if (imgAnal) imgAnal.src = '/assets/images/publics/spa.jpg';
+                    if (imgSkin) imgSkin.src = '/assets/images/publics/pet2.jpg';
                     if (msgEl) msgEl.textContent = 'Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.';
                 }
 
