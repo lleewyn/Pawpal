@@ -1,0 +1,258 @@
+TÀI LIỆU ĐẶC TẢ PHÂN HỆ QUẢN LÝ THÚ CƯNG
+Dành cho: Developer Frontend và Backend
+Phân hệ: Quản lý Thú cưng
+
+
+1. TỔNG QUAN MÀN HÌNH
+Màn hình là trung tâm quản lý toàn bộ hồ sơ thú cưng trên toàn hệ thống PawPal, đóng vai trò như một sổ chăm sóc và hồ sơ thể trạng điện tử. Phân hệ phục vụ trực tiếp cho Kỹ thuật viên Spa, Nhân viên khách sạn thú cưng Pet Hotel và Lễ tân với ba mục tiêu cốt lõi:
+Quản lý tập trung hồ sơ thể trạng, giống loài, màu lông và theo dõi biến động cân nặng qua từng thời kỳ để làm căn cứ tính giá dịch vụ Spa và Hotel theo bảng giá niêm yết.
+Thiết lập hệ thống cảnh báo an toàn về tính hung dữ, thói quen sợ máy sấy, tiền sử dị ứng sữa tắm hoặc bệnh nền để bảo vệ thợ Groomer và bảo đảm an toàn cho thú cưng khi làm dịch vụ.
+Quản lý điều kiện tiêm chủng đầu vào của thú cưng do chủ cung cấp để đủ điều kiện lưu trú Pet Hotel và số hóa quy trình ghi nhận nhật ký ca làm việc kèm ảnh chụp thực tế gửi thẳng sang ứng dụng của chủ nuôi.
+Đối tượng sử dụng gồm:
+Kỹ thuật viên Groomer: Xem ghi chú tập tính, cập nhật cân nặng, kiểm tra ve rận và đăng ảnh nhật ký ca làm việc.
+Nhân viên Pet Hotel: Theo dõi khẩu phần ăn, tình trạng vệ sinh và lịch lưu trú phòng của các bé.
+Lễ tân và Thu ngân: Tiếp nhận bé tại quầy, kiểm tra điều kiện an toàn, in thẻ đeo cổ và tra cứu nhanh thông tin chủ nuôi.
+Quản lý và Admin: Theo dõi số lượng thú cưng toàn hệ thống và kiểm tra chất lượng dịch vụ chăm sóc.
+
+2. BỐ CỤC GIAO DIỆN VÀ MÔ TẢ CÁC SUB-TAB
+Giao diện phân hệ Thú cưng được chia thành bốn Sub-tab chuyên biệt và một Modal tiếp nhận bé cưng tại quầy:
+Sub-tab 1: Thú cưng
+Đây là màn hình trung tâm quản lý toàn bộ danh bạ thú cưng trong hệ thống, được bố trí thành ba khu vực chính:
+Khu vực thẻ thống kê nhanh:
+Nằm ở vị trí trên cùng, hiển thị năm thẻ số liệu gồm: Tổng số thú cưng, Số lượng bé cún, Số lượng bé mèo, Số lượng thú cưng khác như thỏ hoặc hamster, và Số lượng bé đang có cảnh báo an toàn cần lưu ý khi làm dịch vụ.
+Khu vực thanh công cụ và bộ lọc chuyên môn:
+Ô tìm kiếm đa năng cho phép tìm theo Tên bé, Mã thú cưng, Tên giống loài, Tên chủ nuôi hoặc Số điện thoại của chủ.
+Bộ lọc chọn Loài gồm Chó, Mèo, Thỏ hoặc Khác.
+Bộ lọc Giống loài phổ biến như Corgi, Poodle, Golden, Mèo Anh lông ngắn.
+Bộ lọc Phân khúc cân nặng gồm dưới 5kg, từ 5 đến 10kg, từ 10 đến 20kg và trên 20kg.
+Bộ lọc Tình trạng tiêm chủng gồm Đã xác nhận tiêm đủ hoặc Chưa xác nhận tiêm.
+Bộ lọc hiển thị các bé đang có lịch lưu trú tại Pet Hotel.
+Nút Thêm bé cưng mới để mở modal tiếp nhận tại quầy.
+Khu vực bảng danh sách thú cưng:
+Bảng dữ liệu gồm các cột: Ảnh chân dung bé, Mã thú cưng, Tên bé cưng, Loài và Giống loài, Cân nặng hiện tại, Tên chủ sở hữu kèm số điện thoại, Cột Nhãn cảnh báo an toàn, Trạng thái hoạt động, Cột thao tác có nút Xem hồ sơ chi tiết.
+Cột Nhãn cảnh báo an toàn sẽ hiển thị cảnh báo nổi bật nếu bé có tiền sử cắn, dữ khi sấy đuôi hoặc cắt móng, dị ứng sữa tắm.
+Bấm vào Tên chủ sở hữu sẽ tự động chuyển hướng sang hồ sơ của người đó ở phân hệ Khách hàng.
+Dưới cùng là thanh phân trang hiển thị danh sách 10 bé trên một trang.
+[Button] Thêm bé và Tiếp nhận tại quầy
+Hộp thoại bật lên khi Lễ tân hoặc Groomer tiếp nhận bé cưng trước khi đưa lên bàn dịch vụ Spa hoặc nhận phòng Hotel:
+Ô chọn hoặc tìm kiếm Chủ nuôi theo Số điện thoại hoặc Họ tên.
+Ô nhập Tên bé cưng, Dropdown chọn Loài, Ô nhập Giống loài và Ngày sinh dự kiến.
+Dropdown chọn Giới tính gồm Đực hoặc Cái.
+Ô nhập Cân nặng thực tế vừa cân tại quầy tính theo kg.
+Nút gạt xác nhận Đã tiêm ngừa phòng dại và bệnh truyền nhiễm theo sổ tiêm do chủ xuất trình.
+Danh sách kiểm tra thể trạng ban đầu: Tình trạng da lông có vết trầy xước hay không, tai sạch hay bẩn, lông có bị vón cục hay có ve rận hay không.
+Nhóm trường nhập Cảnh báo an toàn và Dị ứng sữa tắm.
+Ô tải ảnh chân dung gương mặt của bé.
+Nút In thẻ đeo cổ cho bé kèm Nút Lưu hồ sơ tiếp nhận.
+Sub-tab 2: Hồ sơ thú cưng
+Trang toàn màn hình khi bấm xem một bé cưng, gồm thanh công cụ trên cùng và bốn tab nội dung:
+Thanh thao tác nhanh một chạm trên đầu Drawer:
+Nút Đặt lịch Spa hoặc Hotel ngay cho bé: Mở form đặt lịch dịch vụ và tự động điền sẵn tên bé, giống loài, cân nặng và tên chủ nuôi.
+Nút Cân bé và Ghi nhận thể trạng: Nhập số kg mới, hệ thống tự động lưu vào biểu đồ cân nặng và tính lại đơn giá dịch vụ tương ứng.
+Nút Đăng ảnh và Nhật ký ca làm: Mở nhanh trình tải ảnh thực tế sau khi sấy lông xong để gửi cho chủ.
+Nút Xem chủ nuôi: Nhấp một lần chuyển thẳng sang phân hệ Khách hàng để xem số dư điểm hoặc liên hệ với chủ.
+Bốn tab con chi tiết bên trong Hồ sơ:
+Tab 1 Thể trạng và Đặc tính: Hiển thị cân nặng hiện tại, biểu đồ biến thiên cân nặng qua các tháng, ngày sinh, màu lông, giới tính, tiền sử dị ứng, tính cách và khung ghi chú kỹ thuật nội bộ dành riêng cho thợ Groomer.
+Tab 2 Xác nhận điều kiện tiêm chủng: Lưu thông tin giấy tờ hoặc sổ tiêm do chủ xuất trình để đối chiếu điều kiện an toàn khi nhận phòng Pet Hotel.
+Tab 3 Nhật ký chăm sóc dịch vụ: Toàn bộ lịch sử các lần tắm sấy, cắt tỉa lông, ảnh Before và After thực tế, người thực hiện và bảng kiểm tra tai móng da lông.
+Tab 4 Lịch sử đặt hẹn và Dịch vụ: Danh sách các ca Spa, Hotel mà bé đã từng làm trong quá khứ hoặc sắp diễn ra trong tương lai.
+Sub-tab 3: Nhắc lịch định kỳ
+Màn hình chuyên trách chăm sóc khách hàng chủ động, theo dõi chu kỳ làm đẹp của thú cưng:
+Bộ thẻ số liệu: Số lượng bé quá 14 ngày chưa đi tắm sấy, Số lượng bé quá 30 ngày chưa cắt tỉa lông, Số lượng khách quen sắp có nhu cầu gửi Pet Hotel dịp cuối tuần hoặc lễ.
+Bảng danh sách nhắc lịch chăm sóc:
+Hiển thị Tên bé cưng, Tên chủ nuôi, Số điện thoại, Loại nhắc lịch như Nhắc tắm sấy định kỳ, Nhắc cắt tỉa lông hoặc Nhắc vệ sinh tai móng, Ngày làm dịch vụ gần nhất và Trạng thái đã gửi tin nhắn hay chưa.
+Cột thao tác có nút Gửi tin nhắn Zalo hoặc SMS nhắc nhở kèm ưu đãi một chạm đến số điện thoại của chủ nuôi.
+Nút Đặt lịch ngay từ danh sách nhắc lịch khi chủ nuôi đồng ý mang bé đến tiệm.
+Sub-tab 4: Nhật ký chăm sóc
+Bàn làm việc điện tử dành riêng cho thợ Groomer và nhân viên Pet Hotel:
+Danh sách các ca dịch vụ đang diễn ra trong ngày.
+Form cập nhật nhật ký ca làm việc:
+Khu vực tải ảnh Before là ảnh chụp trước khi làm và ảnh After là ảnh sau khi đã tắm sấy thơm tho và cắt tỉa lông hoàn thiện.
+Bảng checklist kiểm tra vệ sinh gồm bốn mục: Vệ sinh tai sạch hay bẩn, Móng đã cắt mài gọn gàng hay chưa, Tuyến hôi đã vắt sạch sẽ, Da lông có nấm hoặc ve rận hay không.
+Ô nhập lời nhắn dặn dò chủ ví dụ lông bé hơi rối vùng nách, tiệm đã gỡ và xịt dưỡng mượt.
+Nút Lưu và Gửi nhật ký sang ứng dụng cho chủ nuôi: Đồng bộ tức thì dữ liệu sang trang nhật ký thú cưng của khách hàng.
+
+3. ĐẶC TẢ DỮ LIỆU TỪNG THÀNH PHẦN
+Tên trường trên UI
+Kiểu Component
+Nguồn Database Supabase
+Nguồn Local Fallback
+Bắt buộc
+Quy tắc định dạng và ràng buộc
+Mã thú cưng
+Nhãn chữ
+pet_profile.pet_code
+pets.json id hoặc PET-001
+Có
+Mã định danh duy nhất hiển thị dạng PET-xxx
+Chủ sở hữu
+Đường dẫn liên kết
+pet_profile.customer_id
+pets.json userId
+Có
+Khóa ngoại liên kết bảng customer
+Tên thú cưng
+Ô nhập văn bản
+pet_profile.pet_name
+pets.json name
+Có
+Tên gọi của bé, tối thiểu 1 ký tự
+Loài thú cưng
+Dropdown chọn
+pet_profile.species
+pets.json species
+Có
+Giá trị dog, cat, rabbit hoặc other
+Giống thú cưng
+Ô nhập văn bản
+pet_profile.breed
+pets.json breed
+Không
+Tên giống như Corgi, Golden, Poodle
+Giới tính
+Nút chọn
+pet_profile.gender
+pets.json gender
+Không
+Giá trị male là đực, female là cái
+Cân nặng
+Ô nhập số thực
+pet_profile.weight
+pets.json weight
+Có
+Số thực dương tính theo kg, lớn hơn 0
+Ngày sinh
+Ô chọn ngày
+pet_profile.date_of_birth
+pets.json dob
+Không
+Định dạng năm tháng ngày YYYY-MM-DD
+Màu lông
+Ô nhập văn bản
+pet_profile.color
+pets.json color
+Không
+Ví dụ vàng trắng, xám khói, đen tuyền
+Xác nhận tiêm chủng
+Nút gạt bật tắt
+pet_profile.vaccinated
+pets.json vaccinated
+Có
+Giá trị true là đã tiêm đủ điều kiện, false là chưa
+Tiền sử dị ứng
+Khung văn bản
+pet_profile.allergies
+pets.json allergies
+Không
+Lưu dị ứng sữa tắm tinh dầu, thức ăn
+Tập tính và ghi chú
+Khung văn bản
+pet_profile.notes
+pets.json notes
+Không
+Tính cách nhát người lạ, cắn khi chạm đuôi
+Cảnh báo an toàn
+Nhãn cảnh báo
+pet_health_alert
+alert_type và severity
+Không
+Phân loại cảnh báo hung dữ, sợ sấy, tim mạch
+Lịch sử cân nặng
+Bảng dữ liệu
+pet_weight_history
+Bảng cân nặng theo ngày
+Không
+Lưu mốc cân nặng và ngày giờ đo
+Ảnh Before và After
+Trình tải ảnh
+care_log.photos
+care-logs.json photos
+Không
+Mảng liên kết ảnh chụp thực tế ca làm
+Checklist thể trạng
+Hộp kiểm checklist
+care_log.checklist
+care-logs.json checklist
+Không
+Trạng thái tai, móng, da lông, tuyến hôi
+Ghi chú kỹ thuật
+Khung văn bản
+pet_profile.groomer_notes
+u.groomer_notes
+Không
+Ghi chú tạo kiểu mặt tròn, cạo chân
+Ảnh đại diện bé
+Trình tải ảnh
+pet_profile.avatar_url
+pets.json avatar
+Không
+Đường dẫn ảnh chân dung của bé
+Trạng thái hoạt động
+Nhãn trạng thái
+pet_profile.status
+pets.json isArchived
+Có
+Giá trị ACTIVE đang nuôi hoặc ARCHIVED lưu trữ
+
+
+4. NGHIỆP VỤ VÀ LUỒNG THAO TÁC
+4.1. Luồng tiếp nhận bé cưng và khám sơ bộ tại quầy
+Khi khách đưa bé cưng đến tiệm làm dịch vụ:
+Lễ tân bấm nút Thêm bé hoặc nút Tiếp nhận tại quầy.
+Lễ tân chọn khách hàng bằng cách gõ Số điện thoại của chủ.
+Đặt bé cưng lên cân điện tử tại quầy, nhập số kg cân được vào hệ thống.
+Lễ tân kiểm tra tình trạng tiêm chủng của bé để xác nhận đủ điều kiện an toàn khi gửi phòng Pet Hotel hoặc làm Spa chung.
+Lễ tân kiểm tra nhanh ngoại quan và tích chọn checklist sơ bộ gồm da lông có vết trầy xước không, lông có bị vón cục hay có bọ chét ve rận hay không.
+Nếu bé có đặc điểm hung dữ hay cắn người, lễ tân gắn nhãn cảnh báo an toàn.
+Bấm nút Lưu tiếp nhận:
+Hệ thống tạo bản ghi mới trong pet_profile liên kết với customer_id của chủ.
+Hệ thống tự động in thẻ đeo cổ chống thất lạc chứa Tên bé, Mã thú cưng và Số điện thoại của chủ.
+Danh sách thú cưng tự động cập nhật bé mới vào danh bạ.
+4.2. Luồng cân bé và tự động áp ma trận giá dịch vụ
+Khi khách đưa bé vào làm Spa hoặc gửi Hotel:
+Thợ Groomer cân lại bé trước khi thực hiện dịch vụ.
+Thợ bấm nút Cân bé và ghi nhận thể trạng trên hồ sơ của bé, nhập số cân nặng ví dụ 7.2 kg.
+Hệ thống xử lý tự động:
+Lưu cân nặng 7.2 kg vào bảng lịch sử cân nặng pet_weight_history kèm ngày giờ hiện tại.
+Cập nhật cân nặng mới nhất vào pet_profile.weight.
+Đối chiếu với bảng ma trận giá service_price_matrix theo mốc từ 5 đến 10kg cho loài Chó.
+Tự động điều chỉnh tổng tiền của lịch hẹn tương ứng mà nhân viên không cần phải tính toán thủ công.
+4.3. Luồng thực hiện ca làm và gửi nhật ký chăm sóc
+Sau khi kỹ thuật viên hoàn thành dịch vụ tắm cắt tỉa lông:
+Thợ mở Sub-tab Nhật ký chăm sóc và chọn ca làm việc tương ứng.
+Dùng điện thoại hoặc máy tính bảng chụp ảnh sau khi sấy lông xong tải lên ô ảnh After.
+Tích chọn bốn mục kiểm tra vệ sinh gồm: Tai đã vệ sinh sạch, Móng đã mài tròn nhẵn, Tuyến hôi đã vắt sạch sẽ, Da lông không có nấm ve.
+Nhập lời nhắn dặn dò chủ nếu có ví dụ lông tai bé hơi bẩn tiệm đã vệ sinh sạch.
+Bấm nút Lưu và Gửi nhật ký:
+Dữ liệu được ghi vào bảng care_log liên kết với mã lịch hẹn và mã thú cưng.
+Hệ thống tự động gửi thông báo đến điện thoại của chủ nuôi.
+Khách hàng mở ứng dụng trang Nhật ký thú cưng sẽ nhìn thấy ngay ảnh Before After và kết quả kiểm tra vệ sinh của bé.
+4.4. Luồng nhắc lịch làm đẹp định kỳ
+Khi hệ thống quét chu kỳ làm dịch vụ của các bé cưng:
+Hệ thống tự động lọc ra các bé đã quá 14 ngày chưa đi tắm sấy hoặc quá 30 ngày chưa cắt tỉa lông dựa trên lịch sử ca làm gần nhất.
+Danh sách hiển thị tại Sub-tab Nhắc lịch định kỳ.
+Nhân viên CSKH chỉ cần bấm nút Gửi tin nhắn nhắc hẹn:
+Hệ thống tạo mẫu tin nhắn gửi qua Zalo hoặc SMS: Bé Milu đã 3 tuần chưa làm đẹp, mời sen đưa bé ghé PawPal nhận ưu đãi 10 phần trăm dịch vụ Spa tuần này.
+Khi khách đồng ý, nhân viên bấm nút Đặt lịch ngay trên dòng nhắc lịch để tạo ca hẹn mới cho bé.
+4.5. Cơ chế liên kết chéo giữa các phân hệ
+Bấm vào tên Chủ sở hữu trên hồ sơ thú cưng sẽ chuyển ngay sang hồ sơ của chủ nuôi tại phân hệ Khách hàng.
+Bấm vào Lịch hẹn gần nhất sẽ chuyển thẳng sang phân hệ Dịch vụ để xem chi tiết ca phục vụ và thợ phụ trách.
+Bấm vào lịch sử đơn hàng có mua hạt hoặc cát cho bé sẽ chuyển sang phân hệ Bán hàng để xem chi tiết sản phẩm.
+
+5. CÁC TRẠNG THÁI MÀN HÌNH VÀ XỬ LÝ NGOẠI LỆ
+5.1. Các trạng thái màn hình
+Trạng thái đang tải dữ liệu: Khi đang tải danh bạ thú cưng từ máy chủ, bảng hiển thị các hàng hiệu ứng khung xám nhấp nháy cho người dùng nhận biết.
+Trạng thái danh sách rỗng:
+Khi hệ thống chưa có bé cưng nào: Hiển thị hình ảnh minh họa kèm dòng chữ Chưa có thú cưng nào trong danh bạ, bấm nút Thêm bé để tiếp nhận bé đầu tiên.
+Khi tìm kiếm hoặc lọc không có kết quả: Hiển thị dòng chữ Không tìm thấy thú cưng nào phù hợp kèm nút Bỏ lọc tìm kiếm.
+Trạng thái lỗi tải dữ liệu: Hiển thị thông báo màu đỏ báo lỗi kết nối máy chủ và chuyển sang tải dữ liệu lưu tạm ở máy cục bộ.
+5.2. Xử lý các trường hợp ngoại lệ
+Xử lý bé cưng có cảnh báo hung dữ hoặc cắn người:
+Khi mở hồ sơ hoặc lịch hẹn của bé có cảnh báo hung dữ, hệ thống luôn hiển thị nhãn cảnh báo màu đỏ nổi bật Chú ý thú cưng hay cắn khi chạm đuôi để thợ Groomer chủ động đeo rọ mõm hoặc bố trí hai nhân viên cùng phối hợp thực hiện an toàn.
+Xử lý thú cưng có dị ứng sữa tắm:
+Hiển thị dòng cảnh báo màu cam nổi bật Dị ứng sữa tắm tinh dầu tràm ngay tại đầu phiếu làm dịch vụ để kỹ thuật viên chọn đúng loại dầu tắm dịu nhẹ chuyên dụng, tránh gây kích ứng da cho bé.
+Xử lý trường hợp chủ nuôi chưa có tài khoản:
+Khi tiếp nhận bé tại quầy nhưng số điện thoại của chủ chưa có trong hệ thống, giao diện tự động bật form tạo nhanh tài khoản tạm cho chủ trước khi hoàn tất lưu hồ sơ thú cưng, đảm bảo mọi bé cưng đều có thông tin chủ sở hữu rõ ràng.
+Xử lý thú cưng chưa đạt điều kiện tiêm chủng khi đặt Pet Hotel:
+Nếu bé cưng chưa được xác nhận tiêm ngừa theo quy định mà khách đặt phòng khách sạn lưu trú, hệ thống hiển thị cảnh báo nhắc nhở nhân viên kiểm tra kỹ sổ tiêm thực tế khi khách mang bé đến trước khi bấm Check-in nhận phòng, nhằm bảo đảm an toàn dịch tễ cho toàn bộ tiệm.
+

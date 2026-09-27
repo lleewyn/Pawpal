@@ -1,0 +1,1384 @@
+<div class="pets-module">
+    <!-- ====================================================================
+         SUB-TAB 1: THÚ CƯNG (DANH SÁCH & BỘ LỌC CHUYÊN SÂU)
+         ==================================================================== -->
+    <section class="subtab-content active" id="subtab-tab-pet-list">
+        <!-- KHU VỰC 1: 5 THẺ THỐNG KÊ NHANH -->
+        <div class="pets-kpi-grid">
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Tổng thú cưng</span>
+                <span class="kpi-val" id="petStatTotal">1.450</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Bé cún</span>
+                <span class="kpi-val text-success" id="petStatDog">890</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Bé mèo</span>
+                <span class="kpi-val text-warning" id="petStatCat">520</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Thú cưng khác</span>
+                <span class="kpi-val text-neutral" id="petStatOther">40</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Cảnh báo an toàn</span>
+                <span class="kpi-val text-danger" id="petStatAlert">18</span>
+            </div>
+        </div>
+
+        <!-- KHU VỰC 2 & 3: KHỐI QUẢN LÝ THÚ CƯNG THỐNG NHẤT (BỘ LỌC + BẢNG DANH SÁCH) -->
+        <div class="admin-card pet-master-card">
+            <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
+            <div class="table-toolbar-section">
+                <div class="filter-row-top">
+                    <div class="search-box-wrapper">
+                        <input type="text" class="admin-input search-input" id="petSearchInput" placeholder="Tìm tên bé, Mã PET, giống loài, tên chủ, SĐT...">
+                    </div>
+
+                    <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnExportPetReport">
+                            <span>Xuất file</span>
+                        </button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddPetModal">
+                            <span>+ Thêm bé cưng</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-row-bottom">
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Loài:</label>
+                        <select class="admin-select" id="petFilterSpecies">
+                            <option value="ALL">Tất cả</option>
+                            <option value="dog">Chó</option>
+                            <option value="cat">Mèo</option>
+                            <option value="rabbit">Thỏ</option>
+                            <option value="other">Khác</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Giống loài:</label>
+                        <select class="admin-select" id="petFilterBreed">
+                            <option value="ALL">Tất cả</option>
+                            <option value="Corgi">Corgi</option>
+                            <option value="Poodle">Poodle</option>
+                            <option value="Golden Retriever">Golden Retriever</option>
+                            <option value="Mèo Anh lông ngắn (ALN)">Mèo Anh lông ngắn</option>
+                            <option value="Mèo ta">Mèo ta</option>
+                            <option value="Phốc sóc">Phốc sóc</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Cân nặng:</label>
+                        <select class="admin-select" id="petFilterWeight">
+                            <option value="ALL">Tất cả</option>
+                            <option value="under5">&lt; 5kg</option>
+                            <option value="5to10">5 - 10kg</option>
+                            <option value="10to20">10 - 20kg</option>
+                            <option value="over20">&gt; 20kg</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Tiêm chủng:</label>
+                        <select class="admin-select" id="petFilterVaccine">
+                            <option value="ALL">Tất cả</option>
+                            <option value="VACCINATED">Đã tiêm đủ</option>
+                            <option value="NOT_VACCINATED">Chưa xác nhận</option>
+                        </select>
+                    </div>
+
+                    <button type="button" class="admin-btn-filter-toggle" id="btnFilterHotelOnly">
+                        <span>Đang ở Hotel</span>
+                    </button>
+
+                    <button type="button" class="admin-btn-filter-toggle" id="btnFilterAlertOnly">
+                        <span>Có cảnh báo</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- BẢNG DANH SÁCH DỮ LIỆU THÚ CƯNG -->
+            <div class="table-responsive-wrapper">
+                <table class="admin-table" id="petDataTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 52px; text-align: center;">Ảnh</th>
+                            <th style="width: 105px;">Mã bé</th>
+                            <th>Tên bé cưng</th>
+                            <th>Loài & Giống</th>
+                            <th>Cân nặng</th>
+                            <th>Chủ sở hữu</th>
+                            <th>Cảnh báo an toàn</th>
+                            <th>Trạng thái</th>
+                            <th style="width: 50px; text-align: center;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="petTableTbody">
+                        <!-- Dòng 1: Bé Milu - Cảnh báo cắn khi chạm đuôi (vạch đỏ) -->
+                        <tr class="row-alert-critical" data-id="PET-001">
+                            <td style="text-align: center;">
+                                <img src="/assets/images/publics/dogcute3.jpg" class="pet-avatar-cell" alt="Milu">
+                            </td>
+                            <td><strong>PET-001</strong></td>
+                            <td>
+                                <div class="pet-name-cell">
+                                    <a href="javascript:void(0)" class="pet-name-link btn-open-pet-drawer" data-id="PET-001">Milu</a>
+                                </div>
+                                <div class="pet-sub-cell">Đực • 1 tuổi 4 tháng</div>
+                            </td>
+                            <td>Chó Corgi</td>
+                            <td><strong>8.5 kg</strong></td>
+                            <td>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-001">Nguyễn Văn An</a>
+                                <div class="pet-sub-cell">0912345678</div>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-danger">Cắn khi chạm đuôi</span>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-success">Đang nuôi</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="action-dropdown-wrapper">
+                                    <button type="button" class="btn-action-more" data-id="PET-001" title="Tác vụ">•••</button>
+                                    <div class="action-dropdown-menu">
+                                        <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-001">
+                                            <span>Xem hồ sơ chi tiết</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-001">
+                                            <span>Cân bé & Thể trạng</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-001">
+                                            <span>Tạo ca dịch vụ</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-001">
+                                            <span>Lưu trữ hồ sơ</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Dòng 2: Bé Mimi - Mèo ALN (Đang ở Hotel) -->
+                        <tr data-id="PET-002">
+                            <td style="text-align: center;">
+                                <img src="/assets/images/publics/catcute5.jpg" class="pet-avatar-cell" alt="Mimi">
+                            </td>
+                            <td><strong>PET-002</strong></td>
+                            <td>
+                                <div class="pet-name-cell">
+                                    <a href="javascript:void(0)" class="pet-name-link btn-open-pet-drawer" data-id="PET-002">Mimi</a>
+                                </div>
+                                <div class="pet-sub-cell">Cái • 8 tháng</div>
+                            </td>
+                            <td>Mèo ALN</td>
+                            <td><strong>4.2 kg</strong></td>
+                            <td>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-001">Nguyễn Văn An</a>
+                                <div class="pet-sub-cell">0912345678</div>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-neutral">Bình thường</span>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-warning">Lưu trú Hotel</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="action-dropdown-wrapper">
+                                    <button type="button" class="btn-action-more" data-id="PET-002" title="Tác vụ">•••</button>
+                                    <div class="action-dropdown-menu">
+                                        <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-002">
+                                            <span>Xem hồ sơ chi tiết</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-002">
+                                            <span>Cân bé & Thể trạng</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-002">
+                                            <span>Tạo ca dịch vụ</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-002">
+                                            <span>Lưu trữ hồ sơ</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Dòng 3: Bé Boss - Golden Retriever (Bé lớn 25kg) -->
+                        <tr data-id="PET-003">
+                            <td style="text-align: center;">
+                                <img src="/assets/images/publics/dogcute8.jpg" class="pet-avatar-cell" alt="Boss">
+                            </td>
+                            <td><strong>PET-003</strong></td>
+                            <td>
+                                <div class="pet-name-cell">
+                                    <a href="javascript:void(0)" class="pet-name-link btn-open-pet-drawer" data-id="PET-003">Boss</a>
+                                </div>
+                                <div class="pet-sub-cell">Đực • 2 tuổi 11 tháng</div>
+                            </td>
+                            <td>Golden Retriever</td>
+                            <td><strong>25.0 kg</strong></td>
+                            <td>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-002">Lê Thị Bình</a>
+                                <div class="pet-sub-cell">0987654321</div>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-neutral">Thân thiện, ham nước</span>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-success">Đang nuôi</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="action-dropdown-wrapper">
+                                    <button type="button" class="btn-action-more" data-id="PET-003" title="Tác vụ">•••</button>
+                                    <div class="action-dropdown-menu">
+                                        <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-003">
+                                            <span>Xem hồ sơ chi tiết</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-003">
+                                            <span>Cân bé & Thể trạng</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-003">
+                                            <span>Tạo ca dịch vụ</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-003">
+                                            <span>Lưu trữ hồ sơ</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Dòng 4: Bé Bông - Mèo ta (Chưa xác nhận tiêm - cảnh báo cam) -->
+                        <tr class="row-alert-warning" data-id="PET-004">
+                            <td style="text-align: center;">
+                                <img src="/assets/images/publics/catcute8.jpg" class="pet-avatar-cell" alt="Bông">
+                            </td>
+                            <td><strong>PET-004</strong></td>
+                            <td>
+                                <div class="pet-name-cell">
+                                    <a href="javascript:void(0)" class="pet-name-link btn-open-pet-drawer" data-id="PET-004">Bông</a>
+                                </div>
+                                <div class="pet-sub-cell">Cái • 6 tháng</div>
+                            </td>
+                            <td>Mèo ta</td>
+                            <td><strong>3.5 kg</strong></td>
+                            <td>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-003">Trần Khách Vãng Lai</a>
+                                <div class="pet-sub-cell">0933221100</div>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-warning">Chưa xác nhận tiêm ngừa</span>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-success">Đang nuôi</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="action-dropdown-wrapper">
+                                    <button type="button" class="btn-action-more" data-id="PET-004" title="Tác vụ">•••</button>
+                                    <div class="action-dropdown-menu">
+                                        <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-004">
+                                            <span>Xem hồ sơ chi tiết</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-004">
+                                            <span>Cân bé & Thể trạng</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-004">
+                                            <span>Tạo ca dịch vụ</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-004">
+                                            <span>Lưu trữ hồ sơ</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Dòng 5: Bé Trà Sữa - Poodle Toy (Sợ máy sấy lớn - cảnh báo cam) -->
+                        <tr class="row-alert-warning" data-id="PET-005">
+                            <td style="text-align: center;">
+                                <img src="/assets/images/publics/dogcute6.jpg" class="pet-avatar-cell" alt="Trà Sữa">
+                            </td>
+                            <td><strong>PET-005</strong></td>
+                            <td>
+                                <div class="pet-name-cell">
+                                    <a href="javascript:void(0)" class="pet-name-link btn-open-pet-drawer" data-id="PET-005">Trà Sữa</a>
+                                </div>
+                                <div class="pet-sub-cell">Cái • 3 tháng</div>
+                            </td>
+                            <td>Poodle Toy</td>
+                            <td><strong>2.8 kg</strong></td>
+                            <td>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-005">Hoàng Minh Tuấn</a>
+                                <div class="pet-sub-cell">0903112233</div>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-warning">Sợ máy sấy công suất lớn</span>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-success">Đang nuôi</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="action-dropdown-wrapper">
+                                    <button type="button" class="btn-action-more" data-id="PET-005" title="Tác vụ">•••</button>
+                                    <div class="action-dropdown-menu">
+                                        <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-005">
+                                            <span>Xem hồ sơ chi tiết</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-005">
+                                            <span>Cân bé & Thể trạng</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-005">
+                                            <span>Tạo ca dịch vụ</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-005">
+                                            <span>Lưu trữ hồ sơ</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Dòng 6: Bé Cà Phê - Mèo ALN Xám -->
+                        <tr data-id="PET-006">
+                            <td style="text-align: center;">
+                                <img src="/assets/images/publics/catcute2.jpg" class="pet-avatar-cell" alt="Cà Phê">
+                            </td>
+                            <td><strong>PET-006</strong></td>
+                            <td>
+                                <div class="pet-name-cell">
+                                    <a href="javascript:void(0)" class="pet-name-link btn-open-pet-drawer" data-id="PET-006">Cà Phê</a>
+                                </div>
+                                <div class="pet-sub-cell">Đực • 1 tuổi 1 tháng</div>
+                            </td>
+                            <td>Mèo ALN</td>
+                            <td><strong>5.1 kg</strong></td>
+                            <td>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-007">Vũ Đức Thắng</a>
+                                <div class="pet-sub-cell">0977889900</div>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-neutral">Ngoan, ít vận động</span>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-success">Đang nuôi</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="action-dropdown-wrapper">
+                                    <button type="button" class="btn-action-more" data-id="PET-006" title="Tác vụ">•••</button>
+                                    <div class="action-dropdown-menu">
+                                        <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-006">
+                                            <span>Xem hồ sơ chi tiết</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-006">
+                                            <span>Cân bé & Thể trạng</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-006">
+                                            <span>Tạo ca dịch vụ</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-006">
+                                            <span>Lưu trữ hồ sơ</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Dòng 7: Bé Mochi - Phốc Sóc (Dị ứng xà phòng tinh dầu - cảnh báo đỏ) -->
+                        <tr class="row-alert-critical" data-id="PET-007">
+                            <td style="text-align: center;">
+                                <img src="/assets/images/publics/dogcute1.jpg" class="pet-avatar-cell" alt="Mochi">
+                            </td>
+                            <td><strong>PET-007</strong></td>
+                            <td>
+                                <div class="pet-name-cell">
+                                    <a href="javascript:void(0)" class="pet-name-link btn-open-pet-drawer" data-id="PET-007">Mochi</a>
+                                </div>
+                                <div class="pet-sub-cell">Cái • 10 tháng</div>
+                            </td>
+                            <td>Phốc Sóc (Pomeranian)</td>
+                            <td><strong>3.2 kg</strong></td>
+                            <td>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-008">Bùi Thu Trang</a>
+                                <div class="pet-sub-cell">0938776655</div>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-danger">Dị ứng tinh dầu tràm</span>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-success">Đang nuôi</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="action-dropdown-wrapper">
+                                    <button type="button" class="btn-action-more" data-id="PET-007" title="Tác vụ">•••</button>
+                                    <div class="action-dropdown-menu">
+                                        <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-007">
+                                            <span>Xem hồ sơ chi tiết</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-007">
+                                            <span>Cân bé & Thể trạng</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-007">
+                                            <span>Tạo ca dịch vụ</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-007">
+                                            <span>Lưu trữ hồ sơ</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Dòng 8: Bé Bơ - Thỏ Minilop (Thú cưng khác) -->
+                        <tr data-id="PET-008">
+                            <td style="text-align: center;">
+                                <img src="/assets/images/publics/hamster1.jpg" class="pet-avatar-cell" alt="Bơ">
+                            </td>
+                            <td><strong>PET-008</strong></td>
+                            <td>
+                                <div class="pet-name-cell">
+                                    <a href="javascript:void(0)" class="pet-name-link btn-open-pet-drawer" data-id="PET-008">Bé Bơ</a>
+                                </div>
+                                <div class="pet-sub-cell">Đực • 5 tháng</div>
+                            </td>
+                            <td>Thỏ Minilop</td>
+                            <td><strong>1.6 kg</strong></td>
+                            <td>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-009">Ngô Gia Bảo</a>
+                                <div class="pet-sub-cell">0909123890</div>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-neutral">Dễ giật mình</span>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-success">Đang nuôi</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="action-dropdown-wrapper">
+                                    <button type="button" class="btn-action-more" data-id="PET-008" title="Tác vụ">•••</button>
+                                    <div class="action-dropdown-menu">
+                                        <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-008">
+                                            <span>Xem hồ sơ chi tiết</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-008">
+                                            <span>Cân bé & Thể trạng</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-008">
+                                            <span>Tạo ca dịch vụ</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-008">
+                                            <span>Lưu trữ hồ sơ</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Dòng 9: Bé Đậu Đậu - Poodle (Đang ở Hotel) -->
+                        <tr data-id="PET-009">
+                            <td style="text-align: center;">
+                                <img src="/assets/images/publics/dogcute4.jpg" class="pet-avatar-cell" alt="Đậu Đậu">
+                            </td>
+                            <td><strong>PET-009</strong></td>
+                            <td>
+                                <div class="pet-name-cell">
+                                    <a href="javascript:void(0)" class="pet-name-link btn-open-pet-drawer" data-id="PET-009">Đậu Đậu</a>
+                                </div>
+                                <div class="pet-sub-cell">Đực • 1 tuổi 8 tháng</div>
+                            </td>
+                            <td>Poodle Standard</td>
+                            <td><strong>6.8 kg</strong></td>
+                            <td>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-010">Đặng Thùy Linh</a>
+                                <div class="pet-sub-cell">0945678123</div>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-neutral">Bình thường</span>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-warning">Lưu trú Hotel</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="action-dropdown-wrapper">
+                                    <button type="button" class="btn-action-more" data-id="PET-009" title="Tác vụ">•••</button>
+                                    <div class="action-dropdown-menu">
+                                        <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-009">
+                                            <span>Xem hồ sơ chi tiết</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-009">
+                                            <span>Cân bé & Thể trạng</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-009">
+                                            <span>Tạo ca dịch vụ</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-009">
+                                            <span>Lưu trữ hồ sơ</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Dòng 10: Bé Xíu - Đã lưu trữ (Làm mờ rõ rệt dòng) -->
+                        <tr class="row-archived" data-id="PET-010">
+                            <td style="text-align: center;">
+                                <img src="/assets/images/publics/catcute7.jpg" class="pet-avatar-cell" alt="Xíu">
+                            </td>
+                            <td><strong>PET-010</strong></td>
+                            <td>
+                                <div class="pet-name-cell">
+                                    <a href="javascript:void(0)" class="pet-name-link btn-open-pet-drawer" data-id="PET-010">Bé Xíu</a>
+                                </div>
+                                <div class="pet-sub-cell">Cái • Đã chuyển chủ</div>
+                            </td>
+                            <td>Mèo Ba Tư</td>
+                            <td><strong>3.8 kg</strong></td>
+                            <td>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-004">Phạm Văn Vi Phạm</a>
+                                <div class="pet-sub-cell">0944556677</div>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-neutral">Đã đóng hồ sơ</span>
+                            </td>
+                            <td>
+                                <span class="admin-badge badge-neutral">Lưu trữ</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="action-dropdown-wrapper">
+                                    <button type="button" class="btn-action-more" data-id="PET-010" title="Tác vụ">•••</button>
+                                    <div class="action-dropdown-menu">
+                                        <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-010">
+                                            <span>Xem hồ sơ chi tiết</span>
+                                        </button>
+                                        <button type="button" class="dropdown-item text-success btn-restore-pet" data-id="PET-010">
+                                            <span>Khôi phục hồ sơ</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PHÂN TRANG NGOÀI BẢNG, NỀN TRONG SUỐT, CĂN GIỮA -->
+        <div class="admin-pagination-bar">
+            <div class="pagination-controls">
+                <button type="button" class="pagination-btn disabled" title="Trang trước">&lt;</button>
+                <button type="button" class="pagination-btn active">1</button>
+                <button type="button" class="pagination-btn">2</button>
+                <button type="button" class="pagination-btn">3</button>
+                <span class="pagination-dots">...</span>
+                <button type="button" class="pagination-btn" title="Trang sau">&gt;</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 2: HỒ SƠ THÚ CƯNG 360° (DRAWER TOÀN PHẦN)
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-pet-profile">
+        <div class="profile-drawer-container admin-card">
+            <!-- THANH THAO TÁC MỘT CHẠM TRÊN ĐẦU DRAWER -->
+            <div class="profile-quick-actions-bar">
+                <div class="drawer-user-headline">
+                    <img src="/assets/images/publics/dogcute3.jpg" class="drawer-pet-avatar" id="drawerPetAvatar" alt="Avatar">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span class="headline-name" id="drawerPetName">Milu</span>
+                            <span class="admin-badge badge-neutral" id="drawerPetCode">PET-001</span>
+                            <span class="admin-badge badge-tier-gold" id="drawerPetSpeciesBreed">Chó Corgi</span>
+                            <span class="admin-badge badge-success" id="drawerPetStatusBadge">Đang nuôi</span>
+                        </div>
+                        <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
+                            Chủ sở hữu: <a href="javascript:void(0)" class="user-name-link btn-jump-customer" id="drawerPetOwnerLink" data-cust-id="CUST-001">Nguyễn Văn An (0912345678)</a> • Cân nặng: <strong id="drawerPetWeightHeadline" style="color: var(--text-main);">8.5 kg</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="drawer-action-buttons">
+                    <button type="button" class="action-btn-pill btn-primary-pill btn-quick-book-spa">Đặt lịch Spa / Hotel</button>
+                    <button type="button" class="action-btn-pill btn-open-weigh-modal" id="btnDrawerWeighPet">Cân bé & Thể trạng</button>
+                    <button type="button" class="action-btn-pill btn-quick-carelog">Đăng ảnh nhật ký</button>
+                    <button type="button" class="action-btn-pill btn-jump-customer" id="btnDrawerJumpCustomer" data-cust-id="CUST-001">Xem chủ nuôi</button>
+                </div>
+            </div>
+
+            <!-- BANNER CẢNH BÁO AN TOÀN KHẨN CẤP (DÒNG CHỮ ĐỎ THUẦN) -->
+            <div class="emergency-alert-banner" id="drawerPetAlertBanner">
+                <span class="alert-text" id="drawerPetAlertText">Cảnh báo: Bé hay cắn khi chạm vào đuôi hoặc khi sấy chân sau. Kỹ thuật viên Groomer cần đeo loa chắn mõm hoặc bố trí 2 người cùng phối hợp để đảm bảo an toàn!</span>
+            </div>
+
+            <!-- 4 TAB CON CHI TIẾT BÊN TRONG HỒ SƠ -->
+            <div class="drawer-subtabs-bar">
+                <button type="button" class="drawer-tab-btn active" data-drawertab="ptab-traits">Thể trạng & Đặc tính</button>
+                <button type="button" class="drawer-tab-btn" data-drawertab="ptab-vaccine">
+                    <span>Xác nhận tiêm chủng</span>
+                    <span class="tab-badge-count" id="ptabVaccineBadge" style="display: none;">!</span>
+                </button>
+                <button type="button" class="drawer-tab-btn" data-drawertab="ptab-carelog">
+                    <span>Nhật ký chăm sóc</span>
+                    <span class="tab-badge-count">2</span>
+                </button>
+                <button type="button" class="drawer-tab-btn" data-drawertab="ptab-history">Lịch sử dịch vụ</button>
+            </div>
+
+            <!-- NỘI DUNG 4 TAB CON -->
+            <div class="drawer-tab-body">
+                <!-- TAB CON 1: THỂ TRẠNG & ĐẶC TÍNH -->
+                <div class="drawer-tab-panel active" id="ptab-traits">
+                    <div class="detail-grid-two-col">
+                        <div class="detail-box">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <h4 class="detail-box-title" style="margin-bottom: 0;">Thông tin thể trạng</h4>
+                                <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenEditPetModal">
+                                    <span>Sửa hồ sơ</span>
+                                </button>
+                            </div>
+                            <div class="data-pair-row"><span class="data-key">Mã thú cưng:</span><span class="data-val" id="profilePetCode">PET-001</span></div>
+                            <div class="data-pair-row"><span class="data-key">Tên bé cưng:</span><span class="data-val" id="profilePetName">Milu</span></div>
+                            <div class="data-pair-row"><span class="data-key">Loài & Giống:</span><span class="data-val" id="profilePetSpecies">Chó Corgi</span></div>
+                            <div class="data-pair-row"><span class="data-key">Giới tính:</span><span class="data-val" id="profilePetGender">Đực</span></div>
+                            <div class="data-pair-row"><span class="data-key">Cân nặng hiện tại:</span><span class="data-val"><strong id="profilePetWeight">8.5 kg</strong> (Phân khúc 5 - 10kg)</span></div>
+                            <div class="data-pair-row"><span class="data-key">Ngày sinh:</span><span class="data-val" id="profilePetDob">15/05/2023 (1 tuổi 4 tháng)</span></div>
+                            <div class="data-pair-row"><span class="data-key">Màu lông:</span><span class="data-val" id="profilePetColor">Vàng trắng</span></div>
+                            <div class="data-pair-row"><span class="data-key">Tiền sử dị ứng:</span><span class="data-val text-danger" id="profilePetAllergy">Dị ứng hải sản & sữa tắm tinh dầu tràm</span></div>
+                            <div class="data-pair-row" style="border-bottom: none;"><span class="data-key">Tập tính & Lưu ý:</span><span class="data-val" id="profilePetNotes">Bé khá nhát người lạ, thích ăn pate bò. Hơi dữ khi sấy đuôi.</span></div>
+                        </div>
+
+                        <div class="detail-box">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <h4 class="detail-box-title" style="margin-bottom: 0;">Biến động cân nặng & Ma trận giá</h4>
+                                <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-weigh-modal">
+                                    <span>+ Cân bé</span>
+                                </button>
+                            </div>
+                            <!-- Danh sách mốc cân nặng theo ngày -->
+                            <div class="weight-history-table-wrapper">
+                                <table class="weight-mini-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Ngày đo</th>
+                                            <th>Cân nặng</th>
+                                            <th>Phân khúc giá Spa/Hotel</th>
+                                            <th>Ghi nhận bởi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="petWeightHistoryTbody">
+                                        <tr>
+                                            <td>25/09/2026</td>
+                                            <td><strong>8.5 kg</strong></td>
+                                            <td>Phân khúc 5 - 10kg (250.000đ)</td>
+                                            <td>Lễ tân Mai</td>
+                                        </tr>
+                                        <tr>
+                                            <td>10/08/2026</td>
+                                            <td><strong>8.2 kg</strong></td>
+                                            <td>Phân khúc 5 - 10kg (250.000đ)</td>
+                                            <td>Groomer Tuấn</td>
+                                        </tr>
+                                        <tr>
+                                            <td>15/06/2026</td>
+                                            <td><strong>7.9 kg</strong></td>
+                                            <td>Phân khúc 5 - 10kg (250.000đ)</td>
+                                            <td>Groomer Hương</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style="margin-top: 14px;">
+                                <h4 class="detail-box-title">Ghi chú kỹ thuật Groomer</h4>
+                                <textarea class="admin-input textarea-note" rows="3" id="petGroomerNotes">Cắt tỉa mặt tròn gấu bông, cạo đệm chân và vệ sinh tuyến hôi kỹ. Dùng dầu tắm yến mạch dịu nhẹ tránh kích ứng da.</textarea>
+                                <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+                                    <button type="button" class="admin-btn admin-btn-primary btn-sm" id="btnSaveGroomerNotes">Lưu ghi chú</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CON 2: XÁC NHẬN TIÊM CHỦNG -->
+                <div class="drawer-tab-panel" id="ptab-vaccine">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <h4 class="detail-box-title" style="margin-bottom: 0;">Sổ tiêm chủng điện tử & Điều kiện lưu trú Pet Hotel</h4>
+                        <span class="admin-badge badge-success" style="font-size: 12.5px; padding: 4px 10px;">Đủ điều kiện nhận phòng Hotel</span>
+                    </div>
+
+                    <div class="vaccine-card-grid">
+                        <div class="vaccine-item-card is-qualified">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <strong style="color: var(--text-heading);">Vắc-xin phòng dại (Rabies)</strong>
+                                <span class="admin-badge badge-success">Đã tiêm đủ</span>
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-main);">
+                                <div><strong>Ngày tiêm gần nhất:</strong> 15/04/2026</div>
+                                <div><strong>Ngày tái chủng dự kiến:</strong> 15/04/2027</div>
+                                <div><strong>Nơi tiêm:</strong> Bệnh viện Thú y PetCare</div>
+                            </div>
+                        </div>
+
+                        <div class="vaccine-item-card is-qualified">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <strong style="color: var(--text-heading);">Vắc-xin 7 bệnh cho Chó (Vanguard Plus 5/CV-L)</strong>
+                                <span class="admin-badge badge-success">Đã tiêm đủ</span>
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-main);">
+                                <div><strong>Mũi nhắc lại:</strong> 20/05/2026</div>
+                                <div><strong>Thời hạn bảo hộ:</strong> Đến 20/05/2027</div>
+                                <div><strong>Tình trạng sổ:</strong> Chủ đã xuất trình sổ giấy đối chiếu tại quầy</div>
+                            </div>
+                        </div>
+
+                        <div class="vaccine-item-card is-qualified">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <strong style="color: var(--text-heading);">Xổ giun định kỳ & Nhỏ gáy ve rận</strong>
+                                <span class="admin-badge badge-success">Đã thực hiện</span>
+                            </div>
+                            <div style="font-size: 13px; color: var(--text-main);">
+                                <div><strong>Lần gần nhất:</strong> 10/08/2026 (NexGard Spectra)</div>
+                                <div><strong>Lần tiếp theo:</strong> 10/10/2026</div>
+                            </div>
+                        </div>
+
+                        <div class="vaccine-item-card is-qualified">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <strong style="color: var(--text-heading);">Quy chuẩn an toàn dịch tễ Pet Hotel</strong>
+                                <span class="admin-badge badge-success">Đạt chuẩn</span>
+                            </div>
+                            <div style="font-size: 12.5px; color: var(--text-muted);">
+                                Bé đáp ứng 100% điều kiện cách ly, tiêm chủng và vệ sinh ký sinh trùng theo tiêu chuẩn của Pawpal Pet Hotel.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CON 3: NHẬT KÝ CHĂM SÓC DỊCH VỤ -->
+                <div class="drawer-tab-panel" id="ptab-carelog">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <h4 class="detail-box-title" style="margin-bottom: 0;">Lịch sử ca dịch vụ & Ảnh Before / After</h4>
+                        <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-carelog">
+                            <span>+ Thêm nhật ký ca mới</span>
+                        </button>
+                    </div>
+
+                    <div class="carelog-timeline-list">
+                        <!-- Ca gần nhất -->
+                        <div class="carelog-card">
+                            <div class="carelog-header">
+                                <div>
+                                    <strong style="color: var(--text-heading); font-size: 14px;">Tắm sấy dưỡng ẩm & Cắt mài móng toàn diện</strong>
+                                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Ngày thực hiện: 25/09/2026 14:30 • KTV Groomer: Hoàng Tuấn</div>
+                                </div>
+                                <span class="admin-badge badge-success">Đã gửi app cho chủ</span>
+                            </div>
+
+                            <div class="carelog-photos-grid">
+                                <div class="photo-box">
+                                    <span class="photo-label">Ảnh trước khi làm (Before):</span>
+                                    <img src="/assets/images/publics/dogcute3.jpg" class="carelog-img-preview" alt="Before">
+                                </div>
+                                <div class="photo-box">
+                                    <span class="photo-label">Ảnh sau khi hoàn thiện (After):</span>
+                                    <img src="/assets/images/publics/dogcute1.jpg" class="carelog-img-preview" alt="After">
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--text-heading); margin-bottom: 6px;">Checklist kiểm tra 4 mục vệ sinh:</div>
+                                <div class="checklist-pills-row">
+                                    <span class="check-pill">Tai sạch sẽ</span>
+                                    <span class="check-pill">Móng mài nhẵn</span>
+                                    <span class="check-pill">Tuyến hôi sạch</span>
+                                    <span class="check-pill">Da lông thông thoáng</span>
+                                </div>
+                            </div>
+
+                            <div style="font-size: 13px; color: var(--text-main); background: #FFFFFF; padding: 10px 12px; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);">
+                                <strong>Dặn dò chủ nuôi:</strong> Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, không thấy dấu hiệu mủ viêm.
+                            </div>
+                        </div>
+
+                        <!-- Ca trước đó -->
+                        <div class="carelog-card">
+                            <div class="carelog-header">
+                                <div>
+                                    <strong style="color: var(--text-heading); font-size: 14px;">Cắt tỉa tạo kiểu Corgi mặt gấu bông</strong>
+                                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Ngày thực hiện: 10/08/2026 10:00 • KTV Groomer: Đỗ Hương</div>
+                                </div>
+                                <span class="admin-badge badge-neutral">Đã lưu trữ</span>
+                            </div>
+
+                            <div class="carelog-photos-grid">
+                                <div class="photo-box">
+                                    <span class="photo-label">Ảnh trước khi làm (Before):</span>
+                                    <img src="/assets/images/publics/dogcute7.jpg" class="carelog-img-preview" alt="Before">
+                                </div>
+                                <div class="photo-box">
+                                    <span class="photo-label">Ảnh sau khi hoàn thiện (After):</span>
+                                    <img src="/assets/images/publics/dogcute3.jpg" class="carelog-img-preview" alt="After">
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="checklist-pills-row">
+                                    <span class="check-pill">Tai sạch sẽ</span>
+                                    <span class="check-pill">Móng mài nhẵn</span>
+                                    <span class="check-pill">Tuyến hôi sạch</span>
+                                    <span class="check-pill">Không có ve rận</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CON 4: LỊCH SỬ ĐẶT HẸN & DỊCH VỤ -->
+                <div class="drawer-tab-panel" id="ptab-history">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <h4 class="detail-box-title" style="margin-bottom: 0;">Lịch sử dịch vụ Spa & Lưu trú Pet Hotel</h4>
+                        <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-book-spa">
+                            <span>+ Đặt lịch ngay</span>
+                        </button>
+                    </div>
+
+                    <div class="table-responsive-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã ca</th>
+                                    <th>Dịch vụ</th>
+                                    <th>Thời gian</th>
+                                    <th>Cân nặng áp dụng</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>BK-2609-01</strong></td>
+                                    <td>Tắm sấy dưỡng lông toàn diện</td>
+                                    <td>25/09/2026 14:30</td>
+                                    <td>8.5 kg</td>
+                                    <td><strong>250.000đ</strong></td>
+                                    <td><span class="admin-badge badge-success">Đã hoàn thành</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>BK-2608-14</strong></td>
+                                    <td>Lưu trú Pet Hotel (Phòng VIP) 3 đêm</td>
+                                    <td>12/08/2026 - 15/08/2026</td>
+                                    <td>8.2 kg</td>
+                                    <td><strong>1.050.000đ</strong></td>
+                                    <td><span class="admin-badge badge-success">Đã hoàn thành</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>BK-2608-03</strong></td>
+                                    <td>Cắt tỉa tạo kiểu toàn diện</td>
+                                    <td>10/08/2026 10:00</td>
+                                    <td>8.2 kg</td>
+                                    <td><strong>350.000đ</strong></td>
+                                    <td><span class="admin-badge badge-success">Đã hoàn thành</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 3: NHẮC LỊCH ĐỊNH KỲ (CHĂM SÓC KHÁCH HÀNG CHỦ ĐỘNG)
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-pet-reminders">
+        <!-- BỘ 3 THẺ SỐ LIỆU NHẮC HẸN -->
+        <div class="reminder-kpi-grid">
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Quá 14 ngày chưa tắm sấy</span>
+                <span class="kpi-val text-warning">28 bé</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Quá 30 ngày chưa cắt tỉa lông</span>
+                <span class="kpi-val text-danger">16 bé</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Khách quen cần gửi Pet Hotel dịp lễ</span>
+                <span class="kpi-val text-success">9 khách</span>
+            </div>
+        </div>
+
+        <!-- BẢNG DANH SÁCH NHẮC LỊCH -->
+        <div class="admin-card pet-master-card">
+            <div class="table-toolbar-section">
+                <div class="filter-row-top">
+                    <div class="search-box-wrapper">
+                        <input type="text" class="admin-input search-input" id="reminderSearchInput" placeholder="Tìm tên bé cưng, tên chủ nuôi, SĐT...">
+                    </div>
+                    <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnBatchSendReminder">
+                            <span>Gửi tin đồng loạt (Zalo)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-row-bottom">
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Loại nhắc lịch:</label>
+                        <select class="admin-select" id="reminderFilterType">
+                            <option value="ALL">Tất cả</option>
+                            <option value="BATH">Nhắc tắm sấy định kỳ (&gt; 14 ngày)</option>
+                            <option value="GROOM">Nhắc cắt tỉa lông (&gt; 30 ngày)</option>
+                            <option value="HOTEL">Nhắc gửi Pet Hotel cuối tuần</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Trạng thái:</label>
+                        <select class="admin-select" id="reminderFilterStatus">
+                            <option value="ALL">Tất cả</option>
+                            <option value="UNSENT">Chưa gửi</option>
+                            <option value="SENT">Đã gửi tin</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Tên bé cưng</th>
+                            <th>Chủ sở hữu & SĐT</th>
+                            <th>Loại nhắc lịch</th>
+                            <th>Lần làm gần nhất</th>
+                            <th>Trạng thái tin nhắn</th>
+                            <th style="width: 170px; text-align: right;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reminderTableTbody">
+                        <tr>
+                            <td>
+                                <strong style="color: var(--text-heading);">Milu (Corgi)</strong>
+                                <div style="font-size: 12px; color: var(--text-muted);">Mã: PET-001</div>
+                            </td>
+                            <td>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-001">Nguyễn Văn An</a>
+                                <div style="font-size: 12px; color: var(--text-muted);">0912345678</div>
+                            </td>
+                            <td><span class="admin-badge badge-warning">Quá 18 ngày chưa tắm sấy</span></td>
+                            <td>09/09/2026 (18 ngày trước)</td>
+                            <td><span class="admin-badge badge-neutral">Chưa gửi</span></td>
+                            <td style="text-align: right;">
+                                <div style="display: inline-flex; gap: 6px;">
+                                    <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-reminder-modal" data-pet="Milu" data-owner="Nguyễn Văn An" data-phone="0912345678">Gửi tin</button>
+                                    <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-book-spa">Đặt lịch</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <strong style="color: var(--text-heading);">Boss (Golden)</strong>
+                                <div style="font-size: 12px; color: var(--text-muted);">Mã: PET-003</div>
+                            </td>
+                            <td>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-002">Lê Thị Bình</a>
+                                <div style="font-size: 12px; color: var(--text-muted);">0987654321</div>
+                            </td>
+                            <td><span class="admin-badge badge-danger">Quá 35 ngày chưa cắt lông</span></td>
+                            <td>22/08/2026 (36 ngày trước)</td>
+                            <td><span class="admin-badge badge-success">Đã gửi Zalo hôm qua</span></td>
+                            <td style="text-align: right;">
+                                <div style="display: inline-flex; gap: 6px;">
+                                    <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-reminder-modal" data-pet="Boss" data-owner="Lê Thị Bình" data-phone="0987654321">Gửi lại</button>
+                                    <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-book-spa">Đặt lịch</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <strong style="color: var(--text-heading);">Mimi (Mèo ALN)</strong>
+                                <div style="font-size: 12px; color: var(--text-muted);">Mã: PET-002</div>
+                            </td>
+                            <td>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-001">Nguyễn Văn An</a>
+                                <div style="font-size: 12px; color: var(--text-muted);">0912345678</div>
+                            </td>
+                            <td><span class="admin-badge badge-tier-gold">Gửi Pet Hotel cuối tuần</span></td>
+                            <td>Khách quen hay gửi thứ 7</td>
+                            <td><span class="admin-badge badge-neutral">Chưa gửi</span></td>
+                            <td style="text-align: right;">
+                                <div style="display: inline-flex; gap: 6px;">
+                                    <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-reminder-modal" data-pet="Mimi" data-owner="Nguyễn Văn An" data-phone="0912345678">Gửi tin</button>
+                                    <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-book-spa">Đặt lịch</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="admin-pagination-bar">
+            <div class="pagination-controls">
+                <button type="button" class="pagination-btn disabled">&lt;</button>
+                <button type="button" class="pagination-btn active">1</button>
+                <button type="button" class="pagination-btn">2</button>
+                <button type="button" class="pagination-btn">&gt;</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 4: NHẬT KÝ CHĂM SÓC (BÀN LÀM VIỆC GROOMER & HOTEL)
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-pet-carelog">
+        <div class="carelog-workbench-grid">
+            <!-- CỘT TRÁI: DANH SÁCH CA LÀM VIỆC TRONG NGÀY -->
+            <div class="admin-card" style="padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h4 class="detail-box-title" style="margin-bottom: 0;">Ca làm việc hôm nay</h4>
+                    <span class="admin-badge badge-success">4 ca</span>
+                </div>
+
+                <div class="workbench-queue-list">
+                    <div class="queue-card-item active" data-care-id="CL-001">
+                        <div class="queue-card-head">
+                            <span class="queue-pet-name">Milu (Chó Corgi)</span>
+                            <span class="admin-badge badge-warning">Đang làm</span>
+                        </div>
+                        <div class="queue-card-sub">Dịch vụ: Tắm sấy toàn diện • Chủ: Nguyễn Văn An</div>
+                        <div class="queue-card-sub">KTV: Hoàng Tuấn • Bàn 2</div>
+                    </div>
+
+                    <div class="queue-card-item" data-care-id="CL-002">
+                        <div class="queue-card-head">
+                            <span class="queue-pet-name">Trà Sữa (Poodle Toy)</span>
+                            <span class="admin-badge badge-success">Hoàn thiện</span>
+                        </div>
+                        <div class="queue-card-sub">Dịch vụ: Cắt tỉa gấu bông • Chủ: Hoàng Minh Tuấn</div>
+                        <div class="queue-card-sub">KTV: Đỗ Hương • Bàn 1</div>
+                    </div>
+
+                    <div class="queue-card-item" data-care-id="CL-003">
+                        <div class="queue-card-head">
+                            <span class="queue-pet-name">Bông (Mèo ta)</span>
+                            <span class="admin-badge badge-warning">Đang làm</span>
+                        </div>
+                        <div class="queue-card-sub">Dịch vụ: Vệ sinh tai móng • Chủ: Trần Khách Vãng Lai</div>
+                        <div class="queue-card-sub">KTV: Hoàng Tuấn • Bàn Spa Mèo</div>
+                    </div>
+
+                    <div class="queue-card-item" data-care-id="CL-004">
+                        <div class="queue-card-head">
+                            <span class="queue-pet-name">Mimi (Mèo ALN)</span>
+                            <span class="admin-badge badge-neutral">Phòng Hotel #03</span>
+                        </div>
+                        <div class="queue-card-sub">Khẩu phần ăn chiều • Nhân viên Hotel</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CỘT PHẢI: FORM CẬP NHẬT NHẬT KÝ CA LÀM VIỆC -->
+            <div class="workbench-form-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-neutral); padding-bottom: 12px;">
+                    <div>
+                        <h4 class="detail-box-title" style="margin-bottom: 2px;" id="wbFormTitle">Cập nhật nhật ký ca: Bé Milu (Corgi)</h4>
+                        <div style="font-size: 12.5px; color: var(--text-muted);">Mã lịch hẹn: BK-2609-01 • Chủ sở hữu: Nguyễn Văn An (0912345678)</div>
+                    </div>
+                    <span class="admin-badge badge-warning" id="wbStatusBadge">Đang tiến hành</span>
+                </div>
+
+                <!-- TẢI ẢNH BEFORE & AFTER -->
+                <div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px;">Ảnh chụp thực tế ca làm:</div>
+                    <div class="upload-photos-container">
+                        <div class="photo-upload-placeholder" id="btnUploadBeforePhoto">
+                            <img src="/assets/images/publics/dogcute3.jpg" id="wbBeforeImgPreview" alt="Before">
+                            <span style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 4px;">Ảnh Trước (Before)</span>
+                        </div>
+
+                        <div class="photo-upload-placeholder" id="btnUploadAfterPhoto">
+                            <img src="/assets/images/publics/dogcute1.jpg" id="wbAfterImgPreview" alt="After">
+                            <span style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 4px;">Ảnh Sau (After)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHECKLIST VỆ SINH 4 MỤC -->
+                <div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px;">Checklist vệ sinh và kiểm tra sức khỏe sơ bộ:</div>
+                    <div class="checklist-card-grid">
+                        <label class="checklist-checkbox-item">
+                            <input type="checkbox" id="chkEar" checked>
+                            <span>1. Vệ sinh tai sạch sẽ, không viêm</span>
+                        </label>
+                        <label class="checklist-checkbox-item">
+                            <input type="checkbox" id="chkNail" checked>
+                            <span>2. Móng cắt mài tròn nhẵn</span>
+                        </label>
+                        <label class="checklist-checkbox-item">
+                            <input type="checkbox" id="chkAnal" checked>
+                            <span>3. Tuyến hôi đã vắt sạch sẽ</span>
+                        </label>
+                        <label class="checklist-checkbox-item">
+                            <input type="checkbox" id="chkSkin" checked>
+                            <span>4. Da lông sạch, không có bọ ve nấm</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- LỜI NHẮN DẶN DÒ CHỦ NUÔI -->
+                <div class="form-group">
+                    <label class="form-label">Lời nhắn dặn dò chủ nuôi (Đồng bộ tức thì sang app của khách):</label>
+                    <textarea class="admin-input textarea-note" rows="3" id="wbOwnerMessage" placeholder="Ví dụ: Lông vùng nách bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà; tai sạch sẽ thơm tho.">Lông vùng nách bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.</textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 4px;">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnPreviewCustomerDiary">Xem trước giao diện khách</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveAndSendCareLog">Lưu & Gửi nhật ký sang ứng dụng</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         MODAL 1: TIẾP NHẬN BÉ CƯNG TẠI QUẦY (THÊM BÉ MỚI)
+         ==================================================================== -->
+    <div class="admin-modal-backdrop" id="modalAddPet">
+        <div class="admin-modal-card">
+            <div class="admin-modal-header">
+                <span class="admin-modal-title">Tiếp nhận bé cưng tại quầy</span>
+                <button type="button" class="btn-modal-close" data-close-modal="modalAddPet">Đóng</button>
+            </div>
+
+            <form id="formAddPet" onsubmit="return false;">
+                <!-- CHỌN CHỦ NUÔI -->
+                <div class="form-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label class="form-label">Chủ sở hữu (Tìm theo SĐT hoặc Họ tên):</label>
+                        <a href="javascript:void(0)" class="user-name-link btn-jump-customer" style="font-size: 12px;">+ Tạo nhanh khách mới</a>
+                    </div>
+                    <select class="admin-select" id="newPetOwner" required>
+                        <option value="CUST-001">Nguyễn Văn An - 0912345678 (Hạng Vàng)</option>
+                        <option value="CUST-002">Lê Thị Bình - 0987654321 (Hạng Bạc)</option>
+                        <option value="CUST-003">Trần Khách Vãng Lai - 0933221100 (Khách mới)</option>
+                        <option value="CUST-005">Hoàng Minh Tuấn - 0903112233 (Hạng Vàng)</option>
+                        <option value="CUST-007">Vũ Đức Thắng - 0977889900 (Kim Cương)</option>
+                        <option value="CUST-008">Bùi Thu Trang - 0938776655 (Hạng Đồng)</option>
+                    </select>
+                </div>
+
+                <div class="form-row-two-col">
+                    <div class="form-group">
+                        <label class="form-label">Tên bé cưng:</label>
+                        <input type="text" class="admin-input" id="newPetName" placeholder="Ví dụ: Milu, Đậu Đậu..." required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Loài thú cưng:</label>
+                        <select class="admin-select" id="newPetSpecies" required>
+                            <option value="dog">Chó</option>
+                            <option value="cat">Mèo</option>
+                            <option value="rabbit">Thỏ</option>
+                            <option value="other">Khác</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row-two-col">
+                    <div class="form-group">
+                        <label class="form-label">Giống loài:</label>
+                        <input type="text" class="admin-input" id="newPetBreed" placeholder="Ví dụ: Corgi, Poodle, Mèo ALN..." required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Giới tính:</label>
+                        <select class="admin-select" id="newPetGender">
+                            <option value="male">Đực</option>
+                            <option value="female">Cái</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row-two-col">
+                    <div class="form-group">
+                        <label class="form-label">Cân nặng tại quầy (kg):</label>
+                        <input type="number" step="0.1" class="admin-input" id="newPetWeight" placeholder="Ví dụ: 6.5" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ngày sinh (Dự kiến):</label>
+                        <input type="date" class="admin-input" id="newPetDob" value="2024-01-15">
+                    </div>
+                </div>
+
+                <div class="form-row-two-col">
+                    <div class="form-group">
+                        <label class="form-label">Màu lông:</label>
+                        <input type="text" class="admin-input" id="newPetColor" placeholder="Ví dụ: Vàng trắng, Xám khói...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Xác nhận tiêm phòng (Sổ tiêm):</label>
+                        <select class="admin-select" id="newPetVaccinated">
+                            <option value="true">Đã tiêm đủ dại & bệnh truyền nhiễm</option>
+                            <option value="false">Chưa xác nhận tiêm</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- CHECKLIST SƠ BỘ TẠI QUẦY -->
+                <div class="form-group">
+                    <label class="form-label">Kiểm tra thể trạng ban đầu tại quầy:</label>
+                    <div class="checklist-card-grid">
+                        <label class="checklist-checkbox-item">
+                            <input type="checkbox" checked>
+                            <span>Da lông không trầy xước</span>
+                        </label>
+                        <label class="checklist-checkbox-item">
+                            <input type="checkbox" checked>
+                            <span>Tai sạch, không viêm</span>
+                        </label>
+                        <label class="checklist-checkbox-item">
+                            <input type="checkbox" checked>
+                            <span>Lông không vón bết / không ve rận</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Cảnh báo an toàn (Tính hung dữ, cắn khi sấy...):</label>
+                    <input type="text" class="admin-input" id="newPetAlert" placeholder="Ví dụ: Cắn khi chạm đuôi, sợ sấy lớn...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tiền sử dị ứng sữa tắm / thức ăn:</label>
+                    <input type="text" class="admin-input" id="newPetAllergy" placeholder="Ví dụ: Dị ứng tinh dầu tràm, dị ứng hải sản...">
+                </div>
+
+                <!-- IN THẺ ĐEO CỔ PREVIEW -->
+                <div class="collar-tag-preview">
+                    <div style="flex: 1;">
+                        <div style="font-size: 13px; font-weight: 700; color: var(--text-heading);">Thẻ đeo cổ chống thất lạc PawPal</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Tự động in thẻ mã QR và số điện thoại chủ kèm tên bé khi bấm lưu tiếp nhận.</div>
+                    </div>
+                    <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnPrintCollarTag">In thẻ cổ</button>
+                </div>
+
+                <div class="modal-actions-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalAddPet">Hủy</button>
+                    <button type="submit" class="admin-btn admin-btn-primary" id="btnSubmitAddPet">Lưu hồ sơ tiếp nhận</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 2: CÂN BÉ & ÁP DỤNG MA TRẬN GIÁ DỊCH VỤ
+         ==================================================================== -->
+    <div class="admin-modal-backdrop" id="modalWeighPet">
+        <div class="admin-modal-card">
+            <div class="admin-modal-header">
+                <span class="admin-modal-title">Cân bé & Áp dụng ma trận giá dịch vụ</span>
+                <button type="button" class="btn-modal-close" data-close-modal="modalWeighPet">Đóng</button>
+            </div>
+
+            <form id="formWeighPet" onsubmit="return false;">
+                <div class="form-row-two-col">
+                    <div class="form-group">
+                        <label class="form-label">Tên bé cưng:</label>
+                        <input type="text" class="admin-input" id="weighPetName" value="Milu" readonly style="background-color: #F1F5F3;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cân nặng trước đó:</label>
+                        <input type="text" class="admin-input" id="weighPetOldWeight" value="8.5 kg" readonly style="background-color: #F1F5F3;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Cân nặng thực tế vừa cân tại quầy (kg):</label>
+                    <input type="number" step="0.1" class="admin-input" id="weighPetNewWeight" value="8.6" required style="font-size: 18px; font-weight: 700; color: #236B48;">
+                </div>
+
+                <!-- BẢNG MA TRẬN GIÁ DỊCH VỤ TỰ ĐỘNG NHẢY -->
+                <div class="form-group">
+                    <label class="form-label">Bảng ma trận giá dịch vụ tương ứng:</label>
+                    <div style="border: 1px solid var(--border-neutral); border-radius: var(--admin-radius); padding: 12px; background-color: #FAFCFA; font-size: 13px;">
+                        <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+                            <span>Phân khúc cân nặng:</span>
+                            <strong id="weighTierResult" style="color: #236B48;">5 - 10 kg</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+                            <span>Đơn giá gói Tắm sấy toàn diện:</span>
+                            <strong id="weighSpaPriceResult">250.000đ</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+                            <span>Đơn giá Cắt tỉa tạo kiểu:</span>
+                            <strong id="weighGroomPriceResult">350.000đ</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+                            <span>Đơn giá Phòng Pet Hotel / ngày:</span>
+                            <strong id="weighHotelPriceResult">300.000đ</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalWeighPet">Hủy</button>
+                    <button type="submit" class="admin-btn admin-btn-primary" id="btnSubmitWeigh">Lưu cân nặng mới</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 3: GỬI TIN NHẮN ZALO / SMS CHĂM SÓC ĐỊNH KỲ
+         ==================================================================== -->
+    <div class="admin-modal-backdrop" id="modalSendReminder">
+        <div class="admin-modal-card">
+            <div class="admin-modal-header">
+                <span class="admin-modal-title">Gửi tin nhắn chăm sóc định kỳ</span>
+                <button type="button" class="btn-modal-close" data-close-modal="modalSendReminder">Đóng</button>
+            </div>
+
+            <form id="formSendReminder" onsubmit="return false;">
+                <div class="form-row-two-col">
+                    <div class="form-group">
+                        <label class="form-label">Khách hàng nhận tin:</label>
+                        <input type="text" class="admin-input" id="reminderModalOwner" value="Nguyễn Văn An" readonly style="background-color: #F1F5F3;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Bé cưng:</label>
+                        <input type="text" class="admin-input" id="reminderModalPet" value="Milu" readonly style="background-color: #F1F5F3;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Kênh gửi tin nhắn:</label>
+                    <div style="display: flex; gap: 16px; font-size: 13px;">
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="reminderChannel" value="ZALO" checked accent-color="#236B48">
+                            <span>Zalo ZNS / Official Account (Miễn phí)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="reminderChannel" value="SMS" accent-color="#236B48">
+                            <span>SMS Brandname PawPal</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Nội dung tin nhắn gửi khách:</label>
+                    <textarea class="admin-input textarea-note" rows="4" id="reminderMessageContent">PawPal mến chào Sen Nguyễn Văn An! Bé Milu đã hơn 2 tuần chưa ghé spa làm đẹp rồi đó ạ. PawPal gửi tặng bé voucher ưu đãi 10% dịch vụ Spa trong tuần này. Sen đặt lịch ngay cho bé nhé!</textarea>
+                </div>
+
+                <div class="modal-actions-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalSendReminder">Hủy</button>
+                    <button type="submit" class="admin-btn admin-btn-primary" id="btnSubmitSendReminder">Gửi tin nhắn ngay</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
