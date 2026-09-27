@@ -20,6 +20,7 @@ const ORDER_STATUS = {
 };
 
 let rgOtpFlowActive = false;
+let rgVerifiedPhone = null;
 let rgLastSearchState = {
     phone: '',
     bookings: [],
@@ -30,16 +31,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const form      = document.getElementById('rg-form');
     const errorBox  = document.getElementById('rg-error');
     const resultsEl = document.getElementById('rg-results');
+    const phoneInput = document.getElementById('rg-phone');
 
     errorBox.classList.add('d-none');
     resultsEl.classList.add('d-none');
 
+    if (phoneInput) {
+        phoneInput.addEventListener('input', (e) => {
+            const currentNorm = normalizePhone(e.target.value);
+            if (rgVerifiedPhone && currentNorm !== rgVerifiedPhone) {
+                rgVerifiedPhone = null;
+                resultsEl.classList.add('d-none');
+            }
+        });
+    }
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
-            const phone = document.getElementById('rg-phone').value.trim();
+            const phone = phoneInput ? phoneInput.value.trim() : '';
             if (!phone) return;
 
+            const normPhone = normalizePhone(phone);
             const btn = form.querySelector('button[type=submit]');
             btn.disabled    = true;
             btn.textContent = 'Đang tìm...';
@@ -48,29 +61,34 @@ document.addEventListener('DOMContentLoaded', () => {
             let bookings = supabaseResults.bookings || [];
             let orders = supabaseResults.orders || [];
 
-            if (bookings.length > 0 || orders.length > 0) {
-                showToast('Đã tìm thấy kết quả tra cứu.', 'success');
-            } else {
-                resultsEl.classList.add('d-none');
-                errorBox.classList.remove('d-none');
-                errorBox.innerHTML = 'Không tìm thấy thông tin đơn hàng/lịch hẹn cho số điện thoại này.';
-                btn.disabled    = false;
-                btn.textContent = 'Tìm kiếm';
-                return;
-            }
-
             btn.disabled    = false;
             btn.textContent = 'Tìm kiếm';
 
+            if (bookings.length === 0 && orders.length === 0) {
+                resultsEl.classList.add('d-none');
+                errorBox.classList.remove('d-none');
+                errorBox.innerHTML = 'Không tìm thấy thông tin đơn hàng/lịch hẹn cho số điện thoại này.';
+                return;
+            }
+
+            // Check if this phone number was already OTP-verified in this session
+            if (rgVerifiedPhone === normPhone) {
+                errorBox.classList.add('d-none');
+                resultsEl.classList.remove('d-none');
+                rgLastSearchState = { phone, bookings, orders };
+                renderResults(bookings, orders);
+                return;
+            }
+
+            // First time searching this phone: Prompt OTP verification before showing results
             errorBox.classList.add('d-none');
-            resultsEl.classList.remove('d-none');
-            
-            rgLastSearchState = {
-                phone,
-                bookings,
-                orders,
-            };
-            renderResults(bookings, orders);
+            showOTPModal(phone, () => {
+                rgVerifiedPhone = normPhone;
+                resultsEl.classList.remove('d-none');
+                rgLastSearchState = { phone, bookings, orders };
+                renderResults(bookings, orders);
+                showToast('Xác thực số điện thoại thành công!', 'success');
+            });
         } catch (fatalErr) {
             console.error(fatalErr);
             alert("Error in submit handler: " + fatalErr.message + "\n" + fatalErr.stack);
@@ -489,18 +507,15 @@ window.handleGuestBookingAction = function(bookingId, action) {
     const phone = document.getElementById('rg-phone').value.trim();
     if (!phone) { showToast('Vui lòng nhập số điện thoại trước.', 'info'); return; }
 
-    const title  = action === 'cancel' ? 'Hủy lịch hẹn' : 'Đổi lịch hẹn';
-    const desc   = action === 'cancel'
-        ? 'Lịch hẹn sau khi hủy sẽ không thể khôi phục. Bạn có chắc muốn tiếp tục?'
-        : 'Bạn có muốn thay đổi lịch hẹn này không? PawPal sẽ xác thực danh tính trước khi tiến hành.';
-
-    showActionConfirm(title, desc, phone, () => {
-        if (action === 'cancel') {
-            confirmCancelBooking(bookingId);
-        } else {
-            showChangeScheduleModal(bookingId, phone);
-        }
-    });
+    if (action === 'cancel') {
+        showActionConfirm(
+            'Hủy lịch hẹn',
+            `Bạn có chắc chắn muốn hủy lịch hẹn <strong>${esc(bookingId)}</strong>? Lịch hẹn sau khi hủy sẽ không thể khôi phục.`,
+            () => confirmCancelBooking(bookingId)
+        );
+    } else {
+        showChangeScheduleModal(bookingId, phone);
+    }
 };
 
 window.handleGuestCancelOrder = function(orderId) {
@@ -515,14 +530,13 @@ window.handleGuestCancelOrder = function(orderId) {
 
     const total = order?.pricing?.total || 0;
     const refundNote = isPaidOnline
-        ? ` Số tiền <strong>${fmtPrice(total)}</strong> sẽ được hoàn lại theo chính sách của cửa hàng.`
+        ? `<br><span class="text-muted small">Số tiền <strong>${fmtPrice(total)}</strong> sẽ được hoàn lại theo chính sách của cửa hàng.</span>`
         : '';
 
-    showSendOTPConfirm(
+    showActionConfirm(
         'Hủy đơn hàng',
-        `Đơn hàng sau khi hủy sẽ không thể khôi phục.${refundNote}`,
-        phone,
-        () => { confirmCancelOrder(orderId); }
+        `Bạn có chắc chắn muốn hủy đơn hàng <strong>${esc(orderId)}</strong>? Đơn hàng sau khi hủy sẽ không thể khôi phục.${refundNote}`,
+        () => confirmCancelOrder(orderId)
     );
 };
 
@@ -530,10 +544,9 @@ window.handleGuestConfirmOrder = async function(orderId) {
     const phone = document.getElementById('rg-phone').value.trim();
     if (!phone) { showToast('Vui lòng nhập số điện thoại trước.', 'info'); return; }
 
-    showSendOTPConfirm(
+    showActionConfirm(
         'Xác nhận đơn hàng',
-        'Bạn xác nhận đã nhận hàng thành công?',
-        phone,
+        `Bạn xác nhận đã nhận hàng thành công cho đơn hàng <strong>${esc(orderId)}</strong>?`,
         () => {
             const order = rgLastSearchState.orders.find(o => o.id === orderId);
             if (order) {
@@ -567,28 +580,20 @@ window.handleGuestReturnRequest = function(orderId) {
     const phone = document.getElementById('rg-phone').value.trim();
     if (!phone) { showToast('Vui lòng nhập số điện thoại trước.', 'info'); return; }
 
-    showSendOTPConfirm(
-        'Yêu cầu đổi trả',
-        'Bạn có muốn gửi yêu cầu đổi trả cho đơn hàng này?',
-        phone,
-        () => {
-            const order = (rgLastSearchState.orders || []).find(o => o.id === orderId);
+    const order = (rgLastSearchState.orders || []).find(o => o.id === orderId);
+    if (!order) {
+        showToast('Không tìm thấy đơn hàng.', 'error');
+        return;
+    }
 
-            if (!order) {
-                showToast('Không tìm thấy đơn hàng.', 'error');
-                return;
-            }
-
-            if (typeof openRMADrawer === 'function') {
-                openRMADrawer(orderId);
-            } else {
-                window.location.href = `/pages/user/return-detail/return-detail.html?orderId=${orderId}`;
-            }
-        }
-    );
+    if (typeof openRMADrawer === 'function') {
+        openRMADrawer(orderId);
+    } else {
+        window.location.href = `/pages/user/return-detail/return-detail.html?orderId=${orderId}`;
+    }
 };
 
-function showActionConfirm(title, desc, phone, onConfirm) {
+function showActionConfirm(title, descHtml, onConfirm) {
     const existing = document.getElementById('rg-action-confirm-modal');
     if (existing) existing.remove();
 
@@ -604,7 +609,7 @@ function showActionConfirm(title, desc, phone, onConfirm) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-0">${esc(desc)}</p>
+                    <p class="mb-0">${descHtml}</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Huỷ bỏ</button>
@@ -619,44 +624,7 @@ function showActionConfirm(title, desc, phone, onConfirm) {
 
     document.getElementById('rg-action-confirm-btn').addEventListener('click', () => {
         modal.hide();
-        showOTPModal(phone, onConfirm);
-    });
-}
-
-
-function showSendOTPConfirm(title, desc, phone, onConfirm) {
-    const existing = document.getElementById('rg-send-otp-modal');
-    if (existing) existing.remove();
-
-    const el = document.createElement('div');
-    el.id = 'rg-send-otp-modal';
-    el.className = 'modal fade';
-    el.tabIndex = -1;
-    el.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">${esc(title)}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-1">${desc}</p>
-                    <p class="text-muted small">Để xác nhận, PawPal sẽ gửi mã OTP đến số <strong>${esc(phone)}</strong>.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Huỷ bỏ</button>
-                    <button type="button" class="btn-cta" id="rg-send-otp-btn">Gửi OTP</button>
-                </div>
-            </div>
-        </div>`;
-    document.body.appendChild(el);
-
-    const modal = new bootstrap.Modal(el);
-    modal.show();
-
-    document.getElementById('rg-send-otp-btn').addEventListener('click', () => {
-        modal.hide();
-        showOTPModal(phone, onConfirm);
+        if (typeof onConfirm === 'function') onConfirm();
     });
 }
 
@@ -679,7 +647,7 @@ function showOTPModal(phone, onSuccess) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center py-4">
-                    <p class="text-muted small mb-4">Mã OTP 6 số đã được gửi đến <strong>${esc(phone)}</strong>.<br><span class="text-muted" class="rg-otp-hint">(Mã test: 555666)</span></p>
+                    <p class="text-muted small mb-4">Mã OTP 6 số đã được gửi đến <strong>${esc(phone)}</strong> để xác thực quyền truy cập tra cứu.<br><span class="text-muted" class="rg-otp-hint">(Mã test: 555666)</span></p>
                     <div class="otp-inputs-wrapper mb-3">
                         ${Array.from({length:6}, (_,i) =>
                             `<input type="text" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric"${i>0?' disabled':''}>`

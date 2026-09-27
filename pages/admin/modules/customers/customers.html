@@ -1,0 +1,959 @@
+<div class="customers-module">
+    <!-- ====================================================================
+         SUB-TAB 1: KHÁCH HÀNG (DANH SÁCH & TIẾP NHẬN TẠI QUẦY)
+         ==================================================================== -->
+    <section class="subtab-content active" id="subtab-tab-list">
+        <!-- KHU VỰC 1: 5 THẺ THỐNG KÊ NHANH (NỀN TRẮNG ĐỒNG NHẤT) -->
+        <div class="customers-kpi-grid">
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Tổng khách</span>
+                <span class="kpi-val" id="custStatTotal">1.248</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Thành viên</span>
+                <span class="kpi-val text-success" id="custStatMember">982</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Vãng lai</span>
+                <span class="kpi-val text-warning" id="custStatGuest">251</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Bị khóa</span>
+                <span class="kpi-val text-neutral" id="custStatLocked">15</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Có khiếu nại</span>
+                <span class="kpi-val text-danger" id="custStatComplaint">4</span>
+            </div>
+        </div>
+
+        <!-- KHU VỰC 2 & 3: KHỐI DỮ LIỆU THỐNG NHẤT (BỘ LỌC + BẢNG DANH SÁCH) -->
+        <div class="admin-card customer-master-card">
+            <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
+            <div class="table-toolbar-section">
+                <div class="filter-row-top">
+                    <div class="search-box-wrapper">
+                        <input type="text" class="admin-input search-input" id="custSearchInput" placeholder="Tìm SĐT, Họ tên, Bé cưng, Email...">
+                    </div>
+
+                    <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnExportCustomerReport">
+                            <span>Xuất file</span>
+                        </button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddCustomerModal">
+                            <span>+ Thêm khách</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-row-bottom">
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Hạng thẻ:</label>
+                        <select class="admin-select" id="custFilterTier">
+                            <option value="ALL">Tất cả</option>
+                            <option value="BRONZE">Đồng</option>
+                            <option value="SILVER">Bạc</option>
+                            <option value="GOLD">Vàng</option>
+                            <option value="DIAMOND">Kim Cương</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Trạng thái:</label>
+                        <select class="admin-select" id="custFilterStatus">
+                            <option value="ALL">Tất cả</option>
+                            <option value="ACTIVE">Hoạt động</option>
+                            <option value="TEMP">Tạm thời</option>
+                            <option value="LOCKED">Bị khóa</option>
+                        </select>
+                    </div>
+
+                    <button type="button" class="admin-btn-filter-toggle" id="btnFilterComplaintOnly">
+                        <span>Có khiếu nại</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- BẢNG DANH SÁCH DỮ LIỆU KHÁCH HÀNG -->
+            <div class="table-responsive-wrapper">
+            <table class="admin-table" id="customerDataTable">
+                <thead>
+                    <tr>
+                        <th style="width: 110px;">Mã KH</th>
+                        <th>Họ tên</th>
+                        <th>Số điện thoại</th>
+                        <th>Hạng & Điểm</th>
+                        <th>Cảnh báo</th>
+                        <th>Trạng thái</th>
+                        <th style="width: 50px; text-align: center;"></th>
+                    </tr>
+                </thead>
+                <tbody id="customerTableTbody">
+                    <!-- Dòng dữ liệu mẫu 1: Có khiếu nại khẩn -->
+                    <tr class="row-highlight-complaint">
+                        <td><strong>CUST-001</strong></td>
+                        <td>
+                            <div class="user-name-cell">
+                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="CUST-001">Nguyễn Văn An</a>
+                            </div>
+                            <div class="user-sub-cell">an.nguyen@email.com</div>
+                        </td>
+                        <td><strong>0912345678</strong></td>
+                        <td>
+                            <span class="admin-badge badge-tier-gold">Vàng</span>
+                            <span class="points-val">1.250 pts</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-danger">Khiếu nại TK-008</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-success">Đang hoạt động</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="action-dropdown-wrapper">
+                                <button type="button" class="btn-action-more" data-id="CUST-001" title="Tác vụ">•••</button>
+                                <div class="action-dropdown-menu">
+                                    <button type="button" class="dropdown-item btn-open-profile-drawer" data-id="CUST-001">
+                                        <span>Xem hồ sơ 360°</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item btn-edit-user-table" data-id="CUST-001">
+                                        <span>Sửa hồ sơ</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item text-danger btn-lock-user" data-id="CUST-001">
+                                        <span>Khóa tài khoản</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Dòng dữ liệu mẫu 2: Pet có lưu ý dị ứng -->
+                    <tr>
+                        <td><strong>CUST-002</strong></td>
+                        <td>
+                            <div class="user-name-cell">
+                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="CUST-002">Lê Thị Bình</a>
+                            </div>
+                            <div class="user-sub-cell">binh.le@email.com</div>
+                        </td>
+                        <td><strong>0987654321</strong></td>
+                        <td>
+                            <span class="admin-badge badge-tier-silver">Bạc</span>
+                            <span class="points-val">420 pts</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-warning">Bé Miu: Dị ứng xà phòng</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-success">Đang hoạt động</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="action-dropdown-wrapper">
+                                <button type="button" class="btn-action-more" data-id="CUST-002" title="Tác vụ">•••</button>
+                                <div class="action-dropdown-menu">
+                                    <button type="button" class="dropdown-item btn-open-profile-drawer" data-id="CUST-002">
+                                        <span>Xem hồ sơ 360°</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item btn-edit-user-table" data-id="CUST-002">
+                                        <span>Sửa hồ sơ</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item text-danger btn-lock-user" data-id="CUST-002">
+                                        <span>Khóa tài khoản</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Dòng dữ liệu mẫu 3: Khách vãng lai -->
+                    <tr>
+                        <td><strong>CUST-003</strong></td>
+                        <td>
+                            <div class="user-name-cell">
+                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="CUST-003">Trần Khách Vãng Lai</a>
+                            </div>
+                            <div class="user-sub-cell">Khách tiếp nhận tại quầy</div>
+                        </td>
+                        <td><strong>0933221100</strong></td>
+                        <td>
+                            <span class="admin-badge badge-neutral">Đồng</span>
+                            <span class="points-val">0 pts</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-neutral">Bình thường</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-warning">Tạm thời</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="action-dropdown-wrapper">
+                                <button type="button" class="btn-action-more" data-id="CUST-003" title="Tác vụ">•••</button>
+                                <div class="action-dropdown-menu">
+                                    <button type="button" class="dropdown-item btn-open-profile-drawer" data-id="CUST-003">
+                                        <span>Xem hồ sơ 360°</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item btn-edit-user-table" data-id="CUST-003">
+                                        <span>Sửa hồ sơ</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item text-danger btn-lock-user" data-id="CUST-003">
+                                        <span>Khóa tài khoản</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Dòng dữ liệu mẫu 4: Bị khóa do tranh chấp -->
+                    <tr class="row-locked">
+                        <td><strong>CUST-004</strong></td>
+                        <td>
+                            <div class="user-name-cell">
+                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="CUST-004">Phạm Văn Vi Phạm</a>
+                            </div>
+                            <div class="user-sub-cell">pham.vipham@email.com</div>
+                        </td>
+                        <td><strong>0944556677</strong></td>
+                        <td>
+                            <span class="admin-badge badge-neutral">Đồng</span>
+                            <span class="points-val">50 pts</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-neutral">Tranh chấp thanh toán</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-danger">Bị khóa</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="action-dropdown-wrapper">
+                                <button type="button" class="btn-action-more" data-id="CUST-004" title="Tác vụ">•••</button>
+                                <div class="action-dropdown-menu">
+                                    <button type="button" class="dropdown-item btn-open-profile-drawer" data-id="CUST-004">
+                                        <span>Xem hồ sơ 360°</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item btn-edit-user-table" data-id="CUST-004">
+                                        <span>Sửa hồ sơ</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item text-success btn-unlock-user" data-id="CUST-004">
+                                        <span>Mở khóa tài khoản</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Dòng dữ liệu mẫu 5: Thành viên Vàng -->
+                    <tr>
+                        <td><strong>CUST-005</strong></td>
+                        <td>
+                            <div class="user-name-cell">
+                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="CUST-005">Hoàng Minh Tuấn</a>
+                            </div>
+                            <div class="user-sub-cell">tuan.hoang@email.com</div>
+                        </td>
+                        <td><strong>0903112233</strong></td>
+                        <td>
+                            <span class="admin-badge badge-tier-gold">Vàng</span>
+                            <span class="points-val">1.100 pts</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-neutral">Bình thường</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-success">Đang hoạt động</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="action-dropdown-wrapper">
+                                <button type="button" class="btn-action-more" data-id="CUST-005" title="Tác vụ">•••</button>
+                                <div class="action-dropdown-menu">
+                                    <button type="button" class="dropdown-item btn-open-profile-drawer" data-id="CUST-005">
+                                        <span>Xem hồ sơ 360°</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item btn-edit-user-table" data-id="CUST-005">
+                                        <span>Sửa hồ sơ</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item text-danger btn-lock-user" data-id="CUST-005">
+                                        <span>Khóa tài khoản</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Dòng dữ liệu mẫu 6: Thành viên Bạc -->
+                    <tr>
+                        <td><strong>CUST-006</strong></td>
+                        <td>
+                            <div class="user-name-cell">
+                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="CUST-006">Đỗ Thị Mai</a>
+                            </div>
+                            <div class="user-sub-cell">mai.dothi@email.com</div>
+                        </td>
+                        <td><strong>0918445566</strong></td>
+                        <td>
+                            <span class="admin-badge badge-tier-silver">Bạc</span>
+                            <span class="points-val">380 pts</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-neutral">Bình thường</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-success">Đang hoạt động</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="action-dropdown-wrapper">
+                                <button type="button" class="btn-action-more" data-id="CUST-006" title="Tác vụ">•••</button>
+                                <div class="action-dropdown-menu">
+                                    <button type="button" class="dropdown-item btn-open-profile-drawer" data-id="CUST-006">
+                                        <span>Xem hồ sơ 360°</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item btn-edit-user-table" data-id="CUST-006">
+                                        <span>Sửa hồ sơ</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item text-danger btn-lock-user" data-id="CUST-006">
+                                        <span>Khóa tài khoản</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Dòng dữ liệu mẫu 7: Thành viên Kim Cương VIP -->
+                    <tr>
+                        <td><strong>CUST-007</strong></td>
+                        <td>
+                            <div class="user-name-cell">
+                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="CUST-007">Vũ Đức Thắng</a>
+                            </div>
+                            <div class="user-sub-cell">thang.vu@email.com</div>
+                        </td>
+                        <td><strong>0977889900</strong></td>
+                        <td>
+                            <span class="admin-badge badge-tier-diamond">Kim Cương</span>
+                            <span class="points-val">3.420 pts</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-neutral">Bình thường</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-success">Đang hoạt động</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="action-dropdown-wrapper">
+                                <button type="button" class="btn-action-more" data-id="CUST-007" title="Tác vụ">•••</button>
+                                <div class="action-dropdown-menu">
+                                    <button type="button" class="dropdown-item btn-open-profile-drawer" data-id="CUST-007">
+                                        <span>Xem hồ sơ 360°</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item btn-edit-user-table" data-id="CUST-007">
+                                        <span>Sửa hồ sơ</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item text-danger btn-lock-user" data-id="CUST-007">
+                                        <span>Khóa tài khoản</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Dòng dữ liệu mẫu 8: Thành viên Đồng -->
+                    <tr>
+                        <td><strong>CUST-008</strong></td>
+                        <td>
+                            <div class="user-name-cell">
+                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="CUST-008">Bùi Thu Trang</a>
+                            </div>
+                            <div class="user-sub-cell">trang.bui@email.com</div>
+                        </td>
+                        <td><strong>0938776655</strong></td>
+                        <td>
+                            <span class="admin-badge badge-neutral">Đồng</span>
+                            <span class="points-val">80 pts</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-neutral">Bình thường</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-success">Đang hoạt động</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="action-dropdown-wrapper">
+                                <button type="button" class="btn-action-more" data-id="CUST-008" title="Tác vụ">•••</button>
+                                <div class="action-dropdown-menu">
+                                    <button type="button" class="dropdown-item btn-open-profile-drawer" data-id="CUST-008">
+                                        <span>Xem hồ sơ 360°</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item btn-edit-user-table" data-id="CUST-008">
+                                        <span>Sửa hồ sơ</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item text-danger btn-lock-user" data-id="CUST-008">
+                                        <span>Khóa tài khoản</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Dòng dữ liệu mẫu 9: Thành viên Bạc -->
+                    <tr>
+                        <td><strong>CUST-009</strong></td>
+                        <td>
+                            <div class="user-name-cell">
+                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="CUST-009">Ngô Gia Bảo</a>
+                            </div>
+                            <div class="user-sub-cell">bao.ngo@email.com</div>
+                        </td>
+                        <td><strong>0909123890</strong></td>
+                        <td>
+                            <span class="admin-badge badge-tier-silver">Bạc</span>
+                            <span class="points-val">510 pts</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-neutral">Bình thường</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-success">Đang hoạt động</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="action-dropdown-wrapper">
+                                <button type="button" class="btn-action-more" data-id="CUST-009" title="Tác vụ">•••</button>
+                                <div class="action-dropdown-menu">
+                                    <button type="button" class="dropdown-item btn-open-profile-drawer" data-id="CUST-009">
+                                        <span>Xem hồ sơ 360°</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item btn-edit-user-table" data-id="CUST-009">
+                                        <span>Sửa hồ sơ</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item text-danger btn-lock-user" data-id="CUST-009">
+                                        <span>Khóa tài khoản</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Dòng dữ liệu mẫu 10: Thành viên Vàng -->
+                    <tr>
+                        <td><strong>CUST-010</strong></td>
+                        <td>
+                            <div class="user-name-cell">
+                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="CUST-010">Đặng Thùy Linh</a>
+                            </div>
+                            <div class="user-sub-cell">linh.dang@email.com</div>
+                        </td>
+                        <td><strong>0945678123</strong></td>
+                        <td>
+                            <span class="admin-badge badge-tier-gold">Vàng</span>
+                            <span class="points-val">950 pts</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-neutral">Bình thường</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge badge-success">Đang hoạt động</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="action-dropdown-wrapper">
+                                <button type="button" class="btn-action-more" data-id="CUST-010" title="Tác vụ">•••</button>
+                                <div class="action-dropdown-menu">
+                                    <button type="button" class="dropdown-item btn-open-profile-drawer" data-id="CUST-010">
+                                        <span>Xem hồ sơ 360°</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item btn-edit-user-table" data-id="CUST-010">
+                                        <span>Sửa hồ sơ</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item text-danger btn-lock-user" data-id="CUST-010">
+                                        <span>Khóa tài khoản</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        <!-- PHÂN TRANG NẰM NGOÀI BẢNG, NỀN TRONG SUỐT, CĂN GIỮA -->
+        <div class="admin-pagination-bar">
+            <div class="pagination-controls">
+                <button type="button" class="pagination-btn disabled" title="Trang trước">&lt;</button>
+                <button type="button" class="pagination-btn active">1</button>
+                <button type="button" class="pagination-btn">2</button>
+                <button type="button" class="pagination-btn">3</button>
+                <span class="pagination-dots">...</span>
+                <button type="button" class="pagination-btn" title="Trang sau">&gt;</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 2: HỒ SƠ 360 ĐỘ (DRAWER TRƯỢT TỪ BÊN PHẢI HOẶC MÀN HÌNH CHI TIẾT)
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-profile">
+        <div class="profile-drawer-container admin-card">
+            <!-- THANH THAO TÁC MỘT CHẠM TRÊN ĐẦU DRAWER -->
+            <div class="profile-quick-actions-bar">
+                <div class="drawer-user-headline">
+                    <span class="headline-name" id="drawerCustomerName">Nguyễn Văn An</span>
+                    <span class="admin-badge badge-tier-gold" id="drawerCustomerTier">Vàng</span>
+                    <span class="admin-badge badge-success">0912345678</span>
+                </div>
+                <div class="drawer-action-buttons">
+                    <a href="tel:0912345678" class="action-btn-pill">Gọi điện</a>
+                    <a href="https://zalo.me/0912345678" target="_blank" class="action-btn-pill">Zalo</a>
+                    <button type="button" class="action-btn-pill btn-link-service">Đặt lịch</button>
+                    <button type="button" class="action-btn-pill btn-link-order">Lên đơn</button>
+                    <button type="button" class="action-btn-pill btn-link-complaint text-danger">Khiếu nại</button>
+                </div>
+            </div>
+
+            <!-- BANNER CẢNH BÁO KHẨN CẤP -->
+            <div class="emergency-alert-banner">
+                <span class="alert-text">Khách hàng đang có vé khiếu nại mức độ Cao chưa giải quyết (Mã: TK-008 - Bé Lu bị trầy móng chân). Cần giải quyết dứt điểm trước khi nhận giao dịch mới!</span>
+            </div>
+
+            <!-- 5 TAB CON CHI TIẾT BÊN TRONG HỒ SƠ -->
+            <div class="drawer-subtabs-bar">
+                <button type="button" class="drawer-tab-btn active" data-drawertab="dtab-personal">Cá nhân</button>
+                <button type="button" class="drawer-tab-btn" data-drawertab="dtab-pets">Thú cưng</button>
+                <button type="button" class="drawer-tab-btn" data-drawertab="dtab-orders">
+                    <span>Đơn hàng</span>
+                    <span class="tab-badge-count">1</span>
+                </button>
+                <button type="button" class="drawer-tab-btn" data-drawertab="dtab-bookings">
+                    <span>Lịch hẹn</span>
+                    <span class="tab-badge-count">1</span>
+                </button>
+                <button type="button" class="drawer-tab-btn" data-drawertab="dtab-complaints">
+                    <span>Khiếu nại</span>
+                    <span class="tab-badge-count">1</span>
+                </button>
+            </div>
+
+            <!-- NỘI DUNG 5 TAB CON -->
+            <div class="drawer-tab-body">
+                <!-- TAB CON 1: THÔNG TIN CÁ NHÂN -->
+                <div class="drawer-tab-panel active" id="dtab-personal">
+                    <div class="detail-grid-two-col">
+                        <div class="detail-box">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <h4 class="detail-box-title" style="margin-bottom: 0;">Hồ sơ cá nhân</h4>
+                                <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenEditProfileModal">
+                                    <span>Sửa hồ sơ</span>
+                                </button>
+                            </div>
+                            <div class="data-pair-row"><span class="data-key">Mã định danh:</span><span class="data-val" id="profileValCustId">CUST-001</span></div>
+                            <div class="data-pair-row"><span class="data-key">Họ và tên:</span><span class="data-val" id="profileValFullName">Nguyễn Văn An</span></div>
+                            <div class="data-pair-row"><span class="data-key">Số điện thoại:</span><span class="data-val" id="profileValPhone">0912345678</span></div>
+                            <div class="data-pair-row"><span class="data-key">Email:</span><span class="data-val" id="profileValEmail">an.nguyen@email.com</span></div>
+                            <div class="data-pair-row"><span class="data-key">Giới tính:</span><span class="data-val" id="profileValGender">Nam</span></div>
+                            <div class="data-pair-row" style="align-items: flex-start; padding: 10px 0;">
+                                <span class="data-key" style="margin-top: 3px;">Sổ địa chỉ:</span>
+                                <div class="data-val" id="profileValAddressContainer" style="display: flex; flex-direction: column; gap: 8px; flex: 1;">
+                                    <div class="drawer-address-row">
+                                        <span class="admin-badge badge-success" style="font-size: 11px; padding: 2px 7px;">Mặc định</span>
+                                        <span>120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP.HCM</span>
+                                    </div>
+                                    <div class="drawer-address-row" style="color: var(--text-muted);">
+                                        <span class="admin-badge badge-neutral" style="font-size: 11px; padding: 2px 7px;">Phụ</span>
+                                        <span>Toà nhà Bitexco, 2 Hải Triều, Bến Nghé, Quận 1, TP.HCM</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="data-pair-row" style="border-bottom: none; padding-top: 10px;">
+                                <span class="data-key">Tài khoản & SMS:</span>
+                                <span class="data-val" id="profileValAuthStatus" style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="admin-badge badge-success">Đã kích hoạt</span>
+                                    <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnResendSmsToken" style="font-size: 11.5px; padding: 3px 8px;">Gửi lại SMS</button>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="detail-box">
+                            <h4 class="detail-box-title">Ghi chú</h4>
+                            <textarea class="admin-input textarea-note" rows="5" placeholder="Ghi chú sở thích, tính cách khách hàng...">Khách hàng thân thiết từ 2024. Rất yêu quý bé Lu (Poodle). Khách yêu cầu thợ cắt tỉa nhẹ nhàng, không xịt nước hoa nồng.</textarea>
+                            <div style="display: flex; justify-content: flex-end; margin-top: auto; padding-top: 8px;">
+                                <button type="button" class="admin-btn admin-btn-primary" style="font-size: 13px; padding: 8px 18px;">Lưu ghi chú</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CON 2: THÚ CƯNG & SỨC KHỎE -->
+                <div class="drawer-tab-panel" id="dtab-pets">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 class="detail-box-title" style="margin-bottom: 0;">Danh sách thú cưng sở hữu</h4>
+                        <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenAddPetModal">
+                            <span>+ Thêm bé cưng</span>
+                        </button>
+                    </div>
+                    <div class="pet-cards-list" id="petCardsListContainer">
+                        <div class="pet-detail-card">
+                            <div class="pet-card-head">
+                                <span class="pet-card-name">Bé Lu (Mã: PET-001)</span>
+                                <span class="admin-badge badge-warning">Cảnh báo: Dị ứng phấn hoa</span>
+                            </div>
+                            <div class="pet-card-body">
+                                <div><strong>Loài:</strong> Chó Poodle</div>
+                                <div><strong>Cân nặng:</strong> 4.5 kg</div>
+                                <div><strong>Tiền sử tiêm chủng:</strong> Sổ theo dõi tiêm phòng định kỳ đầy đủ (Chủ xuất trình tháng 8/2026)</div>
+                                <div><strong>Tính cách / Lưu ý:</strong> Bé ngoan, hơi sợ tiếng máy sấy công suất lớn</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CON 3: LỊCH SỬ ĐƠN HÀNG -->
+                <div class="drawer-tab-panel" id="dtab-orders">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Thời gian</th>
+                                <th>Tổng tiền</th>
+                                <th>Thanh toán</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>ORD-8921</strong></td>
+                                <td>25/09/2026</td>
+                                <td>450.000 đ</td>
+                                <td><span class="admin-badge badge-success">Đã thanh toán</span></td>
+                                <td><span class="admin-badge badge-info">Đang giao</span></td>
+                                <td><button type="button" class="admin-btn admin-btn-secondary btn-sm">Xem chi tiết đơn</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- TAB CON 4: LỊCH SỬ LỊCH HẸN -->
+                <div class="drawer-tab-panel" id="dtab-bookings">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Mã lịch</th>
+                                <th>Ngày hẹn</th>
+                                <th>Dịch vụ</th>
+                                <th>Thợ phụ trách</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>AP-201</strong></td>
+                                <td>27/09/2026 09:00</td>
+                                <td>Spa Grooming & Cắt tỉa tạo kiểu</td>
+                                <td>Trần Hoàng (Thợ bậc 2)</td>
+                                <td><span class="admin-badge badge-warning">Đang thực hiện</span></td>
+                                <td><button type="button" class="admin-btn admin-btn-secondary btn-sm">Xem nhật ký</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- TAB CON 5: KHIẾU NẠI & ĐỔI TRẢ -->
+                <div class="drawer-tab-panel" id="dtab-complaints">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Ticket</th>
+                                <th>Ngày gửi</th>
+                                <th>Sự cố phản ánh</th>
+                                <th>Mức độ</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>TK-008</strong></td>
+                                <td>27/09/2026 10:15</td>
+                                <td>Bé Lu bị trầy móng sau buổi cắt tỉa</td>
+                                <td><span class="admin-badge badge-danger">Cao</span></td>
+                                <td><span class="admin-badge badge-warning">Đang xử lý</span></td>
+                                <td><button type="button" class="admin-btn admin-btn-primary btn-sm">Mở Ticket xử lý</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 3: PAWPOINT (CHĂM SÓC THÂN THIẾT & TÍCH ĐIỂM)
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-pawpoint">
+        <div class="pawpoint-grid-layout">
+            <!-- BẢNG CẤU HÌNH 4 HẠNG THÀNH VIÊN -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <span class="admin-card-title">Chính sách hạng thẻ</span>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Hạng thẻ</th>
+                            <th>Chi tiêu</th>
+                            <th>Chiết khấu</th>
+                            <th>Quyền lợi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="admin-badge badge-neutral">Đồng</span></td>
+                            <td>0 đ</td>
+                            <td>0%</td>
+                            <td>Tích lũy 10.000 đ = 1 Pawpoint</td>
+                        </tr>
+                        <tr>
+                            <td><span class="admin-badge badge-tier-silver">Bạc</span></td>
+                            <td>3.000.000 đ</td>
+                            <td>5%</td>
+                            <td>Quà tặng sinh nhật bé cưng</td>
+                        </tr>
+                        <tr>
+                            <td><span class="admin-badge badge-tier-gold">Vàng</span></td>
+                            <td>8.000.000 đ</td>
+                            <td>8%</td>
+                            <td>Ưu tiên giữ phòng Pet Hotel ngày lễ</td>
+                        </tr>
+                        <tr>
+                            <td><span class="admin-badge badge-tier-diamond">Kim Cương</span></td>
+                            <td>20.000.000 đ</td>
+                            <td>12%</td>
+                            <td>Miễn phí đưa đón Pet Taxi bán kính 5km</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- NHẬT KÝ BIẾN ĐỘNG ĐIỂM VÀ NÚT ĐỀN BÙ SỰ CỐ -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <span class="admin-card-title">Lịch sử Pawpoint</span>
+                    <button type="button" class="admin-btn admin-btn-primary btn-sm" id="btnOpenAdjustPointsModal">
+                        <span>Bù điểm sự cố</span>
+                    </button>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Khách hàng</th>
+                            <th>Biến động</th>
+                            <th>Số dư</th>
+                            <th>Lý do</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>27/09/2026 10:30</td>
+                            <td>Nguyễn Văn An (0912345678)</td>
+                            <td><strong class="text-success">+50 pts</strong></td>
+                            <td>1.250 pts</td>
+                            <td>Bù sự cố dịch vụ theo Ticket TK-008</td>
+                        </tr>
+                        <tr>
+                            <td>25/09/2026 14:20</td>
+                            <td>Lê Thị Bình (0987654321)</td>
+                            <td><strong class="text-success">+45 pts</strong></td>
+                            <td>420 pts</td>
+                            <td>Tích điểm đơn hàng ORD-8920</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         MODAL 1: TIẾP NHẬN TẠI QUẦY (QUICK ADD)
+         ==================================================================== -->
+    <div class="admin-modal-backdrop" id="modalAddCustomer" style="display: none;">
+        <div class="admin-modal-card">
+            <div class="admin-modal-header">
+                <span class="admin-modal-title">Tiếp nhận tại quầy</span>
+                <button type="button" class="btn-modal-close" id="btnCloseAddCustomer">Đóng</button>
+            </div>
+            <form id="formAddCustomerQuick">
+                <div class="form-group mb-3">
+                    <label class="form-label">Họ và tên khách hàng</label>
+                    <input type="text" class="admin-input" id="quickAddName" placeholder="Nhập họ tên...">
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Số điện thoại (*)</label>
+                    <input type="tel" class="admin-input" id="quickAddPhone" placeholder="0901234567 (Bắt buộc 10 số)" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Tên bé cưng</label>
+                    <input type="text" class="admin-input" id="quickAddPetName" placeholder="Ví dụ: Bé Lu, Bé Miu...">
+                </div>
+                <div class="form-row-two-col mb-3">
+                    <div class="form-group">
+                        <label class="form-label">Loài thú cưng</label>
+                        <select class="admin-select" id="quickAddPetSpecies">
+                            <option value="DOG">Chó</option>
+                            <option value="CAT">Mèo</option>
+                            <option value="OTHER">Khác</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cân nặng (kg)</label>
+                        <input type="number" step="0.1" class="admin-input" id="quickAddPetWeight" placeholder="Ví dụ: 4.5">
+                    </div>
+                </div>
+
+                <div class="modal-actions-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAddCustomer">Hủy bỏ</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Lưu & Cấp tài khoản</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 2: ĐIỀU CHỈNH ĐIỂM THƯỞNG ĐỀN BÙ SỰ CỐ
+         ==================================================================== -->
+    <div class="admin-modal-backdrop" id="modalAdjustPoints" style="display: none;">
+        <div class="admin-modal-card">
+            <div class="admin-modal-header">
+                <span class="admin-modal-title">Điều chỉnh Pawpoint</span>
+                <button type="button" class="btn-modal-close" id="btnCloseAdjustPoints">Đóng</button>
+            </div>
+            <form id="formAdjustPoints">
+                <div class="form-group mb-3">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="tel" class="admin-input" id="adjustPhone" placeholder="Nhập SĐT khách cần bù điểm..." required>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Số điểm Pawpoint bù</label>
+                    <input type="number" class="admin-input" id="adjustPointsVal" placeholder="Ví dụ: 50" required>
+                </div>
+                <div class="form-group mb-4">
+                    <label class="form-label">Lý do điều chỉnh</label>
+                    <select class="admin-select" id="adjustReason">
+                        <option value="COMPENSATION_SERVICE">Bù sự cố dịch vụ Spa / Hotel trễ hẹn</option>
+                        <option value="COMPENSATION_ORDER">Bù sự cố giao hàng chậm / sản phẩm lỗi</option>
+                        <option value="GOODWILL_VIP">Tặng điểm tri ân khách hàng thân thiết</option>
+                    </select>
+                </div>
+                <div class="modal-actions-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAdjustPoints">Hủy bỏ</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Xác nhận</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 3: CHỈNH SỬA HỒ SƠ KHÁCH HÀNG (EDIT PROFILE)
+         ==================================================================== -->
+    <div class="admin-modal-backdrop" id="modalEditCustomer" style="display: none;">
+        <div class="admin-modal-card">
+            <div class="admin-modal-header">
+                <span class="admin-modal-title">Chỉnh sửa hồ sơ khách hàng</span>
+                <button type="button" class="btn-modal-close" id="btnCloseEditCustomer">Đóng</button>
+            </div>
+            <form id="formEditCustomer">
+                <input type="hidden" id="editCustId" value="CUST-001">
+                <div class="form-group mb-3">
+                    <label class="form-label">Họ và tên khách hàng (*)</label>
+                    <input type="text" class="admin-input" id="editCustFullName" placeholder="Nhập họ tên..." required>
+                </div>
+                <div class="form-row-two-col mb-3">
+                    <div class="form-group">
+                        <label class="form-label">Số điện thoại (*)</label>
+                        <input type="tel" class="admin-input" id="editCustPhone" placeholder="0901234567 (10 số)" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email liên hệ</label>
+                        <input type="email" class="admin-input" id="editCustEmail" placeholder="example@email.com">
+                    </div>
+                </div>
+                <div class="form-row-two-col mb-3">
+                    <div class="form-group">
+                        <label class="form-label">Giới tính</label>
+                        <select class="admin-select" id="editCustGender">
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ngày sinh</label>
+                        <input type="date" class="admin-input" id="editCustDob">
+                    </div>
+                </div>
+                <div class="address-book-wrapper">
+                    <div class="address-book-header">
+                        <label class="form-label">Sổ địa chỉ nhận hàng</label>
+                        <button type="button" class="btn-text-add-address" id="btnAddAddressItem">+ Thêm địa chỉ</button>
+                    </div>
+                    <div class="address-list-container" id="editCustAddressList">
+                        <!-- Render danh sách địa chỉ bằng JavaScript -->
+                    </div>
+                </div>
+
+                <div class="modal-actions-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelEditCustomer">Hủy bỏ</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 4: THÊM THÚ CƯNG MỚI (ADD PET)
+         ==================================================================== -->
+    <div class="admin-modal-backdrop" id="modalAddPet" style="display: none;">
+        <div class="admin-modal-card">
+            <div class="admin-modal-header">
+                <span class="admin-modal-title">Thêm bé cưng cho khách hàng</span>
+                <button type="button" class="btn-modal-close" id="btnCloseAddPet">Đóng</button>
+            </div>
+            <form id="formAddPet">
+                <div class="form-row-two-col mb-3">
+                    <div class="form-group">
+                        <label class="form-label">Tên bé cưng (*)</label>
+                        <input type="text" class="admin-input" id="addPetName" placeholder="Ví dụ: Bé Bông, Bé Miu..." required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Loài (*)</label>
+                        <select class="admin-select" id="addPetSpecies">
+                            <option value="Chó">Chó</option>
+                            <option value="Mèo">Mèo</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row-two-col mb-3">
+                    <div class="form-group">
+                        <label class="form-label">Giống loài</label>
+                        <input type="text" class="admin-input" id="addPetBreed" placeholder="Ví dụ: Poodle, Corgi, Golden, Mèo Anh...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cân nặng (kg)</label>
+                        <input type="number" step="0.1" class="admin-input" id="addPetWeight" placeholder="Ví dụ: 5.2">
+                    </div>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Tiền sử tiêm chủng</label>
+                    <input type="text" class="admin-input" id="addPetVaccine" placeholder="Ví dụ: Đã tiêm dại và 7 bệnh mũi 2...">
+                </div>
+                <div class="form-group mb-4">
+                    <label class="form-label">Lưu ý an toàn / Cảnh báo sức khỏe</label>
+                    <input type="text" class="admin-input" id="addPetAlert" placeholder="Ví dụ: Dị ứng sữa tắm hoa hồng, sợ sấy...">
+                </div>
+
+                <div class="modal-actions-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAddPet">Hủy bỏ</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Lưu bé cưng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

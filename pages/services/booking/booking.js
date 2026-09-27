@@ -1716,6 +1716,7 @@ async function createSupabaseCustomer(currentUser) {
                 email: null,
                 password_hash: null,
                 account_status: 'ACTIVE',
+                is_temporary: true,
                 phone_main: phone,
                 registered_at: new Date().toISOString(),
             })

@@ -1,0 +1,221 @@
+TÀI LIỆU ĐẶC TẢ PHÂN HỆ QUẢN LÝ KHÁCH HÀNG
+Dành cho: Developer Frontend và Backend
+Phân hệ: Quản lý Khách hàng và Thành viên
+
+
+1. TỔNG QUAN MÀN HÌNH
+Màn hình là trung tâm dữ liệu người dùng của toàn bộ hệ thống PawPal, phục vụ ba mục tiêu cốt lõi:
+Giúp Lễ tân hoặc Thu ngân tiếp nhận và tạo nhanh tài khoản cho khách vãng lai tại quầy trong 30 giây.
+Cung cấp góc nhìn Hồ sơ 360 độ gồm Lịch sử đơn hàng, Lịch hẹn, Thú cưng và Khiếu nại để nhân viên nắm rõ khách hàng ngay lập tức mà không phải chuyển trang.
+Quản lý chính sách Hạng thành viên, tích lũy điểm Pawpoint và điều chỉnh điểm thưởng đền bù sự cố.
+Đối tượng sử dụng gồm:
+Lễ tân và Thu ngân: Tiếp nhận khách tại quầy, tra cứu số điện thoại, tạo đơn hàng và lịch hẹn nhanh.
+Nhân viên CSKH: Xem khiếu nại, lịch sử tương tác và bù điểm xin lỗi.
+Quản lý và Admin: Khóa tài khoản vi phạm, xuất báo cáo danh sách khách hàng và quản lý hạng thành viên.
+
+2. BỐ CỤC GIAO DIỆN VÀ MÔ TẢ CÁC SUB-TAB
+Sub-tab 1: Khách hàng
+Màn hình trung tâm quản lý toàn bộ tài khoản người dùng của hệ thống, được bố trí thành ba khu vực từ trên xuống dưới:
+Khu vực thẻ thống kê nhanh:
+Nằm ở trên cùng màn hình, hiển thị năm chỉ số gồm: Tổng số khách hàng, Thành viên chính thức, Khách vãng lai, Tài khoản bị khóa và Số lượng khách hàng đang có khiếu nại chưa xử lý.
+Khu vực thanh công cụ và bộ lọc:
+Ô tìm kiếm đa năng cho phép tìm theo Số điện thoại, Họ tên, Tên thú cưng hoặc Email.
+Bộ lọc chọn Hạng thành viên gồm Bạc, Vàng, Kim Cương.
+Bộ lọc chọn Trạng thái tài khoản gồm Đang hoạt động, Tạm thời, Bị khóa.
+Bộ lọc nhanh hiển thị các khách hàng đang có khiếu nại cần chú ý.
+Nút Xuất báo cáo Excel hoặc CSV.
+Nút Thêm khách mới để mở modal tiếp nhận tại quầy.
+Khu vực bảng danh sách khách hàng:
+Bảng dữ liệu gồm các cột: Mã khách hàng, Họ và tên, Số điện thoại, Hạng thành viên và số điểm, Cột Cảnh báo chú ý, Trạng thái tài khoản, Cột thao tác có nút Xem hồ sơ 360 độ.
+Cột Cảnh báo chú ý sẽ gắn nhãn cảnh báo nếu khách hàng có vé khiếu nại đang chờ xử lý hoặc thú cưng của khách có lưu ý đặc biệt về sức khỏe hoặc tính hung dữ.
+Dưới cùng là thanh phân trang hiển thị 10 khách hàng trên một trang kèm nút chuyển trang.
+[Button] Thêm Khách hàng
+Hộp thoại bật lên giữa màn hình khi nhân viên bấm nút Thêm khách mới tại quầy, gồm các trường nhập liệu cơ bản:
+Ô nhập Họ và tên khách hàng.
+Ô nhập Số điện thoại 10 chữ số của khách hàng, đây là trường bắt buộc.
+Ô nhập Tên thú cưng ban đầu của khách mang đến.
+Dropdown chọn Loài thú cưng gồm Chó, Mèo hoặc Khác.
+Ô nhập Cân nặng của bé tính theo kg.
+Nút Lưu và Cấp tài khoản tạm kèm nút Hủy bỏ.
+Sub-tab 2: Hồ sơ 
+Mở nhanh dưới dạng Drawer trượt từ bên phải sang hoặc hiển thị toàn màn hình khi bấm nút Xem hồ sơ:
+Thanh thao tác nhanh một chạm trên đầu Drawer:
+Nút Gọi điện thoại trực tiếp đến số của khách.
+Nút Mở Zalo trò chuyện nhanh với khách.
+Nút Đặt lịch dịch vụ ngay: Tự động chuyển sang phân hệ Dịch vụ và điền sẵn thông tin khách.
+Nút Lên đơn bán hàng ngay: Tự động chuyển sang phân hệ Bán hàng và điền sẵn tên, địa chỉ.
+Nút Tạo vé khiếu nại CSKH: Tự động tạo vé hỗ trợ mới liên kết với mã khách hàng này.
+Banner cảnh báo khẩn cấp:
+Thanh thông báo màu đỏ xuất hiện nổi bật nếu khách hàng này đang có vé khiếu nại mức độ Cao chưa được giải quyết.
+Năm tab con chi tiết bên trong Hồ sơ:
+Tab 1 Thông tin cá nhân: Hiển thị Email, Giới tính, Ngày sinh, Sổ địa chỉ nhận hàng và khung ghi chú nội bộ bí mật chỉ Admin nhìn thấy.
+Tab 2 Thú cưng và Sức khỏe: Danh sách các bé cún, mèo của khách, tiền sử tiêm chủng, cân nặng và các lưu ý an toàn.
+Tab 3 Lịch sử đơn hàng: Bảng danh sách các đơn mua hàng tại shop, có mã đơn hàng để bấm nhảy sang phân hệ Bán hàng.
+Tab 4 Lịch sử lịch hẹn: Bảng danh sách các lịch hẹn tắm spa, khách sạn thú cưng, có mã lịch hẹn để bấm nhảy sang phân hệ Dịch vụ.
+Tab 5 Khiếu nại và Đổi trả: Danh sách toàn bộ vé hỗ trợ và đơn đổi trả hàng của khách. Bấm vào một vé sẽ chuyển thẳng sang phân hệ Khiếu nại và mở đúng khung chat.
+Sub-tab 3: Pawpoint và Khách hàng thân thiết
+Màn hình chuyên trách về chăm sóc khách hàng thân thiết và tích điểm:
+Bảng cấu hình chính sách bốn hạng thành viên: Hạng Đồng, Bạc, Vàng và Kim Cương kèm tỷ lệ chiết khấu giảm giá.
+Danh sách khách hàng VIP và bảng xếp hạng chi tiêu cao nhất.
+Bảng nhật ký lịch sử cộng hoặc trừ điểm Pawpoint của từng khách hàng.
+Nút Điều chỉnh điểm thưởng để cộng điểm đền bù cho khách khi có sự cố.
+
+3. ĐẶC TẢ DỮ LIỆU TỪNG THÀNH PHẦN
+
+Tên trường trên UI
+Kiểu Component
+Nguồn Database Supabase
+Nguồn Local Fallback
+Bắt buộc
+Quy tắc định dạng và ràng buộc
+Mã khách hàng
+Nhãn chữ
+customer.id
+u.id hoặc USER-001
+Có
+Mã định danh duy nhất hiển thị rút gọn
+Số điện thoại
+Đường dẫn số
+customer.phone_main
+u.phone
+Có
+Chuỗi 10 số bắt đầu bằng 0, duy nhất
+Họ và tên
+Ô nhập văn bản
+customer_profile.full_name
+u.name
+Có
+Tối thiểu 2 ký tự
+Email
+Ô nhập email
+customer.email
+u.email
+Không
+Đúng định dạng thư điện tử
+Giới tính
+Nút chọn
+customer_profile.gender
+u.gender
+Không
+Nhận giá trị nam, nu hoặc khac
+Ngày sinh
+Ô chọn ngày
+customer_profile.date_of_birth
+u.dob
+Không
+Định dạng năm tháng ngày YYYY-MM-DD
+Loại tài khoản
+Nhãn màu
+customer.is_temporary
+u.is_temporary
+Có
+Giá trị true là khách vãng lai, false là thành viên
+Trạng thái tài khoản
+Nhãn trạng thái
+customer.account_status
+u.status
+Có
+Nhận giá trị ACTIVE hoạt động hoặc LOCKED bị khóa
+Mã Token kích hoạt
+Chuỗi ký tự ẩn
+customer.auth_token
+pawpal_temp_tokens
+Không
+Mã dùng để mở trang thiết lập mật khẩu qua SMS
+Hạng thành viên
+Nhãn hạng
+membership_tier.tier_name
+u.tier
+Có
+Nhận tên hạng Đồng, Bạc, Vàng hoặc Kim Cương
+Điểm thưởng Pawpoint
+Số nguyên
+customer_membership.total_paw_points
+u.points
+Có
+Số nguyên không âm lớn hơn hoặc bằng 0
+Ghi chú nội bộ
+Khung văn bản dài
+customer_internal_note.note
+u.internal_notes
+Không
+Tối đa 1000 ký tự, chỉ nhân viên nhìn thấy
+Cảnh báo chú ý
+Nhãn chú ý
+Tổng hợp từ ticket và sức khỏe pet
+Dữ liệu tính toán
+Không
+Cảnh báo vé khiếu nại chưa xử lý hoặc pet dữ
+Sổ địa chỉ
+Danh sách thẻ
+customer_address
+u.addresses
+Không
+Tên người nhận, số điện thoại, số nhà, tỉnh thành
+Thú cưng sở hữu
+Danh sách thẻ
+pet_profile
+pets.json
+Không
+Tên bé, loài chó mèo, giống loài, cân nặng
+
+
+4. NGHIỆP VỤ VÀ LUỒNG THAO TÁC
+4.1. Luồng tiếp nhận và thêm nhanh khách tại quầy
+Khi khách vãng lai đến quầy chưa có tài khoản:
+Nhân viên bấm nút Thêm khách mới để mở modal tiếp nhận tại quầy.
+Nhân viên nhập Họ tên, Số điện thoại và thông tin bé cưng gồm Tên bé, Loài, Cân nặng.
+Nhân viên bấm nút Lưu và cấp tài khoản tạm:
+Hệ thống kiểm tra số điện thoại: Nếu số điện thoại đã tồn tại tài khoản thành viên thì báo lỗi không cho tạo trùng.
+Hệ thống tạo mới một dòng trong bảng customer với cờ is_temporary bằng true và account_status bằng ACTIVE.
+Hệ thống tạo bản ghi hồ sơ cá nhân và hồ sơ thú cưng tương ứng.
+Hệ thống tự động tạo mã token kích hoạt và gửi tin nhắn SMS chứa liên kết tạo mật khẩu đến số điện thoại của khách.
+Màn hình đóng modal, hiển thị thông báo thành công và cập nhật lại danh sách khách hàng.
+4.2. Luồng thao tác nhanh một chạm trên Hồ sơ 360 độ
+Khi khách gọi điện đặt lịch hẹn dịch vụ:
+Nhân viên bấm nút Đặt lịch dịch vụ ngay trên đầu hồ sơ khách.
+Hệ thống lưu thông tin khách vào bộ nhớ phiên và chuyển thẳng sang phân hệ Dịch vụ, tự động điền sẵn Họ tên, Số điện thoại và danh sách Thú cưng vào form đặt lịch.
+Khi khách gọi điện nhờ đặt mua thêm sản phẩm:
+Nhân viên bấm nút Lên đơn bán hàng ngay.
+Hệ thống chuyển sang phân hệ Bán hàng và mở sẵn form tạo đơn mới với Tên người nhận và Địa chỉ giao hàng mặc định của khách.
+Khi khách phản ánh phàn nàn qua điện thoại:
+Nhân viên bấm nút Tạo vé khiếu nại CSKH.
+Hệ thống mở form tạo vé hỗ trợ mới, gán sẵn mã khách hàng và tự động đánh dấu mức độ ưu tiên Cao nếu là sự cố gấp.
+Nút Gọi điện và Mở Zalo:
+Bấm nút Gọi điện sẽ kích hoạt cuộc gọi trực tiếp đến số điện thoại của khách.
+Bấm nút Mở Zalo sẽ sao chép số điện thoại và mở đường dẫn nhắn tin Zalo với khách hàng.
+4.3. Luồng điều chỉnh điểm thưởng đền bù sự cố
+Khi giải quyết khiếu nại hoặc dịch vụ bị trễ hẹn:
+Nhân viên mở mục Pawpoint của khách và bấm nút Điều chỉnh điểm.
+Nhập số điểm cần cộng bù, ví dụ cộng 50 điểm, và chọn lý do là Bù sự cố dịch vụ.
+Bấm xác nhận điều chỉnh:
+Hệ thống cộng trực tiếp số điểm vào tổng điểm của khách trong bảng customer_membership.
+Hệ thống ghi lại một dòng biến động vào sổ cái paw_point_transaction với lý do rõ ràng.
+Hệ thống gửi thông báo cảm ơn và xin lỗi đến tài khoản của khách hàng.
+4.4. Luồng khóa và mở khóa tài khoản
+Khi phát hiện khách hàng có hành vi xấu hoặc có tranh chấp:
+Nhân viên bấm nút Khóa tài khoản và nhập lý do khóa.
+Hệ thống đổi trạng thái account_status thành LOCKED.
+Khách hàng bị khóa sẽ bị đăng xuất khỏi ứng dụng và không thể đặt lịch hay mua hàng cho đến khi Admin bấm nút Mở khóa tài khoản trở lại trạng thái ACTIVE.
+4.5. Cơ chế liên kết chéo giữa các phân hệ
+Bấm vào Mã đơn hàng trên hồ sơ khách sẽ lập tức chuyển hướng sang phân hệ Bán hàng để mở chi tiết đơn hàng đó.
+Bấm vào Mã lịch hẹn sẽ chuyển hướng sang phân hệ Dịch vụ để mở chi tiết ca làm việc đó.
+Bấm vào Mã khiếu nại sẽ chuyển thẳng sang phân hệ Khiếu nại, mở đúng vé hỗ trợ và định vị con trỏ vào khung trả lời.
+
+5. CÁC TRẠNG THÁI MÀN HÌNH VÀ XỬ LÝ NGOẠI LỆ
+5.1. Các trạng thái màn hình
+Trạng thái đang tải dữ liệu: Khi đang đọc dữ liệu từ máy chủ, bảng danh sách hiển thị hiệu ứng khung xám nhấp nháy để người dùng biết hệ thống đang xử lý.
+Trạng thái danh sách rỗng:
+Khi hệ thống chưa có khách hàng nào: Hiển thị dòng thông báo Chưa có khách hàng nào trong hệ thống kèm nút Thêm khách mới.
+Khi tìm kiếm không có kết quả: Hiển thị dòng thông báo Không tìm thấy khách hàng nào phù hợp kèm nút Xóa bộ lọc tìm kiếm.
+Trạng thái mất kết nối: Khi xảy ra lỗi mạng hoặc máy chủ không phản hồi, hiển thị thanh thông báo lỗi màu đỏ và tự động chuyển sang đọc dữ liệu lưu tạm ở bộ nhớ máy.
+5.2. Xử lý các trường hợp ngoại lệ
+Xử lý trùng số điện thoại khi thêm nhanh:
+Nếu số điện thoại vừa nhập đã tồn tại trong hệ thống, dừng thao tác lưu và hiển thị dòng cảnh báo màu đỏ thông báo số điện thoại này đã thuộc về khách hàng cũ, đồng thời cung cấp nút bấm để mở ngay hồ sơ của khách hàng cũ đó.
+Xử lý khách hàng vãng lai chưa có mật khẩu:
+Trong hồ sơ khách vãng lai, phần mật khẩu hiển thị nhãn Tài khoản tạm chưa thiết lập mật khẩu kèm theo nút Gửi lại tin nhắn kích hoạt để nhân viên gửi lại liên kết tạo mật khẩu khi khách yêu cầu.
+Xử lý thú cưng có rủi ro an toàn:
+Nếu thú cưng của khách có đánh dấu hung dữ hoặc dị ứng sữa tắm, hệ thống luôn hiển thị nhãn cảnh báo nổi bật màu cam hoặc đỏ ở cột Chú ý và trên đầu hồ sơ để nhắc nhở kỹ thuật viên cẩn thận trước khi làm dịch vụ.
+Xử lý khách hàng đang có khiếu nại chưa đóng:
+Khách hàng có vé khiếu nại mức độ Cao hoặc đang chờ xử lý sẽ được đổi màu dòng danh sách và ưu tiên hiển thị lên đầu để nhân viên giải quyết dứt điểm trước khi tiếp nhận các giao dịch mới.
+

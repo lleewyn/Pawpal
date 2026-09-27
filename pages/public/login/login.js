@@ -26,6 +26,7 @@ async function supabaseLogin(phone, password) {
                 email,
                 phone_main,
                 account_status,
+                is_temporary,
                 password_hash,
                 customer_profile (
                     full_name,
@@ -57,6 +58,11 @@ async function supabaseLogin(phone, password) {
 
         if (c.account_status !== 'ACTIVE') {
             return { success: false, error: 'account_inactive' };
+        }
+
+        const isTemp = c.is_temporary !== undefined ? Boolean(c.is_temporary) : (!c.password_hash);
+        if (isTemp) {
+            return { success: false, error: 'wrong_password' };
         }
 
         const profile    = Array.isArray(c.customer_profile) ? (c.customer_profile[0] || {}) : (c.customer_profile || {});
@@ -99,6 +105,7 @@ async function supabaseResolveUserByPhone(phone) {
                 email,
                 phone_main,
                 account_status,
+                is_temporary,
                 password_hash,
                 customer_profile (
                     full_name,
@@ -123,6 +130,8 @@ async function supabaseResolveUserByPhone(phone) {
         const membership = Array.isArray(c.customer_membership) ? (c.customer_membership[0] || {}) : (c.customer_membership || {});
         const tier       = membership.membership_tier || {};
 
+        const isTemp = c.is_temporary !== undefined ? Boolean(c.is_temporary) : (!c.password_hash || c.account_status === 'INACTIVE');
+
         return {
             id:           c.id,
             name:         String(profile.full_name || '').trim() || c.phone_main,
@@ -130,7 +139,7 @@ async function supabaseResolveUserByPhone(phone) {
             email:        c.email || '',
             password:     c.password_hash || '',
             role:         'customer',
-            is_temporary: !c.password_hash || c.account_status === 'INACTIVE',
+            is_temporary: isTemp,
             points:       membership.total_paw_points || 0,
             tier:         tier.tier_name || 'Đồng',
             gender:       profile.gender || '',
@@ -220,16 +229,18 @@ async function supabaseCheckPhone(phone) {
     try {
         const { data, error } = await db
             .from('customer')
-            .select('id, account_status')
+            .select('id, account_status, is_temporary, password_hash')
             .eq('phone_main', phone)
             .limit(1);
 
         if (error) return { exists: false, error: error.message };
         if (!data || data.length === 0) return { exists: false };
 
+        const c = data[0];
+        const isTemp = c.is_temporary !== undefined ? Boolean(c.is_temporary) : (!c.password_hash || c.account_status === 'INACTIVE');
         return {
             exists: true,
-            isTemporary: data[0].account_status === 'INACTIVE',
+            isTemporary: isTemp,
         };
     } catch (err) {
         return { exists: false, error: err.message };
@@ -244,7 +255,7 @@ async function supabaseRegister(name, phone, password) {
     try {
         const { data: existingCust, error: checkErr } = await db
             .from('customer')
-            .select('id, password_hash')
+            .select('id, password_hash, is_temporary, account_status')
             .eq('phone_main', phone)
             .limit(1);
 
@@ -254,16 +265,20 @@ async function supabaseRegister(name, phone, password) {
 
         if (existingCust && existingCust.length > 0) {
             const cust = existingCust[0];
-            // Nếu đã có mật khẩu => Tài khoản thành viên đã tồn tại
-            if (cust.password_hash) {
+            const isTemp = cust.is_temporary !== undefined ? Boolean(cust.is_temporary) : (!cust.password_hash || cust.account_status === 'INACTIVE');
+            
+            // Nếu đã có mật khẩu và không phải là khách vãng lai => Tài khoản thành viên đã tồn tại
+            if (!isTemp && cust.password_hash) {
                 return { success: false, error: 'Số điện thoại này đã được đăng ký tài khoản.' };
             }
 
-            // Nếu chưa có mật khẩu => Khách vãng lai -> Thăng cấp thành Thành viên
+            // Nếu là khách vãng lai -> Thăng cấp thành Thành viên
             const { error: updateErr } = await db
                 .from('customer')
                 .update({
                     password_hash: password,
+                    is_temporary: false,
+                    account_status: 'ACTIVE',
                     registered_at: new Date().toISOString()
                 })
                 .eq('id', cust.id);
@@ -271,18 +286,24 @@ async function supabaseRegister(name, phone, password) {
             if (updateErr) throw updateErr;
             customerId = cust.id;
 
-            // Cập nhật lại tên cho Khách vãng lai
+            // Cập nhật hoặc chèn tên cho Khách vãng lai
             if (name) {
-                await db.from('customer_profile').update({ full_name: name }).eq('customer_id', customerId);
+                const { data: prof } = await db.from('customer_profile').select('id').eq('customer_id', customerId).limit(1);
+                if (prof && prof.length > 0) {
+                    await db.from('customer_profile').update({ full_name: name }).eq('customer_id', customerId);
+                } else {
+                    await db.from('customer_profile').insert({ customer_id: customerId, full_name: name });
+                }
             }
         } else {
-            // Trường hợp 3: Chưa có dữ liệu gì => Tạo mới hoàn toàn
+            // Chưa có dữ liệu gì => Tạo mới tài khoản thành viên hoàn toàn
             const { data: newCustomers, error: custErr } = await db
                 .from('customer')
                 .insert({
                     email:          null,
                     password_hash:  password,
                     account_status: 'ACTIVE',
+                    is_temporary:   false,
                     phone_main:     phone,
                     registered_at:  new Date().toISOString(),
                 })
@@ -1029,7 +1050,7 @@ function initAuthForms() {
             const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
             if (db) {
                 try {
-                    const updateData = { password_hash: setupPass.value, account_status: 'ACTIVE' };
+                    const updateData = { password_hash: setupPass.value, account_status: 'ACTIVE', is_temporary: false };
                     const { error: dbErr } = await db
                         .from('customer')
                         .update(updateData)
@@ -1267,7 +1288,10 @@ function initAuthForms() {
             if (db) {
                 try {
                     const updateData = { password_hash: forgotNewPassword.value };
-                    if (isGuest) updateData.account_status = 'ACTIVE';
+                    if (isGuest) {
+                        updateData.account_status = 'ACTIVE';
+                        updateData.is_temporary = false;
+                    }
                     
                     const { error: dbErr } = await db
                         .from('customer')

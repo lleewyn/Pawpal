@@ -1,0 +1,273 @@
+TÀI LIỆU ĐẶC TẢ PHÂN HỆ TỔNG QUAN (DASHBOARD)
+Dành cho: Developer Frontend và Backend
+Phân hệ: Dashboard
+1. TỔNG QUAN MÀN HÌNH
+Màn hình Dashboard là trung tâm chỉ huy của toàn bộ hệ thống PawPal, cung cấp cái nhìn toàn cảnh về sức khỏe doanh nghiệp và vận hành hàng ngày. Phân hệ này không chỉ hiển thị các biểu đồ tĩnh mà hoạt động như một trạm kiểm soát thời gian thực, liên kết trực tiếp với các hành vi của khách hàng.
+Mục tiêu cốt lõi của Dashboard:
+Cung cấp các chỉ số tài chính và vận hành nhanh để Quản lý nắm bắt tình hình kinh doanh, hoạt động của doanh nghiệp
+Tạo đường dẫn tắt liên kết xuyên suốt đến 6 phân hệ cốt lõi: Khách hàng, Thú cưng, Dịch vụ, Bán hàng, Nhân sự, Khiếu nại và Chatbot.
+Tập trung các vấn đề cần xử lý ngay như khiếu nại đang chờ tiếp nhận và sản phẩm sắp hết hàng.
+Theo dõi hiệu suất vận hành thông qua biểu đồ doanh thu, tỷ lệ sử dụng nhân sự và hiệu suất Chatbot AI
+Cập nhật các chỉ số quan trọng theo thời gian thực đối với những dữ liệu có hỗ trợ Real-time
+Đối tượng sử dụng:
+Admin: Xem báo cáo doanh thu, hiệu suất làm việc của nhân sự, tỷ lệ lấp đầy phòng Hotel/Spa và tỷ lệ giải quyết khiếu nại.
+2. BỐ CỤC GIAO DIỆN VÀ MÔ TẢ CÁC KHU VỰC
+Giao diện Dashboard được thiết kế theo dạng các Widget (Khối chức năng) KHÔNG CẦN THÊM SUBTAB có thể tùy biến vị trí, chia làm 3 khu vực chính:
+KHU VỰC 1: Khu vực thẻ thống kê nhanh Chỉ số KPI & Doanh thu 
+Nằm ở vị trí trên cùng, hiển thị các thẻ số liệu động, thay đổi ngay lập tức khi User thao tác trên Web:
+Thẻ Tổng doanh thu trong ngày:
+Hiển thị tổng doanh thu phát sinh trong ngày hiện tại.
+Doanh thu được tổng hợp từ doanh thu bán hàng và doanh thu dịch vụ.
+Chỉ tính các giao dịch đã hoàn thành hoặc đạt trạng thái được quy định là hợp lệ để ghi nhận doanh thu.
+Giá trị được hiển thị dưới dạng tiền Việt Nam, ví dụ: 25.500.000 VNĐ.
+Khi có giao dịch mới hoàn tất, giá trị có thể được cập nhật tự động nếu hệ thống Real-time đang hoạt động.
+Thẻ Lịch hẹn mới:
+Hiển thị tổng số lịch hẹn được đặt thành công trong ngày.
+Bao gồm các loại dịch vụ như Spa, Hotel và Taxi.
+Chỉ tính những lịch hẹn có trạng thái hợp lệ, không tính lịch đã bị hủy.
+Admin có thể bấm vào thẻ để chuyển sang phân hệ Dịch vụ và xem danh sách lịch hẹn chi tiết.
+Thẻ Đơn hàng mới:
+Hiển thị tổng số đơn hàng mua sắm được tạo thành công trong ngày.
+Bao gồm đơn hàng Online và COD.
+Có thể hiển thị số lượng đơn theo trạng thái để Admin nhận biết tình hình xử lý.
+Khi bấm vào thẻ, hệ thống chuyển đến phân hệ Bán hàng để xem danh sách đơn hàng.
+Thẻ Khách hàng mới:
+Hiển thị số lượng tài khoản khách hàng được tạo mới trong ngày.
+Chỉ tính những tài khoản được tạo thành công.
+Có thể liên kết với phân hệ Khách hàng để xem danh sách khách mới.
+Thẻ Bé cưng mới:
+Hiển thị số lượng Pet ID được tạo mới trong ngày.
+Dữ liệu được lấy từ hồ sơ thú cưng.
+Khi bấm vào chỉ số, hệ thống chuyển sang phân hệ Thú cưng để xem danh sách chi tiết.
+KHU VỰC 2: Trung tâm cảnh báo và ưu tiên xử lý
+Nằm ở cột bên trái, hiển thị các danh sách rút gọn mang tính báo động đỏ, cần Admin thao tác ngay:
+Khối Khiếu nại và Đổi trả đang chờ:
+Hiển thị số lượng Ticket hỗ trợ khách hàng và yêu cầu đổi trả hàng đang ở trạng thái cần xử lý.
+Bao gồm:
+Khiếu nại mới chưa có nhân viên tiếp nhận.
+Khiếu nại đang chờ xử lý.
+Yêu cầu đổi trả hàng đang chờ xác nhận.
+Các trường hợp có mức độ ưu tiên cao được gắn nhãn cảnh báo.
+Số lượng khiếu nại được cập nhật khi có Ticket mới hoặc khi trạng thái Ticket thay đổi.
+Khi Admin bấm vào một Ticket, hệ thống chuyển sang phân hệ Khiếu nại và mở đúng Ticket tương ứng.
+Khối Tồn kho báo động:
+Hiển thị danh sách các sản phẩm có số lượng tồn kho thấp hơn ngưỡng an toàn.
+Ngưỡng mặc định được quy định là dưới 5 sản phẩm.
+Mỗi sản phẩm hiển thị:
+Tên sản phẩm.
+Mã SKU.
+Số lượng tồn kho hiện tại.
+Nhãn cảnh báo mức tồn kho.
+Các sản phẩm có số lượng bằng 0 được đánh dấu là hết hàng.
+Admin có thể bấm vào sản phẩm để chuyển sang phân hệ Bán hàng/Kho và xem thông tin chi tiết.
+Khối Lịch hẹn hôm nay:
+Hiển thị các lịch hẹn được đặt trong ngày hiện tại.
+Có thể trình bày dưới dạng danh sách hoặc Kanban Board.
+Mỗi lịch hẹn hiển thị:
+Mã lịch hẹn.
+Tên khách hàng.
+Tên thú cưng.
+Loại dịch vụ.
+Thời gian thực hiện.
+Trạng thái lịch hẹn.
+Admin có thể bấm vào lịch hẹn để xem hoặc xử lý chi tiết trong phân hệ Dịch vụ.
+KHU VỰC 3: Thống kê hiệu suất AI và Hệ thống (Analytics)
+Nằm ở khu vực phía dưới Dashboard, cung cấp các biểu đồ giúp Admin theo dõi xu hướng và hiệu suất hoạt động
+Biểu đồ Doanh thu:
+Sử dụng dạng Line Chart.
+Hiển thị xu hướng doanh thu theo thời gian.
+Cho phép so sánh doanh thu của tuần hiện tại với tuần trước.
+Trục thời gian hiển thị theo từng ngày.
+Trục giá trị thể hiện tổng doanh thu tương ứng.
+Có thể sử dụng Tooltip khi Admin di chuột vào từng điểm dữ liệu để xem doanh thu cụ thể.
+Khi bấm vào biểu đồ, hệ thống có thể chuyển sang phân hệ Báo cáo/Doanh thu nếu hệ thống có triển khai.
+Biểu đồ Hiệu suất Chatbot AI: 
+Sử dụng dạng Pie Chart 
+Hiển thị tỷ lệ giữa:
+Phiên trò chuyện được AI tự động giải quyết.
+Phiên trò chuyện phải chuyển sang nhân viên hỗ trợ (Handover).
+Có thể hiển thị phần trăm và tổng số phiên tương ứng.
+Khi tỷ lệ Handover tăng cao, Admin có thể bấm vào biểu đồ để chuyển sang phân hệ Chatbot và kiểm tra lịch sử hội thoại.
+3. ĐẶC TẢ DỮ LIỆU TỪNG THÀNH PHẦN
+
+Tên trường trên UI
+Kiểu Component
+Nguồn Database Supabase
+Nguồn Local Fallback
+Bắt buộc
+Quy tắc định dạng và ràng buộc
+Tổng doanh thu
+Khối số liệu 
+sales_order + appointment
+dashboard.json: total_revenue
+Có
+Tổng tiền các đơn có trạng thái COMPLETED trong ngày hiện tại
+Đơn hàng chờ duyệt
+Danh sách rút gọn
+sales_order
+orders.json: filter PENDING
+Có
+Chỉ đếm các đơn hàng mua sắm có status là PENDING
+Khiếu nại chờ xử lý
+Nhãn cảnh báo (Đỏ)
+support_tickets + return_requests
+tickets.json
+Có
+Đếm số lượng ticket/RMA có status là OPEN hoặc PENDING
+Lịch hẹn hôm nay
+Kanban Board
+appointment
+bookings.json: today
+Có
+Lọc theo appointment_date = CURRENT_DATE
+Sản phẩm sắp hết
+Danh sách (Vàng)
+inventory.stock_qty
+products.json: stock < 5
+Có
+Hiển thị Tên SP + Mã SKU có tồn kho dưới ngưỡng an toàn
+Tỷ lệ lấp đầy nhân sự
+Thanh tiến trình (%)
+employee_shifts
+hr.json: utilization
+Không
+So sánh tổng giờ làm việc của thợ Spa với tổng giờ lịch hẹn đã đặt
+Chatbot Handover
+Biểu đồ tròn (Pie)
+chat_sessions
+chat_stats.json
+Không
+Tỷ lệ phiên chat AI tự xử lý vs Phiên chat cần Admin nhảy vào
+
+4. NGHIỆP VỤ VÀ LUỒNG THAO TÁC
+4.1. Luồng tải và tổng hợp dữ liệu Dashboard
+Khi Admin đăng nhập và truy cập Dashboard:
+Frontend gửi yêu cầu lấy dữ liệu đến Backend/API.
+Backend truy vấn dữ liệu từ các bảng tương ứng trong Supabase.
+Hệ thống tổng hợp dữ liệu theo từng nhóm:
+Doanh thu.
+Đơn hàng.
+Lịch hẹn.
+Khách hàng.
+Thú cưng.
+Khiếu nại.
+Tồn kho.
+Nhân sự.
+Chatbot.
+Backend trả dữ liệu đã tổng hợp về Frontend.
+Frontend phân bổ dữ liệu vào từng Widget tương ứng.
+Các Widget hiển thị số liệu, danh sách và biểu đồ trên Dashboard.
+4.2. Luồng cập nhật dữ liệu thời gian thực
+Khi phát sinh một nghiệp vụ mới trên hệ thống:
+User thực hiện thao tác trên giao diện Web, ví dụ:
+Hoàn tất thanh toán đơn hàng.
+Đặt lịch Spa.
+Tạo khách hàng mới.
+Tạo Ticket khiếu nại.
+Cập nhật tồn kho.
+Backend cập nhật dữ liệu tương ứng trong Supabase.
+Supabase Realtime phát sự kiện thay đổi dữ liệu về các Client đang theo dõi.
+Dashboard của Admin nhận Payload thay đổi.
+Frontend cập nhật lại Widget liên quan mà không yêu cầu Admin tải lại toàn bộ trang.
+Các chỉ số như Doanh thu, Đơn hàng mới hoặc Lịch hẹn mới được cập nhật trên giao diện.
+Lưu ý:
+Chỉ những dữ liệu được cấu hình hỗ trợ Real-time mới được cập nhật trực tiếp.
+Các biểu đồ thống kê tổng hợp có thể được cập nhật theo chu kỳ thay vì cập nhật sau từng giao dịch nếu việc tính toán trực tiếp gây ảnh hưởng hiệu suất.
+4.3. Luồng thao tác nhanh liên kết phân hệ
+Dashboard đóng vai trò là trung tâm điều hướng. Admin không xử lý nghiệp vụ chuyên sâu trực tiếp trên Dashboard mà sử dụng các Widget để chuyển đến phân hệ tương ứng.
+Khi Admin xem khiếu nại
+Admin nhìn thấy Widget Khiếu nại chờ xử lý.
+Admin bấm vào số lượng hoặc một Ticket cụ thể.
+Hệ thống chuyển sang phân hệ Khiếu nại.
+Nếu Admin bấm vào Ticket cụ thể, hệ thống mở đúng Ticket tương ứng.
+Admin tiếp tục xử lý nghiệp vụ tại phân hệ Khiếu nại.
+Khi Admin xem đơn hàng
+Admin bấm vào Widget Đơn hàng mới.
+Hệ thống chuyển sang phân hệ Bán hàng.
+Danh sách đơn hàng được lọc theo ngày hiện tại.
+Admin có thể tiếp tục xem hoặc xử lý đơn hàng.
+Khi Admin xem lịch hẹn
+Admin bấm vào Widget Lịch hẹn hôm nay.
+Hệ thống chuyển sang phân hệ Dịch vụ.
+Danh sách được lọc theo ngày hiện tại.
+Admin có thể mở chi tiết từng lịch hẹn.
+Khi Admin xem sản phẩm sắp hết
+Admin bấm vào sản phẩm trong Widget Tồn kho chạm đáy.
+Hệ thống chuyển đến phân hệ Bán hàng - Subtab quản lý sản phẩm/kho.
+Hệ thống mở thông tin sản phẩm tương ứng dựa trên mã SKU.
+Admin có thể kiểm tra hoặc thực hiện nghiệp vụ bổ sung tồn kho.
+4.4. Luồng giám sát chất lượng Chatbot AI
+Khi Admin muốn kiểm tra hiệu suất Chatbot:
+Admin xem Widget Hiệu suất Chatbot AI.
+Hệ thống hiển thị tỷ lệ:
+AI tự xử lý thành công.
+AI chuyển sang nhân viên.
+Admin theo dõi xu hướng thay đổi của tỷ lệ Handover.
+Khi cần kiểm tra nguyên nhân, Admin bấm vào biểu đồ.
+Hệ thống chuyển sang phân hệ Chatbot.
+Hệ thống có thể áp dụng bộ lọc theo các phiên Chatbot có trạng thái Handover.
+Admin đọc lại nội dung hội thoại để xác định những trường hợp AI không thể tự xử lý.
+Admin có thể ghi nhận các câu hỏi chưa được hỗ trợ để bổ sung dữ liệu hoặc kịch bản cho Chatbot.
+
+5. CÁC TRẠNG THÁI MÀN HÌNH VÀ XỬ LÝ NGOẠI LỆ
+5.1. Các trạng thái màn hình
+Trạng thái đang tải dữ liệu 
+Khi Admin vừa truy cập Dashboard, hệ thống bắt đầu lấy dữ liệu từ nhiều nguồn.
+Các Widget chưa có dữ liệu sẽ hiển thị Skeleton.
+Skeleton được sử dụng thay cho việc để trống hoàn toàn khu vực giao diện.
+Các dữ liệu nhẹ như tổng số đơn hàng có thể hiển thị trước.
+Các biểu đồ hoặc dữ liệu tổng hợp lớn có thể tiếp tục tải sau.
+Khi dữ liệu hoàn tất, Skeleton được thay thế bằng nội dung thực tế.
+Trạng thái dữ liệu rỗng 
+Khi hệ thống chưa phát sinh dữ liệu:
+Doanh thu: Hiển thị 0 VNĐ.
+Đơn hàng: Hiển thị 0 đơn hàng.
+Lịch hẹn: Hiển thị 0 lịch hẹn.
+Khiếu nại: Hiển thị Không có khiếu nại cần xử lý.
+Tồn kho: Hiển thị Không có sản phẩm sắp hết.
+Biểu đồ: Hiển thị thông báo chưa có đủ dữ liệu để tạo biểu đồ.
+Đối với ngày mới bắt đầu, các chỉ số theo ngày được tính lại dựa trên ngày hiện tại thay vì giữ lại dữ liệu của ngày trước.
+Trạng thái có dữ liệu
+Các Widget hiển thị số liệu thực tế từ Database.
+Các biểu đồ hiển thị dữ liệu theo khoảng thời gian được cấu hình.
+Các cảnh báo được hiển thị khi dữ liệu đáp ứng điều kiện cảnh báo.
+Trạng thái mất kết nối
+Khi Dashboard không thể duy trì kết nối với Server hoặc Supabase Realtime:
+Hiển thị nhãn trạng thái Mất kết nối thời gian thực.
+Các dữ liệu hiện tại trên Dashboard vẫn được giữ nguyên.
+Hệ thống không giả định rằng các số liệu đang hiển thị là dữ liệu mới nhất.
+Khi kết nối được khôi phục, hệ thống thực hiện đồng bộ lại dữ liệu.
+5.2. Xử lý các trường hợp ngoại lệ
+Xử lý mất kết nối Real-time
+Nếu Supabase Realtime mất kết nối:
+Dashboard hiển thị cảnh báo Mất kết nối thời gian thực.
+Không tiếp tục cập nhật các KPI theo sự kiện Real-time.
+Các dữ liệu đang hiển thị được giữ lại để tránh màn hình bị trống.
+Khi kết nối được khôi phục:
+Frontend thực hiện kiểm tra lại trạng thái dữ liệu.
+Hệ thống tải lại các dữ liệu có khả năng đã thay đổi trong thời gian mất kết nối.
+Sau khi đồng bộ thành công, cảnh báo mất kết nối được gỡ bỏ.
+Xử lý lỗi khi lấy dữ liệu Dashboard
+Nếu một API hoặc nguồn dữ liệu bị lỗi:
+Widget tương ứng hiển thị trạng thái lỗi thay vì làm toàn bộ Dashboard không hoạt động.
+Hiển thị thông báo như Không thể tải dữ liệu.
+Cung cấp nút Thử lại.
+Các Widget khác vẫn tiếp tục hiển thị nếu dữ liệu của chúng được tải thành công.
+Xử lý dữ liệu không đầy đủ
+Nếu một chỉ số không có đủ dữ liệu:
+Không tự động hiển thị giá trị sai hoặc suy đoán dữ liệu.
+Hiển thị N/A hoặc Chưa đủ dữ liệu.
+Đối với biểu đồ so sánh tuần:
+Nếu tuần trước chưa có dữ liệu, hệ thống chỉ hiển thị dữ liệu tuần hiện tại.
+Không tính phần trăm tăng/giảm khi không có dữ liệu đối chiếu hợp lệ.
+Xử lý sản phẩm hết hàng
+Nếu stock_qty = 0:
+Sản phẩm được đánh dấu Hết hàng.
+Hiển thị cảnh báo nổi bật trong Widget Tồn kho.
+Admin có thể bấm vào sản phẩm để chuyển sang màn hình quản lý sản phẩm.
+Nếu 0 < stock_qty < 5:
+Sản phẩm được đánh dấu Sắp hết.
+Vẫn cho phép bán nếu nghiệp vụ bán hàng cho phép.
+Xử lý phân quyền truy cập Dashboard:
+Admin có toàn bộ quyền truy cập và thao tác ở Phân hệ Dashboard
+Các nhân viên khác không có quyền truy cập hay nhìn thấy Dashboard

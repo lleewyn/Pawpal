@@ -533,6 +533,7 @@ export const API = {
                             password_hash: null,
                             phone_main: phone,
                             account_status: 'ACTIVE',
+                            is_temporary: true,
                             registered_at: new Date().toISOString()
                         }).select('id').single();
                         

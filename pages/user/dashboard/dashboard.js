@@ -31,7 +31,7 @@ async function _syncUserProfile(db, currentUser) {
     const { data, error } = await db
         .from('customer')
         .select(`
-            id, email, phone_main, account_status,
+            id, email, phone_main, account_status, is_temporary,
             customer_profile ( full_name, gender, date_of_birth ),
             customer_membership (
                 total_paw_points,
@@ -62,18 +62,21 @@ async function _syncUserProfile(db, currentUser) {
         isDefault: a.is_default,
     }));
 
+    const isTemp = c.is_temporary !== undefined ? Boolean(c.is_temporary) : Boolean(currentUser.is_temporary);
+
     const updatedUser = {
         ...currentUser,
-        id:        c.id,
-        name:      profile.full_name     || currentUser.name  || '',
-        email:     c.email               || currentUser.email || '',
-        phone:     c.phone_main          || currentUser.phone || '',
-        gender:    profile.gender        || currentUser.gender || '',
-        dob:       profile.date_of_birth || currentUser.dob   || '',
-        points:    membership.total_paw_points ?? currentUser.points ?? 0,
-        tier:      tier.tier_name        || currentUser.tier  || 'Đồng',
-        addresses: addresses.length ? addresses : currentUser.addresses || [],
-        _source:   'supabase',
+        id:           c.id,
+        name:         profile.full_name     || currentUser.name  || '',
+        email:        c.email               || currentUser.email || '',
+        phone:        c.phone_main          || currentUser.phone || '',
+        gender:       profile.gender        || currentUser.gender || '',
+        dob:          profile.date_of_birth || currentUser.dob   || '',
+        is_temporary: isTemp,
+        points:       membership.total_paw_points ?? currentUser.points ?? 0,
+        tier:         tier.tier_name        || currentUser.tier  || 'Đồng',
+        addresses:    addresses.length ? addresses : currentUser.addresses || [],
+        _source:      'supabase',
     };
 
     localStorage.setItem('pawpal_current_user', JSON.stringify(updatedUser));

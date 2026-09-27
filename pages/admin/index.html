@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Trị - PawPal Admin</title>
+    <!-- Phông chữ Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- CSS Quản Trị -->
+    <link rel="stylesheet" href="admin.css?v=29">
+    <link rel="stylesheet" href="modules/customers/customers.css?v=29">
+</head>
+<body class="admin-body">
+
+    <div class="admin-layout">
+        <!-- THANH ĐIỀU HƯỚNG BÊN TRÁI (SIDEBAR) -->
+        <aside class="admin-sidebar">
+            <!-- LOGO VÀ TIÊU ĐỀ -->
+            <div class="admin-sidebar-brand">
+                <div class="brand-title">Pawpal-er</div>
+            </div>
+
+            <!-- DANH SÁCH 9 MENU QUẢN TRỊ THEO THỨ TỰ YÊU CẦU -->
+            <nav class="admin-sidebar-nav" id="sidebarNav">
+                <button type="button" class="sidebar-menu-btn" data-title="Dashboard">
+                    <span class="menu-icon"><i data-lucide="layout-dashboard"></i></span>
+                    <span class="menu-text">Dashboard</span>
+                </button>
+                <button type="button" class="sidebar-menu-btn active" data-title="Khách hàng">
+                    <span class="menu-icon"><i data-lucide="users"></i></span>
+                    <span class="menu-text">Khách hàng</span>
+                </button>
+                <button type="button" class="sidebar-menu-btn" data-title="Thú cưng">
+                    <span class="menu-icon"><i data-lucide="paw-print"></i></span>
+                    <span class="menu-text">Thú cưng</span>
+                </button>
+                <button type="button" class="sidebar-menu-btn" data-title="Dịch vụ">
+                    <span class="menu-icon"><i data-lucide="calendar"></i></span>
+                    <span class="menu-text">Dịch vụ</span>
+                </button>
+                <button type="button" class="sidebar-menu-btn" data-title="Bán hàng">
+                    <span class="menu-icon"><i data-lucide="shopping-bag"></i></span>
+                    <span class="menu-text">Bán hàng</span>
+                </button>
+                <button type="button" class="sidebar-menu-btn" data-title="Nhân sự">
+                    <span class="menu-icon"><i data-lucide="id-card"></i></span>
+                    <span class="menu-text">Nhân sự</span>
+                </button>
+                <button type="button" class="sidebar-menu-btn" data-title="Khiếu nại">
+                    <span class="menu-icon"><i data-lucide="alert-circle"></i></span>
+                    <span class="menu-text">Khiếu nại</span>
+                </button>
+                <button type="button" class="sidebar-menu-btn" data-title="Chatbot">
+                    <span class="menu-icon"><i data-lucide="message-square"></i></span>
+                    <span class="menu-text">Chatbot</span>
+                </button>
+                <button type="button" class="sidebar-menu-btn" data-title="Cấu hình">
+                    <span class="menu-icon"><i data-lucide="settings"></i></span>
+                    <span class="menu-text">Cấu hình</span>
+                </button>
+            </nav>
+
+            <!-- CHÂN SIDEBAR -->
+            <div class="admin-sidebar-footer">
+                <a href="/pages/public/landing/landing.html" class="btn-sidebar-footer">
+                    <span class="menu-icon"><i data-lucide="globe"></i></span>
+                    <span>Về trang khách</span>
+                </a>
+                <button type="button" class="btn-sidebar-footer btn-logout-danger" id="btnSidebarLogout">
+                    <span class="menu-icon"><i data-lucide="log-out"></i></span>
+                    <span>Đăng xuất</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- VÙNG KHÔNG GIAN BÊN PHẢI -->
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="admin-header-left">
+                    <span class="header-module-title" id="headerModuleTitle" style="display: none;"></span>
+                    <div class="header-subtabs-group" id="headerSubtabsGroup"></div>
+                    <div class="header-deep-breadcrumb" id="headerDeepBreadcrumb"></div>
+                </div>
+                <div class="admin-header-right">
+                    <span class="header-user-tag">Quản trị viên</span>
+                </div>
+            </header>
+
+            <section class="admin-preview-content">
+                <!-- Nội dung module sẽ được nạp động từ admin.js -->
+            </section>
+        </main>
+    </div>
+
+    <!-- Script điều hướng hệ thống Admin -->
+    <script src="admin.js"></script>
+</body>
+</html>

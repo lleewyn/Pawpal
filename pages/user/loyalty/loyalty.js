@@ -98,6 +98,7 @@ async function syncLoyaltyFromSupabase(user) {
                 id,
                 phone_main,
                 email,
+                is_temporary,
                 customer_profile ( full_name ),
                 customer_membership ( total_paw_points, membership_tier ( tier_name, discount_percent ) )
             `)
@@ -117,6 +118,7 @@ async function syncLoyaltyFromSupabase(user) {
         const profile = data.customer_profile?.[0] || {};
         const membership = data.customer_membership?.[0] || {};
         const tier = membership.membership_tier || {};
+        const isTemp = data.is_temporary !== undefined ? Boolean(data.is_temporary) : Boolean(user.is_temporary);
 
         let totalSpend = user.spend || 0;
         try {
@@ -146,6 +148,7 @@ async function syncLoyaltyFromSupabase(user) {
             name: profile.full_name || user.name || 'Khách vãng lai',
             email: data.email || user.email || '',
             phone: data.phone_main || user.phone,
+            is_temporary: isTemp,
             points: membership.total_paw_points ?? user.points ?? 0,
             tier: tier.tier_name || user.tier || 'Đồng',
             spend: totalSpend,
