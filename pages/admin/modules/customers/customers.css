@@ -699,7 +699,7 @@
 }
 
 .admin-modal-card {
-    background-color: var(--surface-white);
+    background-color: #FFFFFF;
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);
     width: 560px;
@@ -711,7 +711,7 @@
     padding: 26px 30px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 12px 32px rgba(26, 43, 35, 0.12);
+    box-shadow: 0 16px 40px rgba(26, 43, 35, 0.16);
 }
 
 .admin-modal-header {

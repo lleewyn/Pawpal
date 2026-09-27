@@ -42,7 +42,7 @@
 
 ---
 
-## 2. QUY TẮC ICON BẤM & TEXT-ONLY
+## 2. QUY TẮC ICON BẤM, TEXT-ONLY & VĂN PHONG (COPYWRITING)
 
 * **Chỉ Sidebar bên trái được dùng Lucide Icons**:
   - 9 menu chức năng và 2 nút chân sidebar là nơi duy nhất được hiển thị icon nét mảnh Lucide.
@@ -52,6 +52,9 @@
   - **Bảng dữ liệu**: Cột tác vụ dùng nút 3 chấm text `•••`.
   - **Menu tác vụ thả xuống (Dropdown)**: Các mục hành động là Text thuần (`Xem hồ sơ 360°`, `Khóa tài khoản`), không icon.
   - **Drawer & Nút thao tác một chạm**: Dùng các nút text pill (`Gọi điện`, `Zalo`, `Đặt lịch`, `Lên đơn`), không icon.
+* **Tuyệt đối không dùng ký hiệu `&` để thay cho chữ "và"**:
+  - Bắt buộc viết rõ ràng chữ "và" trong toàn bộ giao diện: tiêu đề, nhãn (label), nút bấm, mô tả, cột bảng... (Ví dụ: viết `Hạng và Điểm`, `Tắm sấy và Cắt tỉa`, `Lưu và Gửi`, không viết `Hạng & Điểm`, `Tắm sấy & Cắt tỉa`).
+  - Ngoại trừ các cú pháp kỹ thuật trong URL hoặc code logic nếu bắt buộc.
 
 ---
 
@@ -83,7 +86,7 @@
   - Tên liên kết bấm vào xem hồ sơ (`.user-name-link`): `#236B48; font-weight: 600;`.
 * **Tiêu đề cột bảng (Table Headers)**:
   - **Tuyệt đối không in hoa toàn bộ chữ** (bỏ `text-transform: uppercase`).
-  - Viết hoa chữ cái đầu tiêu chuẩn: `Mã KH`, `Họ tên`, `Số điện thoại`, `Hạng & Điểm`, `Cảnh báo`, `Trạng thái`.
+  - Viết hoa chữ cái đầu tiêu chuẩn: `Mã KH`, `Họ tên`, `Số điện thoại`, `Hạng và Điểm`, `Cảnh báo`, `Trạng thái`.
   - Nền tiêu đề bảng: `--table-header-bg: #EEF5F1;` (xanh xô thơm rất nhạt).
 * **Chữ chính & Chữ phụ**:
   - Chữ chính: `--text-main: #203A2C;` (xanh than sẫm, êm mắt).

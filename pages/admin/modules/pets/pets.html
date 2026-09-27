@@ -37,12 +37,8 @@
                     </div>
 
                     <div class="filter-actions-right">
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnExportPetReport">
-                            <span>Xuất file</span>
-                        </button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddPetModal">
-                            <span>+ Thêm bé cưng</span>
-                        </button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnExportPetReport">Xuất file</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddPetModal">+ Thêm bé cưng</button>
                     </div>
                 </div>
 
@@ -75,10 +71,10 @@
                         <label class="filter-label">Cân nặng:</label>
                         <select class="admin-select" id="petFilterWeight">
                             <option value="ALL">Tất cả</option>
-                            <option value="under5">&lt; 5kg</option>
+                            <option value="under5">Dưới 5kg</option>
                             <option value="5to10">5 - 10kg</option>
                             <option value="10to20">10 - 20kg</option>
-                            <option value="over20">&gt; 20kg</option>
+                            <option value="over20">Trên 20kg</option>
                         </select>
                     </div>
 
@@ -91,13 +87,9 @@
                         </select>
                     </div>
 
-                    <button type="button" class="admin-btn-filter-toggle" id="btnFilterHotelOnly">
-                        <span>Đang ở Hotel</span>
-                    </button>
+                    <button type="button" class="admin-btn-filter-toggle" id="btnFilterHotelOnly">Đang ở Hotel</button>
 
-                    <button type="button" class="admin-btn-filter-toggle" id="btnFilterAlertOnly">
-                        <span>Có cảnh báo</span>
-                    </button>
+                    <button type="button" class="admin-btn-filter-toggle" id="btnFilterAlertOnly">Có cảnh báo</button>
                 </div>
             </div>
 
@@ -109,7 +101,7 @@
                             <th style="width: 52px; text-align: center;">Ảnh</th>
                             <th style="width: 105px;">Mã bé</th>
                             <th>Tên bé cưng</th>
-                            <th>Loài & Giống</th>
+                            <th>Loài và Giống</th>
                             <th>Cân nặng</th>
                             <th>Chủ sở hữu</th>
                             <th>Cảnh báo an toàn</th>
@@ -137,7 +129,7 @@
                                 <div class="pet-sub-cell">0912345678</div>
                             </td>
                             <td>
-                                <span class="admin-badge badge-danger">Cắn khi chạm đuôi</span>
+                                <span class="admin-badge badge-warning" style="color: #DC2626; background: #FEE2E2; border-color: #FED8D8;">Cắn khi chạm đuôi</span>
                             </td>
                             <td>
                                 <span class="admin-badge badge-success">Đang nuôi</span>
@@ -147,16 +139,16 @@
                                     <button type="button" class="btn-action-more" data-id="PET-001" title="Tác vụ">•••</button>
                                     <div class="action-dropdown-menu">
                                         <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-001">
-                                            <span>Xem hồ sơ chi tiết</span>
+                                            Xem hồ sơ chi tiết
                                         </button>
                                         <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-001">
-                                            <span>Cân bé & Thể trạng</span>
+                                            Cân bé và Thể trạng
                                         </button>
                                         <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-001">
-                                            <span>Tạo ca dịch vụ</span>
+                                            Tạo ca dịch vụ
                                         </button>
                                         <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-001">
-                                            <span>Lưu trữ hồ sơ</span>
+                                            Lưu trữ hồ sơ
                                         </button>
                                     </div>
                                 </div>
@@ -192,16 +184,16 @@
                                     <button type="button" class="btn-action-more" data-id="PET-002" title="Tác vụ">•••</button>
                                     <div class="action-dropdown-menu">
                                         <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-002">
-                                            <span>Xem hồ sơ chi tiết</span>
+                                            Xem hồ sơ chi tiết
                                         </button>
                                         <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-002">
-                                            <span>Cân bé & Thể trạng</span>
+                                            Cân bé và Thể trạng
                                         </button>
                                         <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-002">
-                                            <span>Tạo ca dịch vụ</span>
+                                            Tạo ca dịch vụ
                                         </button>
                                         <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-002">
-                                            <span>Lưu trữ hồ sơ</span>
+                                            Lưu trữ hồ sơ
                                         </button>
                                     </div>
                                 </div>
@@ -237,16 +229,16 @@
                                     <button type="button" class="btn-action-more" data-id="PET-003" title="Tác vụ">•••</button>
                                     <div class="action-dropdown-menu">
                                         <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-003">
-                                            <span>Xem hồ sơ chi tiết</span>
+                                            Xem hồ sơ chi tiết
                                         </button>
                                         <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-003">
-                                            <span>Cân bé & Thể trạng</span>
+                                            Cân bé và Thể trạng
                                         </button>
                                         <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-003">
-                                            <span>Tạo ca dịch vụ</span>
+                                            Tạo ca dịch vụ
                                         </button>
                                         <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-003">
-                                            <span>Lưu trữ hồ sơ</span>
+                                            Lưu trữ hồ sơ
                                         </button>
                                     </div>
                                 </div>
@@ -282,16 +274,16 @@
                                     <button type="button" class="btn-action-more" data-id="PET-004" title="Tác vụ">•••</button>
                                     <div class="action-dropdown-menu">
                                         <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-004">
-                                            <span>Xem hồ sơ chi tiết</span>
+                                            Xem hồ sơ chi tiết
                                         </button>
                                         <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-004">
-                                            <span>Cân bé & Thể trạng</span>
+                                            Cân bé và Thể trạng
                                         </button>
                                         <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-004">
-                                            <span>Tạo ca dịch vụ</span>
+                                            Tạo ca dịch vụ
                                         </button>
                                         <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-004">
-                                            <span>Lưu trữ hồ sơ</span>
+                                            Lưu trữ hồ sơ
                                         </button>
                                     </div>
                                 </div>
@@ -327,16 +319,16 @@
                                     <button type="button" class="btn-action-more" data-id="PET-005" title="Tác vụ">•••</button>
                                     <div class="action-dropdown-menu">
                                         <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-005">
-                                            <span>Xem hồ sơ chi tiết</span>
+                                            Xem hồ sơ chi tiết
                                         </button>
                                         <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-005">
-                                            <span>Cân bé & Thể trạng</span>
+                                            Cân bé và Thể trạng
                                         </button>
                                         <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-005">
-                                            <span>Tạo ca dịch vụ</span>
+                                            Tạo ca dịch vụ
                                         </button>
                                         <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-005">
-                                            <span>Lưu trữ hồ sơ</span>
+                                            Lưu trữ hồ sơ
                                         </button>
                                     </div>
                                 </div>
@@ -372,16 +364,16 @@
                                     <button type="button" class="btn-action-more" data-id="PET-006" title="Tác vụ">•••</button>
                                     <div class="action-dropdown-menu">
                                         <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-006">
-                                            <span>Xem hồ sơ chi tiết</span>
+                                            Xem hồ sơ chi tiết
                                         </button>
                                         <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-006">
-                                            <span>Cân bé & Thể trạng</span>
+                                            Cân bé và Thể trạng
                                         </button>
                                         <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-006">
-                                            <span>Tạo ca dịch vụ</span>
+                                            Tạo ca dịch vụ
                                         </button>
                                         <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-006">
-                                            <span>Lưu trữ hồ sơ</span>
+                                            Lưu trữ hồ sơ
                                         </button>
                                     </div>
                                 </div>
@@ -407,7 +399,7 @@
                                 <div class="pet-sub-cell">0938776655</div>
                             </td>
                             <td>
-                                <span class="admin-badge badge-danger">Dị ứng tinh dầu tràm</span>
+                                <span class="admin-badge badge-warning" style="color: #DC2626; background: #FEE2E2; border-color: #FED8D8;">Dị ứng tinh dầu tràm</span>
                             </td>
                             <td>
                                 <span class="admin-badge badge-success">Đang nuôi</span>
@@ -417,16 +409,16 @@
                                     <button type="button" class="btn-action-more" data-id="PET-007" title="Tác vụ">•••</button>
                                     <div class="action-dropdown-menu">
                                         <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-007">
-                                            <span>Xem hồ sơ chi tiết</span>
+                                            Xem hồ sơ chi tiết
                                         </button>
                                         <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-007">
-                                            <span>Cân bé & Thể trạng</span>
+                                            Cân bé và Thể trạng
                                         </button>
                                         <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-007">
-                                            <span>Tạo ca dịch vụ</span>
+                                            Tạo ca dịch vụ
                                         </button>
                                         <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-007">
-                                            <span>Lưu trữ hồ sơ</span>
+                                            Lưu trữ hồ sơ
                                         </button>
                                     </div>
                                 </div>
@@ -462,16 +454,16 @@
                                     <button type="button" class="btn-action-more" data-id="PET-008" title="Tác vụ">•••</button>
                                     <div class="action-dropdown-menu">
                                         <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-008">
-                                            <span>Xem hồ sơ chi tiết</span>
+                                            Xem hồ sơ chi tiết
                                         </button>
                                         <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-008">
-                                            <span>Cân bé & Thể trạng</span>
+                                            Cân bé và Thể trạng
                                         </button>
                                         <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-008">
-                                            <span>Tạo ca dịch vụ</span>
+                                            Tạo ca dịch vụ
                                         </button>
                                         <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-008">
-                                            <span>Lưu trữ hồ sơ</span>
+                                            Lưu trữ hồ sơ
                                         </button>
                                     </div>
                                 </div>
@@ -507,16 +499,16 @@
                                     <button type="button" class="btn-action-more" data-id="PET-009" title="Tác vụ">•••</button>
                                     <div class="action-dropdown-menu">
                                         <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-009">
-                                            <span>Xem hồ sơ chi tiết</span>
+                                            Xem hồ sơ chi tiết
                                         </button>
                                         <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="PET-009">
-                                            <span>Cân bé & Thể trạng</span>
+                                            Cân bé và Thể trạng
                                         </button>
                                         <button type="button" class="dropdown-item btn-create-service-pet" data-id="PET-009">
-                                            <span>Tạo ca dịch vụ</span>
+                                            Tạo ca dịch vụ
                                         </button>
                                         <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="PET-009">
-                                            <span>Lưu trữ hồ sơ</span>
+                                            Lưu trữ hồ sơ
                                         </button>
                                     </div>
                                 </div>
@@ -552,10 +544,10 @@
                                     <button type="button" class="btn-action-more" data-id="PET-010" title="Tác vụ">•••</button>
                                     <div class="action-dropdown-menu">
                                         <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="PET-010">
-                                            <span>Xem hồ sơ chi tiết</span>
+                                            Xem hồ sơ chi tiết
                                         </button>
                                         <button type="button" class="dropdown-item text-success btn-restore-pet" data-id="PET-010">
-                                            <span>Khôi phục hồ sơ</span>
+                                            Khôi phục hồ sơ
                                         </button>
                                     </div>
                                 </div>
@@ -603,7 +595,7 @@
 
                 <div class="drawer-action-buttons">
                     <button type="button" class="action-btn-pill btn-primary-pill btn-quick-book-spa">Đặt lịch Spa / Hotel</button>
-                    <button type="button" class="action-btn-pill btn-open-weigh-modal" id="btnDrawerWeighPet">Cân bé & Thể trạng</button>
+                    <button type="button" class="action-btn-pill btn-open-weigh-modal" id="btnDrawerWeighPet">Cân bé và Thể trạng</button>
                     <button type="button" class="action-btn-pill btn-quick-carelog">Đăng ảnh nhật ký</button>
                     <button type="button" class="action-btn-pill btn-jump-customer" id="btnDrawerJumpCustomer" data-cust-id="CUST-001">Xem chủ nuôi</button>
                 </div>
@@ -616,7 +608,7 @@
 
             <!-- 4 TAB CON CHI TIẾT BÊN TRONG HỒ SƠ -->
             <div class="drawer-subtabs-bar">
-                <button type="button" class="drawer-tab-btn active" data-drawertab="ptab-traits">Thể trạng & Đặc tính</button>
+                <button type="button" class="drawer-tab-btn active" data-drawertab="ptab-traits">Thể trạng và Đặc tính</button>
                 <button type="button" class="drawer-tab-btn" data-drawertab="ptab-vaccine">
                     <span>Xác nhận tiêm chủng</span>
                     <span class="tab-badge-count" id="ptabVaccineBadge" style="display: none;">!</span>
@@ -636,27 +628,23 @@
                         <div class="detail-box">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <h4 class="detail-box-title" style="margin-bottom: 0;">Thông tin thể trạng</h4>
-                                <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenEditPetModal">
-                                    <span>Sửa hồ sơ</span>
-                                </button>
+                                <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenEditPetModal">Sửa hồ sơ</button>
                             </div>
                             <div class="data-pair-row"><span class="data-key">Mã thú cưng:</span><span class="data-val" id="profilePetCode">PET-001</span></div>
                             <div class="data-pair-row"><span class="data-key">Tên bé cưng:</span><span class="data-val" id="profilePetName">Milu</span></div>
-                            <div class="data-pair-row"><span class="data-key">Loài & Giống:</span><span class="data-val" id="profilePetSpecies">Chó Corgi</span></div>
+                            <div class="data-pair-row"><span class="data-key">Loài và Giống:</span><span class="data-val" id="profilePetSpecies">Chó Corgi</span></div>
                             <div class="data-pair-row"><span class="data-key">Giới tính:</span><span class="data-val" id="profilePetGender">Đực</span></div>
                             <div class="data-pair-row"><span class="data-key">Cân nặng hiện tại:</span><span class="data-val"><strong id="profilePetWeight">8.5 kg</strong> (Phân khúc 5 - 10kg)</span></div>
                             <div class="data-pair-row"><span class="data-key">Ngày sinh:</span><span class="data-val" id="profilePetDob">15/05/2023 (1 tuổi 4 tháng)</span></div>
                             <div class="data-pair-row"><span class="data-key">Màu lông:</span><span class="data-val" id="profilePetColor">Vàng trắng</span></div>
-                            <div class="data-pair-row"><span class="data-key">Tiền sử dị ứng:</span><span class="data-val text-danger" id="profilePetAllergy">Dị ứng hải sản & sữa tắm tinh dầu tràm</span></div>
-                            <div class="data-pair-row" style="border-bottom: none;"><span class="data-key">Tập tính & Lưu ý:</span><span class="data-val" id="profilePetNotes">Bé khá nhát người lạ, thích ăn pate bò. Hơi dữ khi sấy đuôi.</span></div>
+                            <div class="data-pair-row"><span class="data-key">Tiền sử dị ứng:</span><span class="data-val text-danger" id="profilePetAllergy">Dị ứng hải sản và sữa tắm tinh dầu tràm</span></div>
+                            <div class="data-pair-row" style="border-bottom: none;"><span class="data-key">Tập tính và Lưu ý:</span><span class="data-val" id="profilePetNotes">Bé khá nhát người lạ, thích ăn pate bò. Hơi dữ khi sấy đuôi.</span></div>
                         </div>
 
                         <div class="detail-box">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <h4 class="detail-box-title" style="margin-bottom: 0;">Biến động cân nặng & Ma trận giá</h4>
-                                <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-weigh-modal">
-                                    <span>+ Cân bé</span>
-                                </button>
+                                <h4 class="detail-box-title" style="margin-bottom: 0;">Biến động cân nặng và Ma trận giá</h4>
+                                <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-weigh-modal">+ Cân bé</button>
                             </div>
                             <!-- Danh sách mốc cân nặng theo ngày -->
                             <div class="weight-history-table-wrapper">
@@ -706,7 +694,7 @@
                 <!-- TAB CON 2: XÁC NHẬN TIÊM CHỦNG -->
                 <div class="drawer-tab-panel" id="ptab-vaccine">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                        <h4 class="detail-box-title" style="margin-bottom: 0;">Sổ tiêm chủng điện tử & Điều kiện lưu trú Pet Hotel</h4>
+                        <h4 class="detail-box-title" style="margin-bottom: 0;">Sổ tiêm chủng điện tử và Điều kiện lưu trú Pet Hotel</h4>
                         <span class="admin-badge badge-success" style="font-size: 12.5px; padding: 4px 10px;">Đủ điều kiện nhận phòng Hotel</span>
                     </div>
 
@@ -737,7 +725,7 @@
 
                         <div class="vaccine-item-card is-qualified">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <strong style="color: var(--text-heading);">Xổ giun định kỳ & Nhỏ gáy ve rận</strong>
+                                <strong style="color: var(--text-heading);">Xổ giun định kỳ và Nhỏ gáy ve rận</strong>
                                 <span class="admin-badge badge-success">Đã thực hiện</span>
                             </div>
                             <div style="font-size: 13px; color: var(--text-main);">
@@ -761,10 +749,7 @@
                 <!-- TAB CON 3: NHẬT KÝ CHĂM SÓC DỊCH VỤ -->
                 <div class="drawer-tab-panel" id="ptab-carelog">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                        <h4 class="detail-box-title" style="margin-bottom: 0;">Lịch sử ca dịch vụ & Nhật ký Before / After</h4>
-                        <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-carelog">
-                            <span>+ Thêm nhật ký ca mới</span>
-                        </button>
+                        <h4 class="detail-box-title" style="margin-bottom: 0;">Nhật ký chăm sóc và ảnh dịch vụ</h4>
                     </div>
 
                     <div class="table-responsive-wrapper">
@@ -772,8 +757,8 @@
                             <thead>
                                 <tr>
                                     <th>Thời gian</th>
-                                    <th>Dịch vụ & KTV</th>
-                                    <th style="width: 90px; text-align: center;">Ảnh Before / After</th>
+                                    <th>Dịch vụ và KTV</th>
+                                    <th style="width: 90px; text-align: center;">Ảnh trước và sau</th>
                                     <th>Kiểm tra vệ sinh</th>
                                     <th>Trạng thái app</th>
                                     <th style="width: 100px; text-align: right;">Thao tác</th>
@@ -786,13 +771,13 @@
                                         <div style="font-size: 12px; color: var(--text-muted);">14:30</div>
                                     </td>
                                     <td>
-                                        <strong style="color: var(--text-heading);">Tắm sấy dưỡng ẩm & Cắt mài móng</strong>
+                                        <strong style="color: var(--text-heading);">Tắm sấy dưỡng ẩm và Cắt mài móng</strong>
                                         <div style="font-size: 12px; color: var(--text-muted);">KTV: Hoàng Tuấn • Bàn 2</div>
                                     </td>
                                     <td style="text-align: center;">
                                         <div style="display: inline-flex; gap: 4px;">
-                                            <img src="/assets/images/publics/dogcute3.jpg" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="Before" title="Before">
-                                            <img src="/assets/images/publics/dogcute1.jpg" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="After" title="After">
+                                            <img src="/assets/images/publics/dogcute3.jpg" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="Trước" title="Ảnh trước dịch vụ">
+                                            <img src="/assets/images/publics/dogcute1.jpg" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="Sau" title="Ảnh sau dịch vụ">
                                         </div>
                                     </td>
                                     <td>
@@ -817,8 +802,8 @@
                                     </td>
                                     <td style="text-align: center;">
                                         <div style="display: inline-flex; gap: 4px;">
-                                            <img src="/assets/images/publics/dogcute7.jpg" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="Before" title="Before">
-                                            <img src="/assets/images/publics/dogcute3.jpg" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="After" title="After">
+                                            <img src="/assets/images/publics/dogcute7.jpg" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="Trước" title="Ảnh trước dịch vụ">
+                                            <img src="/assets/images/publics/dogcute3.jpg" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="Sau" title="Ảnh sau dịch vụ">
                                         </div>
                                     </td>
                                     <td>
@@ -839,10 +824,8 @@
                 <!-- TAB CON 4: LỊCH SỬ ĐẶT HẸN & DỊCH VỤ -->
                 <div class="drawer-tab-panel" id="ptab-history">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                        <h4 class="detail-box-title" style="margin-bottom: 0;">Lịch sử dịch vụ Spa & Lưu trú Pet Hotel</h4>
-                        <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-book-spa">
-                            <span>+ Đặt lịch ngay</span>
-                        </button>
+                        <h4 class="detail-box-title" style="margin-bottom: 0;">Lịch sử dịch vụ Spa và Lưu trú Pet Hotel</h4>
+                        <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-book-spa">+ Đặt lịch ngay</button>
                     </div>
 
                     <div class="table-responsive-wrapper">
@@ -918,9 +901,7 @@
                         <input type="text" class="admin-input search-input" id="reminderSearchInput" placeholder="Tìm tên bé cưng, tên chủ nuôi, SĐT...">
                     </div>
                     <div class="filter-actions-right">
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnBatchSendReminder">
-                            <span>Gửi tin đồng loạt (Zalo)</span>
-                        </button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnBatchSendReminder">Gửi tin đồng loạt Zalo</button>
                     </div>
                 </div>
 
@@ -929,9 +910,9 @@
                         <label class="filter-label">Loại nhắc lịch:</label>
                         <select class="admin-select" id="reminderFilterType">
                             <option value="ALL">Tất cả</option>
-                            <option value="BATH">Nhắc tắm sấy định kỳ (&gt; 14 ngày)</option>
-                            <option value="GROOM">Nhắc cắt tỉa lông (&gt; 30 ngày)</option>
-                            <option value="HOTEL">Nhắc gửi Pet Hotel cuối tuần</option>
+                            <option value="BATH">Tắm sấy định kỳ (quá 14 ngày)</option>
+                            <option value="GROOM">Cắt tỉa lông (quá 30 ngày)</option>
+                            <option value="HOTEL">Gửi Pet Hotel cuối tuần</option>
                         </select>
                     </div>
 
@@ -951,9 +932,9 @@
                     <thead>
                         <tr>
                             <th>Tên bé cưng</th>
-                            <th>Chủ sở hữu & SĐT</th>
+                            <th>Chủ sở hữu và SĐT</th>
                             <th>Loại nhắc lịch</th>
-                            <th>Lần làm gần nhất</th>
+                            <th>Ghi chú và lần gần nhất</th>
                             <th>Trạng thái tin nhắn</th>
                             <th style="width: 170px; text-align: right;">Thao tác</th>
                         </tr>
@@ -961,8 +942,8 @@
                     <tbody id="reminderTableTbody">
                         <tr>
                             <td>
-                                <strong style="color: var(--text-heading);">Milu (Corgi)</strong>
-                                <div style="font-size: 12px; color: var(--text-muted);">Mã: PET-001</div>
+                                <strong style="color: var(--text-heading);">Bé Milu</strong>
+                                <div style="font-size: 12px; color: var(--text-muted);">Chó Corgi • Mã: PET-001</div>
                             </td>
                             <td>
                                 <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-001">Nguyễn Văn An</a>
@@ -973,7 +954,7 @@
                             <td><span class="admin-badge badge-neutral">Chưa gửi</span></td>
                             <td style="text-align: right;">
                                 <div style="display: inline-flex; gap: 6px;">
-                                    <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-reminder-modal" data-pet="Milu" data-owner="Nguyễn Văn An" data-phone="0912345678">Gửi tin</button>
+                                    <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-reminder-modal" data-pet="Bé Milu" data-owner="Nguyễn Văn An" data-phone="0912345678">Gửi tin</button>
                                     <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-book-spa">Đặt lịch</button>
                                 </div>
                             </td>
@@ -981,19 +962,19 @@
 
                         <tr>
                             <td>
-                                <strong style="color: var(--text-heading);">Boss (Golden)</strong>
-                                <div style="font-size: 12px; color: var(--text-muted);">Mã: PET-003</div>
+                                <strong style="color: var(--text-heading);">Bé Boss</strong>
+                                <div style="font-size: 12px; color: var(--text-muted);">Chó Golden Retriever • Mã: PET-003</div>
                             </td>
                             <td>
                                 <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-002">Lê Thị Bình</a>
                                 <div style="font-size: 12px; color: var(--text-muted);">0987654321</div>
                             </td>
-                            <td><span class="admin-badge badge-danger">Quá 35 ngày chưa cắt lông</span></td>
+                            <td><span class="admin-badge badge-warning" style="color: #DC2626; background: #FEE2E2; border-color: #FED8D8;">Quá 35 ngày chưa cắt lông</span></td>
                             <td>22/08/2026 (36 ngày trước)</td>
                             <td><span class="admin-badge badge-success">Đã gửi Zalo hôm qua</span></td>
                             <td style="text-align: right;">
                                 <div style="display: inline-flex; gap: 6px;">
-                                    <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-reminder-modal" data-pet="Boss" data-owner="Lê Thị Bình" data-phone="0987654321">Gửi lại</button>
+                                    <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-reminder-modal" data-pet="Bé Boss" data-owner="Lê Thị Bình" data-phone="0987654321">Gửi lại</button>
                                     <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-book-spa">Đặt lịch</button>
                                 </div>
                             </td>
@@ -1001,19 +982,19 @@
 
                         <tr>
                             <td>
-                                <strong style="color: var(--text-heading);">Mimi (Mèo ALN)</strong>
-                                <div style="font-size: 12px; color: var(--text-muted);">Mã: PET-002</div>
+                                <strong style="color: var(--text-heading);">Bé Mimi</strong>
+                                <div style="font-size: 12px; color: var(--text-muted);">Mèo Anh lông ngắn • Mã: PET-002</div>
                             </td>
                             <td>
                                 <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="CUST-001">Nguyễn Văn An</a>
                                 <div style="font-size: 12px; color: var(--text-muted);">0912345678</div>
                             </td>
                             <td><span class="admin-badge badge-tier-gold">Gửi Pet Hotel cuối tuần</span></td>
-                            <td>Khách quen hay gửi thứ 7</td>
+                            <td>Khách quen gửi thứ 7 hằng tuần</td>
                             <td><span class="admin-badge badge-neutral">Chưa gửi</span></td>
                             <td style="text-align: right;">
                                 <div style="display: inline-flex; gap: 6px;">
-                                    <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-reminder-modal" data-pet="Mimi" data-owner="Nguyễn Văn An" data-phone="0912345678">Gửi tin</button>
+                                    <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-open-reminder-modal" data-pet="Bé Mimi" data-owner="Nguyễn Văn An" data-phone="0912345678">Gửi tin</button>
                                     <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-book-spa">Đặt lịch</button>
                                 </div>
                             </td>
@@ -1048,37 +1029,37 @@
                 <div class="workbench-queue-list">
                     <div class="queue-card-item active" data-care-id="CL-001">
                         <div class="queue-card-head">
-                            <span class="queue-pet-name">Milu (Chó Corgi)</span>
+                            <span class="queue-pet-name">Bé Milu</span>
                             <span class="admin-badge badge-warning">Đang làm</span>
                         </div>
-                        <div class="queue-card-sub">Dịch vụ: Tắm sấy toàn diện • Chủ: Nguyễn Văn An</div>
-                        <div class="queue-card-sub">KTV: Hoàng Tuấn • Bàn 2</div>
+                        <div class="queue-card-sub">Chó Corgi • Dịch vụ: Tắm sấy toàn diện</div>
+                        <div class="queue-card-sub">Chủ: Nguyễn Văn An • KTV: Hoàng Tuấn</div>
                     </div>
 
                     <div class="queue-card-item" data-care-id="CL-002">
                         <div class="queue-card-head">
-                            <span class="queue-pet-name">Trà Sữa (Poodle Toy)</span>
+                            <span class="queue-pet-name">Bé Trà Sữa</span>
                             <span class="admin-badge badge-success">Hoàn thiện</span>
                         </div>
-                        <div class="queue-card-sub">Dịch vụ: Cắt tỉa gấu bông • Chủ: Hoàng Minh Tuấn</div>
-                        <div class="queue-card-sub">KTV: Đỗ Hương • Bàn 1</div>
+                        <div class="queue-card-sub">Chó Poodle Toy • Dịch vụ: Cắt tỉa gấu bông</div>
+                        <div class="queue-card-sub">Chủ: Hoàng Minh Tuấn • KTV: Đỗ Hương</div>
                     </div>
 
                     <div class="queue-card-item" data-care-id="CL-003">
                         <div class="queue-card-head">
-                            <span class="queue-pet-name">Bông (Mèo ta)</span>
+                            <span class="queue-pet-name">Bé Bông</span>
                             <span class="admin-badge badge-warning">Đang làm</span>
                         </div>
-                        <div class="queue-card-sub">Dịch vụ: Vệ sinh tai móng • Chủ: Trần Khách Vãng Lai</div>
-                        <div class="queue-card-sub">KTV: Hoàng Tuấn • Bàn Spa Mèo</div>
+                        <div class="queue-card-sub">Mèo ta • Dịch vụ: Vệ sinh tai móng</div>
+                        <div class="queue-card-sub">Chủ: Trần Khách Vãng Lai • KTV: Hoàng Tuấn</div>
                     </div>
 
                     <div class="queue-card-item" data-care-id="CL-004">
                         <div class="queue-card-head">
-                            <span class="queue-pet-name">Mimi (Mèo ALN)</span>
+                            <span class="queue-pet-name">Bé Mimi</span>
                             <span class="admin-badge badge-neutral">Phòng Hotel #03</span>
                         </div>
-                        <div class="queue-card-sub">Khẩu phần ăn chiều • Nhân viên Hotel</div>
+                        <div class="queue-card-sub">Mèo Anh lông ngắn • Khẩu phần ăn chiều</div>
                     </div>
                 </div>
             </div>
@@ -1087,8 +1068,8 @@
             <div class="workbench-form-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-neutral); padding-bottom: 12px;">
                     <div>
-                        <h4 class="detail-box-title" style="margin-bottom: 2px;" id="wbFormTitle">Cập nhật nhật ký ca: Bé Milu (Corgi)</h4>
-                        <div style="font-size: 12.5px; color: var(--text-muted);">Mã lịch hẹn: BK-2609-01 • Chủ sở hữu: Nguyễn Văn An (0912345678)</div>
+                        <h4 class="detail-box-title" style="margin-bottom: 2px;" id="wbFormTitle">Cập nhật nhật ký ca: Bé Milu</h4>
+                        <div style="font-size: 12.5px; color: var(--text-muted);" id="wbFormSub">Giống loài: Chó Corgi • Mã lịch hẹn: BK-2609-01 • Chủ sở hữu: Nguyễn Văn An (0912345678)</div>
                     </div>
                     <span class="admin-badge badge-warning" id="wbStatusBadge">Đang tiến hành</span>
                 </div>
@@ -1098,13 +1079,13 @@
                     <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px;">Ảnh chụp thực tế ca làm:</div>
                     <div class="upload-photos-container">
                         <div class="photo-upload-placeholder" id="btnUploadBeforePhoto">
-                            <img src="/assets/images/publics/dogcute3.jpg" id="wbBeforeImgPreview" alt="Before">
-                            <span style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 4px;">Ảnh Trước (Before)</span>
+                            <img src="/assets/images/publics/dogcute3.jpg" id="wbBeforeImgPreview" alt="Ảnh Trước">
+                            <span style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 4px;">Ảnh trước</span>
                         </div>
 
                         <div class="photo-upload-placeholder" id="btnUploadAfterPhoto">
-                            <img src="/assets/images/publics/dogcute1.jpg" id="wbAfterImgPreview" alt="After">
-                            <span style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 4px;">Ảnh Sau (After)</span>
+                            <img src="/assets/images/publics/dogcute1.jpg" id="wbAfterImgPreview" alt="Ảnh Sau">
+                            <span style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 4px;">Ảnh sau</span>
                         </div>
                     </div>
                 </div>
@@ -1162,12 +1143,15 @@
                 <!-- LỜI NHẮN DẶN DÒ CHỦ NUÔI -->
                 <div class="form-group">
                     <label class="form-label">Lời nhắn dặn dò chủ nuôi (Đồng bộ tức thì sang app của khách):</label>
-                    <textarea class="admin-input textarea-note" rows="3" id="wbOwnerMessage" placeholder="Ví dụ: Lông vùng nách bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà; tai sạch sẽ thơm tho.">Lông vùng nách bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.</textarea>
+                    <textarea class="admin-input textarea-note" rows="2" id="wbOwnerMessage" placeholder="Ví dụ: Lông vùng nách bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà; tai sạch sẽ thơm tho.">Lông vùng nách bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.</textarea>
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 4px;">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnPreviewCustomerDiary">Xem trước giao diện khách</button>
-                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveAndSendCareLog">Lưu & Gửi nhật ký sang ứng dụng</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnSaveDraftCareLog">Lưu bản nháp</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnCompleteAndSendCareLog">Hoàn thiện và Gửi</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1249,7 +1233,7 @@
                     <div class="form-group">
                         <label class="form-label">Xác nhận tiêm phòng (Sổ tiêm):</label>
                         <select class="admin-select" id="newPetVaccinated">
-                            <option value="true">Đã tiêm đủ dại & bệnh truyền nhiễm</option>
+                            <option value="true">Đã tiêm đủ dại và bệnh truyền nhiễm</option>
                             <option value="false">Chưa xác nhận tiêm</option>
                         </select>
                     </div>
@@ -1307,7 +1291,7 @@
     <div class="admin-modal-backdrop" id="modalWeighPet">
         <div class="admin-modal-card">
             <div class="admin-modal-header">
-                <span class="admin-modal-title">Cân bé & Áp dụng ma trận giá dịch vụ</span>
+                <span class="admin-modal-title">Cân bé và Áp dụng ma trận giá dịch vụ</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalWeighPet">Đóng</button>
             </div>
 
@@ -1414,7 +1398,7 @@
     <div class="admin-modal-backdrop" id="modalViewCareLogDetail">
         <div class="admin-modal-card">
             <div class="admin-modal-header">
-                <span class="admin-modal-title" id="carelogModalTitle">Chi tiết ca làm: Tắm sấy dưỡng ẩm & Cắt mài móng</span>
+                <span class="admin-modal-title" id="carelogModalTitle">Chi tiết ca làm: Tắm sấy dưỡng ẩm và Cắt mài móng</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalViewCareLogDetail">Đóng</button>
             </div>
 
@@ -1430,12 +1414,12 @@
                     <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px;">Ảnh thực tế ca làm việc:</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Trước khi làm (Before):</span>
-                            <img src="/assets/images/publics/dogcute3.jpg" id="carelogModalImgBefore" style="width: 100%; height: 160px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);" alt="Before">
+                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Trước khi làm:</span>
+                            <img src="/assets/images/publics/dogcute3.jpg" id="carelogModalImgBefore" style="width: 100%; height: 220px; object-fit: cover; object-position: center; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);" alt="Trước khi làm">
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Sau khi hoàn thiện (After):</span>
-                            <img src="/assets/images/publics/dogcute1.jpg" id="carelogModalImgAfter" style="width: 100%; height: 160px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);" alt="After">
+                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Sau khi hoàn thiện:</span>
+                            <img src="/assets/images/publics/dogcute1.jpg" id="carelogModalImgAfter" style="width: 100%; height: 220px; object-fit: cover; object-position: center; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);" alt="Sau khi hoàn thiện">
                         </div>
                     </div>
                 </div>
@@ -1447,7 +1431,7 @@
                             <img src="/assets/images/publics/cat5.jpg" id="modalChkImgEar" class="modal-chk-img" alt="Ảnh tai">
                             <div class="modal-chk-info">
                                 <span class="modal-chk-title">1. Tai sạch sẽ, không viêm</span>
-                                <span class="admin-badge badge-success" style="font-size: 11px;">Đạt chuẩn</span>
+                                <span class="modal-chk-status-text">Đã vệ sinh sạch bóng</span>
                             </div>
                         </div>
 
@@ -1455,7 +1439,7 @@
                             <img src="/assets/images/publics/handpaw.jpg" id="modalChkImgNail" class="modal-chk-img" alt="Ảnh móng">
                             <div class="modal-chk-info">
                                 <span class="modal-chk-title">2. Móng mài tròn nhẵn</span>
-                                <span class="admin-badge badge-success" style="font-size: 11px;">Đạt chuẩn</span>
+                                <span class="modal-chk-status-text">Đã mài tròn, không sắc nhọn</span>
                             </div>
                         </div>
 
@@ -1463,7 +1447,7 @@
                             <img src="/assets/images/publics/spa.jpg" id="modalChkImgAnal" class="modal-chk-img" alt="Ảnh tuyến hôi">
                             <div class="modal-chk-info">
                                 <span class="modal-chk-title">3. Tuyến hôi sạch sẽ</span>
-                                <span class="admin-badge badge-success" style="font-size: 11px;">Đạt chuẩn</span>
+                                <span class="modal-chk-status-text">Đã vắt sạch, khử mùi tốt</span>
                             </div>
                         </div>
 
@@ -1471,7 +1455,7 @@
                             <img src="/assets/images/publics/pet2.jpg" id="modalChkImgSkin" class="modal-chk-img" alt="Ảnh da lông">
                             <div class="modal-chk-info">
                                 <span class="modal-chk-title">4. Da lông thông thoáng</span>
-                                <span class="admin-badge badge-success" style="font-size: 11px;">Đạt chuẩn</span>
+                                <span class="modal-chk-status-text">Không có bọ ve hoặc nấm</span>
                             </div>
                         </div>
                     </div>
@@ -1479,7 +1463,7 @@
 
                 <div>
                     <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 6px;">Lời dặn dò gửi chủ nuôi:</div>
-                    <div id="carelogModalMessage" style="font-size: 13px; color: var(--text-main); background: #FAFCFA; padding: 10px 14px; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral); line-height: 1.5;">
+                    <div id="carelogModalMessage" style="font-size: 13px; color: var(--text-main); line-height: 1.6;">
                         Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.
                     </div>
                 </div>

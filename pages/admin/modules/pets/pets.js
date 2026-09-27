@@ -589,7 +589,7 @@
                     if (imgSkin) imgSkin.src = '/assets/images/publics/dogcute8.jpg';
                     if (msgEl) msgEl.textContent = 'Bé rất hợp tác trong ca làm, form lông cắt tỉa tròn trịa đáng yêu, tai và móng đã vệ sinh nhẵn bóng.';
                 } else {
-                    if (titleEl) titleEl.textContent = 'Chi tiết ca làm: Tắm sấy dưỡng ẩm & Cắt mài móng';
+                    if (titleEl) titleEl.textContent = 'Chi tiết ca làm: Tắm sấy dưỡng ẩm và Cắt mài móng';
                     if (timeEl) timeEl.textContent = 'Thời gian: 25/09/2026 14:30';
                     if (groomerEl) groomerEl.textContent = 'KTV: Hoàng Tuấn • Bàn 2';
                     if (badgeEl) {
@@ -613,6 +613,7 @@
         const queueItems = document.querySelectorAll('.queue-card-item');
         const wbFormTitle = document.getElementById('wbFormTitle');
         const wbStatusBadge = document.getElementById('wbStatusBadge');
+        const wbFormSub = document.getElementById('wbFormSub');
 
         queueItems.forEach(item => {
             item.addEventListener('click', () => {
@@ -622,13 +623,42 @@
                 const petName = item.querySelector('.queue-pet-name')?.textContent || 'Bé cưng';
                 if (wbFormTitle) wbFormTitle.textContent = `Cập nhật nhật ký ca: ${petName}`;
                 if (wbStatusBadge) wbStatusBadge.textContent = 'Đang tiến hành';
+
+                const subTexts = Array.from(item.querySelectorAll('.queue-card-sub')).map(el => el.textContent.trim());
+                if (wbFormSub && subTexts.length > 0) {
+                    wbFormSub.textContent = `${subTexts[0]} • Mã lịch hẹn: BK-2609 • ${subTexts[1] || ''}`;
+                }
             });
         });
 
-        const btnSaveCareLog = document.getElementById('btnSaveAndSendCareLog');
-        if (btnSaveCareLog) {
-            btnSaveCareLog.addEventListener('click', () => {
-                showToast('Đã lưu nhật ký ca làm và đồng bộ ảnh Before/After sang ứng dụng của chủ nuôi!');
+        // Nút Lưu bản nháp
+        const btnSaveDraft = document.getElementById('btnSaveDraftCareLog');
+        if (btnSaveDraft) {
+            btnSaveDraft.addEventListener('click', () => {
+                showToast('Đã lưu bản nháp nhật ký ca làm. Chưa gửi sang ứng dụng của chủ nuôi.');
+            });
+        }
+
+        // Nút Hoàn thiện và Gửi — đổi trạng thái ca sang "Hoàn thiện"
+        const btnCompleteAndSend = document.getElementById('btnCompleteAndSendCareLog');
+        if (btnCompleteAndSend) {
+            btnCompleteAndSend.addEventListener('click', () => {
+                // Đổi badge trên form
+                const wbBadge = document.getElementById('wbStatusBadge');
+                if (wbBadge) {
+                    wbBadge.textContent = 'Hoàn thiện';
+                    wbBadge.className = 'admin-badge badge-success';
+                }
+                // Đổi badge trên thẻ ca làm bên cột trái
+                const activeItem = document.querySelector('.queue-card-item.active');
+                if (activeItem) {
+                    const itemBadge = activeItem.querySelector('.admin-badge');
+                    if (itemBadge) {
+                        itemBadge.textContent = 'Hoàn thiện';
+                        itemBadge.className = 'admin-badge badge-success';
+                    }
+                }
+                showToast('Hoàn thiện ca làm! Nhật ký và ảnh đã đồng bộ sang ứng dụng của chủ nuôi.');
             });
         }
 
