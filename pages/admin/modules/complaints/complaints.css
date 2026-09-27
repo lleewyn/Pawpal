@@ -272,13 +272,13 @@
 }
 
 .complaint-quote-box {
-    padding: 14px 18px;
-    background-color: #F8FAF9;
-    border-radius: var(--admin-radius);
+    padding: 10px 0;
+    background-color: transparent;
+    border: none;
     color: var(--text-main);
-    font-size: 14px;
-    line-height: 1.5;
-    border-left: 3px solid #236B48;
+    font-size: 14.5px;
+    line-height: 1.6;
+    font-style: italic;
 }
 
 .evidence-photos-list {

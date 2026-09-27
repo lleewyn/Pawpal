@@ -97,8 +97,9 @@
 ## 5. QUY TẮC CẢNH BÁO (ALERTS) & TRẠNG THÁI (STATUSES)
 
 * **Viền cạnh mép trái (`border-left`)**:
-  - **Được dùng cho dòng dữ liệu bảng cần Alert**: Ô đầu tiên của dòng cảnh báo có vạch đỏ 3px (`border-left: 3px solid #DC2626;` cho khiếu nại) hoặc vạch cam 3px (`#D97706;` cho lưu ý). Các dòng bình thường dùng viền trong suốt `border-left: 3px solid transparent;` để căn hàng thẳng tắp.
+  - **DUY NHẤT & ĐỘC QUYỀN cho dòng dữ liệu bảng cần Alert**: Vạch đỏ 3px (`border-left: 3px solid #DC2626;` cho khiếu nại) hoặc vạch cam 3px (`#D97706;` cho lưu ý) CHỈ ĐƯỢC PHÉP ÁP DỤNG trên ô đầu tiên (`td:first-child`) của dòng bảng dữ liệu. Các dòng bình thường dùng viền trong suốt `border-left: 3px solid transparent;` để căn hàng thẳng tắp.
   - **Đồng bộ hàng tiêu đề cột (`th:first-child`)**: Ô đầu tiên của hàng tiêu đề bảng BẮT BUỘC có `border-left: 3px solid var(--table-header-bg);` để ăn khớp thẳng tắp với các dòng dữ liệu bên dưới, triệt tiêu hoàn toàn khe hở màu trắng bên trái.
+  - **TUYỆT ĐỐI CẤM DÙNG `border-left` Ở BẤT KỲ VỊ TRÍ NÀO KHÁC**: Ngoại trừ dòng trong bảng, tuyệt đối không dùng viền mép trái làm trang trí (callout, trích dẫn quote, danh sách, khối ghi chú, thẻ thông tin...). Các khối trích dẫn/nội dung phản ánh phải trình bày dạng chữ phẳng tự nhiên, thoáng đãng (`border: none; background: transparent;`).
   - **Dòng cảnh báo thuần chữ đỏ (Không nền & Không viền khung)**: Cảnh báo khẩn cấp trình bày dạng dòng chữ màu đỏ thuần (`color: #DC2626; background: transparent; border: none;`), không vẽ khung viền hộp và không bôi màu nền để triệt tiêu hoàn toàn cảm giác "hộp viền bao quanh".
 * **Tài khoản bị khóa (`.row-locked`)**:
   - **Làm mờ rõ rệt toàn bộ dòng**: Áp dụng `opacity: 0.52;` cho cả hàng dữ liệu để người quản trị phân biệt ngay lập tức tài khoản đã bị vô hiệu hóa so với các tài khoản đang hoạt động.
