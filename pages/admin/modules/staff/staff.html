@@ -1,0 +1,673 @@
+<div class="staff-module">
+    <!-- ====================================================================
+         SUB-TAB 1: DANH SÁCH NHÂN VIÊN
+         ==================================================================== -->
+    <section class="subtab-content active" id="subtab-tab-staff-list">
+        <!-- 5 THẺ THỐNG KÊ KPI -->
+        <div class="staff-kpi-grid">
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Tổng số nhân viên</span>
+                <span class="kpi-val" id="statTotalStaff">45</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Đang làm việc</span>
+                <span class="kpi-val text-success" id="statActiveStaff">38</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Nghỉ phép</span>
+                <span class="kpi-val text-warning" id="statLeaveStaff">3</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Tạm nghỉ</span>
+                <span class="kpi-val text-neutral" id="statPauseStaff">2</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Cần đào tạo lại</span>
+                <span class="kpi-val text-danger" id="statRetrainStaff">2</span>
+            </div>
+        </div>
+
+        <!-- KHỐI BẢNG DỮ LIỆU -->
+        <div class="admin-card staff-master-card">
+            <div class="table-toolbar-section">
+                <div class="filter-row-top">
+                    <div class="search-box-wrapper">
+                        <input type="text" class="admin-input" id="staffSearchInput" placeholder="Tìm mã nhân viên, họ tên, số điện thoại...">
+                    </div>
+                    <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnExportStaff">Xuất Excel</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddStaffModal">+ Thêm nhân viên</button>
+                    </div>
+                </div>
+
+                <div class="filter-row-bottom">
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Chức vụ:</label>
+                        <select class="admin-select" id="staffFilterPosition">
+                            <option value="ALL">Tất cả</option>
+                            <option value="Receptionist">Lễ tân</option>
+                            <option value="Groomer">Groomer</option>
+                            <option value="Veterinarian">Bác sĩ/Bảo mẫu</option>
+                            <option value="CSKH">CSKH</option>
+                            <option value="Driver">Tài xế Taxi Pet</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Vai trò hệ thống:</label>
+                        <select class="admin-select" id="staffFilterRole">
+                            <option value="ALL">Tất cả</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Receptionist">Receptionist</option>
+                            <option value="Groomer">Groomer</option>
+                            <option value="Veterinarian">Veterinarian</option>
+                            <option value="Driver">Driver</option>
+                            <option value="CSKH">CSKH</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Trạng thái:</label>
+                        <select class="admin-select" id="staffFilterStatus">
+                            <option value="ALL">Tất cả</option>
+                            <option value="ACTIVE">Đang làm việc</option>
+                            <option value="LEAVE">Nghỉ phép</option>
+                            <option value="PAUSE">Tạm nghỉ</option>
+                            <option value="RESIGNED">Nghỉ việc</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Ca làm việc:</label>
+                        <select class="admin-select" id="staffFilterShift">
+                            <option value="ALL">Tất cả</option>
+                            <option value="MORNING">Ca sáng</option>
+                            <option value="AFTERNOON">Ca chiều</option>
+                            <option value="EVENING">Ca tối</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="admin-table" id="staffListTable">
+                    <thead>
+                        <tr>
+                            <th>Mã NV</th>
+                            <th>Họ tên</th>
+                            <th>Chức vụ</th>
+                            <th>Vai trò hệ thống</th>
+                            <th>Số điện thoại</th>
+                            <th>Ca hiện tại</th>
+                            <th>Trạng thái</th>
+                            <th style="text-align: center; width: 60px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staffListTableBody">
+                        <!-- Render by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Phân trang -->
+        <div class="admin-pagination-container" id="staffPagination">
+            <button type="button" class="btn-pagination">&lt;</button>
+            <button type="button" class="btn-pagination active">1</button>
+            <button type="button" class="btn-pagination">2</button>
+            <button type="button" class="btn-pagination">3</button>
+            <button type="button" class="btn-pagination">&gt;</button>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 2: HỒ SƠ NHÂN VIÊN (CHI TIẾT HỒ SƠ 360°)
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-staff-profile">
+        <div class="admin-card staff-profile-container">
+            <!-- THANH THAO TÁC MỘT CHẠM TRÊN ĐẦU HỒ SƠ -->
+            <div class="staff-profile-quick-bar">
+                <div class="staff-headline-group">
+                    <span class="headline-name" id="viewStaffName">Lê Lệ Quyên</span>
+                    <span class="admin-badge badge-neutral" id="viewStaffCode">EMP-001</span>
+                    <span class="admin-badge badge-tier-gold" id="viewStaffPosition">Admin</span>
+                    <span class="admin-badge badge-active" id="viewStaffStatusBadge">Đang làm việc</span>
+                </div>
+                <div class="staff-quick-actions">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnProfileEditStaff">Chỉnh sửa hồ sơ</button>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnProfileAssignShift">Phân ca làm việc</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnProfileAddAssessment">Đánh giá nghiệp vụ</button>
+                </div>
+            </div>
+
+            <!-- NỘI DUNG HỒ SƠ: THOÁNG ĐÃNG TRÊN NỀN TRẮNG, KHÔNG HỘP LỒNG HỘP -->
+            <div class="staff-profile-sections-grid">
+                <div class="staff-profile-left-col">
+                    <div class="drawer-info-block">
+                        <div class="drawer-section-title">Thông tin cá nhân và Liên hệ</div>
+                        <div class="info-grid-2col">
+                            <div class="info-pair">
+                                <span class="info-label">Họ và tên:</span>
+                                <span class="info-value" id="viewStaffFullName">Lê Lệ Quyên</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Mã nhân viên:</span>
+                                <span class="info-value" id="viewStaffId">EMP-001</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Số điện thoại:</span>
+                                <span class="info-value" id="viewStaffPhone">0901234567</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Email công việc:</span>
+                                <span class="info-value" id="viewStaffEmail">quyen.le@pawpal.vn</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Ngày sinh:</span>
+                                <span class="info-value" id="viewStaffDob">15/08/1996</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Ngày bắt đầu làm:</span>
+                                <span class="info-value" id="viewStaffJoinDate">10/01/2024</span>
+                            </div>
+                        </div>
+                        <div class="info-pair" style="margin-top: 14px;">
+                            <span class="info-label">Địa chỉ liên hệ:</span>
+                            <span class="info-value" id="viewStaffAddress">68 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh</span>
+                        </div>
+                    </div>
+
+                    <div class="drawer-info-block" style="margin-top: 24px;">
+                        <div class="drawer-section-title">Thông tin công việc và Ca trực</div>
+                        <div class="info-grid-2col">
+                            <div class="info-pair">
+                                <span class="info-label">Chức danh / Chức vụ:</span>
+                                <span class="info-value" id="viewStaffJobTitle">Admin</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Vai trò hệ thống:</span>
+                                <span class="info-value" id="viewStaffRole">Admin</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Ca làm việc gần nhất:</span>
+                                <span class="info-value" id="viewStaffCurrentShift">Ca sáng (08:00 - 12:00)</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Trạng thái công tác:</span>
+                                <span class="info-value text-success" id="viewStaffWorkStatus">Đang làm việc</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="staff-profile-right-col">
+                    <div class="drawer-info-block">
+                        <div class="drawer-section-title">Quyền truy cập hệ thống</div>
+                        <div class="permission-tags-list" id="viewStaffPermissionsList">
+                            <span class="perm-tag">Xem lịch hẹn</span>
+                            <span class="perm-tag">Xác nhận lịch hẹn</span>
+                            <span class="perm-tag">Hủy lịch hẹn</span>
+                            <span class="perm-tag">Tạo đơn hàng</span>
+                            <span class="perm-tag">Thanh toán</span>
+                            <span class="perm-tag">Quản lý nhân viên</span>
+                            <span class="perm-tag">Quản lý khuyến mãi</span>
+                            <span class="perm-tag">Quản lý nội dung Web</span>
+                        </div>
+                    </div>
+
+                    <div class="drawer-info-block" style="margin-top: 24px;">
+                        <div class="drawer-section-title">Lịch sử đánh giá nghiệp vụ gần nhất</div>
+                        <div class="assessment-history-list" id="viewStaffAssessmentHistory">
+                            <div class="history-item">
+                                <div class="history-item-left">
+                                    <span style="font-weight: 600; color: var(--text-main);">Chuyên môn Grooming</span>
+                                    <span style="font-size: 11.5px; color: var(--text-muted);">20/09/2026 • Người đánh giá: Quản lý chi nhánh</span>
+                                </div>
+                                <div class="history-item-right" style="color: #166534;">85/100 (Đạt)</div>
+                            </div>
+                            <div class="history-item">
+                                <div class="history-item-left">
+                                    <span style="font-weight: 600; color: var(--text-main);">Kỹ năng Spa và Trị liệu</span>
+                                    <span style="font-size: 11.5px; color: var(--text-muted);">15/08/2026 • Người đánh giá: Chuyên gia Spa</span>
+                                </div>
+                                <div class="history-item-right" style="color: #166534;">90/100 (Đạt)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 3: LỊCH LÀM VIỆC
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-staff-schedule">
+        <div class="admin-card staff-master-card">
+            <div class="table-toolbar-section">
+                <div class="filter-row-top" style="justify-content: flex-start; gap: 20px;">
+                    <div class="date-navigator">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnPrevDay">&lt;</button>
+                        <input type="date" class="admin-input" id="scheduleDatePicker" value="2026-09-27">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnNextDay">&gt;</button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnToday">Hôm nay</button>
+                    </div>
+                    
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Chức vụ:</label>
+                        <select class="admin-select" id="scheduleFilterPosition">
+                            <option value="ALL">Tất cả</option>
+                            <option value="Receptionist">Lễ tân</option>
+                            <option value="Groomer">Groomer</option>
+                            <option value="Veterinarian">Bác sĩ/Bảo mẫu</option>
+                            <option value="CSKH">CSKH</option>
+                            <option value="Driver">Tài xế Taxi Pet</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Ca làm việc:</label>
+                        <select class="admin-select" id="scheduleFilterShift">
+                            <option value="ALL">Tất cả</option>
+                            <option value="MORNING">Ca sáng</option>
+                            <option value="AFTERNOON">Ca chiều</option>
+                            <option value="EVENING">Ca tối</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="admin-table schedule-table" id="scheduleTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Họ tên và Chức vụ</th>
+                            <th style="width: 25%; text-align: center;">Ca sáng (08:00 - 12:00)</th>
+                            <th style="width: 25%; text-align: center;">Ca chiều (13:00 - 17:00)</th>
+                            <th style="width: 25%; text-align: center;">Ca tối (17:30 - 21:30)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleTableBody">
+                        <!-- Render by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 3: ĐÁNH GIÁ NGHIỆP VỤ
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-staff-assessment">
+        <div class="staff-kpi-grid assessment-kpi-grid">
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Đã đánh giá tháng này</span>
+                <span class="kpi-val" id="statAssessed">45</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Đạt yêu cầu</span>
+                <span class="kpi-val text-success" id="statPass">40</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Cần đào tạo lại</span>
+                <span class="kpi-val text-warning" id="statRetrain">5</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Chưa đánh giá</span>
+                <span class="kpi-val text-danger" id="statNotAssessed">2</span>
+            </div>
+        </div>
+
+        <div class="admin-card staff-master-card">
+            <div class="table-toolbar-section">
+                <div class="filter-row-top">
+                    <div class="search-box-wrapper">
+                        <input type="text" class="admin-input" id="assessmentSearchInput" placeholder="Tìm mã nhân viên, họ tên...">
+                    </div>
+                    <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddAssessmentModal">+ Ghi nhận đánh giá</button>
+                    </div>
+                </div>
+
+                <div class="filter-row-bottom">
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Loại kiểm tra:</label>
+                        <select class="admin-select" id="assessmentFilterType">
+                            <option value="ALL">Tất cả</option>
+                            <option value="Grooming">Grooming</option>
+                            <option value="Spa">Spa</option>
+                            <option value="CSKH">CSKH</option>
+                            <option value="Taxi Pet">Taxi Pet</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Kết quả:</label>
+                        <select class="admin-select" id="assessmentFilterResult">
+                            <option value="ALL">Tất cả</option>
+                            <option value="PASS">Đạt</option>
+                            <option value="RETRAIN">Cần đào tạo</option>
+                            <option value="FAIL">Không đạt</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table class="admin-table" id="assessmentListTable">
+                    <thead>
+                        <tr>
+                            <th>Ngày đánh giá</th>
+                            <th>Mã NV</th>
+                            <th>Họ tên</th>
+                            <th>Loại kiểm tra</th>
+                            <th>Điểm</th>
+                            <th>Kết quả</th>
+                            <th>Người đánh giá</th>
+                            <th style="text-align: center; width: 60px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assessmentListTableBody">
+                        <!-- Render by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="admin-pagination-container" id="assessmentPagination">
+            <button type="button" class="btn-pagination">&lt;</button>
+            <button type="button" class="btn-pagination active">1</button>
+            <button type="button" class="btn-pagination">2</button>
+            <button type="button" class="btn-pagination">&gt;</button>
+        </div>
+    </section>
+
+    <!-- DRAWER: HỒ SƠ NHÂN VIÊN -->
+    <div class="profile-drawer-overlay" id="staffProfileDrawerOverlay" style="display: none;">
+        <div class="profile-drawer-container">
+            <div class="drawer-header">
+                <h3 class="drawer-title">Hồ sơ nhân viên</h3>
+                <button type="button" class="drawer-close-btn" id="btnCloseStaffDrawer">Đóng</button>
+            </div>
+            
+            <div class="drawer-content">
+                <div class="drawer-action-bar">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnEditStaffProfile">Chỉnh sửa hồ sơ</button>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnAssignShift">Phân ca</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnRecordAssessment">Đánh giá nghiệp vụ</button>
+                </div>
+
+                <div class="drawer-info-block">
+                    <div class="drawer-section-title">Thông tin chung</div>
+                    <div class="info-grid-2col">
+                        <div class="info-pair">
+                            <span class="info-label">Họ tên:</span>
+                            <span class="info-value" id="drawerStaffName">--</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Mã nhân viên:</span>
+                            <span class="info-value" id="drawerStaffCode">--</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Chức vụ:</span>
+                            <span class="info-value" id="drawerStaffPosition">--</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Trạng thái:</span>
+                            <span class="info-value" id="drawerStaffStatus">--</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Số điện thoại:</span>
+                            <span class="info-value" id="drawerStaffPhone">--</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Email:</span>
+                            <span class="info-value" id="drawerStaffEmail">--</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Ngày sinh:</span>
+                            <span class="info-value" id="drawerStaffDob">--</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Ngày vào làm:</span>
+                            <span class="info-value" id="drawerStaffJoinDate">--</span>
+                        </div>
+                    </div>
+                    <div class="info-pair" style="margin-top: 14px;">
+                        <span class="info-label">Địa chỉ:</span>
+                        <span class="info-value" id="drawerStaffAddress">--</span>
+                    </div>
+                </div>
+
+                <div class="drawer-info-block">
+                    <div class="drawer-section-title">Phân quyền hệ thống</div>
+                    <div class="info-grid-2col">
+                        <div class="info-pair">
+                            <span class="info-label">Vai trò:</span>
+                            <span class="info-value" id="drawerStaffRole">--</span>
+                        </div>
+                    </div>
+                    <div class="permission-tags-list" id="drawerStaffPermissions">
+                        <!-- Danh sách quyền -->
+                    </div>
+                </div>
+
+                <div class="drawer-info-block">
+                    <div class="drawer-section-title">Lịch sử đánh giá gần nhất</div>
+                    <div class="assessment-history-list" id="drawerAssessmentHistory">
+                        <!-- Danh sách đánh giá rút gọn -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: THÊM / CHỈNH SỬA NHÂN VIÊN -->
+    <div class="admin-modal-overlay" id="staffModalOverlay">
+        <div class="admin-modal-card wide-modal">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean" id="staffModalTitle">Thêm nhân viên mới</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelStaff">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="detail-section-title" style="margin-top: 0;">Thông tin cá nhân</div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Họ và tên *</label>
+                        <input type="text" class="admin-input" id="staffInputName" placeholder="Ví dụ: Nguyễn Văn A">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Số điện thoại *</label>
+                        <input type="text" class="admin-input" id="staffInputPhone" placeholder="10 chữ số...">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Email công việc *</label>
+                        <input type="email" class="admin-input" id="staffInputEmail" placeholder="abc@pawpal.vn">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Địa chỉ</label>
+                        <input type="text" class="admin-input" id="staffInputAddress" placeholder="Địa chỉ thường trú...">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Ngày sinh</label>
+                        <input type="date" class="admin-input" id="staffInputDob">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Ngày bắt đầu làm *</label>
+                        <input type="date" class="admin-input" id="staffInputJoinDate">
+                    </div>
+                </div>
+
+                <div class="detail-section-title" style="margin-top: 10px;">Thông tin công việc</div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Chức vụ *</label>
+                        <select class="admin-select" id="staffInputPosition">
+                            <option value="Lễ tân">Lễ tân</option>
+                            <option value="Groomer">Groomer</option>
+                            <option value="Bác sĩ/Bảo mẫu">Bác sĩ/Bảo mẫu</option>
+                            <option value="CSKH">CSKH</option>
+                            <option value="Tài xế Taxi Pet">Tài xế Taxi Pet</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Vai trò hệ thống *</label>
+                        <select class="admin-select" id="staffInputRole">
+                            <option value="Receptionist">Receptionist</option>
+                            <option value="Groomer">Groomer</option>
+                            <option value="Veterinarian">Veterinarian</option>
+                            <option value="CSKH">CSKH</option>
+                            <option value="Driver">Driver</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="detail-section-title" style="margin-top: 10px;">Thiết lập quyền truy cập</div>
+                <div class="permissions-grid">
+                    <div class="permission-group">
+                        <div class="perm-group-title">Lịch hẹn</div>
+                        <label class="perm-checkbox"><input type="checkbox" value="view_booking"> Xem lịch hẹn</label>
+                        <label class="perm-checkbox"><input type="checkbox" value="confirm_booking"> Xác nhận lịch hẹn</label>
+                        <label class="perm-checkbox"><input type="checkbox" value="cancel_booking"> Hủy lịch hẹn</label>
+                    </div>
+                    <div class="permission-group">
+                        <div class="perm-group-title">Care Timeline</div>
+                        <label class="perm-checkbox"><input type="checkbox" value="update_image"> Cập nhật hình ảnh</label>
+                        <label class="perm-checkbox"><input type="checkbox" value="update_note"> Cập nhật ghi chú</label>
+                    </div>
+                    <div class="permission-group">
+                        <div class="perm-group-title">Bán hàng</div>
+                        <label class="perm-checkbox"><input type="checkbox" value="create_order"> Tạo đơn hàng</label>
+                        <label class="perm-checkbox"><input type="checkbox" value="checkout"> Thanh toán</label>
+                    </div>
+                    <div class="permission-group">
+                        <div class="perm-group-title">Quản trị</div>
+                        <label class="perm-checkbox"><input type="checkbox" value="manage_staff"> Quản lý nhân viên</label>
+                        <label class="perm-checkbox"><input type="checkbox" value="manage_promo"> Quản lý khuyến mãi</label>
+                        <label class="perm-checkbox"><input type="checkbox" value="manage_web"> Quản lý nội dung Web</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissStaffModal">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveStaff">Lưu nhân viên</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PHÂN CA LÀM VIỆC -->
+    <div class="admin-modal-overlay" id="shiftModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Phân ca làm việc</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelShiftModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Ngày làm việc</label>
+                        <input type="date" class="admin-input" id="shiftInputDate">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Ca làm việc</label>
+                        <select class="admin-select" id="shiftInputShift">
+                            <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
+                            <option value="AFTERNOON">Ca chiều (13:00 - 17:00)</option>
+                            <option value="EVENING">Ca tối (17:30 - 21:30)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="shift-assignment-grid">
+                    <div class="shift-col">
+                        <div class="detail-section-title">Nhân viên khả dụng</div>
+                        <div class="shift-staff-list" id="shiftAvailableStaff">
+                            <!-- JS Render -->
+                        </div>
+                    </div>
+                    <div class="shift-col">
+                        <div class="detail-section-title">Đã phân vào ca</div>
+                        <div class="shift-staff-list" id="shiftAssignedStaff">
+                            <!-- JS Render -->
+                        </div>
+                    </div>
+                </div>
+                <div class="pet-safety-banner" id="shiftAlertBanner" style="display: none; margin-top: 10px;">
+                    <!-- Cảnh báo trùng ca -->
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissShiftModal">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveShift">Lưu lịch</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GHI NHẬN ĐÁNH GIÁ -->
+    <div class="admin-modal-overlay" id="assessmentModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Ghi nhận đánh giá</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelAssessmentModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Nhân viên *</label>
+                    <select class="admin-select" id="assessInputStaff">
+                        <!-- JS Render -->
+                    </select>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Ngày kiểm tra *</label>
+                        <input type="date" class="admin-input" id="assessInputDate">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Loại kiểm tra *</label>
+                        <select class="admin-select" id="assessInputType">
+                            <option value="Grooming">Grooming</option>
+                            <option value="Spa">Spa</option>
+                            <option value="CSKH">CSKH</option>
+                            <option value="Taxi Pet">Taxi Pet</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Điểm đánh giá (0-100) *</label>
+                        <input type="number" class="admin-input" id="assessInputScore" min="0" max="100">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Kết quả *</label>
+                        <select class="admin-select" id="assessInputResult">
+                            <option value="PASS">Đạt</option>
+                            <option value="RETRAIN">Cần đào tạo</option>
+                            <option value="FAIL">Không đạt</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Ghi chú đào tạo</label>
+                    <textarea class="admin-input" id="assessInputNote" rows="3" placeholder="Nhận xét chi tiết..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer-clean" style="justify-content: space-between;">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnSendAssessNotify">Lưu và Gửi thông báo</button>
+                <div>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissAssessmentModal">Hủy</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnSaveAssessment">Lưu kết quả</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DROPDOWN THAO TÁC 3 CHẤM (TEXT-ONLY) -->
+    <div class="action-dropdown-menu" id="staffActionDropdown" style="display: none;">
+        <button type="button" class="action-menu-item" id="menuActionViewProfile">Xem hồ sơ</button>
+        <button type="button" class="action-menu-item" id="menuActionEditStaff">Chỉnh sửa hồ sơ</button>
+        <button type="button" class="action-menu-item" id="menuActionViewSchedule">Xem lịch làm việc</button>
+        <button type="button" class="action-menu-item" id="menuActionViewAssess">Xem lịch sử đánh giá</button>
+        <button type="button" class="action-menu-item danger-item" id="menuActionDeleteStaff">Xóa nhân viên</button>
+    </div>
+</div>

@@ -1,0 +1,552 @@
+<div class="services-module">
+    <!-- ====================================================================
+         SUB-TAB 1: LỊCH HẸN (VẬN HÀNH VÀ QUẢN LÝ LỊCH HẸN DỊCH VỤ)
+         ==================================================================== -->
+    <section class="subtab-content active" id="subtab-tab-service-bookings">
+
+        <!-- KHU VỰC CẢNH BÁO LỊCH HẸN SẮP TỚI (DẠNG THẺ TÍCH HỢP GỌN GÀNG, KHÔNG ĐƯỜNG CONG NỔI) -->
+        <div class="admin-card booking-upcoming-bar" id="upcomingAlertBar">
+            <div class="upcoming-bar-header">
+                <span class="upcoming-bar-title">Lịch hẹn sắp tới trong 60 phút</span>
+                <span class="upcoming-bar-count" id="upcomingCountBadge">3 lịch hẹn</span>
+            </div>
+            <div class="upcoming-items-list" id="upcomingItemsContainer">
+                <!-- Danh sách lịch sắp tới render động -->
+            </div>
+        </div>
+
+        <!-- 6 THẺ THỐNG KÊ KPI NHANH -->
+        <div class="services-kpi-grid">
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Tổng lịch hôm nay</span>
+                <span class="kpi-val" id="statTotalBookings">28</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Chờ xác nhận</span>
+                <span class="kpi-val text-warning" id="statPendingBookings">4</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Đã xác nhận</span>
+                <span class="kpi-val" id="statConfirmedBookings" style="color: #236B48;">11</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Đang thực hiện</span>
+                <span class="kpi-val" id="statInProgressBookings" style="color: #0369A1;">6</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Hoàn thành</span>
+                <span class="kpi-val text-success" id="statCompletedBookings">5</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Yêu cầu đổi và Hủy</span>
+                <span class="kpi-val text-danger" id="statCancelledBookings">2</span>
+            </div>
+        </div>
+
+        <!-- KHỐI BẢNG DỮ LIỆU THỐNG NHẤT (GOM KHỐI) -->
+        <div class="admin-card service-master-card">
+            <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
+            <div class="table-toolbar-section">
+                <div class="filter-row-top">
+                    <div class="search-box-wrapper">
+                        <input type="text" class="admin-input" id="serviceSearchInput" placeholder="Tìm mã BKG, tên khách, số điện thoại, tên thú cưng...">
+                    </div>
+                    <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnExportServiceReport">Xuất file</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateBookingModal">+ Thêm lịch hẹn</button>
+                    </div>
+                </div>
+
+                <div class="filter-row-bottom">
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Loại dịch vụ:</label>
+                        <select class="admin-select" id="serviceFilterCategory">
+                            <option value="ALL">Tất cả</option>
+                            <option value="Spa">Spa và Grooming</option>
+                            <option value="Hotel">Pet Hotel</option>
+                            <option value="Taxi">Pet Taxi</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Trạng thái:</label>
+                        <select class="admin-select" id="serviceFilterStatus">
+                            <option value="ALL">Tất cả</option>
+                            <option value="pending">Chờ xác nhận</option>
+                            <option value="confirmed">Đã xác nhận</option>
+                            <option value="in_progress">Đang thực hiện</option>
+                            <option value="completed">Hoàn thành</option>
+                            <option value="cancelled">Đã hủy</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Kỹ thuật viên:</label>
+                        <select class="admin-select" id="serviceFilterStaff">
+                            <option value="ALL">Tất cả KTV</option>
+                            <option value="Ngọc Anh">Ngọc Anh</option>
+                            <option value="Thu Thảo">Thu Thảo</option>
+                            <option value="Hoàng Nam">Hoàng Nam</option>
+                            <option value="Hữu Phúc">Hữu Phúc</option>
+                            <option value="UNASSIGNED">Chưa phân công</option>
+                        </select>
+                    </div>
+
+                    <button type="button" class="admin-btn-filter-toggle" id="btnToggleUpcomingOnly">Lịch hẹn sắp tới</button>
+                    <button type="button" class="admin-btn-filter-toggle" id="btnToggleAllergyOnly">Pet có lưu ý</button>
+                </div>
+            </div>
+
+            <!-- BẢNG DỮ LIỆU LỊCH HẸN -->
+            <div class="table-responsive-wrapper">
+                <table class="admin-table" id="servicesBookingTable">
+                    <thead>
+                        <tr>
+                            <th>Mã lịch hẹn</th>
+                            <th>Khách hàng</th>
+                            <th>Thú cưng</th>
+                            <th>Loại dịch vụ</th>
+                            <th>Dịch vụ đã đặt</th>
+                            <th>Ngày và Giờ hẹn</th>
+                            <th>Kỹ thuật viên</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Cảnh báo</th>
+                            <th style="text-align: center; width: 60px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="servicesBookingTableBody">
+                        <!-- Nạp động từ services.js -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PHÂN TRANG NẰM NGOÀI BẢNG (KHÔNG NỀN, KHÔNG ĐÓNG KHUNG, CĂN GIỮA) -->
+        <div class="admin-pagination-container" id="servicesPagination">
+            <button type="button" class="btn-pagination" id="btnServicePrev">&lt;</button>
+            <button type="button" class="btn-pagination active">1</button>
+            <button type="button" class="btn-pagination">2</button>
+            <button type="button" class="btn-pagination">3</button>
+            <button type="button" class="btn-pagination" id="btnServiceNext">&gt;</button>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 2: HỒ SƠ LỊCH HẸN (CHI TIẾT CA DỊCH VỤ 360°)
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-service-detail">
+        <div class="admin-card service-detail-card">
+            <!-- THANH TIÊU ĐỀ CHI TIẾT VÀ NÚT THAO TÁC 1-CHẠM -->
+            <div class="service-detail-header-bar">
+                <div class="service-headline-group">
+                    <div class="service-code-title" id="detailBookingCode">BKG-1001</div>
+                    <div class="service-datetime-text" id="detailBookingMeta">Thời gian hẹn: 14:00 - 25/06/2026 | Cơ sở: PawPal Chi nhánh Quận 1</div>
+                </div>
+                <div class="service-action-bar-top" id="detailBookingActionButtons">
+                    <!-- Nút thao tác một chạm theo trạng thái nạp động -->
+                </div>
+            </div>
+
+            <!-- CẢNH BÁO AN TOÀN PET (THUẦN CHỮ ĐỎ, KHÔNG VIỀN KHUNG, KHÔNG NỀN) -->
+            <div class="pet-safety-banner" id="detailPetAlertBanner" style="display: none;">
+                <!-- Dòng chữ đỏ cảnh báo dị ứng hoặc lưu ý đặc biệt -->
+            </div>
+
+            <!-- NỘI DUNG CHI TIẾT 2 CỘT THOÁNG ĐÃNG -->
+            <div class="service-detail-grid">
+                <!-- CỘT TRÁI: THÔNG TIN DỊCH VỤ VÀ TÀI CHÍNH -->
+                <div class="detail-column-left">
+                    <!-- KHỐI 1: THÔNG TIN LỊCH HẸN VÀ DỊCH VỤ -->
+                    <div class="detail-info-group">
+                        <div class="detail-section-title">Thông tin ca dịch vụ</div>
+                        <div class="info-grid-2col">
+                            <div class="info-pair">
+                                <span class="info-label">Trạng thái:</span>
+                                <span class="info-value" id="detailBookingStatusText">Chờ xác nhận</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Kỹ thuật viên:</span>
+                                <span class="info-value" id="detailBookingStaffText">Chưa phân công</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Gói dịch vụ:</span>
+                                <span class="info-value" id="detailBookingServiceText">Gói Tắm Vệ Sinh Cơ Bản</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Thời lượng ước tính:</span>
+                                <span class="info-value" id="detailBookingDurationText">60 phút</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Phân nhóm:</span>
+                                <span class="info-value" id="detailBookingCategoryText">Spa và Grooming</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Dịch vụ đi kèm (Add-on):</span>
+                                <span class="info-value" id="detailBookingAddonsText">Không có</span>
+                            </div>
+                        </div>
+                        <div class="info-pair" style="margin-top: 10px;">
+                            <span class="info-label">Ghi chú của khách:</span>
+                            <span class="info-value" id="detailBookingCustomerNote" style="font-weight: 400;">Không có</span>
+                        </div>
+                    </div>
+
+                    <!-- KHỐI 2: KHÁCH HÀNG VÀ THÚ CƯNG -->
+                    <div class="detail-info-group">
+                        <div class="detail-section-title">Khách hàng và Thú cưng</div>
+                        <div class="info-grid-2col">
+                            <div class="info-pair">
+                                <span class="info-label">Chủ nuôi:</span>
+                                <span class="info-value"><a href="javascript:void(0)" class="user-link-text" id="detailCustomerName">Lê Lệ Quyên</a></span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Số điện thoại:</span>
+                                <span class="info-value" id="detailCustomerPhone">0901234567</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Tên bé cưng:</span>
+                                <span class="info-value" id="detailPetName">Miu Con</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Loài và Giống:</span>
+                                <span class="info-value" id="detailPetBreed">Mèo Anh Lông Ngắn</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Cân nặng:</span>
+                                <span class="info-value" id="detailPetWeight">4.2 kg</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Tuổi:</span>
+                                <span class="info-value" id="detailPetAge">2 tuổi</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KHỐI 3: THANH TOÁN VÀ CHI PHÍ -->
+                    <div class="detail-info-group">
+                        <div class="detail-section-title">Bảng kê chi phí</div>
+                        <div class="financial-summary-list">
+                            <div class="summary-row">
+                                <span>Giá dịch vụ tiêu chuẩn:</span>
+                                <span id="detailCostBase">250.000 đ</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Phụ phí và Add-on:</span>
+                                <span id="detailCostAddon">0 đ</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Giảm giá thành viên / Ưu đãi:</span>
+                                <span id="detailCostDiscount">-0 đ</span>
+                            </div>
+                            <div class="summary-row total-row">
+                                <span>Tổng cộng:</span>
+                                <span id="detailCostTotal">250.000 đ</span>
+                            </div>
+                        </div>
+                        <div class="info-pair" style="margin-top: 6px;">
+                            <span class="info-label">Trạng thái thanh toán:</span>
+                            <span class="info-value" id="detailPaymentStatus">Chưa thanh toán (Thanh toán tại quầy)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CỘT PHẢI: NHẬT KÝ CHĂM SÓC (CARE-LOG TIMELINE) -->
+                <div class="detail-column-right">
+                    <div class="detail-info-group">
+                        <div class="detail-section-title">Nhật ký chăm sóc (Care-Log)</div>
+                        <div class="carelog-hint-text">Cập nhật tiến trình thực hiện ca dịch vụ để chủ nuôi theo dõi thời gian thực.</div>
+                        <div class="carelog-timeline-list" id="detailCarelogList">
+                            <!-- Nạp động theo trạng thái hoặc loại dịch vụ -->
+                        </div>
+
+                        <!-- KHU VỰC THÊM BƯỚC NHẬT KÝ THỜI GIAN THỰC -->
+                        <div class="carelog-quick-add" id="carelogQuickAddBox">
+                            <div class="carelog-add-title">Cập nhật bước mới:</div>
+                            <div class="form-row-2col">
+                                <input type="text" class="admin-input" id="newLogStepTitle" placeholder="Tên bước (VD: Sấy tạo phồng)...">
+                                <input type="text" class="admin-input" id="newLogStepStaff" placeholder="Người thực hiện...">
+                            </div>
+                            <input type="text" class="admin-input" id="newLogStepNote" placeholder="Ghi chú chi tiết cho chủ nuôi...">
+                            <div style="text-align: right;">
+                                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitCarelogStep">+ Ghi nhật ký</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 3: DANH MỤC VÀ BẢNG GIÁ DỊCH VỤ
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-service-catalog">
+        <div class="admin-card service-master-card">
+            <!-- THANH TABS 3 NHÓM DỊCH VỤ -->
+            <div class="table-toolbar-section">
+                <div class="filter-row-top">
+                    <div class="catalog-nav-tabs">
+                        <button type="button" class="catalog-tab-btn active" data-group="spa">Spa và Grooming</button>
+                        <button type="button" class="catalog-tab-btn" data-group="hotel">Pet Hotel</button>
+                        <button type="button" class="catalog-tab-btn" data-group="taxi">Pet Taxi</button>
+                    </div>
+                    <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateServiceModal">+ Thêm dịch vụ</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BẢNG DỮ LIỆU DANH MỤC DỊCH VỤ -->
+            <div class="table-responsive-wrapper">
+                <table class="admin-table" id="servicesCatalogTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">Hình</th>
+                            <th>Mã dịch vụ</th>
+                            <th>Tên dịch vụ</th>
+                            <th>Phân loại</th>
+                            <th>Dành cho</th>
+                            <th>Thời lượng</th>
+                            <th>Giá từ</th>
+                            <th>Đánh giá</th>
+                            <th>Trạng thái</th>
+                            <th style="text-align: center; width: 60px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="servicesCatalogTableBody">
+                        <!-- Nạp động từ CSV dichvu.csv -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         MODAL 1: TẠO LỊCH HẸN MỚI TẠI QUẦY HOẶC QUA ĐIỆN THOẠI
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalCreateBooking">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Tạo lịch hẹn dịch vụ mới</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseCreateBooking">Đóng</button>
+            </div>
+            <form id="formCreateBooking" class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Khách hàng:</label>
+                    <input type="text" class="admin-input" id="newBookingCustomer" placeholder="Nhập tên hoặc số điện thoại khách..." required>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Số điện thoại:</label>
+                        <input type="text" class="admin-input" id="newBookingPhone" placeholder="0901234567..." required>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Tên thú cưng:</label>
+                        <input type="text" class="admin-input" id="newBookingPetName" placeholder="Tên bé cưng..." required>
+                    </div>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Nhóm dịch vụ:</label>
+                        <select class="admin-select" id="newBookingCategory" required>
+                            <option value="Spa">Spa và Grooming</option>
+                            <option value="Hotel">Pet Hotel</option>
+                            <option value="Taxi">Pet Taxi</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Gói dịch vụ cụ thể:</label>
+                        <select class="admin-select" id="newBookingServiceSelect" required>
+                            <option value="Gói Tắm Vệ Sinh Cơ Bản">Gói Tắm Vệ Sinh Cơ Bản (120.000 đ)</option>
+                            <option value="Gói Tắm Dưỡng Premium">Gói Tắm Dưỡng Premium (220.000 đ)</option>
+                            <option value="Grooming Tạo Kiểu Cơ Bản">Grooming Tạo Kiểu Cơ Bản (350.000 đ)</option>
+                            <option value="Phòng Standard">Phòng Standard (180.000 đ/đêm)</option>
+                            <option value="Phòng Deluxe">Phòng Deluxe (380.000 đ/đêm)</option>
+                            <option value="Dịch Vụ Xe Đưa Đón Tận Nơi">Dịch Vụ Xe Đưa Đón Tận Nơi (150.000 đ)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Ngày hẹn:</label>
+                        <input type="date" class="admin-input" id="newBookingDate" required>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Giờ hẹn:</label>
+                        <input type="time" class="admin-input" id="newBookingTime" value="09:00" required>
+                    </div>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Kỹ thuật viên phụ trách:</label>
+                        <select class="admin-select" id="newBookingStaff">
+                            <option value="">Chưa phân công (Phân công sau)</option>
+                            <option value="Ngọc Anh">Ngọc Anh (Senior Groomer)</option>
+                            <option value="Thu Thảo">Thu Thảo (Junior Groomer)</option>
+                            <option value="Hoàng Nam">Hoàng Nam (Master Groomer)</option>
+                            <option value="Hữu Phúc">Hữu Phúc (Tài xế / Chăm sóc)</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Cơ sở chi nhánh:</label>
+                        <select class="admin-select" id="newBookingBranch">
+                            <option value="PawPal Chi nhánh Quận 1">PawPal Chi nhánh Quận 1</option>
+                            <option value="PawPal Chi nhánh Quận 10">PawPal Chi nhánh Quận 10</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Cảnh báo và Lưu ý sức khỏe thú cưng (nếu có):</label>
+                    <input type="text" class="admin-input" id="newBookingPetAlert" placeholder="Ví dụ: Dị ứng xà phòng thơm, nhát nước, cắn khi chạm đuôi...">
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Ghi chú thêm:</label>
+                    <textarea class="admin-input" id="newBookingNotes" style="height: 60px; padding: 8px 14px;" placeholder="Yêu cầu riêng của khách hàng..."></textarea>
+                </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelCreateBooking">Hủy bỏ</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Tạo lịch hẹn</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 2: THÊM VÀ SỬA DỊCH VỤ / MA TRẬN GIÁ
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalServiceForm">
+        <div class="admin-modal-card wide-modal">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean" id="serviceFormModalTitle">Thêm dịch vụ mới</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseServiceForm">Đóng</button>
+            </div>
+            <form id="formServiceItem" class="modal-body-clean">
+                <input type="hidden" id="editServiceCodeHidden">
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Mã dịch vụ:</label>
+                        <input type="text" class="admin-input" id="formServiceId" placeholder="VD: SPA15, HTL09..." required>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Nhóm dịch vụ:</label>
+                        <select class="admin-select" id="formServiceGroup" required>
+                            <option value="Spa">Spa và Grooming</option>
+                            <option value="Hotel">Pet Hotel</option>
+                            <option value="Taxi">Pet Taxi</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Tên dịch vụ:</label>
+                    <input type="text" class="admin-input" id="formServiceName" placeholder="VD: Gói Tắm Trị Liệu Thảo Dược..." required>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Loại thú cưng:</label>
+                        <input type="text" class="admin-input" id="formServicePetType" value="Chó / Mèo" required>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Thời lượng thực hiện:</label>
+                        <input type="text" class="admin-input" id="formServiceDuration" placeholder="VD: 60 phút, Theo ngày..." required>
+                    </div>
+                </div>
+
+                <!-- MA TRẬN GIÁ THEO CÂN NẶNG / QUY MÔ -->
+                <div class="form-group-item">
+                    <label class="form-label-clean">Ma trận giá theo phân khúc cân nặng (VNĐ):</label>
+                    <table class="price-matrix-table">
+                        <thead>
+                            <tr>
+                                <th>Dưới 5kg (&lt;5kg)</th>
+                                <th>Từ 5 - 10kg</th>
+                                <th>Từ 10 - 20kg</th>
+                                <th>Trên 20kg (&gt;20kg)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" class="admin-input" id="formPriceUnder5" placeholder="120.000"></td>
+                                <td><input type="text" class="admin-input" id="formPrice5To10" placeholder="150.000"></td>
+                                <td><input type="text" class="admin-input" id="formPrice10To20" placeholder="200.000"></td>
+                                <td><input type="text" class="admin-input" id="formPriceOver20" placeholder="250.000"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Mô tả dịch vụ chi tiết:</label>
+                    <textarea class="admin-input" id="formServiceDesc" style="height: 65px; padding: 8px 14px;" placeholder="Mô tả lợi ích và trải nghiệm cho bé..."></textarea>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Cấp độ KTV thực hiện:</label>
+                        <select class="admin-select" id="formServiceStaffLevel">
+                            <option value="Junior Groomer">Junior Groomer</option>
+                            <option value="Senior Groomer">Senior Groomer</option>
+                            <option value="Master Groomer">Master Groomer</option>
+                            <option value="Nhân viên chăm sóc lưu trú">Nhân viên chăm sóc lưu trú</option>
+                            <option value="Tài xế kiêm cứu hộ">Tài xế kiêm cứu hộ</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Trạng thái kinh doanh:</label>
+                        <select class="admin-select" id="formServiceStatus">
+                            <option value="Đang phục vụ">Đang phục vụ (Hiển thị Web)</option>
+                            <option value="Tạm ẩn">Tạm ẩn (Ngừng nhận lịch)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelServiceForm">Hủy bỏ</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Lưu dịch vụ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 3: XÁC NHẬN HỦY LỊCH HẸN (BẮT BUỘC LÝ DO)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalCancelBooking">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Hủy lịch hẹn dịch vụ</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseCancelBooking">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div style="font-size: 13.5px; color: var(--text-main);">
+                    Bạn có chắc chắn muốn hủy lịch hẹn <strong id="cancelBookingCodeDisplay">BKG-1001</strong>?
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Lý do hủy lịch hẹn (bắt buộc):</label>
+                    <select class="admin-select" id="cancelBookingReasonSelect">
+                        <option value="Khách bận đột xuất">Khách hàng bận đột xuất</option>
+                        <option value="Bé cưng đang có vấn đề sức khỏe">Bé cưng đang có vấn đề sức khỏe</option>
+                        <option value="Kẹt xe hoặc thời tiết xấu">Kẹt xe hoặc thời tiết xấu</option>
+                        <option value="Cửa hàng hết chỗ hoặc quá tải khung giờ">Cửa hàng hết chỗ hoặc quá tải khung giờ</option>
+                        <option value="Khác">Lý do khác...</option>
+                    </select>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Chi tiết bổ sung:</label>
+                    <textarea class="admin-input" id="cancelBookingReasonDetail" style="height: 60px; padding: 8px 14px;" placeholder="Ghi chú chi tiết nguyên nhân hủy..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissCancelBooking">Đóng</button>
+                <button type="button" class="admin-btn admin-btn-danger-outline" id="btnConfirmCancelBooking">Xác nhận hủy lịch</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DROPDOWN THAO TÁC 3 CHẤM (TEXT-ONLY) -->
+    <div class="action-dropdown-menu" id="servicesActionDropdown" style="display: none;">
+        <button type="button" class="action-menu-item" id="menuActionViewDetail">Xem chi tiết lịch hẹn</button>
+        <button type="button" class="action-menu-item" id="menuActionConfirm">Xác nhận lịch hẹn</button>
+        <button type="button" class="action-menu-item" id="menuActionStart">Bắt đầu dịch vụ</button>
+        <button type="button" class="action-menu-item" id="menuActionComplete">Hoàn thành dịch vụ</button>
+        <button type="button" class="action-menu-item danger-item" id="menuActionCancel">Hủy lịch hẹn</button>
+    </div>
+</div>

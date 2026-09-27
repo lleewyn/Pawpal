@@ -1,0 +1,470 @@
+<div class="complaints-module">
+    <!-- ====================================================================
+         SUB-TAB 1: KHIẾU NẠI DỊCH VỤ
+         ==================================================================== -->
+    <section class="subtab-content active" id="subtab-tab-complaint-services">
+        <!-- 5 THẺ THỐNG KÊ KPI NHANH -->
+        <div class="complaints-kpi-grid">
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Khiếu nại mới</span>
+                <span class="kpi-val" id="statServiceNew">3</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Đang xử lý</span>
+                <span class="kpi-val text-warning" id="statServiceProcessing">5</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Chờ phản hồi khách hàng</span>
+                <span class="kpi-val text-neutral" id="statServiceWaiting">2</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Khiếu nại mức độ Cao</span>
+                <span class="kpi-val text-danger" id="statServiceHighPriority">2</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Quá hạn xử lý</span>
+                <span class="kpi-val text-danger" id="statServiceOverdue">1</span>
+            </div>
+        </div>
+
+        <!-- KHỐI BẢNG DỮ LIỆU THỐNG NHẤT (GOM KHỐI) -->
+        <div class="admin-card complaint-master-card">
+            <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
+            <div class="table-toolbar-section">
+                <div class="filter-row-top">
+                    <div class="search-box-wrapper">
+                        <input type="text" class="admin-input" id="serviceSearchInput" placeholder="Tìm mã khiếu nại, mã lịch hẹn, tên khách, số điện thoại, tên Pet...">
+                    </div>
+                    <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnExportServiceComplaints">Xuất file</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateServiceTicket">+ Tạo khiếu nại</button>
+                    </div>
+                </div>
+
+                <div class="filter-row-bottom">
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Loại dịch vụ:</label>
+                        <select class="admin-select" id="serviceFilterCategory">
+                            <option value="ALL">Tất cả</option>
+                            <option value="spa">Spa và Grooming</option>
+                            <option value="hotel">Pet Hotel</option>
+                            <option value="taxi">Pet Taxi</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Trạng thái:</label>
+                        <select class="admin-select" id="serviceFilterStatus">
+                            <option value="ALL">Tất cả</option>
+                            <option value="new">Mới tiếp nhận</option>
+                            <option value="processing">Đang xử lý</option>
+                            <option value="waiting_customer">Chờ phản hồi khách hàng</option>
+                            <option value="resolved">Đã giải quyết</option>
+                            <option value="closed">Đã đóng</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Mức độ ưu tiên:</label>
+                        <select class="admin-select" id="serviceFilterPriority">
+                            <option value="ALL">Tất cả</option>
+                            <option value="high">Cao</option>
+                            <option value="medium">Trung bình</option>
+                            <option value="low">Thấp</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Nhân viên phụ trách:</label>
+                        <select class="admin-select" id="serviceFilterStaff">
+                            <option value="ALL">Tất cả</option>
+                            <option value="Nguyễn Văn A">Nguyễn Văn A</option>
+                            <option value="Lê Lệ Quyên">Lê Lệ Quyên</option>
+                            <option value="Trần Thị B">Trần Thị B</option>
+                            <option value="unassigned">Chưa phân công</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BẢNG DỮ LIỆU KHIẾU NẠI DỊCH VỤ -->
+            <div class="table-responsive-wrapper">
+                <table class="admin-table" id="serviceComplaintsTable">
+                    <thead>
+                        <tr>
+                            <th>Mã khiếu nại</th>
+                            <th>Khách hàng</th>
+                            <th>Pet</th>
+                            <th>Mã lịch hẹn</th>
+                            <th>Dịch vụ</th>
+                            <th>Nội dung và Vấn đề</th>
+                            <th>Mức độ</th>
+                            <th>Nhân viên phụ trách</th>
+                            <th>Ngày tiếp nhận</th>
+                            <th>Trạng thái</th>
+                            <th style="text-align: center; width: 60px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="serviceComplaintsTableBody">
+                        <!-- Render by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PHÂN TRANG NGOÀI BẢNG -->
+        <div class="admin-pagination-container" id="servicePagination">
+            <button type="button" class="btn-pagination">&lt;</button>
+            <button type="button" class="btn-pagination active">1</button>
+            <button type="button" class="btn-pagination">2</button>
+            <button type="button" class="btn-pagination">&gt;</button>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 2: KHIẾU NẠI ĐƠN HÀNG
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-complaint-orders">
+        <!-- 6 THẺ THỐNG KÊ KPI NHANH -->
+        <div class="complaints-kpi-grid order-kpi-grid">
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Khiếu nại mới</span>
+                <span class="kpi-val" id="statOrderNew">4</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Đang xử lý</span>
+                <span class="kpi-val text-warning" id="statOrderProcessing">6</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Yêu cầu đổi và trả</span>
+                <span class="kpi-val text-neutral" id="statOrderRMA">3</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Chờ khách gửi hàng</span>
+                <span class="kpi-val" style="color: #0369A1;" id="statOrderWaitingReturn">2</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Đang hoàn tiền</span>
+                <span class="kpi-val" style="color: #6D28D9;" id="statOrderRefunding">1</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Quá hạn xử lý</span>
+                <span class="kpi-val text-danger" id="statOrderOverdue">1</span>
+            </div>
+        </div>
+
+        <!-- KHỐI BẢNG DỮ LIỆU ĐƠN HÀNG THỐNG NHẤT -->
+        <div class="admin-card complaint-master-card">
+            <div class="table-toolbar-section">
+                <div class="filter-row-top">
+                    <div class="search-box-wrapper">
+                        <input type="text" class="admin-input" id="orderSearchInput" placeholder="Tìm mã khiếu nại, mã đơn hàng, khách hàng, số điện thoại, tên sản phẩm...">
+                    </div>
+                    <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnExportOrderComplaints">Xuất file</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateOrderTicket">+ Tạo khiếu nại</button>
+                    </div>
+                </div>
+
+                <div class="filter-row-bottom">
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Loại vấn đề:</label>
+                        <select class="admin-select" id="orderFilterIssue">
+                            <option value="ALL">Tất cả</option>
+                            <option value="wrong_item">Sai sản phẩm</option>
+                            <option value="missing_item">Thiếu hàng</option>
+                            <option value="damaged">Hư hỏng</option>
+                            <option value="quality">Chất lượng sản phẩm</option>
+                            <option value="delivery">Giao hàng trễ</option>
+                            <option value="return_request">Yêu cầu Đổi và Trả</option>
+                            <option value="other">Khác</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Trạng thái:</label>
+                        <select class="admin-select" id="orderFilterStatus">
+                            <option value="ALL">Tất cả</option>
+                            <option value="new">Mới tiếp nhận</option>
+                            <option value="processing">Đang xử lý</option>
+                            <option value="waiting_return">Chờ nhận hàng trả</option>
+                            <option value="resolved">Đã giải quyết</option>
+                            <option value="closed">Đã đóng</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Mức độ ưu tiên:</label>
+                        <select class="admin-select" id="orderFilterPriority">
+                            <option value="ALL">Tất cả</option>
+                            <option value="high">Cao</option>
+                            <option value="medium">Trung bình</option>
+                            <option value="low">Thấp</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Nhân viên phụ trách:</label>
+                        <select class="admin-select" id="orderFilterStaff">
+                            <option value="ALL">Tất cả</option>
+                            <option value="Phạm Thị D">Phạm Thị D</option>
+                            <option value="Lê Lệ Quyên">Lê Lệ Quyên</option>
+                            <option value="unassigned">Chưa phân công</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BẢNG DỮ LIỆU KHIẾU NẠI ĐƠN HÀNG -->
+            <div class="table-responsive-wrapper">
+                <table class="admin-table" id="orderComplaintsTable">
+                    <thead>
+                        <tr>
+                            <th>Mã khiếu nại</th>
+                            <th>Khách hàng</th>
+                            <th>Mã đơn hàng</th>
+                            <th>Sản phẩm liên quan</th>
+                            <th>Loại vấn đề</th>
+                            <th>Yêu cầu của khách</th>
+                            <th>Mức độ</th>
+                            <th>Nhân viên phụ trách</th>
+                            <th>Ngày tiếp nhận</th>
+                            <th>Trạng thái</th>
+                            <th style="text-align: center; width: 60px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderComplaintsTableBody">
+                        <!-- Render by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PHÂN TRANG NGOÀI BẢNG -->
+        <div class="admin-pagination-container" id="orderPagination">
+            <button type="button" class="btn-pagination">&lt;</button>
+            <button type="button" class="btn-pagination active">1</button>
+            <button type="button" class="btn-pagination">2</button>
+            <button type="button" class="btn-pagination">&gt;</button>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 3: CHI TIẾT TICKET 360° (CHI TIẾT KHIẾU NẠI)
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-complaint-detail">
+        <div class="admin-card complaint-detail-container">
+            <!-- THANH THAO TÁC MỘT CHẠM ĐẦU CHI TIẾT -->
+            <div class="complaint-detail-header-bar">
+                <div class="complaint-headline-group">
+                    <span class="headline-name" id="viewTicketCode">TK-2026-001</span>
+                    <span class="admin-badge badge-tier-diamond" id="viewTicketCategoryBadge">Dịch vụ Spa</span>
+                    <span class="admin-badge badge-warning" id="viewTicketStatusBadge">Đang xử lý</span>
+                    <span class="admin-badge" id="viewTicketPriorityBadge" style="color: #DC2626; background: #FEE2E2; border-color: #FED8D8;">Mức độ Cao</span>
+                </div>
+                <div class="complaint-quick-actions" id="viewTicketQuickActions">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnAssignHandler">Chuyển người phụ trách</button>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnRequestMoreInfo">Yêu cầu bổ sung</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnOpenResolveModal">Chọn phương án giải quyết</button>
+                </div>
+            </div>
+
+            <!-- BỐ CỤC 2 CỘT: TRÁI LÀ DỮ LIỆU ĐỐI CHỨNG, PHẢI LÀ TIMELINE VÀ XỬ LÝ -->
+            <div class="complaint-detail-grid">
+                <!-- CỘT TRÁI: DỮ LIỆU ĐỐI CHỨNG VÀ BẰNG CHỨNG -->
+                <div class="complaint-detail-left-col">
+                    <!-- KHỐI 1: NỘI DUNG PHẢN ÁNH CỦA KHÁCH -->
+                    <div class="drawer-info-block">
+                        <div class="drawer-section-title">Nội dung phản ánh từ khách hàng</div>
+                        <div class="complaint-quote-box" id="viewTicketCustomerContent">
+                            "Bé Miu sau khi tắm và sấy tại cơ sở Quận 1 về có vết trầy nhẹ ở vành tai phải và thái độ rất sợ nước, gia đình kiểm tra thấy có rớm máu nhẹ ở viền tai."
+                        </div>
+                        <div class="evidence-photos-list" id="viewTicketCustomerEvidence">
+                            <span class="evidence-photo-item">Ảnh đính kèm 1: vet-tray-tai.jpg</span>
+                            <span class="evidence-photo-item">Ảnh đính kèm 2: hoa-don-dich-vu.jpg</span>
+                        </div>
+                    </div>
+
+                    <!-- KHỐI 2: THÔNG TIN KHÁCH HÀNG VÀ PET / ĐƠN HÀNG LIÊN QUAN -->
+                    <div class="drawer-info-block" style="margin-top: 24px;">
+                        <div class="drawer-section-title">Thông tin đối tượng liên quan</div>
+                        <div class="info-grid-2col">
+                            <div class="info-pair">
+                                <span class="info-label">Khách hàng:</span>
+                                <span class="info-value" id="viewTicketCustomerName">Lê Lệ Quyên</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label">Số điện thoại:</span>
+                                <span class="info-value" id="viewTicketCustomerPhone">0901234567</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label" id="viewTicketRefTypeLabel">Pet và Giống:</span>
+                                <span class="info-value" id="viewTicketRefInfo">Miu Con (Mèo Anh Lông Ngắn • 4.2 kg)</span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="info-label" id="viewTicketIdLabel">Mã lịch hẹn:</span>
+                                <span class="info-value" id="viewTicketRefId"><a href="javascript:void(0)" class="user-name-link" id="linkToOriginalTransaction">BKG-1001</a></span>
+                            </div>
+                        </div>
+                        <div class="info-pair" style="margin-top: 14px;">
+                            <span class="info-label">Ghi chú và Dị ứng của Pet:</span>
+                            <span class="info-value" id="viewTicketPetNotes" style="font-weight: 500; color: #DC2626;">Dị ứng phấn hoa và các loại dầu tắm chứa hương liệu đậm đặc. Hơi nhát nước.</span>
+                        </div>
+                    </div>
+
+                    <!-- KHỐI 3: BẰNG CHỨNG TỪ HỆ THỐNG / NHẬT KÝ CHĂM SÓC HOẶC ĐƠN HÀNG GỐC -->
+                    <div class="drawer-info-block" style="margin-top: 24px;">
+                        <div class="drawer-section-title">Dữ liệu đối chứng từ hệ thống</div>
+                        <div class="system-evidence-card" id="viewTicketSystemEvidence">
+                            <div class="info-pair">
+                                <span class="info-label">Nhân viên / Kỹ thuật viên thực hiện:</span>
+                                <span class="info-value" id="viewTicketStaffExecuted">Ngọc Anh (Chi nhánh Quận 1)</span>
+                            </div>
+                            <div class="info-pair" style="margin-top: 10px;">
+                                <span class="info-label">Ghi chú của Kỹ thuật viên khi giao bé:</span>
+                                <span class="info-value" style="font-weight: 400; font-style: italic;">"Bé khá giật mình khi dùng máy sấy công suất lớn, đã chuyển sang chế độ sấy êm dịu. Đã hoàn tất vệ sinh tai sạch sẽ."</span>
+                            </div>
+                            <div style="margin-top: 12px;">
+                                <button type="button" class="admin-btn admin-btn-secondary" id="btnJumpToOriginal">Xem chi tiết giao dịch gốc</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CỘT PHẢI: LỊCH SỬ XỬ LÝ (TIMELINE) VÀ TRAO ĐỔI NỘI BỘ -->
+                <div class="complaint-detail-right-col">
+                    <div class="drawer-info-block">
+                        <div class="drawer-section-title">Nhật ký xử lý khiếu nại (Timeline)</div>
+                        <div class="complaint-timeline-list" id="viewTicketTimeline">
+                            <!-- Render by JS -->
+                        </div>
+                    </div>
+
+                    <!-- KHỐI THÊM PHẢN HỒI / GHI CHÚ NỘI BỘ -->
+                    <div class="drawer-info-block" style="margin-top: 24px;">
+                        <div class="drawer-section-title">Gửi phản hồi hoặc Ghi chú nội bộ</div>
+                        <div class="reply-type-tabs">
+                            <label class="reply-tab-option active"><input type="radio" name="replyType" value="internal" checked> Ghi chú nội bộ (Chỉ nhân viên thấy)</label>
+                            <label class="reply-tab-option"><input type="radio" name="replyType" value="customer"> Phản hồi cho khách hàng</label>
+                        </div>
+                        <textarea class="admin-input" id="replyContentInput" rows="3" placeholder="Nhập nội dung ghi nhận vào nhật ký..."></textarea>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                            <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitReply">Lưu và Cập nhật Timeline</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODAL: TẠO KHIẾU NẠI MỚI (DỊCH VỤ HOẶC ĐƠN HÀNG) -->
+    <div class="admin-modal-overlay" id="createTicketModalOverlay">
+        <div class="admin-modal-card wide-modal">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean" id="createTicketModalTitle">Tiếp nhận khiếu nại Dịch vụ</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelCreateTicket">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Số điện thoại khách hàng *</label>
+                        <input type="text" class="admin-input" id="inputTicketCustomerPhone" placeholder="Nhập 10 số điện thoại...">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Tên khách hàng</label>
+                        <input type="text" class="admin-input" id="inputTicketCustomerName" placeholder="Tự động điền theo SĐT..." readonly>
+                    </div>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item" id="groupTicketRefId">
+                        <label class="form-label-clean" id="labelTicketRefId">Chọn lịch hẹn liên quan *</label>
+                        <select class="admin-select" id="selectTicketRefId">
+                            <option value="">-- Chọn giao dịch --</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Mức độ ưu tiên *</label>
+                        <select class="admin-select" id="selectTicketPriority">
+                            <option value="medium">Trung bình</option>
+                            <option value="high">Cao (Khẩn cấp)</option>
+                            <option value="low">Thấp</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Tiêu đề khiếu nại *</label>
+                    <input type="text" class="admin-input" id="inputTicketTitle" placeholder="Ví dụ: Bé trầy xước sau khi tắm sấy...">
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Nội dung phản ánh chi tiết *</label>
+                    <textarea class="admin-input" id="inputTicketContent" rows="3" placeholder="Mô tả cụ thể sự việc khách phản ánh..."></textarea>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Nhân viên tiếp nhận</label>
+                        <input type="text" class="admin-input" id="inputTicketReceiver" value="Lê Lệ Quyên" readonly>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Hình ảnh / Bằng chứng đính kèm</label>
+                        <input type="text" class="admin-input" id="inputTicketAttachment" placeholder="Tên tệp đính kèm...">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissCreateTicket">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveCreateTicket">Tạo Ticket</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CHỌN PHƯƠNG ÁN GIẢI QUYẾT -->
+    <div class="admin-modal-overlay" id="resolveTicketModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Phương án giải quyết khiếu nại</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelResolveModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Chọn phương án giải quyết *</label>
+                    <select class="admin-select" id="selectResolveOption">
+                        <option value="explain">Giải thích và phản hồi khách hàng</option>
+                        <option value="redo_service">Thực hiện lại dịch vụ (Miễn phí)</option>
+                        <option value="change_staff">Đổi kỹ thuật viên chăm sóc</option>
+                        <option value="refund">Hoàn tiền (Một phần hoặc toàn bộ)</option>
+                        <option value="rma_exchange">Đổi sản phẩm mới (Tạo RMA)</option>
+                        <option value="rma_refund">Trả hàng và hoàn tiền (Tạo RMA)</option>
+                        <option value="reward_voucher">Tặng Voucher và Paw Points bồi hoàn</option>
+                        <option value="reject">Từ chối khiếu nại</option>
+                    </select>
+                </div>
+
+                <div class="form-group-item" id="resolveValueGroup" style="display: none;">
+                    <label class="form-label-clean" id="resolveValueLabel">Giá trị bồi hoàn / Số tiền hoàn (VNĐ hoặc Điểm)</label>
+                    <input type="number" class="admin-input" id="inputResolveValue" placeholder="Nhập số tiền hoặc điểm...">
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Ghi chú và Lý do thực hiện phương án *</label>
+                    <textarea class="admin-input" id="inputResolveNote" rows="3" placeholder="Ghi rõ lý do và thỏa thuận đã đạt được với khách..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissResolveModal">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmResolveTicket">Xác nhận và Cập nhật Ticket</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DROPDOWN THAO TÁC 3 CHẤM (TEXT-ONLY) -->
+    <div class="action-dropdown-menu" id="complaintsActionDropdown" style="display: none;">
+        <button type="button" class="action-menu-item" id="menuActionViewTicket">Xem chi tiết Ticket</button>
+        <button type="button" class="action-menu-item" id="menuActionQuickAssign">Nhận xử lý Ticket</button>
+        <button type="button" class="action-menu-item" id="menuActionQuickResolve">Phương án giải quyết</button>
+        <button type="button" class="action-menu-item" id="menuActionCloseTicket">Đóng Ticket</button>
+    </div>
+</div>

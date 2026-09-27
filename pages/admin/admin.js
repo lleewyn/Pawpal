@@ -10,6 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadModule(moduleName) {
         if (!contentArea) return;
 
+        // Reset Header Subtabs và Breadcrumb trước khi nạp module mới
+        if (subtabsContainer) subtabsContainer.innerHTML = '';
+        if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
+
         if (moduleName === 'Khách hàng') {
             if (moduleTitleEl) {
                 moduleTitleEl.textContent = '';
@@ -68,7 +72,128 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Các module khác tạm hiển thị placeholder thiết kế
+        if (moduleName === 'Dịch vụ') {
+            if (moduleTitleEl) {
+                moduleTitleEl.textContent = '';
+                moduleTitleEl.style.display = 'none';
+            }
+            try {
+                const res = await fetch('modules/services/services.html?v=' + Date.now());
+                if (res.ok) {
+                    const html = await res.text();
+                    contentArea.innerHTML = html;
+                    
+                    // Khởi tạo Lucide
+                    if (window.lucide) lucide.createIcons();
+
+                    // Tải và chạy script tương tác của module Dịch vụ
+                    const oldScript = document.getElementById('dynamic-module-script');
+                    if (oldScript) oldScript.remove();
+
+                    const script = document.createElement('script');
+                    script.id = 'dynamic-module-script';
+                    script.src = 'modules/services/services.js?v=' + Date.now();
+                    document.body.appendChild(script);
+                    return;
+                }
+            } catch (err) {
+                console.error('Không thể load modules/services/services.html:', err);
+            }
+        }
+
+        if (moduleName === 'Bán hàng') {
+            if (moduleTitleEl) {
+                moduleTitleEl.textContent = '';
+                moduleTitleEl.style.display = 'none';
+            }
+            try {
+                const res = await fetch('modules/orders/orders.html?v=' + Date.now());
+                if (res.ok) {
+                    const html = await res.text();
+                    contentArea.innerHTML = html;
+                    
+                    // Khởi tạo Lucide
+                    if (window.lucide) lucide.createIcons();
+
+                    // Tải và chạy script tương tác của module Bán hàng
+                    const oldScript = document.getElementById('dynamic-module-script');
+                    if (oldScript) oldScript.remove();
+
+                    const script = document.createElement('script');
+                    script.id = 'dynamic-module-script';
+                    script.src = 'modules/orders/orders.js?v=' + Date.now();
+                    document.body.appendChild(script);
+                    return;
+                }
+            } catch (err) {
+                console.error('Không thể load modules/orders/orders.html:', err);
+            }
+        }
+
+        if (moduleName === 'Nhân sự') {
+            if (moduleTitleEl) {
+                moduleTitleEl.textContent = '';
+                moduleTitleEl.style.display = 'none';
+            }
+            // Subtabs và DeepBreadcrumb sẽ được quản lý chuẩn trong staff.js
+            if (subtabsContainer) subtabsContainer.innerHTML = '';
+            if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
+            
+            try {
+                const res = await fetch('modules/staff/staff.html?v=' + Date.now());
+                if (res.ok) {
+                    const html = await res.text();
+                    contentArea.innerHTML = html;
+                    
+                    // Khởi tạo Lucide
+                    if (window.lucide) lucide.createIcons();
+
+                    // Tải và chạy script tương tác của module Nhân sự
+                    const oldScript = document.getElementById('dynamic-module-script');
+                    if (oldScript) oldScript.remove();
+
+                    const script = document.createElement('script');
+                    script.id = 'dynamic-module-script';
+                    script.src = 'modules/staff/staff.js?v=' + Date.now();
+                    document.body.appendChild(script);
+                    return;
+                }
+            } catch (err) {
+                console.error('Không thể load modules/staff/staff.html:', err);
+            }
+        }
+
+        if (moduleName === 'Khiếu nại') {
+            if (moduleTitleEl) {
+                moduleTitleEl.textContent = '';
+                moduleTitleEl.style.display = 'none';
+            }
+            if (subtabsContainer) subtabsContainer.innerHTML = '';
+            if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
+            
+            try {
+                const res = await fetch('modules/complaints/complaints.html?v=' + Date.now());
+                if (res.ok) {
+                    const html = await res.text();
+                    contentArea.innerHTML = html;
+                    
+                    // Khởi tạo Lucide
+                    if (window.lucide) lucide.createIcons();
+
+                    // Tải và chạy script tương tác của module Khiếu nại
+                    const oldScript = document.getElementById('dynamic-module-script');
+                    if (oldScript) oldScript.remove();
+
+                    const script = document.createElement('script');
+                    script.id = 'dynamic-module-script';
+                    script.src = 'modules/complaints/complaints.js?v=' + Date.now();
+                    document.body.appendChild(script);
+                    return;
+                }
+            } catch (err) {
+                console.error('Không thể load modules/complaints/complaints.html:', err);
+            }
+        }
         if (moduleTitleEl) {
             moduleTitleEl.textContent = moduleName;
             moduleTitleEl.style.display = 'inline-block';
@@ -95,20 +220,43 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Mặc định nạp module đã lưu hoặc nút active ban đầu
-    const savedModule = sessionStorage.getItem('pawpal_admin_active_module');
-    const matchedBtn = savedModule ? Array.from(sidebarBtns).find(b => b.getAttribute('data-title') === savedModule) : null;
-    
-    if (matchedBtn) {
-        sidebarBtns.forEach(b => b.classList.remove('active'));
-        matchedBtn.classList.add('active');
-        loadModule(savedModule);
-    } else {
-        const activeBtn = document.querySelector('.sidebar-menu-btn.active');
-        if (activeBtn) {
-            loadModule(activeBtn.getAttribute('data-title'));
-        }
+    // Xác định module cần nạp ban đầu theo URL Hash, nút active hoặc sessionStorage
+    const currentHash = window.location.hash || '';
+    let initialModule = null;
+
+    if (currentHash.startsWith('#tab-service') || currentHash.startsWith('#tab-booking')) {
+        initialModule = 'Dịch vụ';
+    } else if (currentHash.startsWith('#tab-order')) {
+        initialModule = 'Bán hàng';
+    } else if (currentHash.startsWith('#tab-staff')) {
+        initialModule = 'Nhân sự';
+    } else if (currentHash.startsWith('#tab-complaint')) {
+        initialModule = 'Khiếu nại';
+    } else if (currentHash.startsWith('#tab-pet')) {
+        initialModule = 'Thú cưng';
+    } else if (currentHash.startsWith('#tab-list') || currentHash.startsWith('#tab-profile') || currentHash.startsWith('#tab-pawpoint')) {
+        initialModule = 'Khách hàng';
     }
+
+    if (!initialModule) {
+        const activeBtn = document.querySelector('.sidebar-menu-btn.active');
+        if (activeBtn) initialModule = activeBtn.getAttribute('data-title');
+    }
+
+    if (!initialModule) {
+        initialModule = sessionStorage.getItem('pawpal_admin_active_module') || 'Bán hàng';
+    }
+
+    sidebarBtns.forEach(b => {
+        if (b.getAttribute('data-title') === initialModule) {
+            b.classList.add('active');
+        } else {
+            b.classList.remove('active');
+        }
+    });
+
+    sessionStorage.setItem('pawpal_admin_active_module', initialModule);
+    loadModule(initialModule);
 
     // Khởi tạo Lucide
     if (window.lucide) {

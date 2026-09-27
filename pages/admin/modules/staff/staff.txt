@@ -1,0 +1,241 @@
+TỔNG QUAN MÀN HÌNH
+Màn hình Nhân sự là trung tâm quản lý toàn bộ nhân viên đang làm việc trong hệ thống PawPal, chịu trách nhiệm quản lý hồ sơ nhân viên, quyền truy cập, lịch làm việc và kết quả đánh giá nghiệp vụ. Dữ liệu tại màn hình này được đồng bộ sang phân hệ Dịch vụ để xác định nhân viên khả dụng khi tiếp nhận lịch hẹn, phân công nhân viên thực hiện dịch vụ và kiểm soát quyền truy cập khi nhân viên đăng nhập.
+Đối tượng sử dụng gồm:
+Admin quản lý toàn bộ hồ sơ nhân viên, phân quyền và lịch làm việc.
+Quản lý chi nhánh được phép phân ca và đánh giá nhân viên trong phạm vi được phân quyền.
+Groomer, Lễ tân, CSKH và Tài xế Taxi Pet chỉ sử dụng dữ liệu đã được Admin thiết lập, không được chỉnh sửa cấu hình nhân sự.
+2. BỐ CỤC GIAO DIỆN VÀ MÔ TẢ CÁC SUB-TAB
+Sub-tab 1: Danh sách nhân viên
+Đây là màn hình mặc định khi mở menu Nhân sự, dùng để quản lý toàn bộ hồ sơ nhân viên trong hệ thống.
+Khu vực thẻ thống kê nhanh
+Hiển thị năm Card thống kê ở đầu màn hình gồm Tổng số nhân viên, Đang làm việc, Nghỉ phép, Tạm nghỉ và Cần đào tạo lại. Khi bấm vào từng Card, hệ thống lọc ngay bảng danh sách phía dưới theo trạng thái tương ứng.
+Khu vực thanh công cụ và bộ lọc
+Ô tìm kiếm cho phép nhập Họ tên, Mã nhân viên hoặc Số điện thoại, hệ thống tìm kiếm theo thời gian thực.
+Dropdown Chức vụ (Tất cả, Lễ tân, Groomer, Bác sĩ/Bảo mẫu, CSKH, Tài xế Taxi Pet).
+Dropdown Vai trò hệ thống (Tất cả, Admin, Receptionist, Groomer, Veterinarian, Driver, CSKH).
+Dropdown Trạng thái (Tất cả, Đang làm việc, Nghỉ phép, Tạm nghỉ, Nghỉ việc).
+Dropdown Ca làm việc (Tất cả, Ca sáng, Ca chiều, Ca tối).
+Button Xuất Excel xuất toàn bộ danh sách nhân viên theo bộ lọc hiện tại ra tệp .xlsx.
+Button Thêm nhân viên mở Modal Thêm nhân viên.
+Khu vực bảng danh sách nhân viên
+Bảng hiển thị các cột Mã nhân viên, Họ tên, Chức vụ, Vai trò hệ thống, Số điện thoại, Ca làm việc hiện tại, Trạng thái và Thao tác.
+Cột Trạng thái hiển thị Badge màu theo giá trị: Xanh (Đang làm việc), Vàng (Nghỉ phép).
+Cột Thao tác hiển thị menu gồm Chỉnh sửa hồ sơ, Xóa nhân viên, Xem lịch làm việc và Xem lịch sử đánh giá.
+Bấm vào Họ tên nhân viên mở Drawer Hồ sơ nhân viên từ cạnh phải màn hình.
+Drawer: 
+Hồ sơ nhân viên hiển thị đầy đủ thông tin của nhân viên và cho phép thao tác nhanh mà không cần quay lại danh sách. 
+Thanh thao tác trên cùng gồm Button Chỉnh sửa hồ sơ mở Modal Chỉnh sửa nhân viên, Button Phân ca mở Modal Phân ca làm việc với nhân viên được chọn sẵn và Button Đánh giá nghiệp vụ mở Modal Ghi nhận đánh giá với nhân viên được chọn sẵn.
+Thông tin hiển thị gồm Mã nhân viên, Họ tên, Chức vụ, Vai trò hệ thống, Email công việc, Số điện thoại, Địa chỉ, Ngày sinh, Ngày bắt đầu làm, Trạng thái, Ca làm việc gần nhất, Quyền truy cập được cấp và ba đánh giá nghiệp vụ gần nhất.
+Modal Thêm nhân viên xuất hiện khi bấm Button Thêm nhân viên trên màn hình Danh sách nhân viên.
+Thông tin cá nhân: 
+Input Họ và tên.
+Input Số điện thoại (10 chữ số).
+Input Email công việc.
+Input Địa chỉ.
+Date Picker Ngày sinh.
+Date Picker Ngày bắt đầu làm.
+Thông tin công việc
+Dropdown Chức vụ (Lễ tân, Groomer, Bác sĩ/Bảo mẫu, CSKH, Tài xế Taxi Pet).
+Dropdown Vai trò hệ thống (Admin, Receptionist, Groomer, Veterinarian, Driver, CSKH).
+Thiết lập quyền truy cập: Hiển thị Checkbox theo nhóm quyền.
+Lịch hẹn (Xem lịch hẹn, Xác nhận lịch hẹn, Hủy lịch hẹn).
+Care Timeline (Cập nhật hình ảnh, Cập nhật ghi chú).
+Bán hàng (Tạo đơn hàng, Thanh toán).
+Quản trị (Quản lý nhân viên, Quản lý khuyến mãi, Quản lý nội dung Website).
+Nút thao tác:
+Button Hủy đóng Modal và hủy toàn bộ dữ liệu chưa lưu.
+Button Lưu nhân viên kiểm tra dữ liệu rồi tạo hồ sơ nhân viên mới.
+Khi bấm Lưu nhân viên, hệ thống thực hiện theo thứ tự: kiểm tra Email có trùng hay không, kiểm tra Số điện thoại đúng định dạng 10 số, sinh Mã nhân viên tự động dạng EMP-001, lưu quyền truy cập tương ứng với Vai trò hệ thống và đồng bộ nhân viên sang phân hệ Dịch vụ.
+Modal Chỉnh sửa nhân viên:
+Sử dụng lại toàn bộ giao diện của Modal Thêm nhân viên nhưng tự động điền dữ liệu hiện tại.
+Button Lưu thay đổi cập nhật thông tin, Button Hủy đóng Modal và giữ nguyên dữ liệu cũ.
+Sub-tab 2: Lịch làm việc
+Màn hình dùng để quản lý lịch làm việc theo ngày và ca của toàn bộ nhân viên.
+Khu vực điều hướng lịch
+Date Picker chọn ngày.
+Button Hôm nay chuyển về ngày hiện tại.
+Button < chuyển sang ngày trước.
+Button > chuyển sang ngày tiếp theo.
+Khu vực bộ lọc
+Dropdown Chức vụ (Tất cả, Lễ tân, Groomer, Bác sĩ/Bảo mẫu, CSKH, Tài xế Taxi Pet).
+Dropdown Ca làm việc (Tất cả, Ca sáng, Ca chiều, Ca tối).
+Khu vực bảng lịch
+Mỗi hàng đại diện một nhân viên. Các cột gồm Họ tên, Chức vụ, Ca sáng, Ca chiều và Ca tối.
+Mỗi ô ca hiển thị trạng thái bằng màu:
+Xanh: Đã phân ca.
+Trắng: Chưa phân.
+Vàng: Nghỉ phép.
+Bấm vào một ô ca sẽ mở Modal Phân ca làm việc.
+Modal Phân ca làm việc: Modal mở từ Sub-tab Lịch làm việc hoặc từ Drawer Hồ sơ nhân viên. Thông tin hiển thị gồm:
+Date Picker Ngày làm việc.
+Dropdown Ca làm việc (Ca sáng, Ca chiều, Ca tối).
+Danh sách Nhân viên khả dụng hiển thị tên, chức vụ và trạng thái.
+Danh sách Nhân viên đã được phân vào ca hiển thị tên và chức vụ.
+Button Thêm vào ca chuyển nhân viên từ danh sách khả dụng sang danh sách đã phân.
+Button Gỡ khỏi ca đưa nhân viên trở lại danh sách khả dụng.
+Button Lưu lịch ghi nhận thay đổi.
+Khi bấm Lưu lịch, hệ thống kiểm tra theo thứ tự: nhân viên có bị phân trùng ca cùng ngày hay không, tổng số giờ làm có vượt quy định hay không, nhân viên có đang nghỉ phép hoặc nghỉ việc hay không. Nếu phát hiện lỗi, hệ thống hiển thị Popup cảnh báo và không cho phép lưu.
+Sub-tab 3: Đánh giá nghiệp vụ
+Màn hình dùng để quản lý kết quả đào tạo và đánh giá chuyên môn của nhân viên.
+Khu vực thẻ thống kê: 
+Hiển thị bốn Card gồm Đã đánh giá tháng này, Đạt yêu cầu, Cần đào tạo lại và Chưa đánh giá. 
+Khi bấm vào từng Card, bảng bên dưới lọc theo trạng thái tương ứng.
+Khu vực thanh công cụ và bộ lọc
+Ô tìm kiếm theo Họ tên hoặc Mã nhân viên.
+Dropdown Loại kiểm tra (Tất cả, Grooming, Spa, CSKH, Taxi Pet).
+Dropdown Kết quả (Tất cả, Đạt, Cần đào tạo, Không đạt).
+Button Ghi nhận đánh giá mở Modal Ghi nhận đánh giá.
+Khu vực bảng lịch sử đánh giá
+Bảng hiển thị các cột Ngày đánh giá, Mã nhân viên, Họ tên, Loại kiểm tra, Điểm, Kết quả, Người đánh giá và Thao tác.
+Bấm vào một dòng sẽ mở Drawer Chi tiết đánh giá.
+Drawer Chi tiết đánh gi
+Drawer hiển thị thông tin đầy đủ của một lần đánh giá gồm Họ tên nhân viên, Ngày kiểm tra, Loại kiểm tra, Điểm, Kết quả, Ghi chú đào tạo, Người đánh giá và toàn bộ lịch sử đánh giá gần đây của nhân viên.
+Button Chỉnh sửa đánh giá mở Modal Ghi nhận đánh giá với dữ liệu được điền sẵn.
+Modal Ghi nhận đánh giá dùng để tạo mới hoặc chỉnh sửa một bản ghi đánh giá. Thông tin nhập gồm:
+Dropdown Nhân viên (chỉ xuất hiện khi mở từ Sub-tab Đánh giá, nếu mở từ Hồ sơ nhân viên thì tự động chọn sẵn).
+Date Picker Ngày kiểm tra.
+Dropdown Loại kiểm tra (Grooming, Spa, CSKH, Taxi Pet).
+Input Điểm đánh giá (0–100).
+Dropdown Kết quả (Đạt, Cần đào tạo, Không đạt).
+Textarea Ghi chú đào tạo.
+Button Lưu kết quả ghi nhận đánh giá.
+Button Gửi thông báo lưu đánh giá đồng thời gửi thông báo nội bộ cho nhân viên.
+3. ĐẶC TẢ DỮ LIỆU TỪNG THÀNH PHẦN
+Tên trường trên UI
+Kiểu Component
+Nguồn Database Supabase
+Nguồn Local Fallback
+Bắt buộc
+Quy tắc định dạng và ràng buộc
+Mã nhân viên
+Nhãn chữ
+staff.staff_code
+EMP-001
+Có
+Mã duy nhất hiển thị dạng EMP-xxx
+Họ và tên
+Ô nhập văn bản
+staff.full_name
+staff.json
+Có
+Tối thiểu 2 ký tự
+Số điện thoại
+Đường dẫn số
+staff.phone
+staff.json
+Có
+Chuỗi 10 số bắt đầu bằng 0
+Email công việc
+Ô nhập email
+staff.email
+staff.json
+Có
+Không được trùng
+Địa chỉ
+Ô nhập văn bản
+staff.address
+staff.json
+Không
+Tối đa 255 ký tự
+Ngày sinh
+Date Picker
+staff.date_of_birth
+staff.json
+Không
+YYYY-MM-DD
+Ngày bắt đầu làm
+Date Picker
+staff.join_date
+staff.json
+Có
+Không lớn hơn ngày hiện tại
+Chức vụ
+Dropdown
+staff.position
+staff.json
+Có
+Lễ tân, Groomer, Bác sĩ/Bảo mẫu, CSKH, Tài xế Taxi Pet
+Vai trò hệ thống
+Dropdown
+staff.role
+staff.json
+Có
+Admin, Receptionist, Groomer, Veterinarian, Driver, CSKH
+Trạng thái
+Badge
+staff.status
+staff.json
+Có
+ACTIVE, LEAVE, PAUSE, RESIGNED
+Ca làm việc
+Dropdown
+staff_schedule.shift
+staff_schedule.json
+Không
+MORNING, AFTERNOON, EVENING
+Điểm đánh giá
+Ô nhập số
+staff_assessment.score
+assessment.json
+Có
+0–100
+Loại kiểm tra
+Dropdown
+staff_assessment.type
+assessment.json
+Có
+Grooming, Spa, CSKH, Taxi Pet
+Kết quả
+Badge
+staff_assessment.result
+assessment.json
+Có
+PASS, RETRAIN, FAIL
+Ghi chú đào tạo
+Textarea
+staff_assessment.note
+assessment.json
+Không
+Tối đa 1000 ký tự
+
+4. NGHIỆP VỤ VÀ LUỒNG THAO TÁC
+4.1. Luồng tạo nhân viên và phân quyền
+ Admin mở màn hình Nhân sự, tại Sub-tab Danh sách nhân viên bấm Button Thêm nhân viên để mở Modal Thêm nhân viên.
+Nhập Họ tên, Số điện thoại, Email công việc, Địa chỉ, Ngày sinh và Ngày bắt đầu làm.
+Chọn Chức vụ và Vai trò hệ thống.
+Chọn các Checkbox quyền truy cập theo nhóm nghiệp vụ.
+Bấm Button Lưu nhân viên.
+Hệ thống kiểm tra Email trùng, kiểm tra định dạng Số điện thoại, sinh Mã nhân viên, tạo bản ghi trong bảng staff, lưu quyền truy cập theo Vai trò hệ thống và đồng bộ nhân viên sang phân hệ Dịch vụ.
+4.2. Luồng phân ca làm việc
+Admin mở Sub-tab Lịch làm việc.
+Chọn ngày trên Date Picker.
+Bấm vào ô Ca sáng, Ca chiều hoặc Ca tối của một nhân viên để mở Modal Phân ca làm việc.
+Chọn hoặc thay đổi nhân viên trong ca.
+Bấm Button Lưu lịch.
+Hệ thống kiểm tra trùng ca, vượt số giờ làm, trạng thái nghỉ phép hoặc nghỉ việc rồi cập nhật bảng staff_schedule và đồng bộ danh sách nhân viên khả dụng sang phân hệ Dịch vụ.
+4.3. Luồng điều chỉnh lịch làm việc
+Admin mở Modal Phân ca làm việc từ một ô ca đã được phân.
+Bấm Button Gỡ khỏi ca hoặc chọn nhân viên khác.
+Bấm Lưu lịch.
+Hệ thống cập nhật lịch ngay lập tức và đồng bộ sang các lịch hẹn chưa thực hiện.
+4.4. Luồng đánh giá nghiệp vụ
+Quản lý mở Sub-tab Đánh giá nghiệp vụ.
+Bấm Button Ghi nhận đánh giá để mở Modal Ghi nhận đánh giá.
+Chọn Nhân viên, Loại kiểm tra, nhập Điểm đánh giá, chọn Kết quả và nhập Ghi chú đào tạo.
+Bấm Lưu kết quả hoặc Gửi thông báo.
+Hệ thống tạo bản ghi trong bảng staff_assessment, lưu Người đánh giá và Thời gian đánh giá, cập nhật lịch sử đào tạo của nhân viên và gửi thông báo nếu người dùng chọn Gửi thông báo.
+4.5. Cơ chế liên kết chéo giữa các phân hệ
+Khi phân hệ Dịch vụ mở màn hình Đặt lịch, hệ thống chỉ hiển thị những Groomer đang có ca làm việc trong thời điểm được chọn.
+Khi nhân viên đăng nhập, hệ thống đọc Vai trò và Quyền truy cập để quyết định các menu và chức năng được phép sử dụng.
+Khi quản lý mở Hồ sơ nhân viên, hệ thống hiển thị lịch sử đánh giá gần nhất để hỗ trợ quyết định phân công các dịch vụ yêu cầu kỹ năng cao.
+5. CÁC TRẠNG THÁI MÀN HÌNH VÀ XỬ LÝ NGOẠI LỆ
+5.1. Các trạng thái màn hình
+Trạng thái đang tải dữ liệu: Khi đọc danh sách nhân viên từ máy chủ, bảng hiển thị Skeleton Loading.
+Trạng thái danh sách rỗng: Nếu chưa có nhân viên, hiển thị thông báo Chưa có nhân viên nào trong hệ thống kèm Button Thêm nhân viên.
+Trạng thái tìm kiếm không có kết quả: Hiển thị thông báo Không tìm thấy nhân viên phù hợp kèm Button Xóa bộ lọc.
+Trạng thái mất kết nối: Hiển thị thanh thông báo lỗi màu đỏ và chuyển sang dữ liệu lưu tạm nếu có.
+5.2. Xử lý các trường hợp ngoại lệ
+Số điện thoại không hợp lệ: Nếu Số điện thoại không đủ 10 chữ số hoặc sai định dạng thì không cho phép lưu và hiển thị lỗi tại trường nhập.
+Phân ca trùng lịch: Nếu nhân viên đã được phân vào ca cùng thời điểm thì hiển thị Popup cảnh báo và không lưu lịch cho đến khi điều chỉnh.
+Nhân viên nghỉ phép: Nếu nhân viên ở trạng thái Nghỉ phép nhưng được phân ca thì hệ thống chặn thao tác lưu và hiển thị thông báo Nhân viên đang nghỉ phép, không thể phân ca vào ngày đã chọn.
+

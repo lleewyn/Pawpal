@@ -1,0 +1,337 @@
+MODULE QUẢN LÝ DỊCH VỤ
+1. TỔNG QUAN MÀN HÌNH
+Phân hệ Quản lý Dịch vụ là khu vực trung tâm để nhân viên PawPal quản lý toàn bộ hoạt động cung cấp dịch vụ cho thú cưng, từ lúc khách hàng tạo lịch hẹn đến khi dịch vụ được hoàn thành.
+Phân hệ phục vụ các mục tiêu cốt lõi:
+Quản lý tập trung toàn bộ lịch hẹn Spa & Grooming, Pet Hotel và Pet Taxi.
+Chủ động cảnh báo các lịch hẹn sắp tới để nhân viên chuẩn bị và hạn chế bỏ sót lịch.
+Tiếp nhận, xác nhận, thay đổi, hủy và cập nhật trạng thái lịch hẹn.
+Theo dõi thông tin Pet và các cảnh báo quan trọng như dị ứng, lưu ý đặc biệt trước khi thực hiện dịch vụ.
+Ghi nhận quá trình thực hiện dịch vụ thông qua Nhật ký chăm sóc gắn trực tiếp với từng lịch hẹn.
+Quản lý danh mục dịch vụ, nội dung hiển thị, bảng giá và các cấu hình tính giá được sử dụng trên website User.
+Đối tượng sử dụng gồm:
+Lễ tân: Tiếp nhận lịch hẹn Online/Offline, xác nhận lịch, tạo lịch tại quầy, thay đổi hoặc hủy lịch.
+Nhân viên/Kỹ thuật viên: Xem lịch được phân công, kiểm tra thông tin Pet và cập nhật Nhật ký chăm sóc trong quá trình thực hiện.
+Quản lý và Admin: Theo dõi tình hình lịch hẹn, quản lý danh mục dịch vụ, giá và trạng thái cung cấp dịch vụ.
+2. BỐ CỤC GIAO DIỆN VÀ MÔ TẢ CÁC SUB-TAB
+Sub-tab 1: Lịch hẹn
+Đây là màn hình vận hành chính của phân hệ Dịch vụ, quản lý toàn bộ lịch hẹn phát sinh từ phía User hoặc do nhân viên tạo trực tiếp tại quầy.
+Màn hình được bố trí thành các khu vực chính từ trên xuống dưới.
+Khu vực cảnh báo lịch hẹn sắp tới
+Nằm nổi bật ở đầu màn hình.
+Hệ thống tự động kiểm tra các lịch hẹn có thời gian thực hiện sắp tới và đưa vào khu vực Lịch hẹn sắp tới.
+Hiển thị nhanh:
+Giờ hẹn.
+Khách hàng.
+Pet.
+Dịch vụ.
+Nhân viên phụ trách.
+Trạng thái hiện tại.
+Các lịch sắp đến giờ nhưng vẫn chưa được xác nhận hoặc chưa có nhân viên phụ trách được hiển thị mức cảnh báo cao hơn.
+Bấm vào cảnh báo sẽ mở trực tiếp Chi tiết lịch hẹn tương ứng.
+Thời gian được xem là “sắp tới” nên được Backend cấu hình thay vì hard-code trên Frontend, ví dụ cảnh báo trước 30 hoặc 60 phút.
+Khu vực thẻ thống kê nhanh
+Hiển thị các chỉ số phục vụ vận hành trong ngày:
+Tổng lịch hôm nay.
+Chờ xác nhận.
+Đã xác nhận.
+Đang thực hiện.
+Hoàn thành.
+Yêu cầu đổi/hủy lịch.
+Khu vực thanh công cụ và bộ lọc
+Ô tìm kiếm cho phép tìm theo:
+Mã lịch hẹn.
+Tên khách hàng.
+Số điện thoại.
+Tên Pet.
+Bộ lọc loại dịch vụ:
+Spa & Grooming.
+Pet Hotel.
+Pet Taxi.
+Bộ lọc trạng thái:
+Chờ xác nhận.
+Đã xác nhận.
+Đang thực hiện.
+Hoàn thành.
+Đã hủy.
+Bộ lọc theo ngày hoặc khoảng thời gian.
+Bộ lọc theo nhân viên phụ trách.
+Bộ lọc nhanh Lịch sắp tới.
+Nút Thêm lịch hẹn để nhân viên tạo lịch cho khách đặt trực tiếp tại quầy hoặc qua điện thoại.
+Khu vực bảng danh sách lịch hẹn
+Bảng dữ liệu gồm:
+Mã lịch hẹn.
+Khách hàng.
+Pet.
+Loại dịch vụ.
+Dịch vụ đã đặt.
+Ngày và giờ thực hiện.
+Nhân viên phụ trách.
+Tổng tiền.
+Trạng thái.
+Cảnh báo.
+Thao tác.
+Cột Cảnh báo hiển thị nhãn nổi bật trong các trường hợp:
+Lịch hẹn sắp tới.
+Sắp tới giờ nhưng chưa xác nhận.
+Chưa có nhân viên phụ trách.
+Pet có dị ứng hoặc lưu ý đặc biệt.
+Lịch có yêu cầu thay đổi/hủy chưa xử lý.
+Lịch hẹn đang có khiếu nại liên quan.
+Dưới cùng là thanh phân trang và lựa chọn số lịch hẹn hiển thị trên mỗi trang.
+[Button] Thêm lịch hẹn
+Khi nhân viên bấm Thêm lịch hẹn, hệ thống mở form tạo lịch cho khách tại quầy hoặc khách liên hệ qua điện thoại.
+Form gồm:
+Tìm khách hàng bằng SĐT hoặc tên.
+Chọn Pet của khách.
+Chọn nhóm dịch vụ.
+Chọn dịch vụ cụ thể.
+Chọn ngày và giờ.
+Chọn nhân viên phụ trách nếu dịch vụ yêu cầu.
+Chọn các Add-on nếu có.
+Ô nhập ghi chú của khách.
+Khu vực hiển thị giá tạm tính.
+Nút Tạo lịch hẹn và Hủy bỏ.
+Nếu khách chưa tồn tại trong hệ thống, cung cấp nút Thêm khách mới và liên kết sang chức năng tiếp nhận nhanh của phân hệ Khách hàng.
+[Button] Xem chi tiết lịch hẹn
+Khi bấm vào một lịch hẹn, mở Drawer hoặc trang Chi tiết lịch hẹn.
+Đây là nơi tập trung toàn bộ thông tin của một ca dịch vụ và được chia thành các khu vực.
+Thông tin lịch hẹn
+Mã lịch hẹn.
+Trạng thái.
+Ngày giờ.
+Dịch vụ.
+Add-on.
+Nhân viên phụ trách.
+Tổng tiền.
+Voucher/Paw Points nếu có.
+Phương thức và trạng thái thanh toán.
+Ghi chú của khách.
+Thông tin khách hàng và Pet
+Họ tên khách hàng.
+Số điện thoại.
+Tên Pet.
+Loài.
+Giống.
+Cân nặng.
+Dị ứng.
+Lưu ý đặc biệt.
+Nếu Pet có dị ứng, tình trạng cần chú ý hoặc lưu ý đặc biệt, hệ thống hiển thị Banner cảnh báo nổi bật ở đầu phần thông tin Pet.
+Thanh thao tác theo trạng thái
+Tùy trạng thái hiện tại của lịch hẹn, Admin/nhân viên có thể:
+Xác nhận lịch.
+Từ chối lịch.
+Thay đổi lịch.
+Hủy lịch.
+Phân công/đổi nhân viên.
+Bắt đầu dịch vụ.
+Hoàn thành dịch vụ.
+Tạo khiếu nại liên quan.
+Không hiển thị tất cả nút cùng lúc mà chỉ hiển thị các thao tác hợp lệ với trạng thái hiện tại.
+
+[Nhật ký chăm sóc trong Chi tiết lịch hẹn]
+Khi lịch chuyển sang Đang thực hiện, nhân viên có thể cập nhật Nhật ký chăm sóc.
+Nhật ký được trình bày theo Timeline gồm:
+Thời gian cập nhật.
+Bước chăm sóc.
+Trạng thái hoàn thành.
+Ghi chú.
+Hình ảnh thực tế.
+Nhân viên cập nhật.
+Đối với Spa & Grooming, Timeline có thể gồm:
+Tiếp nhận Pet → Kiểm tra tình trạng → Tắm → Sấy → Cắt/Tỉa → Hoàn tất
+Đối với Pet Hotel, Nhật ký được cập nhật theo thời gian lưu trú, gồm:
+Ăn uống.
+Vệ sinh.
+Đi dạo.
+Hoạt động/tương tác.
+Tình trạng Pet.
+Hình ảnh trong ngày.
+Đối với Pet Taxi, có thể ghi nhận:
+Đã tiếp nhận Pet → Đang di chuyển → Đã đến điểm giao → Hoàn thành
+Liên kết User: Các nội dung được nhân viên cập nhật tại Nhật ký chăm sóc sẽ được User xem trong Lịch hẹn của bé → Chi tiết/Nhật ký chăm sóc.
+
+Sub-tab 2: Danh mục dịch vụ & Bảng giá
+Màn hình quản lý tập trung dịch vụ, nội dung hiển thị và giá bán, thay vì tách Danh mục dịch vụ và Bảng giá thành hai màn hình độc lập.
+Màn hình được chia thành ba nhóm:
+Spa & Grooming | Pet Hotel | Pet Taxi
+Khu vực danh sách dịch vụ
+Danh sách gồm:
+Hình ảnh.
+Mã dịch vụ.
+Tên dịch vụ.
+Nhóm dịch vụ.
+Thời lượng dự kiến.
+Giá từ.
+Trạng thái.
+Thao tác.
+Trạng thái gồm:
+Đang hoạt động.
+Tạm ẩn.
+Admin có thể:
+Thêm dịch vụ.
+Chỉnh sửa dịch vụ.
+Xem chi tiết.
+Bật/tắt hiển thị trên Web.
+Cập nhật bảng giá.
+Khi Admin tạm ẩn một dịch vụ đang hoạt động, hệ thống yêu cầu nhập Lý do tạm ẩn để lưu lại lịch sử thay đổi.
+[Button] Thêm/Sửa dịch vụ
+Form gồm các trường chung:
+Mã dịch vụ.
+Tên dịch vụ.
+Nhóm dịch vụ.
+Mô tả.
+Thời lượng dự kiến.
+Hình ảnh.
+Quyền lợi/nội dung dịch vụ.
+Checklist nếu có.
+Tiện ích.
+Trạng thái hiển thị.
+Bên dưới thông tin chung là khu vực cấu hình giá, nội dung thay đổi tùy loại dịch vụ.
+Cấu hình Spa & Grooming
+Quản lý giá theo:
+Dịch vụ.
+Loại Pet nếu áp dụng.
+Nhóm cân nặng.
+Giá.
+Phụ phí nếu có.
+Có thể trình bày dưới dạng ma trận để Admin chỉnh nhanh nhiều mức giá.
+Cấu hình Pet Hotel
+Quản lý:
+Loại phòng.
+Mô tả phòng.
+Tiện ích.
+Giá theo ngày/đêm.
+Trạng thái cung cấp.
+Các Add-on như chế độ ăn đặc biệt, đi dạo, tương tác với nhân viên hoặc tắm trong thời gian lưu trú.
+Cấu hình Pet Taxi
+Quản lý:
+Nhóm cân nặng Pet.
+Khoảng cách áp dụng.
+Giá chuyến.
+Phụ phí vượt khoảng cách nếu hệ thống áp dụng.
+Trạng thái áp dụng.
+Liên kết với User: Dịch vụ đang Active được hiển thị trên website. Giá và cấu hình tương ứng được sử dụng để tính chi phí khi User chọn Pet, dịch vụ, phòng hoặc Add-on trong quá trình đặt lịch.
+3. ĐẶC TẢ DỮ LIỆU TỪNG THÀNH PHẦN
+4. NGHIỆP VỤ VÀ LUỒNG THAO TÁC
+4.1. Luồng tiếp nhận lịch hẹn từ User
+Khi User hoàn tất quá trình đặt lịch:
+Hệ thống tạo lịch hẹn mới với trạng thái Chờ xác nhận.
+Lịch xuất hiện trong danh sách Lịch hẹn của Admin.
+Nhân viên mở Chi tiết lịch và kiểm tra:
+Khách hàng.
+Pet.
+Dịch vụ.
+Ngày giờ.
+Nhân viên.
+Các lưu ý đặc biệt.
+Nhân viên bấm Xác nhận lịch.
+Hệ thống chuyển trạng thái:
+Chờ xác nhận → Đã xác nhận
+Phía User trong Lịch hẹn của bé được cập nhật trạng thái tương ứng.
+Nếu Admin từ chối lịch, bắt buộc nhập Lý do từ chối trước khi xác nhận thao tác.
+4.2. Luồng cảnh báo lịch hẹn sắp tới
+Hệ thống tự động kiểm tra thời gian của các lịch đã đặt.
+Khi lịch bước vào khoảng thời gian cảnh báo:
+Hệ thống gắn nhãn Sắp tới giờ cho lịch.
+Lịch được ưu tiên đưa lên khu vực cảnh báo đầu màn hình.
+Nếu lịch đã được xác nhận và có nhân viên phụ trách, cảnh báo chỉ mang tính nhắc việc.
+Nếu lịch vẫn Chờ xác nhận hoặc Chưa phân công nhân viên, hệ thống tăng mức độ cảnh báo.
+Nhân viên bấm vào cảnh báo để mở ngay Chi tiết lịch hẹn và xử lý.
+Khi lịch đã bắt đầu, hoàn thành, bị hủy hoặc không còn nằm trong khoảng thời gian cảnh báo thì Alert tự động được gỡ.
+4.3. Luồng thực hiện dịch vụ và cập nhật Nhật ký chăm sóc
+Khi Pet đến sử dụng dịch vụ:
+Nhân viên mở lịch hẹn tương ứng.
+Kiểm tra lại thông tin Pet và các cảnh báo.
+Bấm Bắt đầu dịch vụ.
+Hệ thống chuyển trạng thái:
+Đã xác nhận → Đang thực hiện
+Khu vực Nhật ký chăm sóc được kích hoạt.
+Trong quá trình thực hiện, nhân viên cập nhật:
+Bước chăm sóc.
+Checklist.
+Ghi chú.
+Hình ảnh.
+Dữ liệu được đồng bộ để User theo dõi Nhật ký chăm sóc.
+Khi hoàn tất, nhân viên bấm Hoàn thành dịch vụ.
+Hệ thống chuyển trạng thái:
+Đang thực hiện → Hoàn thành
+Nhật ký chuyển sang chế độ chỉ xem/chỉnh sửa có kiểm soát và User có thể thực hiện đánh giá dịch vụ.
+4.4. Luồng thay đổi hoặc hủy lịch
+Khi thay đổi lịch
+Nhân viên bấm Thay đổi lịch.
+Chọn ngày/giờ mới và nhân viên phụ trách nếu cần.
+Hệ thống kiểm tra khả năng tiếp nhận lịch tại thời điểm mới.
+Nếu hợp lệ, cập nhật lịch và lưu lịch sử thay đổi.
+User nhận thông báo về thời gian mới.
+Khi hủy lịch
+Nhân viên bấm Hủy lịch.
+Hệ thống yêu cầu chọn hoặc nhập lý do.
+Sau khi xác nhận, lịch chuyển sang Đã hủy.
+Hệ thống lưu người thực hiện, thời gian và lý do hủy.
+User nhận thông báo tương ứng.
+4.5. Luồng quản lý và cập nhật dịch vụ
+Khi Admin thêm dịch vụ mới:
+Mở Danh mục dịch vụ & Bảng giá.
+Chọn Thêm dịch vụ.
+Chọn Spa & Grooming, Pet Hotel hoặc Pet Taxi.
+Nhập thông tin dịch vụ.
+Thiết lập bảng giá/cấu hình tương ứng.
+Chọn trạng thái Đang hoạt động.
+Bấm Lưu.
+Hệ thống tạo dịch vụ và cho phép hiển thị trên phía User.
+Khi Admin tạm ẩn dịch vụ:
+Hệ thống yêu cầu nhập lý do.
+Dịch vụ chuyển sang Tạm ẩn.
+User không thể tạo lịch mới với dịch vụ đó.
+Các lịch hẹn đã được tạo trước đó không tự động bị hủy và vẫn phải được Admin xử lý bình thường.
+Điểm cuối này nên giữ vì nếu chỉ tắt dịch vụ mà tự động hủy các Booking đã xác nhận sẽ gây lỗi nghiệp vụ khá lớn.
+4.6. Cơ chế liên kết chéo giữa các phân hệ
+Bấm vào Tên khách hàng trong lịch hẹn → mở Hồ sơ 360 độ thuộc phân hệ Khách hàng.
+Bấm vào Pet → mở thông tin Pet và các lưu ý an toàn liên quan.
+Từ Hồ sơ Khách hàng bấm Đặt lịch dịch vụ ngay → chuyển sang Dịch vụ và điền sẵn khách hàng/Pet.
+Nếu lịch hẹn phát sinh vấn đề → bấm Tạo khiếu nại → chuyển sang phân hệ Khiếu nại và tự động gắn Mã lịch hẹn, Mã khách hàng và Pet.
+Nếu lịch đã có Ticket khiếu nại → Chi tiết lịch hiển thị nhãn Có khiếu nại liên quan, bấm vào để mở đúng Ticket.
+Sau khi lịch hoàn thành → đánh giá của User được liên kết với dịch vụ và nhân viên thực hiện.
+5. CÁC TRẠNG THÁI MÀN HÌNH VÀ XỬ LÝ NGOẠI LỆ
+5.1. Các trạng thái màn hình
+Trạng thái đang tải dữ liệu: Khi hệ thống đang tải danh sách lịch hẹn hoặc danh mục dịch vụ, hiển thị Skeleton Loading thay cho bảng dữ liệu.
+Trạng thái danh sách rỗng:
+Nếu ngày được chọn chưa có lịch: Hiển thị “Chưa có lịch hẹn nào trong thời gian này”.
+Nếu bộ lọc không có kết quả: Hiển thị “Không tìm thấy lịch hẹn phù hợp” kèm nút Xóa bộ lọc.
+Nếu nhóm dịch vụ chưa có dịch vụ nào: Hiển thị “Chưa có dịch vụ trong danh mục này” kèm nút Thêm dịch vụ.
+Trạng thái lỗi: Khi máy chủ không thể tải dữ liệu, hiển thị thông báo lỗi và nút Thử lại.
+5.2. Xử lý các trường hợp ngoại lệ
+Lịch sắp tới nhưng chưa được xác nhận
+Nếu lịch đã bước vào khoảng cảnh báo nhưng trạng thái vẫn là Chờ xác nhận, hệ thống:
+Đưa lịch lên đầu danh sách.
+Hiển thị cảnh báo nổi bật.
+Cho phép nhân viên mở nhanh để xác nhận hoặc từ chối.
+Chưa có nhân viên phụ trách
+Nếu lịch cần nhân viên/KTV nhưng chưa được phân công:
+Hiển thị nhãn Chưa phân công.
+Không cho chuyển sang Đang thực hiện cho đến khi có người phụ trách, trừ trường hợp loại dịch vụ được cấu hình không yêu cầu nhân viên cụ thể.
+Pet có cảnh báo an toàn
+Nếu Pet có thông tin như dị ứng hoặc lưu ý đặc biệt:
+Hiển thị cảnh báo tại bảng Lịch hẹn.
+Tiếp tục hiển thị Banner nổi bật khi mở Chi tiết lịch.
+Nhân viên phải nhìn thấy cảnh báo trước khi bắt đầu dịch vụ.
+Trùng lịch nhân viên
+Khi Admin thay đổi thời gian hoặc phân công nhân viên:
+Hệ thống kiểm tra các lịch đang tồn tại.
+Nếu nhân viên đã có lịch trùng thời gian, không cho lưu.
+Hiển thị thông báo và yêu cầu chọn nhân viên hoặc thời gian khác.
+Lịch có yêu cầu đổi/hủy chưa xử lý
+Lịch được gắn nhãn Yêu cầu thay đổi hoặc Yêu cầu hủy và ưu tiên hiển thị để nhân viên xử lý.
+Dịch vụ bị tạm ẩn nhưng vẫn còn lịch đã đặt
+Hệ thống không cho User tạo Booking mới với dịch vụ đó, nhưng:
+Các lịch đã tồn tại vẫn được giữ.
+Admin nhận cảnh báo nếu dịch vụ bị tạm ngừng có lịch tương lai.
+Admin quyết định tiếp tục thực hiện, đổi sang dịch vụ khác hoặc liên hệ khách để xử lý.
+Nhật ký chăm sóc chưa hoàn tất
+Nếu nhân viên bấm Hoàn thành dịch vụ nhưng các bước bắt buộc trong Checklist chưa được hoàn tất:
+Hệ thống hiển thị cảnh báo.
+Liệt kê các bước còn thiếu.
+Yêu cầu hoàn thành hoặc nhập lý do bỏ qua trước khi đóng lịch.
+
+
+

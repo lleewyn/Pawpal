@@ -1,0 +1,440 @@
+MODULE QUẢN LÝ KHIẾU NẠI
+1. TỔNG QUAN MÀN HÌNH
+Phân hệ Quản lý Khiếu nại là khu vực tập trung để nhân viên PawPal tiếp nhận, xác minh, xử lý và theo dõi các phản ánh của khách hàng phát sinh trong quá trình sử dụng dịch vụ hoặc mua sản phẩm.
+Khiếu nại Dịch vụ tập trung vào Lịch hẹn – Pet – Nhân viên – Nhật ký chăm sóc
+Khiếu nại Đơn hàng tập trung vào Đơn hàng – Sản phẩm – Giao hàng – Đổi/Trả – Hoàn tiền.
+Phân hệ phục vụ các mục tiêu cốt lõi:
+Tiếp nhận và quản lý tập trung các khiếu nại của khách hàng.
+Liên kết trực tiếp khiếu nại với lịch hẹn hoặc đơn hàng phát sinh vấn đề.
+Cung cấp đầy đủ thông tin và bằng chứng để nhân viên xác minh trước khi đưa ra phương án xử lý.
+Theo dõi xuyên suốt quá trình từ lúc tiếp nhận đến khi khiếu nại được giải quyết và đóng.
+Lưu lại lịch sử trao đổi, người xử lý, phương án giải quyết và các thay đổi của Ticket.
+Hỗ trợ các phương án như thực hiện lại dịch vụ, đổi nhân viên, đổi/trả sản phẩm, hoàn tiền hoặc bồi hoàn quyền lợi cho khách hàng.
+Đối tượng sử dụng gồm:
+Nhân viên CSKH: Tiếp nhận Ticket, trao đổi với khách, xác minh thông tin và đề xuất phương án xử lý.
+Lễ tân/Nhân viên vận hành: Hỗ trợ kiểm tra lịch hẹn, đơn hàng và thông tin thực tế liên quan đến sự cố.
+Quản lý/Admin: Xử lý các trường hợp nghiêm trọng, phê duyệt phương án bồi hoàn khi cần và theo dõi tình trạng giải quyết khiếu nại.
+
+2. BỐ CỤC GIAO DIỆN VÀ MÔ TẢ CÁC SUB-TAB
+Sub-tab 1: Theo Dịch vụ
+Màn hình quản lý các khiếu nại phát sinh từ quá trình khách hàng sử dụng Spa & Grooming, Pet Hotel hoặc Pet Taxi.
+Các trường hợp điển hình gồm:
+Pet bị trầy xước hoặc có vấn đề trong quá trình chăm sóc.
+Kết quả Grooming không đúng yêu cầu.
+Khách không hài lòng với thái độ/chất lượng phục vụ.
+Phòng Pet Hotel không đúng mô tả hoặc không đảm bảo vệ sinh.
+Pet Hotel không thực hiện đúng Add-on khách đã đăng ký.
+Pet Taxi đến trễ hoặc có vấn đề trong quá trình đưa đón.
+Khu vực thẻ thống kê nhanh
+Hiển thị:
+Khiếu nại mới.
+Đang xử lý.
+Chờ phản hồi khách hàng.
+Khiếu nại mức độ Cao.
+Quá hạn xử lý.
+Khu vực thanh công cụ và bộ lọc
+Ô tìm kiếm theo:
+Mã khiếu nại.
+Mã lịch hẹn.
+Tên khách hàng.
+Số điện thoại.
+Tên Pet.
+Bộ lọc loại dịch vụ:
+Spa & Grooming.
+Pet Hotel.
+Pet Taxi.
+Bộ lọc trạng thái:
+Mới tiếp nhận.
+Đang xử lý.
+Chờ phản hồi khách hàng.
+Đã giải quyết.
+Đã đóng.
+Bộ lọc mức độ ưu tiên:
+Thấp.
+Trung bình.
+Cao.
+Bộ lọc ngày tiếp nhận.
+Bộ lọc nhân viên phụ trách.
+Nút Tạo khiếu nại dành cho trường hợp khách phản ánh trực tiếp tại quầy hoặc qua điện thoại.
+Khu vực bảng danh sách khiếu nại
+Bảng gồm:
+Mã khiếu nại.
+Khách hàng.
+Pet.
+Mã lịch hẹn.
+Dịch vụ.
+Nội dung/vấn đề chính.
+Mức độ ưu tiên.
+Nhân viên phụ trách.
+Ngày tiếp nhận.
+Trạng thái.
+Thao tác.
+Các Ticket mức độ Cao hoặc quá thời gian xử lý được ưu tiên hiển thị và gắn nhãn cảnh báo.
+
+[Button] Tạo khiếu nại Dịch vụ
+Sử dụng khi khách phản ánh qua điện thoại hoặc trực tiếp tại PawPal thay vì tự gửi yêu cầu trên website.
+Form gồm:
+Tìm khách hàng theo SĐT.
+Chọn Pet.
+Chọn lịch hẹn liên quan.
+Loại vấn đề.
+Tiêu đề khiếu nại.
+Nội dung phản ánh.
+Hình ảnh/tệp đính kèm nếu có.
+Mức độ ưu tiên.
+Nhân viên tiếp nhận.
+Nút Tạo Ticket và Hủy bỏ.
+Khi chọn lịch hẹn, hệ thống tự động lấy thông tin dịch vụ, thời gian và nhân viên đã thực hiện để hạn chế nhập lại dữ liệu.
+
+[Button] Xem chi tiết khiếu nại Dịch vụ
+Khi mở một Ticket, màn hình Chi tiết khiếu nại cần tập trung toàn bộ dữ liệu phục vụ xác minh và xử lý.
+Thông tin Ticket
+Mã khiếu nại.
+Thời gian tạo.
+Trạng thái.
+Mức độ ưu tiên.
+Nhân viên phụ trách.
+Nội dung khách phản ánh.
+Hình ảnh/tệp khách cung cấp.
+Thông tin khách hàng và Pet
+Khách hàng.
+Số điện thoại.
+Pet.
+Loài/giống.
+Cân nặng.
+Dị ứng.
+Lưu ý đặc biệt.
+Không cần hiển thị toàn bộ Hồ sơ Pet tại đây, chỉ lấy các thông tin có liên quan trực tiếp đến việc xác minh sự cố.
+Thông tin lịch hẹn liên quan
+Booking ID.
+Loại dịch vụ.
+Dịch vụ đã thực hiện.
+Ngày giờ.
+Nhân viên/KTV.
+Add-on.
+Tổng tiền.
+Trạng thái lịch hẹn.
+Bằng chứng thực hiện dịch vụ
+Hiển thị dữ liệu lấy từ Nhật ký chăm sóc:
+Timeline thực hiện.
+Checklist.
+Ghi chú nhân viên.
+Hình ảnh trong quá trình chăm sóc.
+Hình ảnh Before/After nếu có.
+Người và thời gian cập nhật.
+Admin có thể bấm Xem lịch hẹn gốc để chuyển sang phân hệ Dịch vụ và mở đúng Booking.
+Khu vực xử lý
+Nhân viên có thể:
+Nhận xử lý Ticket.
+Chuyển người phụ trách.
+Ghi chú nội bộ.
+Phản hồi khách.
+Yêu cầu khách bổ sung bằng chứng.
+Cập nhật mức độ ưu tiên.
+Chọn phương án giải quyết.
+Các phương án có thể gồm:
+Giải thích/phản hồi khách hàng.
+Thực hiện lại dịch vụ.
+Đổi KTV/Nhân viên.
+Hoàn một phần/toàn bộ phí dịch vụ.
+Tặng Voucher/Paw Points bồi hoàn.
+Chuyển quản lý xử lý.
+Khi chọn phương án có giá trị bồi hoàn, hệ thống phải lưu rõ phương án, giá trị, lý do và người phê duyệt/thực hiện.
+
+Sub-tab 2: Theo Đơn hàng
+Màn hình quản lý khiếu nại phát sinh từ quá trình khách mua sản phẩm tại PawPal, đồng thời theo dõi các yêu cầu đổi/trả sản phẩm liên quan.
+Các trường hợp điển hình gồm:
+Giao sai sản phẩm.
+Sai size hoặc phiên bản.
+Thiếu sản phẩm.
+Sản phẩm bị hư hỏng.
+Bao bì bị vỡ/rách.
+Thức ăn bị ẩm mốc hoặc có vấn đề chất lượng.
+Giao hàng trễ.
+Khách yêu cầu đổi/trả sản phẩm.
+Khu vực thẻ thống kê nhanh
+Hiển thị:
+Khiếu nại mới.
+Đang xử lý.
+Yêu cầu đổi/trả.
+Chờ khách gửi hàng.
+Đang hoàn tiền.
+Quá hạn xử lý.
+Khu vực thanh công cụ và bộ lọc
+Tìm kiếm theo:
+Mã khiếu nại.
+Mã đơn hàng.
+Khách hàng.
+SĐT.
+Tên sản phẩm/SKU.
+Bộ lọc loại vấn đề:
+Sai sản phẩm.
+Thiếu hàng.
+Hư hỏng.
+Chất lượng sản phẩm.
+Giao hàng.
+Đổi/Trả.
+Khác.
+Bộ lọc trạng thái Ticket.
+Bộ lọc mức độ ưu tiên.
+Bộ lọc ngày tiếp nhận.
+Bộ lọc nhân viên phụ trách.
+Nút Tạo khiếu nại Đơn hàng.
+Khu vực bảng danh sách
+Hiển thị:
+Mã khiếu nại.
+Khách hàng.
+Mã đơn hàng.
+Sản phẩm liên quan.
+Loại vấn đề.
+Yêu cầu của khách.
+Mức độ ưu tiên.
+Nhân viên phụ trách.
+Ngày tiếp nhận.
+Trạng thái.
+Trạng thái đổi/trả nếu có.
+Thao tác.
+
+[Button] Tạo khiếu nại Đơn hàng
+Form gồm:
+Tìm khách hàng.
+Chọn đơn hàng.
+Chọn sản phẩm đang khiếu nại.
+Số lượng.
+Loại vấn đề.
+Nội dung phản ánh.
+Yêu cầu của khách.
+Hình ảnh/tệp bằng chứng.
+Mức độ ưu tiên.
+Nút Tạo Ticket và Hủy bỏ.
+Khi chọn Order ID, hệ thống lấy danh sách sản phẩm thuộc đơn để nhân viên chọn thay vì nhập sản phẩm thủ công.
+
+[Button] Xem chi tiết khiếu nại Đơn hàng
+Thông tin Ticket
+Mã khiếu nại.
+Khách hàng.
+Ngày tạo.
+Nội dung phản ánh.
+Hình ảnh/tệp đính kèm.
+Mức độ ưu tiên.
+Nhân viên phụ trách.
+Trạng thái.
+Thông tin đơn hàng
+Order ID.
+Ngày đặt.
+Danh sách sản phẩm.
+Tổng tiền.
+Voucher/Paw Points.
+Phương thức thanh toán.
+Trạng thái thanh toán.
+Trạng thái giao hàng.
+Địa chỉ nhận hàng.
+Sản phẩm đang khiếu nại
+SKU.
+Tên sản phẩm.
+Variant/Size.
+Số lượng mua.
+Số lượng khiếu nại.
+Giá mua.
+Lý do đổi/trả.
+Hình ảnh khách cung cấp.
+Admin có thể bấm Xem đơn hàng gốc để chuyển sang phân hệ Bán hàng.
+Khu vực phương án xử lý
+Nhân viên có thể lựa chọn:
+Giải thích/phản hồi khách.
+Gửi bổ sung sản phẩm thiếu.
+Đổi sản phẩm.
+Trả hàng và hoàn tiền.
+Hoàn tiền không cần trả hàng.
+Tặng Voucher/Paw Points.
+Từ chối yêu cầu và nhập lý do.
+Nếu phương án yêu cầu Đổi/Trả, hệ thống tạo một yêu cầu RMA liên kết với Ticket.
+
+Khu vực lịch sử xử lý chung cho cả hai Sub-tab
+Trong Chi tiết Ticket của cả hai loại khiếu nại nên có một Timeline lịch sử xử lý.
+Ví dụ:
+09:10 – Khách hàng gửi khiếu nại
+ 09:15 – Nguyễn A nhận xử lý
+ 09:25 – Yêu cầu khách bổ sung hình ảnh
+ 10:02 – Khách gửi hình ảnh
+ 10:20 – Đề xuất phương án xử lý
+ 10:35 – Khách đồng ý phương án
+ 10:40 – Khiếu nại được giải quyết
+Mỗi hoạt động lưu:
+Thời gian.
+Người thực hiện.
+Hành động.
+Nội dung/ghi chú.
+Ghi chú nội bộ của nhân viên phải được phân biệt với nội dung phản hồi được phép hiển thị cho User.
+
+3. ĐẶC TẢ DỮ LIỆU TỪNG THÀNH PHẦN
+
+4. NGHIỆP VỤ VÀ LUỒNG THAO TÁC
+4.1. Luồng xử lý chung của Ticket khiếu nại
+Cả Khiếu nại Dịch vụ và Khiếu nại Đơn hàng sử dụng chung vòng đời Ticket:
+Chưa xử lý → Đang xử lý → Đã giải quyết → Đã đóng
+Trong đó:
+Mới tiếp nhận: Ticket vừa được tạo, chưa có hoặc chưa bắt đầu xử lý.
+Đang xử lý: Nhân viên đã tiếp nhận và đang xác minh/đưa ra phương án.
+Chờ phản hồi khách hàng: PawPal đã yêu cầu thêm thông tin hoặc gửi phương án và đang chờ khách phản hồi.
+Đã giải quyết: Phương án xử lý đã được thực hiện.
+Đã đóng: Ticket kết thúc và không còn thao tác xử lý thường xuyên.
+
+4.2. Luồng xử lý khiếu nại Dịch vụ
+Khi nhận phản ánh liên quan đến dịch vụ:
+Ticket được tạo và liên kết với Booking ID.
+Nhân viên mở Ticket và bấm Nhận xử lý.
+Hệ thống chuyển:
+Mới tiếp nhận → Đang xử lý
+Nhân viên kiểm tra:
+Nội dung khách phản ánh.
+Pet và các lưu ý đặc biệt.
+Lịch hẹn.
+Nhân viên thực hiện.
+Nhật ký chăm sóc.
+Hình ảnh/bằng chứng hai bên.
+Nếu chưa đủ thông tin, nhân viên chọn Yêu cầu bổ sung thông tin.
+Ticket chuyển sang Chờ phản hồi khách hàng.
+Khi khách bổ sung thông tin, Ticket được đưa trở lại danh sách cần xử lý.
+Nhân viên chọn phương án giải quyết.
+Phương án được thực hiện và ghi nhận vào Timeline.
+Khi xử lý xong, Ticket chuyển sang Đã giải quyết.
+Sau khi kết thúc hoàn toàn, Ticket chuyển Đã đóng.
+
+4.3. Luồng thực hiện lại dịch vụ
+Nếu phương án giải quyết là Thực hiện lại dịch vụ:
+Nhân viên chọn Thực hiện lại dịch vụ tại Ticket.
+Hệ thống yêu cầu nhập:
+Dịch vụ thực hiện lại.
+Lý do.
+Mức phí khách phải trả nếu có; mặc định có thể là 0 nếu được bồi hoàn toàn bộ.
+Hệ thống tạo yêu cầu đặt lịch mới và liên kết với Ticket gốc.
+Chuyển sang phân hệ Dịch vụ để chọn thời gian và nhân viên.
+Booking mới hiển thị nguồn Tạo từ khiếu nại.
+Sau khi Booking bồi hoàn hoàn thành, kết quả được cập nhật về Ticket.
+Nhân viên xác nhận hoàn tất phương án và chuyển Ticket sang Đã giải quyết.
+
+4.4. Luồng xử lý khiếu nại Đơn hàng
+Khi khách phản ánh về sản phẩm:
+Ticket được tạo và gắn Order ID.
+Nhân viên kiểm tra đơn hàng và sản phẩm liên quan.
+Đối chiếu nội dung và bằng chứng khách cung cấp.
+Nhân viên quyết định:
+Chấp nhận yêu cầu.
+Yêu cầu bổ sung thông tin.
+Từ chối yêu cầu.
+Nếu từ chối, bắt buộc nhập lý do.
+Nếu chấp nhận, chọn phương án:
+Gửi bổ sung.
+Đổi sản phẩm.
+Trả hàng/hoàn tiền.
+Hoàn tiền không cần trả.
+Bồi hoàn Voucher/Paw Points.
+Hệ thống ghi nhận phương án và tiếp tục theo dõi đến khi hoàn thành.
+Ticket chuyển Đã giải quyết → Đã đóng.
+4.5. Luồng Đổi/Trả và RMA
+Khi Admin chấp nhận yêu cầu đổi hoặc trả hàng:
+Tại Ticket, nhân viên bấm Tạo yêu cầu Đổi/Trả.
+Hệ thống sinh mã RMA và liên kết với:
+Complaint ID.
+Order ID.
+Product/SKU.
+Số lượng.
+Nhân viên chọn hình thức:
+Đổi sản phẩm.
+Trả hàng – hoàn tiền.
+RMA được chuyển sang quy trình xử lý của phân hệ Bán hàng.
+Ví dụ vòng đời:
+Đã duyệt → Chờ nhận hàng trả → Đã nhận hàng → Kiểm tra hàng → Đổi hàng/Hoàn tiền → Hoàn tất
+Nếu sản phẩm đủ điều kiện nhập lại kho, phân hệ Bán hàng cập nhật tồn kho.
+Nếu hoàn tiền, trạng thái giao dịch được cập nhật từ hệ thống thanh toán tương ứng.
+Khi RMA hoàn tất, kết quả được đồng bộ về Ticket.
+Ticket có thể chuyển sang Đã giải quyết.
+Như vậy, Khiếu nại quyết định và theo dõi phương án, còn các nghiệp vụ kho, giao hàng và giao dịch hoàn tiền chi tiết vẫn thuộc phân hệ Bán hàng.
+
+4.6. Luồng yêu cầu khách bổ sung thông tin
+Khi chưa đủ bằng chứng:
+Nhân viên bấm Yêu cầu bổ sung thông tin.
+Nhập nội dung cần khách cung cấp, ví dụ hình ảnh sản phẩm hoặc tình trạng Pet.
+Ticket chuyển sang Chờ phản hồi khách hàng.
+User nhận thông báo.
+Khi User gửi phản hồi mới:
+Nội dung được thêm vào Timeline.
+Nhân viên phụ trách nhận thông báo.
+Ticket được đánh dấu Có phản hồi mới và đưa lên nhóm cần xử lý.
+
+4.7. Luồng đóng và mở lại Ticket
+Khi vấn đề đã được giải quyết:
+Nhân viên chuyển Ticket sang Đã giải quyết.
+Sau khi xác nhận không còn tác vụ đang thực hiện, Ticket chuyển sang Đã đóng.
+Ticket đã đóng không được phép xóa khỏi hệ thống.
+Nếu khách phản hồi lại về chính vấn đề cũ trong khoảng thời gian được hệ thống cho phép:
+Ticket có thể được Mở lại.
+Trạng thái chuyển về Đang xử lý.
+Toàn bộ lịch sử trước đó được giữ nguyên.
+
+4.8. Cơ chế liên kết chéo giữa các phân hệ
+Với Dịch vụ
+Bấm Booking ID → chuyển sang Dịch vụ và mở đúng Chi tiết lịch hẹn.
+Ticket có thể đọc Nhật ký chăm sóc và thông tin Pet liên quan.
+Nếu thực hiện lại dịch vụ → tạo Booking mới liên kết với Complaint ID.
+Tại lịch hẹn đang có khiếu nại → hiển thị nhãn Có khiếu nại liên quan.
+Với Bán hàng
+Bấm Order ID → chuyển sang Chi tiết đơn hàng.
+Khi được duyệt đổi/trả → tạo RMA liên kết Ticket.
+Kết quả đổi hàng/hoàn tiền được đồng bộ trở lại Ticket.
+Với Khách hàng
+Bấm tên khách → mở Hồ sơ 360 độ.
+Hồ sơ khách hiển thị danh sách Ticket trước đây.
+Từ Hồ sơ khách có thể bấm Tạo vé khiếu nại và hệ thống điền sẵn Customer ID.
+Với PawPoint/Thành viên
+Nếu phương án xử lý là bồi hoàn Paw Points:
+Khiếu nại gửi yêu cầu điều chỉnh điểm.
+Giao dịch điểm được ghi vào lịch sử PawPoint.
+Ticket lưu lại số điểm đã bồi hoàn và lý do.
+
+5. CÁC TRẠNG THÁI MÀN HÌNH VÀ XỬ LÝ NGOẠI LỆ
+5.1. Các trạng thái màn hình
+Trạng thái đang tải: Khi tải danh sách hoặc Chi tiết Ticket, hệ thống hiển thị Skeleton Loading.
+Trạng thái danh sách rỗng:
+Nếu chưa có khiếu nại: hiển thị “Chưa có khiếu nại nào”.
+Nếu bộ lọc không trả về kết quả: hiển thị “Không tìm thấy khiếu nại phù hợp” kèm nút Xóa bộ lọc.
+Trạng thái lỗi: Khi không tải được dữ liệu, hiển thị thông báo lỗi và nút Thử lại.
+
+5.2. Xử lý các trường hợp ngoại lệ
+Ticket mức độ Cao chưa có người xử lý
+Gắn nhãn cảnh báo đỏ.
+Ưu tiên lên đầu danh sách.
+Hiển thị Chưa có người phụ trách.
+Thông báo cho nhóm CSKH/Admin phù hợp.
+Ticket xử lý quá thời gian quy định
+Gắn nhãn Quá hạn xử lý.
+Ưu tiên lên đầu danh sách.
+Giữ nguyên người phụ trách để xác định trách nhiệm xử lý.
+Khách gửi thêm phản hồi
+Nếu Ticket đang Chờ phản hồi khách hàng và User gửi thông tin mới:
+Gắn badge Phản hồi mới.
+Đưa Ticket trở lại nhóm cần xử lý.
+Thông báo cho nhân viên phụ trách.
+Không tìm thấy Booking hoặc Order liên quan
+Nếu khách phản ánh nhưng không xác định được giao dịch:
+Vẫn cho phép tạo Ticket.
+Gắn trạng thái Chưa xác minh giao dịch.
+Nhân viên có thể tìm và liên kết Booking/Order sau.
+Không được thực hiện hoàn tiền/đổi trả cho đến khi xác minh được giao dịch phù hợp.
+Khách yêu cầu hoàn tiền cao hơn giá trị giao dịch
+Hệ thống không cho nhập số tiền hoàn vượt quá giá trị đủ điều kiện của giao dịch.
+Nếu có trường hợp đặc biệt, yêu cầu cấp quản lý phê duyệt theo quyền được cấu hình.
+Đổi/trả sản phẩm vượt quá số lượng đã mua
+Số lượng yêu cầu đổi/trả không được vượt quá số lượng đủ điều kiện còn lại của sản phẩm trong Order.
+Hệ thống hiển thị cảnh báo và không cho tạo RMA sai số lượng.
+Booking/Order đã có Ticket đang xử lý
+Khi tạo Ticket mới cho cùng một Booking hoặc Order:
+Hệ thống cảnh báo “Giao dịch này đang có khiếu nại chưa đóng”.
+Cho phép nhân viên mở Ticket hiện tại để kiểm tra trước.
+Chỉ tạo Ticket mới khi đây thực sự là một vấn đề khác.
+Ticket đã đóng
+Không cho xóa Ticket.
+Không cho chỉnh sửa lịch sử xử lý cũ.
+Nếu đủ điều kiện mở lại thì sử dụng chức năng Mở lại Ticket, đồng thời ghi nhận hành động này vào Timeline.
+

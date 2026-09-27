@@ -1,0 +1,314 @@
+MODULE QUẢN LÝ BÁN HÀNG (ĐƠN HÀNG)
+
+1. TỔNG QUAN MÀN HÌNH
+Phân hệ Quản lý Bán hàng là trung tâm vận hành thương mại của PawPal, quản lý toàn bộ vòng đời của đơn hàng bán lẻ sản phẩm cho thú cưng từ lúc khách đặt mua online trên Web hoặc mua trực tiếp tại quầy cho đến khi hoàn tất giao hàng và thanh toán.
+Phân hệ phục vụ các mục tiêu cốt lõi:
+- Quản lý tập trung toàn bộ đơn hàng trực tuyến và đơn hàng tại quầy.
+- Chủ động phát hiện và cảnh báo các đơn hàng cần xử lý khẩn cấp (đơn mới chờ duyệt quá hạn, đơn thanh toán lỗi, đơn có khiếu nại đổi trả).
+- Tiếp nhận, xác nhận, đóng gói, bàn giao vận chuyển và theo dõi trạng thái giao hàng.
+- Quản lý danh mục sản phẩm, mức tồn kho, cảnh báo hàng sắp hết và cấu hình giá bán.
+- Quản lý các chương trình khuyến mãi, phát hành và kiểm soát voucher giảm giá hoặc voucher đổi bằng điểm Pawpoint.
+- Kết nối chặt chẽ với phân hệ Khách hàng, Thú cưng và Khiếu nại để mang lại trải nghiệm dịch vụ liền mạch.
+Đối tượng sử dụng gồm:
+- Nhân viên kho và Đóng gói: Tiếp nhận đơn, kiểm tra tồn kho, in phiếu đóng gói, xuất kho và bàn giao cho đơn vị vận chuyển.
+- Thu ngân và Lễ tân: Tạo đơn hàng trực tiếp tại quầy cho khách, tiếp nhận đơn qua hotline, thu tiền COD hoặc xác nhận chuyển khoản.
+- Nhân viên CSKH: Hỗ trợ khách đổi địa chỉ, theo dõi vận đơn, tiếp nhận yêu cầu hủy đơn hoặc hướng dẫn đổi trả sản phẩm.
+- Quản lý và Admin: Theo dõi doanh thu bán hàng, điều phối hàng tồn kho, quản lý danh mục sản phẩm và chính sách khuyến mãi.
+
+---
+
+2. BỐ CỤC GIAO DIỆN VÀ MÔ TẢ CÁC SUB-TAB
+Tuân thủ quy chuẩn thiết kế Pawpal-er: Toàn bộ thanh Header Bar hiển thị danh sách sub-tab dạng text thuần, không icon, phân tách bằng dấu gạch đứng (|). Màu chữ xanh xô thơm (#4F7A65), tab active in đậm màu xanh thương hiệu (#236B48).
+Danh sách sub-tab:
+Đơn hàng | Hồ sơ đơn | Sản phẩm và Kho | Khuyến mãi
+
+Sub-tab 1: Đơn hàng
+Đây là màn hình vận hành chính của phân hệ Bán hàng, quản lý và điều phối luồng xử lý toàn bộ đơn hàng.
+Màn hình được bố trí theo các khu vực thống nhất từ trên xuống dưới.
+
+Khu vực nhận diện cảnh báo khẩn cấp
+- Tích hợp trực tiếp vào thẻ chỉ số "Đổi trả và Hủy" (hoặc "Có khiếu nại") trên đầu màn hình và nút lọc nhanh "Chờ xử lý gấp" trên thanh công cụ.
+- Hệ thống tự động đánh dấu các đơn cần hành động ngay (đơn chờ duyệt quá 30 phút, đơn thanh toán nghi vấn đối soát, đơn yêu cầu hủy/khiếu nại RMA) bằng vạch cảnh báo đỏ/cam thẳng tắp ở mép trái dòng bảng dữ liệu.
+- Tuyệt đối không tạo hộp card riêng rẽ có viền cong để đảm bảo tính gom khối thống nhất của màn hình.
+
+Khu vực thẻ thống kê nhanh trong ngày
+- Hiển thị các chỉ số đo lường hiệu suất vận hành:
+  + Tổng đơn hôm nay.
+  + Chờ xác nhận.
+  + Đang chuẩn bị hàng.
+  + Đang giao hàng.
+  + Đã giao thành công.
+  + Yêu cầu hủy và Đổi trả.
+- Thiết kế thẻ phẳng bo góc 9px, chữ đậm sắc nét theo Forest Palette, không hiệu ứng phóng to giật khung khi rê chuột.
+
+Khu vực thanh công cụ và bộ lọc
+- Gom chung làm phần đầu của Khối Bảng dữ liệu (không tách thành card rời).
+- Ô tìm kiếm hỗ trợ: Mã đơn hàng (ORD-xxxxx), Tên khách hàng, Số điện thoại người nhận, Mã vận đơn bưu cục.
+- Bộ lọc trạng thái đơn hàng:
+  + Tất cả.
+  + Chờ xác nhận.
+  + Đang chuẩn bị.
+  + Đang giao.
+  + Đã giao.
+  + Hoàn thành.
+  + Đã hủy.
+  + Đổi trả.
+- Bộ lọc phương thức thanh toán: COD, VNPay, MoMo, Chuyển khoản ngân hàng.
+- Bộ lọc trạng thái thanh toán: Đã thanh toán, Chưa thanh toán, Chờ hoàn tiền.
+- Bộ lọc theo ngày hoặc khoảng thời gian đặt hàng.
+- Nút bấm text-only: "+ Tạo đơn tại quầy" và "Xuất file".
+
+Khu vực bảng danh sách đơn hàng
+- Bảng dữ liệu tuân thủ triệt để quy tắc: Không lồng nền (nền trong suốt), bo góc 9px, tiêu đề cột viết hoa chữ cái đầu tiêu chuẩn.
+- Các cột dữ liệu:
+  + Mã đơn (dạng liên kết màu xanh #236B48).
+  + Khách hàng (họ tên và số điện thoại người nhận).
+  + Sản phẩm (hiển thị tóm tắt tên 1 sản phẩm chính kèm số lượng món bổ sung, ví dụ: Hạt Royal Canin Maxi + 2 món).
+  + Tổng tiền (định dạng tiền tệ rõ ràng).
+  + Thanh toán (phương thức và huy hiệu trạng thái thanh toán).
+  + Vận chuyển (đơn vị vận chuyển và mã vận đơn nếu có).
+  + Trạng thái đơn (huy hiệu màu phẳng viền nhạt tiệp màu).
+  + Cảnh báo (vạch đỏ mép trái ô đầu nếu có khiếu nại/hủy, vạch cam nếu đơn chờ quá hạn).
+  + Thao tác (nút 3 chấm text ••• mở menu tác vụ text-only).
+- Dòng đơn đã bị hủy hiển thị mờ rõ rệt (opacity: 0.52).
+- Thanh phân trang nằm hoàn toàn bên ngoài bảng, không đóng khung, căn giữa màn hình, hiển thị tối đa 10 dòng/trang, sử dụng nút điều hướng "<" và ">".
+
+[Nút Text] + Tạo đơn tại quầy
+- Mở modal tiêu chuẩn rộng 560px, padding 26px 30px, bo góc 9px, không kẻ ngang cắt xén.
+- Nhập nhanh SĐT để tìm khách quen hoặc nhập tên khách vãng lai.
+- Chọn địa chỉ nhận hàng từ sổ địa chỉ của khách hoặc chọn nhận tại cửa hàng.
+- Tìm kiếm và chọn sản phẩm theo SKU hoặc tên, tự động kiểm tra số lượng tồn kho.
+- Nhập mã giảm giá voucher hoặc áp dụng điểm thưởng Pawpoint nếu khách yêu cầu.
+- Chọn phương thức thanh toán (Tiền mặt, Quẹt thẻ POS, Chuyển khoản QR).
+- Nút bấm text-only: "Tạo đơn hàng" và "Đóng".
+
+---
+
+Sub-tab 2: Hồ sơ đơn (Chi tiết đơn hàng)
+Mở khi người dùng bấm vào Mã đơn hàng từ danh sách hoặc chuyển từ sub-tab trên Header.
+Tự động kích hoạt Deep Breadcrumb trên Header Bar: "/ [Mã đơn hàng]" (ví dụ: / ORD-2026-089).
+
+Bố cục thông tin chi tiết:
+1. Thông tin tổng quan đơn hàng
+   - Mã đơn hàng, ngày giờ đặt hàng, kênh đặt hàng (Website hoặc Quầy thu ngân).
+   - Trạng thái đơn hàng hiện tại và trạng thái thanh toán.
+   - Ghi chú của khách hàng khi đặt hàng.
+   - Ghi chú nội bộ dành riêng cho nhân viên đóng gói và giao hàng.
+2. Danh sách sản phẩm và Kiện hàng
+   - Trình bày dạng danh sách thoáng đãng, không đóng hộp lồng hộp.
+   - Mỗi mục hiển thị: Ảnh sản phẩm, Tên sản phẩm, Mã SKU, Phân loại quy cách (ví dụ: Túi 2kg vị Cá hồi), Đơn giá, Số lượng, Thành tiền.
+3. Bảng kê tài chính đơn hàng
+   - Tiền hàng tạm tính.
+   - Phí vận chuyển tiêu chuẩn.
+   - Giảm giá từ chương trình hoặc Voucher khuyến mãi.
+   - Giảm trừ từ điểm tích lũy Pawpoint.
+   - Tổng tiền thanh toán cuối cùng.
+   - Lịch sử giao dịch thanh toán: Mã giao dịch ngân hàng, thời gian thanh toán, cổng thanh toán.
+4. Thông tin giao nhận và Vận chuyển
+   - Người nhận hàng, số điện thoại liên hệ (có nút bấm text "Gọi điện" hoặc "Sao chép số").
+   - Địa chỉ giao hàng đầy đủ.
+   - Đơn vị giao vận phụ trách (J&T Express, GHTK, Viettel Post hoặc Đội giao PawPal).
+   - Mã vận đơn và liên kết tra cứu hành trình bưu kiện.
+5. Lịch trình xử lý đơn hàng (Timeline thuần chữ)
+   - Đặt hàng thành công (thời gian, người đặt).
+   - Đã xác nhận đơn hàng (nhân viên duyệt).
+   - Đang chuẩn bị và Đóng gói (nhân viên kho xuất hàng).
+   - Đã bàn giao cho đơn vị vận chuyển (ghi nhận mã vận đơn).
+   - Đang giao hàng đến người nhận.
+   - Giao hàng thành công và Hoàn tất đơn hàng.
+6. Thanh thao tác theo trạng thái (Text-only ở góc phải hoặc chân trang)
+   - Tùy theo trạng thái hiện tại của đơn, chỉ hiển thị các nút thao tác hợp lệ:
+     + Trạng thái Chờ xác nhận: "Xác nhận đơn", "Hủy đơn" (bắt buộc nhập lý do).
+     + Trạng thái Đang chuẩn bị: "In phiếu đóng gói", "In hóa đơn", "Bàn giao vận chuyển" (nhập Đơn vị vận chuyển và Mã vận đơn).
+     + Trạng thái Đang giao: "Cập nhật mã vận đơn", "Đã giao hàng thành công", "Báo phát thất bại".
+     + Trạng thái Đã giao: "Xác nhận thu tiền COD" (nếu đơn chưa thanh toán), "Hoàn tất đơn hàng", "Tạo khiếu nại và Đổi trả".
+
+---
+
+Sub-tab 3: Sản phẩm và Kho
+Quản lý danh mục sản phẩm, giá bán, biến thể quy cách và lượng tồn kho thực tế.
+
+Khu vực thẻ chỉ số kho hàng
+- Tổng số sản phẩm đang kinh doanh.
+- Sản phẩm còn hàng.
+- Cảnh báo sắp hết hàng (tồn kho dưới mức an toàn, ví dụ dưới 5 sản phẩm).
+- Sản phẩm đã hết hàng hoặc tạm ngưng bán.
+
+Khu vực bảng danh sách sản phẩm
+- Thanh tìm kiếm theo Tên sản phẩm, Mã SKU hoặc Thương hiệu.
+- Bộ lọc danh mục sản phẩm:
+  + Thức ăn khô.
+  + Thức ăn ướt và Pate.
+  + Bánh thưởng và Snack.
+  + Đồ chơi và Phụ kiện.
+  + Vệ sinh và Chăm sóc.
+  + Thuốc và Dinh dưỡng.
+- Bộ lọc trạng thái: Còn hàng, Sắp hết hàng, Hết hàng, Tạm ngưng kinh doanh.
+- Bảng dữ liệu gồm: Mã SKU, Tên sản phẩm, Danh mục, Thương hiệu, Giá gốc, Giá bán lẻ, Tồn kho thực tế, Trạng thái bán, Thao tác (•••).
+- Hỗ trợ tính năng Điều chỉnh kho nhanh: Cho phép nhân viên kiểm kho cập nhật trực tiếp số lượng tồn thực tế kèm lý do điều chỉnh (Nhập hàng mới, Xuất hủy hư hỏng, Kiểm kê định kỳ).
+- Nút text-only "+ Thêm sản phẩm".
+
+[Nút Text] + Thêm hoặc Chỉnh sửa sản phẩm
+- Form modal hoặc trang chi tiết sản phẩm:
+  + Thông tin cơ bản: Tên sản phẩm, Mã SKU, Danh mục, Thương hiệu, Xuất xứ.
+  + Giá và Thuế: Giá nhập gốc, Giá niêm yết, Giá khuyến mãi.
+  + Cấu hình biến thể (nếu có): Kích cỡ, Khối lượng (túi 500g, 1.5kg, 3kg), Mùi vị.
+  + Quản lý kho: Số lượng tồn kho ban đầu, Ngưỡng cảnh báo sắp hết hàng.
+  + Mô tả chi tiết: Thành phần dinh dưỡng, Hướng dẫn sử dụng, Đối tượng sử dụng (Chó con, Mèo trưởng thành...).
+  + Hình ảnh sản phẩm thực tế.
+  + Trạng thái hiển thị trên Web: Đang bán hoặc Tạm ẩn.
+
+---
+
+Sub-tab 4: Khuyến mãi
+Quản lý các chương trình ưu đãi, mã giảm giá (Voucher) và voucher quy đổi từ điểm Pawpoint.
+
+Bố cục màn hình Khuyến mãi:
+- Thống kê nhanh: Voucher đang chạy, Voucher sắp hết hạn, Lượt đã dùng hôm nay.
+- Bảng danh sách mã giảm giá:
+  + Mã voucher (ví dụ: PAWNEW10, FREESHIP50K).
+  + Tên chương trình ưu đãi.
+  + Loại giảm giá (Giảm theo % đơn hàng hoặc Giảm số tiền cố định VNĐ).
+  + Giá trị giảm và Mức giảm tối đa.
+  + Giá trị đơn hàng tối thiểu để áp dụng.
+  + Số điểm Pawpoint cần quy đổi (nếu là voucher đổi điểm cho khách thân thiết).
+  + Thời hạn áp dụng (Từ ngày - Đến ngày).
+  + Lượt sử dụng (Đã dùng / Tổng số lượng phát hành).
+  + Trạng thái: Đang hoạt động, Hết lượt dùng, Hết hạn, Tạm dừng.
+  + Thao tác (•••): Chỉnh sửa, Tạm dừng, Sao chép mã, Xem lịch sử sử dụng.
+- Nút text-only: "+ Tạo mã khuyến mãi".
+
+---
+
+3. ĐẶC TẢ DỮ LIỆU TỪNG THÀNH PHẦN
+
+Bảng dữ liệu Đơn hàng (sales_order)
+- id: Khóa chính (UUID).
+- order_code: Mã hiển thị thân thiện, định dạng ORD-YYYY-XXXXX (ví dụ: ORD-2026-00128).
+- customer_id: Khóa ngoại liên kết tới bảng customer (Hồ sơ khách hàng).
+- recipient_name: Họ tên người nhận hàng.
+- recipient_phone: Số điện thoại người nhận hàng.
+- shipping_address: Địa chỉ nhận hàng chi tiết.
+- order_status: Trạng thái đơn hàng (PENDING, CONFIRMED, PACKING, SHIPPING, DELIVERED, COMPLETED, CANCELLED, RETURNED).
+- payment_method: Phương thức thanh toán (cod, vnpay, momo, bank_transfer).
+- payment_status: Trạng thái thanh toán (UNPAID, PAID, REFUNDED).
+- shipping_carrier: Tên đơn vị vận chuyển (JT_EXPRESS, GHTK, VIETTEL_POST, INTERNAL).
+- tracking_number: Mã vận đơn giao hàng do hãng vận chuyển cấp.
+- subtotal_amount: Tiền hàng tạm tính (VNĐ).
+- shipping_fee: Phí vận chuyển (VNĐ).
+- discount_amount: Số tiền giảm trừ từ voucher (VNĐ).
+- paw_points_used: Số điểm Pawpoint đã sử dụng.
+- paw_points_discount: Số tiền quy đổi giảm từ điểm (VNĐ).
+- total_amount: Tổng tiền thanh toán cuối cùng (VNĐ).
+- customer_note: Ghi chú của khách hàng khi đặt.
+- internal_note: Ghi chú nội bộ của nhân viên PawPal.
+- created_at: Thời điểm tạo đơn.
+- updated_at: Thời điểm cập nhật trạng thái gần nhất.
+
+Bảng chi tiết đơn hàng (sales_order_detail)
+- id: Khóa chính (UUID).
+- order_id: Khóa ngoại liên kết bảng sales_order.
+- product_id: Khóa ngoại liên kết bảng product.
+- product_name: Tên sản phẩm tại thời điểm mua.
+- sku_code: Mã SKU của sản phẩm hoặc biến thể.
+- unit_price: Đơn giá bán tại thời điểm mua.
+- quantity: Số lượng sản phẩm mua.
+- total_line_amount: Thành tiền của dòng sản phẩm (unit_price * quantity).
+
+Bảng sản phẩm và Tồn kho (product và inventory)
+- id: Khóa chính (UUID).
+- sku: Mã định danh sản phẩm duy nhất.
+- name: Tên sản phẩm.
+- category: Danh mục sản phẩm (thức ăn, đồ chơi, phụ kiện, vệ sinh, dinh dưỡng).
+- brand: Thương hiệu (Royal Canin, Whiskas, Pedigree, Kit Cat...).
+- cost_price: Giá vốn nhập kho.
+- retail_price: Giá bán lẻ niêm yết.
+- stock_quantity: Số lượng tồn kho khả dụng thực tế.
+- safety_stock_threshold: Ngưỡng tồn kho an toàn cảnh báo (mặc định 5).
+- status: Trạng thái kinh doanh (ACTIVE, OUT_OF_STOCK, INACTIVE).
+
+---
+
+4. NGHIỆP VỤ VÀ LUỒNG THAO TÁC
+
+4.1. Luồng tiếp nhận và xác nhận đơn hàng Online
+1. Khách hàng hoàn tất đặt hàng trên Website PawPal.
+2. Hệ thống tạo đơn hàng với trạng thái Chờ xác nhận (PENDING).
+   - Nếu thanh toán COD: Trạng thái thanh toán là Chưa thanh toán (UNPAID).
+   - Nếu thanh toán VNPay/MoMo thành công: Trạng thái thanh toán là Đã thanh toán (PAID).
+3. Đơn hàng xuất hiện ngay trên đầu danh sách Đơn hàng của Admin.
+4. Nhân viên mở Hồ sơ đơn kiểm tra: Danh sách sản phẩm, số lượng tồn kho còn đủ hay không, địa chỉ và thông tin liên hệ.
+5. Nhân viên bấm nút "Xác nhận đơn":
+   - Đơn chuyển trạng thái sang Đang chuẩn bị (CONFIRMED/PACKING).
+   - Hệ thống tự động trừ tạm giữ tồn kho khả dụng của các sản phẩm tương ứng.
+   - Khách hàng nhận được thông báo đơn hàng đã được tiếp nhận và đang đóng gói.
+
+4.2. Luồng đóng gói, xuất kho và bàn giao vận chuyển
+1. Nhân viên kho mở danh sách các đơn Đang chuẩn bị.
+2. Bấm "In phiếu đóng gói" để nhặt hàng trong kho theo đúng SKU và số lượng.
+3. Sau khi đóng gói hoàn tất kiện hàng, nhân viên bấm "Bàn giao vận chuyển".
+4. Hệ thống mở cửa sổ nhập thông tin giao vận:
+   - Chọn Đơn vị vận chuyển (J&T Express, GHTK, Viettel Post hoặc Đội giao tiệm).
+   - Nhập Mã vận đơn bưu cục (Tracking Number).
+5. Sau khi xác nhận bàn giao:
+   - Trạng thái đơn chuyển sang Đang giao (SHIPPING).
+   - Khách hàng có thể theo dõi mã vận đơn và tiến trình giao hàng trên trang User.
+
+4.3. Luồng hoàn tất giao hàng và đối soát thanh toán
+1. Khi bưu tá giao hàng thành công:
+   - Nếu có webhook tích hợp từ hãng vận chuyển hoặc nhân viên cập nhật thủ công: Trạng thái đơn chuyển sang Đã giao (DELIVERED).
+2. Đối với đơn hàng COD (Thu tiền khi nhận hàng):
+   - Thu ngân nhận tiền đối soát từ đơn vị vận chuyển hoặc bưu tá.
+   - Bấm nút "Xác nhận thu tiền COD": Trạng thái thanh toán chuyển thành Đã thanh toán (PAID).
+3. Sau khi đơn được giao thành công và thanh toán hoàn tất:
+   - Trạng thái đơn chuyển thành Hoàn tất (COMPLETED).
+   - Hệ thống tự động kích hoạt tính năng tích điểm Pawpoint tương ứng với giá trị đơn hàng vào tài khoản của khách.
+   - Mở quyền cho User đánh giá chất lượng sản phẩm trên trang cá nhân.
+
+4.4. Luồng hủy đơn hàng và hoàn tồn kho
+1. Trường hợp khách yêu cầu hủy hoặc Admin chủ động hủy:
+   - Chỉ được hủy khi đơn ở trạng thái Chờ xác nhận hoặc Đang chuẩn bị (chưa bàn giao bưu cục).
+   - Nhân viên bấm nút "Hủy đơn" và bắt buộc chọn hoặc nhập Lý do hủy (Khách đổi ý, Hết hàng đột xuất, Không liên lạc được xác nhận...).
+2. Hệ thống chuyển trạng thái đơn sang Đã hủy (CANCELLED):
+   - Toàn bộ số lượng sản phẩm trong đơn được tự động hoàn trả vào kho (stock_quantity).
+   - Nếu đơn đã thanh toán online: Tự động tạo bản ghi chờ hoàn tiền sang bộ phận Kế toán.
+   - Gửi thông báo lý do hủy đến tài khoản khách hàng.
+
+4.5. Cơ chế liên kết chéo giữa các phân hệ (Cross-Module Linking)
+- Bấm vào Họ tên khách hàng trong đơn hàng -> Mở trực tiếp Hồ sơ 360 độ của khách hàng tại phân hệ Khách hàng.
+- Bấm vào Nút "+ Đặt lịch dịch vụ" trên Hồ sơ đơn -> Chuyển sang phân hệ Dịch vụ và điền sẵn thông tin khách.
+- Nếu khách nhận hàng có vấn đề (hàng bể vỡ, sai sản phẩm, thiếu phụ kiện):
+  + Bấm nút "Tạo khiếu nại và Đổi trả" ngay tại Hồ sơ đơn.
+  + Hệ thống chuyển sang phân hệ Khiếu nại (RMA Desk), tự động điền sẵn Mã đơn hàng, Tên khách hàng, Số điện thoại và danh sách sản phẩm cần đổi trả.
+- Nếu đơn hàng đã có yêu cầu đổi trả đang mở:
+  + Dòng đơn hàng trên bảng hiển thị vạch cảnh báo đỏ mép trái và nhãn "Có khiếu nại liên quan".
+  + Bấm vào nhãn để chuyển ngay sang đúng Ticket xử lý bồi thường hoặc đổi hàng.
+
+---
+
+5. CÁC TRẠNG THÁI MÀN HÌNH VÀ XỬ LÝ NGOẠI LỆ
+
+5.1. Các trạng thái màn hình
+- Trạng thái đang tải dữ liệu: Hiển thị Skeleton Loading dạng thanh mảnh mờ nhẹ trên nền bảng trong suốt, không làm giật khung màn hình.
+- Trạng thái danh sách rỗng:
+  + Nếu ngày được chọn chưa có đơn: Hiển thị thông báo "Chưa có đơn hàng nào phát sinh trong khoảng thời gian này".
+  + Nếu kết quả tìm kiếm/lọc không khớp: Hiển thị "Không tìm thấy đơn hàng phù hợp" kèm nút text "Xóa bộ lọc".
+  + Nếu danh mục sản phẩm chưa có mặt hàng nào: Hiển thị "Chưa có sản phẩm trong nhóm này" kèm nút text "+ Thêm sản phẩm".
+- Trạng thái mất kết nối mạng hoặc lỗi máy chủ: Hiển thị thông báo màu xanh xô thơm êm mắt và nút text "Thử lại".
+
+5.2. Xử lý các trường hợp ngoại lệ nghiệp vụ
+1. Sản phẩm trong đơn bị hết hàng tồn thực tế
+   - Khi nhân viên chuẩn bị hàng phát hiện số lượng thực tế trong kho không đủ so với đơn:
+   - Hệ thống hiển thị cảnh báo đỏ "Thiếu hàng tồn kho" ngay trong Hồ sơ đơn.
+   - Cho phép nhân viên: Liên hệ khách đổi sang hương vị/sản phẩm tương đương hoặc tách đơn giao trước phần có sẵn.
+2. Khách hàng yêu cầu hủy đơn khi hàng đã bàn giao vận chuyển
+   - Nếu đơn đã ở trạng thái Đang giao (SHIPPING): Không cho phép nhân viên bấm Hủy đơn trực tiếp.
+   - Hệ thống hướng dẫn nhân viên liên hệ tổng đài hãng vận chuyển để phát lệnh Chuyển hoàn (Return to Sender), sau đó chuyển đơn sang trạng thái Đổi trả/Chuyển hoàn (RETURNED).
+3. Thanh toán trực tuyến nghi vấn lỗi hoặc treo giao dịch
+   - Nếu đơn hàng chọn thanh toán VNPay/MoMo nhưng chưa nhận được phản hồi IPN sau 15 phút:
+   - Đơn được gắn vạch cam cảnh báo "Chờ đối soát thanh toán".
+   - Cung cấp nút text "Kiểm tra trạng thái cổng thanh toán" để nhân viên truy vấn lại trạng thái giao dịch thực tế từ cổng trung gian.
+4. Đơn giao không thành công nhiều lần (Giao thất bại)
+   - Nếu bưu tá báo không liên lạc được với người nhận:
+   - Đơn hiển thị cảnh báo "Giao không thành công lần 1/2".
+   - Nhân viên CSKH PawPal nhìn thấy cảnh báo để chủ động gọi lại cho khách xác minh địa chỉ và thời gian giao lại thuận tiện.
