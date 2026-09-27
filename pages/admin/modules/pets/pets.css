@@ -721,28 +721,48 @@
     }
 }
 
+.workbench-queue-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.queue-column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 2px;
+}
+
 .workbench-queue-list {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-height: 560px;
+    max-height: 580px;
     overflow-y: auto;
 }
 
 .queue-card-item {
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);
-    padding: 12px 14px;
-    background-color: #FAFCFA;
+    padding: 13px 15px;
+    background-color: var(--surface-white);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     cursor: pointer;
     display: flex;
     flex-direction: column;
     gap: 6px;
+    transition: none;
+}
+
+.queue-card-item:hover {
+    border-color: #C3DEC7;
 }
 
 .queue-card-item.active {
     border-color: #236B48;
-    background-color: #F4FAF6;
+    background-color: rgba(244, 250, 246, 0.85);
 }
 
 .queue-card-head {
