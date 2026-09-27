@@ -761,79 +761,78 @@
                 <!-- TAB CON 3: NHẬT KÝ CHĂM SÓC DỊCH VỤ -->
                 <div class="drawer-tab-panel" id="ptab-carelog">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                        <h4 class="detail-box-title" style="margin-bottom: 0;">Lịch sử ca dịch vụ & Ảnh Before / After</h4>
+                        <h4 class="detail-box-title" style="margin-bottom: 0;">Lịch sử ca dịch vụ & Nhật ký Before / After</h4>
                         <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-carelog">
                             <span>+ Thêm nhật ký ca mới</span>
                         </button>
                     </div>
 
-                    <div class="carelog-timeline-list">
-                        <!-- Ca gần nhất -->
-                        <div class="carelog-card">
-                            <div class="carelog-header">
-                                <div>
-                                    <strong style="color: var(--text-heading); font-size: 14px;">Tắm sấy dưỡng ẩm & Cắt mài móng toàn diện</strong>
-                                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Ngày thực hiện: 25/09/2026 14:30 • KTV Groomer: Hoàng Tuấn</div>
-                                </div>
-                                <span class="admin-badge badge-success">Đã gửi app cho chủ</span>
-                            </div>
+                    <div class="table-responsive-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Thời gian</th>
+                                    <th>Dịch vụ & KTV</th>
+                                    <th style="width: 90px; text-align: center;">Ảnh Before / After</th>
+                                    <th>Kiểm tra vệ sinh</th>
+                                    <th>Trạng thái app</th>
+                                    <th style="width: 100px; text-align: right;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <strong>25/09/2026</strong>
+                                        <div style="font-size: 12px; color: var(--text-muted);">14:30</div>
+                                    </td>
+                                    <td>
+                                        <strong style="color: var(--text-heading);">Tắm sấy dưỡng ẩm & Cắt mài móng</strong>
+                                        <div style="font-size: 12px; color: var(--text-muted);">KTV: Hoàng Tuấn • Bàn 2</div>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <div style="display: inline-flex; gap: 4px;">
+                                            <img src="/assets/images/publics/dogcute3.jpg" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="Before" title="Before">
+                                            <img src="/assets/images/publics/dogcute1.jpg" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="After" title="After">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="admin-badge badge-success">4/4 mục đạt chuẩn</span>
+                                    </td>
+                                    <td>
+                                        <span class="admin-badge badge-success">Đã gửi app cho chủ</span>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-view-carelog-modal" data-care-id="CL-001">Xem chi tiết</button>
+                                    </td>
+                                </tr>
 
-                            <div class="carelog-photos-grid">
-                                <div class="photo-box">
-                                    <span class="photo-label">Ảnh trước khi làm (Before):</span>
-                                    <img src="/assets/images/publics/dogcute3.jpg" class="carelog-img-preview" alt="Before">
-                                </div>
-                                <div class="photo-box">
-                                    <span class="photo-label">Ảnh sau khi hoàn thiện (After):</span>
-                                    <img src="/assets/images/publics/dogcute1.jpg" class="carelog-img-preview" alt="After">
-                                </div>
-                            </div>
-
-                            <div>
-                                <div style="font-size: 12.5px; font-weight: 600; color: var(--text-heading); margin-bottom: 6px;">Checklist kiểm tra 4 mục vệ sinh:</div>
-                                <div class="checklist-pills-row">
-                                    <span class="check-pill">Tai sạch sẽ</span>
-                                    <span class="check-pill">Móng mài nhẵn</span>
-                                    <span class="check-pill">Tuyến hôi sạch</span>
-                                    <span class="check-pill">Da lông thông thoáng</span>
-                                </div>
-                            </div>
-
-                            <div style="font-size: 13px; color: var(--text-main); background: #FFFFFF; padding: 10px 12px; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);">
-                                <strong>Dặn dò chủ nuôi:</strong> Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, không thấy dấu hiệu mủ viêm.
-                            </div>
-                        </div>
-
-                        <!-- Ca trước đó -->
-                        <div class="carelog-card">
-                            <div class="carelog-header">
-                                <div>
-                                    <strong style="color: var(--text-heading); font-size: 14px;">Cắt tỉa tạo kiểu Corgi mặt gấu bông</strong>
-                                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Ngày thực hiện: 10/08/2026 10:00 • KTV Groomer: Đỗ Hương</div>
-                                </div>
-                                <span class="admin-badge badge-neutral">Đã lưu trữ</span>
-                            </div>
-
-                            <div class="carelog-photos-grid">
-                                <div class="photo-box">
-                                    <span class="photo-label">Ảnh trước khi làm (Before):</span>
-                                    <img src="/assets/images/publics/dogcute7.jpg" class="carelog-img-preview" alt="Before">
-                                </div>
-                                <div class="photo-box">
-                                    <span class="photo-label">Ảnh sau khi hoàn thiện (After):</span>
-                                    <img src="/assets/images/publics/dogcute3.jpg" class="carelog-img-preview" alt="After">
-                                </div>
-                            </div>
-
-                            <div>
-                                <div class="checklist-pills-row">
-                                    <span class="check-pill">Tai sạch sẽ</span>
-                                    <span class="check-pill">Móng mài nhẵn</span>
-                                    <span class="check-pill">Tuyến hôi sạch</span>
-                                    <span class="check-pill">Không có ve rận</span>
-                                </div>
-                            </div>
-                        </div>
+                                <tr>
+                                    <td>
+                                        <strong>10/08/2026</strong>
+                                        <div style="font-size: 12px; color: var(--text-muted);">10:00</div>
+                                    </td>
+                                    <td>
+                                        <strong style="color: var(--text-heading);">Cắt tỉa tạo kiểu Corgi mặt gấu</strong>
+                                        <div style="font-size: 12px; color: var(--text-muted);">KTV: Đỗ Hương • Bàn 1</div>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <div style="display: inline-flex; gap: 4px;">
+                                            <img src="/assets/images/publics/dogcute7.jpg" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="Before" title="Before">
+                                            <img src="/assets/images/publics/dogcute3.jpg" style="width: 32px; height: 32px; border-radius: var(--admin-radius); object-fit: cover; border: 1px solid var(--border-neutral);" alt="After" title="After">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="admin-badge badge-success">4/4 mục đạt chuẩn</span>
+                                    </td>
+                                    <td>
+                                        <span class="admin-badge badge-neutral">Đã lưu trữ</span>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <button type="button" class="admin-btn admin-btn-secondary btn-sm btn-view-carelog-modal" data-care-id="CL-002">Xem chi tiết</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -1379,6 +1378,62 @@
                     <button type="submit" class="admin-btn admin-btn-primary" id="btnSubmitSendReminder">Gửi tin nhắn ngay</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 4: CHI TIẾT NHẬT KÝ CHĂM SÓC (BEFORE / AFTER & CHECKLIST)
+         ==================================================================== -->
+    <div class="admin-modal-backdrop" id="modalViewCareLogDetail">
+        <div class="admin-modal-card">
+            <div class="admin-modal-header">
+                <span class="admin-modal-title" id="carelogModalTitle">Chi tiết ca làm: Tắm sấy dưỡng ẩm & Cắt mài móng</span>
+                <button type="button" class="btn-modal-close" data-close-modal="modalViewCareLogDetail">Đóng</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div style="font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-neutral); padding-bottom: 8px;">
+                    <div>
+                        <span id="carelogModalTime">Thời gian: 25/09/2026 14:30</span> • <span id="carelogModalGroomer">KTV: Hoàng Tuấn</span>
+                    </div>
+                    <span class="admin-badge badge-success" id="carelogModalBadge">Đã gửi app cho chủ</span>
+                </div>
+
+                <div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px;">Ảnh thực tế ca làm việc:</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Trước khi làm (Before):</span>
+                            <img src="/assets/images/publics/dogcute3.jpg" id="carelogModalImgBefore" style="width: 100%; height: 160px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);" alt="Before">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Sau khi hoàn thiện (After):</span>
+                            <img src="/assets/images/publics/dogcute1.jpg" id="carelogModalImgAfter" style="width: 100%; height: 160px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral);" alt="After">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 8px;">Kết quả kiểm tra 4 mục vệ sinh:</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12.5px;">
+                        <div style="padding: 8px 10px; border-radius: var(--admin-radius); background-color: #F4FAF6; border: 1px solid #C3DEC7; color: #15803D; font-weight: 600;">✓ 1. Tai sạch sẽ, không viêm</div>
+                        <div style="padding: 8px 10px; border-radius: var(--admin-radius); background-color: #F4FAF6; border: 1px solid #C3DEC7; color: #15803D; font-weight: 600;">✓ 2. Móng mài tròn nhẵn</div>
+                        <div style="padding: 8px 10px; border-radius: var(--admin-radius); background-color: #F4FAF6; border: 1px solid #C3DEC7; color: #15803D; font-weight: 600;">✓ 3. Tuyến hôi sạch sẽ</div>
+                        <div style="padding: 8px 10px; border-radius: var(--admin-radius); background-color: #F4FAF6; border: 1px solid #C3DEC7; color: #15803D; font-weight: 600;">✓ 4. Da lông thông thoáng</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 6px;">Lời dặn dò gửi chủ nuôi:</div>
+                    <div id="carelogModalMessage" style="font-size: 13px; color: var(--text-main); background: #FAFCFA; padding: 10px 14px; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral); line-height: 1.5;">
+                        Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.
+                    </div>
+                </div>
+
+                <div class="modal-actions-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalViewCareLogDetail">Đóng</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -554,7 +554,49 @@
             });
         });
 
-        // 10. Sub-tab 4: Nhật ký chăm sóc (Bàn làm việc Groomer & Hotel)
+        // 10. Modal Xem chi tiết nhật ký chăm sóc
+        const modalViewCareLogDetail = document.getElementById('modalViewCareLogDetail');
+        document.addEventListener('click', (e) => {
+            const btnViewCarelog = e.target.closest('.btn-view-carelog-modal');
+            if (btnViewCarelog && modalViewCareLogDetail) {
+                const careId = btnViewCarelog.getAttribute('data-care-id');
+                const titleEl = document.getElementById('carelogModalTitle');
+                const timeEl = document.getElementById('carelogModalTime');
+                const groomerEl = document.getElementById('carelogModalGroomer');
+                const badgeEl = document.getElementById('carelogModalBadge');
+                const imgBeforeEl = document.getElementById('carelogModalImgBefore');
+                const imgAfterEl = document.getElementById('carelogModalImgAfter');
+                const msgEl = document.getElementById('carelogModalMessage');
+
+                if (careId === 'CL-002') {
+                    if (titleEl) titleEl.textContent = 'Chi tiết ca làm: Cắt tỉa tạo kiểu Corgi mặt gấu';
+                    if (timeEl) timeEl.textContent = 'Thời gian: 10/08/2026 10:00';
+                    if (groomerEl) groomerEl.textContent = 'KTV: Đỗ Hương • Bàn 1';
+                    if (badgeEl) {
+                        badgeEl.textContent = 'Đã lưu trữ';
+                        badgeEl.className = 'admin-badge badge-neutral';
+                    }
+                    if (imgBeforeEl) imgBeforeEl.src = '/assets/images/publics/dogcute7.jpg';
+                    if (imgAfterEl) imgAfterEl.src = '/assets/images/publics/dogcute3.jpg';
+                    if (msgEl) msgEl.textContent = 'Bé rất hợp tác trong ca làm, form lông cắt tỉa tròn trịa đáng yêu, tai và móng đã vệ sinh nhẵn bóng.';
+                } else {
+                    if (titleEl) titleEl.textContent = 'Chi tiết ca làm: Tắm sấy dưỡng ẩm & Cắt mài móng';
+                    if (timeEl) timeEl.textContent = 'Thời gian: 25/09/2026 14:30';
+                    if (groomerEl) groomerEl.textContent = 'KTV: Hoàng Tuấn • Bàn 2';
+                    if (badgeEl) {
+                        badgeEl.textContent = 'Đã gửi app cho chủ';
+                        badgeEl.className = 'admin-badge badge-success';
+                    }
+                    if (imgBeforeEl) imgBeforeEl.src = '/assets/images/publics/dogcute3.jpg';
+                    if (imgAfterEl) imgAfterEl.src = '/assets/images/publics/dogcute1.jpg';
+                    if (msgEl) msgEl.textContent = 'Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.';
+                }
+
+                modalViewCareLogDetail.classList.add('open');
+            }
+        });
+
+        // 11. Sub-tab 4: Nhật ký chăm sóc (Bàn làm việc Groomer & Hotel)
         const queueItems = document.querySelectorAll('.queue-card-item');
         const wbFormTitle = document.getElementById('wbFormTitle');
         const wbStatusBadge = document.getElementById('wbStatusBadge');
