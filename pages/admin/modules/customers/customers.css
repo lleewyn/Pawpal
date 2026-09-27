@@ -53,6 +53,8 @@
     background-color: var(--surface-white);
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .kpi-label {
@@ -87,6 +89,8 @@
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);
     overflow: hidden;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .table-toolbar-section {
@@ -94,7 +98,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    background-color: var(--surface-white);
+    background-color: transparent;
     border-bottom: 1px solid var(--border-neutral);
 }
 
@@ -165,7 +169,7 @@
    ========================================================================== */
 .table-responsive-wrapper {
     overflow-x: auto;
-    background-color: var(--surface-white);
+    background-color: transparent;
 }
 
 .admin-table {
@@ -173,6 +177,12 @@
     border-collapse: collapse;
     font-size: 13.5px;
     text-align: left;
+    background-color: transparent;
+}
+
+.admin-table tbody,
+.admin-table tbody tr {
+    background-color: transparent;
 }
 
 .admin-table th {
@@ -191,10 +201,11 @@
 
 .admin-table td {
     padding: 13px 18px;
-    border-bottom: 1px solid #F0F4F2;
+    border-bottom: 1px solid var(--border-neutral);
     color: var(--text-main);
     vertical-align: middle;
     white-space: nowrap;
+    background-color: transparent;
 }
 
 .admin-table td:first-child {
@@ -419,6 +430,8 @@
     background-color: var(--surface-white);
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .profile-quick-actions-bar {

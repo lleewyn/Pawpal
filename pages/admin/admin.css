@@ -26,11 +26,11 @@
 
     /* Bảng màu không gian làm việc chính (Tone Xanh Thương Hiệu Forest Palette Rõ Nét) */
     --canvas-bg: #EDF4F0;             /* Nền xanh nhạt dịu mát (Sage Light) */
-    --surface-white: #FFFFFF;         /* Nền bảng dữ liệu và thẻ */
+    --surface-white: rgba(255, 255, 255, 0.70); /* Nền bảng dữ liệu và thẻ có độ trong suốt rõ nét, hòa quyện canvas */
     --border-neutral: #ECF2EE;        /* Viền cực kỳ nhẹ và thanh mảnh, tối giản cảm giác đóng khung */
     --text-heading: #236B48;          /* Xanh rừng thương hiệu nổi bật: Tiêu đề khối, tiêu đề modal, tên hồ sơ */
     --table-header-text: #236B48;     /* Xanh thông rõ nét: Tiêu đề cột bảng dữ liệu (th), nhãn bộ lọc */
-    --table-header-bg: #EEF5F1;       /* Nền xanh xô thơm nhẹ cho tiêu đề bảng */
+    --table-header-bg: rgba(238, 245, 241, 0.75); /* Nền xanh xô thơm nhẹ trong suốt cho tiêu đề bảng */
     --text-main: #203A2C;             /* Xanh than sẫm: Chữ chính, số liệu lớn, họ tên, mã ID */
     --text-muted: #4F7A65;            /* Xanh xô thơm nhẹ: Chữ phụ, email, chú thích, nhãn KPI */
     --subtab-active-color: #236B48;   /* Màu xanh subtab đang chọn */
@@ -238,6 +238,8 @@ body.admin-body {
     align-items: center;
     justify-content: space-between;
     padding: 0 24px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .admin-header-left {
@@ -513,6 +515,8 @@ textarea.admin-input,
     background-color: var(--surface-white);
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .admin-card-header {

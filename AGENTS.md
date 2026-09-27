@@ -7,8 +7,11 @@
 
 * **Bo góc cố định 9px**:
   - Toàn bộ các phần tử: Khung thẻ (`.admin-card`), ô nhập liệu (`.admin-input`, `.admin-select`), nút bấm (`.admin-btn`), modal, popover dropdown... đều dùng `--admin-radius: 9px;`.
-* **100% Màu phẳng Solid**:
+* **100% Màu phẳng Solid & Nền bán trong suốt Frosted Glass (Translucent Surface)**:
   - Tuyệt đối không dùng gradient ở bất kỳ vị trí nào trong Admin.
+  - Các khối thẻ chính (`.admin-card`, `.customer-master-card`, `.kpi-card`), Drawer hồ sơ (`.profile-drawer-container`) và Header (`.admin-header`) sử dụng màu trắng bán trong suốt `--surface-white: rgba(255, 255, 255, 0.70);` kết hợp `backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);` tạo vẻ đẹp thanh thoát, cao cấp và dịu mắt.
+  - **Triệt tiêu hoàn toàn lớp nền lồng nhau (Anti-Opacity Stacking)**: Các thành phần bên trong bảng dữ liệu (`.table-responsive-wrapper`, `.admin-table`, `tbody`, `tr`, `td`) BẮT BUỘC để `background-color: transparent;` để tránh hiện tượng xếp lớp opacity làm đục màu bảng.
+  - Nền tiêu đề bảng dùng `--table-header-bg: rgba(238, 245, 241, 0.75);`.
 * **Tĩnh hoàn toàn - Triệt tiêu Hover rung giật**:
   - Không hiệu ứng transform phóng to/thu nhỏ, không nhảy giật (`transform: none !important;`).
 * **Độ đậm viền tối giản (Ultra-Subtle Borders)**:

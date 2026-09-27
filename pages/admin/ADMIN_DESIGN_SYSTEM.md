@@ -5,7 +5,11 @@
 
 ## 1. HÌNH KHỐI, BỀ MẶT VÀ BỐ CỤC (LAYOUT & SURFACES)
 1. **Bo góc**: Cố định `9px` (`--admin-radius: 9px;`).
-2. **Màu sắc**: 100% màu phẳng Solid, tuyệt đối không dùng gradient.
+2. **Màu sắc & Bề mặt (Translucent Frosted Glass)**: 
+   - 100% màu phẳng Solid, tuyệt đối không dùng gradient.
+   - Nền khối thẻ chính (`.admin-card`, `.customer-master-card`, `.kpi-card`), Drawer hồ sơ (`.profile-drawer-container`) và Header (`.admin-header`) sử dụng màu trắng bán trong suốt `--surface-white: rgba(255, 255, 255, 0.70);` kết hợp `backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);` tạo vẻ đẹp thanh thoát, cao cấp và dịu mắt.
+   - **Triệt tiêu hoàn toàn lớp nền lồng nhau (Anti-Opacity Stacking)**: Các thành phần bên trong bảng dữ liệu (`.table-responsive-wrapper`, `.admin-table`, `tbody`, `tr`, `td`) BẮT BUỘC để `background-color: transparent;` để tránh hiện tượng xếp lớp opacity làm đục màu bảng.
+   - Nền tiêu đề bảng dùng `--table-header-bg: rgba(238, 245, 241, 0.75);`.
 3. **Hiệu ứng**: Tĩnh hoàn toàn, không hiệu ứng nhảy giật hover, không zoom `transform`.
 4. **Độ đậm viền**: Viền khung, thẻ, bảng, ô nhập liệu dùng màu siêu mảnh nhẹ: `--border-neutral: #ECF2EE;`.
 5. **Gom khối thống nhất**: Bộ lọc Toolbar và Bảng danh sách hợp nhất vào chung 1 khối `.customer-master-card`, không xé lẻ thành các hộp rời rạc.
@@ -32,7 +36,7 @@
 2. **Trạng thái Active**: In đậm `font-weight: 700;` với màu xanh thương hiệu `#236B48`. Inactive dùng màu xanh xô thơm nhẹ `#4F7A65`.
 3. **Độ dài tên**: Tối ưu ngắn gọn, súc tích (ví dụ: `Pawpoint` thay vì tên dài).
 4. **Tiêu đề phân hệ**: Ẩn khi có subtabs để tránh lặp từ.
-5. **Breadcrumb**: Khi xem chi tiết đối tượng, tự động nối thêm `/ Chi tiết (Tên đối tượng)`.
+5. **Breadcrumb**: Khi xem chi tiết đối tượng, tự động nối thêm đường dẫn tinh gọn: `/ [Tên đối tượng]` (bỏ chữ "Chi tiết", bỏ ngoặc tròn, màu xanh xô thơm mờ nhẹ `#4F7A65`, font-size 13px).
 
 ---
 
