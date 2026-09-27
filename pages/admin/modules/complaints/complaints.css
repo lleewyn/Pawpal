@@ -275,10 +275,11 @@
     padding: 10px 0;
     background-color: transparent;
     border: none;
-    color: var(--text-main);
+    color: #B45309;
     font-size: 14.5px;
     line-height: 1.6;
     font-style: italic;
+    font-weight: 500;
 }
 
 .evidence-photos-list {

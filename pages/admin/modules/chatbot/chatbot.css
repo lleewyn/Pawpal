@@ -1,0 +1,620 @@
+/* ====================================================================
+   MODULE CHATBOT & TRỰC CHAT CSKH - TUÂN THỦ 100% AGENTS.MD
+   ==================================================================== */
+
+.chatbot-module-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+.chatbot-module-wrapper .subtab-content {
+    display: none;
+    height: 100%;
+    width: 100%;
+}
+
+.chatbot-module-wrapper .subtab-content.active {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+/* --------------------------------------------------------------------
+   SUB-TAB 1: TRỢ LÝ AI COPILOT
+   -------------------------------------------------------------------- */
+.copilot-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px);
+    padding: 24px;
+    gap: 16px;
+    background-color: var(--surface-white);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    box-sizing: border-box;
+}
+
+.copilot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-neutral);
+}
+
+.copilot-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.copilot-quick-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.copilot-messages-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-right: 8px;
+}
+
+.copilot-msg {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 80%;
+}
+
+.copilot-msg.msg-ai {
+    align-self: flex-start;
+}
+
+.copilot-msg.msg-user {
+    align-self: flex-end;
+}
+
+.copilot-msg-header {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.copilot-msg.msg-user .copilot-msg-header {
+    justify-content: flex-end;
+}
+
+.copilot-sender-name {
+    font-weight: 600;
+    color: var(--text-heading);
+}
+
+.copilot-msg.msg-user .copilot-sender-name {
+    color: #236B48;
+}
+
+.copilot-msg-bubble {
+    padding: 14px 18px;
+    border-radius: var(--admin-radius);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-main);
+    word-break: break-word;
+}
+
+.copilot-msg.msg-ai .copilot-msg-bubble {
+    background-color: #F8FAF9;
+    border: 1px solid var(--border-neutral);
+}
+
+.copilot-msg.msg-user .copilot-msg-bubble {
+    background-color: #EEF5F1;
+    color: var(--text-main);
+    border: 1px solid #D6E8DC;
+}
+
+.copilot-prompt-suggestions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 8px;
+}
+
+.prompt-pill-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.copilot-pill-btn {
+    background-color: transparent;
+    border: 1px solid #D6E8DC;
+    color: #236B48;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: var(--admin-radius);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.copilot-pill-btn:hover {
+    background-color: #EEF5F1;
+    border-color: #C3DEC7;
+}
+
+.copilot-input-area {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.copilot-textarea {
+    flex: 1;
+    resize: none;
+    font-size: 13.5px;
+    line-height: 1.5;
+    padding: 12px 14px;
+}
+
+.btn-send-copilot {
+    height: 44px;
+    white-space: nowrap;
+    padding: 0 20px;
+}
+
+/* --------------------------------------------------------------------
+   SUB-TAB 2: TRỰC CHAT CSKH - HỘP THƯ 3 KHU VỰC
+   -------------------------------------------------------------------- */
+.live-support-container {
+    display: grid;
+    grid-template-columns: 310px 1fr 340px;
+    gap: 16px;
+    height: calc(100vh - 120px);
+    box-sizing: border-box;
+}
+
+@media (max-width: 1400px) {
+    .live-support-container {
+        grid-template-columns: 280px 1fr 300px;
+    }
+}
+
+/* CỘT 1: DANH SÁCH HỘI THOẠI */
+.inbox-conversations-col {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 12px;
+    overflow: hidden;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.inbox-search-box input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.inbox-filter-tabs {
+    display: flex;
+    gap: 6px;
+    border-bottom: 1px solid var(--border-neutral);
+    padding-bottom: 8px;
+}
+
+.inbox-tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    padding: 6px 4px;
+    cursor: pointer;
+    font-family: inherit;
+    border-radius: var(--admin-radius);
+    text-align: center;
+    position: relative;
+    transition: color 0.15s, background-color 0.15s;
+}
+
+.inbox-tab-btn:hover {
+    background-color: #EEF5F1;
+}
+
+.inbox-tab-btn.active {
+    font-weight: 700;
+    color: #236B48;
+    background-color: #EEF5F1;
+}
+
+.badge-urgent-count {
+    display: inline-block;
+    color: #DC2626;
+    background-color: #FEE2E2;
+    padding: 1px 6px;
+    border-radius: 9px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 2px;
+}
+
+.conversations-scroll-list {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 4px;
+}
+
+.conversation-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    border-radius: var(--admin-radius);
+    cursor: pointer;
+    background-color: transparent;
+    border: 1px solid var(--border-neutral);
+    transition: background-color 0.15s;
+}
+
+.conversation-item:hover {
+    background-color: rgba(238, 245, 241, 0.45);
+}
+
+.conversation-item.active {
+    background-color: #F4FAF6;
+    border-color: #C3DEC7;
+}
+
+.conversation-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.conv-cust-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.conv-time {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.conversation-item-mid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.conv-snippet {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 220px;
+}
+
+.conversation-item-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2px;
+}
+
+/* CỘT 2: KHUNG CHAT TRỰC TIẾP */
+.inbox-chat-col {
+    display: flex;
+    flex-direction: column;
+    padding: 18px 22px;
+    gap: 12px;
+    height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.chat-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-neutral);
+}
+
+.chat-header-user-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.chat-target-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+.chat-target-phone {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.chat-header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* THẺ TÓM TẮT NGỮ CẢNH AI (3 GIÂY) */
+.ai-context-summary-card {
+    padding: 12px 16px;
+    background-color: #FEF8ED;
+    border: 1px solid #FDE6C1;
+    border-radius: var(--admin-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.summary-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.summary-title-text {
+    font-size: 12px;
+    font-weight: 700;
+    color: #B45309;
+    text-transform: none;
+}
+
+.summary-tag {
+    font-size: 11px;
+    background-color: #FDEEB0;
+    color: #92400E;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.summary-body-text {
+    font-size: 13px;
+    color: #78350F;
+    line-height: 1.5;
+}
+
+/* DÒNG THỜI GIAN TIN NHẮN */
+.chat-timeline-messages {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 6px;
+}
+
+.chat-bubble-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 72%;
+}
+
+.chat-bubble-wrap.sender-user {
+    align-self: flex-start;
+}
+
+.chat-bubble-wrap.sender-bot {
+    align-self: flex-start;
+}
+
+.chat-bubble-wrap.sender-agent {
+    align-self: flex-end;
+}
+
+.chat-bubble-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.chat-bubble-wrap.sender-agent .chat-bubble-meta {
+    justify-content: flex-end;
+}
+
+.chat-bubble {
+    padding: 12px 16px;
+    border-radius: var(--admin-radius);
+    font-size: 13.5px;
+    line-height: 1.55;
+    word-break: break-word;
+}
+
+/* 1. KHÁCH HÀNG: Nền xanh biển nhạt dịu mắt, viền xanh nhạt, chữ xanh than sẫm */
+.chat-bubble-wrap.sender-user .chat-bubble {
+    background-color: #F0F7FF;
+    border: 1px solid #D0E3F8;
+    color: #1E3A5F;
+}
+
+.chat-bubble-wrap.sender-user .chat-bubble-meta span strong {
+    color: #1D4ED8;
+}
+
+/* 2. PAWPAL BOT: Nền xám ấm thanh lịch, viền phân cách xám nhạt, có nhãn Bot */
+.chat-bubble-wrap.sender-bot .chat-bubble {
+    background-color: #F8FAF9;
+    border: 1px solid #E2EAE5;
+    color: #2D3748;
+}
+
+.chat-bubble-wrap.sender-bot .chat-bubble-meta span strong {
+    color: #4A5568;
+}
+
+/* 3. NHÂN VIÊN CSKH: Nền xanh lá thương hiệu PawPal nhạt, viền xanh lá, căn mép phải */
+.chat-bubble-wrap.sender-agent .chat-bubble {
+    background-color: #EDF7F1;
+    border: 1px solid #C5E3D2;
+    color: #17422C;
+}
+
+.chat-bubble-wrap.sender-agent .chat-bubble-meta span strong {
+    color: #236B48;
+}
+
+/* MÀNG LỌC BẢO VỆ TÂM LÝ NHÂN VIÊN */
+.masked-toxic-content {
+    font-style: italic;
+    color: #DC2626;
+    background-color: #FEE2E2;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    display: inline-block;
+}
+
+/* TIN NHẮN NHANH (MACROS) */
+.chat-quick-templates {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.quick-reply-pill {
+    background: transparent;
+    border: 1px solid #D6E8DC;
+    color: #236B48;
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: var(--admin-radius);
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: background-color 0.15s;
+}
+
+.quick-reply-pill:hover {
+    background-color: #EEF5F1;
+}
+
+/* KHUNG SOẠN THẢO VÀ GỬI */
+.chat-composer-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chat-composer-textarea {
+    resize: none;
+    font-size: 13.5px;
+    line-height: 1.4;
+    padding: 10px 12px;
+}
+
+.chat-composer-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.composer-mode-status {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* CỘT 3: BẢNG THÔNG TIN KHÁCH HÀNG */
+.inbox-customer-info-col {
+    display: flex;
+    flex-direction: column;
+    padding: 18px 20px;
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    box-sizing: border-box;
+}
+
+.customer-info-header {
+    margin-bottom: 12px;
+}
+
+.customer-profile-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-neutral);
+}
+
+.profile-name-tier {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.profile-full-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+.pet-mini-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pet-mini-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-main);
+}
+
+.pet-mini-name {
+    font-weight: 600;
+}
+
+.recent-transaction-box, .open-tickets-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+}
+
+/* PRESET BUTTONS CHO TẶNG ĐIỂM */
+.points-preset-row {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-preset-point.active {
+    background-color: #236B48;
+    color: #FFFFFF;
+    border-color: #236B48;
+}

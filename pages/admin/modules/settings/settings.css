@@ -1,0 +1,501 @@
+/* ====================================================================
+   MODULE CẤU HÌNH HỆ THỐNG (PAWPAL ADMIN) - TUÂN THỦ 100% AGENTS.MD
+   ==================================================================== */
+
+.settings-module-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 16px;
+    padding-bottom: 24px;
+}
+
+.settings-module-wrapper .subtab-content {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    gap: 16px;
+}
+
+.settings-module-wrapper .subtab-content.active {
+    display: flex;
+}
+
+/* ==========================================================================
+   5 THẺ THỐNG KÊ KPI NHANH (NỀN TRẮNG ĐỒNG NHẤT KHỐI BẢNG)
+   ========================================================================== */
+.settings-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+
+@media (max-width: 1200px) {
+    .settings-kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .settings-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.kpi-card {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 14px 18px;
+    background-color: var(--surface-white);
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.kpi-label {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.kpi-val {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-heading);
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+}
+
+.text-success { color: #15803D !important; }
+.text-warning { color: #B45309 !important; }
+.text-danger  { color: #DC2626 !important; }
+.text-neutral { color: #64748B !important; }
+
+/* ==========================================================================
+   MASTER CARD: GOM BỘ LỌC + BẢNG THÀNH 1 KHỐI DUY NHẤT
+   ========================================================================== */
+.settings-master-card {
+    background-color: var(--surface-white);
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+}
+
+.table-toolbar-section {
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background-color: transparent;
+    border-bottom: 1px solid var(--border-neutral);
+}
+
+.filter-row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.search-box-wrapper {
+    position: relative;
+    flex: 1;
+    max-width: 440px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0 14px !important;
+    height: 38px;
+}
+
+.filter-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-row-bottom {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-top: 10px;
+    border-top: 1px solid #F1F5F3;
+}
+
+.filter-dropdown-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-label {
+    font-size: 13px;
+    color: var(--table-header-text);
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   BẢNG DỮ LIỆU CHUẨN AGENTS.MD
+   ========================================================================== */
+.admin-table th:first-child {
+    border-left: 3px solid var(--table-header-bg);
+}
+
+.admin-table td:first-child {
+    border-left: 3px solid transparent;
+}
+
+/* ==========================================================================
+   THANH PHÂN TRANG CĂN GIỮA & NỀN TRONG SUỐT (NGOÀI BẢNG)
+   ========================================================================== */
+.admin-pagination-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2px 0;
+    margin-top: -6px;
+    background-color: transparent !important;
+    border: none !important;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pagination-btn {
+    min-width: 30px;
+    height: 30px;
+    padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    background-color: transparent;
+    color: var(--text-muted);
+    border-radius: var(--admin-radius);
+    cursor: pointer;
+    transition: none;
+}
+
+.pagination-btn:hover:not(.disabled):not(.active) {
+    color: var(--admin-primary);
+    background-color: rgba(35, 107, 72, 0.08);
+}
+
+.pagination-btn.active {
+    background-color: var(--admin-primary);
+    color: #FFFFFF;
+    border-color: var(--admin-primary);
+    font-weight: 700;
+}
+
+.pagination-btn.disabled {
+    color: #AEC8B9;
+    border-color: transparent;
+    background-color: transparent;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* ==========================================================================
+   THANH TAB CON ĐIỀU HƯỚNG (ĐƯỜNG KẺ NGANG CHỈ DÀI BẰNG CHỮ THEO AGENTS.MD)
+   ========================================================================== */
+.settings-subtabs-bar {
+    display: inline-flex;
+    width: fit-content;
+    gap: 24px;
+    border-bottom: none;
+    padding: 6px 0 2px 0;
+    overflow: visible;
+}
+
+.settings-tab-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 2px 8px 2px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: none;
+}
+
+.settings-tab-btn:hover:not(.active) {
+    color: var(--admin-primary);
+}
+
+.settings-tab-btn.active {
+    background-color: transparent;
+    color: var(--admin-primary);
+    border-bottom: 2px solid var(--admin-primary);
+    font-weight: 700;
+}
+
+/* NỘI DUNG TỪNG TAB PANEL */
+.settings-tab-panel {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    gap: 16px;
+}
+
+.settings-tab-panel.active {
+    display: flex;
+}
+
+/* CARD KHỐI CHỨC NĂNG PHỤ */
+.settings-section-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    background-color: var(--surface-white);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+}
+
+.settings-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.voucher-filter-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* GRID BANNER CARDS */
+.banner-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.banner-item-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    border-radius: var(--admin-radius);
+    border: 1px solid var(--border-neutral);
+    background-color: transparent;
+    transition: background-color 0.15s;
+}
+
+.banner-item-card:hover {
+    background-color: rgba(238, 245, 241, 0.4);
+}
+
+.banner-preview-img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: var(--admin-radius);
+    background-color: #EEF5F1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.banner-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.banner-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.banner-card-meta {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.banner-card-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-neutral);
+}
+
+/* CỘT 2 BÊN: PAWPOINTS VÀ THÔNG BÁO */
+.settings-two-col-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 1100px) {
+    .settings-two-col-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pawpoints-summary-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.notification-row-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    gap: 10px;
+}
+
+.notice-content-text {
+    font-size: 13px;
+    color: var(--text-main);
+    flex: 1;
+}
+
+/* SUB-TAB 3: CẤU HÌNH HỆ THỐNG CARDS */
+.system-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 1100px) {
+    .system-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.system-module-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 22px;
+    gap: 16px;
+}
+
+.system-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.system-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+.system-card-desc {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.system-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.method-toggle-row, .partner-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13.5px;
+    color: var(--text-main);
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--border-neutral);
+}
+
+.method-toggle-row:last-child, .partner-status-row:last-child {
+    border-bottom: none;
+}
+
+.system-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-neutral);
+}
+
+/* PREVIEW BÀI VIẾT THUMBNAIL */
+.article-thumb-img {
+    width: 50px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: var(--admin-radius);
+    background-color: #EEF5F1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+/* NÚT THAO TÁC 3 CHẤM BẢNG DỮ LIỆU */
+.btn-action-trigger {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--admin-radius);
+    color: var(--text-muted);
+    cursor: pointer;
+    outline: none;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    line-height: 1;
+    transition: none !important;
+}
+
+.btn-action-trigger:hover {
+    background-color: #EDF4F0;
+    border-color: var(--border-neutral);
+    color: var(--text-main);
+}
+

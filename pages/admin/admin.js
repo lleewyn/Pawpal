@@ -194,6 +194,70 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Không thể load modules/complaints/complaints.html:', err);
             }
         }
+
+        if (moduleName === 'Chatbot') {
+            if (moduleTitleEl) {
+                moduleTitleEl.textContent = '';
+                moduleTitleEl.style.display = 'none';
+            }
+            if (subtabsContainer) subtabsContainer.innerHTML = '';
+            if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
+            
+            try {
+                const res = await fetch('modules/chatbot/chatbot.html?v=' + Date.now());
+                if (res.ok) {
+                    const html = await res.text();
+                    contentArea.innerHTML = html;
+                    
+                    // Khởi tạo Lucide
+                    if (window.lucide) lucide.createIcons();
+
+                    // Tải và chạy script tương tác của module Chatbot
+                    const oldScript = document.getElementById('dynamic-module-script');
+                    if (oldScript) oldScript.remove();
+
+                    const script = document.createElement('script');
+                    script.id = 'dynamic-module-script';
+                    script.src = 'modules/chatbot/chatbot.js?v=' + Date.now();
+                    document.body.appendChild(script);
+                    return;
+                }
+            } catch (err) {
+                console.error('Không thể load modules/chatbot/chatbot.html:', err);
+            }
+        }
+
+        if (moduleName === 'Cấu hình') {
+            if (moduleTitleEl) {
+                moduleTitleEl.textContent = '';
+                moduleTitleEl.style.display = 'none';
+            }
+            if (subtabsContainer) subtabsContainer.innerHTML = '';
+            if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
+            
+            try {
+                const res = await fetch('modules/settings/settings.html?v=' + Date.now());
+                if (res.ok) {
+                    const html = await res.text();
+                    contentArea.innerHTML = html;
+                    
+                    // Khởi tạo Lucide
+                    if (window.lucide) lucide.createIcons();
+
+                    // Tải và chạy script tương tác của module Cấu hình
+                    const oldScript = document.getElementById('dynamic-module-script');
+                    if (oldScript) oldScript.remove();
+
+                    const script = document.createElement('script');
+                    script.id = 'dynamic-module-script';
+                    script.src = 'modules/settings/settings.js?v=' + Date.now();
+                    document.body.appendChild(script);
+                    return;
+                }
+            } catch (err) {
+                console.error('Không thể load modules/settings/settings.html:', err);
+            }
+        }
         if (moduleTitleEl) {
             moduleTitleEl.textContent = moduleName;
             moduleTitleEl.style.display = 'inline-block';
@@ -232,6 +296,10 @@ document.addEventListener('DOMContentLoaded', () => {
         initialModule = 'Nhân sự';
     } else if (currentHash.startsWith('#tab-complaint')) {
         initialModule = 'Khiếu nại';
+    } else if (currentHash.startsWith('#tab-chatbot') || currentHash.startsWith('#tab-ai-') || currentHash.startsWith('#tab-live-support')) {
+        initialModule = 'Chatbot';
+    } else if (currentHash.startsWith('#tab-setting') || currentHash.startsWith('#tab-banner') || currentHash.startsWith('#tab-blog') || currentHash.startsWith('#tab-system')) {
+        initialModule = 'Cấu hình';
     } else if (currentHash.startsWith('#tab-pet')) {
         initialModule = 'Thú cưng';
     } else if (currentHash.startsWith('#tab-list') || currentHash.startsWith('#tab-profile') || currentHash.startsWith('#tab-pawpoint')) {

@@ -1,0 +1,221 @@
+TÀI LIỆU ĐẶC TẢ PHÂN HỆ CHATBOT VÀ CSKH TRỰC TUYẾN
+Dành cho: Developer Frontend và Backend
+Phân hệ: Trợ lý AI và Trực Chat Chăm sóc Khách hàng
+
+
+1. TỔNG QUAN MÀN HÌNH
+Phân hệ Chatbot không chỉ là một công cụ trả lời tự động thông thường mà là Trung tâm Tiếp nhận và Điều phối CSKH Thông minh, kết hợp giữa Trí tuệ nhân tạo Gemini AI và Đội ngũ nhân viên trực tuyến. Phân hệ được xây dựng dựa trên triết lý Thú cưng là thành viên gia đình, phục vụ ba mục tiêu cốt lõi:
+Cung cấp một Trợ lý AI nội bộ dạng Copilot cho Admin để tra cứu nhanh số liệu kinh doanh, chính sách và soạn thảo văn bản hỗ trợ vận hành.
+Cung cấp màn hình trực chat thời gian thực ba khu vực kiểu hộp thư chuyên nghiệp, cho phép nhân viên giám sát toàn bộ các ca trò chuyện và tiếp quản quyền xử lý khi khách hàng gặp sự cố.
+Đóng vai trò là Bộ điều hòa cảm xúc và Màng lọc bảo vệ tâm lý nhân viên, tự động nhận diện năm cấp độ cảm xúc, che mờ từ ngữ thô tục và tóm tắt cốt lõi vấn đề trong ba giây để giải quyết triệt để khiếu nại của khách hàng.
+Đối tượng sử dụng gồm:
+Nhân viên CSKH và Thu ngân: Trực tiếp nhận các ca chat cần hỗ trợ, xử lý khiếu nại, đền bù điểm thưởng và chuyển thành vé hỗ trợ chính thức.
+Quản lý và Admin: Giám sát chất lượng tư vấn của Bot, sử dụng Trợ lý AI nội bộ để tra cứu số liệu, quản lý xoay vòng API Keys và cập nhật tri thức RAG.
+
+2. BỐ CỤC GIAO DIỆN VÀ MÔ TẢ CÁC SUB-TAB
+Giao diện được phân chia thành hai Sub-tab chính:
+Sub-tab 1: Trợ lý AI nội bộ
+Màn hình làm việc độc quyền giữa Admin và Trí tuệ nhân tạo, gồm hai khu vực chính:
+Khu vực lịch sử đối thoại nội bộ:
+Hiển thị toàn bộ câu hỏi của Admin và câu trả lời của AI.
+AI có khả năng gọi các công cụ tra cứu cơ sở dữ liệu để trả lời các câu hỏi về số lượng lịch hẹn hôm nay, danh sách sản phẩm sắp hết hàng, hoặc tóm tắt doanh thu theo ngày.
+Hỗ trợ soạn thảo các nội dung mẫu như thư xin lỗi khách hàng vì giao hàng trễ, thông báo lịch nghỉ lễ, hoặc đề xuất chương trình khuyến mãi mới.
+Khu vực khung nhập lệnh và gợi ý thao tác nhanh:
+Thanh nhập văn bản có đính kèm các nút gợi ý câu hỏi mẫu thường dùng.
+Nút gửi lệnh và phím tắt gửi câu hỏi nhanh.
+Sub-tab 2: Trực chat CSKH
+Màn hình được thiết kế theo cấu trúc hộp thư ba khu vực chuẩn quốc tế gồm: Danh sách hội thoại bên trái, Khung chat trực tiếp ở giữa, và Bảng thông tin khách hàng bên phải.
+Khu vực 1 - Danh sách hội thoại bên trái:
+Nằm ở cột bên trái, hiển thị danh sách các phiên chat của khách hàng với ảnh đại diện, tên khách, trích đoạn tin nhắn gần nhất, thời gian và số tin chưa đọc.
+Admin có quyền giám sát toàn bộ cuộc trò chuyện của mọi khách hàng kể cả khách vãng lai và các ca Bot đang tự động xử lý.
+Phía trên danh sách chia thành ba tab con lọc thông minh:
+Tab con Cần xử lý ngay: Chỉ hiển thị các ca chat có vấn đề như khách bực bội, sự cố mất tiền, thú cưng bị thương, hoặc khách đòi gặp người thật. Các ca này được đẩy lên đầu danh sách kèm nhãn cảnh báo đỏ và đồng hồ đếm ngược phản hồi.
+Tab con Đang trò chuyện trực tiếp: Danh sách các ca chat nhân viên đã bấm nút Tiếp nhận và đang trực tiếp gõ phím hỗ trợ khách.
+Tab con Tất cả hội thoại: Danh sách toàn bộ các cuộc chat của Bot và lịch sử các ca đã giải quyết xong để phục vụ kiểm toán chất lượng.
+Khu vực 2 - Khung chat trực tiếp ở giữa:
+Thanh tiêu đề phiên chat: Hiển thị tên khách hàng, trạng thái kết nối, nhãn cấp độ cảm xúc hiện tại và nút Tiếp nhận cuộc hội thoại hoặc nút Hoàn thành trả quyền cho Bot.
+Thẻ tóm tắt ngữ cảnh AI: Nằm ngay trên đầu khung chat, hiển thị bản tóm tắt trong ba giây gồm tên khách, số điện thoại, vấn đề cốt lõi, mã đơn hoặc mã lịch hẹn bị lỗi, và đề xuất giải pháp xử lý.
+Màn hình dòng thời gian tin nhắn: Phân định rõ ràng ba đối tượng người gửi gồm PawPal Bot có viền xám nhạt, Khách hàng nằm bên trái, và Nhân viên CSKH nằm bên phải có hiển thị tên chuyên viên phản hồi.
+Màng lọc bảo vệ tâm lý nhân viên: Tự động che mờ các từ ngữ chửi thề, lăng mạ thành dòng chữ thông báo nội dung tiêu cực đã ẩn.
+Thanh công cụ nghiệp vụ một chạm:
+Thư viện tin nhắn mẫu một chạm gửi nhanh lời chào, lời xin lỗi, hướng dẫn gửi ảnh chứng từ hoặc thông tin hoàn tiền.
+Nút Đền bù điểm Pawpoint một chạm cộng ngay từ 50 đến 200 điểm thưởng xin lỗi khách kèm tin nhắn tự động.
+Nút Chuyển thành Ticket TK-xxxxx để trích xuất toàn bộ biên bản hội thoại chuyển sang phân hệ Khiếu nại khi cần kế toán đối soát sâu.
+Khung ghi chú nội bộ ca chat để nhân viên ghi lại phương án xử lý bí mật mà khách hàng không nhìn thấy.
+Khu vực 3 - Bảng thông tin khách hàng bên phải:
+Hiển thị ngay thông tin của khách hàng đang chat mà không cần chuyển sang phân hệ khác: Họ tên, Số điện thoại, Hạng thành viên, Số dư điểm Pawpoint.
+Danh sách thú cưng mà khách đang sở hữu kèm giống loài và các cảnh báo an toàn sức khỏe nếu có.
+Đơn hàng gần nhất và Lịch hẹn gần nhất của khách kèm mã định danh để bấm liên kết mở nhanh.
+Danh sách các vé khiếu nại đang mở của khách hàng.
+3. ĐẶC TẢ DỮ LIỆU TỪNG THÀNH PHẦN
+
+Tên trường trên UI
+Kiểu Component
+Nguồn Database Supabase
+Nơi lưu trữ Codebase
+Bắt buộc
+Quy tắc định dạng và ràng buộc
+Khóa API Gemini
+Bảng cấu hình
+api_keys
+chat.js mảng key
+Có
+Quản lý xoay vòng key tránh cạn quota
+Tri thức Vector RAG
+Bảng vector
+document_embeddings
+embed_data.js
+Có
+Dữ liệu nhúng văn bản chính sách, bảng giá
+Hàm truy vấn RAG
+Hàm cơ sở dữ liệu
+RPC match_documents
+chat.js search_store_info
+Có
+Tìm kiếm đoạn văn bản khớp câu hỏi khách
+Mã phiên hội thoại
+Nhãn định danh
+chat_conversation.id
+conversationHistory
+Có
+Mã định danh phiên chat duy nhất
+Mã vé liên kết
+Khóa ngoại
+chat_conversation.ticket_id
+support_ticket.id
+Không
+Cho phép để trống nếu là chat tự do
+Người gửi
+Nhãn phân loại
+chat_conversation.sender_type
+m.sender_type
+Có
+Nhận giá trị bot, user hoặc cskh
+Tên chuyên viên
+Nhãn chữ
+chat_conversation.agent_name
+m.agent_name
+Không
+Tên nhân viên trả lời ca chat
+Nội dung tin nhắn
+Khung văn bản
+chat_conversation.message
+m.content
+Có
+Văn bản tin nhắn trao đổi
+Từ cấm cần lọc
+Cấu hình lọc
+support_handler.checkBadWords
+Danh sách từ ngữ thô tục
+Có
+Kiểm tra và che mờ từ ngữ vi phạm
+Số lần vi phạm
+Số nguyên
+Trạng thái phiên
+badWordsViolationCount
+Có
+Đếm số lần văng tục, đạt 3 lần khóa chat
+Thời gian khóa chat
+Thời gian
+Trạng thái phiên
+chatBlockedUntil
+Không
+Khóa tạm thời 15 phút khi vi phạm
+Cấp độ cảm xúc
+Nhãn màu
+Trạng thái tính toán AI
+current_sentiment_level
+Có
+Thang đo từ cấp độ 1 đến cấp độ 5
+Bản tóm tắt ngữ cảnh
+Khung hiển thị
+Dữ liệu AI tạo
+ai_context_summary
+Không
+Tóm tắt sự cố, mã đơn, phương án xử lý
+Ghi chú nội bộ ca chat
+Khung văn bản dài
+chat_conversation.internal_note
+u.internal_notes
+Không
+Ghi chú bảo mật chỉ nhân viên nhìn thấy
+
+
+4. NGHIỆP VỤ VÀ LUỒNG THAO TÁC
+4.1. Bản sắc tâm lý và văn hóa xưng hô của Chatbot
+Đặc thù ngành chăm sóc thú cưng: Thú cưng được khách hàng coi như con ruột. Khi phát sinh sự cố về sức khỏe của bé hoặc lỗi tiền bạc, bản năng bảo vệ con cái bị kích hoạt khiến cơn giận dữ bùng phát nhanh gấp năm lần thương mại điện tử thông thường.
+Persona của Chatbot:
+Xưng hô thân mật: Xưng PawPal và gọi khách là sen, gọi thú cưng là bé cưng hoặc boss.
+Giọng văn ân cần, chân thành, tuyệt đối không đôi co lý lẽ khi khách hàng đang bực bội.
+Nguyên tắc thép: Khi nhận thấy khách hàng bức xúc hoặc khiếu nại, Bot lập tức dừng trả lời máy móc, thể hiện sự thấu cảm, xoa dịu và chuyển giao quyền xử lý cho nhân viên con người. Không tự bịa đặt thông tin khi không có trong dữ liệu cơ sở tri thức.
+4.2. Năm điều kiện kích hoạt chuyển giao ca chat về cho Admin
+Một cuộc hội thoại đang do Bot tiếp nhận sẽ tự động gắn cờ Cần xử lý ngay và đẩy lên đầu màn hình Admin khi thỏa mãn một trong năm điều kiện:
+Phát hiện cảm xúc tiêu cực cấp độ 4 hoặc cấp độ 5 thông qua phân tích câu chữ, viết hoa toàn bộ câu hoặc dùng nhiều dấu chấm hỏi, dấu chấm than dồn dập.
+Tin nhắn của khách xuất hiện từ khóa nhạy cảm hoặc khiếu nại như mất tiền, trừ tiền MoMo, trừ tiền VNPay, lừa đảo, đền bù, hàng hỏng, giao sai, sự cố chảy máu, bé bị ốm.
+Khách hàng chủ động yêu cầu nói chuyện với người thật bằng các câu như gặp nhân viên, cho gặp người thật, gọi quản lý.
+Bot không hiểu câu hỏi của khách quá hai lần liên tiếp và phải nói câu xin lỗi, hệ thống tự động chuyển giao để tránh làm khách ức chế.
+Khách hàng sử dụng ngôn từ kích động hoặc chửi thề, hệ thống kích hoạt nhắc nhở và đẩy cảnh báo tức thời lên màn hình Admin để giám sát.
+4.3. Luồng tiếp quản cuộc hội thoại (Takeover)
+Khi ca chat rơi vào danh sách Cần xử lý ngay, âm thanh cảnh báo phát ra và thẻ thông tin nhấp nháy đỏ trên màn hình Admin.
+Nhân viên mở ca chat ra, đọc bản Tóm tắt ngữ cảnh AI trong ba giây để nắm bắt sự cố mà không cần đọc lại toàn bộ tin nhắn trước đó.
+Nhân viên bấm nút Tiếp nhận cuộc hội thoại:
+Hệ thống kích hoạt trạng thái Handover, tạm dừng phản hồi tự động của Bot.
+Giao diện mở khung soạn thảo cho nhân viên gõ phím trực tiếp với khách.
+Khách hàng nhận được tin nhắn thông báo chuyên viên CSKH đã vào tiếp quản hỗ trợ.
+Sau khi nhân viên đã giải quyết xong sự cố cho khách, nhân viên bấm nút Hoàn thành và trả quyền cho Bot:
+Hệ thống đóng ca xử lý trực tiếp, kích hoạt lại quyền trả lời tự động cho Bot tiếp tục phục vụ khách hàng.
+4.4. Luồng xử lý màng lọc văn minh bảo vệ nhân viên
+Khi khách hàng nhắn tin chứa từ ngữ thô tục hoặc lăng mạ:
+Phía khách hàng: Bot gửi thông điệp nhắc nhở lịch sự đề nghị khách giữ bình tĩnh để chuyên viên hỗ trợ tốt nhất. Nếu khách cố tình văng tục quá ba lần, hệ thống tạm thời khóa kênh chat của tài khoản trong 15 phút.
+Phía nhân viên CSKH: Toàn bộ từ ngữ xúc phạm tự động được màng lọc che mờ thành dòng chữ thông báo nội dung tiêu cực đã ẩn. Nhân viên chỉ nhìn thấy bản tóm tắt sự việc khách quan, giúp giữ vững tâm lý thoải mái và chuyên nghiệp khi xử lý công việc.
+4.5. Luồng đền bù điểm thưởng và tạo vé khiếu nại một chạm
+Đền bù điểm một chạm:
+Trong lúc trò chuyện, nếu thấy khách hàng chịu thiệt thòi do giao hàng trễ hoặc hủy hẹn, nhân viên bấm nút Tặng điểm Pawpoint.
+Chọn mức điểm 50 hoặc 100 điểm, hệ thống nạp thẳng vào ví khách kèm tin nhắn tự động thông báo quà tặng tạ lỗi.
+Chuyển thành vé khiếu nại chính thức:
+Nếu sự cố phức tạp cần chuyển sang phòng kế toán đối soát tiền MoMo hoặc cần thợ kỹ thuật kiểm tra lại, nhân viên bấm nút Chuyển thành Ticket.
+Hệ thống tự động tạo một vé hỗ trợ mới mang mã định danh TK-xxxxx trong phân hệ Khiếu nại, sao chép toàn bộ lịch sử chat và các hình ảnh đính kèm sang vé đó.
+4.6. Phân tích năm kịch bản vận hành thực tế
+Kịch bản 1: Tra cứu thông tin thông thường hoàn toàn tự động bởi Bot:
+Khách hỏi về bảng giá tắm sấy cho thỏ.
+Bot gọi hàm tìm kiếm tri thức, trả lời đầy đủ chính sách và bảng giá. Khách hài lòng và kết thúc phiên.
+Kịch bản 2: Khách lo lắng về sức khỏe thú cưng:
+Khách phản ánh bé cún đi spa về bị đỏ mắt và gãi tai.
+AI nhận diện cảm xúc cấp độ 4 về sức khỏe thú cưng.
+Bot gửi lời xoa dịu, xin lỗi và kết nối ngay với kỹ thuật viên phụ trách ca của bé.
+Hệ thống bật chuông cảnh báo đỏ trên màn hình Admin, nhân viên vào tiếp nhận xử lý ngay.
+Kịch bản 3: Khách khiếu nại trừ tiền nhưng chưa xác nhận đơn:
+Khách báo đã quét MoMo trừ tiền nhưng đơn hàng vẫn báo chưa thanh toán.
+AI nhận diện từ khóa trừ tiền và mức độ ưu tiên khẩn cấp.
+Bot trấn an khách và tự động tạo vé hỗ trợ khẩn cấp, chuyển sang bàn trực chat cho nhân viên tài chính đối soát giao dịch.
+Kịch bản 4: Khách nóng giận văng tục:
+Khách nhắn tin chửi thề do giao hàng trễ ba ngày.
+Phía khách nhận được thông điệp nhắc nhở giữ lịch sự.
+Phía Admin câu chửi tục bị che mờ, nhân viên bình tĩnh kiểm tra mã vận đơn bưu cục và cập nhật vị trí shipper cho khách mà không bị ảnh hưởng tâm lý.
+Kịch bản 5: Chuyển giao thông minh không làm phiền khách:
+Nhân viên mở ca chat tiếp nhận, màn hình hiển thị tóm tắt khách đang chờ mã đơn hàng bị trễ do mưa bão.
+Nhân viên mở lời chào kèm câu trả lời thẳng vào vấn đề mà không yêu cầu khách phải giải thích lại từ đầu.
+
+5. CÁC TRẠNG THÁI MÀN HÌNH VÀ XỬ LÝ NGOẠI LỆ
+5.1. Thang đo năm cấp độ cảm xúc thời gian thực
+AI tự động gắn nhãn cấp độ cảm xúc cho từng phiên chat:
+Cấp độ 1: Tích cực và Thân thiện, khách khen ngợi hoặc hài lòng với dịch vụ.
+Cấp độ 2: Trung tính, khách tra cứu thông tin giờ giấc hoặc giá cả thông thường.
+Cấp độ 3: Lo lắng và Bất an, liên quan đến sức khỏe hoặc tập tính của thú cưng.
+Cấp độ 4: Bực bội và Thất vọng, phát sinh sự cố giao hàng trễ hoặc trừ tiền lỗi.
+Cấp độ 5: Giận dữ và Khẩn cấp, khách đe dọa bóc phốt hoặc văng tục gay gắt.
+5.2. Các trạng thái màn hình của hộp thư CSKH
+Trạng thái đang tải dữ liệu: Khi đang nạp danh sách hội thoại, hiển thị các khối xám nhấp nháy ở cột danh sách và vòng xoay tải dữ liệu ở khung chat.
+Trạng thái danh sách rỗng:
+Khi không có ca chat nào cần hỗ trợ: Hiển thị hình ảnh minh họa kèm dòng thông báo Hiện tại không có cuộc trò chuyện nào cần xử lý khẩn cấp.
+Khi tìm kiếm khách hàng trong hộp thư không có kết quả: Hiển thị dòng chữ Không tìm thấy hội thoại nào phù hợp.
+Trạng thái đang chờ kết nối máy chủ: Khi tín hiệu mạng yếu hoặc máy chủ AI phản hồi chậm, hiển thị biểu tượng chấm nhấp nháy Đang kết nối lại và tự động thử kết nối lại sau 5 giây.
+5.3. Xử lý các trường hợp ngoại lệ
+Xử lý lỗi cạn hạn mức API Key của Gemini:
+Khi một API Key bị quá tải hoặc hết hạn mức trong ngày, hệ thống backend tự động chuyển sang khóa API dự phòng tiếp theo trong bảng api_keys mà không làm gián đoạn cuộc trò chuyện của khách hàng.
+Xử lý trường hợp Bot không tìm thấy dữ liệu trong cơ sở tri thức:
+Khi khách hỏi những thông tin nằm ngoài tài liệu RAG, Bot không được tự bịa đặt câu trả lời mà phải phản hồi lịch sự rằng vấn đề này cần xin ý kiến quản lý cửa hàng, sau đó tự động kích hoạt chuyển ca chat sang cho nhân viên.
+Xử lý tài khoản bị tạm khóa chat:
+Khi tài khoản bị khóa 15 phút do văng tục quá ba lần, khung nhập liệu phía khách hàng bị làm mờ kèm đồng hồ đếm ngược số phút còn lại. Phía Admin vẫn có quyền chủ động mở khóa sớm cho khách nếu thấy khách đã bình tĩnh trở lại.
+
+

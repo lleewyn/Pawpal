@@ -1,0 +1,378 @@
+1. TỔNG QUAN MÀN HÌNH
+Màn hình Cấu hình là trung tâm thiết lập các chính sách, quy tắc vận hành và tài nguyên dùng chung của toàn bộ hệ thống PawPal. Màn hình phục vụ ba mục tiêu cốt lõi:
+Quản lý các chương trình marketing dùng chung như Banner, Voucher, PawPoints và Thông báo Website để phân hệ Bán hàng và Website sử dụng thống nhất.
+Quản lý nội dung Blog và Cẩm nang chăm sóc thú cưng, bảo đảm chỉ nội dung đã được kiểm duyệt mới hiển thị trên Website và được Chatbot khai thác.
+Thiết lập các quy tắc vận hành toàn hệ thống như phương thức thanh toán, đơn vị vận chuyển, chính sách đặt lịch và kết nối với các đối tác bên thứ ba.
+Đối tượng sử dụng gồm:
+Admin: Thiết lập toàn bộ cấu hình hệ thống, chương trình khuyến mãi và nội dung Website.
+Quản lý: Chỉ xem hoặc chỉnh sửa các cấu hình được Admin phân quyền.
+Các phân hệ Bán hàng, Dịch vụ, Website và Chatbot chỉ đọc dữ liệu đã được cấu hình, không được chỉnh sửa trực tiếp.
+2. BỐ CỤC GIAO DIỆN VÀ MÔ TẢ CÁC SUB-TAB
+Sub-tab 1: Banner và Khuyến mãi
+Đây là màn hình quản lý toàn bộ tài nguyên marketing dùng chung của hệ thống gồm Banner, Voucher, PawPoints và Thông báo Website.
+Khu vực thanh tiêu đề
+Button Thêm Banner mở Modal Thêm Banner.
+Button Tạo Voucher mở Modal Tạo Voucher.
+Button Cấu hình PawPoints mở Modal Cấu hình PawPoints.
+Khu vực Banner: Hiển thị danh sách Banner dưới dạng Card. Mỗi Card hiển thị:
+Ảnh Banner.
+Tiêu đề.
+CTA.
+URL điều hướng.
+Thời gian hiệu lực.
+Toggle Trạng thái (Bật, Tắt).
+Biểu tượng kéo thả để thay đổi thứ tự hiển thị.
+Menu trên từng Card gồm Chỉnh sửa, Nhân bản và Xóa: Bấm Chỉnh sửa mở Modal Thêm Banner với dữ liệu được điền sẵn; Bấm Nhân bản tạo bản sao Banner ở trạng thái Tắt; Bấm Xóa mở Popup xác nhận trước khi xóa.
+Khu vực Voucher: Hiển thị bảng danh sách Voucher. Thanh công cụ gồm:
+Ô tìm kiếm theo Tên chương trình hoặc Mã Voucher.
+Dropdown Loại Voucher (Tất cả, Spa, Hotel, Taxi Pet, Cửa hàng, Toàn hệ thống).
+Dropdown Trạng thái (Tất cả, Hoạt động, Tạm dừng, Hết hạn).
+Bảng dữ liệu hiển thị các cột:
+Mã Voucher.
+Tên chương trình.
+Loại ưu đãi.
+Đối tượng áp dụng.
+Giá trị giảm.
+Đơn tối thiểu.
+Lượt sử dụng.
+Thời hạn.
+Trạng thái.
+Cột Thao tác gồm Chỉnh sửa, Tạm dừng, Kích hoạt lại và Xóa.
+Khu vực PawPoints: Hiển thị chính sách tích điểm hiện hành. Thông tin hiển thị gồm:
+1 điểm tương ứng bao nhiêu VNĐ.
+Điểm thưởng đăng ký.
+Điểm thưởng đơn hàng đầu tiên.
+Điểm thưởng đặt lịch đầu tiên.
+Điểm sinh nhật.
+Button Chỉnh sửa chính sách mở Modal Cấu hình PawPoints.
+Khu vực Thông báo Website: Hiển thị danh sách các thông báo đang hoạt động. Mỗi dòng hiển thị:
+Nội dung.
+Kiểu hiển thị (Top-bar, Popup).
+Thời gian hiệu lực.
+Toggle Kích hoạt.
+Button Thêm thông báo mở Modal Cấu hình Thông báo.
+Modal Thêm Banner mở khi bấm Button Thêm Banner. Thông tin nhập gồm:
+Upload Ảnh Banner (Kéo thả hoặc Chọn ảnh).
+Input Tiêu đề.
+Textarea Mô tả.
+Input CTA.
+Input URL điều hướng.
+Date Picker Ngày bắt đầu.
+Date Picker Ngày kết thúc.
+Button Hủy đóng Modal và hủy dữ liệu chưa lưu.
+Button Lưu Banner kiểm tra dữ liệu rồi tạo Banner mới.
+Khi bấm Lưu Banner, hệ thống lưu Banner ở trạng thái Tắt nếu Ngày bắt đầu lớn hơn ngày hiện tại, ngược lại chuyển sang trạng thái Bật nếu đang trong thời gian hiệu lực.
+Modal Tạo Voucher mở khi bấm Button Tạo Voucher. Thông tin nhập gồm:
+Input Tên chương trình.
+Input Mã Voucher.
+Dropdown Loại ưu đãi (Giảm %, Giảm tiền).
+Input Giá trị giảm.
+Input Đơn hàng tối thiểu.
+Input Số lượt phát hành.
+Dropdown Đối tượng áp dụng (Spa, Hotel, Taxi Pet, Mua sản phẩm, Toàn hệ thống).
+Dropdown Hạng khách hàng (Member, Silver, Gold, VIP).
+Date Picker Ngày bắt đầu, Date Picker Ngày kết thúc.
+Checkbox Cho phép cộng dồn PawPoints.
+Checkbox Cho phép kết hợp Voucher khác.
+Button Hủy đóng Modal.
+Button Tạo Voucher kiểm tra dữ liệu rồi tạo Voucher mới.
+Hệ thống tự động kiểm tra Mã Voucher không được trùng và Ngày kết thúc phải lớn hơn hoặc bằng Ngày bắt đầu.
+Modal Cấu hình PawPoints mở khi bấm Button Chỉnh sửa chính sách. Thông tin cấu hình gồm:
+Input Giá trị 1 điểm (VNĐ).
+Input Điểm thưởng đăng ký.
+Input Điểm thưởng đơn hàng đầu tiên.
+Input Điểm thưởng đặt lịch đầu tiên.
+Input Điểm sinh nhật.
+Toggle Cho phép tích điểm.
+Toggle Cho phép đổi điểm.
+Bảng quy đổi hiển thị hệ số theo hạng thành viên: Silver, Gold, Diamond.
+Button Khôi phục mặc định trả toàn bộ cấu hình về giá trị mặc định.
+Button Lưu chính sách cập nhật cấu hình và đồng bộ sang phân hệ Bán hàng.
+Modal Cấu hình Thông báo mở khi bấm Button Thêm thông báo. Thông tin nhập gồm:
+Textarea Nội dung.
+Dropdown Kiểu hiển thị (Top-bar, Popup).
+Color Picker Màu nền
+Date Picker Thời gian bắt đầu, Date Picker Thời gian kết thúc.
+Toggle Kích hoạt.
+Button Lưu tạo thông báo mới.
+Sau khi lưu, thông báo được đồng bộ sang Website nếu đang trong thời gian hiệu lực.
+Sub-tab 2: Quản lý Nội dung Website
+Đây là màn hình quản lý toàn bộ Blog và Cẩm nang chăm sóc thú cưng hiển thị trên Website.
+Khu vực thanh tiêu đề gồm có Button Tạo bài viết mở Modal Tạo bài viết.
+Khu vực thanh công cụ và bộ lọc
+Ô tìm kiếm theo Tiêu đề.
+Dropdown Danh mục (Tất cả, Chó, Mèo, Dinh dưỡng, Grooming, Mẹo chăm sóc).
+Dropdown Trạng thái (Tất cả, Nháp, Công khai, Tạm ẩn).
+Khu vực bảng danh sách bài viết
+Bảng hiển thị các cột:
+Thumbnail.
+Tiêu đề.
+Tác giả.
+Danh mục.
+Lượt xem.
+Trạng thái.
+Ngày cập nhật.
+Menu trên mỗi dòng gồm Xem trước, Chỉnh sửa, Tạm ẩn và Xóa.
+Bấm Xem trước mở Preview Modal.
+Bấm Chỉnh sửa mở Modal Tạo bài viết với dữ liệu hiện tại.
+Bấm Tạm ẩn chuyển bài viết sang trạng thái Tạm ẩn.
+Bấm Xóa hiển thị Popup xác nhận.
+Modal Tạo/Chỉnh sửa bài viết. Thông tin nhập gồm:
+Input Tiêu đề.
+Textarea Summary.
+Upload Thumbnail.
+Dropdown Danh mục (Chó, Mèo, Dinh dưỡng, Grooming, Mẹo chăm sóc).
+Dropdown Trạng thái (Nháp, Công khai, Tạm ẩn)
+Phần nội dung sử dụng trình soạn thảo WYSIWYG.
+Thanh công cụ gồm:
+Bold.
+Italic.
+Underline.
+Heading H1.
+Heading H2.
+Heading H3.
+Bullet List.
+Number List.
+Chèn Link.
+Chèn Ảnh.
+Chèn Video.
+Button Lưu nháp lưu bài ở trạng thái Nháp
+Button Xem trước mở Preview Modal.
+Button Xuất bản chuyển trạng thái sang Công khai.
+Preview Modal hiển thị mô phỏng đúng giao diện Website. Thông tin hiển thị gồm:
+Banner đầu bài.
+Tiêu đề.
+Tác giả.
+Ngày đăng.
+Danh mục.
+Nội dung đầy đủ.
+Hình ảnh.
+Video.
+Button Quay lại chỉnh sửa đóng Preview và quay về Modal soạn thảo.
+Button Xuất bản ngay công khai bài viết.
+Sub-tab 3: Cấu hình Hệ thống
+Đây là màn hình thiết lập các quy tắc vận hành dùng chung của toàn bộ hệ thống.
+Khu vực Card cấu hình hiển thị bốn Card.
+Thanh toán.
+Giao hàng.
+Chính sách đặt lịch.
+Kết nối đối tác.
+Bấm Button Cấu hình trên từng Card để mở Modal tương ứng.
+Modal Cấu hình Thanh toán hiển thị gồm Toggle cho từng phương thức thanh toán:
+COD.
+QR Banking.
+MoMo.
+VNPay.
+Khi bật QR Banking, hiển thị thêm:
+Dropdown Ngân hàng (Vietcombank, BIDV, Techcombank, MB Bank, ACB, VPBank).
+Input Số tài khoản.
+Input Chủ tài khoản.
+Input Nội dung chuyển khoản mặc định.
+Upload QR Code.
+Button Kiểm tra kiểm tra dữ liệu thanh toán.
+Button Lưu cập nhật cấu hình.
+Modal Cấu hình Giao hàng. Thông tin nhập gồm:
+Dropdown Đơn vị vận chuyển (GHN, GHTK, Ahamove, GrabExpress).
+Input API Key.
+Input Shop ID.
+Checkbox Cho phép giao trong ngày.
+Checkbox Cho phép thu hộ COD.
+Dropdown Loại dịch vụ (Tiết kiệm, Nhanh, Hỏa tốc).
+Button Kiểm tra kết nối kiểm tra API.
+Button Lưu cập nhật cấu hình.
+Modal Chính sách Đặt lịch. Thông tin cấu hình gồm:
+Input Thời gian hủy miễn phí (giờ).
+Input Phí hủy (VNĐ).
+Input Phí giao hàng mặc định (VNĐ).
+Toggle Cho phép khách chọn nhân viên.
+Toggle Cho phép đặt lịch ngoài giờ.
+Button Lưu cập nhật chính sách.
+Sau khi lưu, toàn bộ cấu hình được áp dụng cho màn hình Đặt lịch của phân hệ Dịch vụ.
+Modal Kết nối Đối tác hiển thị danh sách các đối tác. Mỗi dòng hiển thị:
+Tên đối tác (GHN, GHTK, MoMo, VNPay).
+Trạng thái (Đã kết nối, Chưa kết nối).
+Thời gian kiểm tra gần nhất.
+Button Kết nối mở form nhập API Key hoặc Token.
+Button Ngắt kết nối yêu cầu xác nhận trước khi hủy liên kết.
+Button Kiểm tra kết nối gửi yêu cầu kiểm tra tới đối tác và cập nhật trạng thái.
+
+3. ĐẶC TẢ DỮ LIỆU TỪNG THÀNH PHẦN
+
+Tên trường trên UI
+Kiểu Component
+Nguồn Database Supabase
+Nguồn Local Fallback
+Bắt buộc
+Quy tắc định dạng và ràng buộc
+Tiêu đề Banner
+Input
+banner.title
+banner.json
+Có
+Tối đa 100 ký tự
+CTA
+Input
+banner.cta
+banner.json
+Không
+Tối đa 30 ký tự
+URL
+Input
+banner.url
+banner.json
+Không
+URL hợp lệ
+Trạng thái Banner
+Toggle
+banner.status
+banner.json
+Có
+ON, OFF
+Mã Voucher
+Input
+voucher.code
+voucher.json
+Có
+Không trùng
+Loại ưu đãi
+Dropdown
+voucher.discount_type
+voucher.json
+Có
+PERCENT, FIXED
+Giá trị giảm
+Number
+voucher.discount_value
+voucher.json
+Có
+Lớn hơn 0
+Đơn tối thiểu
+Number
+voucher.minimum_order
+voucher.json
+Có
+Lớn hơn hoặc bằng 0
+Đối tượng áp dụng
+Dropdown
+voucher.target
+voucher.json
+Có
+Spa, Hotel, Taxi Pet, Shop, System
+Hạng khách hàng
+Dropdown
+voucher.member_tier
+voucher.json
+Có
+Member, Silver, Gold, VIP
+Giá trị 1 điểm
+Number
+pawpoint_config.point_value
+pawpoint.json
+Có
+Lớn hơn 0
+Tiêu đề bài viết
+Input
+blog.title
+blog.json
+Có
+Tối đa 150 ký tự
+Danh mục
+Dropdown
+blog.category
+blog.json
+Có
+Chó, Mèo, Dinh dưỡng, Grooming, Mẹo chăm sóc
+Trạng thái bài viết
+Dropdown
+blog.status
+blog.json
+Có
+Draft, Published, Hidden
+Phương thức thanh toán
+Toggle
+payment_method.status
+config.json
+Có
+ON, OFF
+Đơn vị vận chuyển
+Dropdown
+shipping.provider
+config.json
+Có
+GHN, GHTK, Ahamove, GrabExpress
+API Key
+Input
+integration.api_key
+config.json
+Không
+Chuỗi bảo mật
+Shop ID
+Input
+shipping.shop_id
+config.json
+Không
+Chuỗi định danh
+
+4. NGHIỆP VỤ VÀ LUỒNG THAO TÁC
+4.1. Luồng tạo Banner
+Admin mở Sub-tab Banner & Chương trình Khuyến mãi.
+Bấm Button Thêm Banner để mở Modal Thêm Banner.
+Tải ảnh, nhập Tiêu đề, CTA, URL và chọn thời gian hiệu lực.
+Bấm Lưu Banner.
+Hệ thống lưu Banner, kiểm tra thời gian hiệu lực và đồng bộ sang Website theo thứ tự hiển thị đã sắp xếp.
+4.2. Luồng tạo Voucher
+Admin bấm Button Tạo Voucher.
+Nhập thông tin chương trình.
+Chọn đối tượng áp dụng.
+Chọn hạng khách hàng.
+Bấm Tạo Voucher.
+Hệ thống kiểm tra Mã Voucher không trùng, tạo Voucher mới và đồng bộ sang phân hệ Bán hàng.
+4.3. Luồng cập nhật PawPoints
+Admin mở Modal Cấu hình PawPoints.
+Chỉnh sửa quy tắc tích điểm.
+Bấm Lưu chính sách.
+Hệ thống cập nhật cấu hình và áp dụng cho toàn bộ giao dịch phát sinh sau thời điểm lưu.
+4.4. Luồng xuất bản bài viết
+Admin mở Sub-tab Quản lý Nội dung Website.
+Bấm Tạo bài viết.
+Soạn nội dung.
+Bấm Xem trước.
+Bấm Xuất bản ngay.
+Hệ thống chuyển trạng thái sang Công khai và đồng bộ sang Website cùng Chatbot.
+4.5. Luồng cấu hình thanh toán
+Admin mở Card Thanh toán.
+Bật hoặc tắt phương thức.
+Kiểm tra kết nối.
+Bấm Lưu.
+Hệ thống cập nhật cấu hình và đồng bộ sang phân hệ Bán hàng.
+4.6. Luồng cấu hình giao hàng
+Admin mở Card Giao hàng.
+Chọn đơn vị vận chuyển.
+Nhập API Key và Shop ID.
+Kiểm tra kết nối.
+Bấm Lưu.
+Hệ thống cập nhật cấu hình và áp dụng cho toàn bộ đơn hàng mới.
+4.7. Luồng cấu hình chính sách đặt lịch
+Admin mở Card Chính sách đặt lịch.
+Chỉnh sửa các điều kiện.
+Bấm Lưu.
+Hệ thống cập nhật quy tắc đặt lịch cho phân hệ Dịch vụ.
+4.8. Cơ chế liên kết giữa các phân hệ
+Bán hàng đọc Voucher, PawPoints, phương thức thanh toán và đơn vị vận chuyển từ màn hình Cấu hình.
+Website đọc Banner, Thông báo và các bài viết ở trạng thái Công khai.
+Chatbot chỉ sử dụng dữ liệu từ các bài viết đã được Công khai.
+Dịch vụ đọc Chính sách đặt lịch để xác định các điều kiện hủy lịch, chọn nhân viên và đặt lịch ngoài giờ.
+5. CÁC TRẠNG THÁI MÀN HÌNH VÀ XỬ LÝ NGOẠI LỆ
+5.1. Các trạng thái màn hình
+Trạng thái đang tải dữ liệu: Hiển thị Skeleton Loading cho từng khu vực Banner, Voucher và Bài viết.
+Trạng thái danh sách rỗng: Hiển thị thông báo Chưa có dữ liệu cùng Button tạo mới tương ứng.
+Trạng thái không có kết quả tìm kiếm: Hiển thị Button Xóa bộ lọc.
+Trạng thái mất kết nối: Hiển thị thanh thông báo lỗi màu đỏ và sử dụng dữ liệu cấu hình lưu tạm nếu có.
+5.2. Xử lý các trường hợp ngoại lệ
+Mã Voucher trùng: Không cho phép lưu và hiển thị lỗi tại trường Mã Voucher.
+Banner hết thời gian hiệu lực: Tự động chuyển Toggle sang Tắt và không hiển thị trên Website.
+Bài viết chưa có Tiêu đề hoặc Danh mục: Không cho phép Xuất bản, chỉ được Lưu nháp.
+Kiểm tra kết nối đối tác thất bại: Hiển thị trạng thái Chưa kết nối và cho phép Kiểm tra kết nối lại.
+Ngày kết thúc nhỏ hơn Ngày bắt đầu: Không cho phép lưu và hiển thị lỗi tại trường Ngày kết thúc.
+Tắt phương thức thanh toán đang được sử dụng: Hệ thống áp dụng thay đổi cho các giao dịch mới, các đơn hàng đã tạo trước đó vẫn giữ nguyên phương thức thanh toán ban đầu để tránh ảnh hưởng đến giao dịch đang xử lý.
+

@@ -1,0 +1,762 @@
+<div class="settings-module-wrapper">
+    <!-- ====================================================================
+         SUB-TAB 1: BANNER VÀ KHUYẾN MÃI
+         ==================================================================== -->
+    <section class="subtab-content active" id="subtab-tab-banner-promos">
+        <!-- KHU VỰC 1: 5 THẺ THỐNG KÊ KPI NHANH (CHUẨN HỆ THỐNG PAWPAL-ER) -->
+        <div class="settings-kpi-grid">
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Tổng Voucher</span>
+                <span class="kpi-val" id="statTotalVouchers">12</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Đang hoạt động</span>
+                <span class="kpi-val text-success" id="statActiveVouchers">8</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Banner đang bật</span>
+                <span class="kpi-val text-heading" id="statActiveBanners">2</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Tạm dừng và Hết hạn</span>
+                <span class="kpi-val text-warning" id="statPausedVouchers">4</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Tỷ lệ quy đổi</span>
+                <span class="kpi-val text-neutral" style="font-size: 19px;">1đ = 1.000đ</span>
+            </div>
+        </div>
+
+        <!-- THANH TAB CON ĐIỀU HƯỚNG 4 KHỐI (ĐƯỜNG KẺ CHỈ NẰM GỌN DƯỚI CHỮ) -->
+        <div class="settings-subtabs-bar">
+            <button type="button" class="settings-tab-btn active" data-settingstab="mkt-vouchers">
+                <span>Voucher khuyến mãi</span>
+            </button>
+            <button type="button" class="settings-tab-btn" data-settingstab="mkt-banners">
+                <span>Banner Website</span>
+            </button>
+            <button type="button" class="settings-tab-btn" data-settingstab="mkt-pawpoints">
+                <span>Chính sách PawPoints</span>
+            </button>
+            <button type="button" class="settings-tab-btn" data-settingstab="mkt-notices">
+                <span>Thông báo Website</span>
+            </button>
+        </div>
+
+        <!-- TAB PANEL 1: VOUCHER KHUYẾN MÃI -->
+        <div class="settings-tab-panel active" id="mkt-vouchers">
+            <div class="admin-card settings-master-card">
+                <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
+                <div class="table-toolbar-section">
+                    <div class="filter-row-top">
+                        <div class="search-box-wrapper">
+                            <input type="text" class="admin-input search-input" id="searchVoucherInput" placeholder="Tìm theo tên chương trình, mã voucher...">
+                        </div>
+                        <div class="filter-actions-right">
+                            <button type="button" class="admin-btn admin-btn-primary" id="btnOpenVoucherModalHeader">+ Tạo Voucher</button>
+                        </div>
+                    </div>
+                    <div class="filter-row-bottom">
+                        <div class="filter-dropdown-group">
+                            <label class="filter-label">Đối tượng:</label>
+                            <select class="admin-select" id="filterVoucherTarget" style="width: 155px;">
+                                <option value="all">Tất cả đối tượng</option>
+                                <option value="Spa">Dịch vụ Spa</option>
+                                <option value="Hotel">Pet Hotel</option>
+                                <option value="Taxi">Taxi Pet</option>
+                                <option value="Shop">Cửa hàng</option>
+                                <option value="System">Toàn hệ thống</option>
+                            </select>
+                        </div>
+                        <div class="filter-dropdown-group">
+                            <label class="filter-label">Trạng thái:</label>
+                            <select class="admin-select" id="filterVoucherStatus" style="width: 145px;">
+                                <option value="all">Tất cả trạng thái</option>
+                                <option value="active">Hoạt động</option>
+                                <option value="paused">Tạm dừng</option>
+                                <option value="expired">Hết hạn</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BẢNG DỮ LIỆU VOUCHER -->
+                <div class="table-responsive-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 120px;">Mã Voucher</th>
+                                <th>Tên chương trình</th>
+                                <th>Loại ưu đãi</th>
+                                <th>Áp dụng</th>
+                                <th>Giá trị giảm</th>
+                                <th>Đơn tối thiểu</th>
+                                <th>Lượt dùng</th>
+                                <th>Thời hạn</th>
+                                <th>Trạng thái</th>
+                                <th style="text-align: center; width: 60px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="vouchersTableBody">
+                            <!-- Render by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PHÂN TRANG NẰM NGOÀI BẢNG, NỀN TRONG SUỐT, CĂN GIỮA -->
+            <div class="admin-pagination-bar">
+                <div class="pagination-controls">
+                    <button type="button" class="pagination-btn disabled" title="Trang trước">&lt;</button>
+                    <button type="button" class="pagination-btn active">1</button>
+                    <button type="button" class="pagination-btn">2</button>
+                    <button type="button" class="pagination-btn" title="Trang sau">&gt;</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB PANEL 2: BANNER WEBSITE -->
+        <div class="settings-tab-panel" id="mkt-banners">
+            <div class="admin-card settings-section-card">
+                <div class="settings-section-head">
+                    <div>
+                        <div class="drawer-section-title" style="margin: 0;">Danh sách Banner Website</div>
+                        <span style="font-size: 12px; color: var(--text-muted);">Điều phối hiển thị ảnh bìa nổi bật trên trang chủ PawPal</span>
+                    </div>
+                    <div class="settings-header-actions">
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenBannerModal">+ Thêm Banner</button>
+                    </div>
+                </div>
+                <div class="banner-cards-grid" id="bannerCardsContainer">
+                    <!-- Render by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB PANEL 3: CHÍNH SÁCH PAWPOINTS -->
+        <div class="settings-tab-panel" id="mkt-pawpoints">
+            <div class="admin-card settings-section-card">
+                <div class="settings-section-head">
+                    <div class="drawer-section-title">Chính sách PawPoints hiện hành</div>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnEditPawpointsLink">Cấu hình PawPoints</button>
+                </div>
+                <div class="pawpoints-summary-box">
+                    <div class="info-pair">
+                        <span class="info-label">Tỷ lệ quy đổi điểm:</span>
+                        <span class="info-value" id="dispPointValue">1 điểm = 1,000 VNĐ</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 10px;">
+                        <span class="info-label">Điểm thưởng đăng ký tài khoản:</span>
+                        <span class="info-value" id="dispRegisterPoints">+50 điểm</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 10px;">
+                        <span class="info-label">Thưởng đơn hàng đầu tiên:</span>
+                        <span class="info-value" id="dispFirstOrderPoints">+100 điểm</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 10px;">
+                        <span class="info-label">Thưởng đặt lịch đầu tiên:</span>
+                        <span class="info-value" id="dispFirstBookingPoints">+100 điểm</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 10px;">
+                        <span class="info-label">Điểm sinh nhật khách hàng:</span>
+                        <span class="info-value" id="dispBirthdayPoints">+200 điểm</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 10px;">
+                        <span class="info-label">Trạng thái tích và đổi điểm:</span>
+                        <span class="info-value"><span class="admin-badge badge-active">Đang áp dụng tự động</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB PANEL 4: THÔNG BÁO WEBSITE -->
+        <div class="settings-tab-panel" id="mkt-notices">
+            <div class="admin-card settings-section-card">
+                <div class="settings-section-head">
+                    <div class="drawer-section-title">Danh sách Thông báo Website</div>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnAddNoticeLink">+ Thêm thông báo</button>
+                </div>
+                <div class="notifications-list" id="notificationsListContainer">
+                    <!-- Render by JS -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 2: QUẢN LÝ NỘI DUNG WEBSITE (BLOG VÀ CẨM NANG)
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-content-management">
+        <!-- KHU VỰC 1: 5 THẺ THỐNG KÊ KPI NỘI DUNG -->
+        <div class="settings-kpi-grid">
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Tổng bài viết</span>
+                <span class="kpi-val" id="statTotalArticles">24</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Đã công khai</span>
+                <span class="kpi-val text-success" id="statPublishedArticles">18</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Bản nháp</span>
+                <span class="kpi-val text-warning" id="statDraftArticles">4</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Tạm ẩn</span>
+                <span class="kpi-val text-neutral" id="statHiddenArticles">2</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Lượt xem tháng</span>
+                <span class="kpi-val text-heading" id="statTotalViews">12.8K</span>
+            </div>
+        </div>
+
+        <!-- BẢNG DANH SÁCH BÀI VIẾT (MASTER CARD GOM KHỐI THỐNG NHẤT) -->
+        <div class="admin-card settings-master-card">
+            <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
+            <div class="table-toolbar-section">
+                <div class="filter-row-top">
+                    <div class="search-box-wrapper">
+                        <input type="text" class="admin-input search-input" id="searchArticleInput" placeholder="Tìm theo tiêu đề bài viết...">
+                    </div>
+                    <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateArticleModal">+ Tạo bài viết mới</button>
+                    </div>
+                </div>
+                <div class="filter-row-bottom">
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Danh mục:</label>
+                        <select class="admin-select" id="filterArticleCategory" style="width: 155px;">
+                            <option value="all">Tất cả danh mục</option>
+                            <option value="Chó">Chó cưng</option>
+                            <option value="Mèo">Mèo cưng</option>
+                            <option value="Dinh dưỡng">Dinh dưỡng</option>
+                            <option value="Grooming">Grooming và Spa</option>
+                            <option value="Mẹo chăm sóc">Mẹo chăm sóc</option>
+                        </select>
+                    </div>
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Trạng thái:</label>
+                        <select class="admin-select" id="filterArticleStatus" style="width: 145px;">
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="published">Công khai</option>
+                            <option value="draft">Bản nháp</option>
+                            <option value="hidden">Tạm ẩn</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BẢNG DỮ LIỆU BÀI VIẾT -->
+            <div class="table-responsive-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Ảnh bìa</th>
+                            <th>Tiêu đề bài viết</th>
+                            <th>Tác giả</th>
+                            <th>Danh mục</th>
+                            <th>Lượt xem</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày cập nhật</th>
+                            <th style="text-align: center; width: 60px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="articlesTableBody">
+                        <!-- Render by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PHÂN TRANG NẰM NGOÀI BẢNG, NỀN TRONG SUỐT, CĂN GIỮA -->
+        <div class="admin-pagination-bar">
+            <div class="pagination-controls">
+                <button type="button" class="pagination-btn disabled" title="Trang trước">&lt;</button>
+                <button type="button" class="pagination-btn active">1</button>
+                <button type="button" class="pagination-btn">2</button>
+                <button type="button" class="pagination-btn" title="Trang sau">&gt;</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 3: CẤU HÌNH HỆ THỐNG (THANH TOÁN, VẬN CHUYỂN, ĐẶT LỊCH, ĐỐI TÁC)
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-system-config">
+        <div class="system-cards-grid">
+            <!-- CARD 1: PHƯƠNG THỨC THANH TOÁN -->
+            <div class="admin-card system-module-card">
+                <div class="system-card-header">
+                    <div>
+                        <div class="system-card-title">Phương thức thanh toán</div>
+                        <div class="system-card-desc">Cấu hình COD, chuyển khoản QR Banking và ví điện tử MoMo, VNPay</div>
+                    </div>
+                    <span class="admin-badge badge-active">4 Cổng</span>
+                </div>
+                <div class="system-card-body">
+                    <div class="method-toggle-row">
+                        <span>Thanh toán khi nhận hàng (COD)</span>
+                        <span class="admin-badge badge-active">Bật</span>
+                    </div>
+                    <div class="method-toggle-row">
+                        <span>Chuyển khoản QR Banking (Vietcombank)</span>
+                        <span class="admin-badge badge-active">Bật</span>
+                    </div>
+                    <div class="method-toggle-row">
+                        <span>Ví điện tử MoMo</span>
+                        <span class="admin-badge badge-active">Bật</span>
+                    </div>
+                    <div class="method-toggle-row">
+                        <span>Cổng thanh toán VNPay</span>
+                        <span class="admin-badge badge-active">Bật</span>
+                    </div>
+                </div>
+                <div class="system-card-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnConfigurePayment">Cấu hình thanh toán</button>
+                </div>
+            </div>
+
+            <!-- CARD 2: ĐƠN VỊ VẬN CHUYỂN -->
+            <div class="admin-card system-module-card">
+                <div class="system-card-header">
+                    <div>
+                        <div class="system-card-title">Đơn vị vận chuyển</div>
+                        <div class="system-card-desc">Tích hợp API kết nối Giao Hàng Nhanh, GHTK, GrabExpress</div>
+                    </div>
+                    <span class="admin-badge badge-active">GHN (Mặc định)</span>
+                </div>
+                <div class="system-card-body">
+                    <div class="info-pair">
+                        <span class="info-label">Đối tác chính:</span>
+                        <span class="info-value">Giao Hàng Nhanh (GHN)</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 6px;">
+                        <span class="info-label">Giao trong ngày:</span>
+                        <span class="info-value">Kích hoạt (Ahamove / GrabExpress)</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 6px;">
+                        <span class="info-label">Thu hộ COD:</span>
+                        <span class="info-value">Cho phép toàn quốc</span>
+                    </div>
+                </div>
+                <div class="system-card-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnConfigureShipping">Cấu hình giao hàng</button>
+                </div>
+            </div>
+
+            <!-- CARD 3: CHÍNH SÁCH ĐẶT LỊCH DỊCH VỤ -->
+            <div class="admin-card system-module-card">
+                <div class="system-card-header">
+                    <div>
+                        <div class="system-card-title">Chính sách đặt lịch</div>
+                        <div class="system-card-desc">Quy tắc hủy lịch, chọn nhân viên và phụ thu ngoài giờ cho Spa & Hotel</div>
+                    </div>
+                    <span class="admin-badge badge-active">Áp dụng ngay</span>
+                </div>
+                <div class="system-card-body">
+                    <div class="info-pair">
+                        <span class="info-label">Thời gian hủy miễn phí:</span>
+                        <span class="info-value">Trước 4 giờ</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 6px;">
+                        <span class="info-label">Phí hủy muộn:</span>
+                        <span class="info-value">50,000 VNĐ</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 6px;">
+                        <span class="info-label">Chọn nhân viên yêu thích:</span>
+                        <span class="info-value">Cho phép khách chọn</span>
+                    </div>
+                </div>
+                <div class="system-card-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnConfigureBookingPolicy">Cấu hình chính sách</button>
+                </div>
+            </div>
+
+            <!-- CARD 4: KẾT NỐI ĐỐI TÁC BÊN THỨ BA -->
+            <div class="admin-card system-module-card">
+                <div class="system-card-header">
+                    <div>
+                        <div class="system-card-title">Kết nối đối tác API</div>
+                        <div class="system-card-desc">Kiểm tra kết nối và hạn ngạch cổng thanh toán, đơn vị giao vận</div>
+                    </div>
+                    <span class="admin-badge badge-active">Hoạt động tốt</span>
+                </div>
+                <div class="system-card-body">
+                    <div class="partner-status-row">
+                        <span>GHN Express API</span>
+                        <span class="admin-badge badge-active">Đã kết nối</span>
+                    </div>
+                    <div class="partner-status-row" style="margin-top: 8px;">
+                        <span>MoMo Merchant Gateway</span>
+                        <span class="admin-badge badge-active">Đã kết nối</span>
+                    </div>
+                    <div class="partner-status-row" style="margin-top: 8px;">
+                        <span>VNPay Payment Engine</span>
+                        <span class="admin-badge badge-active">Đã kết nối</span>
+                    </div>
+                </div>
+                <div class="system-card-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnConfigurePartners">Kiểm tra đối tác</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         MODALS PHÂN HỆ CẤU HÌNH (THIẾT KẾ CHUẨN THOÁNG ĐÃNG AGENTS.MD)
+         ==================================================================== -->
+
+    <!-- MODAL 1: THÊM / SỬA BANNER -->
+    <div class="admin-modal-overlay" id="bannerModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean" id="bannerModalTitle">Thêm Banner Quảng cáo</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelBannerModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Tiêu đề Banner *</label>
+                    <input type="text" class="admin-input" id="inputBannerTitle" placeholder="Ví dụ: Ưu đãi Spa Mùa Hè 30%">
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Ảnh Banner URL *</label>
+                    <input type="text" class="admin-input" id="inputBannerImage" placeholder="Nhập đường dẫn ảnh hoặc tên tệp...">
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Nút kêu gọi (CTA)</label>
+                        <input type="text" class="admin-input" id="inputBannerCta" placeholder="Ví dụ: Đặt lịch ngay">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Đường dẫn điều hướng</label>
+                        <input type="text" class="admin-input" id="inputBannerUrl" placeholder="Ví dụ: /pages/public/services/">
+                    </div>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Ngày bắt đầu</label>
+                        <input type="date" class="admin-input" id="inputBannerStartDate">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Ngày kết thúc</label>
+                        <input type="date" class="admin-input" id="inputBannerEndDate">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissBannerModal">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveBanner">Lưu Banner</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: TẠO VOUCHER KHUYẾN MÃI -->
+    <div class="admin-modal-overlay" id="voucherModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Tạo Voucher Khuyến mãi</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelVoucherModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Mã Voucher *</label>
+                        <input type="text" class="admin-input" id="inputVoucherCode" placeholder="Ví dụ: PAWPAL30K" style="text-transform: uppercase;">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Tên chương trình *</label>
+                        <input type="text" class="admin-input" id="inputVoucherName" placeholder="Tên chương trình ưu đãi...">
+                    </div>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Loại ưu đãi</label>
+                        <select class="admin-select" id="inputVoucherType">
+                            <option value="fixed">Giảm số tiền cố định (VNĐ)</option>
+                            <option value="percent">Giảm theo phần trăm (%)</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Giá trị giảm *</label>
+                        <input type="number" class="admin-input" id="inputVoucherValue" placeholder="30000 hoặc 15">
+                    </div>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Đơn hàng tối thiểu (VNĐ)</label>
+                        <input type="number" class="admin-input" id="inputVoucherMinOrder" value="0">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Số lượt phát hành</label>
+                        <input type="number" class="admin-input" id="inputVoucherLimit" value="100">
+                    </div>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Đối tượng áp dụng</label>
+                        <select class="admin-select" id="inputVoucherTarget">
+                            <option value="System">Toàn hệ thống</option>
+                            <option value="Spa">Dịch vụ Spa & Grooming</option>
+                            <option value="Hotel">Pet Hotel</option>
+                            <option value="Shop">Mua sản phẩm</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Hạng thành viên</label>
+                        <select class="admin-select" id="inputVoucherTier">
+                            <option value="all">Tất cả khách hàng</option>
+                            <option value="Silver">Hạng Bạc trở lên</option>
+                            <option value="Gold">Hạng Vàng trở lên</option>
+                            <option value="VIP">Hạng Kim Cương (VIP)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Ngày bắt đầu</label>
+                        <input type="date" class="admin-input" id="inputVoucherStart">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Ngày kết thúc</label>
+                        <input type="date" class="admin-input" id="inputVoucherEnd">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissVoucherModal">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveVoucher">Tạo Voucher</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: CẤU HÌNH PAWPOINTS -->
+    <div class="admin-modal-overlay" id="pawpointsModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Cấu hình Chính sách PawPoints</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelPawpointsModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Giá trị 1 điểm quy đổi (VNĐ) *</label>
+                    <input type="number" class="admin-input" id="inputCfgPointValue" value="1000">
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Điểm thưởng đăng ký</label>
+                        <input type="number" class="admin-input" id="inputCfgRegisterPoints" value="50">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Thưởng đơn hàng đầu</label>
+                        <input type="number" class="admin-input" id="inputCfgFirstOrderPoints" value="100">
+                    </div>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Thưởng đặt lịch đầu</label>
+                        <input type="number" class="admin-input" id="inputCfgFirstBookingPoints" value="100">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Điểm sinh nhật khách</label>
+                        <input type="number" class="admin-input" id="inputCfgBirthdayPoints" value="200">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissPawpointsModal">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSavePawpointsPolicy">Lưu chính sách</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: CẤU HÌNH THÔNG BÁO WEBSITE -->
+    <div class="admin-modal-overlay" id="notificationModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Thêm Thông báo Website</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelNoticeModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Nội dung thông báo *</label>
+                    <textarea class="admin-input" id="inputNoticeContent" rows="3" placeholder="Nhập thông báo gửi khách hàng..."></textarea>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Kiểu hiển thị</label>
+                        <select class="admin-select" id="inputNoticeType">
+                            <option value="topbar">Top-bar đầu trang</option>
+                            <option value="popup">Popup giữa màn hình</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Trạng thái kích hoạt</label>
+                        <select class="admin-select" id="inputNoticeStatus">
+                            <option value="active">Kích hoạt ngay</option>
+                            <option value="inactive">Tạm tắt</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissNoticeModal">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveNotice">Lưu thông báo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 5: SOẠN THẢO BÀI VIẾT (BLOG & CẨM NANG) -->
+    <div class="admin-modal-overlay" id="articleModalOverlay">
+        <div class="admin-modal-card wide-modal">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean" id="articleModalTitle">Soạn thảo Bài viết mới</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelArticleModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Tiêu đề bài viết *</label>
+                    <input type="text" class="admin-input" id="inputArticleTitle" placeholder="Tiêu đề bài viết hấp dẫn...">
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Danh mục *</label>
+                        <select class="admin-select" id="inputArticleCategory">
+                            <option value="Chó">Chó cưng</option>
+                            <option value="Mèo">Mèo cưng</option>
+                            <option value="Dinh dưỡng">Dinh dưỡng</option>
+                            <option value="Grooming">Grooming & Spa</option>
+                            <option value="Mẹo chăm sóc">Mẹo chăm sóc</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Trạng thái xuất bản</label>
+                        <select class="admin-select" id="inputArticleStatus">
+                            <option value="published">Công khai ngay</option>
+                            <option value="draft">Lưu bản nháp</option>
+                            <option value="hidden">Tạm ẩn</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Tóm tắt ngắn (Summary) *</label>
+                    <textarea class="admin-input" id="inputArticleSummary" rows="2" placeholder="Tóm tắt ngắn 1-2 câu hiển thị ở danh sách bài viết..."></textarea>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Nội dung chi tiết bài viết *</label>
+                    <textarea class="admin-input" id="inputArticleContent" rows="6" placeholder="Nội dung cẩm nang chia sẻ kiến thức chăm sóc thú cưng..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissArticleModal">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveArticle">Xuất bản bài viết</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 6: CẤU HÌNH THANH TOÁN -->
+    <div class="admin-modal-overlay" id="paymentConfigModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Cấu hình Cổng Thanh toán</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelPaymentModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Ngân hàng thụ hưởng QR Banking</label>
+                    <select class="admin-select" id="inputPaymentBank">
+                        <option value="vietcombank">Vietcombank - Ngân hàng Ngoại thương</option>
+                        <option value="techcombank">Techcombank - Ngân hàng Kỹ thương</option>
+                        <option value="mb">MB Bank - Ngân hàng Quân đội</option>
+                        <option value="acb">ACB - Ngân hàng Á Châu</option>
+                    </select>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Số tài khoản</label>
+                        <input type="text" class="admin-input" id="inputPaymentAccNo" value="999888666">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Chủ tài khoản</label>
+                        <input type="text" class="admin-input" id="inputPaymentAccHolder" value="CONG TY CP PAWPAL VIET NAM">
+                    </div>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Cú pháp chuyển khoản mặc định</label>
+                    <input type="text" class="admin-input" id="inputPaymentSyntax" value="PAWPAL [MA_DON_HANG] [SDT]">
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissPaymentModal">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSavePaymentConfig">Lưu cấu hình</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 7: CẤU HÌNH GIAO HÀNG -->
+    <div class="admin-modal-overlay" id="shippingConfigModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Cấu hình Đơn vị Giao hàng</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelShippingModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Đơn vị vận chuyển chính</label>
+                    <select class="admin-select" id="inputShippingProvider">
+                        <option value="ghn">Giao Hàng Nhanh (GHN Express)</option>
+                        <option value="ghtk">Giao Hàng Tiết Kiệm (GHTK)</option>
+                        <option value="grab">GrabExpress Siêu Tốc</option>
+                    </select>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Shop ID</label>
+                        <input type="text" class="admin-input" id="inputShippingShopId" value="PAWPAL_Q1_STORE">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">API Token</label>
+                        <input type="password" class="admin-input" id="inputShippingApiKey" value="ghn_prod_secret_token_12345">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissShippingModal">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveShippingConfig">Lưu cấu hình</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 8: CHÍNH SÁCH ĐẶT LỊCH DỊCH VỤ -->
+    <div class="admin-modal-overlay" id="bookingPolicyModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Chính sách Đặt lịch Dịch vụ</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelBookingPolicyModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Thời gian hủy miễn phí (giờ)</label>
+                        <input type="number" class="admin-input" id="inputFreeCancelHours" value="4">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Phí hủy muộn (VNĐ)</label>
+                        <input type="number" class="admin-input" id="inputLateCancelFee" value="50000">
+                    </div>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Tùy chọn nhân viên yêu thích</label>
+                    <select class="admin-select" id="inputAllowPickStaff">
+                        <option value="yes">Cho phép khách chỉ định nhân viên chăm sóc</option>
+                        <option value="no">Hệ thống tự động xếp ca ngẫu nhiên</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissBookingPolicyModal">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveBookingPolicy">Lưu chính sách</button>
+            </div>
+        </div>
+    </div>
+</div>
