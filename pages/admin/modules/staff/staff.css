@@ -46,6 +46,22 @@
     padding: 14px 18px;
 }
 
+.kpi-card-clickable {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.kpi-card-clickable:hover {
+    border-color: #C3DEC7;
+    background-color: #F4FAF6;
+}
+
+.kpi-card-clickable.active {
+    border-color: #236B48;
+    background-color: #EEF5F1;
+}
+
 .kpi-label {
     font-size: 12.5px;
     color: var(--text-muted);
@@ -65,6 +81,195 @@
 .text-warning { color: #B45309 !important; }
 .text-danger { color: #DC2626 !important; }
 .text-neutral { color: var(--text-muted) !important; }
+
+/* THANH CẢNH BÁO NHÂN SỰ CHỦ ĐỘNG (DẢI MỎNG ALERT TONE, THUẦN CHỮ, KHÔNG VIỀN, TRIỆT TIÊU THANH TRƯỢT) */
+.staff-alert-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 18px;
+    background-color: rgba(245, 232, 211, 0.50);
+    border: none !important;
+    border-radius: var(--admin-radius, 9px) var(--admin-radius, 9px) 0 0;
+    font-size: 13px;
+    overflow: hidden;
+}
+
+.alert-strip-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0; /* Cho phép co lại, triệt tiêu hoàn toàn thanh cuộn ngang */
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.alert-strip-badge {
+    font-weight: 600;
+    color: #734718;
+    font-size: 12.5px;
+    flex-shrink: 0;
+}
+
+.alert-strip-items {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.alert-item-tag {
+    display: inline-block;
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+    height: 24px;
+    line-height: 24px;
+    padding: 0 10px;
+    background-color: #F5E8D3;
+    border: none !important;
+    border-radius: 9px !important;
+    color: var(--text-main);
+    font-size: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.15s;
+}
+
+.alert-item-tag.alert-danger,
+.alert-item-tag.tag-danger {
+    background-color: #F7DCDC;
+    color: #8F2424;
+}
+
+.alert-item-tag.alert-warning,
+.alert-item-tag.tag-warning {
+    background-color: #F5E8D3;
+    color: #734718;
+}
+
+.alert-item-tag.alert-info,
+.alert-item-tag.tag-info {
+    background-color: #DCEAF2;
+    color: #20495E;
+}
+
+.alert-item-tag:hover {
+    background-color: #EDDECA;
+}
+
+.alert-item-tag.alert-danger:hover,
+.alert-item-tag.tag-danger:hover {
+    background-color: #F0CECE;
+}
+
+.alert-item-tag.alert-info:hover,
+.alert-item-tag.tag-info:hover {
+    background-color: #CDE2EC;
+}
+
+/* DẤU 3 CHẤM (...) THUẦN CHỮ (KHÔNG PHẢI NÚT BẤM) KHI CẢNH BÁO DÀI */
+.alert-dots-text {
+    color: #734718;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    user-select: none;
+    flex-shrink: 0;
+    padding: 0 4px;
+    line-height: 24px;
+}
+
+.alert-strip-right {
+    flex-shrink: 0;
+}
+
+.btn-alert-strip-filter {
+    background: transparent;
+    border: none !important;
+    color: #734718;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 9px;
+    border-radius: 9px;
+    text-decoration: underline;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.btn-alert-strip-filter:hover {
+    color: #55330F;
+    background-color: rgba(115, 71, 24, 0.08);
+}
+
+.btn-alert-strip-filter.active {
+    background-color: #734718;
+    color: #FFFFFF !important;
+    text-decoration: none;
+}
+
+/* NÚT LỌC TOGGLE PHẲNG */
+.admin-btn-filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #734718;
+    background-color: #F5E8D3;
+    border: none !important;
+    border-radius: 9px !important;
+    cursor: pointer;
+}
+
+.admin-btn-filter-toggle:hover {
+    background-color: #EDDECA;
+}
+
+.admin-btn-filter-toggle.active {
+    background-color: #236B48;
+    color: #FFFFFF;
+}
+
+.admin-btn-filter-toggle.toggle-danger {
+    color: #8F2424;
+    background-color: #F7DCDC;
+}
+
+.admin-btn-filter-toggle.toggle-danger:hover {
+    background-color: #F0CECE;
+}
+
+.admin-btn-filter-toggle.toggle-danger.active {
+    background-color: #8F2424;
+    color: #FFFFFF;
+}
+
+/* DÒNG CẢNH BÁO BẢNG: VIỀN MÉP TRÁI DUY NHẤT */
+.admin-table th:first-child {
+    border-left: 3px solid var(--table-header-bg);
+}
+
+.admin-table td:first-child {
+    border-left: 3px solid transparent;
+}
+
+.row-highlight-danger td:first-child {
+    border-left: 3px solid #DC2626 !important;
+}
+
+.row-highlight-warning td:first-child {
+    border-left: 3px solid #D97706 !important;
+}
 
 /* BẢNG CHÍNH VÀ THANH CÔNG CỤ (GOM KHỐI, KHÔNG VIỀN CON) */
 .staff-master-card {
@@ -127,33 +332,265 @@
     width: 140px;
 }
 
-/* BẢNG LỊCH LÀM VIỆC */
+/* ==========================================================================
+   GIAI ĐOẠN 2: LỊCH LÀM VIỆC, ĐỊNH BIÊN CA VÀ CHỐNG HỔNG CA
+   ========================================================================== */
+
+/* 1. THANH THỐNG KÊ ĐỊNH BIÊN CA LÀM VIỆC (SHIFT QUOTAS BAR 24/7) */
+.shift-quota-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 2px;
+}
+
+@media (max-width: 1100px) {
+    .shift-quota-strip {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 650px) {
+    .shift-quota-strip {
+        grid-template-columns: 1fr;
+    }
+}
+
+.quota-card {
+    padding: 14px 18px;
+    border-radius: var(--admin-radius, 9px);
+    border: 1px solid var(--border-neutral);
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.quota-card.quota-ok {
+    background-color: #EEF5F1;
+    border-color: #C3DEC7;
+}
+
+.quota-card.quota-ok:hover {
+    background-color: #E3EDE7;
+}
+
+.quota-card.quota-warning {
+    background-color: #FDF6EC;
+    border-color: #F3DCB7;
+}
+
+.quota-card.quota-warning:hover {
+    background-color: #F8EEDB;
+}
+
+.quota-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.quota-shift-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+.quota-status-pill {
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--admin-radius, 9px);
+    line-height: 1.2;
+}
+
+.quota-status-pill.pill-ok {
+    background-color: #DCEEE2;
+    color: #165335;
+}
+
+.quota-status-pill.pill-warning {
+    background-color: #F5E8D3;
+    color: #734718;
+}
+
+.quota-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.quota-count {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.2px;
+}
+
+.quota-note {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* 2. BẢNG LỊCH LÀM VIỆC THEO NGÀY (DAY VIEW) */
 .schedule-table th, .schedule-table td {
     border-left: 1px solid var(--border-neutral);
 }
 
 .schedule-table th:first-child, .schedule-table td:first-child {
-    border-left: none;
+    border-left: 3px solid var(--table-header-bg);
 }
 
 .shift-cell {
-    padding: 8px;
-    min-height: 40px;
-    border-radius: 4px;
+    padding: 8px 10px;
+    min-height: 48px;
+    border-radius: var(--admin-radius, 9px);
     cursor: pointer;
-    transition: background-color 0.15s;
+    transition: background-color 0.15s, border-color 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    text-align: center;
 }
 
 .shift-cell.assigned {
-    background-color: #EEF5F1; /* Màu xanh nhạt */
+    background-color: #EEF5F1;
+    color: #165335;
+    font-weight: 600;
 }
 
 .shift-cell.leave {
-    background-color: #FEF3C7; /* Màu vàng nhạt nghỉ phép */
+    background-color: #F5E8D3;
+    color: #734718;
+    font-weight: 600;
 }
 
-.shift-cell:hover {
-    background-color: #F2F7F4;
+.shift-cell.locked-warning {
+    background-color: #F7DCDC;
+    color: #8F2424;
+    font-weight: 600;
+}
+
+.shift-cell.empty {
+    background-color: transparent;
+    color: var(--text-muted);
+    border: 1px dashed #D3DFD8;
+    font-size: 11.5px;
+}
+
+.shift-cell.empty:hover {
+    background-color: #F4FAF6;
+    border-color: #236B48;
+    color: #236B48;
+}
+
+.shift-cell-title {
+    font-size: 12px;
+}
+
+.shift-cell-time {
+    font-size: 10.5px;
+    font-weight: 400;
+    opacity: 0.82;
+}
+
+/* 3. BẢNG LỊCH LÀM VIỆC THEO TUẦN (WEEK VIEW) */
+.schedule-week-table th, .schedule-week-table td {
+    border-left: 1px solid var(--border-neutral);
+    padding: 8px 6px;
+}
+
+.schedule-week-table th:first-child, .schedule-week-table td:first-child {
+    border-left: 3px solid var(--table-header-bg);
+}
+
+.week-day-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 48px;
+    justify-content: center;
+    align-items: center;
+}
+
+.week-shift-pill {
+    display: inline-block;
+    padding: 3px 6px;
+    border-radius: calc(var(--admin-radius, 9px) - 3px);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    text-align: center;
+    width: 90%;
+    max-width: 90px;
+}
+
+.week-pill-morning {
+    background-color: #DCEEE2;
+    color: #165335;
+}
+
+.week-pill-afternoon {
+    background-color: #E2ECE5;
+    color: #2D483B;
+}
+
+.week-pill-evening {
+    background-color: #DCEAF2;
+    color: #20495E;
+}
+
+.week-pill-night {
+    background-color: #E8E5F5;
+    color: #4B3F72;
+}
+
+.week-pill-leave {
+    background-color: #F5E8D3;
+    color: #734718;
+}
+
+.week-pill-locked {
+    background-color: #F7DCDC;
+    color: #8F2424;
+}
+
+.week-pill-empty {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 400;
+}
+
+/* TỔNG GIỜ LÀM VIỆC BADGE */
+.hours-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: var(--admin-radius, 9px);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.hours-normal {
+    background-color: #DCEEE2;
+    color: #165335;
+}
+
+.hours-overload {
+    background-color: #F7DCDC;
+    color: #8F2424;
+}
+
+.hours-zero {
+    background-color: #E2ECE5;
+    color: var(--text-muted);
 }
 
 /* BADGE TRẠNG THÁI (MUTED PASTEL, NO BORDER & RADIUS 9PX) */
@@ -172,26 +609,50 @@
 }
 
 .badge-active {
-    background-color: #E6F2EB;
-    color: #1E5A3D;
+    background-color: #DCEEE2;
+    color: #165335;
     border: none !important;
 }
 
 .badge-leave {
-    background-color: #F7F2E9;
-    color: #7C5329;
+    background-color: #F5E8D3;
+    color: #734718;
     border: none !important;
 }
 
 .badge-pause {
-    background-color: #EBF2F6;
-    color: #2E5568;
+    background-color: #DCEAF2;
+    color: #20495E;
     border: none !important;
 }
 
 .badge-resigned {
-    background-color: #FBF0F0;
-    color: #993535;
+    background-color: #F7DCDC;
+    color: #8F2424;
+    border: none !important;
+}
+
+.badge-retrain {
+    background-color: #F5E8D3;
+    color: #734718;
+    border: none !important;
+}
+
+.badge-fail {
+    background-color: #F7DCDC;
+    color: #8F2424;
+    border: none !important;
+}
+
+.badge-pass {
+    background-color: #DCEEE2;
+    color: #165335;
+    border: none !important;
+}
+
+.badge-locked {
+    background-color: #F7DCDC;
+    color: #8F2424;
     border: none !important;
 }
 
@@ -703,5 +1164,272 @@
         grid-template-columns: 1fr;
         gap: 20px;
     }
+}
+
+/* ==========================================================================
+   GIAI ĐOẠN 3: ĐƠN NGHỈ PHÉP VÀ ĐỔI CA (LEAVE & SHIFT SWAP SYSTEM)
+   ========================================================================== */
+
+/* SỐ ĐẾM CẢNH BÁO TRÊN TAB CON (.tab-badge-count) */
+.tab-badge-count {
+    position: absolute;
+    top: -7px;
+    right: -9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #DC2626;
+    background-color: #FEE2E2;
+    border-radius: var(--admin-radius, 9px);
+    line-height: 1;
+}
+
+/* SEGMENTED SUBTABS TRONG MODAL */
+.form-subtab-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-neutral);
+    margin-bottom: 6px;
+}
+
+.form-subtab-btn {
+    background: transparent;
+    border: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: var(--admin-radius, 9px);
+    transition: color 0.15s, background-color 0.15s;
+}
+
+.form-subtab-btn:hover {
+    color: var(--text-heading);
+}
+
+.form-subtab-btn.active {
+    font-weight: 700;
+    color: var(--text-heading);
+    border-bottom: 2px solid #236B48;
+    border-radius: 0;
+}
+
+/* DANH SÁCH ĐƠN NGHỈ PHÉP VÀ ĐỔI CA */
+.leave-requests-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 480px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 4px 2px;
+}
+
+.leave-req-item {
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius, 9px);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color 0.15s;
+}
+
+.leave-req-item:hover {
+    border-color: #C3DEC7;
+}
+
+.leave-req-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.leave-req-code-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.leave-req-code {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+.leave-req-time {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.leave-req-body {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 12px;
+    font-size: 13px;
+}
+
+@media (max-width: 640px) {
+    .leave-req-body {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+}
+
+.leave-req-staff-name {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.leave-req-staff-pos {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.leave-req-desc {
+    color: var(--text-main);
+    line-height: 1.4;
+}
+
+.leave-req-reason {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 2px;
+}
+
+.leave-req-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid #F0F4F2;
+}
+
+.btn-req-action {
+    background: transparent;
+    border: none;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: var(--admin-radius, 9px);
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.btn-req-approve {
+    background-color: #DCEEE2;
+    color: #165335;
+}
+
+.btn-req-approve:hover {
+    background-color: #CBE4D3;
+}
+
+.btn-req-reject {
+    background-color: #F7DCDC;
+    color: #8F2424;
+}
+
+.btn-req-reject:hover {
+    background-color: #F0CECE;
+}
+
+.btn-req-delete {
+    color: var(--text-muted);
+}
+
+.btn-req-delete:hover {
+    color: #DC2626;
+    background-color: rgba(220, 38, 38, 0.06);
+}
+
+/* BADGES TRẠNG THÁI ĐƠN */
+.badge-req-pending {
+    background-color: #F5E8D3;
+    color: #734718;
+}
+
+.badge-req-approved {
+    background-color: #DCEEE2;
+    color: #165335;
+}
+
+.badge-req-rejected {
+    background-color: #F7DCDC;
+    color: #8F2424;
+}
+
+/* ==========================================================================
+   GIAI ĐOẠN 4: THỐNG KÊ NĂNG SUẤT, CÔNG CA VÀ BỘ MÁY SÁT HẠCH TAY NGHỀ
+   ========================================================================== */
+
+/* THỐNG KÊ CÔNG CA TRONG HỒ SƠ 360° */
+.timesheet-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+    .timesheet-metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.metric-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 10px;
+    background-color: #F8FAF9;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius, 9px);
+    gap: 2px;
+    text-align: center;
+}
+
+.metric-val {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.2px;
+}
+
+.metric-label {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.text-indigo {
+    color: #4B3F72 !important;
+}
+
+/* BẢNG ĐÁNH GIÁ NGHIỆP VỤ: ĐỒNG BỘ VIỀN TRÁI VÀ ALERT DÒNG (TUÂN THỦ AGENTS.MD) */
+#assessmentListTable th:first-child {
+    border-left: 3px solid var(--table-header-bg);
+}
+
+#assessmentListTable tr.row-highlight-warning td:first-child {
+    border-left: 3px solid #D97706;
+}
+
+#assessmentListTable tr.row-highlight-danger td:first-child {
+    border-left: 3px solid #DC2626;
 }
 

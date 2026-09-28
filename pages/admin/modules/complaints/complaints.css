@@ -52,6 +52,22 @@
     -webkit-backdrop-filter: blur(10px);
 }
 
+.kpi-card-clickable {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.kpi-card-clickable:hover {
+    border-color: #C3DEC7;
+    background-color: #F4FAF6;
+}
+
+.kpi-card-clickable.active {
+    border-color: #236B48;
+    background-color: #EEF5F1;
+}
+
 .kpi-label {
     font-size: 12.5px;
     color: var(--text-muted);
@@ -64,6 +80,229 @@
     color: var(--text-heading);
     line-height: 1.2;
     letter-spacing: -0.3px;
+}
+
+/* THANH CẢNH BÁO KHIẾU NẠI VẬN HÀNH (DẢI MỎNG ALERT TONE, THUẦN CHỮ, KHÔNG VIỀN) */
+.complaints-alert-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 18px;
+    background-color: rgba(245, 232, 211, 0.50);
+    border: none !important;
+    border-radius: var(--admin-radius, 9px) var(--admin-radius, 9px) 0 0;
+    font-size: 13px;
+    overflow: hidden;
+}
+
+.complaints-alert-strip .alert-strip-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.complaints-alert-strip .alert-strip-badge {
+    font-weight: 600;
+    color: #734718;
+    font-size: 12.5px;
+    flex-shrink: 0;
+}
+
+.complaints-alert-strip .alert-strip-items {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.complaints-alert-strip .alert-item-tag {
+    display: inline-block;
+    max-width: 340px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+    height: 24px;
+    line-height: 24px;
+    padding: 0 10px;
+    background-color: #F5E8D3;
+    border: none !important;
+    border-radius: 9px !important;
+    color: var(--text-main);
+    font-size: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.15s;
+}
+
+.complaints-alert-strip .alert-item-tag.alert-danger {
+    background-color: #F7DCDC;
+    color: #8F2424;
+}
+
+.complaints-alert-strip .alert-item-tag.alert-warning {
+    background-color: #F5E8D3;
+    color: #734718;
+}
+
+.complaints-alert-strip .alert-item-tag.alert-info {
+    background-color: #DCEAF2;
+    color: #20495E;
+}
+
+.complaints-alert-strip .alert-item-tag:hover {
+    background-color: #EDDECA;
+}
+
+.complaints-alert-strip .alert-item-tag.alert-danger:hover {
+    background-color: #F0CECE;
+}
+
+.complaints-alert-strip .alert-item-tag.alert-info:hover {
+    background-color: #CDE2EC;
+}
+
+.complaints-alert-strip .alert-dots-text {
+    color: #734718;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    user-select: none;
+    flex-shrink: 0;
+    padding: 0 4px;
+    line-height: 24px;
+}
+
+.complaints-alert-strip .btn-alert-strip-filter {
+    background: transparent;
+    border: none !important;
+    color: #734718;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 9px;
+    border-radius: 9px;
+    text-decoration: underline;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.complaints-alert-strip .btn-alert-strip-filter:hover {
+    color: #55330F;
+    background-color: rgba(115, 71, 24, 0.08);
+}
+
+/* BỘ LỌC NHANH 1-CHẠM (QUICK FILTER CHIPS) */
+.quick-filter-chips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.quick-chip-btn {
+    height: 28px;
+    padding: 0 12px;
+    border-radius: var(--admin-radius, 9px);
+    background-color: transparent;
+    border: 1px solid var(--border-neutral);
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.quick-chip-btn:hover {
+    border-color: #C3DEC7;
+    color: #236B48;
+    background-color: #F4FAF6;
+}
+
+.quick-chip-btn.active {
+    background-color: #236B48;
+    border-color: #236B48;
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+/* HUY HIỆU SLA ĐẾM NGƯỢC THỜI HẠN (SLA COUNTDOWN BADGE) */
+.sla-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 0 9px;
+    font-size: 11.5px;
+    font-weight: 600;
+    border-radius: var(--admin-radius, 9px) !important;
+    border: none !important;
+    line-height: 1;
+}
+
+.sla-badge.sla-overdue {
+    background-color: #F7DCDC;
+    color: #8F2424;
+}
+
+.sla-badge.sla-urgent {
+    background-color: #F5E8D3;
+    color: #734718;
+}
+
+.sla-badge.sla-normal {
+    background-color: #E2ECE5;
+    color: #2D483B;
+}
+
+.sla-badge.sla-done {
+    background-color: #DCEEE2;
+    color: #165335;
+}
+
+/* SỐ ĐẾM CẢNH BÁO TRÊN SUBTAB HEADER */
+.tab-badge-count {
+    color: #DC2626;
+    background: #FEE2E2;
+    border-radius: 9px;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 1px 6px;
+    line-height: 14px;
+    position: absolute;
+    top: -7px;
+    right: -9px;
+    display: inline-block;
+}
+
+.btn-text-action {
+    background: transparent;
+    border: none;
+    color: #236B48;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 3px 6px;
+    border-radius: 6px;
+    text-decoration: underline;
+    transition: background-color 0.15s;
+}
+
+.btn-text-action:hover {
+    background-color: rgba(35, 107, 72, 0.08);
 }
 
 /* 2. KHỐI MASTER CARD BẢNG DỮ LIỆU THỐNG NHẤT */
@@ -174,12 +413,14 @@
     border-bottom: none;
 }
 
-/* DÒNG CẢNH BÁO ALERT (BẮT BUỘC ĐỎ CHO MỨC CAO, VÀNG CHO LƯU Ý) */
-.row-alert-high td:first-child {
+/* DÒNG CẢNH BÁO ALERT (BẮT BUỘC ĐỎ CHO MỨC CAO VÀ QUÁ HẠN, HỔ PHÁCH CHO SẮP TRỄ) */
+.admin-table tr.row-alert-high td:first-child,
+.admin-table tr.row-alert-overdue td:first-child {
     border-left: 3px solid #DC2626 !important;
 }
 
-.row-alert-overdue td:first-child {
+.admin-table tr.row-alert-warning td:first-child,
+.admin-table tr.row-alert-urgent td:first-child {
     border-left: 3px solid #D97706 !important;
 }
 

@@ -53,6 +53,15 @@
                         weight: '4.5',
                         vaccine: 'Sổ theo dõi tiêm phòng định kỳ đầy đủ (Chủ xuất trình tháng 8/2026)',
                         alertNote: 'Cảnh báo: Dị ứng phấn hoa'
+                    },
+                    {
+                        id: 'PET-011',
+                        name: 'Bé Miu',
+                        species: 'Mèo',
+                        breed: 'Mèo Anh lông ngắn',
+                        weight: '3.2',
+                        vaccine: 'Đầy đủ sổ tiêm',
+                        alertNote: 'Bình thường'
                     }
                 ],
                 orders: [
@@ -224,6 +233,24 @@
                         weight: '22.5',
                         vaccine: 'Đầy đủ tiêm phòng',
                         alertNote: 'Lông dày, cần sấy khô kỹ'
+                    },
+                    {
+                        id: 'PET-012',
+                        name: 'Bé Corgi',
+                        species: 'Chó',
+                        breed: 'Corgi',
+                        weight: '11.0',
+                        vaccine: 'Đầy đủ tiêm phòng',
+                        alertNote: 'Thân thiện'
+                    },
+                    {
+                        id: 'PET-013',
+                        name: 'Bé Mochi',
+                        species: 'Chó',
+                        breed: 'Phốc sóc',
+                        weight: '2.8',
+                        vaccine: 'Đầy đủ tiêm phòng',
+                        alertNote: 'Bình thường'
                     }
                 ],
                 orders: [
@@ -235,8 +262,178 @@
                 complaints: [
                     { id: 'TK-015', date: '27/09/2026 08:30', issue: 'Thú cưng bị trầy nhẹ sau spa', level: 'Cao', status: 'Đang xử lý', statusClass: 'badge-warning' }
                 ]
+            },
+            'CUST-006': {
+                id: 'CUST-006',
+                name: 'Đỗ Thị Mai',
+                phone: '0918445566',
+                email: 'mai.dothi@email.com',
+                gender: 'Nữ',
+                dob: '24/04/1993',
+                tier: 'SILVER',
+                tierName: 'Bạc',
+                tierBadgeClass: 'badge-tier-silver',
+                points: 380,
+                status: 'ACTIVE',
+                authStatus: 'Đã kích hoạt',
+                note: 'Khách hàng thường xuyên đặt dịch vụ tắm sấy và tỉa lông cho bé Bơ.',
+                emergencyAlert: null,
+                addresses: [
+                    { address: '280 Hai Bà Trưng, Phường Tân Định, Quận 1, TP.HCM', isDefault: true }
+                ],
+                pets: [
+                    {
+                        id: 'PET-006',
+                        name: 'Bé Bơ',
+                        species: 'Chó',
+                        breed: 'Poodle',
+                        weight: '3.6',
+                        vaccine: 'Đầy đủ sổ tiêm định kỳ',
+                        alertNote: 'Ngoan, dễ chăm sóc'
+                    }
+                ],
+                orders: [
+                    { id: 'ORD-8890', date: '21/09/2026', total: '380.000 đ', payment: 'Đã thanh toán', status: 'Hoàn tất', statusClass: 'badge-success' }
+                ],
+                bookings: [
+                    { id: 'AP-175', date: '21/09/2026 11:00', service: 'Tắm vệ sinh và cạo lông đệm chân', staff: 'Nguyễn Thị Hoa', status: 'Hoàn tất', statusClass: 'badge-success' }
+                ],
+                complaints: []
+            },
+            'CUST-008': {
+                id: 'CUST-008',
+                name: 'Bùi Thu Trang',
+                phone: '0938776655',
+                email: 'trang.bui@email.com',
+                gender: 'Nữ',
+                dob: '10/12/1996',
+                tier: 'BRONZE',
+                tierName: 'Đồng',
+                tierBadgeClass: 'badge-neutral',
+                points: 80,
+                status: 'ACTIVE',
+                authStatus: 'Đã kích hoạt',
+                note: 'Khách hàng mới đăng ký tài khoản app, quan tâm các sản phẩm pate dinh dưỡng.',
+                emergencyAlert: null,
+                addresses: [
+                    { address: '56 Hoàng Diệu, Phường 12, Quận 4, TP.HCM', isDefault: true }
+                ],
+                pets: [
+                    {
+                        id: 'PET-008',
+                        name: 'Bé Kem',
+                        species: 'Mèo',
+                        breed: 'Mèo Ba Tư',
+                        weight: '4.1',
+                        vaccine: 'Đã tiêm 3 mũi',
+                        alertNote: 'Lông dài, dễ rụng'
+                    }
+                ],
+                orders: [
+                    { id: 'ORD-8865', date: '18/09/2026', total: '290.000 đ', payment: 'Đã thanh toán', status: 'Hoàn tất', statusClass: 'badge-success' }
+                ],
+                bookings: [],
+                complaints: []
+            },
+            'CUST-009': {
+                id: 'CUST-009',
+                name: 'Ngô Gia Bảo',
+                phone: '0909123890',
+                email: 'bao.ngo@email.com',
+                gender: 'Nam',
+                dob: '08/07/1991',
+                tier: 'SILVER',
+                tierName: 'Bạc',
+                tierBadgeClass: 'badge-tier-silver',
+                points: 510,
+                status: 'ACTIVE',
+                authStatus: 'Đã kích hoạt',
+                note: 'Khách hàng yêu cầu kiểm tra kỹ da và lông trước khi tắm sấy.',
+                emergencyAlert: null,
+                addresses: [
+                    { address: '184 Nam Kỳ Khởi Nghĩa, Phường 6, Quận 3, TP.HCM', isDefault: true }
+                ],
+                pets: [
+                    {
+                        id: 'PET-009',
+                        name: 'Bé Shin',
+                        species: 'Chó',
+                        breed: 'Shiba Inu',
+                        weight: '9.8',
+                        vaccine: 'Đầy đủ',
+                        alertNote: 'Năng động, hơi bướng'
+                    }
+                ],
+                orders: [
+                    { id: 'ORD-8850', date: '16/09/2026', total: '620.000 đ', payment: 'Đã thanh toán', status: 'Hoàn tất', statusClass: 'badge-success' }
+                ],
+                bookings: [
+                    { id: 'AP-160', date: '15/09/2026 14:00', service: 'Combo tắm sấy và sục ozone', staff: 'Trần Hoàng', status: 'Hoàn tất', statusClass: 'badge-success' }
+                ],
+                complaints: []
+            },
+            'CUST-010': {
+                id: 'CUST-010',
+                name: 'Đặng Thùy Linh',
+                phone: '0945678123',
+                email: 'linh.dang@email.com',
+                gender: 'Nữ',
+                dob: '30/03/1994',
+                tier: 'GOLD',
+                tierName: 'Vàng',
+                tierBadgeClass: 'badge-tier-gold',
+                points: 950,
+                status: 'ACTIVE',
+                authStatus: 'Đã kích hoạt',
+                note: 'Khách hàng thân thiết, thường tích điểm đổi quà phụ kiện cho bé Mầm.',
+                emergencyAlert: null,
+                addresses: [
+                    { address: '72 Lê Thánh Tôn, Phường Bến Nghé, Quận 1, TP.HCM', isDefault: true }
+                ],
+                pets: [
+                    {
+                        id: 'PET-010',
+                        name: 'Bé Mầm',
+                        species: 'Chó',
+                        breed: 'Pug',
+                        weight: '7.5',
+                        vaccine: 'Đầy đủ sổ tiêm',
+                        alertNote: 'Dễ thở dốc khi trời nóng'
+                    }
+                ],
+                orders: [
+                    { id: 'ORD-8915', date: '24/09/2026', total: '780.000 đ', payment: 'Đã thanh toán', status: 'Hoàn tất', statusClass: 'badge-success' }
+                ],
+                bookings: [
+                    { id: 'AP-192', date: '23/09/2026 09:30', service: 'Cắt tỉa tạo kiểu theo yêu cầu', staff: 'Nguyễn Văn Hải', status: 'Hoàn tất', statusClass: 'badge-success' }
+                ],
+                complaints: []
             }
         };
+
+        // Hàm định dạng ô Thú cưng trên bảng theo Phương án 1 (hiển thị bé chính + số lượng bé phụ)
+        function formatCustomerPetsCell(pets) {
+            if (!pets || pets.length === 0) {
+                return `<span class="customer-pet-sub">Chưa có thú cưng</span>`;
+            }
+            if (pets.length === 1) {
+                const p = pets[0];
+                const breedText = p.breed || (p.species === 'CAT' || p.species === 'Mèo' ? 'Mèo' : 'Chó');
+                return `
+                    <div class="customer-pet-cell">${p.name}</div>
+                    <div class="customer-pet-sub">${breedText}</div>
+                `;
+            }
+            const mainPet = pets[0];
+            const moreCount = pets.length - 1;
+            const allBreeds = pets.map(p => p.breed || (p.species === 'CAT' || p.species === 'Mèo' ? 'Mèo' : 'Chó')).filter(Boolean).join(', ');
+            const fullTooltip = pets.map(p => `${p.name} (${p.breed || p.species})`).join(', ');
+
+            return `
+                <div class="customer-pet-cell">${mainPet.name} <span class="customer-pet-more">(+${moreCount} bé)</span></div>
+                <div class="customer-pet-sub" title="${fullTooltip}">${allBreeds}</div>
+            `;
+        }
 
         // State tạm cho danh sách địa chỉ đang chỉnh sửa trong modal
         let currentEditingAddresses = [];
@@ -729,6 +926,7 @@
                 // Thêm 1 dòng mới vào đầu bảng
                 const tbody = document.getElementById('customerTableTbody');
                 if (tbody) {
+                    const petHtml = `<td>${formatCustomerPetsCell(customerDatabase[newId].pets)}</td>`;
                     const newTr = document.createElement('tr');
                     newTr.innerHTML = `
                         <td><strong>${newId}</strong></td>
@@ -739,6 +937,7 @@
                             <div class="user-sub-cell">Khách tiếp nhận tại quầy</div>
                         </td>
                         <td><strong>${phone}</strong></td>
+                        ${petHtml}
                         <td>
                             <span class="admin-badge badge-neutral">Đồng</span>
                             <span class="points-val">0 pts</span>
@@ -1072,7 +1271,7 @@
                         if (sub) sub.textContent = newEmail;
                         const phoneCell = row.querySelectorAll('td')[2]?.querySelector('strong');
                         if (phoneCell) phoneCell.textContent = newPhone;
-                        const tierBadge = row.querySelectorAll('td')[3]?.querySelector('.admin-badge');
+                        const tierBadge = row.querySelector('.points-val')?.parentElement?.querySelector('.admin-badge') || row.querySelectorAll('td')[4]?.querySelector('.admin-badge');
                         if (tierBadge) {
                             tierBadge.textContent = tierMap[newTier].name;
                             tierBadge.className = `admin-badge ${tierMap[newTier].badgeClass}`;
@@ -1133,6 +1332,18 @@
                 });
 
                 renderDrawerPets(currentCustId);
+
+                // Cập nhật lại cột thú cưng trên bảng danh sách
+                document.querySelectorAll('#customerTableTbody tr').forEach(row => {
+                    const idCell = row.querySelector('td:first-child')?.textContent?.trim();
+                    if (idCell === currentCustId) {
+                        const petCell = row.querySelectorAll('td')[3];
+                        if (petCell) {
+                            petCell.innerHTML = formatCustomerPetsCell(customerDatabase[currentCustId]?.pets);
+                        }
+                    }
+                });
+
                 alert(`Đã thêm thành công bé cưng ${petName} vào hồ sơ!`);
                 formAddPet.reset();
                 closeAddPetModal();
@@ -1185,6 +1396,18 @@
                 pet.alertNote = document.getElementById('editPetAlert')?.value || 'Bình thường';
 
                 renderDrawerPets(currentEditingPetCustId);
+
+                // Cập nhật lại cột thú cưng trên bảng danh sách
+                document.querySelectorAll('#customerTableTbody tr').forEach(row => {
+                    const idCell = row.querySelector('td:first-child')?.textContent?.trim();
+                    if (idCell === currentEditingPetCustId) {
+                        const petCell = row.querySelectorAll('td')[3];
+                        if (petCell) {
+                            petCell.innerHTML = formatCustomerPetsCell(customerDatabase[currentEditingPetCustId]?.pets);
+                        }
+                    }
+                });
+
                 alert(`Đã cập nhật thành công thông tin bé cưng ${pet.name}!`);
                 closeEditPetModal();
             });

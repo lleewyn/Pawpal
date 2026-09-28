@@ -466,24 +466,24 @@ textarea.admin-input,
 
 /* Hạng thành viên */
 .badge-tier-gold {
-    background-color: #F7F1E6;
-    color: #7A5722;
+    background-color: #F6E7CF;
+    color: #6E4912;
 }
 
 .badge-tier-silver {
-    background-color: #EEF2F1;
-    color: #4A5B55;
+    background-color: #E2ECE6;
+    color: #384F45;
 }
 
 .badge-tier-diamond {
-    background-color: #EBF2F7;
-    color: #2B576E;
+    background-color: #D9E8F2;
+    color: #1C4A65;
 }
 
 /* Trạng thái trung tính / Mặc định / Bản nháp */
 .badge-neutral {
-    background-color: #EEF3F0;
-    color: #3D5A4C;
+    background-color: #E2ECE5;
+    color: #2D483B;
 }
 
 /* Trạng thái tích cực: Hoạt động, Hoàn thành, Đã thanh toán, Đang làm việc */
@@ -492,8 +492,8 @@ textarea.admin-input,
 .badge-completed,
 .badge-paid,
 .badge-delivered {
-    background-color: #E6F2EB;
-    color: #1E5A3D;
+    background-color: #DCEEE2;
+    color: #165335;
 }
 
 /* Trạng thái chú ý / Chờ duyệt: Chờ xác nhận, Tạm dừng, Nghỉ phép, Chưa thanh toán */
@@ -501,8 +501,8 @@ textarea.admin-input,
 .badge-leave,
 .badge-pending,
 .badge-unpaid {
-    background-color: #F7F2E9;
-    color: #7C5329;
+    background-color: #F5E8D3;
+    color: #734718;
 }
 
 /* Trạng thái khẩn cấp / Hủy: Đã hủy, Nghỉ việc, Bị khóa, Không đạt, Cảnh báo */
@@ -510,8 +510,8 @@ textarea.admin-input,
 .badge-resigned,
 .badge-cancelled,
 .badge-alert {
-    background-color: #FBF0F0;
-    color: #993535;
+    background-color: #F7DCDC;
+    color: #8F2424;
 }
 
 /* Trạng thái tiến trình / Thông tin: Đang thực hiện, Đang giao, Đã xác nhận, Tạm nghỉ */
@@ -520,8 +520,8 @@ textarea.admin-input,
 .badge-confirmed,
 .badge-in-progress,
 .badge-pause {
-    background-color: #EBF2F6;
-    color: #2E5568;
+    background-color: #DCEAF2;
+    color: #20495E;
 }
 
 /* 4. THẺ KHUNG (CARDS) */

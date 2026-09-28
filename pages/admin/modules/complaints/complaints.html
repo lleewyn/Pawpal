@@ -5,23 +5,23 @@
     <section class="subtab-content active" id="subtab-tab-complaint-services">
         <!-- 5 THẺ THỐNG KÊ KPI NHANH -->
         <div class="complaints-kpi-grid">
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-service-kpi="new">
                 <span class="kpi-label">Khiếu nại mới</span>
                 <span class="kpi-val" id="statServiceNew">3</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-service-kpi="processing">
                 <span class="kpi-label">Đang xử lý</span>
                 <span class="kpi-val text-warning" id="statServiceProcessing">5</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-service-kpi="waiting_customer">
                 <span class="kpi-label">Chờ phản hồi khách hàng</span>
                 <span class="kpi-val text-neutral" id="statServiceWaiting">2</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-service-kpi="high">
                 <span class="kpi-label">Khiếu nại mức độ Cao</span>
                 <span class="kpi-val text-danger" id="statServiceHighPriority">2</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-service-kpi="overdue">
                 <span class="kpi-label">Quá hạn xử lý</span>
                 <span class="kpi-val text-danger" id="statServiceOverdue">1</span>
             </div>
@@ -29,6 +29,19 @@
 
         <!-- KHỐI BẢNG DỮ LIỆU THỐNG NHẤT (GOM KHỐI) -->
         <div class="admin-card complaint-master-card">
+            <!-- THANH CẢNH BÁO KHIẾU NẠI VẬN HÀNH (DẢI MỎNG ALERT TONE, THUẦN CHỮ, KHÔNG VIỀN) -->
+            <div class="complaints-alert-strip" id="serviceComplaintsAlertBar">
+                <div class="alert-strip-left">
+                    <span class="alert-strip-badge">Cảnh báo khẩn cấp:</span>
+                    <div class="alert-strip-items" id="serviceAlertItemsContainer">
+                        <!-- Render by JS -->
+                    </div>
+                </div>
+                <div class="alert-strip-right">
+                    <button type="button" class="btn-alert-strip-filter" id="btnFilterUrgentService">Lọc ca cần xử lý gấp</button>
+                </div>
+            </div>
+
             <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
@@ -39,6 +52,15 @@
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportServiceComplaints">Xuất file</button>
                         <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateServiceTicket">+ Tạo khiếu nại</button>
                     </div>
+                </div>
+
+                <!-- BỘ LỌC NHANH 1-CHẠM -->
+                <div class="quick-filter-chips" id="serviceQuickChips">
+                    <button type="button" class="quick-chip-btn active" data-filter="ALL">Tất cả</button>
+                    <button type="button" class="quick-chip-btn" data-filter="MY">Của tôi phụ trách</button>
+                    <button type="button" class="quick-chip-btn" data-filter="UNASSIGNED">Chưa phân công</button>
+                    <button type="button" class="quick-chip-btn" data-filter="OVERDUE">Quá hạn SLA</button>
+                    <button type="button" class="quick-chip-btn" data-filter="HIGH">Mức độ Cao</button>
                 </div>
 
                 <div class="filter-row-bottom">
@@ -99,6 +121,7 @@
                             <th>Dịch vụ</th>
                             <th>Nội dung và Vấn đề</th>
                             <th>Mức độ</th>
+                            <th>Hạn xử lý (SLA)</th>
                             <th>Nhân viên phụ trách</th>
                             <th>Ngày tiếp nhận</th>
                             <th>Trạng thái</th>
@@ -127,27 +150,27 @@
     <section class="subtab-content" id="subtab-tab-complaint-orders">
         <!-- 6 THẺ THỐNG KÊ KPI NHANH -->
         <div class="complaints-kpi-grid order-kpi-grid">
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-order-kpi="new">
                 <span class="kpi-label">Khiếu nại mới</span>
                 <span class="kpi-val" id="statOrderNew">4</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-order-kpi="processing">
                 <span class="kpi-label">Đang xử lý</span>
                 <span class="kpi-val text-warning" id="statOrderProcessing">6</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-order-kpi="return_request">
                 <span class="kpi-label">Yêu cầu đổi và trả</span>
                 <span class="kpi-val text-neutral" id="statOrderRMA">3</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-order-kpi="waiting_return">
                 <span class="kpi-label">Chờ khách gửi hàng</span>
                 <span class="kpi-val" style="color: #0369A1;" id="statOrderWaitingReturn">2</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-order-kpi="refunding">
                 <span class="kpi-label">Đang hoàn tiền</span>
                 <span class="kpi-val" style="color: #6D28D9;" id="statOrderRefunding">1</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-order-kpi="overdue">
                 <span class="kpi-label">Quá hạn xử lý</span>
                 <span class="kpi-val text-danger" id="statOrderOverdue">1</span>
             </div>
@@ -155,6 +178,19 @@
 
         <!-- KHỐI BẢNG DỮ LIỆU ĐƠN HÀNG THỐNG NHẤT -->
         <div class="admin-card complaint-master-card">
+            <!-- THANH CẢNH BÁO KHIẾU NẠI VẬN HÀNH ĐƠN HÀNG -->
+            <div class="complaints-alert-strip" id="orderComplaintsAlertBar">
+                <div class="alert-strip-left">
+                    <span class="alert-strip-badge">Cảnh báo khẩn cấp:</span>
+                    <div class="alert-strip-items" id="orderAlertItemsContainer">
+                        <!-- Render by JS -->
+                    </div>
+                </div>
+                <div class="alert-strip-right">
+                    <button type="button" class="btn-alert-strip-filter" id="btnFilterUrgentOrder">Lọc ca cần xử lý gấp</button>
+                </div>
+            </div>
+
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
                     <div class="search-box-wrapper">
@@ -164,6 +200,15 @@
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportOrderComplaints">Xuất file</button>
                         <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateOrderTicket">+ Tạo khiếu nại</button>
                     </div>
+                </div>
+
+                <!-- BỘ LỌC NHANH 1-CHẠM -->
+                <div class="quick-filter-chips" id="orderQuickChips">
+                    <button type="button" class="quick-chip-btn active" data-filter="ALL">Tất cả</button>
+                    <button type="button" class="quick-chip-btn" data-filter="MY">Của tôi phụ trách</button>
+                    <button type="button" class="quick-chip-btn" data-filter="UNASSIGNED">Chưa phân công</button>
+                    <button type="button" class="quick-chip-btn" data-filter="OVERDUE">Quá hạn SLA</button>
+                    <button type="button" class="quick-chip-btn" data-filter="HIGH">Mức độ Cao</button>
                 </div>
 
                 <div class="filter-row-bottom">
@@ -227,6 +272,7 @@
                             <th>Loại vấn đề</th>
                             <th>Yêu cầu của khách</th>
                             <th>Mức độ</th>
+                            <th>Hạn xử lý (SLA)</th>
                             <th>Nhân viên phụ trách</th>
                             <th>Ngày tiếp nhận</th>
                             <th>Trạng thái</th>

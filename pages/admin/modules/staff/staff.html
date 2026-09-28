@@ -5,23 +5,23 @@
     <section class="subtab-content active" id="subtab-tab-staff-list">
         <!-- 5 THẺ THỐNG KÊ KPI -->
         <div class="staff-kpi-grid">
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable active" data-kpi-filter="ALL">
                 <span class="kpi-label">Tổng số nhân viên</span>
                 <span class="kpi-val" id="statTotalStaff">45</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="ACTIVE">
                 <span class="kpi-label">Đang làm việc</span>
                 <span class="kpi-val text-success" id="statActiveStaff">38</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="LEAVE">
                 <span class="kpi-label">Nghỉ phép</span>
                 <span class="kpi-val text-warning" id="statLeaveStaff">3</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="PAUSE">
                 <span class="kpi-label">Tạm nghỉ</span>
                 <span class="kpi-val text-neutral" id="statPauseStaff">2</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="RETRAIN">
                 <span class="kpi-label">Cần đào tạo lại</span>
                 <span class="kpi-val text-danger" id="statRetrainStaff">2</span>
             </div>
@@ -29,6 +29,19 @@
 
         <!-- KHỐI BẢNG DỮ LIỆU -->
         <div class="admin-card staff-master-card">
+            <!-- THANH CẢNH BÁO NHÂN SỰ CHỦ ĐỘNG (DẢI MỎNG ALERT TONE, THUẦN CHỮ, KHÔNG VIỀN) -->
+            <div class="staff-alert-strip" id="staffAlertBar">
+                <div class="alert-strip-left">
+                    <span class="alert-strip-badge">Cảnh báo vận hành:</span>
+                    <div class="alert-strip-items" id="staffAlertItemsContainer">
+                        <!-- Render động bởi JS -->
+                    </div>
+                </div>
+                <div class="alert-strip-right">
+                    <button type="button" class="btn-alert-strip-filter" id="btnFilterStaffAlertQuick">Lọc danh sách</button>
+                </div>
+            </div>
+
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
                     <div class="search-box-wrapper">
@@ -54,19 +67,6 @@
                     </div>
 
                     <div class="filter-dropdown-group">
-                        <label class="filter-label">Vai trò hệ thống:</label>
-                        <select class="admin-select" id="staffFilterRole">
-                            <option value="ALL">Tất cả</option>
-                            <option value="Admin">Admin</option>
-                            <option value="Receptionist">Receptionist</option>
-                            <option value="Groomer">Groomer</option>
-                            <option value="Veterinarian">Veterinarian</option>
-                            <option value="Driver">Driver</option>
-                            <option value="CSKH">CSKH</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-dropdown-group">
                         <label class="filter-label">Trạng thái:</label>
                         <select class="admin-select" id="staffFilterStatus">
                             <option value="ALL">Tất cả</option>
@@ -84,8 +84,12 @@
                             <option value="MORNING">Ca sáng</option>
                             <option value="AFTERNOON">Ca chiều</option>
                             <option value="EVENING">Ca tối</option>
+                            <option value="NIGHT">Ca khuya</option>
                         </select>
                     </div>
+
+                    <button type="button" class="admin-btn-filter-toggle" id="btnFilterRetrainOnly">Cần đào tạo lại</button>
+                    <button type="button" class="admin-btn-filter-toggle toggle-danger" id="btnFilterLockOnly">Đang khóa nhận việc</button>
                 </div>
             </div>
 
@@ -93,12 +97,12 @@
                 <table class="admin-table" id="staffListTable">
                     <thead>
                         <tr>
-                            <th>Mã NV</th>
+                            <th style="width: 100px;">Mã NV</th>
                             <th>Họ tên</th>
                             <th>Chức vụ</th>
-                            <th>Vai trò hệ thống</th>
                             <th>Số điện thoại</th>
                             <th>Ca hiện tại</th>
+                            <th>Tay nghề</th>
                             <th>Trạng thái</th>
                             <th style="text-align: center; width: 60px;">Thao tác</th>
                         </tr>
@@ -132,8 +136,10 @@
                     <span class="admin-badge badge-neutral" id="viewStaffCode">EMP-001</span>
                     <span class="admin-badge badge-tier-gold" id="viewStaffPosition">Admin</span>
                     <span class="admin-badge badge-active" id="viewStaffStatusBadge">Đang làm việc</span>
+                    <span class="admin-badge badge-locked" id="viewStaffSafetyBadge" style="display: none;">Khóa nhận việc</span>
                 </div>
                 <div class="staff-quick-actions">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnProfileToggleSafetyLock">Khóa nhận việc</button>
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnProfileEditStaff">Chỉnh sửa hồ sơ</button>
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnProfileAssignShift">Phân ca làm việc</button>
                     <button type="button" class="admin-btn admin-btn-primary" id="btnProfileAddAssessment">Đánh giá nghiệp vụ</button>
@@ -198,6 +204,28 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="drawer-info-block" style="margin-top: 24px;">
+                        <div class="drawer-section-title">Công ca và Năng suất tháng hiện tại</div>
+                        <div class="timesheet-metrics-grid">
+                            <div class="metric-box">
+                                <span class="metric-val" id="viewStaffMonthlyHours">168.0h</span>
+                                <span class="metric-label">Tổng giờ công</span>
+                            </div>
+                            <div class="metric-box">
+                                <span class="metric-val text-indigo" id="viewStaffNightShifts">4 ca</span>
+                                <span class="metric-label">Trực đêm 24/7</span>
+                            </div>
+                            <div class="metric-box">
+                                <span class="metric-val text-success" id="viewStaffCompletedServices">42 lượt</span>
+                                <span class="metric-label">Dịch vụ phục vụ</span>
+                            </div>
+                            <div class="metric-box">
+                                <span class="metric-val text-primary" id="viewStaffPunctuality">98.5%</span>
+                                <span class="metric-label">Đúng giờ</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="staff-profile-right-col">
@@ -243,16 +271,73 @@
          SUB-TAB 3: LỊCH LÀM VIỆC
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-staff-schedule">
+        <!-- 4 THẺ ĐỊNH BIÊN CA LÀM VIỆC CHỦ ĐỘNG (SHIFT QUOTAS BAR 24/7) -->
+        <div class="shift-quota-strip" id="shiftQuotaStrip">
+            <div class="quota-card quota-ok" data-target-shift="MORNING">
+                <div class="quota-header">
+                    <span class="quota-shift-name">Ca sáng (08:00 - 12:00)</span>
+                    <span class="quota-status-pill pill-ok" id="quotaMorningBadge">Đạt định biên</span>
+                </div>
+                <div class="quota-detail">
+                    <span class="quota-count" id="quotaMorningCount">4 / 4 nhân sự</span>
+                    <span class="quota-note" id="quotaMorningNote">1 Lễ tân • 2 Groomer • 1 Thú y</span>
+                </div>
+            </div>
+            <div class="quota-card quota-warning" data-target-shift="AFTERNOON">
+                <div class="quota-header">
+                    <span class="quota-shift-name">Ca chiều (13:00 - 17:00)</span>
+                    <span class="quota-status-pill pill-warning" id="quotaAfternoonBadge">Thiếu 1 Groomer</span>
+                </div>
+                <div class="quota-detail">
+                    <span class="quota-count" id="quotaAfternoonCount">2 / 3 nhân sự</span>
+                    <span class="quota-note" id="quotaAfternoonNote">Trần Văn Hùng đang tạm khóa</span>
+                </div>
+            </div>
+            <div class="quota-card quota-ok" data-target-shift="EVENING">
+                <div class="quota-header">
+                    <span class="quota-shift-name">Ca tối (17:30 - 21:30)</span>
+                    <span class="quota-status-pill pill-ok" id="quotaEveningBadge">Đạt định biên</span>
+                </div>
+                <div class="quota-detail">
+                    <span class="quota-count" id="quotaEveningCount">1 / 2 nhân sự</span>
+                    <span class="quota-note" id="quotaEveningNote">1 Lễ tân • 1 CSKH</span>
+                </div>
+            </div>
+            <div class="quota-card quota-ok" data-target-shift="NIGHT">
+                <div class="quota-header">
+                    <span class="quota-shift-name">Ca khuya (22:00 - 06:00)</span>
+                    <span class="quota-status-pill pill-ok" id="quotaNightBadge">Đạt định biên</span>
+                </div>
+                <div class="quota-detail">
+                    <span class="quota-count" id="quotaNightCount">1 / 1 nhân sự</span>
+                    <span class="quota-note" id="quotaNightNote">1 Bác sĩ/Bảo mẫu trực 24/7</span>
+                </div>
+            </div>
+        </div>
+
         <div class="admin-card staff-master-card">
             <div class="table-toolbar-section">
-                <div class="filter-row-top" style="justify-content: flex-start; gap: 20px;">
+                <div class="filter-row-top">
                     <div class="date-navigator">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnPrevDay">&lt;</button>
-                        <input type="date" class="admin-input" id="scheduleDatePicker" value="2026-09-27">
+                        <input type="date" class="admin-input" id="scheduleDatePicker" value="2026-09-28">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnNextDay">&gt;</button>
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnToday">Hôm nay</button>
                     </div>
+
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button type="button" class="admin-btn-filter-toggle active" id="btnScheduleViewDay">Theo ngày</button>
+                        <button type="button" class="admin-btn-filter-toggle" id="btnScheduleViewWeek">Theo tuần</button>
+                    </div>
                     
+                    <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenLeaveRequestsTray">Đơn xin nghỉ và Đổi ca (<span id="trayPendingCount">2</span>)</button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenLeaveSwapModal">+ Tạo đơn nghỉ / Đổi ca</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAssignShiftModal">+ Phân ca làm việc</button>
+                    </div>
+                </div>
+
+                <div class="filter-row-bottom">
                     <div class="filter-dropdown-group">
                         <label class="filter-label">Chức vụ:</label>
                         <select class="admin-select" id="scheduleFilterPosition">
@@ -265,29 +350,61 @@
                         </select>
                     </div>
 
-                    <div class="filter-dropdown-group">
+                    <div class="filter-dropdown-group" id="groupFilterShiftDay">
                         <label class="filter-label">Ca làm việc:</label>
                         <select class="admin-select" id="scheduleFilterShift">
                             <option value="ALL">Tất cả</option>
                             <option value="MORNING">Ca sáng</option>
                             <option value="AFTERNOON">Ca chiều</option>
                             <option value="EVENING">Ca tối</option>
+                            <option value="NIGHT">Ca khuya</option>
                         </select>
+                    </div>
+
+                    <div style="font-size: 12.5px; color: var(--text-muted); margin-left: auto;">
+                        <span id="scheduleLegendText">Quy định định mức: Tối đa 8 giờ làm việc/ngày để đảm bảo an toàn thao tác</span>
                     </div>
                 </div>
             </div>
 
-            <div class="table-responsive-wrapper">
-                <table class="admin-table schedule-table" id="scheduleTable">
+            <!-- CHẾ ĐỘ XEM THEO NGÀY (DAY VIEW) -->
+            <div class="table-responsive-wrapper" id="scheduleDayViewWrapper">
+                <table class="admin-table schedule-table" id="scheduleDayTable">
                     <thead>
                         <tr>
-                            <th style="width: 25%;">Họ tên và Chức vụ</th>
-                            <th style="width: 25%; text-align: center;">Ca sáng (08:00 - 12:00)</th>
-                            <th style="width: 25%; text-align: center;">Ca chiều (13:00 - 17:00)</th>
-                            <th style="width: 25%; text-align: center;">Ca tối (17:30 - 21:30)</th>
+                            <th style="width: 95px;">Mã NV</th>
+                            <th style="width: 200px;">Họ tên và Chức vụ</th>
+                            <th style="text-align: center;">Ca sáng (08:00 - 12:00)</th>
+                            <th style="text-align: center;">Ca chiều (13:00 - 17:00)</th>
+                            <th style="text-align: center;">Ca tối (17:30 - 21:30)</th>
+                            <th style="text-align: center;">Ca khuya (22:00 - 06:00)</th>
+                            <th style="text-align: center; width: 130px;">Tổng giờ/ngày</th>
                         </tr>
                     </thead>
                     <tbody id="scheduleTableBody">
+                        <!-- Render by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- CHẾ ĐỘ XEM THEO TUẦN (WEEK VIEW) -->
+            <div class="table-responsive-wrapper" id="scheduleWeekViewWrapper" style="display: none;">
+                <table class="admin-table schedule-week-table" id="scheduleWeekTable">
+                    <thead>
+                        <tr id="scheduleWeekHeaderRow">
+                            <th style="width: 100px;">Mã NV</th>
+                            <th style="width: 180px;">Họ tên</th>
+                            <th style="text-align: center;">Thứ 2</th>
+                            <th style="text-align: center;">Thứ 3</th>
+                            <th style="text-align: center;">Thứ 4</th>
+                            <th style="text-align: center;">Thứ 5</th>
+                            <th style="text-align: center;">Thứ 6</th>
+                            <th style="text-align: center;">Thứ 7</th>
+                            <th style="text-align: center;">Chủ Nhật</th>
+                            <th style="text-align: center; width: 120px;">Tổng giờ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleWeekTableBody">
                         <!-- Render by JS -->
                     </tbody>
                 </table>
@@ -338,6 +455,8 @@
                             <option value="Spa">Spa</option>
                             <option value="CSKH">CSKH</option>
                             <option value="Taxi Pet">Taxi Pet</option>
+                            <option value="Lưu trú 24/7">Lưu trú 24/7</option>
+                            <option value="Thú y">Thú y và Cấp cứu</option>
                         </select>
                     </div>
 
@@ -357,13 +476,14 @@
                 <table class="admin-table" id="assessmentListTable">
                     <thead>
                         <tr>
-                            <th>Ngày đánh giá</th>
-                            <th>Mã NV</th>
-                            <th>Họ tên</th>
-                            <th>Loại kiểm tra</th>
-                            <th>Điểm</th>
-                            <th>Kết quả</th>
-                            <th>Người đánh giá</th>
+                            <th style="width: 105px;">Ngày đánh giá</th>
+                            <th style="width: 95px;">Mã NV</th>
+                            <th style="width: 170px;">Họ tên</th>
+                            <th style="width: 130px;">Loại kiểm tra</th>
+                            <th style="width: 80px; text-align: center;">Điểm</th>
+                            <th style="width: 120px;">Kết quả</th>
+                            <th style="width: 150px;">Người đánh giá</th>
+                            <th>Ghi chú đào tạo</th>
                             <th style="text-align: center; width: 60px;">Thao tác</th>
                         </tr>
                     </thead>
@@ -575,6 +695,7 @@
                             <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
                             <option value="AFTERNOON">Ca chiều (13:00 - 17:00)</option>
                             <option value="EVENING">Ca tối (17:30 - 21:30)</option>
+                            <option value="NIGHT">Ca khuya (22:00 - 06:00)</option>
                         </select>
                     </div>
                 </div>
@@ -630,22 +751,27 @@
                             <option value="Spa">Spa</option>
                             <option value="CSKH">CSKH</option>
                             <option value="Taxi Pet">Taxi Pet</option>
+                            <option value="Lưu trú 24/7">Lưu trú 24/7</option>
+                            <option value="Thú y">Thú y và Cấp cứu</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-row-2col">
                     <div class="form-group-item">
                         <label class="form-label-clean">Điểm đánh giá (0-100) *</label>
-                        <input type="number" class="admin-input" id="assessInputScore" min="0" max="100">
+                        <input type="number" class="admin-input" id="assessInputScore" min="0" max="100" placeholder="Nhập điểm...">
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Kết quả *</label>
                         <select class="admin-select" id="assessInputResult">
-                            <option value="PASS">Đạt</option>
-                            <option value="RETRAIN">Cần đào tạo</option>
-                            <option value="FAIL">Không đạt</option>
+                            <option value="PASS">Đạt (≥ 80đ)</option>
+                            <option value="RETRAIN">Cần đào tạo (60 - 79đ)</option>
+                            <option value="FAIL">Không đạt (&lt; 60đ)</option>
                         </select>
                     </div>
+                </div>
+                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: -6px;">
+                    * Cơ chế an toàn tự động: Điểm &lt; 80 sẽ kích hoạt Khóa an toàn tay nghề. Điểm ≥ 80 tự động mở khóa nhận việc độc lập.
                 </div>
                 <div class="form-group-item">
                     <label class="form-label-clean">Ghi chú đào tạo</label>
@@ -662,9 +788,180 @@
         </div>
     </div>
 
+    <!-- MODAL: TẠO ĐƠN XIN NGHỈ PHÉP VÀ ĐỀ XUẤT ĐỔI CA (PHASE 3) -->
+    <div class="admin-modal-overlay" id="leaveSwapModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Đơn xin nghỉ phép và Đổi ca</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelLeaveSwapModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <!-- SEGMENTED TABS: XIN NGHỈ PHÉP | ĐỔI CA LÀM VIỆC -->
+                <div class="form-subtab-group">
+                    <button type="button" class="form-subtab-btn active" id="btnTabModeLeave">Xin nghỉ phép</button>
+                    <span class="header-subtab-divider">|</span>
+                    <button type="button" class="form-subtab-btn" id="btnTabModeSwap">Đề xuất đổi ca</button>
+                </div>
+
+                <!-- FORM XIN NGHỈ PHÉP -->
+                <div id="formSectionLeave">
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Nhân viên xin nghỉ *</label>
+                            <select class="admin-select" id="leaveInputStaff">
+                                <!-- Render by JS -->
+                            </select>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Loại nghỉ phép *</label>
+                            <select class="admin-select" id="leaveInputType">
+                                <option value="ANNUAL">Nghỉ phép năm</option>
+                                <option value="SICK">Nghỉ ốm và Khám bệnh</option>
+                                <option value="PERSONAL">Việc riêng gia đình</option>
+                                <option value="UNPAID">Nghỉ không lương</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Từ ngày *</label>
+                            <input type="date" class="admin-input" id="leaveInputStartDate">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Đến ngày *</label>
+                            <input type="date" class="admin-input" id="leaveInputEndDate">
+                        </div>
+                    </div>
+
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Phạm vi ca nghỉ *</label>
+                            <select class="admin-select" id="leaveInputScope">
+                                <option value="ALL">Cả ngày (Tất cả ca)</option>
+                                <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
+                                <option value="AFTERNOON">Ca chiều (13:00 - 17:00)</option>
+                                <option value="EVENING">Ca tối (17:30 - 21:30)</option>
+                                <option value="NIGHT">Ca khuya (22:00 - 06:00)</option>
+                            </select>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Người trực thay thế (Tùy chọn)</label>
+                            <select class="admin-select" id="leaveInputReplacement">
+                                <option value="">-- Chưa có người thay --</option>
+                                <!-- Render by JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Lý do nghỉ phép *</label>
+                        <input type="text" class="admin-input" id="leaveInputReason" placeholder="Ghi rõ lý do xin nghỉ phép...">
+                    </div>
+                </div>
+
+                <!-- FORM ĐỀ XUẤT ĐỔI CA -->
+                <div id="formSectionSwap" style="display: none;">
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Nhân viên xin đổi (NV 1) *</label>
+                            <select class="admin-select" id="swapInputStaffFrom">
+                                <!-- Render by JS -->
+                            </select>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Đổi với nhân viên (NV 2) *</label>
+                            <select class="admin-select" id="swapInputStaffTo">
+                                <!-- Render by JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ngày xin đổi *</label>
+                            <input type="date" class="admin-input" id="swapInputDateFrom">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ca hiện tại của NV 1 *</label>
+                            <select class="admin-select" id="swapInputShiftFrom">
+                                <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
+                                <option value="AFTERNOON">Ca chiều (13:00 - 17:00)</option>
+                                <option value="EVENING">Ca tối (17:30 - 21:30)</option>
+                                <option value="NIGHT">Ca khuya (22:00 - 06:00)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ngày đổi sang (hoặc trực bù) *</label>
+                            <input type="date" class="admin-input" id="swapInputDateTo">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ca NV 1 sẽ nhận lại *</label>
+                            <select class="admin-select" id="swapInputShiftTo">
+                                <option value="MORNING">Ca sáng (08:00 - 12:00)</option>
+                                <option value="AFTERNOON">Ca chiều (13:00 - 17:00)</option>
+                                <option value="EVENING">Ca tối (17:30 - 21:30)</option>
+                                <option value="NIGHT">Ca khuya (22:00 - 06:00)</option>
+                                <option value="NONE">Trực hộ (Không nhận ca bù)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Lý do đổi ca *</label>
+                        <input type="text" class="admin-input" id="swapInputReason" placeholder="Ghi rõ lý do cần đổi ca...">
+                    </div>
+                </div>
+
+                <div class="pet-safety-banner" id="leaveSwapAlertBanner" style="display: none; margin-top: 4px;">
+                    <!-- Cảnh báo thiếu hụt hoặc xung đột ca -->
+                </div>
+            </div>
+            <div class="modal-footer-clean" style="justify-content: space-between;">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissLeaveSwapModal">Hủy</button>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnSubmitLeavePending">Lưu đơn chờ duyệt</button>
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnApproveLeaveImmediately">Duyệt ngay và Áp dụng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DANH SÁCH ĐƠN NGHỈ PHÉP VÀ ĐỔI CA (TRAY) -->
+    <div class="admin-modal-overlay" id="leaveRequestsTrayModal">
+        <div class="admin-modal-card" style="width: 720px; max-width: 95vw;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Quản lý Đơn xin nghỉ phép và Đổi ca</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelLeaveRequestsTray">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <button type="button" class="admin-btn-filter-toggle active" id="btnFilterReqAll">Tất cả</button>
+                        <button type="button" class="admin-btn-filter-toggle" id="btnFilterReqPending">Chờ duyệt (<span id="countFilterReqPending">2</span>)</button>
+                        <button type="button" class="admin-btn-filter-toggle" id="btnFilterReqApproved">Đã duyệt</button>
+                        <button type="button" class="admin-btn-filter-toggle" id="btnFilterReqRejected">Từ chối</button>
+                    </div>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenLeaveModalFromTray">+ Tạo đơn mới</button>
+                </div>
+
+                <div class="leave-requests-list-container" id="leaveRequestsListContainer">
+                    <!-- Render by JS -->
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissLeaveRequestsTray">Đóng</button>
+            </div>
+        </div>
+    </div>
+
     <!-- DROPDOWN THAO TÁC 3 CHẤM (TEXT-ONLY) -->
     <div class="action-dropdown-menu" id="staffActionDropdown" style="display: none;">
         <button type="button" class="action-menu-item" id="menuActionViewProfile">Xem hồ sơ</button>
+        <button type="button" class="action-menu-item" id="menuActionToggleLock">Khóa / Mở nhận việc</button>
         <button type="button" class="action-menu-item" id="menuActionEditStaff">Chỉnh sửa hồ sơ</button>
         <button type="button" class="action-menu-item" id="menuActionViewSchedule">Xem lịch làm việc</button>
         <button type="button" class="action-menu-item" id="menuActionViewAssess">Xem lịch sử đánh giá</button>

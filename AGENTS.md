@@ -107,10 +107,10 @@
   - **Tuyệt đối không viền (`border: none !important;`)**: Triệt tiêu hoàn toàn cảm giác đóng khung hộp cứng nhắc.
   - **Độ đậm & Hình khối chữ nhật chuẩn 9px**: `height: 24px; padding: 0 9px; font-size: 12px; font-weight: 500; border-radius: 9px !important; line-height: 1;`. Chiều cao 24px đảm bảo hai cạnh bên có đoạn thẳng đứng (6px), tạo hình khối chữ nhật bo góc 9px vuông vức đồng bộ với Card/Button/Input, triệt tiêu hoàn toàn hình dạng viên thuốc (oval / pill) hai đầu bị bo tròn ủng bán nguyệt.
   - **Bảng màu dịu mắt (Muted Pastel / Tone-down)**: Triệt tiêu hiệu ứng kẹo cầu vồng chói mắt, gom về các sắc thái tự nhiên, dịu nhẹ, tiệp với nền kính mờ:
-    * *Trung tính / Mặc định / Bản nháp*: Nền `#EEF3F0`, chữ xanh than xô thơm `#3D5A4C`.
-    * *Tích cực (Hoạt động, Hoàn thành, Đã thanh toán, Đang làm việc)*: Nền xanh Forest nhạt `#E6F2EB`, chữ `#1E5A3D`.
-    * *Chú ý / Chờ duyệt (Chờ xác nhận, Tạm dừng, Nghỉ phép, Chưa thanh toán)*: Nền hổ phách trầm ấm `#F7F2E9`, chữ nâu ấm `#7C5329`.
-    * *Khẩn cấp / Tiêu cực (Đã hủy, Nghỉ việc, Bị khóa, Không đạt, Cảnh báo)*: Nền đỏ đất nhạt `#FBF0F0`, chữ đỏ đất sẫm mềm `#993535`.
-    * *Tiến trình / Thông tin (Đang thực hiện, Đang giao, Đã xác nhận, Tạm nghỉ)*: Nền xô thơm / xanh phấn nhẹ `#EBF2F6`, chữ `#2E5568`.
+    * *Trung tính / Mặc định / Bản nháp*: Nền `#E2ECE5`, chữ xanh than xô thơm `#2D483B`.
+    * *Tích cực (Hoạt động, Hoàn thành, Đã thanh toán, Đang làm việc)*: Nền xanh Forest nhạt `#DCEEE2`, chữ `#165335`.
+    * *Chú ý / Chờ duyệt (Chờ xác nhận, Tạm dừng, Nghỉ phép, Chưa thanh toán)*: Nền hổ phách ấm `#F5E8D3`, chữ nâu ấm `#734718`.
+    * *Khẩn cấp / Tiêu cực (Đã hủy, Nghỉ việc, Bị khóa, Không đạt, Cảnh báo)*: Nền đỏ đất nhạt `#F7DCDC`, chữ đỏ đất sẫm mềm `#8F2424`.
+    * *Tiến trình / Thông tin (Đang thực hiện, Đang giao, Đã xác nhận, Tạm nghỉ)*: Nền xô thơm / xanh phấn nhẹ `#DCEAF2`, chữ `#20495E`.
 * **Số đếm cảnh báo trên Tab con (`.tab-badge-count`)**:
   - Khi có đơn hàng, lịch hẹn hoặc khiếu nại đang chờ xử lý, hiển thị con số màu đỏ đặt ở **góc trên bên phải** của tên tab (dạng pill mini `color: #DC2626; background: #FEE2E2; border-radius: 9px; position: absolute; top: -7px; right: -9px;`) để người quản trị nhận diện ngay tức thì.

@@ -66,24 +66,23 @@
     align-items: center;
     gap: 6px;
     padding: 3px 10px;
-    background-color: #FFFFFF;
-    border: 1px solid #FCD34D;
-    border-radius: var(--admin-radius);
+    background-color: #F5E8D3;
+    border: none !important;
+    border-radius: 9px !important;
     color: var(--text-main);
     font-size: 12.5px;
     cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .upcoming-item-tag:hover {
-    background-color: #FEF3C7;
-    border-color: #D97706;
+    background-color: #EDDCBE;
+    border: none !important;
 }
 
 .upcoming-item-tag.urgent {
-    border-color: #FED8D8;
-    background-color: #FEF2F2;
-    color: #DC2626;
+    border: none !important;
+    background-color: #F7DCDC;
+    color: #8F2424;
 }
 
 .upcoming-item-tag .tag-time {
@@ -318,9 +317,9 @@
 }
 
 .admin-btn-filter-toggle.active {
-    background-color: #FEE2E2;
-    border-color: #FED8D8;
-    color: #DC2626;
+    background-color: #F7DCDC;
+    border: none !important;
+    color: #8F2424;
 }
 
 /* BẢNG DỮ LIỆU - TRIỆT TIÊU HOÀN TOÀN XẾP LỚP NỀN (ANTI-OPACITY STACKING) */
@@ -442,38 +441,38 @@
 }
 
 .badge-pending {
-    background-color: #F7F2E9;
-    color: #7C5329;
+    background-color: #F5E8D3;
+    color: #734718;
 }
 
 .badge-confirmed {
-    background-color: #EBF2F6;
-    color: #2E5568;
+    background-color: #DCEAF2;
+    color: #20495E;
 }
 
 .badge-in-progress {
-    background-color: #EBF2F6;
-    color: #2E5568;
+    background-color: #DCEAF2;
+    color: #20495E;
 }
 
 .badge-completed {
-    background-color: #E6F2EB;
-    color: #1E5A3D;
+    background-color: #DCEEE2;
+    color: #165335;
 }
 
 .badge-cancelled {
-    background-color: #FBF0F0;
-    color: #993535;
+    background-color: #F7DCDC;
+    color: #8F2424;
 }
 
 .badge-alert {
-    background-color: #FBF0F0;
-    color: #993535;
+    background-color: #F7DCDC;
+    color: #8F2424;
 }
 
 .badge-warning {
-    background-color: #F7F2E9;
-    color: #7C5329;
+    background-color: #F5E8D3;
+    color: #734718;
 }
 
 /* NÚT THAO TÁC 3 CHẤM TEXT */

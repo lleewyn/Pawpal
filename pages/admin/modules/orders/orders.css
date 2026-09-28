@@ -201,9 +201,9 @@
 }
 
 .admin-btn-filter-toggle.active {
-    background-color: #FEE2E2;
-    border-color: #FED8D8;
-    color: #DC2626;
+    background-color: #F7DCDC;
+    border: none !important;
+    color: #8F2424;
 }
 
 /* BẢNG DỮ LIỆU */
@@ -314,53 +314,53 @@
 }
 
 .badge-pending {
-    background-color: #F7F2E9;
-    color: #7C5329;
+    background-color: #F5E8D3;
+    color: #734718;
 }
 
 .badge-confirmed {
-    background-color: #EBF2F6;
-    color: #2E5568;
+    background-color: #DCEAF2;
+    color: #20495E;
 }
 
 .badge-shipping {
-    background-color: #EBF2F6;
-    color: #2E5568;
+    background-color: #DCEAF2;
+    color: #20495E;
 }
 
 .badge-delivered {
-    background-color: #E6F2EB;
-    color: #1E5A3D;
+    background-color: #DCEEE2;
+    color: #165335;
 }
 
 .badge-completed {
-    background-color: #E6F2EB;
-    color: #1E5A3D;
+    background-color: #DCEEE2;
+    color: #165335;
 }
 
 .badge-cancelled {
-    background-color: #FBF0F0;
-    color: #993535;
+    background-color: #F7DCDC;
+    color: #8F2424;
 }
 
 .badge-paid {
-    background-color: #E6F2EB;
-    color: #1E5A3D;
+    background-color: #DCEEE2;
+    color: #165335;
 }
 
 .badge-unpaid {
-    background-color: #F7F2E9;
-    color: #7C5329;
+    background-color: #F5E8D3;
+    color: #734718;
 }
 
 .badge-alert {
-    background-color: #FBF0F0;
-    color: #993535;
+    background-color: #F7DCDC;
+    color: #8F2424;
 }
 
 .badge-warning {
-    background-color: #F7F2E9;
-    color: #7C5329;
+    background-color: #F5E8D3;
+    color: #734718;
 }
 
 /* NÚT THAO TÁC 3 CHẤM TEXT */
@@ -705,12 +705,12 @@
 }
 
 .stock-badge-low {
-    background-color: #FEE2E2;
-    color: #DC2626;
-    border: 1px solid #FED8D8;
-    padding: 2px 6px;
-    border-radius: var(--admin-radius);
-    font-weight: 700;
+    background-color: #F7DCDC;
+    color: #8F2424;
+    border: none !important;
+    padding: 2px 7px;
+    border-radius: 9px !important;
+    font-weight: 600;
     font-size: 11px;
 }
 
