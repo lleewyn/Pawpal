@@ -39,11 +39,26 @@
                 { name: 'Miu Con', breed: 'Mèo Anh Lông Ngắn', notes: 'Dị ứng phấn hoa' },
                 { name: 'Bông Xù', breed: 'Poodle Trắng', notes: 'Bình thường' }
             ],
+            smartResponses: [
+                { tag: 'Xoa dịu và Đồng cảm', text: 'Dạ PawPal thành thật xin lỗi sen và bé vì sự chậm trễ này! Em rất hiểu bé đang hết thức ăn và sen đang sốt ruột. Em xin phép ưu tiên xử lý đơn ngay cho mình ạ.' },
+                { tag: 'Hành động và Bồi hoàn', text: 'Dạ em đã liên hệ điều phối viên bưu cục giao hỏa tốc đến trước 12:00 trưa nay, đồng thời PawPal xin tặng 50 điểm Pawpoint vào tài khoản của sen để tạ lỗi ạ.' },
+                { tag: 'Hỗ trợ khẩn cấp tại chỗ', text: 'Dạ nếu bé đang đói gấp, cửa hàng PawPal gần nhất (Quận 1) có thể ship hỏa tốc 1 phần pate tạm thời trong 30 phút, sen có đồng ý không ạ?' }
+            ],
             messages: [
-                { sender: 'user', time: '10:40', text: 'Shop ơi, đơn hàng hạt và pate của mình đặt 3 hôm trước sao giờ vẫn chưa thấy giao vậy?' },
-                { sender: 'bot', time: '10:41', text: 'Dạ PawPal xin chào sen! Em xin phép kiểm tra tiến độ đơn hàng SP-2026-003 của sen ngay nhé ạ.' },
-                { sender: 'user', time: '10:43', text: 'Kiểm tra nhanh giùm cái, mèo ở nhà hết đồ ăn từ tối qua rồi, giao trễ hoài bực mình quá!', isAngry: true },
-                { sender: 'bot', time: '10:44', text: 'Dạ PawPal rất thấu hiểu sự bất tiện này và thành thật xin lỗi sen ạ! Em đang kết nối ngay với chuyên viên CSKH để hỗ trợ sen gấp ạ.' }
+                { id: 'msg-001-1', sender: 'user', time: '10:40', text: 'Shop ơi, đơn hàng hạt và pate của mình đặt 3 hôm trước sao giờ vẫn chưa thấy giao vậy?' },
+                { id: 'msg-001-2', sender: 'bot', time: '10:41', text: 'Dạ PawPal xin chào sen! Em xin phép kiểm tra tiến độ đơn hàng SP-2026-003 của sen ngay nhé ạ.' },
+                {
+                    id: 'msg-001-3',
+                    sender: 'user',
+                    time: '10:43',
+                    text: 'Kiểm tra nhanh giùm cái, mèo ở nhà hết đồ ăn từ tối qua rồi, giao trễ hoài bực mình quá!',
+                    isToxic: true,
+                    toxicWord: 'bực mình quá',
+                    maskedWordsText: 'Kiểm tra nhanh giùm cái, mèo ở nhà hết đồ ăn từ tối qua rồi, giao trễ hoài ***!',
+                    fullMaskedText: '[Nội dung kích động đã được màng lọc tâm lý che mờ: ***]',
+                    activeMaskLevel: 'words' // 'full' | 'words' | 'raw'
+                },
+                { id: 'msg-001-4', sender: 'bot', time: '10:44', text: 'Dạ PawPal rất thấu hiểu sự bất tiện này và thành thật xin lỗi sen ạ! Em đang kết nối ngay với chuyên viên CSKH để hỗ trợ sen gấp ạ.' }
             ]
         },
         {
@@ -67,10 +82,25 @@
             pets: [
                 { name: 'Lu Lu', breed: 'Corgi Vàng Trắng', notes: 'Nhát nước, sợ kéo' }
             ],
+            smartResponses: [
+                { tag: 'Xoa dịu và Đồng cảm', text: 'Dạ em chào anh Khang, em hiểu anh đang rất lo lắng và xót xa cho bé Lu Lu. PawPal thành thật xin lỗi anh về sự cố đáng tiếc xảy ra với bé ạ!' },
+                { tag: 'Bác sĩ thăm khám tức thì', text: 'Dạ em đã báo Bác sĩ thú y chi nhánh chuẩn bị thuốc sát trùng và thuốc mỡ dịu da. Bác sĩ sẽ gọi điện thoại video cho anh trong 3 phút nữa để hướng dẫn chăm sóc tức thì cho bé ạ.' },
+                { tag: 'Chuyển cấp Quản lý giải quyết', text: 'Dạ em xin phép kết nối trực tiếp Quản lý chi nhánh Quận 1 đến tận nhà thăm khám và chịu toàn bộ chi phí điều trị cho bé Lu Lu ạ.' }
+            ],
             messages: [
-                { sender: 'user', time: '10:28', text: 'Thợ làm ăn kiểu gì mà cắt rách da con tôi thế này hả lũ vô trách nhiệm?', isToxic: true, maskedText: '[Nội dung tiêu cực/thô tục đã được màng lọc bảo vệ tâm lý che mờ]' },
-                { sender: 'bot', time: '10:29', text: 'Dạ PawPal vô cùng xin lỗi sen về sự cố xảy ra với bé! Em xin phép nối máy ngay với Trưởng ca chi nhánh để thăm khám và xử lý tận tình cho bé ạ.' },
-                { sender: 'agent', agentName: 'Nguyễn Văn A (CSKH)', time: '10:31', text: 'Dạ em chào anh Khang, em là Văn A - CSKH PawPal. Em đã tiếp nhận ca chat và đang liên hệ Bác sĩ thú y trực tại chi nhánh để hỗ trợ kiểm tra vết thương cho bé Lu Lu ngay lập tức ạ.' }
+                {
+                    id: 'msg-002-1',
+                    sender: 'user',
+                    time: '10:28',
+                    text: 'Thợ làm ăn kiểu gì mà cắt rách da con tôi thế này hả lũ vô trách nhiệm?',
+                    isToxic: true,
+                    toxicWord: 'lũ vô trách nhiệm',
+                    maskedWordsText: 'Thợ làm ăn kiểu gì mà cắt rách da con tôi thế này hả ***?',
+                    fullMaskedText: '[Nội dung kích động đã được màng lọc tâm lý che mờ: ***]',
+                    activeMaskLevel: 'full' // 'full' | 'words' | 'raw'
+                },
+                { id: 'msg-002-2', sender: 'bot', time: '10:29', text: 'Dạ PawPal vô cùng xin lỗi sen về sự cố xảy ra với bé! Em xin phép nối máy ngay với Trưởng ca chi nhánh để thăm khám và xử lý tận tình cho bé ạ.' },
+                { id: 'msg-002-3', sender: 'agent', agentName: 'Nguyễn Văn A (CSKH)', time: '10:31', text: 'Dạ em chào anh Khang, em là Văn A - CSKH PawPal. Em đã tiếp nhận ca chat và đang liên hệ Bác sĩ thú y trực tại chi nhánh để hỗ trợ kiểm tra vết thương cho bé Lu Lu ngay lập tức ạ.' }
             ]
         },
         {
@@ -94,9 +124,14 @@
             pets: [
                 { name: 'Bơ Béo', breed: 'Mèo Ba Tư', notes: 'Ăn hạt chuyên biệt' }
             ],
+            smartResponses: [
+                { tag: 'Tư vấn phòng Hotel', text: 'Dạ PawPal xin chào sen! Vào dịp lễ, giá phòng Pet Hotel giữ nguyên phụ thu chỉ 15% và sen hoàn toàn có thể mang thức ăn quen thuộc của bé đến gửi nhé ạ.' },
+                { tag: 'Ưu đãi đặt sớm', text: 'Dạ nếu sen đặt phòng trước ngày 15/4, PawPal xin gửi tặng bé 1 suất tắm sấy vệ sinh miễn phí trước khi đón bé về ạ!' },
+                { tag: 'Hỗ trợ giữ chỗ', text: 'Dạ sen cho em xin cân nặng của bé Bơ Béo để em giữ phòng VIP có camera trực tuyến 24/7 tốt nhất cho bé nhé ạ!' }
+            ],
             messages: [
-                { sender: 'user', time: '09:48', text: 'PawPal cho mình hỏi giá phòng Pet Hotel dịp lễ 30/4 có tăng giá không và có nhận mang thức ăn riêng không ạ?' },
-                { sender: 'bot', time: '09:49', text: 'Dạ PawPal xin chào sen! Vào dịp lễ, giá phòng giữ nguyên phụ thu ngày lễ chỉ 15% và PawPal hoàn toàn hoan nghênh sen mang thức ăn quen thuộc của bé đến gửi nhé ạ.' }
+                { id: 'msg-003-1', sender: 'user', time: '09:48', text: 'PawPal cho mình hỏi giá phòng Pet Hotel dịp lễ 30/4 có tăng giá không và có nhận mang thức ăn riêng không ạ?' },
+                { id: 'msg-003-2', sender: 'bot', time: '09:49', text: 'Dạ PawPal xin chào sen! Vào dịp lễ, giá phòng giữ nguyên phụ thu ngày lễ chỉ 15% và PawPal hoàn toàn hoan nghênh sen mang thức ăn quen thuộc của bé đến gửi nhé ạ.' }
             ]
         },
         {
@@ -120,9 +155,14 @@
             pets: [
                 { name: 'Kẹo Ngọt', breed: 'Poodle Nâu Đỏ', notes: 'Thích vuốt ve' }
             ],
+            smartResponses: [
+                { tag: 'Cảm ơn và Tri ân', text: 'Dạ PawPal cảm ơn sen và bé Kẹo Ngọt thật nhiều ạ! Chúc sen và bé luôn tràn ngập niềm vui bên nhau nhé ạ ❤️' },
+                { tag: 'Tặng điểm khách thân thiết', text: 'Dạ PawPal xin tích lũy thêm 20 điểm thưởng dịch vụ vào ví của sen cho lượt trải nghiệm vừa rồi nhé ạ!' },
+                { tag: 'Hẹn lịch định kỳ', text: 'Dạ lông Poodle thường cần tỉa gọn sau 3 - 4 tuần, sen có muốn em lưu lịch nhắc hẹn tự động cho bé Kẹo không ạ?' }
+            ],
             messages: [
-                { sender: 'user', time: '09:12', text: 'Cảm ơn PawPal nha, bé Kẹo cắt lông xong xinh xắn lắm, bạn nhân viên rất nhẹ nhàng!' },
-                { sender: 'bot', time: '09:13', text: 'Dạ PawPal cảm ơn sen và bé Kẹo Ngọt thật nhiều ạ! Chúc sen và bé luôn tràn ngập niềm vui bên nhau nhé ạ ❤️' }
+                { id: 'msg-004-1', sender: 'user', time: '09:12', text: 'Cảm ơn PawPal nha, bé Kẹo cắt lông xong xinh xắn lắm, bạn nhân viên rất nhẹ nhàng!' },
+                { id: 'msg-004-2', sender: 'bot', time: '09:13', text: 'Dạ PawPal cảm ơn sen và bé Kẹo Ngọt thật nhiều ạ! Chúc sen và bé luôn tràn ngập niềm vui bên nhau nhé ạ ❤️' }
             ]
         }
     ];
@@ -204,6 +244,53 @@
                 renderChatbotAlertBar();
             }
         }, 1000);
+    }
+
+    function renderSmartSuggestions() {
+        const box = document.getElementById('aiSmartSuggestionsBox');
+        const list = document.getElementById('smartSuggestionsList');
+        const tag = document.getElementById('smartSuggestionsTag');
+        if (!box || !list) return;
+
+        if (!currentConversation || !currentConversation.smartResponses || currentConversation.smartResponses.length === 0) {
+            box.style.display = 'none';
+            return;
+        }
+
+        box.style.display = 'flex';
+        if (tag) {
+            tag.textContent = currentConversation.sentimentLevel >= 4 ? 'Xoa dịu và Bồi hoàn khẩn cấp' : 'Tư vấn và Hỗ trợ';
+        }
+
+        list.innerHTML = '';
+        currentConversation.smartResponses.forEach((item, idx) => {
+            const card = document.createElement('div');
+            card.className = 'smart-suggest-card';
+            card.innerHTML = `
+                <div class="suggest-card-body">
+                    <span class="suggest-card-tag">Phương án ${idx + 1}: ${item.tag}</span>
+                    <span class="suggest-card-text">${item.text}</span>
+                </div>
+                <button type="button" class="btn-apply-suggest">Áp dụng</button>
+            `;
+
+            function applySuggestedReply() {
+                const input = document.getElementById('chatMessageInput');
+                if (input) {
+                    input.value = item.text;
+                    input.focus();
+                }
+            }
+
+            card.querySelector('.btn-apply-suggest').addEventListener('click', (e) => {
+                e.stopPropagation();
+                applySuggestedReply();
+            });
+
+            card.addEventListener('click', applySuggestedReply);
+
+            list.appendChild(card);
+        });
     }
 
     // -------------------------------------------------------------
@@ -534,9 +621,32 @@
                     senderBadge = '<span class="admin-badge badge-active" style="font-size: 11px; padding: 1px 6px;">Nhân viên CSKH</span>';
                 }
 
-                let bubbleContent = msg.text;
+                let bubbleContent = '';
                 if (msg.isToxic) {
-                    bubbleContent = `<span class="masked-toxic-content">${msg.maskedText || '[Nội dung đã được che mờ]'}</span>`;
+                    const level = msg.activeMaskLevel || 'full';
+                    let contentHtml = '';
+                    if (level === 'full') {
+                        contentHtml = `<span class="toxic-text-full">${msg.fullMaskedText || '[Nội dung kích động đã được màng lọc tâm lý che mờ: ***]'}</span>`;
+                    } else if (level === 'words') {
+                        const highlighted = (msg.maskedWordsText || msg.text).replace(/\*\*\*/g, '<span class="toxic-asterisk-badge">***</span>');
+                        contentHtml = `<span class="toxic-text-words">${highlighted}</span>`;
+                    } else {
+                        contentHtml = `<span class="toxic-text-raw"><span class="toxic-raw-badge">Nguyên văn chứng cứ</span>${msg.text}</span>`;
+                    }
+
+                    bubbleContent = `
+                        <div class="chat-toxic-container" data-msg-id="${msg.id || ''}">
+                            <div class="toxic-content-display">${contentHtml}</div>
+                            <div class="toxic-level-toolbar">
+                                <span class="toxic-level-label">Màng lọc tâm lý:</span>
+                                <button type="button" class="btn-toxic-level ${level === 'full' ? 'active' : ''}" data-level="full">Che toàn bộ</button>
+                                <button type="button" class="btn-toxic-level ${level === 'words' ? 'active' : ''}" data-level="words">Che từ nhạy cảm</button>
+                                <button type="button" class="btn-toxic-level ${level === 'raw' ? 'active' : ''}" data-level="raw">Hiện gốc</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    bubbleContent = msg.text;
                 }
 
                 wrap.innerHTML = `
@@ -550,8 +660,27 @@
                 `;
                 timelineEl.appendChild(wrap);
             });
+
+            // Gắn sự kiện chuyển cấp độ màng lọc tâm lý trực tiếp
+            timelineEl.querySelectorAll('.btn-toxic-level').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const targetLevel = btn.getAttribute('data-level');
+                    const container = btn.closest('.chat-toxic-container');
+                    const msgId = container?.getAttribute('data-msg-id');
+                    const targetMsg = currentConversation.messages.find(m => m.id === msgId);
+                    if (targetMsg) {
+                        targetMsg.activeMaskLevel = targetLevel;
+                        renderCurrentChat();
+                    }
+                });
+            });
+
             timelineEl.scrollTop = timelineEl.scrollHeight;
         }
+
+        // Render Gợi ý phản hồi thông minh AI Copilot
+        renderSmartSuggestions();
 
         // Cột phải: Thông tin khách hàng 360
         const custNameEl = document.getElementById('infoCustomerName');
@@ -863,6 +992,62 @@
             closeConvertModal();
             renderCurrentChat();
             alert(`Đã tạo vé khiếu nại ${newTicketId} thành công và đồng bộ sang phân hệ Khiếu nại!`);
+        });
+
+        // --- MODAL 3: CHUYỂN CẤP QUẢN LÝ VÀ BÁC SĨ (BẢO VỆ NHÂN VIÊN) ---
+        const escalateModal = document.getElementById('escalateManagerModalOverlay');
+        const btnOpenEscalate = document.getElementById('btnEscalateManager');
+        const btnCancelEscalate = document.getElementById('btnCancelEscalate');
+        const btnDismissEscalate = document.getElementById('btnDismissEscalateModal');
+        const btnConfirmEscalate = document.getElementById('btnConfirmEscalate');
+        const escalateCustName = document.getElementById('escalateCustomerName');
+        const inputEscalateNotes = document.getElementById('inputEscalateNotes');
+
+        btnOpenEscalate?.addEventListener('click', () => {
+            if (!currentConversation) return;
+            if (escalateCustName) escalateCustName.value = currentConversation.customerName;
+            if (inputEscalateNotes) inputEscalateNotes.value = '';
+            escalateModal.style.display = 'flex';
+        });
+
+        function closeEscalateModal() {
+            escalateModal.style.display = 'none';
+        }
+
+        btnCancelEscalate?.addEventListener('click', closeEscalateModal);
+        btnDismissEscalate?.addEventListener('click', closeEscalateModal);
+
+        btnConfirmEscalate?.addEventListener('click', () => {
+            if (!currentConversation) return;
+            const targetSelect = document.getElementById('selectEscalateTarget');
+            const targetName = targetSelect ? targetSelect.options[targetSelect.selectedIndex].text : 'Quản lý Chi nhánh';
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            currentConversation.isHandover = true;
+            currentConversation.isEscalated = true;
+            currentConversation.category = 'urgent';
+
+            // Dấu mốc hệ thống ghi nhận chuyển giao bảo vệ nhân viên
+            currentConversation.messages.push({
+                sender: 'system',
+                time: timeStr,
+                text: `Hệ thống: Ca chat đã được chuyển cấp khẩn cho [${targetName}] lúc ${timeStr}. Chuyên viên CSKH đã được ngắt kết nối an toàn.`
+            });
+
+            // Lời chào nhận trách nhiệm từ Quản lý / Bác sĩ
+            currentConversation.messages.push({
+                sender: 'agent',
+                agentName: targetName,
+                time: timeStr,
+                text: `Dạ PawPal xin chào sen! Em là ${targetName}. Em đã tiếp nhận trực tiếp ca hỗ trợ này để giải quyết dứt điểm sự cố cho gia đình mình ngay ạ!`
+            });
+
+            closeEscalateModal();
+            renderChatbotAlertBar();
+            renderConversationsList();
+            renderCurrentChat();
+
+            alert(`Đã chuyển ca chat thành công sang: ${targetName}. Nhân viên CSKH đã được bảo vệ ngắt kết nối an toàn!`);
         });
     }
 

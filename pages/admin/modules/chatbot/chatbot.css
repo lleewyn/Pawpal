@@ -690,15 +690,198 @@
     color: #236B48;
 }
 
-/* MÀNG LỌC BẢO VỆ TÂM LÝ NHÂN VIÊN - Chữ đỏ thuần, không nền, không viền (Rule 5) */
-.masked-toxic-content {
+/* MÀNG LỌC BẢO VỆ TÂM LÝ NHÂN VIÊN - 3 CẤP ĐỘ HIỂN THỊ (TUÂN THỦ 100% AGENTS.MD) */
+.chat-toxic-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.toxic-content-display {
+    line-height: 1.55;
+    word-break: break-word;
+}
+
+/* Cấp độ 1: Che toàn bộ câu */
+.toxic-text-full {
     font-style: italic;
     color: #DC2626;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Cấp độ 2: Che từ nhạy cảm (***) */
+.toxic-text-words {
+    color: var(--text-main);
+    font-size: 13.5px;
+}
+
+.toxic-asterisk-badge {
+    display: inline-block;
+    color: #DC2626;
+    background-color: #FEE2E2;
+    padding: 0 4px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-style: normal;
+    letter-spacing: 1px;
+}
+
+/* Cấp độ 3: Hiện nguyên văn bằng chứng */
+.toxic-text-raw {
+    color: #8F2424;
+    font-size: 13.5px;
+}
+
+.toxic-raw-badge {
+    display: inline-block;
+    color: #8F2424;
+    background-color: #F7DCDC;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10.5px;
+    font-weight: 700;
+    margin-right: 6px;
+}
+
+/* THANH CHUYỂN CẤP ĐỘ MÀNG LỌC TRÊN BONG BÓNG */
+.toxic-level-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed #D0E3F8;
+    flex-wrap: wrap;
+}
+
+.toxic-level-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-right: 2px;
+}
+
+.btn-toxic-level {
     background: transparent;
     border: none;
-    padding: 0;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: var(--admin-radius);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.btn-toxic-level:hover {
+    background-color: rgba(220, 38, 38, 0.08);
+    color: #DC2626;
+}
+
+.btn-toxic-level.active {
+    background-color: #FEE2E2;
+    color: #DC2626;
+    font-weight: 700;
+}
+
+/* KHỐI GỢI Ý PHẢN HỒI THÔNG MINH AI */
+.ai-smart-suggestions-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 14px;
+    background-color: #F4FAF6;
+    border: 1px solid #C3DEC7;
+    border-radius: var(--admin-radius);
+    margin-bottom: 2px;
+}
+
+.smart-suggestions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.smart-suggestions-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #236B48;
+}
+
+.smart-suggestions-tag {
+    font-size: 11px;
+    color: #165335;
+    background-color: #DCEEE2;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.smart-suggestions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 155px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.smart-suggest-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    padding: 8px 12px;
+    gap: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+
+.smart-suggest-card:hover {
+    border-color: #236B48;
+    background-color: #F9FCFA;
+}
+
+.suggest-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.suggest-card-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: #236B48;
+}
+
+.suggest-card-text {
     font-size: 12.5px;
-    display: inline;
+    color: var(--text-main);
+    line-height: 1.45;
+}
+
+.btn-apply-suggest {
+    background-color: #236B48;
+    color: #FFFFFF;
+    border: none;
+    border-radius: var(--admin-radius);
+    padding: 5px 12px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+    flex-shrink: 0;
+    transition: background-color 0.15s;
+}
+
+.btn-apply-suggest:hover {
+    background-color: #1c5539;
 }
 
 /* TIN NHẮN NHANH (MACROS) */

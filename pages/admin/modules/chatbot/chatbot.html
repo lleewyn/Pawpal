@@ -56,6 +56,7 @@
                     <div class="chat-header-actions">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnRewardPoints">Tặng điểm Pawpoint</button>
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnConvertToTicket">Chuyển thành Ticket</button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnEscalateManager">Chuyển cấp Quản lý</button>
                         <button type="button" class="admin-btn admin-btn-primary" id="btnToggleTakeover">Tiếp nhận ca chat</button>
                     </div>
                 </div>
@@ -74,6 +75,17 @@
                 <!-- MÀN HÌNH DÒNG THỜI GIAN TIN NHẮN -->
                 <div class="chat-timeline-messages" id="chatMessagesTimeline">
                     <!-- Render by JS -->
+                </div>
+
+                <!-- KHỐI GỢI Ý PHẢN HỒI THÔNG MINH AI (SMART RESPONSES) -->
+                <div class="ai-smart-suggestions-box" id="aiSmartSuggestionsBox">
+                    <div class="smart-suggestions-header">
+                        <span class="smart-suggestions-title">Gợi ý phản hồi thông minh AI (Nhấn 1 chạm để áp dụng)</span>
+                        <span class="smart-suggestions-tag" id="smartSuggestionsTag">Đồng cảm và Xoa dịu</span>
+                    </div>
+                    <div class="smart-suggestions-list" id="smartSuggestionsList">
+                        <!-- Render by JS -->
+                    </div>
                 </div>
 
                 <!-- THANH PHẢN HỒI NHANH (MACROS) -->
@@ -331,6 +343,51 @@
             <div class="modal-footer-clean">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissConvertTicket">Hủy</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmConvertTicket">Tạo Ticket trong Khiếu nại</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 3: CHUYỂN CA CHO QUẢN LÝ VÀ BÁC SĨ (BẢO VỆ NHÂN VIÊN)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="escalateManagerModalOverlay" style="display: none;">
+        <div class="admin-modal-card modal-compact">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Chuyển cấp Quản lý và Bác sĩ thú y</div>
+                <button type="button" class="modal-btn-close-text" id="btnDismissEscalateModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Khách hàng cần chuyển giao</label>
+                    <input type="text" class="admin-input" id="escalateCustomerName" readonly>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Lý do chuyển cấp khẩn cấp *</label>
+                    <select class="admin-select" id="selectEscalateReason">
+                        <option value="toxic">Khách hàng giận dữ, lời lẽ công kích vượt thẩm quyền nhân viên</option>
+                        <option value="injury">Thú cưng gặp sự cố sức khỏe, cần Bác sĩ thăm khám trực tiếp</option>
+                        <option value="dispute">Yêu cầu bồi thường lớn cần Trưởng ca hoặc Quản lý phê duyệt</option>
+                    </select>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Bộ phận và Nhân sự tiếp nhận *</label>
+                    <select class="admin-select" id="selectEscalateTarget">
+                        <option value="mgr-q1">Trần Hoàng Nam - Quản lý Chi nhánh Quận 1</option>
+                        <option value="vet-q1">Bác sĩ Thú y Trực ban - Chi nhánh Quận 1</option>
+                        <option value="cskh-lead">Lê Lệ Quyên - Trưởng nhóm CSKH</option>
+                    </select>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Ghi chú tóm tắt bàn giao</label>
+                    <textarea class="admin-input" id="inputEscalateNotes" rows="2" placeholder="Ghi chú thêm cho Quản lý và Bác sĩ..."></textarea>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5; background: #F8FAF9; padding: 8px 12px; border-radius: var(--admin-radius);">
+                    Sau khi bấm xác nhận, hệ thống sẽ ngắt kết nối an toàn cho chuyên viên CSKH và chuyển toàn bộ quyền kiểm soát ca chat sang nhân sự được chỉ định.
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelEscalate">Hủy bỏ</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmEscalate" style="background-color: #DC2626; border-color: #DC2626;">Xác nhận chuyển ca</button>
             </div>
         </div>
     </div>
