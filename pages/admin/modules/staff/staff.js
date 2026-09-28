@@ -2256,6 +2256,36 @@
                 ? savedSubtab 
                 : 'tab-staff-list';
 
+        // Expose Staff Manager for cross-module integration
+        window.PawpalStaffManager = {
+            getAllStaff: () => mockStaff,
+            getStaffByName: (name) => {
+                if (!name) return null;
+                const clean = name.split('(')[0].trim().toLowerCase();
+                return mockStaff.find(s => s.name.toLowerCase().includes(clean) || clean.includes(s.name.toLowerCase()));
+            },
+            toggleSafetyLock: (name, isLocked) => {
+                const s = window.PawpalStaffManager.getStaffByName(name);
+                if (s) {
+                    s.serviceLocked = (isLocked !== undefined) ? isLocked : !s.serviceLocked;
+                    try {
+                        localStorage.setItem('pawpal_staff_locked_' + s.id, s.serviceLocked ? '1' : '0');
+                        localStorage.setItem('pawpal_staff_locked_name_' + s.name.toLowerCase(), s.serviceLocked ? '1' : '0');
+                    } catch (e) {}
+                    return s;
+                }
+                return null;
+            }
+        };
+
+        // Đồng bộ trạng thái khóa từ localStorage nếu có
+        mockStaff.forEach(s => {
+            try {
+                const stored = localStorage.getItem('pawpal_staff_locked_' + s.id) || localStorage.getItem('pawpal_staff_locked_name_' + s.name.toLowerCase());
+                if (stored !== null) s.serviceLocked = stored === '1';
+            } catch(e) {}
+        });
+
         switchSubtab(initialSubtab);
     }
 

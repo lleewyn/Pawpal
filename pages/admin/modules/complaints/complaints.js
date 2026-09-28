@@ -61,6 +61,9 @@
                 createdAt: '2026-09-28 14:30',
                 status: 'processing',
                 evidence: ['vet-tray-tai.jpg', 'hoa-don-dich-vu.jpg'],
+                checkinHealth: 'Bé tỉnh táo, nhanh nhẹn. Vành tai không phát hiện vết xước hay tụ máu ngoài da khi tiếp nhận.',
+                checkinPhotos: ['checkin-miu-01.jpg', 'checkin-miu-tai.jpg'],
+                staffLogNote: 'Bé khá giật mình khi dùng máy sấy công suất lớn, đã chuyển sang chế độ sấy êm dịu. Đã hoàn tất vệ sinh tai sạch sẽ.',
                 timeline: [
                     { time: '14:30 - 28/09/2026', author: 'Lê Lệ Quyên (Khách hàng)', title: 'Gửi khiếu nại qua Website', desc: 'Khách gửi phản ánh về vết thương ở tai bé Miu kèm hình ảnh.', isInternal: false },
                     { time: '14:45 - 28/09/2026', author: 'Lê Lệ Quyên (CSKH)', title: 'Tiếp nhận Ticket', desc: 'Đã nhận xử lý và chuyển thông tin cho Quản lý chi nhánh xác minh camera.', isInternal: true },
@@ -87,6 +90,9 @@
                 createdAt: '2026-09-28 11:15',
                 status: 'new',
                 evidence: ['da-lung-viem.jpg'],
+                checkinHealth: 'Vùng bả vai và sống lưng có mảng vảy gàu đỏ li ti, bé liên tục gãi ngứa khi nhận bàn giao.',
+                checkinPhotos: ['checkin-samoyed-lung.jpg'],
+                staffLogNote: 'Đã ủ dầu tắm trị liệu viêm da trong 15 phút theo phác đồ, sấy khô chân lông cẩn thận.',
                 timeline: [
                     { time: '11:15 - 28/09/2026', author: 'Trần Minh Quân (Khách hàng)', title: 'Gửi yêu cầu kiểm tra lại', desc: 'Khách đề nghị bác sĩ kiểm tra lại mảng viêm.', isInternal: false }
                 ]
@@ -111,6 +117,9 @@
                 createdAt: '2026-09-28 12:00',
                 status: 'waiting_customer',
                 evidence: [],
+                checkinHealth: 'Bé năng động, mắt mũi sáng, thân nhiệt 38.5°C bình thường.',
+                checkinPhotos: ['checkin-lulu-phong.jpg'],
+                staffLogNote: 'Bé làm quen phòng mới trong 30 phút đầu hơi nhút nhát, sau đó chơi bóng bình thường.',
                 timeline: [
                     { time: '12:00 - 28/09/2026', author: 'Hoàng Minh Tuấn (Khách hàng)', title: 'Phản ánh bữa ăn của bé', desc: 'Khách xem camera và báo bé chưa được ăn pate.', isInternal: false },
                     { time: '12:20 - 28/09/2026', author: 'Trần Thị B (Lễ tân)', title: 'Phản hồi khách', desc: 'Đã bổ sung pate hâm nóng và bé đã ăn hết. Đã gửi clip qua Zalo cho khách xác nhận.', isInternal: false }
@@ -136,6 +145,9 @@
                 createdAt: '2026-09-28 09:10',
                 status: 'new',
                 evidence: ['anh-lich-trinh-xe.jpg'],
+                checkinHealth: 'Tiếp nhận bé trong lồng vận chuyển chuyên dụng, bé hơi lo lắng khi lên xe.',
+                checkinPhotos: ['checkin-mochi-long.jpg'],
+                staffLogNote: 'Điều hòa xe bật 25°C, che rèm tối để giảm căng thẳng cho bé suốt hành trình.',
                 timeline: [
                     { time: '09:10 - 28/09/2026', author: 'Đặng Thùy Dung (Khách hàng)', title: 'Phản ánh tài xế đến trễ', desc: 'Khách khiếu nại tài xế không đúng giờ cam kết đón.', isInternal: false }
                 ]
@@ -160,6 +172,9 @@
                 createdAt: '2026-09-28 13:40',
                 status: 'processing',
                 evidence: ['anh-mong-rom-mau.jpg'],
+                checkinHealth: 'Móng chân dài chạm đất, chưa có dấu hiệu nứt móng trước khi cắt.',
+                checkinPhotos: ['checkin-corgi-mong.jpg'],
+                staffLogNote: 'Bé giãy mạnh khi cắt móng bàn chân sau bên trái, đã bôi bột cầm máu chuyên dụng ngay lập tức.',
                 timeline: [
                     { time: '13:40 - 28/09/2026', author: 'Ngô Thanh Vân (Khách hàng)', title: 'Gửi hình ảnh ngón chân bé', desc: 'Khách phản ánh bé bị phạm tủy móng.', isInternal: false }
                 ]
@@ -184,6 +199,9 @@
                 createdAt: '2026-09-27 10:00',
                 status: 'resolved',
                 evidence: [],
+                checkinHealth: 'Lông bờm và thân rối nhẹ, không có nấm da hay bọ chét.',
+                checkinPhotos: ['checkin-simba-long.jpg'],
+                staffLogNote: 'Cắt tỉa form sư tử theo tỉ lệ đầu thân cân đối, chải tơi lông xù.',
                 timeline: [
                     { time: '10:00 - 27/09/2026', author: 'Phan Văn Hậu (Khách hàng)', title: 'Phản ánh form lông', desc: 'Khách không ưng ý độ dài bờm.', isInternal: false },
                     { time: '11:00 - 27/09/2026', author: 'Lê Lệ Quyên (Admin)', title: 'Tặng voucher chăm sóc', desc: 'Đã gọi điện xin lỗi và tặng voucher giảm 50% lần kế tiếp.', isInternal: false }
@@ -209,6 +227,10 @@
                 status: 'processing',
                 content: 'Tôi đặt đồ chơi xương gặm màu cam nhưng khi mở kiện hàng giao tới lại là màu xanh lá.',
                 evidence: ['anh-san-pham-giao-sai.jpg'],
+                warehousePhotos: ['pack-ORD-001-cam.jpg', 'seal-ORD-001.jpg'],
+                carrier: 'Giao Hàng Nhanh (GHN)',
+                trackingCode: 'GHN88291039VN',
+                deliveryStatus: 'Giao thành công • Người nhận ký tên: Quyen Le',
                 timeline: [
                     { time: '11:20 - 28/09/2026', author: 'Lê Lệ Quyên (Khách hàng)', title: 'Phản ánh giao sai màu', desc: 'Khách nhận nhầm màu đồ chơi so với đơn đặt.', isInternal: false },
                     { time: '11:35 - 28/09/2026', author: 'Phạm Thị D (CSKH)', title: 'Xác nhận đơn hàng và kho', desc: 'Kho đóng gói nhầm mã phân loại màu cam và xanh. Chấp thuận đổi hàng mới miễn phí vận chuyển.', isInternal: true }
@@ -231,6 +253,10 @@
                 status: 'new',
                 content: 'Kiện hàng bị va đập khi vận chuyển khiến 2 lon pate bị móp méo rách seal bốc mùi.',
                 evidence: ['anh-lon-mop.jpg'],
+                warehousePhotos: ['pack-ORD-005-lon.jpg', 'seal-ORD-005.jpg'],
+                carrier: 'Viettel Post',
+                trackingCode: 'VTP99182377VN',
+                deliveryStatus: 'Giao thành công • Người nhận ký tên: Nguyen Van An',
                 timeline: [
                     { time: '13:00 - 28/09/2026', author: 'Nguyễn Văn An (Khách hàng)', title: 'Yêu cầu gửi bù hàng hỏng', desc: 'Khách gửi ảnh 2 lon pate hỏng seal.', isInternal: false }
                 ]
@@ -252,6 +278,10 @@
                 status: 'new',
                 content: 'Vòng cổ sạc pin 4 tiếng nhưng bật nguồn không lên đèn, không kết nối được App điện thoại.',
                 evidence: ['video-test-nguon.mp4'],
+                warehousePhotos: ['pack-ORD-008-box.jpg', 'seal-ORD-008.jpg'],
+                carrier: 'SPX Express',
+                trackingCode: 'SPX55198273VN',
+                deliveryStatus: 'Giao thành công • Người nhận ký tên: Vu Thi Mai',
                 timeline: [
                     { time: '08:30 - 28/09/2026', author: 'Vũ Thị Mai (Khách hàng)', title: 'Báo lỗi thiết bị', desc: 'Thiết bị không lên nguồn sau sạc.', isInternal: false }
                 ]
@@ -273,6 +303,10 @@
                 status: 'waiting_return',
                 content: 'Bé nhà mình mặc size M hơi kích nách, còn nguyên tem mác muốn đổi sang size L.',
                 evidence: [],
+                warehousePhotos: ['pack-ORD-012-nem.jpg'],
+                carrier: 'J&T Express',
+                trackingCode: 'JT11928374VN',
+                deliveryStatus: 'Đang vận chuyển trung chuyển qua kho Củ Chi',
                 timeline: [
                     { time: '10:15 - 28/09/2026', author: 'Trịnh Hoàng Nam (Khách hàng)', title: 'Đề nghị đổi size áo', desc: 'Khách đề nghị đổi size L.', isInternal: false },
                     { time: '10:45 - 28/09/2026', author: 'Phạm Thị D (CSKH)', title: 'Tạo mã đổi hàng RMA-091', desc: 'Hướng dẫn khách gửi hàng về kho PawPal.', isInternal: false }
@@ -295,6 +329,10 @@
                 status: 'resolved',
                 content: 'Hóa đơn in 3 gói nhưng trong thùng xốp mở ra chỉ có 2 gói bánh.',
                 evidence: ['anh-thung-hang.jpg'],
+                warehousePhotos: ['pack-ORD-019-hat.jpg', 'seal-ORD-019.jpg'],
+                carrier: 'Giao Hàng Nhanh (GHN)',
+                trackingCode: 'GHN77281900VN',
+                deliveryStatus: 'Giao thành công • Người nhận ký tên: Pham Duc Thang',
                 timeline: [
                     { time: '15:00 - 27/09/2026', author: 'Bùi Anh Tuấn (Khách hàng)', title: 'Báo thiếu hàng', desc: 'Thiếu 1 gói bánh thưởng sữa dê.', isInternal: false },
                     { time: '15:30 - 27/09/2026', author: 'Lê Lệ Quyên (Admin)', title: 'Check camera kho đóng hàng', desc: 'Nhân viên đóng gói sót 1 gói. Đã book bưu tá hỏa tốc gửi bù.', isInternal: true }
@@ -844,8 +882,36 @@
         }
 
         // ---------------------------------------------------------
-        // 7. RENDER SUB-TAB 3: CHI TIẾT TICKET 360°
+        // 7. RENDER SUB-TAB 3: CHI TIẾT TICKET 360° & ĐỐI CHỨNG CHÉO
         // ---------------------------------------------------------
+        function getStaffSafetyLockStatus(staffName) {
+            if (!staffName) return false;
+            if (window.PawpalStaffManager && typeof window.PawpalStaffManager.getStaffByName === 'function') {
+                const s = window.PawpalStaffManager.getStaffByName(staffName);
+                if (s) return !!s.serviceLocked;
+            }
+            try {
+                const clean = staffName.split('(')[0].trim().toLowerCase();
+                const stored = localStorage.getItem('pawpal_staff_locked_name_' + clean);
+                if (stored !== null) return stored === '1';
+            } catch (e) {}
+            return false;
+        }
+
+        function setStaffSafetyLockStatus(staffName, isLocked) {
+            if (!staffName) return false;
+            let lockVal = isLocked;
+            if (window.PawpalStaffManager && typeof window.PawpalStaffManager.toggleSafetyLock === 'function') {
+                const s = window.PawpalStaffManager.toggleSafetyLock(staffName, isLocked);
+                if (s) lockVal = !!s.serviceLocked;
+            }
+            try {
+                const clean = staffName.split('(')[0].trim().toLowerCase();
+                localStorage.setItem('pawpal_staff_locked_name_' + clean, lockVal ? '1' : '0');
+            } catch (e) {}
+            return lockVal;
+        }
+
         function renderTicketDetail(ticket) {
             if (!ticket) return;
             currentActiveTicket = ticket;
@@ -867,10 +933,23 @@
                 priorityBadgeEl.textContent = ticket.priority === 'high' ? 'Mức độ Cao' : 'Mức độ Trung bình';
             }
 
-            // Cột trái
+            // Cột trái: Phản ánh của khách
             const contentEl = document.getElementById('viewTicketCustomerContent');
             if (contentEl) contentEl.textContent = `"${ticket.content}"`;
 
+            // Bằng chứng khách gửi
+            const customerEvidenceEl = document.getElementById('viewTicketCustomerEvidence');
+            if (customerEvidenceEl) {
+                if (ticket.evidence && ticket.evidence.length > 0) {
+                    customerEvidenceEl.innerHTML = ticket.evidence.map((f, i) => `<span class="evidence-photo-item">Ảnh đính kèm ${i + 1}: ${escapeHtml(f)}</span>`).join('');
+                    customerEvidenceEl.style.display = 'flex';
+                } else {
+                    customerEvidenceEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted); font-style: italic;">Không có hình ảnh đính kèm từ khách.</span>';
+                    customerEvidenceEl.style.display = 'block';
+                }
+            }
+
+            // Thông tin khách hàng và đối tượng
             const custNameEl = document.getElementById('viewTicketCustomerName');
             const custPhoneEl = document.getElementById('viewTicketCustomerPhone');
             const refTypeLabelEl = document.getElementById('viewTicketRefTypeLabel');
@@ -894,6 +973,67 @@
                 if (refIdLabelEl) refIdLabelEl.textContent = 'Mã đơn hàng:';
                 if (refIdEl) refIdEl.innerHTML = `<a href="javascript:void(0)" class="user-name-link btn-jump-order" data-id="${ticket.orderId}">${ticket.orderId}</a>`;
                 if (petNotesEl) petNotesEl.textContent = `Yêu cầu của khách: ${ticket.customerDemand}`;
+            }
+
+            // Dữ liệu đối chứng 360°
+            const serviceBlock = document.getElementById('serviceCrossCheckBlock');
+            const orderBlock = document.getElementById('orderCrossCheckBlock');
+
+            if (ticket.bookingId) {
+                if (serviceBlock) serviceBlock.style.display = 'block';
+                if (orderBlock) orderBlock.style.display = 'none';
+
+                const checkinHealthEl = document.getElementById('viewTicketCheckinHealth');
+                if (checkinHealthEl) checkinHealthEl.textContent = ticket.checkinHealth || 'Bé khỏe mạnh, không phát hiện vết xước hay tổn thương ngoài da.';
+
+                const checkinPhotosEl = document.getElementById('viewTicketCheckinPhotos');
+                if (checkinPhotosEl) {
+                    if (ticket.checkinPhotos && ticket.checkinPhotos.length > 0) {
+                        checkinPhotosEl.innerHTML = ticket.checkinPhotos.map(f => `<span class="evidence-photo-item">Ảnh lúc đón: ${escapeHtml(f)}</span>`).join('');
+                    } else {
+                        checkinPhotosEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted); font-style: italic;">Không có ảnh chụp check-in.</span>';
+                    }
+                }
+
+                const staffExecutedEl = document.getElementById('viewTicketStaffExecuted');
+                if (staffExecutedEl) staffExecutedEl.textContent = ticket.staffExecuted || 'Chưa ghi nhận';
+
+                const isLocked = getStaffSafetyLockStatus(ticket.staffExecuted);
+                const lockBadgeEl = document.getElementById('viewStaffSafetyLockBadge');
+                const lockBtnEl = document.getElementById('btnToggleStaffSafetyLock');
+                if (lockBadgeEl) {
+                    lockBadgeEl.innerHTML = isLocked
+                        ? '<span class="admin-badge badge-danger">Đang khóa an toàn nhận việc</span>'
+                        : '<span class="admin-badge badge-active">Hoạt động bình thường</span>';
+                }
+                if (lockBtnEl) {
+                    lockBtnEl.textContent = isLocked ? 'Mở khóa nhận việc KTV' : 'Tạm khóa an toàn KTV';
+                    lockBtnEl.style.color = isLocked ? '#166534' : '#DC2626';
+                }
+
+                const staffLogNoteEl = document.getElementById('viewTicketStaffLogNote');
+                if (staffLogNoteEl) staffLogNoteEl.textContent = ticket.staffLogNote ? `"${ticket.staffLogNote}"` : '"Không có ghi chú thêm từ KTV."';
+            } else {
+                if (serviceBlock) serviceBlock.style.display = 'none';
+                if (orderBlock) orderBlock.style.display = 'block';
+
+                const orderPhotosEl = document.getElementById('viewTicketOrderWarehousePhotos');
+                if (orderPhotosEl) {
+                    if (ticket.warehousePhotos && ticket.warehousePhotos.length > 0) {
+                        orderPhotosEl.innerHTML = ticket.warehousePhotos.map(f => `<span class="evidence-photo-item">Ảnh kiểm kho: ${escapeHtml(f)}</span>`).join('');
+                    } else {
+                        orderPhotosEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted); font-style: italic;">Không có ảnh chụp đóng gói.</span>';
+                    }
+                }
+
+                const shippingCarrierEl = document.getElementById('viewTicketShippingCarrier');
+                if (shippingCarrierEl) shippingCarrierEl.textContent = ticket.carrier || 'Giao Hàng Nhanh (GHN)';
+
+                const shippingCodeEl = document.getElementById('viewTicketShippingCode');
+                if (shippingCodeEl) shippingCodeEl.textContent = ticket.trackingCode || 'GHN88291039VN';
+
+                const deliveryStatusEl = document.getElementById('viewTicketDeliveryStatus');
+                if (deliveryStatusEl) deliveryStatusEl.textContent = ticket.deliveryStatus || 'Giao thành công';
             }
 
             // Timeline
@@ -1151,6 +1291,143 @@
                 renderComplaintsAlertBar();
                 renderTicketDetail(currentActiveTicket);
             }
+        });
+
+        // ---------------------------------------------------------
+        // NÚT KHÓA AN TOÀN NHẬN VIỆC KTV (PHASE 2)
+        // ---------------------------------------------------------
+        document.getElementById('btnToggleStaffSafetyLock')?.addEventListener('click', () => {
+            if (!currentActiveTicket || !currentActiveTicket.staffExecuted) return;
+            const staffName = currentActiveTicket.staffExecuted;
+            const currentLock = getStaffSafetyLockStatus(staffName);
+            const newLock = !currentLock;
+            setStaffSafetyLockStatus(staffName, newLock);
+
+            currentActiveTicket.timeline.unshift({
+                time: 'Vừa xong',
+                author: 'Lê Lệ Quyên (Admin)',
+                title: newLock ? 'Kích hoạt Khóa an toàn KTV' : 'Mở khóa an toàn nhận việc cho KTV',
+                desc: newLock
+                    ? `Đã kích hoạt khóa an toàn: tạm dừng tiếp nhận các lịch hẹn mới cho nhân viên "${staffName}" để phục vụ công tác thanh tra xác minh khiếu nại ${currentActiveTicket.id}.`
+                    : `Đã dỡ bỏ lệnh tạm khóa nhận việc cho nhân viên "${staffName}". Nhân viên có thể tiếp tục nhận lịch dịch vụ bình thường.`,
+                isInternal: true
+            });
+
+            renderTicketDetail(currentActiveTicket);
+            alert(newLock
+                ? `Đã tạm khóa an toàn KTV "${staffName}" thành công! Hệ thống đã chặn tiếp nhận lịch hẹn mới cho KTV này.`
+                : `Đã mở khóa nhận việc cho KTV "${staffName}" thành công!`);
+        });
+
+        // ---------------------------------------------------------
+        // MODAL: CHUYỂN NGƯỜI PHỤ TRÁCH TICKET (PHASE 2)
+        // ---------------------------------------------------------
+        const assignModal = document.getElementById('assignHandlerModalOverlay');
+        document.getElementById('btnAssignHandler')?.addEventListener('click', () => {
+            if (!currentActiveTicket) return;
+            const sel = document.getElementById('selectAssignStaff');
+            if (sel) {
+                let options = [];
+                if (window.PawpalStaffManager && typeof window.PawpalStaffManager.getAllStaff === 'function') {
+                    const allStaff = window.PawpalStaffManager.getAllStaff();
+                    options = allStaff.map(s => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)} (${escapeHtml(s.position)} - ${escapeHtml(s.role)})</option>`);
+                } else {
+                    options = [
+                        '<option value="Lê Lệ Quyên">Lê Lệ Quyên (Quản trị viên - Admin)</option>',
+                        '<option value="Nguyễn Văn A">Nguyễn Văn A (Groomer - Kỹ thuật viên)</option>',
+                        '<option value="Trần Thị B">Trần Thị B (Lễ tân - Tiếp tân)</option>',
+                        '<option value="Phạm Thị D">Phạm Thị D (CSKH - Bán hàng)</option>',
+                        '<option value="Trần Văn Hùng">Trần Văn Hùng (Groomer trưởng - Kỹ thuật viên)</option>'
+                    ];
+                }
+                sel.innerHTML = options.join('');
+                if (currentActiveTicket.staffAssigned && currentActiveTicket.staffAssigned !== 'Chưa phân công') {
+                    sel.value = currentActiveTicket.staffAssigned;
+                }
+            }
+            const noteEl = document.getElementById('inputAssignNote');
+            if (noteEl) noteEl.value = '';
+            assignModal.classList.add('active');
+        });
+
+        document.getElementById('btnCancelAssignHandler')?.addEventListener('click', () => assignModal.classList.remove('active'));
+        document.getElementById('btnDismissAssignHandler')?.addEventListener('click', () => assignModal.classList.remove('active'));
+
+        document.getElementById('btnConfirmAssignHandler')?.addEventListener('click', () => {
+            if (!currentActiveTicket) return;
+            const newStaff = document.getElementById('selectAssignStaff')?.value || 'Lê Lệ Quyên';
+            const note = document.getElementById('inputAssignNote')?.value.trim() || 'Bàn giao phụ trách xử lý tiếp theo cam kết SLA.';
+
+            currentActiveTicket.staffAssigned = newStaff;
+            if (currentActiveTicket.status === 'new') {
+                currentActiveTicket.status = 'processing';
+            }
+
+            currentActiveTicket.timeline.unshift({
+                time: 'Vừa xong',
+                author: 'Lê Lệ Quyên (Admin)',
+                title: 'Chuyển giao người phụ trách Ticket',
+                desc: `Đã phân công lại người phụ trách cho: ${newStaff}. Ghi chú dặn dò: "${note}".`,
+                isInternal: true
+            });
+
+            assignModal.classList.remove('active');
+            updateComplaintsKpis();
+            renderComplaintsAlertBar();
+            if (currentTicketType === 'service') renderServiceComplaintsTable();
+            else renderOrderComplaintsTable();
+            renderTicketDetail(currentActiveTicket);
+
+            alert(`Đã chuyển người phụ trách Ticket ${currentActiveTicket.id} cho "${newStaff}" thành công!`);
+        });
+
+        // ---------------------------------------------------------
+        // MODAL: YÊU CẦU BỔ SUNG THÔNG TIN (PHASE 2)
+        // ---------------------------------------------------------
+        const requestInfoModal = document.getElementById('requestMoreInfoModalOverlay');
+        document.getElementById('btnRequestMoreInfo')?.addEventListener('click', () => {
+            if (!currentActiveTicket) return;
+            const msgEl = document.getElementById('inputRequestMessage');
+            if (msgEl) {
+                const targetRef = currentActiveTicket.bookingId ? 'lịch hẹn dịch vụ ' + currentActiveTicket.bookingId : 'đơn hàng ' + currentActiveTicket.orderId;
+                msgEl.value = `Kính gửi Quý khách ${currentActiveTicket.customerName}, Pawpal chân thành cáo lỗi vì trải nghiệm chưa trọn vẹn tại ${targetRef}. Để có thể hỗ trợ xác minh và giải quyết quyền lợi nhanh nhất cho Quý khách, Pawpal xin phép nhờ Quý khách gửi bổ sung thêm hình ảnh chụp rõ nét tình trạng hiện tại của bé / sản phẩm. Trân trọng cảm ơn Quý khách!`;
+            }
+            requestInfoModal.classList.add('active');
+        });
+
+        document.getElementById('btnCancelRequestInfo')?.addEventListener('click', () => requestInfoModal.classList.remove('active'));
+        document.getElementById('btnDismissRequestInfo')?.addEventListener('click', () => requestInfoModal.classList.remove('active'));
+
+        document.getElementById('btnSendRequestInfo')?.addEventListener('click', () => {
+            if (!currentActiveTicket) return;
+            const channelSelect = document.getElementById('selectRequestChannel');
+            const channelVal = channelSelect ? channelSelect.value : 'zalo';
+            const channelLabel = channelVal === 'zalo' ? 'Tin nhắn Zalo OA' : (channelVal === 'sms' ? 'Tin nhắn SMS Brandname' : (channelVal === 'call' ? 'Cuộc gọi điện thoại' : 'Email thông báo'));
+            const msg = document.getElementById('inputRequestMessage')?.value.trim();
+
+            if (!msg) {
+                alert('Vui lòng nhập nội dung yêu cầu bổ sung thông tin.');
+                return;
+            }
+
+            currentActiveTicket.status = 'waiting_customer';
+
+            currentActiveTicket.timeline.unshift({
+                time: 'Vừa xong',
+                author: 'Lê Lệ Quyên (CSKH)',
+                title: `Gửi yêu cầu bổ sung thông tin qua ${channelLabel}`,
+                desc: `Đã gửi thông báo cho khách hàng ${currentActiveTicket.customerName} (${currentActiveTicket.phone}). Nội dung: "${msg}". Trạng thái chuyển sang Chờ phản hồi khách hàng.`,
+                isInternal: false
+            });
+
+            requestInfoModal.classList.remove('active');
+            updateComplaintsKpis();
+            renderComplaintsAlertBar();
+            if (currentTicketType === 'service') renderServiceComplaintsTable();
+            else renderOrderComplaintsTable();
+            renderTicketDetail(currentActiveTicket);
+
+            alert(`Đã gửi yêu cầu bổ sung thông tin đến khách hàng qua kênh ${channelLabel} thành công!`);
         });
 
         // Gửi phản hồi / ghi chú vào Timeline

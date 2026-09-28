@@ -358,19 +358,63 @@
                         </div>
                     </div>
 
-                    <!-- KHỐI 3: BẰNG CHỨNG TỪ HỆ THỐNG / NHẬT KÝ CHĂM SÓC HOẶC ĐƠN HÀNG GỐC -->
+                    <!-- KHỐI 3: DỮ LIỆU ĐỐI CHỨNG HỆ THỐNG 360° -->
                     <div class="drawer-info-block" style="margin-top: 24px;">
-                        <div class="drawer-section-title">Dữ liệu đối chứng</div>
+                        <div class="drawer-section-title">Dữ liệu đối chứng 360°</div>
                         <div class="system-evidence-card" id="viewTicketSystemEvidence">
-                            <div class="info-pair">
-                                <span class="info-label">Nhân viên / Kỹ thuật viên thực hiện:</span>
-                                <span class="info-value" id="viewTicketStaffExecuted">Ngọc Anh (Chi nhánh Quận 1)</span>
+                            <!-- CHECK-IN SỨC KHỎE ĐẦU VÀO (DÀNH CHO DỊCH VỤ) -->
+                            <div id="serviceCrossCheckBlock">
+                                <div class="info-pair">
+                                    <span class="info-label">Ghi nhận lúc tiếp nhận thú cưng tại quầy:</span>
+                                    <span class="info-value" id="viewTicketCheckinHealth" style="font-weight: 500; color: #166534;">Bé khỏe mạnh, lanh lợi, không phát hiện vết xước hay tổn thương ngoài da.</span>
+                                </div>
+                                <div style="margin-top: 8px;">
+                                    <span class="info-label">Ảnh chụp check-in lúc đón bé:</span>
+                                    <div class="evidence-photos-list" id="viewTicketCheckinPhotos" style="margin-top: 6px;">
+                                        <span class="evidence-photo-item">Ảnh đón bé: checkin-pet-01.jpg</span>
+                                        <span class="evidence-photo-item">Ảnh vùng tai: checkin-pet-tai.jpg</span>
+                                    </div>
+                                </div>
+                                <div class="info-pair" style="margin-top: 14px;">
+                                    <span class="info-label">Kỹ thuật viên / Bác sĩ phụ trách thực hiện:</span>
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                                        <span class="info-value" id="viewTicketStaffExecuted" style="font-weight: 600;">Ngọc Anh (Chi nhánh Quận 1)</span>
+                                        <span id="viewStaffSafetyLockBadge"></span>
+                                        <button type="button" class="admin-btn admin-btn-secondary" id="btnToggleStaffSafetyLock" style="color: #DC2626; height: 26px; padding: 0 10px; font-size: 11.5px;">Tạm khóa an toàn KTV</button>
+                                    </div>
+                                </div>
+                                <div class="info-pair" style="margin-top: 10px;">
+                                    <span class="info-label">Nhật ký chăm sóc / Ghi chú của Kỹ thuật viên khi giao bé:</span>
+                                    <span class="info-value" id="viewTicketStaffLogNote" style="font-weight: 400; font-style: italic;">"Bé khá giật mình khi dùng máy sấy công suất lớn, đã chuyển sang chế độ sấy êm dịu. Đã hoàn tất vệ sinh tai sạch sẽ."</span>
+                                </div>
                             </div>
-                            <div class="info-pair" style="margin-top: 10px;">
-                                <span class="info-label">Ghi chú của Kỹ thuật viên khi giao bé:</span>
-                                <span class="info-value" style="font-weight: 400; font-style: italic;">"Bé khá giật mình khi dùng máy sấy công suất lớn, đã chuyển sang chế độ sấy êm dịu. Đã hoàn tất vệ sinh tai sạch sẽ."</span>
+
+                            <!-- ĐỐI CHỨNG ĐÓNG GÓI & VẬN CHUYỂN (DÀNH CHO ĐƠN HÀNG) -->
+                            <div id="orderCrossCheckBlock" style="display: none;">
+                                <div class="info-pair">
+                                    <span class="info-label">Ảnh chụp kiểm tra đóng gói tại kho:</span>
+                                    <div class="evidence-photos-list" id="viewTicketOrderWarehousePhotos" style="margin-top: 6px;">
+                                        <span class="evidence-photo-item">Ảnh kiện hàng trước đóng: pack-ORD-01.jpg</span>
+                                        <span class="evidence-photo-item">Ảnh tem niêm phong: seal-ORD-02.jpg</span>
+                                    </div>
+                                </div>
+                                <div class="info-grid-2col" style="margin-top: 14px;">
+                                    <div class="info-pair">
+                                        <span class="info-label">Đơn vị vận chuyển:</span>
+                                        <span class="info-value" id="viewTicketShippingCarrier">Giao Hàng Nhanh (GHN)</span>
+                                    </div>
+                                    <div class="info-pair">
+                                        <span class="info-label">Mã vận đơn:</span>
+                                        <span class="info-value" id="viewTicketShippingCode" style="font-weight: 600;">GHN88291039VN</span>
+                                    </div>
+                                </div>
+                                <div class="info-pair" style="margin-top: 10px;">
+                                    <span class="info-label">Trạng thái phát hàng:</span>
+                                    <span class="info-value" id="viewTicketDeliveryStatus" style="color: #166534; font-weight: 500;">Giao thành công • Người nhận ký tên: Quyen Le</span>
+                                </div>
                             </div>
-                            <div style="margin-top: 12px;">
+
+                            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border-neutral);">
                                 <button type="button" class="admin-btn admin-btn-secondary" id="btnJumpToOriginal">Xem chi tiết giao dịch gốc</button>
                             </div>
                         </div>
@@ -502,6 +546,64 @@
             <div class="modal-footer-clean">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissResolveModal">Hủy</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmResolveTicket">Xác nhận và Cập nhật Ticket</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CHUYỂN NGƯỜI PHỤ TRÁCH TICKET -->
+    <div class="admin-modal-overlay" id="assignHandlerModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Chuyển người phụ trách Ticket</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelAssignHandler">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Nhân viên tiếp nhận mới *</label>
+                    <select class="admin-select" id="selectAssignStaff">
+                        <!-- Render by JS from mockStaff -->
+                    </select>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Lý do chuyển giao và Dặn dò chuyên môn *</label>
+                    <textarea class="admin-input" id="inputAssignNote" rows="3" placeholder="Nhập lý do chuyển giao hoặc hướng dẫn xử lý tiếp theo..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissAssignHandler">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmAssignHandler">Xác nhận chuyển giao</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: YÊU CẦU BỔ SUNG THÔNG TIN -->
+    <div class="admin-modal-overlay" id="requestMoreInfoModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Gửi yêu cầu bổ sung thông tin</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelRequestInfo">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Kênh liên hệ khách hàng *</label>
+                    <select class="admin-select" id="selectRequestChannel">
+                        <option value="zalo">Tin nhắn Zalo OA</option>
+                        <option value="sms">Tin nhắn SMS Brandname</option>
+                        <option value="call">Ghi nhận cuộc gọi tư vấn</option>
+                        <option value="email">Thư điện tử (Email)</option>
+                    </select>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Nội dung tin nhắn yêu cầu *</label>
+                    <textarea class="admin-input" id="inputRequestMessage" rows="4" placeholder="Nhập nội dung gửi cho khách hàng..."></textarea>
+                </div>
+                <div style="font-size: 11.5px; color: var(--text-muted);">
+                    * Trạng thái Ticket sẽ tự động chuyển sang "Chờ phản hồi khách hàng" sau khi gửi yêu cầu.
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissRequestInfo">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSendRequestInfo">Gửi yêu cầu</button>
             </div>
         </div>
     </div>
