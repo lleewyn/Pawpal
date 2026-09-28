@@ -580,54 +580,52 @@
     function updateKPIs() {
         const total = bookingsData.length;
         const pending = bookingsData.filter(b => b.status === 'pending').length;
-        const confirmed = bookingsData.filter(b => b.status === 'confirmed').length;
+        const upcoming = bookingsData.filter(b => b.alertType === 'upcoming' || b.status === 'in_progress').length;
         const inProgress = bookingsData.filter(b => b.status === 'in_progress').length;
         const completed = bookingsData.filter(b => b.status === 'completed').length;
         const cancelled = bookingsData.filter(b => b.status === 'cancelled').length;
 
         const statTotal = document.getElementById('statTotalBookings');
         const statPending = document.getElementById('statPendingBookings');
-        const statConfirmed = document.getElementById('statConfirmedBookings');
+        const statUpcoming = document.getElementById('statUpcomingBookings');
         const statInProgress = document.getElementById('statInProgressBookings');
         const statCompleted = document.getElementById('statCompletedBookings');
         const statCancelled = document.getElementById('statCancelledBookings');
 
         if (statTotal) statTotal.textContent = total;
         if (statPending) statPending.textContent = pending;
-        if (statConfirmed) statConfirmed.textContent = confirmed;
+        if (statUpcoming) statUpcoming.textContent = upcoming;
         if (statInProgress) statInProgress.textContent = inProgress;
         if (statCompleted) statCompleted.textContent = completed;
         if (statCancelled) statCancelled.textContent = cancelled;
     }
 
     // ==========================================================================
-    // 3. THANH CẢNH BÁO LỊCH HẸN SẮP TỚI
+    // 3. THANH THÔNG BÁO LỊCH HẸN TRONG 60 PHÚT (MỎNG, GỌN, KHÔNG ICON)
     // ==========================================================================
     function renderUpcomingBar() {
         const container = document.getElementById('upcomingItemsContainer');
-        const badge = document.getElementById('upcomingCountBadge');
+        const bar = document.getElementById('upcomingAlertBar');
         if (!container) return;
 
         const upcomingList = bookingsData.filter(b => b.alertType === 'upcoming' || b.status === 'in_progress');
-        if (badge) badge.textContent = `${upcomingList.length} lịch hẹn`;
 
         if (upcomingList.length === 0) {
-            container.innerHTML = '<div style="font-size: 13px; color: var(--text-muted); padding: 6px 0;">Không có ca dịch vụ nào sắp tới trong 60 phút tới.</div>';
+            if (bar) bar.style.display = 'none';
             return;
         }
 
+        if (bar) bar.style.display = 'flex';
+
         container.innerHTML = upcomingList.map(item => `
-            <div class="upcoming-item-chip ${item.status === 'pending' || !item.staff ? 'urgent' : ''}" data-booking-id="${item.id}">
-                <div class="upcoming-item-main">
-                    <span class="upcoming-time">${item.time}</span>
-                    <span class="upcoming-info"><strong>${item.customerName}</strong> (${item.petName} - ${item.serviceName})</span>
-                    <span class="upcoming-staff">KTV: ${item.staff || '<span class="text-danger" style="font-weight: 600;">Chưa phân công</span>'}</span>
-                </div>
-                <button type="button" class="btn-upcoming-action" data-booking-id="${item.id}">Mở lịch</button>
+            <div class="upcoming-item-tag ${item.status === 'pending' || !item.staff ? 'urgent' : ''}" data-booking-id="${item.id}" title="Xem chi tiết ${item.customerName}">
+                <span class="tag-time">${item.time}</span>
+                <span class="tag-cust">${item.customerName}</span>
+                <span class="tag-pet">(${item.petName})</span>
             </div>
         `).join('');
 
-        container.querySelectorAll('.upcoming-item-chip, .btn-upcoming-action').forEach(el => {
+        container.querySelectorAll('.upcoming-item-tag').forEach(el => {
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const bkgId = el.getAttribute('data-booking-id');
@@ -1399,6 +1397,43 @@
                 renderBookingsTable();
             });
         }
+
+        // Nút lọc nhanh trên dải ruy-băng thông báo 60 phút
+        const btnStripFilter = document.getElementById('btnFilterUpcomingQuick');
+        if (btnStripFilter) {
+            btnStripFilter.addEventListener('click', () => {
+                isUpcomingFilterActive = true;
+                if (btnUpcoming) btnUpcoming.classList.add('active');
+                renderBookingsTable();
+            });
+        }
+
+        // Tương tác click trực tiếp trên các thẻ KPI để lọc 1 chạm
+        document.querySelectorAll('.kpi-card-clickable').forEach(card => {
+            card.addEventListener('click', () => {
+                const kpiFilter = card.getAttribute('data-kpi-filter');
+                document.querySelectorAll('.kpi-card-clickable').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+
+                if (kpiFilter === 'ALL') {
+                    currentFilterStatus = 'ALL';
+                    isUpcomingFilterActive = false;
+                    if (selectStatus) selectStatus.value = 'ALL';
+                    if (btnUpcoming) btnUpcoming.classList.remove('active');
+                } else if (kpiFilter === 'upcoming') {
+                    currentFilterStatus = 'ALL';
+                    isUpcomingFilterActive = true;
+                    if (selectStatus) selectStatus.value = 'ALL';
+                    if (btnUpcoming) btnUpcoming.classList.add('active');
+                } else {
+                    currentFilterStatus = kpiFilter;
+                    isUpcomingFilterActive = false;
+                    if (selectStatus) selectStatus.value = kpiFilter;
+                    if (btnUpcoming) btnUpcoming.classList.remove('active');
+                }
+                renderBookingsTable();
+            });
+        });
 
         // Tabs 3 nhóm trong Sub-tab 3 (Danh mục và Bảng giá)
         document.querySelectorAll('.catalog-tab-btn').forEach(btn => {

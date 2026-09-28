@@ -1,4 +1,4 @@
-<div class="chatbot-module-wrapper">
+﻿<div class="chatbot-module-wrapper">
     <!-- ====================================================================
          SUB-TAB 1: TRỰC CHAT CSKH (HỘP THƯ 3 KHU VỰC THỜI GIAN THỰC) - Ở TRƯỚC
          ==================================================================== -->
@@ -14,7 +14,7 @@
                 <!-- 3 TAB CON LỌC THÔNG MINH -->
                 <div class="inbox-filter-tabs">
                     <button type="button" class="inbox-tab-btn active" data-filter="urgent" id="filterTabUrgent">
-                        Cần xử lý ngay
+                        Xử lý ngay
                         <span class="tab-badge-pill badge-urgent-count" id="urgentBadgeCount">2</span>
                     </button>
                     <button type="button" class="inbox-tab-btn" data-filter="active" id="filterTabActive">
@@ -194,6 +194,50 @@
             <div class="copilot-input-area">
                 <textarea class="admin-input copilot-textarea" id="copilotInput" rows="2" placeholder="Nhập câu hỏi tra cứu dữ liệu hoặc yêu cầu soạn thảo văn bản hỗ trợ... (Nhấn Enter để gửi, Shift+Enter để xuống dòng)"></textarea>
                 <button type="button" class="admin-btn admin-btn-primary btn-send-copilot" id="btnSendCopilot">Gửi yêu cầu</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SUB-TAB 3: QUY ĐỊNH TRÒ CHUYỆN VỚI KHÁCH HÀNG -->
+    <section class="subtab-content" id="subtab-tab-chatbot-rules">
+        <div class="chatbot-rules-container admin-card">
+            <div class="chatbot-rules-intro">
+                <h2 class="chatbot-rules-title">Quy định trò chuyện với khách hàng</h2>
+                <p>Thống nhất cách tư vấn để mỗi cuộc trò chuyện đều rõ ràng, tôn trọng và giúp khách giải quyết được vấn đề.</p>
+            </div>
+            <div class="chatbot-rules-grid">
+                <section class="chatbot-rule-group">
+                    <h3>Thái độ và cách xưng hô</h3>
+                    <ul>
+                        <li>Chào hỏi lịch sự, xưng “PawPal” và gọi khách theo cách khách mong muốn.</li>
+                        <li>Giữ giọng điệu bình tĩnh, thân thiện; không tranh luận, trách móc hoặc phán xét khách.</li>
+                        <li>Dùng câu ngắn, dễ hiểu; xác nhận lại thông tin quan trọng trước khi kết thúc.</li>
+                    </ul>
+                </section>
+                <section class="chatbot-rule-group">
+                    <h3>Nguyên tắc tư vấn</h3>
+                    <ul>
+                        <li>Đọc đầy đủ nội dung và lịch sử liên quan trước khi trả lời.</li>
+                        <li>Chỉ cung cấp thông tin đã được xác minh về đơn hàng, lịch hẹn, giá và chính sách.</li>
+                        <li>Nếu chưa có câu trả lời, nói rõ sẽ kiểm tra và hẹn thời gian phản hồi; không tự suy đoán hoặc hứa ngoài thẩm quyền.</li>
+                    </ul>
+                </section>
+                <section class="chatbot-rule-group">
+                    <h3>Tiếp nhận sự cố và khiếu nại</h3>
+                    <ul>
+                        <li>Ghi nhận vấn đề, xin lỗi phù hợp và nêu bước xử lý tiếp theo.</li>
+                        <li>Ưu tiên tiếp nhận ngay các trường hợp thanh toán, giao hàng khẩn cấp, thú cưng bị thương hoặc khách yêu cầu gặp nhân viên.</li>
+                        <li>Chuyển quản lý hoặc bộ phận chuyên trách khi vượt thẩm quyền; tạo ticket để theo dõi nếu cần.</li>
+                    </ul>
+                </section>
+                <section class="chatbot-rule-group">
+                    <h3>Bảo mật và kết thúc hội thoại</h3>
+                    <ul>
+                        <li>Chỉ xác minh và sử dụng dữ liệu cần thiết; không yêu cầu khách gửi mật khẩu hoặc mã xác thực.</li>
+                        <li>Không chia sẻ thông tin cá nhân, ghi chú nội bộ hoặc dữ liệu của khách khác.</li>
+                        <li>Tóm tắt kết quả, xác nhận khách đã nắm hướng xử lý và cảm ơn khách trước khi kết thúc.</li>
+                    </ul>
+                </section>
             </div>
         </div>
     </section>

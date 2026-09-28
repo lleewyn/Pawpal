@@ -1,8 +1,8 @@
 /**
  * MODULE CHATBOT & TRỰC CHAT CSKH (PAWPAL ADMIN)
  * Tuân thủ nghiêm ngặt 100% AGENTS.md & ADMIN_DESIGN_SYSTEM.md:
- * - 2 Subtabs Header Bar: Trợ lý AI | Trực chat CSKH (Text-only, phân tách bởi '|')
- * - Tự động đồng bộ State và Hash (#tab-ai-copilot, #tab-live-support)
+ * - 3 Subtabs Header Bar: Trợ lý AI | Trực chat CSKH | Quy định
+ * - Tự động đồng bộ State và Hash (#tab-ai-copilot, #tab-live-support, #tab-chatbot-rules)
  * - Màn hình Trợ lý AI Copilot nội bộ cho Admin
  * - Màn hình Trực chat CSKH 3 khu vực: Danh sách hội thoại | Khung chat trực tiếp | Bảng thông tin khách hàng 360°
  * - Thẻ tóm tắt ngữ cảnh AI 3 giây
@@ -138,6 +138,8 @@
             <button type="button" class="header-subtab-btn ${activeTabId === 'tab-live-support' ? 'active' : ''}" data-tab="tab-live-support">Trực chat CSKH</button>
             <span class="subtab-divider">|</span>
             <button type="button" class="header-subtab-btn ${activeTabId === 'tab-ai-copilot' ? 'active' : ''}" data-tab="tab-ai-copilot">Trợ lý AI</button>
+            <span class="subtab-divider">|</span>
+            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-chatbot-rules' ? 'active' : ''}" data-tab="tab-chatbot-rules">Quy định</button>
         `;
 
         subtabsContainer.querySelectorAll('.header-subtab-btn').forEach(btn => {
@@ -738,7 +740,9 @@
     const hash = window.location.hash;
 
     let initTab = 'tab-live-support';
-    if (hash === '#tab-ai-copilot' || savedTab === 'tab-ai-copilot') {
+    if (hash === '#tab-chatbot-rules' || savedTab === 'tab-chatbot-rules') {
+        initTab = 'tab-chatbot-rules';
+    } else if (hash === '#tab-ai-copilot' || savedTab === 'tab-ai-copilot') {
         initTab = 'tab-ai-copilot';
     } else if (hash === '#tab-live-support' || savedTab === 'tab-live-support') {
         initTab = 'tab-live-support';

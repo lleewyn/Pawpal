@@ -348,8 +348,60 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
     padding-top: 8px;
     border-top: 1px dashed var(--border-neutral);
+}
+
+.banner-card-actions > div {
+    display: flex;
+    align-items: center;
+    gap: 8px !important;
+}
+
+.banner-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    padding: 5px 11px;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    background-color: transparent;
+    color: var(--text-heading);
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: none !important;
+    transform: none !important;
+}
+
+.banner-action-btn:hover,
+.banner-action-btn:focus-visible {
+    background-color: #F4FAF6;
+    border-color: #C3DEC7;
+    color: var(--text-heading);
+}
+
+.banner-action-btn.is-pause {
+    color: #B45309;
+}
+
+.banner-action-btn.is-enable {
+    color: var(--admin-primary);
+}
+
+.banner-action-btn.is-pause:hover,
+.banner-action-btn.is-pause:focus-visible {
+    color: #B45309;
+}
+
+.banner-action-btn.is-enable:hover,
+.banner-action-btn.is-enable:focus-visible {
+    color: var(--admin-primary);
 }
 
 /* CỘT 2 BÊN: PAWPOINTS VÀ THÔNG BÁO */

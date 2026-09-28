@@ -224,8 +224,8 @@
                 <div class="banner-card-actions">
                     <span class="admin-badge ${b.status === 'active' ? 'badge-active' : 'badge-neutral'}">${b.status === 'active' ? 'Đang bật' : 'Tạm tắt'}</span>
                     <div style="display: flex; gap: 6px;">
-                        <button type="button" class="user-name-link btn-edit-banner" data-id="${b.id}">Sửa</button>
-                        <button type="button" class="user-name-link btn-toggle-banner" data-id="${b.id}" style="color: ${b.status === 'active' ? '#B45309' : '#236B48'};">${b.status === 'active' ? 'Tắt' : 'Bật'}</button>
+                        <button type="button" class="banner-action-btn btn-edit-banner" data-id="${b.id}">Sửa</button>
+                        <button type="button" class="banner-action-btn btn-toggle-banner ${b.status === 'active' ? 'is-pause' : 'is-enable'}" data-id="${b.id}">${b.status === 'active' ? 'Tắt' : 'Bật'}</button>
                     </div>
                 </div>
             `;

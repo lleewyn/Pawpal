@@ -102,6 +102,12 @@
                     panel.classList.remove('active');
                 }
             });
+
+            // Badge 'Đủ điều kiện nhận phòng Hotel' xuất hiện tinh gọn ở góc phải thanh subtab khi xem Xác nhận tiêm chủng
+            const hotelBadge = document.getElementById('petHotelEligibleBadge');
+            if (hotelBadge) {
+                hotelBadge.style.display = (targetPanelId === 'ptab-vaccine') ? 'inline-block' : 'none';
+            }
         }
 
         drawerTabs.forEach(tab => {

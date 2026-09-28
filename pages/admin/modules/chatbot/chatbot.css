@@ -22,6 +22,89 @@
     width: 100%;
 }
 
+.chatbot-rules-container {
+    width: 100%;
+    min-height: 100%;
+    padding: 24px;
+    background-color: var(--surface-white);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    box-sizing: border-box;
+}
+
+.chatbot-rules-intro {
+    margin-bottom: 24px;
+}
+
+.chatbot-rules-title {
+    margin: 0 0 8px;
+    color: var(--text-heading);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.chatbot-rules-intro p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13.5px;
+    line-height: 1.6;
+}
+
+.chatbot-rules-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 36px;
+}
+
+.chatbot-rule-group {
+    min-width: 0;
+}
+
+.chatbot-rule-group h3 {
+    margin: 0 0 10px;
+    color: var(--text-heading);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.chatbot-rule-group ul {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+    color: var(--text-main);
+    font-size: 13px;
+    line-height: 1.75;
+}
+
+.chatbot-rule-group li {
+    position: relative;
+    padding-left: 16px;
+}
+
+.chatbot-rule-group li::before {
+    position: absolute;
+    left: 0;
+    content: "-";
+    color: var(--text-muted);
+}
+
+.chatbot-rule-group li + li {
+    margin-top: 5px;
+}
+
+@media (max-width: 760px) {
+    .chatbot-rules-container {
+        padding: 18px;
+    }
+
+    .chatbot-rules-grid {
+        grid-template-columns: 1fr;
+        gap: 22px;
+    }
+}
+
 /* --------------------------------------------------------------------
    SUB-TAB 1: TRỢ LÝ AI COPILOT
    -------------------------------------------------------------------- */
@@ -44,7 +127,6 @@
     justify-content: space-between;
     align-items: center;
     padding-bottom: 14px;
-    border-bottom: 1px solid var(--border-neutral);
 }
 
 .copilot-title-group {
@@ -211,7 +293,6 @@
 .inbox-filter-tabs {
     display: flex;
     gap: 6px;
-    border-bottom: 1px solid var(--border-neutral);
     padding-bottom: 8px;
 }
 
@@ -338,7 +419,6 @@
     justify-content: space-between;
     align-items: center;
     padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-neutral);
 }
 
 .chat-header-user-meta {
@@ -364,12 +444,11 @@
     gap: 8px;
 }
 
-/* THẺ TÓM TẮT NGỮ CẢNH AI (3 GIÂY) */
+/* AI CONTEXT CARD - Trình bày phẳng, không nền, không viền (Rule 1: Cấm hộp lồng trong hộp) */
 .ai-context-summary-card {
-    padding: 12px 16px;
-    background-color: #FEF8ED;
-    border: 1px solid #FDE6C1;
-    border-radius: var(--admin-radius);
+    padding: 4px 0 10px;
+    background: transparent;
+    border: none;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -384,7 +463,7 @@
 .summary-title-text {
     font-size: 12px;
     font-weight: 700;
-    color: #B45309;
+    color: var(--text-muted);
     text-transform: none;
 }
 
@@ -399,7 +478,7 @@
 
 .summary-body-text {
     font-size: 13px;
-    color: #78350F;
+    color: var(--text-main);
     line-height: 1.5;
 }
 
@@ -485,15 +564,15 @@
     color: #236B48;
 }
 
-/* MÀNG LỌC BẢO VỆ TÂM LÝ NHÂN VIÊN */
+/* MÀNG LỌC BẢO VỆ TÂM LÝ NHÂN VIÊN - Chữ đỏ thuần, không nền, không viền (Rule 5) */
 .masked-toxic-content {
     font-style: italic;
     color: #DC2626;
-    background-color: #FEE2E2;
-    padding: 4px 8px;
-    border-radius: 4px;
+    background: transparent;
+    border: none;
+    padding: 0;
     font-size: 12.5px;
-    display: inline-block;
+    display: inline;
 }
 
 /* TIN NHẮN NHANH (MACROS) */
@@ -567,7 +646,6 @@
     flex-direction: column;
     gap: 8px;
     padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-neutral);
 }
 
 .profile-name-tier {

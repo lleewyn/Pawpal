@@ -1,0 +1,139 @@
+<div class="dashboard-module">
+    <!-- KHU VỰC 1: 5 THẺ THỐNG KÊ KPI NHANH (CHUẨN HỆ THỐNG PAWPAL-ER) -->
+    <section class="dashboard-kpi-grid" aria-label="Chỉ số trong ngày">
+        <div class="admin-card kpi-card dashboard-kpi-card">
+            <span class="kpi-label">Tổng doanh thu hôm nay</span>
+            <span class="kpi-val text-heading" id="dashboardRevenue">25.500.000 VNĐ</span>
+        </div>
+        <div class="admin-card kpi-card dashboard-kpi-card dashboard-kpi-link" data-dashboard-module="Dịch vụ">
+            <span class="kpi-label">Lịch hẹn mới</span>
+            <span class="kpi-val text-success" id="dashboardBookings">18</span>
+        </div>
+        <div class="admin-card kpi-card dashboard-kpi-card dashboard-kpi-link" data-dashboard-module="Bán hàng">
+            <span class="kpi-label">Đơn hàng mới</span>
+            <span class="kpi-val text-warning" id="dashboardOrders">12</span>
+        </div>
+        <div class="admin-card kpi-card dashboard-kpi-card dashboard-kpi-link" data-dashboard-module="Khách hàng">
+            <span class="kpi-label">Khách hàng mới</span>
+            <span class="kpi-val text-heading" id="dashboardCustomers">7</span>
+        </div>
+        <div class="admin-card kpi-card dashboard-kpi-card dashboard-kpi-link" data-dashboard-module="Thú cưng">
+            <span class="kpi-label">Bé cưng mới</span>
+            <span class="kpi-val text-neutral" id="dashboardPets">5</span>
+        </div>
+    </section>
+
+    <div class="dashboard-main-grid">
+        <section class="admin-card dashboard-widget dashboard-priority-widget">
+            <div class="dashboard-widget-header">
+                <div>
+                    <h2 class="dashboard-widget-title">Ưu tiên xử lý</h2>
+                </div>
+                <span class="admin-badge badge-warning">6 việc</span>
+            </div>
+            <div class="dashboard-priority-list">
+                <button type="button" class="dashboard-priority-row" data-dashboard-module="Khiếu nại">
+                    <span><strong>Khiếu nại chờ xử lý</strong><small>2 ticket cần nhân viên tiếp nhận</small></span>
+                    <span class="admin-badge badge-danger">2</span>
+                </button>
+                <button type="button" class="dashboard-priority-row" data-dashboard-module="Bán hàng">
+                    <span><strong>Đơn hàng chờ duyệt</strong><small>4 đơn hàng mới cần xác nhận</small></span>
+                    <span class="admin-badge badge-warning">4</span>
+                </button>
+            </div>
+            <div class="dashboard-widget-header dashboard-stock-heading">
+                <div>
+                    <h3 class="dashboard-widget-title">Tồn kho sắp hết</h3>
+                </div>
+                <button type="button" class="dashboard-text-link" data-dashboard-module="Bán hàng">Xem kho</button>
+            </div>
+            <div class="dashboard-stock-list">
+                <button type="button" class="dashboard-stock-row" data-dashboard-module="Bán hàng">
+                    <span><strong>Pate gà bí đỏ PawPal</strong><small>SKU: FOOD-012</small></span>
+                    <span class="dashboard-stock-count is-low">Còn 2</span>
+                </button>
+                <button type="button" class="dashboard-stock-row" data-dashboard-module="Bán hàng">
+                    <span><strong>Dầu tắm dịu nhẹ</strong><small>SKU: CARE-008</small></span>
+                    <span class="dashboard-stock-count is-empty">Hết hàng</span>
+                </button>
+                <button type="button" class="dashboard-stock-row" data-dashboard-module="Bán hàng">
+                    <span><strong>Cát vệ sinh đậu nành</strong><small>SKU: CAT-021</small></span>
+                    <span class="dashboard-stock-count is-low">Còn 4</span>
+                </button>
+            </div>
+        </section>
+
+        <section class="admin-card dashboard-widget dashboard-bookings-widget">
+            <div class="dashboard-widget-header">
+                <div>
+                    <h2 class="dashboard-widget-title">Lịch sắp tới</h2>
+                </div>
+                <div class="dashboard-widget-actions">
+                    <!-- THANH TAB CON ĐIỀU HƯỚNG CHẾ ĐỘ XEM LỊCH (ĐƯỜNG KẺ GẠCH CHÂN CHUẨN AGENTS.MD) -->
+                    <div class="dashboard-calendar-view-switch" role="tablist" aria-label="Chế độ xem lịch">
+                        <button type="button" class="dashboard-calendar-view-btn is-active" data-calendar-view="month" role="tab" aria-selected="true"><span>Tháng</span></button>
+                        <button type="button" class="dashboard-calendar-view-btn" data-calendar-view="week" role="tab" aria-selected="false"><span>Tuần</span></button>
+                        <button type="button" class="dashboard-calendar-view-btn" data-calendar-view="day" role="tab" aria-selected="false"><span>Ngày</span></button>
+                    </div>
+                    <button type="button" class="dashboard-text-link" data-dashboard-module="Dịch vụ">Xem tất cả</button>
+                </div>
+            </div>
+            <div class="dashboard-calendar-agenda">
+                <div class="dashboard-calendar-panel">
+                    <div class="dashboard-calendar-header">
+                        <button type="button" class="dashboard-calendar-nav" id="dashboardCalendarPrev" aria-label="Tháng trước">&lt;</button>
+                        <strong id="dashboardCalendarMonth"></strong>
+                        <button type="button" class="dashboard-calendar-nav" id="dashboardCalendarNext" aria-label="Tháng sau">&gt;</button>
+                    </div>
+                    <div class="dashboard-calendar-weekdays" id="dashboardCalendarWeekdays" aria-hidden="true">
+                        <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+                    </div>
+                    <div class="dashboard-calendar-days" id="dashboardCalendarDays" role="grid" aria-label="Lịch hẹn theo tháng"></div>
+                    <div class="dashboard-calendar-key"><span></span>Ngày có lịch hẹn</div>
+                </div>
+                <div class="dashboard-calendar-agenda-panel">
+                    <h3 class="dashboard-agenda-title" id="dashboardAgendaTitle"></h3>
+                    <div class="dashboard-booking-list" id="dashboardBookingList"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <section class="dashboard-analytics-grid">
+        <article class="admin-card dashboard-widget dashboard-revenue-widget">
+            <div class="dashboard-widget-header">
+                <div>
+                    <h2 class="dashboard-widget-title">Doanh thu</h2>
+                </div>
+                <div class="dashboard-chart-legend"><span><i class="legend-current"></i>Tuần này</span><span><i class="legend-previous"></i>Tuần trước</span></div>
+            </div>
+            <div class="dashboard-revenue-chart" id="dashboardRevenueChart" role="img" aria-label="Biểu đồ doanh thu theo ngày"></div>
+        </article>
+        <article class="admin-card dashboard-widget dashboard-chatbot-widget">
+            <div class="dashboard-widget-header">
+                <div>
+                    <h2 class="dashboard-widget-title">Hiệu suất Chatbot AI</h2>
+                </div>
+                <button type="button" class="dashboard-text-link" data-dashboard-module="Chatbot">Xem hội thoại</button>
+            </div>
+            <div class="dashboard-chatbot-chart-wrap">
+                <div class="dashboard-donut-chart" role="img" aria-label="AI tự xử lý 72 phần trăm, chuyển nhân viên 28 phần trăm">
+                    <svg viewBox="0 0 120 120" aria-hidden="true">
+                        <circle class="dashboard-donut-track" cx="60" cy="60" r="48" fill="none" stroke="#AEC8B9" stroke-width="12"></circle>
+                        <circle class="dashboard-donut-value" cx="60" cy="60" r="48" fill="none" stroke="#236B48" stroke-width="12" stroke-dasharray="217.15 301.59" stroke-linecap="round"></circle>
+                    </svg>
+                    <span><strong>72%</strong><small>AI tự xử lý</small></span>
+                </div>
+                <div class="dashboard-chatbot-legend">
+                    <div><i class="legend-ai"></i><span>AI tự xử lý<small>144 phiên</small></span></div>
+                    <div><i class="legend-handover"></i><span>Chuyển nhân viên<small>56 phiên</small></span></div>
+                    <strong class="dashboard-chat-total">200 phiên trò chuyện</strong>
+                </div>
+            </div>
+            <div class="dashboard-staff-utilization">
+                <div><span>Tỷ lệ lấp đầy nhân sự</span><strong>78%</strong></div>
+                <div class="dashboard-progress-track"><span style="width: 78%;"></span></div>
+            </div>
+        </article>
+    </section>
+</div>

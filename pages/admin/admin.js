@@ -14,6 +14,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (subtabsContainer) subtabsContainer.innerHTML = '';
         if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
 
+        if (moduleName === 'Dashboard') {
+            if (moduleTitleEl) {
+                moduleTitleEl.textContent = 'Dashboard';
+                moduleTitleEl.style.display = 'inline-block';
+            }
+            try {
+                const res = await fetch('modules/dashboard/dashboard.html?v=' + Date.now());
+                if (res.ok) {
+                    contentArea.innerHTML = await res.text();
+                    const oldScript = document.getElementById('dynamic-module-script');
+                    if (oldScript) oldScript.remove();
+                    const script = document.createElement('script');
+                    script.id = 'dynamic-module-script';
+                    script.src = 'modules/dashboard/dashboard.js?v=' + Date.now();
+                    document.body.appendChild(script);
+                    return;
+                }
+            } catch (err) {
+                console.error('Không thể load modules/dashboard/dashboard.html:', err);
+            }
+        }
+
         if (moduleName === 'Khách hàng') {
             if (moduleTitleEl) {
                 moduleTitleEl.textContent = '';

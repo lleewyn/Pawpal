@@ -4,47 +4,49 @@
          ==================================================================== -->
     <section class="subtab-content active" id="subtab-tab-service-bookings">
 
-        <!-- KHU VỰC CẢNH BÁO LỊCH HẸN SẮP TỚI (DẠNG THẺ TÍCH HỢP GỌN GÀNG, KHÔNG ĐƯỜNG CONG NỔI) -->
-        <div class="admin-card booking-upcoming-bar" id="upcomingAlertBar">
-            <div class="upcoming-bar-header">
-                <span class="upcoming-bar-title">Lịch hẹn sắp tới trong 60 phút</span>
-                <span class="upcoming-bar-count" id="upcomingCountBadge">3 lịch hẹn</span>
-            </div>
-            <div class="upcoming-items-list" id="upcomingItemsContainer">
-                <!-- Danh sách lịch sắp tới render động -->
-            </div>
-        </div>
-
-        <!-- 6 THẺ THỐNG KÊ KPI NHANH -->
+        <!-- 6 THẺ THỐNG KÊ KPI NHANH (BẤM VÀO ĐỂ LỌC TRỰC TIẾP) -->
         <div class="services-kpi-grid">
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="ALL" title="Xem tất cả lịch hẹn">
                 <span class="kpi-label">Tổng lịch hôm nay</span>
-                <span class="kpi-val" id="statTotalBookings">28</span>
+                <span class="kpi-val" id="statTotalBookings">8</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="pending" title="Lọc lịch chờ xác nhận">
                 <span class="kpi-label">Chờ xác nhận</span>
-                <span class="kpi-val text-warning" id="statPendingBookings">4</span>
+                <span class="kpi-val text-warning" id="statPendingBookings">1</span>
             </div>
-            <div class="admin-card kpi-card">
-                <span class="kpi-label">Đã xác nhận</span>
-                <span class="kpi-val" id="statConfirmedBookings" style="color: #236B48;">11</span>
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="upcoming" title="Lọc 3 lịch hẹn sắp tới trong 60 phút">
+                <span class="kpi-label">Sắp tới trong 60p</span>
+                <span class="kpi-val text-urgent-amber" id="statUpcomingBookings">3</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="in_progress" title="Lọc lịch đang thực hiện">
                 <span class="kpi-label">Đang thực hiện</span>
-                <span class="kpi-val" id="statInProgressBookings" style="color: #0369A1;">6</span>
+                <span class="kpi-val" id="statInProgressBookings" style="color: #0369A1;">1</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="completed" title="Lọc lịch hoàn thành">
                 <span class="kpi-label">Hoàn thành</span>
-                <span class="kpi-val text-success" id="statCompletedBookings">5</span>
+                <span class="kpi-val text-success" id="statCompletedBookings">2</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="cancelled" title="Lọc lịch yêu cầu đổi và hủy">
                 <span class="kpi-label">Yêu cầu đổi và Hủy</span>
-                <span class="kpi-val text-danger" id="statCancelledBookings">2</span>
+                <span class="kpi-val text-danger" id="statCancelledBookings">1</span>
             </div>
         </div>
 
         <!-- KHỐI BẢNG DỮ LIỆU THỐNG NHẤT (GOM KHỐI) -->
         <div class="admin-card service-master-card">
+            <!-- THANH THÔNG BÁO NHANH LỊCH HẸN TRONG 60 PHÚT (MỎNG, GỌN, KHÔNG BOX-IN-BOX, KHÔNG ICON) -->
+            <div class="booking-upcoming-strip" id="upcomingAlertBar">
+                <div class="upcoming-strip-left">
+                    <span class="upcoming-strip-badge">Sắp tới trong 60 phút:</span>
+                    <div class="upcoming-strip-items" id="upcomingItemsContainer">
+                        <!-- Danh sách tóm tắt render động -->
+                    </div>
+                </div>
+                <div class="upcoming-strip-right">
+                    <button type="button" class="btn-strip-filter" id="btnFilterUpcomingQuick">Lọc danh sách</button>
+                </div>
+            </div>
+
             <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
             <div class="table-toolbar-section">
                 <div class="filter-row-top">

@@ -634,6 +634,143 @@
             if (btn) btn.click();
         });
 
+        // 13. THANH THÔNG BÁO KHÁCH HÀNG CÓ KHIẾU NẠI (DẢI MỎNG ALERT TONE, THUẦN CHỮ)
+        // CHỈ hiển thị các khách hàng ĐANG HOẠT ĐỘNG có khiếu nại (loại trừ tài khoản bị khóa)
+        const complaintCustomers = [
+            { id: 'CUST-001', name: 'Nguyễn Văn An', ticket: 'TK-008', reason: 'Chưa nhận quà tặng hạng Vàng' },
+            { id: 'CUST-007', name: 'Vũ Đức Thắng', ticket: 'TK-015', reason: 'Thú cưng bị trầy nhẹ sau spa' }
+        ];
+
+        function renderComplaintBar() {
+            const container = document.getElementById('custComplaintItemsContainer');
+            const bar = document.getElementById('custComplaintAlertBar');
+            if (!container) return;
+
+            if (complaintCustomers.length === 0) {
+                if (bar) bar.style.display = 'none';
+                return;
+            }
+
+            if (bar) bar.style.display = 'flex';
+
+            container.innerHTML = complaintCustomers.map(item => `
+                <div class="complaint-item-tag" data-id="${item.id}" title="Xem hồ sơ ${item.name} (${item.ticket})">
+                    <span class="tag-ticket">${item.ticket}</span>
+                    <span class="tag-cust">${item.name}</span>
+                    <span class="tag-reason">(${item.reason})</span>
+                </div>
+            `).join('');
+
+            container.querySelectorAll('.complaint-item-tag').forEach(tag => {
+                tag.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const custId = tag.getAttribute('data-id');
+                    const link = document.querySelector(`.btn-open-profile-drawer[data-id="${custId}"]`);
+                    if (link) link.click();
+                });
+            });
+        }
+
+        renderComplaintBar();
+
+        // 14. Bộ lọc bảng và tương tác thẻ KPI 1 chạm
+        const tableRows = document.querySelectorAll('#customerTableTbody tr');
+        const filterStatusSelect = document.getElementById('custFilterStatus');
+        const btnFilterComplaint = document.getElementById('btnFilterComplaintOnly');
+        const btnComplaintStripFilter = document.getElementById('btnFilterComplaintQuick');
+        const searchInput = document.getElementById('custSearchInput');
+        let currentFilter = 'ALL';
+
+        function applyCustomerFilters() {
+            const query = (searchInput?.value || '').toLowerCase().trim();
+
+            tableRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const matchesSearch = !query || text.includes(query);
+                let matchesCategory = true;
+
+                if (currentFilter === 'COMPLAINT') {
+                    const isLocked = row.classList.contains('row-locked') || text.includes('bị khóa');
+                    matchesCategory = !isLocked && (row.classList.contains('row-highlight-complaint') || text.includes('khiếu nại'));
+                } else if (currentFilter === 'LOCKED') {
+                    matchesCategory = row.classList.contains('row-locked') || text.includes('bị khóa');
+                } else if (currentFilter === 'TEMP') {
+                    matchesCategory = text.includes('tạm thời') || text.includes('vãng lai');
+                } else if (currentFilter === 'MEMBER') {
+                    matchesCategory = !row.classList.contains('row-locked') && !text.includes('tạm thời');
+                }
+
+                if (matchesSearch && matchesCategory) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Bắt sự kiện gõ tìm kiếm
+        if (searchInput) {
+            searchInput.addEventListener('input', applyCustomerFilters);
+        }
+
+        // Bắt sự kiện chọn dropdown trạng thái
+        if (filterStatusSelect) {
+            filterStatusSelect.addEventListener('change', (e) => {
+                const val = e.target.value;
+                if (val === 'ALL') currentFilter = 'ALL';
+                else if (val === 'ACTIVE') currentFilter = 'MEMBER';
+                else if (val === 'TEMP') currentFilter = 'TEMP';
+                else if (val === 'LOCKED') currentFilter = 'LOCKED';
+                applyCustomerFilters();
+            });
+        }
+
+        // Nút lọc nhanh Có khiếu nại ở thanh công cụ
+        if (btnFilterComplaint) {
+            btnFilterComplaint.addEventListener('click', () => {
+                if (currentFilter === 'COMPLAINT') {
+                    currentFilter = 'ALL';
+                    btnFilterComplaint.classList.remove('active');
+                } else {
+                    currentFilter = 'COMPLAINT';
+                    btnFilterComplaint.classList.add('active');
+                }
+                applyCustomerFilters();
+            });
+        }
+
+        // Nút lọc nhanh trên dải ruy-băng thông báo khiếu nại
+        if (btnComplaintStripFilter) {
+            btnComplaintStripFilter.addEventListener('click', () => {
+                currentFilter = 'COMPLAINT';
+                if (btnFilterComplaint) btnFilterComplaint.classList.add('active');
+                document.querySelectorAll('.customers-kpi-grid .kpi-card-clickable').forEach(c => {
+                    c.classList.toggle('active', c.getAttribute('data-kpi-filter') === 'COMPLAINT');
+                });
+                applyCustomerFilters();
+            });
+        }
+
+        // Tương tác click trực tiếp trên các thẻ KPI
+        document.querySelectorAll('.customers-kpi-grid .kpi-card-clickable').forEach(card => {
+            card.addEventListener('click', () => {
+                const filter = card.getAttribute('data-kpi-filter');
+                document.querySelectorAll('.customers-kpi-grid .kpi-card-clickable').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+
+                currentFilter = filter;
+                if (btnFilterComplaint) {
+                    btnFilterComplaint.classList.toggle('active', filter === 'COMPLAINT');
+                }
+                if (filterStatusSelect) {
+                    if (filter === 'ALL') filterStatusSelect.value = 'ALL';
+                    else if (filter === 'LOCKED') filterStatusSelect.value = 'LOCKED';
+                    else if (filter === 'TEMP') filterStatusSelect.value = 'TEMP';
+                }
+                applyCustomerFilters();
+            });
+        });
+
         // Khởi tạo icon Lucide
         if (window.lucide) {
             lucide.createIcons();

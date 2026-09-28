@@ -606,18 +606,23 @@
                 <span class="alert-text" id="drawerPetAlertText">Cảnh báo: Bé hay cắn khi chạm vào đuôi hoặc khi sấy chân sau. Kỹ thuật viên Groomer cần đeo loa chắn mõm hoặc bố trí 2 người cùng phối hợp để đảm bảo an toàn!</span>
             </div>
 
-            <!-- 4 TAB CON CHI TIẾT BÊN TRONG HỒ SƠ -->
-            <div class="drawer-subtabs-bar">
-                <button type="button" class="drawer-tab-btn active" data-drawertab="ptab-traits">Thể trạng và Đặc tính</button>
-                <button type="button" class="drawer-tab-btn" data-drawertab="ptab-vaccine">
-                    <span>Xác nhận tiêm chủng</span>
-                    <span class="tab-badge-count" id="ptabVaccineBadge" style="display: none;">!</span>
-                </button>
-                <button type="button" class="drawer-tab-btn" data-drawertab="ptab-carelog">
-                    <span>Nhật ký chăm sóc</span>
-                    <span class="tab-badge-count">2</span>
-                </button>
-                <button type="button" class="drawer-tab-btn" data-drawertab="ptab-history">Lịch sử dịch vụ</button>
+            <!-- 4 TAB CON CHI TIẾT BÊN TRONG HỒ SƠ & TRẠNG THÁI -->
+            <div class="drawer-subtabs-row">
+                <div class="drawer-subtabs-bar">
+                    <button type="button" class="drawer-tab-btn active" data-drawertab="ptab-traits">Thể trạng và Đặc tính</button>
+                    <button type="button" class="drawer-tab-btn" data-drawertab="ptab-vaccine">
+                        <span>Xác nhận tiêm chủng</span>
+                        <span class="tab-badge-count" id="ptabVaccineBadge" style="display: none;">!</span>
+                    </button>
+                    <button type="button" class="drawer-tab-btn" data-drawertab="ptab-carelog">
+                        <span>Nhật ký chăm sóc</span>
+                        <span class="tab-badge-count">2</span>
+                    </button>
+                    <button type="button" class="drawer-tab-btn" data-drawertab="ptab-history">Lịch sử dịch vụ</button>
+                </div>
+                <div class="drawer-subtabs-status-extra">
+                    <span class="admin-badge badge-success" id="petHotelEligibleBadge" style="font-size: 12.5px; padding: 4px 10px; display: none;">Đủ điều kiện nhận phòng Hotel</span>
+                </div>
             </div>
 
             <!-- NỘI DUNG 4 TAB CON -->
@@ -693,11 +698,6 @@
 
                 <!-- TAB CON 2: XÁC NHẬN TIÊM CHỦNG -->
                 <div class="drawer-tab-panel" id="ptab-vaccine">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                        <h4 class="detail-box-title" style="margin-bottom: 0;">Sổ tiêm chủng điện tử và Điều kiện lưu trú Pet Hotel</h4>
-                        <span class="admin-badge badge-success" style="font-size: 12.5px; padding: 4px 10px;">Đủ điều kiện nhận phòng Hotel</span>
-                    </div>
-
                     <div class="vaccine-card-grid">
                         <div class="vaccine-item-card is-qualified">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -748,10 +748,6 @@
 
                 <!-- TAB CON 3: NHẬT KÝ CHĂM SÓC DỊCH VỤ -->
                 <div class="drawer-tab-panel" id="ptab-carelog">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                        <h4 class="detail-box-title" style="margin-bottom: 0;">Nhật ký chăm sóc và ảnh dịch vụ</h4>
-                    </div>
-
                     <div class="table-responsive-wrapper">
                         <table class="admin-table">
                             <thead>
@@ -823,8 +819,7 @@
 
                 <!-- TAB CON 4: LỊCH SỬ ĐẶT HẸN & DỊCH VỤ -->
                 <div class="drawer-tab-panel" id="ptab-history">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                        <h4 class="detail-box-title" style="margin-bottom: 0;">Lịch sử dịch vụ Spa và Lưu trú Pet Hotel</h4>
+                    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 14px;">
                         <button type="button" class="admin-btn admin-btn-primary btn-sm btn-quick-book-spa">+ Đặt lịch ngay</button>
                     </div>
 

@@ -1,41 +1,53 @@
 <div class="customers-module">
     <!-- ====================================================================
-         SUB-TAB 1: KHÁCH HÀNG (DANH SÁCH & TIẾP NHẬN TẠI QUẦY)
+         SUB-TAB 1: KHÁCH HÀNG (DANH SÁCH và TIẾP NHẬN TẠI QUẦY)
          ==================================================================== -->
     <section class="subtab-content active" id="subtab-tab-list">
-        <!-- KHU VỰC 1: 5 THẺ THỐNG KÊ NHANH (NỀN TRẮNG ĐỒNG NHẤT) -->
+        <!-- KHU VỰC 1: 5 THẺ THỐNG KÊ NHANH (BẤM VÀO ĐỂ LỌC TRỰC TIẾP) -->
         <div class="customers-kpi-grid">
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="ALL" title="Xem tất cả khách hàng">
                 <span class="kpi-label">Tổng khách</span>
                 <span class="kpi-val" id="custStatTotal">1.248</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="MEMBER" title="Lọc khách hàng thành viên">
                 <span class="kpi-label">Thành viên</span>
                 <span class="kpi-val text-success" id="custStatMember">982</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="TEMP" title="Lọc khách vãng lai">
                 <span class="kpi-label">Vãng lai</span>
                 <span class="kpi-val text-warning" id="custStatGuest">251</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="LOCKED" title="Lọc tài khoản bị khóa">
                 <span class="kpi-label">Bị khóa</span>
                 <span class="kpi-val text-neutral" id="custStatLocked">15</span>
             </div>
-            <div class="admin-card kpi-card">
+            <div class="admin-card kpi-card kpi-card-clickable" data-kpi-filter="COMPLAINT" title="Lọc khách hàng đang có khiếu nại">
                 <span class="kpi-label">Có khiếu nại</span>
                 <span class="kpi-val text-danger" id="custStatComplaint">4</span>
             </div>
         </div>
 
-        <!-- KHU VỰC 2 & 3: KHỐI DỮ LIỆU THỐNG NHẤT (BỘ LỌC + BẢNG DANH SÁCH) -->
+        <!-- KHU VỰC 2 và 3: KHỐI DỮ LIỆU THỐNG NHẤT (BỘ LỌC + BẢNG DANH SÁCH) -->
         <div class="admin-card customer-master-card">
+            <!-- THANH THÔNG BÁO NHANH KHÁCH HÀNG CÓ KHIẾU NẠI (MỎNG, GỌN, ALERT TONE, THUẦN CHỮ, KHÔNG ICON) -->
+            <div class="customer-complaint-strip" id="custComplaintAlertBar">
+                <div class="complaint-strip-left">
+                    <span class="complaint-strip-badge">Cảnh báo khiếu nại đang xử lý:</span>
+                    <div class="complaint-strip-items" id="custComplaintItemsContainer">
+                        <!-- Danh sách tóm tắt render động -->
+                    </div>
+                </div>
+                <div class="complaint-strip-right">
+                    <button type="button" class="btn-complaint-strip-filter" id="btnFilterComplaintQuick">Lọc danh sách</button>
+                </div>
+            </div>
+
             <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
                     <div class="search-box-wrapper">
                         <input type="text" class="admin-input search-input" id="custSearchInput" placeholder="Tìm SĐT, Họ tên, Bé cưng, Email...">
                     </div>
-
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportCustomerReport">Xuất file</button>
                         <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddCustomerModal">+ Thêm khách</button>
@@ -311,8 +323,8 @@
                         </td>
                     </tr>
 
-                    <!-- Dòng dữ liệu mẫu 7: Thành viên Kim Cương VIP -->
-                    <tr>
+                    <!-- Dòng dữ liệu mẫu 7: Thành viên Kim Cương VIP đang có khiếu nại dịch vụ -->
+                    <tr class="row-highlight-complaint">
                         <td><strong>CUST-007</strong></td>
                         <td>
                             <div class="user-name-cell">
@@ -326,7 +338,7 @@
                             <span class="points-val">3.420 pts</span>
                         </td>
                         <td>
-                            <span class="admin-badge badge-neutral">Bình thường</span>
+                            <span class="admin-badge badge-warning" style="color: #DC2626; background: #FEE2E2; border-color: #FED8D8;">Khiếu nại TK-015</span>
                         </td>
                         <td>
                             <span class="admin-badge badge-success">Đang hoạt động</span>
@@ -570,7 +582,7 @@
                     </div>
                 </div>
 
-                <!-- TAB CON 2: THÚ CƯNG & SỨC KHỎE -->
+                <!-- TAB CON 2: THÚ CƯNG và SỨC KHỎE -->
                 <div class="drawer-tab-panel" id="dtab-pets">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h4 class="detail-box-title" style="margin-bottom: 0;">Danh sách thú cưng sở hữu</h4>
@@ -644,7 +656,7 @@
                     </table>
                 </div>
 
-                <!-- TAB CON 5: KHIẾU NẠI & ĐỔI TRẢ -->
+                <!-- TAB CON 5: KHIẾU NẠI và ĐỔI TRẢ -->
                 <div class="drawer-tab-panel" id="dtab-complaints">
                     <table class="admin-table">
                         <thead>
@@ -674,7 +686,7 @@
     </section>
 
     <!-- ====================================================================
-         SUB-TAB 3: PAWPOINT (CHĂM SÓC THÂN THIẾT & TÍCH ĐIỂM)
+         SUB-TAB 3: PAWPOINT (CHĂM SÓC THÂN THIẾT và TÍCH ĐIỂM)
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-pawpoint">
         <div class="pawpoint-grid-layout">

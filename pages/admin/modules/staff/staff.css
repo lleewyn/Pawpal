@@ -295,16 +295,16 @@
     overscroll-behavior: contain;
 }
 
-.profile-drawer-container {
+.staff-profile-drawer {
     width: 500px;
     max-width: 90vw;
-    background-color: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background-color: var(--surface-white);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     height: 100%;
     display: flex;
     flex-direction: column;
-    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.06);
+    box-shadow: none;
     border-left: 1px solid var(--border-neutral);
     animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
