@@ -44,31 +44,36 @@
 
             <!-- CỘT 2 (GIỮA): KHUNG TRỰC CHAT VÀ ĐIỀU PHỐI -->
             <div class="inbox-chat-col admin-card">
-                <!-- HEADER PHIÊN CHAT -->
-                <div class="chat-header-bar">
-                    <div class="chat-header-user-meta">
-                        <span class="chat-target-name" id="currentChatCustomerName">Lê Lệ Quyên</span>
-                        <span class="chat-target-phone" id="currentChatCustomerPhone">0901234567</span>
-                        <span class="admin-badge" id="currentChatSentimentBadge">Mức độ 4: Bực bội và Thất vọng</span>
-                        <span class="admin-badge badge-neutral" id="currentChatHandlerBadge">Bot đang phục vụ</span>
-                        <span class="sla-timer-pill sla-danger" id="currentChatSlaBadge">Chờ: 2m 25s</span>
+
+                <!-- HEADER PHIÊN CHAT: 1 DÒNG GỌN -->
+                <div class="chat-header-single-row">
+                    <span class="chat-target-name" id="currentChatCustomerName">Lê Lệ Quyên</span>
+                    <span class="admin-badge badge-danger" id="currentChatSentimentBadge">Bực bội</span>
+
+                    <!-- NÚT 3 CHẤM VÀ DROPDOWN TÁC VỤ -->
+                    <div class="chat-actions-menu-wrap" id="chatActionsMenuWrap">
+                        <button type="button" class="btn-chat-actions-dots" id="btnChatActionsDots" title="Tác vụ thêm">•••</button>
+                        <div class="chat-actions-dropdown" id="chatActionsDropdown">
+                            <button type="button" class="chat-action-item" id="btnRewardPoints">Tặng điểm Pawpoint</button>
+                            <button type="button" class="chat-action-item" id="btnConvertToTicket">Chuyển thành Ticket</button>
+                            <button type="button" class="chat-action-item" id="btnEscalateManager">Chuyển cấp Quản lý</button>
+                        </div>
                     </div>
-                    <div class="chat-header-actions">
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnRewardPoints">Tặng điểm Pawpoint</button>
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnConvertToTicket">Chuyển thành Ticket</button>
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnEscalateManager">Chuyển cấp Quản lý</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnToggleTakeover">Tiếp nhận ca chat</button>
-                    </div>
+
+                    <div class="chat-header-actions-spacer"></div>
+                    <span class="sla-timer-pill sla-danger" id="currentChatSlaBadge">Quá hạn: 2m 25s</span>
+                    <button type="button" class="admin-btn admin-btn-primary btn-takeover-compact" id="btnToggleTakeover">Tiếp nhận</button>
                 </div>
 
-                <!-- THẺ TÓM TẮT NGỮ CẢNH AI (3 GIÂY) -->
-                <div class="ai-context-summary-card" id="aiContextCard">
-                    <div class="summary-header-row">
-                        <span class="summary-title-text">Tóm tắt ngữ cảnh AI</span>
-                        <span class="summary-tag">Nhận diện sự cố</span>
-                    </div>
-                    <div class="summary-body-text" id="aiContextSummaryText">
-                        Khách phản ánh đơn hàng SP-2026-003 đã quá 2 ngày giao dự kiến vẫn chưa nhận được. Khách đã thanh toán qua MoMo và đang cần gấp thức ăn cho thú cưng. Đề xuất: Kiểm tra vị trí bưu cục vận chuyển và đền bù 50 điểm Pawpoint tạ lỗi.
+                <!-- THẺ TÓM TẮT NGỮ CẢNH AI (COMPACT 1 DÒNG VỚI EXPAND) -->
+                <div class="ai-context-strip" id="aiContextCard">
+                    <span class="ai-context-strip-label">AI:</span>
+                    <span class="ai-context-strip-tag" id="aiContextStripTag">Nhận diện sự cố</span>
+                    <span class="ai-context-strip-body" id="aiContextSummaryText">Khách phản ánh đơn hàng SP-2026-003 đã quá 2 ngày giao dự kiến vẫn chưa nhận được. Khách đã thanh toán qua MoMo và đang cần gấp thức ăn cho thú cưng.</span>
+                    <button type="button" class="ai-context-strip-expand" id="btnExpandAiContext">Xem thêm</button>
+                    <div class="ai-context-actions" id="aiContextActions">
+                        <button type="button" class="btn-context-action" id="btnContextTrackOrder">Vận đơn</button>
+                        <button type="button" class="btn-context-action" id="btnContextPetCamera">Camera</button>
                     </div>
                 </div>
 
@@ -77,26 +82,28 @@
                     <!-- Render by JS -->
                 </div>
 
-                <!-- KHỐI GỢI Ý PHẢN HỒI THÔNG MINH AI (SMART RESPONSES) - COMPACT DẠNG CHIPS -->
-                <div class="ai-smart-suggestions-box" id="aiSmartSuggestionsBox">
-                    <div class="smart-suggestions-header">
-                        <div class="smart-suggestions-header-left">
-                            <span class="smart-suggestions-title">Gợi ý AI 1 chạm:</span>
-                            <span class="smart-suggestions-tag" id="smartSuggestionsTag">Đồng cảm và Xoa dịu</span>
+                <!-- VÙNG CÔNG CỤ PHÍA DƯỚI: GỢI Ý AI + MACROS GOM 1 KHU -->
+                <div class="chat-bottom-toolbar">
+                    <!-- DÒNG 1: GỢI Ý AI DẠNG CAROUSEL 1 NÚT -->
+                    <div class="ai-smart-suggestions-box" id="aiSmartSuggestionsBox">
+                        <div class="suggest-carousel-label">Gợi ý AI:</div>
+                        <button type="button" class="suggest-carousel-prev" id="btnSuggestPrev" title="Gợi ý trước">‹</button>
+                        <div class="suggest-carousel-main" id="suggestCarouselMain">
+                            <span class="suggest-carousel-tag" id="suggestCarouselTag">Đồng cảm và Xoa dịu</span>
+                            <span class="suggest-carousel-text" id="suggestCarouselText">Dạ PawPal thành thật xin lỗi sen và bé...</span>
                         </div>
-                        <button type="button" class="btn-toggle-suggestions-expand" id="btnToggleSuggestionsExpand">Mở rộng chi tiết</button>
+                        <button type="button" class="suggest-carousel-next" id="btnSuggestNext" title="Gợi ý tiếp theo">›</button>
+                        <button type="button" class="suggest-carousel-apply" id="btnApplySuggest">Dùng mẫu này</button>
                     </div>
-                    <div class="smart-suggestions-list compact-mode" id="smartSuggestionsList">
-                        <!-- Render by JS: Compact horizontal chips (default) / Expanded cards -->
+                    <!-- DÒNG 2: MACRO PHẢN HỒI NHANH -->
+                    <div class="chat-quick-templates">
+                        <span class="macros-label">Mẫu nhanh:</span>
+                        <button type="button" class="quick-reply-pill" data-reply="Dạ PawPal xin chào sen, em là chuyên viên CSKH đã tiếp nhận ca chat này để trực tiếp hỗ trợ mình ngay ạ!">Lời chào tiếp nhận</button>
+                        <button type="button" class="quick-reply-pill" data-reply="Dạ PawPal thành thật xin lỗi vì sự bất tiện này. Em đã kiểm tra bưu tá đang trên đường giao hàng và sẽ đến trong chiều nay ạ.">Xin lỗi giao trễ</button>
+                        <button type="button" class="quick-reply-pill" data-reply="Dạ để hỗ trợ tốt nhất, sen vui lòng chụp giúp em hình ảnh tình trạng hiện tại gửi qua đây nhé ạ.">Yêu cầu gửi ảnh</button>
+                        <button type="button" class="quick-reply-pill" data-reply="Dạ để tạ lỗi vì sự cố vừa rồi, PawPal xin gửi tặng mình 50 điểm Pawpoint vào tài khoản nhé ạ.">Tặng điểm tạ lỗi</button>
+                        <button type="button" class="quick-reply-pill btn-canned-lib-link" id="btnOpenCannedModal">Thư viện câu mẫu</button>
                     </div>
-                </div>
-
-                <!-- THANH PHẢN HỒI NHANH (MACROS) -->
-                <div class="chat-quick-templates">
-                    <button type="button" class="quick-reply-pill" data-reply="Dạ PawPal xin chào sen, em là chuyên viên CSKH đã tiếp nhận ca chat này để trực tiếp hỗ trợ mình ngay ạ!">Lời chào tiếp nhận</button>
-                    <button type="button" class="quick-reply-pill" data-reply="Dạ PawPal thành thật xin lỗi vì sự bất tiện này. Em đã kiểm tra bưu tá đang trên đường giao hàng và sẽ đến trong chiều nay ạ.">Xin lỗi giao trễ</button>
-                    <button type="button" class="quick-reply-pill" data-reply="Dạ để hỗ trợ tốt nhất, sen vui lòng chụp giúp em hình ảnh tình trạng hiện tại gửi qua đây nhé ạ.">Yêu cầu gửi ảnh</button>
-                    <button type="button" class="quick-reply-pill" data-reply="Dạ để tạ lỗi vì sự cố vừa rồi, PawPal xin gửi tặng mình 50 điểm Pawpoint vào tài khoản nhé ạ.">Thông báo tặng điểm</button>
                 </div>
 
                 <!-- KHUNG SOẠN THẢO VÀ GỬI TIN NHẮN -->
@@ -394,4 +401,139 @@
             </div>
         </div>
     </div>
+
+    <!-- ====================================================================
+         MODAL 4: THƯ VIỆN CÂU MẪU CSKH CHUẨN MỰC (PHASE 3)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="cannedResponsesModalOverlay" style="display: none;">
+        <div class="admin-modal-card modal-canned-lib">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Thư viện câu mẫu CSKH chuẩn mực</div>
+                    <div class="modal-subtitle-clean">Kho phản hồi tình huống giúp nhân viên phản hồi nhanh, chuẩn văn phong và thấu cảm.</div>
+                </div>
+                <button type="button" class="modal-btn-close-text" id="btnDismissCannedModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean canned-lib-body">
+                <!-- THANH TÌM KIẾM CÂU MẪU -->
+                <div class="canned-lib-search-bar">
+                    <input type="text" class="admin-input" id="inputSearchCanned" placeholder="Tìm câu mẫu theo từ khóa (giao trễ, xin lỗi, bồi hoàn, camera...)...">
+                </div>
+
+                <!-- BỘ LỌC CHỦ ĐỀ CÂU MẪU DẠNG TEXT TABS -->
+                <div class="canned-categories-tabs" id="cannedCategoriesTabs">
+                    <button type="button" class="canned-tab-btn active" data-category="all">Tất cả (15)</button>
+                    <button type="button" class="canned-tab-btn" data-category="greeting">Chào hỏi và Tiếp nhận</button>
+                    <button type="button" class="canned-tab-btn" data-category="shipping">Vận chuyển và Giao hàng</button>
+                    <button type="button" class="canned-tab-btn" data-category="service">Spa và Khách sạn</button>
+                    <button type="button" class="canned-tab-btn" data-category="reward">Bồi hoàn và Tạ lỗi</button>
+                    <button type="button" class="canned-tab-btn" data-category="dispute">Khiếu nại và Đối soát</button>
+                </div>
+
+                <!-- DANH SÁCH CÂU MẪU CUỘN -->
+                <div class="canned-responses-list" id="cannedResponsesList">
+                    <!-- Render by JS -->
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCloseCannedModalBottom">Đóng thư viện</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 5: TRA CỨU VẬN ĐƠN HỎA TỐC BƯU TÁ (PHASE 3)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="orderTrackingModalOverlay" style="display: none;">
+        <div class="admin-modal-card modal-compact">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Lộ trình vận đơn hỏa tốc</div>
+                    <div class="modal-subtitle-clean">Đơn vị: Giao Hàng Hỏa Tốc PawPal Express</div>
+                </div>
+                <button type="button" class="modal-btn-close-text" id="btnDismissTrackingModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="tracking-summary-card">
+                    <div class="tracking-code-row">
+                        <span class="tracking-code-val" id="trackingModalOrderCode">SP-2026-003</span>
+                        <span class="admin-badge badge-warning" id="trackingModalStatusBadge">Đang giao hàng</span>
+                    </div>
+                    <div class="tracking-driver-info">
+                        <div><strong>Bưu tá phụ trách:</strong> <span id="trackingModalDriverName">Nguyễn Văn Hùng</span></div>
+                        <div><strong>Số điện thoại:</strong> <span id="trackingModalDriverPhone">0938.888.999</span></div>
+                        <div><strong>Thời gian dự kiến:</strong> <span id="trackingModalEta" style="color: #236B48; font-weight: 700;">Trước 12:00 hôm nay</span></div>
+                    </div>
+                </div>
+
+                <div class="tracking-timeline-box">
+                    <div class="tracking-step done">
+                        <div class="tracking-step-dot"></div>
+                        <div class="tracking-step-content">
+                            <div class="tracking-step-title">07:45 - Tiếp nhận và Đóng gói</div>
+                            <div class="tracking-step-desc">Kho trung tâm PawPal đã kiểm tra chất lượng và niêm phong hộp thức ăn.</div>
+                        </div>
+                    </div>
+                    <div class="tracking-step done">
+                        <div class="tracking-step-dot"></div>
+                        <div class="tracking-step-content">
+                            <div class="tracking-step-title">08:30 - Xuất kho trung chuyển Quận 1</div>
+                            <div class="tracking-step-desc">Bàn giao kiện hàng cho bưu tá phụ trách tuyến hỏa tốc.</div>
+                        </div>
+                    </div>
+                    <div class="tracking-step current">
+                        <div class="tracking-step-dot current-dot"></div>
+                        <div class="tracking-step-content">
+                            <div class="tracking-step-title">10:15 - Đang di chuyển giao tận nhà</div>
+                            <div class="tracking-step-desc">Bưu tá cách địa chỉ khách hàng 1.2 km (tuyến đường Hai Bà Trưng).</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelTrackingModal">Đóng</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSendTrackingCardToChat">Gửi thẻ vận đơn vào chat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 6: XEM CAMERA AN NINH PHÒNG THÚ CƯNG (PHASE 3)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="petCameraModalOverlay" style="display: none;">
+        <div class="admin-modal-card modal-compact">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Camera an ninh phòng thú cưng</div>
+                    <div class="modal-subtitle-clean">Chi nhánh Quận 1 • Phòng VIP 102</div>
+                </div>
+                <button type="button" class="modal-btn-close-text" id="btnDismissCameraModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <!-- MÀN HÌNH MÔ PHỎNG CAMERA TRỰC TIẾP -->
+                <div class="camera-monitor-view">
+                    <div class="camera-live-badge">TRỰC TIẾP</div>
+                    <div class="camera-pet-screen">
+                        <div class="camera-pet-visual">
+                            <div class="camera-pet-avatar">🐱</div>
+                            <div class="camera-pet-caption">Bé Miu Con đang ngủ trưa trên thảm đệm ấm</div>
+                        </div>
+                    </div>
+                    <div class="camera-telemetry-bar">
+                        <span>Nhiệt độ phòng: <strong>24.5°C</strong></span>
+                        <span>Độ ẩm: <strong>55%</strong></span>
+                        <span>Giờ cập nhật: <strong id="cameraCurrentTime">10:45:20</strong></span>
+                    </div>
+                </div>
+                <div style="font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin-top: 10px;">
+                    Nhân viên có thể chụp ảnh nhanh snapshot kèm thông số an toàn môi trường gửi trực tiếp vào cuộc trò chuyện để trấn an khách hàng.
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelCameraModal">Đóng</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSendCameraSnapshotToChat">Gửi ảnh snapshot vào chat</button>
+            </div>
+        </div>
+    </div>
 </div>
+

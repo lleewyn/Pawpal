@@ -246,14 +246,11 @@
         }, 1000);
     }
 
-    let isSuggestionsExpanded = false;
+    let currentSuggestIndex = 0;
 
     function renderSmartSuggestions() {
         const box = document.getElementById('aiSmartSuggestionsBox');
-        const list = document.getElementById('smartSuggestionsList');
-        const tag = document.getElementById('smartSuggestionsTag');
-        const toggleBtn = document.getElementById('btnToggleSuggestionsExpand');
-        if (!box || !list) return;
+        if (!box) return;
 
         if (!currentConversation || !currentConversation.smartResponses || currentConversation.smartResponses.length === 0) {
             box.style.display = 'none';
@@ -261,72 +258,42 @@
         }
 
         box.style.display = 'flex';
-        if (tag) {
-            tag.textContent = currentConversation.sentimentLevel >= 4 ? 'Xoa dịu và Bồi hoàn khẩn cấp' : 'Tư vấn và Hỗ trợ';
-        }
+        currentSuggestIndex = Math.min(currentSuggestIndex, currentConversation.smartResponses.length - 1);
+        const item = currentConversation.smartResponses[currentSuggestIndex];
 
-        if (toggleBtn) {
-            toggleBtn.textContent = isSuggestionsExpanded ? 'Thu gọn' : 'Xem chi tiết';
-            toggleBtn.onclick = () => {
-                isSuggestionsExpanded = !isSuggestionsExpanded;
-                renderSmartSuggestions();
-            };
-        }
+        const tagEl = document.getElementById('suggestCarouselTag');
+        const textEl = document.getElementById('suggestCarouselText');
 
-        list.innerHTML = '';
-        if (!isSuggestionsExpanded) {
-            // Chế độ Compact Chips: nằm trên 1 hàng ngang, chỉ cao 28px, không chiếm diện tích chat
-            list.className = 'smart-suggestions-list compact-mode';
-            currentConversation.smartResponses.forEach((item, idx) => {
-                const pill = document.createElement('button');
-                pill.type = 'button';
-                pill.className = 'smart-suggest-pill';
-                pill.innerHTML = `<strong>${idx + 1}. ${item.tag}:</strong> ${item.text.slice(0, 34)}...`;
-                pill.title = `${item.tag}: ${item.text}`;
-
-                pill.addEventListener('click', () => {
-                    const input = document.getElementById('chatMessageInput');
-                    if (input) {
-                        input.value = item.text;
-                        input.focus();
-                    }
-                });
-
-                list.appendChild(pill);
-            });
-        } else {
-            // Chế độ Expanded: hiển thị đầy đủ thẻ chi tiết khi Admin muốn đọc kỹ
-            list.className = 'smart-suggestions-list expanded-mode';
-            currentConversation.smartResponses.forEach((item, idx) => {
-                const card = document.createElement('div');
-                card.className = 'smart-suggest-card';
-                card.innerHTML = `
-                    <div class="suggest-card-body">
-                        <span class="suggest-card-tag">Phương án ${idx + 1}: ${item.tag}</span>
-                        <span class="suggest-card-text">${item.text}</span>
-                    </div>
-                    <button type="button" class="btn-apply-suggest">Áp dụng</button>
-                `;
-
-                function applySuggestedReply() {
-                    const input = document.getElementById('chatMessageInput');
-                    if (input) {
-                        input.value = item.text;
-                        input.focus();
-                    }
-                }
-
-                card.querySelector('.btn-apply-suggest').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    applySuggestedReply();
-                });
-
-                card.addEventListener('click', applySuggestedReply);
-
-                list.appendChild(card);
-            });
-        }
+        if (tagEl) tagEl.textContent = item.tag;
+        if (textEl) textEl.textContent = item.text;
     }
+
+    function setupSuggestCarouselEvents() {
+        document.getElementById('btnSuggestPrev')?.addEventListener('click', () => {
+            if (!currentConversation?.smartResponses?.length) return;
+            const total = currentConversation.smartResponses.length;
+            currentSuggestIndex = (currentSuggestIndex - 1 + total) % total;
+            renderSmartSuggestions();
+        });
+
+        document.getElementById('btnSuggestNext')?.addEventListener('click', () => {
+            if (!currentConversation?.smartResponses?.length) return;
+            const total = currentConversation.smartResponses.length;
+            currentSuggestIndex = (currentSuggestIndex + 1) % total;
+            renderSmartSuggestions();
+        });
+
+        document.getElementById('btnApplySuggest')?.addEventListener('click', () => {
+            if (!currentConversation?.smartResponses?.length) return;
+            const item = currentConversation.smartResponses[currentSuggestIndex];
+            const input = document.getElementById('chatMessageInput');
+            if (input && item) {
+                input.value = item.text;
+                input.focus();
+            }
+        });
+    }
+
 
     // -------------------------------------------------------------
     // 2. KHỞI TẠO SUBTABS TRÊN HEADER BAR (CHUẨN AGENTS.MD)
@@ -586,10 +553,18 @@
         const composerStatusEl = document.getElementById('composerModeStatus');
 
         if (nameEl) nameEl.textContent = currentConversation.customerName;
-        if (phoneEl) phoneEl.textContent = currentConversation.phone;
 
+        // Nhãn cảm xúc rút gọn cho header 1 dòng
         if (sentimentBadgeEl) {
-            sentimentBadgeEl.textContent = currentConversation.sentimentText;
+            const shortSentiment = (() => {
+                const level = currentConversation.sentimentLevel;
+                if (level >= 5) return 'Giận dữ';
+                if (level === 4) return 'Bực bội';
+                if (level === 3) return 'Khó chịu';
+                if (level === 2) return 'Thắc mắc';
+                return 'Bình thường';
+            })();
+            sentimentBadgeEl.textContent = shortSentiment;
             sentimentBadgeEl.style.cssText = '';
             if (currentConversation.sentimentLevel >= 4) {
                 sentimentBadgeEl.className = 'admin-badge badge-danger';
@@ -600,11 +575,6 @@
             }
         }
 
-        if (handlerBadgeEl) {
-            handlerBadgeEl.textContent = currentConversation.isHandover ? 'Nhân viên đang xử lý' : 'Bot đang phục vụ';
-            handlerBadgeEl.className = 'admin-badge ' + (currentConversation.isHandover ? 'badge-info' : 'badge-neutral');
-        }
-
         const headerSla = document.getElementById('currentChatSlaBadge');
         if (headerSla) {
             const sla = formatSlaInfo(currentConversation.waitingSeconds, currentConversation.isHandover);
@@ -613,8 +583,8 @@
         }
 
         if (takeoverBtn) {
-            takeoverBtn.textContent = currentConversation.isHandover ? 'Hoàn thành và trả quyền cho Bot' : 'Tiếp nhận ca chat';
-            takeoverBtn.className = 'admin-btn ' + (currentConversation.isHandover ? 'admin-btn-secondary' : 'admin-btn-primary');
+            takeoverBtn.textContent = currentConversation.isHandover ? 'Hoàn thành' : 'Tiếp nhận';
+            takeoverBtn.className = 'admin-btn btn-takeover-compact ' + (currentConversation.isHandover ? 'admin-btn-secondary' : 'admin-btn-primary');
         }
 
         if (aiSummaryTextEl) {
@@ -632,6 +602,111 @@
         if (timelineEl) {
             timelineEl.innerHTML = '';
             currentConversation.messages.forEach(msg => {
+                // PHASE 3: HIỂN THỊ CÁC THẺ HÀNH ĐỘNG GIẢI PHÁP TRỰC QUAN (RICH ACTION CARDS)
+                if (msg.type && msg.type.startsWith('action-')) {
+                    const cardWrap = document.createElement('div');
+                    cardWrap.className = 'chat-bubble-wrap sender-agent';
+
+                    if (msg.type === 'action-reward') {
+                        cardWrap.innerHTML = `
+                            <div class="chat-action-card card-reward">
+                                <div class="action-card-header">
+                                    <span class="admin-badge badge-active">Bồi hoàn Pawpoint</span>
+                                    <span class="action-card-time">${msg.time}</span>
+                                </div>
+                                <div class="action-card-body">
+                                    <div class="action-card-reward-pts">+${msg.rewardData.points} Pawpoint</div>
+                                    <div class="action-card-meta">
+                                        <div><strong>Khách nhận:</strong> ${msg.rewardData.customerName}</div>
+                                        <div><strong>Lý do:</strong> ${msg.rewardData.reason}</div>
+                                        <div><strong>Mã bồi hoàn:</strong> ${msg.rewardData.txId}</div>
+                                    </div>
+                                    <div style="font-size: 13px;">${msg.text}</div>
+                                </div>
+                                <div class="action-card-footer">
+                                    <button type="button" class="btn-card-action btn-jump-pawpoint">Xem ví Pawpoint</button>
+                                </div>
+                            </div>
+                        `;
+                    } else if (msg.type === 'action-ticket') {
+                        cardWrap.innerHTML = `
+                            <div class="chat-action-card card-ticket">
+                                <div class="action-card-header">
+                                    <span class="admin-badge badge-attention">Biên bản Vé Ticket</span>
+                                    <span class="action-card-time">${msg.time}</span>
+                                </div>
+                                <div class="action-card-body">
+                                    <div class="action-card-ticket-title">${msg.ticketData.id}: ${msg.ticketData.title}</div>
+                                    <div class="action-card-meta">
+                                        <div><strong>Phân loại:</strong> ${msg.ticketData.category}</div>
+                                        <div><strong>Tham chiếu:</strong> ${msg.ticketData.refId || 'Đơn hàng hiện tại'}</div>
+                                        <div><strong>Mức độ:</strong> ${msg.ticketData.priority}</div>
+                                    </div>
+                                    <div style="font-size: 13px;">${msg.text}</div>
+                                </div>
+                                <div class="action-card-footer">
+                                    <button type="button" class="btn-card-action btn-jump-ticket" data-id="${msg.ticketData.id}">Mở vé trong Khiếu nại</button>
+                                </div>
+                            </div>
+                        `;
+                    } else if (msg.type === 'action-escalate') {
+                        cardWrap.innerHTML = `
+                            <div class="chat-action-card card-escalate">
+                                <div class="action-card-header">
+                                    <span class="admin-badge badge-danger">Chuyển cấp Quản lý</span>
+                                    <span class="action-card-time">${msg.time}</span>
+                                </div>
+                                <div class="action-card-body">
+                                    <div class="action-card-escalate-target">Tiếp nhận: <strong>${msg.escalateData.targetName}</strong></div>
+                                    <div class="action-card-meta">
+                                        <div><strong>Lý do:</strong> ${msg.escalateData.reason}</div>
+                                        ${msg.escalateData.notes ? `<div><strong>Ghi chú:</strong> ${msg.escalateData.notes}</div>` : ''}
+                                    </div>
+                                    <div style="font-size: 13px;">${msg.text}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else if (msg.type === 'action-tracking') {
+                        cardWrap.innerHTML = `
+                            <div class="chat-action-card card-tracking">
+                                <div class="action-card-header">
+                                    <span class="admin-badge badge-progress">Vận đơn Hỏa tốc</span>
+                                    <span class="action-card-time">${msg.time}</span>
+                                </div>
+                                <div class="action-card-body">
+                                    <div style="font-weight: 700; color: #20495E;">${msg.trackingData.orderId} • ${msg.trackingData.carrier}</div>
+                                    <div class="action-card-meta">
+                                        <div><strong>Bưu tá:</strong> ${msg.trackingData.shipperName} (${msg.trackingData.shipperPhone})</div>
+                                        <div><strong>Trạng thái:</strong> ${msg.trackingData.status}</div>
+                                        <div><strong>Vị trí:</strong> ${msg.trackingData.location}</div>
+                                    </div>
+                                    <div style="font-size: 13px;">${msg.text}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else if (msg.type === 'action-camera') {
+                        cardWrap.innerHTML = `
+                            <div class="chat-action-card card-camera">
+                                <div class="action-card-header">
+                                    <span class="admin-badge badge-active">Snapshot Camera Phòng</span>
+                                    <span class="action-card-time">${msg.time}</span>
+                                </div>
+                                <div class="action-card-body">
+                                    <div style="font-weight: 700; color: #236B48;">${msg.cameraData.roomName} • ${msg.cameraData.petName}</div>
+                                    <div class="action-card-meta">
+                                        <div><strong>Tình trạng:</strong> ${msg.cameraData.caption}</div>
+                                        <div><strong>Nhiệt độ:</strong> ${msg.cameraData.temp} | <strong>Độ ẩm:</strong> ${msg.cameraData.humidity}</div>
+                                    </div>
+                                    <div style="font-size: 13px;">${msg.text}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    timelineEl.appendChild(cardWrap);
+                    return;
+                }
+
                 if (msg.sender === 'system') {
                     const marker = document.createElement('div');
                     marker.className = 'chat-system-marker';
@@ -666,50 +741,74 @@
                         const highlighted = (msg.maskedWordsText || msg.text).replace(/\*\*\*/g, '<span class="toxic-asterisk-badge">***</span>');
                         contentHtml = `<span class="toxic-text-words">${highlighted}</span>`;
                     } else {
-                        contentHtml = `<span class="toxic-text-raw"><span class="toxic-raw-badge">Nguyên văn chứng cứ</span>${msg.text}</span>`;
+                        contentHtml = `<span class="toxic-text-raw">${msg.text}</span>`;
                     }
 
-                    bubbleContent = `
-                        <div class="chat-toxic-container" data-msg-id="${msg.id || ''}">
-                            <div class="toxic-content-display">${contentHtml}</div>
-                            <div class="toxic-level-toolbar">
-                                <span class="toxic-level-label">Màng lọc tâm lý:</span>
-                                <button type="button" class="btn-toxic-level ${level === 'full' ? 'active' : ''}" data-level="full">Che toàn bộ</button>
-                                <button type="button" class="btn-toxic-level ${level === 'words' ? 'active' : ''}" data-level="words">Che từ nhạy cảm</button>
-                                <button type="button" class="btn-toxic-level ${level === 'raw' ? 'active' : ''}" data-level="raw">Hiện gốc</button>
+                    const levelLabel = level === 'full' ? 'Che toàn bộ' : level === 'words' ? 'Che từ nhạy cảm' : 'Hiện gốc';
+                    bubbleContent = `<div class="chat-toxic-container" data-msg-id="${msg.id || ''}">${contentHtml}</div>`;
+
+                    wrap.innerHTML = `
+                        <div class="chat-bubble-meta">
+                            <span><strong>${authorText}</strong> ${senderBadge}</span>
+                            <span>${msg.time}</span>
+                        </div>
+                        <div class="chat-bubble-toxic-row">
+                            <div class="chat-bubble">${bubbleContent}</div>
+                            <div class="toxic-dots-wrap" data-msg-id="${msg.id || ''}">
+                                <button type="button" class="btn-toxic-dots" title="Màng lọc: ${levelLabel}">•••</button>
+                                <div class="toxic-dots-dropdown">
+                                    <button type="button" class="toxic-dots-item ${level === 'full' ? 'active' : ''}" data-level="full">Che toàn bộ</button>
+                                    <button type="button" class="toxic-dots-item ${level === 'words' ? 'active' : ''}" data-level="words">Che từ nhạy cảm</button>
+                                    <button type="button" class="toxic-dots-item ${level === 'raw' ? 'active' : ''}" data-level="raw">Hiện gốc</button>
+                                </div>
                             </div>
                         </div>
                     `;
                 } else {
                     bubbleContent = msg.text;
+                    wrap.innerHTML = `
+                        <div class="chat-bubble-meta">
+                            <span><strong>${authorText}</strong> ${senderBadge}</span>
+                            <span>${msg.time}</span>
+                        </div>
+                        <div class="chat-bubble">${bubbleContent}</div>
+                    `;
                 }
-
-                wrap.innerHTML = `
-                    <div class="chat-bubble-meta">
-                        <span><strong>${authorText}</strong> ${senderBadge}</span>
-                        <span>${msg.time}</span>
-                    </div>
-                    <div class="chat-bubble">
-                        ${bubbleContent}
-                    </div>
-                `;
                 timelineEl.appendChild(wrap);
             });
 
-            // Gắn sự kiện chuyển cấp độ màng lọc tâm lý trực tiếp
-            timelineEl.querySelectorAll('.btn-toxic-level').forEach(btn => {
-                btn.addEventListener('click', (e) => {
+            // Nút ••• màng lọc tâm lý: toggle dropdown
+            timelineEl.querySelectorAll('.toxic-dots-wrap').forEach(wrap => {
+                const dotsBtn = wrap.querySelector('.btn-toxic-dots');
+                const dropdown = wrap.querySelector('.toxic-dots-dropdown');
+
+                dotsBtn?.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const targetLevel = btn.getAttribute('data-level');
-                    const container = btn.closest('.chat-toxic-container');
-                    const msgId = container?.getAttribute('data-msg-id');
-                    const targetMsg = currentConversation.messages.find(m => m.id === msgId);
-                    if (targetMsg) {
-                        targetMsg.activeMaskLevel = targetLevel;
-                        renderCurrentChat();
-                    }
+                    // Đóng tất cả dropdown khác
+                    timelineEl.querySelectorAll('.toxic-dots-wrap.open').forEach(w => {
+                        if (w !== wrap) w.classList.remove('open');
+                    });
+                    wrap.classList.toggle('open');
+                });
+
+                dropdown?.querySelectorAll('.toxic-dots-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const targetLevel = item.getAttribute('data-level');
+                        const msgId = wrap.getAttribute('data-msg-id');
+                        const targetMsg = currentConversation.messages.find(m => m.id === msgId);
+                        if (targetMsg) {
+                            targetMsg.activeMaskLevel = targetLevel;
+                            renderCurrentChat();
+                        }
+                    });
                 });
             });
+
+            // Đóng tất cả toxic dropdown khi bấm ra ngoài
+            document.addEventListener('click', () => {
+                timelineEl.querySelectorAll('.toxic-dots-wrap.open').forEach(w => w.classList.remove('open'));
+            }, { once: false, capture: false });
 
             timelineEl.scrollTop = timelineEl.scrollHeight;
         }
@@ -806,6 +905,13 @@
                 window.location.hash = '#tab-complaint-detail';
             });
         });
+
+        document.querySelectorAll('.btn-jump-pawpoint').forEach(btn => {
+            btn.addEventListener('click', () => {
+                sessionStorage.setItem('pawpal_admin_customer_selected_tab', 'pawpoint');
+                window.location.hash = '#tab-customers';
+            });
+        });
     }
 
     // -------------------------------------------------------------
@@ -826,6 +932,28 @@
         document.getElementById('inboxSearchInput')?.addEventListener('input', () => {
             renderConversationsList();
         });
+
+        // NÚT 3 CHẤM: Toggle dropdown tác vụ
+        const dotsWrap = document.getElementById('chatActionsMenuWrap');
+        const dotsBtn = document.getElementById('btnChatActionsDots');
+        if (dotsBtn && dotsWrap) {
+            dotsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dotsWrap.classList.toggle('open');
+            });
+            // Đóng dropdown khi bấm ra ngoài
+            document.addEventListener('click', (e) => {
+                if (!dotsWrap.contains(e.target)) {
+                    dotsWrap.classList.remove('open');
+                }
+            });
+            // Đóng dropdown sau khi chọn mục
+            dotsWrap.querySelectorAll('.chat-action-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    dotsWrap.classList.remove('open');
+                });
+            });
+        }
 
         // Nút lọc ca khẩn cấp trên Alert Strip
         document.getElementById('btnFilterUrgentChat')?.addEventListener('click', () => {
@@ -964,19 +1092,30 @@
         btnConfirmReward?.addEventListener('click', () => {
             if (!currentConversation) return;
             const pts = parseInt(inputPoints.value, 10) || 50;
+            const selectReason = document.getElementById('selectRewardReason');
+            const reasonText = selectReason ? selectReason.options[selectReason.selectedIndex].text : 'Tạ lỗi vì sự cố dịch vụ';
+            const txCode = 'PT-' + Math.floor(100000 + Math.random() * 900000);
+
             currentConversation.pawpoints += pts;
 
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             currentConversation.messages.push({
+                id: 'msg-reward-' + Date.now(),
                 sender: 'agent',
                 agentName: 'Hệ thống PawPal',
+                type: 'action-reward',
                 time: timeStr,
-                text: `[Hệ thống] Đã nạp thành công +${pts} điểm Pawpoint bồi hoàn vào ví tài khoản của sen!`
+                rewardData: {
+                    points: pts,
+                    customerName: currentConversation.customerName,
+                    reason: reasonText,
+                    txId: txCode
+                },
+                text: `Đã nạp thành công +${pts} điểm Pawpoint bồi hoàn vào ví tài khoản của sen!`
             });
 
             closeRewardModal();
             renderCurrentChat();
-            alert(`Đã tặng thành công ${pts} điểm Pawpoint cho khách hàng ${currentConversation.customerName}!`);
         });
 
         // --- MODAL 2: CHUYỂN THÀNH TICKET KHIẾU NẠI ---
@@ -1010,6 +1149,11 @@
             if (!currentConversation) return;
             const title = inputConvertTitle.value.trim() || 'Khiếu nại chuyển từ kênh chat trực tuyến';
             const newTicketId = 'TK-' + Math.floor(1000 + Math.random() * 9000);
+            const selectCat = document.getElementById('selectConvertTicketCategory');
+            const catText = selectCat ? selectCat.options[selectCat.selectedIndex].text : 'Khiếu nại Đơn hàng';
+            const selectPri = document.getElementById('selectConvertPriority');
+            const priText = selectPri ? selectPri.options[selectPri.selectedIndex].text : 'Mức độ Trung bình';
+            const refId = inputConvertRefId.value.trim();
 
             currentConversation.openTickets.push({
                 id: newTicketId,
@@ -1018,15 +1162,23 @@
 
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             currentConversation.messages.push({
+                id: 'msg-ticket-' + Date.now(),
                 sender: 'agent',
                 agentName: 'Hệ thống PawPal',
+                type: 'action-ticket',
                 time: timeStr,
-                text: `[Hệ thống] Đã trích xuất biên bản hội thoại và tạo thành công vé hỗ trợ chính thức mang mã định danh ${newTicketId} trong phân hệ Khiếu nại.`
+                ticketData: {
+                    id: newTicketId,
+                    title: title,
+                    category: catText,
+                    priority: priText,
+                    refId: refId || (currentConversation.recentOrder ? currentConversation.recentOrder.id : '')
+                },
+                text: `Đã trích xuất biên bản hội thoại và tạo thành công vé hỗ trợ chính thức mang mã định danh ${newTicketId} trong phân hệ Khiếu nại.`
             });
 
             closeConvertModal();
             renderCurrentChat();
-            alert(`Đã tạo vé khiếu nại ${newTicketId} thành công và đồng bộ sang phân hệ Khiếu nại!`);
         });
 
         // --- MODAL 3: CHUYỂN CẤP QUẢN LÝ VÀ BÁC SĨ (BẢO VỆ NHÂN VIÊN) ---
@@ -1056,17 +1208,28 @@
             if (!currentConversation) return;
             const targetSelect = document.getElementById('selectEscalateTarget');
             const targetName = targetSelect ? targetSelect.options[targetSelect.selectedIndex].text : 'Quản lý Chi nhánh';
+            const reasonSelect = document.getElementById('selectEscalateReason');
+            const reasonText = reasonSelect ? reasonSelect.options[reasonSelect.selectedIndex].text : 'Khách hàng bức xúc vượt thẩm quyền';
+            const notesText = inputEscalateNotes ? inputEscalateNotes.value.trim() : '';
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             currentConversation.isHandover = true;
             currentConversation.isEscalated = true;
             currentConversation.category = 'urgent';
 
-            // Dấu mốc hệ thống ghi nhận chuyển giao bảo vệ nhân viên
+            // Dấu mốc hệ thống dạng thẻ Rich Action Card
             currentConversation.messages.push({
-                sender: 'system',
+                id: 'msg-escalate-' + Date.now(),
+                sender: 'agent',
+                agentName: 'Hệ thống PawPal',
+                type: 'action-escalate',
                 time: timeStr,
-                text: `Hệ thống: Ca chat đã được chuyển cấp khẩn cho [${targetName}] lúc ${timeStr}. Chuyên viên CSKH đã được ngắt kết nối an toàn.`
+                escalateData: {
+                    targetName: targetName,
+                    reason: reasonText,
+                    notes: notesText
+                },
+                text: `Ca chat đã được chuyển cấp khẩn cho [${targetName}] lúc ${timeStr}. Chuyên viên CSKH đã được ngắt kết nối an toàn.`
             });
 
             // Lời chào nhận trách nhiệm từ Quản lý / Bác sĩ
@@ -1081,8 +1244,328 @@
             renderChatbotAlertBar();
             renderConversationsList();
             renderCurrentChat();
+        });
+    }
 
-            alert(`Đã chuyển ca chat thành công sang: ${targetName}. Nhân viên CSKH đã được bảo vệ ngắt kết nối an toàn!`);
+    // -------------------------------------------------------------
+    // PHASE 3: THƯ VIỆN CÂU MẪU CSKH CHUẨN MỰC
+    // -------------------------------------------------------------
+    const cannedResponsesDatabase = [
+        // 1. Chào hỏi và Tiếp nhận
+        {
+            id: 'cr-01',
+            category: 'greeting',
+            categoryName: 'Chào hỏi và Tiếp nhận',
+            title: 'Lời chào tiếp nhận ca hỗ trợ',
+            content: 'Dạ PawPal xin chào sen, em là chuyên viên CSKH đã tiếp nhận ca chat này để trực tiếp hỗ trợ mình ngay ạ!'
+        },
+        {
+            id: 'cr-02',
+            category: 'greeting',
+            categoryName: 'Chào hỏi và Tiếp nhận',
+            title: 'Xin phép kiểm tra hệ thống trong 1-2 phút',
+            content: 'Dạ sen vui lòng đợi em trong 1-2 phút, em đang tiến hành tra cứu dữ liệu trên hệ thống và sẽ phản hồi mình ngay ạ.'
+        },
+        {
+            id: 'cr-03',
+            category: 'greeting',
+            categoryName: 'Chào hỏi và Tiếp nhận',
+            title: 'Xác nhận thông tin bé và đơn hàng',
+            content: 'Dạ để hỗ trợ chính xác nhất, sen cho em xin mã đơn hàng hoặc số điện thoại đăng ký tài khoản của bé nhé ạ.'
+        },
+        // 2. Vận chuyển và Giao hàng
+        {
+            id: 'cr-04',
+            category: 'shipping',
+            categoryName: 'Vận chuyển và Giao hàng',
+            title: 'Xin lỗi vì giao hàng chậm trễ',
+            content: 'Dạ PawPal thành thật xin lỗi sen và bé vì sự chậm trễ này! Do ảnh hưởng thời tiết và lượng đơn cao điểm, bưu tá đang ưu tiên phát hỏa tốc đơn của mình trong hôm nay ạ.'
+        },
+        {
+            id: 'cr-05',
+            category: 'shipping',
+            categoryName: 'Vận chuyển và Giao hàng',
+            title: 'Thông báo điều phối shipper hỏa tốc',
+            content: 'Dạ em đã liên hệ điều phối bưu cục, tài xế giao hỏa tốc đang trên đường vận chuyển và sẽ liên hệ giao tận tay cho sen trước 12:00 ạ.'
+        },
+        {
+            id: 'cr-06',
+            category: 'shipping',
+            categoryName: 'Vận chuyển và Giao hàng',
+            title: 'Hướng dẫn đồng kiểm hàng khi nhận',
+            content: 'Dạ khi nhận hàng từ bưu tá, sen hoàn toàn có thể kiểm tra quy cách đóng gói và hạn sử dụng của thức ăn trước khi ký nhận nhé ạ.'
+        },
+        // 3. Dịch vụ Spa và Khách sạn
+        {
+            id: 'cr-07',
+            category: 'service',
+            categoryName: 'Spa và Khách sạn',
+            title: 'Cập nhật tình hình bé tại spa',
+            content: 'Dạ em xin cập nhật là bé boss đang hoàn tất khâu sấy lông và vệ sinh tai móng, bé rất ngoan và hợp tác với kỹ thuật viên ạ!'
+        },
+        {
+            id: 'cr-08',
+            category: 'service',
+            categoryName: 'Spa và Khách sạn',
+            title: 'Thông báo giờ đón bé cưng',
+            content: 'Dạ liệu trình spa của bé đã hoàn thành thơm tho xinh đẹp rồi ạ! Sen có thể ghé chi nhánh đón bé về từ bây giờ nhé ạ.'
+        },
+        {
+            id: 'cr-09',
+            category: 'service',
+            categoryName: 'Spa và Khách sạn',
+            title: 'Hướng dẫn chăm sóc sau dịch vụ',
+            content: 'Dạ sau khi tắm tỉa, sen lưu ý giữ ấm cho bé và tránh để bé gãi mạnh vào vùng tai móng trong 24 giờ đầu nhé ạ.'
+        },
+        // 4. Bồi hoàn và Tạ lỗi
+        {
+            id: 'cr-10',
+            category: 'reward',
+            categoryName: 'Bồi hoàn và Tạ lỗi',
+            title: 'Tặng điểm Pawpoint tạ lỗi vào ví',
+            content: 'Dạ để tạ lỗi vì sự cố không mong muốn vừa rồi, PawPal xin phép gửi tặng 50 điểm Pawpoint vào ví tài khoản của sen để sử dụng cho lần mua sắm tiếp theo ạ.'
+        },
+        {
+            id: 'cr-11',
+            category: 'reward',
+            categoryName: 'Bồi hoàn và Tạ lỗi',
+            title: 'Tặng mã giảm giá PAWPAL50K bồi thường',
+            content: 'Dạ PawPal xin gửi tặng sen mã giảm giá PAWPAL50K (trừ trực tiếp 50.000đ áp dụng cho mọi đơn hàng tiếp theo) như lời cáo lỗi chân thành từ cửa hàng ạ.'
+        },
+        {
+            id: 'cr-12',
+            category: 'reward',
+            categoryName: 'Bồi hoàn và Tạ lỗi',
+            title: 'Cam kết hoàn tiền trong 24 giờ',
+            content: 'Dạ bộ phận kế toán đã tiếp nhận yêu cầu hoàn tiền cho đơn hàng của sen, số tiền sẽ được chuyển hoàn về ví MoMo / tài khoản ngân hàng trong vòng 24 giờ làm việc ạ.'
+        },
+        // 5. Khiếu nại và Đối soát
+        {
+            id: 'cr-13',
+            category: 'dispute',
+            categoryName: 'Khiếu nại và Đối soát',
+            title: 'Yêu cầu gửi ảnh chụp chứng từ sự cố',
+            content: 'Dạ để bộ phận kỹ thuật và bảo hành tiến hành đối soát ngay, sen vui lòng chụp giúp em hình ảnh sản phẩm bị lỗi hoặc hóa đơn gửi qua khung chat này nhé ạ.'
+        },
+        {
+            id: 'cr-14',
+            category: 'dispute',
+            categoryName: 'Khiếu nại và Đối soát',
+            title: 'Tạo vé hỗ trợ chuyển cấp đối soát',
+            content: 'Dạ em đã lập vé hỗ trợ chính thức và chuyển thông tin đến Trưởng bộ phận phụ trách. Chúng em sẽ có văn bản phản hồi giải quyết thấu đáo cho sen trước 17:00 hôm nay ạ.'
+        },
+        {
+            id: 'cr-15',
+            category: 'dispute',
+            categoryName: 'Khiếu nại và Đối soát',
+            title: 'Hẹn gọi thoại tư vấn trực tiếp',
+            content: 'Dạ nếu thuận tiện, em xin phép nhờ Quản lý chi nhánh gọi điện thoại trực tiếp để giải thích chi tiết và lắng nghe ý kiến đóng góp của sen nhé ạ.'
+        }
+    ];
+
+    function setupCannedResponsesModal() {
+        const modalOverlay = document.getElementById('cannedResponsesModalOverlay');
+        const btnOpen = document.getElementById('btnOpenCannedModal');
+        const btnDismiss = document.getElementById('btnDismissCannedModal');
+        const btnCloseBottom = document.getElementById('btnCloseCannedModalBottom');
+        const searchInput = document.getElementById('inputSearchCanned');
+        const tabsContainer = document.getElementById('cannedCategoriesTabs');
+        const listContainer = document.getElementById('cannedResponsesList');
+        const chatInput = document.getElementById('chatMessageInput');
+
+        let activeCat = 'all';
+
+        function closeModal() {
+            if (modalOverlay) modalOverlay.style.display = 'none';
+        }
+
+        btnOpen?.addEventListener('click', () => {
+            if (modalOverlay) modalOverlay.style.display = 'flex';
+            if (searchInput) searchInput.value = '';
+            activeCat = 'all';
+            tabsContainer?.querySelectorAll('.canned-tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-category') === 'all');
+            });
+            renderList();
+        });
+
+        btnDismiss?.addEventListener('click', closeModal);
+        btnCloseBottom?.addEventListener('click', closeModal);
+
+        tabsContainer?.querySelectorAll('.canned-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabsContainer.querySelectorAll('.canned-tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeCat = btn.getAttribute('data-category');
+                renderList();
+            });
+        });
+
+        searchInput?.addEventListener('input', () => {
+            renderList();
+        });
+
+        function renderList() {
+            if (!listContainer) return;
+            const query = (searchInput?.value || '').toLowerCase().trim();
+
+            const filtered = cannedResponsesDatabase.filter(item => {
+                const matchCat = activeCat === 'all' || item.category === activeCat;
+                const matchQuery = !query || item.title.toLowerCase().includes(query) || item.content.toLowerCase().includes(query);
+                return matchCat && matchQuery;
+            });
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 24px 0; font-size: 13px;">Không tìm thấy câu mẫu phù hợp với từ khóa này.</div>';
+                return;
+            }
+
+            listContainer.innerHTML = '';
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'canned-item-card';
+                card.innerHTML = `
+                    <div class="canned-item-header">
+                        <span class="canned-item-title">${item.title}</span>
+                        <span class="admin-badge badge-neutral" style="font-size: 11px;">${item.categoryName}</span>
+                    </div>
+                    <div class="canned-item-content">${item.content}</div>
+                    <div class="canned-item-actions">
+                        <button type="button" class="canned-btn-insert">Chèn vào ô chat</button>
+                        <button type="button" class="canned-btn-send">Gửi ngay</button>
+                    </div>
+                `;
+
+                const btnInsert = card.querySelector('.canned-btn-insert');
+                const btnSend = card.querySelector('.canned-btn-send');
+
+                btnInsert?.addEventListener('click', () => {
+                    if (chatInput) {
+                        chatInput.value = item.content;
+                        chatInput.focus();
+                    }
+                    closeModal();
+                });
+
+                btnSend?.addEventListener('click', () => {
+                    if (!currentConversation) return;
+                    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    currentConversation.messages.push({
+                        id: 'msg-agent-' + Date.now(),
+                        sender: 'agent',
+                        agentName: 'Lê Lệ Quyên (CSKH)',
+                        time: timeStr,
+                        text: item.content
+                    });
+                    closeModal();
+                    renderCurrentChat();
+                });
+
+                listContainer.appendChild(card);
+            });
+        }
+    }
+
+    // -------------------------------------------------------------
+    // PHASE 3: THAO TÁC THÔNG MINH THEO NGỮ CẢNH AI (SMART CONTEXT)
+    // -------------------------------------------------------------
+    function setupSmartContextActions() {
+        const btnTrack = document.getElementById('btnContextTrackOrder');
+        const btnCamera = document.getElementById('btnContextPetCamera');
+
+        // Modal Tra cứu vận đơn
+        const trackingOverlay = document.getElementById('orderTrackingModalOverlay');
+        const btnDismissTracking = document.getElementById('btnDismissTrackingModal');
+        const btnCancelTracking = document.getElementById('btnCancelTrackingModal');
+        const btnSendTracking = document.getElementById('btnSendTrackingCardToChat');
+        const trackingOrderCode = document.getElementById('trackingModalOrderCode');
+
+        btnTrack?.addEventListener('click', () => {
+            if (!currentConversation) return;
+            if (trackingOrderCode) {
+                trackingOrderCode.textContent = currentConversation.recentOrder ? currentConversation.recentOrder.id : 'SP-2026-003';
+            }
+            if (trackingOverlay) trackingOverlay.style.display = 'flex';
+        });
+
+        function closeTrackingModal() {
+            if (trackingOverlay) trackingOverlay.style.display = 'none';
+        }
+
+        btnDismissTracking?.addEventListener('click', closeTrackingModal);
+        btnCancelTracking?.addEventListener('click', closeTrackingModal);
+
+        btnSendTracking?.addEventListener('click', () => {
+            if (!currentConversation) return;
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const orderId = currentConversation.recentOrder ? currentConversation.recentOrder.id : 'SP-2026-003';
+
+            currentConversation.messages.push({
+                id: 'msg-tracking-' + Date.now(),
+                sender: 'agent',
+                agentName: 'Hệ thống Vận Chuyển',
+                type: 'action-tracking',
+                time: timeStr,
+                trackingData: {
+                    orderId: orderId,
+                    carrier: 'PawPal Express Hỏa Tốc',
+                    shipperName: 'Nguyễn Văn Hùng',
+                    shipperPhone: '0938.888.999',
+                    status: 'Đang giao hàng',
+                    location: 'Cách nhà khách 1.2 km (Tuyến Hai Bà Trưng, dự kiến đến trước 12:00)'
+                },
+                text: `Đã chia sẻ thông tin vị trí tài xế giao hỏa tốc đơn hàng ${orderId} vào cuộc trò chuyện.`
+            });
+
+            closeTrackingModal();
+            renderCurrentChat();
+        });
+
+        // Modal Camera an ninh phòng thú cưng
+        const cameraOverlay = document.getElementById('petCameraModalOverlay');
+        const btnDismissCamera = document.getElementById('btnDismissCameraModal');
+        const btnCancelCamera = document.getElementById('btnCancelCameraModal');
+        const btnSendCamera = document.getElementById('btnSendCameraSnapshotToChat');
+        const cameraTimeEl = document.getElementById('cameraCurrentTime');
+
+        btnCamera?.addEventListener('click', () => {
+            if (!currentConversation) return;
+            if (cameraTimeEl) {
+                cameraTimeEl.textContent = new Date().toLocaleTimeString();
+            }
+            if (cameraOverlay) cameraOverlay.style.display = 'flex';
+        });
+
+        function closeCameraModal() {
+            if (cameraOverlay) cameraOverlay.style.display = 'none';
+        }
+
+        btnDismissCamera?.addEventListener('click', closeCameraModal);
+        btnCancelCamera?.addEventListener('click', closeCameraModal);
+
+        btnSendCamera?.addEventListener('click', () => {
+            if (!currentConversation) return;
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const petName = currentConversation.pets.length > 0 ? currentConversation.pets[0].name : 'Boss cưng';
+
+            currentConversation.messages.push({
+                id: 'msg-camera-' + Date.now(),
+                sender: 'agent',
+                agentName: 'Hệ thống Camera An Ninh',
+                type: 'action-camera',
+                time: timeStr,
+                cameraData: {
+                    roomName: 'Chi nhánh Quận 1 • Phòng VIP 102',
+                    petName: petName,
+                    caption: 'Bé đang thư giãn ngủ trưa ngoan ngoãn trên thảm đệm ấm',
+                    temp: '24.5°C',
+                    humidity: '55%'
+                },
+                text: `Đã gửi ảnh chụp camera giám sát phòng bé ${petName} vào cuộc trò chuyện.`
+            });
+
+            closeCameraModal();
+            renderCurrentChat();
         });
     }
 
@@ -1091,6 +1574,9 @@
     // -------------------------------------------------------------
     setupCopilot();
     setupLiveChatEvents();
+    setupSuggestCarouselEvents();
+    setupCannedResponsesModal();
+    setupSmartContextActions();
 
     const savedTab = sessionStorage.getItem('pawpal_admin_chatbot_subtab');
     const hash = window.location.hash;
@@ -1106,3 +1592,4 @@
 
     switchSubtab(initTab);
 })();
+
