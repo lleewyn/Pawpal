@@ -1,8 +1,19 @@
-﻿<div class="chatbot-module-wrapper">
+<div class="chatbot-module-wrapper">
     <!-- ====================================================================
          SUB-TAB 1: TRỰC CHAT CSKH (HỘP THƯ 3 KHU VỰC THỜI GIAN THỰC) - Ở TRƯỚC
          ==================================================================== -->
     <section class="subtab-content active" id="subtab-tab-live-support">
+        <!-- THANH CẢNH BÁO CA CHAT KHẨN CẤP / CHẬM TRỄ (ANTI-MISS ALERT STRIP) -->
+        <div class="chatbot-alert-strip" id="chatbotAlertBar">
+            <div class="alert-strip-left">
+                <span class="alert-strip-badge">Cảnh báo khẩn</span>
+                <span class="alert-strip-text" id="alertStripText">Có ca chat khách hàng bực bội chưa tiếp nhận và đã quá hạn SLA!</span>
+            </div>
+            <div class="alert-strip-right">
+                <button type="button" class="btn-alert-strip-action" id="btnFilterUrgentChat">Xử lý ngay ca khẩn cấp</button>
+            </div>
+        </div>
+
         <div class="live-support-container">
             <!-- CỘT 1 (TRÁI): DANH SÁCH HỘI THOẠI VÀ BỘ LỌC -->
             <div class="inbox-conversations-col admin-card">
@@ -40,6 +51,7 @@
                         <span class="chat-target-phone" id="currentChatCustomerPhone">0901234567</span>
                         <span class="admin-badge" id="currentChatSentimentBadge">Mức độ 4: Bực bội và Thất vọng</span>
                         <span class="admin-badge badge-neutral" id="currentChatHandlerBadge">Bot đang phục vụ</span>
+                        <span class="sla-timer-pill sla-danger" id="currentChatSlaBadge">Chờ: 2m 25s</span>
                     </div>
                     <div class="chat-header-actions">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnRewardPoints">Tặng điểm Pawpoint</button>
@@ -296,7 +308,7 @@
                     <label class="form-label-clean">Phân loại khiếu nại *</label>
                     <select class="admin-select" id="selectConvertTicketCategory">
                         <option value="order">Khiếu nại Đơn hàng / Sản phẩm</option>
-                        <option value="service">Khiếu nại Dịch vụ Spa & Grooming / Hotel</option>
+                        <option value="service">Khiếu nại Dịch vụ Spa và Grooming / Hotel</option>
                     </select>
                 </div>
                 <div class="form-group-item">

@@ -1,17 +1,17 @@
 /**
- * MODULE CHATBOT & TRỰC CHAT CSKH (PAWPAL ADMIN)
- * Tuân thủ nghiêm ngặt 100% AGENTS.md & ADMIN_DESIGN_SYSTEM.md:
+ * MODULE CHATBOT VÀ TRỰC CHAT CSKH (PAWPAL ADMIN)
+ * Tuân thủ nghiêm ngặt 100% AGENTS.md và ADMIN_DESIGN_SYSTEM.md:
  * - 3 Subtabs Header Bar: Trợ lý AI | Trực chat CSKH | Quy định
  * - Tự động đồng bộ State và Hash (#tab-ai-copilot, #tab-live-support, #tab-chatbot-rules)
  * - Màn hình Trợ lý AI Copilot nội bộ cho Admin
  * - Màn hình Trực chat CSKH 3 khu vực: Danh sách hội thoại | Khung chat trực tiếp | Bảng thông tin khách hàng 360°
  * - Thẻ tóm tắt ngữ cảnh AI 3 giây
  * - Màng lọc bảo vệ tâm lý nhân viên (ẩn từ ngữ thô tục/tiêu cực)
- * - Thao tác một chạm: Tặng điểm Pawpoint tạ lỗi & Chuyển thành Ticket khiếu nại (liên kết sang phân hệ Khiếu nại)
+ * - Thao tác một chạm: Tặng điểm Pawpoint tạ lỗi và Chuyển thành Ticket khiếu nại (liên kết sang phân hệ Khiếu nại)
  */
 
 (function initChatbotModule() {
-    console.log('Khởi tạo Module Chatbot & Trực chat CSKH...');
+    console.log('Khởi tạo Module Chatbot và Trực chat CSKH...');
 
     // -------------------------------------------------------------
     // 1. DỮ LIỆU MẪU MÔ PHỎNG (MOCK DATA)
@@ -28,6 +28,7 @@
             sentimentLevel: 4, // 1 đến 5
             sentimentText: 'Mức độ 4: Bực bội và Thất vọng',
             isHandover: false, // true = nhân viên tiếp nhận, false = Bot đang phục vụ
+            waitingSeconds: 145, // Quá hạn SLA (> 120s)
             category: 'urgent', // urgent, active, all
             aiSummary: 'Khách phản ánh đơn hàng SP-2026-003 đã quá 2 ngày giao dự kiến vẫn chưa nhận được. Khách đã thanh toán qua MoMo và đang cần gấp thức ăn cho thú cưng. Đề xuất: Kiểm tra bưu tá giao hàng và tặng 50 điểm Pawpoint tạ lỗi.',
             internalNotes: 'Khách hàng VIP Kim Cương, hay mua pate cho mèo. Cần xử lý nhanh và mềm mỏng.',
@@ -56,6 +57,7 @@
             sentimentLevel: 5,
             sentimentText: 'Mức độ 5: Giận dữ và Khẩn cấp',
             isHandover: true,
+            waitingSeconds: 0,
             category: 'urgent',
             aiSummary: 'Khách giận dữ vì bé cún Corgi bị trầy xước sau khi tắm tỉa tại cơ sở Quận 1 và có lời lẽ kích động. Màng lọc tâm lý đã che mờ từ thô tục. Đề xuất: Mời bác sĩ thú y chi nhánh gọi điện trực tiếp thăm khám miễn phí.',
             internalNotes: 'Đã chuyển ca cho Quản lý chi nhánh Quận 1 theo dõi.',
@@ -82,6 +84,7 @@
             sentimentLevel: 2,
             sentimentText: 'Mức độ 2: Trung tính',
             isHandover: false,
+            waitingSeconds: 38, // Chờ bình thường (< 60s)
             category: 'all',
             aiSummary: 'Khách hỏi thông tin đặt phòng Pet Hotel dịp lễ sắp tới và chính sách mang theo thức ăn riêng. Bot đã giải đáp theo tài liệu RAG.',
             internalNotes: 'Khách quan tâm phòng VIP cho mèo.',
@@ -107,6 +110,7 @@
             sentimentLevel: 1,
             sentimentText: 'Mức độ 1: Tích cực và Thân thiện',
             isHandover: false,
+            waitingSeconds: 78, // Cảnh báo (60s - 120s)
             category: 'all',
             aiSummary: 'Khách gửi lời khen ngợi dịch vụ Spa của bé Poodle tại chi nhánh Bình Thạnh.',
             internalNotes: '',
@@ -125,6 +129,82 @@
 
     let currentConversation = mockConversations[0];
     let currentFilterTab = 'urgent';
+
+    // -------------------------------------------------------------
+    // 1B. TIỆN ÍCH ĐẾM NGƯỢC SLA THỜI GIAN THỰC VÀ ALERT STRIP
+    // -------------------------------------------------------------
+    function formatSlaInfo(waitingSeconds, isHandover) {
+        if (isHandover) {
+            return { text: 'Đang tiếp quản', className: 'sla-done' };
+        }
+        const sec = waitingSeconds || 0;
+        if (sec >= 120) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return { text: `Quá hạn: ${m}m ${s < 10 ? '0' : ''}${s}s`, className: 'sla-danger' };
+        } else if (sec >= 60) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return { text: `Chờ ${m}m ${s < 10 ? '0' : ''}${s}s`, className: 'sla-warning' };
+        } else {
+            return { text: `Chờ ${sec}s`, className: 'sla-normal' };
+        }
+    }
+
+    function renderChatbotAlertBar() {
+        const bar = document.getElementById('chatbotAlertBar');
+        const textEl = document.getElementById('alertStripText');
+        if (!bar || !textEl) return;
+
+        const criticalList = mockConversations.filter(c => !c.isHandover && (c.sentimentLevel >= 4 || (c.waitingSeconds || 0) >= 120));
+        const overdueList = mockConversations.filter(c => !c.isHandover && (c.waitingSeconds || 0) >= 120);
+
+        if (criticalList.length > 0) {
+            bar.style.display = 'flex';
+            textEl.textContent = `Có ${criticalList.length} ca chat khách hàng bực bội chưa tiếp nhận (${overdueList.length} ca đã quá hạn SLA) cần xử lý ngay!`;
+        } else {
+            bar.style.display = 'none';
+        }
+    }
+
+    let slaTickerInterval = null;
+
+    function updateSlaBadgesInDom() {
+        mockConversations.forEach(c => {
+            const pill = document.querySelector(`.sla-pill-${c.id}`);
+            if (pill) {
+                const sla = formatSlaInfo(c.waitingSeconds, c.isHandover);
+                pill.textContent = sla.text;
+                pill.className = `sla-timer-pill ${sla.className} sla-pill-${c.id}`;
+            }
+        });
+
+        if (currentConversation) {
+            const headerSla = document.getElementById('currentChatSlaBadge');
+            if (headerSla) {
+                const sla = formatSlaInfo(currentConversation.waitingSeconds, currentConversation.isHandover);
+                headerSla.textContent = sla.text;
+                headerSla.className = `sla-timer-pill ${sla.className}`;
+            }
+        }
+    }
+
+    function startSlaTicker() {
+        if (slaTickerInterval) clearInterval(slaTickerInterval);
+        slaTickerInterval = setInterval(() => {
+            let changed = false;
+            mockConversations.forEach(c => {
+                if (!c.isHandover) {
+                    c.waitingSeconds = (c.waitingSeconds || 0) + 1;
+                    changed = true;
+                }
+            });
+            if (changed) {
+                updateSlaBadgesInDom();
+                renderChatbotAlertBar();
+            }
+        }, 1000);
+    }
 
     // -------------------------------------------------------------
     // 2. KHỞI TẠO SUBTABS TRÊN HEADER BAR (CHUẨN AGENTS.MD)
@@ -172,8 +252,10 @@
         }
 
         if (tabId === 'tab-live-support') {
+            renderChatbotAlertBar();
             renderConversationsList();
             renderCurrentChat();
+            startSlaTicker();
         }
     }
 
@@ -228,9 +310,9 @@
                 let response = '';
                 const lower = text.toLowerCase();
                 if (lower.includes('lịch hẹn') || lower.includes('spa')) {
-                    response = 'Dạ thưa Quản trị viên, theo cơ sở dữ liệu hệ thống hôm nay: Đang có tổng cộng **28 lịch hẹn** (18 lịch Spa & Grooming, 6 lịch gửi Hotel, 4 cuốc Pet Taxi). Có 2 ca đang thực hiện và 3 ca sắp tới trong khung giờ 11:00 - 13:00.';
+                    response = 'Dạ thưa Quản trị viên, theo cơ sở dữ liệu hệ thống hôm nay: Đang có tổng cộng **28 lịch hẹn** (18 lịch Spa và Grooming, 6 lịch gửi Hotel, 4 cuốc Pet Taxi). Có 2 ca đang thực hiện và 3 ca sắp tới trong khung giờ 11:00 - 13:00.';
                 } else if (lower.includes('hết hàng') || lower.includes('sản phẩm')) {
-                    response = 'Dạ báo cáo danh sách tồn kho dưới 5 món cần bổ sung khẩn cấp gồm có:<br>1. <strong>Pate Royal Canin Kitten 85g</strong>: còn 2 gói (Kho Quận 1).<br>2. <strong>Hạt Ganador Puppy 3kg</strong>: còn 3 bao.<br>3. <strong>Sữa tắm trị ve Joyce & Dolls 400ml</strong>: còn 4 chai.';
+                    response = 'Dạ báo cáo danh sách tồn kho dưới 5 món cần bổ sung khẩn cấp gồm có:<br>1. <strong>Pate Royal Canin Kitten 85g</strong>: còn 2 gói (Kho Quận 1).<br>2. <strong>Hạt Ganador Puppy 3kg</strong>: còn 3 bao.<br>3. <strong>Sữa tắm trị ve Joyce và Dolls 400ml</strong>: còn 4 chai.';
                 } else if (lower.includes('xin lỗi') || lower.includes('giao trễ')) {
                     response = 'Dạ PawPal Copilot đã soạn thảo sẵn mẫu thư xin lỗi gửi khách kèm mã bồi hoàn như sau:<br><br><em>"Kính gửi Quý khách hàng, PawPal chân thành cáo lỗi vì đơn hàng của mình bị chậm trễ do ảnh hưởng mưa bão cục bộ. Đơn vị vận chuyển đang ưu tiên giao gấp trong chiều nay. Để tạ lỗi, PawPal xin gửi tặng mã giảm giá <strong>PAWPAL50K</strong> (trừ trực tiếp 50.000đ cho đơn tiếp theo) hoặc nạp 100 điểm Pawpoint vào ví của Quý khách. Kính chúc Quý khách và bé cưng luôn vui khỏe!"</em>';
                 } else if (lower.includes('khiếu nại') || lower.includes('tồn đọng')) {
@@ -333,6 +415,8 @@
                 ? `<span class="admin-badge badge-info" style="font-size: 10.5px;">Nhân viên</span>`
                 : `<span class="admin-badge badge-neutral" style="font-size: 10.5px;">Bot</span>`;
 
+            const sla = formatSlaInfo(conv.waitingSeconds, conv.isHandover);
+
             const item = document.createElement('div');
             item.className = `conversation-item ${isActive ? 'active' : ''}`;
             item.innerHTML = `
@@ -344,9 +428,10 @@
                     <span class="conv-snippet">${snippet}</span>
                 </div>
                 <div class="conversation-item-bottom">
-                    <div style="display: flex; gap: 4px;">
+                    <div class="conv-bottom-left">
                         ${sentimentBadge}
                         ${handoverTag}
+                        <span class="sla-timer-pill ${sla.className} sla-pill-${conv.id}">${sla.text}</span>
                     </div>
                     ${conv.unreadCount > 0 ? `<span class="badge-urgent-count">${conv.unreadCount}</span>` : ''}
                 </div>
@@ -398,6 +483,13 @@
             handlerBadgeEl.className = 'admin-badge ' + (currentConversation.isHandover ? 'badge-info' : 'badge-neutral');
         }
 
+        const headerSla = document.getElementById('currentChatSlaBadge');
+        if (headerSla) {
+            const sla = formatSlaInfo(currentConversation.waitingSeconds, currentConversation.isHandover);
+            headerSla.textContent = sla.text;
+            headerSla.className = `sla-timer-pill ${sla.className}`;
+        }
+
         if (takeoverBtn) {
             takeoverBtn.textContent = currentConversation.isHandover ? 'Hoàn thành và trả quyền cho Bot' : 'Tiếp nhận ca chat';
             takeoverBtn.className = 'admin-btn ' + (currentConversation.isHandover ? 'admin-btn-secondary' : 'admin-btn-primary');
@@ -418,6 +510,14 @@
         if (timelineEl) {
             timelineEl.innerHTML = '';
             currentConversation.messages.forEach(msg => {
+                if (msg.sender === 'system') {
+                    const marker = document.createElement('div');
+                    marker.className = 'chat-system-marker';
+                    marker.innerHTML = `<span class="chat-system-marker-text">${msg.text}</span>`;
+                    timelineEl.appendChild(marker);
+                    return;
+                }
+
                 const wrap = document.createElement('div');
                 wrap.className = `chat-bubble-wrap sender-${msg.sender}`;
 
@@ -563,19 +663,54 @@
             renderConversationsList();
         });
 
+        // Nút lọc ca khẩn cấp trên Alert Strip
+        document.getElementById('btnFilterUrgentChat')?.addEventListener('click', () => {
+            currentFilterTab = 'urgent';
+            document.querySelectorAll('.inbox-tab-btn').forEach(b => {
+                if (b.getAttribute('data-filter') === 'urgent') b.classList.add('active');
+                else b.classList.remove('active');
+            });
+
+            const critical = mockConversations.find(c => !c.isHandover && (c.sentimentLevel >= 4 || (c.waitingSeconds || 0) >= 120))
+                || mockConversations.find(c => c.category === 'urgent')
+                || mockConversations[0];
+
+            if (critical) {
+                currentConversation = critical;
+            }
+
+            renderConversationsList();
+            renderCurrentChat();
+        });
+
         // Tiếp nhận ca chat (Takeover / Handover)
         document.getElementById('btnToggleTakeover')?.addEventListener('click', () => {
             if (!currentConversation) return;
             currentConversation.isHandover = !currentConversation.isHandover;
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
             if (currentConversation.isHandover) {
-                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                currentConversation.messages.push({
+                    sender: 'system',
+                    time: timeStr,
+                    text: `Hệ thống: PawPal Bot đã tạm dừng. Chuyên viên Lê Lệ Quyên (CSKH) đã tiếp quản ca chat lúc ${timeStr}`
+                });
                 currentConversation.messages.push({
                     sender: 'agent',
                     agentName: 'Lê Lệ Quyên (CSKH)',
                     time: timeStr,
-                    text: 'Dạ PawPal xin chào sen, em là chuyên viên CSKH đã tiếp nhận cuộc trò chuyện để trực tiếp hỗ trợ giải quyết sự cố cho mình ngay ạ!'
+                    text: 'Dạ PawPal xin chào sen! Em là Lê Lệ Quyên - Chuyên viên CSKH đã tiếp nhận ca chat để hỗ trợ trực tiếp cho sen ngay đây ạ!'
+                });
+                currentConversation.waitingSeconds = 0;
+            } else {
+                currentConversation.messages.push({
+                    sender: 'system',
+                    time: timeStr,
+                    text: `Hệ thống: Ca chat đã được hỗ trợ trực tiếp xong. Quyền điều phối tự động được hoàn trả cho PawPal Bot lúc ${timeStr}`
                 });
             }
+
+            renderChatbotAlertBar();
             renderConversationsList();
             renderCurrentChat();
         });
