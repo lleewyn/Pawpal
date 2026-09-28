@@ -97,12 +97,12 @@
                     </div>
                     <!-- DÒNG 2: MACRO PHẢN HỒI NHANH -->
                     <div class="chat-quick-templates">
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenCannedModal" style="padding: 2px 10px; font-size: 11.5px; margin-right: 8px; flex-shrink: 0; font-weight: 600; color: #236B48; border-color: #236B48;">Thư viện câu mẫu</button>
                         <span class="macros-label">Mẫu nhanh:</span>
                         <button type="button" class="quick-reply-pill" data-reply="Dạ PawPal xin chào sen, em là chuyên viên CSKH đã tiếp nhận ca chat này để trực tiếp hỗ trợ mình ngay ạ!">Lời chào tiếp nhận</button>
                         <button type="button" class="quick-reply-pill" data-reply="Dạ PawPal thành thật xin lỗi vì sự bất tiện này. Em đã kiểm tra bưu tá đang trên đường giao hàng và sẽ đến trong chiều nay ạ.">Xin lỗi giao trễ</button>
                         <button type="button" class="quick-reply-pill" data-reply="Dạ để hỗ trợ tốt nhất, sen vui lòng chụp giúp em hình ảnh tình trạng hiện tại gửi qua đây nhé ạ.">Yêu cầu gửi ảnh</button>
                         <button type="button" class="quick-reply-pill" data-reply="Dạ để tạ lỗi vì sự cố vừa rồi, PawPal xin gửi tặng mình 50 điểm Pawpoint vào tài khoản nhé ạ.">Tặng điểm tạ lỗi</button>
+                        <button type="button" class="quick-reply-pill btn-canned-lib-link" id="btnOpenCannedModal">Thư viện câu mẫu</button>
                     </div>
                 </div>
 
@@ -415,19 +415,17 @@
                 <button type="button" class="modal-btn-close-text" id="btnDismissCannedModal">Đóng</button>
             </div>
             <div class="modal-body-clean canned-lib-body">
-                <!-- THANH TÌM KIẾM CÂU MẪU -->
-                <div class="canned-lib-search-bar">
-                    <input type="text" class="admin-input" id="inputSearchCanned" placeholder="Tìm câu mẫu theo từ khóa (giao trễ, xin lỗi, bồi hoàn, camera...)...">
-                </div>
-
-                <!-- BỘ LỌC CHỦ ĐỀ CÂU MẪU DẠNG TEXT TABS -->
-                <div class="canned-categories-tabs" id="cannedCategoriesTabs">
-                    <button type="button" class="canned-tab-btn active" data-category="all">Tất cả (15)</button>
-                    <button type="button" class="canned-tab-btn" data-category="greeting">Chào hỏi và Tiếp nhận</button>
-                    <button type="button" class="canned-tab-btn" data-category="shipping">Vận chuyển và Giao hàng</button>
-                    <button type="button" class="canned-tab-btn" data-category="service">Spa và Khách sạn</button>
-                    <button type="button" class="canned-tab-btn" data-category="reward">Bồi hoàn và Tạ lỗi</button>
-                    <button type="button" class="canned-tab-btn" data-category="dispute">Khiếu nại và Đối soát</button>
+                <!-- THANH TÌM KIẾM VÀ DROPDOWN BỘ LỌC CHỦ ĐỀ CÂU MẪU -->
+                <div class="canned-lib-filter-row">
+                    <input type="text" class="admin-input canned-search-input" id="inputSearchCanned" placeholder="Tìm câu mẫu theo từ khóa (giao trễ, xin lỗi, bồi hoàn, camera...)...">
+                    <select class="admin-select canned-category-select" id="selectCannedCategory">
+                        <option value="all">Tất cả chủ đề (15)</option>
+                        <option value="greeting">Chào hỏi và Tiếp nhận (3)</option>
+                        <option value="shipping">Vận chuyển và Giao hàng (3)</option>
+                        <option value="service">Spa và Khách sạn (3)</option>
+                        <option value="reward">Bồi hoàn và Tạ lỗi (3)</option>
+                        <option value="dispute">Khiếu nại và Đối soát (3)</option>
+                    </select>
                 </div>
 
                 <!-- DANH SÁCH CÂU MẪU CUỘN -->

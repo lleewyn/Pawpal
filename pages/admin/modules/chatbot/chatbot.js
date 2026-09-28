@@ -62,13 +62,6 @@
                 {
                     id: 'msg-001-5',
                     sender: 'agent',
-                    agentName: 'Lê Lệ Quyên (CSKH)',
-                    time: '10:45',
-                    text: 'Dạ PawPal xin chào sen! Em là Quyên - CSKH. Em đã kiểm tra đơn hàng SP-2026-003 và xin gửi tặng 50 điểm Pawpoint bồi hoàn vào ví cho sen ngay ạ.'
-                },
-                {
-                    id: 'msg-001-6',
-                    sender: 'agent',
                     agentName: 'Hệ thống PawPal',
                     type: 'action-reward',
                     time: '10:45',
@@ -124,21 +117,6 @@
                 { id: 'msg-002-3', sender: 'agent', agentName: 'Nguyễn Văn A (CSKH)', time: '10:31', text: 'Dạ em chào anh Khang, em là Văn A - CSKH PawPal. Em đã tiếp nhận ca chat và đang liên hệ Bác sĩ thú y trực tại chi nhánh để hỗ trợ kiểm tra vết thương cho bé Lu Lu ngay lập tức ạ.' },
                 {
                     id: 'msg-002-4',
-                    sender: 'agent',
-                    agentName: 'Hệ thống PawPal',
-                    type: 'action-ticket',
-                    time: '10:32',
-                    ticketData: {
-                        id: 'TK-2026-003',
-                        title: 'Khiếu nại vết trầy xước của cún Lu Lu sau khi spa tắm tỉa',
-                        category: 'Khiếu nại Dịch vụ Spa và Grooming',
-                        priority: 'Mức độ Cao (Khẩn cấp)',
-                        refId: 'BKG-1002'
-                    },
-                    text: 'Đã trích xuất biên bản hội thoại và tạo thành công vé hỗ trợ chính thức mang mã định danh TK-2026-003 trong phân hệ Khiếu nại.'
-                },
-                {
-                    id: 'msg-002-5',
                     sender: 'agent',
                     agentName: 'Hệ thống PawPal',
                     type: 'action-escalate',
@@ -1418,11 +1396,9 @@
         const btnDismiss = document.getElementById('btnDismissCannedModal');
         const btnCloseBottom = document.getElementById('btnCloseCannedModalBottom');
         const searchInput = document.getElementById('inputSearchCanned');
-        const tabsContainer = document.getElementById('cannedCategoriesTabs');
+        const categorySelect = document.getElementById('selectCannedCategory');
         const listContainer = document.getElementById('cannedResponsesList');
         const chatInput = document.getElementById('chatMessageInput');
-
-        let activeCat = 'all';
 
         function closeModal() {
             if (modalOverlay) modalOverlay.style.display = 'none';
@@ -1431,23 +1407,15 @@
         btnOpen?.addEventListener('click', () => {
             if (modalOverlay) modalOverlay.style.display = 'flex';
             if (searchInput) searchInput.value = '';
-            activeCat = 'all';
-            tabsContainer?.querySelectorAll('.canned-tab-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.getAttribute('data-category') === 'all');
-            });
+            if (categorySelect) categorySelect.value = 'all';
             renderList();
         });
 
         btnDismiss?.addEventListener('click', closeModal);
         btnCloseBottom?.addEventListener('click', closeModal);
 
-        tabsContainer?.querySelectorAll('.canned-tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                tabsContainer.querySelectorAll('.canned-tab-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                activeCat = btn.getAttribute('data-category');
-                renderList();
-            });
+        categorySelect?.addEventListener('change', () => {
+            renderList();
         });
 
         searchInput?.addEventListener('input', () => {
@@ -1457,6 +1425,7 @@
         function renderList() {
             if (!listContainer) return;
             const query = (searchInput?.value || '').toLowerCase().trim();
+            const activeCat = categorySelect ? categorySelect.value : 'all';
 
             const filtered = cannedResponsesDatabase.filter(item => {
                 const matchCat = activeCat === 'all' || item.category === activeCat;
