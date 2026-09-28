@@ -513,8 +513,8 @@
 .inbox-chat-col {
     display: flex;
     flex-direction: column;
-    padding: 18px 22px;
-    gap: 12px;
+    padding: 14px 18px;
+    gap: 8px;
     height: 100%;
     overflow: hidden;
     box-sizing: border-box;
@@ -552,12 +552,13 @@
 
 /* AI CONTEXT CARD - Trình bày phẳng, không nền, không viền (Rule 1: Cấm hộp lồng trong hộp) */
 .ai-context-summary-card {
-    padding: 4px 0 10px;
+    padding: 2px 0 4px;
     background: transparent;
     border: none;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
+    flex-shrink: 0;
 }
 
 .summary-header-row {
@@ -567,14 +568,14 @@
 }
 
 .summary-title-text {
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 700;
     color: var(--text-muted);
     text-transform: none;
 }
 
 .summary-tag {
-    font-size: 11px;
+    font-size: 10.5px;
     background-color: #FDEEB0;
     color: #92400E;
     padding: 1px 6px;
@@ -583,19 +584,20 @@
 }
 
 .summary-body-text {
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--text-main);
-    line-height: 1.5;
+    line-height: 1.4;
 }
 
 /* DÒNG THỜI GIAN TIN NHẮN */
 .chat-timeline-messages {
     flex: 1;
+    min-height: 240px;
     overflow-y: auto;
     overscroll-behavior: contain;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     padding-right: 6px;
 }
 
@@ -786,16 +788,17 @@
     font-weight: 700;
 }
 
-/* KHỐI GỢI Ý PHẢN HỒI THÔNG MINH AI */
+/* KHỐI GỢI Ý PHẢN HỒI THÔNG MINH AI - COMPACT DẠNG CHIPS BẢO VỆ CHIỀU CAO TIMELINE */
 .ai-smart-suggestions-box {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 10px 14px;
+    gap: 4px;
+    padding: 6px 12px;
     background-color: #F4FAF6;
     border: 1px solid #C3DEC7;
     border-radius: var(--admin-radius);
     margin-bottom: 2px;
+    flex-shrink: 0;
 }
 
 .smart-suggestions-header {
@@ -804,14 +807,20 @@
     align-items: center;
 }
 
+.smart-suggestions-header-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .smart-suggestions-title {
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 700;
     color: #236B48;
 }
 
 .smart-suggestions-tag {
-    font-size: 11px;
+    font-size: 10.5px;
     color: #165335;
     background-color: #DCEEE2;
     padding: 1px 6px;
@@ -819,13 +828,67 @@
     font-weight: 600;
 }
 
-.smart-suggestions-list {
+.btn-toggle-suggestions-expand {
+    background: transparent;
+    border: none;
+    color: #236B48;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 2px 4px;
+    font-family: inherit;
+    text-decoration: underline;
+    transition: color 0.15s;
+}
+
+.btn-toggle-suggestions-expand:hover {
+    color: #17422C;
+}
+
+/* DẠNG GỌN (COMPACT CHIPS HORIZONTAL) - CHỈ TỐN 28PX CHIỀU CAO */
+.smart-suggestions-list.compact-mode {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+.smart-suggest-pill {
+    background-color: #FFFFFF;
+    border: 1px solid #C3DEC7;
+    color: #17422C;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: var(--admin-radius);
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+    transition: background-color 0.15s, border-color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.smart-suggest-pill strong {
+    color: #236B48;
+}
+
+.smart-suggest-pill:hover {
+    background-color: #EEF5F1;
+    border-color: #236B48;
+}
+
+/* DẠNG MỞ RỘNG (EXPANDED CARDS) KHI CẦN XEM RÕ */
+.smart-suggestions-list.expanded-mode {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    max-height: 155px;
+    max-height: 120px;
     overflow-y: auto;
     overscroll-behavior: contain;
+    padding-top: 4px;
 }
 
 .smart-suggest-card {
@@ -835,8 +898,8 @@
     background-color: #FFFFFF;
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);
-    padding: 8px 12px;
-    gap: 10px;
+    padding: 6px 10px;
+    gap: 8px;
     cursor: pointer;
     transition: border-color 0.15s, background-color 0.15s;
 }
@@ -860,9 +923,9 @@
 }
 
 .suggest-card-text {
-    font-size: 12.5px;
+    font-size: 12px;
     color: var(--text-main);
-    line-height: 1.45;
+    line-height: 1.4;
 }
 
 .btn-apply-suggest {
@@ -870,8 +933,8 @@
     color: #FFFFFF;
     border: none;
     border-radius: var(--admin-radius);
-    padding: 5px 12px;
-    font-size: 11.5px;
+    padding: 4px 10px;
+    font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;

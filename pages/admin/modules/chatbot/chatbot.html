@@ -77,14 +77,17 @@
                     <!-- Render by JS -->
                 </div>
 
-                <!-- KHỐI GỢI Ý PHẢN HỒI THÔNG MINH AI (SMART RESPONSES) -->
+                <!-- KHỐI GỢI Ý PHẢN HỒI THÔNG MINH AI (SMART RESPONSES) - COMPACT DẠNG CHIPS -->
                 <div class="ai-smart-suggestions-box" id="aiSmartSuggestionsBox">
                     <div class="smart-suggestions-header">
-                        <span class="smart-suggestions-title">Gợi ý phản hồi thông minh AI (Nhấn 1 chạm để áp dụng)</span>
-                        <span class="smart-suggestions-tag" id="smartSuggestionsTag">Đồng cảm và Xoa dịu</span>
+                        <div class="smart-suggestions-header-left">
+                            <span class="smart-suggestions-title">Gợi ý AI 1 chạm:</span>
+                            <span class="smart-suggestions-tag" id="smartSuggestionsTag">Đồng cảm và Xoa dịu</span>
+                        </div>
+                        <button type="button" class="btn-toggle-suggestions-expand" id="btnToggleSuggestionsExpand">Mở rộng chi tiết</button>
                     </div>
-                    <div class="smart-suggestions-list" id="smartSuggestionsList">
-                        <!-- Render by JS -->
+                    <div class="smart-suggestions-list compact-mode" id="smartSuggestionsList">
+                        <!-- Render by JS: Compact horizontal chips (default) / Expanded cards -->
                     </div>
                 </div>
 

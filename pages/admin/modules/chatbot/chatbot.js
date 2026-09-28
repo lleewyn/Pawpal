@@ -246,10 +246,13 @@
         }, 1000);
     }
 
+    let isSuggestionsExpanded = false;
+
     function renderSmartSuggestions() {
         const box = document.getElementById('aiSmartSuggestionsBox');
         const list = document.getElementById('smartSuggestionsList');
         const tag = document.getElementById('smartSuggestionsTag');
+        const toggleBtn = document.getElementById('btnToggleSuggestionsExpand');
         if (!box || !list) return;
 
         if (!currentConversation || !currentConversation.smartResponses || currentConversation.smartResponses.length === 0) {
@@ -262,35 +265,67 @@
             tag.textContent = currentConversation.sentimentLevel >= 4 ? 'Xoa dịu và Bồi hoàn khẩn cấp' : 'Tư vấn và Hỗ trợ';
         }
 
+        if (toggleBtn) {
+            toggleBtn.textContent = isSuggestionsExpanded ? 'Thu gọn' : 'Xem chi tiết';
+            toggleBtn.onclick = () => {
+                isSuggestionsExpanded = !isSuggestionsExpanded;
+                renderSmartSuggestions();
+            };
+        }
+
         list.innerHTML = '';
-        currentConversation.smartResponses.forEach((item, idx) => {
-            const card = document.createElement('div');
-            card.className = 'smart-suggest-card';
-            card.innerHTML = `
-                <div class="suggest-card-body">
-                    <span class="suggest-card-tag">Phương án ${idx + 1}: ${item.tag}</span>
-                    <span class="suggest-card-text">${item.text}</span>
-                </div>
-                <button type="button" class="btn-apply-suggest">Áp dụng</button>
-            `;
+        if (!isSuggestionsExpanded) {
+            // Chế độ Compact Chips: nằm trên 1 hàng ngang, chỉ cao 28px, không chiếm diện tích chat
+            list.className = 'smart-suggestions-list compact-mode';
+            currentConversation.smartResponses.forEach((item, idx) => {
+                const pill = document.createElement('button');
+                pill.type = 'button';
+                pill.className = 'smart-suggest-pill';
+                pill.innerHTML = `<strong>${idx + 1}. ${item.tag}:</strong> ${item.text.slice(0, 34)}...`;
+                pill.title = `${item.tag}: ${item.text}`;
 
-            function applySuggestedReply() {
-                const input = document.getElementById('chatMessageInput');
-                if (input) {
-                    input.value = item.text;
-                    input.focus();
-                }
-            }
+                pill.addEventListener('click', () => {
+                    const input = document.getElementById('chatMessageInput');
+                    if (input) {
+                        input.value = item.text;
+                        input.focus();
+                    }
+                });
 
-            card.querySelector('.btn-apply-suggest').addEventListener('click', (e) => {
-                e.stopPropagation();
-                applySuggestedReply();
+                list.appendChild(pill);
             });
+        } else {
+            // Chế độ Expanded: hiển thị đầy đủ thẻ chi tiết khi Admin muốn đọc kỹ
+            list.className = 'smart-suggestions-list expanded-mode';
+            currentConversation.smartResponses.forEach((item, idx) => {
+                const card = document.createElement('div');
+                card.className = 'smart-suggest-card';
+                card.innerHTML = `
+                    <div class="suggest-card-body">
+                        <span class="suggest-card-tag">Phương án ${idx + 1}: ${item.tag}</span>
+                        <span class="suggest-card-text">${item.text}</span>
+                    </div>
+                    <button type="button" class="btn-apply-suggest">Áp dụng</button>
+                `;
 
-            card.addEventListener('click', applySuggestedReply);
+                function applySuggestedReply() {
+                    const input = document.getElementById('chatMessageInput');
+                    if (input) {
+                        input.value = item.text;
+                        input.focus();
+                    }
+                }
 
-            list.appendChild(card);
-        });
+                card.querySelector('.btn-apply-suggest').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    applySuggestedReply();
+                });
+
+                card.addEventListener('click', applySuggestedReply);
+
+                list.appendChild(card);
+            });
+        }
     }
 
     // -------------------------------------------------------------
