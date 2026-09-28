@@ -1,4 +1,4 @@
-// complaints.js - Phân hệ Quản lý Khiếu nại Pawpal-er (Giai đoạn 1: Chống bỏ sót & SLA)
+// complaints.js - Phân hệ Quản lý Khiếu nại Pawpal-er (Chống bỏ sót, SLA và Giải quyết bồi hoàn)
 (function() {
     function initComplaintsModule() {
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
@@ -38,7 +38,7 @@
         }
 
         // ---------------------------------------------------------
-        // 1. DATA MOCK (Khiếu nại Dịch vụ & Đơn hàng kèm SLA chuẩn)
+        // 1. DATA MOCK (Khiếu nại Dịch vụ và Đơn hàng kèm SLA chuẩn)
         // ---------------------------------------------------------
         const mockServiceComplaints = [
             {
@@ -202,6 +202,14 @@
                 checkinHealth: 'Lông bờm và thân rối nhẹ, không có nấm da hay bọ chét.',
                 checkinPhotos: ['checkin-simba-long.jpg'],
                 staffLogNote: 'Cắt tỉa form sư tử theo tỉ lệ đầu thân cân đối, chải tơi lông xù.',
+                resolution: {
+                    type: 'reward_voucher',
+                    typeName: 'Tặng Voucher và Pawpoint bồi hoàn',
+                    pawpoints: 200,
+                    voucherCode: 'PAWPALCARE50',
+                    note: 'Đã gọi điện xin lỗi và tặng voucher giảm 50% gói Spa Grooming lần kế tiếp kèm 200 Pawpoint bồi hoàn.',
+                    updatedAt: '11:00 - 27/09/2026'
+                },
                 timeline: [
                     { time: '10:00 - 27/09/2026', author: 'Phan Văn Hậu (Khách hàng)', title: 'Phản ánh form lông', desc: 'Khách không ưng ý độ dài bờm.', isInternal: false },
                     { time: '11:00 - 27/09/2026', author: 'Lê Lệ Quyên (Admin)', title: 'Tặng voucher chăm sóc', desc: 'Đã gọi điện xin lỗi và tặng voucher giảm 50% lần kế tiếp.', isInternal: false }
@@ -307,6 +315,17 @@
                 carrier: 'J&T Express',
                 trackingCode: 'JT11928374VN',
                 deliveryStatus: 'Đang vận chuyển trung chuyển qua kho Củ Chi',
+                resolution: {
+                    type: 'rma_exchange',
+                    typeName: 'Đổi sản phẩm mới (Tạo mã RMA)',
+                    rmaCode: 'RMA-2026-091',
+                    rmaStep: 2,
+                    warehouse: 'Kho Pawpal Tân Bình (123 Hoàng Văn Thụ, Q. Tân Bình, TP.HCM)',
+                    pickupMethod: 'Khách hàng tự gửi bưu điện về kho',
+                    replacementItem: 'Áo Ấm Mùa Đông Lót Lông Poodle (Size L)',
+                    note: 'Đã tạo mã RMA-091 hướng dẫn khách gửi lại size M, kho sẽ gửi bù size L ngay khi nhận được kiện hoàn.',
+                    updatedAt: '10:45 - 28/09/2026'
+                },
                 timeline: [
                     { time: '10:15 - 28/09/2026', author: 'Trịnh Hoàng Nam (Khách hàng)', title: 'Đề nghị đổi size áo', desc: 'Khách đề nghị đổi size L.', isInternal: false },
                     { time: '10:45 - 28/09/2026', author: 'Phạm Thị D (CSKH)', title: 'Tạo mã đổi hàng RMA-091', desc: 'Hướng dẫn khách gửi hàng về kho PawPal.', isInternal: false }
@@ -350,7 +369,7 @@
         let currentOrderKpiFilter = 'ALL';
 
         // ---------------------------------------------------------
-        // 2. HELPER BADGE & SLA
+        // 2. HELPER BADGE VÀ SLA
         // ---------------------------------------------------------
         function getSlaBadge(item) {
             if (item.status === 'resolved' || item.status === 'closed') {
@@ -528,7 +547,7 @@
         }
 
         // ---------------------------------------------------------
-        // 4. CHUYỂN ĐỔI SUB-TAB & DEEP BREADCRUMB
+        // 4. CHUYỂN ĐỔI SUB-TAB VÀ DEEP BREADCRUMB
         // ---------------------------------------------------------
         const headerSubtabBtns = subtabsContainer ? subtabsContainer.querySelectorAll('.header-subtab-btn') : [];
         const sections = document.querySelectorAll('.subtab-content');
@@ -882,7 +901,7 @@
         }
 
         // ---------------------------------------------------------
-        // 7. RENDER SUB-TAB 3: CHI TIẾT TICKET 360° & ĐỐI CHỨNG CHÉO
+        // 7. RENDER SUB-TAB 3: CHI TIẾT TICKET 360° VÀ ĐỐI CHỨNG CHÉO
         // ---------------------------------------------------------
         function getStaffSafetyLockStatus(staffName) {
             if (!staffName) return false;
@@ -1034,6 +1053,123 @@
 
                 const deliveryStatusEl = document.getElementById('viewTicketDeliveryStatus');
                 if (deliveryStatusEl) deliveryStatusEl.textContent = ticket.deliveryStatus || 'Giao thành công';
+            }
+
+            // ---------------------------------------------------------
+            // KHỐI 4: HIỂN THỊ PHƯƠNG ÁN BỒI HOÀN VÀ TIẾN ĐỘ RMA (PHASE 3)
+            // ---------------------------------------------------------
+            const resBlock = document.getElementById('ticketResolutionBlock');
+            if (resBlock) {
+                if (ticket.resolution) {
+                    resBlock.style.display = 'block';
+
+                    const resBadgeEl = document.getElementById('viewResolutionBadge');
+                    if (resBadgeEl) resBadgeEl.textContent = ticket.resolution.typeName || 'Đã áp dụng phương án';
+
+                    const resTimeEl = document.getElementById('viewResolutionTime');
+                    if (resTimeEl) resTimeEl.textContent = 'Cập nhật: ' + (ticket.resolution.updatedAt || 'Vừa xong');
+
+                    const resNoteEl = document.getElementById('viewResolutionNote');
+                    if (resNoteEl) resNoteEl.textContent = `"${ticket.resolution.note || 'Đã thỏa thuận phương án giải quyết thỏa đáng với khách hàng.'}"`;
+
+                    const rmaDetails = document.getElementById('resolutionRmaDetails');
+                    const rewardDetails = document.getElementById('resolutionRewardDetails');
+                    const redoDetails = document.getElementById('resolutionRedoServiceDetails');
+                    const refundDetails = document.getElementById('resolutionRefundDetails');
+
+                    // Reset tất cả các chi tiết con
+                    if (rmaDetails) rmaDetails.style.display = 'none';
+                    if (rewardDetails) rewardDetails.style.display = 'none';
+                    if (redoDetails) redoDetails.style.display = 'none';
+                    if (refundDetails) refundDetails.style.display = 'none';
+
+                    if (ticket.resolution.type === 'rma_exchange' || ticket.resolution.type === 'rma_refund') {
+                        if (rmaDetails) {
+                            rmaDetails.style.display = 'block';
+                            const rmaCodeEl = document.getElementById('viewRmaCode');
+                            const pickupEl = document.getElementById('viewRmaPickupMethod');
+                            const whEl = document.getElementById('viewRmaWarehouse');
+                            const replGroup = document.getElementById('viewRmaReplacementGroup');
+                            const replEl = document.getElementById('viewRmaReplacementItem');
+
+                            if (rmaCodeEl) rmaCodeEl.textContent = ticket.resolution.rmaCode || 'RMA-2026-CHƯA_CẤP';
+                            if (pickupEl) pickupEl.textContent = ticket.resolution.pickupMethod || 'Bưu tá tới lấy hàng';
+                            if (whEl) whEl.textContent = ticket.resolution.warehouse || 'Kho Pawpal Tân Bình';
+
+                            if (ticket.resolution.type === 'rma_exchange') {
+                                if (replGroup) replGroup.style.display = 'block';
+                                if (replEl) replEl.textContent = ticket.resolution.replacementItem || 'Sản phẩm đổi mới';
+                            } else {
+                                if (replGroup) replGroup.style.display = 'none';
+                            }
+
+                            // Cập nhật Stepper 4 bước (không dùng icon, tuân thủ AGENTS.md)
+                            const currentStep = ticket.resolution.rmaStep || 2;
+                            const stepperContainer = document.getElementById('viewRmaStepper');
+                            if (stepperContainer) {
+                                const steps = [
+                                    '1. Cấp mã RMA',
+                                    '2. Chờ nhận hàng hoàn',
+                                    '3. Kiểm định tại kho',
+                                    ticket.resolution.type === 'rma_exchange' ? '4. Xuất hàng đổi mới' : '4. Hoàn tiền thành công'
+                                ];
+                                stepperContainer.innerHTML = steps.map((s, idx) => {
+                                    const stepNum = idx + 1;
+                                    const isActive = stepNum <= currentStep;
+                                    const arrow = idx < 3 ? '<span class="rma-step-arrow">→</span>' : '';
+                                    return `<span class="rma-step-item ${isActive ? 'active' : ''}">${escapeHtml(s)}</span>${arrow}`;
+                                }).join('');
+                            }
+
+                            // Cập nhật nút bấm tiến độ RMA
+                            const btnAdvance = document.getElementById('btnAdvanceRmaStep');
+                            if (btnAdvance) {
+                                if (currentStep === 1) {
+                                    btnAdvance.textContent = 'Cập nhật: Bắt đầu gửi hàng hoàn';
+                                    btnAdvance.style.display = 'inline-block';
+                                } else if (currentStep === 2) {
+                                    btnAdvance.textContent = 'Cập nhật: Đã nhận hàng tại kho và Kiểm định';
+                                    btnAdvance.style.display = 'inline-block';
+                                } else if (currentStep === 3) {
+                                    btnAdvance.textContent = ticket.resolution.type === 'rma_exchange' ? 'Cập nhật: Đã giao hàng đổi mới (Hoàn tất)' : 'Cập nhật: Đã hoàn tiền (Hoàn tất)';
+                                    btnAdvance.style.display = 'inline-block';
+                                } else {
+                                    btnAdvance.textContent = 'Quy trình RMA đã hoàn tất thành công';
+                                    btnAdvance.style.color = '#166534';
+                                }
+                            }
+                        }
+                    } else if (ticket.resolution.type === 'reward_voucher') {
+                        if (rewardDetails) {
+                            rewardDetails.style.display = 'block';
+                            const ptsEl = document.getElementById('viewRewardPoints');
+                            const vchEl = document.getElementById('viewRewardVoucher');
+                            if (ptsEl) ptsEl.textContent = `+${ticket.resolution.pawpoints || 0} Pawpoint (Tương đương ${((ticket.resolution.pawpoints || 0) * 100).toLocaleString('vi-VN')}đ)`;
+                            if (vchEl) vchEl.textContent = ticket.resolution.voucherCode || 'PAWPALCARE50';
+                        }
+                    } else if (ticket.resolution.type === 'redo_service') {
+                        if (redoDetails) {
+                            redoDetails.style.display = 'block';
+                            const redoIdEl = document.getElementById('viewRedoBookingId');
+                            const redoStaffEl = document.getElementById('viewRedoStaff');
+                            const redoTimeEl = document.getElementById('viewRedoTime');
+
+                            if (redoIdEl) redoIdEl.textContent = ticket.resolution.redoBookingId || 'BKG-REDO-01';
+                            if (redoStaffEl) redoStaffEl.textContent = ticket.resolution.redoStaff || 'KTV chỉ định';
+                            if (redoTimeEl) redoTimeEl.textContent = (ticket.resolution.redoTime || 'Thời gian đã hẹn') + ' (Miễn phí 100%)';
+                        }
+                    } else if (ticket.resolution.type === 'refund') {
+                        if (refundDetails) {
+                            refundDetails.style.display = 'block';
+                            const refAmountEl = document.getElementById('viewRefundAmount');
+                            const refMethodEl = document.getElementById('viewRefundMethod');
+                            if (refAmountEl) refAmountEl.textContent = `${Number(ticket.resolution.refundAmount || 0).toLocaleString('vi-VN')} VNĐ`;
+                            if (refMethodEl) refMethodEl.textContent = ticket.resolution.refundMethod || 'Chuyển khoản trực tiếp';
+                        }
+                    }
+                } else {
+                    resBlock.style.display = 'none';
+                }
             }
 
             // Timeline
@@ -1250,46 +1386,278 @@
             createModal.classList.remove('active');
         });
 
-        // Modal Phương án giải quyết
+        // Modal Phương án giải quyết (Phase 3: RMA, Redo, Reward và Refund)
         const resolveModal = document.getElementById('resolveTicketModalOverlay');
-        document.getElementById('btnOpenResolveModal')?.addEventListener('click', () => {
+        const selectResolveOpt = document.getElementById('selectResolveOption');
+
+        function updateResolveModalSubgroups() {
+            if (!selectResolveOpt) return;
+            const val = selectResolveOpt.value;
+
+            const rmaGroup = document.getElementById('groupResolveRma');
+            const redoGroup = document.getElementById('groupResolveRedo');
+            const rewardGroup = document.getElementById('groupResolveReward');
+            const refundGroup = document.getElementById('groupResolveRefund');
+
+            if (rmaGroup) rmaGroup.style.display = 'none';
+            if (redoGroup) redoGroup.style.display = 'none';
+            if (rewardGroup) rewardGroup.style.display = 'none';
+            if (refundGroup) refundGroup.style.display = 'none';
+
+            if (val === 'rma_exchange' || val === 'rma_refund') {
+                if (rmaGroup) {
+                    rmaGroup.style.display = 'block';
+                    const rmaCodeInput = document.getElementById('inputResolveRmaCode');
+                    if (rmaCodeInput && !rmaCodeInput.value) {
+                        rmaCodeInput.value = 'RMA-2026-' + Math.floor(100 + Math.random() * 900);
+                    }
+                    const exField = document.getElementById('resolveRmaExchangeField');
+                    const refField = document.getElementById('resolveRmaRefundField');
+                    if (val === 'rma_exchange') {
+                        if (exField) exField.style.display = 'block';
+                        if (refField) refField.style.display = 'none';
+                        const replInput = document.getElementById('inputResolveRmaReplacement');
+                        if (replInput && !replInput.value && currentActiveTicket) {
+                            replInput.value = currentActiveTicket.productName ? `${currentActiveTicket.productName} (Đổi mới / đổi size)` : '';
+                        }
+                    } else {
+                        if (exField) exField.style.display = 'none';
+                        if (refField) refField.style.display = 'block';
+                        const refAmtInput = document.getElementById('inputResolveRmaRefundAmount');
+                        if (refAmtInput && !refAmtInput.value) {
+                            refAmtInput.value = '350000';
+                        }
+                    }
+                }
+            } else if (val === 'redo_service') {
+                if (redoGroup) {
+                    redoGroup.style.display = 'block';
+                    const timeInput = document.getElementById('inputResolveRedoTime');
+                    if (timeInput && !timeInput.value) {
+                        timeInput.value = '09:30 - Ngày mai';
+                    }
+                }
+            } else if (val === 'reward_voucher') {
+                if (rewardGroup) {
+                    rewardGroup.style.display = 'block';
+                    const ptsInput = document.getElementById('inputResolveRewardPoints');
+                    const vchInput = document.getElementById('inputResolveRewardVoucher');
+                    if (ptsInput && !ptsInput.value) ptsInput.value = '200';
+                    if (vchInput && !vchInput.value) vchInput.value = 'PAWPALCARE50';
+                }
+            } else if (val === 'refund') {
+                if (refundGroup) {
+                    refundGroup.style.display = 'block';
+                    const refAmtInput = document.getElementById('inputResolveRefundAmount');
+                    if (refAmtInput && !refAmtInput.value) refAmtInput.value = '250000';
+                }
+            }
+        }
+
+        function openResolveModal() {
+            if (!currentActiveTicket) return;
+            if (selectResolveOpt) {
+                if (currentActiveTicket.bookingId) {
+                    selectResolveOpt.value = 'redo_service';
+                } else {
+                    selectResolveOpt.value = 'rma_exchange';
+                }
+                const rmaCodeInput = document.getElementById('inputResolveRmaCode');
+                if (rmaCodeInput) rmaCodeInput.value = 'RMA-2026-' + Math.floor(100 + Math.random() * 900);
+                updateResolveModalSubgroups();
+            }
+            const noteInput = document.getElementById('inputResolveNote');
+            if (noteInput) noteInput.value = '';
             resolveModal.classList.add('active');
-        });
+        }
+
+        document.getElementById('btnOpenResolveModal')?.addEventListener('click', openResolveModal);
         document.getElementById('menuActionQuickResolve')?.addEventListener('click', () => {
             document.getElementById('complaintsActionDropdown').style.display = 'none';
-            resolveModal.classList.add('active');
+            openResolveModal();
         });
+
         document.getElementById('btnCancelResolveModal')?.addEventListener('click', () => resolveModal.classList.remove('active'));
         document.getElementById('btnDismissResolveModal')?.addEventListener('click', () => resolveModal.classList.remove('active'));
 
-        const selectResolveOpt = document.getElementById('selectResolveOption');
-        selectResolveOpt?.addEventListener('change', () => {
-            const val = selectResolveOpt.value;
-            const valGroup = document.getElementById('resolveValueGroup');
-            if (val === 'refund' || val === 'reward_voucher' || val === 'rma_refund') {
-                valGroup.style.display = 'block';
-            } else {
-                valGroup.style.display = 'none';
-            }
-        });
+        selectResolveOpt?.addEventListener('change', updateResolveModalSubgroups);
 
         document.getElementById('btnConfirmResolveTicket')?.addEventListener('click', () => {
-            alert('Phương án giải quyết đã được ghi nhận và cập nhật vào Timeline Ticket!');
-            resolveModal.classList.remove('active');
-            if (currentActiveTicket) {
-                currentActiveTicket.status = 'resolved';
+            if (!currentActiveTicket) return;
+            const val = selectResolveOpt ? selectResolveOpt.value : 'explain';
+            const note = document.getElementById('inputResolveNote')?.value.trim() || 'Đã thỏa thuận thống nhất phương án xử lý thỏa đáng với khách hàng.';
+
+            let resolutionObj = null;
+            let newStatus = 'resolved';
+            let timelineTitle = 'Áp dụng phương án giải quyết';
+            let timelineDesc = note;
+
+            if (val === 'rma_exchange' || val === 'rma_refund') {
+                const rmaCode = document.getElementById('inputResolveRmaCode')?.value || ('RMA-2026-' + Math.floor(100 + Math.random() * 900));
+                const pickup = document.getElementById('selectResolveRmaPickup')?.value || 'Bưu tá tới tận nơi lấy hàng';
+                const wh = document.getElementById('selectResolveRmaWarehouse')?.value || 'Kho Pawpal Tân Bình';
+                const replItem = document.getElementById('inputResolveRmaReplacement')?.value.trim() || (currentActiveTicket.productName || 'Sản phẩm đổi bù mới');
+                const refAmt = document.getElementById('inputResolveRmaRefundAmount')?.value.trim() || '350000';
+
+                resolutionObj = {
+                    type: val,
+                    typeName: val === 'rma_exchange' ? `Đổi sản phẩm mới (Mã RMA: ${rmaCode})` : `Trả hàng hoàn tiền (Mã RMA: ${rmaCode})`,
+                    rmaCode: rmaCode,
+                    rmaStep: 2,
+                    pickupMethod: pickup,
+                    warehouse: wh,
+                    replacementItem: replItem,
+                    refundAmount: refAmt,
+                    note: note,
+                    updatedAt: 'Vừa xong'
+                };
+                newStatus = 'waiting_return';
+                timelineTitle = `Phát hành mã đổi trả ${rmaCode}`;
+                timelineDesc = `Đã cấp mã RMA đổi trả (${val === 'rma_exchange' ? 'Đổi mới: ' + replItem : 'Hoàn tiền: ' + Number(refAmt).toLocaleString('vi-VN') + 'đ'}). Hình thức thu hồi: ${pickup}. Kho nhận: ${wh}. Ghi chú: "${note}".`;
+            } else if (val === 'redo_service') {
+                const redoTime = document.getElementById('inputResolveRedoTime')?.value.trim() || '09:30 - Ngày mai';
+                const redoStaff = document.getElementById('selectResolveRedoStaff')?.value || 'Trần Văn Hùng (Groomer trưởng)';
+                const redoId = 'BKG-REDO-' + Date.now().toString().slice(-4);
+
+                resolutionObj = {
+                    type: 'redo_service',
+                    typeName: 'Thực hiện lại dịch vụ miễn phí',
+                    redoBookingId: redoId,
+                    redoStaff: redoStaff,
+                    redoTime: redoTime,
+                    note: note,
+                    updatedAt: 'Vừa xong'
+                };
+                newStatus = 'processing';
+                timelineTitle = `Tạo lịch hẹn dịch vụ bù (${redoId})`;
+                timelineDesc = `Đã tạo lịch hẹn chăm sóc bù miễn phí 100% vào lúc ${redoTime}. KTV tiếp nhận: ${redoStaff}. Ghi chú: "${note}".`;
+            } else if (val === 'reward_voucher') {
+                const pts = parseInt(document.getElementById('inputResolveRewardPoints')?.value) || 200;
+                const vch = document.getElementById('inputResolveRewardVoucher')?.value.trim() || 'PAWPALCARE50';
+
+                resolutionObj = {
+                    type: 'reward_voucher',
+                    typeName: 'Tặng Voucher và Pawpoint bồi hoàn',
+                    pawpoints: pts,
+                    voucherCode: vch,
+                    note: note,
+                    updatedAt: 'Vừa xong'
+                };
+                newStatus = 'resolved';
+                timelineTitle = `Bồi hoàn +${pts} Pawpoint và tặng Voucher ${vch}`;
+                timelineDesc = `Đã cộng trực tiếp ${pts} Pawpoint vào tài khoản khách hàng và phát hành mã voucher ${vch}. Ghi chú: "${note}".`;
+
+                try {
+                    const key = 'pawpoint_reward_' + currentActiveTicket.phone;
+                    const curr = parseInt(sessionStorage.getItem(key) || '0');
+                    sessionStorage.setItem(key, (curr + pts).toString());
+                } catch (e) {}
+            } else if (val === 'refund') {
+                const refAmt = document.getElementById('inputResolveRefundAmount')?.value.trim() || '250000';
+                const refMethod = document.getElementById('selectResolveRefundMethod')?.value || 'Chuyển khoản trực tiếp';
+
+                resolutionObj = {
+                    type: 'refund',
+                    typeName: 'Hoàn tiền bồi thường khiếu nại',
+                    refundAmount: refAmt,
+                    refundMethod: refMethod,
+                    note: note,
+                    updatedAt: 'Vừa xong'
+                };
+                newStatus = 'resolved';
+                timelineTitle = `Hoàn tiền bồi thường ${Number(refAmt).toLocaleString('vi-VN')}đ`;
+                timelineDesc = `Hình thức: ${refMethod}. Ghi chú: "${note}".`;
+            } else if (val === 'reject') {
+                resolutionObj = {
+                    type: 'reject',
+                    typeName: 'Từ chối khiếu nại',
+                    note: note,
+                    updatedAt: 'Vừa xong'
+                };
+                newStatus = 'closed';
+                timelineTitle = 'Từ chối giải quyết khiếu nại';
+                timelineDesc = `Lý do từ chối: "${note}".`;
+            } else {
+                resolutionObj = {
+                    type: 'explain',
+                    typeName: 'Giải thích và phản hồi khách hàng',
+                    note: note,
+                    updatedAt: 'Vừa xong'
+                };
+                newStatus = 'resolved';
+                timelineTitle = 'Giải thích và chăm sóc khách hàng';
+                timelineDesc = note;
+            }
+
+            currentActiveTicket.resolution = resolutionObj;
+            currentActiveTicket.status = newStatus;
+            if (newStatus === 'resolved' || newStatus === 'closed') {
                 currentActiveTicket.slaStatus = 'DONE';
-                currentActiveTicket.slaRemainingText = 'Đã giải quyết';
+                currentActiveTicket.slaRemainingText = newStatus === 'resolved' ? 'Đã giải quyết' : 'Đã đóng';
+            }
+
+            currentActiveTicket.timeline.unshift({
+                time: 'Vừa xong',
+                author: 'Lê Lệ Quyên (Admin)',
+                title: timelineTitle,
+                desc: timelineDesc,
+                isInternal: false
+            });
+
+            resolveModal.classList.remove('active');
+            updateComplaintsKpis();
+            renderComplaintsAlertBar();
+            if (currentTicketType === 'service') renderServiceComplaintsTable();
+            else renderOrderComplaintsTable();
+            renderTicketDetail(currentActiveTicket);
+
+            alert(`Đã áp dụng phương án "${resolutionObj.typeName}" cho Ticket ${currentActiveTicket.id} thành công!`);
+        });
+
+        // Nút cập nhật tiến độ RMA (Phase 3)
+        document.getElementById('btnAdvanceRmaStep')?.addEventListener('click', () => {
+            if (!currentActiveTicket || !currentActiveTicket.resolution) return;
+            const res = currentActiveTicket.resolution;
+            let currentStep = res.rmaStep || 2;
+
+            if (currentStep < 4) {
+                currentStep++;
+                res.rmaStep = currentStep;
+                res.updatedAt = 'Vừa xong';
+
+                let stepTitle = '';
+                let stepDesc = '';
+
+                if (currentStep === 3) {
+                    stepTitle = `RMA ${res.rmaCode}: Đã nhận hàng tại kho và Kiểm định`;
+                    stepDesc = `Kho Pawpal đã tiếp nhận kiện hàng hoàn trả từ khách hàng. Bộ phận kiểm định xác nhận sản phẩm đạt tiêu chuẩn đổi trả theo quy định.`;
+                } else if (currentStep === 4) {
+                    stepTitle = `RMA ${res.rmaCode}: Hoàn tất lệnh đổi trả`;
+                    stepDesc = res.type === 'rma_exchange'
+                        ? `Đã xuất kho và bàn giao bưu tá sản phẩm đổi mới "${res.replacementItem || 'sản phẩm'}" gửi tới khách hàng. Ticket chuyển sang Đã giải quyết.`
+                        : `Đã thực hiện lệnh hoàn tiền ${Number(res.refundAmount || 0).toLocaleString('vi-VN')}đ tới tài khoản khách hàng. Ticket chuyển sang Đã giải quyết.`;
+                    currentActiveTicket.status = 'resolved';
+                    currentActiveTicket.slaStatus = 'DONE';
+                    currentActiveTicket.slaRemainingText = 'Đã giải quyết';
+                }
+
                 currentActiveTicket.timeline.unshift({
                     time: 'Vừa xong',
                     author: 'Lê Lệ Quyên (Admin)',
-                    title: 'Áp dụng phương án giải quyết',
-                    desc: document.getElementById('inputResolveNote').value || 'Đã thống nhất phương án xử lý với khách hàng.',
+                    title: stepTitle,
+                    desc: stepDesc,
                     isInternal: false
                 });
+
                 updateComplaintsKpis();
                 renderComplaintsAlertBar();
+                if (currentTicketType === 'service') renderServiceComplaintsTable();
+                else renderOrderComplaintsTable();
                 renderTicketDetail(currentActiveTicket);
+
+                alert(`Đã cập nhật tiến độ RMA sang Bước ${currentStep}: ${stepTitle}!`);
+            } else {
+                alert('Quy trình đổi trả RMA này đã hoàn tất trọn vẹn.');
             }
         });
 

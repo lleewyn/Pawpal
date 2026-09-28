@@ -389,7 +389,7 @@
                                 </div>
                             </div>
 
-                            <!-- ĐỐI CHỨNG ĐÓNG GÓI & VẬN CHUYỂN (DÀNH CHO ĐƠN HÀNG) -->
+                            <!-- ĐỐI CHỨNG ĐÓNG GÓI VÀ VẬN CHUYỂN (DÀNH CHO ĐƠN HÀNG) -->
                             <div id="orderCrossCheckBlock" style="display: none;">
                                 <div class="info-pair">
                                     <span class="info-label">Ảnh chụp kiểm tra đóng gói tại kho:</span>
@@ -416,6 +416,106 @@
 
                             <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border-neutral);">
                                 <button type="button" class="admin-btn admin-btn-secondary" id="btnJumpToOriginal">Xem chi tiết giao dịch gốc</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KHỐI 4: PHƯƠNG ÁN BỒI HOÀN VÀ XỬ LÝ RMA (PHASE 3) -->
+                    <div class="drawer-info-block" id="ticketResolutionBlock" style="margin-top: 24px; display: none;">
+                        <div class="drawer-section-title">Phương án bồi hoàn và Xử lý khiếu nại</div>
+                        <div class="resolution-card">
+                            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="info-label" style="margin: 0;">Phương án đã áp dụng:</span>
+                                    <span class="admin-badge badge-active" id="viewResolutionBadge">Đổi sản phẩm mới (Tạo mã RMA)</span>
+                                </div>
+                                <span style="font-size: 11.5px; color: var(--text-muted);" id="viewResolutionTime">Cập nhật: Vừa xong</span>
+                            </div>
+
+                            <!-- CHI TIẾT THEO RMA (TIẾN ĐỘ THU HỒI VÀ ĐỔI MỚI) -->
+                            <div id="resolutionRmaDetails" style="margin-top: 12px; display: none;">
+                                <div class="rma-stepper" id="viewRmaStepper">
+                                    <span class="rma-step-item active">1. Cấp mã RMA</span>
+                                    <span class="rma-step-arrow">→</span>
+                                    <span class="rma-step-item active">2. Chờ gửi hàng hoàn</span>
+                                    <span class="rma-step-arrow">→</span>
+                                    <span class="rma-step-item">3. Kiểm tra tại kho</span>
+                                    <span class="rma-step-arrow">→</span>
+                                    <span class="rma-step-item">4. Đổi mới / Hoàn tất</span>
+                                </div>
+                                <div class="info-grid-2col" style="margin-top: 12px;">
+                                    <div class="info-pair">
+                                        <span class="info-label">Mã RMA:</span>
+                                        <span class="info-value" id="viewRmaCode" style="font-weight: 600; color: #236B48;">RMA-2026-091</span>
+                                    </div>
+                                    <div class="info-pair">
+                                        <span class="info-label">Hình thức thu hồi:</span>
+                                        <span class="info-value" id="viewRmaPickupMethod">Khách hàng tự gửi bưu điện về kho</span>
+                                    </div>
+                                </div>
+                                <div class="info-pair" style="margin-top: 8px;">
+                                    <span class="info-label">Kho tiếp nhận hàng hoàn:</span>
+                                    <span class="info-value" id="viewRmaWarehouse">Kho Pawpal Tân Bình (123 Hoàng Văn Thụ, Q. Tân Bình, TP.HCM)</span>
+                                </div>
+                                <div class="info-pair" id="viewRmaReplacementGroup" style="margin-top: 8px;">
+                                    <span class="info-label">Sản phẩm đổi bù:</span>
+                                    <span class="info-value" id="viewRmaReplacementItem" style="font-weight: 500;">Áo Ấm Mùa Đông Lót Lông Poodle (Size L)</span>
+                                </div>
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border-neutral);">
+                                    <button type="button" class="admin-btn admin-btn-secondary" id="btnAdvanceRmaStep" style="height: 26px; padding: 0 10px; font-size: 11.5px; color: #236B48;">Cập nhật tiến độ RMA tiếp theo</button>
+                                </div>
+                            </div>
+
+                            <!-- CHI TIẾT THEO PAWPOINT VÀ VOUCHER -->
+                            <div id="resolutionRewardDetails" style="margin-top: 12px; display: none;">
+                                <div class="info-grid-2col">
+                                    <div class="info-pair">
+                                        <span class="info-label">Điểm Pawpoint bồi hoàn:</span>
+                                        <span class="info-value" id="viewRewardPoints" style="font-weight: 600; color: #166534;">+200 Pawpoint</span>
+                                    </div>
+                                    <div class="info-pair">
+                                        <span class="info-label">Mã Voucher tặng kèm:</span>
+                                        <span class="info-value" id="viewRewardVoucher" style="font-weight: 600; color: #236B48;">PAWPALCARE50</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CHI TIẾT THEO LÀM LẠI DỊCH VỤ (REDO SERVICE) -->
+                            <div id="resolutionRedoServiceDetails" style="margin-top: 12px; display: none;">
+                                <div class="info-grid-2col">
+                                    <div class="info-pair">
+                                        <span class="info-label">Mã lịch hẹn bù:</span>
+                                        <span class="info-value" id="viewRedoBookingId" style="font-weight: 600; color: #236B48;">BKG-REDO-2026-01</span>
+                                    </div>
+                                    <div class="info-pair">
+                                        <span class="info-label">Kỹ thuật viên chỉ định:</span>
+                                        <span class="info-value" id="viewRedoStaff" style="font-weight: 600;">Trần Văn Hùng (Groomer trưởng)</span>
+                                    </div>
+                                </div>
+                                <div class="info-pair" style="margin-top: 8px;">
+                                    <span class="info-label">Thời gian hẹn:</span>
+                                    <span class="info-value" id="viewRedoTime">09:30 - Thứ Tư, 30/09/2026 (Miễn phí 100%)</span>
+                                </div>
+                            </div>
+
+                            <!-- CHI TIẾT HOÀN TIỀN -->
+                            <div id="resolutionRefundDetails" style="margin-top: 12px; display: none;">
+                                <div class="info-grid-2col">
+                                    <div class="info-pair">
+                                        <span class="info-label">Số tiền hoàn:</span>
+                                        <span class="info-value" id="viewRefundAmount" style="font-weight: 600; color: #DC2626;">250.000 VNĐ</span>
+                                    </div>
+                                    <div class="info-pair">
+                                        <span class="info-label">Hình thức hoàn tiền:</span>
+                                        <span class="info-value" id="viewRefundMethod">Chuyển khoản trực tiếp về số tài khoản khách hàng</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- GHI CHÚ THỎA THUẬN -->
+                            <div class="info-pair" style="margin-top: 10px;">
+                                <span class="info-label">Ghi chú và Điều khoản đã thống nhất với khách:</span>
+                                <span class="info-value" id="viewResolutionNote" style="font-style: italic; font-weight: 400;">"Đã gọi điện xin lỗi và thống nhất thỏa thuận với khách."</span>
                             </div>
                         </div>
                     </div>
@@ -526,16 +626,97 @@
                         <option value="redo_service">Thực hiện lại dịch vụ (Miễn phí)</option>
                         <option value="change_staff">Đổi kỹ thuật viên chăm sóc</option>
                         <option value="refund">Hoàn tiền (Một phần hoặc toàn bộ)</option>
-                        <option value="rma_exchange">Đổi sản phẩm mới (Tạo RMA)</option>
-                        <option value="rma_refund">Trả hàng và hoàn tiền (Tạo RMA)</option>
-                        <option value="reward_voucher">Tặng Voucher và Paw Points bồi hoàn</option>
+                        <option value="rma_exchange">Đổi sản phẩm mới (Tạo mã RMA)</option>
+                        <option value="rma_refund">Trả hàng và hoàn tiền (Tạo mã RMA)</option>
+                        <option value="reward_voucher">Tặng Voucher và Pawpoint bồi hoàn</option>
                         <option value="reject">Từ chối khiếu nại</option>
                     </select>
                 </div>
 
-                <div class="form-group-item" id="resolveValueGroup" style="display: none;">
-                    <label class="form-label-clean" id="resolveValueLabel">Giá trị bồi hoàn / Số tiền hoàn (VNĐ hoặc Điểm)</label>
-                    <input type="number" class="admin-input" id="inputResolveValue" placeholder="Nhập số tiền hoặc điểm...">
+                <!-- SUB-GROUP: QUY TRÌNH RMA (ĐỔI MỚI / TRẢ HÀNG) -->
+                <div id="groupResolveRma" style="display: none; background: #F8FAF9; padding: 14px; border-radius: var(--admin-radius); margin-bottom: 14px;">
+                    <div style="font-size: 13px; font-weight: 600; color: #236B48; margin-bottom: 10px;">Thông tin lệnh đổi trả RMA</div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Mã RMA phát hành</label>
+                            <input type="text" class="admin-input" id="inputResolveRmaCode" readonly style="font-weight: 600; color: #236B48;">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Hình thức thu hồi hàng *</label>
+                            <select class="admin-select" id="selectResolveRmaPickup">
+                                <option value="Bưu tá Pawpal / GHN tới tận nơi lấy hàng">Bưu tá Pawpal / GHN tới tận nơi lấy hàng</option>
+                                <option value="Khách hàng tự gửi bưu điện về kho">Khách hàng tự gửi bưu điện về kho</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group-item" style="margin-top: 10px;">
+                        <label class="form-label-clean">Kho tiếp nhận hàng hoàn</label>
+                        <select class="admin-select" id="selectResolveRmaWarehouse">
+                            <option value="Kho Pawpal Tân Bình (123 Hoàng Văn Thụ, Q. Tân Bình, TP.HCM)">Kho Pawpal Tân Bình (123 Hoàng Văn Thụ, Q. Tân Bình, TP.HCM)</option>
+                            <option value="Kho Pawpal Thủ Đức (45 Võ Văn Ngân, TP. Thủ Đức, TP.HCM)">Kho Pawpal Thủ Đức (45 Võ Văn Ngân, TP. Thủ Đức, TP.HCM)</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item" id="resolveRmaExchangeField" style="margin-top: 10px;">
+                        <label class="form-label-clean">Sản phẩm gửi bù mới *</label>
+                        <input type="text" class="admin-input" id="inputResolveRmaReplacement" placeholder="Ví dụ: Áo Ấm Mùa Đông Lót Lông Poodle (Size L)...">
+                    </div>
+                    <div class="form-group-item" id="resolveRmaRefundField" style="margin-top: 10px; display: none;">
+                        <label class="form-label-clean">Số tiền hoàn sau khi nhận hàng hoàn (VNĐ) *</label>
+                        <input type="number" class="admin-input" id="inputResolveRmaRefundAmount" placeholder="Ví dụ: 350000...">
+                    </div>
+                </div>
+
+                <!-- SUB-GROUP: LÀM LẠI DỊCH VỤ (REDO SERVICE) -->
+                <div id="groupResolveRedo" style="display: none; background: #F8FAF9; padding: 14px; border-radius: var(--admin-radius); margin-bottom: 14px;">
+                    <div style="font-size: 13px; font-weight: 600; color: #236B48; margin-bottom: 10px;">Đặt lịch hẹn chăm sóc bù (Chi phí 0đ)</div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Thời gian hẹn làm bù *</label>
+                            <input type="text" class="admin-input" id="inputResolveRedoTime" placeholder="Ví dụ: 09:30 - 30/09/2026">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Kỹ thuật viên chỉ định tiếp nhận *</label>
+                            <select class="admin-select" id="selectResolveRedoStaff">
+                                <option value="Trần Văn Hùng (Groomer trưởng)">Trần Văn Hùng (Groomer trưởng)</option>
+                                <option value="Lê Lệ Quyên (Quản lý chi nhánh)">Lê Lệ Quyên (Quản lý chi nhánh)</option>
+                                <option value="Nguyễn Văn A (Kỹ thuật viên cao cấp)">Nguyễn Văn A (Kỹ thuật viên cao cấp)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-GROUP: BỒI HOÀN PAWPOINT VÀ VOUCHER -->
+                <div id="groupResolveReward" style="display: none; background: #F8FAF9; padding: 14px; border-radius: var(--admin-radius); margin-bottom: 14px;">
+                    <div style="font-size: 13px; font-weight: 600; color: #236B48; margin-bottom: 10px;">Bồi hoàn Pawpoint và Voucher</div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Số điểm Pawpoint cộng bồi hoàn</label>
+                            <input type="number" class="admin-input" id="inputResolveRewardPoints" placeholder="Ví dụ: 200 (Tương đương 20.000đ)...">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Mã Voucher tặng kèm</label>
+                            <input type="text" class="admin-input" id="inputResolveRewardVoucher" placeholder="Ví dụ: PAWPALCARE50 - Giảm 50%...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-GROUP: HOÀN TIỀN (REFUND) -->
+                <div id="groupResolveRefund" style="display: none; background: #F8FAF9; padding: 14px; border-radius: var(--admin-radius); margin-bottom: 14px;">
+                    <div style="font-size: 13px; font-weight: 600; color: #236B48; margin-bottom: 10px;">Thông tin hoàn tiền</div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Số tiền hoàn (VNĐ) *</label>
+                            <input type="number" class="admin-input" id="inputResolveRefundAmount" placeholder="Ví dụ: 250000...">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Hình thức hoàn tiền *</label>
+                            <select class="admin-select" id="selectResolveRefundMethod">
+                                <option value="Chuyển khoản trực tiếp về số tài khoản khách hàng">Chuyển khoản trực tiếp về số tài khoản khách hàng</option>
+                                <option value="Hoàn vào ví điểm Pawpoint của khách hàng">Hoàn vào ví điểm Pawpoint của khách hàng</option>
+                                <option value="Hoàn tiền mặt trực tiếp tại quầy">Hoàn tiền mặt trực tiếp tại quầy</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group-item">
