@@ -224,7 +224,7 @@
                 else statusBadge = '<span class="admin-badge">Đã đóng</span>';
 
                 let priorityBadge = item.priority === 'high'
-                    ? '<span class="admin-badge" style="color: #DC2626; background: #FEE2E2; border-color: #FED8D8;">Cao</span>'
+                    ? '<span class="admin-badge badge-danger">Cao</span>'
                     : (item.priority === 'medium' ? '<span class="admin-badge badge-tier-gold">Trung bình</span>' : '<span class="admin-badge badge-neutral">Thấp</span>');
 
                 let rowClass = item.priority === 'high' ? 'row-alert-high' : '';
@@ -276,7 +276,7 @@
                 else statusBadge = '<span class="admin-badge">Đã đóng</span>';
 
                 let priorityBadge = item.priority === 'high'
-                    ? '<span class="admin-badge" style="color: #DC2626; background: #FEE2E2; border-color: #FED8D8;">Cao</span>'
+                    ? '<span class="admin-badge badge-danger">Cao</span>'
                     : '<span class="admin-badge badge-tier-gold">Trung bình</span>';
 
                 let rowClass = item.priority === 'high' ? 'row-alert-high' : '';

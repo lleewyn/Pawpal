@@ -449,65 +449,79 @@ textarea.admin-input,
     padding-right: 28px;
 }
 
-/* 3. HUY HIỆU TRẠNG THÁI & HẠNG THÀNH VIÊN (BADGES) */
+/* 3. HUY HIỆU TRẠNG THÁI & HẠNG THÀNH VIÊN (BADGES - MUTED PASTEL & NO BORDER) */
 .admin-badge {
     display: inline-flex;
     align-items: center;
-    padding: 3px 9px;
+    justify-content: center;
+    height: 24px;
+    padding: 0 9px;
     font-size: 12px;
-    font-weight: 600;
-    border-radius: 6px;
-    line-height: 1.3;
+    font-weight: 500;
+    border-radius: 9px !important;
+    line-height: 1;
     white-space: nowrap;
-    border: 1px solid transparent;
+    border: none !important;
 }
 
+/* Hạng thành viên */
 .badge-tier-gold {
-    background-color: #FEF3C7;
-    color: #92400E;
-    border-color: #FDF0B6;
+    background-color: #F7F1E6;
+    color: #7A5722;
 }
 
 .badge-tier-silver {
-    background-color: #F1F5F9;
-    color: #475569;
-    border-color: #E8EDF3;
+    background-color: #EEF2F1;
+    color: #4A5B55;
 }
 
 .badge-tier-diamond {
-    background-color: #E0F2FE;
-    color: #0369A1;
-    border-color: #CEECFD;
+    background-color: #EBF2F7;
+    color: #2B576E;
 }
 
+/* Trạng thái trung tính / Mặc định / Bản nháp */
 .badge-neutral {
-    background-color: #F3F4F6;
-    color: #4B5563;
-    border-color: #EAECEF;
+    background-color: #EEF3F0;
+    color: #3D5A4C;
 }
 
-.badge-success {
-    background-color: #DCFCE7;
-    color: #15803D;
-    border-color: #D1F9DF;
+/* Trạng thái tích cực: Hoạt động, Hoàn thành, Đã thanh toán, Đang làm việc */
+.badge-success,
+.badge-active,
+.badge-completed,
+.badge-paid,
+.badge-delivered {
+    background-color: #E6F2EB;
+    color: #1E5A3D;
 }
 
-.badge-danger {
-    background-color: #FEE2E2;
-    color: #B91C1C;
-    border-color: #FED8D8;
+/* Trạng thái chú ý / Chờ duyệt: Chờ xác nhận, Tạm dừng, Nghỉ phép, Chưa thanh toán */
+.badge-warning,
+.badge-leave,
+.badge-pending,
+.badge-unpaid {
+    background-color: #F7F2E9;
+    color: #7C5329;
 }
 
-.badge-warning {
-    background-color: #FEF3C7;
-    color: #B45309;
-    border-color: #FDEEB0;
+/* Trạng thái khẩn cấp / Hủy: Đã hủy, Nghỉ việc, Bị khóa, Không đạt, Cảnh báo */
+.badge-danger,
+.badge-resigned,
+.badge-cancelled,
+.badge-alert {
+    background-color: #FBF0F0;
+    color: #993535;
 }
 
-.badge-info {
-    background-color: #E0E7FF;
-    color: #4338CA;
-    border-color: #D7DDFF;
+/* Trạng thái tiến trình / Thông tin: Đang thực hiện, Đang giao, Đã xác nhận, Tạm nghỉ */
+.badge-info,
+.badge-shipping,
+.badge-confirmed,
+.badge-in-progress,
+.badge-pause {
+    background-color: #EBF2F6;
+    color: #2E5568;
 }
 
 /* 4. THẺ KHUNG (CARDS) */

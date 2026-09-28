@@ -781,6 +781,48 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
+}
+
+.pet-card-head-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.pet-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-pet-action {
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: var(--admin-radius);
+    text-decoration: none;
+}
+
+.btn-pet-edit {
+    color: var(--admin-primary);
+}
+
+.btn-pet-edit:hover {
+    background-color: #EEF5F1;
+}
+
+.btn-pet-delete {
+    color: #DC2626;
+}
+
+.btn-pet-delete:hover {
+    background-color: #FEE2E2;
 }
 
 .pet-card-name {

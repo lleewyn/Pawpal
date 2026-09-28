@@ -358,10 +358,10 @@
     border-radius: var(--admin-radius);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    padding: 24px 28px;
+    padding: 20px 24px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 14px;
 }
 
 .profile-quick-actions-bar {
@@ -369,8 +369,8 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 16px;
-    padding-bottom: 16px;
+    gap: 14px;
+    padding-bottom: 4px;
 }
 
 .drawer-user-headline {
@@ -427,7 +427,7 @@
 
 /* BANNER CẢNH BÁO AN TOÀN KHẨN CẤP (DÒNG CHỮ ĐỎ THUẦN, KHÔNG KHUNG) */
 .emergency-alert-banner {
-    padding: 4px 0;
+    padding: 2px 0;
     background: transparent;
     border: none;
 }
@@ -447,7 +447,7 @@
     gap: 16px;
     flex-wrap: wrap;
     border-bottom: none;
-    padding-bottom: 2px;
+    padding-bottom: 0;
 }
 
 .drawer-subtabs-bar {
@@ -501,7 +501,7 @@
 
 /* NỘI DUNG CÁC TAB CON */
 .drawer-tab-body {
-    padding-top: 10px;
+    padding-top: 4px;
 }
 
 .drawer-tab-panel {
@@ -780,7 +780,6 @@
 .queue-card-item {
     border: none;
     border-bottom: 1px solid var(--border-neutral);
-    border-left: 3px solid transparent;
     padding: 12px 14px;
     background-color: transparent;
     cursor: pointer;
@@ -799,8 +798,7 @@
 }
 
 .queue-card-item.active {
-    border-left: 3px solid #236B48;
-    background-color: #F4FAF6;
+    background-color: #EBF5EF;
 }
 
 .queue-card-head {

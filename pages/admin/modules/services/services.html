@@ -196,7 +196,10 @@
 
                     <!-- KHỐI 2: KHÁCH HÀNG VÀ THÚ CƯNG -->
                     <div class="detail-info-group">
-                        <div class="detail-section-title">Khách hàng và Thú cưng</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div class="detail-section-title" style="margin-bottom: 0;">Khách hàng và Thú cưng</div>
+                            <button type="button" class="btn-text-action" id="btnEditIntakeInfo">Sửa thông tin tiếp nhận</button>
+                        </div>
                         <div class="info-grid-2col">
                             <div class="info-pair">
                                 <span class="info-label">Chủ nuôi:</span>
@@ -215,7 +218,7 @@
                                 <span class="info-value" id="detailPetBreed">Mèo Anh Lông Ngắn</span>
                             </div>
                             <div class="info-pair">
-                                <span class="info-label">Cân nặng:</span>
+                                <span class="info-label">Cân nặng tiếp nhận:</span>
                                 <span class="info-value" id="detailPetWeight">4.2 kg</span>
                             </div>
                             <div class="info-pair">
@@ -223,26 +226,43 @@
                                 <span class="info-value" id="detailPetAge">2 tuổi</span>
                             </div>
                         </div>
+                        <div class="info-pair" style="margin-top: 10px;">
+                            <span class="info-label">Đồ dùng và Phụ kiện gửi lại quầy:</span>
+                            <span class="info-value" id="detailBelongingsText" style="font-weight: 400;">Không có</span>
+                        </div>
                     </div>
 
                     <!-- KHỐI 3: THANH TOÁN VÀ CHI PHÍ -->
                     <div class="detail-info-group">
-                        <div class="detail-section-title">Bảng kê chi phí</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div class="detail-section-title" style="margin-bottom: 0;">Bảng kê chi phí và Dịch vụ đi cùng</div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <button type="button" class="btn-text-action" id="btnOpenAddAccompanyingServiceModal">+ Thêm dịch vụ đi cùng</button>
+                                <button type="button" class="btn-text-action" id="btnOpenAddSurchargeModal">+ Thêm phụ phí</button>
+                            </div>
+                        </div>
                         <div class="financial-summary-list">
                             <div class="summary-row">
-                                <span>Giá dịch vụ tiêu chuẩn:</span>
-                                <span id="detailCostBase">250.000 đ</span>
+                                <span style="font-weight: 500;">Giá gói dịch vụ chính:</span>
+                                <span id="detailCostBase" style="font-weight: 600;">250.000 đ</span>
                             </div>
-                            <div class="summary-row">
-                                <span>Phụ phí và Add-on:</span>
-                                <span id="detailCostAddon">0 đ</span>
+
+                            <!-- DANH SÁCH DỊCH VỤ ĐI CÙNG (ACCOMPANYING SERVICES) -->
+                            <div class="accompanying-services-list" id="detailAccompanyingServicesList">
+                                <!-- Nạp động danh sách các gói dịch vụ ghép thêm kèm giá và nút xóa -->
                             </div>
-                            <div class="summary-row">
-                                <span>Giảm giá thành viên / Ưu đãi:</span>
+
+                            <!-- DANH SÁCH CHI TIẾT TỪNG PHỤ PHÍ / ADD-ON PHÁT SINH -->
+                            <div class="surcharge-itemized-list" id="detailSurchargeBreakdownList">
+                                <!-- Nạp động danh sách từng món phụ phí kèm lý do, giá và nút xóa -->
+                            </div>
+
+                            <div class="summary-row" id="rowDiscountDisplay" style="color: #15803D;">
+                                <span>Giảm giá ưu đãi:</span>
                                 <span id="detailCostDiscount">-0 đ</span>
                             </div>
                             <div class="summary-row total-row">
-                                <span>Tổng cộng:</span>
+                                <span>Tổng cộng thanh toán:</span>
                                 <span id="detailCostTotal">250.000 đ</span>
                             </div>
                         </div>
@@ -256,13 +276,21 @@
                 <!-- CỘT PHẢI: NHẬT KÝ CHĂM SÓC (CARE-LOG TIMELINE) -->
                 <div class="detail-column-right">
                     <div class="detail-info-group">
-                        <div class="detail-section-title">Nhật ký chăm sóc (Care-Log)</div>
-                        <div class="carelog-hint-text">Cập nhật tiến trình thực hiện ca dịch vụ để chủ nuôi theo dõi thời gian thực.</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <div class="detail-section-title" style="margin-bottom: 0;">Nhật ký chăm sóc (Care-Log)</div>
+                            <button type="button" class="btn-text-action" id="btnShareCarelogLink">Chia sẻ cho khách</button>
+                        </div>
+                        <div class="carelog-hint-text">Cập nhật tiến trình và hình ảnh thực tế để chủ nuôi theo dõi theo thời gian thực.</div>
                         <div class="carelog-timeline-list" id="detailCarelogList">
                             <!-- Nạp động theo trạng thái hoặc loại dịch vụ -->
                         </div>
 
-                        <!-- KHU VỰC THÊM BƯỚC NHẬT KÝ THỜI GIAN THỰC -->
+                        <!-- THÔNG BÁO KHÓA GHI NHẬT KÝ THEO TRẠNG THÁI CA -->
+                        <div class="carelog-lock-notice" id="carelogLockNotice" style="display: none;">
+                            <!-- Nạp động thông báo theo trạng thái ca -->
+                        </div>
+
+                        <!-- KHU VỰC THÊM BƯỚC NHẬT KÝ THỜI GIAN THỰC (CHỈ MỞ KHI ĐANG THỰC HIỆN) -->
                         <div class="carelog-quick-add" id="carelogQuickAddBox">
                             <div class="carelog-add-title">Cập nhật bước mới:</div>
                             <div class="form-row-2col">
@@ -270,7 +298,18 @@
                                 <input type="text" class="admin-input" id="newLogStepStaff" placeholder="Người thực hiện...">
                             </div>
                             <input type="text" class="admin-input" id="newLogStepNote" placeholder="Ghi chú chi tiết cho chủ nuôi...">
-                            <div style="text-align: right;">
+                            
+                            <!-- ĐÍNH KÈM HÌNH ẢNH MINH CHỨNG THỰC TẾ -->
+                            <div class="carelog-image-upload-wrapper">
+                                <input type="file" id="carelogImageFileInput" accept="image/*" multiple style="display: none;">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <button type="button" class="btn-text-action" id="btnTriggerCarelogImageUpload">+ Đính kèm ảnh thực tế</button>
+                                    <span id="carelogImageCountText" style="font-size: 11.5px; color: var(--text-muted);">0 ảnh đã chọn</span>
+                                </div>
+                                <div class="carelog-image-preview-strip" id="carelogImagePreviewStrip" style="display: none;"></div>
+                            </div>
+
+                            <div style="text-align: right; margin-top: 4px;">
                                 <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitCarelogStep">+ Ghi nhật ký</button>
                             </div>
                         </div>
@@ -285,7 +324,7 @@
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-service-catalog">
         <div class="admin-card service-master-card">
-            <!-- THANH TABS 3 NHÓM DỊCH VỤ -->
+            <!-- THANH TABS 3 NHÓM DỊCH VỤ VÀ BỘ LỌC TÌM KIẾM DANH MỤC -->
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
                     <div class="catalog-nav-tabs">
@@ -295,6 +334,19 @@
                     </div>
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateServiceModal">+ Thêm dịch vụ</button>
+                    </div>
+                </div>
+                <div class="filter-row-bottom">
+                    <div class="search-box-wrapper" style="max-width: 360px;">
+                        <input type="text" class="admin-input" id="catalogSearchInput" placeholder="Tìm theo mã hoặc tên dịch vụ...">
+                    </div>
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Trạng thái:</label>
+                        <select class="admin-select" id="catalogFilterStatus">
+                            <option value="ALL">Tất cả trạng thái</option>
+                            <option value="Đang phục vụ">Đang phục vụ</option>
+                            <option value="Tạm ẩn">Tạm ẩn</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -318,6 +370,95 @@
                     </thead>
                     <tbody id="servicesCatalogTableBody">
                         <!-- Nạp động từ CSV dichvu.csv -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         SUB-TAB 4: ĐÁNH GIÁ VÀ PHẢN HỒI DỊCH VỤ (REVIEW MANAGEMENT)
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-service-reviews">
+        <!-- 4 THẺ THỐNG KÊ KPI ĐÁNH GIÁ -->
+        <div class="services-kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="admin-card kpi-card kpi-card-clickable" data-review-filter="ALL">
+                <span class="kpi-label">Điểm đánh giá trung bình</span>
+                <span class="kpi-val" id="statAvgRating" style="color: #B45309;">4.8 ★</span>
+            </div>
+            <div class="admin-card kpi-card kpi-card-clickable" data-review-filter="ALL">
+                <span class="kpi-label">Tổng lượt đánh giá</span>
+                <span class="kpi-val" id="statTotalReviews">4</span>
+            </div>
+            <div class="admin-card kpi-card kpi-card-clickable" data-review-filter="pending">
+                <span class="kpi-label">Chưa phản hồi</span>
+                <span class="kpi-val text-warning" id="statPendingReviews">2</span>
+            </div>
+            <div class="admin-card kpi-card kpi-card-clickable" data-review-filter="low_rating">
+                <span class="kpi-label">Cảnh báo (1-3 sao)</span>
+                <span class="kpi-val text-danger" id="statLowRatingReviews">1</span>
+            </div>
+        </div>
+
+        <!-- KHỐI BẢNG ĐÁNH GIÁ -->
+        <div class="admin-card service-master-card">
+            <div class="table-toolbar-section">
+                <div class="filter-row-top">
+                    <div class="search-box-wrapper">
+                        <input type="text" class="admin-input" id="reviewSearchInput" placeholder="Tìm tên khách, số điện thoại, mã ca, từ khóa đánh giá...">
+                    </div>
+                    <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnExportReviewReport">Xuất file báo cáo</button>
+                    </div>
+                </div>
+                <div class="filter-row-bottom">
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Mức sao:</label>
+                        <select class="admin-select" id="reviewFilterStar">
+                            <option value="ALL">Tất cả sao</option>
+                            <option value="5">5 sao (Xuất sắc)</option>
+                            <option value="4">4 sao (Tốt)</option>
+                            <option value="3">3 sao (Trung bình)</option>
+                            <option value="LOW">1-2 sao (Cần xử lý)</option>
+                        </select>
+                    </div>
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Nhóm dịch vụ:</label>
+                        <select class="admin-select" id="reviewFilterCategory">
+                            <option value="ALL">Tất cả dịch vụ</option>
+                            <option value="Spa">Spa và Grooming</option>
+                            <option value="Hotel">Pet Hotel</option>
+                            <option value="Taxi">Pet Taxi</option>
+                        </select>
+                    </div>
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Phản hồi:</label>
+                        <select class="admin-select" id="reviewFilterStatus">
+                            <option value="ALL">Tất cả</option>
+                            <option value="pending">Chưa phản hồi</option>
+                            <option value="replied">Đã phản hồi</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BẢNG DỮ LIỆU ĐÁNH GIÁ -->
+            <div class="table-responsive-wrapper">
+                <table class="admin-table" id="servicesReviewTable">
+                    <thead>
+                        <tr>
+                            <th>Mã lịch hẹn</th>
+                            <th>Khách hàng</th>
+                            <th>Dịch vụ sử dụng</th>
+                            <th>Điểm sao</th>
+                            <th>Nội dung đánh giá</th>
+                            <th>KTV phụ trách</th>
+                            <th>Trạng thái</th>
+                            <th style="text-align: center; width: 90px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="servicesReviewTableBody">
+                        <!-- Nạp động từ services.js -->
                     </tbody>
                 </table>
             </div>
@@ -481,6 +622,20 @@
                     <label class="form-label-clean">Mô tả dịch vụ chi tiết:</label>
                     <textarea class="admin-input" id="formServiceDesc" style="height: 65px; padding: 8px 14px;" placeholder="Mô tả lợi ích và trải nghiệm cho bé..."></textarea>
                 </div>
+
+                <!-- CẤU HÌNH CÁC BƯỚC QUY TRÌNH CHĂM SÓC CHUẨN (CARE-LOG SOP TEMPLATE) -->
+                <div class="form-group-item">
+                    <label class="form-label-clean">Quy trình các bước chăm sóc chuẩn (Care-log SOP):</label>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Các bước này sẽ tự động khởi tạo vào Nhật ký ca khi khách đặt lịch dịch vụ này.</div>
+                    <div class="service-steps-config-box" id="serviceStepsListContainer">
+                        <!-- Nạp động danh sách các bước chuẩn -->
+                    </div>
+                    <div class="add-step-input-row" style="display: flex; gap: 8px; margin-top: 6px;">
+                        <input type="text" class="admin-input" id="newServiceStepInput" placeholder="Nhập tên bước tiếp theo (VD: Tắm xả mượt lông, Sấy tạo phồng...)...">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnAddStepToService" style="white-space: nowrap; flex-shrink: 0;">+ Thêm bước</button>
+                    </div>
+                </div>
+
                 <div class="form-row-2col">
                     <div class="form-group-item">
                         <label class="form-label-clean">Cấp độ KTV thực hiện:</label>
@@ -543,12 +698,249 @@
         </div>
     </div>
 
+    <!-- ====================================================================
+         MODAL 4: PHẢN HỒI VÀ XỬ LÝ ĐÁNH GIÁ CỦA KHÁCH HÀNG
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalReplyReview">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Phản hồi đánh giá dịch vụ</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseReplyReview">Đóng</button>
+            </div>
+            <form id="formReplyReview" class="modal-body-clean">
+                <input type="hidden" id="replyReviewIdHidden">
+                <div class="form-group-item" style="background-color: #F8FAF9; padding: 12px 14px; border-radius: var(--admin-radius);">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-heading);" id="reviewModalHeaderMeta">Lệ Quyên • BKG-1002 • ★★★★★ (5/5)</div>
+                    <div style="font-size: 13px; color: var(--text-main); margin-top: 4px;" id="reviewModalCustomerComment">"Tỉa tròn mặt Boo cực kỳ xinh xắn, nhân viên tận tình."</div>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Nội dung phản hồi từ PawPal Admin:</label>
+                    <textarea class="admin-input" id="replyContentText" style="height: 90px; padding: 10px 14px;" placeholder="Nhập câu trả lời lịch sự, chu đáo gửi tới khách hàng..." required></textarea>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Gửi kèm quà tặng đền bù / tri ân (nếu có):</label>
+                    <select class="admin-select" id="replyVoucherSelect">
+                        <option value="NONE">Không gửi kèm voucher</option>
+                        <option value="VOUCHER_50K">Tặng Voucher 50.000 đ (Ưu đãi ca sau)</option>
+                        <option value="VOUCHER_100K">Tặng Voucher 100.000 đ (Đền bù trải nghiệm)</option>
+                        <option value="VOUCHER_FREE_BATH">Tặng 01 Lượt Tắm Vệ Sinh Miễn Phí</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelReplyReview">Hủy bỏ</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Gửi phản hồi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- ====================================================================
+         MODAL 5: THÊM PHỤ PHÍ VÀ DỊCH VỤ PHÁT SINH TRONG CA
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalAddSurcharge">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Thêm phụ phí và Dịch vụ phát sinh</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseAddSurcharge">Đóng</button>
+            </div>
+            <form id="formAddSurcharge" class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Chọn danh mục phụ phí phát sinh:</label>
+                    <select class="admin-select" id="surchargePresetSelect">
+                        <option value="CUSTOM">-- Tự nhập loại phụ phí khác --</option>
+                        <option value="Phụ phí gỡ rối lông bết nặng|50000">Phụ phí gỡ rối lông bết nặng (+50.000 đ)</option>
+                        <option value="Vệ sinh tai nấm và viêm chuyên sâu|40000">Vệ sinh tai nấm và viêm chuyên sâu (+40.000 đ)</option>
+                        <option value="Nhỏ thuốc trị ve rận Frontline|80000">Nhỏ thuốc trị ve rận Frontline (+80.000 đ)</option>
+                        <option value="Tắm bùn khoáng phục hồi da lông|100000">Tắm bùn khoáng phục hồi da lông (+100.000 đ)</option>
+                        <option value="Cạo lông theo chỉ định da liễu|60000">Cạo lông theo chỉ định da liễu (+60.000 đ)</option>
+                        <option value="Khách sạn: Quá giờ trả phòng|50000">Khách sạn: Quá giờ trả phòng (+50.000 đ/giờ)</option>
+                        <option value="Khách sạn: Thêm bữa ăn tươi tự chọn|35000">Khách sạn: Thêm bữa ăn tươi tự chọn (+35.000 đ)</option>
+                    </select>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Tên phụ phí / dịch vụ:</label>
+                        <input type="text" class="admin-input" id="surchargeNameInput" placeholder="VD: Gỡ rối lông bết nặng..." required>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Số tiền phụ thu (VNĐ):</label>
+                        <input type="number" class="admin-input" id="surchargeAmountInput" placeholder="50000" min="0" step="1000" required>
+                    </div>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Lý do và Mô tả hiện trạng phát sinh:</label>
+                    <textarea class="admin-input" id="surchargeReasonInput" style="height: 65px; padding: 8px 14px;" placeholder="Ví dụ: Vùng lông sau tai và ngực bị bết cứng, cần gỡ rối 20 phút trước khi tắm..." required></textarea>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Hình thức xác nhận với chủ nuôi:</label>
+                    <select class="admin-select" id="surchargeConsentSelect">
+                        <option value="Đã gọi điện thoại xin ý kiến khách">Đã gọi điện thoại xin ý kiến khách</option>
+                        <option value="Đã gửi ảnh và video qua Zalo cho khách">Đã gửi ảnh và video qua Zalo cho khách</option>
+                        <option value="Khách hàng yêu cầu trực tiếp tại quầy">Khách hàng yêu cầu trực tiếp tại quầy</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAddSurcharge">Hủy bỏ</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Lưu phụ phí</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 6: XEM ẢNH NHẬT KÝ CHĂM SÓC PHÓNG TO (PHOTO LIGHTBOX)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalCarelogPhotoPreview">
+        <div class="admin-modal-card" style="width: 640px; text-align: center;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean" id="previewPhotoModalTitle">Ảnh nhật ký chăm sóc</div>
+                <button type="button" class="modal-btn-close-text" id="btnClosePhotoPreview">Đóng</button>
+            </div>
+            <div class="modal-body-clean" style="align-items: center; padding: 10px 0;">
+                <img id="previewPhotoModalImg" src="" alt="Ảnh chăm sóc thú cưng" style="max-width: 100%; max-height: 480px; object-fit: contain; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral); background-color: #F8FAF9;">
+                <div id="previewPhotoModalCaption" style="font-size: 13px; color: var(--text-muted); margin-top: 8px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 7: THÊM DỊCH VỤ ĐI CÙNG VÀO CA (ACCOMPANYING SERVICE)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalAddAccompanyingService">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Thêm dịch vụ đi cùng vào ca</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseAddAccompanying">Đóng</button>
+            </div>
+            <form id="formAddAccompanyingService" class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Chọn phân nhóm dịch vụ:</label>
+                    <select class="admin-select" id="accompanyingCategorySelect">
+                        <option value="ALL">-- Tất cả phân nhóm dịch vụ --</option>
+                        <option value="spa">Spa và Grooming</option>
+                        <option value="hotel">Pet Hotel (Lưu trú)</option>
+                        <option value="taxi">Pet Taxi (Xe đưa đón)</option>
+                    </select>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Chọn gói dịch vụ đi cùng:</label>
+                    <select class="admin-select" id="accompanyingServiceItemSelect" required>
+                        <!-- Nạp động từ servicesData -->
+                    </select>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Giá dịch vụ (VNĐ):</label>
+                        <input type="number" class="admin-input" id="accompanyingPriceInput" min="0" step="1000" required>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Kỹ thuật viên thực hiện:</label>
+                        <input type="text" class="admin-input" id="accompanyingStaffInput" placeholder="VD: Hoàng Nam, Thu Thảo...">
+                    </div>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Ghi chú yêu cầu riêng của khách:</label>
+                    <textarea class="admin-input" id="accompanyingNoteInput" style="height: 60px; padding: 8px 14px;" placeholder="Ví dụ: Cắt tỉa mặt tròn Boo, đưa đón về lúc 17h00..."></textarea>
+                </div>
+
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAddAccompanying">Hủy bỏ</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Lưu dịch vụ đi cùng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 8: PHIẾU TIẾP NHẬN / SỬA THÔNG TIN TIẾP NHẬN TẠI QUẦY
+         ==================================================================== -->
+    <input type="hidden" id="intakeModalMode" value="edit">
+    <div class="admin-modal-overlay" id="modalEditIntakeInfo">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean" id="intakeModalTitle">Cập nhật thông tin tiếp nhận bé</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseEditIntakeInfo">Đóng</button>
+            </div>
+            <form id="formEditIntakeInfo" class="modal-body-clean">
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Cân nặng đo tại quầy (kg):</label>
+                        <input type="text" class="admin-input" id="intakePetWeightInput" placeholder="VD: 4.5 kg" required>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Tuổi của bé:</label>
+                        <input type="text" class="admin-input" id="intakePetAgeInput" placeholder="VD: 2 tuổi">
+                    </div>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Đồ dùng và Phụ kiện gửi lại quầy:</label>
+                    <textarea class="admin-input" id="intakeBelongingsInput" style="height: 65px; padding: 8px 14px;" placeholder="Ví dụ: 01 Dây dắt đỏ, 01 Chuồng vận chuyển nhựa, 01 Túi hạt cá hồi..."></textarea>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Ghi chú hiện trạng sức khỏe / an toàn:</label>
+                    <textarea class="admin-input" id="intakePetAlertInput" style="height: 65px; padding: 8px 14px;" placeholder="Ví dụ: Bé nhát nước, tai có mảng viêm đỏ..."></textarea>
+                </div>
+
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelEditIntakeInfo">Hủy bỏ</button>
+                    <button type="submit" class="admin-btn admin-btn-primary" id="intakeModalSubmitBtn">Lưu thông tin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- DROPDOWN THAO TÁC 3 CHẤM (TEXT-ONLY) -->
     <div class="action-dropdown-menu" id="servicesActionDropdown" style="display: none;">
         <button type="button" class="action-menu-item" id="menuActionViewDetail">Xem chi tiết lịch hẹn</button>
         <button type="button" class="action-menu-item" id="menuActionConfirm">Xác nhận lịch hẹn</button>
-        <button type="button" class="action-menu-item" id="menuActionStart">Bắt đầu dịch vụ</button>
+        <button type="button" class="action-menu-item" id="menuActionIntake">Tiếp nhận bé</button>
         <button type="button" class="action-menu-item" id="menuActionComplete">Hoàn thành dịch vụ</button>
         <button type="button" class="action-menu-item danger-item" id="menuActionCancel">Hủy lịch hẹn</button>
     </div>
+
+    <!-- ====================================================================
+         MODAL 9: ĐỔI KỸ THUẬT VIÊN (CHANGE STAFF)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalChangeStaff">
+        <div class="admin-modal-card" style="width: 420px;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Đổi Kỹ thuật viên phụ trách</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseChangeStaff">Đóng</button>
+            </div>
+            <form id="formChangeStaff" class="modal-body-clean">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Chọn Kỹ thuật viên mới:</label>
+                    <select class="admin-select" id="changeStaffSelect" required>
+                        <option value="">-- Chọn KTV --</option>
+                        <option value="Ngọc Anh">Ngọc Anh</option>
+                        <option value="Thu Thảo">Thu Thảo</option>
+                        <option value="Hoàng Nam">Hoàng Nam</option>
+                        <option value="Hữu Phúc">Hữu Phúc</option>
+                        <option value="Minh Tú">Minh Tú</option>
+                        <option value="Bảo Châu">Bảo Châu</option>
+                    </select>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Lý do đổi KTV (tùy chọn):</label>
+                    <input type="text" class="admin-input" id="changeStaffReasonInput" placeholder="VD: KTV Ngọc Anh bận lịch khác, điều phối lại...">
+                </div>
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelChangeStaff">Hủy bỏ</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Xác nhận đổi KTV</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>

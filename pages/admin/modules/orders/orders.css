@@ -298,76 +298,69 @@
     color: var(--text-main);
 }
 
-/* HUY HIỆU TRẠNG THÁI */
+/* HUY HIỆU TRẠNG THÁI (MUTED PASTEL & NO BORDER) */
 .admin-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: var(--admin-radius);
-    font-size: 11.5px;
-    font-weight: 600;
-    line-height: 1.2;
-    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 9px !important;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+    border: none !important;
     white-space: nowrap;
 }
 
 .badge-pending {
-    background-color: #FEF3C7;
-    color: #92400E;
-    border-color: #FDEEB0;
+    background-color: #F7F2E9;
+    color: #7C5329;
 }
 
 .badge-confirmed {
-    background-color: #E0E7FF;
-    color: #3730A3;
-    border-color: #C7D2FE;
+    background-color: #EBF2F6;
+    color: #2E5568;
 }
 
 .badge-shipping {
-    background-color: #E0F2FE;
-    color: #0369A1;
-    border-color: #BAE6FD;
+    background-color: #EBF2F6;
+    color: #2E5568;
 }
 
 .badge-delivered {
-    background-color: #D1FAE5;
-    color: #065F46;
-    border-color: #A7F3D0;
+    background-color: #E6F2EB;
+    color: #1E5A3D;
 }
 
 .badge-completed {
-    background-color: #D1F9DF;
-    color: #166534;
-    border-color: #B4F4CA;
+    background-color: #E6F2EB;
+    color: #1E5A3D;
 }
 
 .badge-cancelled {
-    background-color: #FEE2E2;
-    color: #991B1B;
-    border-color: #FED8D8;
+    background-color: #FBF0F0;
+    color: #993535;
 }
 
 .badge-paid {
-    background-color: #ECFDF5;
-    color: #065F46;
-    border-color: #D1FAE5;
+    background-color: #E6F2EB;
+    color: #1E5A3D;
 }
 
 .badge-unpaid {
-    background-color: #FFFBEB;
-    color: #B45309;
-    border-color: #FEF3C7;
+    background-color: #F7F2E9;
+    color: #7C5329;
 }
 
 .badge-alert {
-    background-color: #FEE2E2;
-    color: #DC2626;
-    border-color: #FED8D8;
+    background-color: #FBF0F0;
+    color: #993535;
 }
 
 .badge-warning {
-    background-color: #FEF3C7;
-    color: #D97706;
-    border-color: #FDEEB0;
+    background-color: #F7F2E9;
+    color: #7C5329;
 }
 
 /* NÚT THAO TÁC 3 CHẤM TEXT */

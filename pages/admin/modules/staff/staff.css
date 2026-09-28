@@ -156,29 +156,43 @@
     background-color: #F2F7F4;
 }
 
-/* BADGE TRẠNG THÁI (MỜ, KHÔNG KHUNG CỨNG) */
+/* BADGE TRẠNG THÁI (MUTED PASTEL, NO BORDER & RADIUS 9PX) */
+.admin-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 9px !important;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+    border: none !important;
+    white-space: nowrap;
+}
+
 .badge-active {
-    background-color: #D1F9DF;
-    color: #166534;
-    border-color: #B4F4CA;
+    background-color: #E6F2EB;
+    color: #1E5A3D;
+    border: none !important;
 }
 
 .badge-leave {
-    background-color: #FEF3C7;
-    color: #D97706;
-    border-color: #FDEEB0;
+    background-color: #F7F2E9;
+    color: #7C5329;
+    border: none !important;
 }
 
 .badge-pause {
-    background-color: #F3F4F6;
-    color: #4B5563;
-    border-color: #E5E7EB;
+    background-color: #EBF2F6;
+    color: #2E5568;
+    border: none !important;
 }
 
 .badge-resigned {
-    background-color: #FEE2E2;
-    color: #991B1B;
-    border-color: #FED8D8;
+    background-color: #FBF0F0;
+    color: #993535;
+    border: none !important;
 }
 
 /* DROPDOWN 3 CHẤM (TEXT ONLY) */

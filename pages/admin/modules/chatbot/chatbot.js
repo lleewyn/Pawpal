@@ -322,7 +322,7 @@
 
             let sentimentBadge = '';
             if (conv.sentimentLevel >= 4) {
-                sentimentBadge = `<span class="admin-badge" style="color: #DC2626; background: #FEE2E2; border-color: #FED8D8; font-size: 10.5px;">Cảm xúc ${conv.sentimentLevel}</span>`;
+                sentimentBadge = `<span class="admin-badge badge-danger" style="font-size: 10.5px;">Cảm xúc ${conv.sentimentLevel}</span>`;
             } else if (conv.sentimentLevel === 3) {
                 sentimentBadge = `<span class="admin-badge badge-warning" style="font-size: 10.5px;">Cảm xúc 3</span>`;
             } else {
@@ -383,12 +383,13 @@
 
         if (sentimentBadgeEl) {
             sentimentBadgeEl.textContent = currentConversation.sentimentText;
+            sentimentBadgeEl.style.cssText = '';
             if (currentConversation.sentimentLevel >= 4) {
-                sentimentBadgeEl.style.cssText = 'color: #DC2626; background: #FEE2E2; border-color: #FED8D8;';
+                sentimentBadgeEl.className = 'admin-badge badge-danger';
             } else if (currentConversation.sentimentLevel === 3) {
-                sentimentBadgeEl.style.cssText = 'color: #B45309; background: #FEF3C7; border-color: #FDEEB0;';
+                sentimentBadgeEl.className = 'admin-badge badge-warning';
             } else {
-                sentimentBadgeEl.style.cssText = 'color: #166534; background: #D1F9DF; border-color: #C3DEC7;';
+                sentimentBadgeEl.className = 'admin-badge badge-active';
             }
         }
 
@@ -424,7 +425,7 @@
                 let senderBadge = '';
                 if (msg.sender === 'user') {
                     authorText = currentConversation.customerName;
-                    senderBadge = '<span class="admin-badge" style="color: #1D4ED8; background: #E0EEFD; border-color: #D0E3F8; font-size: 11px; padding: 1px 6px;">Khách hàng</span>';
+                    senderBadge = '<span class="admin-badge badge-info" style="font-size: 11px; padding: 1px 6px;">Khách hàng</span>';
                 } else if (msg.sender === 'bot') {
                     authorText = 'PawPal Bot';
                     senderBadge = '<span class="admin-badge badge-neutral" style="font-size: 11px; padding: 1px 6px;">AI tự động</span>';

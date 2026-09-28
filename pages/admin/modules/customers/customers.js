@@ -21,6 +21,227 @@
             `;
         }
 
+        // ====================================================================
+        // DATA STORE MÔ PHỎNG CHI TIẾT THEO TỪNG KHÁCH HÀNG (CÁ NHÂN, PET, ĐƠN, LỊCH, KHIẾU NẠI)
+        // ====================================================================
+        const customerDatabase = {
+            'CUST-001': {
+                id: 'CUST-001',
+                name: 'Nguyễn Văn An',
+                phone: '0912345678',
+                email: 'an.nguyen@email.com',
+                gender: 'Nam',
+                dob: '15/08/1992',
+                tier: 'GOLD',
+                tierName: 'Vàng',
+                tierBadgeClass: 'badge-tier-gold',
+                points: 1250,
+                status: 'ACTIVE',
+                authStatus: 'Đã kích hoạt',
+                note: 'Khách hàng thân thiết từ 2024. Rất yêu quý bé Lu (Poodle). Khách yêu cầu thợ cắt tỉa nhẹ nhàng, không xịt nước hoa nồng.',
+                emergencyAlert: 'Khách hàng đang có vé khiếu nại mức độ Cao chưa giải quyết (Mã: TK-008 - Bé Lu bị trầy móng chân). Cần giải quyết dứt điểm trước khi nhận giao dịch mới!',
+                addresses: [
+                    { address: '120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP.HCM', isDefault: true },
+                    { address: 'Toà nhà Bitexco, 2 Hải Triều, Bến Nghé, Quận 1, TP.HCM', isDefault: false }
+                ],
+                pets: [
+                    {
+                        id: 'PET-001',
+                        name: 'Bé Lu',
+                        species: 'Chó',
+                        breed: 'Poodle',
+                        weight: '4.5',
+                        vaccine: 'Sổ theo dõi tiêm phòng định kỳ đầy đủ (Chủ xuất trình tháng 8/2026)',
+                        alertNote: 'Cảnh báo: Dị ứng phấn hoa'
+                    }
+                ],
+                orders: [
+                    { id: 'ORD-8921', date: '25/09/2026', total: '450.000 đ', payment: 'Đã thanh toán', status: 'Đang giao', statusClass: 'badge-info' }
+                ],
+                bookings: [
+                    { id: 'AP-201', date: '27/09/2026 09:00', service: 'Spa Grooming và Cắt tỉa tạo kiểu', staff: 'Trần Hoàng (Thợ bậc 2)', status: 'Đang thực hiện', statusClass: 'badge-warning' }
+                ],
+                complaints: [
+                    { id: 'TK-008', date: '27/09/2026 10:15', issue: 'Bé Lu bị trầy móng sau buổi cắt tỉa', level: 'Cao', status: 'Đang xử lý', statusClass: 'badge-warning' }
+                ]
+            },
+            'CUST-002': {
+                id: 'CUST-002',
+                name: 'Lê Thị Bình',
+                phone: '0987654321',
+                email: 'binh.le@email.com',
+                gender: 'Nữ',
+                dob: '20/11/1995',
+                tier: 'SILVER',
+                tierName: 'Bạc',
+                tierBadgeClass: 'badge-tier-silver',
+                points: 420,
+                status: 'ACTIVE',
+                authStatus: 'Đã kích hoạt',
+                note: 'Khách cẩn thận, bé Miu rất nhát người lạ nên ưu tiên nhân viên nữ chăm sóc.',
+                emergencyAlert: null,
+                addresses: [
+                    { address: '45 Lê Duẩn, Phường Bến Nghé, Quận 1, TP.HCM', isDefault: true }
+                ],
+                pets: [
+                    {
+                        id: 'PET-002',
+                        name: 'Bé Miu',
+                        species: 'Mèo',
+                        breed: 'Mèo Anh lông ngắn',
+                        weight: '3.8',
+                        vaccine: 'Đã tiêm phòng 4 bệnh mèo mũi nhắc lại 2026',
+                        alertNote: 'Dị ứng sữa tắm hoa hồng'
+                    }
+                ],
+                orders: [
+                    { id: 'ORD-8920', date: '25/09/2026', total: '420.000 đ', payment: 'Đã thanh toán', status: 'Hoàn tất', statusClass: 'badge-success' }
+                ],
+                bookings: [
+                    { id: 'AP-198', date: '24/09/2026 14:00', service: 'Tắm vệ sinh và cạo lông đệm chân', staff: 'Nguyễn Thị Hoa', status: 'Hoàn tất', statusClass: 'badge-success' }
+                ],
+                complaints: []
+            },
+            'CUST-003': {
+                id: 'CUST-003',
+                name: 'Trần Khách Vãng Lai',
+                phone: '0933221100',
+                email: 'Chưa cập nhật',
+                gender: 'Nam',
+                dob: '01/01/1990',
+                tier: 'BRONZE',
+                tierName: 'Đồng',
+                tierBadgeClass: 'badge-neutral',
+                points: 0,
+                status: 'TEMP',
+                authStatus: 'Chưa kích hoạt',
+                note: 'Khách ghé mua phụ kiện tại quầy, chưa tải app Pawpal.',
+                emergencyAlert: null,
+                addresses: [
+                    { address: 'Tiếp nhận trực tiếp tại quầy Pawpal Pet Center', isDefault: true }
+                ],
+                pets: [
+                    {
+                        id: 'PET-003',
+                        name: 'Bé Bông',
+                        species: 'Chó',
+                        breed: 'Corgi',
+                        weight: '6.2',
+                        vaccine: 'Chưa cập nhật',
+                        alertNote: 'Bình thường'
+                    }
+                ],
+                orders: [],
+                bookings: [],
+                complaints: []
+            },
+            'CUST-004': {
+                id: 'CUST-004',
+                name: 'Phạm Văn Vi Phạm',
+                phone: '0944556677',
+                email: 'pham.vipham@email.com',
+                gender: 'Nam',
+                dob: '12/03/1988',
+                tier: 'BRONZE',
+                tierName: 'Đồng',
+                tierBadgeClass: 'badge-neutral',
+                points: 50,
+                status: 'LOCKED',
+                authStatus: 'Tài khoản bị khóa',
+                note: 'Tạm khóa do có tranh chấp thanh toán đơn hàng.',
+                emergencyAlert: 'Tài khoản đang bị tạm khóa quản trị do tranh chấp thanh toán. Không thực hiện giao dịch ghi nợ!',
+                addresses: [
+                    { address: '88 Nguyễn Trãi, Phường 3, Quận 5, TP.HCM', isDefault: true }
+                ],
+                pets: [],
+                orders: [
+                    { id: 'ORD-8810', date: '10/09/2026', total: '1.250.000 đ', payment: 'Tranh chấp', status: 'Tạm giữ', statusClass: 'badge-warning' }
+                ],
+                bookings: [],
+                complaints: []
+            },
+            'CUST-005': {
+                id: 'CUST-005',
+                name: 'Hoàng Minh Tuấn',
+                phone: '0903112233',
+                email: 'tuan.hoang@email.com',
+                gender: 'Nam',
+                dob: '05/06/1985',
+                tier: 'GOLD',
+                tierName: 'Vàng',
+                tierBadgeClass: 'badge-tier-gold',
+                points: 1100,
+                status: 'ACTIVE',
+                authStatus: 'Đã kích hoạt',
+                note: 'Thường đặt gửi Pet Hotel phòng VIP vào cuối tuần.',
+                emergencyAlert: null,
+                addresses: [
+                    { address: '15 Thảo Điền, Phường Thảo Điền, TP. Thủ Đức', isDefault: true }
+                ],
+                pets: [
+                    {
+                        id: 'PET-005',
+                        name: 'Bé Max',
+                        species: 'Chó',
+                        breed: 'Golden Retriever',
+                        weight: '28.0',
+                        vaccine: 'Đầy đủ sổ tiêm dại và 7 bệnh',
+                        alertNote: 'Thân thiện, ham ăn'
+                    }
+                ],
+                orders: [
+                    { id: 'ORD-8902', date: '22/09/2026', total: '850.000 đ', payment: 'Đã thanh toán', status: 'Hoàn tất', statusClass: 'badge-success' }
+                ],
+                bookings: [
+                    { id: 'AP-180', date: '20/09/2026 10:00', service: 'Khách sạn thú cưng Room VIP', staff: 'Lê Văn Nam', status: 'Hoàn tất', statusClass: 'badge-success' }
+                ],
+                complaints: []
+            },
+            'CUST-007': {
+                id: 'CUST-007',
+                name: 'Vũ Đức Thắng',
+                phone: '0977889900',
+                email: 'thang.vu@email.com',
+                gender: 'Nam',
+                dob: '18/09/1982',
+                tier: 'DIAMOND',
+                tierName: 'Kim Cương',
+                tierBadgeClass: 'badge-tier-diamond',
+                points: 3420,
+                status: 'ACTIVE',
+                authStatus: 'Đã kích hoạt',
+                note: 'Khách hàng VIP Kim Cương. Thường xuyên sử dụng Pet Taxi đưa đón tận nơi.',
+                emergencyAlert: 'Khách hàng VIP đang có vé khiếu nại dịch vụ (Mã: TK-015 - Bé cưng bị trầy nhẹ sau spa). Quản lý cần theo dõi sát sao!',
+                addresses: [
+                    { address: 'Khu biệt thự Chateau, Phú Mỹ Hưng, Quận 7, TP.HCM', isDefault: true }
+                ],
+                pets: [
+                    {
+                        id: 'PET-007',
+                        name: 'Bé Sam',
+                        species: 'Chó',
+                        breed: 'Samoyed',
+                        weight: '22.5',
+                        vaccine: 'Đầy đủ tiêm phòng',
+                        alertNote: 'Lông dày, cần sấy khô kỹ'
+                    }
+                ],
+                orders: [
+                    { id: 'ORD-8930', date: '26/09/2026', total: '2.150.000 đ', payment: 'Đã thanh toán', status: 'Hoàn tất', statusClass: 'badge-success' }
+                ],
+                bookings: [
+                    { id: 'AP-210', date: '26/09/2026 15:30', service: 'Spa phục hồi da lông chuyên sâu', staff: 'Nguyễn Văn Hải', status: 'Hoàn tất', statusClass: 'badge-success' }
+                ],
+                complaints: [
+                    { id: 'TK-015', date: '27/09/2026 08:30', issue: 'Thú cưng bị trầy nhẹ sau spa', level: 'Cao', status: 'Đang xử lý', statusClass: 'badge-warning' }
+                ]
+            }
+        };
+
+        // State tạm cho danh sách địa chỉ đang chỉnh sửa trong modal
+        let currentEditingAddresses = [];
+        let currentEditingPetCustId = null;
+
         // 2. Chuyển đổi giữa 3 Sub-tabs khi bấm nút trên Header Bar
         const headerSubtabBtns = document.querySelectorAll('.header-subtab-btn');
         const subtabPanels = document.querySelectorAll('.subtab-content');
@@ -39,19 +260,11 @@
 
         function switchSubtab(targetSubtab) {
             headerSubtabBtns.forEach(btn => {
-                if (btn.getAttribute('data-subtab') === targetSubtab) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+                btn.classList.toggle('active', btn.getAttribute('data-subtab') === targetSubtab);
             });
 
             subtabPanels.forEach(panel => {
-                if (panel.id === `subtab-${targetSubtab}`) {
-                    panel.classList.add('active');
-                } else {
-                    panel.classList.remove('active');
-                }
+                panel.classList.toggle('active', panel.id === `subtab-${targetSubtab}`);
             });
 
             // Khi ở tab Hồ sơ, luôn hiển thị đường dẫn tinh gọn / [Tên khách hàng]
@@ -64,7 +277,6 @@
                 updateBreadcrumb(null);
             }
 
-            // Lưu trạng thái subtab để khi reload trang vẫn giữ nguyên
             sessionStorage.setItem('pawpal_admin_customer_subtab', targetSubtab);
             try {
                 history.replaceState(null, '', '#' + targetSubtab);
@@ -86,19 +298,11 @@
 
         function switchDrawerTab(targetPanelId) {
             drawerTabs.forEach(t => {
-                if (t.getAttribute('data-drawertab') === targetPanelId) {
-                    t.classList.add('active');
-                } else {
-                    t.classList.remove('active');
-                }
+                t.classList.toggle('active', t.getAttribute('data-drawertab') === targetPanelId);
             });
 
             drawerPanels.forEach(panel => {
-                if (panel.id === targetPanelId) {
-                    panel.classList.add('active');
-                } else {
-                    panel.classList.remove('active');
-                }
+                panel.classList.toggle('active', panel.id === targetPanelId);
             });
 
             sessionStorage.setItem('pawpal_admin_customer_drawertab', targetPanelId);
@@ -112,62 +316,357 @@
             });
         });
 
+        // ====================================================================
+        // HÀM RENDER ĐẦY ĐỦ 5 TAB CON TRONG DRAWER THEO TỪNG KHÁCH HÀNG
+        // ====================================================================
+        function renderDrawerCustomerProfile(custId) {
+            let data = customerDatabase[custId];
+            if (!data) {
+                // Tạo record mặc định nếu là khách mới
+                data = {
+                    id: custId,
+                    name: 'Khách hàng ' + custId,
+                    phone: '0900000000',
+                    email: 'khachhang@email.com',
+                    gender: 'Nam',
+                    dob: '01/01/1990',
+                    tier: 'BRONZE',
+                    tierName: 'Đồng',
+                    tierBadgeClass: 'badge-neutral',
+                    points: 0,
+                    status: 'ACTIVE',
+                    authStatus: 'Đã kích hoạt',
+                    note: 'Chưa có ghi chú đặc biệt.',
+                    emergencyAlert: null,
+                    addresses: [{ address: 'Tiếp nhận trực tiếp tại quầy Pawpal Pet Center', isDefault: true }],
+                    pets: [],
+                    orders: [],
+                    bookings: [],
+                    complaints: []
+                };
+                customerDatabase[custId] = data;
+            }
+
+            // Headline
+            const headlineName = document.getElementById('drawerCustomerName');
+            const headlineTier = document.getElementById('drawerCustomerTier');
+            const headlinePhoneBadge = document.querySelector('.drawer-user-headline .badge-success');
+            if (headlineName) headlineName.textContent = data.name;
+            if (headlineTier) {
+                headlineTier.textContent = data.tierName;
+                headlineTier.className = `admin-badge ${data.tierBadgeClass}`;
+            }
+            if (headlinePhoneBadge) headlinePhoneBadge.textContent = data.phone;
+
+            // Nút thao tác một chạm (Gọi điện, Zalo)
+            const btnCall = document.querySelector('.drawer-action-buttons a[href^="tel:"]');
+            const btnZalo = document.querySelector('.drawer-action-buttons a[href*="zalo.me"]');
+            if (btnCall) btnCall.href = `tel:${data.phone}`;
+            if (btnZalo) btnZalo.href = `https://zalo.me/${data.phone}`;
+
+            // Banner cảnh báo khẩn cấp
+            const banner = document.getElementById('custEmergencyBanner');
+            const alertText = document.getElementById('custEmergencyAlertText');
+            if (data.emergencyAlert) {
+                if (banner) banner.style.display = 'flex';
+                if (alertText) alertText.textContent = data.emergencyAlert;
+            } else {
+                if (banner) banner.style.display = 'none';
+            }
+
+            // Tab 1: Cá nhân
+            if (document.getElementById('profileValCustId')) document.getElementById('profileValCustId').textContent = data.id;
+            if (document.getElementById('profileValFullName')) document.getElementById('profileValFullName').textContent = data.name;
+            if (document.getElementById('profileValPhone')) document.getElementById('profileValPhone').textContent = data.phone;
+            if (document.getElementById('profileValEmail')) document.getElementById('profileValEmail').textContent = data.email;
+            if (document.getElementById('profileValGender')) document.getElementById('profileValGender').textContent = data.gender;
+            if (document.getElementById('profileValDob')) document.getElementById('profileValDob').textContent = data.dob || 'Chưa cập nhật';
+            if (document.getElementById('drawerCustNote')) document.getElementById('drawerCustNote').value = data.note || '';
+
+            // Sổ địa chỉ
+            renderDrawerAddresses(custId);
+
+            // Tab 2: Thú cưng
+            renderDrawerPets(custId);
+
+            // Tab 3: Đơn hàng
+            renderDrawerOrders(custId);
+
+            // Tab 4: Lịch hẹn
+            renderDrawerBookings(custId);
+
+            // Tab 5: Khiếu nại
+            renderDrawerComplaints(custId);
+
+            // Cập nhật số đếm badge đỏ trên các tabs con
+            const badgeOrders = document.getElementById('badgeCountOrders');
+            const badgeBookings = document.getElementById('badgeCountBookings');
+            const badgeComplaints = document.getElementById('badgeCountComplaints');
+            if (badgeOrders) {
+                badgeOrders.textContent = data.orders.length;
+                badgeOrders.style.display = data.orders.length > 0 ? 'inline-flex' : 'none';
+            }
+            if (badgeBookings) {
+                badgeBookings.textContent = data.bookings.length;
+                badgeBookings.style.display = data.bookings.length > 0 ? 'inline-flex' : 'none';
+            }
+            if (badgeComplaints) {
+                badgeComplaints.textContent = data.complaints.length;
+                badgeComplaints.style.display = data.complaints.length > 0 ? 'inline-flex' : 'none';
+            }
+
+            updateBreadcrumb(data.name);
+        }
+
+        // Render Sổ địa chỉ
+        function renderDrawerAddresses(custId) {
+            const container = document.getElementById('profileValAddressContainer');
+            if (!container) return;
+            const list = customerDatabase[custId]?.addresses || [
+                { address: '120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP.HCM', isDefault: true }
+            ];
+
+            container.innerHTML = list.map(item => `
+                <div class="drawer-address-row" style="${!item.isDefault ? 'color: var(--text-muted);' : ''}">
+                    <span class="admin-badge ${item.isDefault ? 'badge-success' : 'badge-neutral'}" style="font-size: 11px; padding: 2px 7px;">
+                        ${item.isDefault ? 'Mặc định' : 'Phụ'}
+                    </span>
+                    <span>${item.address}</span>
+                </div>
+            `).join('');
+        }
+
+        // Render Danh sách thú cưng kèm NÚT SỬA và XÓA (Thuần text, đúng Forest Palette)
+        function renderDrawerPets(custId) {
+            const container = document.getElementById('petCardsListContainer');
+            if (!container) return;
+            const pets = customerDatabase[custId]?.pets || [];
+
+            if (pets.length === 0) {
+                container.innerHTML = `
+                    <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13.5px;">
+                        Khách hàng chưa có bé cưng nào trong danh sách theo dõi. Bấm <strong>+ Thêm bé cưng</strong> để tạo mới.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = pets.map((pet, idx) => `
+                <div class="pet-detail-card" data-pet-id="${pet.id || ('PET-' + idx)}">
+                    <div class="pet-card-head">
+                        <div class="pet-card-head-left">
+                            <span class="pet-card-name">${pet.name} (Mã: ${pet.id || ('PET-' + (idx+1))})</span>
+                            <span class="admin-badge ${pet.alertNote && pet.alertNote !== 'Bình thường' ? 'badge-warning' : 'badge-neutral'}">
+                                ${pet.alertNote || 'Bình thường'}
+                            </span>
+                        </div>
+                        <div class="pet-card-actions">
+                            <button type="button" class="btn-pet-action btn-pet-edit" data-cust-id="${custId}" data-pet-index="${idx}">Sửa</button>
+                            <button type="button" class="btn-pet-action btn-pet-delete" data-cust-id="${custId}" data-pet-index="${idx}">Xóa</button>
+                        </div>
+                    </div>
+                    <div class="pet-card-body">
+                        <div><strong>Loài:</strong> ${pet.species} ${pet.breed ? '(' + pet.breed + ')' : ''}</div>
+                        <div><strong>Cân nặng:</strong> ${pet.weight ? pet.weight + ' kg' : 'Chưa cân'}</div>
+                        <div><strong>Tiền sử tiêm chủng:</strong> ${pet.vaccine || 'Chưa cập nhật'}</div>
+                        <div><strong>Tính cách / Lưu ý:</strong> ${pet.alertNote || 'Bình thường'}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Gán sự kiện Sửa cho từng thẻ Pet
+            container.querySelectorAll('.btn-pet-edit').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const cId = btn.getAttribute('data-cust-id');
+                    const pIdx = parseInt(btn.getAttribute('data-pet-index'), 10);
+                    openEditPetModal(cId, pIdx);
+                });
+            });
+
+            // Gán sự kiện Xóa cho từng thẻ Pet
+            container.querySelectorAll('.btn-pet-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const cId = btn.getAttribute('data-cust-id');
+                    const pIdx = parseInt(btn.getAttribute('data-pet-index'), 10);
+                    const pet = customerDatabase[cId]?.pets[pIdx];
+                    if (confirm(`Bạn có chắc chắn muốn xóa bé cưng ${pet?.name || ''} khỏi hồ sơ của khách?`)) {
+                        customerDatabase[cId].pets.splice(pIdx, 1);
+                        renderDrawerPets(cId);
+                        alert('Đã xóa bé cưng khỏi hồ sơ thành công!');
+                    }
+                });
+            });
+        }
+
+        // Render Tab Đơn hàng
+        function renderDrawerOrders(custId) {
+            const tbody = document.getElementById('drawerOrdersTbody');
+            if (!tbody) return;
+            const orders = customerDatabase[custId]?.orders || [];
+
+            if (orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Khách hàng chưa có lịch sử mua hàng.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = orders.map(ord => `
+                <tr>
+                    <td><strong>${ord.id}</strong></td>
+                    <td>${ord.date}</td>
+                    <td>${ord.total}</td>
+                    <td><span class="admin-badge badge-success">${ord.payment}</span></td>
+                    <td><span class="admin-badge ${ord.statusClass}">${ord.status}</span></td>
+                    <td><button type="button" class="admin-btn admin-btn-secondary btn-sm btn-view-order-action" data-order-id="${ord.id}">Xem chi tiết đơn</button></td>
+                </tr>
+            `).join('');
+
+            tbody.querySelectorAll('.btn-view-order-action').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const ordId = btn.getAttribute('data-order-id');
+                    alert(`Mở thông tin chi tiết đơn hàng ${ordId} tại phân hệ Bán hàng!`);
+                    const menuBtn = document.querySelector('.sidebar-menu-btn[data-title="Bán hàng"]');
+                    if (menuBtn) menuBtn.click();
+                });
+            });
+        }
+
+        // Render Tab Lịch hẹn
+        function renderDrawerBookings(custId) {
+            const tbody = document.getElementById('drawerBookingsTbody');
+            if (!tbody) return;
+            const bookings = customerDatabase[custId]?.bookings || [];
+
+            if (bookings.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Khách hàng chưa có lịch hẹn dịch vụ nào.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = bookings.map(b => `
+                <tr>
+                    <td><strong>${b.id}</strong></td>
+                    <td>${b.date}</td>
+                    <td>${b.service}</td>
+                    <td>${b.staff}</td>
+                    <td><span class="admin-badge ${b.statusClass}">${b.status}</span></td>
+                    <td><button type="button" class="admin-btn admin-btn-secondary btn-sm btn-view-booking-action" data-booking-id="${b.id}">Xem nhật ký</button></td>
+                </tr>
+            `).join('');
+
+            tbody.querySelectorAll('.btn-view-booking-action').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const bId = btn.getAttribute('data-booking-id');
+                    alert(`Mở nhật ký quy trình chăm sóc lịch hẹn ${bId} tại phân hệ Dịch vụ!`);
+                    const menuBtn = document.querySelector('.sidebar-menu-btn[data-title="Dịch vụ"]');
+                    if (menuBtn) menuBtn.click();
+                });
+            });
+        }
+
+        // Render Tab Khiếu nại
+        function renderDrawerComplaints(custId) {
+            const tbody = document.getElementById('drawerComplaintsTbody');
+            if (!tbody) return;
+            const complaints = customerDatabase[custId]?.complaints || [];
+
+            if (complaints.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Khách hàng không có phản ánh hay khiếu nại nào.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = complaints.map(c => `
+                <tr>
+                    <td><strong>${c.id}</strong></td>
+                    <td>${c.date}</td>
+                    <td>${c.issue}</td>
+                    <td><span class="admin-badge badge-danger">${c.level}</span></td>
+                    <td><span class="admin-badge ${c.statusClass}">${c.status}</span></td>
+                    <td><button type="button" class="admin-btn admin-btn-primary btn-sm btn-view-ticket-action" data-ticket-id="${c.id}">Mở Ticket xử lý</button></td>
+                </tr>
+            `).join('');
+
+            tbody.querySelectorAll('.btn-view-ticket-action').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tId = btn.getAttribute('data-ticket-id');
+                    alert(`Chuyển đến xử lý Ticket khiếu nại ${tId} tại phân hệ Khiếu nại!`);
+                    const menuBtn = document.querySelector('.sidebar-menu-btn[data-title="Khiếu nại"]');
+                    if (menuBtn) menuBtn.click();
+                });
+            });
+        }
+
         // 4. Mở Hồ sơ khi click vào Họ tên hoặc nút Xem trong dropdown
         document.querySelectorAll('.btn-open-profile-drawer').forEach(trigger => {
             trigger.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const custId = trigger.getAttribute('data-id');
-                const row = trigger.closest('tr');
-                const custName = row?.querySelector('.user-name-link')?.textContent?.trim() || 
-                                 row?.querySelector('.user-name-cell')?.textContent?.trim() || custId;
 
                 // Đóng tất cả dropdown nếu đang mở
                 document.querySelectorAll('.action-dropdown-menu.show').forEach(m => m.classList.remove('show'));
                 document.querySelectorAll('.btn-action-more.active').forEach(b => b.classList.remove('active'));
 
                 sessionStorage.setItem('pawpal_admin_customer_id', custId);
+                const custName = customerDatabase[custId]?.name || custId;
                 sessionStorage.setItem('pawpal_admin_customer_name', custName);
 
-                // Kích hoạt sub-tab Hồ sơ trên Header Bar (sẽ tự động gọi updateBreadcrumb(custName))
+                // Render toàn bộ hồ sơ khách hàng
+                renderDrawerCustomerProfile(custId);
+
+                // Kích hoạt sub-tab Hồ sơ trên Header Bar
                 switchSubtab('tab-profile');
-
-                const headlineName = document.getElementById('drawerCustomerName');
-                if (headlineName) headlineName.textContent = custName;
-                if (custId) {
-                    const custIdEl = document.getElementById('profileValCustId');
-                    if (custIdEl) custIdEl.textContent = custId;
-                    const phone = row?.querySelectorAll('td')[2]?.textContent?.trim() || '';
-                    const email = row?.querySelector('.user-sub-cell')?.textContent?.trim() || '';
-                    if (document.getElementById('profileValFullName')) document.getElementById('profileValFullName').textContent = custName;
-                    if (phone && document.getElementById('profileValPhone')) document.getElementById('profileValPhone').textContent = phone;
-                    if (email && document.getElementById('profileValEmail')) document.getElementById('profileValEmail').textContent = email;
-                    renderDrawerAddresses(custId);
-                }
             });
         });
 
-        // 5. Đóng/Mở menu tác vụ 3 chấm (...)
-        document.querySelectorAll('.btn-action-more').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const menu = btn.nextElementSibling;
-                const isShown = menu?.classList.contains('show');
+        // 5. Đóng/Mở menu tác vụ 3 chấm (•••) — dùng position:fixed để thoát khỏi overflow scroll container
+        function closeAllDropdowns() {
+            document.querySelectorAll('.action-dropdown-menu.show').forEach(m => {
+                m.classList.remove('show');
+                m.style.cssText = '';
+            });
+            document.querySelectorAll('.btn-action-more.active').forEach(b => b.classList.remove('active'));
+        }
 
-                // Đóng dropdown khác
-                document.querySelectorAll('.action-dropdown-menu.show').forEach(m => m.classList.remove('show'));
-                document.querySelectorAll('.btn-action-more.active').forEach(b => b.classList.remove('active'));
+        function positionAndShowDropdown(btn) {
+            const menu = btn.nextElementSibling;
+            if (!menu || !menu.classList.contains('action-dropdown-menu')) return;
 
-                if (!isShown && menu) {
-                    menu.classList.add('show');
-                    btn.classList.add('active');
+            const wasShown = menu.classList.contains('show');
+            closeAllDropdowns();
+
+            if (!wasShown) {
+                const rect = btn.getBoundingClientRect();
+                const menuWidth = 175;
+                const top = rect.bottom + 4;
+                let left = rect.right - menuWidth;
+                if (left < 8) left = 8;
+
+                menu.style.position = 'fixed';
+                menu.style.top = top + 'px';
+                menu.style.left = left + 'px';
+                menu.style.zIndex = '9999';
+                menu.classList.add('show');
+                btn.classList.add('active');
+            }
+        }
+
+        // Event delegation cho toàn bộ bảng (bao gồm cả dòng mới thêm vào)
+        const customerTable = document.getElementById('customerDataTable');
+        if (customerTable) {
+            customerTable.addEventListener('click', (e) => {
+                const btn = e.target.closest('.btn-action-more');
+                if (btn) {
+                    e.stopPropagation();
+                    positionAndShowDropdown(btn);
                 }
             });
-        });
+        }
 
         // Bấm ra ngoài tự động đóng menu 3 chấm
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.action-dropdown-menu.show').forEach(m => m.classList.remove('show'));
-            document.querySelectorAll('.btn-action-more.active').forEach(b => b.classList.remove('active'));
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.btn-action-more') && !e.target.closest('.action-dropdown-menu')) {
+                closeAllDropdowns();
+            }
         });
 
         // 6. Modal Tiếp nhận tại quầy (Quick Add)
@@ -190,13 +689,91 @@
         if (formAdd) {
             formAdd.addEventListener('submit', (e) => {
                 e.preventDefault();
-                alert('Đã tạo thành công tài khoản tạm cho khách hàng tại quầy!');
+                const name = document.getElementById('quickAddName')?.value || 'Khách vãng lai';
+                const phone = document.getElementById('quickAddPhone')?.value || '';
+                const petName = document.getElementById('quickAddPetName')?.value || '';
+                const petSpecies = document.getElementById('quickAddPetSpecies')?.value || 'Chó';
+                const petWeight = document.getElementById('quickAddPetWeight')?.value || '';
+
+                const newId = 'CUST-' + String(Object.keys(customerDatabase).length + 1).padStart(3, '0');
+                customerDatabase[newId] = {
+                    id: newId,
+                    name: name,
+                    phone: phone,
+                    email: 'Chưa cập nhật',
+                    gender: 'Khác',
+                    dob: '01/01/1990',
+                    tier: 'BRONZE',
+                    tierName: 'Đồng',
+                    tierBadgeClass: 'badge-neutral',
+                    points: 0,
+                    status: 'TEMP',
+                    authStatus: 'Tạm thời tại quầy',
+                    note: 'Khách tiếp nhận nhanh tại quầy.',
+                    emergencyAlert: null,
+                    addresses: [{ address: 'Tiếp nhận trực tiếp tại quầy Pawpal Pet Center', isDefault: true }],
+                    pets: petName ? [{
+                        id: 'PET-' + newId,
+                        name: petName,
+                        species: petSpecies === 'CAT' ? 'Mèo' : 'Chó',
+                        breed: 'Chưa cập nhật',
+                        weight: petWeight,
+                        vaccine: 'Chưa cập nhật',
+                        alertNote: 'Bình thường'
+                    }] : [],
+                    orders: [],
+                    bookings: [],
+                    complaints: []
+                };
+
+                // Thêm 1 dòng mới vào đầu bảng
+                const tbody = document.getElementById('customerTableTbody');
+                if (tbody) {
+                    const newTr = document.createElement('tr');
+                    newTr.innerHTML = `
+                        <td><strong>${newId}</strong></td>
+                        <td>
+                            <div class="user-name-cell">
+                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="${newId}">${name}</a>
+                            </div>
+                            <div class="user-sub-cell">Khách tiếp nhận tại quầy</div>
+                        </td>
+                        <td><strong>${phone}</strong></td>
+                        <td>
+                            <span class="admin-badge badge-neutral">Đồng</span>
+                            <span class="points-val">0 pts</span>
+                        </td>
+                        <td><span class="admin-badge badge-neutral">Bình thường</span></td>
+                        <td><span class="admin-badge badge-warning">Tạm thời</span></td>
+                        <td style="text-align: center;">
+                            <div class="action-dropdown-wrapper">
+                                <button type="button" class="btn-action-more" data-id="${newId}" title="Tác vụ">•••</button>
+                                <div class="action-dropdown-menu">
+                                    <button type="button" class="dropdown-item btn-open-profile-drawer" data-id="${newId}">Xem hồ sơ 360°</button>
+                                    <button type="button" class="dropdown-item btn-edit-user-table" data-id="${newId}">Sửa hồ sơ</button>
+                                    <button type="button" class="dropdown-item text-danger btn-lock-user" data-id="${newId}">Khóa tài khoản</button>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                    tbody.prepend(newTr);
+
+                    // Gán lại sự kiện cho dòng mới
+                    newTr.querySelector('.btn-open-profile-drawer')?.addEventListener('click', () => {
+                        sessionStorage.setItem('pawpal_admin_customer_id', newId);
+                        sessionStorage.setItem('pawpal_admin_customer_name', name);
+                        renderDrawerCustomerProfile(newId);
+                        switchSubtab('tab-profile');
+                    });
+                }
+
+                alert(`Đã tạo thành công tài khoản tạm ${newId} cho khách hàng ${name} tại quầy!`);
                 formAdd.reset();
                 closeAddModal();
             });
         }
 
-        // 7. Modal Điều chỉnh Pawpoint
+        // 7. Modal Điều chỉnh Pawpoint (Hỗ trợ cả CỘNG ĐIỂM và TRỪ ĐIỂM, cập nhật tức thì vào bảng)
         const modalAdjust = document.getElementById('modalAdjustPoints');
         const btnOpenAdjust = document.getElementById('btnOpenAdjustPointsModal');
         const btnCloseAdjust = document.getElementById('btnCloseAdjustPoints');
@@ -216,7 +793,43 @@
         if (formAdjust) {
             formAdjust.addEventListener('submit', (e) => {
                 e.preventDefault();
-                alert('Đã cập nhật bù điểm Pawpoint thành công!');
+                const phone = document.getElementById('adjustPhone')?.value || '';
+                const type = document.getElementById('adjustType')?.value || 'ADD';
+                const pts = parseInt(document.getElementById('adjustPointsVal')?.value || '0', 10);
+                const reason = document.getElementById('adjustReason')?.value || 'Điều chỉnh điểm';
+
+                if (pts <= 0) {
+                    alert('Vui lòng nhập số điểm lớn hơn 0!');
+                    return;
+                }
+
+                // Tìm khách hàng có số điện thoại này
+                let matchedCust = Object.values(customerDatabase).find(c => c.phone === phone);
+                const custName = matchedCust ? matchedCust.name : 'Khách hàng';
+                const currentBalance = matchedCust ? matchedCust.points : 500;
+                const newBalance = type === 'ADD' ? (currentBalance + pts) : Math.max(0, currentBalance - pts);
+                if (matchedCust) matchedCust.points = newBalance;
+
+                // Thêm dòng lịch sử vào bảng Tab Pawpoint
+                const histTbody = document.getElementById('pawpointHistoryTbody');
+                if (histTbody) {
+                    const now = new Date();
+                    const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                    const sign = type === 'ADD' ? '+' : '-';
+                    const colorClass = type === 'ADD' ? 'text-success' : 'text-danger';
+
+                    const newHistRow = document.createElement('tr');
+                    newHistRow.innerHTML = `
+                        <td>${timeStr}</td>
+                        <td>${custName} (${phone})</td>
+                        <td><strong class="${colorClass}">${sign}${pts} pts</strong></td>
+                        <td>${newBalance.toLocaleString('vi-VN')} pts</td>
+                        <td>${reason}</td>
+                    `;
+                    histTbody.prepend(newHistRow);
+                }
+
+                alert(`Đã ${type === 'ADD' ? 'cộng' : 'trừ'} ${pts} Pawpoint cho khách hàng ${custName} thành công! Số dư mới: ${newBalance} pts`);
                 formAdjust.reset();
                 closeAdjustModal();
             });
@@ -229,6 +842,7 @@
                 const row = btn.closest('tr');
                 const badge = row?.querySelector('.admin-badge.badge-success, .admin-badge.badge-danger, .admin-badge.badge-warning');
                 const isLock = btn.classList.contains('btn-lock-user');
+                const custId = btn.getAttribute('data-id');
 
                 if (isLock && badge) {
                     row.classList.add('row-locked');
@@ -236,6 +850,7 @@
                     badge.textContent = 'Bị khóa';
                     btn.className = 'dropdown-item text-success btn-unlock-user';
                     btn.innerHTML = `<span>Mở khóa tài khoản</span>`;
+                    if (customerDatabase[custId]) customerDatabase[custId].status = 'LOCKED';
                     alert('Đã khóa tài khoản khách hàng!');
                 } else if (!isLock && badge) {
                     row.classList.remove('row-locked');
@@ -243,6 +858,7 @@
                     badge.textContent = 'Đang hoạt động';
                     btn.className = 'dropdown-item text-danger btn-lock-user';
                     btn.innerHTML = `<span>Khóa tài khoản</span>`;
+                    if (customerDatabase[custId]) customerDatabase[custId].status = 'ACTIVE';
                     alert('Đã mở khóa tài khoản khách hàng!');
                 }
 
@@ -252,47 +868,7 @@
             });
         });
 
-        // 9. CHỈNH SỬA HỒ SƠ KHÁCH HÀNG & QUẢN LÝ SỔ ĐỊA CHỈ (MODAL 3)
-        // Store lưu trữ địa chỉ cho từng khách hàng (mỗi khách có thể có nhiều địa chỉ, 1 địa chỉ mặc định)
-        const customerAddressesStore = {
-            'CUST-001': [
-                { address: '120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP.HCM', isDefault: true },
-                { address: 'Toà nhà Bitexco, 2 Hải Triều, Bến Nghé, Quận 1, TP.HCM', isDefault: false }
-            ],
-            'CUST-002': [
-                { address: '45 Lê Duẩn, Phường Bến Nghé, Quận 1, TP.HCM', isDefault: true }
-            ],
-            'CUST-003': [
-                { address: 'Tiếp nhận trực tiếp tại quầy Pawpal Pet Center', isDefault: true }
-            ],
-            'CUST-004': [
-                { address: '88 Nguyễn Trãi, Phường 3, Quận 5, TP.HCM', isDefault: true }
-            ],
-            'CUST-005': [
-                { address: '15 Thảo Điền, Phường Thảo Điền, TP. Thủ Đức', isDefault: true }
-            ]
-        };
-
-        // State tạm cho danh sách địa chỉ đang chỉnh sửa trong modal
-        let currentEditingAddresses = [];
-
-        function renderDrawerAddresses(custId) {
-            const container = document.getElementById('profileValAddressContainer');
-            if (!container) return;
-            const list = customerAddressesStore[custId] || [
-                { address: '120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP.HCM', isDefault: true }
-            ];
-
-            container.innerHTML = list.map(item => `
-                <div class="drawer-address-row" style="${!item.isDefault ? 'color: var(--text-muted);' : ''}">
-                    <span class="admin-badge ${item.isDefault ? 'badge-success' : 'badge-neutral'}" style="font-size: 11px; padding: 2px 7px;">
-                        ${item.isDefault ? 'Mặc định' : 'Phụ'}
-                    </span>
-                    <span>${item.address}</span>
-                </div>
-            `).join('');
-        }
-
+        // 9. QUẢN LÝ SỔ ĐỊA CHỈ TRONG MODAL 3
         function updateAddressValuesFromDOM() {
             const container = document.getElementById('editCustAddressList');
             if (!container) return;
@@ -357,44 +933,6 @@
             });
         }
 
-        // Khởi tạo danh sách địa chỉ ban đầu trên Drawer
-        renderDrawerAddresses('CUST-001');
-
-        // Khôi phục Sub-tab và Hồ sơ khách hàng khi F5 / Reload trang (URL Hash hoặc SessionStorage)
-        const hashSubtab = window.location.hash ? window.location.hash.replace('#', '') : null;
-        const validSubtabs = ['tab-list', 'tab-profile', 'tab-pawpoint'];
-        let initialSubtab = 'tab-list';
-
-        if (hashSubtab && validSubtabs.includes(hashSubtab)) {
-            initialSubtab = hashSubtab;
-        } else {
-            const savedSubtab = sessionStorage.getItem('pawpal_admin_customer_subtab');
-            if (savedSubtab && validSubtabs.includes(savedSubtab)) {
-                initialSubtab = savedSubtab;
-            }
-        }
-
-        if (initialSubtab !== 'tab-list') {
-            switchSubtab(initialSubtab);
-            if (initialSubtab === 'tab-profile') {
-                const savedCustId = sessionStorage.getItem('pawpal_admin_customer_id') || 'CUST-001';
-                const savedCustName = sessionStorage.getItem('pawpal_admin_customer_name') || 'Nguyễn Văn An';
-
-                const headlineName = document.getElementById('drawerCustomerName');
-                if (headlineName) headlineName.textContent = savedCustName;
-                if (document.getElementById('profileValFullName')) document.getElementById('profileValFullName').textContent = savedCustName;
-                if (document.getElementById('profileValCustId')) document.getElementById('profileValCustId').textContent = savedCustId;
-                renderDrawerAddresses(savedCustId);
-                updateBreadcrumb(savedCustName);
-            }
-        }
-
-        // Khôi phục tab con trong Drawer nếu có
-        const savedDrawerTab = sessionStorage.getItem('pawpal_admin_customer_drawertab');
-        if (savedDrawerTab && document.getElementById(savedDrawerTab)) {
-            switchDrawerTab(savedDrawerTab);
-        }
-
         // Bắt sự kiện nút Thêm địa chỉ trong modal
         const btnAddAddressItem = document.getElementById('btnAddAddressItem');
         if (btnAddAddressItem) {
@@ -415,7 +953,7 @@
             });
         }
 
-        // 9. Modal Chỉnh sửa hồ sơ khách hàng (Modal 3)
+        // 10. MODAL 3: CHỈNH SỬA HỒ SƠ KHÁCH HÀNG (HỌ TÊN, SĐT, EMAIL, GIỚI TÍNH, NGÀY SINH, HẠNG THÀNH VIÊN, ĐỊA CHỈ)
         const modalEdit = document.getElementById('modalEditCustomer');
         const btnOpenEdit = document.getElementById('btnOpenEditProfileModal');
         const btnCloseEdit = document.getElementById('btnCloseEditCustomer');
@@ -425,18 +963,16 @@
         function openEditCustomerModal(custId) {
             if (!modalEdit) return;
             const currentId = custId || document.getElementById('profileValCustId')?.textContent || 'CUST-001';
-            const fullName = document.getElementById('profileValFullName')?.textContent || document.getElementById('drawerCustomerName')?.textContent || '';
-            const phone = document.getElementById('profileValPhone')?.textContent || '';
-            const email = document.getElementById('profileValEmail')?.textContent || '';
-            const gender = document.getElementById('profileValGender')?.textContent || 'Nam';
-            const dob = document.getElementById('profileValDob')?.textContent || '';
+            const data = customerDatabase[currentId] || {};
 
             if (document.getElementById('editCustId')) document.getElementById('editCustId').value = currentId;
-            if (document.getElementById('editCustFullName')) document.getElementById('editCustFullName').value = fullName;
-            if (document.getElementById('editCustPhone')) document.getElementById('editCustPhone').value = phone;
-            if (document.getElementById('editCustEmail')) document.getElementById('editCustEmail').value = email;
-            if (document.getElementById('editCustGender')) document.getElementById('editCustGender').value = gender;
+            if (document.getElementById('editCustFullName')) document.getElementById('editCustFullName').value = data.name || '';
+            if (document.getElementById('editCustPhone')) document.getElementById('editCustPhone').value = data.phone || '';
+            if (document.getElementById('editCustEmail')) document.getElementById('editCustEmail').value = data.email || '';
+            if (document.getElementById('editCustGender')) document.getElementById('editCustGender').value = data.gender || 'Nam';
+            if (document.getElementById('editCustTier')) document.getElementById('editCustTier').value = data.tier || 'GOLD';
             
+            const dob = data.dob || '';
             if (dob && dob.includes('/')) {
                 const parts = dob.split('/');
                 if (parts.length === 3 && document.getElementById('editCustDob')) {
@@ -445,7 +981,7 @@
             }
 
             // Nạp danh sách địa chỉ cho khách hàng
-            const existingAddresses = customerAddressesStore[currentId] || [
+            const existingAddresses = data.addresses || [
                 { address: '120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP.HCM', isDefault: true }
             ];
             currentEditingAddresses = JSON.parse(JSON.stringify(existingAddresses));
@@ -469,18 +1005,9 @@
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const custId = btn.getAttribute('data-id');
-                const row = btn.closest('tr');
-                const name = row?.querySelector('.user-name-link')?.textContent?.trim() || '';
-                const phone = row?.querySelectorAll('td')[2]?.textContent?.trim() || '';
-                const email = row?.querySelector('.user-sub-cell')?.textContent?.trim() || '';
-
                 document.querySelectorAll('.action-dropdown-menu.show').forEach(m => m.classList.remove('show'));
                 document.querySelectorAll('.btn-action-more.active').forEach(b => b.classList.remove('active'));
-
                 openEditCustomerModal(custId);
-                if (document.getElementById('editCustFullName')) document.getElementById('editCustFullName').value = name;
-                if (document.getElementById('editCustPhone')) document.getElementById('editCustPhone').value = phone;
-                if (document.getElementById('editCustEmail')) document.getElementById('editCustEmail').value = email;
             });
         });
 
@@ -492,6 +1019,7 @@
                 const newPhone = document.getElementById('editCustPhone')?.value || '';
                 const newEmail = document.getElementById('editCustEmail')?.value || '';
                 const newGender = document.getElementById('editCustGender')?.value || 'Nam';
+                const newTier = document.getElementById('editCustTier')?.value || 'GOLD';
                 const newDobRaw = document.getElementById('editCustDob')?.value || '';
 
                 // Cập nhật giá trị địa chỉ từ DOM
@@ -505,33 +1033,34 @@
                     validAddresses[0].isDefault = true;
                 }
 
-                // Lưu danh sách địa chỉ mới
-                customerAddressesStore[custId] = validAddresses;
-
                 let formattedDob = newDobRaw;
                 if (newDobRaw && newDobRaw.includes('-')) {
                     const p = newDobRaw.split('-');
                     formattedDob = `${p[2]}/${p[1]}/${p[0]}`;
                 }
 
-                // Cập nhật thông tin trong Drawer Hồ sơ
-                if (document.getElementById('profileValFullName')) document.getElementById('profileValFullName').textContent = newName;
-                if (document.getElementById('drawerCustomerName')) document.getElementById('drawerCustomerName').textContent = newName;
-                if (document.getElementById('profileValPhone')) document.getElementById('profileValPhone').textContent = newPhone;
-                if (document.getElementById('profileValEmail')) document.getElementById('profileValEmail').textContent = newEmail;
-                if (document.getElementById('profileValGender')) document.getElementById('profileValGender').textContent = newGender;
-                if (document.getElementById('profileValDob') && formattedDob) document.getElementById('profileValDob').textContent = formattedDob;
-                
-                // Render lại danh sách địa chỉ trên Drawer
-                renderDrawerAddresses(custId);
+                // Map tên và class của Hạng thẻ
+                const tierMap = {
+                    'BRONZE': { name: 'Đồng', badgeClass: 'badge-neutral' },
+                    'SILVER': { name: 'Bạc', badgeClass: 'badge-tier-silver' },
+                    'GOLD': { name: 'Vàng', badgeClass: 'badge-tier-gold' },
+                    'DIAMOND': { name: 'Kim Cương', badgeClass: 'badge-tier-diamond' }
+                };
 
-                if (deepBreadcrumbEl && deepBreadcrumbEl.innerHTML.trim() !== '') {
-                    deepBreadcrumbEl.innerHTML = `
-                        <span class="breadcrumb-separator">/</span>
-                        <span class="breadcrumb-detail-name">${newName}</span>
-                    `;
-                }
-                sessionStorage.setItem('pawpal_admin_customer_name', newName);
+                // Cập nhật vào Database
+                if (!customerDatabase[custId]) customerDatabase[custId] = {};
+                customerDatabase[custId].name = newName;
+                customerDatabase[custId].phone = newPhone;
+                customerDatabase[custId].email = newEmail;
+                customerDatabase[custId].gender = newGender;
+                customerDatabase[custId].dob = formattedDob;
+                customerDatabase[custId].tier = newTier;
+                customerDatabase[custId].tierName = tierMap[newTier].name;
+                customerDatabase[custId].tierBadgeClass = tierMap[newTier].badgeClass;
+                customerDatabase[custId].addresses = validAddresses;
+
+                // Cập nhật hiển thị Drawer Hồ sơ
+                renderDrawerCustomerProfile(custId);
 
                 // Cập nhật lên dòng dữ liệu trong bảng danh sách
                 document.querySelectorAll('#customerTableTbody tr').forEach(row => {
@@ -543,6 +1072,11 @@
                         if (sub) sub.textContent = newEmail;
                         const phoneCell = row.querySelectorAll('td')[2]?.querySelector('strong');
                         if (phoneCell) phoneCell.textContent = newPhone;
+                        const tierBadge = row.querySelectorAll('td')[3]?.querySelector('.admin-badge');
+                        if (tierBadge) {
+                            tierBadge.textContent = tierMap[newTier].name;
+                            tierBadge.className = `admin-badge ${tierMap[newTier].badgeClass}`;
+                        }
                     }
                 });
 
@@ -551,13 +1085,12 @@
             });
         }
 
-        // 10. THÊM THÚ CƯNG MỚI (MODAL 4)
+        // 11. MODAL 4: THÊM THÚ CƯNG MỚI (ADD PET)
         const modalAddPet = document.getElementById('modalAddPet');
         const btnOpenAddPet = document.getElementById('btnOpenAddPetModal');
         const btnCloseAddPet = document.getElementById('btnCloseAddPet');
         const btnCancelAddPet = document.getElementById('btnCancelAddPet');
         const formAddPet = document.getElementById('formAddPet');
-        const petCardsContainer = document.getElementById('petCardsListContainer');
 
         if (btnOpenAddPet && modalAddPet) {
             btnOpenAddPet.addEventListener('click', () => {
@@ -580,30 +1113,97 @@
                 const vaccine = document.getElementById('addPetVaccine')?.value || 'Chưa cập nhật';
                 const alertNote = document.getElementById('addPetAlert')?.value || 'Bình thường';
 
-                const newPetCard = document.createElement('div');
-                newPetCard.className = 'pet-detail-card';
-                newPetCard.innerHTML = `
-                    <div class="pet-card-head">
-                        <span class="pet-card-name">${petName} (${species} ${breed ? '- ' + breed : ''})</span>
-                        <span class="admin-badge ${alertNote !== 'Bình thường' ? 'badge-warning' : 'badge-neutral'}">${alertNote}</span>
-                    </div>
-                    <div class="pet-card-body">
-                        <div><strong>Loài:</strong> ${species} ${breed ? '(' + breed + ')' : ''}</div>
-                        <div><strong>Cân nặng:</strong> ${weight ? weight + ' kg' : 'Chưa cân'}</div>
-                        <div><strong>Tiền sử tiêm chủng:</strong> ${vaccine}</div>
-                        <div><strong>Tính cách / Lưu ý:</strong> ${alertNote}</div>
-                    </div>
-                `;
-                if (petCardsContainer) {
-                    petCardsContainer.prepend(newPetCard);
+                const currentCustId = document.getElementById('profileValCustId')?.textContent || 'CUST-001';
+                if (!customerDatabase[currentCustId]) {
+                    customerDatabase[currentCustId] = { pets: [] };
                 }
+                if (!customerDatabase[currentCustId].pets) {
+                    customerDatabase[currentCustId].pets = [];
+                }
+
+                const newPetId = 'PET-' + String(customerDatabase[currentCustId].pets.length + 1).padStart(3, '0');
+                customerDatabase[currentCustId].pets.unshift({
+                    id: newPetId,
+                    name: petName,
+                    species: species,
+                    breed: breed,
+                    weight: weight,
+                    vaccine: vaccine,
+                    alertNote: alertNote
+                });
+
+                renderDrawerPets(currentCustId);
                 alert(`Đã thêm thành công bé cưng ${petName} vào hồ sơ!`);
                 formAddPet.reset();
                 closeAddPetModal();
             });
         }
 
-        // 11. Gửi lại SMS kích hoạt tài khoản
+        // 12. MODAL 5: CHỈNH SỬA THÔNG TIN THÚ CƯNG (EDIT PET)
+        const modalEditPet = document.getElementById('modalEditPet');
+        const btnCloseEditPet = document.getElementById('btnCloseEditPet');
+        const btnCancelEditPet = document.getElementById('btnCancelEditPet');
+        const formEditPet = document.getElementById('formEditPet');
+        let currentEditPetIndex = null;
+
+        function openEditPetModal(custId, petIndex) {
+            if (!modalEditPet) return;
+            currentEditingPetCustId = custId;
+            currentEditPetIndex = petIndex;
+            const pet = customerDatabase[custId]?.pets[petIndex];
+            if (!pet) return;
+
+            if (document.getElementById('editPetId')) document.getElementById('editPetId').value = pet.id || '';
+            if (document.getElementById('editPetName')) document.getElementById('editPetName').value = pet.name || '';
+            if (document.getElementById('editPetSpecies')) document.getElementById('editPetSpecies').value = pet.species || 'Chó';
+            if (document.getElementById('editPetBreed')) document.getElementById('editPetBreed').value = pet.breed || '';
+            if (document.getElementById('editPetWeight')) document.getElementById('editPetWeight').value = pet.weight || '';
+            if (document.getElementById('editPetVaccine')) document.getElementById('editPetVaccine').value = pet.vaccine || '';
+            if (document.getElementById('editPetAlert')) document.getElementById('editPetAlert').value = pet.alertNote || 'Bình thường';
+
+            modalEditPet.style.display = 'flex';
+        }
+
+        function closeEditPetModal() {
+            if (modalEditPet) modalEditPet.style.display = 'none';
+        }
+        if (btnCloseEditPet) btnCloseEditPet.addEventListener('click', closeEditPetModal);
+        if (btnCancelEditPet) btnCancelEditPet.addEventListener('click', closeEditPetModal);
+
+        if (formEditPet) {
+            formEditPet.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (!currentEditingPetCustId || currentEditPetIndex === null) return;
+                const pet = customerDatabase[currentEditingPetCustId]?.pets[currentEditPetIndex];
+                if (!pet) return;
+
+                pet.name = document.getElementById('editPetName')?.value || pet.name;
+                pet.species = document.getElementById('editPetSpecies')?.value || pet.species;
+                pet.breed = document.getElementById('editPetBreed')?.value || '';
+                pet.weight = document.getElementById('editPetWeight')?.value || '';
+                pet.vaccine = document.getElementById('editPetVaccine')?.value || 'Chưa cập nhật';
+                pet.alertNote = document.getElementById('editPetAlert')?.value || 'Bình thường';
+
+                renderDrawerPets(currentEditingPetCustId);
+                alert(`Đã cập nhật thành công thông tin bé cưng ${pet.name}!`);
+                closeEditPetModal();
+            });
+        }
+
+        // 13. Lưu ghi chú khách hàng trong Drawer
+        const btnSaveNote = document.getElementById('btnSaveCustomerNote');
+        if (btnSaveNote) {
+            btnSaveNote.addEventListener('click', () => {
+                const currentCustId = document.getElementById('profileValCustId')?.textContent || 'CUST-001';
+                const noteVal = document.getElementById('drawerCustNote')?.value || '';
+                if (customerDatabase[currentCustId]) {
+                    customerDatabase[currentCustId].note = noteVal;
+                }
+                alert('Đã lưu thành công ghi chú khách hàng!');
+            });
+        }
+
+        // 14. Gửi lại SMS kích hoạt tài khoản
         const btnResendSms = document.getElementById('btnResendSmsToken');
         if (btnResendSms) {
             btnResendSms.addEventListener('click', () => {
@@ -612,7 +1212,7 @@
             });
         }
 
-        // 12. Điều hướng liên kết chéo trên đầu Hồ sơ (Cross-module quick actions)
+        // 15. Điều hướng liên kết chéo trên đầu Hồ sơ (Cross-module quick actions)
         document.querySelector('.btn-link-service')?.addEventListener('click', () => {
             const custName = document.getElementById('drawerCustomerName')?.textContent || '';
             const btn = document.querySelector('.sidebar-menu-btn[data-title="Dịch vụ"]');
@@ -634,8 +1234,7 @@
             if (btn) btn.click();
         });
 
-        // 13. THANH THÔNG BÁO KHÁCH HÀNG CÓ KHIẾU NẠI (DẢI MỎNG ALERT TONE, THUẦN CHỮ)
-        // CHỈ hiển thị các khách hàng ĐANG HOẠT ĐỘNG có khiếu nại (loại trừ tài khoản bị khóa)
+        // 16. THANH THÔNG BÁO KHÁCH HÀNG CÓ KHIẾU NẠI (DẢI MỎNG ALERT TONE, THUẦN CHỮ)
         const complaintCustomers = [
             { id: 'CUST-001', name: 'Nguyễn Văn An', ticket: 'TK-008', reason: 'Chưa nhận quà tặng hạng Vàng' },
             { id: 'CUST-007', name: 'Vũ Đức Thắng', ticket: 'TK-015', reason: 'Thú cưng bị trầy nhẹ sau spa' }
@@ -665,17 +1264,19 @@
                 tag.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const custId = tag.getAttribute('data-id');
-                    const link = document.querySelector(`.btn-open-profile-drawer[data-id="${custId}"]`);
-                    if (link) link.click();
+                    sessionStorage.setItem('pawpal_admin_customer_id', custId);
+                    renderDrawerCustomerProfile(custId);
+                    switchSubtab('tab-profile');
                 });
             });
         }
 
         renderComplaintBar();
 
-        // 14. Bộ lọc bảng và tương tác thẻ KPI 1 chạm
+        // 17. Bộ lọc bảng và tương tác thẻ KPI 1 chạm
         const tableRows = document.querySelectorAll('#customerTableTbody tr');
         const filterStatusSelect = document.getElementById('custFilterStatus');
+        const filterTierSelect = document.getElementById('custFilterTier');
         const btnFilterComplaint = document.getElementById('btnFilterComplaintOnly');
         const btnComplaintStripFilter = document.getElementById('btnFilterComplaintQuick');
         const searchInput = document.getElementById('custSearchInput');
@@ -683,11 +1284,19 @@
 
         function applyCustomerFilters() {
             const query = (searchInput?.value || '').toLowerCase().trim();
+            const selectedTier = filterTierSelect?.value || 'ALL';
 
             tableRows.forEach(row => {
                 const text = row.textContent.toLowerCase();
                 const matchesSearch = !query || text.includes(query);
                 let matchesCategory = true;
+                let matchesTier = true;
+
+                if (selectedTier !== 'ALL') {
+                    const tierNameMap = { 'BRONZE': 'đồng', 'SILVER': 'bạc', 'GOLD': 'vàng', 'DIAMOND': 'kim cương' };
+                    const expectedTier = tierNameMap[selectedTier];
+                    matchesTier = text.includes(expectedTier);
+                }
 
                 if (currentFilter === 'COMPLAINT') {
                     const isLocked = row.classList.contains('row-locked') || text.includes('bị khóa');
@@ -700,7 +1309,7 @@
                     matchesCategory = !row.classList.contains('row-locked') && !text.includes('tạm thời');
                 }
 
-                if (matchesSearch && matchesCategory) {
+                if (matchesSearch && matchesCategory && matchesTier) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
@@ -708,12 +1317,10 @@
             });
         }
 
-        // Bắt sự kiện gõ tìm kiếm
         if (searchInput) {
             searchInput.addEventListener('input', applyCustomerFilters);
         }
 
-        // Bắt sự kiện chọn dropdown trạng thái
         if (filterStatusSelect) {
             filterStatusSelect.addEventListener('change', (e) => {
                 const val = e.target.value;
@@ -725,7 +1332,10 @@
             });
         }
 
-        // Nút lọc nhanh Có khiếu nại ở thanh công cụ
+        if (filterTierSelect) {
+            filterTierSelect.addEventListener('change', applyCustomerFilters);
+        }
+
         if (btnFilterComplaint) {
             btnFilterComplaint.addEventListener('click', () => {
                 if (currentFilter === 'COMPLAINT') {
@@ -739,7 +1349,6 @@
             });
         }
 
-        // Nút lọc nhanh trên dải ruy-băng thông báo khiếu nại
         if (btnComplaintStripFilter) {
             btnComplaintStripFilter.addEventListener('click', () => {
                 currentFilter = 'COMPLAINT';
@@ -751,7 +1360,6 @@
             });
         }
 
-        // Tương tác click trực tiếp trên các thẻ KPI
         document.querySelectorAll('.customers-kpi-grid .kpi-card-clickable').forEach(card => {
             card.addEventListener('click', () => {
                 const filter = card.getAttribute('data-kpi-filter');
@@ -771,7 +1379,32 @@
             });
         });
 
-        // Khởi tạo icon Lucide
+        // 18. KHỞI TẠO VÀ KHÔI PHỤC TRẠNG THÁI KHI F5 / RELOAD
+        const hashSubtab = window.location.hash ? window.location.hash.replace('#', '') : null;
+        const validSubtabs = ['tab-list', 'tab-profile', 'tab-pawpoint'];
+        let initialSubtab = 'tab-list';
+
+        if (hashSubtab && validSubtabs.includes(hashSubtab)) {
+            initialSubtab = hashSubtab;
+        } else {
+            const savedSubtab = sessionStorage.getItem('pawpal_admin_customer_subtab');
+            if (savedSubtab && validSubtabs.includes(savedSubtab)) {
+                initialSubtab = savedSubtab;
+            }
+        }
+
+        const savedCustId = sessionStorage.getItem('pawpal_admin_customer_id') || 'CUST-001';
+        renderDrawerCustomerProfile(savedCustId);
+
+        if (initialSubtab !== 'tab-list') {
+            switchSubtab(initialSubtab);
+        }
+
+        const savedDrawerTab = sessionStorage.getItem('pawpal_admin_customer_drawertab');
+        if (savedDrawerTab && document.getElementById(savedDrawerTab)) {
+            switchDrawerTab(savedDrawerTab);
+        }
+
         if (window.lucide) {
             lucide.createIcons();
         }

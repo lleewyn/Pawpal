@@ -103,7 +103,14 @@
   - **Dòng cảnh báo thuần chữ đỏ (Không nền & Không viền khung)**: Cảnh báo khẩn cấp trình bày dạng dòng chữ màu đỏ thuần (`color: #DC2626; background: transparent; border: none;`), không vẽ khung viền hộp và không bôi màu nền để triệt tiêu hoàn toàn cảm giác "hộp viền bao quanh".
 * **Tài khoản bị khóa (`.row-locked`)**:
   - **Làm mờ rõ rệt toàn bộ dòng**: Áp dụng `opacity: 0.52;` cho cả hàng dữ liệu để người quản trị phân biệt ngay lập tức tài khoản đã bị vô hiệu hóa so với các tài khoản đang hoạt động.
-* **Huy hiệu trạng thái (`.admin-badge`)**:
-  - Viền của huy hiệu phải rất mờ và tiệp màu với nền (ví dụ: viền xanh lá `#D1F9DF`, viền đỏ `#FED8D8`, viền vàng `#FDEEB0`), tránh tạo khung viền đen/đậm cứng nhắc.
+* **Huy hiệu trạng thái (`.admin-badge`) - Muted Pastel & Không viền**:
+  - **Tuyệt đối không viền (`border: none !important;`)**: Triệt tiêu hoàn toàn cảm giác đóng khung hộp cứng nhắc.
+  - **Độ đậm & Hình khối chữ nhật chuẩn 9px**: `height: 24px; padding: 0 9px; font-size: 12px; font-weight: 500; border-radius: 9px !important; line-height: 1;`. Chiều cao 24px đảm bảo hai cạnh bên có đoạn thẳng đứng (6px), tạo hình khối chữ nhật bo góc 9px vuông vức đồng bộ với Card/Button/Input, triệt tiêu hoàn toàn hình dạng viên thuốc (oval / pill) hai đầu bị bo tròn ủng bán nguyệt.
+  - **Bảng màu dịu mắt (Muted Pastel / Tone-down)**: Triệt tiêu hiệu ứng kẹo cầu vồng chói mắt, gom về các sắc thái tự nhiên, dịu nhẹ, tiệp với nền kính mờ:
+    * *Trung tính / Mặc định / Bản nháp*: Nền `#EEF3F0`, chữ xanh than xô thơm `#3D5A4C`.
+    * *Tích cực (Hoạt động, Hoàn thành, Đã thanh toán, Đang làm việc)*: Nền xanh Forest nhạt `#E6F2EB`, chữ `#1E5A3D`.
+    * *Chú ý / Chờ duyệt (Chờ xác nhận, Tạm dừng, Nghỉ phép, Chưa thanh toán)*: Nền hổ phách trầm ấm `#F7F2E9`, chữ nâu ấm `#7C5329`.
+    * *Khẩn cấp / Tiêu cực (Đã hủy, Nghỉ việc, Bị khóa, Không đạt, Cảnh báo)*: Nền đỏ đất nhạt `#FBF0F0`, chữ đỏ đất sẫm mềm `#993535`.
+    * *Tiến trình / Thông tin (Đang thực hiện, Đang giao, Đã xác nhận, Tạm nghỉ)*: Nền xô thơm / xanh phấn nhẹ `#EBF2F6`, chữ `#2E5568`.
 * **Số đếm cảnh báo trên Tab con (`.tab-badge-count`)**:
   - Khi có đơn hàng, lịch hẹn hoặc khiếu nại đang chờ xử lý, hiển thị con số màu đỏ đặt ở **góc trên bên phải** của tên tab (dạng pill mini `color: #DC2626; background: #FEE2E2; border-radius: 9px; position: absolute; top: -7px; right: -9px;`) để người quản trị nhận diện ngay tức thì.

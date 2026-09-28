@@ -299,9 +299,10 @@
 }
 
 .system-evidence-card {
-    padding: 14px 18px;
-    background-color: #F8FAF9;
-    border-radius: var(--admin-radius);
+    padding: 14px 0;
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
     display: flex;
     flex-direction: column;
     gap: 4px;

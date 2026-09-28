@@ -426,58 +426,54 @@
     color: var(--text-main);
 }
 
-/* HUY HIỆU TRẠNG THÁI TIỆP MÀU */
+/* HUY HIỆU TRẠNG THÁI TIỆP MÀU (MUTED PASTEL & NO BORDER) */
 .admin-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: var(--admin-radius);
-    font-size: 11.5px;
-    font-weight: 600;
-    line-height: 1.2;
-    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 9px !important;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+    border: none !important;
     white-space: nowrap;
 }
 
 .badge-pending {
-    background-color: #FEF3C7;
-    color: #92400E;
-    border-color: #FDEEB0;
+    background-color: #F7F2E9;
+    color: #7C5329;
 }
 
 .badge-confirmed {
-    background-color: #E0E7FF;
-    color: #3730A3;
-    border-color: #C7D2FE;
+    background-color: #EBF2F6;
+    color: #2E5568;
 }
 
 .badge-in-progress {
-    background-color: #E0F2FE;
-    color: #0369A1;
-    border-color: #BAE6FD;
+    background-color: #EBF2F6;
+    color: #2E5568;
 }
 
 .badge-completed {
-    background-color: #D1F9DF;
-    color: #166534;
-    border-color: #B4F4CA;
+    background-color: #E6F2EB;
+    color: #1E5A3D;
 }
 
 .badge-cancelled {
-    background-color: #FEE2E2;
-    color: #991B1B;
-    border-color: #FED8D8;
+    background-color: #FBF0F0;
+    color: #993535;
 }
 
 .badge-alert {
-    background-color: #FEE2E2;
-    color: #DC2626;
-    border-color: #FED8D8;
+    background-color: #FBF0F0;
+    color: #993535;
 }
 
 .badge-warning {
-    background-color: #FEF3C7;
-    color: #D97706;
-    border-color: #FDEEB0;
+    background-color: #F7F2E9;
+    color: #7C5329;
 }
 
 /* NÚT THAO TÁC 3 CHẤM TEXT */
@@ -727,6 +723,22 @@
     line-height: 1.5;
 }
 
+/* THÔNG BÁO KHÓA GHI NHẬT KÝ THEO TRẠNG THÁI CA */
+.carelog-lock-notice {
+    padding: 12px 14px;
+    background-color: #EEF5F1;
+    border: 1px solid #C3DEC7;
+    border-radius: var(--admin-radius);
+    font-size: 12.5px;
+    color: var(--text-heading);
+    line-height: 1.45;
+    margin-top: 14px;
+}
+
+.carelog-lock-notice strong {
+    color: #236B48;
+}
+
 /* KHU VỰC THÊM BƯỚC NHẬT KÝ NHANH */
 .carelog-quick-add {
     margin-top: 16px;
@@ -773,6 +785,22 @@
 }
 
 /* BẢNG KÊ CHI PHÍ DỊCH VỤ */
+.btn-text-action {
+    background: transparent;
+    border: none;
+    color: #236B48;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 2px 4px;
+}
+
+.btn-text-action:hover {
+    color: #1b5337;
+}
+
 .financial-summary-list {
     display: flex;
     flex-direction: column;
@@ -785,6 +813,139 @@
     justify-content: space-between;
     font-size: 13.5px;
     color: var(--text-main);
+}
+
+/* DANH SÁCH GÓI DỊCH VỤ ĐI CÙNG GHÉP THÊM */
+.accompanying-services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 4px 0;
+    padding-left: 10px;
+    border-left: 2px solid #236B48;
+}
+
+.accompanying-item-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+    padding: 3px 0;
+}
+
+.accompanying-item-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.accompanying-item-name {
+    font-weight: 600;
+    color: var(--text-heading);
+    font-size: 13px;
+}
+
+.accompanying-item-price {
+    font-weight: 700;
+    color: var(--text-heading);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.accompanying-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.surcharge-itemized-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 4px 0;
+    padding-left: 10px;
+    border-left: 2px solid #C3DEC7;
+}
+
+.surcharge-item-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+    padding: 3px 0;
+}
+
+.surcharge-item-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.surcharge-item-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.surcharge-item-name {
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 13px;
+}
+
+.surcharge-item-amount {
+    font-weight: 700;
+    color: #B45309;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.surcharge-item-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.35;
+}
+
+.surcharge-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.surcharge-tag-consent {
+    display: inline-block;
+    padding: 1px 6px;
+    background-color: #EEF5F1;
+    color: #236B48;
+    border-radius: var(--admin-radius);
+    font-size: 11px;
+    font-weight: 500;
+    width: fit-content;
+}
+
+.surcharge-time-text {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.btn-del-surcharge {
+    background: transparent;
+    border: none;
+    color: #DC2626;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0 4px;
+}
+
+.btn-del-surcharge:hover {
+    color: #991B1B;
 }
 
 .summary-row.total-row {
@@ -845,6 +1006,103 @@
     line-height: 1.4;
 }
 
+/* DẢI HÌNH ẢNH MINH CHỨNG THỰC TẾ THEO BƯỚC TIMELINE */
+.step-gallery-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.step-photo-thumb {
+    width: 58px;
+    height: 58px;
+    border-radius: var(--admin-radius);
+    object-fit: cover;
+    border: 1px solid var(--border-neutral);
+    cursor: pointer;
+    background-color: #F8FAF9;
+    transition: opacity 0.15s ease;
+}
+
+.step-photo-thumb:hover {
+    opacity: 0.85;
+}
+
+/* THANH THAO TÁC 1-CHẠM TRÊN BƯỚC TIMELINE */
+.step-action-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.btn-step-action {
+    background: transparent;
+    border: none;
+    color: #236B48;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.btn-step-action:hover {
+    color: #1b5337;
+}
+
+.btn-step-action.complete-action {
+    color: #236B48;
+}
+
+/* KHU VỰC UPLOAD VÀ XEM TRƯỚC ẢNH TRONG FORM GHI BƯỚC */
+.carelog-image-upload-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 0;
+}
+
+.carelog-image-preview-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.carelog-preview-thumb-wrap {
+    position: relative;
+    width: 52px;
+    height: 52px;
+}
+
+.carelog-preview-thumb {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--admin-radius);
+    object-fit: cover;
+    border: 1px solid var(--border-neutral);
+}
+
+.carelog-thumb-del-btn {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 16px;
+    height: 16px;
+    background-color: #DC2626;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 50%;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+}
+
 /* ==========================================================================
    SUB-TAB 3: DANH MỤC DỊCH VỤ VÀ BẢNG GIÁ
    ========================================================================== */
@@ -900,6 +1158,138 @@
     padding: 8px 10px;
     border-bottom: 1px solid var(--border-neutral);
 }
+
+/* LINK XEM ĐÁNH GIÁ TRONG BẢNG DANH MỤC */
+.catalog-rating-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    padding: 3px 6px;
+    border-radius: var(--admin-radius);
+    transition: background-color 0.15s ease;
+}
+
+.catalog-rating-link:hover {
+    background-color: #FEF3C7;
+}
+
+.catalog-rating-link .star-rating-pill {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #B45309;
+}
+
+.catalog-rating-link .reviews-count-text {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+/* KHỐI CẤU HÌNH CÁC BƯỚC QUY TRÌNH DỊCH VỤ TRONG MODAL */
+.service-steps-config-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 180px;
+    overflow-y: auto;
+    padding: 8px;
+    background-color: #F8FAF9;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+}
+
+.service-step-item-tag {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 10px;
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    font-size: 12.5px;
+    color: var(--text-main);
+}
+
+.service-step-item-tag .step-num {
+    font-weight: 700;
+    color: #236B48;
+    font-size: 11.5px;
+}
+
+.service-step-item-tag .step-text {
+    flex: 1;
+    font-weight: 500;
+}
+
+.btn-remove-step {
+    background: transparent;
+    border: none;
+    color: #DC2626;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.btn-remove-step:hover {
+    color: #991B1B;
+}
+
+
+/* ==========================================================================
+   SUB-TAB 4: ĐÁNH GIÁ VÀ PHẢN HỒI DỊCH VỤ
+   ========================================================================== */
+.star-rating-text {
+    color: #B45309;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+
+.review-comment-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.review-comment-text {
+    font-size: 13px;
+    color: var(--text-main);
+    line-height: 1.4;
+}
+
+.review-reply-preview {
+    margin-top: 6px;
+    padding: 6px 10px;
+    background-color: #F4FAF6;
+    border-radius: var(--admin-radius);
+    font-size: 12px;
+    color: #236B48;
+    line-height: 1.4;
+}
+
+.review-reply-preview strong {
+    color: #1b5337;
+}
+
+.btn-reply-review-table {
+    padding: 4px 10px;
+    background-color: #FFFFFF;
+    border: 1px solid #C3DEC7;
+    border-radius: var(--admin-radius);
+    color: #236B48;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-reply-review-table:hover {
+    background-color: #EEF5F1;
+}
+
 
 /* ==========================================================================
    MODAL DIALOG TIÊU CHUẨN THOÁNG ĐÃNG

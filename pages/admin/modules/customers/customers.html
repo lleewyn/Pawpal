@@ -110,7 +110,7 @@
                             <span class="points-val">1.250 pts</span>
                         </td>
                         <td>
-                            <span class="admin-badge badge-warning" style="color: #DC2626; background: #FEE2E2; border-color: #FED8D8;">Khiếu nại TK-008</span>
+                            <span class="admin-badge badge-danger">Khiếu nại TK-008</span>
                         </td>
                         <td>
                             <span class="admin-badge badge-success">Đang hoạt động</span>
@@ -227,7 +227,7 @@
                             <span class="admin-badge badge-neutral">Tranh chấp thanh toán</span>
                         </td>
                         <td>
-                            <span class="admin-badge badge-warning" style="color: #DC2626; background: #FEE2E2; border-color: #FED8D8;">Bị khóa</span>
+                            <span class="admin-badge badge-danger">Bị khóa</span>
                         </td>
                         <td style="text-align: center;">
                             <div class="action-dropdown-wrapper">
@@ -338,7 +338,7 @@
                             <span class="points-val">3.420 pts</span>
                         </td>
                         <td>
-                            <span class="admin-badge badge-warning" style="color: #DC2626; background: #FEE2E2; border-color: #FED8D8;">Khiếu nại TK-015</span>
+                            <span class="admin-badge badge-danger">Khiếu nại TK-015</span>
                         </td>
                         <td>
                             <span class="admin-badge badge-success">Đang hoạt động</span>
@@ -514,8 +514,8 @@
             </div>
 
             <!-- BANNER CẢNH BÁO KHẨN CẤP -->
-            <div class="emergency-alert-banner">
-                <span class="alert-text">Khách hàng đang có vé khiếu nại mức độ Cao chưa giải quyết (Mã: TK-008 - Bé Lu bị trầy móng chân). Cần giải quyết dứt điểm trước khi nhận giao dịch mới!</span>
+            <div class="emergency-alert-banner" id="custEmergencyBanner">
+                <span class="alert-text" id="custEmergencyAlertText">Khách hàng đang có vé khiếu nại mức độ Cao chưa giải quyết (Mã: TK-008 - Bé Lu bị trầy móng chân). Cần giải quyết dứt điểm trước khi nhận giao dịch mới!</span>
             </div>
 
             <!-- 5 TAB CON CHI TIẾT BÊN TRONG HỒ SƠ -->
@@ -524,15 +524,15 @@
                 <button type="button" class="drawer-tab-btn" data-drawertab="dtab-pets">Thú cưng</button>
                 <button type="button" class="drawer-tab-btn" data-drawertab="dtab-orders">
                     <span>Đơn hàng</span>
-                    <span class="tab-badge-count">1</span>
+                    <span class="tab-badge-count" id="badgeCountOrders">1</span>
                 </button>
                 <button type="button" class="drawer-tab-btn" data-drawertab="dtab-bookings">
                     <span>Lịch hẹn</span>
-                    <span class="tab-badge-count">1</span>
+                    <span class="tab-badge-count" id="badgeCountBookings">1</span>
                 </button>
                 <button type="button" class="drawer-tab-btn" data-drawertab="dtab-complaints">
                     <span>Khiếu nại</span>
-                    <span class="tab-badge-count">1</span>
+                    <span class="tab-badge-count" id="badgeCountComplaints">1</span>
                 </button>
             </div>
 
@@ -551,6 +551,7 @@
                             <div class="data-pair-row"><span class="data-key">Số điện thoại:</span><span class="data-val" id="profileValPhone">0912345678</span></div>
                             <div class="data-pair-row"><span class="data-key">Email:</span><span class="data-val" id="profileValEmail">an.nguyen@email.com</span></div>
                             <div class="data-pair-row"><span class="data-key">Giới tính:</span><span class="data-val" id="profileValGender">Nam</span></div>
+                            <div class="data-pair-row"><span class="data-key">Ngày sinh:</span><span class="data-val" id="profileValDob">15/08/1992</span></div>
                             <div class="data-pair-row" style="align-items: flex-start; padding: 10px 0;">
                                 <span class="data-key" style="margin-top: 3px;">Sổ địa chỉ:</span>
                                 <div class="data-val" id="profileValAddressContainer" style="display: flex; flex-direction: column; gap: 8px; flex: 1;">
@@ -574,9 +575,9 @@
                         </div>
                         <div class="detail-box">
                             <h4 class="detail-box-title">Ghi chú</h4>
-                            <textarea class="admin-input textarea-note" rows="5" placeholder="Ghi chú sở thích, tính cách khách hàng...">Khách hàng thân thiết từ 2024. Rất yêu quý bé Lu (Poodle). Khách yêu cầu thợ cắt tỉa nhẹ nhàng, không xịt nước hoa nồng.</textarea>
+                            <textarea class="admin-input textarea-note" id="drawerCustNote" rows="5" placeholder="Ghi chú sở thích, tính cách khách hàng...">Khách hàng thân thiết từ 2024. Rất yêu quý bé Lu (Poodle). Khách yêu cầu thợ cắt tỉa nhẹ nhàng, không xịt nước hoa nồng.</textarea>
                             <div style="display: flex; justify-content: flex-end; margin-top: auto; padding-top: 8px;">
-                                <button type="button" class="admin-btn admin-btn-primary" style="font-size: 13px; padding: 8px 18px;">Lưu ghi chú</button>
+                                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveCustomerNote" style="font-size: 13px; padding: 8px 18px;">Lưu ghi chú</button>
                             </div>
                         </div>
                     </div>
@@ -589,18 +590,7 @@
                         <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenAddPetModal">+ Thêm bé cưng</button>
                     </div>
                     <div class="pet-cards-list" id="petCardsListContainer">
-                        <div class="pet-detail-card">
-                            <div class="pet-card-head">
-                                <span class="pet-card-name">Bé Lu (Mã: PET-001)</span>
-                                <span class="admin-badge badge-warning">Cảnh báo: Dị ứng phấn hoa</span>
-                            </div>
-                            <div class="pet-card-body">
-                                <div><strong>Loài:</strong> Chó Poodle</div>
-                                <div><strong>Cân nặng:</strong> 4.5 kg</div>
-                                <div><strong>Tiền sử tiêm chủng:</strong> Sổ theo dõi tiêm phòng định kỳ đầy đủ (Chủ xuất trình tháng 8/2026)</div>
-                                <div><strong>Tính cách / Lưu ý:</strong> Bé ngoan, hơi sợ tiếng máy sấy công suất lớn</div>
-                            </div>
-                        </div>
+                        <!-- Render động theo khách hàng -->
                     </div>
                 </div>
 
@@ -617,15 +607,8 @@
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>ORD-8921</strong></td>
-                                <td>25/09/2026</td>
-                                <td>450.000 đ</td>
-                                <td><span class="admin-badge badge-success">Đã thanh toán</span></td>
-                                <td><span class="admin-badge badge-info">Đang giao</span></td>
-                                <td><button type="button" class="admin-btn admin-btn-secondary btn-sm">Xem chi tiết đơn</button></td>
-                            </tr>
+                        <tbody id="drawerOrdersTbody">
+                            <!-- Render động theo khách hàng -->
                         </tbody>
                     </table>
                 </div>
@@ -643,15 +626,8 @@
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>AP-201</strong></td>
-                                <td>27/09/2026 09:00</td>
-                                <td>Spa Grooming và Cắt tỉa tạo kiểu</td>
-                                <td>Trần Hoàng (Thợ bậc 2)</td>
-                                <td><span class="admin-badge badge-warning">Đang thực hiện</span></td>
-                                <td><button type="button" class="admin-btn admin-btn-secondary btn-sm">Xem nhật ký</button></td>
-                            </tr>
+                        <tbody id="drawerBookingsTbody">
+                            <!-- Render động theo khách hàng -->
                         </tbody>
                     </table>
                 </div>
@@ -669,15 +645,8 @@
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>TK-008</strong></td>
-                                <td>27/09/2026 10:15</td>
-                                <td>Bé Lu bị trầy móng sau buổi cắt tỉa</td>
-                                <td><span class="admin-badge badge-warning" style="color: #DC2626; background: #FEE2E2; border-color: #FED8D8;">Cao</span></td>
-                                <td><span class="admin-badge badge-warning">Đang xử lý</span></td>
-                                <td><button type="button" class="admin-btn admin-btn-primary btn-sm">Mở Ticket xử lý</button></td>
-                            </tr>
+                        <tbody id="drawerComplaintsTbody">
+                            <!-- Render động theo khách hàng -->
                         </tbody>
                     </table>
                 </div>
@@ -733,11 +702,11 @@
                 </table>
             </div>
 
-            <!-- NHẬT KÝ BIẾN ĐỘNG ĐIỂM VÀ NÚT ĐỀN BÙ SỰ CỐ -->
+            <!-- NHẬT KÝ BIẾN ĐỘNG ĐIỂM VÀ NÚT ĐIỀU CHỈNH ĐIỂM -->
             <div class="admin-card">
                 <div class="admin-card-header">
                     <span class="admin-card-title">Lịch sử Pawpoint</span>
-                    <button type="button" class="admin-btn admin-btn-primary btn-sm" id="btnOpenAdjustPointsModal">Bù điểm sự cố</button>
+                    <button type="button" class="admin-btn admin-btn-primary btn-sm" id="btnOpenAdjustPointsModal">Điều chỉnh điểm</button>
                 </div>
                 <table class="admin-table">
                     <thead>
@@ -749,7 +718,7 @@
                             <th>Lý do</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="pawpointHistoryTbody">
                         <tr>
                             <td>27/09/2026 10:30</td>
                             <td>Nguyễn Văn An (0912345678)</td>
@@ -827,23 +796,35 @@
             <form id="formAdjustPoints">
                 <div class="form-group mb-3">
                     <label class="form-label">Số điện thoại</label>
-                    <input type="tel" class="admin-input" id="adjustPhone" placeholder="Nhập SĐT khách cần bù điểm..." required>
+                    <input type="tel" class="admin-input" id="adjustPhone" placeholder="Nhập SĐT khách cần điều chỉnh điểm..." required>
                 </div>
-                <div class="form-group mb-3">
-                    <label class="form-label">Số điểm Pawpoint bù</label>
-                    <input type="number" class="admin-input" id="adjustPointsVal" placeholder="Ví dụ: 50" required>
+                <div class="form-row-two-col mb-3">
+                    <div class="form-group">
+                        <label class="form-label">Loại điều chỉnh</label>
+                        <select class="admin-select" id="adjustType">
+                            <option value="ADD">+ Cộng điểm (Thưởng / Bù sự cố)</option>
+                            <option value="SUB">- Trừ điểm (Thu hồi / Đổi quà thủ công)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Số điểm Pawpoint (*)</label>
+                        <input type="number" min="1" class="admin-input" id="adjustPointsVal" placeholder="Ví dụ: 50" required>
+                    </div>
                 </div>
                 <div class="form-group mb-4">
-                    <label class="form-label">Lý do điều chỉnh</label>
+                    <label class="form-label">Lý do điều chỉnh (*)</label>
                     <select class="admin-select" id="adjustReason">
-                        <option value="COMPENSATION_SERVICE">Bù sự cố dịch vụ Spa / Hotel trễ hẹn</option>
-                        <option value="COMPENSATION_ORDER">Bù sự cố giao hàng chậm / sản phẩm lỗi</option>
-                        <option value="GOODWILL_VIP">Tặng điểm tri ân khách hàng thân thiết</option>
+                        <option value="Bù sự cố dịch vụ Spa / Hotel trễ hẹn">Bù sự cố dịch vụ Spa / Hotel trễ hẹn</option>
+                        <option value="Bù sự cố giao hàng chậm / sản phẩm lỗi">Bù sự cố giao hàng chậm / sản phẩm lỗi</option>
+                        <option value="Tặng điểm tri ân khách hàng thân thiết">Tặng điểm tri ân khách hàng thân thiết</option>
+                        <option value="Thu hồi điểm do hủy đơn hàng / hoàn tiền">Thu hồi điểm do hủy đơn hàng / hoàn tiền</option>
+                        <option value="Khách đổi quà tặng trực tiếp tại quầy">Khách đổi quà tặng trực tiếp tại quầy</option>
+                        <option value="Điều chỉnh sai lệch số dư điểm">Điều chỉnh sai lệch số dư điểm</option>
                     </select>
                 </div>
                 <div class="modal-actions-footer">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAdjustPoints">Hủy bỏ</button>
-                    <button type="submit" class="admin-btn admin-btn-primary">Xác nhận</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Xác nhận điều chỉnh</button>
                 </div>
             </form>
         </div>
@@ -887,6 +868,15 @@
                         <label class="form-label">Ngày sinh</label>
                         <input type="date" class="admin-input" id="editCustDob">
                     </div>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Hạng thành viên (Đặc cách / Điều chỉnh)</label>
+                    <select class="admin-select" id="editCustTier">
+                        <option value="BRONZE">Đồng</option>
+                        <option value="SILVER">Bạc</option>
+                        <option value="GOLD">Vàng</option>
+                        <option value="DIAMOND">Kim Cương</option>
+                    </select>
                 </div>
                 <div class="address-book-wrapper">
                     <div class="address-book-header">
@@ -952,6 +942,58 @@
                 <div class="modal-actions-footer">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAddPet">Hủy bỏ</button>
                     <button type="submit" class="admin-btn admin-btn-primary">Lưu bé cưng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 5: CHỈNH SỬA THÔNG TIN THÚ CƯNG (EDIT PET)
+         ==================================================================== -->
+    <div class="admin-modal-backdrop" id="modalEditPet" style="display: none;">
+        <div class="admin-modal-card">
+            <div class="admin-modal-header">
+                <span class="admin-modal-title">Chỉnh sửa thông tin bé cưng</span>
+                <button type="button" class="btn-modal-close" id="btnCloseEditPet">Đóng</button>
+            </div>
+            <form id="formEditPet">
+                <input type="hidden" id="editPetId" value="">
+                <div class="form-row-two-col mb-3">
+                    <div class="form-group">
+                        <label class="form-label">Tên bé cưng (*)</label>
+                        <input type="text" class="admin-input" id="editPetName" placeholder="Ví dụ: Bé Bông, Bé Miu..." required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Loài (*)</label>
+                        <select class="admin-select" id="editPetSpecies">
+                            <option value="Chó">Chó</option>
+                            <option value="Mèo">Mèo</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row-two-col mb-3">
+                    <div class="form-group">
+                        <label class="form-label">Giống loài</label>
+                        <input type="text" class="admin-input" id="editPetBreed" placeholder="Ví dụ: Poodle, Corgi, Golden, Mèo Anh...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cân nặng (kg)</label>
+                        <input type="number" step="0.1" class="admin-input" id="editPetWeight" placeholder="Ví dụ: 5.2">
+                    </div>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Tiền sử tiêm chủng</label>
+                    <input type="text" class="admin-input" id="editPetVaccine" placeholder="Ví dụ: Đã tiêm dại và 7 bệnh mũi 2...">
+                </div>
+                <div class="form-group mb-4">
+                    <label class="form-label">Lưu ý an toàn / Cảnh báo sức khỏe</label>
+                    <input type="text" class="admin-input" id="editPetAlert" placeholder="Ví dụ: Dị ứng sữa tắm hoa hồng, sợ sấy...">
+                </div>
+
+                <div class="modal-actions-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelEditPet">Hủy bỏ</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Lưu cập nhật</button>
                 </div>
             </form>
         </div>
