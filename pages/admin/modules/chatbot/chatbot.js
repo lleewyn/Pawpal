@@ -58,7 +58,28 @@
                     fullMaskedText: '[Nội dung kích động đã được màng lọc tâm lý che mờ: ***]',
                     activeMaskLevel: 'words' // 'full' | 'words' | 'raw'
                 },
-                { id: 'msg-001-4', sender: 'bot', time: '10:44', text: 'Dạ PawPal rất thấu hiểu sự bất tiện này và thành thật xin lỗi sen ạ! Em đang kết nối ngay với chuyên viên CSKH để hỗ trợ sen gấp ạ.' }
+                { id: 'msg-001-4', sender: 'bot', time: '10:44', text: 'Dạ PawPal rất thấu hiểu sự bất tiện này và thành thật xin lỗi sen ạ! Em đang kết nối ngay với chuyên viên CSKH để hỗ trợ sen gấp ạ.' },
+                {
+                    id: 'msg-001-5',
+                    sender: 'agent',
+                    agentName: 'Lê Lệ Quyên (CSKH)',
+                    time: '10:45',
+                    text: 'Dạ PawPal xin chào sen! Em là Quyên - CSKH. Em đã kiểm tra đơn hàng SP-2026-003 và xin gửi tặng 50 điểm Pawpoint bồi hoàn vào ví cho sen ngay ạ.'
+                },
+                {
+                    id: 'msg-001-6',
+                    sender: 'agent',
+                    agentName: 'Hệ thống PawPal',
+                    type: 'action-reward',
+                    time: '10:45',
+                    rewardData: {
+                        points: 50,
+                        customerName: 'Lê Lệ Quyên',
+                        reason: 'Giao hàng trễ so với cam kết',
+                        txId: 'PT-882109'
+                    },
+                    text: 'Đã nạp thành công +50 điểm Pawpoint bồi hoàn vào ví tài khoản của sen!'
+                }
             ]
         },
         {
@@ -100,7 +121,35 @@
                     activeMaskLevel: 'full' // 'full' | 'words' | 'raw'
                 },
                 { id: 'msg-002-2', sender: 'bot', time: '10:29', text: 'Dạ PawPal vô cùng xin lỗi sen về sự cố xảy ra với bé! Em xin phép nối máy ngay với Trưởng ca chi nhánh để thăm khám và xử lý tận tình cho bé ạ.' },
-                { id: 'msg-002-3', sender: 'agent', agentName: 'Nguyễn Văn A (CSKH)', time: '10:31', text: 'Dạ em chào anh Khang, em là Văn A - CSKH PawPal. Em đã tiếp nhận ca chat và đang liên hệ Bác sĩ thú y trực tại chi nhánh để hỗ trợ kiểm tra vết thương cho bé Lu Lu ngay lập tức ạ.' }
+                { id: 'msg-002-3', sender: 'agent', agentName: 'Nguyễn Văn A (CSKH)', time: '10:31', text: 'Dạ em chào anh Khang, em là Văn A - CSKH PawPal. Em đã tiếp nhận ca chat và đang liên hệ Bác sĩ thú y trực tại chi nhánh để hỗ trợ kiểm tra vết thương cho bé Lu Lu ngay lập tức ạ.' },
+                {
+                    id: 'msg-002-4',
+                    sender: 'agent',
+                    agentName: 'Hệ thống PawPal',
+                    type: 'action-ticket',
+                    time: '10:32',
+                    ticketData: {
+                        id: 'TK-2026-003',
+                        title: 'Khiếu nại vết trầy xước của cún Lu Lu sau khi spa tắm tỉa',
+                        category: 'Khiếu nại Dịch vụ Spa và Grooming',
+                        priority: 'Mức độ Cao (Khẩn cấp)',
+                        refId: 'BKG-1002'
+                    },
+                    text: 'Đã trích xuất biên bản hội thoại và tạo thành công vé hỗ trợ chính thức mang mã định danh TK-2026-003 trong phân hệ Khiếu nại.'
+                },
+                {
+                    id: 'msg-002-5',
+                    sender: 'agent',
+                    agentName: 'Hệ thống PawPal',
+                    type: 'action-escalate',
+                    time: '10:33',
+                    escalateData: {
+                        targetName: 'Trần Hoàng Nam - Quản lý Chi nhánh Quận 1',
+                        reason: 'Khách hàng giận dữ, lời lẽ công kích vượt thẩm quyền nhân viên',
+                        notes: 'Bé cún bị trầy xước nhẹ, cần Quản lý chi nhánh trực tiếp đến thăm khám và hỗ trợ chi phí'
+                    },
+                    text: 'Ca chat đã được chuyển cấp khẩn cho [Trần Hoàng Nam - Quản lý Chi nhánh Quận 1] lúc 10:33. Chuyên viên CSKH đã được ngắt kết nối an toàn.'
+                }
             ]
         },
         {
