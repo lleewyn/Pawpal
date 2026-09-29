@@ -1,6 +1,6 @@
 <div class="pets-module">
     <!-- ====================================================================
-         SUB-TAB 1: THÚ CƯNG (DANH SÁCH & BỘ LỌC CHUYÊN SÂU)
+         SUB-TAB 1: THÚ CƯNG (DANH SÁCH VÀ BỘ LỌC CHUYÊN SÂU)
          ==================================================================== -->
     <section class="subtab-content active" id="subtab-tab-pet-list">
         <!-- KHU VỰC 1: 5 THẺ THỐNG KÊ NHANH -->
@@ -27,7 +27,7 @@
             </div>
         </div>
 
-        <!-- KHU VỰC 2 & 3: KHỐI QUẢN LÝ THÚ CƯNG THỐNG NHẤT (BỘ LỌC + BẢNG DANH SÁCH) -->
+        <!-- KHU VỰC 2 VÀ 3: KHỐI QUẢN LÝ THÚ CƯNG THỐNG NHẤT (BỘ LỌC + BẢNG DANH SÁCH) -->
         <div class="admin-card pet-master-card">
             <!-- THANH CÔNG CỤ TÍCH HỢP ĐẦU BẢNG -->
             <div class="table-toolbar-section">
@@ -164,7 +164,7 @@
                 <span class="alert-text" id="drawerPetAlertText">Cảnh báo: Bé hay cắn khi chạm vào đuôi hoặc khi sấy chân sau. Kỹ thuật viên Groomer cần đeo loa chắn mõm hoặc bố trí 2 người cùng phối hợp để đảm bảo an toàn!</span>
             </div>
 
-            <!-- 4 TAB CON CHI TIẾT BÊN TRONG HỒ SƠ & TRẠNG THÁI -->
+            <!-- 4 TAB CON CHI TIẾT BÊN TRONG HỒ SƠ VÀ TRẠNG THÁI -->
             <div class="drawer-subtabs-row">
                 <div class="drawer-subtabs-bar">
                     <button type="button" class="drawer-tab-btn active" data-drawertab="ptab-traits">Thể trạng và Đặc tính</button>
@@ -185,7 +185,7 @@
 
             <!-- NỘI DUNG 4 TAB CON -->
             <div class="drawer-tab-body">
-                <!-- TAB CON 1: THỂ TRẠNG & ĐẶC TÍNH -->
+                <!-- TAB CON 1: THỂ TRẠNG VÀ ĐẶC TÍNH -->
                 <div class="drawer-tab-panel active" id="ptab-traits">
                     <div class="detail-grid-two-col">
                         <div class="detail-box">
@@ -256,6 +256,13 @@
 
                 <!-- TAB CON 2: XÁC NHẬN TIÊM CHỦNG -->
                 <div class="drawer-tab-panel" id="ptab-vaccine">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <h4 class="detail-box-title" style="margin-bottom: 2px;">Hồ sơ dịch tễ và tiêm chủng của bé</h4>
+                            <div style="font-size: 12.5px; color: var(--text-muted);">Theo dõi định kỳ vắc-xin dại, bệnh truyền nhiễm và phòng ký sinh trùng</div>
+                        </div>
+                        <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenAddVaccineModal">+ Ghi nhận tiêm chủng hoặc xổ giun</button>
+                    </div>
                     <div class="vaccine-card-grid" id="petVaccineContainer">
                         <!-- Render động theo bé cưng -->
                     </div>
@@ -282,7 +289,7 @@
                     </div>
                 </div>
 
-                <!-- TAB CON 4: LỊCH SỬ ĐẶT HẸN & DỊCH VỤ -->
+                <!-- TAB CON 4: LỊCH SỬ ĐẶT HẸN VÀ DỊCH VỤ -->
                 <div class="drawer-tab-panel" id="ptab-history">
                     <div class="table-responsive-wrapper">
                         <table class="admin-table">
@@ -658,7 +665,7 @@
     </div>
 
     <!-- ====================================================================
-         MODAL 2: CÂN BÉ & ÁP DỤNG MA TRẬN GIÁ DỊCH VỤ
+         MODAL 2: CÂN BÉ VÀ ÁP DỤNG MA TRẬN GIÁ DỊCH VỤ
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalWeighPet">
         <div class="admin-modal-card">
@@ -765,7 +772,7 @@
     </div>
 
     <!-- ====================================================================
-         MODAL 4: CHI TIẾT NHẬT KÝ CHĂM SÓC (BEFORE / AFTER & CHECKLIST)
+         MODAL 4: CHI TIẾT NHẬT KÝ CHĂM SÓC (BEFORE / AFTER VÀ CHECKLIST)
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalViewCareLogDetail">
         <div class="admin-modal-card">
@@ -1059,6 +1066,165 @@
             <div class="modal-actions-footer" style="margin-top: 20px;">
                 <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalCollarTagPreview">Đóng</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmSendPrintCollar">Xác nhận gửi lệnh in nhiệt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 8: GHI NHẬN TIÊM CHỦNG VÀ DỊCH TỄ
+         ==================================================================== -->
+    <div class="admin-modal-backdrop" id="modalAddVaccine">
+        <div class="admin-modal-card" style="width: 520px;">
+            <div class="admin-modal-header">
+                <span class="admin-modal-title">Ghi nhận tiêm chủng và dịch tễ</span>
+                <button type="button" class="btn-modal-close" data-close-modal="modalAddVaccine">Đóng</button>
+            </div>
+            <form id="formAddVaccine" onsubmit="return false;">
+                <div class="form-group">
+                    <label class="form-label">Loại vắc-xin hoặc dịch vụ dịch tễ (*):</label>
+                    <select class="admin-select" id="newVaccineType" required>
+                        <option value="Vắc-xin phòng dại (Rabies)">Vắc-xin phòng dại (Rabies) - Tiêu chuẩn an toàn</option>
+                        <option value="Vắc-xin 7 bệnh cho Chó (Vanguard Plus 5/CV-L)">Vắc-xin 7 bệnh cho Chó (Vanguard Plus 5/CV-L)</option>
+                        <option value="Vắc-xin 4 bệnh cho Mèo (PureVax / Felocell)">Vắc-xin 4 bệnh cho Mèo (PureVax / Felocell)</option>
+                        <option value="Xổ giun định kỳ và Nhỏ gáy ve rận">Xổ giun định kỳ và Nhỏ gáy ve rận (NexGard / Revolution)</option>
+                        <option value="Tiêm phòng nấm da và ghẻ">Tiêm phòng nấm da và ghẻ</option>
+                        <option value="Khác">Khác (Tự nhập tên vắc-xin)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="groupCustomVaccineName" style="display: none;">
+                    <label class="form-label">Tên mũi tiêm tùy chỉnh (*):</label>
+                    <input type="text" class="admin-input" id="newCustomVaccineName" placeholder="Ví dụ: Vắc-xin Ho cũi chó...">
+                </div>
+                <div class="form-row-two-col">
+                    <div class="form-group">
+                        <label class="form-label">Ngày tiêm gần nhất (*):</label>
+                        <input type="date" class="admin-input" id="newVaccineDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ngày tái chủng dự kiến:</label>
+                        <input type="date" class="admin-input" id="newVaccineNextDate">
+                    </div>
+                </div>
+                <div class="form-row-two-col">
+                    <div class="form-group">
+                        <label class="form-label">Địa điểm hoặc Nguồn xác nhận:</label>
+                        <input type="text" class="admin-input" id="newVaccinePlace" placeholder="Ví dụ: Pawpal Center, Sổ tiêm đối chiếu..." value="Pawpal Center">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Trạng thái:</label>
+                        <select class="admin-select" id="newVaccineStatus">
+                            <option value="Đã tiêm đủ">Đã tiêm đủ</option>
+                            <option value="Đã thực hiện">Đã thực hiện</option>
+                            <option value="Đạt chuẩn">Đạt chuẩn</option>
+                            <option value="Sắp đến hạn">Sắp đến hạn</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalAddVaccine">Hủy</button>
+                    <button type="submit" class="admin-btn admin-btn-primary" id="btnSubmitAddVaccine">Lưu vào hồ sơ bé</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 9: XEM TRƯỚC GIAO DIỆN APP SEN (PAWPAL DIARY MÔ PHỎNG)
+         ==================================================================== -->
+    <div class="admin-modal-backdrop" id="modalPreviewAppDiary">
+        <div class="admin-modal-card" style="width: 440px; padding: 0; overflow: hidden; background: #F8FAF9;">
+            <!-- APP HEADER MÔ PHỎNG MOBILE -->
+            <div style="background-color: #236B48; color: #FFFFFF; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; opacity: 0.85;">PawPal Sen App • Nhật ký làm đẹp</div>
+                    <div style="font-size: 17px; font-weight: 700; margin-top: 2px;" id="appDiaryPetName">Bé Milu hôm nay</div>
+                </div>
+                <button type="button" class="btn-modal-close" data-close-modal="modalPreviewAppDiary" style="color: #FFFFFF; font-size: 13px;">✕ Đóng</button>
+            </div>
+
+            <div style="padding: 18px; display: flex; flex-direction: column; gap: 14px; max-height: 75vh; overflow-y: auto;">
+                <!-- SO SÁNH TRƯỚC VÀ SAU -->
+                <div style="background: #FFFFFF; border-radius: var(--admin-radius); padding: 12px; border: 1px solid var(--border-neutral);">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">Khoảnh khắc Before và After</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div>
+                            <img src="/assets/images/publics/dogcute3.jpg" id="appDiaryImgBefore" style="width: 100%; height: 140px; object-fit: cover; border-radius: var(--admin-radius);" alt="Trước khi làm">
+                            <div style="font-size: 11.5px; color: var(--text-muted); text-align: center; margin-top: 4px; font-weight: 600;">Lúc mới đón bé</div>
+                        </div>
+                        <div>
+                            <img src="/assets/images/publics/dogcute1.jpg" id="appDiaryImgAfter" style="width: 100%; height: 140px; object-fit: cover; border-radius: var(--admin-radius);" alt="Sau khi làm">
+                            <div style="font-size: 11.5px; color: #236B48; text-align: center; margin-top: 4px; font-weight: 600;">Sau khi spa thơm tho</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHECKLIST 4 MỤC VỆ SINH ĐẠT CHUẨN -->
+                <div style="background: #FFFFFF; border-radius: var(--admin-radius); padding: 12px; border: 1px solid var(--border-neutral);">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">4 Mục chăm sóc an toàn vệ sinh</div>
+                    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12.5px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span id="appDiaryItemEar">1. Vệ sinh tai sạch sẽ, không viêm</span>
+                            <span class="admin-badge badge-success" id="appBadgeEar" style="font-size: 11px;">Đạt chuẩn</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span id="appDiaryItemNail">2. Móng cắt mài tròn nhẵn</span>
+                            <span class="admin-badge badge-success" id="appBadgeNail" style="font-size: 11px;">Đạt chuẩn</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span id="appDiaryItemAnal">3. Tuyến hôi đã vắt sạch sẽ</span>
+                            <span class="admin-badge badge-success" id="appBadgeAnal" style="font-size: 11px;">Đạt chuẩn</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span id="appDiaryItemSkin">4. Da lông sạch, không nấm ve</span>
+                            <span class="admin-badge badge-success" id="appBadgeSkin" style="font-size: 11px;">Đạt chuẩn</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LỜI DẶN DÒ TỪ KỸ THUẬT VIÊN -->
+                <div style="background: #FFFFFF; border-radius: var(--admin-radius); padding: 12px; border: 1px solid var(--border-neutral);">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 6px;">Lời dặn dò từ Kỹ thuật viên:</div>
+                    <div id="appDiaryMessage" style="font-size: 12.5px; color: var(--text-main); line-height: 1.5;">
+                        Lông vùng tai bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.
+                    </div>
+                </div>
+
+                <!-- ĐÁNH GIÁ 5 SAO CHO KHÁCH -->
+                <div style="text-align: center; padding: 6px 0;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Sen hài lòng với buổi làm đẹp của bé chứ?</div>
+                    <div style="display: flex; justify-content: center; gap: 8px;">
+                        <span style="font-size: 18px; color: #EAB308;">★</span>
+                        <span style="font-size: 18px; color: #EAB308;">★</span>
+                        <span style="font-size: 18px; color: #EAB308;">★</span>
+                        <span style="font-size: 18px; color: #EAB308;">★</span>
+                        <span style="font-size: 18px; color: #EAB308;">★</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding: 12px 18px; background: #FFFFFF; border-top: 1px solid var(--border-neutral); display: flex; justify-content: flex-end;">
+                <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalPreviewAppDiary">Đóng xem trước</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 10: THƯ VIỆN CHỌN ẢNH THỰC TẾ CA LÀM
+         ==================================================================== -->
+    <div class="admin-modal-backdrop" id="modalSelectPhoto">
+        <div class="admin-modal-card" style="width: 540px;">
+            <div class="admin-modal-header">
+                <span class="admin-modal-title" id="selectPhotoModalTitle">Chọn ảnh thực tế</span>
+                <button type="button" class="btn-modal-close" data-close-modal="modalSelectPhoto">Đóng</button>
+            </div>
+            <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px;">Nhấp chọn một ảnh dưới đây để cập nhật vào ca làm việc:</div>
+            
+            <div class="photo-picker-grid" id="photoPickerGrid">
+                <!-- Danh sách ảnh thumbnail được nạp động từ javascript -->
+            </div>
+
+            <div class="modal-actions-footer" style="margin-top: 16px;">
+                <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalSelectPhoto">Hủy</button>
             </div>
         </div>
     </div>
