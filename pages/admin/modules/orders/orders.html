@@ -175,6 +175,9 @@
             <div class="order-detail-grid">
                 <!-- CỘT CHÍNH (BÊN TRÁI): SẢN PHẨM VÀ BẢNG KÊ TÀI CHÍNH -->
                 <div class="order-main-col">
+                    <!-- KHỐI LIÊN THÔNG ĐỔI TRẢ RMA (GIAI ĐOẠN 3) -->
+                    <div id="detailOrderRmaBannerContainer"></div>
+
                     <div>
                         <div class="detail-section-title">Danh sách sản phẩm</div>
                         <table class="order-items-table">
@@ -443,6 +446,7 @@
         <button type="button" class="action-menu-item" id="menuActionShipOrder">Bàn giao vận chuyển</button>
         <button type="button" class="action-menu-item" id="menuActionConfirmPayment">Xác nhận thu tiền</button>
         <button type="button" class="action-menu-item text-success" id="menuActionReconcileCod">Đối soát tiền COD bưu cục</button>
+        <button type="button" class="action-menu-item" id="menuActionReturnRefund" style="color: #734718;">Đổi trả và Hoàn tiền (RMA)</button>
         <button type="button" class="action-menu-item danger-item" id="menuActionCancelOrder">Hủy đơn hàng</button>
     </div>
 
@@ -709,6 +713,130 @@
 
             <div class="modal-body-clean manifest-body" id="manifestContentContainer">
                 <!-- Nội dung bảng kê được chèn động từ orders.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 7: TIẾP NHẬN ĐỔI TRẢ VÀ HOÀN TIỀN (GIAI ĐOẠN 3: RMA DESK)
+         Liên thông Tồn kho và Phân hệ Khiếu nại
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalReturnRefund">
+        <div class="admin-modal-card rma-modal-card">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Tiếp nhận Đổi trả và Hoàn tiền (RMA Desk)</div>
+                    <div class="sub-meta-text">Xử lý khiếu nại, thu hồi hàng và bồi hoàn cho khách hàng</div>
+                </div>
+                <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalReturnRefund')">Đóng</button>
+            </div>
+
+            <div class="modal-body-clean rma-modal-body">
+                <!-- THÔNG TIN ĐƠN HÀNG GỐC -->
+                <div class="rma-order-summary-box">
+                    <div class="info-pair">
+                        <span class="info-label">Mã đơn hàng:</span>
+                        <span class="info-value text-heading" id="rmaOrderTargetCode" style="font-size: 15px; font-weight: 700;">ORD-2026-001</span>
+                    </div>
+                    <div class="info-pair">
+                        <span class="info-label">Khách hàng:</span>
+                        <span class="info-value" id="rmaCustomerName">Lê Lệ Quyên (0901234567)</span>
+                    </div>
+                    <div class="info-pair">
+                        <span class="info-label">Tổng tiền đơn:</span>
+                        <span class="info-value" id="rmaOrderTotal" style="font-weight: 600;">335.000 đ</span>
+                    </div>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Hình thức giải quyết bồi hoàn:</label>
+                        <select class="admin-select" id="rmaSolutionType">
+                            <option value="exchange">Đổi hàng mới (1-đổi-1 miễn phí vận chuyển)</option>
+                            <option value="refund">Trả hàng và Hoàn tiền (Refund)</option>
+                            <option value="resend">Gửi bù sản phẩm thiếu hoặc móp vỡ</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Lý do đổi trả:</label>
+                        <select class="admin-select" id="rmaReasonSelect">
+                            <option value="damaged">Hàng bị vỡ hoặc móp méo seal do vận chuyển</option>
+                            <option value="wrong_item">Kho đóng gói gửi nhầm loại hoặc nhầm màu</option>
+                            <option value="expired">Sản phẩm cận date hoặc hết hạn sử dụng</option>
+                            <option value="quality">Lỗi kỹ thuật hoặc chất lượng sản phẩm</option>
+                            <option value="customer_change">Khách đổi ý (Thú cưng không hợp tác)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- BẢNG CHỌN SẢN PHẨM CẦN ĐỔI TRẢ -->
+                <div class="form-group-item">
+                    <label class="form-label-clean">Chọn sản phẩm thu hồi / đổi trả:</label>
+                    <div class="table-responsive-wrapper" style="max-height: 180px; overflow-y: auto;">
+                        <table class="admin-table rma-items-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 36px; text-align: center;">Chọn</th>
+                                    <th>Tên sản phẩm</th>
+                                    <th style="width: 60px; text-align: center;">Mua</th>
+                                    <th style="width: 75px; text-align: center;">SL Trả</th>
+                                    <th style="width: 100px; text-align: right;">Đơn giá</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rmaItemsTableBody">
+                                <!-- Nạp động theo sản phẩm của đơn -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- CHÍNH SÁCH KIỂM ĐỊNH TỒN KHO VÀ NHẬP LẠI -->
+                <div class="form-group-item">
+                    <label class="form-label-clean">Kiểm định chất lượng và Phương án tồn kho:</label>
+                    <div class="rma-restock-options">
+                        <label class="rma-radio-label">
+                            <input type="radio" name="rmaRestockAction" value="restock" checked>
+                            <div>
+                                <strong style="color: #236B48;">Hàng còn nguyên seal -> Nhập lại kho bán (Restock)</strong>
+                                <div class="sub-meta-text">Hệ thống sẽ tự động cộng lại số lượng khả dụng vào tồn kho sản phẩm.</div>
+                            </div>
+                        </label>
+                        <label class="rma-radio-label">
+                            <input type="radio" name="rmaRestockAction" value="writeoff">
+                            <div>
+                                <strong style="color: #8F2424;">Hàng đã rách vỡ / Hư hỏng -> Chuyển kho Hủy (Write-off)</strong>
+                                <div class="sub-meta-text">Hàng lỗi không nhập lại kho thương mại, lưu vào sổ sách tổn thất hàng hóa.</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- PHƯƠNG THỨC HOÀN TIỀN -->
+                <div class="form-row-2col" id="rmaRefundFieldsRow">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Phương thức hoàn tiền:</label>
+                        <select class="admin-select" id="rmaRefundMethod">
+                            <option value="bank_transfer">Chuyển khoản ngân hàng trực tiếp</option>
+                            <option value="pawpoint">Quy đổi sang điểm thưởng Pawpoint tương đương</option>
+                            <option value="cash">Hoàn tiền mặt tại quầy chi nhánh</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Số tiền hoàn bồi hoàn (VNĐ):</label>
+                        <input type="number" class="admin-input" id="rmaRefundAmountInput" placeholder="Số tiền hoàn...">
+                    </div>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Ghi chú xử lý RMA:</label>
+                    <textarea class="admin-input" id="rmaInternalNote" placeholder="Ghi chú chi tiết cho bộ phận CSKH và kho vận..." style="height: 60px; padding: 8px 12px;"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalReturnRefund')">Hủy bỏ</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitRmaTicket">Xác nhận phê duyệt RMA</button>
             </div>
         </div>
     </div>

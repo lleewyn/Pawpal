@@ -1275,3 +1275,136 @@
     color: var(--text-main);
 }
 
+/* ==========================================================================
+   GIAI ĐOẠN 3: TIẾP NHẬN ĐỔI TRẢ, HOÀN TIỀN VÀ KIỂM ĐỊNH TỒN KHO RMA
+   ========================================================================== */
+
+.rma-modal-card {
+    width: 640px;
+    max-width: 96vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.rma-modal-body {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.rma-order-summary-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: #F4FAF6;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.rma-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+}
+
+.rma-items-table th {
+    background-color: #EEF5F1;
+    color: #236B48;
+    font-weight: 600;
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid #C3DEC7;
+}
+
+.rma-items-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #ECF2EE;
+    color: var(--text-main);
+}
+
+.rma-restock-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.rma-radio-label {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 14px;
+    background-color: #F8FAF9;
+    border-radius: var(--admin-radius);
+    border: 1px solid var(--border-neutral);
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.rma-radio-label:hover {
+    background-color: #F0F6F2;
+    border-color: #C3DEC7;
+}
+
+.rma-radio-label input[type="radio"] {
+    margin-top: 3px;
+    accent-color: #236B48;
+}
+
+/* THẺ HỒ SƠ RMA LIÊN THÔNG TRONG CHI TIẾT ĐƠN HÀNG */
+.order-rma-detail-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    background-color: #FDF6F6;
+    border: 1px solid #F5D3D3;
+    border-radius: var(--admin-radius);
+    margin-bottom: 16px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.rma-card-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.rma-card-title {
+    font-weight: 700;
+    color: #8F2424;
+    font-size: 13.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rma-card-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.btn-rma-link-complaint {
+    background: transparent !important;
+    border: none !important;
+    color: #236B48 !important;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 4px 8px;
+}
+
+.btn-rma-link-complaint:hover {
+    color: #165335 !important;
+}
+
+
