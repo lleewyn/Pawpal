@@ -792,26 +792,33 @@
         </div>
     </div>
     <!-- ====================================================================
-         MODAL 5: THÊM PHỤ PHÍ VÀ DỊCH VỤ PHÁT SINH TRONG CA
+         MODAL 5: THÊM PHỤ PHÍ VÀ DỊCH VỤ PHÁT SINH (ZERO-DISPUTE SURCHARGE DESK)
          ==================================================================== -->
     <div class="admin-modal-overlay" id="modalAddSurcharge">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card" style="width: 580px; max-width: 95vw;">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Thêm phụ phí và Dịch vụ phát sinh</div>
+                <div>
+                    <div class="modal-title-clean">Thêm phụ phí và Dịch vụ phát sinh (Zero-Dispute)</div>
+                    <div id="surchargeBookingMeta" style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
+                        Mã ca: BKG-1001 | Bé: Miu Con | KTV phụ trách: Ngọc Anh
+                    </div>
+                </div>
                 <button type="button" class="modal-btn-close-text" id="btnCloseAddSurcharge">Đóng</button>
             </div>
             <form id="formAddSurcharge" class="modal-body-clean">
                 <div class="form-group-item">
-                    <label class="form-label-clean">Chọn danh mục phụ phí phát sinh:</label>
+                    <label class="form-label-clean">Chọn danh mục phụ phí phát sinh chuẩn hóa:</label>
                     <select class="admin-select" id="surchargePresetSelect">
                         <option value="CUSTOM">-- Tự nhập loại phụ phí khác --</option>
-                        <option value="Phụ phí gỡ rối lông bết nặng|50000">Phụ phí gỡ rối lông bết nặng (+50.000 đ)</option>
-                        <option value="Vệ sinh tai nấm và viêm chuyên sâu|40000">Vệ sinh tai nấm và viêm chuyên sâu (+40.000 đ)</option>
-                        <option value="Nhỏ thuốc trị ve rận Frontline|80000">Nhỏ thuốc trị ve rận Frontline (+80.000 đ)</option>
-                        <option value="Tắm bùn khoáng phục hồi da lông|100000">Tắm bùn khoáng phục hồi da lông (+100.000 đ)</option>
-                        <option value="Cạo lông theo chỉ định da liễu|60000">Cạo lông theo chỉ định da liễu (+60.000 đ)</option>
-                        <option value="Khách sạn: Quá giờ trả phòng|50000">Khách sạn: Quá giờ trả phòng (+50.000 đ/giờ)</option>
-                        <option value="Khách sạn: Thêm bữa ăn tươi tự chọn|35000">Khách sạn: Thêm bữa ăn tươi tự chọn (+35.000 đ)</option>
+                        <option value="Phụ phí gỡ rối lông bết cấp 1 (nhẹ)|50000">Phụ phí gỡ rối lông bết cấp 1 (nhẹ) (+50.000 đ)</option>
+                        <option value="Phụ phí gỡ rối lông bết cấp 2 (nặng/toàn thân)|100000">Phụ phí gỡ rối lông bết cấp 2 (nặng/toàn thân) (+100.000 đ)</option>
+                        <option value="Tắm thuốc y tế trị ve rận nấm da|80000">Tắm thuốc y tế trị ve rận nấm da (+80.000 đ)</option>
+                        <option value="Vệ sinh tai nấm và viêm chuyên sâu|50000">Vệ sinh tai nấm và viêm chuyên sâu (+50.000 đ)</option>
+                        <option value="Phụ phí bé quá dữ / Cần KTV phụ tá hỗ trợ|60000">Phụ phí bé quá dữ / Cần KTV phụ tá hỗ trợ (+60.000 đ)</option>
+                        <option value="Phụ phí chênh lệch khung cân nặng thực tế|50000">Phụ phí chênh lệch khung cân nặng thực tế (+50.000 đ)</option>
+                        <option value="Cắt tỉa tạo kiểu chi tiết bổ sung|80000">Cắt tỉa tạo kiểu chi tiết bổ sung (+80.000 đ)</option>
+                        <option value="Khách sạn: Quá giờ lưu chuồng (+40.000 đ/giờ)|40000">Khách sạn: Quá giờ lưu chuồng (+40.000 đ/giờ)</option>
+                        <option value="Khách sạn: Thêm bữa ăn tươi dinh dưỡng|35000">Khách sạn: Thêm bữa ăn tươi dinh dưỡng (+35.000 đ)</option>
                     </select>
                 </div>
 
@@ -827,22 +834,40 @@
                 </div>
 
                 <div class="form-group-item">
-                    <label class="form-label-clean">Lý do và Mô tả hiện trạng phát sinh:</label>
-                    <textarea class="admin-input" id="surchargeReasonInput" style="height: 65px; padding: 8px 14px;" placeholder="Ví dụ: Vùng lông sau tai và ngực bị bết cứng, cần gỡ rối 20 phút trước khi tắm..." required></textarea>
+                    <label class="form-label-clean">Lý do và Mô tả hiện trạng phát sinh thực tế:</label>
+                    <textarea class="admin-input" id="surchargeReasonInput" style="height: 60px; padding: 8px 14px;" placeholder="Ví dụ: Vùng lông sau tai và ngực bị bết cứng thành mảng, cần gỡ rối 25 phút trước khi tắm..." required></textarea>
                 </div>
 
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Hình thức xác nhận đồng thuận với chủ nuôi:</label>
+                        <select class="admin-select" id="surchargeConsentSelect">
+                            <option value="Đã gửi ảnh và video qua Zalo cho khách, khách đã đồng ý">Đã gửi ảnh và video qua Zalo, khách đã đồng ý</option>
+                            <option value="Đã gọi điện thoại trao đổi và khách xác nhận">Đã gọi điện thoại trao đổi và khách xác nhận</option>
+                            <option value="Khách hàng yêu cầu trực tiếp tại quầy">Khách hàng yêu cầu trực tiếp tại quầy</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Ghi chú phản hồi của khách (tùy chọn):</label>
+                        <input type="text" class="admin-input" id="surchargeConsentNote" placeholder="VD: Khách dặn làm nhẹ tay, đồng ý mức phí...">
+                    </div>
+                </div>
+
+                <!-- ẢNH BẰNG CHỨNG HIỆN TRẠNG PHÁT SINH (ZERO-DISPUTE EVIDENCE) -->
                 <div class="form-group-item">
-                    <label class="form-label-clean">Hình thức xác nhận với chủ nuôi:</label>
-                    <select class="admin-select" id="surchargeConsentSelect">
-                        <option value="Đã gọi điện thoại xin ý kiến khách">Đã gọi điện thoại xin ý kiến khách</option>
-                        <option value="Đã gửi ảnh và video qua Zalo cho khách">Đã gửi ảnh và video qua Zalo cho khách</option>
-                        <option value="Khách hàng yêu cầu trực tiếp tại quầy">Khách hàng yêu cầu trực tiếp tại quầy</option>
-                    </select>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <label class="form-label-clean" style="margin-bottom: 0;">Ảnh bằng chứng hiện trạng phát sinh (Đối chứng Zero-Dispute):</label>
+                        <button type="button" class="btn-text-action" id="btnAddSurchargePhotoBtn">+ Đính kèm ảnh bằng chứng</button>
+                        <input type="file" id="surchargeProofFileInput" accept="image/*" multiple style="display: none;">
+                    </div>
+                    <div class="intake-proof-preview-container" id="surchargeProofPreviewList">
+                        <!-- Danh sách ảnh preview của phụ phí -->
+                    </div>
                 </div>
 
                 <div class="modal-footer-clean">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelAddSurcharge">Hủy bỏ</button>
-                    <button type="submit" class="admin-btn admin-btn-primary">Lưu phụ phí</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Lưu phụ phí và Ghi nhật ký</button>
                 </div>
             </form>
         </div>
@@ -1083,19 +1108,31 @@
     </div>
 
     <!-- ====================================================================
-         MODAL 9: ĐỔI KỸ THUẬT VIÊN (CHANGE STAFF)
+         MODAL 9: ĐIỀU PHỐI KỸ THUẬT VIÊN (STAFF REASSIGNMENT VÀ AUDIT TRAIL)
          ==================================================================== -->
     <div class="admin-modal-overlay" id="modalChangeStaff">
-        <div class="admin-modal-card" style="width: 420px;">
+        <div class="admin-modal-card" style="width: 480px; max-width: 95vw;">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Đổi Kỹ thuật viên phụ trách</div>
+                <div>
+                    <div class="modal-title-clean">Điều phối Kỹ thuật viên phụ trách</div>
+                    <div id="changeStaffBookingMeta" style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
+                        Mã ca: BKG-1001 (Miu Con) | KTV hiện tại: Ngọc Anh
+                    </div>
+                </div>
                 <button type="button" class="modal-btn-close-text" id="btnCloseChangeStaff">Đóng</button>
             </div>
             <form id="formChangeStaff" class="modal-body-clean">
                 <div class="form-group-item">
-                    <label class="form-label-clean">Chọn Kỹ thuật viên mới:</label>
+                    <label class="form-label-clean">Kỹ thuật viên hiện tại:</label>
+                    <div id="changeStaffCurrentName" style="font-weight: 600; color: #236B48; padding: 6px 12px; background: #EEF5F1; border-radius: var(--admin-radius);">
+                        Ngọc Anh
+                    </div>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Chọn Kỹ thuật viên tiếp nhận mới:</label>
                     <select class="admin-select" id="changeStaffSelect" required>
-                        <option value="">-- Chọn KTV --</option>
+                        <option value="">-- Chọn KTV mới --</option>
                         <option value="Ngọc Anh">Ngọc Anh</option>
                         <option value="Thu Thảo">Thu Thảo</option>
                         <option value="Hoàng Nam">Hoàng Nam</option>
@@ -1104,13 +1141,142 @@
                         <option value="Bảo Châu">Bảo Châu</option>
                     </select>
                 </div>
+
                 <div class="form-group-item">
-                    <label class="form-label-clean">Lý do đổi KTV (tùy chọn):</label>
-                    <input type="text" class="admin-input" id="changeStaffReasonInput" placeholder="VD: KTV Ngọc Anh bận lịch khác, điều phối lại...">
+                    <label class="form-label-clean">Lý do điều chuyển nhân sự:</label>
+                    <select class="admin-select" id="changeStaffPresetReason" style="margin-bottom: 6px;">
+                        <option value="CUSTOM">-- Chọn lý do điều phối chuẩn hóa --</option>
+                        <option value="KTV bận ca khẩn cấp hoặc lịch hẹn đột xuất">KTV bận ca khẩn cấp hoặc lịch hẹn đột xuất</option>
+                        <option value="Bé có tính khí nhút nhát / dữ dằn, cần KTV có chuyên môn cao hơn">Bé có tính khí nhút nhát / dữ dằn, cần KTV có chuyên môn cao hơn</option>
+                        <option value="Khách hàng yêu cầu đổi KTV phụ trách">Khách hàng yêu cầu đổi KTV phụ trách</option>
+                        <option value="Điều phối cân bằng tải công việc trong ca trực">Điều phối cân bằng tải công việc trong ca trực</option>
+                        <option value="KTV gặp sự cố sức khỏe đột xuất">KTV gặp sự cố sức khỏe đột xuất</option>
+                    </select>
+                    <input type="text" class="admin-input" id="changeStaffReasonInput" placeholder="Nhập lý do chi tiết hoặc ghi chú bàn giao..." required>
                 </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Phạm vi bàn giao ca dịch vụ:</label>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label class="intake-check-item">
+                            <input type="radio" name="changeStaffScope" value="next_steps" checked> Tiếp quản các bước kỹ thuật tiếp theo (KTV cũ đã hoàn thành các bước trước)
+                        </label>
+                        <label class="intake-check-item">
+                            <input type="radio" name="changeStaffScope" value="all_steps"> Bàn giao toàn bộ ca dịch vụ (KTV mới phụ trách toàn bộ từ đầu)
+                        </label>
+                    </div>
+                </div>
+
                 <div class="modal-footer-clean">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelChangeStaff">Hủy bỏ</button>
-                    <button type="submit" class="admin-btn admin-btn-primary">Xác nhận đổi KTV</button>
+                    <button type="submit" class="admin-btn admin-btn-primary">Xác nhận điều chuyển KTV</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 10: NGHIỆM THU, KIỂM KÊ TƯ TRANG VÀ BÀN GIAO BÉ (CHECKOUT DESK)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalCompleteBooking">
+        <div class="admin-modal-card" style="width: 580px; max-width: 95vw;">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Nghiệm thu ca dịch vụ và Bàn giao bé</div>
+                    <div id="completeBookingMeta" style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
+                        Mã ca: BKG-1001 | Bé: Miu Con | Chủ nuôi: Lê Lệ Quyên
+                    </div>
+                </div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseCompleteBooking">Đóng</button>
+            </div>
+            <form id="formCompleteBooking" class="modal-body-clean">
+                <!-- KHỐI 1: KIỂM TRA TIẾN ĐỘ VÀ CHẤT LƯỢNG KỸ THUẬT -->
+                <div class="form-group-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label class="form-label-clean" style="margin-bottom: 0;">Tiến độ quy trình chăm sóc Care-Log:</label>
+                        <span id="completeStepsProgressText" style="font-size: 12.5px; font-weight: 600; color: #165335;">Đang kiểm tra...</span>
+                    </div>
+                    <label class="intake-check-item" style="margin-top: 4px;">
+                        <input type="checkbox" id="completeCheckQuality" checked required>
+                        Xác nhận toàn bộ quy trình chăm sóc và vệ sinh đã đạt tiêu chuẩn spa
+                    </label>
+                </div>
+
+                <!-- KHỐI 2: ĐỐI CHIẾU VÀ TRẢ LẠI TƯ TRANG ĐÃ GỬI (ZERO-CLAIM HANDOVER) -->
+                <div class="form-group-item">
+                    <label class="form-label-clean">Kiểm kê và Trả lại tư trang đã gửi lúc tiếp nhận:</label>
+                    <div id="completeBelongingsDesc" style="padding: 8px 12px; background: #F8FAF9; border-radius: var(--admin-radius); font-size: 12.5px; color: var(--text-main); margin-bottom: 6px;">
+                        Không có đồ dùng gửi lại quầy
+                    </div>
+                    <label class="intake-check-item">
+                        <input type="checkbox" id="completeCheckBelongings" checked required>
+                        Đã đối chiếu và trao trả đầy đủ toàn bộ tư trang, phụ kiện cho chủ nuôi
+                    </label>
+                </div>
+
+                <!-- KHỐI 3: BẢNG KÊ TỔNG HỢP CHI PHÍ THANH TOÁN (FINAL INVOICE) -->
+                <div class="form-group-item">
+                    <label class="form-label-clean">Bảng kê chi phí thanh toán cuối cùng:</label>
+                    <div class="financial-summary-list" style="background: #F8FAF9; padding: 10px 14px; border-radius: var(--admin-radius); font-size: 13px;">
+                        <div class="summary-row" style="padding: 3px 0;">
+                            <span>Giá gói dịch vụ chính:</span>
+                            <span id="completePriceBase" style="font-weight: 600;">250.000 đ</span>
+                        </div>
+                        <div class="summary-row" style="padding: 3px 0;">
+                            <span>Dịch vụ đi cùng (Accompanying):</span>
+                            <span id="completePriceAccompanying" style="font-weight: 600;">+0 đ</span>
+                        </div>
+                        <div class="summary-row" style="padding: 3px 0;">
+                            <span>Phụ phí phát sinh đã xác nhận:</span>
+                            <span id="completePriceAddons" style="font-weight: 600;">+0 đ</span>
+                        </div>
+                        <div class="summary-row" style="padding: 3px 0; color: #15803D;">
+                            <span>Giảm giá / Ưu đãi thành viên:</span>
+                            <span id="completePriceDiscount" style="font-weight: 600;">-0 đ</span>
+                        </div>
+                        <div class="summary-row" style="border-top: 1px solid var(--border-neutral); margin-top: 6px; padding-top: 6px;">
+                            <span style="font-weight: 700;">Tổng thanh toán cuối cùng:</span>
+                            <span id="completePriceTotal" style="font-size: 16px; font-weight: 700; color: #236B48;">250.000 đ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KHỐI 4: PHƯƠNG THỨC THANH TOÁN VÀ XÁC NHẬN THU TIỀN -->
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Hình thức thanh toán:</label>
+                        <select class="admin-select" id="completePaymentMethodSelect">
+                            <option value="Tiền mặt (Tại quầy)">Tiền mặt (Tại quầy)</option>
+                            <option value="Chuyển khoản VietQR">Chuyển khoản VietQR</option>
+                            <option value="Thẻ ngân hàng (POS)">Thẻ ngân hàng (POS)</option>
+                            <option value="Ví MoMo / VNPay">Ví MoMo / VNPay</option>
+                            <option value="Đã thanh toán trước Online">Đã thanh toán trước Online</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Trạng thái thu ngân:</label>
+                        <label class="intake-check-item" style="height: 38px; display: flex; align-items: center;">
+                            <input type="checkbox" id="completeCheckPaid" checked>
+                            Đã thu đủ tiền tại quầy
+                        </label>
+                    </div>
+                </div>
+
+                <!-- KHỐI 5: ẢNH CHỤP THÀNH PHẨM SAU CA (BEFORE / AFTER SHOWCASE) -->
+                <div class="form-group-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <label class="form-label-clean" style="margin-bottom: 0;">Ảnh chụp thành phẩm bé sau khi hoàn thành (tùy chọn):</label>
+                        <button type="button" class="btn-text-action" id="btnAddCompletePhotoBtn">+ Tải ảnh thành phẩm</button>
+                        <input type="file" id="completeProofFileInput" accept="image/*" multiple style="display: none;">
+                    </div>
+                    <div class="intake-proof-preview-container" id="completeProofPreviewList">
+                        <!-- Danh sách ảnh thành phẩm preview -->
+                    </div>
+                </div>
+
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelCompleteBooking">Quay lại</button>
+                    <button type="submit" class="admin-btn admin-btn-primary" id="completeModalSubmitBtn">Xác nhận bàn giao và Xuất phiếu</button>
                 </div>
             </form>
         </div>

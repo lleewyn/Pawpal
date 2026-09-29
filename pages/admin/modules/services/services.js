@@ -664,6 +664,8 @@
     let isAllergyFilterActive = false;
     let isSlaFilterActive = false;
     let intakeProofImagesTemp = [];
+    let surchargeProofImagesTemp = [];
+    let completeProofImagesTemp = [];
 
     // Bộ lọc Danh mục
     let catalogSearchTerm = '';
@@ -1145,7 +1147,7 @@
             }
             if (btnComplete) {
                 btnComplete.addEventListener('click', () => {
-                    updateBookingStatus(booking.id, 'completed');
+                    openCompleteBookingModal(booking.id);
                 });
             }
             if (btnCancel) {
@@ -1365,7 +1367,13 @@
                                 <span class="surcharge-item-amount">+${formatCurrency(item.amount)}</span>
                             </div>
                             <div class="surcharge-item-desc">${item.reason}</div>
-                            <div class="surcharge-item-meta">
+                            ${item.consentNote ? `<div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Ghi chú xác nhận: ${item.consentNote}</div>` : ''}
+                            ${(item.images && item.images.length > 0) ? `
+                                <div style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
+                                    ${item.images.map(img => `<img src="${img}" alt="Ảnh bằng chứng" style="width: 44px; height: 44px; object-fit: cover; border-radius: 9px; border: 1px solid var(--border-neutral); cursor: pointer;" onclick="window.open('${img}', '_blank')" onerror="this.src='/assets/images/services/spa/process/spa01.webp'">`).join('')}
+                                </div>
+                            ` : ''}
+                            <div class="surcharge-item-meta" style="margin-top: 4px;">
                                 <span class="surcharge-tag-consent">${item.consent}</span>
                                 <span class="surcharge-time-text">${item.time || ''}</span>
                                 ${isEditableState ? `<button type="button" class="btn-del-surcharge" data-addon-id="${item.id}">Xóa</button>` : ''}
@@ -1836,6 +1844,56 @@
                 const idx = parseInt(btn.getAttribute('data-proof-idx'));
                 intakeProofImagesTemp.splice(idx, 1);
                 renderIntakeProofPreviewList();
+            });
+        });
+    }
+
+    // Render danh sách ảnh preview trong modal thêm phụ phí (Zero-Dispute)
+    function renderSurchargeProofPreviewList() {
+        const listEl = document.getElementById('surchargeProofPreviewList');
+        if (!listEl) return;
+        if (surchargeProofImagesTemp.length === 0) {
+            listEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted);">Chưa có ảnh bằng chứng đính kèm</span>';
+            return;
+        }
+        listEl.innerHTML = surchargeProofImagesTemp.map((img, idx) => `
+            <div class="intake-proof-preview-item">
+                <img src="${img}" alt="Bằng chứng phụ phí ${idx + 1}" onerror="this.src='/assets/images/services/spa/process/spa01.webp'">
+                <button type="button" class="btn-remove-proof" data-surcharge-proof-idx="${idx}" title="Gỡ ảnh">×</button>
+            </div>
+        `).join('');
+
+        listEl.querySelectorAll('.btn-remove-proof').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(btn.getAttribute('data-surcharge-proof-idx'));
+                surchargeProofImagesTemp.splice(idx, 1);
+                renderSurchargeProofPreviewList();
+            });
+        });
+    }
+
+    // Render danh sách ảnh preview thành phẩm sau khi hoàn thành ca
+    function renderCompleteProofPreviewList() {
+        const listEl = document.getElementById('completeProofPreviewList');
+        if (!listEl) return;
+        if (completeProofImagesTemp.length === 0) {
+            listEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted);">Chưa có ảnh chụp thành phẩm sau ca</span>';
+            return;
+        }
+        listEl.innerHTML = completeProofImagesTemp.map((img, idx) => `
+            <div class="intake-proof-preview-item">
+                <img src="${img}" alt="Ảnh thành phẩm ${idx + 1}" onerror="this.src='/assets/images/services/spa/process/spa01.webp'">
+                <button type="button" class="btn-remove-proof" data-complete-proof-idx="${idx}" title="Gỡ ảnh">×</button>
+            </div>
+        `).join('');
+
+        listEl.querySelectorAll('.btn-remove-proof').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(btn.getAttribute('data-complete-proof-idx'));
+                completeProofImagesTemp.splice(idx, 1);
+                renderCompleteProofPreviewList();
             });
         });
     }
@@ -2448,7 +2506,7 @@
             });
         }
 
-        // Modal 5: Thêm phụ phí và Dịch vụ phát sinh
+        // Modal 5: Thêm phụ phí và Dịch vụ phát sinh (Zero-Dispute)
         const modalAddSurcharge = document.getElementById('modalAddSurcharge');
         const btnOpenAddSurcharge = document.getElementById('btnOpenAddSurchargeModal');
         const btnCloseAddSurcharge = document.getElementById('btnCloseAddSurcharge');
@@ -2459,13 +2517,42 @@
         const surchargeAmountInput = document.getElementById('surchargeAmountInput');
         const surchargeReasonInput = document.getElementById('surchargeReasonInput');
         const surchargeConsentSelect = document.getElementById('surchargeConsentSelect');
+        const surchargeConsentNote = document.getElementById('surchargeConsentNote');
+        const surchargeMetaEl = document.getElementById('surchargeBookingMeta');
+        const btnAddSurchargePhoto = document.getElementById('btnAddSurchargePhotoBtn');
+        const surchargeFileInput = document.getElementById('surchargeProofFileInput');
 
         if (btnOpenAddSurcharge) {
             btnOpenAddSurcharge.addEventListener('click', () => {
                 if (formAddSurcharge) formAddSurcharge.reset();
                 if (surchargePresetSelect) surchargePresetSelect.value = 'CUSTOM';
+                surchargeProofImagesTemp = [];
+                renderSurchargeProofPreviewList();
+
+                const booking = bookingsData.find(b => b.id === selectedBookingId);
+                if (booking && surchargeMetaEl) {
+                    surchargeMetaEl.textContent = `Mã ca: ${booking.id} | Bé: ${booking.petName} (${booking.petBreed}) | KTV phụ trách: ${booking.staff || 'Chưa phân công'}`;
+                }
+
                 if (modalAddSurcharge) modalAddSurcharge.classList.add('active');
             });
+        }
+
+        if (btnAddSurchargePhoto && surchargeFileInput) {
+            btnAddSurchargePhoto.onclick = () => surchargeFileInput.click();
+            surchargeFileInput.onchange = (e) => {
+                const files = e.target.files;
+                if (!files || files.length === 0) return;
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        surchargeProofImagesTemp.push(evt.target.result);
+                        renderSurchargeProofPreviewList();
+                    };
+                    reader.readAsDataURL(file);
+                });
+                surchargeFileInput.value = '';
+            };
         }
 
         const closeAddSurchargeModal = () => {
@@ -2496,35 +2583,42 @@
                 const amount = parseInt(surchargeAmountInput.value) || 0;
                 const reason = surchargeReasonInput.value.trim();
                 const consent = surchargeConsentSelect.value;
+                const noteVal = surchargeConsentNote ? surchargeConsentNote.value.trim() : '';
                 const currentTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
                 booking.addons = booking.addons || [];
                 const newAddon = {
-                    id: 'ADD-' + Date.now(),
+                    id: 'ADD-' + (1000 + booking.addons.length + 1),
                     name: name,
                     amount: amount,
                     reason: reason,
                     consent: consent,
-                    time: currentTime
+                    consentNote: noteVal,
+                    images: [...surchargeProofImagesTemp],
+                    time: currentTime,
+                    staff: booking.staff || 'KTV'
                 };
                 booking.addons.push(newAddon);
                 booking.addonPrice = booking.addons.reduce((sum, a) => sum + Number(a.amount || 0), 0);
-                booking.total = Math.max(0, Number(booking.price || 0) + booking.addonPrice - Number(booking.discount || 0));
+                const currentAccompanyingTotal = (booking.accompanyingServices || []).reduce((sum, a) => sum + Number(a.price || 0), 0);
+                booking.total = Math.max(0, Number(booking.price || 0) + currentAccompanyingTotal + booking.addonPrice - Number(booking.discount || 0));
 
-                // Tự động ghi nhật ký vào Timeline Care-Log
+                // Tự động ghi nhật ký vào Timeline Care-Log kèm bằng chứng
                 booking.timeline = booking.timeline || [];
                 booking.timeline.push({
                     time: currentTime,
                     title: `Phát sinh: ${name} (+${formatCurrency(amount)})`,
-                    desc: `[${consent}] ${reason}`,
+                    desc: `[${consent}${noteVal ? ' - ' + noteVal : ''}] ${reason}`,
                     done: true,
-                    staff: booking.staff || 'KTV'
+                    staff: booking.staff || 'KTV',
+                    images: [...surchargeProofImagesTemp]
                 });
 
                 persistData();
                 closeAddSurchargeModal();
                 renderBookingDetail(booking.id);
                 renderBookingsTable();
+                showToast(`Đã thêm phụ phí phát sinh "${name}" (+${formatCurrency(amount)})!`);
             });
         }
 
@@ -2805,7 +2899,7 @@
     }
 
     // ==========================================================================
-    // 6c. MỞ MODAL ĐỔI KTV (STANDALONE)
+    // 6c. MỞ MODAL ĐỔI KTV (STAFF REASSIGNMENT VÀ AUDIT TRAIL)
     // ==========================================================================
     function openChangeStaffModal(bookingId) {
         const booking = bookingsData.find(b => b.id === bookingId);
@@ -2814,11 +2908,22 @@
         const modal = document.getElementById('modalChangeStaff');
         const staffSelect = document.getElementById('changeStaffSelect');
         const reasonInput = document.getElementById('changeStaffReasonInput');
+        const presetReason = document.getElementById('changeStaffPresetReason');
+        const metaEl = document.getElementById('changeStaffBookingMeta');
+        const currentNameEl = document.getElementById('changeStaffCurrentName');
+
+        if (metaEl) {
+            metaEl.textContent = `Mã ca: ${booking.id} (${booking.petName}) | KTV hiện tại: ${booking.staff || 'Chưa phân công'}`;
+        }
+        if (currentNameEl) {
+            currentNameEl.textContent = booking.staff || 'Chưa phân công';
+        }
 
         // Pre-select KTV hiện tại nếu có
         if (staffSelect) {
-            staffSelect.value = booking.staff || '';
+            staffSelect.value = '';
         }
+        if (presetReason) presetReason.value = 'CUSTOM';
         if (reasonInput) reasonInput.value = '';
 
         // Lưu bookingId để submit biết cần cập nhật ca nào
@@ -2833,6 +2938,188 @@
         const form = document.getElementById('formChangeStaff');
         const btnClose = document.getElementById('btnCloseChangeStaff');
         const btnCancel = document.getElementById('btnCancelChangeStaff');
+        const presetReason = document.getElementById('changeStaffPresetReason');
+        const reasonInput = document.getElementById('changeStaffReasonInput');
+
+        const closeModal = () => { if (modal) modal.classList.remove('active'); };
+        if (btnClose) btnClose.addEventListener('click', closeModal);
+        if (btnCancel) btnCancel.addEventListener('click', closeModal);
+        if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        if (presetReason) {
+            presetReason.addEventListener('change', (e) => {
+                const val = e.target.value;
+                if (val && val !== 'CUSTOM') {
+                    if (reasonInput) reasonInput.value = val;
+                }
+            });
+        }
+
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const bookingId = modal ? modal.getAttribute('data-booking-id') : null;
+                const booking = bookingsData.find(b => b.id === bookingId);
+                if (!booking) return;
+
+                const staffSelect = document.getElementById('changeStaffSelect');
+                const newStaff = staffSelect ? staffSelect.value.trim() : '';
+                const reason = reasonInput ? reasonInput.value.trim() : 'Điều phối nhân sự ca trực';
+                const scopeRadio = form.elements['changeStaffScope'];
+                const scope = (scopeRadio && scopeRadio.value) ? scopeRadio.value : 'next_steps';
+
+                if (!newStaff) return;
+
+                const oldStaff = booking.staff || 'Chưa phân công';
+                booking.staff = newStaff;
+
+                // Cập nhật KTV cho các bước timeline theo phạm vi
+                booking.timeline = booking.timeline || [];
+                if (scope === 'all_steps') {
+                    booking.timeline.forEach(st => st.staff = newStaff);
+                } else {
+                    booking.timeline.forEach(st => {
+                        if (!st.done) st.staff = newStaff;
+                    });
+                }
+
+                // Ghi mốc timeline kiểm toán (Audit Trail)
+                const timeNow = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                booking.timeline.push({
+                    time: timeNow,
+                    title: `Điều phối KTV: ${oldStaff} ➔ ${newStaff}`,
+                    desc: `Lý do: ${reason}. Phạm vi: ${scope === 'all_steps' ? 'Bàn giao toàn bộ ca' : 'Tiếp quản các bước tiếp theo'}. Điều phối bởi Quản trị viên lúc ${timeNow}.`,
+                    done: true,
+                    staff: newStaff,
+                    images: []
+                });
+
+                persistData();
+                closeModal();
+                renderBookingDetail(booking.id);
+                renderBookingsTable();
+                showToast(`Đã điều chuyển KTV phụ trách ca sang ${newStaff}!`);
+            });
+        }
+    }
+
+    // ==========================================================================
+    // 6d. MỞ BIÊN BẢN NGHIỆM THU VÀ BÀN GIAO BÉ (ZERO-DISPUTE CHECKOUT DESK)
+    // ==========================================================================
+    function openCompleteBookingModal(bookingId) {
+        const booking = bookingsData.find(b => b.id === bookingId);
+        if (!booking) return;
+
+        selectedBookingId = bookingId;
+
+        const modal = document.getElementById('modalCompleteBooking');
+        const metaEl = document.getElementById('completeBookingMeta');
+        const progressEl = document.getElementById('completeStepsProgressText');
+        const belongingsDescEl = document.getElementById('completeBelongingsDesc');
+        const checkBelongings = document.getElementById('completeCheckBelongings');
+        const checkQuality = document.getElementById('completeCheckQuality');
+        const checkPaid = document.getElementById('completeCheckPaid');
+        const priceBaseEl = document.getElementById('completePriceBase');
+        const priceAccEl = document.getElementById('completePriceAccompanying');
+        const priceAddonsEl = document.getElementById('completePriceAddons');
+        const priceDiscountEl = document.getElementById('completePriceDiscount');
+        const priceTotalEl = document.getElementById('completePriceTotal');
+        const payMethodSelect = document.getElementById('completePaymentMethodSelect');
+
+        if (metaEl) {
+            metaEl.textContent = `Mã ca: ${booking.id} | Bé: ${booking.petName} (${booking.petBreed}) | Chủ nuôi: ${booking.customerName} - ${booking.phone}`;
+        }
+
+        // Tiến độ Care-Log
+        const timeline = booking.timeline || [];
+        const doneSteps = timeline.filter(s => s.done).length;
+        const totalSteps = timeline.length;
+        if (progressEl) {
+            if (doneSteps === totalSteps && totalSteps > 0) {
+                progressEl.textContent = `${doneSteps}/${totalSteps} bước kỹ thuật đã hoàn tất`;
+                progressEl.style.color = '#165335';
+            } else {
+                progressEl.textContent = `${doneSteps}/${totalSteps} bước hoàn thành (tự động chốt hoàn tất khi nghiệm thu)`;
+                progressEl.style.color = '#B45309';
+            }
+        }
+        if (checkQuality) checkQuality.checked = true;
+
+        // Đối chiếu tư trang đã gửi
+        const belongings = booking.belongings || (booking.intakeSafety && booking.intakeSafety.belongings) || 'Không có';
+        if (belongingsDescEl) {
+            if (belongings && belongings !== 'Không có') {
+                belongingsDescEl.innerHTML = `<strong>Tư trang gửi tại quầy:</strong> ${belongings}`;
+                if (checkBelongings) {
+                    checkBelongings.checked = true;
+                    checkBelongings.disabled = false;
+                }
+            } else {
+                belongingsDescEl.textContent = 'Khách không gửi lại đồ dùng / tư trang tại quầy.';
+                if (checkBelongings) {
+                    checkBelongings.checked = true;
+                    checkBelongings.disabled = true;
+                }
+            }
+        }
+
+        // Bảng kê tài chính
+        const accompanyingTotal = (booking.accompanyingServices || []).reduce((sum, a) => sum + Number(a.price || 0), 0);
+        const addonTotal = (booking.addons || []).reduce((sum, a) => sum + Number(a.amount || 0), 0);
+        booking.addonPrice = addonTotal;
+        booking.total = Math.max(0, Number(booking.price || 0) + accompanyingTotal + addonTotal - Number(booking.discount || 0));
+
+        if (priceBaseEl) priceBaseEl.textContent = formatCurrency(booking.price);
+        if (priceAccEl) priceAccEl.textContent = accompanyingTotal > 0 ? `+${formatCurrency(accompanyingTotal)}` : '+0 đ';
+        if (priceAddonsEl) priceAddonsEl.textContent = addonTotal > 0 ? `+${formatCurrency(addonTotal)}` : '+0 đ';
+        if (priceDiscountEl) priceDiscountEl.textContent = `-${formatCurrency(booking.discount || 0)}`;
+        if (priceTotalEl) priceTotalEl.textContent = formatCurrency(booking.total);
+
+        // Hình thức thanh toán
+        if (payMethodSelect) {
+            if (booking.paymentStatus && booking.paymentStatus.includes('Đã thanh toán')) {
+                payMethodSelect.value = 'Đã thanh toán trước Online';
+            } else {
+                payMethodSelect.value = 'Tiền mặt (Tại quầy)';
+            }
+        }
+        if (checkPaid) checkPaid.checked = true;
+
+        // Reset ảnh thành phẩm
+        completeProofImagesTemp = [];
+        renderCompleteProofPreviewList();
+
+        // Gắn nút chụp ảnh thành phẩm
+        const btnAddCompletePhoto = document.getElementById('btnAddCompletePhotoBtn');
+        const completeFileInput = document.getElementById('completeProofFileInput');
+        if (btnAddCompletePhoto && completeFileInput) {
+            btnAddCompletePhoto.onclick = () => completeFileInput.click();
+            completeFileInput.onchange = (e) => {
+                const files = e.target.files;
+                if (!files || files.length === 0) return;
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        completeProofImagesTemp.push(evt.target.result);
+                        renderCompleteProofPreviewList();
+                    };
+                    reader.readAsDataURL(file);
+                });
+                completeFileInput.value = '';
+            };
+        }
+
+        if (modal) {
+            modal.setAttribute('data-booking-id', bookingId);
+            modal.classList.add('active');
+        }
+    }
+
+    function setupCompleteBookingModal() {
+        const modal = document.getElementById('modalCompleteBooking');
+        const form = document.getElementById('formCompleteBooking');
+        const btnClose = document.getElementById('btnCloseCompleteBooking');
+        const btnCancel = document.getElementById('btnCancelCompleteBooking');
 
         const closeModal = () => { if (modal) modal.classList.remove('active'); };
         if (btnClose) btnClose.addEventListener('click', closeModal);
@@ -2846,32 +3133,40 @@
                 const booking = bookingsData.find(b => b.id === bookingId);
                 if (!booking) return;
 
-                const staffSelect = document.getElementById('changeStaffSelect');
-                const reasonInput = document.getElementById('changeStaffReasonInput');
-                const newStaff = staffSelect ? staffSelect.value.trim() : '';
-                const reason = reasonInput ? reasonInput.value.trim() : '';
+                const payMethodSelect = document.getElementById('completePaymentMethodSelect');
+                const checkPaid = document.getElementById('completeCheckPaid');
+                const payMethod = payMethodSelect ? payMethodSelect.value : 'Tiền mặt (Tại quầy)';
+                const isPaid = checkPaid ? checkPaid.checked : true;
 
-                if (!newStaff) return;
-
-                const oldStaff = booking.staff || 'Chưa phân công';
-                booking.staff = newStaff;
-
-                // Ghi mốc timeline
                 const timeNow = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+                booking.status = 'completed';
+                booking.alertType = null;
+                booking.paymentStatus = isPaid ? `Đã thanh toán (${payMethod})` : `Chưa thanh toán (${payMethod})`;
+
+                // Đánh dấu hoàn tất toàn bộ các bước trong Care-Log
                 booking.timeline = booking.timeline || [];
+                booking.timeline.forEach(st => st.done = true);
+
+                const belongings = booking.belongings || (booking.intakeSafety && booking.intakeSafety.belongings) || 'Không có';
+                const belongingsNote = (belongings && belongings !== 'Không có') ? `Đã trao trả đầy đủ tư trang: ${belongings}.` : 'Không có tư trang gửi lại.';
+
                 booking.timeline.push({
                     time: timeNow,
-                    title: `Đổi Kỹ thuật viên: ${oldStaff} → ${newStaff}`,
-                    desc: reason || `Điều phối lại KTV phụ trách ca dịch vụ`,
+                    title: 'Nghiệm thu ca dịch vụ và Bàn giao bé',
+                    desc: `Đã hoàn tất toàn bộ liệu trình chăm sóc đạt chuẩn chất lượng. ${belongingsNote} Xuất phiếu thanh toán: ${formatCurrency(booking.total)} (${booking.paymentStatus}).`,
                     done: true,
-                    staff: newStaff,
-                    images: []
+                    staff: booking.staff || 'KTV',
+                    images: [...completeProofImagesTemp]
                 });
 
                 persistData();
                 closeModal();
                 renderBookingDetail(booking.id);
                 renderBookingsTable();
+                renderUpcomingBar();
+                updateKPIs();
+                showToast(`Ca dịch vụ ${booking.id} đã hoàn tất và bàn giao bé thành công!`);
             });
         }
     }
@@ -2989,7 +3284,7 @@
         };
 
         document.getElementById('menuActionComplete').onclick = () => {
-            if (activeDropdownBookingId) updateBookingStatus(activeDropdownBookingId, 'completed');
+            if (activeDropdownBookingId) openCompleteBookingModal(activeDropdownBookingId);
             dropdown.style.display = 'none';
         };
 
@@ -3204,6 +3499,7 @@
         setupFilterEvents();
         setupModals();
         setupChangeStaffModal();
+        setupCompleteBookingModal();
         setupActionDropdownEvents();
     }
 
