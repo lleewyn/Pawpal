@@ -601,12 +601,33 @@
     gap: 8px;
 }
 
-.btn-alert-strip-action {
-    height: 30px !important;
-    padding: 0 12px !important;
+.settings-alert-strip .btn-alert-strip-filter {
+    background: transparent !important;
+    border: none !important;
+    color: #8F2424 !important;
+    font-family: inherit;
     font-size: 12.5px !important;
     font-weight: 600 !important;
-    background-color: #FFFFFF !important;
+    cursor: pointer;
+    padding: 5px 10px !important;
+    border-radius: var(--admin-radius);
+    text-decoration: underline;
+    transition: background-color 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.settings-alert-strip .btn-alert-strip-filter:hover {
+    color: #5C1515 !important;
+    background-color: rgba(143, 36, 36, 0.08) !important;
+}
+
+.settings-alert-strip.is-safe .btn-alert-strip-filter {
+    color: #165335 !important;
+}
+
+.settings-alert-strip.is-safe .btn-alert-strip-filter:hover {
+    color: #0E3622 !important;
+    background-color: rgba(22, 83, 53, 0.08) !important;
 }
 
 /* HUY HIỆU KHẨN CẤP / MUTED PASTEL (KHÔNG VIỀN THEO AGENTS.MD) */
