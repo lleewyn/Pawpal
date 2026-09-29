@@ -731,6 +731,21 @@
 }
 
 /* 10. GIAO DIỆN BẰNG CHỨNG ẢNH VÀ UPLOAD THỰC TẾ (EVIDENCE & LIGHTBOX) */
+.drawer-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.drawer-section-header .drawer-section-title {
+    margin-bottom: 0;
+    display: inline-block;
+    width: fit-content;
+    border-bottom: 2px solid #236B48;
+    padding-bottom: 4px;
+}
+
 .evidence-photos-list {
     display: flex;
     flex-wrap: wrap;
