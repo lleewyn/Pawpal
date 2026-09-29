@@ -968,6 +968,18 @@
                 }
             }
 
+            // Biên bản đối thoại từ Kênh Trực chat (nếu ticket bắt nguồn từ Chatbot)
+            const chatTranscriptBlock = document.getElementById('viewTicketChatTranscriptBlock');
+            const chatTranscriptEl = document.getElementById('viewTicketChatTranscript');
+            if (chatTranscriptBlock && chatTranscriptEl) {
+                if (ticket.chatTranscript) {
+                    chatTranscriptBlock.style.display = 'block';
+                    chatTranscriptEl.textContent = ticket.chatTranscript;
+                } else {
+                    chatTranscriptBlock.style.display = 'none';
+                }
+            }
+
             // Thông tin khách hàng và đối tượng
             const custNameEl = document.getElementById('viewTicketCustomerName');
             const custPhoneEl = document.getElementById('viewTicketCustomerPhone');
@@ -1611,6 +1623,18 @@
             else renderOrderComplaintsTable();
             renderTicketDetail(currentActiveTicket);
 
+            // Ghi nhận cờ giải quyết cho Chatbot CSKH nắm bắt vòng lặp đóng
+            try {
+                sessionStorage.setItem('pawpal_ticket_resolved_' + currentActiveTicket.id, JSON.stringify({
+                    id: currentActiveTicket.id,
+                    status: newStatus,
+                    typeName: resolutionObj.typeName,
+                    note: resolutionObj.note,
+                    customerName: currentActiveTicket.customerName,
+                    resolvedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }));
+            } catch (e) {}
+
             alert(`Đã áp dụng phương án "${resolutionObj.typeName}" cho Ticket ${currentActiveTicket.id} thành công!`);
         });
 
@@ -1888,7 +1912,33 @@
             setOrderQuickFilter('OVERDUE');
         });
 
+        // Đồng bộ vé khiếu nại được tạo từ kênh Chatbot CSKH
+        function syncSharedTicketsFromChatbot() {
+            try {
+                const storedRaw = sessionStorage.getItem('pawpal_admin_shared_tickets');
+                if (!storedRaw) return;
+                const sharedList = JSON.parse(storedRaw);
+                if (Array.isArray(sharedList)) {
+                    sharedList.forEach(t => {
+                        const isService = t.bookingId || t.serviceName;
+                        if (isService) {
+                            if (!mockServiceComplaints.some(item => item.id === t.id)) {
+                                mockServiceComplaints.unshift(t);
+                            }
+                        } else {
+                            if (!mockOrderComplaints.some(item => item.id === t.id)) {
+                                mockOrderComplaints.unshift(t);
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error('Lỗi sync shared tickets:', e);
+            }
+        }
+
         // Khởi tạo ban đầu
+        syncSharedTicketsFromChatbot();
         updateComplaintsKpis();
         renderComplaintsAlertBar();
 
@@ -1904,6 +1954,7 @@
 
         // Tiếp nhận preset khiếu nại hoặc mở Ticket từ phân hệ khác
         const checkPresetComplaint = () => {
+            syncSharedTicketsFromChatbot();
             const rawPreset = sessionStorage.getItem('pawpal_admin_complaint_preset');
             if (rawPreset) {
                 try {

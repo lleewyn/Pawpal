@@ -153,18 +153,75 @@ sequenceDiagram
 
 ---
 
-### Luồng 5: Giám sát Trợ lý Chatbot AI và Chuyển giao nhân viên
-Kết hợp trí tuệ nhân tạo tư vấn tự động và nhân sự trực tiếp can thiệp đúng lúc.
+### Luồng 5: Tiếp nhận khiếu nại tại quầy hoặc qua Hotline (Ngoại tuyến)
+Dành cho trường hợp khách hàng phản ánh trực tiếp với thu ngân/lễ tân tại quầy hoặc gọi điện đến hotline.
 
 ```mermaid
-flowchart LR
-    Khach[Khách hàng nhắn tin qua Web] --> Bot[Chatbot AI Pawpal]
-    Bot --> Check{Màng lọc tâm lý phân tích}
-    Check -- Cảm xúc bình thường: Hỏi giá, hỏi lịch --> AI_Ans[AI trả lời tự động 100%]
-    Check -- Cảm xúc bức xúc / Muốn gặp người --> Handover[Kích hoạt cờ Handover]
-    Handover --> Notice[Thông báo ngay trên Widget Chatbot ở Dashboard]
-    Notice --> Staff[Nhân viên CSKH vào tiếp quản đoạn chat 1-1]
+sequenceDiagram
+    autonumber
+    actor Khach as Khách hàng tại quầy / Hotline
+    participant Letan as Lễ tân / CSKH
+    participant Comp as Phân hệ Khiếu nại
+    participant DB as Bảng điều khiển (Dashboard)
+    participant Admin as Quản lý chi nhánh
+
+    Khach->>Letan: Phản ánh sự cố dịch vụ hoặc đơn hàng
+    Letan->>Comp: Mở modal "+ Tạo khiếu nại" (Điền SĐT khách)
+    Comp-->>Letan: Tự động gợi ý mã lịch hẹn / đơn hàng gần nhất
+    Letan->>Comp: Nhập nội dung phản ánh + đính kèm ảnh bằng chứng
+    Comp->>DB: Đẩy cảnh báo lên khối "Ưu tiên xử lý" (Dòng đỏ khẩn cấp)
+    Admin->>DB: Nhấp vào dòng cảnh báo khiếu nại
+    DB->>Comp: Chuyển thẳng vào màn hình Chi tiết Ticket
+    Admin->>Admin: Xác minh dữ liệu đối chứng 360° (Check-in ban đầu, KTV thực hiện, camera)
+    Admin->>Comp: Chọn phương án giải quyết (Tặng voucher, Làm lại miễn phí, Hoàn tiền)
+    Admin->>Comp: Chuyển trạng thái sang "Đã giải quyết"
+    Comp-->>DB: Tự động xóa cảnh báo khẩn cấp, hạ số đếm việc tồn đọng về 0
 ```
+
+---
+
+### Luồng 6: Luồng tương tác khép kín giữa Trực chat AI và Phân hệ Khiếu nại (Closed-Loop Escalation)
+*Đây là luồng tương tác quan trọng bậc nhất đảm bảo không bỏ sót bất kỳ sự cố nào của khách hàng trên không gian số, phân định rõ ràng giữa CSKH tuyến đầu (Frontline) và Thẩm định khiếu nại tuyến sau (Back-office).*
+
+#### 1. Ma trận phân tầng xử lý sự cố (Triage Matrix):
+- **Cấp độ 1 - Xử lý ngay tại chỗ trên Chat (First-Contact Resolution)**:
+  - *Dấu hiệu*: Khách thắc mắc thời gian giao hàng, giao trễ nhẹ, hỏi cách sử dụng sản phẩm, phàn nàn nhẹ về đóng gói.
+  - *Hành động*: Chuyên viên CSKH sử dụng mẫu câu gợi ý từ AI để đồng cảm, bấm nút **"Tặng điểm Pawpoint"** (50 - 100 điểm) trực tiếp trong khung chat để tạ lỗi.
+  - *Kết quả*: Đóng ca chat thành công, **không tạo ticket khiếu nại** để tránh làm cồng kềnh bộ máy vận hành.
+- **Cấp độ 2 - Chuyển giao thành Ticket Khiếu nại chính thức (Escalate to Ticket)**:
+  - *Dấu hiệu*: Bé cưng bị trầy xước/chảy máu/dị ứng sau dịch vụ, grooming sai kiểu nghiêm trọng, pet hotel bỏ quên bữa ăn của bé, thất lạc kiện hàng giá trị lớn, khách giận dữ mức độ 4-5 đòi gặp cấp trên hoặc hoàn tiền.
+  - *Hành động*: Bắt buộc bấm menu `•••` ➔ **"Chuyển thành Ticket"**. Hệ thống tự động trích xuất biên bản hội thoại (Chat Transcript) và tóm tắt AI sang phân hệ Khiếu nại.
+
+#### 2. Sơ đồ tương tác khép kín 2 chiều:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Khach as Khách hàng
+    participant Bot as Chatbot AI & Màng lọc tâm lý
+    participant CSKH as Chuyên viên CSKH Trực chat
+    participant Comp as Phân hệ Khiếu nại (Quản lý)
+    participant CRM as Hồ sơ 360° Khách & Thú cưng
+
+    Khach->>Bot: Nhắn tin bức xúc (Ví dụ: Bé bị xước tai sau tắm)
+    Bot->>Bot: Nhận diện cảm xúc mức 4-5 (Giận dữ) + Lọc từ thô tục
+    Bot->>Bot: AI tóm tắt ngữ cảnh 3 giây: Tên khách, Mã lịch hẹn, Cốt lõi sự cố
+    Bot->>CSKH: Đẩy ca chat vào Tab "Cần xử lý ngay" kèm đồng hồ đếm ngược SLA
+    CSKH->>CSKH: Nhấn "Tiếp nhận" để trực tiếp trao đổi với khách
+    CSKH->>Comp: Vượt thẩm quyền ➔ Bấm "Chuyển thành Ticket" (Tạo mã TK-xxxx)
+    Note over CSKH,Comp: Tự động đính kèm: Chat Transcript, Mã BKG, Tóm tắt AI
+    Comp->>Comp: Xuất hiện trong bảng Khiếu nại (Nguồn: Kênh Trực chat)
+    Comp->>Comp: Quản lý mở chi tiết: Đọc nguyên văn đoạn chat, kiểm tra ảnh check-in, khóa an toàn KTV
+    Comp->>Khach: Quản lý liên hệ giải quyết: Phê duyệt bồi hoàn (Voucher / Làm lại / Hoàn tiền)
+    Comp->>Comp: Chuyển trạng thái Ticket sang "Đã giải quyết"
+    Comp-->>CSKH: Bắn cờ Closed-Loop về khung chat: [TK-xxxx: Đã giải quyết ✓]
+    CSKH->>Khach: Gửi tin nhắn xác nhận hoàn tất giải quyết qua chat
+    Comp->>CRM: Ghi nhận vĩnh viễn tiền sử khiếu nại vào Hồ sơ 360° của bé
+```
+
+#### 3. Quy tắc bàn giao dữ liệu không mất dấu:
+- **Biên bản đối thoại (Chat Transcript)**: Toàn bộ lịch sử tin nhắn giữa khách và CSKH được lưu nguyên vẹn trong Ticket. Quản lý khi tiếp nhận xác minh không được hỏi lại những gì khách đã trình bày trên chat.
+- **Vòng lặp đóng (Closed-loop)**: Sau khi Quản lý xử lý xong bên phân hệ Khiếu nại, bảng thông tin khách hàng ở phân hệ Chatbot tự động hiển thị huy hiệu `[Đã giải quyết]` kèm phương án cụ thể, giúp CSKH tự tin phản hồi nếu khách tiếp tục nhắn tin hỏi tiến độ.
 
 ---
 

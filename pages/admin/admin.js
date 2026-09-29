@@ -306,27 +306,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    function resolveModuleFromHash(hash) {
+        if (!hash) return null;
+        if (hash.startsWith('#tab-service') || hash.startsWith('#tab-booking') || hash === '#services') return 'Dịch vụ';
+        if (hash.startsWith('#tab-order')) return 'Bán hàng';
+        if (hash.startsWith('#tab-staff')) return 'Nhân sự';
+        if (hash.startsWith('#tab-complaint')) return 'Khiếu nại';
+        if (hash.startsWith('#tab-chatbot') || hash.startsWith('#tab-ai-') || hash.startsWith('#tab-live-support')) return 'Chatbot';
+        if (hash.startsWith('#tab-setting') || hash.startsWith('#tab-banner') || hash.startsWith('#tab-blog') || hash.startsWith('#tab-system')) return 'Cấu hình';
+        if (hash.startsWith('#tab-pet')) return 'Thú cưng';
+        if (hash.startsWith('#tab-list') || hash.startsWith('#tab-profile') || hash.startsWith('#tab-pawpoint') || hash.startsWith('#tab-customer')) return 'Khách hàng';
+        if (hash.startsWith('#tab-dashboard')) return 'Dashboard';
+        return null;
+    }
+
     // Xác định module cần nạp ban đầu theo URL Hash, nút active hoặc sessionStorage
     const currentHash = window.location.hash || '';
-    let initialModule = null;
-
-    if (currentHash.startsWith('#tab-service') || currentHash.startsWith('#tab-booking')) {
-        initialModule = 'Dịch vụ';
-    } else if (currentHash.startsWith('#tab-order')) {
-        initialModule = 'Bán hàng';
-    } else if (currentHash.startsWith('#tab-staff')) {
-        initialModule = 'Nhân sự';
-    } else if (currentHash.startsWith('#tab-complaint')) {
-        initialModule = 'Khiếu nại';
-    } else if (currentHash.startsWith('#tab-chatbot') || currentHash.startsWith('#tab-ai-') || currentHash.startsWith('#tab-live-support')) {
-        initialModule = 'Chatbot';
-    } else if (currentHash.startsWith('#tab-setting') || currentHash.startsWith('#tab-banner') || currentHash.startsWith('#tab-blog') || currentHash.startsWith('#tab-system')) {
-        initialModule = 'Cấu hình';
-    } else if (currentHash.startsWith('#tab-pet')) {
-        initialModule = 'Thú cưng';
-    } else if (currentHash.startsWith('#tab-list') || currentHash.startsWith('#tab-profile') || currentHash.startsWith('#tab-pawpoint')) {
-        initialModule = 'Khách hàng';
-    }
+    let initialModule = resolveModuleFromHash(currentHash);
 
     if (!initialModule) {
         const activeBtn = document.querySelector('.sidebar-menu-btn.active');
@@ -347,6 +343,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     sessionStorage.setItem('pawpal_admin_active_module', initialModule);
     loadModule(initialModule);
+
+    // Lắng nghe thay đổi URL Hash liên phân hệ để chuyển module mượt mà
+    window.addEventListener('hashchange', () => {
+        const targetMod = resolveModuleFromHash(window.location.hash);
+        const currentMod = sessionStorage.getItem('pawpal_admin_active_module');
+        if (targetMod && targetMod !== currentMod) {
+            sidebarBtns.forEach(b => {
+                if (b.getAttribute('data-title') === targetMod) {
+                    b.classList.add('active');
+                } else {
+                    b.classList.remove('active');
+                }
+            });
+            sessionStorage.setItem('pawpal_admin_active_module', targetMod);
+            loadModule(targetMod);
+        }
+    });
 
     // Khởi tạo Lucide
     if (window.lucide) {

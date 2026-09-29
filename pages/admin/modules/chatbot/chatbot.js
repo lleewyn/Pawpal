@@ -893,7 +893,26 @@
             if (currentConversation.openTickets.length > 0) {
                 currentConversation.openTickets.forEach(t => {
                     const el = document.createElement('div');
-                    el.innerHTML = `<a href="javascript:void(0)" class="user-name-link btn-jump-ticket" data-id="${t.id}">${t.id}</a>: ${t.title}`;
+                    el.style.marginBottom = '6px';
+                    
+                    // Kiểm tra cờ giải quyết từ phân hệ Khiếu nại (Closed-loop)
+                    let resolvedInfo = null;
+                    try {
+                        const raw = sessionStorage.getItem('pawpal_ticket_resolved_' + t.id);
+                        if (raw) resolvedInfo = JSON.parse(raw);
+                    } catch (e) {}
+
+                    if (resolvedInfo) {
+                        el.innerHTML = `
+                            <div>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-ticket" data-id="${t.id}">${t.id}</a>: ${t.title}
+                                <span class="admin-badge badge-active" style="font-size: 10.5px; height: 20px; padding: 0 6px; margin-left: 4px;">Đã giải quyết</span>
+                            </div>
+                            <div style="font-size: 11.5px; color: #166534; margin-top: 2px;">✓ ${resolvedInfo.typeName || 'Đã áp dụng phương án xử lý'} (${resolvedInfo.resolvedAt})</div>
+                        `;
+                    } else {
+                        el.innerHTML = `<a href="javascript:void(0)" class="user-name-link btn-jump-ticket" data-id="${t.id}">${t.id}</a>: ${t.title}`;
+                    }
                     ticketsListEl.appendChild(el);
                 });
             } else {
@@ -1175,16 +1194,80 @@
         btnConfirmConvert?.addEventListener('click', () => {
             if (!currentConversation) return;
             const title = inputConvertTitle.value.trim() || 'Khiếu nại chuyển từ kênh chat trực tuyến';
-            const newTicketId = 'TK-' + Math.floor(1000 + Math.random() * 9000);
             const selectCat = document.getElementById('selectConvertTicketCategory');
+            const catVal = selectCat ? selectCat.value : 'order';
             const catText = selectCat ? selectCat.options[selectCat.selectedIndex].text : 'Khiếu nại Đơn hàng';
+            const isServiceTicket = catVal === 'service' || catText.includes('Dịch vụ');
+            const newTicketId = isServiceTicket
+                ? 'TK-' + Math.floor(1000 + Math.random() * 9000)
+                : 'TK-ORD-' + Math.floor(100 + Math.random() * 900);
+
             const selectPri = document.getElementById('selectConvertPriority');
             const priText = selectPri ? selectPri.options[selectPri.selectedIndex].text : 'Mức độ Trung bình';
+            const priVal = priText.includes('Cao') ? 'high' : (priText.includes('Thấp') ? 'low' : 'medium');
             const refId = inputConvertRefId.value.trim();
 
+            // Trích xuất toàn bộ biên bản hội thoại để chuyển giao ngữ cảnh
+            const chatTranscript = currentConversation.messages.map(m => {
+                const senderLabel = m.sender === 'user'
+                    ? currentConversation.customerName
+                    : (m.sender === 'agent' ? (m.agentName || 'CSKH Trực tuyến') : 'PawPal AI Bot');
+                return `[${m.time}] ${senderLabel}: ${m.text || ''}`;
+            }).join('\n');
+
+            // Tạo đối tượng ticket hoàn chỉnh theo cấu trúc của complaints.js
+            const newTicketData = {
+                id: newTicketId,
+                customerName: currentConversation.customerName,
+                phone: currentConversation.phone,
+                petName: currentConversation.pets && currentConversation.pets.length > 0 ? currentConversation.pets[0].name : 'Thú cưng',
+                petBreed: currentConversation.pets && currentConversation.pets.length > 0 ? currentConversation.pets[0].breed : '',
+                petNotes: currentConversation.pets && currentConversation.pets.length > 0 ? currentConversation.pets[0].notes : '',
+                bookingId: isServiceTicket ? (refId || (currentConversation.recentBooking ? currentConversation.recentBooking.id : 'BKG-CHAT-01')) : '',
+                orderId: !isServiceTicket ? (refId || (currentConversation.recentOrder ? currentConversation.recentOrder.id : 'ORD-CHAT-01')) : '',
+                serviceType: 'spa',
+                serviceName: isServiceTicket ? 'Dịch vụ Spa Grooming (Phản ánh qua Chat)' : '',
+                productName: !isServiceTicket ? 'Sản phẩm mua sắm (Phản ánh qua Chat)' : '',
+                productSku: !isServiceTicket ? (refId || 'SKU-CHAT-01') : '',
+                issueType: isServiceTicket ? 'quality' : 'delay',
+                staffExecuted: 'Đội ngũ CSKH tiếp nhận trực tuyến',
+                title: title,
+                content: `[Tóm tắt sự cố từ AI]: ${currentConversation.aiSummary || title}\n\n[Khách hàng phản ánh]: ${title}`,
+                priority: priVal,
+                slaStatus: priVal === 'high' ? 'URGENT' : 'NORMAL',
+                slaRemainingText: 'Còn 24 giờ',
+                staffAssigned: 'Chưa phân công',
+                createdAt: new Date().toLocaleDateString('vi-VN') + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                status: 'new',
+                source: 'Kênh Chat Trực tuyến',
+                evidence: [],
+                chatTranscript: chatTranscript,
+                timeline: [
+                    {
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
+                        author: `${currentConversation.customerName} (Khách qua Chat)`,
+                        title: 'Tạo vé khiếu nại từ Kênh Trực chat',
+                        desc: `Khách hàng phản ánh qua phiên chat trực tuyến. Nhân viên CSKH đã tiếp nhận và trích xuất biên bản chuyển sang Quản lý xác minh. Mã tham chiếu: ${refId || 'N/A'}.`,
+                        isInternal: false
+                    }
+                ]
+            };
+
+            // Lưu vé vào sessionStorage chia sẻ liên phân hệ
+            try {
+                const storedTicketsRaw = sessionStorage.getItem('pawpal_admin_shared_tickets');
+                const sharedTickets = storedTicketsRaw ? JSON.parse(storedTicketsRaw) : [];
+                sharedTickets.unshift(newTicketData);
+                sessionStorage.setItem('pawpal_admin_shared_tickets', JSON.stringify(sharedTickets));
+            } catch (e) {
+                console.error('Lỗi lưu shared tickets:', e);
+            }
+
+            // Đưa vào danh sách ticket của phiên chat hiện tại
             currentConversation.openTickets.push({
                 id: newTicketId,
-                title: title
+                title: title,
+                status: 'new'
             });
 
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1199,13 +1282,14 @@
                     title: title,
                     category: catText,
                     priority: priText,
-                    refId: refId || (currentConversation.recentOrder ? currentConversation.recentOrder.id : '')
+                    refId: refId || (isServiceTicket ? (currentConversation.recentBooking ? currentConversation.recentBooking.id : '') : (currentConversation.recentOrder ? currentConversation.recentOrder.id : ''))
                 },
                 text: `Đã trích xuất biên bản hội thoại và tạo thành công vé hỗ trợ chính thức mang mã định danh ${newTicketId} trong phân hệ Khiếu nại.`
             });
 
             closeConvertModal();
             renderCurrentChat();
+            renderCustomerInfoPanel();
         });
 
         // --- MODAL 3: CHUYỂN CẤP QUẢN LÝ VÀ BÁC SĨ (BẢO VỆ NHÂN VIÊN) ---
