@@ -693,3 +693,47 @@
     color: #DC2626;
 }
 
+/* ==========================================================================
+   GIAI ĐOẠN 2: AUDIT LOG VÀ CƠ CHẾ KHÓA AN TOÀN / TÁC ĐỘNG ĐA PHÂN HỆ
+   ========================================================================== */
+.safe-mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 10px;
+    height: 24px;
+    line-height: 24px;
+    border-radius: var(--admin-radius);
+    background-color: #F5E8D3;
+    color: #734718;
+    border: none;
+}
+
+.safe-mode-badge.is-unlocked {
+    background-color: #DCEEE2;
+    color: #165335;
+}
+
+.impact-module-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    font-size: 13px;
+    background-color: transparent;
+}
+
+.impact-module-name {
+    font-weight: 600;
+    color: var(--text-heading);
+}
+
+.impact-module-note {
+    font-size: 12.5px;
+    color: var(--text-muted);
+}
+

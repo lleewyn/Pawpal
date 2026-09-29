@@ -18,7 +18,7 @@
                 <span class="kpi-val text-heading" id="statActiveBanners">2</span>
             </div>
             <div class="admin-card kpi-card">
-                <span class="kpi-label">Cảnh báo Zero Miss</span>
+                <span class="kpi-label">Cần xử lý gấp</span>
                 <span class="kpi-val text-danger" id="statZeroMissAlerts">2</span>
             </div>
             <div class="admin-card kpi-card">
@@ -46,10 +46,9 @@
         <!-- TAB PANEL 1: VOUCHER KHUYẾN MÃI -->
         <div class="settings-tab-panel active" id="mkt-vouchers">
             <div class="admin-card settings-master-card">
-                <!-- THANH CẢNH BÁO ZERO MISS TÍCH HỢP TRỰC TIẾP ĐẦU BẢNG (CHUẨN GOM KHỐI THỐNG NHẤT AGENTS.MD) -->
+                <!-- THANH CẢNH BÁO TÍCH HỢP TRỰC TIẾP ĐẦU BẢNG (CHUẨN GOM KHỐI THỐNG NHẤT AGENTS.MD) -->
                 <div class="settings-alert-strip" id="settingsAlertBar">
                     <div class="alert-strip-left">
-                        <span class="admin-badge badge-urgent">Cảnh báo Zero Miss</span>
                         <span class="alert-strip-text" id="alertStripMessage">Đang quét tình trạng Voucher và Banner chiến dịch...</span>
                     </div>
                     <div class="alert-strip-actions">
@@ -83,7 +82,7 @@
                             <label class="filter-label">Trạng thái:</label>
                             <select class="admin-select" id="filterVoucherStatus" style="width: 175px;">
                                 <option value="all">Tất cả trạng thái</option>
-                                <option value="zero-miss">Cần xử lý (Zero Miss)</option>
+                                <option value="zero-miss">Cần xử lý gấp</option>
                                 <option value="active">Hoạt động</option>
                                 <option value="paused">Tạm dừng</option>
                                 <option value="expired">Hết hạn</option>
@@ -405,6 +404,35 @@
                 <div class="system-card-footer">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnConfigurePartners">Kiểm tra kết nối đối tác</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- KHỐI NHẬT KÝ THAY ĐỔI CẤU HÌNH (AUDIT LOG VÀ ĐỒNG BỘ ĐA PHÂN HỆ SSOT - GIAI ĐOẠN 2) -->
+        <div class="admin-card settings-master-card" style="margin-top: 4px;">
+            <div class="table-toolbar-section">
+                <div class="filter-row-top">
+                    <span style="font-size: 15px; font-weight: 700; color: var(--text-heading);">Nhật ký thay đổi cấu hình (Audit Log)</span>
+                    <div class="filter-actions-right">
+                        <span class="safe-mode-badge" id="safeModeBadge">Khóa an toàn: Đang bật</span>
+                        <button type="button" class="btn-alert-strip-filter" id="btnToggleSafeMode">Mở khóa để sửa</button>
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 140px;">Thời gian</th>
+                            <th style="width: 130px;">Người thực hiện</th>
+                            <th style="width: 180px;">Phân hệ tác động</th>
+                            <th>Nội dung thay đổi</th>
+                            <th style="width: 150px;">Trạng thái đồng bộ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditLogTableBody">
+                        <!-- Render by JS -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </section>
@@ -762,6 +790,28 @@
             <div class="modal-footer-clean">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissBookingPolicyModal">Hủy</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnSaveBookingPolicy">Lưu chính sách</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 9: XÁC NHẬN TÁC ĐỘNG ĐA PHÂN HỆ (SSOT IMPACT CONFIRMATION - GIAI ĐOẠN 2) -->
+    <div class="admin-modal-overlay" id="impactConfirmModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Xác nhận thay đổi cấu hình hệ thống</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelImpactModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div id="impactModalDesc" style="font-size: 13.5px; color: var(--text-main); line-height: 1.5;">
+                    <!-- Nội dung cảnh báo tác động -->
+                </div>
+                <div id="impactAffectedModulesBox" style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Chi tiết các phân hệ bị ảnh hưởng -->
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissImpactModal">Hủy bỏ</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmAndSyncImpact">Xác nhận và Đồng bộ ngay</button>
             </div>
         </div>
     </div>

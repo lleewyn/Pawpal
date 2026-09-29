@@ -156,6 +156,30 @@
         }
     ];
 
+    const mockAuditLogs = [
+        {
+            time: '29/09/2026 14:15',
+            actor: 'Quản trị viên (Admin)',
+            targetModules: 'Khách hàng và Bán hàng',
+            actionText: 'Tỷ lệ PawPoints: 1 điểm = 500 VNĐ → 1.000 VNĐ',
+            status: 'Đã đồng bộ SSOT'
+        },
+        {
+            time: '28/09/2026 09:30',
+            actor: 'Quản trị viên (Admin)',
+            targetModules: 'Dịch vụ và Nhân sự',
+            actionText: 'Thời gian hủy miễn phí: 2 giờ → 4 giờ',
+            status: 'Đã đồng bộ SSOT'
+        },
+        {
+            time: '25/09/2026 16:45',
+            actor: 'Quản trị viên (Admin)',
+            targetModules: 'Bán hàng',
+            actionText: 'Kích hoạt phương thức thanh toán VNPay QR',
+            status: 'Đã đồng bộ SSOT'
+        }
+    ];
+
     // -------------------------------------------------------------
     // 2. KHỞI TẠO SUBTABS TRÊN HEADER BAR (CHUẨN AGENTS.MD)
     // -------------------------------------------------------------
@@ -201,6 +225,8 @@
             renderNotifications();
         } else if (tabId === 'tab-content-management') {
             renderArticles();
+        } else if (tabId === 'tab-system-config') {
+            renderAuditLogs();
         }
     }
 
@@ -247,13 +273,8 @@
         const btnFilter = document.getElementById('btnFilterZeroMiss');
 
         if (alertBar && alertMsg) {
-            const badgeEl = alertBar.querySelector('.admin-badge');
             if (totalAlerts > 0) {
                 alertBar.classList.remove('is-safe');
-                if (badgeEl) {
-                    badgeEl.className = 'admin-badge badge-urgent';
-                    badgeEl.textContent = 'Cảnh báo Zero Miss';
-                }
                 alertMsg.innerHTML = `Có <strong>${warnVouchers.length} Voucher</strong> sắp cạn hoặc hết quota và <strong>${warnBanners.length} Banner</strong> sắp hết hạn trong 24 giờ. Cần gia hạn ngay để không đứt gãy luồng khách hàng!`;
                 if (btnFilter) {
                     btnFilter.textContent = 'Lọc mục cần xử lý';
@@ -261,10 +282,6 @@
                 }
             } else {
                 alertBar.classList.add('is-safe');
-                if (badgeEl) {
-                    badgeEl.className = 'admin-badge badge-active';
-                    badgeEl.textContent = 'Vận hành tối ưu';
-                }
                 alertMsg.innerHTML = 'Toàn bộ Voucher và Banner đang trong hạn mức an toàn. Hệ thống vận hành ổn định không rủi ro!';
                 if (btnFilter) {
                     btnFilter.textContent = 'Xem tất cả Voucher';
@@ -503,7 +520,65 @@
     }
 
     // -------------------------------------------------------------
-    // 5. GẮN SỰ KIỆN LỌC VÀ MODALS
+    // 6. RENDER SUB-TAB 3: NHẬT KÝ AUDIT LOG VÀ TÁC ĐỘNG ĐA PHÂN HỆ (GIAI ĐOẠN 2)
+    // -------------------------------------------------------------
+    let isSafeModeLocked = true;
+    let pendingImpactCallback = null;
+
+    function renderAuditLogs() {
+        const tbody = document.getElementById('auditLogTableBody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+        if (mockAuditLogs.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">Chưa có lịch sử thay đổi cấu hình nào.</td></tr>`;
+            return;
+        }
+
+        mockAuditLogs.forEach(log => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span style="font-size: 12.5px; color: var(--text-muted);">${log.time}</span></td>
+                <td><strong>${log.actor}</strong></td>
+                <td><span class="admin-badge badge-neutral">${log.targetModules}</span></td>
+                <td><span style="color: var(--text-main); font-weight: 500;">${log.actionText}</span></td>
+                <td><span class="admin-badge badge-active">${log.status}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function openImpactConfirmationModal({ title, desc, affectedModules, onConfirm }) {
+        const modal = document.getElementById('impactConfirmModalOverlay');
+        const descEl = document.getElementById('impactModalDesc');
+        const boxEl = document.getElementById('impactAffectedModulesBox');
+        if (!modal || !descEl || !boxEl) {
+            if (onConfirm) onConfirm();
+            return;
+        }
+
+        descEl.innerHTML = `Bạn đang chuẩn bị thay đổi <strong>${title}</strong>. Theo quy tắc Nguồn Dữ Liệu Duy Nhất (SSOT), cấu hình này sẽ tự động đồng bộ ngay lập tức sang các phân hệ sau:`;
+        boxEl.innerHTML = '';
+
+        affectedModules.forEach(mod => {
+            const row = document.createElement('div');
+            row.className = 'impact-module-item';
+            row.innerHTML = `
+                <div>
+                    <div class="impact-module-name">${mod.name}</div>
+                    <div class="impact-module-note">${mod.note}</div>
+                </div>
+                <span class="admin-badge badge-active">Sẵn sàng đồng bộ</span>
+            `;
+            boxEl.appendChild(row);
+        });
+
+        pendingImpactCallback = onConfirm;
+        modal.style.display = 'flex';
+    }
+
+    // -------------------------------------------------------------
+    // 7. GẮN SỰ KIỆN LỌC VÀ MODALS
     // -------------------------------------------------------------
     function setupSettingsEvents() {
         // Chuyển Tab con trong Sub-tab 1 (Voucher, Banner, PawPoints, Thông báo)
@@ -620,12 +695,38 @@
             if (pawpointsModal) pawpointsModal.style.display = 'none';
         });
         document.getElementById('btnSavePawpointsPolicy')?.addEventListener('click', () => {
+            if (isSafeModeLocked) {
+                alert('CẢNH BÁO AN TOÀN:\nKhóa an toàn cấu hình đang BẬT để chống sửa nhầm tham số lõi!\nVui lòng vào tab "Cấu hình Hệ thống" và bấm "Mở khóa để sửa" trước khi lưu thay đổi điểm thưởng PawPoints.');
+                return;
+            }
             const pointVal = document.getElementById('inputCfgPointValue')?.value || '1000';
             const regPts = document.getElementById('inputCfgRegisterPoints')?.value || '50';
-            document.getElementById('dispPointValue').textContent = `1 điểm = ${parseInt(pointVal, 10).toLocaleString('vi-VN')} VNĐ`;
-            document.getElementById('dispRegisterPoints').textContent = `+${regPts} điểm`;
-            pawpointsModal.style.display = 'none';
-            alert('Đã cập nhật chính sách điểm thưởng PawPoints toàn hệ thống!');
+
+            openImpactConfirmationModal({
+                title: 'Chính sách Điểm thưởng PawPoints',
+                desc: 'Thay đổi tỷ lệ quy đổi điểm và điểm thưởng thành viên.',
+                affectedModules: [
+                    { name: 'Phân hệ Khách hàng', note: 'Tính toán lại công thức tích lũy và cập nhật hiển thị điểm trong Hồ sơ 360°' },
+                    { name: 'Phân hệ Bán hàng', note: 'Áp dụng tỷ lệ trừ tiền trực tiếp vào hóa đơn POS và Web Checkout' }
+                ],
+                onConfirm: () => {
+                    document.getElementById('dispPointValue').textContent = `1 điểm = ${parseInt(pointVal, 10).toLocaleString('vi-VN')} VNĐ`;
+                    document.getElementById('dispRegisterPoints').textContent = `+${regPts} điểm`;
+                    pawpointsModal.style.display = 'none';
+
+                    const now = new Date();
+                    const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                    mockAuditLogs.unshift({
+                        time: timeStr,
+                        actor: 'Quản trị viên (Admin)',
+                        targetModules: 'Khách hàng và Bán hàng',
+                        actionText: `Cập nhật PawPoints: 1 điểm = ${parseInt(pointVal, 10).toLocaleString('vi-VN')} VNĐ, Thưởng đăng ký +${regPts} điểm`,
+                        status: 'Đã đồng bộ SSOT'
+                    });
+                    renderAuditLogs();
+                    alert('Đã lưu chính sách PawPoints và đồng bộ thành công sang phân hệ Khách hàng và Bán hàng!');
+                }
+            });
         });
 
         // --- MODAL THÔNG BÁO WEBSITE ---
@@ -702,8 +803,31 @@
             if (paymentModal) paymentModal.style.display = 'none';
         });
         document.getElementById('btnSavePaymentConfig')?.addEventListener('click', () => {
-            paymentModal.style.display = 'none';
-            alert('Đã cập nhật cấu hình thanh toán và đồng bộ sang phân hệ Bán hàng!');
+            if (isSafeModeLocked) {
+                alert('CẢNH BÁO AN TOÀN:\nKhóa an toàn cấu hình đang BẬT!\nVui lòng bấm "Mở khóa để sửa" trước khi lưu cấu hình cổng thanh toán.');
+                return;
+            }
+            openImpactConfirmationModal({
+                title: 'Cấu hình Cổng Thanh toán',
+                desc: 'Cập nhật danh sách cổng thanh toán trực tuyến.',
+                affectedModules: [
+                    { name: 'Phân hệ Bán hàng', note: 'Tự động mở/đóng cổng quét mã MoMo và VNPay trên màn hình POS và thanh toán Web' }
+                ],
+                onConfirm: () => {
+                    paymentModal.style.display = 'none';
+                    const now = new Date();
+                    const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                    mockAuditLogs.unshift({
+                        time: timeStr,
+                        actor: 'Quản trị viên (Admin)',
+                        targetModules: 'Bán hàng',
+                        actionText: 'Cấu hình thanh toán: Xác nhận kết nối MoMo và VNPay QR',
+                        status: 'Đã đồng bộ SSOT'
+                    });
+                    renderAuditLogs();
+                    alert('Đã cập nhật cổng thanh toán và đồng bộ sang phân hệ Bán hàng!');
+                }
+            });
         });
 
         const shippingModal = document.getElementById('shippingConfigModalOverlay');
@@ -717,8 +841,31 @@
             if (shippingModal) shippingModal.style.display = 'none';
         });
         document.getElementById('btnSaveShippingConfig')?.addEventListener('click', () => {
-            shippingModal.style.display = 'none';
-            alert('Đã lưu cấu hình đơn vị vận chuyển!');
+            if (isSafeModeLocked) {
+                alert('CẢNH BÁO AN TOÀN:\nKhóa an toàn cấu hình đang BẬT!\nVui lòng bấm "Mở khóa để sửa" trước khi lưu cấu hình vận chuyển.');
+                return;
+            }
+            openImpactConfirmationModal({
+                title: 'Cấu hình Đơn vị Vận chuyển',
+                desc: 'Cập nhật đối tác giao vận và phương thức giao hàng.',
+                affectedModules: [
+                    { name: 'Phân hệ Bán hàng', note: 'Đồng bộ biểu phí ship COD và bảng giá giao hàng tức thời Ahamove / GrabExpress' }
+                ],
+                onConfirm: () => {
+                    shippingModal.style.display = 'none';
+                    const now = new Date();
+                    const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                    mockAuditLogs.unshift({
+                        time: timeStr,
+                        actor: 'Quản trị viên (Admin)',
+                        targetModules: 'Bán hàng',
+                        actionText: 'Cập nhật đơn vị vận chuyển: Kích hoạt GHN và Ahamove',
+                        status: 'Đã đồng bộ SSOT'
+                    });
+                    renderAuditLogs();
+                    alert('Đã lưu cấu hình vận chuyển và đồng bộ sang phân hệ Bán hàng!');
+                }
+            });
         });
 
         const bookingPolicyModal = document.getElementById('bookingPolicyModalOverlay');
@@ -732,8 +879,35 @@
             if (bookingPolicyModal) bookingPolicyModal.style.display = 'none';
         });
         document.getElementById('btnSaveBookingPolicy')?.addEventListener('click', () => {
-            bookingPolicyModal.style.display = 'none';
-            alert('Đã áp dụng chính sách đặt lịch mới sang phân hệ Dịch vụ!');
+            if (isSafeModeLocked) {
+                alert('CẢNH BÁO AN TOÀN:\nKhóa an toàn cấu hình đang BẬT!\nVui lòng bấm "Mở khóa để sửa" ở bảng Nhật ký Cấu hình trước khi thay đổi quy tắc đặt lịch.');
+                return;
+            }
+            const freeHours = document.getElementById('inputFreeCancelHours')?.value || '4';
+            const lateFee = document.getElementById('inputLateCancelFee')?.value || '50000';
+
+            openImpactConfirmationModal({
+                title: 'Chính sách Đặt lịch Dịch vụ',
+                desc: 'Quy tắc hủy lịch hẹn và phí hủy muộn cho dịch vụ Spa và Hotel.',
+                affectedModules: [
+                    { name: 'Phân hệ Dịch vụ', note: `Áp dụng thời gian hủy miễn phí trước ${freeHours} giờ và phí phạt ${parseInt(lateFee, 10).toLocaleString('vi-VN')} VNĐ` },
+                    { name: 'Phân hệ Nhân sự', note: 'Tự động tính toán lại quyền giữ slot ca trực cho chuyên viên chăm sóc' }
+                ],
+                onConfirm: () => {
+                    bookingPolicyModal.style.display = 'none';
+                    const now = new Date();
+                    const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                    mockAuditLogs.unshift({
+                        time: timeStr,
+                        actor: 'Quản trị viên (Admin)',
+                        targetModules: 'Dịch vụ và Nhân sự',
+                        actionText: `Chính sách đặt lịch: Hủy miễn phí trước ${freeHours} giờ, Phí hủy muộn ${parseInt(lateFee, 10).toLocaleString('vi-VN')} VNĐ`,
+                        status: 'Đã đồng bộ SSOT'
+                    });
+                    renderAuditLogs();
+                    alert('Đã áp dụng chính sách đặt lịch mới và đồng bộ sang phân hệ Dịch vụ và Nhân sự!');
+                }
+            });
         });
 
         // --- SỰ KIỆN ZERO MISS VÀ TÁC VỤ DROPDOWN 3 CHẤM (GIAI ĐOẠN 1) ---
@@ -829,6 +1003,45 @@
                 alert(`Kết quả kiểm tra đối tác bên thứ ba (Live Healthcheck):\n- GHN Express API: 200 OK (${ghnPing}ms)\n- MoMo Merchant Gateway: 200 OK (${momoPing}ms)\n- VNPay Payment Engine: 200 OK (${vnpayPing}ms)\n\nToàn bộ kênh kết nối đang thông suốt, không phát hiện nghẽn mạng!`);
             }, 350);
         });
+
+        // --- SỰ KIỆN GIAI ĐOẠN 2: KHÓA AN TOÀN VÀ XÁC NHẬN TÁC ĐỘNG ĐA PHÂN HỆ ---
+        document.getElementById('btnToggleSafeMode')?.addEventListener('click', () => {
+            isSafeModeLocked = !isSafeModeLocked;
+            const badge = document.getElementById('safeModeBadge');
+            const btn = document.getElementById('btnToggleSafeMode');
+            if (isSafeModeLocked) {
+                if (badge) {
+                    badge.className = 'safe-mode-badge';
+                    badge.textContent = 'Khóa an toàn: Đang bật';
+                }
+                if (btn) btn.textContent = 'Mở khóa để sửa';
+                alert('Đã BẬT Khóa an toàn! Toàn bộ tham số cấu hình lõi được bảo vệ chống thao tác nhầm.');
+            } else {
+                if (badge) {
+                    badge.className = 'safe-mode-badge is-unlocked';
+                    badge.textContent = 'Khóa an toàn: Đã mở';
+                }
+                if (btn) btn.textContent = 'Bật lại khóa an toàn';
+                alert('Đã MỞ KHÓA thành công! Bạn có thể chỉnh sửa các chính sách và cấu hình vận hành.');
+            }
+        });
+
+        document.getElementById('btnConfirmAndSyncImpact')?.addEventListener('click', () => {
+            if (pendingImpactCallback) {
+                pendingImpactCallback();
+                pendingImpactCallback = null;
+            }
+            const modal = document.getElementById('impactConfirmModalOverlay');
+            if (modal) modal.style.display = 'none';
+        });
+
+        const closeImpactModalHandler = () => {
+            pendingImpactCallback = null;
+            const modal = document.getElementById('impactConfirmModalOverlay');
+            if (modal) modal.style.display = 'none';
+        };
+        document.getElementById('btnDismissImpactModal')?.addEventListener('click', closeImpactModalHandler);
+        document.getElementById('btnCancelImpactModal')?.addEventListener('click', closeImpactModalHandler);
     }
 
     // -------------------------------------------------------------
