@@ -840,4 +840,263 @@
             </div>
         </div>
     </div>
+
+    <!-- ====================================================================
+         MODAL 8: ĐIỀU CHỈNH TỒN KHO VÀ GIÁ BÁN SẢN PHẨM
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalAdjustStock">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Điều chỉnh tồn kho và Sản phẩm</div>
+                    <div class="sub-meta-text" id="adjustStockSubtitle">Cập nhật số lượng kiểm kê và giá bán</div>
+                </div>
+                <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalAdjustStock')">Đóng</button>
+            </div>
+
+            <div class="modal-body-clean">
+                <div class="rma-order-summary-box">
+                    <div class="info-pair">
+                        <span class="info-label">Mã SKU:</span>
+                        <span class="info-value text-heading" id="adjustSkuCode" style="font-family: monospace; font-size: 15px; font-weight: 700;">TP-HAT-01</span>
+                    </div>
+                    <div class="info-pair">
+                        <span class="info-label">Tên sản phẩm:</span>
+                        <span class="info-value" id="adjustProdName" style="font-weight: 500;">Thức ăn hạt Royal Canin</span>
+                    </div>
+                    <div class="info-pair">
+                        <span class="info-label">Tồn kho hiện tại:</span>
+                        <span class="info-value text-heading" id="adjustCurrentStock" style="font-weight: 700; font-size: 15px;">45 gói</span>
+                    </div>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Thao tác điều chỉnh:</label>
+                        <select class="admin-select" id="adjustOperationType">
+                            <option value="ADD">Nhập thêm hàng vào kho (+)</option>
+                            <option value="SUB">Xuất bớt / Hàng hư hỏng (-)</option>
+                            <option value="SET">Kiểm kê đặt lại số thực tế (=)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Số lượng thay đổi:</label>
+                        <input type="number" class="admin-input" id="adjustQuantityInput" value="10" min="0">
+                    </div>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Giá niêm yết mới (VNĐ):</label>
+                        <input type="number" class="admin-input" id="adjustPriceInput" placeholder="Để trống nếu giữ nguyên">
+                    </div>
+
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Trạng thái kinh doanh:</label>
+                        <select class="admin-select" id="adjustStatusSelect">
+                            <option value="Đang bán">Đang bán bình thường</option>
+                            <option value="Tạm ngưng">Tạm ngưng kinh doanh</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Lý do điều chỉnh kiểm kê:</label>
+                    <select class="admin-select" id="adjustReasonSelect">
+                        <option value="Nhập hàng mới từ nhà cung cấp">Nhập hàng mới từ nhà cung cấp</option>
+                        <option value="Kiểm kê định kỳ cân đối sổ sách">Kiểm kê định kỳ cân đối sổ sách</option>
+                        <option value="Xuất hủy hàng lỗi bao bì rách vỡ">Xuất hủy hàng lỗi bao bì rách vỡ</option>
+                        <option value="Điều chuyển nội bộ sang chi nhánh khác">Điều chuyển nội bộ sang chi nhánh khác</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalAdjustStock')">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAdjustStock">Lưu cập nhật tồn kho</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 9: THÊM SẢN PHẨM MỚI VÀO KHO
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalAddProduct">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Thêm sản phẩm mới vào kho</div>
+                    <div class="sub-meta-text">Tạo mã SKU và thiết lập số lượng tồn ban đầu</div>
+                </div>
+                <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalAddProduct')">Đóng</button>
+            </div>
+
+            <div class="modal-body-clean">
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Mã SKU sản phẩm:</label>
+                        <input type="text" class="admin-input" id="newProdSku" placeholder="Ví dụ: TP-PATE-15...">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Tên mặt hàng:</label>
+                        <input type="text" class="admin-input" id="newProdName" placeholder="Tên sản phẩm đầy đủ...">
+                    </div>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Danh mục ngành hàng:</label>
+                        <select class="admin-select" id="newProdCategory">
+                            <option value="Thức ăn khô">Thức ăn khô</option>
+                            <option value="Thức ăn ướt">Thức ăn ướt</option>
+                            <option value="Sức khỏe">Sức khỏe và Dinh dưỡng</option>
+                            <option value="Bát ăn">Bát ăn và Phụ kiện</option>
+                            <option value="Đồ chơi">Đồ chơi và Huấn luyện</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Thương hiệu / Nhà sản xuất:</label>
+                        <input type="text" class="admin-input" id="newProdBrand" placeholder="Royal Canin, King's Pet, PawPal...">
+                    </div>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Giá niêm yết bán lẻ (VNĐ):</label>
+                        <input type="number" class="admin-input" id="newProdPrice" placeholder="Ví dụ: 150000" min="0">
+                    </div>
+
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Số lượng nhập ban đầu:</label>
+                        <input type="number" class="admin-input" id="newProdInitialStock" value="20" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Ngưỡng cảnh báo sắp hết hàng (Min Stock):</label>
+                    <input type="number" class="admin-input" id="newProdMinStock" value="5" min="1">
+                </div>
+            </div>
+
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalAddProduct')">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAddProduct">Xác nhận thêm sản phẩm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 10: TẠO MÃ KHUYẾN MÃI / VOUCHER
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalCreateVoucher">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Tạo mã khuyến mãi mới</div>
+                    <div class="sub-meta-text">Phát hành voucher giảm giá hoặc đổi điểm Pawpoint</div>
+                </div>
+                <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalCreateVoucher')">Đóng</button>
+            </div>
+
+            <div class="modal-body-clean">
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Mã Voucher (In hoa, không dấu):</label>
+                        <input type="text" class="admin-input" id="newVoucherCode" placeholder="Ví dụ: PAWSUMMER20..." style="font-family: monospace; font-weight: 700;">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Tên chương trình:</label>
+                        <input type="text" class="admin-input" id="newVoucherTitle" placeholder="Ưu đãi hè rực rỡ...">
+                    </div>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Mức giảm giá:</label>
+                        <input type="text" class="admin-input" id="newVoucherDiscount" placeholder="Ví dụ: 20% (Tối đa 50k) hoặc 30.000 đ">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Đơn hàng tối thiểu:</label>
+                        <input type="text" class="admin-input" id="newVoucherMinOrder" placeholder="Ví dụ: 250.000 đ">
+                    </div>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Điểm Pawpoint cần đổi:</label>
+                        <input type="text" class="admin-input" id="newVoucherPoints" value="Miễn phí" placeholder="Miễn phí hoặc 500 điểm">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Thời hạn sử dụng:</label>
+                        <input type="text" class="admin-input" id="newVoucherExpiry" value="31/12/2026" placeholder="Ngày hết hạn...">
+                    </div>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Số lượt phát hành tối đa:</label>
+                    <input type="number" class="admin-input" id="newVoucherMaxUses" value="200" min="1">
+                </div>
+            </div>
+
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalCreateVoucher')">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitCreateVoucher">Kích hoạt mã khuyến mãi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 11: QUẢN LÝ VÀ ĐIỀU CHỈNH VOUCHER
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalVoucherAction">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Quản lý mã khuyến mãi</div>
+                    <div class="sub-meta-text" id="voucherActionSubtitle">Điều chỉnh trạng thái và thời hạn</div>
+                </div>
+                <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalVoucherAction')">Đóng</button>
+            </div>
+
+            <div class="modal-body-clean">
+                <div class="rma-order-summary-box">
+                    <div class="info-pair">
+                        <span class="info-label">Mã Voucher:</span>
+                        <span class="info-value text-heading" id="voucherTargetCode" style="font-family: monospace; font-size: 15px; font-weight: 700;">PAWNEW10</span>
+                    </div>
+                    <div class="info-pair">
+                        <span class="info-label">Chương trình:</span>
+                        <span class="info-value" id="voucherTargetTitle" style="font-weight: 500;">Giảm 10% đơn đầu</span>
+                    </div>
+                    <div class="info-pair">
+                        <span class="info-label">Lượt đã dùng:</span>
+                        <span class="info-value" id="voucherTargetUsed" style="font-weight: 600;">142 / 500</span>
+                    </div>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Trạng thái phát hành:</label>
+                        <select class="admin-select" id="voucherTargetStatus">
+                            <option value="Đang chạy">Đang chạy (Khách được áp dụng)</option>
+                            <option value="Tạm ngưng">Tạm ngưng phát hành</option>
+                            <option value="Hết hạn">Đã hết hạn sử dụng</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Gia hạn thời gian sử dụng:</label>
+                        <input type="text" class="admin-input" id="voucherTargetExpiry" placeholder="Ví dụ: 31/12/2026">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalVoucherAction')">Bỏ qua</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitUpdateVoucher">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
 </div>

@@ -495,6 +495,8 @@
     let filterSlaOverdueOnly = false;
     let selectedBatchOrderIds = []; // Giai đoạn 2: Danh sách đơn chọn hàng loạt
     let activeActionOrderId = null;
+    let activeAdjustProductSku = null;
+    let activeActionVoucherCode = null;
     let renderOrderDetailRef = null;
 
     function formatVND(amount) {
@@ -1199,7 +1201,7 @@
                         <td>${alertBadge}</td>
                         <td>${statusBadge}</td>
                         <td style="text-align: center;">
-                            <button type="button" class="btn-action-trigger" onclick="alert('Điều chỉnh tồn kho cho ${p.sku}')">•••</button>
+                            <button type="button" class="btn-action-trigger" onclick="PawpalOrdersModule.openAdjustStockModal('${p.sku}')">•••</button>
                         </td>
                     </tr>
                 `;
@@ -1222,7 +1224,7 @@
                     <td>${v.used}</td>
                     <td><span class="admin-badge badge-paid">${v.status}</span></td>
                     <td style="text-align: center;">
-                        <button type="button" class="btn-action-trigger" onclick="alert('Tác vụ cho voucher ${v.code}')">•••</button>
+                        <button type="button" class="btn-action-trigger" onclick="PawpalOrdersModule.openVoucherActionModal('${v.code}')">•••</button>
                     </td>
                 </tr>
             `).join('');
@@ -1430,6 +1432,146 @@
         });
         document.getElementById('btnExportProductStock')?.addEventListener('click', () => {
             alert('Đã xuất báo cáo kiểm kê kho hàng thành công.');
+        });
+
+        // Mở modal thêm sản phẩm mới
+        document.getElementById('btnOpenAddProductModal')?.addEventListener('click', () => {
+            document.getElementById('modalAddProduct')?.classList.add('active');
+        });
+
+        // Xác nhận thêm sản phẩm mới
+        document.getElementById('btnSubmitAddProduct')?.addEventListener('click', () => {
+            const sku = document.getElementById('newProdSku')?.value.trim();
+            const name = document.getElementById('newProdName')?.value.trim();
+            const cat = document.getElementById('newProdCategory')?.value;
+            const brand = document.getElementById('newProdBrand')?.value.trim() || 'PawPal';
+            const price = parseInt(document.getElementById('newProdPrice')?.value || '0', 10);
+            const stock = parseInt(document.getElementById('newProdInitialStock')?.value || '0', 10);
+            const minStock = parseInt(document.getElementById('newProdMinStock')?.value || '5', 10);
+
+            if (!sku || !name) {
+                alert('Vui lòng nhập đầy đủ mã SKU và tên sản phẩm.');
+                return;
+            }
+
+            if (initialProducts.some(p => p.sku.toLowerCase() === sku.toLowerCase())) {
+                alert(`Mã SKU "${sku}" đã tồn tại trong kho. Vui lòng nhập mã khác.`);
+                return;
+            }
+
+            initialProducts.unshift({
+                sku: sku,
+                name: name,
+                category: cat,
+                brand: brand,
+                price: price,
+                stock: stock,
+                minStock: minStock,
+                status: 'Còn hàng'
+            });
+
+            document.getElementById('modalAddProduct')?.classList.remove('active');
+            renderProductsTable();
+            alert(`Đã thêm thành công sản phẩm mới "${name}" (SKU: ${sku}) vào kho hàng!`);
+        });
+
+        // Xác nhận lưu điều chỉnh tồn kho
+        document.getElementById('btnSubmitAdjustStock')?.addEventListener('click', () => {
+            const sku = activeAdjustProductSku;
+            const prod = initialProducts.find(p => p.sku === sku);
+            if (!prod) return;
+
+            const opType = document.getElementById('adjustOperationType')?.value || 'ADD';
+            const qty = parseInt(document.getElementById('adjustQuantityInput')?.value || '0', 10);
+            const newPrice = document.getElementById('adjustPriceInput')?.value;
+            const newStatus = document.getElementById('adjustStatusSelect')?.value || 'Đang bán';
+            const reason = document.getElementById('adjustReasonSelect')?.value;
+
+            if (opType === 'ADD') {
+                prod.stock += qty;
+            } else if (opType === 'SUB') {
+                prod.stock = Math.max(0, prod.stock - qty);
+            } else if (opType === 'SET') {
+                prod.stock = Math.max(0, qty);
+            }
+
+            if (newPrice && parseInt(newPrice, 10) > 0) {
+                prod.price = parseInt(newPrice, 10);
+            }
+
+            prod.status = newStatus;
+
+            document.getElementById('modalAdjustStock')?.classList.remove('active');
+            renderProductsTable();
+            alert(`Đã cập nhật tồn kho cho sản phẩm ${sku}!\nSố lượng tồn mới: ${prod.stock} (Lý do: ${reason}).`);
+        });
+
+        // Mở modal tạo mã khuyến mãi
+        document.getElementById('btnOpenCreateVoucherModal')?.addEventListener('click', () => {
+            document.getElementById('modalCreateVoucher')?.classList.add('active');
+        });
+
+        // Xác nhận tạo mã khuyến mãi
+        document.getElementById('btnSubmitCreateVoucher')?.addEventListener('click', () => {
+            const code = document.getElementById('newVoucherCode')?.value.trim().toUpperCase();
+            const title = document.getElementById('newVoucherTitle')?.value.trim();
+            const discount = document.getElementById('newVoucherDiscount')?.value.trim();
+            const minOrder = document.getElementById('newVoucherMinOrder')?.value.trim() || '0 đ';
+            const points = document.getElementById('newVoucherPoints')?.value.trim() || 'Miễn phí';
+            const expiry = document.getElementById('newVoucherExpiry')?.value.trim() || '31/12/2026';
+            const maxUses = document.getElementById('newVoucherMaxUses')?.value || '100';
+
+            if (!code || !title || !discount) {
+                alert('Vui lòng nhập đầy đủ mã voucher, tên chương trình và mức giảm giá.');
+                return;
+            }
+
+            if (initialVouchers.some(v => v.code.toUpperCase() === code)) {
+                alert(`Mã khuyến mãi "${code}" đã tồn tại. Vui lòng chọn mã khác.`);
+                return;
+            }
+
+            initialVouchers.unshift({
+                code: code,
+                title: title,
+                discount: discount,
+                minOrder: minOrder,
+                points: points,
+                expiry: expiry,
+                used: `0 / ${maxUses}`,
+                status: 'Đang chạy'
+            });
+
+            const statActive = document.getElementById('statActiveVouchers');
+            if (statActive) {
+                statActive.textContent = initialVouchers.filter(v => v.status === 'Đang chạy').length;
+            }
+
+            document.getElementById('modalCreateVoucher')?.classList.remove('active');
+            renderVouchersTable();
+            alert(`Đã phát hành thành công mã khuyến mãi "${code}"!`);
+        });
+
+        // Cập nhật voucher từ modal tác vụ
+        document.getElementById('btnSubmitUpdateVoucher')?.addEventListener('click', () => {
+            const code = activeActionVoucherCode;
+            const voucher = initialVouchers.find(v => v.code === code);
+            if (!voucher) return;
+
+            const newStatus = document.getElementById('voucherTargetStatus')?.value;
+            const newExpiry = document.getElementById('voucherTargetExpiry')?.value.trim();
+
+            if (newStatus) voucher.status = newStatus;
+            if (newExpiry) voucher.expiry = newExpiry;
+
+            const statActive = document.getElementById('statActiveVouchers');
+            if (statActive) {
+                statActive.textContent = initialVouchers.filter(v => v.status === 'Đang chạy').length;
+            }
+
+            document.getElementById('modalVoucherAction')?.classList.remove('active');
+            renderVouchersTable();
+            alert(`Đã lưu thay đổi cho mã khuyến mãi "${code}" thành công!`);
         });
 
         // Tạo đơn tại quầy
@@ -2015,6 +2157,44 @@
             popover.style.top = `${rect.bottom + 4}px`;
             popover.style.left = `${rect.left - 130}px`;
             popover.classList.add('active');
+        },
+        openAdjustStockModal: function(sku) {
+            const prod = initialProducts.find(p => p.sku === sku);
+            if (!prod) return;
+
+            activeAdjustProductSku = sku;
+            const skuEl = document.getElementById('adjustSkuCode');
+            const nameEl = document.getElementById('adjustProdName');
+            const stockEl = document.getElementById('adjustCurrentStock');
+            const priceInput = document.getElementById('adjustPriceInput');
+            const statusSelect = document.getElementById('adjustStatusSelect');
+
+            if (skuEl) skuEl.textContent = prod.sku;
+            if (nameEl) nameEl.textContent = prod.name;
+            if (stockEl) stockEl.textContent = `${prod.stock} đơn vị`;
+            if (priceInput) priceInput.value = prod.price || '';
+            if (statusSelect) statusSelect.value = prod.status || 'Đang bán';
+
+            document.getElementById('modalAdjustStock')?.classList.add('active');
+        },
+        openVoucherActionModal: function(code) {
+            const voucher = initialVouchers.find(v => v.code === code);
+            if (!voucher) return;
+
+            activeActionVoucherCode = code;
+            const codeEl = document.getElementById('voucherTargetCode');
+            const titleEl = document.getElementById('voucherTargetTitle');
+            const usedEl = document.getElementById('voucherTargetUsed');
+            const statusSelect = document.getElementById('voucherTargetStatus');
+            const expiryInput = document.getElementById('voucherTargetExpiry');
+
+            if (codeEl) codeEl.textContent = voucher.code;
+            if (titleEl) titleEl.textContent = voucher.title;
+            if (usedEl) usedEl.textContent = voucher.used;
+            if (statusSelect) statusSelect.value = voucher.status || 'Đang chạy';
+            if (expiryInput) expiryInput.value = voucher.expiry || '';
+
+            document.getElementById('modalVoucherAction')?.classList.add('active');
         }
     };
 
