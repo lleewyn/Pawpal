@@ -249,6 +249,7 @@
         if (alertBar && alertMsg) {
             const badgeEl = alertBar.querySelector('.admin-badge');
             if (totalAlerts > 0) {
+                alertBar.classList.remove('is-safe');
                 if (badgeEl) {
                     badgeEl.className = 'admin-badge badge-urgent';
                     badgeEl.textContent = 'Cảnh báo Zero Miss';
@@ -259,6 +260,7 @@
                     btnFilter.style.display = 'inline-flex';
                 }
             } else {
+                alertBar.classList.add('is-safe');
                 if (badgeEl) {
                     badgeEl.className = 'admin-badge badge-active';
                     badgeEl.textContent = 'Vận hành tối ưu';
