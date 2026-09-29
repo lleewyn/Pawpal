@@ -24,7 +24,7 @@
         // ====================================================================
         // DATA STORE MÔ PHỎNG CHI TIẾT THEO TỪNG KHÁCH HÀNG (CÁ NHÂN, PET, ĐƠN, LỊCH, KHIẾU NẠI)
         // ====================================================================
-        const customerDatabase = {
+        const defaultCustomerDatabase = {
             'CUST-001': {
                 id: 'CUST-001',
                 name: 'Nguyễn Văn An',
@@ -411,6 +411,95 @@
             }
         };
 
+        function getCustomersData() {
+            const saved = sessionStorage.getItem('pawpal_admin_customers_data');
+            if (saved) {
+                try {
+                    return JSON.parse(saved);
+                } catch (e) {
+                    console.error('Lỗi phân tích cú pháp pawpal_admin_customers_data:', e);
+                }
+            }
+            return JSON.parse(JSON.stringify(defaultCustomerDatabase));
+        }
+
+        const customerDatabase = getCustomersData();
+
+        function persistCustomersData() {
+            sessionStorage.setItem('pawpal_admin_customers_data', JSON.stringify(customerDatabase));
+        }
+
+        function showToast(msg) {
+            let toast = document.getElementById('adminGlobalToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'adminGlobalToast';
+                toast.style.cssText = `
+                    position: fixed;
+                    bottom: 24px;
+                    right: 24px;
+                    background-color: #236B48;
+                    color: #FFFFFF;
+                    padding: 12px 20px;
+                    border-radius: 9px;
+                    font-size: 13.5px;
+                    font-weight: 500;
+                    box-shadow: 0 8px 24px rgba(26, 43, 35, 0.2);
+                    z-index: 9999;
+                    display: none;
+                `;
+                document.body.appendChild(toast);
+            }
+            toast.textContent = msg;
+            toast.style.display = 'block';
+            if (window._custToastTimer) clearTimeout(window._custToastTimer);
+            window._custToastTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3200);
+        }
+
+        // Tự động đồng bộ bé cưng sang kho dữ liệu pets module khi thêm khách mới hoặc thêm pet
+        function syncNewPetToPetsModule(newPet, custId, custName, custPhone) {
+            try {
+                const savedPets = sessionStorage.getItem('pawpal_admin_pets_data');
+                let petsData = savedPets ? JSON.parse(savedPets) : null;
+                if (petsData) {
+                    const newPetId = newPet.id || ('PET-' + String(Object.keys(petsData).length + 1).padStart(3, '0'));
+                    newPet.id = newPetId;
+                    const spec = newPet.species === 'Mèo' || newPet.species === 'CAT' ? 'cat' : (newPet.species === 'Thỏ' ? 'rabbit' : 'dog');
+                    petsData[newPetId] = {
+                        name: newPet.name,
+                        code: newPetId,
+                        species: spec,
+                        speciesBreed: `${newPet.species} ${newPet.breed || ''}`.trim(),
+                        breed: newPet.breed || 'Chưa cập nhật',
+                        gender: 'Đực',
+                        weight: newPet.weight ? `${newPet.weight} kg` : '3.5 kg',
+                        weightNum: parseFloat(newPet.weight) || 3.5,
+                        dob: 'Chưa cập nhật',
+                        color: 'Chưa cập nhật',
+                        allergy: 'Không',
+                        notes: 'Tiếp nhận ban đầu tại quầy cùng khách hàng.',
+                        alert: newPet.alertNote && newPet.alertNote !== 'Bình thường' ? newPet.alertNote : '',
+                        ownerName: custName,
+                        ownerPhone: custPhone,
+                        custId: custId,
+                        avatar: spec === 'cat' ? '/assets/images/publics/catcute1.jpg' : '/assets/images/publics/dogcute1.jpg',
+                        status: 'Đang nuôi',
+                        vaccinated: false,
+                        isHotel: false,
+                        weightHistory: [],
+                        vaccines: [],
+                        carelogs: [],
+                        history: []
+                    };
+                    sessionStorage.setItem('pawpal_admin_pets_data', JSON.stringify(petsData));
+                }
+            } catch(err) {
+                console.warn('Lỗi đồng bộ thú cưng sang pets module:', err);
+            }
+        }
+
         // Hàm định dạng ô Thú cưng trên bảng theo Phương án 1 (hiển thị bé chính + số lượng bé phụ)
         function formatCustomerPetsCell(pets) {
             if (!pets || pets.length === 0) {
@@ -691,7 +780,9 @@
                     if (confirm(`Bạn có chắc chắn muốn xóa bé cưng ${pet?.name || ''} khỏi hồ sơ của khách?`)) {
                         customerDatabase[cId].pets.splice(pIdx, 1);
                         renderDrawerPets(cId);
-                        alert('Đã xóa bé cưng khỏi hồ sơ thành công!');
+                        persistCustomersData();
+                        renderCustomersTable();
+                        showToast('Đã xóa bé cưng khỏi hồ sơ thành công!');
                     }
                 });
             });
@@ -847,14 +938,273 @@
             }
         }
 
-        // Event delegation cho toàn bộ bảng (bao gồm cả dòng mới thêm vào)
+        // ====================================================================
+        // RENDER BẢNG DỮ LIỆU KHÁCH HÀNG VÀ PHÂN TRANG ĐỘNG (CHUẨN 10 DÒNG/TRANG)
+        // ====================================================================
+        let currentCustomerPage = 1;
+        const CUSTOMER_PAGE_SIZE = 10;
+        let currentCustomerFilter = 'ALL'; // ALL, MEMBER, TEMP, LOCKED, COMPLAINT
+
+        function updateCustomerKPIs() {
+            const totalEl = document.getElementById('custStatTotal');
+            const memberEl = document.getElementById('custStatMember');
+            const guestEl = document.getElementById('custStatGuest');
+            const lockedEl = document.getElementById('custStatLocked');
+            const complaintEl = document.getElementById('custStatComplaint');
+
+            const allCusts = Object.values(customerDatabase);
+            const totalCount = allCusts.length;
+            const memberCount = allCusts.filter(c => c.status === 'ACTIVE').length;
+            const guestCount = allCusts.filter(c => c.status === 'TEMP').length;
+            const lockedCount = allCusts.filter(c => c.status === 'LOCKED').length;
+            const complaintCount = allCusts.filter(c => c.emergencyAlert || (c.complaints && c.complaints.some(tc => tc.status === 'Đang xử lý'))).length;
+
+            if (totalEl) totalEl.textContent = totalCount.toLocaleString('vi-VN');
+            if (memberEl) memberEl.textContent = memberCount.toLocaleString('vi-VN');
+            if (guestEl) guestEl.textContent = guestCount.toLocaleString('vi-VN');
+            if (lockedEl) lockedEl.textContent = lockedCount.toLocaleString('vi-VN');
+            if (complaintEl) complaintEl.textContent = complaintCount.toLocaleString('vi-VN');
+        }
+
+        function renderCustomerPagination(totalPages) {
+            const pagBar = document.getElementById('customerPaginationBar');
+            const pagControls = document.getElementById('customerPaginationControls');
+            if (!pagBar || !pagControls) return;
+
+            if (totalPages <= 1) {
+                pagBar.style.display = 'none';
+                return;
+            }
+            pagBar.style.display = 'flex';
+
+            let html = '';
+            const prevDisabled = currentCustomerPage === 1 ? 'disabled' : '';
+            html += `<button type="button" class="pagination-btn ${prevDisabled}" data-page="prev" title="Trang trước">&lt;</button>`;
+
+            for (let p = 1; p <= totalPages; p++) {
+                const activeClass = p === currentCustomerPage ? 'active' : '';
+                html += `<button type="button" class="pagination-btn ${activeClass}" data-page="${p}">${p}</button>`;
+            }
+
+            const nextDisabled = currentCustomerPage === totalPages ? 'disabled' : '';
+            html += `<button type="button" class="pagination-btn ${nextDisabled}" data-page="next" title="Trang sau">&gt;</button>`;
+
+            pagControls.innerHTML = html;
+
+            pagControls.querySelectorAll('.pagination-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const pageAction = btn.getAttribute('data-page');
+                    if (pageAction === 'prev') {
+                        if (currentCustomerPage > 1) {
+                            currentCustomerPage--;
+                            renderCustomersTable();
+                        }
+                    } else if (pageAction === 'next') {
+                        if (currentCustomerPage < totalPages) {
+                            currentCustomerPage++;
+                            renderCustomersTable();
+                        }
+                    } else {
+                        const targetP = parseInt(pageAction, 10);
+                        if (targetP && targetP !== currentCustomerPage) {
+                            currentCustomerPage = targetP;
+                            renderCustomersTable();
+                        }
+                    }
+                });
+            });
+        }
+
+        function renderCustomersTable() {
+            const tbody = document.getElementById('customerTableTbody');
+            if (!tbody) return;
+
+            const query = (document.getElementById('custSearchInput')?.value || '').toLowerCase().trim();
+            const selectedTier = document.getElementById('custFilterTier')?.value || 'ALL';
+
+            const allCusts = Object.values(customerDatabase);
+
+            const filtered = allCusts.filter(c => {
+                const matchSearch = !query || 
+                    c.id.toLowerCase().includes(query) ||
+                    c.name.toLowerCase().includes(query) ||
+                    c.phone.includes(query) ||
+                    (c.email && c.email.toLowerCase().includes(query)) ||
+                    (c.pets && c.pets.some(p => p.name.toLowerCase().includes(query) || (p.breed && p.breed.toLowerCase().includes(query))));
+
+                const matchTier = (selectedTier === 'ALL') || (c.tier === selectedTier);
+
+                let matchCategory = true;
+                if (currentCustomerFilter === 'MEMBER') {
+                    matchCategory = (c.status === 'ACTIVE');
+                } else if (currentCustomerFilter === 'TEMP') {
+                    matchCategory = (c.status === 'TEMP');
+                } else if (currentCustomerFilter === 'LOCKED') {
+                    matchCategory = (c.status === 'LOCKED');
+                } else if (currentCustomerFilter === 'COMPLAINT') {
+                    matchCategory = Boolean(c.emergencyAlert || (c.complaints && c.complaints.some(tc => tc.status === 'Đang xử lý')));
+                }
+
+                return matchSearch && matchTier && matchCategory;
+            });
+
+            const totalPages = Math.ceil(filtered.length / CUSTOMER_PAGE_SIZE) || 1;
+            if (currentCustomerPage > totalPages) currentCustomerPage = totalPages;
+
+            const startIdx = (currentCustomerPage - 1) * CUSTOMER_PAGE_SIZE;
+            const pageItems = filtered.slice(startIdx, startIdx + CUSTOMER_PAGE_SIZE);
+
+            if (pageItems.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                            Không tìm thấy khách hàng nào phù hợp với bộ lọc hiện tại.
+                        </td>
+                    </tr>
+                `;
+                renderCustomerPagination(0);
+                return;
+            }
+
+            tbody.innerHTML = pageItems.map(c => {
+                const isLocked = (c.status === 'LOCKED');
+                const hasEmergency = Boolean(c.emergencyAlert || (c.complaints && c.complaints.some(tc => tc.status === 'Đang xử lý')));
+                const hasPetAlert = Boolean(c.pets && c.pets.some(p => p.alertNote && p.alertNote !== 'Bình thường'));
+
+                // Vạch border-left duy nhất ở td:first-child theo AGENTS.md
+                let firstTdBorder = 'border-left: 3px solid transparent;';
+                if (hasEmergency) {
+                    firstTdBorder = 'border-left: 3px solid #DC2626 !important;';
+                } else if (hasPetAlert) {
+                    firstTdBorder = 'border-left: 3px solid #D97706 !important;';
+                }
+
+                const rowLockedClass = isLocked ? 'row-locked' : '';
+                const rowComplaintClass = hasEmergency ? 'row-highlight-complaint' : '';
+
+                let alertBadgeHtml = '<span class="admin-badge badge-neutral">Bình thường</span>';
+                if (hasEmergency) {
+                    const ticketId = (c.complaints && c.complaints.length > 0) ? c.complaints[0].id : 'Khiếu nại';
+                    alertBadgeHtml = `<span class="admin-badge badge-danger">Khiếu nại ${ticketId}</span>`;
+                } else if (hasPetAlert) {
+                    const alertPet = c.pets.find(p => p.alertNote && p.alertNote !== 'Bình thường');
+                    alertBadgeHtml = `<span class="admin-badge badge-warning">${alertPet.name}: ${alertPet.alertNote}</span>`;
+                }
+
+                let statusBadgeHtml = '<span class="admin-badge badge-success">Đang hoạt động</span>';
+                if (isLocked) {
+                    statusBadgeHtml = '<span class="admin-badge badge-danger">Bị khóa</span>';
+                } else if (c.status === 'TEMP') {
+                    statusBadgeHtml = '<span class="admin-badge badge-warning">Tạm thời</span>';
+                }
+
+                const lockBtnText = isLocked ? 'Mở khóa tài khoản' : 'Khóa tài khoản';
+                const lockBtnClass = isLocked ? 'text-success btn-unlock-user' : 'text-danger btn-lock-user';
+
+                return `
+                    <tr class="${rowLockedClass} ${rowComplaintClass}" data-id="${c.id}">
+                        <td style="${firstTdBorder}"><strong>${c.id}</strong></td>
+                        <td>
+                            <div class="user-name-cell">
+                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="${c.id}">${c.name}</a>
+                            </div>
+                            <div class="user-sub-cell">${c.email && c.email !== 'Chưa cập nhật' ? c.email : 'Khách tiếp nhận tại quầy'}</div>
+                        </td>
+                        <td><strong>${c.phone}</strong></td>
+                        <td>
+                            ${formatCustomerPetsCell(c.pets)}
+                        </td>
+                        <td>
+                            <span class="admin-badge ${c.tierBadgeClass || 'badge-neutral'}">${c.tierName || 'Đồng'}</span>
+                            <span class="points-val">${(c.points || 0).toLocaleString('vi-VN')} pts</span>
+                        </td>
+                        <td>${alertBadgeHtml}</td>
+                        <td>${statusBadgeHtml}</td>
+                        <td style="text-align: center;">
+                            <div class="action-dropdown-wrapper">
+                                <button type="button" class="btn-action-more" data-id="${c.id}" title="Tác vụ">•••</button>
+                                <div class="action-dropdown-menu">
+                                    <button type="button" class="dropdown-item btn-open-profile-drawer" data-id="${c.id}">
+                                        Xem hồ sơ 360°
+                                    </button>
+                                    <button type="button" class="dropdown-item btn-edit-user-table" data-id="${c.id}">
+                                        Sửa hồ sơ
+                                    </button>
+                                    <button type="button" class="dropdown-item ${lockBtnClass}" data-id="${c.id}">
+                                        ${lockBtnText}
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            renderCustomerPagination(totalPages);
+        }
+
+        // Event delegation trên toàn bộ bảng khách hàng
         const customerTable = document.getElementById('customerDataTable');
         if (customerTable) {
             customerTable.addEventListener('click', (e) => {
-                const btn = e.target.closest('.btn-action-more');
-                if (btn) {
+                const btnMore = e.target.closest('.btn-action-more');
+                if (btnMore) {
                     e.stopPropagation();
-                    positionAndShowDropdown(btn);
+                    positionAndShowDropdown(btnMore);
+                    return;
+                }
+
+                const btnProfile = e.target.closest('.btn-open-profile-drawer');
+                if (btnProfile) {
+                    e.stopPropagation();
+                    const custId = btnProfile.getAttribute('data-id');
+                    sessionStorage.setItem('pawpal_admin_customer_id', custId);
+                    sessionStorage.setItem('pawpal_admin_customer_name', customerDatabase[custId]?.name || '');
+                    renderDrawerCustomerProfile(custId);
+                    switchSubtab('tab-profile');
+                    closeAllDropdowns();
+                    return;
+                }
+
+                const btnEdit = e.target.closest('.btn-edit-user-table');
+                if (btnEdit) {
+                    e.stopPropagation();
+                    const custId = btnEdit.getAttribute('data-id');
+                    closeAllDropdowns();
+                    openEditCustomerModal(custId);
+                    return;
+                }
+
+                const btnLock = e.target.closest('.btn-lock-user');
+                if (btnLock) {
+                    e.stopPropagation();
+                    const custId = btnLock.getAttribute('data-id');
+                    if (customerDatabase[custId]) {
+                        customerDatabase[custId].status = 'LOCKED';
+                        customerDatabase[custId].authStatus = 'Tài khoản bị khóa';
+                        persistCustomersData();
+                        renderCustomersTable();
+                        updateCustomerKPIs();
+                        showToast(`Đã khóa tài khoản khách hàng ${customerDatabase[custId].name}!`);
+                    }
+                    closeAllDropdowns();
+                    return;
+                }
+
+                const btnUnlock = e.target.closest('.btn-unlock-user');
+                if (btnUnlock) {
+                    e.stopPropagation();
+                    const custId = btnUnlock.getAttribute('data-id');
+                    if (customerDatabase[custId]) {
+                        customerDatabase[custId].status = 'ACTIVE';
+                        customerDatabase[custId].authStatus = 'Đã kích hoạt';
+                        persistCustomersData();
+                        renderCustomersTable();
+                        updateCustomerKPIs();
+                        showToast(`Đã mở khóa tài khoản khách hàng ${customerDatabase[custId].name}!`);
+                    }
+                    closeAllDropdowns();
+                    return;
                 }
             });
         }
@@ -866,33 +1216,83 @@
             }
         });
 
-        // 6. Modal Tiếp nhận tại quầy (Quick Add)
+        // 6. Modal Tiếp nhận tại quầy (Quick Add) kèm Chống trùng SĐT
         const modalAdd = document.getElementById('modalAddCustomer');
         const btnOpenAdd = document.getElementById('btnOpenAddCustomerModal');
         const btnCloseAdd = document.getElementById('btnCloseAddCustomer');
         const btnCancelAdd = document.getElementById('btnCancelAddCustomer');
         const formAdd = document.getElementById('formAddCustomerQuick');
+        const quickAddPhoneInput = document.getElementById('quickAddPhone');
+        const quickAddPhoneAlert = document.getElementById('quickAddPhoneAlert');
+        const quickAddDupName = document.getElementById('quickAddDupName');
+        const quickAddDupId = document.getElementById('quickAddDupId');
+        const btnOpenDupCustomer = document.getElementById('btnOpenDupCustomer');
+        let dupFoundCustId = null;
 
         if (btnOpenAdd && modalAdd) {
             btnOpenAdd.addEventListener('click', () => {
                 modalAdd.style.display = 'flex';
+                if (quickAddPhoneAlert) quickAddPhoneAlert.style.display = 'none';
+                dupFoundCustId = null;
             });
         }
         function closeAddModal() {
             if (modalAdd) modalAdd.style.display = 'none';
+            if (quickAddPhoneAlert) quickAddPhoneAlert.style.display = 'none';
+            dupFoundCustId = null;
         }
         if (btnCloseAdd) btnCloseAdd.addEventListener('click', closeAddModal);
         if (btnCancelAdd) btnCancelAdd.addEventListener('click', closeAddModal);
+
+        if (quickAddPhoneInput) {
+            quickAddPhoneInput.addEventListener('input', () => {
+                const cleanPhone = quickAddPhoneInput.value.replace(/[^0-9]/g, '').trim();
+                if (cleanPhone.length >= 9) {
+                    const existing = Object.values(customerDatabase).find(c => c.phone && c.phone.replace(/[^0-9]/g, '').trim() === cleanPhone);
+                    if (existing) {
+                        dupFoundCustId = existing.id;
+                        if (quickAddDupName) quickAddDupName.textContent = existing.name;
+                        if (quickAddDupId) quickAddDupId.textContent = existing.id;
+                        if (quickAddPhoneAlert) quickAddPhoneAlert.style.display = 'block';
+                        return;
+                    }
+                }
+                dupFoundCustId = null;
+                if (quickAddPhoneAlert) quickAddPhoneAlert.style.display = 'none';
+            });
+        }
+
+        if (btnOpenDupCustomer) {
+            btnOpenDupCustomer.addEventListener('click', () => {
+                if (dupFoundCustId) {
+                    closeAddModal();
+                    sessionStorage.setItem('pawpal_admin_customer_id', dupFoundCustId);
+                    sessionStorage.setItem('pawpal_admin_customer_name', customerDatabase[dupFoundCustId]?.name || '');
+                    renderDrawerCustomerProfile(dupFoundCustId);
+                    switchSubtab('tab-profile');
+                }
+            });
+        }
+
         if (formAdd) {
             formAdd.addEventListener('submit', (e) => {
                 e.preventDefault();
+                if (dupFoundCustId) {
+                    showToast(`Số điện thoại này đã thuộc về khách hàng ${customerDatabase[dupFoundCustId]?.name}! Vui lòng kiểm tra lại.`);
+                    return;
+                }
+
                 const name = document.getElementById('quickAddName')?.value || 'Khách vãng lai';
                 const phone = document.getElementById('quickAddPhone')?.value || '';
                 const petName = document.getElementById('quickAddPetName')?.value || '';
-                const petSpecies = document.getElementById('quickAddPetSpecies')?.value || 'Chó';
+                const petSpecies = document.getElementById('quickAddPetSpecies')?.value || 'DOG';
+                const petBreed = document.getElementById('quickAddPetBreed')?.value || 'Chưa cập nhật';
                 const petWeight = document.getElementById('quickAddPetWeight')?.value || '';
+                const initialAddress = document.getElementById('quickAddAddress')?.value || 'Tiếp nhận trực tiếp tại quầy Pawpal Center';
 
                 const newId = 'CUST-' + String(Object.keys(customerDatabase).length + 1).padStart(3, '0');
+                const specName = petSpecies === 'CAT' ? 'Mèo' : (petSpecies === 'OTHER' ? 'Khác' : 'Chó');
+
                 customerDatabase[newId] = {
                     id: newId,
                     name: name,
@@ -908,12 +1308,12 @@
                     authStatus: 'Tạm thời tại quầy',
                     note: 'Khách tiếp nhận nhanh tại quầy.',
                     emergencyAlert: null,
-                    addresses: [{ address: 'Tiếp nhận trực tiếp tại quầy Pawpal Pet Center', isDefault: true }],
+                    addresses: [{ address: initialAddress, isDefault: true }],
                     pets: petName ? [{
                         id: 'PET-' + newId,
                         name: petName,
-                        species: petSpecies === 'CAT' ? 'Mèo' : 'Chó',
-                        breed: 'Chưa cập nhật',
+                        species: specName,
+                        breed: petBreed,
                         weight: petWeight,
                         vaccine: 'Chưa cập nhật',
                         alertNote: 'Bình thường'
@@ -923,50 +1323,16 @@
                     complaints: []
                 };
 
-                // Thêm 1 dòng mới vào đầu bảng
-                const tbody = document.getElementById('customerTableTbody');
-                if (tbody) {
-                    const petHtml = `<td>${formatCustomerPetsCell(customerDatabase[newId].pets)}</td>`;
-                    const newTr = document.createElement('tr');
-                    newTr.innerHTML = `
-                        <td><strong>${newId}</strong></td>
-                        <td>
-                            <div class="user-name-cell">
-                                <a href="javascript:void(0)" class="user-name-link btn-open-profile-drawer" data-id="${newId}">${name}</a>
-                            </div>
-                            <div class="user-sub-cell">Khách tiếp nhận tại quầy</div>
-                        </td>
-                        <td><strong>${phone}</strong></td>
-                        ${petHtml}
-                        <td>
-                            <span class="admin-badge badge-neutral">Đồng</span>
-                            <span class="points-val">0 pts</span>
-                        </td>
-                        <td><span class="admin-badge badge-neutral">Bình thường</span></td>
-                        <td><span class="admin-badge badge-warning">Tạm thời</span></td>
-                        <td style="text-align: center;">
-                            <div class="action-dropdown-wrapper">
-                                <button type="button" class="btn-action-more" data-id="${newId}" title="Tác vụ">•••</button>
-                                <div class="action-dropdown-menu">
-                                    <button type="button" class="dropdown-item btn-open-profile-drawer" data-id="${newId}">Xem hồ sơ 360°</button>
-                                    <button type="button" class="dropdown-item btn-edit-user-table" data-id="${newId}">Sửa hồ sơ</button>
-                                    <button type="button" class="dropdown-item text-danger btn-lock-user" data-id="${newId}">Khóa tài khoản</button>
-                                </div>
-                            </div>
-                        </td>
-                    `;
-                    tbody.prepend(newTr);
+                persistCustomersData();
 
-                    // Gán lại sự kiện cho dòng mới
-                    newTr.querySelector('.btn-open-profile-drawer')?.addEventListener('click', () => {
-                        sessionStorage.setItem('pawpal_admin_customer_id', newId);
-                        sessionStorage.setItem('pawpal_admin_customer_name', name);
-                        renderDrawerCustomerProfile(newId);
-                        switchSubtab('tab-profile');
-                    });
+                // Tự động đồng bộ bé cưng sang kho dữ liệu pets module
+                if (petName) {
+                    syncNewPetToPetsModule(customerDatabase[newId].pets[0], newId, name, phone);
                 }
 
-                alert(`Đã tạo thành công tài khoản tạm ${newId} cho khách hàng ${name} tại quầy!`);
+                renderCustomersTable();
+                updateCustomerKPIs();
+                showToast(`Đã tạo thành công tài khoản tạm ${newId} cho khách hàng ${name} tại quầy!`);
                 formAdd.reset();
                 closeAddModal();
             });
@@ -1028,7 +1394,10 @@
                     histTbody.prepend(newHistRow);
                 }
 
-                alert(`Đã ${type === 'ADD' ? 'cộng' : 'trừ'} ${pts} Pawpoint cho khách hàng ${custName} thành công! Số dư mới: ${newBalance} pts`);
+                persistCustomersData();
+                renderCustomersTable();
+                updateCustomerKPIs();
+                showToast(`Đã ${type === 'ADD' ? 'cộng' : 'trừ'} ${pts} Pawpoint cho khách hàng ${custName} thành công! Số dư mới: ${newBalance} pts`);
                 formAdjust.reset();
                 closeAdjustModal();
             });
@@ -1279,7 +1648,10 @@
                     }
                 });
 
-                alert(`Đã cập nhật thành công hồ sơ của khách hàng ${newName}!`);
+                persistCustomersData();
+                renderCustomersTable();
+                updateCustomerKPIs();
+                showToast(`Đã cập nhật thành công hồ sơ của khách hàng ${newName}!`);
                 closeEditModal();
             });
         }
@@ -1344,7 +1716,10 @@
                     }
                 });
 
-                alert(`Đã thêm thành công bé cưng ${petName} vào hồ sơ!`);
+                persistCustomersData();
+                syncNewPetToPetsModule(customerDatabase[currentCustId].pets[0], currentCustId, customerDatabase[currentCustId]?.name, customerDatabase[currentCustId]?.phone);
+                renderCustomersTable();
+                showToast(`Đã thêm thành công bé cưng ${petName} vào hồ sơ!`);
                 formAddPet.reset();
                 closeAddPetModal();
             });
@@ -1408,7 +1783,9 @@
                     }
                 });
 
-                alert(`Đã cập nhật thành công thông tin bé cưng ${pet.name}!`);
+                persistCustomersData();
+                renderCustomersTable();
+                showToast(`Đã cập nhật thành công thông tin bé cưng ${pet.name}!`);
                 closeEditPetModal();
             });
         }
@@ -1422,7 +1799,8 @@
                 if (customerDatabase[currentCustId]) {
                     customerDatabase[currentCustId].note = noteVal;
                 }
-                alert('Đã lưu thành công ghi chú khách hàng!');
+                persistCustomersData();
+                    showToast('Đã lưu thành công ghi chú khách hàng!');
             });
         }
 
@@ -1431,7 +1809,7 @@
         if (btnResendSms) {
             btnResendSms.addEventListener('click', () => {
                 const phone = document.getElementById('profileValPhone')?.textContent || 'khách hàng';
-                alert(`Đã gửi lại tin nhắn SMS chứa liên kết tạo mật khẩu đến số ${phone}!`);
+                showToast(`Đã gửi lại tin nhắn SMS chứa liên kết tạo mật khẩu đến số ${phone}!`);
             });
         }
 
@@ -1497,89 +1875,61 @@
         renderComplaintBar();
 
         // 17. Bộ lọc bảng và tương tác thẻ KPI 1 chạm
-        const tableRows = document.querySelectorAll('#customerTableTbody tr');
         const filterStatusSelect = document.getElementById('custFilterStatus');
         const filterTierSelect = document.getElementById('custFilterTier');
         const btnFilterComplaint = document.getElementById('btnFilterComplaintOnly');
         const btnComplaintStripFilter = document.getElementById('btnFilterComplaintQuick');
         const searchInput = document.getElementById('custSearchInput');
-        let currentFilter = 'ALL';
-
-        function applyCustomerFilters() {
-            const query = (searchInput?.value || '').toLowerCase().trim();
-            const selectedTier = filterTierSelect?.value || 'ALL';
-
-            tableRows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                const matchesSearch = !query || text.includes(query);
-                let matchesCategory = true;
-                let matchesTier = true;
-
-                if (selectedTier !== 'ALL') {
-                    const tierNameMap = { 'BRONZE': 'đồng', 'SILVER': 'bạc', 'GOLD': 'vàng', 'DIAMOND': 'kim cương' };
-                    const expectedTier = tierNameMap[selectedTier];
-                    matchesTier = text.includes(expectedTier);
-                }
-
-                if (currentFilter === 'COMPLAINT') {
-                    const isLocked = row.classList.contains('row-locked') || text.includes('bị khóa');
-                    matchesCategory = !isLocked && (row.classList.contains('row-highlight-complaint') || text.includes('khiếu nại'));
-                } else if (currentFilter === 'LOCKED') {
-                    matchesCategory = row.classList.contains('row-locked') || text.includes('bị khóa');
-                } else if (currentFilter === 'TEMP') {
-                    matchesCategory = text.includes('tạm thời') || text.includes('vãng lai');
-                } else if (currentFilter === 'MEMBER') {
-                    matchesCategory = !row.classList.contains('row-locked') && !text.includes('tạm thời');
-                }
-
-                if (matchesSearch && matchesCategory && matchesTier) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
 
         if (searchInput) {
-            searchInput.addEventListener('input', applyCustomerFilters);
+            searchInput.addEventListener('input', () => {
+                currentCustomerPage = 1;
+                renderCustomersTable();
+            });
         }
 
         if (filterStatusSelect) {
             filterStatusSelect.addEventListener('change', (e) => {
                 const val = e.target.value;
-                if (val === 'ALL') currentFilter = 'ALL';
-                else if (val === 'ACTIVE') currentFilter = 'MEMBER';
-                else if (val === 'TEMP') currentFilter = 'TEMP';
-                else if (val === 'LOCKED') currentFilter = 'LOCKED';
-                applyCustomerFilters();
+                if (val === 'ALL') currentCustomerFilter = 'ALL';
+                else if (val === 'ACTIVE') currentCustomerFilter = 'MEMBER';
+                else if (val === 'TEMP') currentCustomerFilter = 'TEMP';
+                else if (val === 'LOCKED') currentCustomerFilter = 'LOCKED';
+                currentCustomerPage = 1;
+                renderCustomersTable();
             });
         }
 
         if (filterTierSelect) {
-            filterTierSelect.addEventListener('change', applyCustomerFilters);
+            filterTierSelect.addEventListener('change', () => {
+                currentCustomerPage = 1;
+                renderCustomersTable();
+            });
         }
 
         if (btnFilterComplaint) {
             btnFilterComplaint.addEventListener('click', () => {
-                if (currentFilter === 'COMPLAINT') {
-                    currentFilter = 'ALL';
+                if (currentCustomerFilter === 'COMPLAINT') {
+                    currentCustomerFilter = 'ALL';
                     btnFilterComplaint.classList.remove('active');
                 } else {
-                    currentFilter = 'COMPLAINT';
+                    currentCustomerFilter = 'COMPLAINT';
                     btnFilterComplaint.classList.add('active');
                 }
-                applyCustomerFilters();
+                currentCustomerPage = 1;
+                renderCustomersTable();
             });
         }
 
         if (btnComplaintStripFilter) {
             btnComplaintStripFilter.addEventListener('click', () => {
-                currentFilter = 'COMPLAINT';
+                currentCustomerFilter = 'COMPLAINT';
                 if (btnFilterComplaint) btnFilterComplaint.classList.add('active');
                 document.querySelectorAll('.customers-kpi-grid .kpi-card-clickable').forEach(c => {
                     c.classList.toggle('active', c.getAttribute('data-kpi-filter') === 'COMPLAINT');
                 });
-                applyCustomerFilters();
+                currentCustomerPage = 1;
+                renderCustomersTable();
             });
         }
 
@@ -1589,7 +1939,7 @@
                 document.querySelectorAll('.customers-kpi-grid .kpi-card-clickable').forEach(c => c.classList.remove('active'));
                 card.classList.add('active');
 
-                currentFilter = filter;
+                currentCustomerFilter = filter;
                 if (btnFilterComplaint) {
                     btnFilterComplaint.classList.toggle('active', filter === 'COMPLAINT');
                 }
@@ -1597,10 +1947,16 @@
                     if (filter === 'ALL') filterStatusSelect.value = 'ALL';
                     else if (filter === 'LOCKED') filterStatusSelect.value = 'LOCKED';
                     else if (filter === 'TEMP') filterStatusSelect.value = 'TEMP';
+                    else if (filter === 'MEMBER') filterStatusSelect.value = 'ACTIVE';
                 }
-                applyCustomerFilters();
+                currentCustomerPage = 1;
+                renderCustomersTable();
             });
         });
+
+        // Khởi tạo render bảng và 5 thẻ KPI
+        renderCustomersTable();
+        updateCustomerKPIs();
 
         // 18. KHỞI TẠO VÀ KHÔI PHỤC TRẠNG THÁI KHI F5 / RELOAD
         const hashSubtab = window.location.hash ? window.location.hash.replace('#', '') : null;
