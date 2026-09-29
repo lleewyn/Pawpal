@@ -775,7 +775,11 @@
             badges.push('<span class="alert-pill-mini alert-green">Đúng tiến độ</span>');
         }
 
-        return badges.join(' ') || '<span style="color: var(--text-muted); font-size: 12px;">Bình thường</span>';
+        if (badges.length === 0) {
+            return '<span style="color: var(--text-muted); font-size: 12px;">Bình thường</span>';
+        }
+
+        return `<div class="alert-badges-stack">${badges.join('')}</div>`;
     }
 
     // ==========================================================================

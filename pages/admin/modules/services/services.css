@@ -1392,6 +1392,13 @@
 /* ==========================================================================
    ALERT PILLS VÀ SLA BADGES (MUTED PASTEL VÀ NO BORDER)
    ========================================================================== */
+.alert-badges-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+}
+
 .alert-pill-mini {
     display: inline-flex;
     align-items: center;
