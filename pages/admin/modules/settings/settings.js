@@ -1357,16 +1357,15 @@
     // -------------------------------------------------------------
     setupSettingsEvents();
 
+    const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
     const savedTab = sessionStorage.getItem('pawpal_admin_settings_subtab');
-    const hash = window.location.hash;
+    const validTabs = ['tab-banner-promos', 'tab-content-management', 'tab-system-config'];
 
     let initTab = 'tab-banner-promos';
-    if (hash === '#tab-content-management' || savedTab === 'tab-content-management') {
-        initTab = 'tab-content-management';
-    } else if (hash === '#tab-system-config' || savedTab === 'tab-system-config') {
-        initTab = 'tab-system-config';
-    } else if (hash === '#tab-banner-promos' || savedTab === 'tab-banner-promos') {
-        initTab = 'tab-banner-promos';
+    if (validTabs.includes(hash)) {
+        initTab = hash;
+    } else if (validTabs.includes(savedTab)) {
+        initTab = savedTab;
     }
 
     switchSubtab(initTab);

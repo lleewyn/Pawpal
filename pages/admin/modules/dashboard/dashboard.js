@@ -1,4 +1,11 @@
 (function initDashboard() {
+    try {
+        history.replaceState(null, '', '#tab-dashboard');
+    } catch (e) {
+        window.location.hash = 'tab-dashboard';
+    }
+    sessionStorage.setItem('pawpal_admin_active_module', 'Dashboard');
+
     updateDashboardLiveMetrics();
     setupQuickReceptionActions();
     setupBookingQuickModalEvents();

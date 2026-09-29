@@ -295,17 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.lucide) lucide.createIcons();
     }
 
-    // Gắn sự kiện click sidebar
-    sidebarBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            sidebarBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const title = btn.getAttribute('data-title');
-            sessionStorage.setItem('pawpal_admin_active_module', title);
-            loadModule(title);
-        });
-    });
-
     function resolveModuleFromHash(hash) {
         if (!hash) return null;
         if (hash.startsWith('#tab-service') || hash.startsWith('#tab-booking') || hash === '#services') return 'Dịch vụ';
@@ -313,12 +302,71 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hash.startsWith('#tab-staff')) return 'Nhân sự';
         if (hash.startsWith('#tab-complaint')) return 'Khiếu nại';
         if (hash.startsWith('#tab-chatbot') || hash.startsWith('#tab-ai-') || hash.startsWith('#tab-live-support')) return 'Chatbot';
-        if (hash.startsWith('#tab-setting') || hash.startsWith('#tab-banner') || hash.startsWith('#tab-blog') || hash.startsWith('#tab-system')) return 'Cấu hình';
+        if (hash.startsWith('#tab-setting') || hash.startsWith('#tab-banner') || hash.startsWith('#tab-blog') || hash.startsWith('#tab-system') || hash.startsWith('#tab-content')) return 'Cấu hình';
         if (hash.startsWith('#tab-pet')) return 'Thú cưng';
         if (hash.startsWith('#tab-list') || hash.startsWith('#tab-profile') || hash.startsWith('#tab-pawpoint') || hash.startsWith('#tab-customer')) return 'Khách hàng';
         if (hash.startsWith('#tab-dashboard')) return 'Dashboard';
         return null;
     }
+
+    function getTargetHashForModule(moduleName) {
+        if (moduleName === 'Dashboard') return '#tab-dashboard';
+        if (moduleName === 'Khách hàng') {
+            const saved = sessionStorage.getItem('pawpal_admin_customer_subtab');
+            return saved ? '#' + saved : '#tab-list';
+        }
+        if (moduleName === 'Thú cưng') {
+            const saved = sessionStorage.getItem('pawpal_admin_pet_subtab');
+            return saved ? '#' + saved : '#tab-pet-list';
+        }
+        if (moduleName === 'Dịch vụ') {
+            const saved = sessionStorage.getItem('pawpal_admin_services_active_subtab');
+            return saved ? '#' + saved : '#tab-service-bookings';
+        }
+        if (moduleName === 'Bán hàng') {
+            const saved = sessionStorage.getItem('pawpal_admin_order_subtab');
+            return saved ? '#' + saved : '#tab-order-list';
+        }
+        if (moduleName === 'Nhân sự') {
+            const saved = sessionStorage.getItem('pawpal_admin_staff_active_subtab');
+            return saved ? '#' + saved : '#tab-staff-list';
+        }
+        if (moduleName === 'Khiếu nại') {
+            const saved = sessionStorage.getItem('pawpal_admin_complaint_active_subtab');
+            return saved ? '#' + saved : '#tab-complaint-services';
+        }
+        if (moduleName === 'Chatbot') {
+            const saved = sessionStorage.getItem('pawpal_admin_chatbot_subtab');
+            return saved ? '#' + saved : '#tab-live-support';
+        }
+        if (moduleName === 'Cấu hình') {
+            const saved = sessionStorage.getItem('pawpal_admin_settings_subtab');
+            return saved ? '#' + saved : '#tab-banner-promos';
+        }
+        return '';
+    }
+
+    // Gắn sự kiện click sidebar
+    sidebarBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            sidebarBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const title = btn.getAttribute('data-title');
+            sessionStorage.setItem('pawpal_admin_active_module', title);
+
+            // Đồng bộ hash URL ngay lập tức khi bấm đổi phân hệ
+            const targetHash = getTargetHashForModule(title);
+            if (targetHash && resolveModuleFromHash(window.location.hash) !== title) {
+                try {
+                    history.replaceState(null, '', targetHash);
+                } catch (e) {
+                    window.location.hash = targetHash;
+                }
+            }
+
+            loadModule(title);
+        });
+    });
 
     // Xác định module cần nạp ban đầu theo URL Hash, nút active hoặc sessionStorage
     const currentHash = window.location.hash || '';
@@ -340,6 +388,16 @@ document.addEventListener('DOMContentLoaded', () => {
             b.classList.remove('active');
         }
     });
+
+    // Đảm bảo hash khớp với initialModule nếu hash rỗng
+    if (!window.location.hash) {
+        const defaultHash = getTargetHashForModule(initialModule);
+        if (defaultHash) {
+            try {
+                history.replaceState(null, '', defaultHash);
+            } catch (e) {}
+        }
+    }
 
     sessionStorage.setItem('pawpal_admin_active_module', initialModule);
     loadModule(initialModule);

@@ -486,7 +486,7 @@
     ];
 
     let currentOrdersList = [...initialOrders];
-    let selectedOrderId = 'ORD-2026-001';
+    let selectedOrderId = sessionStorage.getItem('pawpal_admin_order_selected_id') || sessionStorage.getItem('pawpal_admin_order_id') || 'ORD-2026-001';
     let currentFilterStatus = 'ALL';
     let currentFilterPayment = 'ALL';
     let currentFilterPayStatus = 'ALL';
@@ -988,6 +988,8 @@
             if (!order) return;
 
             selectedOrderId = order.id;
+            sessionStorage.setItem('pawpal_admin_order_selected_id', order.id);
+            sessionStorage.setItem('pawpal_admin_order_id', order.id);
 
             // Header bar
             const codeEl = document.getElementById('detailOrderCode');
@@ -1902,11 +1904,14 @@
         renderOrderDetailRef = renderOrderDetail;
 
         // Khôi phục subtab từ hash hoặc sessionStorage
-        const savedSubtab = sessionStorage.getItem('pawpal_admin_order_subtab') || 
-                            (window.location.hash ? window.location.hash.replace('#', '') : null);
-        if (savedSubtab && document.getElementById(`subtab-${savedSubtab}`)) {
-            switchSubtab(savedSubtab);
-        }
+        const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
+        const savedSubtab = sessionStorage.getItem('pawpal_admin_order_subtab');
+        const initialSubtab = (hash && document.getElementById(`subtab-${hash}`))
+            ? hash
+            : (savedSubtab && document.getElementById(`subtab-${savedSubtab}`))
+                ? savedSubtab
+                : 'tab-order-list';
+        switchSubtab(initialSubtab);
 
         // Tiếp nhận preset đặt đơn và mở đơn hàng từ phân hệ Khách hàng
         const checkPresetOrder = () => {

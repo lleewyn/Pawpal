@@ -194,7 +194,8 @@
         }
     ];
 
-    let currentConversation = mockConversations[0];
+    const savedConvId = sessionStorage.getItem('pawpal_admin_chatbot_conv_id');
+    let currentConversation = (savedConvId && mockConversations.find(c => c.id === savedConvId)) || mockConversations[0];
     let currentFilterTab = 'urgent';
 
     // -------------------------------------------------------------
@@ -555,6 +556,7 @@
 
             item.addEventListener('click', () => {
                 currentConversation = conv;
+                sessionStorage.setItem('pawpal_admin_chatbot_conv_id', conv.id);
                 renderConversationsList();
                 renderCurrentChat();
                 // Đồng bộ breadcrumb
@@ -1680,16 +1682,15 @@
     setupCannedResponsesModal();
     setupSmartContextActions();
 
+    const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
     const savedTab = sessionStorage.getItem('pawpal_admin_chatbot_subtab');
-    const hash = window.location.hash;
+    const validTabs = ['tab-live-support', 'tab-ai-copilot', 'tab-chatbot-rules'];
 
     let initTab = 'tab-live-support';
-    if (hash === '#tab-chatbot-rules' || savedTab === 'tab-chatbot-rules') {
-        initTab = 'tab-chatbot-rules';
-    } else if (hash === '#tab-ai-copilot' || savedTab === 'tab-ai-copilot') {
-        initTab = 'tab-ai-copilot';
-    } else if (hash === '#tab-live-support' || savedTab === 'tab-live-support') {
-        initTab = 'tab-live-support';
+    if (validTabs.includes(hash)) {
+        initTab = hash;
+    } else if (validTabs.includes(savedTab)) {
+        initTab = savedTab;
     }
 
     switchSubtab(initTab);

@@ -817,14 +817,19 @@
             });
         });
 
-        // Kiểm tra hash để mở subtab mong muốn
+        // Kiểm tra hash hoặc sessionStorage để mở subtab mong muốn
         const hash = window.location.hash || '';
-        if (hash === '#tab-service-detail') {
+        const savedSubtab = sessionStorage.getItem('pawpal_admin_services_active_subtab');
+        if (hash === '#tab-service-detail' || (!hash.startsWith('#tab-service') && savedSubtab === 'tab-service-detail')) {
             switchSubtab('tab-service-detail');
-        } else if (hash === '#tab-service-catalog') {
+        } else if (hash === '#tab-service-catalog' || (!hash.startsWith('#tab-service') && savedSubtab === 'tab-service-catalog')) {
             switchSubtab('tab-service-catalog');
-        } else if (hash === '#tab-service-reviews') {
+        } else if (hash === '#tab-service-reviews' || (!hash.startsWith('#tab-service') && savedSubtab === 'tab-service-reviews')) {
             switchSubtab('tab-service-reviews');
+        } else if (hash === '#tab-service-bookings' || (!hash.startsWith('#tab-service') && savedSubtab === 'tab-service-bookings')) {
+            switchSubtab('tab-service-bookings');
+        } else if (savedSubtab && document.getElementById('subtab-' + savedSubtab)) {
+            switchSubtab(savedSubtab);
         } else {
             switchSubtab('tab-service-bookings');
         }
