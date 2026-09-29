@@ -1938,6 +1938,16 @@
                     switchSubtab('tab-complaint-detail');
                 }
             }
+
+            const filterStatus = sessionStorage.getItem('pawpal_admin_complaint_filter_status');
+            if (filterStatus) {
+                sessionStorage.removeItem('pawpal_admin_complaint_filter_status');
+                const sSelect = document.getElementById('serviceFilterStatus');
+                if (sSelect) {
+                    sSelect.value = filterStatus;
+                    renderServiceComplaintsTable();
+                }
+            }
         };
         setTimeout(checkPresetComplaint, 150);
     }

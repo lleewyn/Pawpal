@@ -1,4 +1,7 @@
 (function initDashboard() {
+    updateDashboardLiveMetrics();
+    window.addEventListener('focus', updateDashboardLiveMetrics);
+    window.addEventListener('storage', updateDashboardLiveMetrics);
     setupDashboardCalendar();
 
     const chart = document.getElementById('dashboardRevenueChart');
@@ -70,12 +73,30 @@
         let shownMonth = new Date(today.getFullYear(), today.getMonth(), 1);
         let selectedDate = new Date(today);
         let calendarView = 'month';
-        const services = [
-            { pet: 'Bé Bông', customer: 'Nguyễn Thu Hà', service: 'Tắm sấy và cắt tỉa', time: '09:30', status: 'Đã xác nhận', badge: 'badge-success' },
-            { pet: 'Bé Đậu', customer: 'Trần Minh Khang', service: 'Khám sức khỏe', time: '10:15', status: 'Chờ xác nhận', badge: 'badge-warning' },
-            { pet: 'Bé Milu', customer: 'Lê Lệ Quyên', service: 'Nhận phòng Pet Hotel', time: '11:00', status: 'Đã xác nhận', badge: 'badge-success' },
-            { pet: 'Bé Mây', customer: 'Phạm Hoàng Yến', service: 'Tắm sấy', time: '13:30', status: 'Sắp tới', badge: 'badge-neutral' }
+        let services = [
+            { pet: 'Bé Bông', customer: 'Nguyễn Thu Hà', service: 'Tắm sấy và cắt tỉa', time: '09:30', status: 'Đã xác nhận', badge: 'badge-success', id: 'BKG-1001' },
+            { pet: 'Bé Đậu', customer: 'Trần Minh Khang', service: 'Combo Vệ sinh tai móng', time: '10:15', status: 'Chờ xác nhận', badge: 'badge-warning', id: 'BKG-1002' },
+            { pet: 'Bé Milu', customer: 'Lê Lệ Quyên', service: 'Nhận phòng Pet Hotel', time: '11:00', status: 'Đã xác nhận', badge: 'badge-success', id: 'BKG-1003' },
+            { pet: 'Bé Mây', customer: 'Phạm Hoàng Yến', service: 'Tắm sấy dưỡng lông', time: '13:30', status: 'Sắp tới', badge: 'badge-neutral', id: 'BKG-1004' }
         ];
+
+        try {
+            const storedBookings = sessionStorage.getItem('pawpal_admin_services_bookings');
+            if (storedBookings) {
+                const parsed = JSON.parse(storedBookings);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    services = parsed.slice(0, 8).map(b => ({
+                        id: b.id || 'BKG-1001',
+                        pet: b.petName || b.pet || 'Bé cưng',
+                        customer: b.customerName || b.customer || 'Khách hàng',
+                        service: b.serviceName || b.service || 'Chăm sóc thú cưng',
+                        time: b.time || '10:00',
+                        status: b.status === 'completed' ? 'Đã hoàn thành' : b.status === 'confirmed' ? 'Đã xác nhận' : 'Chờ xác nhận',
+                        badge: b.status === 'completed' ? 'badge-neutral' : b.status === 'confirmed' ? 'badge-success' : 'badge-warning'
+                    }));
+                }
+            }
+        } catch (e) {}
 
         function toDateKey(date) {
             const year = date.getFullYear();
@@ -123,7 +144,7 @@
             }
 
             bookingList.innerHTML = dayBookings.map((booking) => `
-                <button type="button" class="dashboard-booking-row" data-dashboard-module="Dịch vụ">
+                <button type="button" class="dashboard-booking-row" data-dashboard-module="Dịch vụ" data-booking-id="${booking.id || ''}">
                     <time>${booking.time}</time>
                     <span class="dashboard-booking-detail"><strong>${booking.pet} · ${booking.customer}</strong><small>${booking.service}</small></span>
                     <span class="admin-badge ${booking.badge}">${booking.status}</span>
@@ -275,7 +296,7 @@
                             styleAttrs += ` left: ${leftPercent}%; width: ${widthPercent}%; z-index: ${zIndex};`;
                         }
 
-                        return `<button type="button" class="${classes}" style="${styleAttrs}" data-dashboard-module="Dịch vụ">
+                        return `<button type="button" class="${classes}" style="${styleAttrs}" data-dashboard-module="Dịch vụ" data-booking-id="${b.id || ''}">
                             <div class="dashboard-day-event-header">
                                 <strong>${b.time} · ${b.pet}</strong>
                                 <span class="dashboard-day-event-status">${b.status}</span>
@@ -375,10 +396,152 @@
             control.dataset.dashboardBound = 'true';
             control.addEventListener('click', () => {
                 const moduleName = control.getAttribute('data-dashboard-module');
+
+                // 1. Deep linking theo ngữ cảnh thông minh
+                const action = control.getAttribute('data-action');
+                const sku = control.getAttribute('data-sku');
+                const bookingId = control.getAttribute('data-booking-id');
+
+                if (action === 'complaints') {
+                    sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-services');
+                    sessionStorage.setItem('pawpal_admin_complaint_filter_status', 'pending');
+                } else if (action === 'orders') {
+                    sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-list');
+                    sessionStorage.setItem('pawpal_admin_order_filter_status', 'pending');
+                } else if (control.id === 'btnDashboardViewAllStock' || control.classList.contains('dashboard-stock-heading')) {
+                    sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-products');
+                } else if (sku) {
+                    sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-products');
+                    sessionStorage.setItem('pawpal_admin_product_search', sku);
+                } else if (bookingId) {
+                    sessionStorage.setItem('pawpal_admin_services_active_subtab', 'tab-service-bookings');
+                    sessionStorage.setItem('pawpal_admin_service_selected_id', bookingId);
+                } else if (moduleName === 'Dịch vụ') {
+                    sessionStorage.setItem('pawpal_admin_services_active_subtab', 'tab-service-bookings');
+                } else if (moduleName === 'Bán hàng') {
+                    sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-list');
+                } else if (moduleName === 'Khách hàng') {
+                    sessionStorage.setItem('pawpal_admin_customer_subtab', 'tab-customer-list');
+                } else if (moduleName === 'Thú cưng') {
+                    sessionStorage.setItem('pawpal_admin_pet_subtab', 'tab-pet-list');
+                }
+
+                // 2. Chuyển sang module đích
                 const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
                     .find((button) => button.getAttribute('data-title') === moduleName);
                 if (target) target.click();
             });
         });
+    }
+
+    function updateDashboardLiveMetrics() {
+        // 1. Thống kê Đơn hàng
+        let pendingOrdersCount = 4;
+        let totalOrdersToday = 12;
+        let todayRevenueVal = 25500000;
+        try {
+            const rawOrders = sessionStorage.getItem('pawpal_admin_orders_list');
+            if (rawOrders) {
+                const list = JSON.parse(rawOrders);
+                if (Array.isArray(list) && list.length > 0) {
+                    totalOrdersToday = list.length;
+                    pendingOrdersCount = list.filter(o => o.status === 'pending').length;
+                    const completedRevenue = list
+                        .filter(o => o.status === 'completed')
+                        .reduce((sum, o) => sum + (parseFloat(o.total || o.amount) || 0), 0);
+                    if (completedRevenue > 0) todayRevenueVal = completedRevenue;
+                }
+            }
+        } catch (e) {}
+
+        // 2. Thống kê Khiếu nại
+        let pendingComplaintsCount = 2;
+        try {
+            const rawComplaints = sessionStorage.getItem('pawpal_admin_complaints_data');
+            if (rawComplaints) {
+                const list = JSON.parse(rawComplaints);
+                if (Array.isArray(list) && list.length > 0) {
+                    pendingComplaintsCount = list.filter(c => c.status === 'pending' || c.status === 'processing').length;
+                }
+            }
+        } catch (e) {}
+
+        // 3. Thống kê Dịch vụ / Lịch hẹn
+        let todayBookingsCount = 18;
+        try {
+            const rawBookings = sessionStorage.getItem('pawpal_admin_services_bookings');
+            if (rawBookings) {
+                const list = JSON.parse(rawBookings);
+                if (Array.isArray(list) && list.length > 0) {
+                    todayBookingsCount = list.length;
+                }
+            }
+        } catch (e) {}
+
+        // 4. Thống kê Khách hàng
+        let newCustomersCount = 7;
+        try {
+            const rawCust = sessionStorage.getItem('pawpal_admin_customers_data');
+            if (rawCust) {
+                const obj = JSON.parse(rawCust);
+                const count = Object.keys(obj).length;
+                if (count > 0) newCustomersCount = count;
+            }
+        } catch (e) {}
+
+        // 5. Thống kê Thú cưng
+        let newPetsCount = 5;
+        try {
+            const rawPets = sessionStorage.getItem('pawpal_admin_pets_data');
+            if (rawPets) {
+                const obj = JSON.parse(rawPets);
+                const count = Object.keys(obj).length;
+                if (count > 0) newPetsCount = count;
+            }
+        } catch (e) {}
+
+        // Render DOM các thẻ KPI
+        const elRevenue = document.getElementById('dashboardRevenue');
+        if (elRevenue) elRevenue.textContent = `${labelCurrency(todayRevenueVal)} VNĐ`;
+
+        const elBookings = document.getElementById('dashboardBookings');
+        if (elBookings) elBookings.textContent = todayBookingsCount;
+
+        const elOrders = document.getElementById('dashboardOrders');
+        if (elOrders) elOrders.textContent = totalOrdersToday;
+
+        const elCust = document.getElementById('dashboardCustomers');
+        if (elCust) elCust.textContent = newCustomersCount;
+
+        const elPets = document.getElementById('dashboardPets');
+        if (elPets) elPets.textContent = newPetsCount;
+
+        // Render khối Ưu tiên xử lý
+        const totalPriority = pendingComplaintsCount + pendingOrdersCount;
+        const elPriorityCount = document.getElementById('dashboardPriorityCount');
+        if (elPriorityCount) {
+            elPriorityCount.textContent = `${totalPriority} việc`;
+            elPriorityCount.className = `admin-badge ${totalPriority > 0 ? 'badge-warning' : 'badge-success'}`;
+        }
+
+        const elComplaintsBadge = document.getElementById('dashboardComplaintsBadge');
+        if (elComplaintsBadge) elComplaintsBadge.textContent = pendingComplaintsCount;
+
+        const elComplaintsSub = document.getElementById('dashboardComplaintsSub');
+        if (elComplaintsSub) {
+            elComplaintsSub.textContent = pendingComplaintsCount > 0 
+                ? `${pendingComplaintsCount} ticket cần nhân viên tiếp nhận`
+                : `Không có khiếu nại tồn đọng`;
+        }
+
+        const elOrdersBadge = document.getElementById('dashboardOrdersBadge');
+        if (elOrdersBadge) elOrdersBadge.textContent = pendingOrdersCount;
+
+        const elOrdersSub = document.getElementById('dashboardOrdersSub');
+        if (elOrdersSub) {
+            elOrdersSub.textContent = pendingOrdersCount > 0
+                ? `${pendingOrdersCount} đơn hàng mới cần xác nhận`
+                : `Tất cả đơn hàng đã được duyệt`;
+        }
     }
 })();

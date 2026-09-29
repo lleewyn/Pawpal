@@ -1943,6 +1943,26 @@
                     window.PawpalOrdersModule.openOrderDetail(rawOrderId);
                 }
             }
+
+            const filterStatus = sessionStorage.getItem('pawpal_admin_order_filter_status');
+            if (filterStatus) {
+                sessionStorage.removeItem('pawpal_admin_order_filter_status');
+                const statusSelect = document.getElementById('orderFilterStatus');
+                if (statusSelect) {
+                    statusSelect.value = filterStatus;
+                    renderOrdersTable();
+                }
+            }
+
+            const productSearch = sessionStorage.getItem('pawpal_admin_product_search');
+            if (productSearch) {
+                sessionStorage.removeItem('pawpal_admin_product_search');
+                const pSearchInput = document.getElementById('productSearchInput');
+                if (pSearchInput) {
+                    pSearchInput.value = productSearch;
+                    renderProductsTable();
+                }
+            }
         };
         setTimeout(checkPresetOrder, 150);
     }

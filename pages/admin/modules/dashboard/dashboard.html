@@ -29,34 +29,34 @@
                 <div>
                     <h2 class="dashboard-widget-title">Ưu tiên xử lý</h2>
                 </div>
-                <span class="admin-badge badge-warning">6 việc</span>
+                <span class="admin-badge badge-warning" id="dashboardPriorityCount">6 việc</span>
             </div>
             <div class="dashboard-priority-list">
-                <button type="button" class="dashboard-priority-row" data-dashboard-module="Khiếu nại">
-                    <span><strong>Khiếu nại chờ xử lý</strong><small>2 ticket cần nhân viên tiếp nhận</small></span>
-                    <span class="admin-badge badge-danger">2</span>
+                <button type="button" class="dashboard-priority-row" id="dashboardPriorityComplaints" data-action="complaints" data-dashboard-module="Khiếu nại">
+                    <span><strong>Khiếu nại chờ xử lý</strong><small id="dashboardComplaintsSub">2 ticket cần nhân viên tiếp nhận</small></span>
+                    <span class="admin-badge badge-danger" id="dashboardComplaintsBadge">2</span>
                 </button>
-                <button type="button" class="dashboard-priority-row" data-dashboard-module="Bán hàng">
-                    <span><strong>Đơn hàng chờ duyệt</strong><small>4 đơn hàng mới cần xác nhận</small></span>
-                    <span class="admin-badge badge-warning">4</span>
+                <button type="button" class="dashboard-priority-row" id="dashboardPriorityOrders" data-action="orders" data-dashboard-module="Bán hàng">
+                    <span><strong>Đơn hàng chờ duyệt</strong><small id="dashboardOrdersSub">4 đơn hàng mới cần xác nhận</small></span>
+                    <span class="admin-badge badge-warning" id="dashboardOrdersBadge">4</span>
                 </button>
             </div>
             <div class="dashboard-widget-header dashboard-stock-heading">
                 <div>
                     <h3 class="dashboard-widget-title">Tồn kho sắp hết</h3>
                 </div>
-                <button type="button" class="dashboard-text-link" data-dashboard-module="Bán hàng">Xem kho</button>
+                <button type="button" class="dashboard-text-link" id="btnDashboardViewAllStock" data-dashboard-module="Bán hàng">Xem kho</button>
             </div>
-            <div class="dashboard-stock-list">
-                <button type="button" class="dashboard-stock-row" data-dashboard-module="Bán hàng">
+            <div class="dashboard-stock-list" id="dashboardStockList">
+                <button type="button" class="dashboard-stock-row" data-sku="FOOD-012" data-dashboard-module="Bán hàng">
                     <span><strong>Pate gà bí đỏ PawPal</strong><small>SKU: FOOD-012</small></span>
                     <span class="dashboard-stock-count is-low">Còn 2</span>
                 </button>
-                <button type="button" class="dashboard-stock-row" data-dashboard-module="Bán hàng">
+                <button type="button" class="dashboard-stock-row" data-sku="CARE-008" data-dashboard-module="Bán hàng">
                     <span><strong>Dầu tắm dịu nhẹ</strong><small>SKU: CARE-008</small></span>
                     <span class="dashboard-stock-count is-empty">Hết hàng</span>
                 </button>
-                <button type="button" class="dashboard-stock-row" data-dashboard-module="Bán hàng">
+                <button type="button" class="dashboard-stock-row" data-sku="CAT-021" data-dashboard-module="Bán hàng">
                     <span><strong>Cát vệ sinh đậu nành</strong><small>SKU: CAT-021</small></span>
                     <span class="dashboard-stock-count is-low">Còn 4</span>
                 </button>
