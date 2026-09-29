@@ -730,3 +730,134 @@
     font-weight: 700;
 }
 
+/* 10. GIAO DIỆN BẰNG CHỨNG ẢNH VÀ UPLOAD THỰC TẾ (EVIDENCE & LIGHTBOX) */
+.evidence-photos-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.evidence-photo-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    background-color: rgba(255, 255, 255, 0.85);
+    border: 1px solid var(--border-neutral, #ECF2EE);
+    border-radius: var(--admin-radius, 9px);
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.15s, background-color 0.15s;
+    max-width: 280px;
+}
+
+.evidence-photo-card:hover {
+    border-color: #C3DEC7;
+    background-color: #F4FAF6;
+    transform: none !important;
+}
+
+.evidence-thumb-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--border-neutral, #ECF2EE);
+    background-color: #EEF5F1;
+}
+
+.evidence-thumb-placeholder {
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    background-color: #EEF5F1;
+    color: #236B48;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: 1px solid #C3DEC7;
+}
+
+.evidence-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.evidence-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-main, #203A2C);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.evidence-sub {
+    font-size: 11px;
+    color: var(--text-muted, #4F7A65);
+}
+
+.btn-upload-evidence-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 13px;
+    background-color: transparent;
+    border: 1px dashed #236B48;
+    border-radius: var(--admin-radius, 9px);
+    color: #236B48;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s;
+    height: 34px;
+}
+
+.btn-upload-evidence-pill:hover {
+    background-color: #EEF5F1;
+    transform: none !important;
+}
+
+.uploaded-preview-item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-neutral, #ECF2EE);
+    border-radius: 6px;
+}
+
+.uploaded-preview-thumb {
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.uploaded-preview-remove {
+    background: none;
+    border: none;
+    color: #DC2626;
+    font-size: 11px;
+    cursor: pointer;
+    padding: 2px 4px;
+    font-weight: 600;
+}
+
+.uploaded-preview-remove:hover {
+    text-decoration: underline;
+}
+

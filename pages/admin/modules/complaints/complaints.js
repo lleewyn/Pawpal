@@ -931,6 +931,86 @@
             return lockVal;
         }
 
+        // Sinh ảnh minh họa SVG chất lượng cao cho các tệp mô phỏng
+        function generateEvidenceThumbnail(fileName, category) {
+            let bg = '#EEF5F1';
+            let label = 'ẢNH ĐÍNH KÈM';
+            let icon = '📸';
+            const fLower = (fileName || '').toLowerCase();
+            if (fLower.includes('tai') || fLower.includes('tray') || fLower.includes('pet') || fLower.includes('corgi') || fLower.includes('miu')) {
+                bg = '#FDE8E8'; label = 'SỰ CỐ PET'; icon = '🐾';
+            } else if (fLower.includes('mop') || fLower.includes('lon') || fLower.includes('pack') || fLower.includes('san-pham')) {
+                bg = '#FEF3C7'; label = 'KIỂM HÀNG'; icon = '📦';
+            } else if (fLower.includes('seal') || fLower.includes('hoa-don') || fLower.includes('lich-trinh')) {
+                bg = '#E0F2FE'; label = 'NIÊM PHONG'; icon = '📄';
+            }
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+                <rect width="300" height="300" fill="${bg}"/>
+                <circle cx="150" cy="115" r="48" fill="rgba(255,255,255,0.7)"/>
+                <text x="50%" y="130" font-size="44" text-anchor="middle">${icon}</text>
+                <text x="50%" y="195" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto" font-size="14" font-weight="700" fill="#203A2C" text-anchor="middle">${label}</text>
+                <text x="50%" y="222" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto" font-size="12" fill="#4F7A65" text-anchor="middle">${escapeHtml(fileName.length > 22 ? fileName.slice(0, 20) + '...' : fileName)}</text>
+                <text x="50%" y="250" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto" font-size="10" font-weight="600" fill="#236B48" text-anchor="middle">PawPal Care Verified</text>
+            </svg>`;
+            return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+        }
+
+        // Mở và đóng Lightbox xem ảnh phóng to
+        function openImageLightbox(src, title, meta) {
+            const overlay = document.getElementById('imagePreviewModalOverlay');
+            const img = document.getElementById('imagePreviewImg');
+            const titleEl = document.getElementById('imagePreviewTitle');
+            const metaEl = document.getElementById('imagePreviewMeta');
+            if (img) img.src = src;
+            if (titleEl) titleEl.textContent = title || 'Chi tiết hình ảnh bằng chứng';
+            if (metaEl) metaEl.textContent = meta || 'Ảnh xác minh hệ thống';
+            if (overlay) overlay.style.display = 'flex';
+        }
+
+        function closeImageLightbox() {
+            const overlay = document.getElementById('imagePreviewModalOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+
+        // Render danh sách ảnh bằng chứng dạng Card tương tác
+        function renderEvidenceList(containerEl, items, categoryName) {
+            if (!containerEl) return;
+            containerEl.innerHTML = '';
+            if (!items || items.length === 0) {
+                containerEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted); font-style: italic;">Chưa có hình ảnh nào.</span>';
+                return;
+            }
+
+            items.forEach((item, index) => {
+                let src = '';
+                let name = '';
+                let dateStr = 'Ảnh hồ sơ thẩm định';
+                if (typeof item === 'string') {
+                    name = item;
+                    src = generateEvidenceThumbnail(item, categoryName);
+                } else if (item && typeof item === 'object') {
+                    name = item.name || `Ảnh bằng chứng ${index + 1}`;
+                    src = item.dataUrl || generateEvidenceThumbnail(name, categoryName);
+                    dateStr = item.uploadedAt || 'Tải lên từ máy';
+                }
+
+                const card = document.createElement('div');
+                card.className = 'evidence-photo-card';
+                card.title = `Bấm để phóng to xem chi tiết: ${name}`;
+                card.innerHTML = `
+                    <img src="${src}" class="evidence-thumb-img" alt="${escapeHtml(name)}">
+                    <div class="evidence-info">
+                        <div class="evidence-name">${escapeHtml(name)}</div>
+                        <div class="evidence-sub">${escapeHtml(dateStr)} • Phóng to</div>
+                    </div>
+                `;
+                card.addEventListener('click', () => {
+                    openImageLightbox(src, name, `${dateStr} • Xác thực hồ sơ Pawpal`);
+                });
+                containerEl.appendChild(card);
+            });
+        }
+
         function renderTicketDetail(ticket) {
             if (!ticket) return;
             currentActiveTicket = ticket;
@@ -956,17 +1036,9 @@
             const contentEl = document.getElementById('viewTicketCustomerContent');
             if (contentEl) contentEl.textContent = `"${ticket.content}"`;
 
-            // Bằng chứng khách gửi
+            // Bằng chứng khách gửi (render dạng thumbnail có click phóng to)
             const customerEvidenceEl = document.getElementById('viewTicketCustomerEvidence');
-            if (customerEvidenceEl) {
-                if (ticket.evidence && ticket.evidence.length > 0) {
-                    customerEvidenceEl.innerHTML = ticket.evidence.map((f, i) => `<span class="evidence-photo-item">Ảnh đính kèm ${i + 1}: ${escapeHtml(f)}</span>`).join('');
-                    customerEvidenceEl.style.display = 'flex';
-                } else {
-                    customerEvidenceEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted); font-style: italic;">Không có hình ảnh đính kèm từ khách.</span>';
-                    customerEvidenceEl.style.display = 'block';
-                }
-            }
+            renderEvidenceList(customerEvidenceEl, ticket.evidence, 'customer');
 
             // Biên bản đối thoại từ Kênh Trực chat (nếu ticket bắt nguồn từ Chatbot)
             const chatTranscriptBlock = document.getElementById('viewTicketChatTranscriptBlock');
@@ -1018,13 +1090,7 @@
                 if (checkinHealthEl) checkinHealthEl.textContent = ticket.checkinHealth || 'Bé khỏe mạnh, không phát hiện vết xước hay tổn thương ngoài da.';
 
                 const checkinPhotosEl = document.getElementById('viewTicketCheckinPhotos');
-                if (checkinPhotosEl) {
-                    if (ticket.checkinPhotos && ticket.checkinPhotos.length > 0) {
-                        checkinPhotosEl.innerHTML = ticket.checkinPhotos.map(f => `<span class="evidence-photo-item">Ảnh lúc đón: ${escapeHtml(f)}</span>`).join('');
-                    } else {
-                        checkinPhotosEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted); font-style: italic;">Không có ảnh chụp check-in.</span>';
-                    }
-                }
+                renderEvidenceList(checkinPhotosEl, ticket.checkinPhotos, 'checkin');
 
                 const staffExecutedEl = document.getElementById('viewTicketStaffExecuted');
                 if (staffExecutedEl) staffExecutedEl.textContent = ticket.staffExecuted || 'Chưa ghi nhận';
@@ -1049,13 +1115,7 @@
                 if (orderBlock) orderBlock.style.display = 'block';
 
                 const orderPhotosEl = document.getElementById('viewTicketOrderWarehousePhotos');
-                if (orderPhotosEl) {
-                    if (ticket.warehousePhotos && ticket.warehousePhotos.length > 0) {
-                        orderPhotosEl.innerHTML = ticket.warehousePhotos.map(f => `<span class="evidence-photo-item">Ảnh kiểm kho: ${escapeHtml(f)}</span>`).join('');
-                    } else {
-                        orderPhotosEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted); font-style: italic;">Không có ảnh chụp đóng gói.</span>';
-                    }
-                }
+                renderEvidenceList(orderPhotosEl, ticket.warehousePhotos, 'warehouse');
 
                 const shippingCarrierEl = document.getElementById('viewTicketShippingCarrier');
                 if (shippingCarrierEl) shippingCarrierEl.textContent = ticket.carrier || 'Giao Hàng Nhanh (GHN)';
@@ -1366,6 +1426,155 @@
             }
         });
 
+        // ---------------------------------------------------------
+        // SỰ KIỆN UPLOAD ẢNH VÀ XEM ẢNH PHÓNG TO (LIGHTBOX)
+        // ---------------------------------------------------------
+        document.getElementById('btnCloseImagePreview')?.addEventListener('click', closeImageLightbox);
+        document.getElementById('btnDismissImagePreview')?.addEventListener('click', closeImageLightbox);
+        document.getElementById('imagePreviewModalOverlay')?.addEventListener('click', (e) => {
+            if (e.target.id === 'imagePreviewModalOverlay') closeImageLightbox();
+        });
+
+        // 1. Upload bổ sung ảnh phản ánh của khách trong Chi tiết Ticket
+        const btnUploadMoreEvidence = document.getElementById('btnTriggerUploadMoreEvidence');
+        const inputUploadMoreEvidence = document.getElementById('inputUploadMoreEvidence');
+        btnUploadMoreEvidence?.addEventListener('click', () => {
+            inputUploadMoreEvidence?.click();
+        });
+
+        inputUploadMoreEvidence?.addEventListener('change', (e) => {
+            if (!currentActiveTicket || !e.target.files || e.target.files.length === 0) return;
+            const files = Array.from(e.target.files);
+            let processed = 0;
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    if (!currentActiveTicket.evidence) currentActiveTicket.evidence = [];
+                    currentActiveTicket.evidence.push({
+                        name: file.name,
+                        dataUrl: event.target.result,
+                        uploadedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+                    processed++;
+                    if (processed === files.length) {
+                        currentActiveTicket.timeline.unshift({
+                            time: 'Vừa xong',
+                            author: 'Lê Lệ Quyên (Admin)',
+                            title: 'Bổ sung ảnh bằng chứng từ máy',
+                            desc: `Đã tải lên ${files.length} ảnh mới: ${files.map(f => f.name).join(', ')}.`,
+                            isInternal: true
+                        });
+                        renderTicketDetail(currentActiveTicket);
+                        alert(`Đã tải lên thành công ${files.length} ảnh bằng chứng!`);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+            inputUploadMoreEvidence.value = '';
+        });
+
+        // 2. Upload bổ sung ảnh check-in đón bé (Dịch vụ)
+        const btnUploadCheckin = document.getElementById('btnTriggerUploadCheckinPhoto');
+        const inputUploadCheckin = document.getElementById('inputUploadCheckinPhoto');
+        btnUploadCheckin?.addEventListener('click', () => inputUploadCheckin?.click());
+        inputUploadCheckin?.addEventListener('change', (e) => {
+            if (!currentActiveTicket || !e.target.files || e.target.files.length === 0) return;
+            const files = Array.from(e.target.files);
+            let processed = 0;
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    if (!currentActiveTicket.checkinPhotos) currentActiveTicket.checkinPhotos = [];
+                    currentActiveTicket.checkinPhotos.push({
+                        name: file.name,
+                        dataUrl: event.target.result,
+                        uploadedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+                    processed++;
+                    if (processed === files.length) {
+                        renderTicketDetail(currentActiveTicket);
+                        alert(`Đã bổ sung ${files.length} ảnh đón bé vào hồ sơ dịch vụ!`);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+            inputUploadCheckin.value = '';
+        });
+
+        // 3. Upload bổ sung ảnh kiểm kho (Đơn hàng)
+        const btnUploadWarehouse = document.getElementById('btnTriggerUploadWarehousePhoto');
+        const inputUploadWarehouse = document.getElementById('inputUploadWarehousePhoto');
+        btnUploadWarehouse?.addEventListener('click', () => inputUploadWarehouse?.click());
+        inputUploadWarehouse?.addEventListener('change', (e) => {
+            if (!currentActiveTicket || !e.target.files || e.target.files.length === 0) return;
+            const files = Array.from(e.target.files);
+            let processed = 0;
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    if (!currentActiveTicket.warehousePhotos) currentActiveTicket.warehousePhotos = [];
+                    currentActiveTicket.warehousePhotos.push({
+                        name: file.name,
+                        dataUrl: event.target.result,
+                        uploadedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+                    processed++;
+                    if (processed === files.length) {
+                        renderTicketDetail(currentActiveTicket);
+                        alert(`Đã bổ sung ${files.length} ảnh kiểm tra kho hàng vào hồ sơ!`);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+            inputUploadWarehouse.value = '';
+        });
+
+        // 4. Quản lý Upload ảnh trong Modal Tạo Ticket
+        let createTicketUploadedFiles = [];
+        const btnTriggerUploadModal = document.getElementById('btnTriggerUploadTicketFiles');
+        const inputTicketFiles = document.getElementById('inputTicketFiles');
+        const createPreviewsContainer = document.getElementById('createTicketPreviewsContainer');
+
+        function renderCreateTicketPreviews() {
+            if (!createPreviewsContainer) return;
+            createPreviewsContainer.innerHTML = '';
+            createTicketUploadedFiles.forEach((fileObj, idx) => {
+                const item = document.createElement('div');
+                item.className = 'uploaded-preview-item';
+                item.innerHTML = `
+                    <img src="${fileObj.dataUrl}" class="uploaded-preview-thumb" alt="${escapeHtml(fileObj.name)}">
+                    <span style="font-size: 11.5px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(fileObj.name)}</span>
+                    <button type="button" class="uploaded-preview-remove" data-idx="${idx}" title="Xóa ảnh này">✕</button>
+                `;
+                item.querySelector('.uploaded-preview-remove').addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    createTicketUploadedFiles.splice(idx, 1);
+                    renderCreateTicketPreviews();
+                });
+                createPreviewsContainer.appendChild(item);
+            });
+        }
+
+        btnTriggerUploadModal?.addEventListener('click', () => inputTicketFiles?.click());
+        inputTicketFiles?.addEventListener('change', (e) => {
+            if (!e.target.files || e.target.files.length === 0) return;
+            const files = Array.from(e.target.files);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    createTicketUploadedFiles.push({
+                        name: file.name,
+                        dataUrl: ev.target.result,
+                        uploadedAt: 'Đính kèm lúc tạo vé'
+                    });
+                    renderCreateTicketPreviews();
+                };
+                reader.readAsDataURL(file);
+            });
+            inputTicketFiles.value = '';
+        });
+
         // Modal Tạo Ticket
         const createModal = document.getElementById('createTicketModalOverlay');
         document.getElementById('btnOpenCreateServiceTicket')?.addEventListener('click', () => {
@@ -1377,6 +1586,8 @@
                 <option value="BKG-1008">BKG-1008 (Bông Xù - Tắm Thuốc Da Liễu)</option>
                 <option value="BKG-1004">BKG-1004 (Lu Lu - Pet Hotel Tiêu Chuẩn)</option>
             `;
+            createTicketUploadedFiles = [];
+            renderCreateTicketPreviews();
             createModal.classList.add('active');
         });
 
@@ -1388,14 +1599,69 @@
                 <option value="ORD-2026-001">ORD-2026-001 (Đồ chơi gặm xương)</option>
                 <option value="ORD-2026-005">ORD-2026-005 (Pate mèo nắp bật)</option>
             `;
+            createTicketUploadedFiles = [];
+            renderCreateTicketPreviews();
             createModal.classList.add('active');
         });
 
         document.getElementById('btnCancelCreateTicket')?.addEventListener('click', () => createModal.classList.remove('active'));
         document.getElementById('btnDismissCreateTicket')?.addEventListener('click', () => createModal.classList.remove('active'));
+        
         document.getElementById('btnSaveCreateTicket')?.addEventListener('click', () => {
-            alert('Tạo Ticket khiếu nại thành công!');
+            const phone = document.getElementById('inputTicketCustomerPhone')?.value.trim() || '0901234567';
+            const name = document.getElementById('inputTicketCustomerName')?.value.trim() || 'Khách hàng tiếp nhận tại quầy';
+            const title = document.getElementById('inputTicketTitle')?.value.trim() || 'Khiếu nại tiếp nhận tại quầy';
+            const content = document.getElementById('inputTicketContent')?.value.trim() || title;
+            const refId = document.getElementById('selectTicketRefId')?.value || 'BKG-1001';
+            const priority = document.getElementById('selectTicketPriority')?.value || 'medium';
+            const isService = refId.startsWith('BKG');
+            const newId = isService ? ('TK-' + Math.floor(1000 + Math.random() * 9000)) : ('TK-ORD-' + Math.floor(100 + Math.random() * 900));
+
+            const newTicket = {
+                id: newId,
+                customerName: name,
+                phone: phone,
+                petName: isService ? 'Bé cưng' : '',
+                petBreed: isService ? 'Thú cưng' : '',
+                petNotes: 'Ghi nhận lúc lập ticket tại quầy',
+                bookingId: isService ? refId : '',
+                orderId: !isService ? refId : '',
+                serviceName: isService ? 'Dịch vụ Spa & Hotel' : '',
+                productName: !isService ? 'Sản phẩm mua sắm' : '',
+                title: title,
+                content: content,
+                priority: priority,
+                slaStatus: priority === 'high' ? 'URGENT' : 'NORMAL',
+                slaRemainingText: 'Còn 24 giờ',
+                staffAssigned: 'Lê Lệ Quyên',
+                createdAt: new Date().toLocaleDateString('vi-VN') + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                status: 'new',
+                evidence: [...createTicketUploadedFiles],
+                checkinPhotos: [],
+                warehousePhotos: [],
+                timeline: [
+                    {
+                        time: 'Vừa xong',
+                        author: 'Lê Lệ Quyên (Lễ tân)',
+                        title: 'Tiếp nhận khiếu nại tại quầy',
+                        desc: `Đã lập ticket và tải lên ${createTicketUploadedFiles.length} ảnh bằng chứng ban đầu.`,
+                        isInternal: false
+                    }
+                ]
+            };
+
+            if (isService) {
+                mockServiceComplaints.unshift(newTicket);
+                renderServiceComplaintsTable();
+            } else {
+                mockOrderComplaints.unshift(newTicket);
+                renderOrderComplaintsTable();
+            }
+
+            updateComplaintsKpis();
+            renderComplaintsAlertBar();
             createModal.classList.remove('active');
+            alert(`Tạo Ticket ${newId} thành công với ${createTicketUploadedFiles.length} ảnh bằng chứng đính kèm!`);
         });
 
         // Modal Phương án giải quyết (Phase 3: RMA, Redo, Reward và Refund)

@@ -321,13 +321,18 @@
                 <div class="complaint-detail-left-col">
                     <!-- KHỐI 1: NỘI DUNG PHẢN ÁNH CỦA KHÁCH -->
                     <div class="drawer-info-block">
-                        <div class="drawer-section-title">Phản ánh của khách</div>
+                        <div class="drawer-section-title" style="display: flex; align-items: center; justify-content: space-between;">
+                            <span>Phản ánh của khách</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="file" id="inputUploadMoreEvidence" multiple accept="image/*" style="display: none;">
+                                <button type="button" class="btn-upload-evidence-pill" id="btnTriggerUploadMoreEvidence">+ Tải ảnh bằng chứng từ máy</button>
+                            </div>
+                        </div>
                         <div class="complaint-quote-box" id="viewTicketCustomerContent">
                             "Bé Miu sau khi tắm và sấy tại cơ sở Quận 1 về có vết trầy nhẹ ở vành tai phải và thái độ rất sợ nước, gia đình kiểm tra thấy có rớm máu nhẹ ở viền tai."
                         </div>
                         <div class="evidence-photos-list" id="viewTicketCustomerEvidence">
-                            <span class="evidence-photo-item">Ảnh đính kèm 1: vet-tray-tai.jpg</span>
-                            <span class="evidence-photo-item">Ảnh đính kèm 2: hoa-don-dich-vu.jpg</span>
+                            <!-- Render bằng thẻ ảnh card hoặc thumbnail -->
                         </div>
                     </div>
 
@@ -379,10 +384,13 @@
                                     <span class="info-value" id="viewTicketCheckinHealth" style="font-weight: 500; color: #166534;">Bé khỏe mạnh, lanh lợi, không phát hiện vết xước hay tổn thương ngoài da.</span>
                                 </div>
                                 <div style="margin-top: 8px;">
-                                    <span class="info-label">Ảnh chụp check-in lúc đón bé:</span>
+                                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                                        <span class="info-label">Ảnh chụp check-in lúc đón bé:</span>
+                                        <input type="file" id="inputUploadCheckinPhoto" multiple accept="image/*" style="display: none;">
+                                        <button type="button" class="btn-upload-evidence-pill" id="btnTriggerUploadCheckinPhoto" style="height: 28px; padding: 2px 10px; font-size: 11.5px;">+ Bổ sung ảnh đón bé</button>
+                                    </div>
                                     <div class="evidence-photos-list" id="viewTicketCheckinPhotos" style="margin-top: 6px;">
-                                        <span class="evidence-photo-item">Ảnh đón bé: checkin-pet-01.jpg</span>
-                                        <span class="evidence-photo-item">Ảnh vùng tai: checkin-pet-tai.jpg</span>
+                                        <!-- Render by JS -->
                                     </div>
                                 </div>
                                 <div class="info-pair" style="margin-top: 14px;">
@@ -402,10 +410,13 @@
                             <!-- ĐỐI CHỨNG ĐÓNG GÓI VÀ VẬN CHUYỂN (DÀNH CHO ĐƠN HÀNG) -->
                             <div id="orderCrossCheckBlock" style="display: none;">
                                 <div class="info-pair">
-                                    <span class="info-label">Ảnh chụp kiểm tra đóng gói tại kho:</span>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                                        <span class="info-label">Ảnh chụp kiểm tra đóng gói tại kho:</span>
+                                        <input type="file" id="inputUploadWarehousePhoto" multiple accept="image/*" style="display: none;">
+                                        <button type="button" class="btn-upload-evidence-pill" id="btnTriggerUploadWarehousePhoto" style="height: 28px; padding: 2px 10px; font-size: 11.5px;">+ Bổ sung ảnh kho</button>
+                                    </div>
                                     <div class="evidence-photos-list" id="viewTicketOrderWarehousePhotos" style="margin-top: 6px;">
-                                        <span class="evidence-photo-item">Ảnh kiện hàng trước đóng: pack-ORD-01.jpg</span>
-                                        <span class="evidence-photo-item">Ảnh tem niêm phong: seal-ORD-02.jpg</span>
+                                        <!-- Render by JS -->
                                     </div>
                                 </div>
                                 <div class="info-grid-2col" style="margin-top: 14px;">
@@ -610,7 +621,11 @@
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Hình ảnh / Bằng chứng đính kèm</label>
-                        <input type="text" class="admin-input" id="inputTicketAttachment" placeholder="Tên tệp đính kèm...">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="file" id="inputTicketFiles" multiple accept="image/*" style="display: none;">
+                            <button type="button" class="admin-btn admin-btn-secondary" id="btnTriggerUploadTicketFiles" style="width: 100%;">+ Chọn ảnh từ máy tính / điện thoại</button>
+                        </div>
+                        <div class="uploaded-previews-container" id="createTicketPreviewsContainer" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
                     </div>
                 </div>
             </div>
@@ -795,6 +810,23 @@
             <div class="modal-footer-clean">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissRequestInfo">Hủy</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnSendRequestInfo">Gửi yêu cầu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: XEM ẢNH BẰNG CHỨNG PHÓNG TO (LIGHTBOX) -->
+    <div class="admin-modal-overlay" id="imagePreviewModalOverlay" style="display: none; z-index: 99999;">
+        <div class="admin-modal-card" style="max-width: 680px; width: 92vw; padding: 22px 26px;">
+            <div class="modal-header-clean" style="margin-bottom: 14px;">
+                <div class="modal-title-clean" id="imagePreviewTitle">Chi tiết hình ảnh bằng chứng</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseImagePreview">Đóng</button>
+            </div>
+            <div class="image-preview-body" style="background: rgba(238, 245, 241, 0.5); border-radius: 9px; padding: 14px; display: flex; align-items: center; justify-content: center; min-height: 280px; max-height: 60vh; overflow: hidden;">
+                <img id="imagePreviewImg" src="" alt="Bằng chứng khiếu nại" style="max-width: 100%; max-height: 56vh; object-fit: contain; border-radius: 6px;">
+            </div>
+            <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: var(--text-muted);">
+                <span id="imagePreviewMeta">Ảnh xác minh hệ thống</span>
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissImagePreview">Đóng xem ảnh</button>
             </div>
         </div>
     </div>
