@@ -31,6 +31,18 @@
             petAlert: 'Dị ứng phấn hoa và các loại dầu tắm chứa hương liệu đậm đặc.',
             customerNote: 'Bé hơi nhát nước, xin hãy massage nhẹ nhàng trước khi xả nước.',
             addons: [],
+            intakeSafety: {
+                actualWeight: '4.2 kg',
+                weightEval: 'Đúng khung giá đăng ký',
+                skinCoat: 'Da lông sạch sẽ, có lưu ý dị ứng hương liệu',
+                eyesEarsNose: 'Mắt sáng, vành tai sạch sẽ',
+                wounds: 'Không có vết thương cũ',
+                temperament: 'Nhút nhát / Hơi sợ nước',
+                belongings: '01 Dây dắt đỏ bản to',
+                proofImages: ['/assets/images/services/spa/process/spa01.webp'],
+                intakeStaff: 'Ngọc Anh',
+                intakeTime: '13:50'
+            },
             timeline: [
                 { time: '13:50', title: 'Tiếp nhận Pet', desc: 'Đã đón bé tại quầy tiếp tân cơ sở Quận 1', done: true, staff: 'Ngọc Anh', images: ['/assets/images/services/spa/process/spa01.webp'] },
                 { time: '14:00', title: 'Kiểm tra da lông sơ bộ', desc: 'Kiểm tra vết nấm, ve rận và độ dài móng', done: true, staff: 'Ngọc Anh', images: ['/assets/images/services/spa/process/tam_cho5.jpg'] },
@@ -296,6 +308,53 @@
             addons: [],
             timeline: [
                 { time: '14:00', title: 'Chuẩn bị phòng thuốc', desc: 'Đã chuẩn bị bồn ngâm thảo dược đông y', done: true, staff: 'Ngọc Anh' }
+            ]
+        },
+        {
+            id: 'BKG-1009',
+            userId: 'USER-001',
+            customerName: 'Trần Thị Mai',
+            phone: '0933445566',
+            petId: 'PET-006',
+            petName: 'Bông Gòn',
+            petBreed: 'Chó Bichon Frise',
+            petWeight: '5.2 kg',
+            petAge: '2 tuổi',
+            serviceCode: 'SPA07',
+            category: 'Spa',
+            categoryName: 'Spa và Grooming',
+            serviceName: 'Grooming Tạo Kiểu Cơ Bản',
+            date: '2026-06-25',
+            time: '13:00',
+            duration: '90 phút',
+            staff: 'Hoàng Nam',
+            branch: 'PawPal Chi nhánh Quận 1',
+            price: 450000,
+            addonPrice: 0,
+            discount: 0,
+            total: 450000,
+            paymentStatus: 'Chưa thanh toán (Tại quầy)',
+            status: 'in_progress',
+            alertType: 'urgent',
+            petAlert: 'Lông bị rối bết nhiều vùng háng và nách chân trước.',
+            customerNote: 'Xin hãy kiên nhẫn gỡ rối, đừng cạo sát da bé.',
+            addons: [],
+            intakeSafety: {
+                actualWeight: '5.2 kg',
+                weightEval: 'Đúng khung giá đăng ký',
+                skinCoat: 'Lông bết rối nhiều mảng háng và bụng',
+                eyesEarsNose: 'Mắt tai sạch sẽ bình thường',
+                wounds: 'Có vết xước nhỏ ở đệm chân trước',
+                temperament: 'Ngoan hiền / Thân thiện',
+                belongings: '01 Chuồng vận chuyển nhựa xám',
+                proofImages: ['/assets/images/services/spa/process/cat_long1.jpg'],
+                intakeStaff: 'Hoàng Nam',
+                intakeTime: '13:00'
+            },
+            timeline: [
+                { time: '13:00', title: 'Tiếp nhận bé và Kiểm tra an toàn', desc: 'Đã kiểm tra cân nặng 5.2kg, ghi nhận lông bết rối, có vết xước nhẹ đệm chân trước', done: true, staff: 'Hoàng Nam', images: ['/assets/images/services/spa/process/cat_long1.jpg'] },
+                { time: '13:15', title: 'Tắm xả và sấy bông lông', desc: 'Hoàn tất tắm dưỡng phục hồi', done: true, staff: 'Hoàng Nam' },
+                { time: '14:30', title: 'Gỡ rối và Cắt tỉa tạo kiểu', desc: 'Đang gỡ rối lông dày và cắt tỉa form chuẩn', done: false, staff: 'Hoàng Nam' }
             ]
         }
     ];
@@ -603,6 +662,8 @@
     let currentFilterStaff = 'ALL';
     let isUpcomingFilterActive = false;
     let isAllergyFilterActive = false;
+    let isSlaFilterActive = false;
+    let intakeProofImagesTemp = [];
 
     // Bộ lọc Danh mục
     let catalogSearchTerm = '';
@@ -646,18 +707,70 @@
         }
     }
 
-    // Helper: Nhãn cảnh báo
+    // Helper: Tính toán giám sát SLA tiến trình dịch vụ và Aging
+    function getServiceSlaInfo(booking) {
+        if (!booking || booking.status === 'cancelled') {
+            return { level: 'ok', label: 'Đã hủy', minutesLate: 0 };
+        }
+        if (booking.status === 'completed') {
+            return { level: 'ok', label: 'Hoàn thành', minutesLate: 0 };
+        }
+
+        // 1. Chờ xác nhận (pending)
+        if (booking.status === 'pending') {
+            if (booking.alertType === 'urgent' || booking.id === 'BKG-1006') {
+                return { level: 'danger', label: 'Quá hạn duyệt (>30p)', minutesLate: 35 };
+            }
+            return { level: 'warning', label: 'Chờ duyệt (>15p)', minutesLate: 15 };
+        }
+
+        // 2. Đã xác nhận (confirmed - chờ khách tới tiếp nhận)
+        if (booking.status === 'confirmed') {
+            if (booking.alertType === 'urgent' || (!booking.staff)) {
+                return { level: 'warning', label: 'Chờ KTV (+15p)', minutesLate: 15 };
+            }
+            if (booking.alertType === 'upcoming' || booking.id === 'BKG-1008') {
+                return { level: 'info', label: 'Sắp tới giờ', minutesLate: 0 };
+            }
+            return { level: 'ok', label: 'Chờ đón bé', minutesLate: 0 };
+        }
+
+        // 3. Đang thực hiện (in_progress)
+        if (booking.status === 'in_progress') {
+            if (booking.id === 'BKG-1009') {
+                return { level: 'danger', label: 'Quá hạn SLA (>30p)', minutesLate: 35 };
+            }
+            if (booking.alertType === 'urgent') {
+                return { level: 'warning', label: 'Trễ ca (+15p)', minutesLate: 18 };
+            }
+            return { level: 'ok', label: 'Đúng tiến độ', minutesLate: 0 };
+        }
+
+        return { level: 'ok', label: 'Bình thường', minutesLate: 0 };
+    }
+
+    // Helper: Nhãn cảnh báo (Tích hợp Pet Alert, SLA Alert, và Phân công KTV)
     function getAlertBadge(item) {
         const badges = [];
+        const sla = getServiceSlaInfo(item);
+
         if (item.petAlert) {
             badges.push('<span class="alert-pill-mini alert-red">Pet có lưu ý</span>');
         }
-        if (item.alertType === 'urgent' || (!item.staff && item.status !== 'cancelled')) {
+        if (!item.staff && item.status !== 'cancelled') {
             badges.push('<span class="alert-pill-mini alert-orange">Chưa phân công</span>');
         }
-        if (item.alertType === 'upcoming') {
-            badges.push('<span class="alert-pill-mini alert-blue">Sắp tới giờ</span>');
+
+        if (sla.level === 'danger') {
+            badges.push(`<span class="alert-pill-mini alert-red">${sla.label}</span>`);
+        } else if (sla.level === 'warning') {
+            badges.push(`<span class="alert-pill-mini alert-orange">${sla.label}</span>`);
+        } else if (sla.level === 'info') {
+            badges.push(`<span class="alert-pill-mini alert-blue">${sla.label}</span>`);
+        } else if (item.status === 'in_progress') {
+            badges.push('<span class="alert-pill-mini alert-green">Đúng tiến độ</span>');
         }
+
         return badges.join(' ') || '<span style="color: var(--text-muted); font-size: 12px;">Bình thường</span>';
     }
 
@@ -860,6 +973,12 @@
             // Toggle pet có dị ứng / lưu ý
             if (isAllergyFilterActive && !item.petAlert) return false;
 
+            // Toggle quá hạn SLA và Trễ ca
+            if (isSlaFilterActive) {
+                const sla = getServiceSlaInfo(item);
+                if (sla.level !== 'danger' && sla.level !== 'warning') return false;
+            }
+
             return true;
         });
 
@@ -876,11 +995,12 @@
 
         tbody.innerHTML = filtered.map(item => {
             // Xác định class alert mép trái thẳng
+            const sla = getServiceSlaInfo(item);
             let alertClass = '';
-            if (item.petAlert) {
-                alertClass = 'row-alert-red';
-            } else if (item.alertType === 'urgent' || (!item.staff && item.status !== 'cancelled')) {
-                alertClass = 'row-alert-orange';
+            if (item.petAlert || sla.level === 'danger') {
+                alertClass = 'row-alert-danger';
+            } else if ((!item.staff && item.status !== 'cancelled') || sla.level === 'warning') {
+                alertClass = 'row-alert-warning';
             }
 
             const isLocked = item.status === 'cancelled' ? 'row-locked' : '';
@@ -1085,6 +1205,64 @@
             // Chỉ hiện nút Sửa thông tin tiếp nhận khi ca đã xác nhận trở đi (không hiện khi đang chờ xác nhận)
             const showEditIntake = (booking.status === 'confirmed' || booking.status === 'in_progress');
             btnEditIntakeInfo.style.display = showEditIntake ? 'inline-block' : 'none';
+        }
+
+        // Cập nhật Khối Biên bản tiếp nhận an toàn (Zero-Claim)
+        const intakeSection = document.getElementById('detailIntakeSafetySection');
+        const intakeEmptyNotice = document.getElementById('detailIntakeEmptyNotice');
+        const intakeContent = document.getElementById('detailIntakeContentContainer');
+        const btnEditSafety = document.getElementById('btnEditIntakeSafety');
+
+        if (intakeSection) {
+            const hasIntake = !!booking.intakeSafety;
+            if (!hasIntake) {
+                if (intakeEmptyNotice) intakeEmptyNotice.style.display = 'block';
+                if (intakeContent) intakeContent.style.display = 'none';
+                if (btnEditSafety) {
+                    btnEditSafety.textContent = 'Tiếp nhận bé';
+                    btnEditSafety.style.display = (booking.status === 'confirmed' || booking.status === 'pending') ? 'inline-block' : 'none';
+                    btnEditSafety.onclick = () => openIntakeModal(booking.id, 'intake');
+                }
+            } else {
+                if (intakeEmptyNotice) intakeEmptyNotice.style.display = 'none';
+                if (intakeContent) intakeContent.style.display = 'block';
+                if (btnEditSafety) {
+                    btnEditSafety.textContent = 'Sửa biên bản tiếp nhận';
+                    btnEditSafety.style.display = (booking.status !== 'cancelled') ? 'inline-block' : 'none';
+                    btnEditSafety.onclick = () => openIntakeModal(booking.id, 'edit');
+                }
+
+                const s = booking.intakeSafety;
+                const actWeight = document.getElementById('detailIntakeActualWeight');
+                const weightEval = document.getElementById('detailIntakeWeightEval');
+                const skinCoat = document.getElementById('detailIntakeSkinCoat');
+                const eyesEars = document.getElementById('detailIntakeEyesEarsNose');
+                const wounds = document.getElementById('detailIntakeWounds');
+                const tempEl = document.getElementById('detailIntakeTemperament');
+                const staffEl = document.getElementById('detailIntakeStaff');
+                const belongEl = document.getElementById('detailIntakeBelongings');
+                const proofGrid = document.getElementById('detailIntakeProofGrid');
+
+                if (actWeight) actWeight.textContent = s.actualWeight || booking.petWeight || 'Chưa cân';
+                if (weightEval) weightEval.textContent = s.weightEval || 'Đúng khung giá';
+                if (skinCoat) skinCoat.textContent = s.skinCoat || 'Sạch sẽ';
+                if (eyesEars) eyesEars.textContent = s.eyesEarsNose || 'Bình thường';
+                if (wounds) wounds.textContent = s.wounds || 'Không có vết thương cũ';
+                if (tempEl) tempEl.textContent = s.temperament || 'Ngoan hiền';
+                if (staffEl) staffEl.textContent = `${s.intakeStaff || booking.staff || 'KTV'} (${s.intakeTime || 'Tiếp nhận'})`;
+                if (belongEl) belongEl.textContent = s.belongings || booking.belongings || 'Không có';
+
+                if (proofGrid) {
+                    const imgs = s.proofImages || [];
+                    if (imgs.length === 0) {
+                        proofGrid.innerHTML = '<span style="font-size: 12px; color: var(--text-muted);">Chưa có ảnh đính kèm lúc đón bé</span>';
+                    } else {
+                        proofGrid.innerHTML = imgs.map(img => `
+                            <img src="${img}" class="intake-proof-thumb" alt="Ảnh đối chứng Zero-Claim" onclick="window.open('${img}', '_blank')" onerror="this.src='/assets/images/services/spa/process/spa01.webp'">
+                        `).join('');
+                    }
+                }
+            }
         }
 
         // Cập nhật tài chính và Bảng kê chi phí / Dịch vụ đi cùng / Phụ phí phát sinh
@@ -1637,33 +1815,208 @@
     }
 
     // ==========================================================================
-    // 6b. MỬ MODAL TIẾP NHẬN BÉ (STANDALONE - ĐƯỢC GỌI TỪ RENDER)
+    // Render danh sách ảnh preview trong modal tiếp nhận
+    function renderIntakeProofPreviewList() {
+        const listEl = document.getElementById('intakeProofPreviewList');
+        if (!listEl) return;
+        if (intakeProofImagesTemp.length === 0) {
+            listEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted);">Chưa có ảnh nào được chọn (nhấn nút tải ảnh ở trên)</span>';
+            return;
+        }
+        listEl.innerHTML = intakeProofImagesTemp.map((img, idx) => `
+            <div class="intake-proof-preview-item">
+                <img src="${img}" alt="Ảnh bằng chứng ${idx + 1}" onerror="this.src='/assets/images/services/spa/process/spa01.webp'">
+                <button type="button" class="btn-remove-proof" data-proof-idx="${idx}" title="Gỡ ảnh">×</button>
+            </div>
+        `).join('');
+
+        listEl.querySelectorAll('.btn-remove-proof').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(btn.getAttribute('data-proof-idx'));
+                intakeProofImagesTemp.splice(idx, 1);
+                renderIntakeProofPreviewList();
+            });
+        });
+    }
+
+    // ==========================================================================
+    // 6b. MỞ BIÊN BẢN TIẾP NHẬN BÉ VÀ KIỂM TRA AN TOÀN (ZERO-CLAIM INTAKE)
     // ==========================================================================
     function openIntakeModal(bookingId, mode) {
         const booking = bookingsData.find(b => b.id === bookingId);
         if (!booking) return;
 
+        selectedBookingId = bookingId;
+
         const modalIntake = document.getElementById('modalEditIntakeInfo');
         const modalTitleEl = document.getElementById('intakeModalTitle');
+        const petSummaryEl = document.getElementById('intakePetSummary');
         const submitBtnEl = document.getElementById('intakeModalSubmitBtn');
         const modeInput = document.getElementById('intakeModalMode');
         const intakeWeightInput = document.getElementById('intakePetWeightInput');
-        const intakeAgeInput = document.getElementById('intakePetAgeInput');
+        const origWeightLabel = document.getElementById('intakeOriginalWeightLabel');
+        const staffSelect = document.getElementById('intakeStaffSelect');
+        const weightAlertBox = document.getElementById('intakeWeightAlertBox');
         const intakeBelongingsInput = document.getElementById('intakeBelongingsInput');
-        const intakeAlertInput = document.getElementById('intakePetAlertInput');
+        const woundNoteInput = document.getElementById('intakeExistingWoundNote');
 
-        if (intakeWeightInput) intakeWeightInput.value = booking.petWeight || '4.0 kg';
-        if (intakeAgeInput) intakeAgeInput.value = booking.petAge || '2 tuổi';
-        if (intakeBelongingsInput) intakeBelongingsInput.value = booking.belongings || '';
-        if (intakeAlertInput) intakeAlertInput.value = booking.petAlert || '';
+        // Subtitle tóm tắt
+        if (petSummaryEl) {
+            petSummaryEl.textContent = `Mã ca: ${booking.id} | Bé: ${booking.petName} (${booking.petBreed}) | Chủ nuôi: ${booking.customerName} - ${booking.phone}`;
+        }
+
+        // Cân nặng
+        const originalWeightNum = parseFloat(booking.petWeight) || 4.0;
+        if (origWeightLabel) {
+            origWeightLabel.textContent = `(Đăng ký online: ${booking.petWeight || '4.0 kg'})`;
+        }
+        if (intakeWeightInput) {
+            const currentActual = booking.intakeSafety ? parseFloat(booking.intakeSafety.actualWeight) : originalWeightNum;
+            intakeWeightInput.value = currentActual || originalWeightNum;
+        }
+
+        // Kỹ thuật viên
+        if (staffSelect) {
+            staffSelect.value = booking.staff || '';
+        }
+
+        // Hàm kiểm tra lệch cân nặng
+        const checkWeightDiff = () => {
+            if (!intakeWeightInput || !weightAlertBox) return;
+            const actualVal = parseFloat(intakeWeightInput.value);
+            if (isNaN(actualVal)) {
+                weightAlertBox.style.display = 'none';
+                return;
+            }
+            const diff = Math.abs(actualVal - originalWeightNum);
+            if (diff >= 1.0) {
+                weightAlertBox.style.display = 'block';
+                weightAlertBox.innerHTML = `<strong>Lưu ý lệch khung cân nặng:</strong> Đo tại quầy ${actualVal} kg (chênh lệch ${diff.toFixed(1)} kg so với đăng ký ban đầu ${originalWeightNum} kg). Hệ thống sẽ tự động cập nhật phụ phí khung cân nặng nếu vượt bậc.`;
+            } else {
+                weightAlertBox.style.display = 'none';
+            }
+        };
+        checkWeightDiff();
+        if (intakeWeightInput) {
+            intakeWeightInput.oninput = checkWeightDiff;
+        }
+
+        // Checklist
+        const s = booking.intakeSafety;
+        if (s) {
+            // Khôi phục từ dữ liệu đã có
+            const checkSkinNorm = document.getElementById('checkSkinNormal');
+            const checkSkinFlea = document.getElementById('checkSkinFleas');
+            const checkSkinFung = document.getElementById('checkSkinFungus');
+            const checkSkinMatt = document.getElementById('checkSkinMatted');
+            if (checkSkinNorm) checkSkinNorm.checked = (s.skinCoat && s.skinCoat.includes('Sạch sẽ'));
+            if (checkSkinFlea) checkSkinFlea.checked = (s.skinCoat && s.skinCoat.includes('ve rận'));
+            if (checkSkinFung) checkSkinFung.checked = (s.skinCoat && s.skinCoat.includes('nấm'));
+            if (checkSkinMatt) checkSkinMatt.checked = (s.skinCoat && s.skinCoat.includes('bết'));
+
+            const checkEyesNorm = document.getElementById('checkEyesEarsNormal');
+            const checkEyesDisc = document.getElementById('checkEyesDischarge');
+            const checkEarsInf = document.getElementById('checkEarsInfection');
+            const checkNoseRun = document.getElementById('checkNoseRunny');
+            if (checkEyesNorm) checkEyesNorm.checked = (s.eyesEarsNose && s.eyesEarsNose.includes('Bình thường'));
+            if (checkEyesDisc) checkEyesDisc.checked = (s.eyesEarsNose && s.eyesEarsNose.includes('Đỏ mắt'));
+            if (checkEarsInf) checkEarsInf.checked = (s.eyesEarsNose && s.eyesEarsNose.includes('tai'));
+            if (checkNoseRun) checkNoseRun.checked = (s.eyesEarsNose && s.eyesEarsNose.includes('mũi'));
+
+            const checkWoundNo = document.getElementById('checkWoundNone');
+            const checkWoundExist = document.getElementById('checkWoundExisting');
+            if (checkWoundNo) checkWoundNo.checked = (s.wounds && s.wounds.includes('Không có'));
+            if (checkWoundExist) checkWoundExist.checked = (s.wounds && !s.wounds.includes('Không có'));
+            if (woundNoteInput) woundNoteInput.value = (s.wounds && !s.wounds.includes('Không có')) ? s.wounds : '';
+
+            // Radios tâm lý
+            const radioTemperament = document.querySelectorAll('input[name="intakeTemperamentRadio"]');
+            radioTemperament.forEach(r => {
+                if (s.temperament && s.temperament.includes(r.value)) r.checked = true;
+            });
+
+            if (intakeBelongingsInput) intakeBelongingsInput.value = s.belongings || booking.belongings || '';
+            intakeProofImagesTemp = [...(s.proofImages || [])];
+        } else {
+            // Mặc định ban đầu
+            const checkSkinNorm = document.getElementById('checkSkinNormal');
+            const checkSkinFlea = document.getElementById('checkSkinFleas');
+            const checkSkinFung = document.getElementById('checkSkinFungus');
+            const checkSkinMatt = document.getElementById('checkSkinMatted');
+            if (checkSkinNorm) checkSkinNorm.checked = true;
+            if (checkSkinFlea) checkSkinFlea.checked = false;
+            if (checkSkinFung) checkSkinFung.checked = false;
+            if (checkSkinMatt) checkSkinMatt.checked = false;
+
+            const checkEyesNorm = document.getElementById('checkEyesEarsNormal');
+            const checkEyesDisc = document.getElementById('checkEyesDischarge');
+            const checkEarsInf = document.getElementById('checkEarsInfection');
+            const checkNoseRun = document.getElementById('checkNoseRunny');
+            if (checkEyesNorm) checkEyesNorm.checked = true;
+            if (checkEyesDisc) checkEyesDisc.checked = false;
+            if (checkEarsInf) checkEarsInf.checked = false;
+            if (checkNoseRun) checkNoseRun.checked = false;
+
+            const checkWoundNo = document.getElementById('checkWoundNone');
+            const checkWoundExist = document.getElementById('checkWoundExisting');
+            if (checkWoundNo) checkWoundNo.checked = true;
+            if (checkWoundExist) checkWoundExist.checked = false;
+            if (woundNoteInput) woundNoteInput.value = '';
+
+            const radioTemperament = document.querySelectorAll('input[name="intakeTemperamentRadio"]');
+            if (radioTemperament.length > 0) radioTemperament[0].checked = true;
+
+            if (intakeBelongingsInput) intakeBelongingsInput.value = booking.belongings || '';
+            intakeProofImagesTemp = [];
+        }
+
+        renderIntakeProofPreviewList();
+
+        // Nút gắn ảnh bằng chứng
+        const btnAddProof = document.getElementById('btnAddProofPhotoBtn');
+        const fileInput = document.getElementById('intakeProofFileInput');
+        if (btnAddProof && fileInput) {
+            btnAddProof.onclick = () => fileInput.click();
+            fileInput.onchange = (e) => {
+                const files = e.target.files;
+                if (!files || files.length === 0) return;
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        intakeProofImagesTemp.push(evt.target.result);
+                        renderIntakeProofPreviewList();
+                    };
+                    reader.readAsDataURL(file);
+                });
+                fileInput.value = '';
+            };
+        }
+
+        // Checkbox đồ dùng
+        const belongingCheckboxes = document.querySelectorAll('.check-belonging-item');
+        belongingCheckboxes.forEach(cb => {
+            cb.onchange = () => {
+                const checkedVals = Array.from(belongingCheckboxes).filter(c => c.checked).map(c => c.value);
+                if (intakeBelongingsInput) {
+                    let currentTxt = intakeBelongingsInput.value;
+                    checkedVals.forEach(v => {
+                        if (!currentTxt.includes(v)) {
+                            currentTxt = currentTxt ? `${currentTxt}, ${v}` : v;
+                        }
+                    });
+                    intakeBelongingsInput.value = currentTxt;
+                }
+            };
+        });
 
         if (mode === 'intake') {
-            if (modalTitleEl) modalTitleEl.textContent = 'Phiếu tiếp nhận bé tại quầy';
+            if (modalTitleEl) modalTitleEl.textContent = 'Biên bản tiếp nhận bé và Kiểm tra an toàn (Zero-Claim)';
             if (submitBtnEl) submitBtnEl.textContent = 'Xác nhận tiếp nhận và Bắt đầu ca';
             if (modeInput) modeInput.value = 'intake';
         } else {
-            if (modalTitleEl) modalTitleEl.textContent = 'Cập nhật thông tin tiếp nhận bé';
-            if (submitBtnEl) submitBtnEl.textContent = 'Lưu thông tin';
+            if (modalTitleEl) modalTitleEl.textContent = 'Cập nhật biên bản tiếp nhận an toàn';
+            if (submitBtnEl) submitBtnEl.textContent = 'Lưu biên bản';
             if (modeInput) modeInput.value = 'edit';
         }
 
@@ -2326,31 +2679,95 @@
                 const booking = bookingsData.find(b => b.id === selectedBookingId);
                 if (!booking) return;
 
-                // Lưu thông tin tiếp nhận
-                booking.petWeight = intakeWeightInput.value.trim() || booking.petWeight;
-                booking.petAge = intakeAgeInput.value.trim() || booking.petAge;
-                booking.belongings = intakeBelongingsInput.value.trim() || null;
-                booking.petAlert = intakeAlertInput.value.trim() || null;
+                const intakeWeightInput = document.getElementById('intakePetWeightInput');
+                const staffSelect = document.getElementById('intakeStaffSelect');
+                const intakeBelongingsInput = document.getElementById('intakeBelongingsInput');
+                const woundNoteInput = document.getElementById('intakeExistingWoundNote');
+
+                const checkSkinNorm = document.getElementById('checkSkinNormal');
+                const checkSkinFlea = document.getElementById('checkSkinFleas');
+                const checkSkinFung = document.getElementById('checkSkinFungus');
+                const checkSkinMatt = document.getElementById('checkSkinMatted');
+
+                const checkEyesNorm = document.getElementById('checkEyesEarsNormal');
+                const checkEyesDisc = document.getElementById('checkEyesDischarge');
+                const checkEarsInf = document.getElementById('checkEarsInfection');
+                const checkNoseRun = document.getElementById('checkNoseRunny');
+
+                const checkWoundNo = document.getElementById('checkWoundNone');
+
+                const actualWeightNum = parseFloat(intakeWeightInput ? intakeWeightInput.value : booking.petWeight) || 4.0;
+                const actualWeightStr = actualWeightNum.toFixed(1) + ' kg';
+                const staffVal = (staffSelect && staffSelect.value) ? staffSelect.value : (booking.staff || 'Ngọc Anh');
+
+                // Da lông
+                const skinParts = [];
+                if (checkSkinNorm && checkSkinNorm.checked) skinParts.push('Sạch sẽ');
+                if (checkSkinFlea && checkSkinFlea.checked) skinParts.push('Có ve rận/bọ chét');
+                if (checkSkinFung && checkSkinFung.checked) skinParts.push('Có mảng nấm/viêm đỏ');
+                if (checkSkinMatt && checkSkinMatt.checked) skinParts.push('Lông bết rối nhiều');
+
+                // Mắt tai mũi
+                const eyesParts = [];
+                if (checkEyesNorm && checkEyesNorm.checked) eyesParts.push('Bình thường');
+                if (checkEyesDisc && checkEyesDisc.checked) eyesParts.push('Đỏ mắt/nhiều rỉ ghèn');
+                if (checkEarsInf && checkEarsInf.checked) eyesParts.push('Sáp tai đen/viêm tai');
+                if (checkNoseRun && checkNoseRun.checked) eyesParts.push('Chảy nước mũi/hắt hơi');
+
+                // Vết thương cũ
+                const woundsVal = (checkWoundNo && checkWoundNo.checked)
+                    ? 'Không có vết thương cũ'
+                    : ((woundNoteInput && woundNoteInput.value.trim()) ? woundNoteInput.value.trim() : 'Có vết trầy xước/sẹo cũ từ trước');
+
+                // Tính khí
+                const selectedTempRadio = document.querySelector('input[name="intakeTemperamentRadio"]:checked');
+                const selectedTemp = selectedTempRadio ? selectedTempRadio.value : 'Ngoan hiền';
+
+                // Đồ dùng gửi lại
+                const belongingsVal = (intakeBelongingsInput && intakeBelongingsInput.value.trim()) ? intakeBelongingsInput.value.trim() : 'Không có';
+
+                // Đánh giá cân nặng
+                const origNum = parseFloat(booking.petWeight) || 4.0;
+                const diff = actualWeightNum - origNum;
+                const weightEval = Math.abs(diff) >= 1.0 ? `Lệch khung cân (${diff > 0 ? '+' : ''}${diff.toFixed(1)} kg)` : 'Đúng khung giá đăng ký';
+
+                const timeNow = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+                // Lưu hồ sơ Intake Safety
+                booking.intakeSafety = {
+                    actualWeight: actualWeightStr,
+                    weightEval: weightEval,
+                    skinCoat: skinParts.join(', ') || 'Sạch sẽ',
+                    eyesEarsNose: eyesParts.join(', ') || 'Bình thường',
+                    wounds: woundsVal,
+                    temperament: selectedTemp,
+                    belongings: belongingsVal,
+                    proofImages: [...intakeProofImagesTemp],
+                    intakeStaff: staffVal,
+                    intakeTime: timeNow
+                };
+
+                booking.petWeight = actualWeightStr;
+                booking.staff = staffVal;
+                booking.belongings = belongingsVal;
 
                 const modeInput = document.getElementById('intakeModalMode');
                 const mode = modeInput ? modeInput.value : 'edit';
 
                 if (mode === 'intake') {
-                    // Chế độ Tiếp nhận bé: chuyển sang in_progress và ghi mốc timeline
-                    const timeNow = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                    // Chuyển trạng thái sang in_progress
                     booking.status = 'in_progress';
                     booking.alertType = null;
-                    if (!booking.staff) booking.staff = 'Ngọc Anh';
 
                     booking.timeline = booking.timeline || [];
                     if (booking.timeline.length > 0) booking.timeline[0].done = true;
                     booking.timeline.push({
                         time: timeNow,
-                        title: 'Tiếp nhận bé tại quầy',
-                        desc: `Đã kiểm tra cân nặng (${booking.petWeight}), đồ gửi lại: ${booking.belongings || 'Không có'}. Bàn giao bé cho KTV ${booking.staff} bắt đầu liệu trình.`,
+                        title: 'Tiếp nhận bé và Kiểm tra an toàn (Zero-Claim)',
+                        desc: `Cân nặng: ${actualWeightStr} (${weightEval}). Da lông: ${booking.intakeSafety.skinCoat}. Vết thương: ${woundsVal}. Tính khí: ${selectedTemp}. Đồ gửi lại: ${belongingsVal}. KTV phụ trách: ${staffVal}.`,
                         done: true,
-                        staff: booking.staff,
-                        images: []
+                        staff: staffVal,
+                        images: [...intakeProofImagesTemp]
                     });
 
                     // Tự động nạp các bước quy trình chuẩn từ danh mục dịch vụ vào Care-Log
@@ -2362,7 +2779,7 @@
                                 title: stepName,
                                 desc: `Bước ${idx + 1} trong quy trình ${serviceEntry.name}`,
                                 done: false,
-                                staff: booking.staff,
+                                staff: staffVal,
                                 images: []
                             });
                         });
@@ -2374,12 +2791,14 @@
                     renderBookingsTable();
                     renderUpcomingBar();
                     updateKPIs();
+                    showToast(`Đã hoàn tất tiếp nhận bé ${booking.petName} và bắt đầu ca dịch vụ!`);
                 } else {
-                    // Chế độ Sửa thông tin: chỉ lưu, không đổi trạng thái
+                    // Chế độ Sửa thông tin: chỉ lưu hồ sơ an toàn
                     persistData();
                     closeIntakeModal();
                     renderBookingDetail(booking.id);
                     renderBookingsTable();
+                    showToast(`Đã cập nhật biên bản tiếp nhận an toàn bé ${booking.petName}!`);
                 }
             });
         }
@@ -2638,6 +3057,15 @@
             btnAllergy.addEventListener('click', () => {
                 isAllergyFilterActive = !isAllergyFilterActive;
                 btnAllergy.classList.toggle('active', isAllergyFilterActive);
+                renderBookingsTable();
+            });
+        }
+
+        const btnSla = document.getElementById('btnToggleSlaOverdue');
+        if (btnSla) {
+            btnSla.addEventListener('click', () => {
+                isSlaFilterActive = !isSlaFilterActive;
+                btnSla.classList.toggle('active', isSlaFilterActive);
                 renderBookingsTable();
             });
         }

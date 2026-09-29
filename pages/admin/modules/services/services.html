@@ -96,6 +96,7 @@
 
                     <button type="button" class="admin-btn-filter-toggle" id="btnToggleUpcomingOnly">Lịch hẹn sắp tới</button>
                     <button type="button" class="admin-btn-filter-toggle" id="btnToggleAllergyOnly">Pet có lưu ý</button>
+                    <button type="button" class="admin-btn-filter-toggle" id="btnToggleSlaOverdue">Quá hạn SLA và Trễ ca</button>
                 </div>
             </div>
 
@@ -229,6 +230,60 @@
                         <div class="info-pair" style="margin-top: 10px;">
                             <span class="info-label">Đồ dùng và Phụ kiện gửi lại quầy:</span>
                             <span class="info-value" id="detailBelongingsText" style="font-weight: 400;">Không có</span>
+                        </div>
+                    </div>
+
+                    <!-- KHỐI 2B: BIÊN BẢN TIẾP NHẬN AN TOÀN (ZERO-CLAIM INTAKE ASSESSMENT) -->
+                    <div class="detail-info-group" id="detailIntakeSafetySection">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div class="detail-section-title" style="margin-bottom: 0;">Biên bản tiếp nhận an toàn (Zero-Claim)</div>
+                            <button type="button" class="btn-text-action" id="btnEditIntakeSafety">Sửa biên bản tiếp nhận</button>
+                        </div>
+                        <div id="detailIntakeEmptyNotice" style="font-size: 13px; color: var(--text-muted); padding: 6px 0; display: none;">
+                            Ca dịch vụ chưa thực hiện tiếp nhận và kiểm tra an toàn tại quầy.
+                        </div>
+                        <div id="detailIntakeContentContainer">
+                            <div class="info-grid-2col">
+                                <div class="info-pair">
+                                    <span class="info-label">Cân nặng thực tế:</span>
+                                    <span class="info-value" id="detailIntakeActualWeight">4.2 kg</span>
+                                </div>
+                                <div class="info-pair">
+                                    <span class="info-label">Đánh giá cân nặng:</span>
+                                    <span class="info-value" id="detailIntakeWeightEval">Đúng khung giá đăng ký</span>
+                                </div>
+                                <div class="info-pair">
+                                    <span class="info-label">Tình trạng Da và Lông:</span>
+                                    <span class="info-value" id="detailIntakeSkinCoat">Sạch sẽ, không ve rận</span>
+                                </div>
+                                <div class="info-pair">
+                                    <span class="info-label">Mắt, Mũi và Tai:</span>
+                                    <span class="info-value" id="detailIntakeEyesEarsNose">Bình thường</span>
+                                </div>
+                                <div class="info-pair">
+                                    <span class="info-label">Vết xước / Sẹo có sẵn:</span>
+                                    <span class="info-value" id="detailIntakeWounds">Không có vết thương cũ</span>
+                                </div>
+                                <div class="info-pair">
+                                    <span class="info-label">Tâm lý và Tính khí:</span>
+                                    <span class="info-value" id="detailIntakeTemperament">Ngoan hiền</span>
+                                </div>
+                                <div class="info-pair">
+                                    <span class="info-label">KTV đón bé:</span>
+                                    <span class="info-value" id="detailIntakeStaff">Ngọc Anh (13:50)</span>
+                                </div>
+                                <div class="info-pair">
+                                    <span class="info-label">Tư trang gửi lại:</span>
+                                    <span class="info-value" id="detailIntakeBelongings">01 Dây dắt đỏ</span>
+                                </div>
+                            </div>
+                            <!-- Khung ảnh bằng chứng tiếp nhận ngoại quan ban đầu -->
+                            <div style="margin-top: 10px;">
+                                <div class="info-label" style="margin-bottom: 6px;">Ảnh bằng chứng tiếp nhận ban đầu (Đối chứng Zero-Claim):</div>
+                                <div class="intake-proof-grid" id="detailIntakeProofGrid">
+                                    <!-- Nạp động ảnh thumbnail -->
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -861,40 +916,158 @@
     </div>
 
     <!-- ====================================================================
-         MODAL 8: PHIẾU TIẾP NHẬN / SỬA THÔNG TIN TIẾP NHẬN TẠI QUẦY
+         MODAL 8: BIÊN BẢN TIẾP NHẬN BÉ VÀ KIỂM TRA AN TOÀN TẠI QUẦY (ZERO-CLAIM)
          ==================================================================== -->
     <input type="hidden" id="intakeModalMode" value="edit">
     <div class="admin-modal-overlay" id="modalEditIntakeInfo">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card" style="width: 640px; max-width: 95vw;">
             <div class="modal-header-clean">
-                <div class="modal-title-clean" id="intakeModalTitle">Cập nhật thông tin tiếp nhận bé</div>
+                <div>
+                    <div class="modal-title-clean" id="intakeModalTitle">Biên bản tiếp nhận bé và Kiểm tra an toàn</div>
+                    <div id="intakePetSummary" style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
+                        Mã ca: BKG-1001 | Bé: Miu Con | Chủ nuôi: Lê Lệ Quyên
+                    </div>
+                </div>
                 <button type="button" class="modal-btn-close-text" id="btnCloseEditIntakeInfo">Đóng</button>
             </div>
             <form id="formEditIntakeInfo" class="modal-body-clean">
+                <!-- KHỐI 1: CÂN NẶNG VÀ KỸ THUẬT VIÊN TIẾP NHẬN -->
                 <div class="form-row-2col">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Cân nặng đo tại quầy (kg):</label>
-                        <input type="text" class="admin-input" id="intakePetWeightInput" placeholder="VD: 4.5 kg" required>
+                        <label class="form-label-clean">
+                            Cân nặng thực tế tại quầy (kg):
+                            <span id="intakeOriginalWeightLabel" style="font-size: 11.5px; color: var(--text-muted); font-weight: normal; margin-left: 6px;">(Đăng ký: 4.2 kg)</span>
+                        </label>
+                        <input type="number" step="0.1" class="admin-input" id="intakePetWeightInput" placeholder="VD: 4.5" required>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Tuổi của bé:</label>
-                        <input type="text" class="admin-input" id="intakePetAgeInput" placeholder="VD: 2 tuổi">
+                        <label class="form-label-clean">Kỹ thuật viên tiếp nhận ca:</label>
+                        <select class="admin-select" id="intakeStaffSelect" required>
+                            <option value="">-- Chọn KTV tiếp nhận --</option>
+                            <option value="Ngọc Anh">Ngọc Anh</option>
+                            <option value="Thu Thảo">Thu Thảo</option>
+                            <option value="Hoàng Nam">Hoàng Nam</option>
+                            <option value="Hữu Phúc">Hữu Phúc</option>
+                            <option value="Minh Tú">Minh Tú</option>
+                            <option value="Bảo Châu">Bảo Châu</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="form-group-item">
-                    <label class="form-label-clean">Đồ dùng và Phụ kiện gửi lại quầy:</label>
-                    <textarea class="admin-input" id="intakeBelongingsInput" style="height: 65px; padding: 8px 14px;" placeholder="Ví dụ: 01 Dây dắt đỏ, 01 Chuồng vận chuyển nhựa, 01 Túi hạt cá hồi..."></textarea>
+                <!-- CẢNH BÁO LỆCH KHUNG CÂN NẶNG (THUẦN CHỮ HỔ PHÁCH/ĐỎ, KHÔNG VIỀN KHUNG DÀY) -->
+                <div id="intakeWeightAlertBox" class="intake-weight-alert" style="display: none;">
+                    <!-- Nội dung cảnh báo chênh lệch khung giá cân nặng -->
                 </div>
 
+                <!-- KHỐI 2: CHECKLIST NGOẠI QUAN 4 VÙNG AN TOÀN (ZERO-CLAIM INSPECTION) -->
                 <div class="form-group-item">
-                    <label class="form-label-clean">Ghi chú hiện trạng sức khỏe / an toàn:</label>
-                    <textarea class="admin-input" id="intakePetAlertInput" style="height: 65px; padding: 8px 14px;" placeholder="Ví dụ: Bé nhát nước, tai có mảng viêm đỏ..."></textarea>
+                    <label class="form-label-clean">Kiểm tra ngoại quan an toàn (Biên bản đối chứng Zero-Claim):</label>
+                    <div class="intake-checklist-grid">
+                        <!-- Vùng 1: Da và Lông -->
+                        <div class="intake-check-section">
+                            <div class="intake-section-subhead">1. Da và Lông</div>
+                            <div class="intake-check-options">
+                                <label class="intake-check-item">
+                                    <input type="checkbox" id="checkSkinNormal" checked> Da lông sạch sẽ
+                                </label>
+                                <label class="intake-check-item">
+                                    <input type="checkbox" id="checkSkinFleas"> Có ve rận / bọ chét
+                                </label>
+                                <label class="intake-check-item">
+                                    <input type="checkbox" id="checkSkinFungus"> Có mảng nấm / viêm đỏ
+                                </label>
+                                <label class="intake-check-item">
+                                    <input type="checkbox" id="checkSkinMatted"> Lông bết rối nhiều
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Vùng 2: Mắt, Mũi và Tai -->
+                        <div class="intake-check-section">
+                            <div class="intake-section-subhead">2. Mắt, Mũi và Tai</div>
+                            <div class="intake-check-options">
+                                <label class="intake-check-item">
+                                    <input type="checkbox" id="checkEyesEarsNormal" checked> Mắt tai bình thường
+                                </label>
+                                <label class="intake-check-item">
+                                    <input type="checkbox" id="checkEyesDischarge"> Đỏ mắt / nhiều rỉ ghèn
+                                </label>
+                                <label class="intake-check-item">
+                                    <input type="checkbox" id="checkEarsInfection"> Sáp tai đen / viêm tai
+                                </label>
+                                <label class="intake-check-item">
+                                    <input type="checkbox" id="checkNoseRunny"> Chảy nước mũi / hắt hơi
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Vùng 3: Vết trầy xước / Sẹo có sẵn -->
+                        <div class="intake-check-section">
+                            <div class="intake-section-subhead">3. Vết trầy xước / Sẹo có sẵn</div>
+                            <div class="intake-check-options">
+                                <label class="intake-check-item">
+                                    <input type="checkbox" id="checkWoundNone" checked> Không có vết thương cũ
+                                </label>
+                                <label class="intake-check-item">
+                                    <input type="checkbox" id="checkWoundExisting"> Có vết trầy xước / sẹo cũ
+                                </label>
+                            </div>
+                            <input type="text" class="admin-input" id="intakeExistingWoundNote" placeholder="Ghi chú vị trí vết xước có sẵn (nếu có)..." style="margin-top: 6px; font-size: 12px; height: 32px;">
+                        </div>
+
+                        <!-- Vùng 4: Tâm lý và Tính khí -->
+                        <div class="intake-check-section">
+                            <div class="intake-section-subhead">4. Tâm lý và Tính khí</div>
+                            <div class="intake-check-options">
+                                <label class="intake-check-item">
+                                    <input type="radio" name="intakeTemperamentRadio" value="Ngoan hiền" checked> Ngoan hiền / Thân thiện
+                                </label>
+                                <label class="intake-check-item">
+                                    <input type="radio" name="intakeTemperamentRadio" value="Nhút nhát"> Nhút nhát / Sợ nước và máy sấy
+                                </label>
+                                <label class="intake-check-item">
+                                    <input type="radio" name="intakeTemperamentRadio" value="Dữ dằn"> Bồn chồn / Cần rọ mõm an toàn
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KHỐI 3: TƯ TRANG VÀ ĐỒ DÙNG GỬI LẠI QUẦY -->
+                <div class="form-group-item">
+                    <label class="form-label-clean">Đồ dùng và Phụ kiện gửi lại quầy:</label>
+                    <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 6px;">
+                        <label class="intake-check-item">
+                            <input type="checkbox" class="check-belonging-item" value="Dây dắt"> Dây dắt
+                        </label>
+                        <label class="intake-check-item">
+                            <input type="checkbox" class="check-belonging-item" value="Lồng / Túi vận chuyển"> Lồng / Túi xách
+                        </label>
+                        <label class="intake-check-item">
+                            <input type="checkbox" class="check-belonging-item" value="Quần áo / Yếm"> Quần áo / Yếm
+                        </label>
+                        <label class="intake-check-item">
+                            <input type="checkbox" class="check-belonging-item" value="Thức ăn / Thuốc riêng"> Thức ăn / Thuốc riêng
+                        </label>
+                    </div>
+                    <textarea class="admin-input" id="intakeBelongingsInput" style="height: 52px; padding: 6px 12px; font-size: 12.5px;" placeholder="Mô tả cụ thể (ví dụ: 01 Dây dắt đỏ bản to, 01 Chuồng nhựa màu xanh)..."></textarea>
+                </div>
+
+                <!-- KHỐI 4: ẢNH BẰNG CHỨNG NGOẠI QUAN BAN ĐẦU (ZERO-CLAIM PROOF) -->
+                <div class="form-group-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label class="form-label-clean" style="margin-bottom: 0;">Ảnh chụp hiện trạng tiếp nhận lúc đón bé:</label>
+                        <button type="button" class="btn-text-action" id="btnAddProofPhotoBtn">+ Tải ảnh bằng chứng</button>
+                        <input type="file" id="intakeProofFileInput" accept="image/*" multiple style="display: none;">
+                    </div>
+                    <div class="intake-proof-preview-container" id="intakeProofPreviewList">
+                        <!-- Danh sách ảnh preview trước ca -->
+                    </div>
                 </div>
 
                 <div class="modal-footer-clean">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelEditIntakeInfo">Hủy bỏ</button>
-                    <button type="submit" class="admin-btn admin-btn-primary" id="intakeModalSubmitBtn">Lưu thông tin</button>
+                    <button type="submit" class="admin-btn admin-btn-primary" id="intakeModalSubmitBtn">Xác nhận tiếp nhận và Bắt đầu ca</button>
                 </div>
             </form>
         </div>
