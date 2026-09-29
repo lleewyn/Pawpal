@@ -675,7 +675,9 @@
     let reviewSearchTerm = '';
     let reviewFilterStar = 'ALL';
     let reviewFilterCategory = 'ALL';
+    let reviewFilterStaff = 'ALL';
     let reviewFilterStatus = 'ALL';
+    let currentReplyingReview = null;
 
     // Lưu dữ liệu vào SessionStorage
     function persistData() {
@@ -1590,7 +1592,7 @@
         if (filtered.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="10" class="empty-state-cell">
+                    <td colspan="11" class="empty-state-cell">
                         Chưa có dịch vụ nào phù hợp với điều kiện tìm kiếm.
                     </td>
                 </tr>
@@ -1613,6 +1615,14 @@
                 <td><span style="font-size: 13px;">${item.duration}</span></td>
                 <td><span style="font-weight: 700; color: var(--text-heading);">${item.priceFrom} đ</span></td>
                 <td>
+                    <div style="display: flex; flex-direction: column; gap: 3px;">
+                        <button type="button" class="btn-view-sop-pill btn-open-sop-details" data-service-code="${item.code}" title="Bấm để xem chi tiết các bước chuẩn">
+                            ${(item.steps || []).length} bước SOP
+                        </button>
+                        <span style="font-size: 11.5px; color: var(--text-muted);">Hoa hồng: ${item.commission || 15}%</span>
+                    </div>
+                </td>
+                <td>
                     <a href="javascript:void(0)" class="catalog-rating-link btn-view-service-reviews" data-service-name="${item.name}" data-service-group="${item.group}" title="Bấm để xem tất cả đánh giá của ${item.name}">
                         <span class="star-rating-pill">★ ${item.rating}</span> <span class="reviews-count-text">(${item.reviews})</span>
                     </a>
@@ -1621,7 +1631,10 @@
                     ${item.status === 'Đang phục vụ' ? '<span class="admin-badge badge-success">Đang phục vụ</span>' : '<span class="admin-badge badge-warning">Tạm ẩn</span>'}
                 </td>
                 <td style="text-align: center;">
-                    <button type="button" class="btn-action-trigger btn-edit-service" data-service-code="${item.code}">•••</button>
+                    <div style="display: flex; gap: 4px; justify-content: center;">
+                        <button type="button" class="btn-table-action-sm btn-edit-service" data-service-code="${item.code}">Sửa</button>
+                        <button type="button" class="btn-table-action-sm btn-open-sop-details" data-service-code="${item.code}">SOP</button>
+                    </div>
                 </td>
             </tr>
         `).join('');
@@ -1630,6 +1643,14 @@
             btn.addEventListener('click', () => {
                 const code = btn.getAttribute('data-service-code');
                 openEditServiceModal(code);
+            });
+        });
+
+        tbody.querySelectorAll('.btn-open-sop-details').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const code = btn.getAttribute('data-service-code');
+                openSopDetailsModal(code);
             });
         });
 
@@ -1704,6 +1725,7 @@
             }
 
             if (reviewFilterCategory !== 'ALL' && r.category !== reviewFilterCategory) return false;
+            if (reviewFilterStaff !== 'ALL' && r.staff !== reviewFilterStaff) return false;
             if (reviewFilterStatus !== 'ALL' && r.status !== reviewFilterStatus) return false;
 
             return true;
@@ -1723,6 +1745,13 @@
         tbody.innerHTML = filtered.map(item => {
             const starsText = '★'.repeat(item.rating) + '☆'.repeat(5 - item.rating);
             const alertClass = item.rating <= 3 ? 'row-alert-red' : '';
+
+            let statusBadge = '<span class="admin-badge badge-warning">Chờ phản hồi</span>';
+            if (item.status === 'replied') {
+                statusBadge = '<span class="admin-badge badge-success">Đã phản hồi</span>';
+            } else if (item.status === 'escalated') {
+                statusBadge = '<span class="admin-badge escalated-badge">Đã chuyển CSKH</span>';
+            }
 
             return `
                 <tr class="${alertClass}" data-review-id="${item.id}">
@@ -1755,11 +1784,11 @@
                     </td>
                     <td><span style="font-weight: 500;">${item.staff || 'PawPal Team'}</span></td>
                     <td>
-                        ${item.status === 'replied' ? '<span class="admin-badge badge-success">Đã phản hồi</span>' : '<span class="admin-badge badge-warning">Chờ phản hồi</span>'}
+                        ${statusBadge}
                     </td>
                     <td style="text-align: center;">
                         <button type="button" class="btn-reply-review-table btn-open-reply-modal" data-review-id="${item.id}">
-                            ${item.status === 'replied' ? 'Sửa bài' : 'Phản hồi'}
+                            ${item.status === 'replied' ? 'Sửa bài' : (item.status === 'escalated' ? 'Chi tiết' : 'Phản hồi')}
                         </button>
                     </td>
                 </tr>
@@ -1785,12 +1814,38 @@
         const modal = document.getElementById('modalReplyReview');
         const review = reviewsData.find(r => r.id === reviewId);
         if (!review || !modal) return;
+        currentReplyingReview = review;
 
         document.getElementById('replyReviewIdHidden').value = review.id;
         document.getElementById('reviewModalHeaderMeta').textContent = `${review.customerName} • ${review.bookingId} • ${'★'.repeat(review.rating)} (${review.rating}/5)`;
         document.getElementById('reviewModalCustomerComment').textContent = `"${review.comment}"`;
+        
+        const staffMetaEl = document.getElementById('reviewModalStaffMeta');
+        if (staffMetaEl) {
+            staffMetaEl.textContent = `KTV phụ trách: ${review.staff || 'Chưa phân công'} | Gói dịch vụ: ${review.serviceName}`;
+        }
+
+        const replyPresetSelect = document.getElementById('replyPresetSelect');
+        if (replyPresetSelect) replyPresetSelect.value = 'CUSTOM';
+
         document.getElementById('replyContentText').value = review.replyText || '';
         document.getElementById('replyVoucherSelect').value = 'NONE';
+
+        const btnEscalate = document.getElementById('btnEscalateToComplaint');
+        if (btnEscalate) {
+            if (review.rating <= 3) {
+                btnEscalate.style.display = 'inline-block';
+                if (review.status === 'escalated') {
+                    btnEscalate.textContent = 'Đã chuyển CSKH';
+                    btnEscalate.disabled = true;
+                } else {
+                    btnEscalate.textContent = 'Chuyển thành khiếu nại CSKH';
+                    btnEscalate.disabled = false;
+                }
+            } else {
+                btnEscalate.style.display = 'none';
+            }
+        }
 
         modal.classList.add('active');
     }
@@ -2215,6 +2270,51 @@
         const formService = document.getElementById('formServiceItem');
         const btnAddStep = document.getElementById('btnAddStepToService');
         const inputNewStep = document.getElementById('newServiceStepInput');
+        const sopPresetSelect = document.getElementById('serviceSopPresetSelect');
+
+        const sopTemplates = {
+            SOP_SPA_FULL: [
+                'Khám ngoại quan da lông và tư vấn kiểu chăm sóc',
+                'Cắt mài móng chân, vệ sinh tai mắt và cạo lông đệm bàn chân',
+                'Vắt tuyến hôi và tắm nước ấm xà bông 1 khử mùi',
+                'Tắm bọt thảo dược y tế trị liệu và ủ xả dưỡng lông',
+                'Sấy tạo phồng chân lông và chải tơi lông chuyên sâu',
+                'Tỉa phom vệ sinh bụng hậu môn và kiểm tra hoàn thiện',
+                'Xịt tinh dầu dưỡng bóng lông và thắt nơ xinh'
+            ],
+            SOP_GROOMING_STYLE: [
+                'Tư vấn phom dáng theo sở thích chủ nuôi và kiểm tra độ bết rối',
+                'Tắm vệ sinh chuyên sâu và sấy phồng chân lông tạo độ tơi',
+                'Cắt định hình phom thân và 4 chân cân đối',
+                'Điêu khắc tỉa chi tiết khuôn mặt, tai và chóp đuôi',
+                'Kiểm tra cân đối toàn thân và khử trùng dụng cụ kéo',
+                'Chụp ảnh thành phẩm xinh xắn và xuất phiếu bàn giao'
+            ],
+            SOP_PET_HOTEL: [
+                'Check-in phòng riêng, kiểm tra thể trạng và kết nối camera IP',
+                'Khẩu phần ăn sáng dinh dưỡng và bổ sung nước lọc tinh khiết',
+                'Thả chơi sân cỏ tương tác vận động và giao lưu',
+                'Dọn vệ sinh phòng chuồng, thay khay cát và khử khuẩn UV',
+                'Khẩu phần ăn tối, kiểm tra thân nhiệt và chải lông massage',
+                'Gửi clip 4K và nhật ký sinh hoạt của bé cho chủ nuôi'
+            ],
+            SOP_PET_TAXI: [
+                'Khảo sát lộ trình di chuyển và khử khuẩn lồng chuyên dụng',
+                'Đón bé tận nhà, kiểm tra tình trạng sức khỏe và đối chiếu phụ kiện',
+                'Di chuyển cabin máy lạnh êm ái, theo dõi tâm lý bé suốt tuyến',
+                'Bàn giao bé an toàn tại điểm đến cho chủ nuôi hoặc bác sĩ'
+            ]
+        };
+
+        if (sopPresetSelect) {
+            sopPresetSelect.addEventListener('change', (e) => {
+                const key = e.target.value;
+                if (sopTemplates[key]) {
+                    currentEditingServiceSteps = [...sopTemplates[key]];
+                    renderServiceStepsEditor();
+                }
+            });
+        }
 
         if (btnAddStep) {
             btnAddStep.addEventListener('click', () => {
@@ -2240,6 +2340,9 @@
                 document.getElementById('serviceFormModalTitle').textContent = 'Thêm dịch vụ mới';
                 document.getElementById('editServiceCodeHidden').value = '';
                 formService.reset();
+                if (sopPresetSelect) sopPresetSelect.value = 'CUSTOM';
+                const commissionInput = document.getElementById('formServiceCommission');
+                if (commissionInput) commissionInput.value = 15;
                 currentEditingServiceSteps = [
                     'Tiếp nhận bé và kiểm tra da lông sơ bộ',
                     'Thực hiện liệu trình dịch vụ chuyên nghiệp',
@@ -2269,6 +2372,7 @@
                 const desc = document.getElementById('formServiceDesc').value;
                 const staffLevel = document.getElementById('formServiceStaffLevel').value;
                 const status = document.getElementById('formServiceStatus').value;
+                const commission = parseInt(document.getElementById('formServiceCommission')?.value || '15');
                 const pUnder5 = document.getElementById('formPriceUnder5').value || '150.000';
                 const p5To10 = document.getElementById('formPrice5To10').value || '200.000';
                 const p10To20 = document.getElementById('formPrice10To20').value || '250.000';
@@ -2284,6 +2388,7 @@
                         existing.desc = desc;
                         existing.staffLevel = staffLevel;
                         existing.status = status;
+                        existing.commission = commission;
                         existing.priceFrom = pUnder5;
                         existing.prices = { under5: pUnder5, to10: p5To10, to20: p10To20, over20: pOver20 };
                         existing.steps = [...currentEditingServiceSteps];
@@ -2299,6 +2404,7 @@
                         duration: duration,
                         rating: 5.0,
                         reviews: 1,
+                        commission: commission,
                         priceFrom: pUnder5,
                         prices: { under5: pUnder5, to10: p5To10, to20: p10To20, over20: pOver20 },
                         desc: desc,
@@ -2479,6 +2585,60 @@
 
         if (btnCloseReply) btnCloseReply.addEventListener('click', closeReplyModal);
         if (btnCancelReply) btnCancelReply.addEventListener('click', closeReplyModal);
+
+        const replyPresetSelect = document.getElementById('replyPresetSelect');
+        const replyContentText = document.getElementById('replyContentText');
+        const btnEscalate = document.getElementById('btnEscalateToComplaint');
+
+        if (replyPresetSelect && replyContentText) {
+            replyPresetSelect.addEventListener('change', (e) => {
+                const key = e.target.value;
+                if (!currentReplyingReview) return;
+                const r = currentReplyingReview;
+                if (key === 'PRESET_THANK_5') {
+                    replyContentText.value = `Dạ PawPal xin chân thành cảm ơn Anh/Chị ${r.customerName} đã tin tưởng gửi gắm bé ${r.petName}! Toàn thể đội ngũ KTV và PawPal rất hạnh phúc khi nhận được sự hài lòng của gia đình. Chúc bé luôn xinh đẹp, khỏe mạnh và hẹn gặp lại Anh/Chị ở ca chăm sóc tiếp theo ạ!`;
+                } else if (key === 'PRESET_ACK_4') {
+                    replyContentText.value = `Dạ PawPal cảm ơn Anh/Chị ${r.customerName} đã dành thời gian đánh giá trải nghiệm của bé ${r.petName}. PawPal xin ghi nhận góp ý quý giá này để không ngừng cải thiện tay nghề và chất lượng dịch vụ ngày một hoàn thiện, chu đáo hơn nữa ạ!`;
+                } else if (key === 'PRESET_APOLOGY_LOW') {
+                    replyContentText.value = `Dạ PawPal thành thật xin lỗi Anh/Chị ${r.customerName} vì trải nghiệm chưa trọn vẹn của bé ${r.petName} trong ca dịch vụ vừa qua. Quản lý cơ sở mong muốn được liên hệ trực tiếp qua số ${r.phone} để lắng nghe chi tiết và có phương án bảo hành, chăm sóc lại miễn phí chu đáo nhất cho bé ạ!`;
+                } else if (key === 'PRESET_EXPLAIN') {
+                    replyContentText.value = `Dạ PawPal xin chào Anh/Chị ${r.customerName}! PawPal xin phép được chia sẻ thêm về quy trình kỹ thuật chuyên môn của ca dịch vụ bé ${r.petName} để gia đình an tâm. Đội ngũ chuyên gia PawPal luôn sẵn sàng giải đáp và đồng hành cùng sức khỏe, sắc đẹp của bé yêu ạ!`;
+                }
+            });
+        }
+
+        if (btnEscalate) {
+            btnEscalate.addEventListener('click', () => {
+                const reviewId = document.getElementById('replyReviewIdHidden').value;
+                const review = reviewsData.find(r => r.id === reviewId);
+                if (!review) return;
+
+                if (confirm(`Bạn có chắc chắn muốn chuyển phản ánh của khách hàng "${review.customerName}" (${review.rating} sao) thành Phiếu Khiếu Nại khẩn cấp gửi sang bộ phận CSKH xử lý đền bù?`)) {
+                    review.status = 'escalated';
+
+                    // Thêm mốc Timeline vào ca dịch vụ tương ứng
+                    const targetBooking = bookingsData.find(b => b.id === review.bookingId);
+                    if (targetBooking) {
+                        targetBooking.alertType = 'urgent';
+                        targetBooking.timeline = targetBooking.timeline || [];
+                        targetBooking.timeline.push({
+                            time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+                            title: 'Chuyển đánh giá thành Khiếu nại CSKH',
+                            desc: `Khách hàng phản ánh ${review.rating} sao: "${review.comment}". Đã chuyển bộ phận CSKH xử lý đền bù.`,
+                            done: false,
+                            staff: 'Quản lý Dịch vụ'
+                        });
+                    }
+
+                    persistData();
+                    closeReplyModal();
+                    renderReviewsTable();
+                    renderBookingsTable();
+                    updateReviewKPIs();
+                    showToast(`Đã chuyển phản ánh của ca ${review.bookingId} sang bộ phận CSKH thành công!`);
+                }
+            });
+        }
 
         if (formReply) {
             formReply.addEventListener('submit', (e) => {
@@ -3217,6 +3377,11 @@
             document.getElementById('formPriceOver20').value = service.prices.over20 || '';
         }
 
+        const commissionInput = document.getElementById('formServiceCommission');
+        if (commissionInput) commissionInput.value = service.commission || 15;
+        const sopPresetSelect = document.getElementById('serviceSopPresetSelect');
+        if (sopPresetSelect) sopPresetSelect.value = 'CUSTOM';
+
         // Khởi tạo các bước chuẩn vào trình chỉnh sửa
         currentEditingServiceSteps = [...(service.steps || [
             'Tiếp nhận bé và kiểm tra da lông sơ bộ',
@@ -3227,6 +3392,66 @@
         renderServiceStepsEditor();
 
         modal.classList.add('active');
+    }
+
+    // ==========================================================================
+    // 7B. XEM CHI TIẾT QUY TRÌNH CHUẨN SOP (MODAL 11)
+    // ==========================================================================
+    function openSopDetailsModal(serviceCode) {
+        const modal = document.getElementById('modalViewSopDetails');
+        const service = servicesData.find(s => s.code === serviceCode);
+        if (!service || !modal) return;
+
+        const titleEl = document.getElementById('sopViewerTitle');
+        const metaEl = document.getElementById('sopViewerMeta');
+        const listEl = document.getElementById('sopViewerStepsList');
+        const btnEdit = document.getElementById('btnEditSopFromViewer');
+
+        if (titleEl) titleEl.textContent = `Quy trình chuẩn: ${service.name}`;
+        if (metaEl) {
+            metaEl.textContent = `Mã gói: ${service.code} | Nhóm: ${service.categoryName} | Thời lượng: ${service.duration} | Hoa hồng KTV: ${service.commission || 15}% | Cấp độ: ${service.staffLevel || 'Groomer'}`;
+        }
+
+        const steps = (service.steps && service.steps.length > 0) ? service.steps : [
+            'Tiếp nhận bé và kiểm tra da lông sơ bộ',
+            'Thực hiện liệu trình dịch vụ chuyên nghiệp',
+            'Vệ sinh tai móng và khử khuẩn',
+            'Chụp ảnh hoàn tất và bàn giao cho chủ'
+        ];
+
+        if (listEl) {
+            listEl.innerHTML = steps.map((step, idx) => `
+                <div class="sop-flow-step-item">
+                    <span class="sop-flow-step-badge">Bước ${idx + 1}</span>
+                    <div class="sop-flow-step-content">
+                        <div class="sop-flow-step-title">${step}</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                            Bắt buộc KTV kiểm tra đạt chuẩn và cập nhật vào Care-Log ca dịch vụ
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        if (btnEdit) {
+            btnEdit.onclick = () => {
+                modal.classList.remove('active');
+                openEditServiceModal(serviceCode);
+            };
+        }
+
+        modal.classList.add('active');
+    }
+
+    function setupSopDetailsModal() {
+        const modal = document.getElementById('modalViewSopDetails');
+        const btnClose = document.getElementById('btnCloseSopViewer');
+        const btnDismiss = document.getElementById('btnDismissSopViewer');
+
+        const closeModal = () => { if (modal) modal.classList.remove('active'); };
+        if (btnClose) btnClose.addEventListener('click', closeModal);
+        if (btnDismiss) btnDismiss.addEventListener('click', closeModal);
+        if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
     }
 
     // ==========================================================================
@@ -3454,6 +3679,14 @@
             });
         }
 
+        const reviewFilterStaffSelect = document.getElementById('reviewFilterStaff');
+        if (reviewFilterStaffSelect) {
+            reviewFilterStaffSelect.addEventListener('change', (e) => {
+                reviewFilterStaff = e.target.value;
+                renderReviewsTable();
+            });
+        }
+
         // Click KPI Card Đánh giá
         document.querySelectorAll('[data-review-filter]').forEach(card => {
             card.addEventListener('click', () => {
@@ -3500,6 +3733,7 @@
         setupModals();
         setupChangeStaffModal();
         setupCompleteBookingModal();
+        setupSopDetailsModal();
         setupActionDropdownEvents();
     }
 

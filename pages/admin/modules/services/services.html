@@ -418,9 +418,10 @@
                             <th>Dành cho</th>
                             <th>Thời lượng</th>
                             <th>Giá từ</th>
+                            <th>Quy trình SOP</th>
                             <th>Đánh giá</th>
                             <th>Trạng thái</th>
-                            <th style="text-align: center; width: 60px;">Thao tác</th>
+                            <th style="text-align: center; width: 110px;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="servicesCatalogTableBody">
@@ -487,11 +488,22 @@
                         </select>
                     </div>
                     <div class="filter-dropdown-group">
+                        <label class="filter-label">KTV phụ trách:</label>
+                        <select class="admin-select" id="reviewFilterStaff">
+                            <option value="ALL">Tất cả KTV</option>
+                            <option value="Ngọc Anh">Ngọc Anh</option>
+                            <option value="Thu Thảo">Thu Thảo</option>
+                            <option value="Minh Khang">Minh Khang</option>
+                            <option value="Bảo Nam">Bảo Nam</option>
+                        </select>
+                    </div>
+                    <div class="filter-dropdown-group">
                         <label class="filter-label">Phản hồi:</label>
                         <select class="admin-select" id="reviewFilterStatus">
                             <option value="ALL">Tất cả</option>
                             <option value="pending">Chưa phản hồi</option>
                             <option value="replied">Đã phản hồi</option>
+                            <option value="escalated">Đã chuyển CSKH</option>
                         </select>
                     </div>
                 </div>
@@ -680,8 +692,17 @@
 
                 <!-- CẤU HÌNH CÁC BƯỚC QUY TRÌNH CHĂM SÓC CHUẨN (CARE-LOG SOP TEMPLATE) -->
                 <div class="form-group-item">
-                    <label class="form-label-clean">Quy trình các bước chăm sóc chuẩn (Care-log SOP):</label>
-                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Các bước này sẽ tự động khởi tạo vào Nhật ký ca khi khách đặt lịch dịch vụ này.</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; flex-wrap: wrap; gap: 6px;">
+                        <label class="form-label-clean" style="margin-bottom: 0;">Quy trình các bước chăm sóc chuẩn (Care-log SOP):</label>
+                        <select class="admin-select" id="serviceSopPresetSelect" style="width: auto; max-width: 280px; font-size: 12px; height: 30px; padding: 2px 8px;">
+                            <option value="CUSTOM">-- Mẫu quy trình SOP có sẵn --</option>
+                            <option value="SOP_SPA_FULL">Mẫu SOP Spa Trọn Gói (7 bước chuẩn)</option>
+                            <option value="SOP_GROOMING_STYLE">Mẫu SOP Cắt Tỉa Tạo Kiểu (6 bước chuẩn)</option>
+                            <option value="SOP_PET_HOTEL">Mẫu SOP Khách Sạn Lưu Trú (6 bước/ngày)</option>
+                            <option value="SOP_PET_TAXI">Mẫu SOP Pet Taxi Đưa Đón (4 bước chuẩn)</option>
+                        </select>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Các bước này sẽ tự động khởi tạo vào Care-Log khi khách đặt lịch dịch vụ này.</div>
                     <div class="service-steps-config-box" id="serviceStepsListContainer">
                         <!-- Nạp động danh sách các bước chuẩn -->
                     </div>
@@ -693,6 +714,10 @@
 
                 <div class="form-row-2col">
                     <div class="form-group-item">
+                        <label class="form-label-clean">Tỷ lệ hoa hồng KTV (%):</label>
+                        <input type="number" min="0" max="100" class="admin-input" id="formServiceCommission" value="15" placeholder="15">
+                    </div>
+                    <div class="form-group-item">
                         <label class="form-label-clean">Cấp độ KTV thực hiện:</label>
                         <select class="admin-select" id="formServiceStaffLevel">
                             <option value="Junior Groomer">Junior Groomer</option>
@@ -702,13 +727,13 @@
                             <option value="Tài xế kiêm cứu hộ">Tài xế kiêm cứu hộ</option>
                         </select>
                     </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Trạng thái kinh doanh:</label>
-                        <select class="admin-select" id="formServiceStatus">
-                            <option value="Đang phục vụ">Đang phục vụ (Hiển thị Web)</option>
-                            <option value="Tạm ẩn">Tạm ẩn (Ngừng nhận lịch)</option>
-                        </select>
-                    </div>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Trạng thái kinh doanh:</label>
+                    <select class="admin-select" id="formServiceStatus">
+                        <option value="Đang phục vụ">Đang phục vụ (Hiển thị Web và Cho phép đặt)</option>
+                        <option value="Tạm ẩn">Tạm ẩn (Ngừng nhận lịch)</option>
+                    </select>
                 </div>
                 <div class="modal-footer-clean">
                     <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelServiceForm">Hủy bỏ</button>
@@ -757,9 +782,9 @@
          MODAL 4: PHẢN HỒI VÀ XỬ LÝ ĐÁNH GIÁ CỦA KHÁCH HÀNG
          ==================================================================== -->
     <div class="admin-modal-overlay" id="modalReplyReview">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card" style="width: 560px; max-width: 95vw;">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Phản hồi đánh giá dịch vụ</div>
+                <div class="modal-title-clean">Phản hồi và Xử lý đánh giá dịch vụ</div>
                 <button type="button" class="modal-btn-close-text" id="btnCloseReplyReview">Đóng</button>
             </div>
             <form id="formReplyReview" class="modal-body-clean">
@@ -767,15 +792,25 @@
                 <div class="form-group-item" style="background-color: #F8FAF9; padding: 12px 14px; border-radius: var(--admin-radius);">
                     <div style="font-size: 13px; font-weight: 600; color: var(--text-heading);" id="reviewModalHeaderMeta">Lệ Quyên • BKG-1002 • ★★★★★ (5/5)</div>
                     <div style="font-size: 13px; color: var(--text-main); margin-top: 4px;" id="reviewModalCustomerComment">"Tỉa tròn mặt Boo cực kỳ xinh xắn, nhân viên tận tình."</div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="reviewModalStaffMeta">KTV phụ trách: Ngọc Anh</div>
                 </div>
 
                 <div class="form-group-item">
-                    <label class="form-label-clean">Nội dung phản hồi từ PawPal Admin:</label>
-                    <textarea class="admin-input" id="replyContentText" style="height: 90px; padding: 10px 14px;" placeholder="Nhập câu trả lời lịch sự, chu đáo gửi tới khách hàng..." required></textarea>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; flex-wrap: wrap; gap: 6px;">
+                        <label class="form-label-clean" style="margin-bottom: 0;">Mẫu câu trả lời chuyên nghiệp:</label>
+                        <select class="admin-select" id="replyPresetSelect" style="width: auto; max-width: 270px; font-size: 12px; height: 30px; padding: 2px 8px;">
+                            <option value="CUSTOM">-- Chọn mẫu câu phản hồi --</option>
+                            <option value="PRESET_THANK_5">Mẫu cảm ơn và tri ân (5 sao)</option>
+                            <option value="PRESET_ACK_4">Mẫu ghi nhận góp ý (4 sao)</option>
+                            <option value="PRESET_APOLOGY_LOW">Mẫu xin lỗi và chăm sóc lại (1-3 sao)</option>
+                            <option value="PRESET_EXPLAIN">Mẫu giải thích quy trình kỹ thuật</option>
+                        </select>
+                    </div>
+                    <textarea class="admin-input" id="replyContentText" style="height: 100px; padding: 10px 14px;" placeholder="Nhập câu trả lời lịch sự, chu đáo gửi tới khách hàng..." required></textarea>
                 </div>
 
                 <div class="form-group-item">
-                    <label class="form-label-clean">Gửi kèm quà tặng đền bù / tri ân (nếu có):</label>
+                    <label class="form-label-clean">Gửi kèm quà tặng đền bù hoặc tri ân (nếu có):</label>
                     <select class="admin-select" id="replyVoucherSelect">
                         <option value="NONE">Không gửi kèm voucher</option>
                         <option value="VOUCHER_50K">Tặng Voucher 50.000 đ (Ưu đãi ca sau)</option>
@@ -784,9 +819,14 @@
                     </select>
                 </div>
 
-                <div class="modal-footer-clean">
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelReplyReview">Hủy bỏ</button>
-                    <button type="submit" class="admin-btn admin-btn-primary">Gửi phản hồi</button>
+                <div class="modal-footer-clean" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <button type="button" class="admin-btn admin-btn-danger-outline" id="btnEscalateToComplaint" style="display: none;">Chuyển thành khiếu nại</button>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelReplyReview">Hủy bỏ</button>
+                        <button type="submit" class="admin-btn admin-btn-primary">Gửi phản hồi</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -1279,6 +1319,38 @@
                     <button type="submit" class="admin-btn admin-btn-primary" id="completeModalSubmitBtn">Xác nhận bàn giao và Xuất phiếu</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 11: XEM CHI TIẾT QUY TRÌNH CHUẨN SOP (SOP DETAILS VIEWER)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalViewSopDetails">
+        <div class="admin-modal-card" style="width: 540px; max-width: 95vw;">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean" id="sopViewerTitle">Quy trình chuẩn: Gói Cắt Tỉa Tạo Kiểu</div>
+                    <div id="sopViewerMeta" style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
+                        Mã gói: SPA02 | Nhóm: Spa và Grooming | Thời lượng: 90 phút | Hoa hồng KTV: 15%
+                    </div>
+                </div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseSopViewer">Đóng</button>
+            </div>
+            <div class="modal-body-clean" style="max-height: 68vh; overflow-y: auto;">
+                <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+                    Đây là danh mục các bước kỹ thuật chuẩn hóa bắt buộc áp dụng khi thực hiện ca dịch vụ. Mỗi bước sẽ được KTV kiểm tra và ghi nhật ký Care-Log trong hồ sơ khách hàng.
+                </div>
+                <div class="sop-steps-flow-container" id="sopViewerStepsList">
+                    <!-- Nạp động các bước SOP -->
+                </div>
+                <div style="margin-top: 14px; padding: 10px 14px; background: #F8FAF9; border-radius: var(--admin-radius); font-size: 12.5px; color: var(--text-main);">
+                    <strong>Tiêu chuẩn bàn giao:</strong> KTV bắt buộc chụp ảnh đối chiếu trước và sau ca, kiểm kê toàn bộ tư trang gửi lại trước khi bàn giao cho chủ nuôi.
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissSopViewer">Đóng</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnEditSopFromViewer">Chỉnh sửa quy trình này</button>
+            </div>
         </div>
     </div>
 

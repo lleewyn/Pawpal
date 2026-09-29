@@ -1571,3 +1571,83 @@
     line-height: 1;
 }
 
+/* MODAL 11: SOP VIEWER VÀ FLOW */
+.sop-steps-flow-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sop-flow-step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: var(--admin-radius);
+    background: #F8FAF9;
+    font-size: 13px;
+    color: var(--text-main);
+    line-height: 1.4;
+}
+
+.sop-flow-step-badge {
+    background: #EEF5F1;
+    color: #236B48;
+    font-weight: 700;
+    font-size: 11.5px;
+    padding: 2px 8px;
+    border-radius: var(--admin-radius);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.sop-flow-step-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sop-flow-step-title {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.btn-view-sop-pill {
+    background: #EEF5F1;
+    color: #236B48;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: var(--admin-radius);
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.btn-view-sop-pill:hover {
+    background: #DCEEE2;
+}
+
+.btn-table-action-sm {
+    background: transparent;
+    color: #236B48;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border: 1px solid #C3DEC7;
+    border-radius: var(--admin-radius);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-table-action-sm:hover {
+    background: #EEF5F1;
+}
+
+.escalated-badge {
+    background: #FEE2E2 !important;
+    color: #DC2626 !important;
+}
+
+
