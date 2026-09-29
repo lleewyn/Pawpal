@@ -41,6 +41,9 @@
                     <div class="search-box-wrapper">
                         <input type="text" class="admin-input" id="orderSearchInput" placeholder="Tìm mã đơn ORD, tên khách, số điện thoại, mã vận đơn...">
                     </div>
+                    <div class="quick-scanner-wrapper">
+                        <input type="text" class="admin-input" id="quickScanTrackingInput" placeholder="Quét mã vạch hoặc nhập mã vận đơn..." title="Nhấn Enter để xử lý nhanh đơn hàng">
+                    </div>
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportOrderReport">Xuất file</button>
                         <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateOrderModal">+ Tạo đơn tại quầy</button>
@@ -100,6 +103,20 @@
                         <button type="button" class="btn-cod-quick-reconcile" id="btnQuickReconcileAllCod">Xác nhận đối soát toàn bộ</button>
                     </div>
                 </div>
+
+                <!-- DẢI THAO TÁC HÀNG LOẠT (GIAI ĐOẠN 2: BATCH DISPATCH VÀ PACKING) -->
+                <div class="batch-action-toolbar" id="batchActionToolbar" style="display: none;">
+                    <div class="batch-toolbar-left">
+                        <span class="batch-selected-count">Đã chọn <strong id="batchSelectedCount">0</strong> đơn hàng</span>
+                        <span class="batch-divider">•</span>
+                        <button type="button" class="admin-btn-text" id="btnBatchDeselectAll">Bỏ chọn</button>
+                    </div>
+                    <div class="batch-toolbar-right">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnBatchPrintPack">In hàng loạt phiếu đóng gói</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnBatchDispatch">Bàn giao vận chuyển hàng loạt</button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnBatchExportManifest">Xuất bảng kê bàn giao</button>
+                    </div>
+                </div>
             </div>
 
             <!-- BẢNG DỮ LIỆU ĐƠN HÀNG -->
@@ -107,6 +124,9 @@
                 <table class="admin-table" id="ordersTable">
                     <thead>
                         <tr>
+                            <th style="width: 42px; text-align: center;">
+                                <input type="checkbox" class="admin-checkbox" id="checkSelectAllOrders" title="Chọn tất cả">
+                            </th>
                             <th>Mã đơn</th>
                             <th>Khách hàng</th>
                             <th>Sản phẩm và Số lượng</th>
@@ -534,7 +554,7 @@
                 <div class="form-group-item">
                     <label class="form-label-clean">Đơn vị vận chuyển phụ trách:</label>
                     <select class="admin-select" id="shipCarrierSelect">
-                        <option value="J&amp;T Express">J&amp;T Express</option>
+                        <option value="J và T Express">J và T Express</option>
                         <option value="Giao Hàng Tiết Kiệm (GHTK)">Giao Hàng Tiết Kiệm (GHTK)</option>
                         <option value="Viettel Post">Viettel Post</option>
                         <option value="Đội giao hỏa tốc PawPal">Đội giao hỏa tốc PawPal</option>
@@ -596,6 +616,99 @@
             <div class="modal-footer-clean">
                 <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalCancelOrder')">Bỏ qua</button>
                 <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitCancelOrder" style="background-color: #DC2626;">Xác nhận hủy đơn</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 4: IN PHIẾU ĐÓNG GÓI VÀ VẬN ĐƠN (GIAI ĐOẠN 2: PACKING SLIP PREVIEW)
+         Chuẩn khổ A6 / K80 in nhiệt cho kho, hỗ trợ in đơn lẻ hoặc in liên tiếp hàng loạt
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalPackingSlip">
+        <div class="admin-modal-card packing-slip-modal-card">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Phiếu đóng gói và giao hàng</div>
+                    <div class="sub-meta-text" id="slipModalSubtitle">Xem trước định dạng in chuẩn khổ A6 / K80</div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnPrintSlipConfirm">In phiếu ngay</button>
+                    <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalPackingSlip')">Đóng</button>
+                </div>
+            </div>
+
+            <div class="modal-body-clean packing-slip-body" id="packingSlipContainer">
+                <!-- Nội dung các phiếu in được chèn động từ orders.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 5: BÀN GIAO VẬN CHUYỂN HÀNG LOẠT (GIAI ĐOẠN 2: BATCH 3PL DISPATCH)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalBatchDispatch">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Bàn giao vận chuyển hàng loạt</div>
+                <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalBatchDispatch')">Đóng</button>
+            </div>
+
+            <div class="modal-body-clean">
+                <div class="info-pair">
+                    <span class="info-label">Số đơn đã chọn bàn giao:</span>
+                    <span class="info-value text-heading" id="batchDispatchCount" style="font-size: 15px;">0 đơn</span>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted);">Các đơn hàng được chọn sẽ tự động chuyển sang trạng thái <strong>Đang giao</strong> và được gán mã vận đơn bưu cục.</p>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Đơn vị vận chuyển tiếp nhận:</label>
+                    <select class="admin-select" id="batchCarrierSelect">
+                        <option value="J và T Express">J và T Express</option>
+                        <option value="Giao Hàng Tiết Kiệm (GHTK)">Giao Hàng Tiết Kiệm (GHTK)</option>
+                        <option value="Viettel Post">Viettel Post</option>
+                        <option value="Đội giao hỏa tốc PawPal">Đội giao hỏa tốc PawPal</option>
+                    </select>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Phương thức cấp mã vận đơn:</label>
+                    <select class="admin-select" id="batchTrackingMode">
+                        <option value="auto">Tự động phát sinh mã vận đơn bưu cục chuẩn</option>
+                        <option value="keep">Giữ nguyên mã đã có (chỉ cập nhật đơn vị vận chuyển)</option>
+                    </select>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Ghi chú bàn giao cho bưu tá:</label>
+                    <input type="text" class="admin-input" id="batchCarrierNote" placeholder="Hàng thú cưng đóng hộp chuẩn, đã dán tem bảo đảm...">
+                </div>
+            </div>
+
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalBatchDispatch')">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitBatchDispatch">Xác nhận bàn giao bưu cục</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 6: BẢNG KÊ BÀN GIAO VẬN CHUYỂN (MANIFEST)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalDispatchManifest">
+        <div class="admin-modal-card manifest-modal-card">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Bảng kê bàn giao bưu cục (Manifest)</div>
+                    <div class="sub-meta-text" id="manifestSubtitle">Danh sách bàn giao bưu tá ký xác nhận</div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="admin-btn admin-btn-primary" id="btnPrintManifestConfirm">In bảng kê</button>
+                    <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalDispatchManifest')">Đóng</button>
+                </div>
+            </div>
+
+            <div class="modal-body-clean manifest-body" id="manifestContentContainer">
+                <!-- Nội dung bảng kê được chèn động từ orders.js -->
             </div>
         </div>
     </div>

@@ -493,11 +493,177 @@
     let filterComplaintOnly = false;
     let filterUrgentOnly = false;
     let filterSlaOverdueOnly = false;
+    let selectedBatchOrderIds = []; // Giai đoạn 2: Danh sách đơn chọn hàng loạt
     let activeActionOrderId = null;
     let renderOrderDetailRef = null;
 
     function formatVND(amount) {
         return (amount || 0).toLocaleString('vi-VN') + ' đ';
+    }
+
+    // -------------------------------------------------------------
+    // GIAI ĐOẠN 2: HÀM TẠO PHIẾU ĐÓNG GÓI VÀ BẢNG KÊ VẬN CHUYỂN
+    // -------------------------------------------------------------
+    function generatePackingSlipHtml(order) {
+        const isCod = order.paymentMethod === 'cod' && order.paymentStatus !== 'paid';
+        const carrierName = order.carrier || 'Chưa bàn giao';
+        const trackingCode = order.trackingNumber || ('PAW' + order.id.replace(/[^0-9]/g, ''));
+        const dateFormatted = new Date(order.createdAt).toLocaleString('vi-VN');
+        const customerAddr = order.shippingAddress || 'Số 123 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh';
+
+        const itemsRows = (order.products || []).map((p, idx) => `
+            <tr>
+                <td style="width: 32px; text-align: center;">${idx + 1}</td>
+                <td style="font-family: monospace; font-weight: 600;">${p.sku}</td>
+                <td>
+                    <div style="font-weight: 500;">${p.name}</div>
+                    ${p.spec ? `<div class="sub-meta-text">${p.spec}</div>` : ''}
+                </td>
+                <td style="text-align: center; font-weight: 700; font-size: 14px; color: #236B48;">${p.quantity}</td>
+                <td style="text-align: right;">${formatVND(p.price)}</td>
+                <td style="text-align: right; font-weight: 600;">${formatVND(p.total || (p.price * p.quantity))}</td>
+            </tr>
+        `).join('');
+
+        return `
+            <div class="packing-slip-sheet">
+                <div class="slip-header-block">
+                    <div>
+                        <div class="slip-brand-title">PAWPAL PET CARE</div>
+                        <div class="slip-brand-sub">Hệ thống chăm sóc thú cưng toàn diện | Hotline: 1900-PAWPAL</div>
+                        <div class="slip-brand-sub">Kho vận: 45 Lê Duẩn, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh</div>
+                    </div>
+                    <div class="slip-tracking-box">
+                        <div class="slip-barcode-text">*${order.id}*</div>
+                        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">Mã vận đơn: <strong style="font-family: monospace; color: var(--text-main);">${trackingCode}</strong></div>
+                        <div style="font-size: 11.5px; color: #236B48; font-weight: 600;">${carrierName}</div>
+                    </div>
+                </div>
+
+                <div class="slip-info-grid">
+                    <div class="slip-info-col">
+                        <span class="slip-info-label">NGƯỜI NHẬN HÀNG:</span>
+                        <span class="slip-info-val strong">${order.customerName} - ${order.phone}</span>
+                        <span class="slip-info-val">${customerAddr}</span>
+                    </div>
+                    <div class="slip-info-col">
+                        <span class="slip-info-label">THÔNG TIN ĐƠN HÀNG:</span>
+                        <span class="slip-info-val">Mã đơn: <strong style="color: #236B48;">${order.id}</strong> | Ngày đặt: ${dateFormatted}</span>
+                        <span class="slip-info-val">Ghi chú: ${order.customerNote || 'Giao giờ hành chính, cho kiểm tra hàng'}</span>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-weight: 600; font-size: 12.5px; margin-bottom: 6px; color: var(--text-heading);">DANH SÁCH HÀNG CẦN ĐÓNG GÓI (PICK-LIST):</div>
+                    <table class="slip-items-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 32px; text-align: center;">STT</th>
+                                <th style="width: 95px;">Mã SKU</th>
+                                <th>Tên sản phẩm</th>
+                                <th style="width: 45px; text-align: center;">SL</th>
+                                <th style="width: 90px; text-align: right;">Đơn giá</th>
+                                <th style="width: 100px; text-align: right;">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsRows}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="slip-cod-highlight-box ${isCod ? 'is-cod' : 'is-paid'}">
+                    <div>
+                        <div style="font-weight: 700; font-size: 13px;">${isCod ? 'TIỀN THU HỘ (COD):' : 'TRẠNG THÁI THANH TOÁN:'}</div>
+                        <div style="font-size: 11.5px;">${isCod ? 'Bưu tá vui lòng thu đúng số tiền ghi trên phiếu trước khi giao hàng' : 'Đơn đã được thanh toán trực tuyến, bưu tá tuyệt đối không thu thêm'}</div>
+                    </div>
+                    <div class="slip-cod-val">
+                        ${isCod ? formatVND(order.total) : 'ĐÃ THANH TOÁN (0 đ)'}
+                    </div>
+                </div>
+
+                <div class="slip-sign-row">
+                    <div class="slip-sign-col">
+                        <span>Xác nhận đóng gói (Ký và ghi rõ họ tên)</span>
+                        <span style="font-weight: 500; color: var(--text-main);">Nhân viên kho PawPal</span>
+                    </div>
+                    <div class="slip-sign-col">
+                        <span>Bưu tá nhận hàng (Ký và ghi rõ họ tên)</span>
+                        <span style="font-weight: 500; color: var(--text-main);">${carrierName}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function generateManifestHtml(ordersList, carrierName) {
+        const todayStr = new Date().toLocaleDateString('vi-VN');
+        const totalCod = ordersList.reduce((sum, o) => {
+            return sum + (o.paymentMethod === 'cod' && o.paymentStatus !== 'paid' ? o.total : 0);
+        }, 0);
+
+        const rows = ordersList.map((o, idx) => {
+            const isCod = o.paymentMethod === 'cod' && o.paymentStatus !== 'paid';
+            return `
+                <tr>
+                    <td style="text-align: center;">${idx + 1}</td>
+                    <td style="font-weight: 600; font-family: monospace;">${o.id}</td>
+                    <td style="font-family: monospace; color: #236B48;">${o.trackingNumber || '--'}</td>
+                    <td>
+                        <div style="font-weight: 500;">${o.customerName}</div>
+                        <div class="sub-meta-text">${o.phone}</div>
+                    </td>
+                    <td style="font-size: 12px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${o.shippingAddress || ''}">${o.shippingAddress || o.customerAddress || 'Chi nhánh Q1'}</td>
+                    <td style="text-align: center;">${o.products.reduce((acc, p) => acc + p.quantity, 0)} món</td>
+                    <td style="text-align: right; font-weight: ${isCod ? '700' : '400'}; color: ${isCod ? '#734718' : 'var(--text-main)'};">
+                        ${isCod ? formatVND(o.total) : '0 đ (Đã trả)'}
+                    </td>
+                    <td style="text-align: center; color: var(--text-muted);">Đã nhận</td>
+                </tr>
+            `;
+        }).join('');
+
+        return `
+            <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <div style="font-size: 15px; font-weight: 700; color: #236B48;">PAWPAL PET CARE - BẢNG KÊ BÀN GIAO HÀNG HÓA</div>
+                    <div class="sub-meta-text">Đơn vị vận chuyển: <strong>${carrierName}</strong> | Ngày lập: ${todayStr}</div>
+                </div>
+                <div style="text-align: right; font-size: 13px;">
+                    <div>Tổng số đơn: <strong>${ordersList.length} kiện</strong></div>
+                    <div>Tổng COD bưu tá thu hộ: <strong style="color: #236B48; font-size: 15px;">${formatVND(totalCod)}</strong></div>
+                </div>
+            </div>
+
+            <table class="manifest-table">
+                <thead>
+                    <tr>
+                        <th style="width: 32px; text-align: center;">STT</th>
+                        <th style="width: 95px;">Mã đơn</th>
+                        <th style="width: 120px;">Mã vận đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Địa chỉ nhận</th>
+                        <th style="width: 60px; text-align: center;">Số lượng</th>
+                        <th style="width: 100px; text-align: right;">Tiền COD</th>
+                        <th style="width: 80px; text-align: center;">Xác nhận</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+
+            <div style="margin-top: 24px; display: flex; justify-content: space-between; padding: 0 40px; text-align: center; font-size: 12.5px; color: var(--text-muted);">
+                <div>
+                    <div>ĐẠI DIỆN KHO PAWPAL</div>
+                    <div style="margin-top: 50px; font-weight: 600; color: var(--text-main);">Nhân viên điều phối</div>
+                </div>
+                <div>
+                    <div>ĐẠI DIỆN ĐƠN VỊ VẬN CHUYỂN</div>
+                    <div style="margin-top: 50px; font-weight: 600; color: var(--text-main);">${carrierName}</div>
+                </div>
+            </div>
+        `;
     }
 
     // -------------------------------------------------------------
@@ -699,10 +865,27 @@
                 }
             }
 
+            // Cập nhật Dải thao tác hàng loạt (Giai đoạn 2)
+            const batchToolbar = document.getElementById('batchActionToolbar');
+            const batchCountEl = document.getElementById('batchSelectedCount');
+            if (batchToolbar) {
+                if (selectedBatchOrderIds.length > 0) {
+                    batchToolbar.style.display = 'flex';
+                    if (batchCountEl) batchCountEl.textContent = selectedBatchOrderIds.length;
+                } else {
+                    batchToolbar.style.display = 'none';
+                }
+            }
+
+            const checkAllEl = document.getElementById('checkSelectAllOrders');
+            if (checkAllEl) {
+                checkAllEl.checked = filtered.length > 0 && filtered.every(o => selectedBatchOrderIds.includes(o.id));
+            }
+
             if (filtered.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                        <td colspan="10" style="text-align: center; padding: 36px; color: var(--text-muted);">
                             <div>Không tìm thấy đơn hàng phù hợp với bộ lọc hiện tại.</div>
                         </td>
                     </tr>
@@ -756,8 +939,13 @@
                 else if (o.paymentMethod === 'momo') payMethodLabel = 'MoMo';
                 else if (o.paymentMethod === 'bank_transfer') payMethodLabel = 'Chuyển khoản';
 
+                const isChecked = selectedBatchOrderIds.includes(o.id);
+
                 return `
                     <tr class="${rowAlertClass}">
+                        <td style="text-align: center; width: 42px;">
+                            <input type="checkbox" class="admin-checkbox order-row-checkbox" data-id="${o.id}" ${isChecked ? 'checked' : ''} onclick="PawpalOrdersModule.toggleSelectOrder(event, '${o.id}')">
+                        </td>
                         <td>
                             <a href="javascript:void(0)" class="order-code-link" onclick="PawpalOrdersModule.openOrderDetail('${o.id}')">${o.id}</a>
                         </td>
@@ -1048,6 +1236,142 @@
             filterSlaOverdueOnly = !filterSlaOverdueOnly;
             this.classList.toggle('active', filterSlaOverdueOnly);
             renderOrdersTable();
+        });
+
+        // GIAI ĐOẠN 2: Checkbox chọn tất cả đơn hàng
+        document.getElementById('checkSelectAllOrders')?.addEventListener('change', function(e) {
+            const isChecked = e.target.checked;
+            const searchVal = (document.getElementById('orderSearchInput')?.value || '').toLowerCase().trim();
+            const visibleOrders = currentOrdersList.filter(o => {
+                if (currentFilterStatus !== 'ALL' && o.status !== currentFilterStatus) return false;
+                if (currentFilterPayment !== 'ALL' && o.paymentMethod !== currentFilterPayment) return false;
+                if (currentFilterPayStatus !== 'ALL' && o.paymentStatus !== currentFilterPayStatus) return false;
+                if (filterComplaintOnly && o.status !== 'returned' && o.alertType !== 'danger') return false;
+                if (filterSlaOverdueOnly && !getOrderSlaInfo(o).isSlaOverdue) return false;
+                if (searchVal) {
+                    const matchId = o.id.toLowerCase().includes(searchVal);
+                    const matchName = o.customerName.toLowerCase().includes(searchVal);
+                    const matchPhone = o.phone.includes(searchVal);
+                    const matchTrack = (o.trackingNumber || '').toLowerCase().includes(searchVal);
+                    if (!matchId && !matchName && !matchPhone && !matchTrack) return false;
+                }
+                return true;
+            });
+
+            if (isChecked) {
+                visibleOrders.forEach(o => {
+                    if (!selectedBatchOrderIds.includes(o.id)) {
+                        selectedBatchOrderIds.push(o.id);
+                    }
+                });
+            } else {
+                const visibleIds = visibleOrders.map(o => o.id);
+                selectedBatchOrderIds = selectedBatchOrderIds.filter(id => !visibleIds.includes(id));
+            }
+            renderOrdersTable();
+        });
+
+        // Nút bỏ chọn toàn bộ đơn hàng
+        document.getElementById('btnBatchDeselectAll')?.addEventListener('click', () => {
+            selectedBatchOrderIds = [];
+            renderOrdersTable();
+        });
+
+        // Nút in hàng loạt phiếu đóng gói
+        document.getElementById('btnBatchPrintPack')?.addEventListener('click', () => {
+            PawpalOrdersModule.printBatchPackingSlips();
+        });
+
+        // Nút bàn giao vận chuyển hàng loạt
+        document.getElementById('btnBatchDispatch')?.addEventListener('click', () => {
+            PawpalOrdersModule.openBatchDispatchModal();
+        });
+
+        // Nút xuất bảng kê bàn giao (Manifest)
+        document.getElementById('btnBatchExportManifest')?.addEventListener('click', () => {
+            PawpalOrdersModule.exportDispatchManifest();
+        });
+
+        // Ô QUÉT MÃ VẬN ĐƠN / BARCODE SIÊU TỐC
+        document.getElementById('quickScanTrackingInput')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const code = e.target.value.trim();
+                if (!code) return;
+
+                const targetOrder = currentOrdersList.find(o => 
+                    o.id.toLowerCase() === code.toLowerCase() || 
+                    (o.trackingNumber && o.trackingNumber.toLowerCase() === code.toLowerCase())
+                );
+
+                if (!targetOrder) {
+                    alert(`Không tìm thấy đơn hàng tương ứng với mã quét "${code}". Vui lòng kiểm tra lại.`);
+                    return;
+                }
+
+                e.target.value = '';
+
+                if (targetOrder.status === 'confirmed') {
+                    if (confirm(`Đơn hàng ${targetOrder.id} đang chuẩn bị xuất kho.\nBạn có muốn bàn giao nhanh cho bưu cục và chuyển sang trạng thái Đang giao ngay?`)) {
+                        targetOrder.status = 'shipping';
+                        targetOrder.timeline.push({
+                            title: 'Bàn giao vận chuyển qua máy quét mã vạch',
+                            time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
+                            desc: 'Nhân viên kho quét barcode xuất bưu cục thành công',
+                            done: true
+                        });
+                        renderOrdersTable();
+                    }
+                } else if (targetOrder.status === 'shipping') {
+                    if (confirm(`Đơn hàng ${targetOrder.id} đang giao.\nXác nhận khách đã nhận hàng thành công?`)) {
+                        PawpalOrdersModule.completeDelivery(targetOrder.id);
+                        return;
+                    }
+                }
+
+                PawpalOrdersModule.openOrderDetail(targetOrder.id);
+            }
+        });
+
+        // Xác nhận bàn giao vận chuyển hàng loạt
+        document.getElementById('btnSubmitBatchDispatch')?.addEventListener('click', () => {
+            if (selectedBatchOrderIds.length === 0) return;
+            const carrier = document.getElementById('batchCarrierSelect')?.value || 'J và T Express';
+            const mode = document.getElementById('batchTrackingMode')?.value || 'auto';
+            const note = document.getElementById('batchCarrierNote')?.value.trim() || '';
+
+            selectedBatchOrderIds.forEach(id => {
+                const ord = currentOrdersList.find(o => o.id === id);
+                if (ord) {
+                    ord.status = 'shipping';
+                    ord.carrier = carrier;
+                    if (mode === 'auto' || !ord.trackingNumber) {
+                        const prefix = carrier.includes('GHTK') ? 'GHTK' : (carrier.includes('Viettel') ? 'VT' : 'JT');
+                        ord.trackingNumber = `${prefix}${Date.now().toString().slice(-6)}${ord.id.slice(-3)}`;
+                    }
+                    ord.timeline.push({
+                        title: `Bàn giao vận chuyển hàng loạt cho ${carrier}`,
+                        time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
+                        desc: note ? `Xuất kho hàng loạt. Ghi chú: ${note}` : 'Xuất kho và bàn giao bưu cục thành công',
+                        done: true
+                    });
+                }
+            });
+
+            const count = selectedBatchOrderIds.length;
+            selectedBatchOrderIds = [];
+            document.getElementById('modalBatchDispatch')?.classList.remove('active');
+            renderOrdersTable();
+            if (selectedOrderId) renderOrderDetail(selectedOrderId);
+            alert(`Đã bàn giao thành công ${count} đơn hàng cho đơn vị vận chuyển ${carrier}!`);
+        });
+
+        // Lệnh in phiếu đóng gói và in bảng kê
+        document.getElementById('btnPrintSlipConfirm')?.addEventListener('click', () => {
+            alert('Lệnh in phiếu đóng gói (Packing Slip) đã gửi đến máy in nhiệt A6 / K80 thành công!');
+        });
+        document.getElementById('btnPrintManifestConfirm')?.addEventListener('click', () => {
+            alert('Đã gửi lệnh in Bảng kê bàn giao bưu cục (Manifest) ra máy in văn phòng!');
         });
 
         // Nút đối soát toàn bộ tiền COD bưu cục
@@ -1380,7 +1704,72 @@
             window.PawpalOrdersModule.openOrderDetail(orderId);
         },
         printPackingSlip: function(orderId) {
-            alert(`Đang kết nối máy in để in Phiếu đóng gói (Packing Slip) cho đơn ${orderId}...`);
+            const order = currentOrdersList.find(o => o.id === orderId);
+            if (!order) return;
+            const container = document.getElementById('packingSlipContainer');
+            const titleEl = document.getElementById('slipModalSubtitle');
+            if (container) {
+                container.innerHTML = generatePackingSlipHtml(order);
+            }
+            if (titleEl) {
+                titleEl.textContent = `Phiếu đóng gói đơn hàng ${order.id} | Khổ in A6 / K80`;
+            }
+            document.getElementById('modalPackingSlip')?.classList.add('active');
+        },
+        toggleSelectOrder: function(e, orderId) {
+            e.stopPropagation();
+            if (selectedBatchOrderIds.includes(orderId)) {
+                selectedBatchOrderIds = selectedBatchOrderIds.filter(id => id !== orderId);
+            } else {
+                selectedBatchOrderIds.push(orderId);
+            }
+            renderOrdersTable();
+        },
+        printBatchPackingSlips: function() {
+            if (selectedBatchOrderIds.length === 0) {
+                alert('Vui lòng chọn ít nhất một đơn hàng trên danh sách để in phiếu đóng gói hàng loạt.');
+                return;
+            }
+            const container = document.getElementById('packingSlipContainer');
+            const titleEl = document.getElementById('slipModalSubtitle');
+            const selectedOrders = currentOrdersList.filter(o => selectedBatchOrderIds.includes(o.id));
+            if (container) {
+                container.innerHTML = selectedOrders.map(o => generatePackingSlipHtml(o)).join('');
+            }
+            if (titleEl) {
+                titleEl.textContent = `In hàng loạt ${selectedOrders.length} phiếu đóng gói liên tiếp | Khổ in A6 / K80`;
+            }
+            document.getElementById('modalPackingSlip')?.classList.add('active');
+        },
+        openBatchDispatchModal: function() {
+            if (selectedBatchOrderIds.length === 0) {
+                alert('Vui lòng chọn ít nhất một đơn hàng để bàn giao vận chuyển hàng loạt.');
+                return;
+            }
+            const countEl = document.getElementById('batchDispatchCount');
+            if (countEl) countEl.textContent = `${selectedBatchOrderIds.length} đơn hàng`;
+            document.getElementById('modalBatchDispatch')?.classList.add('active');
+        },
+        exportDispatchManifest: function() {
+            const targetOrders = selectedBatchOrderIds.length > 0 
+                ? currentOrdersList.filter(o => selectedBatchOrderIds.includes(o.id))
+                : currentOrdersList.filter(o => o.status === 'shipping' || o.status === 'confirmed');
+
+            if (targetOrders.length === 0) {
+                alert('Không có đơn hàng nào để xuất bảng kê bàn giao vận chuyển.');
+                return;
+            }
+
+            const carrier = targetOrders[0]?.carrier || 'Bưu cục đối tác';
+            const container = document.getElementById('manifestContentContainer');
+            const subTitle = document.getElementById('manifestSubtitle');
+            if (container) {
+                container.innerHTML = generateManifestHtml(targetOrders, carrier);
+            }
+            if (subTitle) {
+                subTitle.textContent = `Bảng kê gồm ${targetOrders.length} đơn hàng bàn giao cho ${carrier}`;
+            }
+            document.getElementById('modalDispatchManifest')?.classList.add('active');
         },
         printInvoice: function(orderId) {
             alert(`Đang xuất hóa đơn bán lẻ PDF cho đơn ${orderId}...`);
