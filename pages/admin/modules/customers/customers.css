@@ -427,24 +427,22 @@
 
 .btn-action-more:hover,
 .btn-action-more.active {
-    background-color: rgba(35, 107, 72, 0.08);
+    background-color: #EEF5F1;
     border-color: var(--border-neutral);
-    color: var(--text-main);
+    color: var(--admin-primary);
 }
 
 .action-dropdown-menu {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 4px);
-    background-color: var(--surface-white);
+    position: fixed;
+    background-color: #FFFFFF;
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    min-width: 175px;
+    box-shadow: 0 8px 24px rgba(26, 43, 35, 0.12);
+    min-width: 180px;
     display: none;
     flex-direction: column;
-    padding: 5px;
-    z-index: 100;
+    padding: 6px;
+    z-index: 99999;
 }
 
 .action-dropdown-menu.show {

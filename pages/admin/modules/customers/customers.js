@@ -1063,36 +1063,149 @@
             });
         });
 
-        // 5. Đóng/Mở menu tác vụ 3 chấm (•••) — dùng position:fixed để thoát khỏi overflow scroll container
-        function closeAllDropdowns() {
-            document.querySelectorAll('.action-dropdown-menu.show').forEach(m => {
-                m.classList.remove('show');
-                m.style.cssText = '';
-            });
-            document.querySelectorAll('.btn-action-more.active').forEach(b => b.classList.remove('active'));
+        // ====================================================================
+        // 5. GLOBAL DROPDOWN TÁC VỤ 3 CHẤM (DIRECT BODY PORTAL - KHÔNG BỊ TRÀN/CẮT)
+        // ====================================================================
+        let globalActionDropdown = document.getElementById('customerGlobalActionDropdown');
+        if (!globalActionDropdown) {
+            globalActionDropdown = document.createElement('div');
+            globalActionDropdown.id = 'customerGlobalActionDropdown';
+            globalActionDropdown.className = 'action-dropdown-menu';
+            globalActionDropdown.innerHTML = `
+                <button type="button" class="dropdown-item" data-action="profile">
+                    Xem hồ sơ 360°
+                </button>
+                <button type="button" class="dropdown-item" data-action="edit">
+                    Sửa hồ sơ
+                </button>
+                <button type="button" class="dropdown-item" data-action="adjust-points">
+                    Điều chỉnh điểm
+                </button>
+                <button type="button" class="dropdown-item" data-action="toggle-lock">
+                    <span id="globalDropdownLockText">Khóa tài khoản</span>
+                </button>
+            `;
+            document.body.appendChild(globalActionDropdown);
         }
 
-        function positionAndShowDropdown(btn) {
-            const menu = btn.nextElementSibling;
-            if (!menu || !menu.classList.contains('action-dropdown-menu')) return;
+        let activeMoreBtn = null;
 
-            const wasShown = menu.classList.contains('show');
-            closeAllDropdowns();
-
-            if (!wasShown) {
-                const rect = btn.getBoundingClientRect();
-                const menuWidth = 175;
-                const top = rect.bottom + 4;
-                let left = rect.right - menuWidth;
-                if (left < 8) left = 8;
-
-                menu.style.position = 'fixed';
-                menu.style.top = top + 'px';
-                menu.style.left = left + 'px';
-                menu.style.zIndex = '9999';
-                menu.classList.add('show');
-                btn.classList.add('active');
+        function closeGlobalDropdown() {
+            if (globalActionDropdown) {
+                globalActionDropdown.style.display = 'none';
+                globalActionDropdown.classList.remove('show');
             }
+            if (activeMoreBtn) {
+                activeMoreBtn.classList.remove('active');
+                activeMoreBtn = null;
+            }
+        }
+
+        function toggleGlobalDropdown(btn) {
+            if (!btn || !globalActionDropdown) return;
+            const custId = btn.getAttribute('data-id');
+            const cust = customerDatabase[custId];
+            if (!cust) return;
+
+            // Nếu đang mở chính nút này thì bấm vào sẽ đóng
+            if (activeMoreBtn === btn && globalActionDropdown.style.display === 'flex') {
+                closeGlobalDropdown();
+                return;
+            }
+
+            closeGlobalDropdown();
+            activeMoreBtn = btn;
+            btn.classList.add('active');
+
+            globalActionDropdown.setAttribute('data-id', custId);
+            const lockItem = globalActionDropdown.querySelector('[data-action="toggle-lock"]');
+            const lockText = globalActionDropdown.querySelector('#globalDropdownLockText');
+            if (lockItem && lockText) {
+                if (cust.status === 'LOCKED') {
+                    lockItem.className = 'dropdown-item text-success';
+                    lockText.textContent = 'Mở khóa tài khoản';
+                } else {
+                    lockItem.className = 'dropdown-item text-danger';
+                    lockText.textContent = 'Khóa tài khoản';
+                }
+            }
+
+            // Tính toán vị trí hiển thị chuẩn xác không phụ thuộc bất kỳ thẻ cha nào
+            const rect = btn.getBoundingClientRect();
+            const menuWidth = 180;
+            const menuHeight = 160;
+
+            let left = rect.right - menuWidth;
+            if (left < 10) left = 10;
+            if (left + menuWidth > window.innerWidth - 10) {
+                left = window.innerWidth - menuWidth - 10;
+            }
+
+            let top = rect.bottom + 6;
+            // Nếu nút ở gần mép dưới màn hình thì mở ngược lên trên
+            if (top + menuHeight > window.innerHeight - 10) {
+                top = rect.top - menuHeight - 6;
+            }
+
+            globalActionDropdown.style.position = 'fixed';
+            globalActionDropdown.style.top = `${top}px`;
+            globalActionDropdown.style.left = `${left}px`;
+            globalActionDropdown.style.zIndex = '99999';
+            globalActionDropdown.style.display = 'flex';
+            globalActionDropdown.classList.add('show');
+        }
+
+        // Bắt sự kiện thao tác trên menu dropdown
+        globalActionDropdown.addEventListener('click', (e) => {
+            const item = e.target.closest('.dropdown-item');
+            if (!item) return;
+            e.stopPropagation();
+
+            const action = item.getAttribute('data-action');
+            const custId = globalActionDropdown.getAttribute('data-id');
+            closeGlobalDropdown();
+
+            if (!custId || !customerDatabase[custId]) return;
+
+            if (action === 'profile') {
+                sessionStorage.setItem('pawpal_admin_customer_id', custId);
+                sessionStorage.setItem('pawpal_admin_customer_name', customerDatabase[custId].name || custId);
+                renderDrawerCustomerProfile(custId);
+                switchSubtab('tab-profile');
+            } else if (action === 'edit') {
+                openEditCustomerModal(custId);
+            } else if (action === 'adjust-points') {
+                openAdjustPointsModal(customerDatabase[custId].phone);
+            } else if (action === 'toggle-lock') {
+                if (customerDatabase[custId].status === 'LOCKED') {
+                    customerDatabase[custId].status = 'ACTIVE';
+                    customerDatabase[custId].authStatus = 'Đã kích hoạt';
+                    persistCustomersData();
+                    renderCustomersTable();
+                    updateCustomerKPIs();
+                    showToast(`Đã mở khóa tài khoản khách hàng ${customerDatabase[custId].name}!`);
+                } else {
+                    customerDatabase[custId].status = 'LOCKED';
+                    customerDatabase[custId].authStatus = 'Tài khoản bị khóa';
+                    persistCustomersData();
+                    renderCustomersTable();
+                    updateCustomerKPIs();
+                    showToast(`Đã khóa tài khoản khách hàng ${customerDatabase[custId].name}!`);
+                }
+            }
+        });
+
+        // Đóng dropdown khi click ra ngoài hoặc khi cuộn trang
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.btn-action-more') && !e.target.closest('#customerGlobalActionDropdown')) {
+                closeGlobalDropdown();
+            }
+        });
+
+        window.addEventListener('resize', closeGlobalDropdown);
+        const scrollContainer = document.querySelector('.table-responsive-wrapper');
+        if (scrollContainer) {
+            scrollContainer.addEventListener('scroll', closeGlobalDropdown);
         }
 
         // ====================================================================
@@ -1277,21 +1390,8 @@
                         </td>
                         <td>${alertBadgeHtml}</td>
                         <td>${statusBadgeHtml}</td>
-                        <td style="text-align: center;">
-                            <div class="action-dropdown-wrapper">
-                                <button type="button" class="btn-action-more" data-id="${c.id}" title="Tác vụ">•••</button>
-                                <div class="action-dropdown-menu">
-                                    <button type="button" class="dropdown-item btn-open-profile-drawer" data-id="${c.id}">
-                                        Xem hồ sơ 360°
-                                    </button>
-                                    <button type="button" class="dropdown-item btn-edit-user-table" data-id="${c.id}">
-                                        Sửa hồ sơ
-                                    </button>
-                                    <button type="button" class="dropdown-item ${lockBtnClass}" data-id="${c.id}">
-                                        ${lockBtnText}
-                                    </button>
-                                </div>
-                            </div>
+                        <td style="width: 70px; min-width: 70px; text-align: center; padding: 8px 10px;">
+                            <button type="button" class="btn-action-more" data-id="${c.id}" title="Tác vụ">•••</button>
                         </td>
                     </tr>
                 `;
@@ -1307,71 +1407,23 @@
                 const btnMore = e.target.closest('.btn-action-more');
                 if (btnMore) {
                     e.stopPropagation();
-                    positionAndShowDropdown(btnMore);
+                    toggleGlobalDropdown(btnMore);
                     return;
                 }
 
-                const btnProfile = e.target.closest('.btn-open-profile-drawer');
-                if (btnProfile) {
+                const userLink = e.target.closest('.user-name-link');
+                if (userLink) {
                     e.stopPropagation();
-                    const custId = btnProfile.getAttribute('data-id');
+                    const custId = userLink.getAttribute('data-id');
                     sessionStorage.setItem('pawpal_admin_customer_id', custId);
                     sessionStorage.setItem('pawpal_admin_customer_name', customerDatabase[custId]?.name || '');
                     renderDrawerCustomerProfile(custId);
                     switchSubtab('tab-profile');
-                    closeAllDropdowns();
-                    return;
-                }
-
-                const btnEdit = e.target.closest('.btn-edit-user-table');
-                if (btnEdit) {
-                    e.stopPropagation();
-                    const custId = btnEdit.getAttribute('data-id');
-                    closeAllDropdowns();
-                    openEditCustomerModal(custId);
-                    return;
-                }
-
-                const btnLock = e.target.closest('.btn-lock-user');
-                if (btnLock) {
-                    e.stopPropagation();
-                    const custId = btnLock.getAttribute('data-id');
-                    if (customerDatabase[custId]) {
-                        customerDatabase[custId].status = 'LOCKED';
-                        customerDatabase[custId].authStatus = 'Tài khoản bị khóa';
-                        persistCustomersData();
-                        renderCustomersTable();
-                        updateCustomerKPIs();
-                        showToast(`Đã khóa tài khoản khách hàng ${customerDatabase[custId].name}!`);
-                    }
-                    closeAllDropdowns();
-                    return;
-                }
-
-                const btnUnlock = e.target.closest('.btn-unlock-user');
-                if (btnUnlock) {
-                    e.stopPropagation();
-                    const custId = btnUnlock.getAttribute('data-id');
-                    if (customerDatabase[custId]) {
-                        customerDatabase[custId].status = 'ACTIVE';
-                        customerDatabase[custId].authStatus = 'Đã kích hoạt';
-                        persistCustomersData();
-                        renderCustomersTable();
-                        updateCustomerKPIs();
-                        showToast(`Đã mở khóa tài khoản khách hàng ${customerDatabase[custId].name}!`);
-                    }
-                    closeAllDropdowns();
+                    closeGlobalDropdown();
                     return;
                 }
             });
         }
-
-        // Bấm ra ngoài tự động đóng menu 3 chấm
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.btn-action-more') && !e.target.closest('.action-dropdown-menu')) {
-                closeAllDropdowns();
-            }
-        });
 
         // 6. Modal Tiếp nhận tại quầy (Quick Add) kèm Chống trùng SĐT
         const modalAdd = document.getElementById('modalAddCustomer');
