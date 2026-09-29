@@ -286,42 +286,51 @@
    ========================================================================== */
 .action-dropdown-wrapper {
     position: relative;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-action-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
     background: transparent;
     border: none;
-    color: var(--text-muted);
-    font-size: 14px;
-    letter-spacing: 2px;
-    cursor: pointer;
-    padding: 4px 8px;
     border-radius: var(--admin-radius);
+    color: var(--text-muted);
+    font-size: 16px;
     font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    user-select: none;
 }
 
-.btn-action-more:hover {
-    color: var(--text-heading);
-    background-color: rgba(35, 107, 72, 0.08);
+.btn-action-more:hover,
+.btn-action-more.active {
+    background-color: #EEF5F1;
+    color: #236B48;
 }
 
 .action-dropdown-menu {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 4px);
-    background-color: #FFFFFF;
+    position: fixed;
+    background-color: #FFFFFF !important;
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius);
     box-shadow: 0 8px 24px rgba(26, 43, 35, 0.12);
-    min-width: 175px;
+    min-width: 185px;
     padding: 6px 0;
-    z-index: 100;
+    z-index: 99999;
     display: none;
+    flex-direction: column;
 }
 
-.action-dropdown-wrapper.open .action-dropdown-menu {
-    display: block;
+.action-dropdown-menu.show {
+    display: flex !important;
 }
 
 .dropdown-item {
@@ -335,6 +344,8 @@
     border: none;
     text-align: left;
     cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.12s ease, color 0.12s ease;
 }
 
 .dropdown-item:hover {
@@ -342,9 +353,22 @@
     color: #236B48;
 }
 
+.dropdown-item.text-danger {
+    color: #DC2626;
+}
+
 .dropdown-item.text-danger:hover {
     background-color: #FEE2E2;
     color: #DC2626;
+}
+
+.dropdown-item.text-success {
+    color: #165335;
+}
+
+.dropdown-item.text-success:hover {
+    background-color: #DCEEE2;
+    color: #165335;
 }
 
 /* ==========================================================================

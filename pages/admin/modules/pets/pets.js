@@ -388,6 +388,7 @@
         }
 
         function switchSubtab(targetSubtab) {
+            if (typeof closePetGlobalDropdown === 'function') closePetGlobalDropdown();
             headerSubtabBtns.forEach(btn => {
                 btn.classList.toggle('active', btn.getAttribute('data-subtab') === targetSubtab);
             });
@@ -669,22 +670,165 @@
             }
         });
 
-        // 5. Quản lý dropdown 3 chấm (•••)
-        document.addEventListener('click', (e) => {
-            const moreBtn = e.target.closest('.btn-action-more');
-            const allDropdowns = document.querySelectorAll('.action-dropdown-wrapper');
+        // ====================================================================
+        // 5. GLOBAL ACTION DROPDOWN PORTAL (•••) CHO BẢNG THÚ CƯNG
+        // ====================================================================
+        let currentWeighingPetId = 'PET-001';
+        let petGlobalActionDropdown = document.getElementById('petGlobalActionDropdown');
+        if (!petGlobalActionDropdown) {
+            petGlobalActionDropdown = document.createElement('div');
+            petGlobalActionDropdown.id = 'petGlobalActionDropdown';
+            petGlobalActionDropdown.className = 'action-dropdown-menu';
+            document.body.appendChild(petGlobalActionDropdown);
+        }
 
-            if (moreBtn) {
-                const wrapper = moreBtn.closest('.action-dropdown-wrapper');
-                const isOpen = wrapper.classList.contains('open');
-                allDropdowns.forEach(w => w.classList.remove('open'));
-                if (!isOpen) {
-                    wrapper.classList.add('open');
+        function closePetGlobalDropdown() {
+            if (petGlobalActionDropdown) {
+                petGlobalActionDropdown.classList.remove('show');
+                petGlobalActionDropdown.style.display = 'none';
+                petGlobalActionDropdown.removeAttribute('data-id');
+            }
+            document.querySelectorAll('.btn-action-more.active').forEach(b => b.classList.remove('active'));
+        }
+
+        function togglePetGlobalDropdown(btn) {
+            const petId = btn.getAttribute('data-id');
+            const isCurrentlyOpen = petGlobalActionDropdown.classList.contains('show') &&
+                                    petGlobalActionDropdown.getAttribute('data-id') === petId;
+
+            closePetGlobalDropdown();
+            if (isCurrentlyOpen) return;
+
+            const pet = petsData[petId];
+            if (!pet) return;
+
+            btn.classList.add('active');
+            petGlobalActionDropdown.setAttribute('data-id', petId);
+            const isArchived = pet.status === 'Lưu trữ';
+
+            petGlobalActionDropdown.innerHTML = `
+                <button type="button" class="dropdown-item" data-action="profile">
+                    Xem hồ sơ chi tiết
+                </button>
+                <button type="button" class="dropdown-item" data-action="weigh">
+                    Cân bé và Thể trạng
+                </button>
+                <button type="button" class="dropdown-item" data-action="print">
+                    In thẻ đeo cổ (80mm)
+                </button>
+                <button type="button" class="dropdown-item" data-action="service">
+                    Tạo ca dịch vụ
+                </button>
+                ${isArchived ? `
+                    <button type="button" class="dropdown-item text-success" data-action="restore">
+                        Khôi phục hồ sơ
+                    </button>
+                ` : `
+                    <button type="button" class="dropdown-item text-danger" data-action="archive">
+                        Lưu trữ hồ sơ
+                    </button>
+                `}
+            `;
+
+            // Đo kích thước thực tế
+            petGlobalActionDropdown.style.display = 'flex';
+            petGlobalActionDropdown.style.visibility = 'hidden';
+            petGlobalActionDropdown.style.top = '0px';
+            petGlobalActionDropdown.style.left = '0px';
+
+            const rect = btn.getBoundingClientRect();
+            const dropdownWidth = petGlobalActionDropdown.offsetWidth || 185;
+            const dropdownHeight = petGlobalActionDropdown.offsetHeight || 190;
+            petGlobalActionDropdown.style.visibility = 'visible';
+
+            let left = rect.right - dropdownWidth;
+            if (left < 10) left = 10;
+
+            const spaceBelow = window.innerHeight - rect.bottom;
+            let top;
+            if (spaceBelow < dropdownHeight + 10 && rect.top > dropdownHeight + 10) {
+                // Lật ngược lên trên nếu gần đáy màn hình
+                top = rect.top - dropdownHeight - 4;
+            } else {
+                top = rect.bottom + 4;
+            }
+
+            petGlobalActionDropdown.style.top = `${top}px`;
+            petGlobalActionDropdown.style.left = `${left}px`;
+            petGlobalActionDropdown.style.zIndex = '99999';
+            petGlobalActionDropdown.classList.add('show');
+        }
+
+        // Bắt sự kiện thao tác trên dropdown pet
+        petGlobalActionDropdown.addEventListener('click', (e) => {
+            const item = e.target.closest('.dropdown-item');
+            if (!item) return;
+            e.stopPropagation();
+
+            const action = item.getAttribute('data-action');
+            const petId = petGlobalActionDropdown.getAttribute('data-id');
+            closePetGlobalDropdown();
+
+            if (!petId || !petsData[petId]) return;
+            const pet = petsData[petId];
+
+            if (action === 'profile') {
+                sessionStorage.setItem('pawpal_admin_pet_id', petId);
+                sessionStorage.setItem('pawpal_admin_pet_name', pet.name);
+                openPetProfile(petId);
+            } else if (action === 'weigh') {
+                currentWeighingPetId = petId;
+                const weighPetName = document.getElementById('weighPetName');
+                const weighOldWeight = document.getElementById('weighPetOldWeight');
+                const weighNewWeightInput = document.getElementById('weighPetNewWeight');
+                const modalWeigh = document.getElementById('modalWeighPet');
+                if (weighPetName) weighPetName.value = pet.name;
+                if (weighOldWeight) weighOldWeight.value = pet.weight;
+                if (weighNewWeightInput) weighNewWeightInput.value = pet.weightNum || parseFloat(pet.weight) || 8.5;
+                if (typeof updatePriceMatrix === 'function') {
+                    updatePriceMatrix(weighNewWeightInput ? weighNewWeightInput.value : 8.5);
                 }
-            } else if (!e.target.closest('.action-dropdown-menu')) {
-                allDropdowns.forEach(w => w.classList.remove('open'));
+                if (modalWeigh) modalWeigh.classList.add('show');
+            } else if (action === 'print') {
+                openCollarTagPreview(pet);
+            } else if (action === 'service') {
+                handleCreateServiceForPet(petId);
+            } else if (action === 'archive') {
+                if (confirm(`Bạn có chắc muốn lưu trữ hồ sơ của bé cưng ${pet.name || petId}?`)) {
+                    pet.status = 'Lưu trữ';
+                    persistPetsData();
+                    renderPetsTable();
+                    updatePetKPIs();
+                    showToast(`Đã lưu trữ hồ sơ bé cưng ${pet.name}!`);
+                }
+            } else if (action === 'restore') {
+                pet.status = 'Đang nuôi';
+                persistPetsData();
+                renderPetsTable();
+                updatePetKPIs();
+                showToast(`Đã khôi phục hoạt động cho bé cưng ${pet.name}!`);
             }
         });
+
+        // Bấm nút 3 chấm để bật/tắt dropdown, hoặc click ra ngoài để đóng
+        document.addEventListener('click', (e) => {
+            const moreBtn = e.target.closest('.btn-action-more');
+            if (moreBtn) {
+                e.stopPropagation();
+                togglePetGlobalDropdown(moreBtn);
+                return;
+            }
+
+            if (!e.target.closest('#petGlobalActionDropdown')) {
+                closePetGlobalDropdown();
+            }
+        });
+
+        window.addEventListener('resize', closePetGlobalDropdown);
+        const petScrollBox = document.querySelector('.table-responsive-wrapper');
+        if (petScrollBox) {
+            petScrollBox.addEventListener('scroll', closePetGlobalDropdown);
+        }
 
         // ====================================================================
         // 6. BỘ LỌC VÀ TÌM KIẾM THÚ CƯNG (ĐẦY ĐỦ CÂN NẶNG & TIÊM CHỦNG)
@@ -720,6 +864,7 @@
         }
 
         function renderPetsTable() {
+            closePetGlobalDropdown();
             const tbody = document.getElementById('petTableTbody');
             if (!tbody) return;
 
@@ -829,33 +974,8 @@
                         <td>
                             <span class="admin-badge ${statusBadgeClass}">${pet.status}</span>
                         </td>
-                        <td style="text-align: center;">
-                            <div class="action-dropdown-wrapper">
-                                <button type="button" class="btn-action-more" data-id="${pet.code}" title="Tác vụ">•••</button>
-                                <div class="action-dropdown-menu">
-                                    <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="${pet.code}">
-                                        Xem hồ sơ chi tiết
-                                    </button>
-                                    <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="${pet.code}">
-                                        Cân bé và Thể trạng
-                                    </button>
-                                    <button type="button" class="dropdown-item btn-print-collar-tag" data-id="${pet.code}">
-                                        In thẻ đeo cổ (80mm)
-                                    </button>
-                                    <button type="button" class="dropdown-item btn-create-service-pet" data-id="${pet.code}">
-                                        Tạo ca dịch vụ
-                                    </button>
-                                    ${isArchived ? `
-                                        <button type="button" class="dropdown-item text-success btn-restore-pet" data-id="${pet.code}">
-                                            Khôi phục hồ sơ
-                                        </button>
-                                    ` : `
-                                        <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="${pet.code}">
-                                            Lưu trữ hồ sơ
-                                        </button>
-                                    `}
-                                </div>
-                            </div>
+                        <td style="width: 70px; min-width: 70px; text-align: center; padding: 8px 10px;">
+                            <button type="button" class="btn-action-more" data-id="${pet.code}" title="Tác vụ">•••</button>
                         </td>
                     </tr>
                 `;
@@ -927,7 +1047,7 @@
         const weighSpaPriceResult = document.getElementById('weighSpaPriceResult');
         const weighGroomPriceResult = document.getElementById('weighGroomPriceResult');
         const weighHotelPriceResult = document.getElementById('weighHotelPriceResult');
-        let currentWeighingPetId = 'PET-001';
+        currentWeighingPetId = 'PET-001';
 
         function updatePriceMatrix(weight) {
             const kg = parseFloat(weight) || 0;
@@ -1297,7 +1417,7 @@
                 if (pet) {
                     openCollarTagPreview(pet);
                 }
-                btnPrint.closest('.action-dropdown-wrapper')?.classList.remove('open');
+                closePetGlobalDropdown();
             }
         });
 
@@ -2251,7 +2371,7 @@
             const btnCreate = e.target.closest('.btn-create-service-pet');
             if (btnCreate) {
                 const petId = btnCreate.getAttribute('data-id') || btnCreate.closest('tr')?.getAttribute('data-id');
-                btnCreate.closest('.action-dropdown-wrapper')?.classList.remove('open');
+                closePetGlobalDropdown();
                 handleCreateServiceForPet(petId);
                 return;
             }
