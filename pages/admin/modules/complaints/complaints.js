@@ -1901,6 +1901,45 @@
                 : 'tab-complaint-services';
 
         switchSubtab(initialSubtab);
+
+        // Tiếp nhận preset khiếu nại hoặc mở Ticket từ phân hệ khác
+        const checkPresetComplaint = () => {
+            const rawPreset = sessionStorage.getItem('pawpal_admin_complaint_preset');
+            if (rawPreset) {
+                try {
+                    const preset = JSON.parse(rawPreset);
+                    const phoneEl = document.getElementById('inputTicketCustomerPhone');
+                    const nameEl = document.getElementById('inputTicketCustomerName');
+                    if (phoneEl && (preset.custPhone || preset.ownerPhone)) phoneEl.value = preset.custPhone || preset.ownerPhone;
+                    if (nameEl && (preset.custName || preset.ownerName)) nameEl.value = preset.custName || preset.ownerName;
+
+                    const createModal = document.getElementById('createTicketModalOverlay');
+                    if (createModal) {
+                        const titleEl = document.getElementById('createTicketModalTitle');
+                        if (titleEl) titleEl.textContent = 'Tiếp nhận khiếu nại khách hàng';
+                        createModal.classList.add('active');
+                    }
+                    sessionStorage.removeItem('pawpal_admin_complaint_preset');
+                } catch (e) {}
+            }
+
+            const rawTicketId = sessionStorage.getItem('pawpal_admin_ticket_id') || sessionStorage.getItem('pawpal_admin_complaint_selected_id');
+            if (rawTicketId) {
+                sessionStorage.removeItem('pawpal_admin_ticket_id');
+                const foundService = mockServiceComplaints.find(i => i.id === rawTicketId);
+                const foundOrder = mockOrderComplaints.find(i => i.id === rawTicketId);
+                if (foundService) {
+                    currentActiveTicket = foundService;
+                    currentTicketType = 'service';
+                    switchSubtab('tab-complaint-detail');
+                } else if (foundOrder) {
+                    currentActiveTicket = foundOrder;
+                    currentTicketType = 'order';
+                    switchSubtab('tab-complaint-detail');
+                }
+            }
+        };
+        setTimeout(checkPresetComplaint, 150);
     }
 
     if (document.readyState === 'loading') {

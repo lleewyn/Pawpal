@@ -429,29 +429,29 @@
             sessionStorage.setItem('pawpal_admin_customers_data', JSON.stringify(customerDatabase));
         }
 
-        function showToast(msg) {
+        function showToast(msg, type = 'success') {
             let toast = document.getElementById('adminGlobalToast');
             if (!toast) {
                 toast = document.createElement('div');
                 toast.id = 'adminGlobalToast';
-                toast.style.cssText = `
-                    position: fixed;
-                    bottom: 24px;
-                    right: 24px;
-                    background-color: #236B48;
-                    color: #FFFFFF;
-                    padding: 12px 20px;
-                    border-radius: 9px;
-                    font-size: 13.5px;
-                    font-weight: 500;
-                    box-shadow: 0 8px 24px rgba(26, 43, 35, 0.2);
-                    z-index: 9999;
-                    display: none;
-                `;
                 document.body.appendChild(toast);
             }
+            const isAlert = type === 'warning' || type === 'error' || type === 'danger';
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                background-color: ${isAlert ? '#8F2424' : '#236B48'};
+                color: #FFFFFF;
+                padding: 12px 20px;
+                border-radius: 9px;
+                font-size: 13.5px;
+                font-weight: 500;
+                box-shadow: 0 8px 24px rgba(26, 43, 35, 0.2);
+                z-index: 9999;
+                display: block;
+            `;
             toast.textContent = msg;
-            toast.style.display = 'block';
             if (window._custToastTimer) clearTimeout(window._custToastTimer);
             window._custToastTimer = setTimeout(() => {
                 toast.style.display = 'none';
@@ -747,6 +747,7 @@
                             </span>
                         </div>
                         <div class="pet-card-actions">
+                            <button type="button" class="btn-pet-action btn-pet-view-profile" data-pet-id="${pet.id || ('PET-' + (idx+1))}" data-pet-name="${pet.name}">Xem hồ sơ bé</button>
                             <button type="button" class="btn-pet-action btn-pet-edit" data-cust-id="${custId}" data-pet-index="${idx}">Sửa</button>
                             <button type="button" class="btn-pet-action btn-pet-delete" data-cust-id="${custId}" data-pet-index="${idx}">Xóa</button>
                         </div>
@@ -759,6 +760,21 @@
                     </div>
                 </div>
             `).join('');
+
+            // Gán sự kiện Xem hồ sơ bé cưng -> Chuyển sang phân hệ Thú cưng
+            container.querySelectorAll('.btn-pet-view-profile').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const petId = btn.getAttribute('data-pet-id');
+                    const petName = btn.getAttribute('data-pet-name') || 'Bé cưng';
+                    sessionStorage.setItem('pawpal_admin_pet_id', petId);
+                    sessionStorage.setItem('pawpal_admin_pet_name', petName);
+                    sessionStorage.setItem('pawpal_admin_pet_subtab', 'tab-pet-profile');
+                    showToast(`Chuyển đến hồ sơ bé ${petName} (${petId}) tại phân hệ Thú cưng!`);
+                    const sidebarBtn = document.querySelector('.sidebar-menu-btn[data-title="Thú cưng"]');
+                    if (sidebarBtn) sidebarBtn.click();
+                });
+            });
 
             // Gán sự kiện Sửa cho từng thẻ Pet
             container.querySelectorAll('.btn-pet-edit').forEach(btn => {
@@ -813,7 +829,8 @@
             tbody.querySelectorAll('.btn-view-order-action').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const ordId = btn.getAttribute('data-order-id');
-                    alert(`Mở thông tin chi tiết đơn hàng ${ordId} tại phân hệ Bán hàng!`);
+                    sessionStorage.setItem('pawpal_admin_order_id', ordId);
+                    showToast(`Mở thông tin chi tiết đơn hàng ${ordId} tại phân hệ Bán hàng!`);
                     const menuBtn = document.querySelector('.sidebar-menu-btn[data-title="Bán hàng"]');
                     if (menuBtn) menuBtn.click();
                 });
@@ -845,7 +862,8 @@
             tbody.querySelectorAll('.btn-view-booking-action').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const bId = btn.getAttribute('data-booking-id');
-                    alert(`Mở nhật ký quy trình chăm sóc lịch hẹn ${bId} tại phân hệ Dịch vụ!`);
+                    sessionStorage.setItem('pawpal_admin_booking_id', bId);
+                    showToast(`Mở nhật ký quy trình chăm sóc lịch hẹn ${bId} tại phân hệ Dịch vụ!`);
                     const menuBtn = document.querySelector('.sidebar-menu-btn[data-title="Dịch vụ"]');
                     if (menuBtn) menuBtn.click();
                 });
@@ -877,7 +895,9 @@
             tbody.querySelectorAll('.btn-view-ticket-action').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const tId = btn.getAttribute('data-ticket-id');
-                    alert(`Chuyển đến xử lý Ticket khiếu nại ${tId} tại phân hệ Khiếu nại!`);
+                    sessionStorage.setItem('pawpal_admin_ticket_id', tId);
+                    sessionStorage.setItem('pawpal_admin_complaint_selected_id', tId);
+                    showToast(`Chuyển đến xử lý Ticket khiếu nại ${tId} tại phân hệ Khiếu nại!`);
                     const menuBtn = document.querySelector('.sidebar-menu-btn[data-title="Khiếu nại"]');
                     if (menuBtn) menuBtn.click();
                 });
@@ -1364,7 +1384,7 @@
                 const reason = document.getElementById('adjustReason')?.value || 'Điều chỉnh điểm';
 
                 if (pts <= 0) {
-                    alert('Vui lòng nhập số điểm lớn hơn 0!');
+                    showToast('Vui lòng nhập số điểm lớn hơn 0!', 'warning');
                     return;
                 }
 
@@ -1419,7 +1439,7 @@
                     btn.className = 'dropdown-item text-success btn-unlock-user';
                     btn.innerHTML = `<span>Mở khóa tài khoản</span>`;
                     if (customerDatabase[custId]) customerDatabase[custId].status = 'LOCKED';
-                    alert('Đã khóa tài khoản khách hàng!');
+                    showToast('Đã khóa tài khoản khách hàng!');
                 } else if (!isLock && badge) {
                     row.classList.remove('row-locked');
                     badge.className = 'admin-badge badge-success';
@@ -1427,7 +1447,7 @@
                     btn.className = 'dropdown-item text-danger btn-lock-user';
                     btn.innerHTML = `<span>Khóa tài khoản</span>`;
                     if (customerDatabase[custId]) customerDatabase[custId].status = 'ACTIVE';
-                    alert('Đã mở khóa tài khoản khách hàng!');
+                    showToast('Đã mở khóa tài khoản khách hàng!');
                 }
 
                 document.querySelectorAll('.action-dropdown-menu.show').forEach(m => m.classList.remove('show'));
@@ -1594,7 +1614,7 @@
                 updateAddressValuesFromDOM();
                 const validAddresses = currentEditingAddresses.filter(a => a.address.trim() !== '');
                 if (validAddresses.length === 0) {
-                    alert('Vui lòng nhập ít nhất một địa chỉ nhận hàng!');
+                    showToast('Vui lòng nhập ít nhất một địa chỉ nhận hàng!', 'warning');
                     return;
                 }
                 if (!validAddresses.some(a => a.isDefault)) {
@@ -1815,23 +1835,54 @@
 
         // 15. Điều hướng liên kết chéo trên đầu Hồ sơ (Cross-module quick actions)
         document.querySelector('.btn-link-service')?.addEventListener('click', () => {
-            const custName = document.getElementById('drawerCustomerName')?.textContent || '';
+            const currentCustId = sessionStorage.getItem('pawpal_admin_customer_id') || document.getElementById('profileValCustId')?.textContent || 'CUST-001';
+            const cust = customerDatabase[currentCustId] || { name: document.getElementById('drawerCustomerName')?.textContent || 'Khách hàng' };
+            const presetBooking = {
+                custId: cust.id || currentCustId,
+                custName: cust.name || '',
+                ownerName: cust.name || '',
+                custPhone: cust.phone || '',
+                ownerPhone: cust.phone || '',
+                petName: (cust.pets && cust.pets.length > 0) ? cust.pets[0].name : '',
+                pets: cust.pets || []
+            };
+            sessionStorage.setItem('pawpal_admin_booking_preset', JSON.stringify(presetBooking));
+            showToast(`Đã thiết lập thông tin đặt lịch cho ${cust.name}, chuyển sang phân hệ Dịch vụ!`);
             const btn = document.querySelector('.sidebar-menu-btn[data-title="Dịch vụ"]');
-            alert(`Tự động điền thông tin ${custName} và chuyển sang phân hệ Dịch vụ!`);
             if (btn) btn.click();
         });
 
         document.querySelector('.btn-link-order')?.addEventListener('click', () => {
-            const custName = document.getElementById('drawerCustomerName')?.textContent || '';
+            const currentCustId = sessionStorage.getItem('pawpal_admin_customer_id') || document.getElementById('profileValCustId')?.textContent || 'CUST-001';
+            const cust = customerDatabase[currentCustId] || { name: document.getElementById('drawerCustomerName')?.textContent || 'Khách hàng' };
+            const defaultAddr = cust.addresses?.find(a => a.isDefault)?.address || cust.addresses?.[0]?.address || '';
+            const presetOrder = {
+                custId: cust.id || currentCustId,
+                custName: cust.name || '',
+                ownerName: cust.name || '',
+                custPhone: cust.phone || '',
+                ownerPhone: cust.phone || '',
+                address: defaultAddr
+            };
+            sessionStorage.setItem('pawpal_admin_order_preset', JSON.stringify(presetOrder));
+            showToast(`Đã thiết lập thông tin lên đơn cho ${cust.name}, chuyển sang phân hệ Bán hàng!`);
             const btn = document.querySelector('.sidebar-menu-btn[data-title="Bán hàng"]');
-            alert(`Tự động điền thông tin ${custName} và chuyển sang phân hệ Bán hàng để lên đơn!`);
             if (btn) btn.click();
         });
 
         document.querySelector('.btn-link-complaint')?.addEventListener('click', () => {
-            const custName = document.getElementById('drawerCustomerName')?.textContent || '';
+            const currentCustId = sessionStorage.getItem('pawpal_admin_customer_id') || document.getElementById('profileValCustId')?.textContent || 'CUST-001';
+            const cust = customerDatabase[currentCustId] || { name: document.getElementById('drawerCustomerName')?.textContent || 'Khách hàng' };
+            const presetComplaint = {
+                custId: cust.id || currentCustId,
+                custName: cust.name || '',
+                ownerName: cust.name || '',
+                custPhone: cust.phone || '',
+                ownerPhone: cust.phone || ''
+            };
+            sessionStorage.setItem('pawpal_admin_complaint_preset', JSON.stringify(presetComplaint));
+            showToast(`Mở phiếu tiếp nhận khiếu nại cho ${cust.name} tại phân hệ Khiếu nại!`);
             const btn = document.querySelector('.sidebar-menu-btn[data-title="Khiếu nại"]');
-            alert(`Mở phiếu hỗ trợ cho khách hàng ${custName} tại phân hệ Khiếu nại!`);
             if (btn) btn.click();
         });
 

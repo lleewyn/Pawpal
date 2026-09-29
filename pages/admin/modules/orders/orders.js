@@ -1907,6 +1907,44 @@
         if (savedSubtab && document.getElementById(`subtab-${savedSubtab}`)) {
             switchSubtab(savedSubtab);
         }
+
+        // Tiếp nhận preset đặt đơn và mở đơn hàng từ phân hệ Khách hàng
+        const checkPresetOrder = () => {
+            const rawPreset = sessionStorage.getItem('pawpal_admin_order_preset');
+            if (rawPreset) {
+                try {
+                    const preset = JSON.parse(rawPreset);
+                    const phoneEl = document.getElementById('createOrderPhone');
+                    const nameEl = document.getElementById('createOrderName');
+                    const addrInput = document.getElementById('createOrderCustomAddress');
+                    const addrRadios = document.querySelectorAll('input[name="addrSelect"]');
+
+                    if (phoneEl && (preset.custPhone || preset.ownerPhone)) phoneEl.value = preset.custPhone || preset.ownerPhone;
+                    if (nameEl && (preset.custName || preset.ownerName)) nameEl.value = preset.custName || preset.ownerName;
+                    if (preset.address && addrInput) {
+                        addrInput.value = preset.address;
+                        if (addrRadios && addrRadios[1]) {
+                            addrRadios[1].checked = true;
+                            addrRadios[1].closest('.address-item-card')?.classList.add('selected');
+                            addrRadios[0]?.closest('.address-item-card')?.classList.remove('selected');
+                        }
+                    }
+
+                    const modal = document.getElementById('modalCreateOrder');
+                    if (modal) modal.classList.add('active');
+                    sessionStorage.removeItem('pawpal_admin_order_preset');
+                } catch (e) {}
+            }
+
+            const rawOrderId = sessionStorage.getItem('pawpal_admin_order_id');
+            if (rawOrderId) {
+                sessionStorage.removeItem('pawpal_admin_order_id');
+                if (window.PawpalOrdersModule?.openOrderDetail) {
+                    window.PawpalOrdersModule.openOrderDetail(rawOrderId);
+                }
+            }
+        };
+        setTimeout(checkPresetOrder, 150);
     }
 
     // Xuất API công khai cho module Orders

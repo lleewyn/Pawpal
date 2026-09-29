@@ -838,6 +838,15 @@
     text-decoration: none;
 }
 
+.btn-pet-view-profile {
+    color: var(--admin-primary);
+    background-color: #EEF5F1;
+}
+
+.btn-pet-view-profile:hover {
+    background-color: #DCEEE2;
+}
+
 .btn-pet-edit {
     color: var(--admin-primary);
 }
