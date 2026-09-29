@@ -219,7 +219,20 @@ sequenceDiagram
     Comp->>CRM: Ghi nhận vĩnh viễn tiền sử khiếu nại vào Hồ sơ 360° của bé
 ```
 
-#### 3. Quy tắc bàn giao dữ liệu không mất dấu:
+#### 3. Hướng dẫn thao tác từng bước trên giao diện (Step-by-Step Actions):
+
+| Bước | Phân hệ / Khu vực | Thao tác của nhân sự | Phản hồi của hệ thống |
+| :--- | :--- | :--- | :--- |
+| **Bước 1** | **Chatbot** ➔ Cột Trái (Danh sách hội thoại) | Nhân viên theo dõi tab con **"Xử lý ngay"** (có số đếm màu đỏ). Bấm vào ca chat có nhãn **"Bực bội"** hoặc đồng hồ SLA báo đỏ. | Khung giữa lập tức hiển thị toàn bộ tin nhắn. Thẻ trên đầu tóm tắt trong 3 giây: Tên khách, Mã đơn/Lịch hẹn và cốt lõi vấn đề. |
+| **Bước 2** | **Chatbot** ➔ Khung giữa (Thanh tiêu đề ca chat) | Nhân viên bấm nút **"Tiếp nhận"** (`btnToggleTakeover`). Chế độ chat chuyển sang "Nhân viên trực tiếp". | AI tạm dừng trả lời tự động để nhân viên toàn quyền trao đổi với khách. Màng lọc tâm lý tự động che mờ các từ ngữ kích động. |
+| **Bước 3A** | *(Nếu sự cố nhẹ)* ➔ Dưới khung soạn thảo | Nhân viên bấm nút gợi ý AI mẫu xoa dịu, hoặc bấm nút **"Tặng điểm Pawpoint"** (50 - 100 điểm) để tạ lỗi ngay. | Hệ thống cộng điểm tức thì vào ví khách hàng, gửi tin nhắn thông báo vào đoạn chat. **Kết thúc ca chat tại chỗ mà không cần mở Ticket.** |
+| **Bước 3B** | *(Nếu sự cố nặng)* ➔ Nút menu `•••` trên tiêu đề chat | Nhân viên bấm `•••` ➔ Chọn **"Chuyển thành Ticket"** (`btnConvertToTicket`). Điền loại (Dịch vụ/Đơn hàng), mức độ ưu tiên và bấm **"Xác nhận chuyển"**. | Hệ thống sinh mã `TK-xxxx`, tự động trích xuất toàn bộ lịch sử tin nhắn (Chat Transcript) và lưu vào bộ nhớ chia sẻ. Đưa thẻ vé vào khung chat. |
+| **Bước 4** | **Chatbot** ➔ Thẻ vé trong khung chat | Nhân viên hoặc Quản lý bấm nút **"Mở vé trong Khiếu nại"** (`btn-jump-ticket`). | Bộ định tuyến tự động chuyển sang phân hệ **Khiếu nại**, tự động nạp ticket mới vào bảng và mở thẳng màn hình **Chi tiết khiếu nại**. |
+| **Bước 5** | **Khiếu nại** ➔ Màn hình Chi tiết Ticket | Quản lý/Admin đọc trích đoạn tại khối **"Biên bản đối thoại từ Kênh Trực chat"**, đối chiếu ảnh check-in đầu vào, camera phòng sấy hoặc mã vận đơn. | Quản lý nắm bắt 100% ngữ cảnh mà **không cần gọi điện hỏi lại khách**. Nếu có sai sót nghiêm trọng, có thể bấm nút *"Tạm khóa an toàn KTV"*. |
+| **Bước 6** | **Khiếu nại** ➔ Nút "Chọn phương án giải quyết" | Quản lý bấm nút, chọn 1 trong các phương án: **Tặng Voucher/Điểm**, **Làm lại dịch vụ miễn phí**, **Hoàn tiền**, hoặc **Đổi trả hàng RMA**. | Hệ thống ghi nhận biên bản vào Timeline, chuyển trạng thái Ticket sang **"Đã giải quyết"** và xóa cảnh báo quá hạn trên Dashboard. |
+| **Bước 7** | **Vòng lặp đóng (Closed-Loop)** | Hệ thống tự động bắn cờ kết quả giải quyết về phân hệ **Chatbot** và lưu vĩnh viễn vào **Hồ sơ 360° Khách hàng**. | Bên phân hệ Chatbot, cột hồ sơ khách hàng lập tức hiển thị huy hiệu xanh **`[Đã giải quyết ✓]`**. Nhân viên chat có căn cứ báo tin vui dứt điểm cho khách. |
+
+#### 4. Quy tắc bàn giao dữ liệu không mất dấu:
 - **Biên bản đối thoại (Chat Transcript)**: Toàn bộ lịch sử tin nhắn giữa khách và CSKH được lưu nguyên vẹn trong Ticket. Quản lý khi tiếp nhận xác minh không được hỏi lại những gì khách đã trình bày trên chat.
 - **Vòng lặp đóng (Closed-loop)**: Sau khi Quản lý xử lý xong bên phân hệ Khiếu nại, bảng thông tin khách hàng ở phân hệ Chatbot tự động hiển thị huy hiệu `[Đã giải quyết]` kèm phương án cụ thể, giúp CSKH tự tin phản hồi nếu khách tiếp tục nhắn tin hỏi tiến độ.
 
@@ -328,21 +341,47 @@ sequenceDiagram
 ### 3.7. Phân hệ Khiếu nại và Hỗ trợ (Complaints)
 *Giải quyết sự cố dịch vụ và đổi trả hàng minh bạch, bảo vệ uy tín thương hiệu.*
 
+- **Cấu trúc 3 Subtab chuyên sâu trên Header Bar**:
+  1. *Theo Dịch vụ (`tab-complaint-services`)*: Quản lý các sự cố về Spa & Grooming, Pet Hotel, Pet Taxi (kèm nhãn mức độ, KTV thực hiện, đồng hồ đếm ngược SLA).
+  2. *Theo Đơn hàng (`tab-complaint-orders`)*: Quản lý khiếu nại về hàng lỗi, giao trễ, giao sai màu/kích thước, quy trình đổi trả hàng RMA.
+  3. *Chi tiết khiếu nại (`tab-complaint-detail`)*: Màn hình thẩm định và giải quyết 360°.
+- **Dữ liệu đối chứng 360° (Cross-Check Data)**:
+  - *Dành cho Dịch vụ*: Đối chiếu tình trạng sức khỏe lúc check-in đón bé, hình ảnh chụp vành tai/da lông đầu vào, nhật ký chăm sóc của KTV. Có nút *"Tạm khóa an toàn KTV"* để đình chỉ tạm thời KTV có nguy cơ vi phạm quy chuẩn.
+  - *Dành cho Đơn hàng*: Đối chiếu hình ảnh kiểm hàng trước khi đóng gói tại kho, thông tin đơn vị vận chuyển (GHN/GHTK), mã vận đơn và chữ ký người nhận.
+  - *Nguồn từ Trực chat*: Tự động hiển thị khối **"Biên bản đối thoại từ Kênh Trực chat"** trích xuất nguyên văn trao đổi giữa khách và CSKH.
+- **4 Phương án giải quyết & Đền bù chính thức**:
+  1. *Tặng Voucher và Pawpoint bồi hoàn*: Cộng trực tiếp điểm thưởng vào tài khoản khách và cấp mã voucher giảm giá cho lần chăm sóc kế tiếp.
+  2. *Làm lại dịch vụ miễn phí (Redo Service)*: Lên lịch hẹn mới miễn phí 100%, chỉ định KTV trưởng hoặc Groomer tay nghề cao thực hiện.
+  3. *Hoàn tiền bồi thường*: Nhập số tiền hoàn và chọn phương thức chuyển khoản/tiền mặt.
+  4. *Quy trình đổi trả hàng chuẩn RMA (4 bước)*: Tiếp nhận yêu cầu ➔ Bưu tá thu hồi hàng ➔ Kho kiểm định chất lượng ➔ Xuất hàng đổi mới hoặc hoàn tiền.
 - **Đồng hồ đếm ngược SLA**:
-  - Mức độ Khẩn cấp (High / Urgent): Bắt buộc tiếp nhận trong vòng 30 phút.
-  - Mức độ Tiêu chuẩn (Normal): Giải quyết dứt điểm trong 24 giờ.
-- **Quy trình hòa giải và bù đắp**:
-  - Xác minh dữ liệu trước dịch vụ (ảnh chụp lúc tiếp nhận, camera phòng sấy).
-  - Có chức năng tặng điểm thưởng Pawpoint đền bù trực tiếp hoặc tạo phiếu đổi trả sản phẩm mới (RMA).
+  - Mức độ Khẩn cấp (High / Urgent): Cảnh báo đỏ, ưu tiên xử lý trong 30 phút - 2 giờ.
+  - Mức độ Tiêu chuẩn (Normal): Giải quyết dứt điểm trong vòng 24 giờ.
 
 ---
 
-### 3.8. Phân hệ Trợ lý ảo Chatbot AI (Chatbot)
-*Giám sát các cuộc hội thoại tự động và phát hiện cảm xúc khách hàng.*
+### 3.8. Phân hệ Trợ lý ảo Chatbot AI và Trực chat CSKH (Chatbot)
+*Trung tâm Tiếp nhận và Điều phối CSKH thông minh kết hợp Gemini AI và Nhân viên trực tuyến.*
 
-- **Màng lọc tâm lý khách hàng**:
-  - *Tích cực / Trung tính*: AI tự động tư vấn giá, gợi ý dịch vụ và hướng dẫn đặt lịch.
-  - *Bức xúc / Tiêu cực (Toxic alert)*: Hệ thống cảnh báo màu đỏ và tự động chuyển quyền điều khiển sang nhân viên thật (Human Handover) để không làm mất lòng khách.
+- **Bố cục Hộp thư 3 khu vực chuẩn quốc tế**:
+  1. *Cột 1 (Trái) - Danh sách hội thoại & Bộ lọc thông minh*:
+     - Tab **"Xử lý ngay"**: Chỉ hiển thị các ca chat khẩn cấp (khách bực bội cấp 4-5, sự cố thú cưng, quá hạn SLA) kèm số đếm màu đỏ.
+     - Tab **"Đang chat"**: Danh sách các ca nhân viên đã bấm "Tiếp nhận" và đang trực tiếp gõ phím.
+     - Tab **"Tất cả"**: Toàn bộ lịch sử ca chat của Bot và các ca đã hoàn tất.
+  2. *Cột 2 (Giữa) - Khung chat trực tiếp & Điều phối nghiệp vụ*:
+     - **Thẻ tóm tắt ngữ cảnh AI 3 giây**: Tự động nhận diện tên khách, số điện thoại, vấn đề cốt lõi, mã đơn/lịch hẹn và đề xuất hướng xử lý.
+     - **Màng lọc bảo vệ tâm lý nhân viên**: Tự động che mờ các từ ngữ thô tục, lăng mạ thành thông báo an toàn, giúp nhân viên giữ vững bình tĩnh.
+     - **Gợi ý AI & Thư viện câu mẫu**: Trợ lý AI gợi ý sẵn câu trả lời đồng cảm/xoa dịu theo ngữ cảnh, bấm "Dùng mẫu này" để đưa ngay vào ô soạn thảo.
+     - **Nút 3 chấm `•••` Tác vụ một chạm**:
+       * *Tặng điểm Pawpoint*: Nạp ngay 50 - 100 điểm tạ lỗi trực tiếp vào ví khách hàng.
+       * *Chuyển thành Ticket*: Trích xuất toàn bộ biên bản đoạn chat chuyển sang phân hệ Khiếu nại.
+       * *Chuyển cấp Quản lý*: Bàn giao ca chat cho cấp quản lý can thiệp khi khách quá căng thẳng.
+  3. *Cột 3 (Phải) - Bảng thông tin khách hàng 360°*:
+     - Xem ngay họ tên, số điện thoại, hạng thành viên, số dư điểm Pawpoint.
+     - Danh sách thú cưng của khách và cảnh báo dị ứng/tập tính.
+     - Đơn hàng gần nhất và Lịch hẹn gần nhất (có liên kết nhảy nhanh).
+     - **Danh sách khiếu nại đang mở**: Tự động hiển thị trạng thái giải quyết khép kín từ phân hệ Khiếu nại (`Đã giải quyết ✓`).
+     - Khung ghi chú nội bộ bí mật dành cho nhân viên ca trực.
 
 ---
 
