@@ -1434,6 +1434,11 @@
             btnOpenAddPet.addEventListener('click', () => {
                 modalAddPet.classList.add('open');
             });
+
+            if (sessionStorage.getItem('pawpal_admin_pet_open_add_modal') === 'true') {
+                sessionStorage.removeItem('pawpal_admin_pet_open_add_modal');
+                modalAddPet.classList.add('open');
+            }
         }
 
         // Submit form tiếp nhận bé mới

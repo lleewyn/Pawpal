@@ -2184,6 +2184,14 @@
                     showToast(`Đã tự động điền thông tin bé ${preset.petName} vào phiếu tạo lịch hẹn!`);
                 } catch (e) {}
             }
+
+            if (sessionStorage.getItem('pawpal_admin_service_open_create_modal') === 'true') {
+                sessionStorage.removeItem('pawpal_admin_service_open_create_modal');
+                const todayStr = new Date().toISOString().split('T')[0];
+                const dateInput = document.getElementById('newBookingDate');
+                if (dateInput) dateInput.value = todayStr;
+                if (modalCreate) modalCreate.classList.add('active');
+            }
         };
         setTimeout(checkPresetBooking, 150);
 

@@ -1,5 +1,7 @@
 (function initDashboard() {
     updateDashboardLiveMetrics();
+    setupQuickReceptionActions();
+    setupBookingQuickModalEvents();
     window.addEventListener('focus', updateDashboardLiveMetrics);
     window.addEventListener('storage', updateDashboardLiveMetrics);
     setupDashboardCalendar();
@@ -143,13 +145,21 @@
                 return;
             }
 
-            bookingList.innerHTML = dayBookings.map((booking) => `
-                <button type="button" class="dashboard-booking-row" data-dashboard-module="Dịch vụ" data-booking-id="${booking.id || ''}">
+            bookingList.innerHTML = dayBookings.map((booking, idx) => `
+                <button type="button" class="dashboard-booking-row" data-booking-idx="${idx}">
                     <time>${booking.time}</time>
                     <span class="dashboard-booking-detail"><strong>${booking.pet} · ${booking.customer}</strong><small>${booking.service}</small></span>
                     <span class="admin-badge ${booking.badge}">${booking.status}</span>
                 </button>`).join('');
-            bindModuleNavigation(bookingList);
+
+            bookingList.querySelectorAll('.dashboard-booking-row').forEach((btn) => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(btn.dataset.bookingIdx, 10);
+                    const booking = dayBookings[idx] || dayBookings[0];
+                    if (booking) openBookingQuickModal(booking);
+                });
+            });
         }
 
         function renderCalendar() {
@@ -312,7 +322,15 @@
                         <div class="dashboard-day-timeline-grid">${timeSlotsMarkup}</div>
                         <div class="dashboard-day-timeline-events">${eventsMarkup}</div>
                     </div>`;
-                bindModuleNavigation(daysGrid);
+
+                daysGrid.querySelectorAll('.dashboard-day-event').forEach((btn) => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const bId = btn.getAttribute('data-booking-id');
+                        const found = dayBookings.find(b => b.id === bId) || dayBookings[0];
+                        if (found) openBookingQuickModal(found);
+                    });
+                });
             } else {
                 daysGrid.innerHTML = calendarDates.map((date) => {
                     if (!date) return '<span class="dashboard-calendar-blank" aria-hidden="true"></span>';
@@ -542,6 +560,128 @@
             elOrdersSub.textContent = pendingOrdersCount > 0
                 ? `${pendingOrdersCount} đơn hàng mới cần xác nhận`
                 : `Tất cả đơn hàng đã được duyệt`;
+        }
+
+        // Cập nhật Dòng cảnh báo khẩn cấp (thuần chữ đỏ, không khung theo AGENTS.md)
+        const alertBanner = document.getElementById('dashboardAlertBanner');
+        const alertText = document.getElementById('dashboardAlertText');
+        const alertBtn = document.getElementById('dashboardAlertAction');
+        if (alertBanner && alertText && alertBtn) {
+            if (pendingComplaintsCount > 0) {
+                alertBanner.style.display = 'flex';
+                alertText.textContent = `Cảnh báo vận hành: Có ${pendingComplaintsCount} khiếu nại khách hàng đang chờ xử lý SLA khẩn cấp!`;
+                alertBtn.onclick = () => {
+                    sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-services');
+                    sessionStorage.setItem('pawpal_admin_complaint_filter_status', 'pending');
+                    const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
+                        .find(b => b.getAttribute('data-title') === 'Khiếu nại');
+                    if (target) target.click();
+                };
+            } else {
+                alertBanner.style.display = 'none';
+            }
+        }
+    }
+
+    // ==========================================================================
+    // GIAI ĐOẠN 2: THANH THAO TÁC TIẾP NHẬN TẠI QUẦY (QUICK RECEPTION BAR)
+    // ==========================================================================
+    function setupQuickReceptionActions() {
+        const btnPet = document.getElementById('btnQuickReceptionPet');
+        const btnService = document.getElementById('btnQuickBookingService');
+        const btnOrder = document.getElementById('btnQuickCreateOrder');
+
+        if (btnPet) {
+            btnPet.addEventListener('click', () => {
+                sessionStorage.setItem('pawpal_admin_pet_subtab', 'tab-pet-list');
+                sessionStorage.setItem('pawpal_admin_pet_open_add_modal', 'true');
+                const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
+                    .find(b => b.getAttribute('data-title') === 'Thú cưng');
+                if (target) target.click();
+            });
+        }
+
+        if (btnService) {
+            btnService.addEventListener('click', () => {
+                sessionStorage.setItem('pawpal_admin_services_active_subtab', 'tab-service-bookings');
+                sessionStorage.setItem('pawpal_admin_service_open_create_modal', 'true');
+                const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
+                    .find(b => b.getAttribute('data-title') === 'Dịch vụ');
+                if (target) target.click();
+            });
+        }
+
+        if (btnOrder) {
+            btnOrder.addEventListener('click', () => {
+                sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-list');
+                sessionStorage.setItem('pawpal_admin_order_open_create_modal', 'true');
+                const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
+                    .find(b => b.getAttribute('data-title') === 'Bán hàng');
+                if (target) target.click();
+            });
+        }
+    }
+
+    // ==========================================================================
+    // GIAI ĐOẠN 2: MODAL XEM NHANH CA DỊCH VỤ TRÊN LỊCH HẸN
+    // ==========================================================================
+    let currentSelectedQuickBooking = null;
+
+    function openBookingQuickModal(booking) {
+        currentSelectedQuickBooking = booking;
+        const modal = document.getElementById('dashboardBookingQuickModal');
+        if (!modal) return;
+
+        const elPet = document.getElementById('modalBookingPet');
+        const elCust = document.getElementById('modalBookingCustomer');
+        const elSvc = document.getElementById('modalBookingService');
+        const elTime = document.getElementById('modalBookingTime');
+        const elStaff = document.getElementById('modalBookingStaff');
+        const elStatus = document.getElementById('modalBookingStatus');
+        const elNotes = document.getElementById('modalBookingNotes');
+
+        if (elPet) elPet.textContent = booking.pet || 'Bé cưng';
+        if (elCust) elCust.textContent = booking.customer || 'Khách hàng';
+        if (elSvc) elSvc.textContent = booking.service || 'Chăm sóc thú cưng';
+        if (elTime) elTime.textContent = `${booking.time || '10:00'} · Hôm nay`;
+        if (elStaff) elStaff.textContent = booking.staff || 'Groomer Tuấn (Đã xếp ca)';
+        if (elStatus) elStatus.innerHTML = `<span class="admin-badge ${booking.badge || 'badge-success'}">${booking.status || 'Đã xác nhận'}</span>`;
+        if (elNotes) elNotes.textContent = booking.notes || 'Bé ngoan, cẩn thận sấy vùng tai và dùng dầu tắm dưỡng lông dịu nhẹ.';
+
+        modal.style.display = 'flex';
+    }
+
+    function closeBookingQuickModal() {
+        const modal = document.getElementById('dashboardBookingQuickModal');
+        if (modal) modal.style.display = 'none';
+        currentSelectedQuickBooking = null;
+    }
+
+    function setupBookingQuickModalEvents() {
+        const modal = document.getElementById('dashboardBookingQuickModal');
+        const btnClose = document.getElementById('btnCloseBookingQuickModal');
+        const btnDismiss = document.getElementById('btnDismissBookingModal');
+        const btnGo = document.getElementById('btnGoToServiceDetail');
+
+        if (btnClose) btnClose.addEventListener('click', closeBookingQuickModal);
+        if (btnDismiss) btnDismiss.addEventListener('click', closeBookingQuickModal);
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeBookingQuickModal();
+            });
+        }
+
+        if (btnGo) {
+            btnGo.addEventListener('click', () => {
+                closeBookingQuickModal();
+                sessionStorage.setItem('pawpal_admin_services_active_subtab', 'tab-service-bookings');
+                if (currentSelectedQuickBooking && currentSelectedQuickBooking.id) {
+                    sessionStorage.setItem('pawpal_admin_service_selected_id', currentSelectedQuickBooking.id);
+                }
+                const target = Array.from(document.querySelectorAll('.sidebar-menu-btn'))
+                    .find(b => b.getAttribute('data-title') === 'Dịch vụ');
+                if (target) target.click();
+            });
         }
     }
 })();

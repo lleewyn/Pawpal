@@ -992,3 +992,179 @@
         margin-left: 48px;
     }
 }
+
+/* ==========================================================================
+   GIAI ĐOẠN 2: DÒNG CẢNH BÁO KHẨN CẤP (CHUẨN AGENTS.MD: THUẦN CHỮ ĐỎ, KHÔNG KHUNG)
+   ========================================================================== */
+.dashboard-alert-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 6px;
+    color: #DC2626;
+    background: transparent;
+    border: none;
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+.dashboard-alert-btn {
+    background: transparent;
+    border: none;
+    color: #DC2626;
+    text-decoration: underline;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.dashboard-alert-btn:hover {
+    color: #991B1B;
+}
+
+/* ==========================================================================
+   GIAI ĐOẠN 2: THANH THAO TÁC NHANH TIẾP NHẬN TẠI QUẦY (QUICK RECEPTION BAR)
+   ========================================================================== */
+.dashboard-quick-actions-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    gap: 14px;
+    background-color: var(--surface-white);
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-sizing: border-box;
+    flex-wrap: wrap;
+}
+
+.dashboard-quick-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.quick-info-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+.quick-info-desc {
+    font-size: 12.5px;
+    color: var(--text-muted);
+}
+
+.dashboard-quick-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   GIAI ĐOẠN 2: MODAL XEM NHANH CA DỊCH VỤ TRÊN LỊCH HẸN
+   ========================================================================== */
+.dashboard-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(20, 36, 27, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    padding: 16px;
+    box-sizing: border-box;
+    overscroll-behavior: contain;
+}
+
+.dashboard-modal-card {
+    width: 560px;
+    max-width: 94vw;
+    background-color: #FFFFFF;
+    border-radius: var(--admin-radius);
+    box-shadow: 0 16px 40px rgba(26, 43, 35, 0.16);
+    padding: 26px 30px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border: 1px solid var(--border-neutral);
+}
+
+.dashboard-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none;
+    padding: 0;
+}
+
+.dashboard-modal-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+.dashboard-modal-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--admin-radius);
+}
+
+.dashboard-modal-close-btn:hover {
+    color: var(--text-heading);
+    background-color: #EEF5F1;
+}
+
+.dashboard-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dashboard-modal-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-neutral);
+    font-size: 13.5px;
+}
+
+.dashboard-modal-row .modal-label {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.dashboard-modal-row .modal-val {
+    color: var(--text-main);
+    font-weight: 600;
+    text-align: right;
+}
+
+.dashboard-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    border-top: none;
+    padding: 0;
+    margin-top: 6px;
+}

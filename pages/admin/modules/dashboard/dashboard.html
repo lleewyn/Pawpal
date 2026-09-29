@@ -23,6 +23,25 @@
         </div>
     </section>
 
+    <!-- DÒNG CẢNH BÁO KHẨN CẤP THUẦN CHỮ ĐỎ (CHUẨN AGENTS.MD: KHÔNG NỀN, KHÔNG KHUNG VIỀN HỘP) -->
+    <div class="dashboard-alert-banner" id="dashboardAlertBanner" style="display: none;">
+        <span class="dashboard-alert-text" id="dashboardAlertText"></span>
+        <button type="button" class="dashboard-alert-btn" id="dashboardAlertAction">Xử lý ngay</button>
+    </div>
+
+    <!-- THANH THAO TÁC NHANH TIẾP NHẬN TẠI QUẦY (QUICK RECEPTION BAR) -->
+    <section class="admin-card dashboard-quick-actions-bar" aria-label="Thao tác tiếp nhận nhanh">
+        <div class="dashboard-quick-info">
+            <span class="quick-info-title">Trực ca vận hành quầy</span>
+            <span class="quick-info-desc">Lễ tân và Quản lý sẵn sàng tiếp nhận khách hàng tại quầy</span>
+        </div>
+        <div class="dashboard-quick-buttons">
+            <button type="button" class="admin-btn admin-btn-primary" id="btnQuickReceptionPet">+ Tiếp nhận bé mới</button>
+            <button type="button" class="admin-btn admin-btn-secondary" id="btnQuickBookingService">+ Đặt lịch Spa và Hotel</button>
+            <button type="button" class="admin-btn admin-btn-secondary" id="btnQuickCreateOrder">+ Lên đơn bán lẻ</button>
+        </div>
+    </section>
+
     <div class="dashboard-main-grid">
         <section class="admin-card dashboard-widget dashboard-priority-widget">
             <div class="dashboard-widget-header">
@@ -136,4 +155,27 @@
             </div>
         </article>
     </section>
+
+    <!-- MODAL XEM NHANH CA DỊCH VỤ TRÊN LỊCH HẸN (CHUẨN AGENTS.MD: 9PX RADIUS, 560PX WIDTH, NO EXTRA BOXES) -->
+    <div class="dashboard-modal-backdrop" id="dashboardBookingQuickModal" style="display: none;">
+        <div class="dashboard-modal-card">
+            <div class="dashboard-modal-header">
+                <h3 class="dashboard-modal-title" id="modalBookingTitle">Thông tin ca dịch vụ</h3>
+                <button type="button" class="dashboard-modal-close-btn" id="btnCloseBookingQuickModal">Đóng</button>
+            </div>
+            <div class="dashboard-modal-body">
+                <div class="dashboard-modal-row"><span class="modal-label">Bé cưng:</span><strong class="modal-val text-heading" id="modalBookingPet">Bé Bông</strong></div>
+                <div class="dashboard-modal-row"><span class="modal-label">Khách hàng:</span><span class="modal-val" id="modalBookingCustomer">Nguyễn Thu Hà (0901234567)</span></div>
+                <div class="dashboard-modal-row"><span class="modal-label">Dịch vụ:</span><span class="modal-val" id="modalBookingService">Tắm sấy và cắt tỉa</span></div>
+                <div class="dashboard-modal-row"><span class="modal-label">Thời gian:</span><span class="modal-val" id="modalBookingTime">09:30 · Hôm nay</span></div>
+                <div class="dashboard-modal-row"><span class="modal-label">Kỹ thuật viên:</span><span class="modal-val" id="modalBookingStaff">Groomer Tuấn</span></div>
+                <div class="dashboard-modal-row"><span class="modal-label">Trạng thái:</span><span class="modal-val" id="modalBookingStatus"><span class="admin-badge badge-success">Đã xác nhận</span></span></div>
+                <div class="dashboard-modal-row" style="border-bottom: none;"><span class="modal-label">Lưu ý khi làm:</span><span class="modal-val text-muted" id="modalBookingNotes">Bé hơi nhát nước và nhạy cảm vùng đuôi. Dùng dầu tắm thảo mộc dịu nhẹ.</span></div>
+            </div>
+            <div class="dashboard-modal-footer">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissBookingModal">Quay lại</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnGoToServiceDetail">Chuyển sang ca Dịch vụ</button>
+            </div>
+        </div>
+    </div>
 </div>

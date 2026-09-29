@@ -1936,6 +1936,12 @@
                 } catch (e) {}
             }
 
+            if (sessionStorage.getItem('pawpal_admin_order_open_create_modal') === 'true') {
+                sessionStorage.removeItem('pawpal_admin_order_open_create_modal');
+                const modal = document.getElementById('modalCreateOrder');
+                if (modal) modal.classList.add('active');
+            }
+
             const rawOrderId = sessionStorage.getItem('pawpal_admin_order_id');
             if (rawOrderId) {
                 sessionStorage.removeItem('pawpal_admin_order_id');
