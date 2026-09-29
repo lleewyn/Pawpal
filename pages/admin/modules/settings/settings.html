@@ -3,6 +3,17 @@
          SUB-TAB 1: BANNER VÀ KHUYẾN MÃI
          ==================================================================== -->
     <section class="subtab-content active" id="subtab-tab-banner-promos">
+        <!-- THANH CẢNH BÁO ZERO MISS TỨC THỜI (CHUẨN BẢNG THIẾT KẾ PAWPAL-ER) -->
+        <div class="settings-alert-strip" id="settingsAlertBar">
+            <div class="alert-strip-left">
+                <span class="admin-badge badge-urgent">Cảnh báo Zero Miss</span>
+                <span class="alert-strip-text" id="alertStripMessage">Đang quét tình trạng Voucher và Banner chiến dịch...</span>
+            </div>
+            <div class="alert-strip-actions">
+                <button type="button" class="admin-btn admin-btn-secondary btn-alert-strip-action" id="btnFilterZeroMiss">Lọc mục cần xử lý</button>
+            </div>
+        </div>
+
         <!-- KHU VỰC 1: 5 THẺ THỐNG KÊ KPI NHANH (CHUẨN HỆ THỐNG PAWPAL-ER) -->
         <div class="settings-kpi-grid">
             <div class="admin-card kpi-card">
@@ -18,8 +29,8 @@
                 <span class="kpi-val text-heading" id="statActiveBanners">2</span>
             </div>
             <div class="admin-card kpi-card">
-                <span class="kpi-label">Tạm dừng và Hết hạn</span>
-                <span class="kpi-val text-warning" id="statPausedVouchers">4</span>
+                <span class="kpi-label">Cảnh báo Zero Miss</span>
+                <span class="kpi-val text-danger" id="statZeroMissAlerts">2</span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Tỷ lệ quy đổi</span>
@@ -70,8 +81,9 @@
                         </div>
                         <div class="filter-dropdown-group">
                             <label class="filter-label">Trạng thái:</label>
-                            <select class="admin-select" id="filterVoucherStatus" style="width: 145px;">
+                            <select class="admin-select" id="filterVoucherStatus" style="width: 175px;">
                                 <option value="all">Tất cả trạng thái</option>
+                                <option value="zero-miss">Cần xử lý (Zero Miss)</option>
                                 <option value="active">Hoạt động</option>
                                 <option value="paused">Tạm dừng</option>
                                 <option value="expired">Hết hạn</option>
@@ -344,7 +356,7 @@
                 <div class="system-card-header">
                     <div>
                         <div class="system-card-title">Chính sách đặt lịch</div>
-                        <div class="system-card-desc">Quy tắc hủy lịch, chọn nhân viên và phụ thu ngoài giờ cho Spa & Hotel</div>
+                        <div class="system-card-desc">Quy tắc hủy lịch, chọn nhân viên và phụ thu ngoài giờ cho Spa và Hotel</div>
                     </div>
                     <span class="admin-badge badge-active">Áp dụng ngay</span>
                 </div>
@@ -379,19 +391,19 @@
                 <div class="system-card-body">
                     <div class="partner-status-row">
                         <span>GHN Express API</span>
-                        <span class="admin-badge badge-active">Đã kết nối</span>
+                        <span class="admin-badge badge-active" id="pingGhnBadge">Trực tuyến (18ms)</span>
                     </div>
                     <div class="partner-status-row" style="margin-top: 8px;">
                         <span>MoMo Merchant Gateway</span>
-                        <span class="admin-badge badge-active">Đã kết nối</span>
+                        <span class="admin-badge badge-active" id="pingMomoBadge">Trực tuyến (24ms)</span>
                     </div>
                     <div class="partner-status-row" style="margin-top: 8px;">
                         <span>VNPay Payment Engine</span>
-                        <span class="admin-badge badge-active">Đã kết nối</span>
+                        <span class="admin-badge badge-active" id="pingVnpayBadge">Trực tuyến (31ms)</span>
                     </div>
                 </div>
                 <div class="system-card-footer">
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnConfigurePartners">Kiểm tra đối tác</button>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnConfigurePartners">Kiểm tra kết nối đối tác</button>
                 </div>
             </div>
         </div>
@@ -491,7 +503,7 @@
                         <label class="form-label-clean">Đối tượng áp dụng</label>
                         <select class="admin-select" id="inputVoucherTarget">
                             <option value="System">Toàn hệ thống</option>
-                            <option value="Spa">Dịch vụ Spa & Grooming</option>
+                            <option value="Spa">Dịch vụ Spa và Grooming</option>
                             <option value="Hotel">Pet Hotel</option>
                             <option value="Shop">Mua sản phẩm</option>
                         </select>
@@ -600,7 +612,7 @@
         </div>
     </div>
 
-    <!-- MODAL 5: SOẠN THẢO BÀI VIẾT (BLOG & CẨM NANG) -->
+    <!-- MODAL 5: SOẠN THẢO BÀI VIẾT (BLOG VÀ CẨM NANG) -->
     <div class="admin-modal-overlay" id="articleModalOverlay">
         <div class="admin-modal-card wide-modal">
             <div class="modal-header-clean">
@@ -619,7 +631,7 @@
                             <option value="Chó">Chó cưng</option>
                             <option value="Mèo">Mèo cưng</option>
                             <option value="Dinh dưỡng">Dinh dưỡng</option>
-                            <option value="Grooming">Grooming & Spa</option>
+                            <option value="Grooming">Grooming và Spa</option>
                             <option value="Mẹo chăm sóc">Mẹo chăm sóc</option>
                         </select>
                     </div>
@@ -752,5 +764,12 @@
                 <button type="button" class="admin-btn admin-btn-primary" id="btnSaveBookingPolicy">Lưu chính sách</button>
             </div>
         </div>
+    </div>
+
+    <!-- DROPDOWN TÁC VỤ 3 CHẤM DÀNH CHO VOUCHER (TEXT-ONLY, CHUẨN AGENTS.MD) -->
+    <div class="action-dropdown-menu" id="voucherActionDropdown">
+        <button type="button" class="action-menu-item text-success" id="btnActionExtendQuota">Gia hạn thêm 50 lượt</button>
+        <button type="button" class="action-menu-item" id="btnActionToggleStatus">Đổi trạng thái Bật/Tắt</button>
+        <button type="button" class="action-menu-item text-danger" id="btnActionDeleteVoucher">Xóa Voucher</button>
     </div>
 </div>

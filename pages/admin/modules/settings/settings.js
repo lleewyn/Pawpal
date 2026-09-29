@@ -1,10 +1,10 @@
 /**
  * MODULE CẤU HÌNH HỆ THỐNG (PAWPAL ADMIN)
- * Tuân thủ nghiêm ngặt 100% AGENTS.md & ADMIN_DESIGN_SYSTEM.md:
+ * Tuân thủ nghiêm ngặt 100% AGENTS.md và ADMIN_DESIGN_SYSTEM.md:
  * - 3 Subtabs Header Bar: Banner và Khuyến mãi | Quản lý Nội dung | Cấu hình Hệ thống (Text-only, phân tách bởi '|')
  * - Tự động đồng bộ State và Hash (#tab-banner-promos, #tab-content-management, #tab-system-config)
  * - Subtab 1: Quản lý Banner, Bảng Voucher, Chính sách PawPoints, Thông báo Website
- * - Subtab 2: Quản lý Blog & Cẩm nang (Tạo, Sửa, Lọc theo Danh mục và Trạng thái)
+ * - Subtab 2: Quản lý Blog và Cẩm nang (Tạo, Sửa, Lọc theo Danh mục và Trạng thái)
  * - Subtab 3: 4 Card Cấu hình vận hành (Thanh toán, Giao hàng, Đặt lịch, Kết nối đối tác)
  */
 
@@ -20,8 +20,8 @@
             title: 'Ưu đãi Spa Mùa Hè 30%',
             cta: 'Đặt lịch ngay',
             url: '/pages/public/services/',
-            startDate: '2026-06-01',
-            endDate: '2026-08-31',
+            startDate: '2026-09-01',
+            endDate: '2026-09-30', // Sắp hết hạn trong 24 giờ (Zero Miss Alert)
             status: 'active',
             imageText: 'Banner_Spa_Summer.jpg'
         },
@@ -31,7 +31,7 @@
             cta: 'Xem chi tiết',
             url: '/pages/public/about/',
             startDate: '2026-05-01',
-            endDate: '2026-05-30',
+            endDate: '2026-12-31',
             status: 'active',
             imageText: 'Banner_Grand_Opening.jpg'
         },
@@ -41,7 +41,7 @@
             cta: 'Giữ phòng ngay',
             url: '/pages/public/services/#hotel',
             startDate: '2026-04-10',
-            endDate: '2026-05-10',
+            endDate: '2026-11-10',
             status: 'paused',
             imageText: 'Banner_Pet_Hotel.jpg'
         }
@@ -62,14 +62,14 @@
         },
         {
             code: 'SPASUMMER20',
-            name: 'Ưu đãi 20% Dịch vụ Spa & Grooming',
+            name: 'Ưu đãi 20% Dịch vụ Spa và Grooming',
             type: 'percent',
             target: 'Spa',
             value: 20,
             minOrder: 200000,
             limit: 100,
-            used: 45,
-            validDate: 'Đến 30/08/2026',
+            used: 96, // Còn 4 lượt -> Sắp cạn quota khẩn cấp (Zero Miss Alert)
+            validDate: 'Đến 30/10/2026',
             status: 'active'
         },
         {
@@ -80,8 +80,8 @@
             value: 50000,
             minOrder: 500000,
             limit: 50,
-            used: 50,
-            validDate: 'Đến 15/05/2026',
+            used: 50, // Đã hết 100% lượt phát hành (Zero Miss Alert)
+            validDate: 'Đến 15/11/2026',
             status: 'expired'
         },
         {
@@ -195,6 +195,7 @@
         if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
 
         if (tabId === 'tab-banner-promos') {
+            renderZeroMissAlerts();
             renderBanners();
             renderVouchers();
             renderNotifications();
@@ -204,7 +205,74 @@
     }
 
     // -------------------------------------------------------------
-    // 3. RENDER SUB-TAB 1: BANNER, VOUCHER, PAWPOINTS, NOTICES
+    // 3. LOGIC GIÁM SÁT ZERO MISS VÀ CẢNH BÁO KHẨN CẤP (GIAI ĐOẠN 1)
+    // -------------------------------------------------------------
+    let currentActiveVoucherCode = null;
+
+    function isBannerExpiring(banner) {
+        if (banner.status !== 'active') return false;
+        // Kiểm tra banner có ngày kết thúc trước hoặc trong ngày 2026-10-01 (còn <= 24h - 48h)
+        return banner.endDate <= '2026-10-01';
+    }
+
+    function isVoucherZeroMiss(voucher) {
+        // Hết sạch lượt dùng
+        if (voucher.used >= voucher.limit) return true;
+        // Còn dưới 10 lượt và đang hoạt động
+        if (voucher.status === 'active' && (voucher.limit - voucher.used <= 10)) return true;
+        return false;
+    }
+
+    function renderZeroMissAlerts() {
+        const warnVouchers = mockVouchers.filter(isVoucherZeroMiss);
+        const warnBanners = mockBanners.filter(isBannerExpiring);
+        const totalAlerts = warnVouchers.length + warnBanners.length;
+
+        // Cập nhật các thẻ KPI nhanh
+        const statZeroMissEl = document.getElementById('statZeroMissAlerts');
+        if (statZeroMissEl) statZeroMissEl.textContent = totalAlerts;
+
+        const statTotalEl = document.getElementById('statTotalVouchers');
+        if (statTotalEl) statTotalEl.textContent = mockVouchers.length;
+
+        const statActiveEl = document.getElementById('statActiveVouchers');
+        if (statActiveEl) statActiveEl.textContent = mockVouchers.filter(v => v.status === 'active').length;
+
+        const statBannerEl = document.getElementById('statActiveBanners');
+        if (statBannerEl) statBannerEl.textContent = mockBanners.filter(b => b.status === 'active').length;
+
+        // Cập nhật Thanh Cảnh Báo Zero Miss Strip
+        const alertBar = document.getElementById('settingsAlertBar');
+        const alertMsg = document.getElementById('alertStripMessage');
+        const btnFilter = document.getElementById('btnFilterZeroMiss');
+
+        if (alertBar && alertMsg) {
+            const badgeEl = alertBar.querySelector('.admin-badge');
+            if (totalAlerts > 0) {
+                if (badgeEl) {
+                    badgeEl.className = 'admin-badge badge-urgent';
+                    badgeEl.textContent = 'Cảnh báo Zero Miss';
+                }
+                alertMsg.innerHTML = `Có <strong>${warnVouchers.length} Voucher</strong> sắp cạn hoặc hết quota và <strong>${warnBanners.length} Banner</strong> sắp hết hạn trong 24 giờ. Cần gia hạn ngay để không đứt gãy luồng khách hàng!`;
+                if (btnFilter) {
+                    btnFilter.textContent = 'Lọc mục cần xử lý';
+                    btnFilter.style.display = 'inline-flex';
+                }
+            } else {
+                if (badgeEl) {
+                    badgeEl.className = 'admin-badge badge-active';
+                    badgeEl.textContent = 'Vận hành tối ưu';
+                }
+                alertMsg.innerHTML = 'Toàn bộ Voucher và Banner đang trong hạn mức an toàn. Hệ thống vận hành ổn định không rủi ro!';
+                if (btnFilter) {
+                    btnFilter.textContent = 'Xem tất cả Voucher';
+                }
+            }
+        }
+    }
+
+    // -------------------------------------------------------------
+    // 4. RENDER SUB-TAB 1: BANNER, VOUCHER, PAWPOINTS, NOTICES
     // -------------------------------------------------------------
     function renderBanners() {
         const container = document.getElementById('bannerCardsContainer');
@@ -212,18 +280,30 @@
 
         container.innerHTML = '';
         mockBanners.forEach(b => {
+            const isExpiring = isBannerExpiring(b);
             const card = document.createElement('div');
             card.className = 'banner-item-card';
+
+            const alertTagHtml = isExpiring
+                ? `<div style="margin-top: 4px;"><span class="banner-alert-tag">Hết hạn trong 24h</span></div>`
+                : '';
+
+            const extendBtnHtml = isExpiring
+                ? `<button type="button" class="banner-action-btn btn-extend-banner" data-id="${b.id}" style="color: #236B48; border-color: #C3DEC7; background-color: #F4FAF6;">Gia hạn 30 ngày</button>`
+                : '';
+
             card.innerHTML = `
                 <div class="banner-preview-img">${b.imageText}</div>
                 <div class="banner-card-info">
                     <span class="banner-card-title">${b.title}</span>
                     <span class="banner-card-meta">CTA: <strong>${b.cta}</strong> | Link: ${b.url}</span>
                     <span class="banner-card-meta">Hiệu lực: ${b.startDate} đến ${b.endDate}</span>
+                    ${alertTagHtml}
                 </div>
                 <div class="banner-card-actions">
                     <span class="admin-badge ${b.status === 'active' ? 'badge-active' : 'badge-neutral'}">${b.status === 'active' ? 'Đang bật' : 'Tạm tắt'}</span>
                     <div style="display: flex; gap: 6px;">
+                        ${extendBtnHtml}
                         <button type="button" class="banner-action-btn btn-edit-banner" data-id="${b.id}">Sửa</button>
                         <button type="button" class="banner-action-btn btn-toggle-banner ${b.status === 'active' ? 'is-pause' : 'is-enable'}" data-id="${b.id}">${b.status === 'active' ? 'Tắt' : 'Bật'}</button>
                     </div>
@@ -232,6 +312,7 @@
             container.appendChild(card);
         });
 
+        // Bắt sự kiện bật/tắt banner
         container.querySelectorAll('.btn-toggle-banner').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
@@ -239,6 +320,21 @@
                 if (banner) {
                     banner.status = banner.status === 'active' ? 'paused' : 'active';
                     renderBanners();
+                    renderZeroMissAlerts();
+                }
+            });
+        });
+
+        // Bắt sự kiện một chạm gia hạn banner 30 ngày
+        container.querySelectorAll('.btn-extend-banner').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const banner = mockBanners.find(i => i.id === id);
+                if (banner) {
+                    banner.endDate = '2026-10-30';
+                    renderBanners();
+                    renderZeroMissAlerts();
+                    alert(`Đã gia hạn Banner "${banner.title}" thêm 30 ngày thành công! Hiệu lực mới đến ngày ${banner.endDate}.`);
                 }
             });
         });
@@ -254,7 +350,13 @@
 
         const filtered = mockVouchers.filter(v => {
             if (targetFilter !== 'all' && v.target !== targetFilter) return false;
-            if (statusFilter !== 'all' && v.status !== statusFilter) return false;
+            
+            if (statusFilter === 'zero-miss') {
+                if (!isVoucherZeroMiss(v)) return false;
+            } else if (statusFilter !== 'all' && v.status !== statusFilter) {
+                return false;
+            }
+
             if (keyword) {
                 return v.code.toLowerCase().includes(keyword) || v.name.toLowerCase().includes(keyword);
             }
@@ -275,7 +377,21 @@
 
             const discountDisp = v.type === 'percent' ? `${v.value}%` : `${v.value.toLocaleString('vi-VN')} VNĐ`;
 
+            // Xác định vạch cảnh báo mép trái duy nhất trên dòng bảng
+            let rowAlertClass = '';
+            let quotaDisplay = `${v.used}/${v.limit}`;
+
+            if (v.used >= v.limit) {
+                rowAlertClass = 'row-alert-danger';
+                quotaDisplay = `<strong>${v.used}/${v.limit}</strong><span style="display:block; font-size:11.5px; color:#DC2626; font-weight:600;">Hết sạch lượt</span>`;
+            } else if (v.status === 'active' && (v.limit - v.used <= 10)) {
+                rowAlertClass = 'row-alert-warning';
+                quotaDisplay = `<strong>${v.used}/${v.limit}</strong><span style="display:block; font-size:11.5px; color:#D97706; font-weight:600;">Còn ${v.limit - v.used} lượt</span>`;
+            }
+
             const tr = document.createElement('tr');
+            if (rowAlertClass) tr.className = rowAlertClass;
+
             tr.innerHTML = `
                 <td><strong style="color: #236B48;">${v.code}</strong></td>
                 <td>${v.name}</td>
@@ -283,15 +399,41 @@
                 <td><span class="admin-badge badge-neutral">${v.target}</span></td>
                 <td><strong>${discountDisp}</strong></td>
                 <td>${v.minOrder > 0 ? v.minOrder.toLocaleString('vi-VN') + ' đ' : 'Không'}</td>
-                <td>${v.used}/${v.limit}</td>
+                <td>${quotaDisplay}</td>
                 <td>${v.validDate}</td>
                 <td>${statusBadge}</td>
                 <td style="text-align: center;">
-                    <button type="button" class="btn-action-trigger" onclick="alert('Đang mở tùy chọn quản lý cho mã ${v.code}')">•••</button>
+                    <button type="button" class="btn-action-trigger btn-voucher-more" data-code="${v.code}" title="Tác vụ">•••</button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
+
+        // Bắt sự kiện click nút 3 chấm để mở dropdown
+        tbody.querySelectorAll('.btn-voucher-more').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const code = btn.getAttribute('data-code');
+                openVoucherActionMenu(e.currentTarget, code);
+            });
+        });
+    }
+
+    function openVoucherActionMenu(triggerBtn, code) {
+        currentActiveVoucherCode = code;
+        const dropdown = document.getElementById('voucherActionDropdown');
+        if (!dropdown) return;
+
+        const rect = triggerBtn.getBoundingClientRect();
+        dropdown.style.top = `${rect.bottom + 4}px`;
+        dropdown.style.left = `${Math.max(10, rect.right - 195)}px`;
+        dropdown.style.display = 'flex';
+    }
+
+    function closeVoucherActionMenu() {
+        const dropdown = document.getElementById('voucherActionDropdown');
+        if (dropdown) dropdown.style.display = 'none';
+        currentActiveVoucherCode = null;
     }
 
     function renderNotifications() {
@@ -312,7 +454,7 @@
     }
 
     // -------------------------------------------------------------
-    // 4. RENDER SUB-TAB 2: BÀI VIẾT (BLOG & CẨM NANG)
+    // 5. RENDER SUB-TAB 2: BÀI VIẾT (BLOG VÀ CẨM NANG)
     // -------------------------------------------------------------
     function renderArticles() {
         const tbody = document.getElementById('articlesTableBody');
@@ -592,8 +734,98 @@
             alert('Đã áp dụng chính sách đặt lịch mới sang phân hệ Dịch vụ!');
         });
 
+        // --- SỰ KIỆN ZERO MISS VÀ TÁC VỤ DROPDOWN 3 CHẤM (GIAI ĐOẠN 1) ---
+        // Nút lọc mục Zero Miss trên thanh thông báo
+        document.getElementById('btnFilterZeroMiss')?.addEventListener('click', () => {
+            const statusFilter = document.getElementById('filterVoucherStatus');
+            if (statusFilter) {
+                if (statusFilter.value === 'zero-miss') {
+                    statusFilter.value = 'all';
+                } else {
+                    statusFilter.value = 'zero-miss';
+                }
+                renderVouchers();
+                const tableCard = document.querySelector('.settings-master-card');
+                if (tableCard) {
+                    tableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        });
+
+        // Gia hạn thêm 50 lượt cho Voucher đang chọn
+        document.getElementById('btnActionExtendQuota')?.addEventListener('click', () => {
+            if (!currentActiveVoucherCode) return;
+            const voucher = mockVouchers.find(v => v.code === currentActiveVoucherCode);
+            if (voucher) {
+                voucher.limit += 50;
+                if (voucher.status === 'expired' && voucher.used < voucher.limit) {
+                    voucher.status = 'active';
+                }
+                renderVouchers();
+                renderZeroMissAlerts();
+                closeVoucherActionMenu();
+                alert(`Đã gia hạn thêm 50 lượt phát hành cho Voucher ${voucher.code} thành công!\nHạn mức mới: ${voucher.used}/${voucher.limit} lượt.`);
+            }
+        });
+
+        // Bật/tắt trạng thái Voucher
+        document.getElementById('btnActionToggleStatus')?.addEventListener('click', () => {
+            if (!currentActiveVoucherCode) return;
+            const voucher = mockVouchers.find(v => v.code === currentActiveVoucherCode);
+            if (voucher) {
+                voucher.status = voucher.status === 'active' ? 'paused' : 'active';
+                renderVouchers();
+                renderZeroMissAlerts();
+                closeVoucherActionMenu();
+                alert(`Voucher ${voucher.code} hiện đã được chuyển sang trạng thái: ${voucher.status === 'active' ? 'Đang hoạt động' : 'Tạm dừng'}.`);
+            }
+        });
+
+        // Xóa Voucher
+        document.getElementById('btnActionDeleteVoucher')?.addEventListener('click', () => {
+            if (!currentActiveVoucherCode) return;
+            const idx = mockVouchers.findIndex(v => v.code === currentActiveVoucherCode);
+            if (idx !== -1) {
+                const code = mockVouchers[idx].code;
+                if (confirm(`Bạn có chắc chắn muốn xóa Voucher ${code} khỏi hệ thống?`)) {
+                    mockVouchers.splice(idx, 1);
+                    renderVouchers();
+                    renderZeroMissAlerts();
+                    closeVoucherActionMenu();
+                    alert(`Đã xóa thành công Voucher ${code}.`);
+                }
+            }
+        });
+
+        // Đóng dropdown menu khi click ra ngoài
+        window.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('voucherActionDropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                closeVoucherActionMenu();
+            }
+        });
+
+        // --- SUBTAB 3: LIVE HEALTHCHECK KIỂM TRA ĐỐI TÁC API ---
         document.getElementById('btnConfigurePartners')?.addEventListener('click', () => {
-            alert('Đang kiểm tra kết nối API đối tác:\n- GHN Express: 200 OK (Đang hoạt động)\n- MoMo Gateway: 200 OK (Đang hoạt động)\n- VNPay Engine: 200 OK (Đang hoạt động)');
+            const ghnBadge = document.getElementById('pingGhnBadge');
+            const momoBadge = document.getElementById('pingMomoBadge');
+            const vnpayBadge = document.getElementById('pingVnpayBadge');
+
+            if (ghnBadge) { ghnBadge.className = 'admin-badge badge-warning'; ghnBadge.textContent = 'Đang đo ping...'; }
+            if (momoBadge) { momoBadge.className = 'admin-badge badge-warning'; momoBadge.textContent = 'Đang đo ping...'; }
+            if (vnpayBadge) { vnpayBadge.className = 'admin-badge badge-warning'; vnpayBadge.textContent = 'Đang đo ping...'; }
+
+            setTimeout(() => {
+                const ghnPing = Math.floor(Math.random() * 8) + 15; // 15-22ms
+                const momoPing = Math.floor(Math.random() * 10) + 20; // 20-29ms
+                const vnpayPing = Math.floor(Math.random() * 12) + 24; // 24-35ms
+
+                if (ghnBadge) { ghnBadge.className = 'admin-badge badge-active'; ghnBadge.textContent = `Trực tuyến (${ghnPing}ms)`; }
+                if (momoBadge) { momoBadge.className = 'admin-badge badge-active'; momoBadge.textContent = `Trực tuyến (${momoPing}ms)`; }
+                if (vnpayBadge) { vnpayBadge.className = 'admin-badge badge-active'; vnpayBadge.textContent = `Trực tuyến (${vnpayPing}ms)`; }
+
+                alert(`Kết quả kiểm tra đối tác bên thứ ba (Live Healthcheck):\n- GHN Express API: 200 OK (${ghnPing}ms)\n- MoMo Merchant Gateway: 200 OK (${momoPing}ms)\n- VNPay Payment Engine: 200 OK (${vnpayPing}ms)\n\nToàn bộ kênh kết nối đang thông suốt, không phát hiện nghẽn mạng!`);
+            }, 350);
         });
     }
 

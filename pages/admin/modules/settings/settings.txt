@@ -315,7 +315,7 @@ Chuỗi định danh
 
 4. NGHIỆP VỤ VÀ LUỒNG THAO TÁC
 4.1. Luồng tạo Banner
-Admin mở Sub-tab Banner & Chương trình Khuyến mãi.
+Admin mở Sub-tab Banner và Chương trình Khuyến mãi.
 Bấm Button Thêm Banner để mở Modal Thêm Banner.
 Tải ảnh, nhập Tiêu đề, CTA, URL và chọn thời gian hiệu lực.
 Bấm Lưu Banner.
