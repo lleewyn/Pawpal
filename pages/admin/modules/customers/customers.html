@@ -322,9 +322,20 @@
 
             <!-- NHẬT KÝ BIẾN ĐỘNG ĐIỂM VÀ NÚT ĐIỀU CHỈNH ĐIỂM -->
             <div class="admin-card">
-                <div class="admin-card-header">
+                <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                     <span class="admin-card-title">Lịch sử Pawpoint</span>
-                    <button type="button" class="admin-btn admin-btn-primary btn-sm" id="btnOpenAdjustPointsModal">Điều chỉnh điểm</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnExportPawpointHistory">Xuất file</button>
+                        <button type="button" class="admin-btn admin-btn-primary btn-sm" id="btnOpenAdjustPointsModal">Điều chỉnh điểm</button>
+                    </div>
+                </div>
+                <div class="pawpoint-toolbar" style="padding: 10px 16px; display: flex; gap: 10px; border-bottom: 1px solid var(--border-neutral);">
+                    <input type="text" class="admin-input" id="pawpointSearchInput" placeholder="Tìm theo tên hoặc SĐT..." style="max-width: 240px; height: 32px; font-size: 13px;">
+                    <select class="admin-select" id="pawpointFilterType" style="max-width: 150px; height: 32px; font-size: 13px;">
+                        <option value="ALL">Tất cả giao dịch</option>
+                        <option value="ADD">+ Cộng điểm</option>
+                        <option value="SUB">- Trừ điểm</option>
+                    </select>
                 </div>
                 <table class="admin-table">
                     <thead>
@@ -337,20 +348,6 @@
                         </tr>
                     </thead>
                     <tbody id="pawpointHistoryTbody">
-                        <tr>
-                            <td>27/09/2026 10:30</td>
-                            <td>Nguyễn Văn An (0912345678)</td>
-                            <td><strong class="text-success">+50 pts</strong></td>
-                            <td>1.250 pts</td>
-                            <td>Bù sự cố dịch vụ theo Ticket TK-008</td>
-                        </tr>
-                        <tr>
-                            <td>25/09/2026 14:20</td>
-                            <td>Lê Thị Bình (0987654321)</td>
-                            <td><strong class="text-success">+45 pts</strong></td>
-                            <td>420 pts</td>
-                            <td>Tích điểm đơn hàng ORD-8920</td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -425,8 +422,9 @@
             </div>
             <form id="formAdjustPoints">
                 <div class="form-group mb-3">
-                    <label class="form-label">Số điện thoại</label>
+                    <label class="form-label">Số điện thoại (*)</label>
                     <input type="tel" class="admin-input" id="adjustPhone" placeholder="Nhập SĐT khách cần điều chỉnh điểm..." required>
+                    <div id="adjustPhoneCustomerHint" style="font-size: 12.5px; color: var(--admin-primary); margin-top: 5px; display: none;"></div>
                 </div>
                 <div class="form-row-two-col mb-3">
                     <div class="form-group">

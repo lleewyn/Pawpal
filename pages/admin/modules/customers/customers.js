@@ -429,6 +429,143 @@
             sessionStorage.setItem('pawpal_admin_customers_data', JSON.stringify(customerDatabase));
         }
 
+        // ====================================================================
+        // CƠ CHẾ ĐÁNH GIÁ VÀ THĂNG HẠNG THÀNH VIÊN TỰ ĐỘNG (AUTOMATIC TIER PROGRESSION)
+        // ====================================================================
+        function evaluateCustomerTier(cust) {
+            if (!cust) return { changed: false };
+            const pts = Number(cust.points) || 0;
+            let newTier = 'BRONZE';
+            let newTierName = 'Đồng';
+            let newBadgeClass = 'badge-neutral';
+
+            if (pts >= 2000) {
+                newTier = 'DIAMOND';
+                newTierName = 'Kim Cương';
+                newBadgeClass = 'badge-tier-diamond';
+            } else if (pts >= 800) {
+                newTier = 'GOLD';
+                newTierName = 'Vàng';
+                newBadgeClass = 'badge-tier-gold';
+            } else if (pts >= 300) {
+                newTier = 'SILVER';
+                newTierName = 'Bạc';
+                newBadgeClass = 'badge-tier-silver';
+            }
+
+            const oldTier = cust.tier;
+            if (oldTier !== newTier) {
+                const oldTierName = cust.tierName || oldTier;
+                cust.tier = newTier;
+                cust.tierName = newTierName;
+                cust.tierBadgeClass = newBadgeClass;
+                return { changed: true, oldTier, oldTierName, newTier, newTierName };
+            }
+            return { changed: false };
+        }
+
+        // ====================================================================
+        // DATA STORE VÀ PERSISTENCE CHO LỊCH SỬ BIẾN ĐỘNG ĐIỂM PAWPOINT
+        // ====================================================================
+        const defaultPawpointHistory = [
+            {
+                id: 'PWH-001',
+                time: '27/09/2026 10:30',
+                custId: 'CUST-001',
+                custName: 'Nguyễn Văn An',
+                phone: '0912345678',
+                type: 'ADD',
+                points: 50,
+                balance: 1250,
+                reason: 'Bù sự cố dịch vụ theo Ticket TK-008'
+            },
+            {
+                id: 'PWH-002',
+                time: '25/09/2026 14:20',
+                custId: 'CUST-002',
+                custName: 'Lê Thị Bình',
+                phone: '0987654321',
+                type: 'ADD',
+                points: 45,
+                balance: 420,
+                reason: 'Tích điểm đơn hàng ORD-8920'
+            },
+            {
+                id: 'PWH-003',
+                time: '24/09/2026 16:00',
+                custId: 'CUST-005',
+                custName: 'Hoàng Kim Long',
+                phone: '0966778899',
+                type: 'ADD',
+                points: 215,
+                balance: 2450,
+                reason: 'Tích điểm đơn hàng ORD-8930'
+            },
+            {
+                id: 'PWH-004',
+                time: '20/09/2026 11:15',
+                custId: 'CUST-006',
+                custName: 'Đỗ Thị Mai',
+                phone: '0918445566',
+                type: 'SUB',
+                points: 100,
+                balance: 380,
+                reason: 'Khách đổi quà tặng trực tiếp tại quầy'
+            }
+        ];
+
+        function getPawpointHistory() {
+            try {
+                const saved = sessionStorage.getItem('pawpal_admin_pawpoint_history');
+                if (saved) return JSON.parse(saved);
+            } catch (e) {}
+            return JSON.parse(JSON.stringify(defaultPawpointHistory));
+        }
+
+        const pawpointHistory = getPawpointHistory();
+
+        function persistPawpointHistory() {
+            try {
+                sessionStorage.setItem('pawpal_admin_pawpoint_history', JSON.stringify(pawpointHistory));
+            } catch (e) {}
+        }
+
+        function renderPawpointHistory() {
+            const tbody = document.getElementById('pawpointHistoryTbody');
+            if (!tbody) return;
+
+            const query = (document.getElementById('pawpointSearchInput')?.value || '').toLowerCase().trim();
+            const filterType = document.getElementById('pawpointFilterType')?.value || 'ALL';
+
+            const filtered = pawpointHistory.filter(item => {
+                const matchQuery = !query ||
+                    (item.custName && item.custName.toLowerCase().includes(query)) ||
+                    (item.phone && item.phone.includes(query)) ||
+                    (item.reason && item.reason.toLowerCase().includes(query));
+                const matchType = (filterType === 'ALL') || (item.type === filterType);
+                return matchQuery && matchType;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">Không tìm thấy lịch sử biến động điểm phù hợp.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(item => {
+                const sign = item.type === 'ADD' ? '+' : '-';
+                const colorClass = item.type === 'ADD' ? 'text-success' : 'text-danger';
+                return `
+                    <tr>
+                        <td>${item.time}</td>
+                        <td><strong>${item.custName}</strong> <span style="color: var(--text-muted); font-size: 12px;">(${item.phone})</span></td>
+                        <td><strong class="${colorClass}">${sign}${item.points} pts</strong></td>
+                        <td>${Number(item.balance).toLocaleString('vi-VN')} pts</td>
+                        <td>${item.reason}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
         function showToast(msg, type = 'success') {
             let toast = document.getElementById('adminGlobalToast');
             if (!toast) {
@@ -1375,6 +1512,25 @@
         }
         if (btnCloseAdjust) btnCloseAdjust.addEventListener('click', closeAdjustModal);
         if (btnCancelAdjust) btnCancelAdjust.addEventListener('click', closeAdjustModal);
+        // Gợi ý thông tin khách hàng thời gian thực khi nhập SĐT điều chỉnh điểm
+        const adjustPhoneInput = document.getElementById('adjustPhone');
+        if (adjustPhoneInput) {
+            adjustPhoneInput.addEventListener('input', () => {
+                const clean = adjustPhoneInput.value.replace(/[^0-9]/g, '').trim();
+                const hint = document.getElementById('adjustPhoneCustomerHint');
+                if (!hint) return;
+                if (clean.length >= 9) {
+                    const matched = Object.values(customerDatabase).find(c => c.phone && c.phone.replace(/[^0-9]/g, '').trim() === clean);
+                    if (matched) {
+                        hint.innerHTML = `Khách hàng: <strong>${matched.name}</strong> (${matched.tierName}) — Số dư: <strong>${(matched.points || 0).toLocaleString('vi-VN')} pts</strong>`;
+                        hint.style.display = 'block';
+                        return;
+                    }
+                }
+                hint.style.display = 'none';
+            });
+        }
+
         if (formAdjust) {
             formAdjust.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -1389,36 +1545,57 @@
                 }
 
                 // Tìm khách hàng có số điện thoại này
-                let matchedCust = Object.values(customerDatabase).find(c => c.phone === phone);
-                const custName = matchedCust ? matchedCust.name : 'Khách hàng';
-                const currentBalance = matchedCust ? matchedCust.points : 500;
-                const newBalance = type === 'ADD' ? (currentBalance + pts) : Math.max(0, currentBalance - pts);
-                if (matchedCust) matchedCust.points = newBalance;
-
-                // Thêm dòng lịch sử vào bảng Tab Pawpoint
-                const histTbody = document.getElementById('pawpointHistoryTbody');
-                if (histTbody) {
-                    const now = new Date();
-                    const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                    const sign = type === 'ADD' ? '+' : '-';
-                    const colorClass = type === 'ADD' ? 'text-success' : 'text-danger';
-
-                    const newHistRow = document.createElement('tr');
-                    newHistRow.innerHTML = `
-                        <td>${timeStr}</td>
-                        <td>${custName} (${phone})</td>
-                        <td><strong class="${colorClass}">${sign}${pts} pts</strong></td>
-                        <td>${newBalance.toLocaleString('vi-VN')} pts</td>
-                        <td>${reason}</td>
-                    `;
-                    histTbody.prepend(newHistRow);
+                const cleanPhone = phone.replace(/[^0-9]/g, '').trim();
+                let matchedCust = Object.values(customerDatabase).find(c => c.phone && c.phone.replace(/[^0-9]/g, '').trim() === cleanPhone);
+                if (!matchedCust) {
+                    showToast(`Không tìm thấy khách hàng với số điện thoại ${phone}!`, 'warning');
+                    return;
                 }
 
+                const custName = matchedCust.name;
+                const currentBalance = Number(matchedCust.points) || 0;
+                const newBalance = type === 'ADD' ? (currentBalance + pts) : Math.max(0, currentBalance - pts);
+                matchedCust.points = newBalance;
+
+                // Tự động kiểm tra và thăng / hạ hạng thành viên
+                const tierResult = evaluateCustomerTier(matchedCust);
+
+                // Thêm vào kho lịch sử Pawpoint
+                const now = new Date();
+                const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                pawpointHistory.unshift({
+                    id: 'PWH-' + String(pawpointHistory.length + 1).padStart(3, '0'),
+                    time: timeStr,
+                    custId: matchedCust.id,
+                    custName: custName,
+                    phone: matchedCust.phone,
+                    type: type,
+                    points: pts,
+                    balance: newBalance,
+                    reason: reason
+                });
+
+                persistPawpointHistory();
                 persistCustomersData();
                 renderCustomersTable();
                 updateCustomerKPIs();
-                showToast(`Đã ${type === 'ADD' ? 'cộng' : 'trừ'} ${pts} Pawpoint cho khách hàng ${custName} thành công! Số dư mới: ${newBalance} pts`);
+                renderPawpointHistory();
+
+                // Cập nhật lại Drawer nếu đang mở đúng khách hàng này
+                const currentOpenCustId = sessionStorage.getItem('pawpal_admin_customer_id');
+                if (currentOpenCustId === matchedCust.id) {
+                    renderDrawerCustomerProfile(matchedCust.id);
+                }
+
+                if (tierResult.changed) {
+                    showToast(`Đã ${type === 'ADD' ? 'cộng' : 'trừ'} ${pts} Pawpoint! ${matchedCust.name} được tự động cập nhật hạng: ${tierResult.newTierName}!`);
+                } else {
+                    showToast(`Đã ${type === 'ADD' ? 'cộng' : 'trừ'} ${pts} Pawpoint cho khách hàng ${matchedCust.name}! Số dư mới: ${newBalance.toLocaleString('vi-VN')} pts`);
+                }
+
                 formAdjust.reset();
+                const hint = document.getElementById('adjustPhoneCustomerHint');
+                if (hint) hint.style.display = 'none';
                 closeAdjustModal();
             });
         }
@@ -2005,9 +2182,142 @@
             });
         });
 
-        // Khởi tạo render bảng và 5 thẻ KPI
+        // ====================================================================
+        // XUẤT BÁO CÁO DỮ LIỆU KHÁCH HÀNG VÀ LỊCH SỬ PAWPOINT (CSV / EXCEL UTF-8 BOM)
+        // ====================================================================
+        function exportCustomersToCSV() {
+            const allCusts = Object.values(customerDatabase);
+            if (!allCusts || allCusts.length === 0) {
+                showToast('Không có dữ liệu khách hàng để xuất!', 'warning');
+                return;
+            }
+
+            const headers = [
+                'Mã khách hàng',
+                'Họ và tên',
+                'Số điện thoại',
+                'Email',
+                'Giới tính',
+                'Ngày sinh',
+                'Hạng thành viên',
+                'Điểm Pawpoint',
+                'Trạng thái tài khoản',
+                'Số lượng thú cưng',
+                'Danh sách thú cưng',
+                'Địa chỉ mặc định',
+                'Ghi chú'
+            ];
+
+            const rows = allCusts.map(c => {
+                const petsList = (c.pets || []).map(p => `${p.name} (${p.species || 'Chó/Mèo'})`).join('; ');
+                const defaultAddr = (c.addresses || []).find(a => a.isDefault)?.address || (c.addresses?.[0]?.address || '');
+                const statusText = c.status === 'ACTIVE' ? 'Đang hoạt động' : (c.status === 'TEMP' ? 'Tài khoản tạm' : 'Bị khóa');
+
+                return [
+                    c.id || '',
+                    c.name || '',
+                    c.phone || '',
+                    c.email || '',
+                    c.gender || '',
+                    c.dob || '',
+                    c.tierName || c.tier || '',
+                    c.points || 0,
+                    statusText,
+                    (c.pets || []).length,
+                    petsList,
+                    defaultAddr,
+                    c.note || ''
+                ];
+            });
+
+            const csvRows = [
+                headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','),
+                ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+            ];
+
+            const csvContent = '\uFEFF' + csvRows.join('\r\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Pawpal_Danh_Sach_Khach_Hang_${dateStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showToast(`Đã xuất báo cáo ${allCusts.length} khách hàng thành công ra file CSV!`);
+        }
+
+        function exportPawpointHistoryToCSV() {
+            if (!pawpointHistory || pawpointHistory.length === 0) {
+                showToast('Không có lịch sử điểm để xuất!', 'warning');
+                return;
+            }
+
+            const headers = [
+                'Mã giao dịch',
+                'Thời gian',
+                'Mã khách hàng',
+                'Tên khách hàng',
+                'Số điện thoại',
+                'Loại giao dịch',
+                'Số điểm',
+                'Số dư sau giao dịch',
+                'Lý do điều chỉnh'
+            ];
+
+            const rows = pawpointHistory.map(item => [
+                item.id || '',
+                item.time || '',
+                item.custId || '',
+                item.custName || '',
+                item.phone || '',
+                item.type === 'ADD' ? 'Cộng điểm' : 'Trừ điểm',
+                (item.type === 'ADD' ? '+' : '-') + item.points + ' pts',
+                Number(item.balance).toLocaleString('vi-VN') + ' pts',
+                item.reason || ''
+            ]);
+
+            const csvRows = [
+                headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','),
+                ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+            ];
+
+            const csvContent = '\uFEFF' + csvRows.join('\r\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Pawpal_Lich_Su_Pawpoint_${dateStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showToast(`Đã xuất lịch sử ${pawpointHistory.length} giao dịch Pawpoint ra file CSV!`);
+        }
+
+        document.getElementById('btnExportCustomerReport')?.addEventListener('click', exportCustomersToCSV);
+        document.getElementById('btnExportPawpointHistory')?.addEventListener('click', exportPawpointHistoryToCSV);
+
+        const pawpointSearchInput = document.getElementById('pawpointSearchInput');
+        if (pawpointSearchInput) {
+            pawpointSearchInput.addEventListener('input', renderPawpointHistory);
+        }
+        const pawpointFilterType = document.getElementById('pawpointFilterType');
+        if (pawpointFilterType) {
+            pawpointFilterType.addEventListener('change', renderPawpointHistory);
+        }
+
+        // Khởi tạo render bảng, 5 thẻ KPI và lịch sử Pawpoint
         renderCustomersTable();
         updateCustomerKPIs();
+        renderPawpointHistory();
 
         // 18. KHỞI TẠO VÀ KHÔI PHỤC TRẠNG THÁI KHI F5 / RELOAD
         const hashSubtab = window.location.hash ? window.location.hash.replace('#', '') : null;
