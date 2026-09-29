@@ -57,7 +57,7 @@
                 vaccines: [
                     { title: 'Vắc-xin phòng dại (Rabies)', status: 'Đã tiêm đủ', date: '15/04/2026', nextDate: '15/04/2027', place: 'Sổ tiêm chủng do chủ xuất trình' },
                     { title: 'Vắc-xin 7 bệnh cho Chó (Vanguard Plus 5/CV-L)', status: 'Đã tiêm đủ', date: '20/05/2026', nextDate: '20/05/2027', place: 'Sổ giấy đối chiếu tại quầy' },
-                    { title: 'Xổ giun định kỳ và Nhỏ gáy ve rận', status: 'Đã thực hiện', date: '10/08/2026 (NexGard Spectra)', nextDate: '10/10/2026', place: 'Pawpal Center' },
+                    { title: 'Xổ giun định kỳ và Nhỏ gáy ve rận', status: 'Đã thực hiện', date: '10/08/2026 (NexGard Spectra)', nextDate: '10/10/2026', place: 'Sổ theo dõi thú y do chủ cung cấp' },
                     { title: 'Quy chuẩn an toàn dịch tễ Pet Hotel', status: 'Đạt chuẩn', date: 'Đáp ứng 100% điều kiện nhận phòng', nextDate: '', place: 'Pawpal Hotel' }
                 ],
                 carelogs: [
@@ -99,7 +99,7 @@
                 vaccines: [
                     { title: 'Vắc-xin phòng dại (Rabies)', status: 'Đã tiêm đủ', date: '10/03/2026', nextDate: '10/03/2027', place: 'Sổ tiêm chủng do chủ xuất trình' },
                     { title: 'Vắc-xin 4 bệnh cho Mèo (Purevax RCPCh)', status: 'Đã tiêm đủ', date: '15/03/2026', nextDate: '15/03/2027', place: 'Đầy đủ sổ tiêm' },
-                    { title: 'Nhỏ gáy Advocate trị nội ngoại ký sinh', status: 'Đã thực hiện', date: '05/09/2026', nextDate: '05/10/2026', place: 'Pawpal Center' },
+                    { title: 'Nhỏ gáy Advocate trị nội ngoại ký sinh', status: 'Đã thực hiện', date: '05/09/2026', nextDate: '05/10/2026', place: 'Sổ theo dõi thú y do chủ cung cấp' },
                     { title: 'Quy chuẩn an toàn dịch tễ Pet Hotel', status: 'Đạt chuẩn', date: 'Đang lưu trú phòng VIP #03', nextDate: '', place: 'Pawpal Hotel' }
                 ],
                 carelogs: [
@@ -136,7 +136,7 @@
                 ],
                 vaccines: [
                     { title: 'Vắc-xin phòng dại và 7 bệnh chó lớn', status: 'Đã tiêm đủ', date: '01/02/2026', nextDate: '01/02/2027', place: 'Sổ tiêm chủng do chủ cung cấp' },
-                    { title: 'Xổ giun và ngừa ve rận', status: 'Đã thực hiện', date: '15/08/2026', nextDate: '15/10/2026', place: 'Pawpal Center' }
+                    { title: 'Xổ giun và ngừa ve rận', status: 'Đã thực hiện', date: '15/08/2026', nextDate: '15/10/2026', place: 'Sổ theo dõi thú y do chủ cung cấp' }
                 ],
                 carelogs: [
                     { time: '22/08/2026 14:00', service: 'Spa tắm sấy chó lớn và chải lông rụng', ktv: 'Nguyễn Văn Nam', imgBefore: '/assets/images/publics/dogcute8.jpg', imgAfter: '/assets/images/publics/dogcute8.jpg', checkText: '4/4 mục đạt chuẩn', appStatus: 'Đã gửi app cho chủ', careId: 'CL-005' }
@@ -1757,7 +1757,7 @@
                     formattedNext = `${nParts[2]}/${nParts[1]}/${nParts[0]}`;
                 }
 
-                const place = document.getElementById('newVaccinePlace')?.value || 'Pawpal Center';
+                const place = document.getElementById('newVaccinePlace')?.value || 'Sổ tiêm đối chiếu';
                 const status = document.getElementById('newVaccineStatus')?.value || 'Đã tiêm đủ';
 
                 if (!pet.vaccines) pet.vaccines = [];

@@ -1076,14 +1076,14 @@
     <div class="admin-modal-backdrop" id="modalAddVaccine">
         <div class="admin-modal-card" style="width: 520px;">
             <div class="admin-modal-header">
-                <span class="admin-modal-title">Ghi nhận tiêm chủng và dịch tễ</span>
+                <span class="admin-modal-title">Ghi nhận sổ tiêm chủng và dịch tễ (Đối chiếu sổ)</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalAddVaccine">Đóng</button>
             </div>
             <form id="formAddVaccine" onsubmit="return false;">
                 <div class="form-group">
-                    <label class="form-label">Loại vắc-xin hoặc dịch vụ dịch tễ (*):</label>
+                    <label class="form-label">Loại vắc-xin hoặc dịch tễ ghi trên sổ (*):</label>
                     <select class="admin-select" id="newVaccineType" required>
-                        <option value="Vắc-xin phòng dại (Rabies)">Vắc-xin phòng dại (Rabies) - Tiêu chuẩn an toàn</option>
+                        <option value="Vắc-xin phòng dại (Rabies)">Vắc-xin phòng dại (Rabies) - Bắt buộc khi nhận Pet Hotel</option>
                         <option value="Vắc-xin 7 bệnh cho Chó (Vanguard Plus 5/CV-L)">Vắc-xin 7 bệnh cho Chó (Vanguard Plus 5/CV-L)</option>
                         <option value="Vắc-xin 4 bệnh cho Mèo (PureVax / Felocell)">Vắc-xin 4 bệnh cho Mèo (PureVax / Felocell)</option>
                         <option value="Xổ giun định kỳ và Nhỏ gáy ve rận">Xổ giun định kỳ và Nhỏ gáy ve rận (NexGard / Revolution)</option>
@@ -1107,8 +1107,8 @@
                 </div>
                 <div class="form-row-two-col">
                     <div class="form-group">
-                        <label class="form-label">Địa điểm hoặc Nguồn xác nhận:</label>
-                        <input type="text" class="admin-input" id="newVaccinePlace" placeholder="Ví dụ: Pawpal Center, Sổ tiêm đối chiếu..." value="Pawpal Center">
+                        <label class="form-label">Nguồn đối chiếu hoặc Cơ sở tiêm ngoài:</label>
+                        <input type="text" class="admin-input" id="newVaccinePlace" placeholder="Ví dụ: Sổ tiêm đối chiếu, PK Thú y 24/7..." value="Sổ tiêm đối chiếu">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Trạng thái:</label>
