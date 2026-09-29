@@ -26,7 +26,7 @@
         // ====================================================================
         // DATA STORE MÔ PHỎNG CHI TIẾT TỪNG BÉ CƯNG (ĐẦY ĐỦ 4 TAB CON)
         // ====================================================================
-        const petsData = {
+        const initialPetsData = {
             'PET-001': {
                 name: 'Milu',
                 code: 'PET-001',
@@ -329,6 +329,48 @@
             }
         };
 
+        // Khởi tạo petsData từ sessionStorage hoặc fallback initialPetsData
+        let petsData = {};
+        try {
+            const savedPets = sessionStorage.getItem('pawpal_admin_pets_data');
+            petsData = savedPets ? JSON.parse(savedPets) : JSON.parse(JSON.stringify(initialPetsData));
+        } catch (e) {
+            petsData = JSON.parse(JSON.stringify(initialPetsData));
+        }
+
+        function persistPetsData() {
+            try {
+                sessionStorage.setItem('pawpal_admin_pets_data', JSON.stringify(petsData));
+            } catch (e) {}
+        }
+
+        // Danh bạ khách hàng liên kết phục vụ tiếp nhận bé tại quầy
+        const initialCustomers = {
+            'CUST-001': { id: 'CUST-001', name: 'Nguyễn Văn An', phone: '0912345678', tier: 'Vàng' },
+            'CUST-002': { id: 'CUST-002', name: 'Lê Thị Bình', phone: '0987654321', tier: 'Bạc' },
+            'CUST-003': { id: 'CUST-003', name: 'Trần Khách Vãng Lai', phone: '0933221100', tier: 'Khách mới' },
+            'CUST-004': { id: 'CUST-004', name: 'Phạm Văn Vi Phạm', phone: '0944556677', tier: 'Bị khóa' },
+            'CUST-005': { id: 'CUST-005', name: 'Hoàng Minh Tuấn', phone: '0903112233', tier: 'Vàng' },
+            'CUST-007': { id: 'CUST-007', name: 'Vũ Đức Thắng', phone: '0977889900', tier: 'Kim Cương' },
+            'CUST-008': { id: 'CUST-008', name: 'Bùi Thu Trang', phone: '0938776655', tier: 'Đồng' },
+            'CUST-009': { id: 'CUST-009', name: 'Ngô Gia Bảo', phone: '0909123890', tier: 'Bạc' },
+            'CUST-010': { id: 'CUST-010', name: 'Đặng Thùy Linh', phone: '0945678123', tier: 'Vàng' }
+        };
+
+        let customersData = {};
+        try {
+            const savedCust = sessionStorage.getItem('pawpal_admin_customers_data');
+            customersData = savedCust ? JSON.parse(savedCust) : JSON.parse(JSON.stringify(initialCustomers));
+        } catch (e) {
+            customersData = JSON.parse(JSON.stringify(initialCustomers));
+        }
+
+        function persistCustomersData() {
+            try {
+                sessionStorage.setItem('pawpal_admin_customers_data', JSON.stringify(customersData));
+            } catch (e) {}
+        }
+
         // 2. Chuyển đổi giữa 4 Sub-tabs trên Header Bar
         const headerSubtabBtns = document.querySelectorAll('.header-subtab-btn');
         const subtabPanels = document.querySelectorAll('.subtab-content');
@@ -617,6 +659,8 @@
         // ====================================================================
         // 6. BỘ LỌC VÀ TÌM KIẾM THÚ CƯNG (ĐẦY ĐỦ CÂN NẶNG & TIÊM CHỦNG)
         // ====================================================================
+        // 6. RENDER ĐỘNG BẢNG THÚ CƯNG VÀ TÍNH TOÁN 5 THẺ THỐNG KÊ KPI
+        // ====================================================================
         const petSearchInput = document.getElementById('petSearchInput');
         const petFilterSpecies = document.getElementById('petFilterSpecies');
         const petFilterBreed = document.getElementById('petFilterBreed');
@@ -624,16 +668,175 @@
         const petFilterVaccine = document.getElementById('petFilterVaccine');
         const btnFilterHotelOnly = document.getElementById('btnFilterHotelOnly');
         const btnFilterAlertOnly = document.getElementById('btnFilterAlertOnly');
-        const tableRows = document.querySelectorAll('#petTableTbody tr');
 
         let isHotelOnly = false;
         let isAlertOnly = false;
+
+        function updatePetKPIs() {
+            const statTotal = document.getElementById('petStatTotal');
+            const statDog = document.getElementById('petStatDog');
+            const statCat = document.getElementById('petStatCat');
+            const statOther = document.getElementById('petStatOther');
+            const statAlert = document.getElementById('petStatAlert');
+
+            const petsList = Object.values(petsData);
+            const activePets = petsList.filter(p => p.status !== 'Lưu trữ');
+
+            if (statTotal) statTotal.textContent = activePets.length;
+            if (statDog) statDog.textContent = activePets.filter(p => p.species === 'dog').length;
+            if (statCat) statCat.textContent = activePets.filter(p => p.species === 'cat').length;
+            if (statOther) statOther.textContent = activePets.filter(p => p.species !== 'dog' && p.species !== 'cat').length;
+            if (statAlert) statAlert.textContent = activePets.filter(p => Boolean(p.alert)).length;
+        }
+
+        function renderPetsTable() {
+            const tbody = document.getElementById('petTableTbody');
+            if (!tbody) return;
+
+            const query = petSearchInput ? petSearchInput.value.toLowerCase().trim() : '';
+            const speciesVal = petFilterSpecies ? petFilterSpecies.value : 'ALL';
+            const breedVal = petFilterBreed ? petFilterBreed.value : 'ALL';
+            const weightVal = petFilterWeight ? petFilterWeight.value : 'ALL';
+            const vaccineVal = petFilterVaccine ? petFilterVaccine.value : 'ALL';
+
+            const petsList = Object.values(petsData);
+            const filteredPets = petsList.filter(pet => {
+                const text = `${pet.code} ${pet.name} ${pet.speciesBreed || ''} ${pet.breed || ''} ${pet.ownerName || ''} ${pet.ownerPhone || ''}`.toLowerCase();
+                
+                if (query && !text.includes(query)) return false;
+
+                if (speciesVal !== 'ALL') {
+                    if (speciesVal === 'dog' && pet.species !== 'dog') return false;
+                    if (speciesVal === 'cat' && pet.species !== 'cat') return false;
+                    if (speciesVal === 'rabbit' && pet.species !== 'rabbit') return false;
+                    if (speciesVal === 'other' && (pet.species === 'dog' || pet.species === 'cat' || pet.species === 'rabbit')) return false;
+                }
+
+                if (breedVal !== 'ALL') {
+                    if (!text.includes(breedVal.toLowerCase())) return false;
+                }
+
+                if (weightVal !== 'ALL') {
+                    const kg = pet.weightNum || parseFloat(pet.weight) || 0;
+                    if (weightVal === 'under5' && kg >= 5) return false;
+                    if (weightVal === '5to10' && (kg < 5 || kg > 10)) return false;
+                    if (weightVal === '10to20' && (kg < 10 || kg > 20)) return false;
+                    if (weightVal === 'over20' && kg <= 20) return false;
+                }
+
+                if (vaccineVal !== 'ALL') {
+                    if (vaccineVal === 'VACCINATED' && pet.vaccinated === false) return false;
+                    if (vaccineVal === 'NOT_VACCINATED' && pet.vaccinated !== false) return false;
+                }
+
+                if (isHotelOnly && pet.isHotel !== true && pet.status !== 'Lưu trú Hotel') return false;
+                if (isAlertOnly && !pet.alert) return false;
+
+                return true;
+            });
+
+            if (filteredPets.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 36px 16px; font-size: 13.5px;">
+                            Không tìm thấy bé cưng nào phù hợp với bộ lọc tìm kiếm hiện tại.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filteredPets.map(pet => {
+                let alertRowClass = '';
+                let alertBadgeClass = 'badge-neutral';
+                let alertText = pet.alert ? pet.alert : 'Bình thường';
+                
+                if (pet.alert) {
+                    const lowAlert = pet.alert.toLowerCase();
+                    if (lowAlert.includes('cắn') || lowAlert.includes('dữ') || lowAlert.includes('chưa xác nhận tiêm dại') || lowAlert.includes('nguy hiểm')) {
+                        alertRowClass = 'row-alert-critical';
+                        alertBadgeClass = 'badge-danger';
+                    } else {
+                        alertRowClass = 'row-alert-warning';
+                        alertBadgeClass = 'badge-warning';
+                    }
+                }
+
+                const isArchived = pet.status === 'Lưu trữ';
+                const rowClass = [alertRowClass, isArchived ? 'row-archived' : ''].filter(Boolean).join(' ');
+
+                let statusBadgeClass = 'badge-success';
+                if (pet.status === 'Lưu trú Hotel') statusBadgeClass = 'badge-warning';
+                else if (pet.status === 'Lưu trữ') statusBadgeClass = 'badge-neutral';
+
+                // Tóm gọn alert để hiển thị gọn gàng
+                let displayAlert = alertText;
+                if (displayAlert.length > 26) {
+                    displayAlert = displayAlert.substring(0, 24) + '...';
+                }
+
+                return `
+                    <tr class="${rowClass}" data-id="${pet.code}">
+                        <td style="text-align: center;">
+                            <img src="${pet.avatar || '/assets/images/publics/dogcute3.jpg'}" class="pet-avatar-cell" alt="${pet.name}">
+                        </td>
+                        <td><strong>${pet.code}</strong></td>
+                        <td>
+                            <div class="pet-name-cell">
+                                <a href="javascript:void(0)" class="pet-name-link btn-open-pet-drawer" data-id="${pet.code}">${pet.name}</a>
+                            </div>
+                            <div class="pet-sub-cell">${pet.gender || 'Đực'} • ${pet.dob || ''}</div>
+                        </td>
+                        <td>${pet.speciesBreed || pet.breed || 'Chó'}</td>
+                        <td><strong>${pet.weight}</strong></td>
+                        <td>
+                            <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="${pet.custId || 'CUST-001'}">${pet.ownerName || 'Chủ nuôi'}</a>
+                            <div class="pet-sub-cell">${pet.ownerPhone || ''}</div>
+                        </td>
+                        <td>
+                            <span class="admin-badge ${alertBadgeClass}" title="${pet.alert || ''}">${displayAlert}</span>
+                        </td>
+                        <td>
+                            <span class="admin-badge ${statusBadgeClass}">${pet.status}</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="action-dropdown-wrapper">
+                                <button type="button" class="btn-action-more" data-id="${pet.code}" title="Tác vụ">•••</button>
+                                <div class="action-dropdown-menu">
+                                    <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="${pet.code}">
+                                        Xem hồ sơ chi tiết
+                                    </button>
+                                    <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="${pet.code}">
+                                        Cân bé và Thể trạng
+                                    </button>
+                                    <button type="button" class="dropdown-item btn-print-collar-tag" data-id="${pet.code}">
+                                        In thẻ đeo cổ (80mm)
+                                    </button>
+                                    <button type="button" class="dropdown-item btn-create-service-pet" data-id="${pet.code}">
+                                        Tạo ca dịch vụ
+                                    </button>
+                                    ${isArchived ? `
+                                        <button type="button" class="dropdown-item text-success btn-restore-pet" data-id="${pet.code}">
+                                            Khôi phục hồ sơ
+                                        </button>
+                                    ` : `
+                                        <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="${pet.code}">
+                                            Lưu trữ hồ sơ
+                                        </button>
+                                    `}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
 
         if (btnFilterHotelOnly) {
             btnFilterHotelOnly.addEventListener('click', () => {
                 isHotelOnly = !isHotelOnly;
                 btnFilterHotelOnly.classList.toggle('active', isHotelOnly);
-                filterPetsTable();
+                renderPetsTable();
             });
         }
 
@@ -641,81 +844,15 @@
             btnFilterAlertOnly.addEventListener('click', () => {
                 isAlertOnly = !isAlertOnly;
                 btnFilterAlertOnly.classList.toggle('active', isAlertOnly);
-                filterPetsTable();
+                renderPetsTable();
             });
         }
 
-        function filterPetsTable() {
-            const query = petSearchInput ? petSearchInput.value.toLowerCase().trim() : '';
-            const speciesVal = petFilterSpecies ? petFilterSpecies.value : 'ALL';
-            const breedVal = petFilterBreed ? petFilterBreed.value : 'ALL';
-            const weightVal = petFilterWeight ? petFilterWeight.value : 'ALL';
-            const vaccineVal = petFilterVaccine ? petFilterVaccine.value : 'ALL';
-
-            tableRows.forEach(row => {
-                const petId = row.getAttribute('data-id');
-                const pet = petsData[petId] || {};
-                const text = row.textContent.toLowerCase();
-
-                let matchSearch = !query || text.includes(query);
-                let matchSpecies = true;
-                let matchBreed = true;
-                let matchWeight = true;
-                let matchVaccine = true;
-                let matchHotel = true;
-                let matchAlert = true;
-
-                // 1. Kiểm tra loài
-                if (speciesVal !== 'ALL') {
-                    if (speciesVal === 'dog') matchSpecies = pet.species === 'dog' || text.includes('chó') || text.includes('poodle') || text.includes('corgi') || text.includes('golden') || text.includes('phốc');
-                    else if (speciesVal === 'cat') matchSpecies = pet.species === 'cat' || text.includes('mèo');
-                    else if (speciesVal === 'rabbit') matchSpecies = pet.species === 'rabbit' || text.includes('thỏ');
-                    else if (speciesVal === 'other') matchSpecies = pet.species === 'other' || text.includes('thỏ') || text.includes('hamster') || text.includes('khác');
-                }
-
-                // 2. Kiểm tra giống
-                if (breedVal !== 'ALL') {
-                    matchBreed = text.includes(breedVal.toLowerCase());
-                }
-
-                // 3. Kiểm tra Cân nặng
-                if (weightVal !== 'ALL') {
-                    const kg = pet.weightNum || parseFloat(pet.weight) || 0;
-                    if (weightVal === 'under5') matchWeight = kg < 5;
-                    else if (weightVal === '5to10') matchWeight = (kg >= 5 && kg <= 10);
-                    else if (weightVal === '10to20') matchWeight = (kg > 10 && kg <= 20);
-                    else if (weightVal === 'over20') matchWeight = kg > 20;
-                }
-
-                // 4. Kiểm tra Tiêm chủng
-                if (vaccineVal !== 'ALL') {
-                    if (vaccineVal === 'VACCINATED') matchVaccine = pet.vaccinated !== false;
-                    else if (vaccineVal === 'NOT_VACCINATED') matchVaccine = pet.vaccinated === false;
-                }
-
-                // 5. Kiểm tra Hotel
-                if (isHotelOnly) {
-                    matchHotel = pet.isHotel === true || text.includes('hotel');
-                }
-
-                // 6. Kiểm tra Cảnh báo
-                if (isAlertOnly) {
-                    matchAlert = row.classList.contains('row-alert-critical') || row.classList.contains('row-alert-warning') || Boolean(pet.alert);
-                }
-
-                if (matchSearch && matchSpecies && matchBreed && matchWeight && matchVaccine && matchHotel && matchAlert) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-
-        if (petSearchInput) petSearchInput.addEventListener('input', filterPetsTable);
-        if (petFilterSpecies) petFilterSpecies.addEventListener('change', filterPetsTable);
-        if (petFilterBreed) petFilterBreed.addEventListener('change', filterPetsTable);
-        if (petFilterWeight) petFilterWeight.addEventListener('change', filterPetsTable);
-        if (petFilterVaccine) petFilterVaccine.addEventListener('change', filterPetsTable);
+        if (petSearchInput) petSearchInput.addEventListener('input', renderPetsTable);
+        if (petFilterSpecies) petFilterSpecies.addEventListener('change', renderPetsTable);
+        if (petFilterBreed) petFilterBreed.addEventListener('change', renderPetsTable);
+        if (petFilterWeight) petFilterWeight.addEventListener('change', renderPetsTable);
+        if (petFilterVaccine) petFilterVaccine.addEventListener('change', renderPetsTable);
 
         // ====================================================================
         // 7. TÁC VỤ LƯU TRỮ VÀ KHÔI PHỤC HỒ SƠ THÚ CƯNG TRÊN MENU 3 CHẤM
@@ -727,39 +864,27 @@
             if (btnArchive) {
                 e.stopPropagation();
                 const petId = btnArchive.getAttribute('data-id');
-                const row = btnArchive.closest('tr');
-                if (confirm(`Bạn có chắc muốn lưu trữ hồ sơ của bé cưng ${petsData[petId]?.name || petId}?`)) {
-                    row.classList.add('row-archived');
-                    const badge = row.querySelectorAll('td')[7]?.querySelector('.admin-badge');
-                    if (badge) {
-                        badge.textContent = 'Lưu trữ';
-                        badge.className = 'admin-badge badge-neutral';
-                    }
-                    if (petsData[petId]) petsData[petId].status = 'Lưu trữ';
-
-                    btnArchive.className = 'dropdown-item text-success btn-restore-pet';
-                    btnArchive.textContent = 'Khôi phục hồ sơ';
-                    btnArchive.closest('.action-dropdown-wrapper')?.classList.remove('open');
-                    showToast(`Đã lưu trữ hồ sơ bé cưng ${petsData[petId]?.name || petId}!`);
+                const pet = petsData[petId];
+                if (pet && confirm(`Bạn có chắc muốn lưu trữ hồ sơ của bé cưng ${pet.name || petId}?`)) {
+                    pet.status = 'Lưu trữ';
+                    persistPetsData();
+                    renderPetsTable();
+                    updatePetKPIs();
+                    showToast(`Đã lưu trữ hồ sơ bé cưng ${pet.name}!`);
                 }
             }
 
             if (btnRestore) {
                 e.stopPropagation();
                 const petId = btnRestore.getAttribute('data-id');
-                const row = btnRestore.closest('tr');
-                row.classList.remove('row-archived');
-                const badge = row.querySelectorAll('td')[7]?.querySelector('.admin-badge');
-                if (badge) {
-                    badge.textContent = 'Đang nuôi';
-                    badge.className = 'admin-badge badge-success';
+                const pet = petsData[petId];
+                if (pet) {
+                    pet.status = 'Đang nuôi';
+                    persistPetsData();
+                    renderPetsTable();
+                    updatePetKPIs();
+                    showToast(`Đã khôi phục hoạt động cho bé cưng ${pet.name}!`);
                 }
-                if (petsData[petId]) petsData[petId].status = 'Đang nuôi';
-
-                btnRestore.className = 'dropdown-item text-danger btn-archive-pet';
-                btnRestore.textContent = 'Lưu trữ hồ sơ';
-                btnRestore.closest('.action-dropdown-wrapper')?.classList.remove('open');
-                showToast(`Đã khôi phục hoạt động cho bé cưng ${petsData[petId]?.name || petId}!`);
             }
         });
 
@@ -861,12 +986,10 @@
                 }
                 renderPetSubtabs(pet);
 
-                // Cập nhật dòng ngoài bảng
-                const row = document.querySelector(`#petTableTbody tr[data-id="${currentWeighingPetId}"]`);
-                if (row) {
-                    const weightCell = row.querySelectorAll('td')[4]?.querySelector('strong');
-                    if (weightCell) weightCell.textContent = `${newKg} kg`;
-                }
+                // Cập nhật Database và Render lại bảng danh sách
+                persistPetsData();
+                renderPetsTable();
+                updatePetKPIs();
 
                 showToast(`Đã lưu cân nặng mới (${newKg} kg) cho bé ${pet.name} và cập nhật lịch sử!`);
                 if (modalWeighPet) modalWeighPet.classList.remove('open');
@@ -952,29 +1075,10 @@
                 // Cập nhật lại Drawer
                 openPetProfile(currentEditingPetCode);
 
-                // Cập nhật lại dòng ngoài bảng danh sách
-                const row = document.querySelector(`#petTableTbody tr[data-id="${currentEditingPetCode}"]`);
-                if (row) {
-                    const nameLink = row.querySelector('.pet-name-link');
-                    if (nameLink) nameLink.textContent = name;
-                    const subCell = row.querySelector('.pet-sub-cell');
-                    if (subCell) subCell.textContent = `${gender} • ${pet.dob}`;
-                    const speciesCell = row.querySelectorAll('td')[3];
-                    if (speciesCell) speciesCell.textContent = speciesBreedStr;
-                    const weightCell = row.querySelectorAll('td')[4]?.querySelector('strong');
-                    if (weightCell) weightCell.textContent = `${weight} kg`;
-                    const alertCell = row.querySelectorAll('td')[6]?.querySelector('.admin-badge');
-                    if (alertCell) {
-                        alertCell.textContent = alertText || 'Bình thường';
-                        alertCell.className = `admin-badge ${alertText ? 'badge-danger' : 'badge-neutral'}`;
-                        alertCell.style.cssText = '';
-                    }
-                    const statusCell = row.querySelectorAll('td')[7]?.querySelector('.admin-badge');
-                    if (statusCell) {
-                        statusCell.textContent = status;
-                        statusCell.className = `admin-badge ${status === 'Đang nuôi' ? 'badge-success' : (status === 'Lưu trú Hotel' ? 'badge-warning' : 'badge-neutral')}`;
-                    }
-                }
+                // Cập nhật Database và Render lại bảng
+                persistPetsData();
+                renderPetsTable();
+                updatePetKPIs();
 
                 showToast(`Đã cập nhật thành công hồ sơ của bé ${name}!`);
                 if (modalEditPet) modalEditPet.classList.remove('open');
@@ -982,35 +1086,227 @@
         }
 
         // ====================================================================
-        // 10. TIẾP NHẬN BÉ CƯNG MỚI TẠI QUẦY (MODAL 1)
+        // 10. TIẾP NHẬN BÉ CƯNG MỚI TẠI QUẦY & AUTOCOMPLETE CHỦ NUÔI
         // ====================================================================
         const modalAddPet = document.getElementById('modalAddPet');
         const btnOpenAddPet = document.getElementById('btnOpenAddPetModal');
+        const newPetOwnerInput = document.getElementById('newPetOwnerInput');
+        const newPetOwnerHidden = document.getElementById('newPetOwner');
+        const newPetOwnerDropdown = document.getElementById('newPetOwnerDropdown');
+        const modalQuickAddOwner = document.getElementById('modalQuickAddOwner');
+        const btnOpenQuickAddOwnerModal = document.getElementById('btnOpenQuickAddOwnerModal');
+        const btnSubmitQuickAddOwner = document.getElementById('btnSubmitQuickAddOwner');
+        const modalCollarTagPreview = document.getElementById('modalCollarTagPreview');
+        const btnPreviewCollarTagFromAdd = document.getElementById('btnPreviewCollarTagFromAdd');
+        const btnConfirmSendPrintCollar = document.getElementById('btnConfirmSendPrintCollar');
+
+        // Autocomplete tìm kiếm chủ nuôi
+        if (newPetOwnerInput && newPetOwnerDropdown) {
+            function updateOwnerAutocomplete(query) {
+                const q = query.toLowerCase().trim();
+                const allCusts = Object.values(customersData);
+                const matched = allCusts.filter(c => 
+                    !q || c.name.toLowerCase().includes(q) || c.phone.includes(q) || c.id.toLowerCase().includes(q)
+                );
+
+                if (matched.length === 0) {
+                    newPetOwnerDropdown.innerHTML = '<div class="autocomplete-empty">Không tìm thấy khách hàng. Bấm "+ Thêm nhanh chủ nuôi" để tạo mới!</div>';
+                } else {
+                    newPetOwnerDropdown.innerHTML = matched.map(c => `
+                        <div class="autocomplete-item" data-id="${c.id}" data-name="${c.name}" data-phone="${c.phone}" data-tier="${c.tier || 'Khách mới'}">
+                            <div>
+                                <span class="autocomplete-item-name">${c.name}</span>
+                                <span style="font-size: 11.5px; color: var(--text-muted); margin-left: 6px;">(${c.tier || 'Khách mới'})</span>
+                            </div>
+                            <span class="autocomplete-item-phone">${c.phone} • ${c.id}</span>
+                        </div>
+                    `).join('');
+                }
+                newPetOwnerDropdown.style.display = 'block';
+            }
+
+            newPetOwnerInput.addEventListener('focus', () => {
+                updateOwnerAutocomplete(newPetOwnerInput.value);
+            });
+
+            newPetOwnerInput.addEventListener('input', () => {
+                updateOwnerAutocomplete(newPetOwnerInput.value);
+            });
+
+            newPetOwnerDropdown.addEventListener('click', (e) => {
+                const item = e.target.closest('.autocomplete-item');
+                if (item) {
+                    const custId = item.getAttribute('data-id');
+                    const custName = item.getAttribute('data-name');
+                    const custPhone = item.getAttribute('data-phone');
+                    const custTier = item.getAttribute('data-tier');
+
+                    if (newPetOwnerHidden) newPetOwnerHidden.value = custId;
+                    newPetOwnerInput.value = `${custName} - ${custPhone} (Hạng ${custTier})`;
+                    newPetOwnerDropdown.style.display = 'none';
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.pet-owner-autocomplete-wrapper')) {
+                    newPetOwnerDropdown.style.display = 'none';
+                }
+            });
+        }
+
+        // Mở popup Thêm nhanh chủ nuôi
+        if (btnOpenQuickAddOwnerModal && modalQuickAddOwner) {
+            btnOpenQuickAddOwnerModal.addEventListener('click', () => {
+                modalQuickAddOwner.classList.add('open');
+            });
+        }
+
+        // Lưu tạo nhanh chủ nuôi
+        if (btnSubmitQuickAddOwner) {
+            btnSubmitQuickAddOwner.addEventListener('click', () => {
+                const name = document.getElementById('quickOwnerName')?.value.trim();
+                const phone = document.getElementById('quickOwnerPhone')?.value.trim();
+                const tier = document.getElementById('quickOwnerTier')?.value || 'Khách mới';
+                const address = document.getElementById('quickOwnerAddress')?.value.trim();
+
+                if (!name || !phone) {
+                    alert('Vui lòng nhập đầy đủ Họ tên và Số điện thoại của chủ nuôi!');
+                    return;
+                }
+
+                const newCustId = 'CUST-' + String(Object.keys(customersData).length + 1).padStart(3, '0');
+                customersData[newCustId] = {
+                    id: newCustId,
+                    name: name,
+                    phone: phone,
+                    tier: tier,
+                    address: address
+                };
+                persistCustomersData();
+
+                // Tự động điền vào ô chọn chủ nuôi của form tiếp nhận
+                if (newPetOwnerHidden) newPetOwnerHidden.value = newCustId;
+                if (newPetOwnerInput) newPetOwnerInput.value = `${name} - ${phone} (Hạng ${tier})`;
+
+                if (modalQuickAddOwner) modalQuickAddOwner.classList.remove('open');
+                showToast(`Đã tạo nhanh khách hàng ${name} (${newCustId}) thành công!`);
+            });
+        }
+
+        // Hàm mở Modal Xem trước Thẻ in nhiệt 80mm
+        function openCollarTagPreview(pet) {
+            if (!modalCollarTagPreview || !pet) return;
+
+            const nameEl = document.getElementById('tagPreviewPetName');
+            const infoEl = document.getElementById('tagPreviewPetInfo');
+            const codeEl = document.getElementById('tagPreviewPetCode');
+            const ownerNameEl = document.getElementById('tagPreviewOwnerName');
+            const ownerPhoneEl = document.getElementById('tagPreviewOwnerPhone');
+            const intakeTimeEl = document.getElementById('tagPreviewIntakeTime');
+            const alertWrap = document.getElementById('tagPreviewAlertWrapper');
+            const alertTextEl = document.getElementById('tagPreviewAlertText');
+            const barcodeNumEl = document.getElementById('tagPreviewBarcodeNum');
+
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} ngày ${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
+
+            if (nameEl) nameEl.textContent = (pet.name || 'BÉ CƯNG').toUpperCase();
+            if (infoEl) infoEl.textContent = `${pet.speciesBreed || pet.breed || 'Chó'} • ${pet.weight || '5.0 kg'} • ${pet.gender || 'Đực'}`;
+            if (codeEl) codeEl.textContent = pet.code || 'PET-NEW';
+            if (ownerNameEl) ownerNameEl.textContent = pet.ownerName || 'Chủ nuôi';
+            if (ownerPhoneEl) ownerPhoneEl.textContent = pet.ownerPhone || '0900000000';
+            if (intakeTimeEl) intakeTimeEl.textContent = timeStr;
+            if (barcodeNumEl) barcodeNumEl.textContent = `*${pet.code || 'PET-NEW'}*`;
+
+            if (alertWrap && alertTextEl) {
+                if (pet.alert) {
+                    alertTextEl.textContent = pet.alert;
+                    alertWrap.style.display = 'block';
+                } else {
+                    alertWrap.style.display = 'none';
+                }
+            }
+
+            modalCollarTagPreview.classList.add('open');
+        }
+
+        // Nút xem trước thẻ in từ form tiếp nhận
+        if (btnPreviewCollarTagFromAdd) {
+            btnPreviewCollarTagFromAdd.addEventListener('click', () => {
+                const name = document.getElementById('newPetName')?.value || 'Bé Mới';
+                const ownerCustId = newPetOwnerHidden?.value || 'CUST-001';
+                const cust = customersData[ownerCustId] || { name: 'Khách hàng', phone: '0900000000' };
+                const species = document.getElementById('newPetSpecies')?.value || 'dog';
+                const breed = document.getElementById('newPetBreed')?.value || 'Corgi';
+                const gender = document.getElementById('newPetGender')?.value === 'female' ? 'Cái' : 'Đực';
+                const weight = document.getElementById('newPetWeight')?.value || '5.0';
+                const alertText = document.getElementById('newPetAlert')?.value || '';
+
+                const speciesNameMap = { 'dog': 'Chó', 'cat': 'Mèo', 'rabbit': 'Thỏ', 'other': 'Khác' };
+                const speciesBreedStr = `${speciesNameMap[species] || 'Chó'} ${breed}`;
+
+                openCollarTagPreview({
+                    name: name,
+                    code: 'PET-' + String(Object.keys(petsData).length + 1).padStart(3, '0'),
+                    speciesBreed: speciesBreedStr,
+                    weight: `${weight} kg`,
+                    gender: gender,
+                    ownerName: cust.name,
+                    ownerPhone: cust.phone,
+                    alert: alertText
+                });
+            });
+        }
+
+        // Nút in thẻ trên dropdown 3 chấm bảng danh sách
+        document.addEventListener('click', (e) => {
+            const btnPrint = e.target.closest('.btn-print-collar-tag');
+            if (btnPrint) {
+                const petId = btnPrint.getAttribute('data-id');
+                const pet = petsData[petId];
+                if (pet) {
+                    openCollarTagPreview(pet);
+                }
+                btnPrint.closest('.action-dropdown-wrapper')?.classList.remove('open');
+            }
+        });
+
+        // Xác nhận gửi lệnh in nhiệt
+        if (btnConfirmSendPrintCollar) {
+            btnConfirmSendPrintCollar.addEventListener('click', () => {
+                showToast('Đã gửi lệnh in thẻ đeo cổ tới máy in nhãn nhiệt quầy tiếp nhận!');
+                if (modalCollarTagPreview) modalCollarTagPreview.classList.remove('open');
+            });
+        }
+
+        // Mở modal tiếp nhận
         if (btnOpenAddPet && modalAddPet) {
             btnOpenAddPet.addEventListener('click', () => {
                 modalAddPet.classList.add('open');
             });
         }
 
+        // Submit form tiếp nhận bé mới
         const btnSubmitAddPet = document.getElementById('btnSubmitAddPet');
         if (btnSubmitAddPet) {
             btnSubmitAddPet.addEventListener('click', () => {
-                const name = document.getElementById('newPetName')?.value || 'Bé Mới';
-                const ownerCustId = document.getElementById('newPetOwner')?.value || 'CUST-001';
+                const name = document.getElementById('newPetName')?.value.trim() || 'Bé Mới';
+                const ownerCustId = newPetOwnerHidden?.value || 'CUST-001';
+                const cust = customersData[ownerCustId] || { name: 'Khách hàng', phone: '0900000000' };
                 const species = document.getElementById('newPetSpecies')?.value || 'dog';
-                const breed = document.getElementById('newPetBreed')?.value || 'Corgi';
+                const breed = document.getElementById('newPetBreed')?.value.trim() || 'Corgi';
                 const gender = document.getElementById('newPetGender')?.value === 'female' ? 'Cái' : 'Đực';
                 const weight = parseFloat(document.getElementById('newPetWeight')?.value || '5.0');
                 const dob = document.getElementById('newPetDob')?.value || '2024-01-15';
-                const color = document.getElementById('newPetColor')?.value || 'Vàng trắng';
-                const alertText = document.getElementById('newPetAlert')?.value || '';
-                const allergy = document.getElementById('newPetAllergy')?.value || 'Không';
+                const color = document.getElementById('newPetColor')?.value.trim() || 'Vàng trắng';
+                const alertText = document.getElementById('newPetAlert')?.value.trim() || '';
+                const allergy = document.getElementById('newPetAllergy')?.value.trim() || 'Không';
 
                 const newPetId = 'PET-' + String(Object.keys(petsData).length + 1).padStart(3, '0');
                 const speciesNameMap = { 'dog': 'Chó', 'cat': 'Mèo', 'rabbit': 'Thỏ', 'other': 'Khác' };
                 const speciesBreedStr = `${speciesNameMap[species] || 'Chó'} ${breed}`;
 
-                petsData[newPetId] = {
+                const newPetObj = {
                     name: name,
                     code: newPetId,
                     species: species,
@@ -1025,8 +1321,8 @@
                     allergy: allergy,
                     notes: 'Tiếp nhận mới tại quầy.',
                     alert: alertText,
-                    ownerName: 'Khách hàng',
-                    ownerPhone: '0900000000',
+                    ownerName: cust.name,
+                    ownerPhone: cust.phone,
                     custId: ownerCustId,
                     avatar: species === 'cat' ? '/assets/images/publics/catcute5.jpg' : '/assets/images/publics/dogcute3.jpg',
                     status: 'Đang nuôi',
@@ -1038,56 +1334,18 @@
                     history: []
                 };
 
-                // Thêm 1 dòng mới vào bảng
-                const tbody = document.getElementById('petTableTbody');
-                if (tbody) {
-                    const newTr = document.createElement('tr');
-                    newTr.setAttribute('data-id', newPetId);
-                    newTr.innerHTML = `
-                        <td style="text-align: center;">
-                            <img src="${petsData[newPetId].avatar}" class="pet-avatar-cell" alt="${name}">
-                        </td>
-                        <td><strong>${newPetId}</strong></td>
-                        <td>
-                            <div class="pet-name-cell">
-                                <a href="javascript:void(0)" class="pet-name-link btn-open-pet-drawer" data-id="${newPetId}">${name}</a>
-                            </div>
-                            <div class="pet-sub-cell">${gender} • ${dob}</div>
-                        </td>
-                        <td>${speciesBreedStr}</td>
-                        <td><strong>${weight} kg</strong></td>
-                        <td>
-                            <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="${ownerCustId}">${ownerCustId}</a>
-                            <div class="pet-sub-cell">Chủ nuôi</div>
-                        </td>
-                        <td>
-                            <span class="admin-badge ${alertText ? 'badge-warning' : 'badge-neutral'}">${alertText || 'Bình thường'}</span>
-                        </td>
-                        <td><span class="admin-badge badge-success">Đang nuôi</span></td>
-                        <td style="text-align: center;">
-                            <div class="action-dropdown-wrapper">
-                                <button type="button" class="btn-action-more" data-id="${newPetId}" title="Tác vụ">•••</button>
-                                <div class="action-dropdown-menu">
-                                    <button type="button" class="dropdown-item btn-open-pet-drawer" data-id="${newPetId}">Xem hồ sơ chi tiết</button>
-                                    <button type="button" class="dropdown-item btn-open-weigh-modal" data-id="${newPetId}">Cân bé và Thể trạng</button>
-                                    <button type="button" class="dropdown-item btn-create-service-pet" data-id="${newPetId}">Tạo ca dịch vụ</button>
-                                    <button type="button" class="dropdown-item text-danger btn-archive-pet" data-id="${newPetId}">Lưu trữ hồ sơ</button>
-                                </div>
-                            </div>
-                        </td>
-                    `;
-                    tbody.prepend(newTr);
-                }
+                petsData[newPetId] = newPetObj;
+                persistPetsData();
+                renderPetsTable();
+                updatePetKPIs();
 
-                showToast(`Tiếp nhận bé ${name} thành công! Đã tự động in thẻ đeo cổ chống thất lạc.`);
+                showToast(`Tiếp nhận bé ${name} (${newPetId}) thành công!`);
                 if (modalAddPet) modalAddPet.classList.remove('open');
-            });
-        }
 
-        const btnPrintCollar = document.getElementById('btnPrintCollarTag');
-        if (btnPrintCollar) {
-            btnPrintCollar.addEventListener('click', () => {
-                alert('Lệnh in thẻ đeo cổ đã gửi tới máy in nhãn nhiệt quầy lễ tân:\n- Tên bé cưng: Milu\n- Mã PET: PET-001\n- Hotline chủ: 0912345678');
+                // Mở ngay xem trước thẻ in nhiệt 80mm
+                setTimeout(() => {
+                    openCollarTagPreview(newPetObj);
+                }, 300);
             });
         }
 
@@ -1553,6 +1811,10 @@
         if (savedDrawerTab) {
             switchDrawerTab(savedDrawerTab);
         }
+
+        // Render bảng dữ liệu động và 5 thẻ KPI ban đầu
+        renderPetsTable();
+        updatePetKPIs();
 
         // Render hồ sơ mặc định ban đầu
         const initPetId = sessionStorage.getItem('pawpal_admin_pet_id') || 'PET-001';

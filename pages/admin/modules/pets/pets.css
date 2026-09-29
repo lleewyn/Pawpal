@@ -1089,3 +1089,208 @@
     align-items: center;
     gap: 12px;
 }
+
+.btn-text-action {
+    background: transparent;
+    border: none;
+    color: #236B48;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.btn-text-action:hover {
+    color: #174a31;
+}
+
+/* AUTOCOMPLETE CHỦ NUÔI */
+.pet-owner-autocomplete-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.autocomplete-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #FFFFFF;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    box-shadow: 0 10px 24px rgba(26, 43, 35, 0.12);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 10050;
+    overscroll-behavior: contain;
+}
+
+.autocomplete-item {
+    padding: 9px 12px;
+    font-size: 13px;
+    color: var(--text-main);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #F1F5F3;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.selected {
+    background-color: #F4FAF6;
+}
+
+.autocomplete-item-name {
+    font-weight: 600;
+    color: var(--text-heading);
+}
+
+.autocomplete-item-phone {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.autocomplete-empty {
+    padding: 12px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* THẺ IN NHIỆT 80MM (THERMAL COLLAR TAG PREVIEW) */
+.thermal-tag-preview-card {
+    background-color: #FAFCFA;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.02);
+}
+
+.thermal-tag-header {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.thermal-tag-brand {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--text-heading);
+}
+
+.thermal-tag-sub {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.thermal-tag-divider {
+    border-top: 1px dashed #CBD5E1;
+    margin: 4px 0;
+}
+
+.thermal-tag-pet-hero {
+    text-align: center;
+    padding: 6px 0;
+}
+
+.thermal-pet-name {
+    font-size: 26px;
+    font-weight: 900;
+    color: #236B48;
+    letter-spacing: 0.5px;
+    line-height: 1.1;
+}
+
+.thermal-pet-info {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-top: 4px;
+}
+
+.thermal-tag-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.thermal-tag-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-main);
+}
+
+.thermal-tag-row span {
+    color: var(--text-muted);
+}
+
+.thermal-tag-alert-box {
+    background-color: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: var(--admin-radius);
+    padding: 8px 10px;
+    font-size: 12.5px;
+    color: #991B1B;
+}
+
+.thermal-alert-title {
+    font-weight: 700;
+    font-size: 11.5px;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+}
+
+.thermal-alert-text {
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.thermal-tag-barcode-zone {
+    text-align: center;
+    padding: 8px 0 2px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.thermal-barcode-mock {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: #0F172A;
+    user-select: none;
+}
+
+.thermal-barcode-num {
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.thermal-tag-footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    border-top: 1px dashed #CBD5E1;
+    padding-top: 8px;
+}
