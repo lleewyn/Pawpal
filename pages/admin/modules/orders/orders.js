@@ -256,6 +256,7 @@
             carrier: 'Chưa phân công',
             trackingNumber: '--',
             createdAt: '2026-06-12T07:45:00',
+            slaMinutes: 48, // Quá hạn SLA 48 phút (> 30p)
             subtotal: 700000,
             shippingFee: 0,
             discount: 0,
@@ -263,8 +264,8 @@
             total: 700000,
             customerNote: 'Đã trừ tiền ngân hàng nhưng đơn vẫn chưa báo thành công.',
             internalNote: 'Đang đối soát mã giao dịch VNPay 14298192 với cổng thanh toán.',
-            alertType: 'warning',
-            alertMessage: 'Chờ đối soát thanh toán VNPay',
+            alertType: 'danger',
+            alertMessage: 'Quá hạn SLA (48p) - Cần duyệt gấp',
             products: [
                 {
                     sku: 'TP-HAT-05',
@@ -278,6 +279,185 @@
             ],
             timeline: [
                 { title: 'Đặt hàng thành công', time: '07:45 - 12/06/2026', desc: 'Chờ xác nhận giao dịch VNPay', done: true }
+            ]
+        },
+        {
+            id: 'ORD-2026-008',
+            userId: 'USER-008',
+            customerName: 'Bùi Thanh Trúc',
+            phone: '0981122334',
+            address: '56 Hoàng Diệu, Phường 12, Quận 4, TP. Hồ Chí Minh',
+            status: 'delivered',
+            paymentStatus: 'cod_pending', // Đã giao hàng nhưng tiền COD chưa về
+            paymentMethod: 'cod',
+            carrier: 'J&T Express',
+            trackingNumber: 'JT99281203',
+            createdAt: '2026-06-11T13:00:00',
+            subtotal: 650000,
+            shippingFee: 30000,
+            discount: 0,
+            pawPointsUsed: 0,
+            total: 680000,
+            customerNote: 'Kiểm tra hàng trước khi nhận.',
+            internalNote: 'Bưu tá J&T báo phát thành công, tiền thu hộ COD đang chờ bưu cục chuyển đợt thứ 6.',
+            alertType: 'warning',
+            alertMessage: 'Chờ đối soát COD (680.000 đ)',
+            products: [
+                {
+                    sku: 'TP-HAT-01',
+                    name: 'Thức ăn hạt cao cấp Royal Canin Mother và Babycat',
+                    spec: 'Túi 2kg',
+                    price: 200000,
+                    quantity: 3,
+                    total: 600000,
+                    image: '/assets/images/shop/products/tp-hat-01.png'
+                },
+                {
+                    sku: 'TP-PATE-02',
+                    name: 'Pate lon hỗn hợp cá hồi và gà chín mềm King\'s Pet',
+                    spec: 'Lon 180g',
+                    price: 45000,
+                    quantity: 1,
+                    total: 45000,
+                    image: '/assets/images/shop/products/TP-PATE-02.png'
+                }
+            ],
+            timeline: [
+                { title: 'Đặt hàng thành công', time: '13:00 - 11/06/2026', desc: 'Đặt hàng COD trực tuyến', done: true },
+                { title: 'Đã bàn giao vận chuyển', time: '15:00 - 11/06/2026', desc: 'J&T Express tiếp nhận', done: true },
+                { title: 'Giao hàng thành công', time: '10:00 - 12/06/2026', desc: 'Khách đã nhận hàng và trả tiền mặt cho bưu tá', done: true },
+                { title: 'Chờ đối soát tiền COD', time: '10:30 - 12/06/2026', desc: 'Tiền thu hộ 680.000 đ đang chờ J&T đối soát kỳ tuần', done: false }
+            ]
+        },
+        {
+            id: 'ORD-2026-009',
+            userId: 'USER-009',
+            customerName: 'Ngô Kiến Huy',
+            phone: '0938887766',
+            address: '205 Nguyễn Tri Phương, Phường 9, Quận 5, TP. Hồ Chí Minh',
+            status: 'delivered',
+            paymentStatus: 'cod_pending',
+            paymentMethod: 'cod',
+            carrier: 'Giao Hàng Tiết Kiệm (GHTK)',
+            trackingNumber: 'GHTK77881920',
+            createdAt: '2026-06-11T16:20:00',
+            subtotal: 1150000,
+            shippingFee: 0,
+            discount: 0,
+            pawPointsUsed: 0,
+            total: 1150000,
+            customerNote: 'Giao giờ hành chính tại văn phòng.',
+            internalNote: 'Đơn vị vận chuyển GHTK đã thu tiền, đang tổng hợp biên bản đối soát phiên ngày mai.',
+            alertType: 'warning',
+            alertMessage: 'Chờ đối soát COD (1.150.000 đ)',
+            products: [
+                {
+                    sku: 'DD-MAY-03',
+                    name: 'Đài phun nước lọc tự động thông minh Petkit Eversweet 3',
+                    spec: 'Màu trắng 1.35L',
+                    price: 950000,
+                    quantity: 1,
+                    total: 950000,
+                    image: '/assets/images/shop/products/DD-MAY-03.png'
+                },
+                {
+                    sku: 'TP-HAT-01',
+                    name: 'Thức ăn hạt cao cấp Royal Canin Mother và Babycat',
+                    spec: 'Túi 2kg',
+                    price: 200000,
+                    quantity: 1,
+                    total: 200000,
+                    image: '/assets/images/shop/products/tp-hat-01.png'
+                }
+            ],
+            timeline: [
+                { title: 'Đặt hàng thành công', time: '16:20 - 11/06/2026', desc: 'Đặt hàng COD trực tuyến', done: true },
+                { title: 'Đã bàn giao vận chuyển', time: '09:00 - 12/06/2026', desc: 'Bàn giao cho GHTK', done: true },
+                { title: 'Giao hàng thành công', time: '14:30 - 12/06/2026', desc: 'Bưu tá thu đủ 1.150.000 đ tiền mặt', done: true },
+                { title: 'Chờ đối soát tiền COD', time: '15:00 - 12/06/2026', desc: 'Chờ GHTK chuyển khoản đối soát doanh thu', done: false }
+            ]
+        },
+        {
+            id: 'ORD-2026-010',
+            userId: 'USER-010',
+            customerName: 'Lâm Bảo Châu',
+            phone: '0903332211',
+            address: '102 Phan Xích Long, Phường 2, Quận Phú Nhuận, TP. Hồ Chí Minh',
+            status: 'pending',
+            paymentStatus: 'paid',
+            paymentMethod: 'momo',
+            carrier: 'Chưa phân công',
+            trackingNumber: '--',
+            createdAt: '2026-06-12T10:45:00',
+            slaMinutes: 12, // Mới đặt 12 phút (SLA An toàn)
+            subtotal: 420000,
+            shippingFee: 25000,
+            discount: 0,
+            pawPointsUsed: 0,
+            total: 445000,
+            customerNote: 'Gói hàng cẩn thận giúp mình nhé.',
+            internalNote: 'Đơn mới thanh toán MoMo thành công, tồn kho còn đủ, sẵn sàng xác nhận.',
+            alertType: null,
+            products: [
+                {
+                    sku: 'TP-PATE-07',
+                    name: 'Pate tươi vị bò và rau củ dinh dưỡng PawPal Home-cooked',
+                    spec: 'Hộp 200g',
+                    price: 65000,
+                    quantity: 4,
+                    total: 260000,
+                    image: '/assets/images/shop/products/tp-hat-01.png'
+                },
+                {
+                    sku: 'TP-SUP-10',
+                    name: 'Dầu cá hồi Na Uy dưỡng lông ép lạnh hồi phục da',
+                    spec: 'Chai 150ml',
+                    price: 185000,
+                    quantity: 1,
+                    total: 185000,
+                    image: '/assets/images/shop/products/TP-SUP-10.png'
+                }
+            ],
+            timeline: [
+                { title: 'Đặt hàng thành công', time: '10:45 - Hôm nay', desc: 'Đã thanh toán MoMo thành công', done: true },
+                { title: 'Chờ xác nhận đơn', time: 'Đang chờ 12 phút', desc: 'Chờ nhân viên duyệt xuất kho', done: false }
+            ]
+        },
+        {
+            id: 'ORD-2026-011',
+            userId: 'USER-011',
+            customerName: 'Trịnh Thăng Bình',
+            phone: '0918776655',
+            address: '77 Pasteur, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh',
+            status: 'pending',
+            paymentStatus: 'unpaid',
+            paymentMethod: 'cod',
+            carrier: 'Chưa phân công',
+            trackingNumber: '--',
+            createdAt: '2026-06-12T10:35:00',
+            slaMinutes: 24, // Chờ duyệt 24 phút (Sắp chạm ngưỡng 30p)
+            subtotal: 560000,
+            shippingFee: 25000,
+            discount: 0,
+            pawPointsUsed: 0,
+            total: 585000,
+            customerNote: 'Giao trong sáng nay giúp mình.',
+            internalNote: 'Khách VIP, cần gọi điện xác nhận nhanh.',
+            alertType: 'warning',
+            alertMessage: 'Chờ duyệt (24p)',
+            products: [
+                {
+                    sku: 'TP-HAT-06',
+                    name: 'Thức ăn hạt Taste of the Wild High Prairie cho chó',
+                    spec: 'Túi 2.0kg',
+                    price: 280000,
+                    quantity: 2,
+                    total: 560000,
+                    image: '/assets/images/shop/products/TP-HAT-06.png'
+                }
+            ],
+            timeline: [
+                { title: 'Đặt hàng thành công', time: '10:35 - Hôm nay', desc: 'Đơn đặt trực tuyến COD', done: true }
             ]
         }
     ];
@@ -312,11 +492,95 @@
     let currentFilterPayStatus = 'ALL';
     let filterComplaintOnly = false;
     let filterUrgentOnly = false;
+    let filterSlaOverdueOnly = false;
     let activeActionOrderId = null;
     let renderOrderDetailRef = null;
 
     function formatVND(amount) {
         return (amount || 0).toLocaleString('vi-VN') + ' đ';
+    }
+
+    // -------------------------------------------------------------
+    // HÀM TÍNH TOÁN SLA THỜI GIAN VÀ CẢNH BÁO TẮC NGHẼN ĐƠN HÀNG (GIAI ĐOẠN 1)
+    // -------------------------------------------------------------
+    function getOrderSlaInfo(order) {
+        if (order.status === 'returned' || (order.alertType === 'danger' && order.alertMessage && order.alertMessage.includes('khiếu nại'))) {
+            return {
+                level: 'danger',
+                badgeClass: 'badge-sla-urgent',
+                label: order.alertMessage || 'Có khiếu nại (RMA)',
+                isSlaOverdue: false
+            };
+        }
+
+        if (order.paymentStatus === 'cod_pending') {
+            return {
+                level: 'warning',
+                badgeClass: 'badge-cod-pending',
+                label: 'Chờ đối soát COD',
+                isSlaOverdue: false
+            };
+        }
+
+        if (order.status === 'pending') {
+            const mins = order.slaMinutes || 10;
+            if (mins > 30) {
+                return {
+                    level: 'danger',
+                    badgeClass: 'badge-sla-urgent',
+                    label: `Quá hạn SLA (${mins}p)`,
+                    isSlaOverdue: true
+                };
+            } else if (mins >= 15) {
+                return {
+                    level: 'warning',
+                    badgeClass: 'badge-sla-warning',
+                    label: `Chờ duyệt (${mins}p)`,
+                    isSlaOverdue: false
+                };
+            } else {
+                return {
+                    level: 'ok',
+                    badgeClass: 'badge-sla-ok',
+                    label: `Mới đặt (${mins}p)`,
+                    isSlaOverdue: false
+                };
+            }
+        }
+
+        if (order.status === 'confirmed' && order.slaMinutes && order.slaMinutes > 120) {
+            return {
+                level: 'warning',
+                badgeClass: 'badge-sla-warning',
+                label: 'Chậm đóng gói (>2h)',
+                isSlaOverdue: true
+            };
+        }
+
+        if (order.alertType === 'danger') {
+            return {
+                level: 'danger',
+                badgeClass: 'badge-sla-urgent',
+                label: order.alertMessage || 'Cần xử lý gấp',
+                isSlaOverdue: false
+            };
+        }
+
+        if (order.alertType === 'warning') {
+            return {
+                level: 'warning',
+                badgeClass: 'badge-sla-warning',
+                label: order.alertMessage || 'Lưu ý',
+                isSlaOverdue: false
+            };
+        }
+
+        return {
+            level: 'normal',
+            badgeClass: '',
+            label: '--',
+            isSlaOverdue: false
+        };
     }
 
     function initOrdersModule() {
@@ -399,11 +663,14 @@
             const searchVal = (document.getElementById('orderSearchInput')?.value || '').toLowerCase().trim();
 
             const filtered = currentOrdersList.filter(o => {
+                const sla = getOrderSlaInfo(o);
+
                 if (currentFilterStatus !== 'ALL' && o.status !== currentFilterStatus) return false;
                 if (currentFilterPayment !== 'ALL' && o.paymentMethod !== currentFilterPayment) return false;
                 if (currentFilterPayStatus !== 'ALL' && o.paymentStatus !== currentFilterPayStatus) return false;
                 if (filterComplaintOnly && o.status !== 'returned' && o.alertType !== 'danger') return false;
-                if (filterUrgentOnly && !o.alertType) return false;
+                if (filterUrgentOnly && sla.level !== 'danger' && sla.level !== 'warning') return false;
+                if (filterSlaOverdueOnly && !sla.isSlaOverdue) return false;
 
                 if (searchVal) {
                     const matchId = o.id.toLowerCase().includes(searchVal);
@@ -414,6 +681,23 @@
                 }
                 return true;
             });
+
+            // Cập nhật Dải tổng hợp đối soát dòng tiền COD
+            const codStrip = document.getElementById('codReconcileSummaryStrip');
+            const codPendingOrders = currentOrdersList.filter(o => o.paymentStatus === 'cod_pending');
+            const totalCodAmount = codPendingOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+
+            if (codStrip) {
+                if (currentFilterPayStatus === 'cod_pending' || codPendingOrders.length > 0) {
+                    codStrip.style.display = 'flex';
+                    const countEl = document.getElementById('dispCodPendingCount');
+                    const amtEl = document.getElementById('dispCodPendingAmount');
+                    if (countEl) countEl.textContent = `${codPendingOrders.length} đơn hàng`;
+                    if (amtEl) amtEl.textContent = formatVND(totalCodAmount);
+                } else {
+                    codStrip.style.display = 'none';
+                }
+            }
 
             if (filtered.length === 0) {
                 tbody.innerHTML = `
@@ -427,6 +711,8 @@
             }
 
             tbody.innerHTML = filtered.map(o => {
+                const sla = getOrderSlaInfo(o);
+
                 let statusBadge = '';
                 if (o.status === 'pending') statusBadge = '<span class="admin-badge badge-pending">Chờ xác nhận</span>';
                 else if (o.status === 'confirmed') statusBadge = '<span class="admin-badge badge-confirmed">Đang chuẩn bị</span>';
@@ -436,18 +722,25 @@
                 else if (o.status === 'cancelled') statusBadge = '<span class="admin-badge badge-cancelled">Đã hủy</span>';
                 else if (o.status === 'returned') statusBadge = '<span class="admin-badge badge-cancelled">Đổi trả</span>';
 
-                let payBadge = o.paymentStatus === 'paid' 
-                    ? '<span class="admin-badge badge-paid">Đã thanh toán</span>' 
-                    : '<span class="admin-badge badge-unpaid">Chưa thanh toán</span>';
+                let payBadge = '';
+                if (o.paymentStatus === 'paid') {
+                    payBadge = '<span class="admin-badge badge-paid">Đã thanh toán</span>';
+                } else if (o.paymentStatus === 'cod_pending') {
+                    payBadge = '<span class="admin-badge badge-cod-pending">Chờ đối soát COD</span>';
+                } else {
+                    payBadge = '<span class="admin-badge badge-unpaid">Chưa thanh toán</span>';
+                }
 
                 let rowAlertClass = '';
                 let alertLabel = '<span style="color: var(--text-muted); font-size: 12px;">--</span>';
-                if (o.alertType === 'danger') {
+                if (sla.level === 'danger') {
                     rowAlertClass = 'row-alert-danger';
-                    alertLabel = `<span class="admin-badge badge-alert">${o.alertMessage || 'Cần xử lý'}</span>`;
-                } else if (o.alertType === 'warning') {
+                    alertLabel = `<span class="admin-badge ${sla.badgeClass}">${sla.label}</span>`;
+                } else if (sla.level === 'warning') {
                     rowAlertClass = 'row-alert-warning';
-                    alertLabel = `<span class="admin-badge badge-warning">${o.alertMessage || 'Lưu ý'}</span>`;
+                    alertLabel = `<span class="admin-badge ${sla.badgeClass}">${sla.label}</span>`;
+                } else if (sla.level === 'ok') {
+                    alertLabel = `<span class="admin-badge ${sla.badgeClass}">${sla.label}</span>`;
                 }
 
                 if (o.status === 'cancelled') {
@@ -538,7 +831,11 @@
                 } else if (order.status === 'delivered') {
                     if (order.paymentStatus === 'unpaid') {
                         btnsHtml += `
-                            <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.confirmPayment('${order.id}')">Xác nhận thu tiền COD</button>
+                            <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.confirmPayment('${order.id}')">Xác nhận thu tiền</button>
+                        `;
+                    } else if (order.paymentStatus === 'cod_pending') {
+                        btnsHtml += `
+                            <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.reconcileCod('${order.id}')" style="color: #236B48; font-weight: 600;">Đối soát tiền COD bưu cục</button>
                         `;
                     }
                     btnsHtml += `
@@ -746,6 +1043,34 @@
             renderOrdersTable();
         });
 
+        // Lọc quá hạn SLA (>30p)
+        document.getElementById('btnFilterSlaOverdue')?.addEventListener('click', function() {
+            filterSlaOverdueOnly = !filterSlaOverdueOnly;
+            this.classList.toggle('active', filterSlaOverdueOnly);
+            renderOrdersTable();
+        });
+
+        // Nút đối soát toàn bộ tiền COD bưu cục
+        document.getElementById('btnQuickReconcileAllCod')?.addEventListener('click', function() {
+            const codOrders = currentOrdersList.filter(o => o.paymentStatus === 'cod_pending');
+            if (codOrders.length === 0) {
+                alert('Không có đơn hàng nào đang chờ đối soát tiền COD.');
+                return;
+            }
+            codOrders.forEach(o => {
+                o.paymentStatus = 'paid';
+                o.timeline.push({
+                    title: 'Đã đối soát tiền COD',
+                    time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
+                    desc: 'Kế toán đối soát thành công tiền COD bưu cục về tài khoản PawPal',
+                    done: true
+                });
+            });
+            renderOrdersTable();
+            if (selectedOrderId) renderOrderDetail(selectedOrderId);
+            alert(`Đã đối soát và xác nhận tiền về tài khoản thành công cho toàn bộ ${codOrders.length} đơn hàng COD!`);
+        });
+
         // Bộ lọc bảng sản phẩm
         document.getElementById('productSearchInput')?.addEventListener('input', renderProductsTable);
         document.getElementById('productFilterCategory')?.addEventListener('change', renderProductsTable);
@@ -914,6 +1239,12 @@
                 document.getElementById('orderActionDropdown')?.classList.remove('active');
             }
         });
+        document.getElementById('menuActionReconcileCod')?.addEventListener('click', () => {
+            if (activeActionOrderId) {
+                PawpalOrdersModule.reconcileCod(activeActionOrderId);
+                document.getElementById('orderActionDropdown')?.classList.remove('active');
+            }
+        });
         document.getElementById('menuActionCancelOrder')?.addEventListener('click', () => {
             if (activeActionOrderId) {
                 PawpalOrdersModule.openCancelModal(activeActionOrderId);
@@ -995,30 +1326,58 @@
             const order = currentOrdersList.find(o => o.id === orderId);
             if (order) {
                 order.status = 'delivered';
+                if (order.paymentMethod === 'cod' && order.paymentStatus === 'unpaid') {
+                    order.paymentStatus = 'cod_pending';
+                }
                 order.timeline.push({
                     title: 'Đã giao hàng thành công',
                     time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
-                    desc: 'Bưu tá xác nhận khách đã nhận hàng',
+                    desc: order.paymentStatus === 'cod_pending' 
+                        ? 'Bưu tá xác nhận khách đã nhận hàng và thu tiền COD. Đơn chuyển sang trạng thái chờ bưu cục chuyển khoản đối soát.'
+                        : 'Bưu tá xác nhận khách đã nhận hàng thành công',
                     done: true
                 });
                 alert(`Đã cập nhật trạng thái Đã giao cho đơn ${orderId}!`);
+                renderOrdersTable();
+                window.PawpalOrdersModule.openOrderDetail(orderId);
+            }
+        },
+        reconcileCod: function(orderId) {
+            const order = currentOrdersList.find(o => o.id === orderId);
+            if (order) {
+                order.paymentStatus = 'paid';
+                order.timeline.push({
+                    title: 'Đã đối soát tiền COD',
+                    time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
+                    desc: 'Kế toán xác nhận bưu cục đã chuyển khoản tiền COD về tài khoản PawPal',
+                    done: true
+                });
+                alert(`Đã đối soát thành công tiền COD cho đơn hàng ${orderId}!`);
+                renderOrdersTable();
                 window.PawpalOrdersModule.openOrderDetail(orderId);
             }
         },
         completeOrder: function(orderId) {
             const order = currentOrdersList.find(o => o.id === orderId);
-            if (order) {
-                order.status = 'completed';
-                order.paymentStatus = 'paid';
-                order.timeline.push({
-                    title: 'Hoàn tất đơn hàng',
-                    time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
-                    desc: 'Đơn hàng đã hoàn thành và tích điểm Pawpoint cho khách',
-                    done: true
-                });
-                alert(`Đơn hàng ${orderId} đã hoàn tất thành công!`);
-                window.PawpalOrdersModule.openOrderDetail(orderId);
+            if (!order) return;
+            if (order.paymentMethod === 'cod' && order.paymentStatus === 'cod_pending') {
+                alert(`Chặn hoàn tất đơn: Đơn hàng ${orderId} đang chờ bưu cục chuyển khoản tiền COD (Chờ đối soát). Vui lòng xác nhận đối soát tiền về tài khoản trước khi hoàn tất.`);
+                return;
             }
+            if (order.paymentStatus === 'unpaid') {
+                alert(`Chặn hoàn tất đơn: Đơn hàng ${orderId} chưa được thanh toán. Vui lòng xác nhận thu tiền trước khi hoàn tất.`);
+                return;
+            }
+            order.status = 'completed';
+            order.timeline.push({
+                title: 'Hoàn tất đơn hàng',
+                time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
+                desc: 'Đơn hàng đã hoàn thành và tích điểm Pawpoint cho khách',
+                done: true
+            });
+            alert(`Đơn hàng ${orderId} đã hoàn tất thành công!`);
+            renderOrdersTable();
+            window.PawpalOrdersModule.openOrderDetail(orderId);
         },
         printPackingSlip: function(orderId) {
             alert(`Đang kết nối máy in để in Phiếu đóng gói (Packing Slip) cho đơn ${orderId}...`);

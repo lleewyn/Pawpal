@@ -76,14 +76,29 @@
                     <div class="filter-dropdown-group">
                         <label class="filter-label">Đối soát:</label>
                         <select class="admin-select" id="orderFilterPayStatus">
-                            <option value="ALL">Tất cả</option>
-                            <option value="paid">Đã thanh toán</option>
+                            <option value="ALL">Tất cả đối soát</option>
+                            <option value="paid">Đã thanh toán và Đối soát</option>
+                            <option value="cod_pending">Chờ bưu cục đối soát COD</option>
                             <option value="unpaid">Chưa thanh toán</option>
                         </select>
                     </div>
 
                     <button type="button" class="admin-btn-filter-toggle" id="btnFilterComplaintOrders">Có khiếu nại</button>
                     <button type="button" class="admin-btn-filter-toggle" id="btnFilterUrgentOrders">Chờ xử lý gấp</button>
+                    <button type="button" class="admin-btn-filter-toggle" id="btnFilterSlaOverdue">Quá hạn SLA (&gt;30p)</button>
+                </div>
+
+                <!-- DẢI TỔNG HỢP ĐỐI SOÁT DÒNG TIỀN COD (GIAI ĐOẠN 1) -->
+                <div class="cod-reconcile-strip" id="codReconcileSummaryStrip" style="display: none;">
+                    <div class="cod-strip-left">
+                        <span class="cod-strip-title">Đối soát COD bưu cục:</span>
+                        <span class="cod-strip-highlight" id="dispCodPendingCount">3 đơn hàng</span>
+                        <span class="cod-strip-divider">•</span>
+                        <span>Tổng tiền thu hộ chờ về: <strong id="dispCodPendingAmount" class="text-heading">1.830.000 đ</strong></span>
+                    </div>
+                    <div class="cod-strip-right">
+                        <button type="button" class="btn-cod-quick-reconcile" id="btnQuickReconcileAllCod">Xác nhận đối soát toàn bộ</button>
+                    </div>
                 </div>
             </div>
 
@@ -99,7 +114,7 @@
                             <th>Thanh toán</th>
                             <th>Vận chuyển</th>
                             <th>Trạng thái</th>
-                            <th>Cảnh báo</th>
+                            <th>Cảnh báo và SLA</th>
                             <th style="text-align: center; width: 60px;">Thao tác</th>
                         </tr>
                     </thead>
@@ -407,6 +422,7 @@
         <button type="button" class="action-menu-item" id="menuActionPrintPack">In phiếu đóng hàng</button>
         <button type="button" class="action-menu-item" id="menuActionShipOrder">Bàn giao vận chuyển</button>
         <button type="button" class="action-menu-item" id="menuActionConfirmPayment">Xác nhận thu tiền</button>
+        <button type="button" class="action-menu-item text-success" id="menuActionReconcileCod">Đối soát tiền COD bưu cục</button>
         <button type="button" class="action-menu-item danger-item" id="menuActionCancelOrder">Hủy đơn hàng</button>
     </div>
 
