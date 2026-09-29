@@ -460,19 +460,23 @@
          SUB-TAB 4: NHẮC LỊCH ĐỊNH KỲ (CHĂM SÓC KHÁCH HÀNG CHỦ ĐỘNG)
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-pet-reminders">
-        <!-- BỘ 3 THẺ SỐ LIỆU NHẮC HẸN -->
+        <!-- BỘ 4 THẺ SỐ LIỆU NHẮC HẸN CHU KỲ CHĂM SÓC -->
         <div class="reminder-kpi-grid">
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Quá 14 ngày chưa tắm sấy</span>
-                <span class="kpi-val text-warning">28 bé</span>
+                <span class="kpi-val text-warning" id="remKpiValBath">28 bé</span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Quá 30 ngày chưa cắt tỉa lông</span>
-                <span class="kpi-val text-danger">16 bé</span>
+                <span class="kpi-val text-danger" id="remKpiValGroom">16 bé</span>
             </div>
             <div class="admin-card kpi-card">
-                <span class="kpi-label">Khách quen cần gửi Pet Hotel dịp lễ</span>
-                <span class="kpi-val text-success">9 khách</span>
+                <span class="kpi-label">Khách quen gửi Pet Hotel</span>
+                <span class="kpi-val text-success" id="remKpiValHotel">9 khách</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Cảnh báo sổ tiêm ngoài cho Hotel</span>
+                <span class="kpi-val" id="remKpiValVaccineAlert" style="color: #D97706;">4 bé</span>
             </div>
         </div>
 
@@ -494,8 +498,10 @@
                         <select class="admin-select" id="reminderFilterType">
                             <option value="ALL">Tất cả</option>
                             <option value="BATH">Tắm sấy định kỳ (quá 14 ngày)</option>
-                            <option value="GROOM">Cắt tỉa lông (quá 30 ngày)</option>
+                            <option value="GROOM">Cắt tỉa tạo kiểu lông (quá 30 ngày)</option>
                             <option value="HOTEL">Gửi Pet Hotel cuối tuần</option>
+                            <option value="HOTEL_VACCINE">Cảnh báo sổ tiêm ngoài cho Hotel</option>
+                            <option value="SHOP_REFILL">Mua lại thức ăn và Cát vệ sinh</option>
                         </select>
                     </div>
 
@@ -726,7 +732,7 @@
          MODAL 3: GỬI TIN NHẮN ZALO / SMS CHĂM SÓC ĐỊNH KỲ
          ==================================================================== -->
     <div class="admin-modal-backdrop" id="modalSendReminder">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card" style="width: 540px;">
             <div class="admin-modal-header">
                 <span class="admin-modal-title">Gửi tin nhắn chăm sóc định kỳ</span>
                 <button type="button" class="btn-modal-close" data-close-modal="modalSendReminder">Đóng</button>
@@ -745,11 +751,22 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="form-label">Chọn mẫu tin nhắn chăm sóc (Template):</label>
+                    <select class="admin-select" id="reminderTemplateSelect">
+                        <option value="SPA_BATH">Mẫu 1: Nhắc tắm sấy và vệ sinh định kỳ (Tặng voucher 10% Spa)</option>
+                        <option value="GROOM">Mẫu 2: Nhắc cắt tỉa tạo kiểu lông (Chải lông xả rối và cắt móng)</option>
+                        <option value="HOTEL">Mẫu 3: Mời đặt trước phòng Pet Hotel cuối tuần và dịp nghỉ lễ</option>
+                        <option value="HOTEL_VACCINE">Mẫu 4: Cảnh báo sổ tiêm ngoài quá hạn trước khi nhận phòng Hotel</option>
+                        <option value="SHOP">Mẫu 5: Nhắc mua lại thức ăn hạt dinh dưỡng và Cát vệ sinh</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label">Kênh gửi tin nhắn:</label>
                     <div style="display: flex; gap: 16px; font-size: 13px;">
                         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                             <input type="radio" name="reminderChannel" value="ZALO" checked accent-color="#236B48">
-                            <span>Zalo ZNS / Official Account (Miễn phí)</span>
+                            <span>Zalo ZNS / Official Account (Khuyên dùng)</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
                             <input type="radio" name="reminderChannel" value="SMS" accent-color="#236B48">
@@ -759,13 +776,21 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Nội dung tin nhắn gửi khách:</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label class="form-label" style="margin-bottom: 0;">Nội dung tin nhắn gửi khách:</label>
+                        <button type="button" class="btn-text-action" id="btnCopyReminderText">Sao chép nội dung</button>
+                    </div>
                     <textarea class="admin-input textarea-note" rows="4" id="reminderMessageContent">PawPal mến chào Sen Nguyễn Văn An! Bé Milu đã hơn 2 tuần chưa ghé spa làm đẹp rồi đó ạ. PawPal gửi tặng bé voucher ưu đãi 10% dịch vụ Spa trong tuần này. Sen đặt lịch ngay cho bé nhé!</textarea>
                 </div>
 
-                <div class="modal-actions-footer">
-                    <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalSendReminder">Hủy</button>
-                    <button type="submit" class="admin-btn admin-btn-primary" id="btnSubmitSendReminder">Gửi tin nhắn ngay</button>
+                <div class="modal-actions-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <a href="javascript:void(0)" class="admin-btn admin-btn-secondary" id="btnOpenZaloChat" target="_blank">Mở Zalo nhắn Sen</a>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalSendReminder">Hủy</button>
+                        <button type="submit" class="admin-btn admin-btn-primary" id="btnSubmitSendReminder">Gửi tin nhắn ngay</button>
+                    </div>
                 </div>
             </form>
         </div>
