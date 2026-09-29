@@ -181,7 +181,15 @@
                 <div class="settings-section-head">
                     <button type="button" class="admin-btn admin-btn-primary" id="btnAddNoticeLink">+ Thêm thông báo</button>
                 </div>
-                <div class="notifications-list" id="notificationsListContainer">
+                <!-- THANH XEM TRƯỚC TOP-BAR THỜI GIAN THỰC (GIAI ĐOẠN 3) -->
+                <div class="topbar-live-preview-wrap">
+                    <div class="topbar-preview-title">Xem trước dải Top-bar thông báo trên Website khách hàng:</div>
+                    <div class="topbar-preview-bar" id="topbarLivePreviewBar">
+                        <span class="topbar-preview-text" id="topbarLivePreviewText">PawPal mở rộng khung giờ phục vụ Spa đến 21:00 các ngày cuối tuần!</span>
+                        <span class="topbar-preview-badge">Đang chạy</span>
+                    </div>
+                </div>
+                <div class="notifications-list" id="notificationsListContainer" style="margin-top: 14px;">
                     <!-- Render by JS -->
                 </div>
             </div>
@@ -262,6 +270,7 @@
                             <th>Tác giả</th>
                             <th>Danh mục</th>
                             <th>Lượt xem</th>
+                            <th>Tri thức AI</th>
                             <th>Trạng thái</th>
                             <th>Ngày cập nhật</th>
                             <th style="text-align: center; width: 60px;"></th>
@@ -495,7 +504,10 @@
             <div class="modal-body-clean">
                 <div class="form-row-2col">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Mã Voucher *</label>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label class="form-label-clean">Mã Voucher *</label>
+                            <button type="button" class="btn-text-action" id="btnAutoGenerateVoucherCode">Tạo mã tự động</button>
+                        </div>
                         <input type="text" class="admin-input" id="inputVoucherCode" placeholder="Ví dụ: PAWPAL30K" style="text-transform: uppercase;">
                     </div>
                     <div class="form-group-item">
@@ -554,6 +566,22 @@
                     <div class="form-group-item">
                         <label class="form-label-clean">Ngày kết thúc</label>
                         <input type="date" class="admin-input" id="inputVoucherEnd">
+                    </div>
+                </div>
+
+                <!-- KHUNG XEM TRƯỚC VOUCHER THỜI GIAN THỰC (GIAI ĐOẠN 3) -->
+                <div class="voucher-preview-wrapper">
+                    <div class="voucher-preview-label">Xem trước Voucher hiển thị đến Khách hàng:</div>
+                    <div class="voucher-live-card" id="voucherLivePreview">
+                        <div class="voucher-card-left">
+                            <span class="voucher-badge-target" id="prevTarget">Toàn hệ thống</span>
+                            <span class="voucher-code-disp" id="prevCode">PAWPAL30K</span>
+                        </div>
+                        <div class="voucher-card-right">
+                            <div class="voucher-name-disp" id="prevName">Tên chương trình ưu đãi</div>
+                            <div class="voucher-discount-disp" id="prevDiscount">Giảm 30.000 VNĐ</div>
+                            <div class="voucher-condition-disp" id="prevCondition">Đơn tối thiểu: 0 VNĐ</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -816,10 +844,53 @@
         </div>
     </div>
 
+    <!-- MODAL 10: TÓM TẮT TRI THỨC AI CHATBOT (RAG TRÍCH XUẤT - GIAI ĐOẠN 3) -->
+    <div class="admin-modal-overlay" id="articleRagModalOverlay">
+        <div class="admin-modal-card">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Tri thức AI Chatbot (RAG Trích xuất)</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelRagModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="rag-info-banner">
+                    <span class="rag-banner-title" id="ragArticleTitle">Tiêu đề bài viết</span>
+                    <div style="display: flex; gap: 8px; align-items: center; margin-top: 6px;">
+                        <span class="admin-badge badge-neutral" id="ragArticleCategory">Chó cưng</span>
+                        <span class="admin-badge badge-active" id="ragArticleStatus">Đã nạp RAG</span>
+                    </div>
+                </div>
+                <div class="form-group-item" style="margin-top: 14px;">
+                    <label class="form-label-clean">Thực thể và Từ khóa cốt lõi (Keywords và Entities)</label>
+                    <div class="rag-keywords-box" id="ragKeywordsBox">
+                        <!-- Render tags -->
+                    </div>
+                </div>
+                <div class="form-group-item" style="margin-top: 12px;">
+                    <label class="form-label-clean">Nội dung tóm lược nạp vào Prompt Context của Chatbot</label>
+                    <div class="rag-content-box" id="ragContentBox">
+                        <!-- Nội dung trích dẫn -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissRagModal">Đóng</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSyncRagArticle">Đồng bộ lại vào Chatbot</button>
+            </div>
+        </div>
+    </div>
+
     <!-- DROPDOWN TÁC VỤ 3 CHẤM DÀNH CHO VOUCHER (TEXT-ONLY, CHUẨN AGENTS.MD) -->
     <div class="action-dropdown-menu" id="voucherActionDropdown">
         <button type="button" class="action-menu-item text-success" id="btnActionExtendQuota">Gia hạn thêm 50 lượt</button>
         <button type="button" class="action-menu-item" id="btnActionToggleStatus">Đổi trạng thái Bật/Tắt</button>
         <button type="button" class="action-menu-item text-danger" id="btnActionDeleteVoucher">Xóa Voucher</button>
+    </div>
+
+    <!-- DROPDOWN TÁC VỤ 3 CHẤM DÀNH CHO BÀI VIẾT (TEXT-ONLY, CHUẨN AGENTS.MD - GIAI ĐOẠN 3) -->
+    <div class="action-dropdown-menu" id="articleActionDropdown">
+        <button type="button" class="action-menu-item text-success" id="btnActionViewRag">Xem tóm tắt AI (RAG)</button>
+        <button type="button" class="action-menu-item" id="btnActionSyncRag">Đồng bộ lại vào Chatbot</button>
+        <button type="button" class="action-menu-item" id="btnActionToggleArticleStatus">Đổi trạng thái Công khai / Tạm ẩn</button>
+        <button type="button" class="action-menu-item text-danger" id="btnActionDeleteArticle">Xóa bài viết</button>
     </div>
 </div>

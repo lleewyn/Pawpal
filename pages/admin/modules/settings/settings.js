@@ -122,7 +122,10 @@
             views: 1420,
             status: 'published',
             updatedAt: '25/09/2026',
-            summary: 'Hướng dẫn sơ cứu khẩn cấp khi thú cưng bị thở dốc, mắt lờ đờ hoặc mệt mỏi trong thời tiết nắng nóng oi bức.'
+            summary: 'Hướng dẫn sơ cứu khẩn cấp khi thú cưng bị thở dốc, mắt lờ đờ hoặc mệt mỏi trong thời tiết nắng nóng oi bức.',
+            ragSynced: true,
+            ragKeywords: ['Sốc nhiệt', 'Sơ cứu cún', 'Thời tiết nóng', 'Hạ nhiệt an toàn'],
+            ragSummary: 'Cung cấp hướng dẫn sơ cứu nhanh cho cún bị sốc nhiệt: đưa vào bóng râm, dùng khăn mát lau bàn chân và nách, cho uống nước mát từng ngụm nhỏ, lập tức đưa đến cơ sở thú y gần nhất nếu hôn mê.'
         },
         {
             id: 'art-002',
@@ -132,7 +135,10 @@
             views: 980,
             status: 'published',
             updatedAt: '22/09/2026',
-            summary: 'Bổ sung Omega 3, kẽm và dầu cá hồi đúng cách vào khẩu phần ăn hàng ngày của các bé mèo cưng.'
+            summary: 'Bổ sung Omega 3, kẽm và dầu cá hồi đúng cách vào khẩu phần ăn hàng ngày của các bé mèo cưng.',
+            ragSynced: true,
+            ragKeywords: ['Dinh dưỡng mèo', 'Mượt lông', 'Omega 3', 'Dầu cá hồi', 'Giảm rụng lông'],
+            ragSummary: 'Khuyến nghị bổ sung acid béo Omega 3 và Omega 6, kẽm hữu cơ từ dầu cá hồi Na Uy. Liều lượng 1-2 giọt mỗi bữa ăn giúp da khỏe và giảm rụng lông 60% sau 4 tuần.'
         },
         {
             id: 'art-003',
@@ -142,7 +148,10 @@
             views: 650,
             status: 'published',
             updatedAt: '18/09/2026',
-            summary: 'Những vật dụng cần mang theo và cách giúp bé nhanh chóng làm quen với môi trường lưu trú mới.'
+            summary: 'Những vật dụng cần mang theo và cách giúp bé nhanh chóng làm quen với môi trường lưu trú mới.',
+            ragSynced: false,
+            ragKeywords: ['Pet Hotel', 'Khách sạn thú cưng', 'Lưu trú', 'Chuẩn bị đồ dùng'],
+            ragSummary: 'Checklist gửi thú cưng: sổ tiêm ngừa đầy đủ, thức ăn quen thuộc, đồ chơi yêu thích có mùi quen thuộc. Quy trình check-in và gửi hình ảnh camera 24/7 cho chủ nuôi.'
         },
         {
             id: 'art-004',
@@ -152,7 +161,10 @@
             views: 310,
             status: 'draft',
             updatedAt: '15/09/2026',
-            summary: 'Minh bạch quy trình bảo đảm an toàn sức khỏe tuyệt đối cho thú cưng khi sử dụng dịch vụ tại cửa hàng.'
+            summary: 'Minh bạch quy trình bảo đảm an toàn sức khỏe tuyệt đối cho thú cưng khi sử dụng dịch vụ tại cửa hàng.',
+            ragSynced: false,
+            ragKeywords: ['Grooming', 'Khử trùng tia UV', 'Lồng sấy thông minh', 'Vệ sinh spa'],
+            ragSummary: 'Tiêu chuẩn vô trùng thiết bị Spa tại PawPal bằng đèn UV-C và dung dịch khử khuẩn sinh học chuyên dụng sau mỗi lượt thú cưng, kiểm soát độ ẩm và nhiệt độ sấy an toàn 38 độ C.'
         }
     ];
 
@@ -460,21 +472,78 @@
         if (!container) return;
 
         container.innerHTML = '';
+        if (mockNotifications.length === 0) {
+            container.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 13px;">Chưa có thông báo nào.</div>';
+            return;
+        }
+
+        // Cập nhật thanh Xem trước Top-bar thời gian thực
+        const activeTopbar = mockNotifications.find(n => n.type === 'Top-bar' && n.status === 'active');
+        const prevTextEl = document.getElementById('topbarLivePreviewText');
+        const prevBarEl = document.getElementById('topbarLivePreviewBar');
+        if (prevTextEl && prevBarEl) {
+            if (activeTopbar) {
+                prevTextEl.textContent = activeTopbar.content;
+                prevBarEl.style.opacity = '1';
+            } else {
+                prevTextEl.textContent = '(Hiện không có thông báo Top-bar nào đang kích hoạt)';
+                prevBarEl.style.opacity = '0.6';
+            }
+        }
+
         mockNotifications.forEach(n => {
+            const isAct = n.status === 'active';
+            const statusBadge = isAct
+                ? '<span class="admin-badge badge-active">Đang hiện</span>'
+                : '<span class="admin-badge badge-neutral">Tạm tắt</span>';
+
             const row = document.createElement('div');
             row.className = 'notification-row-item';
             row.innerHTML = `
-                <span class="notice-content-text">${n.content}</span>
+                <span class="notice-content-text" style="flex: 1;">${n.content}</span>
                 <span class="admin-badge badge-neutral">${n.type}</span>
-                <span class="admin-badge badge-active">Đang hiện</span>
+                ${statusBadge}
+                <div style="display: flex; gap: 8px; align-items: center; margin-left: 8px;">
+                    <button type="button" class="btn-text-action btn-toggle-notice" data-id="${n.id}">
+                        ${isAct ? 'Tạm tắt' : 'Kích hoạt'}
+                    </button>
+                    <button type="button" class="btn-text-action text-danger btn-delete-notice" data-id="${n.id}">
+                        Xóa
+                    </button>
+                </div>
             `;
             container.appendChild(row);
+        });
+
+        // Gắn sự kiện đổi trạng thái và xóa thông báo
+        container.querySelectorAll('.btn-toggle-notice').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const notif = mockNotifications.find(item => item.id === id);
+                if (notif) {
+                    notif.status = notif.status === 'active' ? 'inactive' : 'active';
+                    renderNotifications();
+                }
+            });
+        });
+
+        container.querySelectorAll('.btn-delete-notice').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const idx = mockNotifications.findIndex(item => item.id === id);
+                if (idx !== -1) {
+                    mockNotifications.splice(idx, 1);
+                    renderNotifications();
+                }
+            });
         });
     }
 
     // -------------------------------------------------------------
-    // 5. RENDER SUB-TAB 2: BÀI VIẾT (BLOG VÀ CẨM NANG)
+    // 5. RENDER SUB-TAB 2: BÀI VIẾT (BLOG VÀ CẨM NANG - GIAI ĐOẠN 3)
     // -------------------------------------------------------------
+    let currentActiveArticleId = null;
+
     function renderArticles() {
         const tbody = document.getElementById('articlesTableBody');
         if (!tbody) return;
@@ -492,7 +561,7 @@
 
         tbody.innerHTML = '';
         if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted);">Không tìm thấy bài viết nào phù hợp.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 24px; color: var(--text-muted);">Không tìm thấy bài viết nào phù hợp.</td></tr>`;
             return;
         }
 
@@ -502,6 +571,10 @@
             else if (a.status === 'draft') statusBadge = '<span class="admin-badge badge-neutral">Bản nháp</span>';
             else statusBadge = '<span class="admin-badge badge-warning">Tạm ẩn</span>';
 
+            const ragBadge = a.ragSynced
+                ? '<span class="admin-badge badge-active">Đã nạp RAG</span>'
+                : '<span class="admin-badge badge-warning">Chưa nạp RAG</span>';
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><div class="article-thumb-img">Ảnh bìa</div></td>
@@ -509,14 +582,61 @@
                 <td>${a.author}</td>
                 <td><span class="admin-badge badge-neutral">${a.category}</span></td>
                 <td>${a.views.toLocaleString('vi-VN')}</td>
+                <td>${ragBadge}</td>
                 <td>${statusBadge}</td>
                 <td>${a.updatedAt}</td>
                 <td style="text-align: center;">
-                    <button type="button" class="btn-action-trigger" onclick="alert('Đang mở bài viết: ${a.title}')">•••</button>
+                    <button type="button" class="btn-action-trigger btn-article-more" data-id="${a.id}" title="Tác vụ bài viết">•••</button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
+
+        // Bắt sự kiện click nút 3 chấm để mở dropdown tác vụ bài viết
+        tbody.querySelectorAll('.btn-article-more').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = btn.getAttribute('data-id');
+                openArticleActionMenu(e.currentTarget, id);
+            });
+        });
+
+        updateArticleKpis();
+    }
+
+    function updateArticleKpis() {
+        const total = mockArticles.length;
+        const pub = mockArticles.filter(a => a.status === 'published').length;
+        const draft = mockArticles.filter(a => a.status === 'draft').length;
+        const hidden = mockArticles.filter(a => a.status === 'hidden').length;
+
+        const tEl = document.getElementById('statTotalArticles');
+        const pEl = document.getElementById('statPublishedArticles');
+        const dEl = document.getElementById('statDraftArticles');
+        const hEl = document.getElementById('statHiddenArticles');
+
+        if (tEl) tEl.textContent = total;
+        if (pEl) pEl.textContent = pub;
+        if (dEl) dEl.textContent = draft;
+        if (hEl) hEl.textContent = hidden;
+    }
+
+    function openArticleActionMenu(triggerBtn, articleId) {
+        currentActiveArticleId = articleId;
+        closeVoucherActionMenu();
+        const dropdown = document.getElementById('articleActionDropdown');
+        if (!dropdown) return;
+
+        const rect = triggerBtn.getBoundingClientRect();
+        dropdown.style.top = `${rect.bottom + 4}px`;
+        dropdown.style.left = `${Math.max(10, rect.right - 210)}px`;
+        dropdown.style.display = 'flex';
+    }
+
+    function closeArticleActionMenu() {
+        const dropdown = document.getElementById('articleActionDropdown');
+        if (dropdown) dropdown.style.display = 'none';
+        currentActiveArticleId = null;
     }
 
     // -------------------------------------------------------------
@@ -642,10 +762,50 @@
             alert('Đã thêm Banner mới và đồng bộ sang Website thành công!');
         });
 
-        // --- MODAL VOUCHER ---
+        // --- MODAL VOUCHER (GIAI ĐOẠN 3: TỰ ĐỘNG HÓA VÀ XEM TRƯỚC TRỰC QUAN) ---
         const voucherModal = document.getElementById('voucherModalOverlay');
+        function updateVoucherLivePreview() {
+            const code = document.getElementById('inputVoucherCode')?.value.trim().toUpperCase() || 'PAWPAL30K';
+            const name = document.getElementById('inputVoucherName')?.value.trim() || 'Tên chương trình ưu đãi';
+            const type = document.getElementById('inputVoucherType')?.value || 'fixed';
+            const val = parseFloat(document.getElementById('inputVoucherValue')?.value) || 0;
+            const minOrder = parseFloat(document.getElementById('inputVoucherMinOrder')?.value) || 0;
+            const target = document.getElementById('inputVoucherTarget')?.value || 'System';
+
+            const prevCodeEl = document.getElementById('prevCode');
+            const prevNameEl = document.getElementById('prevName');
+            const prevDiscountEl = document.getElementById('prevDiscount');
+            const prevTargetEl = document.getElementById('prevTarget');
+            const prevCondEl = document.getElementById('prevCondition');
+
+            if (prevCodeEl) prevCodeEl.textContent = code;
+            if (prevNameEl) prevNameEl.textContent = name;
+            if (prevDiscountEl) {
+                if (type === 'percent') {
+                    prevDiscountEl.textContent = val > 0 ? `Giảm ${val}%` : 'Giảm 0%';
+                } else {
+                    prevDiscountEl.textContent = val > 0 ? `Giảm ${val.toLocaleString('vi-VN')} VNĐ` : 'Giảm 0 VNĐ';
+                }
+            }
+            if (prevTargetEl) {
+                const targetMap = {
+                    'System': 'Toàn hệ thống',
+                    'Spa': 'Dịch vụ Spa',
+                    'Hotel': 'Pet Hotel',
+                    'Shop': 'Sản phẩm'
+                };
+                prevTargetEl.textContent = targetMap[target] || target;
+            }
+            if (prevCondEl) {
+                prevCondEl.textContent = `Đơn tối thiểu: ${minOrder.toLocaleString('vi-VN')} VNĐ`;
+            }
+        }
+
         const openVoucherHandler = () => {
-            if (voucherModal) voucherModal.style.display = 'flex';
+            if (voucherModal) {
+                voucherModal.style.display = 'flex';
+                updateVoucherLivePreview();
+            }
         };
         document.getElementById('btnOpenVoucherModal')?.addEventListener('click', openVoucherHandler);
         document.getElementById('btnOpenVoucherModalHeader')?.addEventListener('click', openVoucherHandler);
@@ -655,6 +815,36 @@
         document.getElementById('btnDismissVoucherModal')?.addEventListener('click', () => {
             if (voucherModal) voucherModal.style.display = 'none';
         });
+
+        // Nút sinh mã tự động thông minh
+        document.getElementById('btnAutoGenerateVoucherCode')?.addEventListener('click', () => {
+            const target = document.getElementById('inputVoucherTarget')?.value || 'System';
+            const prefixMap = {
+                'System': 'PAW',
+                'Spa': 'SPA',
+                'Hotel': 'HOTEL',
+                'Shop': 'SHOP'
+            };
+            const prefix = prefixMap[target] || 'PAW';
+            const randNum = Math.floor(100 + Math.random() * 900);
+            const year = '2026';
+            const generatedCode = `${prefix}-${year}-${randNum}`;
+            const codeInput = document.getElementById('inputVoucherCode');
+            if (codeInput) {
+                codeInput.value = generatedCode;
+                updateVoucherLivePreview();
+            }
+        });
+
+        // Cập nhật Live Preview khi gõ các trường dữ liệu voucher
+        ['inputVoucherCode', 'inputVoucherName', 'inputVoucherType', 'inputVoucherValue', 'inputVoucherMinOrder', 'inputVoucherTarget'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', updateVoucherLivePreview);
+                el.addEventListener('change', updateVoucherLivePreview);
+            }
+        });
+
         document.getElementById('btnSaveVoucher')?.addEventListener('click', () => {
             const code = document.getElementById('inputVoucherCode')?.value.trim().toUpperCase();
             const name = document.getElementById('inputVoucherName')?.value.trim();
@@ -772,19 +962,32 @@
         });
         document.getElementById('btnSaveArticle')?.addEventListener('click', () => {
             const title = document.getElementById('inputArticleTitle')?.value.trim();
+            const summary = document.getElementById('inputArticleSummary')?.value.trim() || '';
+            const content = document.getElementById('inputArticleContent')?.value.trim() || '';
+            const category = document.getElementById('inputArticleCategory')?.value || 'Mẹo chăm sóc';
+            const status = document.getElementById('inputArticleStatus')?.value || 'published';
+
             if (!title) {
                 alert('Vui lòng nhập tiêu đề bài viết!');
                 return;
             }
+
+            // Tự động phân tách thực thể và từ khóa cốt lõi cho RAG
+            const autoKeywords = [category, 'PawPal'];
+            title.split(' ').filter(w => w.length > 3).slice(0, 4).forEach(w => autoKeywords.push(w));
+
             mockArticles.unshift({
                 id: 'art-' + Date.now(),
                 title: title,
                 author: 'Quản trị viên',
-                category: document.getElementById('inputArticleCategory')?.value || 'Mẹo chăm sóc',
+                category: category,
                 views: 0,
-                status: document.getElementById('inputArticleStatus')?.value || 'published',
+                status: status,
                 updatedAt: 'Hôm nay',
-                summary: document.getElementById('inputArticleSummary')?.value || ''
+                summary: summary,
+                ragSynced: true,
+                ragKeywords: autoKeywords,
+                ragSummary: summary || (content.length > 180 ? content.slice(0, 180) + '...' : content) || 'Tóm tắt bài viết tự động nạp vào Chatbot.'
             });
             articleModal.style.display = 'none';
             renderArticles();
@@ -973,11 +1176,116 @@
             }
         });
 
-        // Đóng dropdown menu khi click ra ngoài
+        // --- SỰ KIỆN TÁC VỤ BÀI VIẾT VÀ TRI THỨC AI RAG (GIAI ĐOẠN 3) ---
+        const ragModal = document.getElementById('articleRagModalOverlay');
+        const closeRagModalHandler = () => {
+            if (ragModal) ragModal.style.display = 'none';
+        };
+        document.getElementById('btnCancelRagModal')?.addEventListener('click', closeRagModalHandler);
+        document.getElementById('btnDismissRagModal')?.addEventListener('click', closeRagModalHandler);
+
+        // Xem tóm tắt RAG từ dropdown
+        document.getElementById('btnActionViewRag')?.addEventListener('click', () => {
+            if (!currentActiveArticleId) return;
+            const article = mockArticles.find(a => a.id === currentActiveArticleId);
+            if (!article) return;
+
+            const titleEl = document.getElementById('ragArticleTitle');
+            const catEl = document.getElementById('ragArticleCategory');
+            const statusEl = document.getElementById('ragArticleStatus');
+            const kwsBox = document.getElementById('ragKeywordsBox');
+            const contentBox = document.getElementById('ragContentBox');
+
+            if (titleEl) titleEl.textContent = article.title;
+            if (catEl) catEl.textContent = article.category;
+            if (statusEl) {
+                statusEl.className = article.ragSynced ? 'admin-badge badge-active' : 'admin-badge badge-warning';
+                statusEl.textContent = article.ragSynced ? 'Đã nạp RAG' : 'Chưa nạp RAG';
+            }
+
+            if (kwsBox) {
+                kwsBox.innerHTML = '';
+                const kws = article.ragKeywords || ['Chăm sóc thú cưng', 'Cẩm nang PawPal'];
+                kws.forEach(kw => {
+                    const pill = document.createElement('span');
+                    pill.className = 'rag-keyword-pill';
+                    pill.textContent = kw;
+                    kwsBox.appendChild(pill);
+                });
+            }
+
+            if (contentBox) {
+                contentBox.textContent = article.ragSummary || article.summary || 'Chưa có dữ liệu trích xuất RAG.';
+            }
+
+            closeArticleActionMenu();
+            if (ragModal) ragModal.style.display = 'flex';
+        });
+
+        // Đồng bộ lại vào Chatbot từ dropdown bài viết
+        document.getElementById('btnActionSyncRag')?.addEventListener('click', () => {
+            if (!currentActiveArticleId) return;
+            const article = mockArticles.find(a => a.id === currentActiveArticleId);
+            if (article) {
+                article.ragSynced = true;
+                renderArticles();
+                closeArticleActionMenu();
+                alert(`Đã nạp thành công bài viết "${article.title}" vào cơ sở tri thức RAG của Chatbot PawPal!`);
+            }
+        });
+
+        // Nút đồng bộ trong Modal RAG
+        document.getElementById('btnSyncRagArticle')?.addEventListener('click', () => {
+            if (!currentActiveArticleId) return;
+            const article = mockArticles.find(a => a.id === currentActiveArticleId);
+            if (article) {
+                article.ragSynced = true;
+                const statusEl = document.getElementById('ragArticleStatus');
+                if (statusEl) {
+                    statusEl.className = 'admin-badge badge-active';
+                    statusEl.textContent = 'Đã nạp RAG';
+                }
+                renderArticles();
+                alert(`Đã nạp và đồng bộ bài viết "${article.title}" vào Chatbot thành công!`);
+            }
+        });
+
+        // Đổi trạng thái Công khai / Tạm ẩn từ dropdown
+        document.getElementById('btnActionToggleArticleStatus')?.addEventListener('click', () => {
+            if (!currentActiveArticleId) return;
+            const article = mockArticles.find(a => a.id === currentActiveArticleId);
+            if (article) {
+                article.status = article.status === 'published' ? 'hidden' : 'published';
+                renderArticles();
+                closeArticleActionMenu();
+                alert(`Bài viết "${article.title}" hiện đã chuyển sang trạng thái: ${article.status === 'published' ? 'Công khai' : 'Tạm ẩn'}.`);
+            }
+        });
+
+        // Xóa bài viết từ dropdown
+        document.getElementById('btnActionDeleteArticle')?.addEventListener('click', () => {
+            if (!currentActiveArticleId) return;
+            const idx = mockArticles.findIndex(a => a.id === currentActiveArticleId);
+            if (idx !== -1) {
+                const title = mockArticles[idx].title;
+                if (confirm(`Bạn có chắc chắn muốn xóa bài viết "${title}" khỏi hệ thống?`)) {
+                    mockArticles.splice(idx, 1);
+                    renderArticles();
+                    closeArticleActionMenu();
+                    alert(`Đã xóa thành công bài viết "${title}".`);
+                }
+            }
+        });
+
+        // Đóng dropdown menu khi click ra ngoài window
         window.addEventListener('click', (e) => {
-            const dropdown = document.getElementById('voucherActionDropdown');
-            if (dropdown && !dropdown.contains(e.target)) {
+            const voucherDropdown = document.getElementById('voucherActionDropdown');
+            if (voucherDropdown && !voucherDropdown.contains(e.target)) {
                 closeVoucherActionMenu();
+            }
+            const articleDropdown = document.getElementById('articleActionDropdown');
+            if (articleDropdown && !articleDropdown.contains(e.target)) {
+                closeArticleActionMenu();
             }
         });
 
