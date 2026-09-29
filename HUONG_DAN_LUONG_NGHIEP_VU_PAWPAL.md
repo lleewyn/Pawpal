@@ -411,4 +411,26 @@ sequenceDiagram
 - Dòng cảnh báo khẩn cấp ở đầu trang luôn sử dụng **chữ đỏ thuần không nền, không viền hộp**.
 
 ---
+
+## 5. CƠ CHẾ LƯU VÀ KHÔI PHỤC TRẠNG THÁI TOÀN HỆ THỐNG (STATE PERSISTENCE & F5/RELOAD)
+
+Toàn bộ **9 phân hệ quản trị** của Pawpal-er đã được kiểm tra và chuẩn hóa 100% cơ chế lưu trữ liên thông giữa **URL Hash**, **`sessionStorage`** và **Bộ điều hướng Sidebar**:
+
+| Phân hệ | Khóa lưu trữ Subtab (`sessionStorage`) | Hash mặc định / Subtabs hỗ trợ | Thông tin chi tiết được giữ nguyên khi F5 / Reload |
+| :--- | :--- | :--- | :--- |
+| **1. Dashboard** | `pawpal_admin_active_module` | `#tab-dashboard` | Tự động giữ nguyên phân hệ Dashboard, không bị trôi sang các phân hệ khác. |
+| **2. Khách hàng** | `pawpal_admin_customer_subtab` | `#tab-list`, `#tab-profile`, `#tab-pawpoint` | Giữ nguyên mã khách hàng đang mở (`pawpal_admin_customer_id`), tab con trong Drawer (`pawpal_admin_customer_drawertab`) và Deep Breadcrumb `/ [Tên khách]`. |
+| **3. Thú cưng** | `pawpal_admin_pet_subtab` | `#tab-pet-list`, `#tab-pet-profile`, `#tab-pet-carelog`, `#tab-pet-reminders` | Giữ nguyên mã bé đang xem (`pawpal_admin_pet_id`), tab con Drawer (`pawpal_admin_pet_drawertab`) và Deep Breadcrumb `/ [Tên bé]`. |
+| **4. Dịch vụ** | `pawpal_admin_services_active_subtab` | `#tab-service-bookings`, `#tab-service-detail`, `#tab-service-catalog`, `#tab-service-reviews` | Giữ nguyên lịch hẹn đang mở (`pawpal_admin_service_selected_id`), bảng giá, đánh giá và Deep Breadcrumb `/ [Mã BKG]`. |
+| **5. Bán hàng** | `pawpal_admin_order_subtab` | `#tab-order-list`, `#tab-order-detail`, `#tab-order-products`, `#tab-order-promos` | Giữ nguyên đơn hàng đang chọn (`pawpal_admin_order_selected_id`), danh mục kho, voucher và Deep Breadcrumb `/ [Mã ORD]`. |
+| **6. Nhân sự** | `pawpal_admin_staff_active_subtab` | `#tab-staff-list`, `#tab-staff-profile`, `#tab-staff-schedule`, `#tab-staff-assessment` | Giữ nguyên nhân viên đang xem (`pawpal_admin_staff_selected_id`), lịch làm việc, đánh giá KPI và Deep Breadcrumb `/ [Tên NV]`. |
+| **7. Khiếu nại** | `pawpal_admin_complaint_active_subtab` | `#tab-complaint-services`, `#tab-complaint-orders`, `#tab-complaint-detail` | Giữ nguyên Ticket đang xử lý (`pawpal_admin_complaint_selected_id`), biên bản đối thoại Chat Transcript và Deep Breadcrumb `/ [Mã Ticket]`. |
+| **8. Chatbot AI** | `pawpal_admin_chatbot_subtab` | `#tab-live-support`, `#tab-ai-copilot`, `#tab-chatbot-rules` | Giữ nguyên ca hội thoại đang trực tiếp trao đổi (`pawpal_admin_chatbot_conv_id`) và Deep Breadcrumb `/ [Tên khách]`. |
+| **9. Cấu hình** | `pawpal_admin_settings_subtab` | `#tab-banner-promos`, `#tab-content-management`, `#tab-system-config` | Giữ nguyên phân mục đang chỉnh sửa (Banner & Vouchers, Bài viết tin tức hoặc Cấu hình hệ thống). |
+
+*Quy tắc điều hướng Sidebar & Browser History:*
+- Khi bấm chuyển phân hệ trên Sidebar, URL Hash tự động cập nhật ngay lập tức theo phân mục đang làm việc của phân hệ đó.
+- Nút bấm **Back / Forward (`<` / `>`)** của trình duyệt tự động chuyển đổi mượt mà giữa các phân hệ và subtab mà không bị giật trang hay mất dữ liệu làm việc.
+
+---
 *Tài liệu được biên soạn và cập nhật tự động theo tiêu chuẩn hệ thống quản trị Pawpal-er.*
