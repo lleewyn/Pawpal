@@ -485,7 +485,20 @@
         { code: 'PAWPOINT100', title: 'Đổi điểm thưởng Pawpoint lấy voucher 100k', discount: '100.000 đ', minOrder: '800.000 đ', points: '1.000 điểm', expiry: '15/07/2026', used: '64 / 100', status: 'Sắp hết' }
     ];
 
-    let currentOrdersList = [...initialOrders];
+    let currentOrdersList = [];
+    try {
+        const savedOrders = sessionStorage.getItem('pawpal_admin_orders_data');
+        currentOrdersList = savedOrders ? JSON.parse(savedOrders) : [...initialOrders];
+    } catch (e) {
+        currentOrdersList = [...initialOrders];
+    }
+
+    function persistOrdersData() {
+        try {
+            sessionStorage.setItem('pawpal_admin_orders_data', JSON.stringify(currentOrdersList));
+        } catch (e) {}
+    }
+
     let selectedOrderId = sessionStorage.getItem('pawpal_admin_order_selected_id') || sessionStorage.getItem('pawpal_admin_order_id') || 'ORD-2026-001';
     let currentFilterStatus = 'ALL';
     let currentFilterPayment = 'ALL';
@@ -953,7 +966,7 @@
                         </td>
                         <td>
                             <div>
-                                <span class="user-name-link" onclick="PawpalOrdersModule.openCustomerProfile('${o.userId}')">${o.customerName}</span>
+                                <span class="user-name-link" onclick="PawpalOrdersModule.openCustomerProfile('${o.userId}', '${o.customerName}')">${o.customerName}</span>
                                 <div class="sub-meta-text">${o.phone}</div>
                             </div>
                         </td>
@@ -1117,7 +1130,12 @@
             const carrierEl = document.getElementById('detailShippingCarrier');
             const trackingEl = document.getElementById('detailTrackingNumber');
 
-            if (recNameEl) recNameEl.textContent = order.customerName;
+            if (recNameEl) {
+                recNameEl.textContent = order.customerName;
+                recNameEl.onclick = () => {
+                    PawpalOrdersModule.openCustomerProfile(order.userId, order.customerName);
+                };
+            }
             if (recPhoneEl) recPhoneEl.textContent = order.phone;
             if (recAddrEl) recAddrEl.textContent = order.address;
             if (payMethodEl) {
@@ -1600,16 +1618,21 @@
             const opt = prodSelect.options[prodSelect.selectedIndex];
             const price = parseInt(opt.getAttribute('data-price') || '0', 10);
 
+            const addrInput = document.getElementById('createOrderCustomAddress')?.value?.trim();
+            const preset = window.__currentOrderPresetCust;
+            const finalAddr = addrInput || (preset && preset.address) || 'Chi nhánh Quận 1, TP. Hồ Chí Minh';
+            const finalUserId = (preset && (preset.custId || preset.userId)) || 'USER-001';
+
             const newOrder = {
                 id: newCode,
-                userId: 'USER-GUEST',
+                userId: finalUserId,
                 customerName: name,
                 phone: phone,
-                address: 'Chi nhánh Quận 1, TP. Hồ Chí Minh',
+                address: finalAddr,
                 status: 'confirmed',
                 paymentStatus: (payMethod === 'cod') ? 'unpaid' : 'paid',
                 paymentMethod: payMethod,
-                carrier: 'Tại quầy PawPal',
+                carrier: (payMethod === 'cod' || addrInput) ? 'Giao tận nơi' : 'Tại quầy PawPal',
                 trackingNumber: '--',
                 createdAt: new Date().toISOString(),
                 subtotal: price * qty,
@@ -1637,6 +1660,8 @@
             };
 
             currentOrdersList.unshift(newOrder);
+            persistOrdersData();
+            window.__currentOrderPresetCust = null;
             document.getElementById('modalCreateOrder')?.classList.remove('active');
             renderOrdersTable();
             alert(`Đã tạo thành công đơn hàng ${newCode}!`);
@@ -1664,6 +1689,7 @@
                     desc: `Bàn giao cho ${carrier}. Mã vận đơn: ${tracking}`,
                     done: true
                 });
+                persistOrdersData();
             }
 
             document.getElementById('modalShipOrder')?.classList.remove('active');
@@ -1688,6 +1714,7 @@
                     desc: `Hủy bởi nhân viên quản trị. Lý do: ${reason}`,
                     done: true
                 });
+                persistOrdersData();
             }
 
             document.getElementById('modalCancelOrder')?.classList.remove('active');
@@ -1919,6 +1946,7 @@
             if (rawPreset) {
                 try {
                     const preset = JSON.parse(rawPreset);
+                    window.__currentOrderPresetCust = preset;
                     const phoneEl = document.getElementById('createOrderPhone');
                     const nameEl = document.getElementById('createOrderName');
                     const addrInput = document.getElementById('createOrderCustomAddress');
@@ -1989,10 +2017,21 @@
                 renderOrderDetailRef(orderId);
             }
         },
-        openCustomerProfile: function(userId) {
-            // Chuyển sang phân hệ Khách hàng
-            sessionStorage.setItem('pawpal_admin_active_module', 'Khách hàng');
+        openCustomerProfile: function(userId, customerName) {
+            const custIdMap = {
+                'USER-001': 'CUST-001',
+                'USER-002': 'CUST-002',
+                'USER-003': 'CUST-003',
+                'USER-004': 'CUST-004',
+                'USER-005': 'CUST-005',
+                'USER-ADMIN': 'CUST-001'
+            };
+            const targetCustId = custIdMap[userId] || (userId && userId.startsWith('CUST-') ? userId : 'CUST-001');
+            sessionStorage.setItem('pawpal_admin_customer_id', targetCustId);
+            if (customerName) sessionStorage.setItem('pawpal_admin_customer_name', customerName);
             sessionStorage.setItem('pawpal_admin_customer_subtab', 'tab-profile');
+            sessionStorage.setItem('pawpal_admin_active_module', 'Khách hàng');
+            window.location.hash = '#tab-profile';
             const custBtn = Array.from(document.querySelectorAll('.sidebar-menu-btn')).find(b => b.getAttribute('data-title') === 'Khách hàng');
             if (custBtn) custBtn.click();
         },
@@ -2080,13 +2119,41 @@
                 return;
             }
             order.status = 'completed';
+            const pointsEarned = Math.floor(order.total / 10000);
             order.timeline.push({
                 title: 'Hoàn tất đơn hàng',
                 time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
-                desc: 'Đơn hàng đã hoàn thành và tích điểm Pawpoint cho khách',
+                desc: `Đơn hàng đã hoàn thành và tích lũy +${pointsEarned} điểm Pawpoint cho khách hàng`,
                 done: true
             });
-            alert(`Đơn hàng ${orderId} đã hoàn tất thành công!`);
+
+            // Tự động cộng điểm thưởng Pawpoint vào ví khách hàng
+            try {
+                const rawCust = sessionStorage.getItem('pawpal_admin_customers_data');
+                if (rawCust) {
+                    const cData = JSON.parse(rawCust);
+                    const custIdMap = { 'USER-001': 'CUST-001', 'USER-002': 'CUST-002', 'USER-003': 'CUST-003', 'USER-004': 'CUST-004', 'USER-005': 'CUST-005' };
+                    const cId = custIdMap[order.userId] || order.userId;
+                    if (cData[cId]) {
+                        cData[cId].points = (cData[cId].points || 0) + pointsEarned;
+                        cData[cId].orders = cData[cId].orders || [];
+                        if (!cData[cId].orders.some(o => o.id === order.id)) {
+                            cData[cId].orders.unshift({
+                                id: order.id,
+                                date: new Date().toLocaleDateString('vi-VN'),
+                                total: formatVND(order.total),
+                                payment: 'Đã thanh toán',
+                                status: 'Hoàn tất',
+                                statusClass: 'badge-success'
+                            });
+                        }
+                        sessionStorage.setItem('pawpal_admin_customers_data', JSON.stringify(cData));
+                    }
+                }
+            } catch (e) {}
+
+            persistOrdersData();
+            alert(`Đơn hàng ${orderId} đã hoàn tất thành công! Đã tích lũy +${pointsEarned} điểm Pawpoint cho khách hàng.`);
             renderOrdersTable();
             window.PawpalOrdersModule.openOrderDetail(orderId);
         },

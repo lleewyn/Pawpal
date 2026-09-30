@@ -945,7 +945,40 @@
         function renderDrawerOrders(custId) {
             const tbody = document.getElementById('drawerOrdersTbody');
             if (!tbody) return;
-            const orders = customerDatabase[custId]?.orders || [];
+            let orders = [...(customerDatabase[custId]?.orders || [])];
+
+            // Tự động hợp nhất các đơn hàng thực tế từ phân hệ Bán hàng
+            try {
+                const rawOrders = sessionStorage.getItem('pawpal_admin_orders_data');
+                if (rawOrders) {
+                    const allOrders = JSON.parse(rawOrders);
+                    const custObj = customerDatabase[custId];
+                    const custName = custObj?.name?.toLowerCase();
+                    const custPhone = custObj?.phone;
+                    const custIdMap = { 'CUST-001': 'USER-001', 'CUST-002': 'USER-002', 'CUST-003': 'USER-003', 'CUST-004': 'USER-004', 'CUST-005': 'USER-005' };
+                    const mappedUserId = custIdMap[custId];
+
+                    const matchedOrders = allOrders.filter(o =>
+                        o.userId === custId ||
+                        o.userId === mappedUserId ||
+                        (custPhone && o.phone && o.phone.replace(/[^0-9]/g, '') === custPhone.replace(/[^0-9]/g, '')) ||
+                        (custName && o.customerName && o.customerName.toLowerCase() === custName)
+                    );
+
+                    matchedOrders.forEach(mo => {
+                        if (!orders.some(ord => ord.id === mo.id)) {
+                            orders.unshift({
+                                id: mo.id,
+                                date: new Date(mo.createdAt).toLocaleDateString('vi-VN'),
+                                total: Number(mo.total).toLocaleString('vi-VN') + ' đ',
+                                payment: mo.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán',
+                                status: mo.status === 'completed' ? 'Hoàn tất' : mo.status === 'shipping' ? 'Đang giao' : mo.status === 'confirmed' ? 'Đang chuẩn bị' : 'Chờ xác nhận',
+                                statusClass: mo.status === 'completed' ? 'badge-success' : mo.status === 'shipping' ? 'badge-info' : 'badge-warning'
+                            });
+                        }
+                    });
+                }
+            } catch (e) {}
 
             if (orders.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Khách hàng chưa có lịch sử mua hàng.</td></tr>`;
@@ -954,7 +987,9 @@
 
             tbody.innerHTML = orders.map(ord => `
                 <tr>
-                    <td><strong>${ord.id}</strong></td>
+                    <td>
+                        <a href="javascript:void(0)" class="user-name-link btn-jump-order-code" data-order-id="${ord.id}" style="font-weight: 600; color: var(--text-heading); text-decoration: none;">${ord.id}</a>
+                    </td>
                     <td>${ord.date}</td>
                     <td>${ord.total}</td>
                     <td><span class="admin-badge badge-success">${ord.payment}</span></td>
@@ -963,13 +998,22 @@
                 </tr>
             `).join('');
 
-            tbody.querySelectorAll('.btn-view-order-action').forEach(btn => {
-                btn.addEventListener('click', () => {
+            const jumpToOrder = (ordId) => {
+                sessionStorage.setItem('pawpal_admin_order_id', ordId);
+                sessionStorage.setItem('pawpal_admin_order_selected_id', ordId);
+                sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-detail');
+                sessionStorage.setItem('pawpal_admin_active_module', 'Bán hàng');
+                showToast(`Mở chi tiết đơn hàng ${ordId} tại phân hệ Bán hàng!`);
+                setTimeout(() => {
+                    window.location.hash = '#tab-order-detail';
+                }, 300);
+            };
+
+            tbody.querySelectorAll('.btn-jump-order-code, .btn-view-order-action').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
                     const ordId = btn.getAttribute('data-order-id');
-                    sessionStorage.setItem('pawpal_admin_order_id', ordId);
-                    showToast(`Mở thông tin chi tiết đơn hàng ${ordId} tại phân hệ Bán hàng!`);
-                    const menuBtn = document.querySelector('.sidebar-menu-btn[data-title="Bán hàng"]');
-                    if (menuBtn) menuBtn.click();
+                    jumpToOrder(ordId);
                 });
             });
         }
@@ -2094,9 +2138,12 @@
                 address: defaultAddr
             };
             sessionStorage.setItem('pawpal_admin_order_preset', JSON.stringify(presetOrder));
+            sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-list');
+            sessionStorage.setItem('pawpal_admin_active_module', 'Bán hàng');
             showToast(`Đã thiết lập thông tin lên đơn cho ${cust.name}, chuyển sang phân hệ Bán hàng!`);
-            const btn = document.querySelector('.sidebar-menu-btn[data-title="Bán hàng"]');
-            if (btn) btn.click();
+            setTimeout(() => {
+                window.location.hash = '#tab-order-list';
+            }, 300);
         });
 
         document.querySelector('.btn-link-complaint')?.addEventListener('click', () => {
