@@ -1030,7 +1030,7 @@
                         <div style="font-size: 12px; color: var(--text-muted);">${item.phone}</div>
                     </td>
                     <td>
-                        <div style="font-weight: 600; color: var(--text-main);">${item.petName}</div>
+                        <a href="javascript:void(0)" class="user-name-link btn-jump-pet" data-pet-id="${item.petId || 'PET-001'}" data-pet-name="${item.petName}" style="font-weight: 600; color: var(--text-heading); text-decoration: none;">${item.petName}</a>
                         <div style="font-size: 12px; color: var(--text-muted);">${item.petBreed}</div>
                     </td>
                     <td>
@@ -1063,6 +1063,19 @@
                 </tr>
             `;
         }).join('');
+
+        // Gắn sự kiện click vào tên thú cưng để nhảy sang hồ sơ Thú cưng
+        tbody.querySelectorAll('.btn-jump-pet').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const petId = btn.getAttribute('data-pet-id') || 'PET-001';
+                const pName = btn.getAttribute('data-pet-name') || '';
+                sessionStorage.setItem('pawpal_admin_pet_id', petId);
+                if (pName) sessionStorage.setItem('pawpal_admin_pet_name', pName);
+                sessionStorage.setItem('pawpal_admin_pet_subtab', 'tab-pet-profile');
+                window.location.hash = '#tab-pet-profile';
+            });
+        });
 
         // Gắn sự kiện click xem chi tiết
         tbody.querySelectorAll('.btn-view-booking').forEach(link => {
@@ -1208,7 +1221,15 @@
             };
         }
         if (customerPhone) customerPhone.textContent = booking.phone;
-        if (petName) petName.textContent = booking.petName;
+        if (petName) {
+            petName.textContent = booking.petName;
+            petName.onclick = () => {
+                sessionStorage.setItem('pawpal_admin_pet_id', booking.petId || 'PET-001');
+                sessionStorage.setItem('pawpal_admin_pet_name', booking.petName);
+                sessionStorage.setItem('pawpal_admin_pet_subtab', 'tab-pet-profile');
+                window.location.hash = '#tab-pet-profile';
+            };
+        }
         if (petBreed) petBreed.textContent = booking.petBreed;
         if (petWeight) petWeight.textContent = booking.petWeight || '4.0 kg';
         if (petAge) petAge.textContent = booking.petAge || 'Chưa rõ';
@@ -2165,20 +2186,27 @@
             });
         }
 
+        let activeBookingPreset = null;
+
         // Tự động kiểm tra nếu chuyển từ phân hệ Thú cưng sang với thông tin bé cưng điền sẵn
         const checkPresetBooking = () => {
             const rawPreset = sessionStorage.getItem('pawpal_admin_booking_preset');
             if (rawPreset) {
                 try {
                     const preset = JSON.parse(rawPreset);
+                    activeBookingPreset = preset;
                     const custEl = document.getElementById('newBookingCustomer');
                     const phoneEl = document.getElementById('newBookingPhone');
                     const petEl = document.getElementById('newBookingPetName');
+                    const alertEl = document.getElementById('newBookingPetAlert');
                     const dateInput = document.getElementById('newBookingDate');
 
                     if (custEl && preset.ownerName) custEl.value = preset.ownerName;
                     if (phoneEl && preset.ownerPhone) phoneEl.value = preset.ownerPhone;
                     if (petEl && preset.petName) petEl.value = preset.petName;
+                    if (alertEl && (preset.petAlert || preset.alert || preset.allergy)) {
+                        alertEl.value = preset.petAlert || preset.alert || preset.allergy;
+                    }
                     if (dateInput) {
                         const todayStr = new Date().toISOString().split('T')[0];
                         dateInput.value = todayStr;
@@ -2186,7 +2214,7 @@
 
                     if (modalCreate) modalCreate.classList.add('active');
                     sessionStorage.removeItem('pawpal_admin_booking_preset');
-                    showToast(`Đã tự động điền thông tin bé ${preset.petName} vào phiếu tạo lịch hẹn!`);
+                    showToast(`Đã tự động điền thông tin bé ${preset.petName} và cảnh báo an toàn vào phiếu đặt lịch!`);
                 } catch (e) {}
             }
 
@@ -2202,6 +2230,7 @@
 
         const closeCreateModal = () => {
             if (modalCreate) modalCreate.classList.remove('active');
+            activeBookingPreset = null;
         };
         if (btnCloseCreate) btnCloseCreate.addEventListener('click', closeCreateModal);
         if (btnCancelCreate) btnCancelCreate.addEventListener('click', closeCreateModal);
@@ -2238,16 +2267,17 @@
                     }))
                     : [ { time: time, title: 'Tiếp nhận ca mới', desc: 'Đã tạo lịch hẹn thành công', done: true, staff: staff || 'PawPal' } ];
 
+                const preset = activeBookingPreset;
                 const newBooking = {
                     id: newId,
                     userId: 'USER-001',
                     customerName: customer,
                     phone: phone,
-                    petId: 'PET-NEW',
+                    petId: (preset && preset.petId) ? preset.petId : 'PET-001',
                     petName: petName,
-                    petBreed: 'Thú cưng',
-                    petWeight: '5.0 kg',
-                    petAge: '2 tuổi',
+                    petBreed: (preset && (preset.breed || preset.speciesBreed)) ? (preset.breed || preset.speciesBreed) : 'Thú cưng',
+                    petWeight: (preset && preset.weight) ? preset.weight : '5.0 kg',
+                    petAge: (preset && preset.age) ? preset.age : '2 tuổi',
                     serviceCode: matchedSvc ? matchedSvc.code : 'SPA01',
                     category: category,
                     categoryName: categoryName,
@@ -3021,6 +3051,28 @@
                 booking.petWeight = actualWeightStr;
                 booking.staff = staffVal;
                 booking.belongings = belongingsVal;
+
+                // Tự động cập nhật cân nặng mới nhất vào Hồ sơ Thú cưng liên kết
+                if (booking.petId) {
+                    try {
+                        const savedPets = sessionStorage.getItem('pawpal_admin_pets_data');
+                        if (savedPets) {
+                            const pData = JSON.parse(savedPets);
+                            if (pData[booking.petId]) {
+                                pData[booking.petId].weight = actualWeightStr;
+                                pData[booking.petId].weightNum = parseFloat(actualWeightStr) || pData[booking.petId].weightNum;
+                                pData[booking.petId].weightHistory = pData[booking.petId].weightHistory || [];
+                                pData[booking.petId].weightHistory.unshift({
+                                    date: new Date().toLocaleDateString('vi-VN'),
+                                    weight: actualWeightStr,
+                                    tier: `Tiếp nhận tại quầy (${booking.serviceName})`,
+                                    by: staffVal || 'KTV Tiếp nhận'
+                                });
+                                sessionStorage.setItem('pawpal_admin_pets_data', JSON.stringify(pData));
+                            }
+                        }
+                    } catch (e) {}
+                }
 
                 const modeInput = document.getElementById('intakeModalMode');
                 const mode = modeInput ? modeInput.value : 'edit';

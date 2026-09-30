@@ -554,20 +554,52 @@
             // Tab 4: Lịch sử đặt hẹn & dịch vụ
             const historyTbody = document.getElementById('petHistoryTbody');
             if (historyTbody) {
-                const sHistory = pet.history || [];
+                let sHistory = [...(pet.history || [])];
+                try {
+                    const rawBookings = sessionStorage.getItem('pawpal_admin_services_bookings');
+                    if (rawBookings) {
+                        const allBookings = JSON.parse(rawBookings);
+                        const petBookings = allBookings.filter(b => b.petId === pet.code || (b.petName && b.petName.toLowerCase() === pet.name.toLowerCase()));
+                        petBookings.forEach(pb => {
+                            if (!sHistory.some(h => h.id === pb.id)) {
+                                sHistory.unshift({
+                                    id: pb.id,
+                                    service: pb.serviceName,
+                                    time: pb.date + ' ' + (pb.time || ''),
+                                    weight: pb.petWeight || pet.weight,
+                                    price: pb.total ? Number(pb.total).toLocaleString('vi-VN') + 'đ' : '250.000đ',
+                                    status: pb.status === 'completed' ? 'Đã hoàn thành' : pb.status === 'confirmed' ? 'Đã xác nhận' : 'Chờ xác nhận'
+                                });
+                            }
+                        });
+                    }
+                } catch (e) {}
+
                 if (sHistory.length === 0) {
                     historyTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 18px;">Bé chưa có lịch sử đặt dịch vụ.</td></tr>`;
                 } else {
                     historyTbody.innerHTML = sHistory.map(h => `
                         <tr>
-                            <td><strong>${h.id}</strong></td>
+                            <td>
+                                <a href="javascript:void(0)" class="user-name-link btn-jump-service-booking" data-booking-id="${h.id}" style="font-weight: 600; color: var(--text-heading); text-decoration: none;">${h.id}</a>
+                            </td>
                             <td>${h.service}</td>
                             <td>${h.time}</td>
                             <td>${h.weight}</td>
                             <td style="text-align: right;"><strong>${h.price}</strong></td>
-                            <td style="text-align: center;"><span class="admin-badge badge-success">${h.status}</span></td>
+                            <td style="text-align: center;"><span class="admin-badge ${h.status === 'Đã hoàn thành' ? 'badge-success' : 'badge-warning'}">${h.status}</span></td>
                         </tr>
                     `).join('');
+
+                    historyTbody.querySelectorAll('.btn-jump-service-booking').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            const bkgId = btn.getAttribute('data-booking-id');
+                            sessionStorage.setItem('pawpal_admin_service_selected_id', bkgId);
+                            sessionStorage.setItem('pawpal_admin_services_active_subtab', 'tab-service-detail');
+                            window.location.hash = '#tab-service-detail';
+                        });
+                    });
                 }
             }
         }
@@ -1930,18 +1962,22 @@
                 const ownerName = btnQuickBook.getAttribute('data-owner') || 'chủ nuôi';
                 const petId = btnQuickBook.getAttribute('data-id') || '';
                 const ownerPhone = btnQuickBook.getAttribute('data-phone') || '';
+                const pet = petsData[petId];
 
                 sessionStorage.setItem('pawpal_admin_booking_preset', JSON.stringify({
                     petId: petId,
                     petName: petName,
                     ownerName: ownerName,
-                    ownerPhone: ownerPhone
+                    ownerPhone: ownerPhone,
+                    breed: pet ? (pet.speciesBreed || pet.breed) : '',
+                    weight: pet ? pet.weight : '',
+                    petAlert: pet ? (pet.alert || pet.allergy || pet.notes) : ''
                 }));
 
                 showToast(`Đã chọn bé ${petName} (${ownerName}). Đang chuyển sang Phân hệ Dịch vụ để xếp lịch hẹn...`);
                 setTimeout(() => {
-                    window.location.hash = '#services';
-                }, 800);
+                    window.location.hash = '#tab-service-bookings';
+                }, 400);
             }
         });
 
@@ -2359,17 +2395,17 @@
                 petName: pet.name,
                 ownerName: pet.ownerName,
                 ownerPhone: pet.ownerPhone,
-                breed: pet.speciesBreed,
-                weight: pet.weight
+                breed: pet.speciesBreed || pet.breed,
+                weight: pet.weight,
+                petAlert: pet.alert || pet.allergy || pet.notes
             };
             sessionStorage.setItem('pawpal_admin_booking_preset', JSON.stringify(presetBooking));
-            sessionStorage.setItem('pawpal_admin_service_subtab', 'tab-booking-list');
+            sessionStorage.setItem('pawpal_admin_services_active_subtab', 'tab-service-bookings');
 
             showToast(`Đang chuyển sang phân hệ Dịch vụ để tạo ca cho bé ${pet.name}...`);
-            const srvMenuBtn = document.querySelector('.sidebar-menu-btn[data-title="Dịch vụ"]');
-            if (srvMenuBtn) {
-                srvMenuBtn.click();
-            }
+            setTimeout(() => {
+                window.location.hash = '#tab-service-bookings';
+            }, 300);
         }
 
         document.addEventListener('click', (e) => {
