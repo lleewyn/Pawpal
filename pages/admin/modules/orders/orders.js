@@ -1338,47 +1338,6 @@
             PawpalOrdersModule.exportDispatchManifest();
         });
 
-        // Ô QUÉT MÃ VẬN ĐƠN / BARCODE SIÊU TỐC
-        document.getElementById('quickScanTrackingInput')?.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const code = e.target.value.trim();
-                if (!code) return;
-
-                const targetOrder = currentOrdersList.find(o => 
-                    o.id.toLowerCase() === code.toLowerCase() || 
-                    (o.trackingNumber && o.trackingNumber.toLowerCase() === code.toLowerCase())
-                );
-
-                if (!targetOrder) {
-                    alert(`Không tìm thấy đơn hàng tương ứng với mã quét "${code}". Vui lòng kiểm tra lại.`);
-                    return;
-                }
-
-                e.target.value = '';
-
-                if (targetOrder.status === 'confirmed') {
-                    if (confirm(`Đơn hàng ${targetOrder.id} đang chuẩn bị xuất kho.\nBạn có muốn bàn giao nhanh cho bưu cục và chuyển sang trạng thái Đang giao ngay?`)) {
-                        targetOrder.status = 'shipping';
-                        targetOrder.timeline.push({
-                            title: 'Bàn giao vận chuyển qua máy quét mã vạch',
-                            time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay',
-                            desc: 'Nhân viên kho quét barcode xuất bưu cục thành công',
-                            done: true
-                        });
-                        renderOrdersTable();
-                    }
-                } else if (targetOrder.status === 'shipping') {
-                    if (confirm(`Đơn hàng ${targetOrder.id} đang giao.\nXác nhận khách đã nhận hàng thành công?`)) {
-                        PawpalOrdersModule.completeDelivery(targetOrder.id);
-                        return;
-                    }
-                }
-
-                PawpalOrdersModule.openOrderDetail(targetOrder.id);
-            }
-        });
-
         // Xác nhận bàn giao vận chuyển hàng loạt
         document.getElementById('btnSubmitBatchDispatch')?.addEventListener('click', () => {
             if (selectedBatchOrderIds.length === 0) return;
