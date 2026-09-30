@@ -57,6 +57,31 @@
     transform: translateY(1px);
 }
 
+.btn-complaint {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 18px;
+    border-radius: var(--border-radius-pill, 9999px);
+    background: #FFF1F2;
+    border: 1px solid #FECDD3;
+    color: #BE123C;
+    font-family: var(--font-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-complaint:hover {
+    background: #FFE4E6;
+    color: #9F1239;
+    border-color: #FDA4AF;
+}
+
 .service-review-card {
     margin: 18px 0 22px;
     padding: 18px;

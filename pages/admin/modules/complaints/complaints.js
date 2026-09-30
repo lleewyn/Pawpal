@@ -359,6 +359,181 @@
             }
         ];
 
+        // Đồng bộ dữ liệu khiếu nại do Khách hàng gửi từ trang Web User qua LocalStorage
+        try {
+            const userServices = JSON.parse(localStorage.getItem('pawpal_service_complaints')) || [];
+            userServices.forEach(uItem => {
+                if (!mockServiceComplaints.some(m => m.id === uItem.id)) {
+                    mockServiceComplaints.unshift(uItem);
+                }
+            });
+        } catch(e) {}
+
+        try {
+            const userOrders = JSON.parse(localStorage.getItem('pawpal_order_complaints')) || [];
+            userOrders.forEach(uItem => {
+                if (!mockOrderComplaints.some(m => m.id === uItem.id)) {
+                    mockOrderComplaints.unshift(uItem);
+                }
+            });
+        } catch(e) {}
+
+        function calculateSla(item) {
+            if (!item) return;
+            if (item.status === 'resolved' || item.status === 'closed') {
+                item.slaStatus = 'DONE';
+                item.slaRemainingText = item.status === 'resolved' ? 'Đã giải quyết' : 'Đã đóng';
+                return;
+            }
+
+            let createTime = Date.now();
+            if (item.createdAt) {
+                let parsed = Date.parse(item.createdAt);
+                if (isNaN(parsed)) {
+                    const parts = item.createdAt.split(' ');
+                    if (parts.length === 2) {
+                        parsed = Date.parse(`${parts[0]}T${parts[1]}:00`);
+                    }
+                }
+                if (!isNaN(parsed)) {
+                    createTime = parsed;
+                }
+            }
+
+            const isUrgent = item.priority === 'high' || item.issueType === 'injury' || item.issueType === 'damaged';
+            const totalSlaMs = (isUrgent ? 2 : 4) * 60 * 60 * 1000;
+            const deadline = createTime + totalSlaMs;
+            const remainingMs = deadline - Date.now();
+
+            if (remainingMs <= 0) {
+                item.slaStatus = 'OVERDUE';
+                const overdueMins = Math.floor(Math.abs(remainingMs) / 60000);
+                if (overdueMins < 60) {
+                    item.slaRemainingText = `Quá hạn ${overdueMins} phút`;
+                } else {
+                    const h = Math.floor(overdueMins / 60);
+                    const m = overdueMins % 60;
+                    item.slaRemainingText = `Quá hạn ${h}h ${m > 0 ? m + 'p' : ''}`.trim();
+                }
+            } else {
+                const remMins = Math.floor(remainingMs / 60000);
+                if (remMins <= 60) {
+                    item.slaStatus = 'URGENT';
+                    item.slaRemainingText = `Còn ${remMins} phút`;
+                } else {
+                    item.slaStatus = 'NORMAL';
+                    const h = Math.floor(remMins / 60);
+                    const m = remMins % 60;
+                    item.slaRemainingText = `Còn ${h}h ${m > 0 ? m + 'p' : ''}`.trim();
+                }
+            }
+        }
+
+        function saveComplaintsState() {
+            try {
+                localStorage.setItem('pawpal_service_complaints', JSON.stringify(mockServiceComplaints));
+                localStorage.setItem('pawpal_order_complaints', JSON.stringify(mockOrderComplaints));
+            } catch(e) {
+                console.warn('[ComplaintsSync] Could not save to localStorage', e);
+            }
+        }
+
+        function applyCompensationToCustomer(resolution) {
+            if (!resolution) return;
+            try {
+                if (resolution.pawpoints && Number(resolution.pawpoints) > 0) {
+                    const pts = Number(resolution.pawpoints);
+                    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || {};
+                    currentUser.points = (Number(currentUser.points) || 0) + pts;
+                    currentUser.pawPoints = currentUser.points;
+                    localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
+
+                    const users = JSON.parse(localStorage.getItem('pawpal_users_db')) || [];
+                    const uIdx = users.findIndex(u => u.phone === currentUser.phone || u.id === currentUser.id);
+                    if (uIdx >= 0) {
+                        users[uIdx].points = currentUser.points;
+                        users[uIdx].pawPoints = currentUser.points;
+                        localStorage.setItem('pawpal_users_db', JSON.stringify(users));
+                    }
+                    console.log(`[ComplaintsCompensation] Đã cộng +${pts} Pawpoint vào tài khoản khách!`);
+                }
+
+                if (resolution.voucherCode) {
+                    const vouchers = JSON.parse(localStorage.getItem('pawpal_user_vouchers')) || [];
+                    if (!vouchers.some(v => v.code === resolution.voucherCode)) {
+                        vouchers.unshift({
+                            code: resolution.voucherCode,
+                            discountPercent: 50,
+                            title: 'Voucher Chăm Sóc Khách Hàng',
+                            desc: resolution.note || 'Ưu đãi bồi hoàn từ PawPal',
+                            createdAt: new Date().toISOString()
+                        });
+                        localStorage.setItem('pawpal_user_vouchers', JSON.stringify(vouchers));
+                        console.log(`[ComplaintsCompensation] Đã phát hành voucher ${resolution.voucherCode} vào ví ưu đãi!`);
+                    }
+                }
+            } catch (err) {
+                console.warn('[ComplaintsCompensation] Lỗi bồi hoàn tài khoản:', err);
+            }
+        }
+
+        function syncTicketToUserPortal(ticket) {
+            if (!ticket) return;
+            try {
+                const userTickets = JSON.parse(localStorage.getItem('pawpal_support_tickets')) || [];
+                const foundIndex = userTickets.findIndex(t => t.id === ticket.id || (ticket.bookingId && t.context?.bookingId === ticket.bookingId) || (ticket.orderId && t.context?.orderId === ticket.orderId));
+
+                const publicMessages = (ticket.timeline || [])
+                    .filter(entry => !entry.isInternal)
+                    .map(entry => ({
+                        sender: entry.author.includes('Khách hàng') ? 'user' : 'cskh',
+                        agent: entry.author.includes('Khách hàng') ? '' : entry.author,
+                        text: `${entry.title}: ${entry.desc}`,
+                        time: entry.time || new Date().toISOString()
+                    }))
+                    .reverse();
+
+                let updatedStatus = 'pending';
+                if (ticket.status === 'processing') updatedStatus = 'processing';
+                else if (ticket.status === 'resolved' || ticket.status === 'closed') updatedStatus = 'completed';
+
+                if (foundIndex >= 0) {
+                    userTickets[foundIndex].status = updatedStatus;
+                    userTickets[foundIndex].resolution = ticket.resolution || null;
+                    if (publicMessages.length > 0) {
+                        userTickets[foundIndex].messages = publicMessages;
+                    }
+                } else {
+                    userTickets.unshift({
+                        id: ticket.id,
+                        title: ticket.title,
+                        type: ticket.serviceType ? 'service' : 'order',
+                        status: updatedStatus,
+                        priority: ticket.priority === 'high' ? 'Cao' : 'Trung bình',
+                        resolution: ticket.resolution || null,
+                        context: {
+                            bookingId: ticket.bookingId,
+                            orderId: ticket.orderId,
+                            serviceName: ticket.serviceName,
+                            petName: ticket.petName
+                        },
+                        messages: publicMessages
+                    });
+                }
+                localStorage.setItem('pawpal_support_tickets', JSON.stringify(userTickets));
+
+                if (ticket.resolution) {
+                    applyCompensationToCustomer(ticket.resolution);
+                }
+            } catch (e) {
+                console.warn('[SyncToUser] Error syncing ticket to user portal:', e);
+            }
+        }
+
+        // Tự động tính toán SLA ban đầu cho tất cả vé
+        mockServiceComplaints.forEach(calculateSla);
+        mockOrderComplaints.forEach(calculateSla);
+
         let currentActiveTicket = mockServiceComplaints[0];
         let currentTicketType = 'service'; // 'service' hoặc 'order'
 
@@ -372,6 +547,7 @@
         // 2. HELPER BADGE VÀ SLA
         // ---------------------------------------------------------
         function getSlaBadge(item) {
+            calculateSla(item);
             if (item.status === 'resolved' || item.status === 'closed') {
                 return '<span class="sla-badge sla-done">Đã giải quyết</span>';
             }
@@ -385,6 +561,10 @@
         }
 
         function updateComplaintsKpis() {
+            // Tái tính toán SLA trước khi đếm KPIs
+            mockServiceComplaints.forEach(calculateSla);
+            mockOrderComplaints.forEach(calculateSla);
+
             // Service KPIs
             const sNew = mockServiceComplaints.filter(i => i.status === 'new').length;
             const sProc = mockServiceComplaints.filter(i => i.status === 'processing').length;
@@ -1310,6 +1490,9 @@
             if (ticketType === 'service') renderServiceComplaintsTable();
             else renderOrderComplaintsTable();
 
+            saveComplaintsState();
+            syncTicketToUserPortal(targetTicket);
+
             if (currentActiveTicket && currentActiveTicket.id === ticketId) {
                 renderTicketDetail(targetTicket);
             }
@@ -1422,6 +1605,8 @@
                 renderComplaintsAlertBar();
                 if (type === 'service') renderServiceComplaintsTable();
                 else renderOrderComplaintsTable();
+                saveComplaintsState();
+                syncTicketToUserPortal(t);
                 alert(`Ticket ${id} đã được đóng hoàn tất.`);
             }
         });
@@ -1888,6 +2073,8 @@
             if (currentTicketType === 'service') renderServiceComplaintsTable();
             else renderOrderComplaintsTable();
             renderTicketDetail(currentActiveTicket);
+            saveComplaintsState();
+            syncTicketToUserPortal(currentActiveTicket);
 
             // Ghi nhận cờ giải quyết cho Chatbot CSKH nắm bắt vòng lặp đóng
             try {
@@ -2035,6 +2222,8 @@
             if (currentTicketType === 'service') renderServiceComplaintsTable();
             else renderOrderComplaintsTable();
             renderTicketDetail(currentActiveTicket);
+            saveComplaintsState();
+            syncTicketToUserPortal(currentActiveTicket);
 
             alert(`Đã chuyển người phụ trách Ticket ${currentActiveTicket.id} cho "${newStaff}" thành công!`);
         });
@@ -2084,6 +2273,8 @@
             if (currentTicketType === 'service') renderServiceComplaintsTable();
             else renderOrderComplaintsTable();
             renderTicketDetail(currentActiveTicket);
+            saveComplaintsState();
+            syncTicketToUserPortal(currentActiveTicket);
 
             alert(`Đã gửi yêu cầu bổ sung thông tin đến khách hàng qua kênh ${channelLabel} thành công!`);
         });
@@ -2106,6 +2297,8 @@
                 });
                 txt.value = '';
                 renderTicketDetail(currentActiveTicket);
+                saveComplaintsState();
+                syncTicketToUserPortal(currentActiveTicket);
                 alert('Đã cập nhật Timeline thành công!');
             }
         });
@@ -2266,6 +2459,33 @@
                 }
             }
         };
+
+        // Lắng nghe sự kiện storage để đồng bộ real-time giữa Tab User và Tab Admin
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'pawpal_service_complaints' || e.key === 'pawpal_order_complaints') {
+                try {
+                    const latestServices = JSON.parse(localStorage.getItem('pawpal_service_complaints')) || [];
+                    const latestOrders = JSON.parse(localStorage.getItem('pawpal_order_complaints')) || [];
+                    if (latestServices.length > 0) {
+                        mockServiceComplaints.length = 0;
+                        mockServiceComplaints.push(...latestServices);
+                    }
+                    if (latestOrders.length > 0) {
+                        mockOrderComplaints.length = 0;
+                        mockOrderComplaints.push(...latestOrders);
+                    }
+                    updateComplaintsKpis();
+                    renderComplaintsAlertBar();
+                    if (currentTicketType === 'service') renderServiceComplaintsTable();
+                    else renderOrderComplaintsTable();
+                    if (currentActiveTicket) {
+                        const updated = (currentTicketType === 'service' ? mockServiceComplaints : mockOrderComplaints).find(x => x.id === currentActiveTicket.id);
+                        if (updated) renderTicketDetail(updated);
+                    }
+                } catch (err) {}
+            }
+        });
+
         setTimeout(checkPresetComplaint, 150);
     }
 

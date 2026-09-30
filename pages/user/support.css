@@ -582,3 +582,50 @@
 .text-primary {
     color: var(--color-primary) !important;
 }
+
+.ticket-resolution-box {
+    border: 1px solid #C3DEC7;
+    background: #F4FAF6;
+    border-radius: 9px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.ticket-resolution-title {
+    color: #165335;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.ticket-context-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 9px;
+    background: #EEF5F1;
+    color: #236B48;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.voucher-comp-card {
+    transition: all 0.2s ease;
+}
+
+.voucher-comp-card:hover {
+    box-shadow: 0 2px 8px rgba(35, 107, 72, 0.08);
+}
+
+.voucher-code-text {
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    color: #165335;
+}
+
+.pawpoints-comp-card,
+.rma-comp-card {
+    border: 1px solid #E2ECE5;
+}
+

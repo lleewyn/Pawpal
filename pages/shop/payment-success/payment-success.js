@@ -2,11 +2,24 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const orderId = urlParams.get('orderId');
+    const orderId = urlParams.get('orderId') || urlParams.get('vnp_TxnRef');
     
     if (!orderId) {
         window.location.href = '/pages/shop/shop.html';
         return;
+    }
+
+    // Xử lý phản hồi từ Cổng thanh toán VNPAY chính thức
+    const vnpResponseCode = urlParams.get('vnp_ResponseCode');
+    if (vnpResponseCode) {
+        if (vnpResponseCode === '00') {
+            const transactionNo = urlParams.get('vnp_TransactionNo') || `VNP${Date.now()}`;
+            updateOrderAfterVNPay(orderId, 'paid', 'preparing', transactionNo);
+        } else {
+            alert('Giao dịch VNPAY không thành công hoặc bạn đã hủy giao dịch. Đơn hàng vẫn được lưu ở trạng thái "Chờ thanh toán" (thời hạn 15 phút).');
+            window.location.href = '/pages/user/orders/orders.html?status=pending_payment';
+            return;
+        }
     }
     
     const orderData = JSON.parse(localStorage.getItem('pawpal_current_order') || 'null');
@@ -165,10 +178,53 @@ function displayOrderInfo(order) {
         cod: 'Thanh toán khi nhận hàng (COD)',
         momo: 'Ví điện tử MoMo',
         vnpay: 'Cổng thanh toán VNPay',
+        vietqr: 'Quét mã VietQR',
+        zalopay: 'Ví điện tử ZaloPay',
         bank: 'Chuyển khoản ngân hàng'
     };
+    const payMethod = (order.payment?.method || order.paymentMethod || '').toLowerCase();
     document.getElementById('payment-method').textContent = 
-        paymentMethodNames[order.payment.method] || order.payment.method;
+        paymentMethodNames[payMethod] || order.payment?.method || 'Thanh toán online';
+
+    // Cập nhật huy hiệu trạng thái thanh toán và tiêu đề trang
+    const isPaid = (order.payment?.status === 'paid' || order.paymentStatus === 'paid');
+    const isCOD = payMethod === 'cod';
+    const statusBadge = document.getElementById('payment-status-badge');
+    const statusText = document.getElementById('payment-status-text');
+    const statusIcon = document.getElementById('payment-status-icon');
+    const resultTitle = document.querySelector('.result-title');
+    const resultSubtitle = document.querySelector('.result-subtitle');
+
+    if (statusBadge && statusText) {
+        if (isPaid) {
+            statusBadge.className = 'status-badge status-paid';
+            statusBadge.style.backgroundColor = '#DCEEE2';
+            statusBadge.style.color = '#165335';
+            statusText.textContent = 'ĐÃ THANH TOÁN';
+            if (statusIcon) {
+                statusIcon.innerHTML = `<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
+            }
+            if (resultTitle) resultTitle.textContent = 'Thanh toán thành công!';
+            if (resultSubtitle) resultSubtitle.innerHTML = 'Cảm ơn bạn đã tin tưởng PawPal.<br>Giao dịch thanh toán trực tuyến của bạn đã hoàn tất.';
+        } else if (isCOD) {
+            statusBadge.className = 'status-badge status-pending';
+            statusBadge.style.backgroundColor = '#F5E8D3';
+            statusBadge.style.color = '#734718';
+            statusText.textContent = 'CHƯA THANH TOÁN (COD)';
+            if (statusIcon) {
+                statusIcon.innerHTML = `<svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`;
+            }
+            if (resultTitle) resultTitle.textContent = 'Đặt hàng thành công!';
+            if (resultSubtitle) resultSubtitle.innerHTML = 'Cảm ơn bạn đã tin tưởng PawPal.<br>Đơn hàng COD của bạn đã được ghi nhận. Vui lòng thanh toán tiền mặt cho shipper khi nhận hàng.';
+        } else {
+            statusBadge.className = 'status-badge status-pending';
+            statusBadge.style.backgroundColor = '#F5E8D3';
+            statusBadge.style.color = '#734718';
+            statusText.textContent = 'CHỜ THANH TOÁN';
+            if (resultTitle) resultTitle.textContent = 'Đơn hàng đang chờ thanh toán';
+            if (resultSubtitle) resultSubtitle.innerHTML = 'Cảm ơn bạn đã tin tưởng PawPal.<br>Đơn hàng đang chờ bạn hoàn tất thanh toán trực tuyến (thời hạn 15 phút).';
+        }
+    }
     
     const productsContainer = document.getElementById('order-products');
     productsContainer.innerHTML = '';
@@ -253,3 +309,38 @@ function showToast(message, type = 'info') {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
+
+function updateOrderAfterVNPay(orderId, paymentStatus, orderStatus, transactionNo) {
+    try {
+        const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+        const idx = localOrders.findIndex(o => String(o.id) === String(orderId) || String(o.orderId) === String(orderId));
+        if (idx !== -1) {
+            localOrders[idx].paymentStatus = paymentStatus;
+            localOrders[idx].status = orderStatus;
+            localOrders[idx].vnpayTransactionNo = transactionNo;
+            if (!Array.isArray(localOrders[idx].timeline)) localOrders[idx].timeline = [];
+            localOrders[idx].timeline.push({
+                status: 'paid',
+                title: 'Thanh toán thành công qua VNPAY',
+                description: `Giao dịch VNPAY thành công. Mã giao dịch: #${transactionNo}`,
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('pawpal_orders', JSON.stringify(localOrders));
+        }
+
+        let currentOrder = JSON.parse(localStorage.getItem('pawpal_current_order') || 'null');
+        if (currentOrder && (String(currentOrder.id) === String(orderId) || String(currentOrder.orderId) === String(orderId))) {
+            currentOrder.paymentStatus = paymentStatus;
+            currentOrder.status = orderStatus;
+            currentOrder.vnpayTransactionNo = transactionNo;
+            if (!currentOrder.payment) currentOrder.payment = {};
+            currentOrder.payment.status = paymentStatus;
+            localStorage.setItem('pawpal_current_order', JSON.stringify(currentOrder));
+        } else if (idx !== -1) {
+            localStorage.setItem('pawpal_current_order', JSON.stringify(localOrders[idx]));
+        }
+    } catch (e) {
+        console.warn('Lỗi cập nhật đơn hàng sau thanh toán VNPAY:', e);
+    }
+}
+

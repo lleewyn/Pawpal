@@ -1,4 +1,4 @@
-﻿
+
 .checkout-steps {
   display: flex;
   justify-content: center;
@@ -504,3 +504,274 @@
 .ui-element-7 {
     vertical-align: text-top;
 }
+
+/* =========================================================
+   QUẢN LÝ ĐỊA CHỈ NHẬN HÀNG (ADDRESS BOOK & MODALS)
+   ========================================================= */
+.btn-address-link {
+    background: transparent;
+    border: none;
+    color: #236B48;
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-address-link:hover {
+    background: #EEF5F1;
+    color: #165335;
+}
+
+.selected-address-card {
+    background: #F4FAF6;
+    border: 1px solid #C3DEC7;
+    border-radius: 9px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+}
+
+.receiver-name {
+    font-size: 15px;
+    color: #203A2C;
+}
+
+.receiver-phone {
+    font-size: 13.5px;
+}
+
+.badge-default-addr {
+    display: inline-block;
+    background: #DCEEE2;
+    color: #165335;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    line-height: 1.2;
+}
+
+.receiver-address-text {
+    font-size: 14px;
+    color: #203A2C;
+    margin-top: 4px;
+    line-height: 1.5;
+}
+
+/* Modal Popup Sổ địa chỉ (Chuẩn AGENTS.md: 560px, padding thoáng, không kẻ ngang vụn vặt) */
+.address-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1060;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    transition: opacity 0.2s ease;
+}
+
+.address-modal-card {
+    background: #FFFFFF;
+    border-radius: 9px;
+    border: 1px solid #ECF2EE;
+    width: 560px;
+    max-width: 94vw;
+    max-height: 88vh;
+    padding: 26px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+}
+
+.address-modal-header {
+    border-bottom: none !important;
+}
+
+.address-modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #236B48;
+}
+
+.btn-close-address-modal {
+    background: transparent;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    line-height: 1;
+    color: #4F7A65;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.btn-close-address-modal:hover {
+    background: #EEF5F1;
+    color: #236B48;
+}
+
+.address-modal-body {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    max-height: 55vh;
+    padding-right: 4px;
+}
+
+.address-modal-footer {
+    border-top: none !important;
+}
+
+.address-card-item {
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #FFFFFF;
+}
+
+.address-card-item.is-default {
+    border-color: #C3DEC7;
+    background: #F4FAF6;
+}
+
+.address-card-item.selected {
+    border-color: #236B48;
+}
+
+.address-card-item:hover {
+    border-color: #236B48;
+}
+
+.address-card-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.address-card-radio {
+    margin-top: 4px;
+    cursor: pointer;
+    accent-color: #236B48;
+    width: 16px;
+    height: 16px;
+}
+
+.address-card-content {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.address-card-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    padding-top: 8px;
+    border-top: 1px dashed #E5ECE7;
+}
+
+.btn-address-action {
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #4F7A65;
+    transition: color 0.15s ease;
+    text-decoration: none;
+    line-height: 1.2;
+}
+
+.btn-address-action:hover {
+    text-decoration: underline;
+}
+
+.btn-address-action.action-edit {
+    color: #236B48;
+    font-weight: 600;
+}
+
+.btn-address-action.action-default {
+    color: #236B48;
+}
+
+.btn-address-action.action-delete {
+    color: #DC2626;
+}
+
+.btn-address-action.action-delete:hover {
+    color: #B91C1C;
+}
+
+.btn-text-add-address {
+    background: transparent;
+    border: none;
+    color: #236B48;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s ease;
+}
+
+.btn-text-add-address:hover {
+    color: #165335;
+    text-decoration: underline;
+}
+
+.btn-modal-cancel {
+    background: transparent;
+    border: 1px solid #AEC8B9;
+    color: #4F7A65;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-modal-cancel:hover {
+    background: #EEF5F1;
+    color: #236B48;
+}
+
+.btn-modal-confirm {
+    background: #236B48;
+    border: none;
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 20px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.btn-modal-confirm:hover {
+    background: #1A5438;
+}
+

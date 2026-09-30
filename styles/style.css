@@ -526,6 +526,31 @@ h1, h2, h3, h4, h5, h6 {
     background: var(--color-primary-light);
 }
 
+.btn-complaint {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: var(--border-radius-pill);
+    font-family: var(--font-body);
+    font-size: var(--fs-small, 13px);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    text-align: center;
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: #be123c;
+    white-space: nowrap;
+}
+
+.btn-complaint:hover {
+    background: #ffe4e6;
+    color: #9f1239;
+    border-color: #fda4af;
+}
+
 .zalo-float-btn:hover {
     background-color: #0050CC;
     

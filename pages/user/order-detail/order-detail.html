@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="../dashboard/dashboard.css">
     <link rel="stylesheet" href="/components/user-sidebar/user-sidebar.css">
     <link rel="stylesheet" href="order-detail.css">
+    <link rel="stylesheet" href="../../shop/checkout/payment-qr.css">
 
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -77,6 +78,28 @@
                 </div>
                 <span class="status-badge" id="order-status-badge">...</span>
             </header>
+            
+            <!-- Banner Chờ thanh toán có hạn giờ -->
+            <div id="pending-payment-banner" class="pending-payment-banner d-none mb-3">
+                <div class="pending-banner-content d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="pending-banner-icon fs-3">⏰</div>
+                        <div>
+                            <div class="pending-banner-title fw-bold" style="color: #92400E; font-size: 15px;">
+                                Đơn hàng đang chờ thanh toán trực tuyến
+                            </div>
+                            <div class="pending-banner-desc text-muted small mt-1">
+                                Vui lòng hoàn tất giao dịch trước: <strong id="pending-expiry-time" class="text-dark">--:--</strong>
+                                (Thời gian còn lại: <strong id="pending-countdown-timer" class="text-danger fw-bold">--:--</strong>).
+                                Đơn hàng sẽ tự động hủy nếu quá thời hạn này.
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-cta" id="btn-banner-pay-now" onclick="payNow()">
+                        Thanh toán ngay
+                    </button>
+                </div>
+            </div>
 
             
             <div class="detail-grid">
@@ -274,6 +297,34 @@
                 </form>
             </div>
         </aside>
+    </div>
+
+    <!-- Modal Thanh toán QR trong trang Chi tiết đơn hàng -->
+    <div class="payment-qr-backdrop" id="order-qr-backdrop"></div>
+    <div class="payment-qr-modal" id="order-payment-qr-modal">
+        <button type="button" class="btn-close-qr" id="btn-close-order-qr" onclick="closeOrderQRModal()">&times;</button>
+        <div class="qr-modal-header">
+            <img id="order-qr-logo" class="qr-logo" src="" alt="Payment logo">
+            <div class="qr-header-info">
+                <h3 id="order-qr-method-name">Thanh toán trực tuyến</h3>
+                <p id="order-qr-method-desc">Đơn hàng #...</p>
+            </div>
+        </div>
+        <div class="qr-modal-body">
+            <div class="qr-code-wrapper">
+                <img id="order-qr-code-image" src="" alt="QR Code">
+            </div>
+            <p class="qr-instruction" id="order-qr-instruction">Quét mã QR bằng ứng dụng ngân hàng hoặc ví điện tử</p>
+            <div class="qr-timer-section">
+                <div class="qr-timer-label">Hết hạn trong</div>
+                <div class="qr-timer" id="order-qr-timer">15:00</div>
+            </div>
+            <div class="payment-status-message" id="order-payment-status-msg"></div>
+        </div>
+        <div class="qr-modal-footer">
+            <button type="button" class="btn-cancel" onclick="closeOrderQRModal()">Đóng</button>
+            <button type="button" class="btn-confirm" id="btn-confirm-order-paid" onclick="confirmOrderPayment()">Đã thanh toán</button>
+        </div>
     </div>
 
     <div id="site-fab"></div>

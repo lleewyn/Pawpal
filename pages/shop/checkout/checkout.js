@@ -3,6 +3,8 @@ const checkoutState = {
     cart: [],
     products: [],
     user: null,
+    selectedAddress: null,
+    editingAddressId: null,
     deliveryOptions: [],
     paymentMethods: [],
     selectedDelivery: 'standard',
@@ -53,13 +55,27 @@ function normalizeCheckoutAddress(address, fallbackUser = {}) {
 
     if (typeof address === 'string') {
         const parts = address.split(',').map((part) => part.trim()).filter(Boolean);
-        const city = parts.length > 0 ? parts[parts.length - 1] : '';
-        const district = parts.length > 1 ? parts[parts.length - 2] : '';
-        const street = parts.slice(0, Math.max(parts.length - 2, 1)).join(', ') || parts[0] || '';
+        let city = '';
+        let district = '';
+        let street = '';
+
+        if (parts.length >= 3) {
+            city = parts[parts.length - 1];
+            district = parts[parts.length - 2];
+            street = parts.slice(0, parts.length - 2).join(', ');
+        } else if (parts.length === 2) {
+            street = parts[0];
+            city = parts[1];
+            district = '';
+        } else {
+            street = parts[0] || address;
+            city = 'TP. Hồ Chí Minh';
+            district = '';
+        }
 
         return {
             id: `addr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-            label: 'Dia chi da luu',
+            label: 'Địa chỉ đã lưu',
             name: fallbackUser.name || '',
             phone: fallbackUser.phone || '',
             street,
@@ -203,7 +219,13 @@ async function loadProducts() {
             checkoutState.cart = checkoutState.cart.map(item => {
                 const product = checkoutState.products.find(p => String(p.id) === String(item.id));
                 if (product) {
-                    return { ...product, quantity: item.qty || item.quantity || 1, qty: item.qty || item.quantity || 1 };
+                    return { 
+                        ...product, 
+                        ...item, 
+                        price: Number(item.price) || Number(product.price) || 0,
+                        quantity: item.qty || item.quantity || 1, 
+                        qty: item.qty || item.quantity || 1 
+                    };
                 }
                 return { ...item, quantity: item.qty || item.quantity || 1, qty: item.qty || item.quantity || 1 };
             });
@@ -218,6 +240,10 @@ async function loadProducts() {
 }
 
 function validateCheckoutCart() {
+    if (!checkoutState.cart || checkoutState.cart.length === 0) {
+        return { valid: false, message: 'Giỏ hàng của bạn đang trống. Vui lòng chọn sản phẩm trước khi thanh toán.' };
+    }
+
     if (!checkoutState.products || checkoutState.products.length === 0) {
         return { valid: true };
     }
@@ -421,67 +447,407 @@ function loadPersistedVoucher() {
 }
 
 // ============================================================================
-// Shipping Form
+// Shipping Form & Address Management
 // ============================================================================
 function initializeShippingForm() {
     if (checkoutState.user) {
         checkoutState.user.addresses = getCheckoutUserAddresses(checkoutState.user);
 
-        document.getElementById('save-address-section').classList.remove('d-none');
-        
-        document.getElementById('fullName').value = checkoutState.user.name || '';
-        document.getElementById('phone').value = checkoutState.user.phone || '';
-        const primaryAddress = checkoutState.user.addresses[0];
-        if (primaryAddress) {
-            fillAddressForm(primaryAddress);
-        } else {
-            document.getElementById('address').value = checkoutState.user.address || '';
-        }
-        
+        const saveSection = document.getElementById('save-address-section');
+        if (saveSection) saveSection.classList.remove('d-none');
+
         if (checkoutState.user.addresses && checkoutState.user.addresses.length > 0) {
-            populateSavedAddresses();
+            const defaultAddr = checkoutState.user.addresses.find(a => a.isDefault) || checkoutState.user.addresses[0];
+            selectCheckoutAddress(defaultAddr);
+        } else {
+            // Trường hợp user chưa có địa chỉ lưu sẵn
+            const manualWrapper = document.getElementById('manual-address-wrapper');
+            const selectedAddressCard = document.getElementById('selected-address-card');
+            const btnOpenBook = document.getElementById('btn-open-address-book');
+            const btnEditSelected = document.getElementById('btn-edit-selected-address');
+
+            if (manualWrapper) manualWrapper.classList.remove('d-none');
+            if (selectedAddressCard) selectedAddressCard.classList.add('d-none');
+            if (btnOpenBook) btnOpenBook.style.display = 'none';
+            if (btnEditSelected) btnEditSelected.style.display = 'none';
+
+            const fullNameInput = document.getElementById('fullName');
+            const phoneInput = document.getElementById('phone');
+            const addressInput = document.getElementById('address');
+            if (fullNameInput) fullNameInput.value = checkoutState.user.name || '';
+            if (phoneInput) phoneInput.value = checkoutState.user.phone || '';
+            if (addressInput) addressInput.value = checkoutState.user.address || '';
         }
+    } else {
+        // Khách vãng lai
+        const manualWrapper = document.getElementById('manual-address-wrapper');
+        const selectedAddressCard = document.getElementById('selected-address-card');
+        const btnOpenBook = document.getElementById('btn-open-address-book');
+        const btnEditSelected = document.getElementById('btn-edit-selected-address');
+
+        if (manualWrapper) manualWrapper.classList.remove('d-none');
+        if (selectedAddressCard) selectedAddressCard.classList.add('d-none');
+        if (btnOpenBook) btnOpenBook.style.display = 'none';
+        if (btnEditSelected) btnEditSelected.style.display = 'none';
     }
 }
 
-function populateSavedAddresses() {
-    const dropdown = document.getElementById('address-dropdown');
-    const section = document.getElementById('saved-addresses-section');
-    dropdown.innerHTML = '<option value="">-- Chọn địa chỉ đã lưu --</option>';
-    
-    checkoutState.user.addresses.forEach(addr => {
-        const option = document.createElement('option');
-        option.value = addr.id;
-        option.textContent = `${addr.label} - ${buildStructuredAddressLabel(addr)}`;
-        dropdown.appendChild(option);
-    });
-    
-    const newOption = document.createElement('option');
-    newOption.value = 'new';
-    newOption.textContent = '+ Thêm địa chỉ mới';
-    dropdown.appendChild(newOption);
-    
-    section.classList.remove('d-none');
-    
-    const defaultAddr = checkoutState.user.addresses.find(a => a.isDefault);
-    if (defaultAddr) {
-        dropdown.value = defaultAddr.id;
-        fillAddressForm(defaultAddr);
+function selectCheckoutAddress(address) {
+    if (!address) return;
+    checkoutState.selectedAddress = address;
+
+    // Cập nhật card hiển thị
+    const selectedAddressCard = document.getElementById('selected-address-card');
+    const manualWrapper = document.getElementById('manual-address-wrapper');
+    const btnOpenBook = document.getElementById('btn-open-address-book');
+    const btnEditSelected = document.getElementById('btn-edit-selected-address');
+
+    const nameEl = document.getElementById('selected-addr-name');
+    const phoneEl = document.getElementById('selected-addr-phone');
+    const fullEl = document.getElementById('selected-addr-full');
+    const noteEl = document.getElementById('selected-addr-note');
+    const defaultBadge = document.getElementById('selected-addr-default-badge');
+
+    if (nameEl) nameEl.textContent = address.name || checkoutState.user?.name || 'Người nhận';
+    if (phoneEl) phoneEl.textContent = address.phone || checkoutState.user?.phone || '';
+    if (fullEl) fullEl.textContent = buildStructuredAddressLabel(address) || address.street || address.address || '';
+
+    if (noteEl) {
+        if (address.note && address.note.trim()) {
+            noteEl.textContent = `Ghi chú: ${address.note}`;
+            noteEl.classList.remove('d-none');
+        } else {
+            noteEl.classList.add('d-none');
+        }
     }
+
+    if (defaultBadge) {
+        if (address.isDefault) {
+            defaultBadge.classList.remove('d-none');
+        } else {
+            defaultBadge.classList.add('d-none');
+        }
+    }
+
+    if (selectedAddressCard) selectedAddressCard.classList.remove('d-none');
+    if (manualWrapper) manualWrapper.classList.add('d-none');
+    if (btnOpenBook) btnOpenBook.style.display = 'inline-block';
+    if (btnEditSelected) btnEditSelected.style.display = 'inline-block';
+
+    // Đồng bộ vào form ẩn để form validation và đơn hàng lấy chính xác
+    fillAddressForm(address);
 }
 
 function fillAddressForm(address) {
-    document.getElementById('fullName').value = address.name;
-    document.getElementById('phone').value = address.phone;
-    document.getElementById('address').value = address.street;
+    if (!address) return;
+    const fullNameInput = document.getElementById('fullName');
+    const phoneInput = document.getElementById('phone');
+    const addressInput = document.getElementById('address');
     const citySelect = document.getElementById('city');
     const districtSelect = document.getElementById('district');
-    ensureSelectOption(citySelect, address.city);
-    ensureSelectOption(districtSelect, address.district);
-    citySelect.value = address.city || '';
-    districtSelect.value = address.district || '';
-    document.getElementById('note').value = address.note || '';
+    const noteInput = document.getElementById('note');
+
+    const resolvedName = address.name || checkoutState.user?.name || '';
+    const resolvedPhone = address.phone || checkoutState.user?.phone || '';
+    const resolvedStreet = address.street || address.address || '';
+    const resolvedCity = address.city || 'TP. Hồ Chí Minh';
+    const resolvedDistrict = address.district || (districtSelect?.options?.[1]?.value || 'Quận 1');
+
+    if (fullNameInput) fullNameInput.value = resolvedName;
+    if (phoneInput) phoneInput.value = resolvedPhone;
+    if (addressInput) addressInput.value = resolvedStreet;
+
+    if (citySelect) {
+        ensureSelectOption(citySelect, resolvedCity);
+        citySelect.value = resolvedCity;
+    }
+    if (districtSelect) {
+        ensureSelectOption(districtSelect, resolvedDistrict);
+        districtSelect.value = resolvedDistrict;
+    }
+    if (noteInput) noteInput.value = address.note || '';
 }
+
+function openAddressBookModal() {
+    if (!checkoutState.user) return;
+    checkoutState.user.addresses = getCheckoutUserAddresses(checkoutState.user);
+
+    const listContainer = document.getElementById('addressBookListContainer');
+    if (!listContainer) return;
+
+    if (!checkoutState.user.addresses || checkoutState.user.addresses.length === 0) {
+        listContainer.innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <p>Bạn chưa lưu địa chỉ giao hàng nào.</p>
+                <button type="button" class="btn-address-action text-brand" onclick="openAddressEditModal(null)">+ Thêm địa chỉ đầu tiên</button>
+            </div>
+        `;
+    } else {
+        listContainer.innerHTML = checkoutState.user.addresses.map((addr) => {
+            const isSelected = checkoutState.selectedAddress && String(checkoutState.selectedAddress.id) === String(addr.id);
+            const isDefault = Boolean(addr.isDefault);
+            const addrFull = buildStructuredAddressLabel(addr) || addr.street || addr.address || '';
+
+            return `
+                <div class="address-card-item ${isDefault ? 'is-default' : ''} ${isSelected ? 'selected' : ''}" data-id="${addr.id}">
+                    <div class="address-card-main">
+                        <input type="radio" name="addressChoiceRadio" value="${addr.id}" id="addr-choice-${addr.id}" ${isSelected ? 'checked' : ''} class="address-card-radio">
+                        <label for="addr-choice-${addr.id}" class="address-card-content cursor-pointer">
+                            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                <strong style="color: #203A2C;">${addr.name || 'Người nhận'}</strong>
+                                <span class="text-muted small">${addr.phone || ''}</span>
+                                ${isDefault ? '<span class="badge-default-addr">Mặc định</span>' : ''}
+                            </div>
+                            <div class="address-card-text text-muted small">
+                                ${addrFull}
+                            </div>
+                            ${addr.note ? `<div class="text-muted small fst-italic mt-1">Ghi chú: ${addr.note}</div>` : ''}
+                        </label>
+                    </div>
+                    <div class="address-card-actions">
+                        <button type="button" class="btn-address-action action-edit" onclick="openAddressEditModal('${addr.id}')">Sửa</button>
+                        ${!isDefault ? `<button type="button" class="btn-address-action action-default" onclick="setDefaultAddressDirectly('${addr.id}')">Thiết lập mặc định</button>` : ''}
+                        ${!isDefault && checkoutState.user.addresses.length > 1 ? `<button type="button" class="btn-address-action action-delete" onclick="deleteAddressDirectly('${addr.id}')">Xóa</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    const overlay = document.getElementById('addressBookModalOverlay');
+    if (overlay) overlay.classList.remove('d-none');
+}
+
+function closeAddressBookModal() {
+    const overlay = document.getElementById('addressBookModalOverlay');
+    if (overlay) overlay.classList.add('d-none');
+}
+
+function confirmAddressChoice() {
+    const selectedRadio = document.querySelector('input[name="addressChoiceRadio"]:checked');
+    if (selectedRadio && checkoutState.user?.addresses) {
+        const found = checkoutState.user.addresses.find(a => String(a.id) === String(selectedRadio.value));
+        if (found) {
+            selectCheckoutAddress(found);
+            showToast('Đã chọn địa chỉ giao hàng', 'info');
+        }
+    }
+    closeAddressBookModal();
+}
+
+function setDefaultAddressDirectly(addrId) {
+    if (!checkoutState.user || !checkoutState.user.addresses) return;
+
+    checkoutState.user.addresses.forEach(a => {
+        a.isDefault = (String(a.id) === String(addrId));
+    });
+
+    const defaultAddr = checkoutState.user.addresses.find(a => a.isDefault);
+    if (defaultAddr) {
+        checkoutState.user.address = buildStructuredAddressLabel(defaultAddr);
+    }
+
+    localStorage.setItem('pawpal_current_user', JSON.stringify(checkoutState.user));
+
+    if (checkoutState.selectedAddress && String(checkoutState.selectedAddress.id) === String(addrId)) {
+        checkoutState.selectedAddress.isDefault = true;
+        selectCheckoutAddress(defaultAddr);
+    } else {
+        // Cập nhật lại UI thẻ hiện tại nếu nó vừa bị bỏ mặc định
+        if (checkoutState.selectedAddress) {
+            const updatedCur = checkoutState.user.addresses.find(a => String(a.id) === String(checkoutState.selectedAddress.id));
+            if (updatedCur) selectCheckoutAddress(updatedCur);
+        }
+    }
+
+    openAddressBookModal();
+    showToast('Đã cập nhật địa chỉ mặc định', 'success');
+}
+
+function deleteAddressDirectly(addrId) {
+    if (!checkoutState.user || !checkoutState.user.addresses) return;
+
+    checkoutState.user.addresses = checkoutState.user.addresses.filter(a => String(a.id) !== String(addrId));
+    localStorage.setItem('pawpal_current_user', JSON.stringify(checkoutState.user));
+
+    if (checkoutState.selectedAddress && String(checkoutState.selectedAddress.id) === String(addrId)) {
+        const fallback = checkoutState.user.addresses.find(a => a.isDefault) || checkoutState.user.addresses[0];
+        if (fallback) selectCheckoutAddress(fallback);
+    }
+
+    openAddressBookModal();
+    showToast('Đã xóa địa chỉ thành công', 'info');
+}
+
+function openAddressEditModal(addrId = null) {
+    checkoutState.editingAddressId = addrId;
+
+    const modalTitle = document.getElementById('addressEditModalTitle');
+    const form = document.getElementById('modal-address-form');
+    if (form) form.reset();
+
+    const fullNameInput = document.getElementById('modalFullName');
+    const phoneInput = document.getElementById('modalPhone');
+    const addressInput = document.getElementById('modalAddress');
+    const citySelect = document.getElementById('modalCity');
+    const districtSelect = document.getElementById('modalDistrict');
+    const noteInput = document.getElementById('modalNote');
+    const setDefaultCheckbox = document.getElementById('modalSetDefault');
+
+    if (addrId && checkoutState.user?.addresses) {
+        const addr = checkoutState.user.addresses.find(a => String(a.id) === String(addrId));
+        if (modalTitle) modalTitle.textContent = 'Chỉnh sửa thông tin địa chỉ';
+        if (addr) {
+            if (fullNameInput) fullNameInput.value = addr.name || '';
+            if (phoneInput) phoneInput.value = addr.phone || '';
+            if (addressInput) addressInput.value = addr.street || addr.address || '';
+            if (citySelect) {
+                ensureSelectOption(citySelect, addr.city);
+                citySelect.value = addr.city || '';
+            }
+            if (districtSelect) {
+                ensureSelectOption(districtSelect, addr.district);
+                districtSelect.value = addr.district || '';
+            }
+            if (noteInput) noteInput.value = addr.note || '';
+            if (setDefaultCheckbox) setDefaultCheckbox.checked = Boolean(addr.isDefault);
+        }
+    } else {
+        if (modalTitle) modalTitle.textContent = 'Thêm địa chỉ nhận hàng mới';
+        if (fullNameInput) fullNameInput.value = checkoutState.user?.name || '';
+        if (phoneInput) phoneInput.value = checkoutState.user?.phone || '';
+        if (setDefaultCheckbox) {
+            const hasExisting = checkoutState.user?.addresses && checkoutState.user.addresses.length > 0;
+            setDefaultCheckbox.checked = !hasExisting;
+        }
+    }
+
+    const overlay = document.getElementById('addressEditModalOverlay');
+    if (overlay) overlay.classList.remove('d-none');
+}
+
+function closeAddressEditModal() {
+    const overlay = document.getElementById('addressEditModalOverlay');
+    if (overlay) overlay.classList.add('d-none');
+}
+
+function saveAddressFromModal() {
+    const fullNameInput = document.getElementById('modalFullName');
+    const phoneInput = document.getElementById('modalPhone');
+    const addressInput = document.getElementById('modalAddress');
+    const citySelect = document.getElementById('modalCity');
+    const districtSelect = document.getElementById('modalDistrict');
+    const noteInput = document.getElementById('modalNote');
+    const setDefaultCheckbox = document.getElementById('modalSetDefault');
+
+    const name = fullNameInput?.value.trim() || '';
+    const phone = phoneInput?.value.trim() || '';
+    const street = addressInput?.value.trim() || '';
+    const city = citySelect?.value || '';
+    const district = districtSelect?.value || '';
+    const note = noteInput?.value.trim() || '';
+    const isDefault = Boolean(setDefaultCheckbox?.checked);
+
+    if (!name) {
+        showToast('Vui lòng nhập họ và tên người nhận', 'error');
+        fullNameInput?.focus();
+        return;
+    }
+    if (!phone || !/^0[0-9]{9}$/.test(phone)) {
+        showToast('Số điện thoại không hợp lệ (cần 10 chữ số bắt đầu bằng số 0)', 'error');
+        phoneInput?.focus();
+        return;
+    }
+    if (!street) {
+        showToast('Vui lòng nhập địa chỉ chi tiết', 'error');
+        addressInput?.focus();
+        return;
+    }
+    if (!city) {
+        showToast('Vui lòng chọn Tỉnh/Thành phố', 'error');
+        citySelect?.focus();
+        return;
+    }
+    if (!district) {
+        showToast('Vui lòng chọn Quận/Huyện', 'error');
+        districtSelect?.focus();
+        return;
+    }
+
+    if (!checkoutState.user) {
+        checkoutState.user = {
+            id: 'user-' + Date.now(),
+            name,
+            phone,
+            addresses: []
+        };
+    }
+    if (!Array.isArray(checkoutState.user.addresses)) {
+        checkoutState.user.addresses = [];
+    }
+
+    let savedAddress = null;
+
+    if (checkoutState.editingAddressId) {
+        const idx = checkoutState.user.addresses.findIndex(a => String(a.id) === String(checkoutState.editingAddressId));
+        if (idx !== -1) {
+            checkoutState.user.addresses[idx] = {
+                ...checkoutState.user.addresses[idx],
+                name,
+                phone,
+                street,
+                city,
+                district,
+                note,
+                isDefault: isDefault || checkoutState.user.addresses[idx].isDefault
+            };
+            savedAddress = checkoutState.user.addresses[idx];
+        }
+    } else {
+        savedAddress = {
+            id: `addr-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            label: `Địa chỉ ${checkoutState.user.addresses.length + 1}`,
+            name,
+            phone,
+            street,
+            city,
+            district,
+            note,
+            isDefault: isDefault || checkoutState.user.addresses.length === 0
+        };
+        checkoutState.user.addresses.push(savedAddress);
+    }
+
+    if (isDefault && savedAddress) {
+        checkoutState.user.addresses.forEach(a => {
+            a.isDefault = (String(a.id) === String(savedAddress.id));
+        });
+        savedAddress.isDefault = true;
+        checkoutState.user.address = buildStructuredAddressLabel(savedAddress);
+    }
+
+    // Lưu vào localStorage
+    localStorage.setItem('pawpal_current_user', JSON.stringify(checkoutState.user));
+
+    // Đồng bộ ngay lập tức vào card giao diện thanh toán
+    if (savedAddress) {
+        selectCheckoutAddress(savedAddress);
+    }
+
+    closeAddressEditModal();
+    closeAddressBookModal();
+    showToast(isDefault ? 'Đã lưu và đặt làm địa chỉ mặc định thành công!' : 'Đã lưu địa chỉ thành công!', 'success');
+}
+
+// Gắn window để gọi từ inline onclick nếu có
+window.openAddressBookModal = openAddressBookModal;
+window.closeAddressBookModal = closeAddressBookModal;
+window.confirmAddressChoice = confirmAddressChoice;
+window.setDefaultAddressDirectly = setDefaultAddressDirectly;
+window.deleteAddressDirectly = deleteAddressDirectly;
+window.openAddressEditModal = openAddressEditModal;
+window.closeAddressEditModal = closeAddressEditModal;
+window.saveAddressFromModal = saveAddressFromModal;
 
 // ============================================================================
 // Delivery Options
@@ -740,6 +1106,7 @@ function renderOrderSummary() {
             <img src="${item.image}" alt="${item.name}" class="order-item-img">
             <div class="order-item-info">
                 <h4>${item.name}</h4>
+                ${item.selectedVariant ? `<div class="order-item-variant" style="font-size: 0.8rem; color: #4F7A65; margin: 2px 0 4px 0;">Phân loại: <strong style="color: #236B48;">${item.selectedVariant}</strong></div>` : ''}
                 ${isBuyNow ? `
                     <div class="buy-now-qty-control" data-index="${index}">
                         <button type="button" class="buy-now-qty-btn" data-action="decrease" aria-label="Giảm số lượng">-</button>
@@ -877,19 +1244,51 @@ function removeVoucher() {
 // Form Validation
 // ============================================================================
 function validateCheckoutForm() {
+    // Trường hợp 1: Đang chọn địa chỉ có sẵn từ Sổ địa chỉ (Card hiển thị)
+    if (checkoutState.selectedAddress) {
+        const addr = checkoutState.selectedAddress;
+        const name = (addr.name || checkoutState.user?.name || '').trim();
+        const phone = (addr.phone || checkoutState.user?.phone || '').trim();
+        const street = (addr.street || addr.address || '').trim();
+
+        if (!name || !phone || !street) {
+            showToast('Thông tin địa chỉ giao hàng chưa đầy đủ. Vui lòng bấm Sửa để bổ sung.', 'error');
+            return false;
+        }
+
+        const phoneRegex = /^0[0-9]{9}$/;
+        if (!phoneRegex.test(phone)) {
+            showToast('Số điện thoại không hợp lệ (cần đúng 10 chữ số bắt đầu bằng số 0). Vui lòng bấm Sửa để cập nhật.', 'error');
+            return false;
+        }
+
+        // Đảm bảo form ẩn luôn được điền để đồng bộ
+        fillAddressForm(addr);
+
+        const invoiceChecked = document.getElementById('invoice-checkbox')?.checked;
+        if (invoiceChecked) {
+            const companyName = document.getElementById('companyName')?.value.trim();
+            const taxCode = document.getElementById('taxCode')?.value.trim();
+            if (!companyName || !taxCode) {
+                showToast('Vui lòng điền đầy đủ thông tin hóa đơn', 'error');
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Trường hợp 2: Khách vãng lai hoặc nhập form thủ công
     const form = document.getElementById('shipping-form');
-    
-    if (!form.checkValidity()) {
+    if (form && !form.checkValidity()) {
         form.classList.add('was-validated');
         showToast('Vui lòng điền đầy đủ thông tin giao hàng', 'error');
         return false;
     }
     
-    const invoiceChecked = document.getElementById('invoice-checkbox').checked;
+    const invoiceChecked = document.getElementById('invoice-checkbox')?.checked;
     if (invoiceChecked) {
-        const companyName = document.getElementById('companyName').value;
-        const taxCode = document.getElementById('taxCode').value;
-        
+        const companyName = document.getElementById('companyName')?.value.trim();
+        const taxCode = document.getElementById('taxCode')?.value.trim();
         if (!companyName || !taxCode) {
             showToast('Vui lòng điền đầy đủ thông tin hóa đơn', 'error');
             return false;
@@ -918,34 +1317,60 @@ async function handleCheckout() {
         }
     };
 
+    // Kiểm tra điều kiện tiên quyết: Giỏ hàng và Kho hàng
+    const cartValidation = validateCheckoutCart();
+    if (!cartValidation.valid) {
+        showToast(cartValidation.message, 'error');
+        restoreBtn();
+        return;
+    }
+
+    // Kiểm tra điều kiện tiên quyết: Thông tin giao hàng
     if (!validateCheckoutForm()) {
         restoreBtn();
         return;
     }
     
+    const isOnlinePayment = ['momo', 'vnpay', 'zalopay', 'vietqr'].includes(checkoutState.selectedPayment);
+    const selectedAddr = checkoutState.selectedAddress;
+
+    const shippingInfo = selectedAddr ? {
+        name: selectedAddr.name || checkoutState.user?.name || document.getElementById('fullName')?.value || '',
+        phone: selectedAddr.phone || checkoutState.user?.phone || document.getElementById('phone')?.value || '',
+        address: selectedAddr.street || selectedAddr.address || document.getElementById('address')?.value || '',
+        district: selectedAddr.district || document.getElementById('district')?.value || '',
+        city: selectedAddr.city || document.getElementById('city')?.value || 'TP. Hồ Chí Minh',
+        note: selectedAddr.note || document.getElementById('note')?.value || '',
+        deliveryMethod: checkoutState.selectedDelivery,
+        deliveryFee: checkoutState.totals.shippingFee
+    } : {
+        name: document.getElementById('fullName')?.value || '',
+        phone: document.getElementById('phone')?.value || '',
+        address: document.getElementById('address')?.value || '',
+        district: document.getElementById('district')?.value || '',
+        city: document.getElementById('city')?.value || 'TP. Hồ Chí Minh',
+        note: document.getElementById('note')?.value || '',
+        deliveryMethod: checkoutState.selectedDelivery,
+        deliveryFee: checkoutState.totals.shippingFee
+    };
+
     const orderData = {
         orderId: generateOrderId(),
         userId: checkoutState.user?.id || null,
-        userPhone: checkoutState.user?.phone || document.getElementById('phone').value || null,
+        userPhone: shippingInfo.phone || checkoutState.user?.phone || null,
+        status: isOnlinePayment ? 'pending_payment' : 'pending',
+        paymentExpiry: isOnlinePayment ? new Date(Date.now() + 15 * 60 * 1000).toISOString() : null,
         
-        shipping: {
-            name: document.getElementById('fullName').value,
-            phone: document.getElementById('phone').value,
-            address: document.getElementById('address').value,
-            district: document.getElementById('district').value,
-            city: document.getElementById('city').value,
-            note: document.getElementById('note').value,
-            deliveryMethod: checkoutState.selectedDelivery,
-            deliveryFee: checkoutState.totals.shippingFee
-        },
+        shipping: shippingInfo,
         
         items: checkoutState.cart,
+        products: checkoutState.cart.map(item => ({ ...item, total: (Number(item.price) || 0) * (Number(item.quantity) || 1) })),
         
         pricing: checkoutState.totals,
         
         payment: {
             method: checkoutState.selectedPayment,
-            status: 'pending'
+            status: isOnlinePayment ? 'pending_payment' : 'pending'
         }
     };
 
@@ -1033,7 +1458,42 @@ async function handleCheckout() {
             }
         }
         window.location.href = `/pages/shop/payment-success/payment-success.html?orderId=${orderData.orderId}`;
-    } else if (['momo', 'vnpay', 'zalopay', 'vietqr'].includes(checkoutState.selectedPayment)) {
+    } else if (checkoutState.selectedPayment === 'vnpay') {
+        localStorage.removeItem('pawpal_cart_unselected_backup');
+        localStorage.removeItem('pawpal_applied_voucher_code');
+        localStorage.removeItem(PENDING_POINTS_KEY);
+        const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
+        if (isBuyNow) {
+            sessionStorage.removeItem('pawpal_buynow_cart');
+            sessionStorage.removeItem('pawpal_is_buynow');
+        } else {
+            if (window.API && typeof window.API.saveUserCart === 'function') {
+                await window.API.saveUserCart(checkoutState.user?.id || checkoutState.user?.phone || null, []);
+            }
+        }
+
+        // Ưu tiên gọi Backend để lấy URL Cổng VNPAY Sandbox thật
+        try {
+            const vnpRes = await fetch('/api/vnpay/create-payment-url', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    orderId: orderData.orderId,
+                    amount: orderData.pricing.grandTotal,
+                    orderInfo: `Thanh toan don hang ${orderData.orderId} tai PawPal`
+                })
+            });
+            const vnpData = await vnpRes.json();
+            if (vnpData.success && vnpData.paymentUrl && !vnpData.paymentUrl.includes('DEMO_TMN')) {
+                window.location.href = vnpData.paymentUrl;
+                return;
+            }
+        } catch (err) {
+            console.warn('[Checkout] Không thể kết nối API VNPAY thật, chuyển sang giao diện giả lập:', err);
+        }
+
+        window.location.href = `/pages/shop/vnpay-sandbox/vnpay-sandbox.html?orderId=${orderData.orderId}&amount=${orderData.pricing.grandTotal}`;
+    } else if (['momo', 'zalopay', 'vietqr'].includes(checkoutState.selectedPayment)) {
         showQRPaymentModal(orderData);
     } else {
         localStorage.removeItem('pawpal_cart_unselected_backup');
@@ -1090,34 +1550,79 @@ const paymentMethodConfig = {
 };
 
 function generateMockQRCode(orderId, amount) {
+    const size = 220;
     const canvas = document.createElement('canvas');
-    canvas.width = 200;
-    canvas.height = 200;
+    canvas.width = size;
+    canvas.height = size;
     const ctx = canvas.getContext('2d');
     
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, 200, 200);
+    ctx.fillRect(0, 0, size, size);
     
-    ctx.fillStyle = '#000000';
-    
-    const patterns = [
-        [0, 0], [150, 0], [0, 150]
-    ];
-    
-    patterns.forEach(([x, y]) => {
-        ctx.fillRect(x, y, 50, 50);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(x + 10, y + 10, 30, 30);
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(x + 15, y + 15, 20, 20);
-    });
-    
-    ctx.fillStyle = '#000000';
-    for (let i = 0; i < 100; i++) {
-        const x = Math.random() * 100 + 50;
-        const y = Math.random() * 100 + 50;
-        if (Math.random() > 0.5) {
-            ctx.fillRect(x, y, 2, 2);
+    const modulesCount = 25;
+    const margin = 10;
+    const moduleSize = (size - margin * 2) / modulesCount;
+
+    const grid = Array.from({ length: modulesCount }, () => Array(modulesCount).fill(null));
+
+    function addFinder(startR, startC) {
+        for (let r = -1; r <= 7; r++) {
+            for (let c = -1; c <= 7; c++) {
+                const gr = startR + r;
+                const gc = startC + c;
+                if (gr >= 0 && gr < modulesCount && gc >= 0 && gc < modulesCount) grid[gr][gc] = 0;
+            }
+        }
+        for (let r = 0; r < 7; r++) {
+            for (let c = 0; c < 7; c++) {
+                if (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
+                    grid[startR + r][startC + c] = 1;
+                } else {
+                    grid[startR + r][startC + c] = 0;
+                }
+            }
+        }
+    }
+
+    addFinder(0, 0);
+    addFinder(0, modulesCount - 7);
+    addFinder(modulesCount - 7, 0);
+
+    for (let i = 8; i < modulesCount - 8; i++) {
+        if (grid[6][i] === null) grid[6][i] = (i % 2 === 0) ? 1 : 0;
+        if (grid[i][6] === null) grid[i][6] = (i % 2 === 0) ? 1 : 0;
+    }
+
+    let seed = 0;
+    const seedStr = String(orderId || 'QR') + String(amount || '100000');
+    for (let i = 0; i < seedStr.length; i++) {
+        seed = ((seed << 5) - seed + seedStr.charCodeAt(i)) | 0;
+    }
+    function pseudo() {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+    }
+
+    for (let r = 0; r < modulesCount; r++) {
+        for (let c = 0; c < modulesCount; c++) {
+            if (grid[r][c] === null) {
+                const mask = (r + c) % 2 === 0;
+                grid[r][c] = (mask ^ (pseudo() > 0.48)) ? 1 : 0;
+            }
+        }
+    }
+
+    ctx.fillStyle = '#1E293B';
+    for (let r = 0; r < modulesCount; r++) {
+        for (let c = 0; c < modulesCount; c++) {
+            if (grid[r][c] === 1) {
+                ctx.fillRect(
+                    Math.round(margin + c * moduleSize),
+                    Math.round(margin + r * moduleSize),
+                    Math.ceil(moduleSize),
+                    Math.ceil(moduleSize)
+                );
+            }
         }
     }
     
@@ -1192,19 +1697,57 @@ function hideQRPaymentModal() {
     
     if (qrPaymentState.timerInterval) {
         clearInterval(qrPaymentState.timerInterval);
+        qrPaymentState.timerInterval = null;
+    }
+
+    // Nếu người dùng đóng modal khi chưa hoàn tất thanh toán
+    if (!qrPaymentState.paymentVerified && qrPaymentState.orderData) {
+        localStorage.removeItem('pawpal_cart_unselected_backup');
+        localStorage.removeItem('pawpal_applied_voucher_code');
+        localStorage.removeItem(PENDING_POINTS_KEY);
+        const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
+        if (isBuyNow) {
+            sessionStorage.removeItem('pawpal_buynow_cart');
+            sessionStorage.removeItem('pawpal_is_buynow');
+        } else {
+            if (window.API && typeof window.API.saveUserCart === 'function') {
+                window.API.saveUserCart(checkoutState.user?.id || checkoutState.user?.phone || null, []);
+            }
+        }
+
+        showToast(`Đơn hàng #${qrPaymentState.orderData.orderId} đang ở trạng thái "Chờ thanh toán" (thời hạn 15 phút). Bạn có thể tiếp tục thanh toán trong mục Đơn hàng của tôi.`, 'info');
+        setTimeout(() => {
+            window.location.href = `/pages/user/orders/orders.html?status=pending_payment`;
+        }, 1500);
     }
 }
 
 function handleQRExpired() {
     const statusMsg = document.getElementById('payment-status-message');
     statusMsg.className = 'payment-status-message show error';
-    statusMsg.textContent = 'Hết thời hạn thanh toán. Vui lòng thử lại.';
+    statusMsg.textContent = 'Đã hết thời hạn thanh toán (15 phút). Đơn hàng đã tự động hủy.';
     
     document.getElementById('btn-confirm-payment').disabled = true;
+
+    if (qrPaymentState.orderData) {
+        updatePersistedOrderPaymentStatus(
+            qrPaymentState.orderData.orderId,
+            'expired',
+            'cancelled',
+            {
+                status: 'cancelled',
+                title: 'Tự động hủy đơn hàng',
+                description: 'Đơn hàng tự động hủy do quá thời hạn thanh toán trực tuyến 15 phút',
+                timestamp: new Date().toISOString()
+            }
+        );
+    }
     
     setTimeout(() => {
-        hideQRPaymentModal();
-    }, 3000);
+        document.getElementById('qr-backdrop').classList.remove('show');
+        document.getElementById('payment-qr-modal').classList.remove('show');
+        window.location.href = `/pages/user/orders/orders.html?status=cancelled`;
+    }, 2500);
 }
 
 function verifyPaymentSimulation() {
@@ -1220,16 +1763,24 @@ function verifyPaymentSimulation() {
             if (willSucceed) {
                 qrPaymentState.paymentVerified = true;
                 qrPaymentState.orderData.payment.status = 'paid';
+                qrPaymentState.orderData.status = 'preparing';
                 finalizePendingPointsUsage();
                 localStorage.setItem('pawpal_current_order', JSON.stringify(qrPaymentState.orderData));
-                updatePersistedOrderPaymentStatus(qrPaymentState.orderData.orderId, 'paid');
+
+                const timelineSuccess = {
+                    status: 'paid',
+                    title: 'Thanh toán thành công',
+                    description: `Khách hàng đã thanh toán thành công qua ${paymentMethodConfig[qrPaymentState.orderData.payment.method]?.name || 'cổng điện tử'}`,
+                    timestamp: new Date().toISOString()
+                };
+                updatePersistedOrderPaymentStatus(qrPaymentState.orderData.orderId, 'paid', 'preparing', timelineSuccess);
                 
                 if (window.API && window.API.updateOrderPaymentStatus) {
                     window.API.updateOrderPaymentStatus(qrPaymentState.orderData.orderId, 'PAID').catch(err => console.error('Failed to update DB payment status', err));
                 }
                 
                 statusMsg.className = 'payment-status-message show success';
-                statusMsg.innerHTML = ' Thanh toán thành công!';
+                statusMsg.innerHTML = 'Thanh toán thành công!';
                 
                 localStorage.removeItem('pawpal_cart_unselected_backup');
                 const isBuyNow = sessionStorage.getItem('pawpal_is_buynow') === 'true';
@@ -1280,22 +1831,53 @@ function finalizePendingPointsUsage() {
     }
 }
 function setupEventListeners() {
-    const addressDropdown = document.getElementById('address-dropdown');
-    if (addressDropdown) {
-        addressDropdown.addEventListener('change', (e) => {
-            if (e.target.value === 'new') {
-                document.getElementById('shipping-form').reset();
-                if (checkoutState.user) {
-                    document.getElementById('fullName').value = checkoutState.user.name || '';
-                    document.getElementById('phone').value = checkoutState.user.phone || '';
-                }
-            } else if (e.target.value) {
-                const address = checkoutState.user.addresses.find(a => a.id === e.target.value);
-                if (address) fillAddressForm(address);
-            }
+    // Address Book & Edit Modal triggers
+    const btnOpenAddressBook = document.getElementById('btn-open-address-book');
+    if (btnOpenAddressBook) btnOpenAddressBook.addEventListener('click', openAddressBookModal);
+
+    const btnEditSelectedAddress = document.getElementById('btn-edit-selected-address');
+    if (btnEditSelectedAddress) {
+        btnEditSelectedAddress.addEventListener('click', () => {
+            openAddressEditModal(checkoutState.selectedAddress?.id || null);
         });
     }
-    
+
+    const btnCloseAddressBookX = document.getElementById('btn-close-address-book-x');
+    if (btnCloseAddressBookX) btnCloseAddressBookX.addEventListener('click', closeAddressBookModal);
+
+    const btnCloseAddressBook = document.getElementById('btn-close-address-book');
+    if (btnCloseAddressBook) btnCloseAddressBook.addEventListener('click', closeAddressBookModal);
+
+    const btnConfirmAddressChoice = document.getElementById('btn-confirm-address-choice');
+    if (btnConfirmAddressChoice) btnConfirmAddressChoice.addEventListener('click', confirmAddressChoice);
+
+    const btnModalAddAddress = document.getElementById('btn-modal-add-address');
+    if (btnModalAddAddress) btnModalAddAddress.addEventListener('click', () => openAddressEditModal(null));
+
+    const btnCloseAddressEditX = document.getElementById('btn-close-address-edit-x');
+    if (btnCloseAddressEditX) btnCloseAddressEditX.addEventListener('click', closeAddressEditModal);
+
+    const btnCancelModalAddress = document.getElementById('btn-cancel-modal-address');
+    if (btnCancelModalAddress) btnCancelModalAddress.addEventListener('click', closeAddressEditModal);
+
+    const btnSaveModalAddress = document.getElementById('btn-save-modal-address');
+    if (btnSaveModalAddress) btnSaveModalAddress.addEventListener('click', saveAddressFromModal);
+
+    // Click backdrop overlay to close modals
+    const addressBookModalOverlay = document.getElementById('addressBookModalOverlay');
+    if (addressBookModalOverlay) {
+        addressBookModalOverlay.addEventListener('click', (e) => {
+            if (e.target === addressBookModalOverlay) closeAddressBookModal();
+        });
+    }
+
+    const addressEditModalOverlay = document.getElementById('addressEditModalOverlay');
+    if (addressEditModalOverlay) {
+        addressEditModalOverlay.addEventListener('click', (e) => {
+            if (e.target === addressEditModalOverlay) closeAddressEditModal();
+        });
+    }
+
     const voucherInput = document.getElementById('voucher-input');
     const voucherDropdown = document.getElementById('checkoutVoucherDropdown');
 
@@ -1324,31 +1906,45 @@ function setupEventListeners() {
         });
     }
     
-    document.getElementById('invoice-checkbox').addEventListener('change', (e) => {
-        const form = document.getElementById('invoice-form');
-        if (e.target.checked) {
-            form.classList.remove('d-none');
-            form.querySelectorAll('input').forEach(input => {
-                input.setAttribute('required', 'required');
-            });
-        } else {
-            form.classList.add('d-none');
-            form.querySelectorAll('input').forEach(input => {
-                input.removeAttribute('required');
-            });
-        }
-    });
+    const invoiceCheckbox = document.getElementById('invoice-checkbox');
+    if (invoiceCheckbox) {
+        invoiceCheckbox.addEventListener('change', (e) => {
+            const form = document.getElementById('invoice-form');
+            if (form) {
+                if (e.target.checked) {
+                    form.classList.remove('d-none');
+                    form.querySelectorAll('input').forEach(input => {
+                        input.setAttribute('required', 'required');
+                    });
+                } else {
+                    form.classList.add('d-none');
+                    form.querySelectorAll('input').forEach(input => {
+                        input.removeAttribute('required');
+                    });
+                }
+            }
+        });
+    }
     
-    document.getElementById('btn-checkout').addEventListener('click', handleCheckout);
+    const btnCheckout = document.getElementById('btn-checkout');
+    if (btnCheckout) btnCheckout.addEventListener('click', handleCheckout);
     
-    document.getElementById('btn-close-qr').addEventListener('click', hideQRPaymentModal);
-    document.getElementById('btn-cancel-qr').addEventListener('click', hideQRPaymentModal);
-    document.getElementById('qr-backdrop').addEventListener('click', hideQRPaymentModal);
+    const btnCloseQr = document.getElementById('btn-close-qr');
+    if (btnCloseQr) btnCloseQr.addEventListener('click', hideQRPaymentModal);
+
+    const btnCancelQr = document.getElementById('btn-cancel-qr');
+    if (btnCancelQr) btnCancelQr.addEventListener('click', hideQRPaymentModal);
+
+    const qrBackdrop = document.getElementById('qr-backdrop');
+    if (qrBackdrop) qrBackdrop.addEventListener('click', hideQRPaymentModal);
     
-    document.getElementById('btn-confirm-payment').addEventListener('click', async () => {
-        document.getElementById('btn-confirm-payment').disabled = true;
-        await verifyPaymentSimulation();
-    });
+    const btnConfirmPayment = document.getElementById('btn-confirm-payment');
+    if (btnConfirmPayment) {
+        btnConfirmPayment.addEventListener('click', async () => {
+            btnConfirmPayment.disabled = true;
+            await verifyPaymentSimulation();
+        });
+    }
 }
 
 // ============================================================================
@@ -1408,9 +2004,17 @@ function saveOrderToUserHistory(orderData) {
             if (orderData.payment?.status === 'paid') return 'paid';
             return orderData.payment?.status || 'pending';
         })(),
-        timeline: orderData.timeline || [],
+        paymentExpiry: orderData.paymentExpiry || null,
+        timeline: (orderData.timeline && orderData.timeline.length > 0) ? orderData.timeline : [
+            {
+                status: orderData.status || 'pending',
+                title: orderData.status === 'pending_payment' ? 'Chờ thanh toán trực tuyến' : 'Đặt hàng thành công',
+                description: orderData.status === 'pending_payment' ? 'Đang chờ khách hàng hoàn tất thanh toán trực tuyến (thời hạn 15 phút)' : 'Đơn hàng đã được tạo thành công trên hệ thống',
+                timestamp: new Date().toISOString()
+            }
+        ],
         createdAt: new Date().toISOString(),
-        status: 'pending'
+        status: orderData.status || 'pending'
     };
     orders.unshift(normalized);
     
@@ -1447,7 +2051,7 @@ function createGuestTempUserForOrder(orderData) {
     }
 }
 
-function updatePersistedOrderPaymentStatus(orderId, paymentStatus) {
+function updatePersistedOrderPaymentStatus(orderId, paymentStatus, newOrderStatus = null, timelineItem = null) {
     const orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
     const index = orders.findIndex(order => String(order.id) === String(orderId));
 
@@ -1464,6 +2068,15 @@ function updatePersistedOrderPaymentStatus(orderId, paymentStatus) {
         },
         updatedAt: new Date().toISOString()
     };
+
+    if (newOrderStatus) {
+        orders[index].status = newOrderStatus;
+    }
+
+    if (timelineItem) {
+        if (!Array.isArray(orders[index].timeline)) orders[index].timeline = [];
+        orders[index].timeline.push(timelineItem);
+    }
 
     localStorage.setItem('pawpal_orders', JSON.stringify(orders));
 }

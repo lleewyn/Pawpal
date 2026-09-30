@@ -135,6 +135,76 @@ document.addEventListener('DOMContentLoaded', async () => {
         return price.toLocaleString('vi-VN') + 'đ';
     }
 
+    function getProductVariants(product) {
+        if (!product) return [];
+
+        // 1. Nếu database hoặc product đã có sẵn cấu trúc variants
+        if (Array.isArray(product.variants) && product.variants.length > 0) {
+            return product.variants.map((v, idx) => ({
+                id: v.id || `v-${idx}`,
+                name: typeof v === 'string' ? v : (v.name || v.label || v.title || ('Phân loại ' + (idx + 1))),
+                price: Number(v.price) || Number(product.price) || 0
+            }));
+        }
+
+        const basePrice = Number(product.price) || 0;
+        const cat = String(product.category || product.categoryName || '').toLowerCase();
+        const name = String(product.name || '').toLowerCase();
+
+        // 2. Bộ sinh phân loại con thông minh theo từng ngành hàng (Fallback cho tới khi DB cập nhật)
+        // Thức ăn khô / Hạt
+        if (cat.includes('dry') || cat.includes('kho') || name.includes('hạt') || name.includes('hat') || name.includes('mother & babycat')) {
+            return [
+                { id: 'size-small', name: 'Gói 400g (Dùng thử)', price: Math.max(10000, Math.round(basePrice * 0.45 / 1000) * 1000) },
+                { id: 'size-standard', name: 'Gói 1.5kg (Tiêu chuẩn)', price: basePrice },
+                { id: 'size-large', name: 'Bao 3.0kg (Tiết kiệm)', price: Math.round(basePrice * 1.85 / 1000) * 1000 }
+            ];
+        }
+
+        // Thức ăn ướt / Pate / Súp thưởng
+        if (cat.includes('wet') || cat.includes('uot') || name.includes('pate') || name.includes('súp') || name.includes('sup') || name.includes('churu')) {
+            return [
+                { id: 'flavor-salmon', name: 'Vị Cá Hồi & Rau Củ', price: basePrice },
+                { id: 'flavor-chicken', name: 'Vị Thịt Gà Chín Mềm', price: basePrice },
+                { id: 'flavor-beef', name: 'Vị Bò Tươi Sốt Đậm Đà', price: basePrice + 5000 },
+                { id: 'flavor-combo', name: 'Hộp Combo 6 gói/lon', price: Math.round(basePrice * 5.5 / 1000) * 1000 }
+            ];
+        }
+
+        // Xương gặm / Bánh thưởng
+        if (cat.includes('bone') || cat.includes('gam') || cat.includes('snack') || name.includes('xương') || name.includes('bánh')) {
+            return [
+                { id: 'opt-single', name: 'Gói 1 chiếc (Dùng thử)', price: basePrice },
+                { id: 'opt-pack3', name: 'Gói 3 chiếc (Tiêu chuẩn)', price: Math.round(basePrice * 2.7 / 1000) * 1000 },
+                { id: 'opt-pack5', name: 'Túi tiết kiệm 5 chiếc', price: Math.round(basePrice * 4.2 / 1000) * 1000 }
+            ];
+        }
+
+        // Sức khỏe / Chăm sóc / Vệ sinh
+        if (cat.includes('health') || cat.includes('groom') || cat.includes('hygiene') || cat.includes('ve sinh') || name.includes('dầu') || name.includes('gel') || name.includes('men')) {
+            return [
+                { id: 'vol-std', name: 'Dung tích tiêu chuẩn (Tiêu chuẩn)', price: basePrice },
+                { id: 'vol-large', name: 'Dung tích lớn (Tiết kiệm)', price: Math.round(basePrice * 1.75 / 1000) * 1000 },
+                { id: 'formula-pro', name: 'Dòng cao cấp (Bổ sung vi khoáng)', price: Math.round(basePrice * 1.25 / 1000) * 1000 }
+            ];
+        }
+
+        // Đồ chơi / Phụ kiện / Quần áo
+        if (cat.includes('toy') || cat.includes('clothe') || cat.includes('accessories') || name.includes('vòng') || name.includes('áo') || name.includes('đồ chơi')) {
+            return [
+                { id: 'size-s', name: 'Kích cỡ S (Thú cưng < 4kg)', price: basePrice },
+                { id: 'size-m', name: 'Kích cỡ M (Thú cưng 4 - 8kg)', price: basePrice + 15000 },
+                { id: 'size-l', name: 'Kích cỡ L (Thú cưng > 8kg)', price: basePrice + 30000 }
+            ];
+        }
+
+        // Mặc định chung cho sản phẩm khác
+        return [
+            { id: 'var-std', name: 'Quy cách tiêu chuẩn', price: basePrice },
+            { id: 'var-pro', name: 'Bản nâng cấp cao cấp', price: Math.round(basePrice * 1.25 / 1000) * 1000 }
+        ];
+    }
+
     async function initCart() {
         try {
             const currentUser = getCurrentUser();
@@ -277,9 +347,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         cart.forEach(item => {
             if (selectedIds.has(normalizeId(item.id))) {
                 const prod = products.find(p => isSameCartItemId(p.id, item.id));
-                if (prod) {
-                    checkedSubtotal += prod.price * getItemQuantity(item);
-                }
+                const unitPrice = Number(item.price) || Number(prod?.price) || 0;
+                checkedSubtotal += unitPrice * getItemQuantity(item);
             }
         });
 
@@ -313,19 +382,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const cartItemsData = cart.map(item => {
             const product = products.find(p => isSameCartItemId(p.id, item.id));
-            if (product) {
-                return { ...product, quantity: getItemQuantity(item), qty: getItemQuantity(item) };
+            const baseObj = product ? { ...product, ...item } : { ...item };
+            const variants = getProductVariants(product || item);
+
+            // Xác định phân loại đang được chọn
+            let currentVariant = null;
+            if (item.selectedVariant) {
+                currentVariant = variants.find(v => v.name === item.selectedVariant);
+            }
+            if (!currentVariant) {
+                currentVariant = variants.find(v => v.price === Number(item.price)) || variants[0];
             }
 
+            const activeVariantName = currentVariant ? currentVariant.name : 'Tiêu chuẩn';
+            const unitPrice = currentVariant ? currentVariant.price : (Number(item.price) || Number(product?.price) || 0);
+
+            // Đồng bộ lại vào item trong cart
+            item.selectedVariant = activeVariantName;
+            item.price = unitPrice;
+
             return {
-                ...item,
-                name: item.name || `Sản phẩm ${item.id}`,
-                brand: item.brand || '',
-                price: Number(item.price || 0),
-                image: item.image || '/assets/images/shop/products/placeholder.webp',
+                ...baseObj,
+                id: item.id,
+                name: baseObj.name || `Sản phẩm ${item.id}`,
+                brand: baseObj.brand || 'PawPal',
+                price: unitPrice,
+                selectedVariant: activeVariantName,
+                variants: variants,
+                image: baseObj.image || '/assets/images/shop/products/placeholder.webp',
                 quantity: getItemQuantity(item),
                 qty: getItemQuantity(item),
-                category: item.category || null
+                category: baseObj.category || null
             };
         }).filter(item => item !== null);
 
@@ -356,6 +443,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="cart-item-details">
                     <a href="/pages/shop/product-detail/product-detail.html?id=${item.id}" class="cart-item-name">${item.name}</a>
                     <div class="cart-item-meta">Thương hiệu: ${item.brand}</div>
+                    
+                    <div class="cart-item-variant-wrapper">
+                        <button type="button" class="btn-variant-toggle" data-id="${item.id}" aria-expanded="false" title="Nhấn để đổi phân loại sản phẩm">
+                            <span class="variant-label-prefix">Phân loại:</span>
+                            <span class="variant-current-text">${item.selectedVariant}</span>
+                            <svg class="variant-chevron-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="variant-dropdown-menu" data-menu-id="${item.id}">
+                            <div class="variant-dropdown-header">Chọn phân loại sản phẩm</div>
+                            <div class="variant-options-list">
+                                ${item.variants.map(v => `
+                                    <div class="variant-option-item ${v.name === item.selectedVariant ? 'active' : ''}" data-id="${item.id}" data-variant="${v.name}">
+                                        <div class="variant-opt-info">
+                                            <span class="variant-opt-name">${v.name}</span>
+                                            <span class="variant-opt-price">${formatPrice(v.price)}</span>
+                                        </div>
+                                        ${v.name === item.selectedVariant ? '<span class="variant-opt-check">✓</span>' : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="cart-item-price-unit mt-1">${formatPrice(item.price)}</div>
                 </div>
                 <div class="cart-item-qty-actions">
@@ -397,6 +509,47 @@ document.addEventListener('DOMContentLoaded', async () => {
                 calculateTotals();
             });
 
+            // Gắn sự kiện cho nút mở dropdown phân loại
+            const btnVariantToggle = row.querySelector('.btn-variant-toggle');
+            const variantMenu = row.querySelector('.variant-dropdown-menu');
+
+            if (btnVariantToggle && variantMenu) {
+                btnVariantToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isCurrentlyOpen = variantMenu.classList.contains('open');
+
+                    // Đóng tất cả dropdown đang mở khác
+                    document.querySelectorAll('.variant-dropdown-menu.open').forEach(menu => {
+                        if (menu !== variantMenu) menu.classList.remove('open');
+                    });
+                    document.querySelectorAll('.btn-variant-toggle.active').forEach(btn => {
+                        if (btn !== btnVariantToggle) {
+                            btn.classList.remove('active');
+                            btn.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+
+                    if (!isCurrentlyOpen) {
+                        variantMenu.classList.add('open');
+                        btnVariantToggle.classList.add('active');
+                        btnVariantToggle.setAttribute('aria-expanded', 'true');
+                    } else {
+                        variantMenu.classList.remove('open');
+                        btnVariantToggle.classList.remove('active');
+                        btnVariantToggle.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                variantMenu.querySelectorAll('.variant-option-item').forEach(opt => {
+                    opt.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const targetId = opt.dataset.id;
+                        const targetVariant = opt.dataset.variant;
+                        updateItemVariant(targetId, targetVariant);
+                    });
+                });
+            }
+
             cartItemsList.appendChild(row);
         });
 
@@ -413,7 +566,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return sum;
             }
             const prod = products.find(p => isSameCartItemId(p.id, item.id));
-            const unitPrice = prod?.price ?? Number(item.price) ?? 0;
+            const unitPrice = Number(item.price) || Number(prod?.price) || 0;
             return sum + unitPrice * getItemQuantity(item);
         }, 0);
     }
@@ -425,7 +578,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         cart.forEach(item => {
             if (selectedIds.has(normalizeId(item.id))) {
                 const prod = products.find(p => isSameCartItemId(p.id, item.id));
-                const unitPrice = prod?.price ?? Number(item.price) ?? 0;
+                const unitPrice = Number(item.price) || Number(prod?.price) || 0;
                 subtotal += unitPrice * getItemQuantity(item);
                 selectedCount += getItemQuantity(item);
             }
@@ -483,7 +636,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (item) {
             const maxQty = (item.stock != null && item.stock > 0) ? item.stock : newQty;
             if (newQty > maxQty) {
-                showToast(`Chỉ còn ${maxQty} sản phẩm trong kho`, 'warning');
+                if (typeof window.showGlobalToast === 'function') {
+                    window.showGlobalToast('warning', `Chỉ còn ${maxQty} sản phẩm trong kho`);
+                }
                 newQty = maxQty;
             }
             item.quantity = newQty;
@@ -492,6 +647,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderCart();
         }
     }
+
+    function updateItemVariant(productId, newVariantName) {
+        const item = cart.find(i => isSameCartItemId(i.id, productId));
+        if (!item) return;
+
+        const prod = products.find(p => isSameCartItemId(p.id, productId));
+        const variants = getProductVariants(prod || item);
+        const matched = variants.find(v => v.name === newVariantName);
+
+        if (matched) {
+            item.selectedVariant = matched.name;
+            item.price = matched.price;
+            saveCart();
+            renderCart();
+
+            if (typeof window.showGlobalToast === 'function') {
+                window.showGlobalToast('success', `Đã chọn: ${matched.name}`);
+            }
+        }
+    }
+
+    // Đóng dropdown khi click ra ngoài
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.cart-item-variant-wrapper')) {
+            document.querySelectorAll('.variant-dropdown-menu.open').forEach(menu => {
+                menu.classList.remove('open');
+            });
+            document.querySelectorAll('.btn-variant-toggle.active').forEach(btn => {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-expanded', 'false');
+            });
+        }
+    });
 
     function removeCartItem(productId, rowElement) {
         rowElement.classList.add('item-removed');

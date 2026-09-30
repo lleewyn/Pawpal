@@ -162,6 +162,16 @@ function renderBookingDetail(booking) {
         );
         careLogSection.classList.toggle('d-none', !(normalizedStatus === 'completed' && hasCareLog));
     }
+
+    const complaintSection = document.getElementById('serviceComplaintSection');
+    const complaintLink = document.getElementById('btnServiceComplaintDetail');
+    if (complaintSection && complaintLink) {
+        const isCompleted = normalizedStatus === 'completed';
+        complaintSection.classList.toggle('d-none', !isCompleted);
+        if (isCompleted) {
+            complaintLink.href = `/pages/user/support-create/support-create.html?type=service&bookingId=${encodeURIComponent(booking.id)}`;
+        }
+    }
 }
 
 function renderServiceReviewSection(booking) {

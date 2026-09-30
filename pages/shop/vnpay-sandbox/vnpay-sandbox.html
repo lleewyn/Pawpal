@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cổng thanh toán VNPAY - Môi trường thử nghiệm Sandbox</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="vnpay-sandbox.css">
+</head>
+<body>
+    <!-- HEADER VNPAY -->
+    <header class="vnpay-header">
+        <div class="vnpay-container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <img src="/assets/images/shared/payment_vnpay.png" alt="VNPAY Logo" class="vnpay-logo">
+                <span class="vnpay-sandbox-badge">MÔI TRƯỜNG THỬ NGHIỆM (SANDBOX)</span>
+            </div>
+            <div class="vnpay-header-right d-flex align-items-center gap-3">
+                <span class="vnpay-hotline">Hotline: <strong>*3388 / 1900 55 55 77</strong></span>
+                <span class="vnpay-lang">Tiếng Việt</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN PAYMENT INTERFACE -->
+    <main class="vnpay-main">
+        <div class="vnpay-container">
+            <div class="row g-4">
+                <!-- CỘT TRÁI: THÔNG TIN ĐƠN HÀNG -->
+                <div class="col-lg-4 col-md-5">
+                    <div class="vnpay-order-summary-card">
+                        <div class="order-summary-header">
+                            <span class="text-muted small">Đơn vị chấp nhận thanh toán</span>
+                            <h5 class="merchant-name mb-0">PAWPAL PET CARE & SHOP</h5>
+                        </div>
+
+                        <div class="order-summary-body">
+                            <div class="summary-item">
+                                <span class="label">Mã đơn hàng:</span>
+                                <strong class="value" id="display-order-id">ORD-...</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Số tiền thanh toán:</span>
+                                <span class="value amount-highlight" id="display-order-amount">0 đ</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Nội dung thanh toán:</span>
+                                <span class="value text-muted" id="display-order-desc">Thanh toán đơn hàng Pawpal</span>
+                            </div>
+
+                            <div class="vnpay-countdown-box">
+                                <span class="timer-icon">⏳</span>
+                                <div class="timer-info">
+                                    <span class="timer-label">Giao dịch hết hạn trong</span>
+                                    <span class="timer-value" id="vnpay-timer">15:00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="order-summary-footer">
+                            <button type="button" class="btn-vnpay-cancel" id="btn-cancel-vnpay">
+                                &larr; Hủy giao dịch và quay về
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CỘT PHẢI: CÁC PHƯƠNG THỨC THANH TOÁN VNPAY -->
+                <div class="col-lg-8 col-md-7">
+                    <div class="vnpay-payment-card">
+                        <!-- TABS -->
+                        <div class="vnpay-tabs d-flex">
+                            <button type="button" class="vnpay-tab-btn active" data-tab="tab-qr">
+                                VNPAY-QR
+                            </button>
+                            <button type="button" class="vnpay-tab-btn" data-tab="tab-atm">
+                                Thẻ ATM và Tài khoản ngân hàng
+                            </button>
+                            <button type="button" class="vnpay-tab-btn" data-tab="tab-intl">
+                                Thẻ quốc tế Visa/Master
+                            </button>
+                        </div>
+
+                        <!-- TAB CONTENT 1: VNPAY-QR -->
+                        <div class="vnpay-tab-content active" id="tab-qr">
+                            <div class="qr-content-wrapper text-center">
+                                <p class="qr-guide-title">Quét mã QR bằng ứng dụng ngân hàng hoặc Ví VNPAY</p>
+                                
+                                <div class="vnpay-qr-box">
+                                    <div class="vnpay-qr-card-header">
+                                        <span class="vnpay-brand-vn">VN</span><span class="vnpay-brand-pay">PAY</span>
+                                        <span class="vnpay-brand-qr">QR</span>
+                                    </div>
+                                    <div class="vnpay-qr-relative-wrap">
+                                        <img id="vnpay-qr-img" src="" alt="VNPAY QR Code" class="qr-image">
+                                        <div class="qr-scan-line"></div>
+                                    </div>
+                                    <div class="vnpay-qr-card-footer">
+                                        <span class="vnpay-qr-merchant-name">PAWPAL PET CARE & SHOP</span>
+                                        <span class="vnpay-qr-amount-val" id="vnpay-qr-amount-text">185.000 đ</span>
+                                    </div>
+                                </div>
+
+                                <p class="qr-guide-subtitle text-muted mt-2">
+                                    Mở ứng dụng Mobile Banking của bạn, chọn chức năng <strong>Quét mã QR</strong> để quét mã trên
+                                </p>
+
+                                <div class="supported-banks-preview mt-3">
+                                    <span class="small text-muted d-block mb-2">Hỗ trợ thanh toán qua hơn 40 ứng dụng ngân hàng:</span>
+                                    <div class="bank-tags-list">
+                                        <span class="bank-tag">VCB Digibank</span>
+                                        <span class="bank-tag">VietinBank iPay</span>
+                                        <span class="bank-tag">BIDV SmartBanking</span>
+                                        <span class="bank-tag">MB Bank</span>
+                                        <span class="bank-tag">Agribank E-Mobile</span>
+                                        <span class="bank-tag">Techcombank Mobile</span>
+                                        <span class="bank-tag">TPBank Mobile</span>
+                                        <span class="bank-tag">Ví VNPAY</span>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-3 border-top">
+                                    <button type="button" class="btn-vnpay-action btn-simulate-qr" id="btn-simulate-qr-success">
+                                        Mô phỏng: Quét và thanh toán thành công
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB CONTENT 2: THẺ ATM NỘI ĐỊA -->
+                        <div class="vnpay-tab-content" id="tab-atm">
+                            <!-- BƯỚC 1: CHỌN NGÂN HÀNG -->
+                            <div id="atm-step-select-bank">
+                                <h6 class="mb-3 text-dark fw-bold">Chọn ngân hàng phát hành thẻ ATM của bạn:</h6>
+                                <div class="bank-grid" id="bank-selection-grid">
+                                    <!-- Render ngân hàng động -->
+                                </div>
+                            </div>
+
+                            <!-- BƯỚC 2: NHẬP THÔNG TIN THẺ -->
+                            <div id="atm-step-card-info" class="d-none">
+                                <div class="selected-bank-banner d-flex justify-content-between align-items-center mb-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="bank-circle-icon" id="card-bank-code">VCB</span>
+                                        <strong id="card-bank-name">Ngân hàng Vietcombank</strong>
+                                    </div>
+                                    <button type="button" class="btn-change-bank" id="btn-change-bank">&larr; Đổi ngân hàng khác</button>
+                                </div>
+
+                                <div class="sandbox-quick-fill-box mb-3 d-flex justify-content-between align-items-center">
+                                    <span class="small text-muted">Dùng thông tin thẻ test của VNPAY Sandbox:</span>
+                                    <button type="button" class="btn-quick-fill" id="btn-quick-fill-atm">
+                                        Điền thẻ test tự động
+                                    </button>
+                                </div>
+
+                                <form id="atm-card-form" class="vnpay-form">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="atm-card-number">Số thẻ <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="atm-card-number" placeholder="9704 xxxx xxxx xxxx" maxlength="19" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="atm-card-holder">Tên in trên thẻ (không dấu) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control text-uppercase" id="atm-card-holder" placeholder="NGUYEN VAN A" required>
+                                    </div>
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="atm-issue-date">Ngày phát hành (MM/YY) <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="atm-issue-date" placeholder="07/15" maxlength="5" required>
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn-vnpay-action w-100" id="btn-submit-atm">
+                                        Tiếp tục xác thực OTP
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- BƯỚC 3: NHẬP OTP -->
+                            <div id="atm-step-otp" class="d-none text-center py-3">
+                                <div class="otp-badge mb-2">BƯỚC XÁC THỰC BẢO MẬT OTP</div>
+                                <h5>Nhập mã xác thực OTP</h5>
+                                <p class="text-muted small">
+                                    Hệ thống VNPAY đã gửi mã OTP thử nghiệm đến số điện thoại liên kết của bạn.
+                                </p>
+                                <div class="otp-demo-hint alert alert-info py-2 mb-3">
+                                    Mã OTP Sandbox thử nghiệm: <strong>123456</strong>
+                                </div>
+
+                                <div class="d-flex justify-content-center gap-2 mb-3">
+                                    <input type="text" class="form-control text-center otp-input" id="otp-input" maxlength="6" placeholder="123456" autofocus>
+                                </div>
+
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button type="button" class="btn-vnpay-cancel" id="btn-back-to-card">Quay lại</button>
+                                    <button type="button" class="btn-vnpay-action" id="btn-confirm-otp">Xác nhận thanh toán</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB CONTENT 3: THẺ QUỐC TẾ (VISA / MASTER) -->
+                        <div class="vnpay-tab-content" id="tab-intl">
+                            <h6 class="mb-3 text-dark fw-bold">Thanh toán qua thẻ quốc tế (Visa / MasterCard / JCB)</h6>
+                            <div class="sandbox-quick-fill-box mb-3 d-flex justify-content-between align-items-center">
+                                <span class="small text-muted">Dùng thẻ Visa test của Sandbox:</span>
+                                <button type="button" class="btn-quick-fill" id="btn-quick-fill-visa">
+                                    Điền thẻ Visa test
+                                </button>
+                            </div>
+
+                            <form id="intl-card-form" class="vnpay-form">
+                                <div class="mb-3">
+                                    <label class="form-label" for="intl-card-number">Số thẻ Visa / MasterCard <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="intl-card-number" placeholder="4000 0012 3456 7890" maxlength="19" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="intl-card-holder">Tên in trên thẻ <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control text-uppercase" id="intl-card-holder" placeholder="NGUYEN VAN A" required>
+                                </div>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-6">
+                                        <label class="form-label" for="intl-expiry">Ngày hết hạn (MM/YY) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="intl-expiry" placeholder="12/28" maxlength="5" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label" for="intl-cvv">Mã CVV/CVC <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control" id="intl-cvv" placeholder="123" maxlength="4" required>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn-vnpay-action w-100" id="btn-submit-intl">
+                                    Xác nhận thanh toán quốc tế
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL ĐANG XỬ LÝ THANH TOÁN (SIMULATION SPINNER) -->
+    <div class="vnpay-loading-overlay d-none" id="vnpay-loading-overlay">
+        <div class="vnpay-loading-card text-center">
+            <div class="vnpay-spinner mb-3"></div>
+            <h5 class="fw-bold mb-2">Đang kết nối VNPAY xử lý giao dịch...</h5>
+            <p class="text-muted small mb-0">Vui lòng không đóng trình duyệt hoặc làm mới trang.</p>
+        </div>
+    </div>
+
+    <!-- MODAL THÔNG BÁO KẾT QUẢ GIAO DỊCH -->
+    <div class="vnpay-result-overlay d-none" id="vnpay-result-overlay">
+        <div class="vnpay-result-card text-center" id="vnpay-result-card">
+            <div class="result-icon-wrapper" id="result-icon-wrapper">
+                <span class="result-icon" id="result-icon">✓</span>
+            </div>
+            <h4 class="fw-bold mt-3 mb-2" id="result-title">Giao dịch thành công</h4>
+            <p class="text-muted small mb-3" id="result-message">Mã giao dịch VNPAY: <strong>#VNP14829102</strong></p>
+            <button type="button" class="btn-vnpay-action w-100" id="btn-return-merchant">
+                Quay về cửa hàng PawPal
+            </button>
+        </div>
+    </div>
+
+    <!-- THANH TIỆN ÍCH TEST NHANH Ở DƯỚI CÙNG DÀNH CHO TESTER -->
+    <aside class="vnpay-test-dock">
+        <div class="vnpay-container d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning text-dark">SANDBOX CONTROLS</span>
+                <span class="small text-white">Kiểm tra các kịch bản phản hồi từ VNPAY:</span>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn-test-action btn-test-success" id="btn-quick-success">
+                    Thanh toán thành công (Mã 00)
+                </button>
+                <button type="button" class="btn-test-action btn-test-failed" id="btn-quick-fail">
+                    Giao dịch thất bại (Mã 51 - Số dư không đủ)
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <script src="vnpay-sandbox.js"></script>
+</body>
+</html>

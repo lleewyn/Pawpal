@@ -22,31 +22,99 @@ async function loadOrders() {
         }
 
         if (!window.SupabaseClient) {
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise(r => setTimeout(r, 300));
         }
 
-        const orders = await API.getUserOrders(currentUser.id);
-        const normalizedOrders = Array.isArray(orders) ? orders : [];
-        const uniqueOrders = Array.from(
-            normalizedOrders.reduce((map, order) => {
-                const key = String(order?._supabaseId || order?.id || '');
-                if (!key) return map;
-                if (!map.has(key)) {
-                    map.set(key, order);
-                    return map;
-                }
+        let remoteOrders = [];
+        try {
+            if (currentUser && currentUser.id) {
+                const res = await API.getUserOrders(currentUser.id);
+                if (Array.isArray(res)) remoteOrders = res;
+            }
+        } catch (e) {
+            console.warn('[Orders] API.getUserOrders error:', e);
+        }
 
-                const existing = map.get(key);
-                if (currentUser._source === 'supabase' && existing?._source !== 'supabase' && order?._source === 'supabase') {
-                    map.set(key, order);
-                }
-                return map;
-            }, new Map()).values()
-        );
+        // 1. Lấy đơn hàng từ localStorage (được tạo qua checkout hoặc thanh toán)
+        const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+        
+        // 2. Lọc đơn thuộc về user hiện tại
+        const userPhone = String(currentUser?.phone || '').trim();
+        const userId = String(currentUser?.id || '').trim();
+        
+        let matchingLocalOrders = localOrders.filter(o => {
+            const oUserId = String(o.userId || '');
+            const oPhone = String(o.userPhone || o.shipping?.phone || o.delivery?.phone || '');
+            if (userId && (oUserId === userId || oUserId === 'USER-001')) return true;
+            if (userPhone && oPhone === userPhone) return true;
+            if (!userId && !userPhone) return true;
+            return false;
+        });
 
-        ordersState.allOrders = currentUser._source === 'supabase'
-            ? uniqueOrders.filter((order) => order._source === 'supabase' || order._supabaseId)
-            : uniqueOrders;
+        // 3. Nếu cả local lẫn remote đều trống, nạp mẫu từ /data/orders.json cho demo
+        if (matchingLocalOrders.length === 0 && remoteOrders.length === 0) {
+            try {
+                const res = await fetch('/data/orders.json');
+                const sampleOrders = await res.json();
+                if (Array.isArray(sampleOrders)) {
+                    matchingLocalOrders = sampleOrders;
+                }
+            } catch (err) {
+                console.warn('[Orders] Không thể nạp sample orders:', err);
+            }
+        }
+
+        // 4. Hợp nhất danh sách đơn hàng
+        const orderMap = new Map();
+        matchingLocalOrders.forEach(order => {
+            const key = String(order.id || order.orderId || order._supabaseId || '');
+            if (key) orderMap.set(key, order);
+        });
+
+        remoteOrders.forEach(order => {
+            const key = String(order.id || order.order_code || order._supabaseId || '');
+            if (key) {
+                const existing = orderMap.get(key);
+                orderMap.set(key, { ...order, ...(existing || {}) });
+            }
+        });
+
+        // 5. Chuẩn hóa từng đơn hàng
+        const mergedList = Array.from(orderMap.values()).map(order => {
+            const products = Array.isArray(order.products) && order.products.length > 0
+                ? order.products
+                : (Array.isArray(order.items) && order.items.length > 0 ? order.items : []);
+            
+            const normalizedProducts = products.map(p => ({
+                id: p.id || p.productId || '',
+                name: p.name || p.title || 'Sản phẩm',
+                image: p.image || p.img || '/assets/images/shared/product_placeholder.png',
+                quantity: Number(p.quantity ?? p.qty) || 1,
+                price: Number(p.price ?? p.unitPrice) || 0,
+                total: Number(p.total) || ((Number(p.price) || 0) * (Number(p.quantity) || 1))
+            }));
+
+            const grandTotal = Number(
+                order.pricing?.grandTotal ?? order.pricing?.total ?? order.total ?? 0
+            );
+
+            return {
+                ...order,
+                id: order.id || order.orderId || `ORD-${Date.now()}`,
+                products: normalizedProducts,
+                pricing: {
+                    ...(order.pricing || {}),
+                    total: grandTotal,
+                    grandTotal: grandTotal
+                },
+                paymentMethod: (order.paymentMethod || order.payment?.method || 'cod').toLowerCase(),
+                paymentStatus: String(order.paymentStatus || order.payment?.status || (order.paymentMethod === 'cod' ? 'pending_payment' : 'pending')).toLowerCase(),
+                status: order.status || 'pending',
+                createdAt: order.createdAt || new Date().toISOString()
+            };
+        });
+
+        ordersState.allOrders = mergedList;
         ordersState.filteredOrders = ordersState.allOrders;
 
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
@@ -63,13 +131,100 @@ async function loadOrders() {
             }
         }
 
+        checkAndExpirePendingOrders();
         updateStats();
         updateTabCounts();
-        renderOrders();
+        applyFilters();
+        startPendingOrdersTicker();
     } catch (error) {
         console.error('Lỗi load đơn hàng:', error);
         showEmptyState('Không thể tải đơn hàng. Vui lòng thử lại sau.');
     }
+}
+
+function checkAndExpirePendingOrders() {
+    let hasChanges = false;
+    const now = Date.now();
+
+    ordersState.allOrders.forEach((order) => {
+        const isOnline = ['vnpay', 'momo', 'zalopay', 'vietqr'].includes((order.paymentMethod || order.payment?.method || '').toLowerCase());
+        const isPaid = order.paymentStatus === 'paid' || order.payment?.status === 'paid';
+        const isPending = order.status === 'pending_payment' || order.status === 'pending' || order.status === 'placed';
+
+        if (isPending && !isPaid && isOnline && order.paymentExpiry) {
+            const expiryTime = new Date(order.paymentExpiry).getTime();
+            if (now >= expiryTime) {
+                order.status = 'cancelled';
+                order.paymentStatus = 'expired';
+                order.cancelReason = 'Quá thời hạn thanh toán trực tuyến (15 phút)';
+                if (!Array.isArray(order.timeline)) order.timeline = [];
+                order.timeline.push({
+                    status: 'cancelled',
+                    title: 'Tự động hủy đơn hàng',
+                    description: 'Đơn hàng tự động hủy do quá thời hạn thanh toán 15 phút',
+                    timestamp: new Date().toISOString()
+                });
+                hasChanges = true;
+            }
+        }
+    });
+
+    if (hasChanges) {
+        try {
+            const allLocalOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+            ordersState.allOrders.forEach((updatedOrder) => {
+                const idx = allLocalOrders.findIndex(o => String(o.id) === String(updatedOrder.id));
+                if (idx !== -1) {
+                    allLocalOrders[idx] = { ...allLocalOrders[idx], ...updatedOrder };
+                }
+            });
+            localStorage.setItem('pawpal_orders', JSON.stringify(allLocalOrders));
+        } catch (e) {
+            console.error('Error saving expired orders to localStorage', e);
+        }
+    }
+
+    return hasChanges;
+}
+
+let pendingOrdersTicker = null;
+function startPendingOrdersTicker() {
+    if (pendingOrdersTicker) clearInterval(pendingOrdersTicker);
+    pendingOrdersTicker = setInterval(() => {
+        const timerChips = document.querySelectorAll('.order-pending-countdown');
+        if (!timerChips || timerChips.length === 0) return;
+
+        let needsRefresh = false;
+        const now = Date.now();
+
+        timerChips.forEach((chip) => {
+            const expiryStr = chip.getAttribute('data-expiry');
+            if (!expiryStr) return;
+            const diff = new Date(expiryStr).getTime() - now;
+            const clockEl = chip.querySelector('.countdown-clock');
+
+            if (diff <= 0) {
+                if (clockEl) clockEl.textContent = '00:00 (Hết hạn)';
+                needsRefresh = true;
+            } else {
+                const totalSeconds = Math.floor(diff / 1000);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                if (clockEl) {
+                    clockEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                }
+            }
+        });
+
+        if (needsRefresh) {
+            const hasExpired = checkAndExpirePendingOrders();
+            if (hasExpired) {
+                updateStats();
+                updateTabCounts();
+                applyFilters();
+            }
+        }
+    }, 1000);
 }
 
 function updateStats() {
@@ -123,8 +278,9 @@ function applyFilters() {
 
     if (ordersState.searchQuery) {
         filtered = filtered.filter((order) => {
-            const matchId = order.id.toLowerCase().includes(ordersState.searchQuery);
-            const matchProducts = order.products.some((product) => product.name.toLowerCase().includes(ordersState.searchQuery));
+            const matchId = String(order.id || '').toLowerCase().includes(ordersState.searchQuery);
+            const prods = Array.isArray(order.products) ? order.products : [];
+            const matchProducts = prods.some((product) => String(product.name || '').toLowerCase().includes(ordersState.searchQuery));
             return matchId || matchProducts;
         });
     }
@@ -157,10 +313,11 @@ function renderOrders() {
 
 function createOrderCard(order) {
     const orderId = order.id || order._id || '';
-    const firstProduct = (order.products && order.products.length > 0)
-        ? order.products[0]
-        : { name: 'Đơn hàng', image: '', sku: '', quantity: 1, price: 0, total: 0 };
-    const remainingCount = order.products.length - 1;
+    const prods = Array.isArray(order.products) ? order.products : (Array.isArray(order.items) ? order.items : []);
+    const firstProduct = prods.length > 0
+        ? prods[0]
+        : { name: 'Sản phẩm PawPal', image: '/assets/images/shared/product_placeholder.png', sku: '', quantity: 1, price: 0, total: 0 };
+    const remainingCount = Math.max(0, prods.length - 1);
     const normalizedStatus = normalizeOrderStatus(order.status);
 
     const isPaid = order.paymentStatus === 'paid' || order.payment?.status === 'paid';
@@ -222,6 +379,14 @@ function createOrderCard(order) {
         }
     }
 
+    if ((normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && !isPaid && isOnline && order.paymentExpiry) {
+        statusNoticeChips.push(`
+            <span class="order-meta-chip meta-chip-warning order-pending-countdown" data-expiry="${order.paymentExpiry}" data-order-id="${orderId}">
+                ⏳ Còn <strong class="countdown-clock">--:--</strong>
+            </span>
+        `);
+    }
+
     const metaParts = [
         productCount > 0 ? `${productCount} sản phẩm` : '',
         paymentLabel,
@@ -247,7 +412,10 @@ function createOrderCard(order) {
             </button>
         `;
     } else if (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment' || normalizedStatus === 'preparing') {
+        const canPayNow = (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && !isPaid && isOnline;
         footerButtonsHTML = `
+            ${canPayNow ? `<button class="btn-cta text-decoration-none" onclick="openOrderPaymentModal('${orderId}')">Thanh toán ngay</button>` : ''}
+            ${canPayNow ? `<button class="btn-track-order" onclick="openChangePaymentMethodModal('${orderId}')">Đổi phương thức</button>` : ''}
             ${detailActionHTML}
             <button class="btn-track-order" onclick="contactHotline('${orderId}')">
                 Liên hệ hotline
@@ -262,6 +430,7 @@ function createOrderCard(order) {
             ${reviewActionHTML}
             ${reorderActionHTML}
             ${returnActionHTML}
+            <a href="/pages/user/support-create/support-create.html?type=order&orderId=${orderId}" class="btn-complaint text-decoration-none" title="Khiếu nại sự cố về đơn hàng này">Phản ánh đơn</a>
         `;
     } else if (normalizedStatus === 'delivered' || normalizedStatus === 'cancelled') {
         footerButtonsHTML = normalizedStatus === 'delivered'
@@ -298,7 +467,7 @@ function createOrderCard(order) {
                 </div>
                 <div class="order-summary">
                     <span class="summary-label">Tổng tiền:</span>
-                    <span class="summary-value">${formatCurrency(toNumber(order.pricing?.total))}</span>
+                    <span class="summary-value">${formatCurrency(toNumber(order.pricing?.total ?? order.pricing?.grandTotal ?? order.total))}</span>
                 </div>
             </div>
             <div class="order-card-footer">
@@ -419,6 +588,25 @@ function cancelOrder(orderId) {
                 }
             } catch (error) {
                 console.warn('cancelOrder stock restore error:', error);
+            }
+        // Hoàn lại điểm PawPoints nếu đơn hàng có sử dụng điểm
+        const pointsDiscount = Number(order.pricing?.pointsDiscount || 0);
+        if (pointsDiscount > 0) {
+            try {
+                const pointsToRefund = Math.round(pointsDiscount / 1000);
+                const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+                if (currentUser) {
+                    currentUser.points = (Number(currentUser.points) || 0) + pointsToRefund;
+                    localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
+                }
+                const users = JSON.parse(localStorage.getItem('pawpal_users') || '[]');
+                const uIdx = users.findIndex(u => String(u.id) === String(order.userId) || String(u.phone) === String(order.userPhone));
+                if (uIdx !== -1) {
+                    users[uIdx].points = (Number(users[uIdx].points) || 0) + pointsToRefund;
+                    localStorage.setItem('pawpal_users', JSON.stringify(users));
+                }
+            } catch (err) {
+                console.warn('Lỗi hoàn điểm khi hủy đơn:', err);
             }
         }
 
@@ -767,7 +955,208 @@ function getPaymentMethodLabel(method) {
     return labels[method] || 'Thanh toán online';
 }
 
+async function openOrderPaymentModal(orderId) {
+    const order = ordersState.allOrders.find(o => String(o.id) === String(orderId));
+    if (!order) return;
+    localStorage.setItem('pawpal_current_order', JSON.stringify(order));
+
+    const payMethod = (order.paymentMethod || order.payment?.method || '').toLowerCase();
+    if (payMethod === 'vnpay') {
+        const grandTotal = order.pricing?.total || order.pricing?.grandTotal || 0;
+        try {
+            const vnpRes = await fetch('/api/vnpay/create-payment-url', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    orderId: order.id,
+                    amount: grandTotal,
+                    orderInfo: `Thanh toan don hang ${order.id} tai PawPal`
+                })
+            });
+            const vnpData = await vnpRes.json();
+            if (vnpData.success && vnpData.paymentUrl) {
+                window.location.href = vnpData.paymentUrl;
+                return;
+            }
+        } catch (err) {
+            console.warn('[Orders] Lỗi tạo link VNPAY thật, fallback sang mô phỏng:', err);
+        }
+        window.location.href = `/pages/shop/vnpay-sandbox/vnpay-sandbox.html?orderId=${orderId}&amount=${grandTotal}`;
+        return;
+    }
+
+    window.location.href = `/pages/user/order-detail/order-detail.html?id=${orderId}&pay=now`;
+}
+window.openOrderPaymentModal = openOrderPaymentModal;
+
+function openChangePaymentMethodModal(orderId) {
+    const order = ordersState.allOrders.find(o => String(o.id) === String(orderId));
+    if (!order) return;
+
+    const modalId = 'orders-change-payment-modal';
+    const existing = document.getElementById(modalId);
+    if (existing) existing.remove();
+
+    const currentMethod = (order.paymentMethod || order.payment?.method || 'vnpay').toLowerCase();
+
+    const el = document.createElement('div');
+    el.id = modalId;
+    el.className = 'modal fade';
+    el.tabIndex = -1;
+    el.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+            <div class="modal-content" style="border-radius: 9px; border: 1px solid #ECF2EE;">
+                <div class="modal-header" style="border-bottom: 1px solid #ECF2EE; padding: 18px 24px;">
+                    <h5 class="modal-title" style="color: #236B48; font-weight: 700; font-size: 17px;">Đổi phương thức thanh toán</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="padding: 20px 24px;">
+                    <p class="text-muted small mb-3">Đơn hàng <strong>#${order.id}</strong> đang chờ thanh toán. Vui lòng chọn phương thức bạn muốn chuyển đổi:</p>
+                    <div class="d-flex flex-column gap-2 mb-3" id="paymentMethodRadioGroup">
+                        <label class="d-flex align-items-center gap-3 p-3 rounded cursor-pointer" style="border: 1px solid ${currentMethod === 'cod' ? '#236B48' : '#ECF2EE'}; background: ${currentMethod === 'cod' ? '#F4FAF6' : '#fff'}; border-radius: 9px;">
+                            <input type="radio" name="newPayMethod" value="cod" ${currentMethod === 'cod' ? 'checked' : ''} style="accent-color: #236B48;">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold" style="color: #203A2C; font-size: 14px;">Thanh toán khi nhận hàng (COD)</div>
+                                <div class="text-muted small">Trả tiền mặt cho shipper khi nhận hàng (Không lo hết hạn 15 phút)</div>
+                            </div>
+                        </label>
+                        <label class="d-flex align-items-center gap-3 p-3 rounded cursor-pointer" style="border: 1px solid ${currentMethod === 'vnpay' ? '#236B48' : '#ECF2EE'}; background: ${currentMethod === 'vnpay' ? '#F4FAF6' : '#fff'}; border-radius: 9px;">
+                            <input type="radio" name="newPayMethod" value="vnpay" ${currentMethod === 'vnpay' ? 'checked' : ''} style="accent-color: #236B48;">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold" style="color: #203A2C; font-size: 14px;">Cổng thanh toán VNPay</div>
+                                <div class="text-muted small">Quét QR VNPAY, Thẻ ATM nội địa, Thẻ Visa/Mastercard</div>
+                            </div>
+                        </label>
+                        <label class="d-flex align-items-center gap-3 p-3 rounded cursor-pointer" style="border: 1px solid ${currentMethod === 'vietqr' ? '#236B48' : '#ECF2EE'}; background: ${currentMethod === 'vietqr' ? '#F4FAF6' : '#fff'}; border-radius: 9px;">
+                            <input type="radio" name="newPayMethod" value="vietqr" ${currentMethod === 'vietqr' ? 'checked' : ''} style="accent-color: #236B48;">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold" style="color: #203A2C; font-size: 14px;">Quét mã VietQR</div>
+                                <div class="text-muted small">Mở app ngân hàng quét mã QR chuyển khoản tức thì</div>
+                            </div>
+                        </label>
+                        <label class="d-flex align-items-center gap-3 p-3 rounded cursor-pointer" style="border: 1px solid ${currentMethod === 'momo' ? '#236B48' : '#ECF2EE'}; background: ${currentMethod === 'momo' ? '#F4FAF6' : '#fff'}; border-radius: 9px;">
+                            <input type="radio" name="newPayMethod" value="momo" ${currentMethod === 'momo' ? 'checked' : ''} style="accent-color: #236B48;">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold" style="color: #203A2C; font-size: 14px;">Ví điện tử MoMo</div>
+                                <div class="text-muted small">Quét mã bằng ứng dụng ví MoMo</div>
+                            </div>
+                        </label>
+                        <label class="d-flex align-items-center gap-3 p-3 rounded cursor-pointer" style="border: 1px solid ${currentMethod === 'zalopay' ? '#236B48' : '#ECF2EE'}; background: ${currentMethod === 'zalopay' ? '#F4FAF6' : '#fff'}; border-radius: 9px;">
+                            <input type="radio" name="newPayMethod" value="zalopay" ${currentMethod === 'zalopay' ? 'checked' : ''} style="accent-color: #236B48;">
+                            <div class="flex-grow-1">
+                                <div class="fw-bold" style="color: #203A2C; font-size: 14px;">Ví điện tử ZaloPay</div>
+                                <div class="text-muted small">Quét mã bằng ứng dụng Zalo / ZaloPay</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #ECF2EE; padding: 14px 24px;">
+                    <button type="button" class="btn-green-outline" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn-cta" id="btn-confirm-change-payment">Xác nhận đổi</button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(el);
+
+    const modal = new bootstrap.Modal(el);
+    modal.show();
+
+    const radios = el.querySelectorAll('input[name="newPayMethod"]');
+    radios.forEach(r => {
+        r.addEventListener('change', () => {
+            el.querySelectorAll('#paymentMethodRadioGroup label').forEach(lbl => {
+                lbl.style.borderColor = '#ECF2EE';
+                lbl.style.backgroundColor = '#fff';
+            });
+            const parent = r.closest('label');
+            if (parent) {
+                parent.style.borderColor = '#236B48';
+                parent.style.backgroundColor = '#F4FAF6';
+            }
+        });
+    });
+
+    document.getElementById('btn-confirm-change-payment').addEventListener('click', async () => {
+        const selectedRadio = el.querySelector('input[name="newPayMethod"]:checked');
+        if (!selectedRadio) return;
+        const newMethod = selectedRadio.value;
+        modal.hide();
+
+        const methodNames = {
+            cod: 'Thanh toán khi nhận hàng (COD)',
+            vnpay: 'Cổng thanh toán VNPay',
+            vietqr: 'Quét mã VietQR',
+            momo: 'Ví MoMo',
+            zalopay: 'Ví ZaloPay'
+        };
+
+        order.paymentMethod = newMethod;
+        if (!order.payment) order.payment = {};
+        order.payment.method = newMethod;
+
+        if (!Array.isArray(order.timeline)) order.timeline = [];
+
+        if (newMethod === 'cod') {
+            order.status = 'pending';
+            order.paymentStatus = 'pending_payment';
+            order.paymentExpiry = null;
+            order.timeline.push({
+                status: 'pending',
+                title: 'Đổi phương thức thanh toán sang COD',
+                description: 'Khách hàng đã đổi sang Thanh toán khi nhận hàng (COD). Đơn hàng đang chờ cửa hàng xác nhận.',
+                timestamp: new Date().toISOString()
+            });
+        } else {
+            order.timeline.push({
+                status: 'pending_payment',
+                title: `Đổi phương thức thanh toán sang ${methodNames[newMethod] || newMethod}`,
+                description: `Khách hàng đã đổi phương thức thanh toán sang ${methodNames[newMethod] || newMethod}.`,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        order.updatedAt = new Date().toISOString();
+        saveOrderToLocalStorage(order);
+
+        const db = window.SupabaseClient;
+        if (db) {
+            try {
+                await db.from('sales_order').update({
+                    order_status: newMethod === 'cod' ? 'PENDING' : 'PENDING_PAYMENT',
+                    updated_at: new Date().toISOString()
+                }).eq('id', order.id);
+            } catch (err) {
+                console.warn('[Orders] Supabase update payment method error:', err);
+            }
+        }
+
+        updateTabCounts();
+        applyFilters();
+
+        showOrdersToast(`Đã đổi phương thức thanh toán sang "${methodNames[newMethod]}" thành công!`, 'success');
+
+        if (newMethod !== 'cod') {
+            setTimeout(() => {
+                openOrderPaymentModal(order.id);
+            }, 600);
+        }
+    });
+}
+window.openChangePaymentMethodModal = openChangePaymentMethodModal;
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Kiểm tra tab ban đầu từ URL parameter (ví dụ ?status=pending_payment hoặc ?tab=pending_payment)
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialStatus = urlParams.get('status') || urlParams.get('tab');
+    if (initialStatus) {
+        ordersState.currentTab = initialStatus;
+        const targetTab = document.querySelector(`.tab-btn[data-status="${initialStatus}"]`);
+        if (targetTab) {
+            document.querySelectorAll('.tab-btn').forEach((item) => item.classList.remove('active'));
+            targetTab.classList.add('active');
+        }
+    }
+
     loadOrders();
 
     document.querySelectorAll('.tab-btn').forEach((button) => {

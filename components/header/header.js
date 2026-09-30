@@ -531,16 +531,83 @@
         });
     }
     
+    // -------------------------------------------------------------
+    // TÍCH HỢP DẢI THÔNG BÁO TOP-BAR TỪ PHÂN HỆ CẤU HÌNH ADMIN (GIAI ĐOẠN 2)
+    // -------------------------------------------------------------
+    function renderDynamicTopBarNotice() {
+        try {
+            const notices = JSON.parse(localStorage.getItem('pawpal_settings_notices') || '[]');
+            const activeTopNotice = notices.find(n => n.status === 'active' && (n.type === 'Top-bar' || n.type === 'topbar'));
+            
+            // Tìm hoặc tạo container Topbar
+            let topBarEl = document.getElementById('pawpal-public-topbar-notice');
+            if (!activeTopNotice) {
+                if (topBarEl) topBarEl.remove();
+                return;
+            }
+
+            if (!topBarEl) {
+                topBarEl = document.createElement('div');
+                topBarEl.id = 'pawpal-public-topbar-notice';
+                topBarEl.style.cssText = `
+                    background-color: #236B48;
+                    color: #FFFFFF;
+                    font-size: 13px;
+                    font-weight: 500;
+                    text-align: center;
+                    padding: 8px 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 12px;
+                    z-index: 1050;
+                    position: relative;
+                    letter-spacing: 0.1px;
+                `;
+                const siteHeader = document.getElementById('site-header') || document.body;
+                if (siteHeader === document.body) {
+                    document.body.insertBefore(topBarEl, document.body.firstChild);
+                } else {
+                    siteHeader.parentNode.insertBefore(topBarEl, siteHeader);
+                }
+            }
+
+            topBarEl.innerHTML = `
+                <span>${activeTopNotice.content}</span>
+                <button type="button" id="btnCloseTopBarNotice" style="background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer; font-size: 14px; padding: 0 4px; line-height: 1;" title="Đóng">✕</button>
+            `;
+
+            document.getElementById('btnCloseTopBarNotice')?.addEventListener('click', () => {
+                topBarEl.style.display = 'none';
+            });
+        } catch (e) {
+            console.warn('Lỗi hiển thị topbar notice:', e);
+        }
+    }
+
     // Chạy khi header được chèn vào HTML
-    document.addEventListener('headerInjected', updateHeaderAuth);
+    document.addEventListener('headerInjected', () => {
+        updateHeaderAuth();
+        renderDynamicTopBarNotice();
+    });
     
     // Also run if header already exists (for pages that don't use components.js)
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', updateHeaderAuth);
+        document.addEventListener('DOMContentLoaded', () => {
+            updateHeaderAuth();
+            renderDynamicTopBarNotice();
+        });
     } else {
         updateHeaderAuth();
+        renderDynamicTopBarNotice();
     }
     
-    // Lắng nghe thay đổi trạng thái đăng nhập
+    // Lắng nghe thay đổi trạng thái đăng nhập và cấu hình cập nhật
     document.addEventListener('auth_state_changed', updateHeaderAuth);
+    window.addEventListener('pawpal_settings_updated', renderDynamicTopBarNotice);
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'pawpal_settings_notices') {
+            renderDynamicTopBarNotice();
+        }
+    });
 })();

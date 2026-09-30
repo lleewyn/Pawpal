@@ -54,74 +54,89 @@
 
                 <div class="col-lg-7">
 
-                    <div class="checkout-section mb-4">
-                        <h2 class="section-title">Địa chỉ giao hàng</h2>
-
-                        <div id="saved-addresses-section" class="mb-3 d-none">
-                            <label class="form-label">Chọn từ địa chỉ đã lưu</label>
-                            <select id="address-dropdown" class="form-select">
-                                <option value="">-- Chọn địa chỉ --</option>
-                            </select>
+                    <div class="checkout-section mb-4" id="checkout-address-section">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h2 class="section-title mb-0">Địa chỉ giao hàng</h2>
+                            <div class="address-header-actions d-flex gap-2">
+                                <button type="button" class="btn-address-link" id="btn-open-address-book" style="display: none;">Đổi địa chỉ</button>
+                                <button type="button" class="btn-address-link" id="btn-edit-selected-address" style="display: none;">Sửa</button>
+                            </div>
                         </div>
 
-                        <form id="shipping-form" class="address-form">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="fullName" class="form-label">Họ và tên <span
-                                            class="required">*</span></label>
-                                    <input type="text" class="form-control" id="fullName" name="fullName" required>
-                                    <div class="invalid-feedback">Vui lòng nhập họ tên</div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="phone" class="form-label">Số điện thoại <span
-                                            class="required">*</span></label>
-                                    <input type="tel" class="form-control" id="phone" name="phone" pattern="^0[0-9]{9}$"
-                                        required>
-                                    <div class="invalid-feedback">Số điện thoại phải có 10 chữ số</div>
-                                </div>
-                                <div class="col-12">
-                                    <label for="address" class="form-label">Địa chỉ chi tiết <span
-                                            class="required">*</span></label>
-                                    <input type="text" class="form-control" id="address" name="address"
-                                        placeholder="Số nhà, tên đường, phường/xã" required>
-                                    <div class="invalid-feedback">Vui lòng nhập địa chỉ</div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="city" class="form-label">Thành phố/Tỉnh <span
-                                            class="required">*</span></label>
-                                    <select class="form-select" id="city" name="city" required>
-                                        <option value="">-- Chọn --</option>
-                                        <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
-                                        <option value="Hà Nội">Hà Nội</option>
-                                        <option value="Đà Nẵng">Đà Nẵng</option>
-                                        <option value="Cần Thơ">Cần Thơ</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="district" class="form-label">Quận/Huyện <span
-                                            class="required">*</span></label>
-                                    <select class="form-select" id="district" name="district" required>
-                                        <option value="">-- Chọn --</option>
-                                        <option value="Quận 1">Quận 1</option>
-                                        <option value="Quận 2">Quận 2</option>
-                                        <option value="Quận 3">Quận 3</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label for="note" class="form-label">Ghi chú giao hàng (tùy chọn)</label>
-                                    <textarea class="form-control" id="note" name="note" rows="2"
-                                        placeholder="Ví dụ: Giao vào buổi chiều"></textarea>
-                                </div>
-                                <div class="col-12 d-none" id="save-address-section">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="saveAddress">
-                                        <label class="form-check-label" for="saveAddress">
-                                            Lưu vào địa chỉ của tôi
-                                        </label>
-                                    </div>
+                        <!-- Thẻ Địa chỉ Đang chọn (Selected Address Card) -->
+                        <div id="selected-address-card" class="selected-address-card d-none">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <strong class="receiver-name" id="selected-addr-name">...</strong>
+                                    <span class="receiver-phone text-muted" id="selected-addr-phone">...</span>
+                                    <span class="badge-default-addr d-none" id="selected-addr-default-badge">Mặc định</span>
                                 </div>
                             </div>
-                        </form>
+                            <div class="receiver-address-text" id="selected-addr-full">...</div>
+                            <div class="receiver-note-text text-muted small mt-1 d-none" id="selected-addr-note"></div>
+                        </div>
+
+                        <!-- Form nhập địa chỉ giao hàng -->
+                        <div id="manual-address-wrapper">
+                            <form id="shipping-form" class="address-form">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="fullName" class="form-label">Họ và tên <span
+                                                class="required">*</span></label>
+                                        <input type="text" class="form-control" id="fullName" name="fullName" required>
+                                        <div class="invalid-feedback">Vui lòng nhập họ tên</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="phone" class="form-label">Số điện thoại <span
+                                                class="required">*</span></label>
+                                        <input type="tel" class="form-control" id="phone" name="phone" pattern="^0[0-9]{9}$"
+                                            required>
+                                        <div class="invalid-feedback">Số điện thoại phải có 10 chữ số</div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="address" class="form-label">Địa chỉ chi tiết <span
+                                                class="required">*</span></label>
+                                        <input type="text" class="form-control" id="address" name="address"
+                                            placeholder="Số nhà, tên đường, phường/xã" required>
+                                        <div class="invalid-feedback">Vui lòng nhập địa chỉ</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="city" class="form-label">Thành phố/Tỉnh <span
+                                                class="required">*</span></label>
+                                        <select class="form-select" id="city" name="city" required>
+                                            <option value="">-- Chọn --</option>
+                                            <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                                            <option value="Hà Nội">Hà Nội</option>
+                                            <option value="Đà Nẵng">Đà Nẵng</option>
+                                            <option value="Cần Thơ">Cần Thơ</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="district" class="form-label">Quận/Huyện <span
+                                                class="required">*</span></label>
+                                        <select class="form-select" id="district" name="district" required>
+                                            <option value="">-- Chọn --</option>
+                                            <option value="Quận 1">Quận 1</option>
+                                            <option value="Quận 2">Quận 2</option>
+                                            <option value="Quận 3">Quận 3</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="note" class="form-label">Ghi chú giao hàng (tùy chọn)</label>
+                                        <textarea class="form-control" id="note" name="note" rows="2"
+                                            placeholder="Ví dụ: Giao vào buổi chiều"></textarea>
+                                    </div>
+                                    <div class="col-12 d-none" id="save-address-section">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="saveAddress" checked>
+                                            <label class="form-check-label" for="saveAddress">
+                                                Đặt làm địa chỉ nhận hàng mặc định của tôi
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
 
                     <div class="checkout-section mb-4">
@@ -343,6 +358,89 @@
             <div class="qr-modal-footer">
                 <button type="button" class="btn-cancel" id="btn-cancel-qr">Hủy</button>
                 <button type="button" class="btn-confirm" id="btn-confirm-payment" disabled>Đã thanh toán</button>
+            </div>
+        </div>
+
+        <!-- MODAL 1: SỔ ĐỊA CHỈ NHẬN HÀNG (ADDRESS BOOK MODAL) -->
+        <div class="address-modal-overlay d-none" id="addressBookModalOverlay">
+            <div class="address-modal-card" id="addressBookModalCard" role="dialog" aria-modal="true">
+                <div class="address-modal-header d-flex justify-content-between align-items-center">
+                    <h5 class="address-modal-title mb-0">Sổ địa chỉ nhận hàng</h5>
+                    <button type="button" class="btn-close-address-modal" id="btn-close-address-book-x">&times;</button>
+                </div>
+                <div class="address-modal-body" id="addressBookListContainer">
+                    <!-- Danh sách địa chỉ được render động -->
+                </div>
+                <div class="address-modal-footer d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn-text-add-address" id="btn-modal-add-address">+ Thêm địa chỉ mới</button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn-modal-cancel" id="btn-close-address-book">Đóng</button>
+                        <button type="button" class="btn-modal-confirm" id="btn-confirm-address-choice">Xác nhận chọn</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL 2: THÊM / CHỈNH SỬA ĐỊA CHỈ (ADDRESS EDIT MODAL) -->
+        <div class="address-modal-overlay d-none" id="addressEditModalOverlay">
+            <div class="address-modal-card" id="addressEditModalCard" role="dialog" aria-modal="true">
+                <div class="address-modal-header d-flex justify-content-between align-items-center">
+                    <h5 class="address-modal-title mb-0" id="addressEditModalTitle">Chỉnh sửa địa chỉ nhận hàng</h5>
+                    <button type="button" class="btn-close-address-modal" id="btn-close-address-edit-x">&times;</button>
+                </div>
+                <div class="address-modal-body">
+                    <form id="modal-address-form">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="modalFullName" class="form-label">Họ và tên <span class="required">*</span></label>
+                                <input type="text" class="form-control" id="modalFullName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="modalPhone" class="form-label">Số điện thoại <span class="required">*</span></label>
+                                <input type="tel" class="form-control" id="modalPhone" pattern="^0[0-9]{9}$" required>
+                            </div>
+                            <div class="col-12">
+                                <label for="modalAddress" class="form-label">Địa chỉ chi tiết <span class="required">*</span></label>
+                                <input type="text" class="form-control" id="modalAddress" placeholder="Số nhà, tên đường, phường/xã" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="modalCity" class="form-label">Thành phố/Tỉnh <span class="required">*</span></label>
+                                <select class="form-select" id="modalCity" required>
+                                    <option value="">-- Chọn --</option>
+                                    <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                                    <option value="Hà Nội">Hà Nội</option>
+                                    <option value="Đà Nẵng">Đà Nẵng</option>
+                                    <option value="Cần Thơ">Cần Thơ</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="modalDistrict" class="form-label">Quận/Huyện <span class="required">*</span></label>
+                                <select class="form-select" id="modalDistrict" required>
+                                    <option value="">-- Chọn --</option>
+                                    <option value="Quận 1">Quận 1</option>
+                                    <option value="Quận 2">Quận 2</option>
+                                    <option value="Quận 3">Quận 3</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label for="modalNote" class="form-label">Ghi chú giao hàng (tùy chọn)</label>
+                                <textarea class="form-control" id="modalNote" rows="2" placeholder="Ví dụ: Giao giờ hành chính"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" id="modalSetDefault" checked>
+                                    <label class="form-check-label fw-semibold" for="modalSetDefault" style="color: #236B48;">
+                                        Đặt làm địa chỉ nhận hàng mặc định của tôi
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="address-modal-footer d-flex justify-content-end gap-2">
+                    <button type="button" class="btn-modal-cancel" id="btn-cancel-modal-address">Hủy</button>
+                    <button type="button" class="btn-modal-confirm" id="btn-save-modal-address">Lưu địa chỉ</button>
+                </div>
             </div>
         </div>
 

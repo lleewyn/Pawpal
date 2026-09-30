@@ -947,5 +947,50 @@
 
 .ui-box-18 {
     width: 16px;
-     height: 16px;
+    height: 16px;
 }
+
+/* ==========================================================================
+   Pending Payment Banner (Chờ thanh toán trực tuyến)
+   ========================================================================== */
+.pending-payment-banner {
+    background: #FFFBEB;
+    border: 1px solid #FCD34D;
+    border-radius: 9px;
+    padding: 16px 20px;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);
+}
+
+.pending-payment-banner .pending-banner-icon {
+    font-size: 26px;
+    line-height: 1;
+}
+
+.pending-payment-banner .pending-banner-title {
+    color: #92400E;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.pending-payment-banner .pending-banner-desc {
+    color: #78350F;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.pending-payment-banner .btn-cta {
+    background: #236B48;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 9px;
+    padding: 9px 18px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.pending-payment-banner .btn-cta:hover {
+    background: #1B5539;
+}
+

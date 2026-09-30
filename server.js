@@ -1,6 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const chatApi = require('./scripts/api/chat.js');
+const vnpayApi = require('./scripts/api/vnpay.js');
 
 const app = express();
 const port = 3000;
@@ -18,6 +20,16 @@ app.post('/api/chat', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Route cho Cổng thanh toán VNPAY
+app.post('/api/vnpay/create-payment-url', async (req, res) => {
+    try {
+        await vnpayApi.createPaymentUrl(req, res);
+    } catch (error) {
+        console.error('[Server] VNPay Route error:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 });
 

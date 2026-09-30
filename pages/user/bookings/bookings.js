@@ -229,6 +229,9 @@ function createBookingCard(booking) {
     const writeReviewBtn = normalizedStatus === 'completed' && !alreadyReviewed
         ? `<a class="btn-review text-decoration-none" href="../booking-detail/booking-detail.html?id=${bookingId}#service-review" onclick="event.stopPropagation()">Đánh giá</a>`
         : '';
+    const complaintBtn = normalizedStatus === 'completed'
+        ? `<a class="btn-complaint text-decoration-none" href="../support-create/support-create.html?type=service&bookingId=${encodeURIComponent(bookingId)}" onclick="event.stopPropagation()" title="Gửi phản ánh hoặc khiếu nại ca dịch vụ này">Phản ánh dịch vụ</a>`
+        : '';
     const detailPrompt = '<span class="booking-card-detail-hint">Nhấn để xem chi tiết</span>';
     const changeScheduleAction = canModify
         ? `<button type="button" class="btn-change-schedule" data-booking-id="${bookingId}">Đổi lịch</button>`
@@ -280,6 +283,7 @@ function createBookingCard(booking) {
                 ${cancelBookingAction}
                 ${writeReviewBtn}
                 ${reviewedBadge}
+                ${complaintBtn}
                 ${detailPrompt}
                 ${isChangeLimited ? '<span class="booking-limit-warning">Đã hết lượt đổi</span>' : ''}
                 ${careLogLink}
