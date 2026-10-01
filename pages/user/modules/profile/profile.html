@@ -1,0 +1,158 @@
+<!-- modules/profile/profile.html - Module Quản lý tài khoản & Cài đặt Pawpal -->
+<div class="profile-module-container">
+    <!-- TỔNG QUAN TÀI KHOẢN -->
+    <div class="profile-overview-content" id="paneOverview">
+        <!-- Banner chào mừng & thống kê -->
+        <div class="dashboard-welcome-banner mb-4">
+            <div class="welcome-banner-content">
+                <h2 class="welcome-title-custom">Xin chào Sen <span id="welcomeName">bạn</span></h2>
+                <div class="welcome-banner-stats">
+                    <div class="welcome-stat-card">
+                        <span class="welcome-stat-value" id="statPoints">0</span>
+                        <span class="welcome-stat-label">PAW POINTS</span>
+                    </div>
+                    <div class="welcome-stat-card">
+                        <span class="welcome-stat-value" id="statAccountType">-</span>
+                        <span class="welcome-stat-label">HẠNG THÀNH VIÊN</span>
+                    </div>
+                    <div class="welcome-stat-card">
+                        <span class="welcome-stat-value" id="statPetsCount">0</span>
+                        <span class="welcome-stat-label">BÉ CƯNG CỦA BẠN</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách bé cưng -->
+        <div class="dashboard-section-wrapper mb-4">
+            <div class="section-header-row mb-3">
+                <h3 class="section-title-custom">Bé cưng của bạn</h3>
+                <a href="#pets" class="section-link-custom">Xem tất cả hồ sơ &rarr;</a>
+            </div>
+            <div class="horizontal-scroll-card-custom">
+                <div class="pets-horizontal-list" id="myPetsContainerHorizontal">
+                    <p class="text-muted p-3">Đang tải...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lịch hẹn sắp tới -->
+        <div class="dashboard-section-wrapper mb-4">
+            <div class="section-header-row mb-3">
+                <h3 class="section-title-custom">Lịch hẹn sắp tới</h3>
+                <a href="#bookings" class="section-link-custom">Xem tất cả lịch &rarr;</a>
+            </div>
+            <div id="upcomingBookingCardContainer">
+                <p class="text-muted p-3">Đang tải...</p>
+            </div>
+        </div>
+
+        <!-- Grid 2 cột: Thông tin cá nhân & Đơn hàng gần đây -->
+        <div class="dashboard-bottom-grid">
+            <!-- Cột trái: Thông tin cá nhân -->
+            <div class="dashboard-bottom-card">
+                <div class="bottom-card-header mb-3">
+                    <h3 class="bottom-card-title-custom">Thông tin cá nhân</h3>
+                    <button id="btnEditProfile" type="button" class="btn-edit-link-custom">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" class="me-1 align-text-bottom"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Chỉnh sửa
+                    </button>
+                </div>
+
+                <div class="profile-info-section-custom" id="profileDisplaySection">
+                    <div class="info-row-custom">
+                        <span class="info-label-custom">Họ và tên</span>
+                        <span class="info-value-custom" id="profileName">-</span>
+                    </div>
+                    <div class="info-row-custom">
+                        <span class="info-label-custom">Email</span>
+                        <span class="info-value-custom" id="profileEmail">Chưa cập nhật</span>
+                    </div>
+                    <div class="info-row-custom">
+                        <span class="info-label-custom">Số điện thoại</span>
+                        <span class="info-value-custom" id="profilePhone">-</span>
+                    </div>
+                    <div class="info-row-custom">
+                        <span class="info-label-custom">Địa chỉ chính</span>
+                        <span class="info-value-custom text-end" id="profileAddress">Chưa thiết lập địa chỉ mặc định</span>
+                    </div>
+
+                    <div class="d-none">
+                        <span id="profileGender">-</span>
+                        <span id="profileDob">-</span>
+                        <button id="btnEditAddress">Sửa</button>
+                        <div id="addressCardView"></div>
+                        <div id="addressCardEdit">
+                            <textarea id="profileAddressInput"></textarea>
+                            <button id="btnSaveAddress">Lưu</button>
+                            <button id="btnCancelAddress">Huỷ</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal chỉnh sửa thông tin cá nhân -->
+                <div class="modal fade" id="profileEditModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Chỉnh sửa thông tin cá nhân</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="profileUpdateForm" class="profile-update-form">
+                                    <div class="mb-3">
+                                        <label for="profileNameInput" class="form-label">Họ và tên</label>
+                                        <input type="text" class="form-control" id="profileNameInput" placeholder="Nhập tên của bạn" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="profileEmailInput" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="profileEmailInput" placeholder="Nhập địa chỉ email">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="profilePhoneInput" class="form-label">Số điện thoại</label>
+                                        <input type="tel" class="form-control" id="profilePhoneInput" placeholder="0xxxxxxxxx" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Địa chỉ</label>
+                                        <div id="addressesList" class="mb-3"></div>
+                                        <div class="row g-2">
+                                            <div class="col-12">
+                                                <input id="newAddressStreetInput" class="form-control" placeholder="Số nhà, tên đường, phường/xã">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input id="newAddressDistrictInput" class="form-control" placeholder="Quận/Huyện">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input id="newAddressCityInput" class="form-control" placeholder="Thành phố/Tỉnh">
+                                            </div>
+                                            <div class="col-12">
+                                                <button id="btnAddAddress" type="button" class="btn btn-outline-primary w-100">Thêm địa chỉ</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
+                                <button id="btnSaveProfile" type="button" class="btn btn-primary">Lưu</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột phải: Đơn hàng gần đây -->
+            <div class="dashboard-bottom-card">
+                <div class="bottom-card-header mb-3">
+                    <h3 class="bottom-card-title-custom">Đơn hàng gần đây</h3>
+                    <a href="#orders" class="section-link-custom">Xem tất cả</a>
+                </div>
+                <div class="recent-orders-list-custom" id="recentOrdersContainer">
+                    <p class="text-muted p-3">Chưa có đơn hàng nào.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Container Toast thông báo -->
+<div class="toast-container-custom" id="toastContainer"></div>

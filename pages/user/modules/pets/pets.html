@@ -1,0 +1,187 @@
+<!-- modules/pets/pets.html - Module Hồ sơ bé cưng Pawpal -->
+<div class="pets-module-container">
+    <!-- Thanh lọc tab: Đang hoạt động / Kho lưu trữ -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div class="d-flex gap-2">
+            <button class="tab-btn active" data-tab="active">Đang hoạt động</button>
+            <button class="tab-btn" data-tab="archive">Kho lưu trữ</button>
+        </div>
+        <button class="btn btn-success btn-sm px-3 rounded-pill" type="button" onclick="window.openPetFormModal()">
+            + Thêm bé mới
+        </button>
+    </div>
+
+    <!-- TAB 1: ĐANG HOẠT ĐỘNG -->
+    <div id="activeTab">
+        <div class="pet-cards-grid" id="activePetGrid"></div>
+        
+        <div class="empty-state d-none" id="emptyStateActive">
+            <div class="empty-state-icon mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </div>
+            <h3 class="empty-state-title">Chưa có bé cưng nào</h3>
+            <p class="empty-state-desc">Thêm hồ sơ bé cưng để bắt đầu sử dụng dịch vụ của PawPal nhé!</p>
+            <button class="btn btn-success px-4" type="button" onclick="window.openPetFormModal()">
+                Thêm bé mới
+            </button>
+        </div>
+    </div>
+
+    <!-- TAB 2: KHO LƯU TRỮ -->
+    <div id="archiveTab" class="d-none">
+        <div class="pet-cards-grid" id="archivePetGrid"></div>
+        
+        <div class="empty-state d-none" id="emptyStateArchive">
+            <div class="empty-state-icon mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                    <rect x="1" y="3" width="22" height="5"></rect>
+                    <line x1="10" y1="12" x2="14" y2="12"></line>
+                </svg>
+            </div>
+            <h3 class="empty-state-title">Kho lưu trữ trống</h3>
+            <p class="empty-state-desc">Các hồ sơ đã xóa sẽ xuất hiện ở đây và tự động xóa sau 30 ngày.</p>
+        </div>
+    </div>
+
+    <!-- Khối ưu đãi & nhắc nhở -->
+    <div class="pet-profile-bottom-grid mt-5">
+        <div class="row g-4">
+            <div class="col-md-7">
+                <div class="pet-offer-card">
+                    <div>
+                        <h3>Ưu đãi hôm nay dành cho bé</h3>
+                        <p>Giảm 20% cho tất cả dịch vụ spa và làm đẹp khi đặt lịch qua ứng dụng PawPal.</p>
+                    </div>
+                    <a href="/pages/services/booking/booking.html" class="btn-offer-cta">Đặt ngay</a>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="pet-reminder-card">
+                    <div>
+                        <h3>Nhắc nhở</h3>
+                        <div class="reminder-list" id="pet-reminders-list"></div>
+                    </div>
+                    <a href="#bookings" class="link-view-all">Xem tất cả lịch hẹn</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM / CHỈNH SỬA BÉ CƯNG -->
+    <div class="modal-overlay" id="petFormModal">
+        <div class="modal-content modal-content-large pet-form-modal-shell pet-add-page">
+            <button class="modal-close" onclick="document.getElementById('petFormModal').classList.remove('active'); if (!document.getElementById('petId').value && typeof resetPetForm === 'function') resetPetForm(); return false;" aria-label="Đóng">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <div class="page-wrap">
+                <div class="modal-header-section text-center mb-2">
+                    <h3 class="modal-title-custom" id="petModalTitle">Thêm bé cưng mới</h3>
+                    <p class="modal-subtitle-custom" id="petModalSubtitle">Đăng ký thông tin để PawPal chăm sóc bé chu đáo và chuẩn xác nhất</p>
+                </div>
+                
+                <div class="avatar-upload">
+                    <div class="avatar-circle" id="avatarCircle" onclick="document.getElementById('avatar-input').click()" title="Bấm để chọn ảnh đại diện">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                        <img id="avatarPreview" src="" alt="" style="display:none;" onerror="this.style.display='none'; if(this.parentElement) this.parentElement.classList.remove('has-image');">
+                    </div>
+                    <p class="avatar-hint"><a href="#" onclick="document.getElementById('avatar-input').click();return false;">Tải ảnh lên</a> — JPG, PNG, WEBP tối đa 5MB</p>
+                    <input type="file" id="avatar-input" accept="image/*">
+                </div>
+
+                <form id="petForm" novalidate>
+                    <input type="hidden" id="petId" value="">
+                    <div class="form-section">
+                        <div class="section-label">Thông tin cơ bản</div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="petName">Tên bé cưng <span class="req">*</span></label>
+                                <input type="text" id="petName" placeholder="Ví dụ: Milu, Bông, Cam...">
+                                <span class="error-msg d-none">Vui lòng nhập tên bé.</span>
+                            </div>
+
+                            <div class="field">
+                                <label>Loài <span class="req">*</span></label>
+                                <div class="chip-group">
+                                    <input type="radio" name="species" id="dog" value="dog">
+                                    <label for="dog">Chó</label>
+                                    <input type="radio" name="species" id="cat" value="cat">
+                                    <label for="cat">Mèo</label>
+                                    <input type="radio" name="species" id="rabbit" value="rabbit">
+                                    <label for="rabbit">Thỏ</label>
+                                    <input type="radio" name="species" id="other" value="other">
+                                    <label for="other">Khác</label>
+                                </div>
+                                <span class="error-msg d-none">Vui lòng chọn loài thú cưng.</span>
+                                <div id="otherSpeciesWrap" class="mt-2 d-none">
+                                    <input type="text" id="otherSpecies" placeholder="Ví dụ: Hamster, Rùa, Chim...">
+                                    <span class="error-msg d-none">Vui lòng nhập loài khác.</span>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label for="breed">Giống cụ thể</label>
+                                <input type="text" id="breed" placeholder="Ví dụ: Poodle, Anh lông ngắn...">
+                            </div>
+                            <div class="field">
+                                <label>Giới tính</label>
+                                <div class="chip-group">
+                                    <input type="radio" name="gender" id="male" value="male">
+                                    <label for="male">Đực</label>
+                                    <input type="radio" name="gender" id="female" value="female">
+                                    <label for="female">Cái</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="section-label">Thể chất và Y tế</div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="weight">Cân nặng (kg) <span class="req">*</span></label>
+                                <input type="number" id="weight" step="0.1" min="0.1" max="150" placeholder="0.0">
+                                <span class="error-msg d-none">Vui lòng nhập cân nặng hợp lệ (> 0 kg).</span>
+                            </div>
+                            <div class="field">
+                                <label for="dob">Ngày sinh (ước tính)</label>
+                                <input type="date" id="dob">
+                            </div>
+                            <div class="field">
+                                <label for="color">Màu lông / Đặc điểm</label>
+                                <input type="text" id="color" placeholder="Ví dụ: Vàng trắng, Xám xanh...">
+                                <span class="error-msg d-none"></span>
+                            </div>
+                            <div class="field d-flex align-items-center" style="padding-top: 26px;">
+                                <label class="checkbox-label" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" id="vaccinated" style="width: 18px; height: 18px; accent-color: #236B48;">
+                                    <span style="font-weight: 500; font-size: 14px; color: var(--text-dark);">Đã tiêm phòng định kỳ</span>
+                                </label>
+                            </div>
+                            <div class="field" style="grid-column: 1 / -1;">
+                                <label for="allergies">Dị ứng / Bệnh nền (nếu có)</label>
+                                <input type="text" id="allergies" placeholder="Ví dụ: Dị ứng thịt gà, phấn hoa...">
+                            </div>
+                            <div class="field" style="grid-column: 1 / -1;">
+                                <label for="notes">Ghi chú chăm sóc</label>
+                                <input type="text" id="notes" placeholder="Tính cách, thói quen ăn uống, lưu ý khi sấy/cắt móng...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions mt-3 d-flex justify-content-end gap-2 pt-3" style="border-top: 1px solid var(--border);">
+                        <button type="button" class="btn btn-outline-secondary px-4" onclick="document.getElementById('petFormModal').classList.remove('active');">Hủy</button>
+                        <button type="submit" class="btn btn-success px-4" id="saveBtn" style="background-color: #236B48; border-color: #236B48;">Lưu hồ sơ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

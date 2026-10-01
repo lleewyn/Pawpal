@@ -674,7 +674,7 @@ function initAuthForms() {
                     setTimeout(() => {
                         window.location.href = result.user.role === 'admin'
                             ? '/pages/admin/index/index.html'
-                            : '/pages/user/dashboard/dashboard.html';
+                            : '/pages/user/#profile';
                     }, 2000);
                     return;
                 }
@@ -728,7 +728,7 @@ function initAuthForms() {
             setTimeout(() => {
                 window.location.href = user.role === 'admin'
                     ? '/pages/admin/index/index.html'
-                    : '/pages/user/dashboard/dashboard.html';
+                    : '/pages/user/#profile';
             }, 2000);
         } else {
             showErrorBanner(
@@ -980,7 +980,7 @@ function initAuthForms() {
             counterEl.textContent = current;
             if (current >= 50) {
                 clearInterval(timer);
-                setTimeout(() => { window.location.href = '/pages/user/dashboard/dashboard.html'; }, 2000);
+                setTimeout(() => { window.location.href = '/pages/user/#profile'; }, 2000);
             }
         }, stepTime);
     }
@@ -1069,7 +1069,7 @@ function initAuthForms() {
             localStorage.setItem(TEMP_TOKENS_KEY, JSON.stringify(tokens.filter(t => t.token !== token)));
 
             showToast('success', 'Kích hoạt tài khoản thành viên thành công! Bạn nhận thêm 50 điểm thưởng chào mừng.');
-            setTimeout(() => { window.location.href = '/pages/user/dashboard/dashboard.html'; }, 2000);
+            setTimeout(() => { window.location.href = '/pages/user/#profile'; }, 2000);
         });
     }
 
@@ -1313,7 +1313,7 @@ function initAuthForms() {
                 sessionStorage.setItem('guestVerifiedPhone', phone);
                 window.isGuestActivationFlow = false;
                 showToast('success', 'Kích hoạt thành công! Bạn nhận 50 Paw Points chào mừng 🎉', 3000);
-                setTimeout(() => { window.location.href = '/pages/user/dashboard/dashboard.html'; }, 2500);
+                setTimeout(() => { window.location.href = '/pages/user/#profile'; }, 2500);
                 return;
             }
 
@@ -1322,7 +1322,7 @@ function initAuthForms() {
             setTimeout(() => {
                 window.location.href = updatedUser.role === 'admin'
                     ? '/pages/admin/index/index.html'
-                    : '/pages/user/dashboard/dashboard.html';
+                    : '/pages/user/#profile';
             }, 2000);
         });
     } 

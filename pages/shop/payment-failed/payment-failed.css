@@ -1,10 +1,158 @@
 
-
-.ui-bg-box-8 {
-    min-height:110px;
-    background:#f4faf7;
+.payment-result-page {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
 }
 
-.ui-element-8 {
-    vertical-align: text-top;
+.result-icon-container {
+  margin-bottom: var(--space-lg);
+}
+
+.result-icon {
+  width: 100px;
+  height: 100px;
+}
+
+.error-icon {
+  color: var(--color-danger);
+  animation: fadeInShake 0.6s ease-out;
+}
+
+@keyframes fadeInShake {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  60% { transform: translateX(-5px); }
+  70% { transform: translateX(5px); }
+  80% { transform: translateX(-3px); }
+  90% { transform: translateX(3px); }
+  100% { transform: translateX(0); }
+}
+
+/* Result Title */
+.result-title {
+  font-family: var(--font-heading);
+  font-size: var(--fs-h1);
+  font-weight: 700;
+}
+
+.result-subtitle {
+  font-size: var(--fs-body);
+  line-height: 1.6;
+}
+
+/* Info Card */
+.info-card {
+  background: var(--color-bg-white);
+  border: var(--border-card);
+  border-radius: var(--card-border-radius);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-md);
+}
+
+.info-card .card-title {
+  font-family: var(--font-heading);
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+  color: var(--color-text-dark);
+}
+
+/* Info Rows */
+.info-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  color: var(--color-text-light);
+  font-size: var(--fs-body);
+  flex-shrink: 0;
+  width: 180px;
+}
+
+.info-value {
+  color: var(--color-text-dark);
+  font-weight: 500;
+  text-align: right;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--border-radius-pill);
+  font-size: var(--fs-small);
+  font-weight: 600;
+}
+
+.status-failed {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.ui-bg-box-8 {
+  min-height: 110px;
+  background: #f4faf7;
+}
+
+.ui-element-9 {
+  vertical-align: text-top;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .result-icon {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .result-title {
+    font-size: var(--fs-h2);
+  }
+  
+  .info-card {
+    padding: var(--space-md);
+  }
+  
+  .info-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .info-label {
+    width: 100%;
+  }
+  
+  .info-value {
+    width: 100%;
+    text-align: left;
+    justify-content: flex-start;
+  }
 }

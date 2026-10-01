@@ -17,6 +17,26 @@
       "destination": "/pages/public/landing/landing.html"
     },
     {
+      "source": "/pages/shop",
+      "destination": "/pages/shop/index.html"
+    },
+    {
+      "source": "/pages/shop/",
+      "destination": "/pages/shop/index.html"
+    },
+    {
+      "source": "/shop",
+      "destination": "/pages/shop/index.html"
+    },
+    {
+      "source": "/cart",
+      "destination": "/pages/shop/cart/cart.html"
+    },
+    {
+      "source": "/checkout",
+      "destination": "/pages/shop/checkout/checkout.html"
+    },
+    {
       "source": "/pages/shop/shop",
       "destination": "/pages/shop/shop.html"
     },
@@ -25,12 +45,56 @@
       "destination": "/pages/shop/product-detail/product-detail.html"
     },
     {
+      "source": "/pages/services",
+      "destination": "/pages/services/index.html"
+    },
+    {
+      "source": "/pages/services/",
+      "destination": "/pages/services/index.html"
+    },
+    {
+      "source": "/services",
+      "destination": "/pages/services/index.html"
+    },
+    {
+      "source": "/booking",
+      "destination": "/pages/services/booking/booking.html"
+    },
+    {
       "source": "/pages/services/booking",
       "destination": "/pages/services/booking/booking.html"
     },
     {
       "source": "/pages/services/services",
       "destination": "/pages/services/services.html"
+    },
+    {
+      "source": "/pages/public",
+      "destination": "/pages/public/index.html"
+    },
+    {
+      "source": "/pages/public/",
+      "destination": "/pages/public/index.html"
+    },
+    {
+      "source": "/landing",
+      "destination": "/pages/public/landing/landing.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/pages/public/about/about.html"
+    },
+    {
+      "source": "/blog",
+      "destination": "/pages/public/blog/blog.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/pages/public/contact/contact.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/pages/public/login/login.html"
     },
     {
       "source": "/pages/public/about",
@@ -53,44 +117,60 @@
       "destination": "/pages/public/return-guest/return-guest.html"
     },
     {
+      "source": "/pages/user",
+      "destination": "/pages/user/index.html"
+    },
+    {
+      "source": "/pages/user/",
+      "destination": "/pages/user/index.html"
+    },
+    {
       "source": "/pages/user/dashboard",
-      "destination": "/pages/user/dashboard/dashboard.html"
+      "destination": "/pages/user/index.html#profile"
+    },
+    {
+      "source": "/pages/user/settings",
+      "destination": "/pages/user/index.html#settings"
     },
     {
       "source": "/pages/user/bookings",
-      "destination": "/pages/user/bookings/bookings.html"
+      "destination": "/pages/user/index.html#bookings"
     },
     {
       "source": "/pages/user/booking-detail",
-      "destination": "/pages/user/booking-detail/booking-detail.html"
+      "destination": "/pages/user/index.html#bookings"
     },
     {
       "source": "/pages/user/orders",
-      "destination": "/pages/user/orders/orders.html"
+      "destination": "/pages/user/index.html#orders"
     },
     {
       "source": "/pages/user/order-detail",
-      "destination": "/pages/user/order-detail/order-detail.html"
+      "destination": "/pages/user/index.html#orders"
     },
     {
       "source": "/pages/user/pet-profile",
-      "destination": "/pages/user/pet-profile/pet-profile.html"
+      "destination": "/pages/user/index.html#pets"
     },
     {
       "source": "/pages/user/pet-diary",
-      "destination": "/pages/user/pet-diary/pet-diary.html"
+      "destination": "/pages/user/index.html#diary"
     },
     {
       "source": "/pages/user/wishlist",
-      "destination": "/pages/user/wishlist/wishlist.html"
+      "destination": "/pages/user/index.html#wishlist"
     },
     {
       "source": "/pages/user/loyalty",
-      "destination": "/pages/user/loyalty/loyalty.html"
+      "destination": "/pages/user/index.html#loyalty"
     },
     {
       "source": "/pages/user/support-tickets",
-      "destination": "/pages/user/support-tickets/support-tickets.html"
+      "destination": "/pages/user/index.html#support"
+    },
+    {
+      "source": "/pages/user/support",
+      "destination": "/pages/user/index.html#support"
     }
   ]
 }

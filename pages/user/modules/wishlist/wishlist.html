@@ -1,0 +1,26 @@
+<!-- modules/wishlist/wishlist.html - Module Sản phẩm yêu thích Pawpal -->
+<div class="wishlist-module-container">
+    <div class="dashboard-content-panel">
+        <div class="wishlist-header mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <p class="wishlist-count mb-0">Bạn có <span id="wishlistCount" class="fw-bold text-success">0</span> mục yêu thích</p>
+            <div class="wishlist-tabs d-flex gap-2">
+                <button type="button" class="wishlist-tab active" data-type="all">Tất cả</button>
+                <button type="button" class="wishlist-tab" data-type="product">Sản phẩm</button>
+                <button type="button" class="wishlist-tab" data-type="service">Dịch vụ</button>
+            </div>
+        </div>
+
+        <!-- Trạng thái trống -->
+        <div id="emptyWishlist" class="empty-wishlist text-center py-5">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-muted mb-3">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+            <h4>Chưa có mục yêu thích</h4>
+            <p class="text-muted mb-4">Hãy lưu sản phẩm hoặc dịch vụ bạn quan tâm để tiện quay lại xem và đặt nhanh hơn</p>
+            <a href="/pages/shop/shop.html" class="btn btn-success px-4 rounded-pill">Khám phá ngay</a>
+        </div>
+
+        <!-- Danh sách mục yêu thích -->
+        <div id="wishlistGrid" class="wishlist-grid d-none"></div>
+    </div>
+</div>

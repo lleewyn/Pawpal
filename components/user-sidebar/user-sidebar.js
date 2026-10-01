@@ -1,63 +1,52 @@
 (function() {
-    const currentPath = window.location.pathname.toLowerCase();
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentTab = urlParams.get('tab') || 'profile';
-    const navLinks = document.querySelectorAll('.sidebar-nav .sidebar-link');
-    
-    navLinks.forEach(link => {
-        const href = link.getAttribute('href');
-        if (href && href !== '#') {
-            const linkPath = href.toLowerCase();
-            const linkTab = link.getAttribute('data-tab');
-            
-            if (currentPath.includes('dashboard') && linkPath.includes('dashboard')) {
-                if (linkTab === currentTab) {
+    function updateActiveState() {
+        const currentPath = window.location.pathname.toLowerCase();
+        const currentHash = (window.location.hash || '').toLowerCase();
+        const navLinks = document.querySelectorAll('.sidebar-nav .sidebar-link');
+        
+        navLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (!href || href === '#') return;
+            const linkHref = href.toLowerCase();
+
+            // Nếu đang trong SPA trung tâm (/pages/user/ hoặc index.html)
+            if (currentPath.includes('/pages/user') && (currentPath.endsWith('/user/') || currentPath.includes('index.html') || currentPath.endsWith('/user'))) {
+                let targetHash = '#profile';
+                if (linkHref.includes('#')) {
+                    targetHash = '#' + linkHref.split('#')[1];
+                }
+
+                const activeHash = currentHash.split('?')[0] || '#profile';
+                if (activeHash === targetHash) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            } else {
+                // Legacy path check
+                if (currentPath.includes('dashboard') && linkHref.includes('profile')) {
+                    link.classList.add('active');
+                } else if (currentPath.includes('pet-profile') && linkHref.includes('pets')) {
+                    link.classList.add('active');
+                } else if (currentPath.includes('pet-diary') && linkHref.includes('diary')) {
+                    link.classList.add('active');
+                } else if (currentPath.includes('booking') && linkHref.includes('booking')) {
+                    link.classList.add('active');
+                } else if (currentPath.includes('order') && linkHref.includes('order')) {
+                    link.classList.add('active');
+                } else if (currentPath.includes('wishlist') && linkHref.includes('wishlist')) {
+                    link.classList.add('active');
+                } else if (currentPath.includes('loyalty') && linkHref.includes('loyalty')) {
+                    link.classList.add('active');
+                } else if (currentPath.includes('support') && linkHref.includes('support')) {
+                    link.classList.add('active');
+                } else if (currentPath.includes('settings') && linkHref.includes('settings')) {
                     link.classList.add('active');
                 }
-                
-                if (linkPath.includes('dashboard') && linkTab) {
-                    link.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        
-                        const newUrl = linkTab === 'profile' 
-                            ? '/pages/user/dashboard.html' 
-                            : `/pages/user/dashboard.html?tab=${linkTab}`;
-                        window.history.pushState({}, '', newUrl);
-                        
-                        document.querySelectorAll('.dashboard-content-panel').forEach(panel => {
-                            panel.classList.add('d-none');
-                        });
-                        
-                        const tabMap = {
-                            'profile': 'profileTab',
-                            'security': 'securityTab'
-                        };
-                        const targetTabId = tabMap[linkTab] || 'profileTab';
-                        const targetTab = document.getElementById(targetTabId);
-                        if (targetTab) {
-                            targetTab.classList.remove('d-none');
-                        }
-                        
-                        navLinks.forEach(l => l.classList.remove('active'));
-                        link.classList.add('active');
-                    });
-                }
-            } 
-            else if (currentPath.includes('pet-profile') && linkPath.includes('pet-profile')) {
-                link.classList.add('active');
-            } else if (currentPath.includes('pet-diary') && linkPath.includes('pet-diary')) {
-                link.classList.add('active');
-            } else if (currentPath.includes('booking') && linkPath.includes('booking')) {
-                link.classList.add('active');
-            } else if (currentPath.includes('orders') && linkPath.includes('orders')) {
-                link.classList.add('active');
-            } else if (currentPath.includes('wishlist') && linkPath.includes('wishlist')) {
-                link.classList.add('active');
-            } else if (currentPath.includes('loyalty') && linkPath.includes('loyalty')) {
-                link.classList.add('active');
-            } else if (currentPath.includes('support') && linkPath.includes('support')) {
-                link.classList.add('active');
             }
-        }
-    });
+        });
+    }
+
+    updateActiveState();
+    window.addEventListener('hashchange', updateActiveState);
 })();

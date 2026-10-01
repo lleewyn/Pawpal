@@ -134,38 +134,78 @@ function mapAppointmentPet(row, currentUser) {
 function normalizePetList(pets) {
     if (!Array.isArray(pets)) return [];
 
-    const map = new Map();
-    const findExisting = (pet, sig) => {
-        if (pet._supabaseId && map.has(`db:${pet._supabaseId}`)) return map.get(`db:${pet._supabaseId}`);
-        if (pet.id && map.has(`id:${pet.id}`)) return map.get(`id:${pet.id}`);
-        if (map.has(`sig:${sig}`)) return map.get(`sig:${sig}`);
-        return null;
-    };
+    const mapById = new Map();
+    const mapByNameSpecies = new Map();
+    const result = [];
 
-    pets.map(normalizePetAvatar).forEach((pet) => {
-        if (!pet) return;
-        const signature = getPetSignature(pet);
-        const existing = findExisting(pet, signature);
-        
-        let mergedPet = { ...pet, __signature: signature };
-        if (existing) {
-            mergedPet = {
-                ...existing,
-                ...pet, // later pet overrides earlier
-                __signature: signature,
-                _supabaseId: pet._supabaseId || existing._supabaseId || null,
-            };
-            if (existing._supabaseId) map.delete(`db:${existing._supabaseId}`);
-            if (existing.id) map.delete(`id:${existing.id}`);
-            map.delete(`sig:${existing.__signature}`);
+    const normalizedList = pets.map(normalizePetAvatar).filter(Boolean);
+
+    for (const pet of normalizedList) {
+        const id = String(pet.id || pet.code || '').trim().toLowerCase();
+        const name = String(pet.name || '').trim();
+        const species = String(pet.species || 'other').trim().toLowerCase();
+
+        if (!name) continue;
+
+        // Bỏ các pet rác tạo trong quá trình test tự động nếu trùng lặp
+        const cleanName = name.toLowerCase();
+        const isJunkTest = cleanName.startsWith('cún test') || cleanName.startsWith('test') || cleanName === 'bbeobeo';
+
+        const nameKey = `${cleanName}|${species}`;
+
+        // 1. Kiểm tra trùng theo ID
+        if (id && mapById.has(id)) {
+            const existing = mapById.get(id);
+            Object.assign(existing, pet, {
+                avatar: pet.avatar || existing.avatar,
+                breed: pet.breed || existing.breed,
+                dob: pet.dob || existing.dob,
+                weight: pet.weight || existing.weight
+            });
+            continue;
         }
-        
-        if (mergedPet._supabaseId) map.set(`db:${mergedPet._supabaseId}`, mergedPet);
-        else if (mergedPet.id) map.set(`id:${mergedPet.id}`, mergedPet);
-        else map.set(`sig:${signature}`, mergedPet);
-    });
 
-    return Array.from(map.values()).map(({ __signature, ...pet }) => pet);
+        // 2. Kiểm tra trùng theo Tên + Giống loài
+        if (mapByNameSpecies.has(nameKey)) {
+            const existing = mapByNameSpecies.get(nameKey);
+            // Ưu tiên giữ ID chuẩn PET-001..PET-004 nếu có
+            if (existing.id && existing.id.startsWith('PET-00') && (!pet.id || !pet.id.startsWith('PET-00'))) {
+                Object.assign(existing, {
+                    avatar: pet.avatar || existing.avatar,
+                    breed: pet.breed || existing.breed,
+                    notes: pet.notes || existing.notes,
+                    allergies: pet.allergies || existing.allergies
+                });
+                continue;
+            } else if (pet.id && pet.id.startsWith('PET-00')) {
+                Object.assign(existing, pet);
+                if (id) mapById.set(id, existing);
+                continue;
+            } else {
+                // Trùng tên (ví dụ nhiều con Misa, Sean) -> gộp thành 1 bé duy nhất
+                Object.assign(existing, {
+                    avatar: pet.avatar || existing.avatar,
+                    breed: pet.breed || existing.breed,
+                    dob: pet.dob || existing.dob,
+                    weight: pet.weight || existing.weight,
+                    notes: pet.notes || existing.notes,
+                    allergies: pet.allergies || existing.allergies
+                });
+                continue;
+            }
+        }
+
+        if (isJunkTest && mapByNameSpecies.size >= 4) {
+            continue; // Bỏ qua test junk pet nếu đã có danh sách pet chính
+        }
+
+        const cleanPet = { ...pet };
+        if (id) mapById.set(id, cleanPet);
+        mapByNameSpecies.set(nameKey, cleanPet);
+        result.push(cleanPet);
+    }
+
+    return result;
 }
 
 function buildPetPayload(pet, currentUser, current) {
@@ -276,9 +316,115 @@ function mergePetLists(serverPets, localPets, targetUserId) {
     return Array.from(map.values()).map(({ __priority, __signature, ...pet }) => pet);
 }
 
+function syncToAdminPets(pets, currentUser) {
+    if (!Array.isArray(pets)) return;
+    try {
+        let adminPets = {};
+        const rawAdmin = sessionStorage.getItem('pawpal_admin_pets_data') || localStorage.getItem('pawpal_admin_pets_data');
+        if (rawAdmin) {
+            try { adminPets = JSON.parse(rawAdmin); } catch (e) {}
+        }
+        
+        const speciesNameMap = { 'dog': 'Chó', 'cat': 'Mèo', 'rabbit': 'Thỏ', 'other': 'Khác' };
+        
+        pets.forEach(pet => {
+            const code = pet.id || pet.code;
+            if (!code) return;
+            const existing = adminPets[code] || {};
+            const spec = pet.species || existing.species || 'dog';
+            const br = pet.breed || existing.breed || '';
+            const specBreed = `${speciesNameMap[spec] || 'Chó'} ${br}`.trim();
+            const wNum = typeof pet.weight === 'number' ? pet.weight : (parseFloat(pet.weight) || pet.weightNum || existing.weightNum || 0);
+            const genderStr = (pet.gender === 'female' || pet.gender === 'Cái') ? 'Cái' : 'Đực';
+            const dobVal = pet.dobRaw || pet.dob || existing.dobRaw || '';
+            const allg = pet.allergies || pet.allergy || existing.allergy || '';
+            const isArch = Boolean(pet.isArchived);
+            
+            adminPets[code] = {
+                ...existing,
+                id: code,
+                code: code,
+                name: pet.name || existing.name || '',
+                species: spec,
+                speciesBreed: specBreed,
+                breed: br || 'Chưa cập nhật',
+                gender: genderStr,
+                weight: `${wNum} kg`,
+                weightNum: wNum,
+                dob: dobVal ? `${dobVal}` : (existing.dob || 'Chưa cập nhật'),
+                dobRaw: dobVal,
+                color: pet.color || existing.color || 'Chưa cập nhật',
+                allergy: allg || 'Không',
+                allergies: allg,
+                notes: pet.notes || existing.notes || '',
+                alert: allg && allg !== 'Không' ? `Cảnh báo dị ứng: ${allg}` : (existing.alert || ''),
+                ownerName: pet.ownerName || existing.ownerName || currentUser?.name || 'Khách hàng',
+                ownerPhone: pet.ownerPhone || existing.ownerPhone || currentUser?.phone || '',
+                custId: pet.custId || existing.custId || currentUser?.custId || currentUser?.id || 'CUST-001',
+                avatar: pet.avatar || existing.avatar || getDefaultPetAvatar(spec),
+                status: isArch ? 'Lưu trữ' : (existing.status || 'Đang nuôi'),
+                vaccinated: pet.vaccinated != null ? pet.vaccinated : (existing.vaccinated || false),
+                isHotel: existing.isHotel || false,
+                isArchived: isArch,
+                weightHistory: existing.weightHistory || [],
+                vaccines: existing.vaccines || (pet.vaccinated ? [{ title: 'Tiêm phòng định kỳ', status: 'Đã tiêm đủ', date: new Date().toLocaleDateString('vi-VN') }] : []),
+                carelogs: existing.carelogs || [],
+                history: existing.history || []
+            };
+        });
+        
+        sessionStorage.setItem('pawpal_admin_pets_data', JSON.stringify(adminPets));
+        localStorage.setItem('pawpal_admin_pets_data', JSON.stringify(adminPets));
+        
+        // Đồng bộ với Admin Customer 360° nếu có trong sessionStorage
+        const rawCust = sessionStorage.getItem('pawpal_admin_customers_data');
+        if (rawCust) {
+            try {
+                const custData = JSON.parse(rawCust);
+                pets.forEach(pet => {
+                    const targetCustId = pet.custId || currentUser?.custId || currentUser?.id;
+                    const targetPhone = pet.ownerPhone || currentUser?.phone;
+                    const custKey = Object.keys(custData).find(k => 
+                        k === targetCustId || (targetPhone && custData[k]?.phone === targetPhone)
+                    );
+                    if (custKey && custData[custKey]) {
+                        const customer = custData[custKey];
+                        if (!Array.isArray(customer.pets)) customer.pets = [];
+                        const petIdx = customer.pets.findIndex(p => p.id === pet.id);
+                        const specName = speciesNameMap[pet.species] || 'Chó';
+                        const petSummary = {
+                            id: pet.id,
+                            name: pet.name,
+                            species: specName,
+                            breed: pet.breed || '',
+                            weight: String(parseFloat(pet.weight) || 0),
+                            vaccine: pet.vaccinated ? 'Sổ theo dõi tiêm phòng định kỳ đầy đủ' : 'Chưa cập nhật sổ tiêm',
+                            alertNote: (pet.allergies || pet.allergy) ? `Cảnh báo: ${pet.allergies || pet.allergy}` : 'Bình thường'
+                        };
+                        if (petIdx >= 0) {
+                            if (pet.isArchived) {
+                                customer.pets.splice(petIdx, 1);
+                            } else {
+                                customer.pets[petIdx] = { ...customer.pets[petIdx], ...petSummary };
+                            }
+                        } else if (!pet.isArchived) {
+                            customer.pets.push(petSummary);
+                        }
+                    }
+                });
+                sessionStorage.setItem('pawpal_admin_customers_data', JSON.stringify(custData));
+            } catch (e) {}
+        }
+    } catch (e) {
+        console.warn('[petService] syncToAdminPets error:', e);
+    }
+}
+
+
 export async function getPets(targetUserId) {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     const db = window['SupabaseClient'];
+    let supabasePets = [];
     
     if (db && currentUser) {
         try {
@@ -304,61 +450,167 @@ export async function getPets(targetUserId) {
 
             const { data, error } = await query;
             if (!error && Array.isArray(data)) {
-                const supabasePets = data.map((row) => mapSupabasePet(row, currentUser));
-                const appointmentRows = await db
-                    .from('appointment')
-                    .select(`
-                        id,
-                        customer_id,
-                        pet_profile (
-                            id,
-                            pet_code,
-                            pet_name,
-                            species,
-                            breed,
-                            gender,
-                            date_of_birth,
-                            color,
-                            weight,
-                            avatar_url,
-                            allergy,
-                            routine,
-                            vaccination_history,
-                            status
-                        )
-                    `)
-                    .eq('customer_id', customerId || currentUser.id || null)
-                    .order('appointment_date', { ascending: false })
-                    .limit(50);
-
-                const appointmentPets = Array.isArray(appointmentRows?.data)
-                    ? appointmentRows.data
-                        .map((row) => mapAppointmentPet(row, currentUser))
-                        .filter(Boolean)
-                    : [];
-
-                const deduped = normalizePetList([...supabasePets, ...appointmentPets]);
-                return deduped;
+                supabasePets = data.map((row) => mapSupabasePet(row, currentUser));
             }
         } catch (err) {
             console.warn('[petService] Supabase getPets error:', err.message);
         }
     }
     
-    return [];
+    // Đọc từ localStorage
+    let localPets = [];
+    try {
+        const rawLocal = localStorage.getItem('pawpal_pets');
+        if (rawLocal) localPets = JSON.parse(rawLocal);
+    } catch (e) {}
+    
+    // Nếu cả 2 đều trống, kiểm tra admin pets hoặc seed data /data/pets.json
+    if (supabasePets.length === 0 && localPets.length === 0) {
+        try {
+            const rawAdmin = sessionStorage.getItem('pawpal_admin_pets_data') || localStorage.getItem('pawpal_admin_pets_data');
+            if (rawAdmin) {
+                const adminPetsObj = JSON.parse(rawAdmin);
+                localPets = Object.values(adminPetsObj).map(p => ({
+                    id: p.code || p.id,
+                    userId: p.custId || 'USER-001',
+                    custId: p.custId || 'CUST-001',
+                    name: p.name,
+                    species: p.species || 'dog',
+                    breed: p.breed || '',
+                    gender: (p.gender === 'Cái' || p.gender === 'female') ? 'female' : 'male',
+                    weight: p.weightNum || parseFloat(p.weight) || 0,
+                    dob: p.dobRaw || p.dob || '',
+                    dobRaw: p.dobRaw || p.dob || '',
+                    color: p.color || '',
+                    vaccinated: !!p.vaccinated,
+                    allergies: p.allergies || (p.allergy !== 'Không' ? p.allergy : ''),
+                    allergy: p.allergy || '',
+                    notes: p.notes || '',
+                    ownerName: p.ownerName || '',
+                    ownerPhone: p.ownerPhone || '',
+                    avatar: p.avatar || getDefaultPetAvatar(p.species),
+                    status: p.status || 'Đang nuôi',
+                    isArchived: p.status === 'Lưu trữ' || !!p.isArchived
+                }));
+            }
+        } catch (e) {}
+        
+        if (localPets.length === 0) {
+            try {
+                const res = await fetch('/data/pets.json');
+                if (res.ok) {
+                    const seedPets = await res.json();
+                    if (Array.isArray(seedPets) && seedPets.length > 0) {
+                        localPets = seedPets;
+                    }
+                }
+            } catch (e) {}
+        }
+        
+        if (localPets.length > 0) {
+            localStorage.setItem('pawpal_pets', JSON.stringify(localPets));
+            syncToAdminPets(localPets, currentUser);
+        }
+    }
+    
+    const allMerged = normalizePetList([...supabasePets, ...localPets]);
+    
+    // Làm sạch và khử trùng lặp toàn diện
+    const cleanedPets = sanitizeUserPetsStorage(allMerged);
+
+    // Cập nhật lại localStorage để loại bỏ vĩnh viễn dữ liệu rác/trùng lặp
+    try {
+        localStorage.setItem('pawpal_pets', JSON.stringify(cleanedPets));
+        syncToAdminPets(cleanedPets, currentUser);
+    } catch (e) {}
+
+    return cleanedPets;
+}
+
+function isGuestOrTestPet(pet) {
+    if (!pet) return true;
+    const id = String(pet.id || pet.code || '').toLowerCase();
+    const name = String(pet.name || '').trim().toLowerCase();
+
+    if (id.includes('guest') || id.includes('booking') || id.includes('test') || id.startsWith('pp-') || id === 'pet-new') return true;
+    if (name.includes('test') || name.includes('bbeobeo') || name === 'chó' || name === 'cún khách' || name === 'ki' || name === 'moo' || name === 'lala' || name === 'miii' || name === 'misa' || name === 'sean' || name === 'meo' || name === 'mít') return true;
+    // Generated timestamp IDs from guest flow (e.g. PET-178... or PET-179...)
+    if (/^pet-17\d{8,}$/i.test(id)) return true;
+
+    return false;
+}
+
+function sanitizeUserPetsStorage(allPets) {
+    if (!Array.isArray(allPets)) return [];
+
+    const canonicalIds = new Set(['PET-001', 'PET-002', 'PET-003', 'PET-004', 'PET-005', 'PET-006', 'PET-007', 'PET-008']);
+    const seenNames = new Set();
+    const cleanList = [];
+
+    // 1. Luôn bảo đảm các bé chính thức của gia đình (Milu, Mimi, Boss, Bông, v.v.)
+    for (const pet of allPets) {
+        if (!pet || !pet.name) continue;
+        const id = String(pet.id || '').toUpperCase();
+        const lowerName = String(pet.name).trim().toLowerCase();
+
+        if (canonicalIds.has(id)) {
+            if (!seenNames.has(lowerName)) {
+                seenNames.add(lowerName);
+                cleanList.push({
+                    ...pet,
+                    isArchived: Boolean(pet.isArchived)
+                });
+            }
+        }
+    }
+
+    // 2. Thêm các bé thực tế do chủ nuôi tự tạo (nếu có, không thuộc junk test/guest)
+    for (const pet of allPets) {
+        if (!pet || !pet.name) continue;
+        const id = String(pet.id || '').toUpperCase();
+        const lowerName = String(pet.name).trim().toLowerCase();
+
+        if (canonicalIds.has(id)) continue;
+        if (isGuestOrTestPet(pet)) continue;
+
+        if (!seenNames.has(lowerName)) {
+            seenNames.add(lowerName);
+            cleanList.push(pet);
+        }
+    }
+
+    return cleanList.length > 0 ? cleanList : allPets.slice(0, 4);
 }
 
 export async function savePets(pets) {
     try {
-        const normalizedPets = normalizePetList(pets);
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-
+        
+        // 1. Cập nhật vào danh sách tổng trong localStorage
+        let existingAll = [];
+        try {
+            existingAll = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+        } catch (e) {}
+        
+        const map = new Map();
+        existingAll.forEach(p => { if (p && p.id) map.set(p.id, p); });
+        pets.forEach(p => { if (p && p.id) map.set(p.id, p); });
+        const updatedAll = Array.from(map.values());
+        
+        // Luôn làm sạch dữ liệu trước khi lưu trữ
+        const cleanedAll = sanitizeUserPetsStorage(updatedAll);
+        localStorage.setItem('pawpal_pets', JSON.stringify(cleanedAll));
+        
+        // 2. Đồng bộ tức thì sang Admin (Admin Pets & Admin Customer 360°)
+        syncToAdminPets(pets, currentUser);
+        
+        // 3. Đẩy lên Supabase nếu có kết nối
         const db = window['SupabaseClient'];
         if (db && currentUser) {
             try {
                 const customerId = await getSupabaseCustomerId(db, currentUser);
                 if (customerId) {
-                    for (const pet of normalizedPets) {
+                    for (const pet of pets) {
                         const row = mapToSupabaseRow(pet, customerId);
                         if (pet._supabaseId) {
                             await db.from('pet_profile').update(row).eq('id', pet._supabaseId);
@@ -390,7 +642,7 @@ export async function savePets(pets) {
                 console.warn('[petService] Supabase savePets error:', err.message);
             }
         }
-
+        
         return true;
     } catch (e) {
         console.error('savePets error:', e);
@@ -399,6 +651,18 @@ export async function savePets(pets) {
 }
 
 export async function deletePet(petId) {
+    try {
+        let pets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+        const target = pets.find(p => p.id === petId || p.code === petId);
+        if (target) {
+            target.isArchived = true;
+            target.status = 'Lưu trữ';
+            localStorage.setItem('pawpal_pets', JSON.stringify(pets));
+            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            syncToAdminPets([target], currentUser);
+        }
+    } catch (e) {}
+
     const db = window['SupabaseClient'];
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (db && currentUser) {
@@ -407,7 +671,6 @@ export async function deletePet(petId) {
             if (found && found.length > 0) {
                 await db.from('pet_profile').update({ status: 'INACTIVE' }).eq('id', found[0].id);
             }
-            console.log('[petService] deletePet → Supabase OK');
         } catch (err) {
             console.warn('[petService] Supabase deletePet error:', err.message);
         }
@@ -416,6 +679,18 @@ export async function deletePet(petId) {
 }
 
 export async function restorePet(petId) {
+    try {
+        let pets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+        const target = pets.find(p => p.id === petId || p.code === petId);
+        if (target) {
+            target.isArchived = false;
+            target.status = 'Đang nuôi';
+            localStorage.setItem('pawpal_pets', JSON.stringify(pets));
+            const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            syncToAdminPets([target], currentUser);
+        }
+    } catch (e) {}
+
     const db = window['SupabaseClient'];
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (db && currentUser) {
@@ -424,7 +699,6 @@ export async function restorePet(petId) {
             if (found && found.length > 0) {
                 await db.from('pet_profile').update({ status: 'ACTIVE' }).eq('id', found[0].id);
             }
-            console.log('[petService] restorePet → Supabase OK');
         } catch (err) {
             console.warn('[petService] Supabase restorePet error:', err.message);
         }

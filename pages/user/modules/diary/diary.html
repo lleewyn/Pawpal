@@ -1,0 +1,94 @@
+<!-- modules/diary/diary.html - Module Nhật ký chăm sóc Pawpal -->
+<div class="pet-diary-module-container">
+    <div class="pet-diary-content">
+        <!-- Bộ chọn bé cưng -->
+        <div class="pet-selector-wrapper mb-4">
+            <label for="petSelector" class="form-label fw-semibold">Chọn bé cưng để theo dõi</label>
+            <select class="form-select pet-selector" id="petSelector">
+                <option value="">-- Chọn bé cưng để xem nhật ký --</option>
+            </select>
+        </div>
+
+        <div id="dashboardState">
+            <!-- Trạng thái trống ban đầu -->
+            <div class="empty-state-diary d-none" id="emptyState">
+                <div class="empty-icon empty-icon-diary-custom mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                </div>
+                <h4 class="empty-title">Chọn bé cưng để xem nhật ký</h4>
+                <p class="empty-desc">Vui lòng chọn một bé cưng từ danh sách trên để xem lịch sử chăm sóc</p>
+            </div>
+
+            <!-- Dịch vụ đang diễn ra -->
+            <div id="activeServicesContainer" class="d-none">
+                <h4 class="active-services-title mb-3">Dịch vụ đang diễn ra</h4>
+                <div class="row g-4 justify-content-center active-services-grid" id="activeServicesGrid"></div>
+            </div>
+
+            <!-- Danh sách bé cưng chọn nhanh -->
+            <div id="quickPetsSection" class="quick-pets-section d-none">
+                <h4 class="quick-pets-title">Bé cưng của bạn</h4>
+                <div class="row g-3 justify-content-center" id="quickPetsGrid"></div>
+            </div>
+        </div>
+
+        <!-- Template card dịch vụ đang chạy -->
+        <template id="activeServiceCardTemplate">
+            <div class="col-md-6 col-lg-5">
+                <div class="active-service-card">
+                    <div class="active-service-pet-info">
+                        <img src="" alt="" class="active-service-avatar">
+                        <div class="active-service-details">
+                            <h5 class="active-service-name"></h5>
+                            <p class="active-service-type"></p>
+                            <span class="active-service-badge"></span>
+                        </div>
+                    </div>
+                    <button class="btn btn-view-detail active-service-btn">
+                        Vào xem nhật ký
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Chi tiết nhật ký của bé cưng đã chọn -->
+        <div class="diary-content-wrapper d-none" id="diaryContent">
+            <!-- Thẻ thông tin bé cưng -->
+            <div class="pet-info-card mb-4" id="petInfoCard"></div>
+
+            <div class="row g-4">
+                <!-- Dòng thời gian cập nhật -->
+                <div class="col-lg-8">
+                    <div class="timeline-header mb-3">
+                        <h4 class="timeline-title">Dòng thời gian</h4>
+                    </div>
+                    <div class="timeline-wrapper" id="timelineWrapper"></div>
+                    <div class="empty-timeline d-none" id="emptyTimeline">
+                        <div class="empty-icon text-primary-light mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="9" y1="9" x2="15" y2="9"></line>
+                                <line x1="9" y1="13" x2="15" y2="13"></line>
+                                <line x1="9" y1="17" x2="15" y2="17"></line>
+                            </svg>
+                        </div>
+                        <p class="empty-desc text-muted">Đang chờ cập nhật từ nhân viên chăm sóc</p>
+                    </div>
+                </div>
+
+                <!-- Cột lịch sử dịch vụ -->
+                <div class="col-lg-4">
+                    <div class="history-sidebar">
+                        <h4 class="sidebar-title mb-3">Lịch sử dịch vụ</h4>
+                        <div class="history-list" id="historyList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

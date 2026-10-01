@@ -321,14 +321,14 @@
                             </div>
                         </div>
                         <div class="dropdown-divider"></div>
-                        <a href="${root}pages/user/dashboard/dashboard.html" class="dropdown-item">
+                        <a href="${root}pages/user/#profile" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="12" cy="7" r="4"></circle>
                             </svg>
                             Tài khoản của tôi
                         </a>
-                        <a href="${root}pages/user/pet-profile/pet-profile.html" class="dropdown-item">
+                        <a href="${root}pages/user/#pets" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M12 2c1.2 0 2.2 1 2.2 2.2S13.2 6.4 12 6.4 9.8 5.4 9.8 4.2 10.8 2 12 2z"/>
                                 <path d="M5 7.5c1 0 1.8.8 1.8 1.8S6 11 5 11s-1.8-.8-1.8-1.8S4 7.5 5 7.5z"/>
@@ -337,7 +337,7 @@
                             </svg>
                             Hồ sơ bé cưng
                         </a>
-                        <a href="${root}pages/user/bookings/bookings.html" class="dropdown-item">
+                        <a href="${root}pages/user/#bookings" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                                 <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -346,7 +346,7 @@
                             </svg>
                             Lịch hẹn của bé
                         </a>
-                        <a href="${root}pages/user/orders/orders.html" class="dropdown-item">
+                        <a href="${root}pages/user/#orders" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                                 <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -354,26 +354,26 @@
                             </svg>
                             Đơn hàng của bé
                         </a>
-                        <a href="${root}pages/user/wishlist/wishlist.html" class="dropdown-item">
+                        <a href="${root}pages/user/#wishlist" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                             </svg>
                             Yêu thích
                         </a>
-                        <a href="${root}pages/user/pet-diary/pet-diary.html" class="dropdown-item">
+                        <a href="${root}pages/user/#diary" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
                                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
                             </svg>
                             Nhật ký chăm sóc
                         </a>
-                        <a href="${root}pages/user/loyalty/loyalty.html" class="dropdown-item">
+                        <a href="${root}pages/user/#loyalty" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                             </svg>
                             Paw Points
                         </a>
-                        <a href="${root}pages/user/settings/settings.html" class="dropdown-item">
+                        <a href="${root}pages/user/#settings" class="dropdown-item">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="3"></circle>
                                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.92 0 1.71.57 2 1.39.06.19.1.4.1.61a2 2 0 0 1-2 2h-.09c-.65 0-1.24.39-1.51 1z"></path>

@@ -1,0 +1,1248 @@
+/* modules/support/support.css - Module Trung tâm hỗ trợ PawPal (độc lập 100%) */
+
+.support-module-container {
+    animation: userModuleFadeIn 0.2s ease-out;
+}
+
+/* --- SUPPORT BASE STYLES --- */
+
+.bento-grid-faq {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.bento-card-topic {
+    background-color: var(--color-bg-white);
+    border: var(--border-card);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-md);
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease, border-color 0.2s ease;
+    text-decoration: none;
+    color: var(--color-text-dark);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.bento-card-topic:hover {
+    
+    box-shadow: var(--shadow-card-hover);
+    border-color: var(--color-primary);
+}
+
+.bento-card-topic .topic-icon {
+    width: 48px;
+    height: 48px;
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--space-xs);
+}
+
+.bento-card-topic .topic-title {
+    font-weight: 700;
+    font-size: var(--fs-h3);
+    color: var(--color-primary-dark);
+    margin: 0;
+}
+
+.bento-card-topic .topic-desc {
+    font-size: var(--fs-small);
+    color: var(--color-text-light);
+    margin: 0;
+}
+
+.faq-accordion-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.faq-accordion-item {
+    background-color: var(--color-bg-white);
+    border: var(--border-card);
+    border-radius: var(--card-border-radius);
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+
+.faq-accordion-item:hover {
+    border-color: var(--color-primary);
+}
+
+.faq-accordion-header {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: var(--space-sm) var(--space-md);
+    text-align: left;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.faq-accordion-header svg {
+    transition: transform 0.3s ease;
+    color: var(--color-text-light);
+    flex-shrink: 0;
+}
+
+.faq-accordion-item.active .faq-accordion-header svg {
+    transform: rotate(180deg);
+    color: var(--color-primary);
+}
+
+.faq-accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    background-color: var(--color-primary-light);
+}
+
+.faq-accordion-body {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--fs-body);
+    color: var(--color-text-dark);
+    line-height: 1.6;
+}
+
+.chat-floating-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 999;
+    width: 56px;
+    height: 56px;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(42, 89, 68, 0.3);
+    cursor: pointer;
+    border: 2px solid var(--color-bg-white);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.chat-floating-btn:hover {
+    
+    background-color: var(--color-primary-dark);
+}
+
+.chat-drawer {
+    position: fixed;
+    top: 0;
+    right: -380px;
+    width: 360px;
+    height: 100vh;
+    background-color: var(--color-bg-white);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+    z-index: 10050;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.chat-drawer.open {
+    right: 0;
+}
+
+.chat-drawer-header {
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--color-primary-dark);
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-drawer-header .chat-title {
+    font-weight: 700;
+    font-size: var(--fs-body);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chat-drawer-header .btn-close-drawer {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+.chat-messages-area {
+    flex-grow: 1;
+    padding: var(--space-sm);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    background-color: #f4faf7;
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: var(--card-border-radius);
+    font-size: var(--fs-body);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.chat-bubble.bot {
+    background-color: var(--color-bg-white);
+    color: var(--color-text-dark);
+    align-self: flex-start;
+    border: 1px solid var(--color-border);
+}
+
+.chat-bubble.user {
+    background-color: var(--color-primary);
+    color: #ffffff;
+    align-self: flex-end;
+}
+
+.chat-bubble.system-error {
+    background-color: var(--color-danger-light);
+    color: var(--color-danger);
+    align-self: center;
+    max-width: 90%;
+    font-size: var(--fs-small);
+    border: 1px solid rgba(220, 38, 38, 0.15);
+    text-align: center;
+}
+
+.chat-quick-replies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: var(--space-xs) var(--space-sm);
+    background-color: var(--color-bg-light);
+}
+
+.btn-quick-reply {
+    background-color: var(--color-bg-white);
+    border: 1.5px solid var(--color-border);
+    color: var(--color-primary);
+    border-radius: var(--border-radius-pill);
+    padding: 6px 12px;
+    font-size: var(--fs-small);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-quick-reply:hover {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-light);
+}
+
+.chat-input-area {
+    padding: var(--space-xs) var(--space-sm);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    gap: var(--space-xs);
+    align-items: center;
+}
+
+.chat-input-area input {
+    flex-grow: 1;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--border-radius-pill);
+    padding: 8px 16px;
+    font-size: var(--fs-body);
+}
+
+.chat-input-area input:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+.chat-input-area .btn-send-chat {
+    background-color: var(--color-primary);
+    color: #ffffff;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.chat-input-area .btn-send-chat:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.ticket-timeline-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+}
+
+.ticket-timeline-item {
+    background-color: var(--color-bg-white);
+    border: var(--border-card);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-md);
+}
+
+.ticket-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xs);
+}
+
+.ticket-cskh-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--color-accent);
+    color: var(--color-primary-dark);
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-small);
+}
+
+.star-rating-holder {
+    display: flex;
+    gap: var(--space-xs);
+    margin: var(--space-sm) 0;
+}
+
+.star-btn {
+    background: none;
+    border: none;
+    font-size: var(--fs-h2);
+    color: var(--color-neutral-light);
+    cursor: pointer;
+    padding: 0;
+}
+
+.star-btn.active {
+    color: var(--color-accent);
+}
+
+.badge-status {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: var(--border-radius-pill);
+    font-weight: 600;
+    font-size: var(--fs-small);
+    white-space: nowrap;
+}
+
+.badge-status-pending {
+    background-color: var(--color-neutral-light);
+    color: var(--color-neutral-dark);
+    border: 1px solid rgba(78, 89, 100, 0.15);
+}
+
+.badge-status-processing {
+    background-color: var(--color-accent-light);
+    color: var(--color-accent-dark);
+    border: 1px solid rgba(224, 159, 31, 0.2);
+}
+
+.badge-status-completed {
+    background-color: var(--color-success-light);
+    color: var(--color-success);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.badge-priority {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: var(--border-radius-pill);
+    font-weight: 600;
+    font-size: var(--fs-small);
+    white-space: nowrap;
+}
+
+.badge-priority-high {
+    background-color: var(--color-danger-light);
+    color: var(--color-danger);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.badge-priority-normal {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    border: 1px solid rgba(79, 122, 104, 0.2);
+}
+
+.tickets-table-wrapper {
+    background: var(--color-bg-white);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.tickets-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tickets-table thead tr {
+    background: var(--color-bg-light);
+    border-bottom: 2px solid var(--color-border);
+}
+
+.tickets-table thead th {
+    padding: 13px 18px;
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--color-text-light);
+    text-align: left;
+    white-space: nowrap;
+    border: none;
+}
+
+.tickets-table thead th.text-center {
+    text-align: center;
+}
+
+.tickets-table tbody tr {
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color 0.15s ease;
+}
+
+.tickets-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.tickets-table tbody tr:hover {
+    background: #f8fdfb;
+}
+
+.tickets-table tbody td {
+    padding: 15px 18px;
+    font-size: var(--fs-body);
+    color: var(--color-text-dark);
+    vertical-align: middle;
+    border: none;
+}
+
+.tickets-table tbody td.text-center {
+    text-align: center;
+}
+
+.ticket-id-pill {
+    display: inline-block;
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--color-primary);
+    font-family: monospace;
+    background: var(--color-primary-light);
+    padding: 3px 9px;
+    border-radius: var(--border-radius-pill);
+    white-space: nowrap;
+}
+
+.ticket-title-cell {
+    color: var(--color-text-dark);
+    font-size: var(--fs-body);
+    line-height: 1.5;
+}
+
+.tickets-empty-cell {
+    text-align: center;
+    padding: 48px 24px !important;
+    color: var(--color-text-light);
+}
+
+.tickets-empty-cell svg {
+    display: block;
+    margin: 0 auto var(--space-sm);
+    opacity: 0.4;
+}
+
+.tickets-empty-cell p {
+    margin: 0;
+    font-size: var(--fs-body);
+}
+
+@media (max-width: 1024px) {
+    .bento-grid-faq {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .bento-grid-faq {
+        grid-template-columns: 1fr;
+    }
+    
+    .chat-drawer {
+        width: 100%;
+        right: -100%;
+    }
+}
+
+.support-form-select {
+    border: 1px solid var(--color-border);
+    border-radius: var(--card-border-radius);
+    padding: 12px 16px;
+}
+.support-btn-cancel {
+    border-radius: var(--border-radius-pill);
+    padding: 8px 20px;
+    font-size: var(--fs-small);
+    font-weight: 600;
+    border-width: 1.5px;
+}
+.support-btn-submit {
+    padding: 8px 20px;
+    font-size: var(--fs-small);
+}
+
+.tickets-title {
+    font-family: var(--font-heading); color: var(--color-primary-dark); margin: 0;
+}
+.btn-new-ticket {
+    padding: 10px 24px; font-size: var(--fs-small); white-space: nowrap;
+}
+.table-tickets-wrapper {
+    border: 1px solid var(--color-border); border-radius: var(--card-border-radius); overflow: hidden;
+}
+.ticket-detail-modal {
+    border: 1px solid var(--color-border); border-radius: var(--card-border-radius); padding: 24px; background: var(--color-bg-white);
+}
+.detail-ticket-title {
+    font-weight: 700; color: var(--color-primary-dark); margin: 0;
+}
+.btn-close-panel {
+    background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-text-light);
+}
+.ticket-timeline-wrapper {
+    max-height: 400px; overflow-y: auto; padding: 16px; margin-bottom: 24px; background: var(--color-neutral-light); border-radius: 8px;
+}
+.reply-label, .rating-comment-label {
+    font-weight: 600; margin-bottom: 8px; display: block; color: var(--color-primary-dark);
+}
+.rating-comment-label {
+    font-size: var(--fs-small);
+}
+.reply-textarea, .rating-comment {
+    border: 1px solid var(--color-border) !important; border-radius: 8px !important;
+}
+.btn-close-ticket {
+    border-radius: var(--border-radius-pill); font-weight: 700; padding: 10px 20px;
+}
+.btn-send-reply {
+    padding: 10px 24px;
+}
+.rating-feedback-area {
+    border: 1px solid var(--color-border);
+}
+.rating-title {
+    font-weight: 700; color: var(--color-primary-dark); margin-bottom: 12px;
+}
+.star-btn {
+    background: none; border: none; font-size: 1.5rem; color: var(--color-border); cursor: pointer; transition: all 0.2s;
+}
+.star-btn.star-active {
+    color: #facc15;
+}
+.btn-submit-rating {
+    padding: 8px 20px; font-size: var(--fs-small);
+}
+.btn-view-ticket {
+    font-size: var(--fs-small);
+    padding: 6px 16px;
+    border-radius: var(--border-radius-pill);
+    white-space: nowrap;
+    border: 1.5px solid var(--color-primary);
+    font-weight: 600;
+}
+.ticket-msg-bubble {
+    margin: 0; padding: 8px 12px; border-radius: 6px; color: var(--color-text-dark);
+}
+.ticket-msg-bubble.cskh {
+    background: var(--color-bg-white); border-left: 3px solid var(--color-primary);
+}
+.ticket-msg-bubble.user {
+    background: rgba(48,121,227,0.08); border-left: 3px solid var(--color-border);
+}
+.text-primary {
+    color: var(--color-primary) !important;
+}
+
+.ticket-resolution-box {
+    border: 1px solid #C3DEC7;
+    background: #F4FAF6;
+    border-radius: 9px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.ticket-resolution-title {
+    color: #165335;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.ticket-context-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 9px;
+    background: #EEF5F1;
+    color: #236B48;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.voucher-comp-card {
+    transition: all 0.2s ease;
+}
+
+.voucher-comp-card:hover {
+    box-shadow: 0 2px 8px rgba(35, 107, 72, 0.08);
+}
+
+.voucher-code-text {
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    color: #165335;
+}
+
+.pawpoints-comp-card,
+.rma-comp-card {
+    border: 1px solid #E2ECE5;
+}
+
+
+
+/* --- SUPPORT TICKETS STYLES --- */
+/* support-tickets.css - Chuẩn hóa giao diện Hỗ trợ & Khiếu nại PawPal */
+
+/* =========================================================
+   1. BẢNG PHIẾU HỖ TRỢ (TICKETS TABLE)
+   ========================================================= */
+.tickets-table-wrapper {
+    background: #FFFFFF;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.tickets-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+}
+
+.tickets-table thead th {
+    background: #EEF5F1;
+    color: #236B48;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #ECF2EE;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.tickets-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.tickets-table tbody tr:hover {
+    background-color: #F8FAF9;
+}
+
+.tickets-table tbody td {
+    padding: 14px 16px;
+    font-size: 13.5px;
+    color: #203A2C;
+    vertical-align: middle;
+    border-bottom: 1px solid #ECF2EE;
+}
+
+.tickets-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Badge ID */
+.ticket-id-pill {
+    display: inline-block;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: #236B48;
+    background: #EEF5F1;
+    padding: 3px 8px;
+    border-radius: 9px;
+    white-space: nowrap;
+}
+
+/* Cột chủ đề gọn gàng 2 dòng */
+.ticket-title-col {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-width: 440px;
+}
+
+.ticket-title-main {
+    font-size: 14px;
+    font-weight: 600;
+    color: #203A2C;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.ticket-title-sub {
+    font-size: 12px;
+    color: #4F7A65;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.ticket-title-sub .dot-sep {
+    color: #AEC8B9;
+}
+
+/* Huy hiệu trạng thái Muted Pastel 9px */
+.badge-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    padding: 0 9px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 9px !important;
+    border: none !important;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.badge-status-pending {
+    background: #F5E8D3;
+    color: #734718;
+}
+
+.badge-status-processing {
+    background: #DCEAF2;
+    color: #20495E;
+}
+
+.badge-status-completed {
+    background: #DCEEE2;
+    color: #165335;
+}
+
+/* Huy hiệu độ ưu tiên 9px */
+.badge-priority {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    padding: 0 9px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 9px !important;
+    border: none !important;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.badge-priority-high {
+    background: #F7DCDC;
+    color: #8F2424;
+}
+
+.badge-priority-normal {
+    background: #E2ECE5;
+    color: #2D483B;
+}
+
+/* Nút Chi tiết */
+.btn-view-ticket {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 9px;
+    border: 1px solid #236B48;
+    background: transparent;
+    color: #236B48;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-view-ticket:hover {
+    background: #236B48;
+    color: #FFFFFF;
+}
+
+/* =========================================================
+   2. POPUP MODAL XEM CHI TIẾT (TICKET DETAIL POPUP)
+   ========================================================= */
+body.ticket-modal-open {
+    overflow: hidden !important;
+}
+
+.ticket-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.ticket-modal-overlay.d-none {
+    display: none !important;
+}
+
+.ticket-modal-card {
+    background: #FFFFFF;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    width: 740px;
+    max-width: 95vw;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
+    overflow: hidden;
+    animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalPopIn {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.ticket-modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #ECF2EE;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: #FFFFFF;
+    flex-shrink: 0;
+}
+
+.ticket-modal-body {
+    padding: 20px 24px 24px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    flex: 1 1 auto;
+}
+
+.detail-ticket-title {
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 700;
+    color: #203A2C;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.btn-close-detail {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    border: 1px solid #ECF2EE;
+    background: #FFFFFF;
+    color: #4F7A65;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.btn-close-detail:hover {
+    background: #EEF5F1;
+    color: #236B48;
+    border-color: #C3DEC7;
+}
+
+/* =========================================================
+   3. THẺ NGỮ CẢNH DỊCH VỤ / ĐƠN HÀNG (CONTEXT CARD)
+   ========================================================= */
+.ticket-context-card {
+    background: #F8FAF9;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+}
+
+.context-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.context-type-badge {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #236B48;
+    background: #EEF5F1;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.context-link-btn {
+    font-size: 12px;
+    font-weight: 600;
+    color: #236B48;
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 9px;
+    background: #EEF5F1;
+    transition: background 0.15s ease;
+}
+
+.context-link-btn:hover {
+    background: #DCEEE2;
+    color: #165335;
+}
+
+.context-specs {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.context-spec-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.context-spec-label {
+    font-size: 11px;
+    color: #7A9B89;
+}
+
+.context-spec-val {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #203A2C;
+}
+
+.context-spec-val.mono {
+    font-family: monospace;
+    color: #236B48;
+}
+
+/* =========================================================
+   4. THẺ PHƯƠNG ÁN GIẢI QUYẾT & BỒI HOÀN (RESOLUTION CARD)
+   ========================================================= */
+.ticket-resolution-card {
+    background: #F4FAF6;
+    border: 1px solid #C3DEC7;
+    border-radius: 9px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+
+.resolution-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.resolution-title {
+    color: #165335;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.resolution-text {
+    color: #203A2C;
+    font-size: 13.5px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.voucher-comp-card {
+    background: #FFFFFF;
+    border: 1px dashed #236B48;
+    border-radius: 9px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.voucher-code-text {
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #165335;
+    background: #EEF5F1;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.btn-copy-voucher {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 9px;
+    border: 1px solid #236B48;
+    color: #236B48;
+    background: #FFFFFF;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-copy-voucher:hover {
+    background: #EEF5F1;
+}
+
+.pawpoints-comp-card,
+.rma-comp-card {
+    background: #FFFFFF;
+    border: 1px solid #C3DEC7;
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #165335;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+/* =========================================================
+   5. LUỒNG TRAO ĐỔI HỘI THOẠI (CONVERSATIONAL THREAD)
+   ========================================================= */
+.thread-header-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #236B48;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ticket-timeline-wrapper {
+    background: #FAFDFB;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 18px 20px;
+    max-height: 380px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.thread-message {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.thread-message-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sender-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 6px;
+}
+
+.sender-tag.sender-user {
+    background: #E2ECE5;
+    color: #2D483B;
+}
+
+.sender-tag.sender-cskh {
+    background: #DCEEE2;
+    color: #165335;
+}
+
+.thread-time {
+    font-size: 11px;
+    color: #7A9B89;
+}
+
+.thread-bubble {
+    padding: 10px 14px;
+    border-radius: 9px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    max-width: 85%;
+    border: none;
+}
+
+.thread-bubble.bubble-user {
+    background: #FFFFFF;
+    border: 1px solid #E2ECE5;
+    color: #203A2C;
+    align-self: flex-start;
+}
+
+.thread-bubble.bubble-cskh {
+    background: #F4FAF6;
+    border: 1px solid #C3DEC7;
+    color: #165335;
+    align-self: flex-start;
+}
+
+/* =========================================================
+   6. VÙNG PHẢN HỒI VÀ ĐÁNH GIÁ (REPLY & RATING)
+   ========================================================= */
+.reply-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #236B48;
+}
+
+.reply-textarea {
+    border: 1px solid #ECF2EE !important;
+    border-radius: 9px !important;
+    font-size: 13.5px;
+    padding: 10px 12px;
+    color: #203A2C;
+    resize: vertical;
+}
+
+.reply-textarea:focus {
+    border-color: #236B48 !important;
+    box-shadow: 0 0 0 2px rgba(35, 107, 72, 0.15) !important;
+}
+
+.btn-close-ticket {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 18px;
+    border-radius: 9px !important;
+    border: 1px solid #AEC8B9;
+    color: #4F7A65;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-close-ticket:hover {
+    background: #EEF5F1;
+    color: #236B48;
+    border-color: #236B48;
+}
+
+.btn-send-reply {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 20px;
+    border-radius: 9px !important;
+    background: #236B48;
+    color: #FFFFFF;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-send-reply:hover {
+    background: #1A5438;
+}
+
+.rating-feedback-area {
+    background: #F4FAF6;
+    border: 1px solid #C3DEC7;
+    border-radius: 9px;
+}
+
+.rating-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #165335;
+}
+
+.star-btn {
+    font-size: 24px;
+    background: none;
+    border: none;
+    color: #C3DEC7;
+    cursor: pointer;
+    padding: 0 2px;
+    transition: color 0.15s ease;
+}
+
+.star-btn:hover,
+.star-btn.active {
+    color: #D97706;
+}
+
+.btn-submit-rating {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 22px;
+    border-radius: 9px !important;
+    background: #236B48;
+    color: #FFFFFF;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-submit-rating:hover {
+    background: #1A5438;
+}

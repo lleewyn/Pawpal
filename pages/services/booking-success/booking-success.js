@@ -60,12 +60,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    const myBookingsLink = document.querySelector('a[href*="/pages/user/bookings/bookings.html"]');
+    const myBookingsLink = document.querySelector('a[href*="#bookings"], a[href*="bookings.html"]');
     if (myBookingsLink) {
-        myBookingsLink.setAttribute('href', '/pages/user/bookings/bookings.html');
+        myBookingsLink.setAttribute('href', '/pages/user/#bookings');
         myBookingsLink.addEventListener('click', (e) => {
             e.preventDefault();
-            window.location.href = '/pages/user/bookings/bookings.html';
+            window.location.href = '/pages/user/#bookings';
         });
     }
 });

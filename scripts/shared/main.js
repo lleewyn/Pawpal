@@ -75,28 +75,27 @@ function initActiveNav() {
 
     let matched = null;
 
-    if (currentPath === '/' || currentPath.includes('index.html') || currentPath.includes('landing.html')) {
-        matched = navList.querySelector('a.nav-link[href*="landing.html"]');
+    if (currentPath === '/' || currentPath.endsWith('/landing') || currentPath.includes('landing') || currentPath.endsWith('/index.html')) {
+        matched = navList.querySelector('a.nav-link[href="/"]') || navList.querySelector('a.nav-link[href*="landing"]');
     } else if (
-        currentPath.includes('/services/') ||
-        currentPath.includes('services.html') ||
+        currentPath.includes('/services') ||
         currentPath.includes('service-detail') ||
-        currentPath.includes('/booking/') ||
-        currentPath.includes('booking.html')
+        currentPath.includes('/booking')
     ) {
-        matched = navList.querySelector('a.nav-link[href*="services.html"]');
+        matched = navList.querySelector('a.nav-link[href="/services"]') || navList.querySelector('a.nav-link[href*="services"]');
     } else if (
-        currentPath.includes('/pages/shop/shop.html') ||
+        currentPath.includes('/shop') ||
         currentPath.includes('product-detail') ||
-        currentPath.includes('/pages/shop/product')
+        currentPath.includes('/cart') ||
+        currentPath.includes('/checkout')
     ) {
-        matched = navList.querySelector('a.nav-link[href*="shop.html"]');
+        matched = navList.querySelector('a.nav-link[href="/shop"]') || navList.querySelector('a.nav-link[href*="shop"]');
     } else if (currentPath.includes('blog') || currentPath.includes('cam-nang')) {
-        matched = navList.querySelector('a.nav-link[href*="blog.html"]');
+        matched = navList.querySelector('a.nav-link[href="/blog"]') || navList.querySelector('a.nav-link[href*="blog"]');
     } else if (currentPath.includes('contact') || currentPath.includes('lien-he')) {
-        matched = navList.querySelector('a.nav-link[href*="contact.html"]');
+        matched = navList.querySelector('a.nav-link[href="/contact"]') || navList.querySelector('a.nav-link[href*="contact"]');
     } else if (currentPath.includes('about') || currentPath.includes('ve-chung-toi')) {
-        matched = navList.querySelector('a.nav-link[href*="about.html"]');
+        matched = navList.querySelector('a.nav-link[href="/about"]') || navList.querySelector('a.nav-link[href*="about"]');
     }
 
     if (matched) {

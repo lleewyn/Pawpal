@@ -516,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             if (btnPointsStart) {
-                btnPointsStart.href = '/pages/user/loyalty/loyalty.html';
+                btnPointsStart.href = '/pages/user/#loyalty';
                 const textSpan = btnPointsStart.querySelector('span:first-child');
                 const badgeSpan = btnPointsStart.querySelector('.points-badge');
                 

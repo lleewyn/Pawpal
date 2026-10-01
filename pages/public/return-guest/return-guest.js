@@ -589,7 +589,7 @@ window.handleGuestReturnRequest = function(orderId) {
     if (typeof openRMADrawer === 'function') {
         openRMADrawer(orderId);
     } else {
-        window.location.href = `/pages/user/return-detail/return-detail.html?orderId=${orderId}`;
+        window.location.href = `/pages/user/#orders`;
     }
 };
 

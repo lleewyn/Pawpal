@@ -150,9 +150,9 @@ function setupTrackingLink(order) {
         const id = order.id || order.orderId || order.orderID || orderIdFrom(order);
         if (isLoggedInUser) {
             if (id) {
-                btn.href = `/pages/user/order-detail/order-detail.html?id=${encodeURIComponent(id)}`;
+                btn.href = `/pages/user/#orders?id=${encodeURIComponent(id)}`;
             } else {
-                btn.href = '/pages/user/orders/orders.html';
+                btn.href = '/pages/user/#orders';
             }
         } else {
             btn.href = '/pages/public/return-guest/return-guest.html';
