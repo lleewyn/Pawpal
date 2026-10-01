@@ -186,15 +186,51 @@
     }
 
     // 5. Cập nhật Breadcrumb & Title
-    function updateBreadcrumb(routeKey) {
+    function updateBreadcrumb(routeKey, subTitle = '') {
         const config = ROUTE_CONFIG[routeKey] || ROUTE_CONFIG['profile'];
-        document.title = config.title;
+        const list = document.getElementById('userBreadcrumbList');
+        if (!list) return;
 
-        const currentBreadcrumbEl = document.getElementById('userBreadcrumbCurrent');
-        if (currentBreadcrumbEl) {
-            currentBreadcrumbEl.textContent = config.breadcrumb;
+        if (subTitle) {
+            document.title = `${subTitle} - ${config.breadcrumb} - PawPal`;
+            list.innerHTML = `
+                <li class="breadcrumb-item"><a href="/pages/public/landing/landing.html">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="#${routeKey}" class="breadcrumb-parent-link">${config.breadcrumb}</a></li>
+                <li class="breadcrumb-item active" id="userBreadcrumbCurrent">${String(subTitle).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</li>
+            `;
+            const parentLink = list.querySelector('.breadcrumb-parent-link');
+            if (parentLink) {
+                parentLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (routeKey === 'diary' && typeof window.pawpalShowDiaryDashboard === 'function') {
+                        window.pawpalShowDiaryDashboard();
+                    } else if (routeKey === 'pets' && typeof window.switchToPetListScreen === 'function') {
+                        window.switchToPetListScreen();
+                    } else if (routeKey === 'orders' && typeof window.pawpalShowOrderList === 'function') {
+                        window.pawpalShowOrderList();
+                    } else if (routeKey === 'bookings' && typeof window.pawpalShowBookingList === 'function') {
+                        window.pawpalShowBookingList();
+                    } else {
+                        if (window.location.hash === `#${routeKey}`) {
+                            window.dispatchEvent(new HashChangeEvent('hashchange'));
+                        } else {
+                            window.location.hash = `#${routeKey}`;
+                        }
+                    }
+                });
+            }
+        } else {
+            document.title = config.title;
+            list.innerHTML = `
+                <li class="breadcrumb-item"><a href="/pages/public/landing/landing.html">Trang chủ</a></li>
+                <li class="breadcrumb-item active" id="userBreadcrumbCurrent">${config.breadcrumb}</li>
+            `;
         }
     }
+
+    window.setUserSubBreadcrumb = function(subTitle, routeKey = 'diary') {
+        updateBreadcrumb(routeKey, subTitle);
+    };
 
     // 6. Highlight active menu item trong User Sidebar
     function highlightActiveSidebar(routeKey) {
@@ -447,7 +483,7 @@
             window.location.hash = `#${matchedRoute}`;
 
             // Đóng menu mobile nếu đang mở
-            document.body.classList.remove('user-sidebar-open');
+            document.body.classList.remove('user-sidebar-open', 'dashboard-sidebar-open');
             const backdrop = document.getElementById('userSidebarBackdrop');
             if (backdrop) backdrop.hidden = true;
         });
@@ -457,19 +493,41 @@
     function initMobileSidebar() {
         const toggleBtn = document.getElementById('userSidebarToggle');
         const backdrop = document.getElementById('userSidebarBackdrop');
-        if (!toggleBtn || !backdrop) return;
+        const closeBtn = document.getElementById('userSidebarClose');
+        if (!toggleBtn) return;
 
         const setOpen = (open) => {
             document.body.classList.toggle('user-sidebar-open', open);
-            backdrop.hidden = !open;
+            document.body.classList.toggle('dashboard-sidebar-open', open);
+            if (backdrop) backdrop.hidden = !open;
             toggleBtn.setAttribute('aria-expanded', String(open));
         };
 
-        toggleBtn.addEventListener('click', () => {
+        toggleBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             setOpen(!document.body.classList.contains('user-sidebar-open'));
-        });
+        };
 
-        backdrop.addEventListener('click', () => setOpen(false));
+        if (closeBtn) {
+            closeBtn.onclick = (e) => {
+                e.preventDefault();
+                setOpen(false);
+            };
+        }
+
+        if (backdrop) {
+            backdrop.onclick = (e) => {
+                e.preventDefault();
+                setOpen(false);
+            };
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.body.classList.contains('user-sidebar-open')) {
+                setOpen(false);
+            }
+        });
     }
 
     // 12. Lắng nghe thay đổi Hash và Khởi chạy SPA
@@ -510,7 +568,7 @@
     }
 
     // 13. Đợi DOM và User-Sidebar sẵn sàng
-    document.addEventListener('DOMContentLoaded', () => {
+    function startUserPortal() {
         initMobileSidebar();
         attachDetailClickInterceptors();
         initRouter();
@@ -527,6 +585,12 @@
         }, 100);
 
         setTimeout(() => clearInterval(checkSidebarInterval), 5000);
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startUserPortal);
+    } else {
+        startUserPortal();
+    }
 
 })();

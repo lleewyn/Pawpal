@@ -1,42 +1,41 @@
 <!-- modules/bookings/bookings.html - Module Quản lý lịch hẹn dịch vụ Pawpal -->
 <div class="bookings-module-container">
     <div class="bookings-content">
-        <!-- Bộ lọc trạng thái lịch hẹn -->
-        <div class="filter-tabs mb-4" role="tablist">
-            <button class="filter-tab active" data-status="all" role="tab" aria-selected="true">
-                Tất cả
-            </button>
-            <button class="filter-tab" data-status="pending" role="tab" aria-selected="false">
-                Chờ xác nhận
-            </button>
-            <button class="filter-tab" data-status="confirmed" role="tab" aria-selected="false">
-                Đã xác nhận
-            </button>
-            <button class="filter-tab" data-status="in-progress" role="tab" aria-selected="false">
-                Đang thực hiện
-            </button>
-            <button class="filter-tab" data-status="completed" role="tab" aria-selected="false">
-                Hoàn thành
-            </button>
-            <button class="filter-tab" data-status="cancelled" role="tab" aria-selected="false">
-                Đã hủy
-            </button>
+        <!-- Bộ lọc trạng thái lịch hẹn dạng Subtabs chuẩn phẳng Text-Only -->
+        <div class="booking-filter-bar mb-4">
+            <div class="booking-filter-tabs" role="tablist">
+                <button class="booking-filter-tab active" data-status="all" role="tab" aria-selected="true">
+                    Tất cả <span class="tab-count" id="countAll">(0)</span>
+                </button>
+                <span class="tab-separator">|</span>
+                <button class="booking-filter-tab" data-status="pending" role="tab" aria-selected="false">
+                    Chờ xác nhận <span class="tab-count" id="countPending">(0)</span>
+                </button>
+                <span class="tab-separator">|</span>
+                <button class="booking-filter-tab" data-status="confirmed" role="tab" aria-selected="false">
+                    Đã xác nhận <span class="tab-count" id="countConfirmed">(0)</span>
+                </button>
+                <span class="tab-separator">|</span>
+                <button class="booking-filter-tab" data-status="in-progress" role="tab" aria-selected="false">
+                    Đang thực hiện <span class="tab-count" id="countInProgress">(0)</span>
+                </button>
+                <span class="tab-separator">|</span>
+                <button class="booking-filter-tab" data-status="completed" role="tab" aria-selected="false">
+                    Hoàn thành <span class="tab-count" id="countCompleted">(0)</span>
+                </button>
+                <span class="tab-separator">|</span>
+                <button class="booking-filter-tab" data-status="cancelled" role="tab" aria-selected="false">
+                    Đã hủy <span class="tab-count" id="countCancelled">(0)</span>
+                </button>
+            </div>
         </div>
 
         <!-- Danh sách lịch hẹn -->
         <div class="bookings-list" id="bookingsList">
-            <div class="empty-state" id="emptyState">
-                <div class="empty-icon text-primary-light">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                    </svg>
-                </div>
-                <h4>Chưa có lịch hẹn nào</h4>
-                <p>Các lịch hẹn dịch vụ của bạn sẽ hiển thị ở đây</p>
-                <a href="/pages/services/booking/booking.html" class="btn-cta">Đặt lịch ngay</a>
+            <div class="empty-state d-none" id="emptyState">
+                <h4 class="empty-title">Chưa có lịch hẹn nào</h4>
+                <p class="empty-desc">Các lịch hẹn chăm sóc và dịch vụ của bé cưng sẽ hiển thị tại đây</p>
+                <a href="/pages/services/booking/booking.html" class="btn-booking-primary-cta">+ Đặt lịch dịch vụ ngay</a>
             </div>
         </div>
     </div>

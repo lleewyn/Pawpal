@@ -1,4 +1,4 @@
-/* modules/settings/settings.css - Style cho Module Cài đặt tài khoản PawPal */
+/* modules/settings/settings.css - Style cho Module Cài đặt tài khoản PawPal (Chuẩn AGENTS.md: 9px radius, Flat Solid, Text-Only) */
 
 .settings-module-container {
     animation: userModuleFadeIn 0.2s ease-out;
@@ -8,7 +8,7 @@
 .settings-grid-custom {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 24px;
+    gap: 20px;
 }
 
 @media (max-width: 991px) {
@@ -20,16 +20,18 @@
 .settings-column {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
 }
 
+/* Thẻ Card Cài đặt - Chuẩn Frosted Glass & 9px radius */
 .settings-card-custom {
-    background: #ffffff;
-    border: 1px solid #E2ECE5;
-    border-radius: 14px;
-    padding: 22px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
-    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 20px 22px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
 }
 
 .settings-card-header-custom {
@@ -37,22 +39,27 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #EEF5F1;
-    padding-bottom: 14px;
-    margin-bottom: 18px;
-    cursor: pointer;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
 }
 
 .settings-card-title-custom {
     font-family: var(--font-heading, 'Lora', serif);
-    font-size: 1.18rem;
+    font-size: 1.15rem;
     color: #236B48;
     font-weight: 700;
     margin: 0;
 }
 
-#passwordToggleIcon {
-    transition: transform 0.25s ease;
-    color: #4F7A65;
+/* Badge Tự động lưu */
+.auto-save-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: #236B48;
+    background: #DCEEE2;
+    padding: 3px 8px;
+    border-radius: 9px;
+    display: inline-block;
 }
 
 .form-label-custom {
@@ -76,12 +83,12 @@
 
 .form-control-custom {
     width: 100%;
-    padding: 10px 42px 10px 14px;
+    padding: 9px 50px 9px 12px;
     border: 1px solid #D6E4DC;
     border-radius: 9px;
     background: #F8FAF9;
     font-family: var(--font-body, 'DM Sans', sans-serif);
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: #203A2C;
     outline: none;
     transition: border-color 0.2s ease, background-color 0.2s ease;
@@ -90,23 +97,43 @@
 .form-control-custom:focus {
     border-color: #236B48;
     background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(35, 107, 72, 0.1);
+    box-shadow: 0 0 0 2px rgba(35, 107, 72, 0.12);
 }
 
-.btn-toggle-password-custom {
+.form-control-custom.is-invalid {
+    border-color: #DC2626;
+    background: #FFF5F5;
+}
+
+.invalid-feedback {
+    display: none;
+    color: #DC2626;
+    font-size: 0.78rem;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+.form-control-custom.is-invalid ~ .invalid-feedback,
+.invalid-feedback.d-block {
+    display: block;
+}
+
+/* Nút Hiện/Ẩn Text-Only chuẩn AGENTS.md */
+.btn-toggle-password-text {
     position: absolute;
-    right: 12px;
+    right: 10px;
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 3px 6px;
+    font-size: 12px;
+    font-weight: 600;
     color: #4F7A65;
+    border-radius: 6px;
+    transition: color 0.15s ease;
 }
 
-.btn-toggle-password-custom:hover {
+.btn-toggle-password-text:hover {
     color: #236B48;
 }
 
@@ -116,7 +143,6 @@
     align-items: center;
     font-size: 0.75rem;
     font-weight: 600;
-    letter-spacing: 0.5px;
 }
 
 .strength-title {
@@ -152,18 +178,18 @@
 .settings-action-row {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-top: 8px;
+    gap: 10px;
+    margin-top: 14px;
 }
 
 .btn-submit-custom {
-    padding: 10px 22px;
+    padding: 8px 18px;
     background: #236B48;
     color: #ffffff;
     border: none;
     border-radius: 9px;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     cursor: pointer;
     transition: opacity 0.2s ease, background-color 0.2s ease;
 }
@@ -179,15 +205,15 @@
 }
 
 .btn-cancel-custom {
-    padding: 10px 18px;
+    padding: 8px 14px;
     background: transparent;
     color: #4F7A65;
     border: 1px solid #D6E4DC;
     border-radius: 9px;
     font-weight: 500;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
 }
 
 .btn-cancel-custom:hover {
@@ -199,15 +225,15 @@
 .social-links-list-custom {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .social-link-item-custom {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 14px;
-    border: 1px solid #E2ECE5;
+    padding: 10px 14px;
+    border: 1px solid #ECF2EE;
     border-radius: 9px;
     background: #F8FAF9;
 }
@@ -215,12 +241,12 @@
 .social-info-custom {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .social-icon-custom {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -243,23 +269,23 @@
 
 .social-name-custom {
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: #203A2C;
 }
 
 .social-email-custom {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: #4F7A65;
 }
 
 .btn-social-action-custom {
-    padding: 6px 14px;
+    padding: 5px 12px;
     border-radius: 9px;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 600;
     border: none;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: opacity 0.15s ease;
 }
 
 .btn-social-action-custom.connect-btn {
@@ -268,7 +294,7 @@
 }
 
 .btn-social-action-custom.disconnect-btn {
-    background: #F1F5F9;
+    background: #E2ECE5;
     color: #4F7A65;
 }
 
@@ -277,12 +303,18 @@
 }
 
 /* Notification Preferences */
+.notifications-list-custom {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .notification-row-custom {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 14px;
-    border: 1px solid #E2ECE5;
+    padding: 10px 14px;
+    border: 1px solid #ECF2EE;
     border-radius: 9px;
     background: #F8FAF9;
 }
@@ -294,21 +326,21 @@
 
 .notification-type-title {
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: #203A2C;
 }
 
 .notification-type-desc {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: #4F7A65;
 }
 
-/* Switch toggle */
+/* Switch toggle - Chuẩn bo góc 9px */
 .switch {
     position: relative;
     display: inline-block;
-    width: 44px;
-    height: 24px;
+    width: 42px;
+    height: 22px;
     flex-shrink: 0;
 }
 
@@ -326,20 +358,20 @@
     right: 0;
     bottom: 0;
     background-color: #CBD5E1;
-    transition: .3s;
-    border-radius: 24px;
+    transition: background-color .2s ease;
+    border-radius: 9px;
 }
 
 .slider:before {
     position: absolute;
     content: "";
-    height: 18px;
-    width: 18px;
+    height: 16px;
+    width: 16px;
     left: 3px;
     bottom: 3px;
     background-color: white;
-    transition: .3s;
-    border-radius: 50%;
+    transition: transform .2s ease;
+    border-radius: 7px;
 }
 
 input:checked + .slider {
@@ -350,45 +382,35 @@ input:checked + .slider:before {
     transform: translateX(20px);
 }
 
-.btn-save-notifications-custom {
-    width: 100%;
-    padding: 10px 16px;
-    background: #F4A261;
-    color: #ffffff;
-    border: none;
-    border-radius: 9px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.btn-save-notifications-custom:hover {
-    background: #E76F51;
-}
-
-/* Language & Unit */
+/* Language and Unit Selection */
 .form-select-custom {
     width: 100%;
-    padding: 9px 14px;
+    padding: 8px 12px;
     border: 1px solid #D6E4DC;
     border-radius: 9px;
     background: #F8FAF9;
     font-family: var(--font-body, 'DM Sans', sans-serif);
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: #203A2C;
     outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.form-select-custom:focus {
+    border-color: #236B48;
+    background: #ffffff;
 }
 
 .unit-toggle-row-custom {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 14px;
-    border: 1px solid #E2ECE5;
+    padding: 10px 14px;
+    border: 1px solid #ECF2EE;
     border-radius: 9px;
     background: #F8FAF9;
-    margin-top: 14px;
+    margin-top: 12px;
 }
 
 .unit-text-custom {
@@ -398,12 +420,12 @@ input:checked + .slider:before {
 
 .unit-title-custom {
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: #203A2C;
 }
 
 .unit-desc-custom {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: #4F7A65;
 }
 
@@ -411,16 +433,16 @@ input:checked + .slider:before {
     display: flex;
     background: #E2ECE5;
     padding: 3px;
-    border-radius: 8px;
+    border-radius: 9px;
     gap: 3px;
 }
 
 .unit-btn {
     border: none;
     background: transparent;
-    padding: 5px 14px;
-    border-radius: 6px;
-    font-size: 0.85rem;
+    padding: 4px 12px;
+    border-radius: 7px;
+    font-size: 0.82rem;
     font-weight: 600;
     color: #4F7A65;
     cursor: pointer;
@@ -430,5 +452,84 @@ input:checked + .slider:before {
 .unit-btn.active {
     background: #ffffff;
     color: #203A2C;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Privacy & Data actions */
+.privacy-action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.privacy-action-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    background: #F8FAF9;
+}
+
+.privacy-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.privacy-item-title {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #203A2C;
+}
+
+.privacy-item-desc {
+    font-size: 0.78rem;
+    color: #4F7A65;
+}
+
+.btn-privacy-action {
+    padding: 5px 12px;
+    border-radius: 9px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid #D6E4DC;
+    background: #ffffff;
+    color: #203A2C;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.btn-privacy-action:hover {
+    background: #F4FAF6;
+    color: #236B48;
+    border-color: #236B48;
+}
+
+.btn-privacy-action.btn-privacy-danger {
+    color: #8F2424;
+    background: #F7DCDC;
+    border: none;
+}
+
+.btn-privacy-action.btn-privacy-danger:hover {
+    background: #F2C4C4;
+    color: #731B1B;
+}
+
+/* Toast container */
+.toast-container-custom {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.toast-container-custom > * {
+    pointer-events: auto;
 }

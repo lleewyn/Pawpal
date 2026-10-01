@@ -1,20 +1,36 @@
 /**
  * modules/settings/settings.js - Logic cho Module Cài đặt tài khoản PawPal
+ * Chuẩn AGENTS.md: 9px radius, Flat Solid, Text-Only, Auto-Save
  */
 
 const PAWPAL_USERS_KEY = 'pawpal_users_db';
 const CURRENT_USER_KEY = 'pawpal_current_user';
 
 function getCurrentUser() {
-    return JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || null;
+    try {
+        return JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || {
+            id: 'USER-001',
+            name: 'Nguyễn Văn A',
+            phone: '0901234567',
+            email: 'quyen@gmail.com'
+        };
+    } catch (e) {
+        return null;
+    }
 }
 
 function getUsers() {
-    return JSON.parse(localStorage.getItem(PAWPAL_USERS_KEY)) || [];
+    try {
+        return JSON.parse(localStorage.getItem(PAWPAL_USERS_KEY)) || [];
+    } catch (e) {
+        return [];
+    }
 }
 
 function saveUsers(users) {
-    localStorage.setItem(PAWPAL_USERS_KEY, JSON.stringify(users));
+    try {
+        localStorage.setItem(PAWPAL_USERS_KEY, JSON.stringify(users));
+    } catch (e) {}
 }
 
 function updateCurrentUserRecord(updatedUser) {
@@ -24,87 +40,71 @@ function updateCurrentUserRecord(updatedUser) {
         users[userIndex] = { ...users[userIndex], ...updatedUser };
         saveUsers(users);
     }
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
+    try {
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
+    } catch (e) {}
 }
 
-function showToast(type, message, duration = 4000) {
-    const container = document.getElementById('toastContainer');
+function showToast(type, message, duration = 3000) {
+    let container = document.getElementById('toastContainer');
     if (!container) {
-        alert(message);
-        return;
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container-custom';
+        document.body.appendChild(container);
     }
 
-    const toastId = 'toast-' + Date.now();
     const toastColors = {
-        success: { bg: '#236B48', accent: '#DCEEE2' },
-        error: { bg: '#DC2626', accent: '#FEE2E2' },
-        info: { bg: '#20495E', accent: '#DCEAF2' },
-        warning: { bg: '#D97706', accent: '#FEF3C7' }
+        success: { bg: '#236B48', label: 'Thành công' },
+        error: { bg: '#8F2424', label: 'Lỗi' },
+        info: { bg: '#20495E', label: 'Thông báo' },
+        warning: { bg: '#734718', label: 'Lưu ý' }
     };
-    const cfg = toastColors[type] || toastColors.info;
+    const cfg = toastColors[type] || toastColors.success;
 
-    const toastHtml = `
-        <div id="${toastId}" style="
-            display:flex;
-            align-items:flex-start;
-            gap:12px;
-            background:#ffffff;
-            border:1px solid ${cfg.accent};
-            box-shadow:0 8px 24px rgba(20, 40, 30, 0.12);
-            border-radius:12px;
-            padding:12px 16px;
-            min-width:300px;
-            max-width:400px;
-            color:#203A2C;
-            margin-bottom:10px;
-            animation: userModuleFadeIn 0.2s ease-out;
-        ">
-            <div style="
-                width:24px;
-                height:24px;
-                flex:0 0 24px;
-                border-radius:50%;
-                background:${cfg.accent};
-                color:${cfg.bg};
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-weight:700;
-                font-size:12px;
-            ">${type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '!' : 'i'}</div>
-            <div style="flex:1; min-width:0;">
-                <div style="font-weight:700; font-size:0.9rem; color:#203A2C;">${type === 'success' ? 'Thành công' : type === 'error' ? 'Lỗi' : type === 'warning' ? 'Cảnh báo' : 'Thông báo'}</div>
-                <div style="font-size:0.85rem; color:#4F7A65; margin-top:2px;">${message}</div>
-            </div>
-            <button type="button" class="toast-close" style="
-                border:none;
-                background:transparent;
-                color:#94A3B8;
-                font-size:18px;
-                cursor:pointer;
-                padding:0;
-            ">&times;</button>
-        </div>
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        background: #ffffff;
+        border: 1px solid #E2ECE5;
+        border-radius: 9px;
+        padding: 10px 16px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        min-width: 260px;
+        max-width: 360px;
+        color: #203A2C;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        opacity: 1;
+        transition: opacity 0.25s ease;
     `;
 
-    container.insertAdjacentHTML('beforeend', toastHtml);
-    const toastEl = document.getElementById(toastId);
-    if (!toastEl) return;
+    toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-weight: 700; font-size: 13px; color: ${cfg.bg};">${cfg.label}:</span>
+            <span style="font-size: 13px; color: #203A2C;">${message}</span>
+        </div>
+        <button type="button" style="border: none; background: transparent; color: #4F7A65; font-size: 16px; cursor: pointer; padding: 0 4px;">&times;</button>
+    `;
 
-    toastEl.querySelector('.toast-close').addEventListener('click', () => toastEl.remove());
+    toast.querySelector('button').addEventListener('click', () => toast.remove());
+    container.appendChild(toast);
+
     setTimeout(() => {
-        if (toastEl.parentNode) toastEl.remove();
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 250);
     }, duration);
 }
 
 function calculatePasswordStrength(password) {
     let score = 0;
-    if (password.length === 0) return { score: 0 };
+    if (!password || password.length === 0) return { score: 0 };
     if (password.length >= 8) score++;
     if (password.length >= 12) score++;
     if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
     if (/[0-9]/.test(password) || /[^a-zA-Z0-9]/.test(password)) score++;
-    return { score: Math.min(score, 4) };
+    return { score: Math.min(score, 3) };
 }
 
 function initPasswordStrengthMeter() {
@@ -112,7 +112,7 @@ function initPasswordStrengthMeter() {
     const strengthLabel = document.getElementById('strengthLabel');
     const seg1 = document.getElementById('strengthSeg1');
     const seg2 = document.getElementById('strengthSeg2');
-    const seg3 = document.getElementById('strengthSeg3');
+    const strengthSeg3 = document.getElementById('strengthSeg3');
 
     if (!newPassword || !strengthLabel) return;
 
@@ -122,16 +122,16 @@ function initPasswordStrengthMeter() {
 
         if (seg1) seg1.className = 'strength-bar-segment';
         if (seg2) seg2.className = 'strength-bar-segment';
-        if (seg3) seg3.className = 'strength-bar-segment';
+        if (strengthSeg3) strengthSeg3.className = 'strength-bar-segment';
 
         if (strength.score === 0) {
             strengthLabel.textContent = 'Trống';
             strengthLabel.style.color = '#4F7A65';
-        } else if (strength.score <= 1) {
+        } else if (strength.score === 1) {
             if (seg1) seg1.classList.add('weak');
             strengthLabel.textContent = 'Yếu';
             strengthLabel.style.color = '#DC2626';
-        } else if (strength.score <= 2) {
+        } else if (strength.score === 2) {
             if (seg1) seg1.classList.add('medium');
             if (seg2) seg2.classList.add('medium');
             strengthLabel.textContent = 'Trung bình';
@@ -139,7 +139,7 @@ function initPasswordStrengthMeter() {
         } else {
             if (seg1) seg1.classList.add('strong');
             if (seg2) seg2.classList.add('strong');
-            if (seg3) seg3.classList.add('strong');
+            if (strengthSeg3) strengthSeg3.classList.add('strong');
             strengthLabel.textContent = 'Mạnh';
             strengthLabel.style.color = '#236B48';
         }
@@ -153,21 +153,24 @@ function validateChangePasswordForm() {
     const newPassword = document.getElementById('newPassword');
     const confirmNewPassword = document.getElementById('confirmNewPassword');
     const btnSubmit = document.getElementById('btnUpdateSecurity');
+    const errEl = document.getElementById('confirmPasswordError');
 
     if (!newPassword || !confirmNewPassword || !btnSubmit) return;
 
-    const strength = calculatePasswordStrength(newPassword.value);
-    const isPasswordValid = strength.score >= 1 && newPassword.value.length >= 8;
-    const isConfirmValid = confirmNewPassword.value === newPassword.value && confirmNewPassword.value.length > 0;
-    const isCurrentValid = currentPassword ? currentPassword.value.length > 0 : true;
+    const isCurrentValid = currentPassword ? currentPassword.value.trim().length > 0 : true;
+    const isPasswordValid = newPassword.value.length >= 8;
+    const isConfirmMatch = confirmNewPassword.value === newPassword.value;
+    const isConfirmFilled = confirmNewPassword.value.length > 0;
 
-    if (confirmNewPassword.value.length > 0 && !isConfirmValid) {
+    if (isConfirmFilled && !isConfirmMatch) {
         confirmNewPassword.classList.add('is-invalid');
+        if (errEl) errEl.classList.add('d-block');
     } else {
         confirmNewPassword.classList.remove('is-invalid');
+        if (errEl) errEl.classList.remove('d-block');
     }
 
-    btnSubmit.disabled = !(isPasswordValid && isConfirmValid && isCurrentValid);
+    btnSubmit.disabled = !(isCurrentValid && isPasswordValid && isConfirmMatch && isConfirmFilled);
 }
 
 function initChangePasswordForm() {
@@ -195,6 +198,9 @@ function initChangePasswordForm() {
                 const el = document.getElementById(id);
                 if (el) el.className = 'strength-bar-segment';
             });
+            confirmNewPassword.classList.remove('is-invalid');
+            const errEl = document.getElementById('confirmPasswordError');
+            if (errEl) errEl.classList.remove('d-block');
             btnSubmit.disabled = true;
         });
     }
@@ -212,66 +218,53 @@ function initChangePasswordForm() {
 
         updateCurrentUserRecord(updatedUser);
 
-        // Ẩn warning nếu có
         const warning = document.getElementById('tempAccountWarning');
         if (warning) warning.classList.add('d-none');
 
         showToast('success', 'Mật khẩu đã được cập nhật thành công!');
         form.reset();
         btnSubmit.disabled = true;
+        const strengthLabel = document.getElementById('strengthLabel');
+        if (strengthLabel) {
+            strengthLabel.textContent = 'Trống';
+            strengthLabel.style.color = '#4F7A65';
+        }
+        ['strengthSeg1', 'strengthSeg2', 'strengthSeg3'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.className = 'strength-bar-segment';
+        });
     });
 }
 
 function initPasswordToggles() {
-    document.querySelectorAll('.btn-toggle-password-custom').forEach(btn => {
+    document.querySelectorAll('.btn-toggle-password-text').forEach(btn => {
         btn.addEventListener('click', () => {
-            const wrapper = btn.closest('.password-input-wrapper-custom');
-            const input = wrapper ? wrapper.querySelector('input') : btn.previousElementSibling;
+            const targetId = btn.getAttribute('data-target');
+            const input = document.getElementById(targetId);
             if (!input) return;
 
             if (input.type === 'password') {
                 input.type = 'text';
-                btn.innerHTML = `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+                btn.textContent = 'Ẩn';
             } else {
                 input.type = 'password';
-                btn.innerHTML = `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+                btn.textContent = 'Hiện';
             }
         });
     });
 }
 
-function initPasswordAccordion() {
-    const toggleBtn = document.getElementById('togglePasswordBtn');
-    const formContainer = document.getElementById('passwordFormContainer');
-    const icon = document.getElementById('passwordToggleIcon');
-
-    if (toggleBtn && formContainer && icon) {
-        toggleBtn.addEventListener('click', () => {
-            const isHidden = formContainer.classList.contains('d-none');
-            if (isHidden) {
-                formContainer.classList.remove('d-none');
-                icon.style.transform = 'rotate(0deg)';
-            } else {
-                formContainer.classList.add('d-none');
-                icon.style.transform = 'rotate(180deg)';
-            }
-        });
-    }
-}
-
 function initNotificationSettings(user) {
-    const form = document.getElementById('notificationSettingsForm');
     const emailCheckbox = document.getElementById('notifyEmail');
     const smsCheckbox = document.getElementById('notifySMS');
 
-    if (!form || !emailCheckbox || !smsCheckbox) return;
+    if (!emailCheckbox || !smsCheckbox) return;
 
     const settings = user.notificationPreferences || { email: true, sms: false };
     emailCheckbox.checked = Boolean(settings.email);
     smsCheckbox.checked = Boolean(settings.sms);
 
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
+    const savePreferences = () => {
         const updatedPreferences = {
             email: emailCheckbox.checked,
             sms: smsCheckbox.checked,
@@ -281,8 +274,11 @@ function initNotificationSettings(user) {
             notificationPreferences: updatedPreferences,
         };
         updateCurrentUserRecord(updatedUser);
-        showToast('success', 'Cài đặt thông báo đã được lưu!');
-    });
+        showToast('success', 'Đã lưu tùy chọn thông báo');
+    };
+
+    emailCheckbox.addEventListener('change', savePreferences);
+    smsCheckbox.addEventListener('change', savePreferences);
 }
 
 function initLanguageAndUnit(user) {
@@ -295,7 +291,7 @@ function initLanguageAndUnit(user) {
         languageSelect.value = savedLang;
         languageSelect.addEventListener('change', () => {
             localStorage.setItem('pawpal_language', languageSelect.value);
-            showToast('success', 'Đã lưu tùy chọn ngôn ngữ!');
+            showToast('success', 'Đã lưu tùy chọn ngôn ngữ');
         });
     }
 
@@ -338,7 +334,7 @@ function initSocialAccounts(user) {
                 statusEl.textContent = 'Chưa liên kết';
                 btn.textContent = 'Liên kết';
                 btn.className = 'btn-social-action-custom connect-btn';
-                showToast('success', `Đã hủy liên kết tài khoản ${nameEl.textContent}`);
+                showToast('info', `Đã hủy liên kết tài khoản ${nameEl.textContent}`);
             } else {
                 const mockEmail = user.email || `${(user.name || 'user').toLowerCase().replace(/\s+/g, '')}@gmail.com`;
                 statusEl.textContent = mockEmail;
@@ -348,6 +344,49 @@ function initSocialAccounts(user) {
             }
         });
     });
+}
+
+function initPrivacyActions(user) {
+    const btnExport = document.getElementById('btnExportUserData');
+    const btnDeactivate = document.getElementById('btnDeactivateAccount');
+
+    if (btnExport) {
+        btnExport.addEventListener('click', () => {
+            try {
+                const pets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
+                const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+                const orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+                
+                const exportData = {
+                    user: { name: user.name, phone: user.phone, email: user.email },
+                    pets: pets,
+                    bookingsCount: bookings.length,
+                    ordersCount: orders.length,
+                    exportedAt: new Date().toISOString()
+                };
+
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `pawpal_data_${Date.now()}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+
+                showToast('success', 'Đã tải về bản sao dữ liệu của bạn');
+            } catch (err) {
+                showToast('error', 'Không thể tạo tệp dữ liệu');
+            }
+        });
+    }
+
+    if (btnDeactivate) {
+        btnDeactivate.addEventListener('click', () => {
+            if (window.confirm('Bạn có chắc chắn muốn tạm dừng hoạt động tài khoản này? Bạn có thể đăng nhập lại bất cứ lúc nào để kích hoạt lại.')) {
+                showToast('warning', 'Tài khoản đã được đặt sang trạng thái tạm dừng.');
+            }
+        });
+    }
 }
 
 // Khởi tạo toàn bộ module Cài đặt
@@ -360,13 +399,17 @@ export function init() {
         if (warning) warning.classList.remove('d-none');
     }
 
+    if (typeof window.setUserSubBreadcrumb === 'function') {
+        window.setUserSubBreadcrumb('', 'settings');
+    }
+
     initPasswordStrengthMeter();
     initChangePasswordForm();
     initPasswordToggles();
-    initPasswordAccordion();
     initNotificationSettings(user);
     initLanguageAndUnit(user);
     initSocialAccounts(user);
+    initPrivacyActions(user);
 }
 
 // Tự động chạy nếu tải qua script tag thường

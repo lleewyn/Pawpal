@@ -93,7 +93,7 @@ async function loadBookingDetail(bookingId) {
             }
             const sessionId = currentBooking.id || '';
             const query = `id=${encodeURIComponent(petId)}${sessionId ? `&sessionId=${encodeURIComponent(sessionId)}` : ''}`;
-            window.location.href = `/pages/user/pet-diary/pet-diary.html?${query}`;
+            window.location.hash = `#diary?${query}`;
         };
     }
 

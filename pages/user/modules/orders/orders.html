@@ -1,6 +1,6 @@
-<!-- modules/orders/orders.html - Module Quản lý đơn hàng Pawpal -->
+<!-- modules/orders/orders.html - Module Quản lý đơn hàng PawPal (Chuẩn AGENTS.md: 9px radius, Flat Solid, Text-Only) -->
 <div class="orders-module-container">
-    <!-- Thống kê đơn hàng -->
+    <!-- Thống kê tổng quan đơn hàng -->
     <section class="orders-stats mb-4">
         <div class="stat-card">
             <span class="stat-number" id="processing-count">0</span>
@@ -16,45 +16,53 @@
         </div>
     </section>
 
-    <!-- Thanh tìm kiếm -->
-    <div class="orders-search mb-3">
+    <!-- Thanh tìm kiếm đơn hàng -->
+    <div class="orders-search mb-4">
         <input type="text" id="order-search" 
                placeholder="Tìm kiếm theo mã đơn hàng hoặc tên sản phẩm..."
                class="search-input">
         <button class="search-btn" id="search-btn">Tìm kiếm</button>
     </div>
 
-    <!-- Thanh lọc trạng thái đơn hàng -->
-    <nav class="orders-tabs mb-4" id="orders-tabs">
-        <button class="tab-btn active" data-status="all">
-            Tất cả <span class="tab-count" id="count-all">(0)</span>
-        </button>
-        <button class="tab-btn" data-status="pending_payment">
-            Chờ thanh toán <span class="tab-count" id="count-pending_payment">(0)</span>
-        </button>
-        <button class="tab-btn" data-status="preparing">
-            Đang chuẩn bị <span class="tab-count" id="count-preparing">(0)</span>
-        </button>
-        <button class="tab-btn" data-status="shipping">
-            Đang giao <span class="tab-count" id="count-shipping">(0)</span>
-        </button>
-        <button class="tab-btn" data-status="delivered">
-            Đã giao <span class="tab-count" id="count-delivered">(0)</span>
-        </button>
-        <button class="tab-btn" data-status="completed">
-            Hoàn thành <span class="tab-count" id="count-completed">(0)</span>
-        </button>
-        <button class="tab-btn" data-status="cancelled">
-            Đã hủy <span class="tab-count" id="count-cancelled">(0)</span>
-        </button>
-    </nav>
+    <!-- Bộ lọc trạng thái đơn hàng dạng Subtabs chuẩn phẳng Text-Only -->
+    <div class="order-filter-bar mb-4">
+        <div class="order-filter-tabs" id="orders-tabs" role="tablist">
+            <button class="order-filter-tab active" data-status="all" role="tab" aria-selected="true">
+                Tất cả <span class="tab-count" id="count-all">(0)</span>
+            </button>
+            <span class="tab-separator">|</span>
+            <button class="order-filter-tab" data-status="pending_payment" role="tab" aria-selected="false">
+                Chờ thanh toán <span class="tab-count" id="count-pending_payment">(0)</span>
+            </button>
+            <span class="tab-separator">|</span>
+            <button class="order-filter-tab" data-status="preparing" role="tab" aria-selected="false">
+                Đang chuẩn bị <span class="tab-count" id="count-preparing">(0)</span>
+            </button>
+            <span class="tab-separator">|</span>
+            <button class="order-filter-tab" data-status="shipping" role="tab" aria-selected="false">
+                Đang giao <span class="tab-count" id="count-shipping">(0)</span>
+            </button>
+            <span class="tab-separator">|</span>
+            <button class="order-filter-tab" data-status="delivered" role="tab" aria-selected="false">
+                Đã giao <span class="tab-count" id="count-delivered">(0)</span>
+            </button>
+            <span class="tab-separator">|</span>
+            <button class="order-filter-tab" data-status="completed" role="tab" aria-selected="false">
+                Hoàn thành <span class="tab-count" id="count-completed">(0)</span>
+            </button>
+            <span class="tab-separator">|</span>
+            <button class="order-filter-tab" data-status="cancelled" role="tab" aria-selected="false">
+                Đã hủy <span class="tab-count" id="count-cancelled">(0)</span>
+            </button>
+        </div>
+    </div>
 
     <!-- Danh sách đơn hàng -->
     <div class="orders-list" id="orders-list">
         <div class="text-center p-5 text-muted">Đang tải danh sách đơn hàng...</div>
     </div>
 
-    <!-- Phân trang -->
+    <!-- Phân trang chuẩn ngoài Card -->
     <nav class="pagination d-none mt-4 justify-content-center" id="pagination">
         <button class="page-btn" id="prev-page">&lt;</button>
         <div id="page-numbers" class="d-inline-flex gap-1"></div>

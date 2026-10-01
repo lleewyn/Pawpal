@@ -9,6 +9,7 @@ const TRACKER_LOGS_KEY = 'pawpal_pet_tracker_logs';
 let careLogsCache = null;
 let petSeedCache = null;
 let currentPetId = null;
+let currentPetObject = null;
 let currentSessionId = null;
 let isHashListenerAttached = false;
 
@@ -16,16 +17,34 @@ const DEMO_STAFF_PRIMARY = 'Nguyễn Thị Mai';
 const DEMO_STAFF_RECEPTION = 'Trần Văn Nam';
 
 const TIMELINE_FALLBACK_IMAGES = {
-    dry: '/assets/images/publics/dogcute3.jpg',
-    bath: '/assets/images/publics/dogcute6.jpg',
-    receive: '/assets/images/publics/catcute5.jpg',
-    trim: '/assets/images/publics/catcute8.jpg',
-    complete: '/assets/images/publics/dogcute8.jpg',
-    default: '/assets/images/publics/pet3.jpg'
+    cat: {
+        receive: '/assets/images/services/spa/process/chai_long_meo1.jpeg',
+        bath: '/assets/images/services/spa/process/tam_meo.jpg',
+        dry: '/assets/images/services/spa/process/say_long1.jpg',
+        trim: '/assets/images/services/spa/process/process_cat_long_cat_long_meo.jpg',
+        complete: '/assets/images/services/spa/process/process_nghi_ngoi_nghi_ngoi1.jpg',
+        default: '/assets/images/services/spa/process/tam_meo.jpg'
+    },
+    dog: {
+        receive: '/assets/images/services/spa/process/process_chai_long_chai_long.jpg',
+        bath: '/assets/images/services/spa/process/tam_cho1.jpg',
+        dry: '/assets/images/services/spa/process/say_long2.jpg',
+        trim: '/assets/images/services/spa/process/process_cat_long_cat_long.jpg',
+        complete: '/assets/images/services/spa/process/process_nghi_ngoi_nghi_ngoi.jpg',
+        default: '/assets/images/services/spa/process/spa01.webp'
+    },
+    default: {
+        receive: '/assets/images/services/spa/process/massage.jpg',
+        bath: '/assets/images/services/spa/process/process_tam_tam.jpg',
+        dry: '/assets/images/services/spa/process/process_say_say_long.jpg',
+        trim: '/assets/images/services/spa/process/cat_long1.jpg',
+        complete: '/assets/images/services/spa/process/nghi_ngoi1.jpg',
+        default: '/assets/images/services/spa/process/spa01.webp'
+    }
 };
 
 /* ==========================================================================
-   1. TIỆN ÍCH DỮ LIỆU & STORAGE
+   1. TIỆN ÍCH DỮ LIỆU VÀ STORAGE
    ========================================================================== */
 
 function getTrackerLogs() {
@@ -129,10 +148,12 @@ function formatWeightDisplay(weightVal) {
 }
 
 /* ==========================================================================
-   2. KHỞI TẠO MODULE & ĐIỀU HƯỚNG
+   2. KHỞI TẠO MODULE VÀ ĐIỀU HƯỚNG
    ========================================================================== */
 
 export async function initPetDiary() {
+    setupDiaryNavigation();
+    setupDiaryImageModal();
     await populatePetSelector();
 
     const petSelector = document.getElementById('petSelector');
@@ -148,6 +169,11 @@ export async function initPetDiary() {
                 const targetPetId = getRouteParam('id') || getRouteParam('pet') || getRouteParam('petId');
                 if (targetPetId && targetPetId !== currentPetId) {
                     await selectAndLoadPet(targetPetId);
+                } else if (!targetPetId) {
+                    const defaultId = await getDefaultPetIdToLoad();
+                    if (defaultId && defaultId !== currentPetId) {
+                        await selectAndLoadPet(defaultId);
+                    }
                 }
             }
         });
@@ -156,16 +182,61 @@ export async function initPetDiary() {
     const petIdFromUrl = getRouteParam('id') || getRouteParam('pet') || getRouteParam('petId');
     const sessionIdFromUrl = getRouteParam('sessionId') || getRouteParam('session');
 
-    if (petIdFromUrl) {
-        await selectAndLoadPet(petIdFromUrl);
+    let targetPetId = petIdFromUrl || (petSelector && petSelector.value);
+    if (!targetPetId) {
+        targetPetId = await getDefaultPetIdToLoad();
+    }
+
+    if (targetPetId) {
+        await selectAndLoadPet(targetPetId);
         if (sessionIdFromUrl) {
             await openSessionFromUrlOrFallback(sessionIdFromUrl);
         }
-    } else if (petSelector && petSelector.value) {
-        await selectAndLoadPet(petSelector.value);
     } else {
-        await renderActiveServicesDashboard();
+        showEmptyPetState();
     }
+}
+
+function setupDiaryNavigation() {
+    // Điều hướng chọn bé trực quan qua pet-switch-pill trên đầu trang
+}
+
+async function renderPetSwitcherPills(activePetId) {
+    const pillsContainer = document.getElementById('petSwitcherPills');
+    if (!pillsContainer) return;
+
+    const pets = (await getPets()).filter((pet) => !pet.isArchived);
+    if (!pets.length) {
+        pillsContainer.innerHTML = '';
+        return;
+    }
+
+    const pillsMarkup = await Promise.all(pets.map(async (pet) => {
+        const isActive = String(pet.id).toLowerCase() === String(activePetId).toLowerCase();
+        const avatar = pet.avatar || '/assets/images/shared/default-pet.png';
+        const logs = await getOrSeedTrackerLogs(pet);
+        const isLive = Boolean(logs?.currentSession && logs.currentSession.status === 'Đang thực hiện');
+        const liveTag = isLive ? `<span class="pill-live-tag">Đang spa</span>` : '';
+
+        return `
+            <button type="button" class="pet-switch-pill ${isActive ? 'active' : ''} ${isLive ? 'has-live-service' : ''}" data-pet-id="${escapeHtml(pet.id)}" title="Xem nhật ký ${escapeHtml(pet.name)}">
+                <img src="${avatar}" alt="${escapeHtml(pet.name)}" class="pill-pet-avatar">
+                <span class="pill-pet-name">${escapeHtml(pet.name)}</span>
+                ${liveTag}
+            </button>
+        `;
+    }));
+
+    pillsContainer.innerHTML = pillsMarkup.join('');
+
+    pillsContainer.querySelectorAll('.pet-switch-pill').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const petId = btn.getAttribute('data-pet-id');
+            if (petId && petId !== currentPetId) {
+                await selectAndLoadPet(petId);
+            }
+        });
+    });
 }
 
 async function populatePetSelector() {
@@ -193,16 +264,89 @@ async function handlePetChange(e) {
     await selectAndLoadPet(petId);
 }
 
-async function selectAndLoadPet(petId) {
+function updateDiaryBreadcrumb(petName) {
+    if (typeof window.setUserSubBreadcrumb === 'function') {
+        window.setUserSubBreadcrumb(petName, 'diary');
+        return;
+    }
+    const list = document.getElementById('userBreadcrumbList');
+    if (!list) return;
+    if (petName) {
+        list.innerHTML = `
+            <li class="breadcrumb-item"><a href="/pages/public/landing/landing.html">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="#diary" id="btnBreadcrumbDiary">Nhật ký chăm sóc</a></li>
+            <li class="breadcrumb-item active" id="userBreadcrumbCurrent">${escapeHtml(petName)}</li>
+        `;
+        document.title = `${petName} - Nhật ký chăm sóc - PawPal`;
+        const link = document.getElementById('btnBreadcrumbDiary');
+        if (link) {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showDashboardState();
+            });
+        }
+    } else {
+        list.innerHTML = `
+            <li class="breadcrumb-item"><a href="/pages/public/landing/landing.html">Trang chủ</a></li>
+            <li class="breadcrumb-item active" id="userBreadcrumbCurrent">Nhật ký chăm sóc</li>
+        `;
+        document.title = 'Nhật ký chăm sóc - PawPal';
+    }
+}
+
+async function getDefaultPetIdToLoad() {
+    try {
+        const pets = (await getPets()).filter((pet) => !pet.isArchived);
+        if (!pets || pets.length === 0) return null;
+
+        // Ưu tiên 1: Bé đang có dịch vụ 'Đang thực hiện'
+        for (const pet of pets) {
+            const logs = await getOrSeedTrackerLogs(pet);
+            if (logs?.currentSession && logs.currentSession.status === 'Đang thực hiện') {
+                return pet.id;
+            }
+        }
+
+        // Ưu tiên 2: Bé đầu tiên trong danh sách
+        return pets[0].id;
+    } catch (e) {
+        console.warn('[diary] getDefaultPetIdToLoad error:', e);
+        return null;
+    }
+}
+
+function showEmptyPetState() {
+    const dashboardState = document.getElementById('dashboardState');
+    const diaryContent = document.getElementById('diaryContent');
+    const emptyState = document.getElementById('emptyState');
+    const petSelector = document.getElementById('petSelector');
+
+    if (dashboardState) dashboardState.classList.remove('d-none');
+    if (diaryContent) diaryContent.classList.add('d-none');
+    if (emptyState) emptyState.classList.remove('d-none');
+    if (petSelector) petSelector.value = '';
+
+    updateDiaryBreadcrumb('');
+}
+
+async function showDashboardState() {
+    const defaultPetId = await getDefaultPetIdToLoad();
+    if (defaultPetId) {
+        await selectAndLoadPet(defaultPetId);
+    } else {
+        showEmptyPetState();
+    }
+}
+
+window.pawpalShowDiaryDashboard = showDashboardState;
+
+async function selectAndLoadPet(petId, targetSessionId = null) {
     const emptyState = document.getElementById('emptyState');
     const diaryContent = document.getElementById('diaryContent');
     const dashboardState = document.getElementById('dashboardState');
 
     if (!petId) {
-        currentPetId = null;
-        if (dashboardState) dashboardState.classList.remove('d-none');
-        if (diaryContent) diaryContent.classList.add('d-none');
-        await renderActiveServicesDashboard();
+        await showDashboardState();
         return;
     }
 
@@ -212,11 +356,21 @@ async function selectAndLoadPet(petId) {
         String(p.name).toLowerCase() === String(petId).toLowerCase()
     );
 
+    if (!pet) {
+        const fallbackId = await getDefaultPetIdToLoad();
+        if (fallbackId && String(fallbackId) !== String(petId)) {
+            await selectAndLoadPet(fallbackId, targetSessionId);
+            return;
+        }
+        showEmptyPetState();
+        return;
+    }
+
     const petSelector = document.getElementById('petSelector');
     if (petSelector) {
         let matchedOption = Array.from(petSelector.options).find(opt => 
-            opt.value.toLowerCase() === String(petId).toLowerCase() ||
-            (pet && opt.value.toLowerCase() === String(pet.id).toLowerCase())
+            opt.value.toLowerCase() === String(pet.id).toLowerCase() ||
+            opt.value.toLowerCase() === String(petId).toLowerCase()
         );
 
         if (!matchedOption && pet) {
@@ -236,23 +390,36 @@ async function selectAndLoadPet(petId) {
     if (emptyState) emptyState.classList.add('d-none');
     if (diaryContent) diaryContent.classList.remove('d-none');
 
-    currentPetId = pet ? pet.id : petId;
-    await loadPetDiary(currentPetId);
+    currentPetId = pet.id;
+    currentPetObject = pet;
+
+    // Cập nhật Breadcrumb: Trang chủ / Nhật ký chăm sóc / [Tên bé]
+    updateDiaryBreadcrumb(currentPetObject.name);
+
+    const targetHash = `#diary?id=${currentPetId}`;
+    if (window.location.hash !== targetHash) {
+        history.replaceState(null, '', targetHash);
+    }
+
+    await renderPetSwitcherPills(currentPetId);
+    await loadPetDiary(currentPetId, targetSessionId);
 }
+
+window.selectAndLoadPet = selectAndLoadPet;
 
 /* ==========================================================================
    3. TẢI VÀ ĐỒNG BỘ DỮ LIỆU NHẬT KÝ (MULTI-SOURCE SYNC)
    ========================================================================== */
 
-async function loadPetDiary(petId) {
+async function loadPetDiary(petId, targetSessionId = null) {
     const pets = await getPets();
     const pet = pets.find(p => String(p.id) === String(petId));
     if (!pet) {
         showToast('Không tìm thấy thông tin bé cưng', 'error');
         return;
     }
-
-    renderPetInfoCard(pet);
+    currentPetObject = pet;
+    updateDiaryBreadcrumb(pet.name);
 
     // 1. Thử đồng bộ từ Supabase nếu có client
     let logs = null;
@@ -278,14 +445,26 @@ async function loadPetDiary(petId) {
     if (currentSession) allSessions.push({ ...currentSession, isCurrent: true });
     [...history].reverse().forEach(s => allSessions.push({ ...s, isCurrent: false }));
 
-    renderHistorySidebar(allSessions);
+    // Chọn phiên dịch vụ kích hoạt
+    let activeSession = null;
+    if (targetSessionId) {
+        activeSession = allSessions.find(s => String(s.id) === String(targetSessionId));
+    }
+    if (!activeSession) {
+        activeSession = currentSession || (allSessions.length > 0 ? allSessions[0] : null);
+    }
 
-    if (currentSession) {
-        currentSessionId = currentSession.id;
-        renderTimeline(currentSession.timeline);
-    } else if (history.length > 0) {
-        currentSessionId = history[0].id;
-        renderTimeline(history[0].timeline);
+    renderPetInfoCard(pet, currentSession);
+    renderServiceStepper(activeSession, pet);
+
+    renderHistorySidebar(allSessions.map(s => ({
+        ...s,
+        isCurrent: activeSession ? (String(s.id) === String(activeSession.id)) : s.isCurrent
+    })));
+
+    if (activeSession) {
+        currentSessionId = activeSession.id;
+        renderTimeline(activeSession.timeline);
     } else {
         currentSessionId = null;
         renderTimeline([]);
@@ -425,7 +604,7 @@ function syncAdminBookingToSession(booking, pet) {
 
     return {
         id: booking.id,
-        service: booking.serviceName || 'Spa & Grooming',
+        service: booking.serviceName || 'Spa và Grooming',
         date: booking.date || new Date().toISOString().split('T')[0],
         status: booking.status === 'completed' ? 'Hoàn thành' : (booking.status === 'cancelled' ? 'Đã hủy' : 'Đang thực hiện'),
         timeline,
@@ -541,35 +720,143 @@ function seedDemoLogs(pet, seed) {
 }
 
 /* ==========================================================================
-   4. RENDER GIAO DIỆN HỒ SƠ & DÒNG THỜI GIAN
+   4. RENDER GIAO DIỆN HỒ SƠ VÀ DÒNG THỜI GIAN
    ========================================================================== */
 
-function renderPetInfoCard(pet) {
+function renderPetInfoCard(pet, currentSession) {
     const container = document.getElementById('petInfoCard');
     if (!container) return;
 
     const age = calcAge(pet.dob);
     const weightText = formatWeightDisplay(pet.weight || pet.weightNum);
+    const speciesText = getSpeciesDisplay(pet);
+    const breedText = pet.breed ? pet.breed : '';
 
     const avatarHtml = pet.avatar
         ? `<img src="${pet.avatar}" alt="${escapeHtml(pet.name)}" class="pet-info-avatar">`
         : `<div class="pet-info-avatar-placeholder">
-               <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                   <circle cx="12" cy="8" r="4"/>
-                   <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-               </svg>
+               <span class="pet-avatar-text">${escapeHtml((pet.name || 'P').charAt(0).toUpperCase())}</span>
            </div>`;
 
+    const isLiveActive = Boolean(currentSession && currentSession.status === 'Đang thực hiện');
+
     container.innerHTML = `
-        ${avatarHtml}
-        <div class="pet-info-details">
-            <h4>${escapeHtml(pet.name)}</h4>
-            <div class="pet-info-meta">
-                <span>${escapeHtml(pet.id)}</span>
-                <span>${getSpeciesDisplay(pet)}</span>
-                ${pet.breed ? `<span>${escapeHtml(pet.breed)}</span>` : ''}
-                ${weightText ? `<span>${escapeHtml(weightText)}</span>` : ''}
-                ${age ? `<span>${escapeHtml(age)}</span>` : ''}
+        <div class="pet-info-header-wrap">
+            <div class="pet-info-left">
+                <div class="pet-avatar-wrapper ${isLiveActive ? 'avatar-in-spa' : ''}">
+                    ${avatarHtml}
+                    ${isLiveActive ? '<span class="avatar-live-indicator" title="Bé đang được chăm sóc tại Spa"></span>' : ''}
+                </div>
+                <div class="pet-info-details">
+                    <div class="pet-title-row">
+                        <h3 class="pet-title-name">${escapeHtml(pet.name)}</h3>
+                        <span class="pet-code-pill">${escapeHtml(pet.id || pet.code || 'Bé cưng')}</span>
+                    </div>
+                    <div class="pet-info-tags">
+                        <span class="pet-meta-tag tag-species">
+                            ${escapeHtml(speciesText)}${breedText ? ` • ${escapeHtml(breedText)}` : ''}
+                        </span>
+                        ${weightText ? `
+                        <span class="pet-meta-tag tag-weight">
+                            ${escapeHtml(weightText)}
+                        </span>` : ''}
+                        ${age ? `
+                        <span class="pet-meta-tag tag-age">
+                            ${escapeHtml(age)}
+                        </span>` : ''}
+                    </div>
+                </div>
+            </div>
+            <div class="pet-info-right">
+                ${isLiveActive ? `
+                <div class="pet-status-live-banner">
+                    <span class="live-pulse-dot"></span>
+                    <span class="live-text">Đang làm Spa</span>
+                </div>
+                ` : `
+                <div class="pet-status-idle-banner">
+                    <span class="idle-text">Nghỉ ngơi tại nhà</span>
+                </div>
+                `}
+                <a href="/pages/services/booking/booking.html?petId=${encodeURIComponent(pet.id || '')}" class="btn-pet-new-booking" title="Đặt lịch hẹn spa/khám mới cho bé">
+                    <span>+ Đặt lịch mới</span>
+                </a>
+            </div>
+        </div>
+    `;
+}
+
+function renderServiceStepper(currentSession, pet) {
+    const container = document.getElementById('serviceStepperCard');
+    if (!container) return;
+
+    if (!currentSession) {
+        container.innerHTML = '';
+        container.classList.add('d-none');
+        return;
+    }
+
+    container.classList.remove('d-none');
+
+    let currentStep = 1;
+    const timeline = currentSession.timeline || [];
+    const latestEvent = timeline.length > 0 ? timeline[0] : null;
+    const statusStr = ((latestEvent?.status || '') + ' ' + (latestEvent?.description || '')).toLowerCase();
+
+    if (currentSession.status === 'Hoàn thành' || statusStr.includes('hoàn thành')) {
+        currentStep = 4;
+    } else if (statusStr.includes('cắt') || statusStr.includes('tỉa') || statusStr.includes('tạo kiểu') || statusStr.includes('chải')) {
+        currentStep = 3;
+    } else if (statusStr.includes('tắm') || statusStr.includes('sấy') || statusStr.includes('massage')) {
+        currentStep = 2;
+    } else {
+        currentStep = 1;
+    }
+
+    const steps = [
+        { num: 1, title: 'Tiếp nhận', sub: 'Khám và Check-in' },
+        { num: 2, title: 'Tắm và Sấy', sub: 'Thư giãn dịu nhẹ' },
+        { num: 3, title: 'Cắt tỉa và Spa', sub: 'Tạo kiểu xinh xắn' },
+        { num: 4, title: 'Hoàn tất', sub: 'Sẵn sàng đón bé' }
+    ];
+
+    const progressPercent = currentStep === 1 ? 0 : (currentStep === 2 ? 28 : (currentStep === 3 ? 56 : 84));
+
+    container.innerHTML = `
+        <div class="stepper-header">
+            <div class="stepper-title-group">
+                <div class="stepper-service-name">
+                    <h4>${escapeHtml(currentSession.service || 'Spa và Grooming')}</h4>
+                </div>
+                <span class="stepper-time-badge">${formatDate(currentSession.date)}</span>
+            </div>
+            <div class="stepper-status-badge ${currentSession.status === 'Hoàn thành' ? 'status-finished' : 'status-ongoing'}">
+                ${currentSession.status === 'Hoàn thành' ? 'Đã hoàn tất' : 'Tiến trình trực tiếp'}
+            </div>
+        </div>
+
+        <div class="stepper-track-wrapper">
+            <div class="stepper-progress-bar" style="width: ${progressPercent}%;"></div>
+            <div class="stepper-steps">
+                ${steps.map(step => {
+                    const isDone = step.num < currentStep || currentStep === 4;
+                    const isActive = step.num === currentStep && currentStep !== 4;
+                    let stateClass = 'pending';
+                    if (isDone) stateClass = 'done';
+                    else if (isActive) stateClass = 'active';
+
+                    return `
+                        <div class="stepper-step ${stateClass}">
+                            <div class="step-circle">
+                                <span>${step.num}</span>
+                            </div>
+                            <div class="step-content">
+                                <span class="step-name">${step.title}</span>
+                                <span class="step-desc">${step.sub}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
             </div>
         </div>
     `;
@@ -590,7 +877,7 @@ function renderTimeline(timeline) {
 
     const sorted = [...timeline].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-    wrapper.innerHTML = sorted.map(item => buildTimelineItemHtml(item)).join('');
+    wrapper.innerHTML = sorted.map((item, idx) => buildTimelineItemHtml(item, sorted.length - idx, sorted.length)).join('');
 
     sorted.forEach(item => {
         if (item.urgent || item.type === 'urgent') {
@@ -600,48 +887,132 @@ function renderTimeline(timeline) {
     });
 }
 
-function buildTimelineItemHtml(item) {
+function getStageMetadata(status, desc) {
+    const text = `${status || ''} ${desc || ''}`.toLowerCase();
+    if (text.includes('sấy')) {
+        return {
+            badgeText: 'Sấy lông và Thư giãn',
+            badgeBg: '#FEF3C7',
+            badgeColor: '#B45309',
+            mood: 'Bé rất ngoan ngoãn, thích được sấy ấm và vuốt ve',
+            themeClass: 'stage-dry',
+            stepNumber: '02'
+        };
+    }
+    if (text.includes('tắm')) {
+        return {
+            badgeText: 'Tắm sạch và Dưỡng lông',
+            badgeBg: '#E0F2FE',
+            badgeColor: '#0369A1',
+            mood: 'Bé hợp tác tốt, sảng khoái với bọt sữa tắm dịu nhẹ',
+            themeClass: 'stage-bath',
+            stepNumber: '02'
+        };
+    }
+    if (text.includes('cắt') || text.includes('tỉa') || text.includes('chải') || text.includes('tạo kiểu')) {
+        return {
+            badgeText: 'Cắt tỉa và Tạo phom',
+            badgeBg: '#FCE7F3',
+            badgeColor: '#BE185D',
+            mood: 'Tạo kiểu xinh xắn, ngoan ngoãn đứng cho chuyên viên cắt tỉa',
+            themeClass: 'stage-trim',
+            stepNumber: '03'
+        };
+    }
+    if (text.includes('hoàn thành') || text.includes('chờ đón')) {
+        return {
+            badgeText: 'Hoàn thành xuất sắc',
+            badgeBg: '#DCFCE7',
+            badgeColor: '#15803D',
+            mood: 'Bé thơm tho, sạch đẹp và đã sẵn sàng chờ phụ huynh đón',
+            themeClass: 'stage-complete',
+            stepNumber: '04'
+        };
+    }
+    return {
+        badgeText: 'Tiếp nhận và Thăm khám',
+        badgeBg: '#EEF5F1',
+        badgeColor: '#236B48',
+        mood: 'Bé đã vào phòng chờ, tinh thần thoải mái và vui vẻ',
+        themeClass: 'stage-receive',
+        stepNumber: '01'
+    };
+}
+
+function buildTimelineItemHtml(item, itemIndex, totalItems) {
     const isUrgent = item.urgent || item.type === 'urgent';
     const isCompleted = item.type === 'completed';
     const timeStr = formatTimestamp(item.timestamp);
-    const imageUrl = resolveTimelineImageUrl(item);
+    const imageUrl = resolveTimelineImageUrl(item, currentPetObject);
+    const meta = getStageMetadata(item.status, item.description);
+    const nodeLabel = meta.stepNumber || (itemIndex ? String(itemIndex).padStart(2, '0') : '01');
 
     return `
-        <div class="timeline-item ${isUrgent ? 'timeline-item-urgent' : ''}">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content timeline-content-with-image">
-                <div class="timeline-item-main">
-                    ${isUrgent ? `
-                    <div class="timeline-urgent-badge">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                        </svg>
-                        GHI CHÚ KHẨN
-                    </div>` : ''}
-                    <div class="timeline-time">${timeStr}</div>
-                    <h4 class="timeline-status">${escapeHtml(item.status)}</h4>
-                    <p class="timeline-description">${escapeHtml(item.description)}</p>
-                    <div class="timeline-staff">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-                        </svg>
-                        <span>${escapeHtml(item.staff || DEMO_STAFF_PRIMARY)}</span>
+        <div class="timeline-story-card ${isUrgent ? 'timeline-item-urgent' : ''}" data-item-id="${item.id}">
+            <!-- Node số thứ tự / công đoạn trên trục dọc (100% text-only) -->
+            <div class="timeline-node-icon ${meta.themeClass}" title="${meta.badgeText}">
+                <span class="timeline-node-text">${nodeLabel}</span>
+            </div>
+
+            <div class="story-card-body">
+                <!-- Header của thẻ nhật ký -->
+                <div class="story-card-header">
+                    <div class="story-stage-info">
+                        <span class="story-stage-badge" style="background: ${meta.badgeBg}; color: ${meta.badgeColor};">
+                            ${meta.badgeText}
+                        </span>
+                        <span class="story-timestamp">${timeStr}</span>
                     </div>
-                    ${isUrgent ? buildChatBoxHtml(item.id) : ''}
-                    ${isCompleted && item.invoice ? buildInvoiceBlockHtml(item.invoice) : ''}
+                    <div class="story-staff-tag">
+                        <span>Chăm sóc: ${escapeHtml(item.staff || DEMO_STAFF_PRIMARY)}</span>
+                    </div>
                 </div>
+
+                ${isUrgent ? `
+                <div class="timeline-urgent-banner">
+                    <span>LƯU Ý QUAN TRỌNG TỪ NHÂN VIÊN</span>
+                </div>` : ''}
+
+                <!-- Tiêu đề và Lời nhắn -->
+                <h4 class="story-card-title">${escapeHtml(item.status)}</h4>
+                <p class="story-card-desc">${escapeHtml(item.description)}</p>
+
+                <!-- Thanh tâm trạng bé -->
+                <div class="story-pet-mood-pill">
+                    <span class="mood-label">Tâm trạng bé:</span>
+                    <span class="mood-text">${escapeHtml(meta.mood)}</span>
+                </div>
+
+                <!-- Ảnh chụp hoạt động thực tế (Story Photo) -->
                 ${imageUrl ? `
-                <div class="timeline-photo">
-                    <img src="${imageUrl}" alt="${escapeHtml(item.status)}" class="timeline-item-image" loading="lazy" />
+                <div class="story-photo-wrap" onclick="window.openDiaryImageModal('${imageUrl}', '${escapeHtml(item.status)} — ${escapeHtml(timeStr)}')" title="Bấm để xem ảnh phóng to nét căng">
+                    <img src="${imageUrl}" alt="${escapeHtml(item.status)}" class="story-photo-img" loading="lazy" />
+                    <div class="story-photo-overlay">
+                        <span class="story-zoom-btn">Phóng to</span>
+                    </div>
                 </div>
                 ` : ''}
+
+                <!-- Khung chat khẩn / Hóa đơn nếu có -->
+                ${isUrgent ? buildChatBoxHtml(item.id) : ''}
+                ${isCompleted && item.invoice ? buildInvoiceBlockHtml(item.invoice) : ''}
+
+                <!-- Footer tương tác người dùng -->
+                <div class="story-card-footer">
+                    <button type="button" class="btn-story-like" onclick="window.toggleStoryLike(this)">
+                        <span class="like-label">Yêu thích</span>
+                        <span class="like-count">(1)</span>
+                    </button>
+                    <button type="button" class="btn-story-message" onclick="window.focusStoryChat('${item.id}')">
+                        <span>Nhắn dặn dò</span>
+                    </button>
+                </div>
             </div>
         </div>
     `;
 }
 
-function resolveTimelineImageUrl(item) {
+function resolveTimelineImageUrl(item, pet) {
     if (!item || typeof item !== 'object') return '';
 
     const candidates = [
@@ -669,8 +1040,16 @@ function resolveTimelineImageUrl(item) {
         item.media?.url
     ];
 
-    let rawImage = candidates.find(value => typeof value === 'string' && value.trim() !== '')
-        || getTimelineFallbackImage(item);
+    let rawImage = candidates.find(value => typeof value === 'string' && value.trim() !== '');
+
+    // Nếu ảnh là ảnh chibi / clip-art cũ (như catcute, dogcute, cat10, pet3), ưu tiên thay thế bằng ảnh chụp Spa thực tế 100%
+    if (rawImage && (rawImage.includes('catcute') || rawImage.includes('dogcute') || rawImage.includes('cat10') || rawImage.includes('/publics/'))) {
+        rawImage = null;
+    }
+
+    if (!rawImage) {
+        rawImage = getTimelineFallbackImage(item, pet);
+    }
 
     if (rawImage && !rawImage.startsWith('http') && !rawImage.startsWith('data:') && !rawImage.startsWith('/')) {
         rawImage = '/' + rawImage;
@@ -684,18 +1063,97 @@ function resolveTimelineImageUrl(item) {
     }
 }
 
-function getTimelineFallbackImage(item) {
+function getTimelineFallbackImage(item, pet) {
+    const rawSpecies = (pet?.species || 'dog').toLowerCase();
+    const speciesKey = rawSpecies === 'cat' ? 'cat' : (rawSpecies === 'dog' ? 'dog' : 'default');
+    const group = TIMELINE_FALLBACK_IMAGES[speciesKey] || TIMELINE_FALLBACK_IMAGES.default;
+
     const status = `${item.status || ''} ${item.description || ''}`.toLowerCase();
 
-    if (status.includes('sấy')) return TIMELINE_FALLBACK_IMAGES.dry;
-    if (status.includes('tắm')) return TIMELINE_FALLBACK_IMAGES.bath;
-    if (status.includes('tiếp nhận')) return TIMELINE_FALLBACK_IMAGES.receive;
+    if (status.includes('sấy')) return group.dry;
+    if (status.includes('tắm')) return group.bath;
+    if (status.includes('tiếp nhận') || status.includes('kiểm tra')) return group.receive;
     if (status.includes('cắt') || status.includes('tỉa') || status.includes('chải') || status.includes('tạo kiểu')) {
-        return TIMELINE_FALLBACK_IMAGES.trim;
+        return group.trim;
     }
-    if (status.includes('hoàn thành')) return TIMELINE_FALLBACK_IMAGES.complete;
+    if (status.includes('hoàn thành')) return group.complete;
 
-    return TIMELINE_FALLBACK_IMAGES.default;
+    return group.default;
+}
+
+window.toggleStoryLike = function(btn) {
+    if (!btn) return;
+    const isLiked = btn.classList.contains('liked');
+    const countEl = btn.querySelector('.like-count');
+    let count = parseInt(countEl?.textContent || '0', 10);
+    if (isLiked) {
+        btn.classList.remove('liked');
+        if (countEl) countEl.textContent = Math.max(0, count - 1);
+    } else {
+        btn.classList.add('liked');
+        if (countEl) countEl.textContent = count + 1;
+        btn.classList.add('animate-heart');
+        setTimeout(() => btn.classList.remove('animate-heart'), 400);
+    }
+};
+
+window.focusStoryChat = function(itemId) {
+    let chatInput = document.getElementById(`chatInput-${itemId}`);
+    if (chatInput) {
+        chatInput.focus();
+        chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+        const card = document.querySelector(`[data-item-id="${itemId}"] .story-card-body`);
+        if (card) {
+            let existingBox = card.querySelector('.urgent-chat-box');
+            if (!existingBox) {
+                const boxHtml = buildChatBoxHtml(itemId);
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = boxHtml;
+                const footer = card.querySelector('.story-card-footer');
+                card.insertBefore(tempDiv.firstElementChild, footer);
+                loadChatMessages(itemId);
+                bindChatInputEvents(itemId);
+                const newInput = document.getElementById(`chatInput-${itemId}`);
+                if (newInput) {
+                    newInput.focus();
+                    newInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+    }
+};
+
+function setupDiaryImageModal() {
+    const modal = document.getElementById('diaryImageModal');
+    const closeBtn = document.getElementById('diaryModalClose');
+    const backdrop = document.getElementById('diaryModalBackdrop');
+    const modalImg = document.getElementById('diaryModalImg');
+    const modalCaption = document.getElementById('diaryModalCaption');
+
+    if (!modal) return;
+
+    const closeModal = () => {
+        modal.classList.remove('show');
+        setTimeout(() => { modal.style.display = 'none'; }, 200);
+    };
+
+    if (closeBtn) closeBtn.onclick = closeModal;
+    if (backdrop) backdrop.onclick = closeModal;
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('show')) {
+            closeModal();
+        }
+    });
+
+    window.openDiaryImageModal = (src, caption) => {
+        if (!modalImg) return;
+        modalImg.src = src;
+        if (modalCaption) modalCaption.textContent = caption || '';
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show'), 10);
+    };
 }
 
 /* ==========================================================================
@@ -805,7 +1263,7 @@ function appendChatMessage(noteId, msg) {
 }
 
 /* ==========================================================================
-   6. HÓA ĐƠN & LỊCH SỬ DỊCH VỤ
+   6. HÓA ĐƠN VÀ LỊCH SỬ DỊCH VỤ
    ========================================================================== */
 
 function buildInvoiceBlockHtml(invoice) {
@@ -836,6 +1294,10 @@ function buildInvoiceBlockHtml(invoice) {
 
 function renderHistorySidebar(sessions) {
     const container = document.getElementById('historyList');
+    const countBadge = document.getElementById('historyCountBadge');
+    if (countBadge) {
+        countBadge.textContent = `${sessions ? sessions.length : 0} ca`;
+    }
     if (!container) return;
 
     if (!sessions || sessions.length === 0) {
@@ -849,7 +1311,9 @@ function renderHistorySidebar(sessions) {
             <div class="history-item ${session.isCurrent ? 'active' : ''}" data-session-id="${session.id}">
                 <div class="history-date">${formatDate(session.date)}</div>
                 <div class="history-service">${escapeHtml(session.service)}</div>
-                <div class="history-status ${isActive ? 'status-active' : 'status-done'}">${escapeHtml(session.status)}</div>
+                <div class="history-status ${isActive ? 'status-active' : 'status-done'}">
+                    ${escapeHtml(session.status)}
+                </div>
             </div>
         `;
     }).join('');
@@ -883,6 +1347,7 @@ function switchSession(sessionId) {
     }
 
     currentSessionId = session.id;
+    renderServiceStepper(session, currentPetObject);
     renderTimeline(session.timeline);
 }
 
@@ -904,15 +1369,16 @@ async function openSessionFromUrlOrFallback(sessionId) {
 }
 
 /* ==========================================================================
-   7. DASHBOARD DỊCH VỤ ĐANG CHẠY & BÉ CƯNG CHỌN NHANH
+   7. DASHBOARD DỊCH VỤ ĐANG CHẠY VÀ BÉ CƯNG CHỌN NHANH
    ========================================================================== */
 
 async function renderActiveServicesDashboard() {
     const dashboardState = document.getElementById('dashboardState');
     const emptyState = document.getElementById('emptyState');
     const activeContainer = document.getElementById('activeServicesContainer');
-    const grid = document.getElementById('activeServicesGrid');
-    const template = document.getElementById('activeServiceCardTemplate');
+    const activeGrid = document.getElementById('activeServicesGrid');
+    const pastContainer = document.getElementById('pastServicesContainer');
+    const pastGrid = document.getElementById('pastServicesGrid');
     const quickPetsSection = document.getElementById('quickPetsSection');
     const quickPetsGrid = document.getElementById('quickPetsGrid');
 
@@ -920,62 +1386,122 @@ async function renderActiveServicesDashboard() {
 
     const pets = (await getPets()).filter((pet) => !pet.isArchived);
     const activeSessions = [];
+    const pastSessions = [];
 
     for (const pet of pets) {
         const logs = await getOrSeedTrackerLogs(pet);
-        if (logs && logs.currentSession) {
-            activeSessions.push({ pet, session: logs.currentSession });
+        if (logs) {
+            // 1. Ca đang diễn ra
+            if (logs.currentSession && logs.currentSession.status === 'Đang thực hiện') {
+                activeSessions.push({ pet, session: logs.currentSession });
+            } else if (logs.currentSession && logs.currentSession.status === 'Hoàn thành') {
+                pastSessions.push({ pet, session: logs.currentSession });
+            }
+
+            // 2. Ca lịch sử đã hoàn tất
+            if (Array.isArray(logs.history)) {
+                logs.history.forEach(session => {
+                    if (!pastSessions.some(p => p.session.id === session.id)) {
+                        pastSessions.push({ pet, session });
+                    }
+                });
+            }
         }
     }
+
+    // Sắp xếp các ca hoàn thành mới nhất lên đầu
+    pastSessions.sort((a, b) => new Date(b.session.date) - new Date(a.session.date));
 
     dashboardState.classList.remove('d-none');
 
     // 1. Dịch vụ đang diễn ra
-    if (activeSessions.length > 0 && activeContainer && grid && template) {
+    if (activeSessions.length > 0 && activeContainer && activeGrid) {
         activeContainer.classList.remove('d-none');
-        if (emptyState) emptyState.classList.add('d-none');
-        grid.innerHTML = '';
-
-        activeSessions.forEach(item => {
+        activeGrid.innerHTML = activeSessions.map(item => {
             const latestEvent = item.session.timeline && item.session.timeline.length > 0 ? item.session.timeline[0] : null;
-            const statusText = latestEvent ? latestEvent.status : item.session.status;
+            const statusText = latestEvent?.status || item.session.status || 'Đang thực hiện';
             const petImage = item.pet.avatar || '/assets/images/shared/default-pet.png';
+            const serviceName = escapeHtml(item.session.service || 'Spa và Grooming').replace(/&/g, 'và');
 
-            const clone = template.content.cloneNode(true);
-            const img = clone.querySelector('.active-service-avatar');
-            img.src = petImage;
-            img.alt = item.pet.name;
+            return `
+                <div class="col-md-6 col-lg-5">
+                    <div class="active-service-card">
+                        <div class="active-service-pet-info">
+                            <img src="${petImage}" alt="${escapeHtml(item.pet.name)}" class="active-service-avatar">
+                            <div class="active-service-details">
+                                <h5 class="active-service-name">${escapeHtml(item.pet.name)}</h5>
+                                <p class="active-service-type">${serviceName}</p>
+                                <span class="active-service-badge status-ongoing">${escapeHtml(statusText)}</span>
+                            </div>
+                        </div>
+                        <button class="active-service-btn" type="button" data-pet-id="${escapeHtml(item.pet.id)}" data-session-id="${escapeHtml(item.session.id)}">
+                            Vào xem nhật ký
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
 
-            clone.querySelector('.active-service-name').textContent = item.pet.name;
-            clone.querySelector('.active-service-type').textContent = item.session.service;
-            clone.querySelector('.active-service-badge').textContent = statusText;
-
-            const btn = clone.querySelector('.active-service-btn');
+        activeGrid.querySelectorAll('.active-service-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
-                await selectAndLoadPet(item.pet.id);
+                await selectAndLoadPet(btn.getAttribute('data-pet-id'), btn.getAttribute('data-session-id'));
             });
-
-            grid.appendChild(clone);
         });
     } else {
         if (activeContainer) activeContainer.classList.add('d-none');
-        if (emptyState) emptyState.classList.remove('d-none');
     }
 
-    // 2. Danh sách bé cưng chọn nhanh (Quick-select Grid)
-    if (quickPetsSection && quickPetsGrid) {
-        const quickPetsTitle = quickPetsSection.querySelector('.quick-pets-title');
-        const activePetIds = new Set(activeSessions.map(item => String(item.pet.id || item.pet.code || '')));
-        
-        // Loại bỏ hoàn toàn các bé đang có trong phần "Dịch vụ đang diễn ra" để triệt tiêu việc bị lặp
-        const displayPets = pets.filter(pet => !activePetIds.has(String(pet.id || pet.code || '')));
+    // 2. Lịch sử dịch vụ đã hoàn tất
+    if (pastSessions.length > 0 && pastContainer && pastGrid) {
+        pastContainer.classList.remove('d-none');
+        pastGrid.innerHTML = pastSessions.map(item => {
+            const petImage = item.pet.avatar || '/assets/images/shared/default-pet.png';
+            const serviceName = escapeHtml(item.session.service || 'Spa và Grooming').replace(/&/g, 'và');
+            const dateStr = formatDate(item.session.date);
 
-        if (displayPets.length > 0) {
+            return `
+                <div class="col-md-6 col-lg-5">
+                    <div class="active-service-card past-service-card">
+                        <div class="active-service-pet-info">
+                            <img src="${petImage}" alt="${escapeHtml(item.pet.name)}" class="active-service-avatar">
+                            <div class="active-service-details">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h5 class="active-service-name m-0">${escapeHtml(item.pet.name)}</h5>
+                                    <span class="active-service-date">${dateStr}</span>
+                                </div>
+                                <p class="active-service-type mb-2">${serviceName}</p>
+                                <span class="active-service-badge status-completed">Hoàn thành</span>
+                            </div>
+                        </div>
+                        <button class="active-service-btn" type="button" data-pet-id="${escapeHtml(item.pet.id)}" data-session-id="${escapeHtml(item.session.id)}">
+                            Vào xem nhật ký
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        pastGrid.querySelectorAll('.active-service-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                await selectAndLoadPet(btn.getAttribute('data-pet-id'), btn.getAttribute('data-session-id'));
+            });
+        });
+    } else {
+        if (pastContainer) pastContainer.classList.add('d-none');
+    }
+
+    // 3. Trạng thái trống nếu không có ca nào
+    if (activeSessions.length === 0 && pastSessions.length === 0) {
+        if (emptyState) emptyState.classList.remove('d-none');
+    } else {
+        if (emptyState) emptyState.classList.add('d-none');
+    }
+
+    // 4. Danh sách bé cưng chọn nhanh (Quick-select Grid)
+    if (quickPetsSection && quickPetsGrid) {
+        if (pets.length > 0) {
             quickPetsSection.classList.remove('d-none');
-            if (quickPetsTitle) {
-                quickPetsTitle.textContent = activeSessions.length > 0 ? 'Các bé cưng khác' : 'Bé cưng của bạn';
-            }
-            quickPetsGrid.innerHTML = displayPets.map(pet => {
+            quickPetsGrid.innerHTML = pets.map(pet => {
                 const petImage = pet.avatar || '/assets/images/shared/default-pet.png';
                 const speciesName = getSpeciesDisplay(pet);
                 const subText = pet.breed ? `${speciesName} • ${pet.breed}` : speciesName;
@@ -987,7 +1513,7 @@ async function renderActiveServicesDashboard() {
                                 <h5 class="quick-pet-name">${escapeHtml(pet.name)}</h5>
                                 <p class="quick-pet-meta">${escapeHtml(subText)}</p>
                             </div>
-                            <button class="quick-pet-btn">Xem</button>
+                            <button class="quick-pet-btn" type="button">Xem nhật ký</button>
                         </div>
                     </div>
                 `;
@@ -1002,14 +1528,13 @@ async function renderActiveServicesDashboard() {
                 });
             });
         } else {
-            // Khi toàn bộ các bé đều đã có ở phần Dịch vụ đang diễn ra (hoặc chỉ có 1 bé), ẩn khối này để không bị trùng lặp
             quickPetsSection.classList.add('d-none');
         }
     }
 }
 
 /* ==========================================================================
-   8. ĐỊNH DẠNG & BẢO VỆ
+   8. ĐỊNH DẠNG VÀ BẢO VỆ
    ========================================================================== */
 
 function formatTimestamp(isoStr, mode = 'full') {
@@ -1032,8 +1557,11 @@ function formatCurrency(amount) {
 }
 
 function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    // Tuân thủ AGENTS.md: Tuyệt đối không dùng ký hiệu & thay cho chữ "và" trong giao diện
+    const cleanedText = String(text).replace(/\s*&\s*/g, ' và ');
     const div = document.createElement('div');
-    div.textContent = String(text ?? '');
+    div.textContent = cleanedText;
     return div.innerHTML;
 }
 

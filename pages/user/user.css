@@ -25,10 +25,19 @@ body.user-portal-body {
 }
 
 /* User Sidebar Container */
-.user-portal-sidebar-col {
-    position: sticky;
-    top: 90px;
-    z-index: 10;
+@media (min-width: 992px) {
+    .user-portal-sidebar-col {
+        position: sticky;
+        top: 90px;
+        z-index: 10;
+    }
+}
+
+@media (max-width: 1024px) {
+    .user-portal-sidebar-col {
+        position: static !important;
+        z-index: auto !important;
+    }
 }
 
 /* Breadcrumb Styling */
@@ -42,23 +51,40 @@ body.user-portal-body {
 }
 
 .user-breadcrumb .breadcrumb-item a {
-    color: var(--user-text-muted);
+    color: var(--user-text-muted, #4F7A65);
     text-decoration: none;
     transition: color 0.15s ease;
 }
 
 .user-breadcrumb .breadcrumb-item a:hover {
-    color: var(--user-primary-green);
+    color: var(--user-primary-green, #236B48);
     text-decoration: underline;
 }
 
+.user-breadcrumb .breadcrumb-item a.breadcrumb-parent-link {
+    color: var(--user-text-muted, #4F7A65);
+    font-weight: 500;
+}
+
+.user-breadcrumb .breadcrumb-item a.breadcrumb-parent-link:hover {
+    color: var(--user-primary-green, #236B48);
+}
+
 .user-breadcrumb .breadcrumb-item.active {
-    color: var(--user-text-dark);
+    color: var(--user-text-dark, #203A2C);
     font-weight: 600;
+}
+
+/* Deep breadcrumb cấp con: chữ nhỏ hơn 13px, xanh xô thơm mờ #4F7A65, độ đậm 500 theo AGENTS.md */
+.user-breadcrumb .breadcrumb-item.active#userBreadcrumbCurrent {
+    font-size: 13px;
+    color: #4F7A65;
+    font-weight: 500;
 }
 
 .user-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
     color: #AEC8B9;
+    padding: 0 6px;
 }
 
 /* Dynamic Content Area */
@@ -101,32 +127,11 @@ body.user-portal-body {
     height: 2.5rem;
 }
 
-/* Mobile Sidebar Drawer */
+/* Mobile Sidebar Toggle & Container */
 @media (max-width: 991.98px) {
     .user-portal-sidebar-col {
-        position: fixed;
-        top: 0;
-        left: -320px;
-        width: 300px;
-        height: 100vh;
-        background: #ffffff;
-        z-index: 1050;
-        padding: 20px;
-        overflow-y: auto;
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
-        transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    body.user-sidebar-open .user-portal-sidebar-col {
-        left: 0;
-    }
-
-    .dashboard-sidebar-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.45);
-        backdrop-filter: blur(2px);
-        z-index: 1040;
+        position: static;
+        padding: 0;
     }
 
     .dashboard-sidebar-toggle {
@@ -145,6 +150,7 @@ body.user-portal-body {
     }
 }
 
+
 /* ========================================================
    SLIDE-IN DETAIL DRAWER (Xem chi tiết tại chỗ không tải trang)
    ======================================================== */
@@ -153,7 +159,7 @@ body.user-portal-body {
     inset: 0;
     background: rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(2px);
-    z-index: 1055;
+    z-index: 1260;
     transition: opacity 0.25s ease;
 }
 
@@ -164,8 +170,9 @@ body.user-portal-body {
     width: 680px;
     max-width: 95vw;
     height: 100vh;
+    height: 100dvh;
     background: #ffffff;
-    z-index: 1060;
+    z-index: 1270;
     display: flex;
     flex-direction: column;
     box-shadow: -8px 0 35px rgba(0, 0, 0, 0.12);

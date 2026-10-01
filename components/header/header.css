@@ -39,6 +39,11 @@
     view-transition-name: site-header;
 }
 
+.main-header.nav-open,
+.main-header:has(.nav-menu.show) {
+    z-index: 9999 !important;
+}
+
 /* Sửa lỗi nhỏ: đảm bảo các thành phần không bị đè lên nhau */
 .main-header * {
     z-index: 1001;
@@ -213,14 +218,26 @@
         box-shadow: -10px 0 30px rgba(0, 0, 0, 0.18);
         transform: translateX(100%);
         transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-        /* Đảm bảo drawer nằm trên header khi cuộn */
-        z-index: 1202;
+        /* Đảm bảo drawer nằm trên header và overlay khi cuộn */
+        z-index: 10000;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
         scroll-behavior: smooth;
+    }
+
+    .mobile-nav-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        z-index: 9995 !important;
+        opacity: 0;
+        transition: opacity 220ms ease;
+        pointer-events: auto;
     }
 
     .nav-menu.show { transform: translateX(0); }

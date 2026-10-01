@@ -297,6 +297,14 @@ function applyFilters() {
     renderOrders();
 }
 
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const cleaned = String(text).replace(/\s*&\s*/g, ' và ');
+    const div = document.createElement('div');
+    div.textContent = cleaned;
+    return div.innerHTML;
+}
+
 function renderOrders() {
     const container = document.getElementById('orders-list');
 
@@ -335,25 +343,33 @@ function createOrderCard(order) {
     const productCount = Array.isArray(order.products)
         ? order.products.reduce((sum, product) => sum + (Number(product.quantity) || 1), 0)
         : 0;
-    const paymentLabel = getPaymentMethodLabel(order.paymentMethod);
+    const paymentLabel = getPaymentMethodLabel(order.paymentMethod).replace(/\s*&\s*/g, ' và ');
     const orderAlreadyReviewed = isCompleted && ordersState.reviews.includes(String(orderId));
-
-    const reviewActionHTML = isCompleted
-        ? orderAlreadyReviewed
-            ? `<a class="btn-review" href="/pages/user/order-detail/order-detail.html?id=${orderId}#reviews" aria-label="Xem đánh giá đơn hàng ${orderId}">Xem đánh giá</a>`
-            : `<a class="btn-review" href="/pages/user/order-detail/order-detail.html?id=${orderId}#reviews" aria-label="Đánh giá đơn hàng ${orderId}">Đánh giá</a>`
-        : '';
 
     const alreadyReturned = ordersState.returns.includes(String(orderId));
 
-    let returnActionHTML = '';
-    const statusNoticeChips = [];
+    let actionButtonsHtml = '';
 
+    // 1. Phản ánh đơn hàng
     if (isCompleted) {
-        if (orderAlreadyReviewed) {
-            statusNoticeChips.push(`<span class="order-meta-chip meta-chip-success">Đã đánh giá</span>`);
-        }
+        actionButtonsHtml += `
+            <a class="btn-order-action btn-action-complaint" href="/pages/user/support-create/support-create.html?type=order&orderId=${encodeURIComponent(orderId)}" onclick="event.stopPropagation()" title="Gửi phản ánh hoặc khiếu nại về đơn hàng này">
+                Phản ánh đơn
+            </a>
+        `;
+    }
 
+    // 2. Hủy đơn hàng
+    if (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment' || normalizedStatus === 'preparing') {
+        actionButtonsHtml += `
+            <button type="button" class="btn-order-action btn-action-cancel" onclick="event.stopPropagation(); cancelOrder('${escapeHtml(orderId)}')">
+                Hủy đơn
+            </button>
+        `;
+    }
+
+    // 3. Đổi trả / Hoàn tiền
+    if (isCompleted) {
         const completedEntry = Array.isArray(order.timeline)
             ? order.timeline.slice().reverse().find((timelineItem) => timelineItem.status === 'completed')
             : null;
@@ -362,119 +378,117 @@ function createOrderCard(order) {
         const withinReturnWindow = daysPassed <= 7;
 
         if (alreadyReturned) {
-            returnActionHTML = `
-                <a href="/pages/user/return-detail/return-detail.html?orderId=${orderId}" class="btn-track-order text-decoration-none">
+            actionButtonsHtml += `
+                <a href="/pages/user/index.html#return-detail?orderId=${encodeURIComponent(orderId)}" class="btn-order-action btn-action-modify" onclick="event.stopPropagation()">
                     Chi tiết đổi trả
                 </a>
             `;
-            statusNoticeChips.push(`<span class="order-meta-chip meta-chip-info">Đã yêu cầu đổi trả</span>`);
-        } else if (!withinReturnWindow) {
-            statusNoticeChips.push(`<span class="order-meta-chip meta-chip-warning" title="Đã quá 7 ngày, không thể yêu cầu đổi trả.">Hết hạn đổi trả</span>`);
-        } else if (orderAlreadyReviewed) {
-            statusNoticeChips.push(`<span class="order-meta-chip meta-chip-muted" title="Giao dịch đã được đánh giá, không thể đổi trả.">Hết hạn đổi trả</span>`);
-        } else {
-            returnActionHTML = `
-                <button class="btn-track-order" onclick="openRMADrawer('${orderId}')">
-                    Yêu cầu trả hàng/hoàn tiền
+        } else if (withinReturnWindow && !orderAlreadyReviewed) {
+            actionButtonsHtml += `
+                <button type="button" class="btn-order-action btn-action-modify" onclick="event.stopPropagation(); openRMADrawer('${escapeHtml(orderId)}')">
+                    Yêu cầu đổi trả
                 </button>
             `;
         }
     }
 
+    // 4. Đổi phương thức thanh toán
+    const canPayNow = (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && !isPaid && isOnline;
+    if (canPayNow) {
+        actionButtonsHtml += `
+            <button type="button" class="btn-order-action btn-action-modify" onclick="event.stopPropagation(); openChangePaymentMethodModal('${escapeHtml(orderId)}')">
+                Đổi phương thức
+            </button>
+        `;
+    }
+
+    // 5. Liên hệ hotline
+    actionButtonsHtml += `
+        <button type="button" class="btn-order-action btn-action-hotline" onclick="event.stopPropagation(); contactHotline('${escapeHtml(orderId)}')">
+            Liên hệ hotline
+        </button>
+    `;
+
+    // 6. Đánh giá
+    if (isCompleted) {
+        if (!orderAlreadyReviewed) {
+            actionButtonsHtml += `
+                <a class="btn-order-action btn-action-review" href="/pages/user/index.html#order-detail?id=${encodeURIComponent(orderId)}#reviews" onclick="event.stopPropagation()">
+                    Đánh giá
+                </a>
+            `;
+        } else {
+            actionButtonsHtml += `<span class="badge-reviewed-9px">Đã đánh giá</span>`;
+        }
+    }
+
+    // 7. Xác nhận nhận hàng
+    if (normalizedStatus === 'delivered') {
+        actionButtonsHtml += `
+            <button type="button" class="btn-order-action btn-action-primary" onclick="event.stopPropagation(); confirmOrderReceipt('${escapeHtml(orderId)}')">
+                Đã nhận được hàng
+            </button>
+        `;
+    }
+
+    // 8. Primary Action: Thanh toán ngay (vàng hổ phách) hoặc Mua lại (vàng hổ phách)
+    if (canPayNow) {
+        actionButtonsHtml += `
+            <button type="button" class="btn-order-action btn-action-primary" onclick="event.stopPropagation(); openOrderPaymentModal('${escapeHtml(orderId)}')">
+                Thanh toán ngay
+            </button>
+        `;
+    } else if (isCompleted) {
+        actionButtonsHtml += `
+            <button type="button" class="btn-order-action btn-action-primary" onclick="event.stopPropagation(); reorder('${escapeHtml(orderId)}')">
+                Mua lại
+            </button>
+        `;
+    }
+
+    let statusNoticeHtml = '';
     if ((normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && !isPaid && isOnline && order.paymentExpiry) {
-        statusNoticeChips.push(`
-            <span class="order-meta-chip meta-chip-warning order-pending-countdown" data-expiry="${order.paymentExpiry}" data-order-id="${orderId}">
-                ⏳ Còn <strong class="countdown-clock">--:--</strong>
-            </span>
-        `);
+        statusNoticeHtml = `
+            <div class="order-alert-note order-pending-countdown" data-expiry="${order.paymentExpiry}" data-order-id="${orderId}">
+                ⏳ Thời gian thanh toán còn lại: <strong class="countdown-clock">--:--</strong>
+            </div>
+        `;
     }
 
-    const metaParts = [
-        productCount > 0 ? `${productCount} sản phẩm` : '',
-        paymentLabel,
-        normalizedStatus === 'shipping' ? 'Đang giao tới bạn' : '',
-        normalizedStatus === 'completed' ? 'Đơn đã hoàn tất' : '',
-        (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && isPaid && isOnline ? 'Đã thanh toán — chờ xác nhận' :
-        (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && !isPaid ? 'Chờ thanh toán' : '',
-        normalizedStatus === 'preparing' ? 'Shop đang đóng gói' : ''
-    ].filter(Boolean);
-
-    const reorderActionHTML = isCompleted
-        ? `<button class="btn-view-detail border-0" onclick="reorder('${orderId}')">Mua lại</button>`
-        : '';
-
-    const detailActionHTML = `<a href="/pages/user/order-detail/order-detail.html?id=${orderId}" class="btn-view-detail text-decoration-none">Xem chi tiết</a>`;
-
-    let footerButtonsHTML = '';
-    if (normalizedStatus === 'shipping') {
-        footerButtonsHTML = `
-            ${detailActionHTML}
-            <button class="btn-track-order" onclick="contactHotline('${orderId}')">
-                Liên hệ hotline
-            </button>
-        `;
-    } else if (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment' || normalizedStatus === 'preparing') {
-        const canPayNow = (normalizedStatus === 'placed' || normalizedStatus === 'pending_payment') && !isPaid && isOnline;
-        footerButtonsHTML = `
-            ${canPayNow ? `<button class="btn-cta text-decoration-none" onclick="openOrderPaymentModal('${orderId}')">Thanh toán ngay</button>` : ''}
-            ${canPayNow ? `<button class="btn-track-order" onclick="openChangePaymentMethodModal('${orderId}')">Đổi phương thức</button>` : ''}
-            ${detailActionHTML}
-            <button class="btn-track-order" onclick="contactHotline('${orderId}')">
-                Liên hệ hotline
-            </button>
-            <button class="btn-track-order text-danger border-danger" onclick="cancelOrder('${orderId}')">
-                Hủy đơn hàng
-            </button>
-        `;
-    } else if (normalizedStatus === 'completed') {
-        footerButtonsHTML = `
-            ${detailActionHTML}
-            ${reviewActionHTML}
-            ${reorderActionHTML}
-            ${returnActionHTML}
-            <a href="/pages/user/support-create/support-create.html?type=order&orderId=${orderId}" class="btn-complaint text-decoration-none" title="Khiếu nại sự cố về đơn hàng này">Phản ánh đơn</a>
-        `;
-    } else if (normalizedStatus === 'delivered' || normalizedStatus === 'cancelled') {
-        footerButtonsHTML = normalizedStatus === 'delivered'
-            ? `
-                ${detailActionHTML}
-                <button class="btn-track-order" onclick="confirmOrderReceipt('${orderId}')">
-                    Xác nhận đơn hàng
-                </button>
-            `
-            : detailActionHTML;
-    }
-
-    const allMetaChips = [...metaParts.map((item) => `<span class="order-meta-chip">${item}</span>`), ...statusNoticeChips].join('');
+    const detailUrl = `/pages/user/index.html#order-detail?id=${encodeURIComponent(orderId)}`;
 
     return `
-        <article class="order-card" data-order-id="${orderId}">
-            <div class="order-card-header">
-                <div class="order-info">
-                    <span class="order-id">Mã: ${orderId}</span>
-                    <span class="order-date">${formatDate(order.createdAt)}</span>
+        <article class="order-card status-${normalizedStatus}" data-order-id="${orderId}">
+            <div class="order-card-main-content" onclick="window.location.href='${detailUrl}'" role="link" tabindex="0">
+                <div class="order-product-thumb-wrapper">
+                    <img src="${firstProduct.image || '/assets/images/shared/product_placeholder.png'}" alt="${escapeHtml(firstProduct.name)}" class="order-product-thumb" loading="lazy">
                 </div>
-                <span class="status-badge ${displayStatusClass}">
-                    ${displayStatusLabel}
-                </span>
+                <div class="order-info-col">
+                    <div class="order-title-row">
+                        <span class="order-code">Mã: #${escapeHtml(orderId)}</span>
+                        <span class="order-dot-sep">•</span>
+                        <span class="order-date">${formatDate(order.createdAt)}</span>
+                    </div>
+                    <h4 class="order-product-name">${escapeHtml(firstProduct.name)}</h4>
+                    <div class="order-meta-row">
+                        <span class="order-meta-item">${productCount > 0 ? `${productCount} sản phẩm` : '1 sản phẩm'}${remainingCount > 0 ? ` (và ${remainingCount} sản phẩm khác)` : ''}</span>
+                        <span class="order-dot-sep">•</span>
+                        <span class="order-meta-item">${escapeHtml(paymentLabel)}</span>
+                    </div>
+                    ${statusNoticeHtml}
+                </div>
+                <div class="order-status-price-col">
+                    <span class="order-badge-status ${displayStatusClass}">${displayStatusLabel}</span>
+                    <span class="order-price-value">${formatCurrency(toNumber(order.pricing?.total ?? order.pricing?.grandTotal ?? order.total))}</span>
+                </div>
             </div>
-            <div class="order-card-body" onclick="window.location.href='/pages/user/order-detail/order-detail.html?id=${orderId}'" title="Nhấn để xem chi tiết đơn hàng">
-                <div class="product-preview">
-                    <img src="${firstProduct.image}" alt="${firstProduct.name}" class="product-thumb" loading="lazy">
-                    <div class="product-info">
-                        <h4 class="product-name">${firstProduct.name}</h4>
-                        ${remainingCount > 0 ? `<p class="product-meta">và ${remainingCount} sản phẩm khác</p>` : ''}
-                        ${allMetaChips ? `<div class="order-meta-chips">${allMetaChips}</div>` : ''}
+            ${actionButtonsHtml ? `
+                <div class="order-card-footer-actions">
+                    <div class="order-card-actions-group">
+                        ${actionButtonsHtml}
                     </div>
                 </div>
-                <div class="order-summary">
-                    <span class="summary-label">Tổng tiền:</span>
-                    <span class="summary-value">${formatCurrency(toNumber(order.pricing?.total ?? order.pricing?.grandTotal ?? order.total))}</span>
-                </div>
-            </div>
-            <div class="order-card-footer">
-                ${footerButtonsHTML}
-            </div>
+            ` : ''}
         </article>
     `;
 }
@@ -483,11 +497,13 @@ function showEmptyState(message) {
     const container = document.getElementById('orders-list');
     container.innerHTML = `
         <div class="empty-state">
-            <div class="empty-state-icon">*</div>
-            <p class="empty-state-text">${message}</p>
+            <h4 class="empty-title">Chưa có đơn hàng nào</h4>
+            <p class="empty-desc">${escapeHtml(message || 'Các đơn mua sắm vật phẩm và phụ kiện cho bé cưng sẽ hiển thị tại đây')}</p>
+            <a href="/pages/shop/catalog/catalog.html" class="btn-order-primary-cta">+ Mua sắm cho bé ngay</a>
         </div>
     `;
-    document.getElementById('pagination').classList.add('d-none');
+    const pagination = document.getElementById('pagination');
+    if (pagination) pagination.classList.add('d-none');
 }
 
 function renderPagination() {
@@ -1149,24 +1165,36 @@ function openChangePaymentMethodModal(orderId) {
 window.openChangePaymentMethodModal = openChangePaymentMethodModal;
 
 export function initOrders() {
+    if (typeof window.setUserSubBreadcrumb === 'function') {
+        window.setUserSubBreadcrumb('', 'orders');
+    }
+
     // Kiểm tra tab ban đầu từ URL parameter (ví dụ ?status=pending_payment hoặc ?tab=pending_payment)
     const urlParams = new URLSearchParams(window.location.search);
     const initialStatus = urlParams.get('status') || urlParams.get('tab');
     if (initialStatus) {
         ordersState.currentTab = initialStatus;
-        const targetTab = document.querySelector(`.tab-btn[data-status="${initialStatus}"]`);
+        const targetTab = document.querySelector(`.order-filter-tab[data-status="${initialStatus}"], .tab-btn[data-status="${initialStatus}"]`);
         if (targetTab) {
-            document.querySelectorAll('.tab-btn').forEach((item) => item.classList.remove('active'));
+            document.querySelectorAll('.order-filter-tab, .tab-btn').forEach((item) => {
+                item.classList.remove('active');
+                item.setAttribute('aria-selected', 'false');
+            });
             targetTab.classList.add('active');
+            targetTab.setAttribute('aria-selected', 'true');
         }
     }
 
     loadOrders();
 
-    document.querySelectorAll('.tab-btn').forEach((button) => {
+    document.querySelectorAll('.order-filter-tab, .tab-btn').forEach((button) => {
         button.addEventListener('click', (event) => {
-            document.querySelectorAll('.tab-btn').forEach((item) => item.classList.remove('active'));
+            document.querySelectorAll('.order-filter-tab, .tab-btn').forEach((item) => {
+                item.classList.remove('active');
+                item.setAttribute('aria-selected', 'false');
+            });
             event.currentTarget.classList.add('active');
+            event.currentTarget.setAttribute('aria-selected', 'true');
             filterByStatus(event.currentTarget.dataset.status);
         });
     });
@@ -1208,5 +1236,5 @@ if (document.readyState === 'loading') {
     initOrders();
 }
 
-
 export const init = initOrders;
+

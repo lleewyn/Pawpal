@@ -93,36 +93,40 @@
 
 .payment-status {
     display: inline-block;
-    padding: 4px 12px;
-    border-radius: var(--border-radius-pill);
+    padding: 4px 10px;
+    border-radius: 9px !important;
     font-size: var(--fs-small);
     font-weight: 600;
 }
 
 .payment-status.paid {
-    background: var(--color-success-light);
-    color: var(--color-success);
+    background: #DCEEE2;
+    color: #165335;
 }
 
 .payment-status.unpaid {
-    background: var(--color-danger-light);
-    color: var(--color-danger);
+    background: #F7DCDC;
+    color: #8F2424;
 }
 
 
 .status-badge {
-    padding: 6px 14px;
-    border-radius: var(--border-radius-pill);
-    font-size: var(--fs-small);
-    font-weight: 700;
-    font-family: var(--font-body);
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 9px !important;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none !important;
 }
 
-.status-placed, .status-pending_payment { background: var(--color-neutral-light); color: var(--color-neutral); }
-.status-preparing { background: var(--color-info-light); color: var(--color-info); }
-.status-shipping { background: var(--color-accent-light); color: var(--color-accent-dark); }
-.status-delivered, .status-completed { background: var(--color-success-light); color: var(--color-success); }
-.status-cancelled { background: var(--color-danger-light); color: var(--color-danger); }
+.status-placed, .status-pending_payment { background: #F5E8D3; color: #734718; }
+.status-preparing, .status-confirmed, .status-shipping { background: #DCEAF2; color: #20495E; }
+.status-delivered, .status-completed { background: #DCEEE2; color: #165335; }
+.status-cancelled { background: #F7DCDC; color: #8F2424; }
 
 
 .detail-grid {

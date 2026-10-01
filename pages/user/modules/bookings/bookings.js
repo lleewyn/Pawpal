@@ -69,8 +69,19 @@ function hasServiceReview(booking) {
     }
 }
 
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const cleaned = String(text).replace(/\s*&\s*/g, ' và ');
+    const div = document.createElement('div');
+    div.textContent = cleaned;
+    return div.innerHTML;
+}
+
 export async function init() {
     if (!document.getElementById('bookingsList')) return;
+    if (typeof window.setUserSubBreadcrumb === 'function') {
+        window.setUserSubBreadcrumb('', 'bookings');
+    }
     initFilterTabs();
     await loadBookings('all');
 }
@@ -82,7 +93,7 @@ if (document.readyState === 'loading') {
 }
 
 function initFilterTabs() {
-    const tabs = document.querySelectorAll('.filter-tab');
+    const tabs = document.querySelectorAll('.booking-filter-tab, .filter-tab');
     tabs.forEach((tab) => {
         tab.addEventListener('click', function () {
             tabs.forEach((item) => {
@@ -173,19 +184,25 @@ function renderBookings(status) {
         });
     });
 
-    document.querySelectorAll('.filter-tab').forEach(tab => {
+    document.querySelectorAll('.booking-filter-tab, .filter-tab').forEach(tab => {
         const tabStatus = tab.dataset.status;
-        if (!tab.dataset.originalText) {
-            tab.dataset.originalText = tab.innerText.replace(/\(\d+\)/g, '').trim();
-        }
+        const countSpan = tab.querySelector('.tab-count');
         const count = counts[tabStatus] || 0;
-        tab.innerText = `${tab.dataset.originalText} (${count})`;
+        if (countSpan) {
+            countSpan.textContent = `(${count})`;
+        } else {
+            if (!tab.dataset.originalText) {
+                tab.dataset.originalText = tab.innerText.replace(/\(\d+\)/g, '').trim();
+            }
+            tab.innerText = `${tab.dataset.originalText} (${count})`;
+        }
     });
+
     if (status !== 'all') {
         const allowedStatuses = statusAliases[status] || [status];
         filteredBookings = filteredBookings.filter((booking) => allowedStatuses.includes(resolveBookingStatus(booking)));
     } else {
-        const statusOrder = { pending: 1, upcoming: 2, confirmed: 2, accepted: 3, 'in-progress': 4, completed: 5, cancelled: 6 };
+        const statusOrder = { 'in-progress': 1, pending: 2, upcoming: 3, confirmed: 3, accepted: 4, completed: 5, cancelled: 6 };
         filteredBookings.sort((a, b) => (statusOrder[resolveBookingStatus(a)] || 99) - (statusOrder[resolveBookingStatus(b)] || 99));
     }
 
@@ -206,8 +223,6 @@ function createBookingCard(booking) {
     const changeCount = Number(booking.changeCount || 0);
     const cancelCount = Number(booking.cancelCount || 0);
     const isChangeLimited = changeCount >= 2;
-    const scheduledAt = getBookingScheduledAt(booking);
-    const diffMinutes = scheduledAt ? (scheduledAt.getTime() - Date.now()) / (1000 * 60) : Number.POSITIVE_INFINITY;
     const canModify = !['in-progress', 'completed', 'cancelled'].includes(normalizedStatus)
         && !isChangeLimited;
     const canCancel = ['pending', 'confirmed', 'accepted'].includes(normalizedStatus)
@@ -217,38 +232,77 @@ function createBookingCard(booking) {
     const petObj = currentPetMap.get(petKey);
     const petId = booking.petId || petObj?._id || petObj?.id || '';
     const bookingId = booking.id || booking._id || '';
+    const petAvatar = petObj?.avatar || booking.petAvatar || '/assets/images/shared/default-pet.png';
+    const petName = booking.petName || petObj?.name || booking.petInfo?.petName || booking.petId || 'Bé cưng';
+    const serviceName = (booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal').replace(/\s*&\s*/g, ' và ');
+    const dateTimeText = buildDateTimeText(booking);
 
     const diaryQuery = petId ? `?id=${encodeURIComponent(petId)}&sessionId=${encodeURIComponent(bookingId)}` : '';
-    const careLogLink = normalizedStatus === 'completed' && petId
-        ? `<a class="booking-card-link" href="../pet-diary/pet-diary.html${diaryQuery}" onclick="event.stopPropagation()">Xem nhật ký chăm sóc</a>`
-        : '';
     const alreadyReviewed = normalizedStatus === 'completed' && hasServiceReview(booking);
-    const reviewedBadge = alreadyReviewed
-        ? '<span class="booking-reviewed-badge">Đã đánh giá</span>'
-        : '';
-    const writeReviewBtn = normalizedStatus === 'completed' && !alreadyReviewed
-        ? `<a class="btn-review text-decoration-none" href="../booking-detail/booking-detail.html?id=${bookingId}#service-review" onclick="event.stopPropagation()">Đánh giá</a>`
-        : '';
-    const complaintBtn = normalizedStatus === 'completed'
-        ? `<a class="btn-complaint text-decoration-none" href="../support-create/support-create.html?type=service&bookingId=${encodeURIComponent(bookingId)}" onclick="event.stopPropagation()" title="Gửi phản ánh hoặc khiếu nại ca dịch vụ này">Phản ánh dịch vụ</a>`
-        : '';
-    const detailPrompt = '<span class="booking-card-detail-hint">Nhấn để xem chi tiết</span>';
-    const changeScheduleAction = canModify
-        ? `<button type="button" class="btn-change-schedule" data-booking-id="${bookingId}">Đổi lịch</button>`
-        : '';
-    const cancelBookingAction = canCancel
-        ? `<button type="button" class="btn-cancel-booking" data-booking-id="${bookingId}">Huỷ lịch</button>`
-        : '';
+
+    let actionButtonsHtml = '';
+
+    // 1. Phản ánh dịch vụ
+    if (normalizedStatus === 'completed') {
+        actionButtonsHtml += `
+            <a class="btn-booking-action btn-action-complaint" href="../support-create/support-create.html?type=service&bookingId=${encodeURIComponent(bookingId)}" onclick="event.stopPropagation()" title="Gửi phản ánh hoặc khiếu nại ca dịch vụ này">
+                Phản ánh dịch vụ
+            </a>
+        `;
+    }
+
+    // 2. Hủy lịch
+    if (canCancel) {
+        actionButtonsHtml += `
+            <button type="button" class="btn-booking-action btn-action-cancel btn-cancel-booking" data-booking-id="${bookingId}">
+                Hủy lịch
+            </button>
+        `;
+    }
+
+    // 3. Đổi lịch
+    if (canModify) {
+        actionButtonsHtml += `
+            <button type="button" class="btn-booking-action btn-action-modify btn-change-schedule" data-booking-id="${bookingId}">
+                Đổi lịch
+            </button>
+        `;
+    }
+
+    // 4. Đánh giá
+    if (normalizedStatus === 'completed') {
+        if (!alreadyReviewed) {
+            actionButtonsHtml += `
+                <a class="btn-booking-action btn-action-review" href="../booking-detail/booking-detail.html?id=${bookingId}#service-review" onclick="event.stopPropagation()">
+                    Đánh giá
+                </a>
+            `;
+        } else {
+            actionButtonsHtml += `<span class="badge-reviewed-9px">Đã đánh giá</span>`;
+        }
+    }
+
+    // 5. Nút chính Primary CTA (Vàng hổ phách #E5A83B): Xem nhật ký / Theo dõi trực tiếp
+    if (normalizedStatus === 'in-progress' && petId) {
+        actionButtonsHtml += `
+            <a class="btn-booking-action btn-action-primary" href="#diary${diaryQuery}" onclick="event.stopPropagation()">
+                Theo dõi trực tiếp
+            </a>
+        `;
+    } else if (normalizedStatus === 'completed' && petId) {
+        actionButtonsHtml += `
+            <a class="btn-booking-action btn-action-primary" href="#diary${diaryQuery}" onclick="event.stopPropagation()">
+                Xem nhật ký
+            </a>
+        `;
+    }
+
     card.className = `booking-card status-${normalizedStatus}`;
     card.tabIndex = 0;
     card.setAttribute('role', 'link');
     card.onclick = () => {
         window.location.href = `../booking-detail/booking-detail.html?id=${bookingId}`;
     };
-
-    const petName = booking.petName || petObj?.name || booking.petInfo?.petName || booking.petId || 'Bé cưng';
-    const serviceName = booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal';
-    const dateTimeText = buildDateTimeText(booking);
     card.setAttribute('aria-label', `Xem chi tiết lịch hẹn ${petName}`);
 
     card.addEventListener('keydown', (event) => {
@@ -259,36 +313,35 @@ function createBookingCard(booking) {
     });
 
     card.innerHTML = `
-        <div class="booking-card-header">
-            <div>
-                <div class="booking-card-pet-service">
-                    <span class="booking-card-pet-name">${petName}</span>
-                    <span class="booking-card-service-separator">-</span>
-                    <span class="booking-card-service-name">${serviceName}</span>
-                </div>
-                <div class="booking-card-datetime">
-                    ${dateTimeText}
-                </div>
-                ${booking.staff ? `<div class="booking-card-staff">Nhân viên: ${booking.staff}</div>` : ''}
-                ${booking.branch ? `<div class="booking-card-staff">Chi nhánh: ${booking.branch}</div>` : ''}
-                ${changeCount > 0 ? `<div class="booking-card-staff ${isChangeLimited ? 'text-danger fw-semibold' : ''}">Đã đổi lịch: ${changeCount} lần${isChangeLimited ? ' - Đã đạt giới hạn đổi' : ''}</div>` : ''}
-                ${cancelCount > 0 ? `<div class="booking-card-staff">Đã hủy lịch: ${cancelCount} lần</div>` : ''}
+        <div class="booking-card-main-content">
+            <div class="booking-pet-avatar-wrapper">
+                <img src="${petAvatar}" alt="${escapeHtml(petName)}" class="booking-pet-avatar">
             </div>
-            <span class="badge-status badge-${normalizedStatus}">${statusLabels[normalizedStatus] || normalizedStatus}</span>
-        </div>
-        <div class="booking-card-footer">
-            <div class="booking-card-price">${formatPrice(booking.price || 0)}</div>
-            <div class="booking-card-actions">
-                ${changeScheduleAction}
-                ${cancelBookingAction}
-                ${writeReviewBtn}
-                ${reviewedBadge}
-                ${complaintBtn}
-                ${detailPrompt}
-                ${isChangeLimited ? '<span class="booking-limit-warning">Đã hết lượt đổi</span>' : ''}
-                ${careLogLink}
+            <div class="booking-info-col">
+                <div class="booking-title-row">
+                    <h4 class="booking-pet-name">${escapeHtml(petName)}</h4>
+                    <span class="booking-dot-sep">•</span>
+                    <span class="booking-service-name">${escapeHtml(serviceName)}</span>
+                </div>
+                <div class="booking-meta-row">
+                    <span class="booking-datetime">Thời gian: ${dateTimeText}</span>
+                    ${booking.staff ? `<span class="booking-meta-item">• Nhân viên: ${escapeHtml(booking.staff)}</span>` : ''}
+                    ${booking.branch ? `<span class="booking-meta-item">• Chi nhánh: ${escapeHtml(booking.branch)}</span>` : ''}
+                </div>
+                ${changeCount > 0 ? `<div class="booking-alert-note ${isChangeLimited ? 'limit-reached' : ''}">Đã đổi lịch: ${changeCount} lần${isChangeLimited ? ' (Đã hết lượt đổi)' : ''}</div>` : ''}
+            </div>
+            <div class="booking-status-price-col">
+                <span class="booking-badge-status status-${normalizedStatus}">${statusLabels[normalizedStatus] || normalizedStatus}</span>
+                <span class="booking-price-value">${formatPrice(booking.price || 0)}</span>
             </div>
         </div>
+        ${actionButtonsHtml ? `
+            <div class="booking-card-footer-actions">
+                <div class="booking-card-actions-group">
+                    ${actionButtonsHtml}
+                </div>
+            </div>
+        ` : ''}
     `;
 
     const changeBtn = card.querySelector('.btn-change-schedule');

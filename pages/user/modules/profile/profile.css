@@ -1,18 +1,18 @@
-/* modules/profile/profile.css - Module Quản lý tài khoản PawPal */
+/* modules/profile/profile.css - Module Quản lý tài khoản PawPal (Chuẩn AGENTS.md: 9px radius, Flat Solid, Text-Only) */
 
 .profile-module-container {
     animation: userModuleFadeIn 0.2s ease-out;
 }
 
-/* Banner chào mừng & thống kê */
+/* Banner chào mừng và thống kê - Chuẩn 9px radius */
 .dashboard-welcome-banner {
     background: #236B48;
-    border-radius: 14px;
-    padding: 28px 24px;
+    border-radius: 9px;
+    padding: 24px 22px;
     color: #ffffff;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(35, 107, 72, 0.12);
+    box-shadow: 0 4px 16px rgba(35, 107, 72, 0.1);
 }
 
 .welcome-banner-content {
@@ -22,25 +22,25 @@
 
 .welcome-title-custom {
     font-family: var(--font-heading, 'Lora', serif);
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     color: #ffffff;
     font-weight: 700;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
     text-align: center;
 }
 
 .welcome-banner-stats {
     display: flex;
-    gap: 16px;
+    gap: 14px;
     flex-wrap: wrap;
     justify-content: center;
 }
 
 .welcome-stat-card {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    border-radius: 10px;
-    padding: 14px 20px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 9px;
+    padding: 12px 18px;
     flex: 1;
     min-width: 130px;
     max-width: 220px;
@@ -53,7 +53,7 @@
 
 .welcome-stat-value {
     font-family: var(--font-heading, 'Lora', serif);
-    font-size: 1.7rem;
+    font-size: 1.6rem;
     font-weight: 700;
     color: #ffffff;
     line-height: 1.2;
@@ -62,19 +62,21 @@
 .welcome-stat-label {
     font-family: var(--font-body, 'DM Sans', sans-serif);
     font-size: 0.7rem;
-    letter-spacing: 0.6px;
-    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.92);
     margin-top: 4px;
     font-weight: 600;
 }
 
-/* Khối danh sách bé cưng & lịch hẹn */
+/* Khối danh sách bé cưng và lịch hẹn - Chuẩn Frosted Glass */
 .dashboard-section-wrapper {
-    background: #ffffff;
-    border: 1px solid #E2ECE5;
-    border-radius: 14px;
-    padding: 20px 22px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 18px 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
 }
 
 .section-header-row {
@@ -82,12 +84,12 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #EEF5F1;
-    padding-bottom: 12px;
+    padding-bottom: 10px;
 }
 
 .section-title-custom {
     font-family: var(--font-heading, 'Lora', serif);
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     color: #236B48;
     margin: 0;
     font-weight: 700;
@@ -96,7 +98,7 @@
 .section-link-custom {
     color: #4F7A65;
     text-decoration: none;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 600;
     transition: color 0.15s ease;
 }
@@ -114,7 +116,7 @@
 .pets-horizontal-list {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
 }
 
 .pet-avatar-item {
@@ -127,12 +129,12 @@
 }
 
 .pet-image-circle {
-    width: 64px;
-    height: 64px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #E2ECE5;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     transition: border-color 0.2s;
 }
 
@@ -142,30 +144,30 @@
 
 .pet-avatar-name {
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: #203A2C;
     margin-bottom: 2px;
 }
 
 .pet-avatar-breed {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: #4F7A65;
 }
 
 .add-pet-circle {
-    width: 64px;
-    height: 64px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     border: 2px dashed #CBD5E1;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     color: #4F7A65;
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     cursor: pointer;
     background: transparent;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
 }
 
 .add-pet-circle:hover {
@@ -174,23 +176,23 @@
     background-color: #F4FAF6;
 }
 
-/* Upcoming Booking Card */
+/* Upcoming Booking Card - Chuẩn 9px radius */
 .upcoming-booking-card {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 16px;
     background: #F8FAF9;
-    border: 1px solid #E2ECE5;
-    border-radius: 12px;
-    padding: 16px;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 14px 16px;
 }
 
 .booking-date-badge {
     background-color: #ffffff;
-    border: 1px solid #E2ECE5;
-    border-radius: 10px;
-    width: 68px;
-    height: 68px;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    width: 64px;
+    height: 64px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -206,10 +208,11 @@
 }
 
 .booking-date-badge .badge-day {
-    font-size: 1.6rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: #203A2C;
-    line-height: 1;
+    line-height: 1.1;
+    text-align: center;
 }
 
 .booking-info {
@@ -218,21 +221,40 @@
 
 .booking-service-title {
     font-family: var(--font-heading, 'Lora', serif);
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #203A2C;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .booking-meta-list {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #4F7A65;
 }
 
-/* Grid 2 cột phía dưới: Thông tin cá nhân & Đơn hàng */
+.btn-booking-detail-action {
+    padding: 6px 14px;
+    border: 1px solid #D6E4DC;
+    background: #ffffff;
+    color: #236B48;
+    border-radius: 9px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.btn-booking-detail-action:hover {
+    background: #236B48;
+    color: #ffffff;
+    border-color: #236B48;
+}
+
+/* Grid 2 cột phía dưới: Thông tin cá nhân và Đơn hàng */
 .dashboard-bottom-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -247,11 +269,13 @@
 }
 
 .dashboard-bottom-card {
-    background: #ffffff;
-    border: 1px solid #E2ECE5;
-    border-radius: 14px;
-    padding: 20px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 18px 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
     display: flex;
     flex-direction: column;
 }
@@ -261,7 +285,7 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #EEF5F1;
-    padding-bottom: 12px;
+    padding-bottom: 10px;
 }
 
 .bottom-card-title-custom {
@@ -275,15 +299,15 @@
 .profile-info-section-custom {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-top: 14px;
+    gap: 10px;
+    margin-top: 12px;
 }
 
 .info-row-custom {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 10px;
+    padding-bottom: 8px;
     border-bottom: 1px solid #F1F5F3;
 }
 
@@ -311,6 +335,7 @@
     font-size: 0.85rem;
     cursor: pointer;
     padding: 0;
+    transition: opacity 0.15s ease;
 }
 
 .btn-edit-link-custom:hover {
@@ -321,16 +346,327 @@
 .recent-orders-list-custom {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-top: 14px;
+    gap: 8px;
+    margin-top: 12px;
 }
 
 .order-item-card {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 14px;
-    border: 1px solid #E2ECE5;
+    padding: 10px 14px;
+    border: 1px solid #ECF2EE;
     border-radius: 9px;
     background: #F8FAF9;
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+}
+
+.order-item-card:hover {
+    background: #EEF5F1;
+}
+
+.order-code-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #203A2C;
+}
+
+.order-date-text {
+    font-size: 0.78rem;
+    color: #4F7A65;
+    margin-top: 2px;
+}
+
+.order-right-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.order-price-text {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #236B48;
+}
+
+/* Huy hiệu trạng thái Muted Pastel chuẩn AGENTS.md (9px, không viền, height 24px) */
+.order-status-badge {
+    height: 24px;
+    padding: 0 9px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 9px !important;
+    border: none !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.status-completed {
+    background: #DCEEE2;
+    color: #165335;
+}
+
+.status-pending {
+    background: #F5E8D3;
+    color: #734718;
+}
+
+.status-delivering,
+.status-in-progress {
+    background: #DCEAF2;
+    color: #20495E;
+}
+
+.status-cancelled {
+    background: #F7DCDC;
+    color: #8F2424;
+}
+
+/* ========================================================
+   MODAL CHỈNH SỬA THÔNG TIN CÁ NHÂN & SỔ ĐỊA CHỈ (AGENTS.md)
+   ======================================================== */
+.profile-modal-wrapper.modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 99999 !important;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.48) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 16px;
+    margin: 0 !important;
+}
+
+.profile-modal-wrapper.modal.show {
+    display: flex !important;
+}
+
+.profile-modal-dialog {
+    max-width: 560px;
+    width: 94vw;
+    margin: auto !important;
+    position: relative;
+    z-index: 100000;
+}
+
+.profile-modal-content {
+    background: #ffffff;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 26px 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.profile-modal-header {
+    border-bottom: none;
+    padding: 0 0 16px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.profile-modal-title {
+    font-family: var(--font-heading, 'Lora', serif);
+    font-size: 1.25rem;
+    color: #236B48;
+    font-weight: 700;
+    margin: 0;
+}
+
+.btn-modal-close {
+    border: none;
+    background: transparent;
+    color: #4F7A65;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.profile-modal-body {
+    padding: 0;
+}
+
+.form-label-custom {
+    font-family: var(--font-body, 'DM Sans', sans-serif);
+    font-weight: 600;
+    color: #203A2C;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.required-star {
+    color: #DC2626;
+}
+
+.form-control-custom {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #D6E4DC;
+    border-radius: 9px;
+    background: #F8FAF9;
+    font-family: var(--font-body, 'DM Sans', sans-serif);
+    font-size: 0.88rem;
+    color: #203A2C;
+    outline: none;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.form-control-custom:focus {
+    border-color: #236B48;
+    background: #ffffff;
+    box-shadow: 0 0 0 2px rgba(35, 107, 72, 0.12);
+}
+
+/* Sổ địa chỉ (Address Book) */
+.btn-add-address-text {
+    border: none;
+    background: transparent;
+    color: #236B48;
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+.btn-add-address-text:hover {
+    text-decoration: underline;
+}
+
+.addresses-container-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.address-item-card {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    background: #F8FAF9;
+    gap: 10px;
+}
+
+.address-item-card.is-default {
+    border-color: #C3DEC7;
+    background: #F4FAF6;
+}
+
+.address-item-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    flex: 1;
+}
+
+.address-radio-input {
+    margin-top: 3px;
+    accent-color: #236B48;
+    cursor: pointer;
+}
+
+.address-text-wrap {
+    font-size: 0.82rem;
+    color: #203A2C;
+}
+
+.address-default-tag {
+    font-size: 11px;
+    font-weight: 600;
+    color: #165335;
+    background: #DCEEE2;
+    padding: 1px 6px;
+    border-radius: 6px;
+    margin-left: 6px;
+    display: inline-block;
+}
+
+.btn-delete-address {
+    border: none;
+    background: transparent;
+    color: #8F2424;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.new-address-collapse {
+    background: #F8FAF9;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 12px;
+    margin-top: 8px;
+}
+
+.btn-cancel-address-btn {
+    padding: 5px 12px;
+    border: 1px solid #D6E4DC;
+    border-radius: 9px;
+    background: transparent;
+    color: #4F7A65;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.btn-save-address-btn {
+    padding: 5px 14px;
+    border: none;
+    border-radius: 9px;
+    background: #236B48;
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.profile-modal-footer {
+    border-top: none;
+    padding: 20px 0 0 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-modal-cancel {
+    padding: 8px 16px;
+    background: transparent;
+    color: #4F7A65;
+    border: 1px solid #D6E4DC;
+    border-radius: 9px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-modal-save {
+    padding: 8px 20px;
+    background: #236B48;
+    color: #ffffff;
+    border: none;
+    border-radius: 9px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-modal-save:hover {
+    background: #1B5639;
 }

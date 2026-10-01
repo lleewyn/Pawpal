@@ -37,11 +37,14 @@
     backdrop-filter: blur(2px);
     z-index: 1098;
     opacity: 0;
+    pointer-events: none;
     transition: opacity 220ms ease;
 }
 
-body.dashboard-sidebar-open .dashboard-sidebar-backdrop {
+body.dashboard-sidebar-open .dashboard-sidebar-backdrop,
+body.user-sidebar-open .dashboard-sidebar-backdrop {
     opacity: 1;
+    pointer-events: auto;
 }
 
 .sidebar-title {
@@ -127,13 +130,14 @@ body.dashboard-sidebar-open .dashboard-sidebar-backdrop {
         max-height: calc(100dvh - 144px);
         overflow-y: auto;
         margin-bottom: 0;
-        z-index: 1101;
+        z-index: 1105;
         transform: translateX(calc(-100% - 24px));
         transition: transform 240ms ease;
         will-change: transform;
     }
 
-    body.dashboard-sidebar-open .dashboard-sidebar {
+    body.dashboard-sidebar-open .dashboard-sidebar,
+    body.user-sidebar-open .dashboard-sidebar {
         transform: translateX(0);
     }
 }

@@ -1,28 +1,25 @@
-<!-- modules/settings/settings.html - Module Cài đặt tài khoản PawPal -->
+<!-- modules/settings/settings.html - Module Cài đặt tài khoản PawPal (Chuẩn AGENTS.md: 9px radius, Flat Solid, Text-Only) -->
 <div class="settings-module-container">
     <!-- Cảnh báo tài khoản tạm thời nếu có -->
-    <div class="alert-warning-custom mb-4 hide-initial" id="tempAccountWarning">
-        <strong>Cảnh báo:</strong> Bạn bắt buộc phải thiết lập mật khẩu cá nhân để mở khóa tính năng đổi điểm thưởng và bảo mật thông tin bé cưng.
+    <div class="alert-warning-custom mb-4 d-none" id="tempAccountWarning">
+        <strong>Lưu ý bảo mật:</strong> Bạn cần thiết lập mật khẩu cá nhân để mở khóa tính năng đổi điểm thưởng và bảo vệ an toàn hồ sơ bé cưng.
     </div>
 
     <div class="settings-grid-custom">
-        <!-- Cột trái: Đổi mật khẩu & Liên kết mạng xã hội -->
+        <!-- Cột trái: Đổi mật khẩu và Liên kết mạng xã hội -->
         <div class="settings-column">
-            <!-- Đổi mật khẩu -->
+            <!-- Khối 1: Đổi mật khẩu -->
             <div class="settings-card-custom">
-                <div class="settings-card-header-custom" id="togglePasswordBtn">
+                <div class="settings-card-header-custom">
                     <h3 class="settings-card-title-custom">Đổi mật khẩu</h3>
-                    <svg id="passwordToggleIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                 </div>
                 <div class="settings-card-body-custom" id="passwordFormContainer">
-                    <form id="changePasswordForm" class="settings-form-custom">
+                    <form id="changePasswordForm" class="settings-form-custom" novalidate>
                         <div class="form-group mb-3">
                             <label for="currentPassword" class="form-label-custom">Mật khẩu hiện tại <span class="required-star">*</span></label>
                             <div class="password-input-wrapper-custom">
-                                <input type="password" id="currentPassword" class="form-control-custom" placeholder="••••••••" required>
-                                <button type="button" class="btn-toggle-password-custom" aria-label="Hiện mật khẩu">
-                                    <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
+                                <input type="password" id="currentPassword" class="form-control-custom" placeholder="Nhập mật khẩu đang dùng" required>
+                                <button type="button" class="btn-toggle-password-text" data-target="currentPassword">Hiện</button>
                             </div>
                         </div>
 
@@ -30,13 +27,11 @@
                             <label for="newPassword" class="form-label-custom">Mật khẩu mới <span class="required-star">*</span></label>
                             <div class="password-input-wrapper-custom">
                                 <input type="password" id="newPassword" class="form-control-custom" placeholder="Tối thiểu 8 ký tự" required>
-                                <button type="button" class="btn-toggle-password-custom" aria-label="Hiện mật khẩu">
-                                    <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
+                                <button type="button" class="btn-toggle-password-text" data-target="newPassword">Hiện</button>
                             </div>
                             
                             <div class="strength-label-container mt-2">
-                                <span class="strength-title">ĐỘ MẠNH MẬT KHẨU</span>
+                                <span class="strength-title">Độ mạnh mật khẩu</span>
                                 <span class="strength-value-label" id="strengthLabel">Trống</span>
                             </div>
                             <div class="password-strength-bar-custom mt-1">
@@ -50,11 +45,9 @@
                             <label for="confirmNewPassword" class="form-label-custom">Xác nhận mật khẩu mới <span class="required-star">*</span></label>
                             <div class="password-input-wrapper-custom">
                                 <input type="password" id="confirmNewPassword" class="form-control-custom" placeholder="Nhập lại mật khẩu mới" required>
-                                <button type="button" class="btn-toggle-password-custom" aria-label="Hiện mật khẩu">
-                                    <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
+                                <button type="button" class="btn-toggle-password-text" data-target="confirmNewPassword">Hiện</button>
                             </div>
-                            <div class="invalid-feedback">Mật khẩu chưa khớp</div>
+                            <div class="invalid-feedback" id="confirmPasswordError">Mật khẩu xác nhận chưa khớp</div>
                         </div>
 
                         <div class="settings-action-row">
@@ -65,12 +58,12 @@
                 </div>
             </div>
 
-            <!-- Liên kết mạng xã hội -->
+            <!-- Khối 2: Liên kết mạng xã hội -->
             <div class="settings-card-custom">
-                <div class="settings-card-header-custom border-0 pb-0">
+                <div class="settings-card-header-custom">
                     <h3 class="settings-card-title-custom">Liên kết mạng xã hội</h3>
                 </div>
-                <div class="settings-card-body-custom pt-3">
+                <div class="settings-card-body-custom">
                     <div class="social-links-list-custom">
                         <div class="social-link-item-custom">
                             <div class="social-info-custom">
@@ -101,51 +94,52 @@
             </div>
         </div>
 
-        <!-- Cột phải: Thông báo & Ngôn ngữ -->
+        <!-- Cột phải: Thông báo, Ngôn ngữ và Quyền riêng tư -->
         <div class="settings-column">
-            <!-- Thông báo quan trọng -->
+            <!-- Khối 3: Thông báo quan trọng -->
             <div class="settings-card-custom">
-                <div class="settings-card-header-custom border-0 pb-0">
+                <div class="settings-card-header-custom d-flex justify-content-between align-items-center">
                     <h3 class="settings-card-title-custom">Thông báo quan trọng</h3>
+                    <span class="auto-save-badge">Tự động lưu</span>
                 </div>
-                <div class="settings-card-body-custom pt-3">
-                    <form id="notificationSettingsForm" class="notifications-form-custom">
+                <div class="settings-card-body-custom">
+                    <div class="notifications-list-custom">
                         <div class="notification-row-custom mb-3">
                             <div class="notification-text-custom">
                                 <span class="notification-type-title">Email</span>
-                                <span class="notification-type-desc">Cập nhật lịch hẹn và khuyến mãi.</span>
+                                <span class="notification-type-desc">Nhận xác nhận lịch hẹn, hóa đơn và ưu đãi.</span>
                             </div>
-                            <label class="switch">
+                            <label class="switch" aria-label="Bật tắt thông báo Email">
                                 <input type="checkbox" id="notifyEmail">
-                                <span class="slider round"></span>
+                                <span class="slider"></span>
                             </label>
                         </div>
-                        <div class="notification-row-custom mb-4">
+                        <div class="notification-row-custom">
                             <div class="notification-text-custom">
                                 <span class="notification-type-title">SMS</span>
-                                <span class="notification-type-desc">Đón trả bé cưng & đơn hàng.</span>
+                                <span class="notification-type-desc">Nhắc lịch đón trả bé cưng và trạng thái đơn hàng.</span>
                             </div>
-                            <label class="switch">
+                            <label class="switch" aria-label="Bật tắt thông báo SMS">
                                 <input type="checkbox" id="notifySMS">
-                                <span class="slider round"></span>
+                                <span class="slider"></span>
                             </label>
                         </div>
-                        <button type="submit" class="btn-save-notifications-custom">Lưu thay đổi thông báo</button>
-                    </form>
+                    </div>
                 </div>
             </div>
 
-            <!-- Ngôn ngữ & Đơn vị -->
+            <!-- Khối 4: Ngôn ngữ và Đơn vị -->
             <div class="settings-card-custom">
-                <div class="settings-card-header-custom border-0 pb-0">
-                    <h3 class="settings-card-title-custom">Ngôn ngữ & Đơn vị</h3>
+                <div class="settings-card-header-custom d-flex justify-content-between align-items-center">
+                    <h3 class="settings-card-title-custom">Ngôn ngữ và Đơn vị</h3>
+                    <span class="auto-save-badge">Tự động lưu</span>
                 </div>
-                <div class="settings-card-body-custom pt-3">
+                <div class="settings-card-body-custom">
                     <div class="form-group mb-3">
-                        <label class="form-label-custom" for="languageSelect">Ngôn ngữ</label>
+                        <label class="form-label-custom" for="languageSelect">Ngôn ngữ giao diện</label>
                         <div class="select-wrapper-custom">
                             <select id="languageSelect" class="form-select-custom">
-                                <option value="vi">Tiếng Việt</option>
+                                <option value="vi">Tiếng Việt (Mặc định)</option>
                                 <option value="en">English</option>
                             </select>
                         </div>
@@ -153,11 +147,36 @@
                     <div class="unit-toggle-row-custom">
                         <div class="unit-text-custom">
                             <span class="unit-title-custom">Đơn vị cân nặng</span>
-                            <span class="unit-desc-custom">Sử dụng kg hoặc lb cho cân nặng thú cưng.</span>
+                            <span class="unit-desc-custom">Áp dụng cho hồ sơ và biểu đồ sức khỏe của bé.</span>
                         </div>
                         <div class="unit-toggle-buttons">
                             <button type="button" id="unitKgBtn" class="unit-btn active">kg</button>
                             <button type="button" id="unitLbBtn" class="unit-btn">lb</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Khối 5: Quyền riêng tư và Dữ liệu -->
+            <div class="settings-card-custom">
+                <div class="settings-card-header-custom">
+                    <h3 class="settings-card-title-custom">Quyền riêng tư và Dữ liệu</h3>
+                </div>
+                <div class="settings-card-body-custom">
+                    <div class="privacy-action-list">
+                        <div class="privacy-action-item mb-3">
+                            <div class="privacy-info">
+                                <span class="privacy-item-title">Bản sao dữ liệu cá nhân</span>
+                                <span class="privacy-item-desc">Tải về toàn bộ hồ sơ thú cưng, lịch hẹn và nhật ký của bạn.</span>
+                            </div>
+                            <button type="button" class="btn-privacy-action" id="btnExportUserData">Tải dữ liệu</button>
+                        </div>
+                        <div class="privacy-action-item">
+                            <div class="privacy-info">
+                                <span class="privacy-item-title">Tạm dừng hoạt động tài khoản</span>
+                                <span class="privacy-item-desc">Ẩn tài khoản và tạm ngưng nhận các thông báo tự động.</span>
+                            </div>
+                            <button type="button" class="btn-privacy-action btn-privacy-danger" id="btnDeactivateAccount">Tạm khóa</button>
                         </div>
                     </div>
                 </div>

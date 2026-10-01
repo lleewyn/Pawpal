@@ -585,10 +585,173 @@
         }
     }
 
+    // -------------------------------------------------------------
+    // ĐIỀU KHIỂN MENU MOBILE DRAWER (HAMBURGER BUTTON)
+    // -------------------------------------------------------------
+    function initMobileNavigation() {
+        const toggleBtn = document.getElementById('mobileNavToggle');
+        const nav = document.getElementById('primaryNavigation');
+        if (!toggleBtn || !nav) return;
+
+        if (toggleBtn.dataset.mobileNavReady === 'true' && nav.dataset.mobileNavReady === 'true') {
+            return;
+        }
+
+        let mobileOverlay = null;
+        function createOverlay() {
+            if (mobileOverlay) return;
+            mobileOverlay = document.createElement('div');
+            mobileOverlay.className = 'mobile-nav-overlay';
+            mobileOverlay.style.position = 'fixed';
+            mobileOverlay.style.inset = '0';
+            mobileOverlay.style.background = 'rgba(0,0,0,0.45)';
+            mobileOverlay.style.zIndex = '9995';
+            mobileOverlay.style.opacity = '0';
+            mobileOverlay.style.transition = 'opacity 220ms ease';
+            document.body.appendChild(mobileOverlay);
+            mobileOverlay.addEventListener('click', closeDrawer);
+            requestAnimationFrame(() => {
+                if (mobileOverlay) mobileOverlay.style.opacity = '1';
+            });
+        }
+
+        function removeOverlay() {
+            if (!mobileOverlay) return;
+            mobileOverlay.style.opacity = '0';
+            setTimeout(() => {
+                if (mobileOverlay && mobileOverlay.parentNode) mobileOverlay.parentNode.removeChild(mobileOverlay);
+                mobileOverlay = null;
+            }, 240);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDrawer();
+        });
+
+        // Đóng menu khi click ra ngoài drawer
+        document.addEventListener('click', (e) => {
+            if (!nav.classList.contains('show')) return;
+            if (nav.contains(e.target) || toggleBtn.contains(e.target)) return;
+            closeDrawer();
+        });
+
+        let wasMobile = window.innerWidth < 1250;
+        window.addEventListener('resize', () => {
+            const isMobile = window.innerWidth < 1250;
+            if (isMobile !== wasMobile) {
+                closeDrawer();
+            }
+            wasMobile = isMobile;
+        });
+
+        nav.classList.remove('show');
+        toggleBtn.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+        nav.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
+        nav.querySelectorAll('.dropdown-toggle').forEach(dt => {
+            dt.setAttribute('aria-expanded', 'false');
+            const svg = dt.querySelector('svg');
+            if (svg) svg.style.transform = 'rotate(0deg)';
+        });
+
+        function openDrawer() {
+            nav.classList.add('show');
+            const header = document.querySelector('.main-header');
+            if (header) header.classList.add('nav-open');
+            toggleBtn.setAttribute('aria-expanded', 'true');
+            document.body.style.overflow = 'hidden';
+            createOverlay();
+            if (typeof setupMobileAccountToggle === 'function') setupMobileAccountToggle();
+            if (typeof setupLogoutButtons === 'function') setupLogoutButtons();
+        }
+
+        function closeDrawer() {
+            nav.classList.remove('show');
+            const header = document.querySelector('.main-header');
+            if (header) header.classList.remove('nav-open');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+            removeOverlay();
+            nav.querySelectorAll('.dropdown-toggle svg').forEach(svg => svg.style.transform = 'rotate(0deg)');
+            nav.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
+            nav.querySelectorAll('.dropdown-toggle').forEach(dt => {
+                dt.classList.remove('show');
+                dt.setAttribute('aria-expanded', 'false');
+            });
+        }
+
+        toggleBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const isOpen = nav.classList.contains('show');
+            if (isOpen) {
+                closeDrawer();
+            } else {
+                openDrawer();
+            }
+        };
+
+        nav.querySelectorAll('a').forEach(link => {
+            if (!link.classList.contains('dropdown-toggle') && link.dataset.mobileNavCloseBound !== 'true') {
+                link.addEventListener('click', (e) => {
+                    // Nếu là link chuyển hash hoặc url thì đóng drawer
+                    closeDrawer();
+                });
+                link.dataset.mobileNavCloseBound = 'true';
+            }
+        });
+
+        const dropdownToggles = nav.querySelectorAll('.dropdown-toggle');
+        dropdownToggles.forEach(dt => {
+            if (dt.dataset.mobileDropdownBound === 'true') return;
+            
+            dt.addEventListener('click', (e) => {
+                if (window.innerWidth < 1250) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const parentItem = dt.closest('.nav-item.dropdown') || dt.parentElement;
+                    const menu = parentItem ? parentItem.querySelector('.dropdown-menu') : dt.nextElementSibling;
+                    if (menu) {
+                        const isCurrentlyOpen = menu.classList.contains('show');
+                        // Đóng các dropdown khác để tránh tràn màn hình mobile
+                        nav.querySelectorAll('.dropdown-menu.show').forEach(m => {
+                            if (m !== menu) m.classList.remove('show');
+                        });
+                        nav.querySelectorAll('.dropdown-toggle').forEach(t => {
+                            if (t !== dt) {
+                                t.classList.remove('show');
+                                t.setAttribute('aria-expanded', 'false');
+                                const s = t.querySelector('svg');
+                                if (s) s.style.transform = 'rotate(0deg)';
+                            }
+                        });
+
+                        menu.classList.toggle('show', !isCurrentlyOpen);
+                        dt.classList.toggle('show', !isCurrentlyOpen);
+                        dt.setAttribute('aria-expanded', String(!isCurrentlyOpen));
+                        const svg = dt.querySelector('svg');
+                        if (svg) svg.style.transform = !isCurrentlyOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+                    }
+                }
+            });
+            
+            dt.dataset.mobileDropdownBound = 'true';
+        });
+
+        if (typeof setupMobileAccountToggle === 'function') setupMobileAccountToggle();
+        if (typeof setupLogoutButtons === 'function') setupLogoutButtons();
+
+        toggleBtn.dataset.mobileNavReady = 'true';
+        nav.dataset.mobileNavReady = 'true';
+    }
+
+    window.initMobileNavigation = initMobileNavigation;
+
     // Chạy khi header được chèn vào HTML
     document.addEventListener('headerInjected', () => {
         updateHeaderAuth();
         renderDynamicTopBarNotice();
+        initMobileNavigation();
     });
     
     // Also run if header already exists (for pages that don't use components.js)
@@ -596,10 +759,12 @@
         document.addEventListener('DOMContentLoaded', () => {
             updateHeaderAuth();
             renderDynamicTopBarNotice();
+            initMobileNavigation();
         });
     } else {
         updateHeaderAuth();
         renderDynamicTopBarNotice();
+        initMobileNavigation();
     }
     
     // Lắng nghe thay đổi trạng thái đăng nhập và cấu hình cập nhật
