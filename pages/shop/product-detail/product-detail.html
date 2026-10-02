@@ -9,19 +9,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../../../styles/style.css">
-    <link rel="stylesheet" href="../../../components/ui/review-form.css">
-    <link rel="stylesheet" href="../../../components/ui/reviews.css">
-    <link rel="stylesheet" href="product-detail.css">
+    <link rel="stylesheet" href="/styles/style.css">
+    <link rel="stylesheet" href="/components/ui/review-form.css">
+    <link rel="stylesheet" href="/components/ui/reviews.css">
+    <link rel="stylesheet" href="/pages/shop/product-detail/product-detail.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../../../scripts/api/supabase-client.js"></script>
-    <script type="module" src="../../../scripts/api/api-global.js"></script>
+    <script src="/scripts/api/supabase-client.js"></script>
+    <script type="module" src="/scripts/api/api-global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
-    <script src="../../../scripts/shared/data-loader.js" defer></script>
-    <script src="product-detail.js" defer></script>
-    <script src="product-reviews.js" defer></script>
-    <script src="../../../scripts/shared/components.js" defer></script>
-    <script type="module" src="../../../scripts/shared/main.js"></script>
+    <script src="/scripts/shared/data-loader.js" defer></script>
+    <script src="/components/header/header.js" defer></script>
+    <script src="/pages/shop/product-detail/product-detail.js" defer></script>
+    <script src="/pages/shop/product-detail/product-reviews.js" defer></script>
+    <script src="/scripts/shared/components.js" defer></script>
+    <script type="module" src="/scripts/shared/main.js"></script>
 </head>
 <body>
 
@@ -111,13 +112,10 @@
                     
                     <div class="product-info-column">
                         <div class="pd-summary-card">
-                            <div class="pd-product-id" id="productSKUChip">RC-MA-001</div>
-                            <div class="product-brand-name">
+                            <div class="pd-top-header-row">
+                                <span class="pd-product-id" id="productSKUChip">RC-MA-001</span>
                                 <span class="product-brand" id="productBrand">Royal Canin</span>
-                            </div>
-                            <h1 class="product-title" id="productTitle">Royal Canin Mini Adult</h1>
-
-                            <div class="product-rating-stock">
+                                <span class="pd-meta-separator">•</span>
                                 <div class="product-rating">
                                     <div class="stars">
                                         <span class="star filled"></span>
@@ -130,49 +128,59 @@
                                 </div>
                             </div>
 
-                            <div class="detail-meta-list">
-                                <div class="detail-meta-item">
-                                    <span class="detail-meta-label">Bé cưng:</span>
-                                    <span id="productPetType">Chó / Mèo</span>
-                                </div>
-                                <div class="detail-meta-item">
-                                    <span class="detail-meta-label">Trạng thái:</span>
-                                    <span id="productStockStatus" class="fw-semibold text-success">Còn hàng</span>
-                                </div>
-                                <div class="detail-meta-item">
-                                    <span class="detail-meta-label">Trong kho:</span>
-                                    <span id="productStockQty" class="fw-semibold text-dark">48 sản phẩm</span>
-                                </div>
+                            <h1 class="product-title" id="productTitle">Royal Canin Mini Adult</h1>
+
+                            <div class="pd-compact-meta-row">
+                                <span class="pd-meta-tag">Bé cưng: <strong id="productPetType">Chó / Mèo</strong></span>
+                                <span class="pd-meta-separator">•</span>
+                                <span class="pd-meta-tag">Trạng thái: <strong id="productStockStatus" class="text-success">Còn hàng</strong> (<span id="productStockQty">48 sản phẩm</span>)</span>
                             </div>
 
+                            <div class="pd-variants-section" id="pdVariantsSection"></div>
+
                             <div class="pd-summary-footer">
-                                <div class="product-price-block">
-                                    <div class="price-main" id="productPrice">250.000₫</div>
-                                    <div class="price-old d-none" id="productPriceOld">320.000₫</div>
-                                    <div class="price-discount d-none" id="productDiscount">Tiết kiệm 70.000₫</div>
-                                </div>
-                                <div class="product-actions">
+                                <div class="pd-price-qty-row">
+                                    <div class="product-price-block">
+                                        <div class="price-main" id="productPrice">250.000₫</div>
+                                        <div class="price-old d-none" id="productPriceOld">320.000₫</div>
+                                        <div class="price-discount d-none" id="productDiscount">Tiết kiệm 70.000₫</div>
+                                    </div>
                                     <div class="quantity-selector">
-                                        <label>Số lượng:</label>
+                                        <span class="qty-label">Số lượng:</span>
                                         <div class="quantity-controls">
                                             <button class="quantity-btn" id="decreaseQty">−</button>
                                             <input type="number" id="quantity" value="1" min="1" max="99">
                                             <button class="quantity-btn" id="increaseQty">+</button>
                                         </div>
                                     </div>
-                                    <div class="action-buttons-row">
-                                        <button class="btn-add-to-cart" id="addToCartBtn">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <circle cx="9" cy="21" r="1"></circle>
-                                                <circle cx="20" cy="21" r="1"></circle>
-                                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                                            </svg>
-                                            Thêm vào giỏ hàng
-                                        </button>
-                                        <button class="btn-buy-now" id="buyNowBtn">
-                                            Mua ngay
-                                        </button>
-                                    </div>
+                                </div>
+                                <div class="action-buttons-row">
+                                    <button class="btn-add-to-cart" id="addToCartBtn">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="9" cy="21" r="1"></circle>
+                                            <circle cx="20" cy="21" r="1"></circle>
+                                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                        </svg>
+                                        Thêm vào giỏ hàng
+                                    </button>
+                                    <button class="btn-buy-now" id="buyNowBtn">
+                                        Mua ngay
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="pd-trust-perks">
+                                <div class="trust-perk-item">
+                                    <span>Chính hãng 100%</span>
+                                </div>
+                                <div class="trust-perk-item">
+                                    <span>Giao nhanh 2 giờ</span>
+                                </div>
+                                <div class="trust-perk-item">
+                                    <span>Đổi trả 7 ngày</span>
+                                </div>
+                                <div class="trust-perk-item">
+                                    <span>Tư vấn tận tâm</span>
                                 </div>
                             </div>
                         </div>
@@ -184,82 +192,156 @@
         
         <section class="product-tabs-section">
             <div class="container-xl">
-                <div class="product-tabs">
-                    <button class="tab-btn active" data-tab="description">Mô tả sản phẩm</button>
+                <div class="product-tabs-nav" role="tablist">
+                    <button class="tab-btn active" data-tab="description" role="tab" aria-selected="true">Mô tả chi tiết</button>
+                    <button class="tab-btn" data-tab="usage" role="tab" aria-selected="false">Hướng dẫn và Khẩu phần</button>
+                    <button class="tab-btn" data-tab="shipping" role="tab" aria-selected="false">Chính sách và Vận chuyển</button>
                 </div>
 
-                <div class="tab-content active" id="description">
+                <!-- Tab 1: Detailed Description -->
+                <div class="tab-content active" id="tab-description" role="tabpanel">
                     <div class="description-content">
-                        <h3>Thông tin chi tiết</h3>
-                        <p id="productDescShort">Thức ăn khô Royal Canin Mini Adult dành cho chó trưởng thành giống nhỏ từ 10 tháng tuổi. Công thức đặc biệt giúp duy trì sức khỏe tối ưu và làm đẹp lông.</p>
-                        <div class="product-meta desc-meta-row">
-                            <div class="meta-item">
-                                <span class="meta-label">SKU:</span>
-                                <span class="meta-value" id="productSKU">RC-MA-001</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Danh mục:</span>
-                                <span class="meta-value" id="productCategory">Thức ăn khô</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Thương hiệu:</span>
-                                <span class="meta-value" id="productBrandMeta">Royal Canin</span>
-                            </div>
-                            <div class="meta-item d-none" id="deliveryEstimate">
-                                <span class="meta-label">Giao hàng:</span>
-                                <span class="meta-value meta-delivery">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect x="1" y="3" width="15" height="13"></rect>
-                                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-                                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
-                                    </svg>
-                                    Dự kiến 2-3 ngày
-                                </span>
+                        <div class="desc-meta-card">
+                            <div class="desc-meta-grid">
+                                <div class="desc-meta-item">
+                                    <span class="meta-label">Mã SKU:</span>
+                                    <span class="meta-value" id="productSKU">RC-MA-001</span>
+                                </div>
+                                <div class="desc-meta-item">
+                                    <span class="meta-label">Danh mục:</span>
+                                    <span class="meta-value" id="productCategory">Thức ăn khô</span>
+                                </div>
+                                <div class="desc-meta-item">
+                                    <span class="meta-label">Thương hiệu:</span>
+                                    <span class="meta-value" id="productBrandMeta">Royal Canin</span>
+                                </div>
+                                <div class="desc-meta-item">
+                                    <span class="meta-label">Giao hàng:</span>
+                                    <span class="meta-value text-success fw-semibold">Hỏa tốc 2H / Toàn quốc</span>
+                                </div>
                             </div>
                         </div>
-                        <div id="dynamicProductDetails">
-                            <p>Royal Canin Mini Adult là dòng thức ăn khô cao cấp được thiết kế đặc biệt cho chó trưởng thành giống nhỏ (dưới 10kg) từ 10 tháng tuổi trở lên.</p>
-                            
-                            <h4>Đặc điểm nổi bật:</h4>
-                            <ul>
-                                <li><strong>Hỗ trợ sức khỏe tiêu hóa:</strong> Chứa protein chất lượng cao (L.I.P) và prebiotics giúp cân bằng hệ vi sinh đường ruột</li>
-                                <li><strong>Làm đẹp da và lông:</strong> EPA-DHA, biotin và axit amin giúp nuôi dưỡng da và tăng độ bóng cho lông</li>
-                                <li><strong>Duy trì cân nặng lý tưởng:</strong> Hàm lượng calo phù hợp giúp kiểm soát cân nặng</li>
-                                <li><strong>Hạt nhỏ dễ nhai:</strong> Thiết kế viên hạt phù hợp với hàm răng giống chó nhỏ</li>
-                            </ul>
 
-                            <h4>Thành phần:</h4>
-                            <p>Thịt gia cầm, gạo, mì, mỡ động vật, gluten ngô, bột củ cải đường, dầu cá, khoáng chất, vitamin...</p>
-                            
-                            <h4>Thông số kỹ thuật:</h4>
-                            <div class="specifications-table">
-                                <table>
-                                    <tr>
-                                        <th>Trọng lượng</th>
-                                        <td>2kg</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Độ tuổi</th>
-                                        <td>Từ 10 tháng tuổi</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Kích cỡ</th>
-                                        <td>Giống nhỏ (dưới 10kg)</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Xuất xứ</th>
-                                        <td>Pháp</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Hạn sử dụng</th>
-                                        <td>18 tháng kể từ ngày sản xuất</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Bảo quản</th>
-                                        <td>Nơi khô ráo, thoáng mát</td>
-                                    </tr>
+                        <div class="dynamic-details-wrapper" id="dynamicProductDetails">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Usage & Feeding Guide -->
+                <div class="tab-content" id="tab-usage" role="tabpanel">
+                    <div class="usage-content">
+                        <div class="usage-intro">
+                            <h3 class="pd-tab-title">Hướng dẫn sử dụng và Định lượng bữa ăn</h3>
+                            <p class="text-secondary">Khẩu phần ăn có thể điều chỉnh linh hoạt theo thể trạng, mức độ vận động và độ tuổi của từng bé. Luôn chuẩn bị sẵn nước sạch uống kèm cho bé bất cứ lúc nào.</p>
+                        </div>
+
+                        <div class="pd-feeding-card">
+                            <h4 class="pd-section-subtitle">Bảng định lượng khẩu phần khuyến nghị (mỗi ngày)</h4>
+                            <div class="table-responsive">
+                                <table class="pd-custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Cân nặng bé</th>
+                                            <th>Vận động ít / Trong nhà</th>
+                                            <th>Vận động tiêu chuẩn</th>
+                                            <th>Vận động nhiều / Hoạt bát</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>1 – 3 kg</strong></td>
+                                            <td>30 – 55 g (khoảng 1/2 lon)</td>
+                                            <td>40 – 70 g</td>
+                                            <td>50 – 85 g</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>3 – 5 kg</strong></td>
+                                            <td>55 – 85 g (khoảng 1 lon)</td>
+                                            <td>70 – 105 g</td>
+                                            <td>90 – 130 g</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>5 – 10 kg</strong></td>
+                                            <td>85 – 145 g</td>
+                                            <td>105 – 180 g (khoảng 2 lon)</td>
+                                            <td>130 – 220 g</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>> 10 kg</strong></td>
+                                            <td>145 – 230 g</td>
+                                            <td>180 – 290 g</td>
+                                            <td>220 – 360 g (khoảng 3 lon)</td>
+                                        </tr>
+                                    </tbody>
                                 </table>
+                            </div>
+                        </div>
+
+                        <div class="pd-transition-card">
+                            <h4 class="pd-section-subtitle">Lộ trình 7 ngày đổi thức ăn mới an toàn</h4>
+                            <p class="text-secondary fs-small mb-3">Hệ tiêu hóa của thú cưng rất nhạy cảm. Để phòng tránh khó tiêu hay tiêu chảy, bạn nên trộn thức ăn mới tăng dần theo tỷ lệ:</p>
+                            <div class="transition-steps-grid">
+                                <div class="step-card">
+                                    <div class="step-badge">Ngày 1 – 2</div>
+                                    <div class="step-ratio"><strong>25%</strong> Mới</div>
+                                    <div class="step-sub">75% Thức ăn cũ</div>
+                                </div>
+                                <div class="step-card">
+                                    <div class="step-badge">Ngày 3 – 4</div>
+                                    <div class="step-ratio"><strong>50%</strong> Mới</div>
+                                    <div class="step-sub">50% Thức ăn cũ</div>
+                                </div>
+                                <div class="step-card">
+                                    <div class="step-badge">Ngày 5 – 6</div>
+                                    <div class="step-ratio"><strong>75%</strong> Mới</div>
+                                    <div class="step-sub">25% Thức ăn cũ</div>
+                                </div>
+                                <div class="step-card step-highlight">
+                                    <div class="step-badge success">Ngày 7 trở đi</div>
+                                    <div class="step-ratio"><strong>100%</strong> Mới</div>
+                                    <div class="step-sub">Bé quen hoàn toàn</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pd-storage-card">
+                            <h4 class="pd-section-subtitle">Cách bảo quản sản phẩm</h4>
+                            <ul class="pd-bullet-list">
+                                <li><strong>Chưa mở nắp/gói:</strong> Bảo quản nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp từ mặt trời.</li>
+                                <li><strong>Sau khi mở nắp/gói:</strong> Đậy kín nắp hoặc bọc màng bọc thực phẩm, bảo quản trong ngăn mát tủ lạnh (2–6°C) và dùng hết trong 48 giờ.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Shipping & Return Policies -->
+                <div class="tab-content" id="tab-shipping" role="tabpanel">
+                    <div class="shipping-content">
+                        <div class="policy-cards-grid">
+                            <div class="policy-card">
+                                <div class="policy-info">
+                                    <h4>Giao hàng hỏa tốc 2 giờ</h4>
+                                    <p>Áp dụng cho mọi đơn hàng giao trong khu vực nội thành. Nhận hàng ngay tức thì phục vụ bữa ăn kịp thời của bé cưng.</p>
+                                </div>
+                            </div>
+                            <div class="policy-card">
+                                <div class="policy-info">
+                                    <h4>Đóng gói cẩn thận 3 lớp</h4>
+                                    <p>Mỗi lon pate, túi hạt hay phụ kiện đều được bọc chống sốc và dán kín nhãn niêm phong bảo đảm vệ sinh tuyệt đối.</p>
+                                </div>
+                            </div>
+                            <div class="policy-card">
+                                <div class="policy-info">
+                                    <h4>Đổi trả miễn phí 7 ngày</h4>
+                                    <p>Hỗ trợ đổi trả 100% miễn phí nếu sản phẩm phát sinh lỗi móp méo do vận chuyển, giao sai phân loại hoặc cận hạn sử dụng.</p>
+                                </div>
+                            </div>
+                            <div class="policy-card">
+                                <div class="policy-info">
+                                    <h4>Cam kết chính hãng</h4>
+                                    <p>Pawpal cam kết phân phối sản phẩm chính hãng, đầy đủ tem phụ tiếng Việt và nguồn gốc xuất xứ rõ ràng.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -270,75 +352,92 @@
         
         <section class="product-reviews-section">
             <div class="container-xl">
-                <h2 class="section-title">Đánh giá sản phẩm</h2>
+                <div class="reviews-header-bar">
+                    <h2 class="reviews-title">Đánh giá sản phẩm</h2>
+                    <span class="reviews-count-badge" id="reviewsHeaderCount">4 nhận xét</span>
+                </div>
                 
                 <div class="reviews-summary-block">
-                    
+                    <!-- Left: Average Score -->
                     <div class="rating-average-box">
                         <div class="average-score-huge" id="averageScore">4.0</div>
-                        <div class="stars-row"></div>
-                        <div class="total-reviews-count" id="totalReviewsCount">Dựa trên 156 đánh giá</div>
+                        <div class="stars-row" id="summaryStarsRow">
+                            <span class="star filled">★</span>
+                            <span class="star filled">★</span>
+                            <span class="star filled">★</span>
+                            <span class="star filled">★</span>
+                            <span class="star">★</span>
+                        </div>
+                        <div class="total-reviews-count" id="totalReviewsCount">Dựa trên 4 lượt đánh giá</div>
                     </div>
                     
-                                        
+                    <!-- Right: Distribution Bars -->
                     <div class="stars-distribution">
                         <div class="distribution-row">
                             <span class="distribution-label">5 Sao</span>
                             <div class="distribution-bar-bg">
-                                <div class="distribution-bar-fill ui-box-12" id="bar5"></div>
+                                <div class="distribution-bar-fill" id="bar5"></div>
                             </div>
-                            <span class="distribution-percent" id="pct5">0%</span>
+                            <span class="distribution-stat"><strong id="cnt5">0</strong> <span id="pct5">(0%)</span></span>
                         </div>
                         <div class="distribution-row">
                             <span class="distribution-label">4 Sao</span>
                             <div class="distribution-bar-bg">
-                                <div class="distribution-bar-fill ui-box-13" id="bar4"></div>
+                                <div class="distribution-bar-fill" id="bar4"></div>
                             </div>
-                            <span class="distribution-percent" id="pct4">0%</span>
+                            <span class="distribution-stat"><strong id="cnt4">0</strong> <span id="pct4">(0%)</span></span>
                         </div>
                         <div class="distribution-row">
                             <span class="distribution-label">3 Sao</span>
                             <div class="distribution-bar-bg">
-                                <div class="distribution-bar-fill ui-box-14" id="bar3"></div>
+                                <div class="distribution-bar-fill" id="bar3"></div>
                             </div>
-                            <span class="distribution-percent" id="pct3">0%</span>
+                            <span class="distribution-stat"><strong id="cnt3">0</strong> <span id="pct3">(0%)</span></span>
                         </div>
                         <div class="distribution-row">
                             <span class="distribution-label">2 Sao</span>
                             <div class="distribution-bar-bg">
-                                <div class="distribution-bar-fill ui-box-15" id="bar2"></div>
+                                <div class="distribution-bar-fill" id="bar2"></div>
                             </div>
-                            <span class="distribution-percent" id="pct2">0%</span>
+                            <span class="distribution-stat"><strong id="cnt2">0</strong> <span id="pct2">(0%)</span></span>
                         </div>
                         <div class="distribution-row">
                             <span class="distribution-label">1 Sao</span>
                             <div class="distribution-bar-bg">
-                                <div class="distribution-bar-fill ui-box-16" id="bar1"></div>
+                                <div class="distribution-bar-fill" id="bar1"></div>
                             </div>
-                            <span class="distribution-percent" id="pct1">0%</span>
+                            <span class="distribution-stat"><strong id="cnt1">0</strong> <span id="pct1">(0%)</span></span>
                         </div>
                     </div>
                 </div>
 
-                
-                <div class="review-chips-wrapper" id="reviewChips">
-                    <button class="review-filter-chip active" data-filter="all">Tất cả</button>
-                    <button class="review-filter-chip" data-filter="5">5 Sao</button>
-                    <button class="review-filter-chip" data-filter="4">4 Sao</button>
-                    <button class="review-filter-chip" data-filter="3">3 Sao</button>
-                    <button class="review-filter-chip" data-filter="2">2 Sao</button>
-                    <button class="review-filter-chip" data-filter="1">1 Sao</button>
+                <!-- Review Filter Chips & Variant Filters -->
+                <div class="review-toolbar-container">
+                    <div class="review-chips-wrapper" id="reviewChips">
+                        <button class="review-filter-chip active" data-filter="all">Tất cả (<span id="chipCntAll">0</span>)</button>
+                        <button class="review-filter-chip" data-filter="5">5 Sao (<span id="chipCnt5">0</span>)</button>
+                        <button class="review-filter-chip" data-filter="4">4 Sao (<span id="chipCnt4">0</span>)</button>
+                        <button class="review-filter-chip" data-filter="3">3 Sao (<span id="chipCnt3">0</span>)</button>
+                        <button class="review-filter-chip" data-filter="2">2 Sao (<span id="chipCnt2">0</span>)</button>
+                        <button class="review-filter-chip" data-filter="1">1 Sao (<span id="chipCnt1">0</span>)</button>
+                        <button class="review-filter-chip" data-filter="has_media">Có hình ảnh (<span id="chipCntMedia">0</span>)</button>
+                    </div>
+                    
+                    <div class="review-variant-filter-row" id="reviewVariantFilterRow" style="display: none;">
+                        <span class="variant-filter-label">Lọc theo phân loại:</span>
+                        <div class="variant-chips-wrapper" id="reviewVariantChips">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
                 </div>
                 
-                
+                <!-- Reviews List Container -->
                 <div class="reviews-list" id="reviewsContainer">
                     <div class="text-center py-4 text-secondary">Đang tải đánh giá...</div>
                 </div>
 
-                
-                <nav aria-label="Review Pagination" class="mt-4 d-none" id="reviewsPaginationWrapper" >
-                    <ul class="pagination justify-content-center" id="reviewsPagination">
-                    </ul>
+                <nav aria-label="Review Pagination" class="mt-4 d-none" id="reviewsPaginationWrapper">
+                    <ul class="pagination justify-content-center" id="reviewsPagination"></ul>
                 </nav>
             </div>
         </section>

@@ -89,11 +89,15 @@ async function initReturnDetail() {
     await API.initData();
 
     const urlParams = new URLSearchParams(window.location.search);
-    const orderId = urlParams.get('orderId');
+    let orderId = urlParams.get('orderId') || urlParams.get('id');
+    if (!orderId && window.location.hash.includes('?')) {
+        const hashParams = new URLSearchParams(window.location.hash.split('?')[1]);
+        orderId = hashParams.get('orderId') || hashParams.get('id');
+    }
 
     if (!orderId) {
         alert('Không tìm thấy mã đơn hàng.');
-        window.location.href = '/pages/user/orders/orders.html'; // Bug 7: absolute path
+        window.location.hash = '#orders';
         return;
     }
 
@@ -108,7 +112,7 @@ async function initReturnDetail() {
 
     if (!rmaData) {
         alert('Không tìm thấy yêu cầu đổi trả cho đơn hàng này.');
-        window.location.href = '/pages/user/orders/orders.html';
+        window.location.hash = '#orders';
         return;
     }
 

@@ -1,303 +1,154 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <script src="../dashboard-init.js"></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi tiết đơn hàng - PawPal</title>
-    
-    
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
-    
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    
-    <link rel="stylesheet" href="../../../styles/style.css">
-    
-    
-    <link rel="stylesheet" href="../../../components/ui/review-form.css">
-    <link rel="stylesheet" href="../../../components/ui/reviews.css">
-    <link rel="stylesheet" href="../return-detail/return-detail.css">
-    <link rel="stylesheet" href="return-form.css">
-    
-    <link rel="stylesheet" href="../dashboard/dashboard.css">
-    <link rel="stylesheet" href="/components/user-sidebar/user-sidebar.css">
-    <link rel="stylesheet" href="order-detail.css">
-    <link rel="stylesheet" href="../../shop/checkout/payment-qr.css">
+<!-- modules/orders/order-detail.html - Chi tiết đơn hàng (Chuẩn AGENTS.md: 9px radius, Flat Solid, Text-Only) -->
+<div class="order-detail-module-container pawpal-smooth-entrance">
 
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../../../scripts/api/supabase-client.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
-    <script src="https://unpkg.com/lucide@latest" defer></script>
-    <script src="../../../scripts/shared/data-loader.js" defer></script>
-    <script src="../../../scripts/shared/main.js" defer></script>
-    <script src="../../../scripts/shared/components.js" defer></script>
-    <script src="../../../components/header/header.js" defer></script>
-    <script src="./review-handler.js" defer></script>
-    <script type="module" src="order-detail.js"></script>
-    <script src="./return-handler.js" defer></script>
-</head>
-<body>
-    
-    <header id="site-header"></header>
+    <!-- Thanh điều hướng đầu trang -->
+    <div class="detail-top-nav mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <a href="#orders" class="btn-back-link">
+            &larr; Danh sách đơn hàng
+        </a>
+        <div class="detail-header-actions d-flex align-items-center gap-2">
+            <span class="admin-badge status-placed" id="order-status-badge">Đang tải...</span>
+        </div>
+    </div>
 
-    
-    <div class="orders-page-wrapper">
-        <button type="button" class="dashboard-sidebar-toggle d-lg-none" id="dashboardSidebarToggle" aria-controls="user-sidebar" aria-expanded="false">
-            <span class="dashboard-sidebar-toggle-icon" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
-            </span>
-            <span class="dashboard-sidebar-toggle-text">Tài khoản</span>
-        </button>
-        <div class="dashboard-sidebar-backdrop" id="dashboardSidebarBackdrop" hidden></div>
-        
-        <div id="user-sidebar">
-            <div class="dashboard-sidebar ui-box-17">
-                <p class="ui-spacing-6">Loading...</p>
+    <!-- Banner Chờ thanh toán có hạn giờ -->
+    <div id="pending-payment-banner" class="pending-payment-banner d-none mb-4">
+        <div class="pending-banner-content d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="pending-banner-icon fs-3">⏰</div>
+                <div>
+                    <div class="pending-banner-title fw-bold" style="color: #734718; font-size: 15px;">
+                        Đơn hàng đang chờ thanh toán trực tuyến
+                    </div>
+                    <div class="pending-banner-desc text-muted small mt-1">
+                        Vui lòng hoàn tất giao dịch trước: <strong id="pending-expiry-time" class="text-dark">--:--</strong>
+                        (Thời gian còn lại: <strong id="pending-countdown-timer" class="text-danger fw-bold">--:--</strong>).
+                        Đơn hàng sẽ tự động hủy nếu quá thời hạn này.
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn-detail-action btn-action-primary-amber" id="btn-banner-pay-now" onclick="payNow()">
+                Thanh toán ngay
+            </button>
+        </div>
+    </div>
+
+    <div class="order-detail-layout">
+        <div class="row g-4">
+            <!-- Cột trái: Thông tin đơn hàng & Sản phẩm & Giao nhận -->
+            <div class="col-lg-8">
+                <!-- Thẻ Thông tin sản phẩm & Chi phí -->
+                <div class="order-detail-card mb-4">
+                    <div class="card-section-header mb-3">
+                        <h4 class="card-section-title">Mã đơn: #<span id="order-id">...</span></h4>
+                        <span class="order-date-text" id="order-created-date">...</span>
+                    </div>
+
+                    <!-- Danh sách sản phẩm -->
+                    <div class="products-list-wrapper mb-3">
+                        <div class="products-list products-list-clean" id="products-list">
+                            <!-- Injected by order-detail.js -->
+                        </div>
+                    </div>
+
+                    <!-- Hộp tổng kết chi phí -->
+                    <div class="order-summary-box mb-4">
+                        <div class="summary-row">
+                            <span>Tạm tính</span>
+                            <span id="subtotal">0đ</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Phí vận chuyển</span>
+                            <span id="shipping-fee">0đ</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Giảm giá</span>
+                            <span id="discount" class="text-danger">0đ</span>
+                        </div>
+                        <div class="summary-divider"></div>
+                        <div class="summary-row summary-total">
+                            <span class="fw-bold" style="color: #236B48;">Tổng thanh toán</span>
+                            <span id="total" class="total-price fw-bold" style="color: #236B48; font-size: 1.25rem;">0đ</span>
+                        </div>
+                    </div>
+
+                    <!-- Thao tác đơn hàng (Action Buttons) -->
+                    <div class="order-actions actions-clean mb-2" id="order-actions">
+                        <!-- Injected by order-detail.js -->
+                    </div>
+
+                    <!-- Thông báo cho khách vãng lai -->
+                    <div class="guest-notice-banner d-none" id="guest-notice">
+                        <div class="notice-content">
+                            <p class="mb-1"><strong>Bạn đang xem với quyền hạn hạn chế</strong></p>
+                            <p class="mb-0 text-muted small">Để thực hiện các thao tác với đơn hàng, vui lòng đăng nhập hoặc kích hoạt tài khoản thành viên.</p>
+                        </div>
+                        <a href="/pages/public/login/login.html" class="btn-detail-action btn-action-primary-green text-decoration-none">
+                            Đăng nhập ngay
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Thẻ Thông tin Giao nhận & Thanh toán -->
+                <div class="order-detail-card mb-4">
+                    <div class="card-section-header mb-3">
+                        <h4 class="card-section-title">Thông tin giao nhận và thanh toán</h4>
+                    </div>
+
+                    <div class="order-specs-grid">
+                        <div class="order-spec-row">
+                            <span class="spec-label">Người nhận</span>
+                            <span class="spec-value fw-bold" id="receiver-name">-</span>
+                        </div>
+                        <div class="order-spec-row">
+                            <span class="spec-label">Số điện thoại</span>
+                            <span class="spec-value" id="receiver-phone">-</span>
+                        </div>
+                        <div class="order-spec-row full-width">
+                            <span class="spec-label">Địa chỉ giao hàng</span>
+                            <span class="spec-value" id="receiver-address">-</span>
+                        </div>
+                        <div class="order-spec-row">
+                            <span class="spec-label">Phương thức thanh toán</span>
+                            <span class="spec-value" id="payment-method">-</span>
+                        </div>
+                        <div class="order-spec-row">
+                            <span class="spec-label">Trạng thái thanh toán</span>
+                            <span class="spec-value" id="payment-status">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột phải: Lịch sử trạng thái & Lưu ý -->
+            <div class="col-lg-4">
+                <!-- Thẻ Tiến trình trạng thái -->
+                <div class="order-detail-card mb-4">
+                    <div class="card-section-header mb-3">
+                        <h4 class="card-section-title">Lịch sử trạng thái</h4>
+                    </div>
+                    <div class="order-timeline" id="order-timeline">
+                        <!-- Injected by order-detail.js -->
+                    </div>
+                </div>
+
+                <!-- Thẻ Chính sách & Lưu ý -->
+                <div class="order-detail-card policy-card">
+                    <div class="card-section-header mb-3">
+                        <h4 class="card-section-title">Lưu ý đơn hàng</h4>
+                    </div>
+                    <ul class="policy-list mb-0">
+                        <li>Kiểm tra hàng trước khi thanh toán và nhận hàng.</li>
+                        <li>Được đổi trả trong vòng 7 ngày nếu lỗi từ nhà sản xuất.</li>
+                        <li>Tổng đài hỗ trợ và chăm sóc khách hàng: <strong>1900 1234</strong>.</li>
+                    </ul>
+                </div>
             </div>
         </div>
-
-        
-        <main class="order-detail-main">
-            
-            <div  class="mb-md">
-                <a href="../orders/orders.html" class="back-to-orders-link">
-                    <i data-lucide="chevron-left" class="ui-box-18"></i> Quay lại danh sách đơn hàng
-                </a>
-            </div>
-
-            
-            <header class="order-detail-header">
-                <div class="order-header-left">
-                    <h4 class="order-title">
-                        Mã đơn: <span id="order-id">...</span>
-                    </h4>
-                    <p class="order-date" id="order-created-date">...</p>
-                </div>
-                <span class="status-badge" id="order-status-badge">...</span>
-            </header>
-            
-            <!-- Banner Chờ thanh toán có hạn giờ -->
-            <div id="pending-payment-banner" class="pending-payment-banner d-none mb-3">
-                <div class="pending-banner-content d-flex justify-content-between align-items-center flex-wrap gap-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="pending-banner-icon fs-3">⏰</div>
-                        <div>
-                            <div class="pending-banner-title fw-bold" style="color: #92400E; font-size: 15px;">
-                                Đơn hàng đang chờ thanh toán trực tuyến
-                            </div>
-                            <div class="pending-banner-desc text-muted small mt-1">
-                                Vui lòng hoàn tất giao dịch trước: <strong id="pending-expiry-time" class="text-dark">--:--</strong>
-                                (Thời gian còn lại: <strong id="pending-countdown-timer" class="text-danger fw-bold">--:--</strong>).
-                                Đơn hàng sẽ tự động hủy nếu quá thời hạn này.
-                            </div>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-cta" id="btn-banner-pay-now" onclick="payNow()">
-                        Thanh toán ngay
-                    </button>
-                </div>
-            </div>
-
-            
-            <div class="detail-grid">
-                
-                <div class="order-main-content">
-                    
-                    
-                    <section class="info-card delivery-info">
-                        <h3 class="section-title-with-icon"><i data-lucide="map-pin"></i> Thông tin giao nhận</h3>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Người nhận:</span>
-                                <span class="info-value" id="receiver-name">...</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Số điện thoại:</span>
-                                <span class="info-value" id="receiver-phone">...</span>
-                            </div>
-                            <div class="info-item full-width">
-                                <span class="info-label">Địa chỉ:</span>
-                                <span class="info-value" id="receiver-address">...</span>
-                            </div>
-                        </div>
-                    </section>
-
-                    
-                    <section class="info-card payment-info">
-                        <h3 class="section-title-with-icon"><i data-lucide="credit-card"></i> Phương thức thanh toán</h3>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <span class="info-label">Loại:</span>
-                                <span class="info-value" id="payment-method">...</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Trạng thái:</span>
-                                <span class="payment-status" id="payment-status">...</span>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="info-card products-section">
-                        <h3 class="mb-md" ><i data-lucide="package"></i> Thông tin sản phẩm</h3>
-                        
-                        <div class="products-list products-list-clean" id="products-list">
-                            
-                        </div>
-
-                        
-                        <div class="order-summary-box summary-box-clean">
-                            <div class="summary-row">
-                                <span>Tạm tính:</span>
-                                <span id="subtotal">...</span>
-                            </div>
-                            <div class="summary-row">
-                                <span>Phí vận chuyển:</span>
-                                <span id="shipping-fee">...</span>
-                            </div>
-                            <div class="summary-row">
-                                <span>Giảm giá:</span>
-                                <span id="discount" class="text-danger">...</span>
-                            </div>
-                            <div class="summary-divider"></div>
-                            <div class="summary-row summary-total">
-                                <span>Tổng cộng:</span>
-                                <span id="total" class="total-price">...</span>
-                            </div>
-                        </div>
-
-                        
-                        <div class="order-actions actions-clean" id="order-actions">
-                            
-                        </div>
-
-                        
-                        <div class="guest-notice-banner" id="guest-notice">
-                            <div class="notice-content">
-                                <p><strong>Bạn đang xem với quyền hạn hạn chế</strong></p>
-                                <p>Để thực hiện các thao tác với đơn hàng, vui lòng đăng nhập 
-                                   hoặc kích hoạt tài khoản thành viên.</p>
-                            </div>
-                            <a href="/pages/public/login/login.html" class="btn-cta-outline">
-                                Đăng nhập ngay
-                            </a>
-                        </div>
-                    </section>
-                </div>
-
-                
-                <aside class="timeline-section info-card">
-                    <h3 class="mb-md" ><i data-lucide="clock"></i> Lịch sử trạng thái</h3>
-                    <div class="timeline" id="order-timeline">
-                        
-                    </div>
-                </aside>
-            </div>
-        </main>
     </div>
 
-    
-    <footer id="site-footer"></footer>
-
-    
+    <!-- Container cho Drawer đổi trả RMA -->
     <div id="rma-drawer-container"></div>
-
-    
-    <div class="return-panel-overlay" id="return-panel-overlay">
-        <aside class="return-panel" id="return-panel">
-            
-            <header class="return-panel-header">
-                <h2>Yêu cầu đổi trả</h2>
-                <button class="panel-close-btn" id="close-return-panel">×</button>
-            </header>
-
-            
-            <div class="return-panel-body">
-                <form id="return-form">
-                    
-                    <section class="form-section">
-                        <label class="form-label">Hình thức đổi trả</label>
-                        <div class="radio-cards">
-                            <label class="radio-card">
-                                <input type="radio" name="return_type" value="exchange" checked>
-                                <div class="radio-card-content">
-                                    <span class="radio-icon"></span>
-                                    <span class="radio-text">Đổi sản phẩm mới</span>
-                                </div>
-                            </label>
-                            <label class="radio-card">
-                                <input type="radio" name="return_type" value="refund">
-                                <div class="radio-card-content">
-                                    <span class="radio-icon"></span>
-                                    <span class="radio-text">Hoàn tiền</span>
-                                </div>
-                            </label>
-                        </div>
-                    </section>
-
-                    
-                    <section class="form-section">
-                        <label class="form-label">Chọn sản phẩm muốn đổi trả</label>
-                        <div class="products-checklist" id="return-products-list">
-                            
-                        </div>
-                    </section>
-
-                    
-                    <section class="form-section">
-                        <label class="form-label" for="return-reason">
-                            Lý do đổi trả <span class="required">*</span>
-                        </label>
-                        <select id="return-reason" name="reason" required>
-                            <option value="">Chọn lý do...</option>
-                        </select>
-                    </section>
-
-                    
-                    <section class="form-section">
-                        <label class="form-label" for="return-description">
-                            Mô tả chi tiết
-                        </label>
-                        <textarea id="return-description" 
-                                  name="description" 
-                                  rows="4" 
-                                  maxlength="500"
-                                  placeholder="Vui lòng mô tả chi tiết vấn đề..."></textarea>
-                        <span class="char-counter" id="char-counter">0/500</span>
-                    </section>
-
-                    
-                    <section class="form-section">
-                        <label class="form-label">
-                            Ảnh/Video minh chứng
-                            <span class="required d-none" id="proof-required-mark" >*</span>
-                        </label>
-                        <div class="file-upload-zone" id="file-upload-zone">
-                            <div class="upload-placeholder">
-                                <span class="upload-icon">▲</span>
-                                <p>Kéo thả hoặc click để tải ảnh/video</p>
-                                <span class="upload-hint">Tối đa 5MB - JPG, PNG, MP4</span>
-                            </div>
-                            <input type="file" 
-                                   id="file-input" 
-                                   accept="image/jpeg,image/png,image/webp,video/mp4" 
-                                   multiple 
-                                   hidden>
-                        </div>
-                        <div class="file-preview-list" id="file-preview-list"></div>
-                        <p class="error-message" id="file-error"></p>
-                    </section>
-
-                    
-                    <button type="submit" class="btn-cta btn-submit-return">
-                        Gửi yêu cầu hoàn trả
-                    </button>
-                </form>
-            </div>
-        </aside>
-    </div>
 
     <!-- Modal Thanh toán QR trong trang Chi tiết đơn hàng -->
     <div class="payment-qr-backdrop" id="order-qr-backdrop"></div>
@@ -322,12 +173,8 @@
             <div class="payment-status-message" id="order-payment-status-msg"></div>
         </div>
         <div class="qr-modal-footer">
-            <button type="button" class="btn-cancel" onclick="closeOrderQRModal()">Đóng</button>
-            <button type="button" class="btn-confirm" id="btn-confirm-order-paid" onclick="confirmOrderPayment()">Đã thanh toán</button>
+            <button type="button" class="btn-detail-action btn-action-neutral" onclick="closeOrderQRModal()">Đóng</button>
+            <button type="button" class="btn-detail-action btn-action-primary-green" id="btn-confirm-order-paid" onclick="confirmOrderPayment()">Đã thanh toán</button>
         </div>
     </div>
-
-    <div id="site-fab"></div>
-</body>
-</html>
-
+</div>

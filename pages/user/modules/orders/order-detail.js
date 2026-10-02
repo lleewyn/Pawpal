@@ -167,7 +167,16 @@ function resolveDataUrl(path) {
 
 function getOrderIdFromURL() {
     const params = new URLSearchParams(window.location.search);
-    return params.get('id');
+    let id = params.get('id') || params.get('orderId');
+    if (id) return id;
+
+    const hash = window.location.hash || '';
+    const qIndex = hash.indexOf('?');
+    if (qIndex !== -1) {
+        const hashParams = new URLSearchParams(hash.substring(qIndex + 1));
+        return hashParams.get('id') || hashParams.get('orderId');
+    }
+    return null;
 }
 
 async function loadOrderDetail() {
@@ -197,7 +206,7 @@ async function loadOrderDetail() {
         }
 
         if (!currentOrder) {
-            showError('Không tìm thấy đơn hàng');
+            showError('Không tìm thấy đơn hàng #' + orderId);
             return;
         }
         
@@ -211,6 +220,10 @@ async function loadOrderDetail() {
         renderTimeline();
         renderActions();
         renderPendingPaymentBanner();
+
+        if (window.setUserSubBreadcrumb && currentOrder?.id) {
+            window.setUserSubBreadcrumb('#' + currentOrder.id, 'order-detail');
+        }
 
         const searchParams = new URLSearchParams(window.location.search);
         if (searchParams.get('pay') === 'now') {
@@ -229,7 +242,7 @@ async function loadOrderDetail() {
             ReviewHandler.init(currentOrder.id, products);
             scrollToReviewAnchor();
 
-            if (window.location.hash === '#reviews' && ReviewHandler.hasOrderReviewed(currentOrder.id)) {
+            if (window.location.hash.includes('#reviews') && ReviewHandler.hasOrderReviewed(currentOrder.id)) {
                 setTimeout(() => showOrderReviewsModal(currentOrder.id), 300);
             }
 
@@ -307,9 +320,12 @@ function checkAutoComplete() {
 }
 
 function renderOrderHeader() {
-    document.getElementById('order-id').textContent = currentOrder.id;
-    document.getElementById('order-created-date').textContent = 
-        'Đặt ngày ' + formatDate(currentOrder.createdAt);
+    if (!currentOrder) return;
+    const idEl = document.getElementById('order-id');
+    if (idEl) idEl.textContent = currentOrder.id;
+
+    const dateEl = document.getElementById('order-created-date');
+    if (dateEl) dateEl.textContent = 'Đặt ngày ' + formatDate(currentOrder.createdAt);
     
     const ONLINE_METHODS = ['vnpay', 'momo', 'zalopay', 'vietqr'];
     const payMethod = (currentOrder.paymentMethod || currentOrder.payment?.method || '').toLowerCase();
@@ -317,41 +333,58 @@ function renderOrderHeader() {
     const isPendingOnlinePaid = (currentOrder.status === 'pending' || currentOrder.status === 'pending_payment')
                              && isPaid && ONLINE_METHODS.includes(payMethod);
 
-    const displayStatus = isPendingOnlinePaid ? 'preparing'   // dùng class xanh/vàng thay vì đỏ
+    const displayStatus = isPendingOnlinePaid ? 'preparing'
                         : currentOrder.status === 'pending' ? 'pending_payment'
                         : currentOrder.status;
     const displayLabel  = isPendingOnlinePaid ? 'Đã thanh toán — Chờ xác nhận'
                         : getStatusLabel(currentOrder.status);
 
     const statusBadge = document.getElementById('order-status-badge');
-    statusBadge.textContent = displayLabel;
-    statusBadge.className = `status-badge status-${displayStatus}`;
+    if (statusBadge) {
+        statusBadge.textContent = displayLabel;
+        statusBadge.className = `admin-badge status-${displayStatus}`;
+    }
 }
 
 function renderDeliveryInfo() {
+    if (!currentOrder) return;
     const delivery = currentOrder.delivery || currentOrder.shipping || {};
-    document.getElementById('receiver-name').textContent = delivery.name || '—';
-    document.getElementById('receiver-phone').textContent = delivery.phone || '—';
-    document.getElementById('receiver-address').textContent = delivery.address || delivery.street || '—';
+    const nameEl = document.getElementById('receiver-name');
+    const phoneEl = document.getElementById('receiver-phone');
+    const addrEl = document.getElementById('receiver-address');
+
+    if (nameEl) nameEl.textContent = delivery.name || '—';
+    if (phoneEl) phoneEl.textContent = delivery.phone || '—';
+    if (addrEl) addrEl.textContent = delivery.address || delivery.street || '—';
 }
 
 function renderPaymentInfo() {
+    if (!currentOrder) return;
     const methodLabels = {
         'cod': 'COD - Thanh toán khi nhận hàng',
-        'vnpay': 'VNPay',
-        'momo': 'MoMo'
+        'vnpay': 'Cổng thanh toán VNPay',
+        'momo': 'Ví điện tử MoMo',
+        'zalopay': 'Ví điện tử ZaloPay',
+        'vietqr': 'Quét mã VietQR'
     };
     
-    document.getElementById('payment-method').textContent = 
-        methodLabels[currentOrder.paymentMethod] || currentOrder.paymentMethod;
+    const methodEl = document.getElementById('payment-method');
+    if (methodEl) {
+        methodEl.textContent = methodLabels[currentOrder.paymentMethod] || currentOrder.paymentMethod || 'COD';
+    }
     
     const statusElement = document.getElementById('payment-status');
-    if (currentOrder.paymentStatus === 'paid') {
-        statusElement.textContent = 'Đã thanh toán';
-        statusElement.className = 'payment-status paid';
-    } else {
-        statusElement.textContent = 'Chưa thanh toán';
-        statusElement.className = 'payment-status unpaid';
+    if (statusElement) {
+        if (currentOrder.paymentStatus === 'paid') {
+            statusElement.textContent = 'Đã thanh toán';
+            statusElement.className = 'payment-status paid';
+        } else if (currentOrder.paymentStatus === 'expired') {
+            statusElement.textContent = 'Đã hết hạn';
+            statusElement.className = 'payment-status expired';
+        } else {
+            statusElement.textContent = 'Chưa thanh toán';
+            statusElement.className = 'payment-status unpaid';
+        }
     }
 }
 
@@ -1294,7 +1327,7 @@ function openChangePaymentMethodModal() {
 
         showPawPalToast(`Đã đổi phương thức thanh toán sang "${methodNames[newMethod]}" thành công!`, 'success');
 
-        renderHeader();
+        renderOrderHeader();
         renderTimeline();
         renderActions();
 
@@ -1548,15 +1581,17 @@ function updateCartBadgeCount() {
 }
 
 function showError(message) {
-    document.querySelector('.order-detail-main').innerHTML = `
-        <div class="empty-state">
-            <div class="empty-state-icon">•</div>
-            <p class="empty-state-text">${message}</p>
-            <a href="/pages/user/orders/orders.html" class="btn-cta mt-4">
-                Quay lại danh sách đơn hàng
-            </a>
-        </div>
-    `;
+    const container = document.getElementById('products-list') || document.querySelector('.order-detail-card') || document.querySelector('.order-detail-module-container');
+    if (container) {
+        container.innerHTML = `
+            <div class="empty-state text-center py-5">
+                <p class="text-muted mb-3">${message}</p>
+                <a href="#orders" class="btn-detail-action btn-action-primary-green text-decoration-none">
+                    Quay lại danh sách đơn hàng
+                </a>
+            </div>
+        `;
+    }
 }
 
 function formatCurrency(amount) {
@@ -1611,10 +1646,22 @@ function getStatusLabel(status) {
     return labels[status] || status;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    
+window.reorder = reorder;
+
+function initOrderDetail() {
     const params = new URLSearchParams(window.location.search);
-    isGuest = params.get('guest') === 'true';
+    let guestParam = params.get('guest');
+    if (!guestParam && window.location.hash.includes('?')) {
+        const hashParams = new URLSearchParams(window.location.hash.split('?')[1]);
+        guestParam = hashParams.get('guest');
+    }
+    isGuest = guestParam === 'true';
     
     loadOrderDetail();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initOrderDetail);
+} else {
+    initOrderDetail();
+}

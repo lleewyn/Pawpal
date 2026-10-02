@@ -4,163 +4,177 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="view-transition" content="same-origin">
-    <title>Cẩm Nang - PawPal</title>
+    <title>Cẩm Nang Chăm Sóc Thú Cưng - PawPal Magazine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="../../../styles/style.css">
-    <link rel="stylesheet" href="blog.css">
+    <link rel="stylesheet" href="/styles/style.css">
+    <link rel="stylesheet" href="/pages/public/blog/blog.css">
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmxc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" defer></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../../../scripts/api/supabase-client.js"></script>
-    <script type="module" src="../../../scripts/api/api-global.js"></script>
-    <script src="../../../scripts/shared/data-loader.js" defer></script>
-    
-    <script src="../../../scripts/shared/components.js" defer></script>
-    <script type="module" src="../../../scripts/shared/main.js"></script>
-    <script type="module" src="../../../scripts/shared/auth.js"></script>
-    <script type="module" src="blog.js"></script>
+    <script src="/scripts/api/supabase-client.js"></script>
+    <script type="module" src="/scripts/api/api-global.js"></script>
+    <script src="/scripts/shared/data-loader.js" defer></script>
+    <script src="/components/header/header.js" defer></script>
+    <script src="/scripts/shared/components.js" defer></script>
+    <script type="module" src="/scripts/shared/main.js"></script>
+    <script type="module" src="/scripts/shared/auth.js"></script>
+    <script type="module" src="/pages/public/blog/blog.js"></script>
 </head>
 <body class="blog-page-body">
     <div id="site-header"></div>
 
     <main class="blog-magazine-main">
         <div class="blog-page-wrapper">
-            <section class="blog-section blog-hero-section" id="blog-top">
-                <div class="blog-hero-shell">
-                    <div class="blog-hero-copy">
-                        <span class="blog-kicker">Cẩm nang PawPal</span>
-                        <h1 class="blog-hero-title">Cẩm nang chăm Boss dễ đọc và dễ áp dụng</h1>
-                        <form class="blog-search-form" role="search">
-                            <label class="visually-hidden" for="blogSearchInput">Tìm bài viết</label>
-                            <input id="blogSearchInput" type="search" placeholder="Tìm theo chủ đề, giống loài, dinh dưỡng..." autocomplete="off">
-                            <button type="submit" class="btn-cta">Tìm bài</button>
+            
+            <!-- Hero Editorial Banner -->
+            <section class="blog-hero-magazine" id="blog-hero">
+                <div class="hero-editorial-top">
+                    <h1 class="hero-editorial-title">Cẩm nang nuôi dưỡng và chăm sóc <span class="accent-italic">Boss</span> toàn diện</h1>
+                    
+                    <div class="hero-search-wrapper">
+                        <form class="blog-search-form" id="blogSearchForm" role="search">
+                            <input id="blogSearchInput" type="search" placeholder="Tìm kiếm bài viết, giống loài, dinh dưỡng, bệnh thường gặp..." autocomplete="off">
+                            <button type="submit" class="btn-search-blog">Tìm bài viết</button>
                         </form>
-                        <div class="blog-hero-stats">
-                            <div class="hero-stat-card">
-                                <strong>40+</strong>
-                                <span>bài viết dễ áp dụng</span>
+                        <div class="hero-trending-keywords">
+                            <span class="trending-label">Gợi ý tìm nhanh:</span>
+                            <button type="button" class="btn-keyword-chip" data-keyword="Dinh dưỡng">Dinh dưỡng</button>
+                            <button type="button" class="btn-keyword-chip" data-keyword="Tắm">Tắm sấy</button>
+                            <button type="button" class="btn-keyword-chip" data-keyword="Mèo">Mèo cưng</button>
+                            <button type="button" class="btn-keyword-chip" data-keyword="Chó">Chó cưng</button>
+                            <button type="button" class="btn-keyword-chip" data-keyword="Sức khỏe">Sức khỏe</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Editorial Bento Spotlight (1 Main Feature + 2 Editors' Picks) -->
+                <div class="hero-bento-grid" id="blogHeroBentoGrid">
+                    <!-- Loaded dynamically by JS -->
+                    <div class="bento-loading-placeholder">Đang tải tiêu điểm cẩm nang...</div>
+                </div>
+            </section>
+
+            <!-- Smart Filter Bar (Sticky Navigation) -->
+            <section class="blog-filter-section" id="blogFilterSection">
+                <div class="filter-bar-container">
+                    <div class="category-tabs-row" id="blogCategoryTabs">
+                        <button class="cat-tab-btn active" data-cat="all">Tất cả bài viết</button>
+                        <button class="cat-tab-btn" data-cat="tips">Kiến thức chăm sóc</button>
+                        <button class="cat-tab-btn" data-cat="dinh-duong">Dinh dưỡng và Khẩu phần</button>
+                        <button class="cat-tab-btn" data-cat="suc-khoe">Sức khỏe và Y tế</button>
+                        <button class="cat-tab-btn" data-cat="huan-luyen">Huấn luyện và Tập tính</button>
+                        <button class="cat-tab-btn" data-cat="promo">Khuyến mãi và Sự kiện</button>
+                        <button class="cat-tab-btn" data-cat="news">Tin tức Pawpal</button>
+                    </div>
+
+                    <div class="pet-chips-row" id="blogPetChips">
+                        <span class="pet-filter-label">Đối tượng:</span>
+                        <button class="pet-chip-btn active" data-pet="all">Tất cả Boss</button>
+                        <button class="pet-chip-btn" data-pet="cho">Chó cưng</button>
+                        <button class="pet-chip-btn" data-pet="meo">Mèo cưng</button>
+                        <button class="pet-chip-btn" data-pet="be-con">Chó mèo con</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Magazine Main Content (Articles Grid + Sidebar) -->
+            <section class="blog-main-section">
+                <div class="magazine-layout-grid">
+                    
+                    <!-- Left: Articles Stream -->
+                    <div class="magazine-articles-column">
+                        <div class="articles-header-bar">
+                            <div class="feed-count-title" id="articlesCountTitle">Danh sách bài viết (Đang tải...)</div>
+                            <div class="feed-sort-wrapper">
+                                <span class="sort-label">Sắp xếp:</span>
+                                <select id="blogSortSelect" class="sort-select">
+                                    <option value="latest">Mới nhất</option>
+                                    <option value="popular">Xem nhiều nhất</option>
+                                </select>
                             </div>
-                            <div class="hero-stat-card">
-                                <strong>3</strong>
-                                <span>nhóm nội dung chính</span>
+                        </div>
+
+                        <!-- Main Grid of Cards -->
+                        <div class="articles-card-grid" id="articlesCardGrid">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+
+                        <!-- Empty State -->
+                        <div class="blog-empty-box" id="blogEmptyBox" style="display: none;">
+                            <div class="empty-title">Không tìm thấy bài viết phù hợp</div>
+                            <p class="empty-desc">Thử đổi chủ đề, phân loại hoặc xóa từ khóa tìm kiếm để xem thêm các bài viết khác nhé.</p>
+                            <button type="button" class="btn-reset-filters" id="btnResetFilters">Xem tất cả bài viết</button>
+                        </div>
+
+                        <!-- Pagination Navigation -->
+                        <nav aria-label="Blog pagination" class="blog-pagination-wrapper" id="blogPaginationWrapper" style="display: none;">
+                            <ul class="pagination justify-content-center" id="blogPagination"></ul>
+                        </nav>
+                    </div>
+
+                    <!-- Right: Editorial Sidebar -->
+                    <aside class="magazine-sidebar">
+                        
+                        <!-- Widget 1: Trending Articles (Top 5) -->
+                        <div class="sidebar-widget trending-widget">
+                            <h3 class="widget-title">Đọc nhiều nhất</h3>
+                            <div class="trending-list" id="sidebarTrendingList">
+                                <!-- Populated dynamically -->
                             </div>
-                            <div class="hero-stat-card">
-                                <strong>1 chạm</strong>
-                                <span>sang sản phẩm và dịch vụ liên quan</span>
+                        </div>
+
+                        <!-- Widget 2: Popular Topics / Tags -->
+                        <div class="sidebar-widget tags-widget">
+                            <h3 class="widget-title">Chủ đề thịnh hành</h3>
+                            <div class="popular-tags-cloud" id="popularTagsCloud">
+                                <button class="tag-cloud-btn" data-tag="dinh-duong">#DinhDưỡng</button>
+                                <button class="tag-cloud-btn" data-tag="tắm">#TắmSấySpa</button>
+                                <button class="tag-cloud-btn" data-tag="suc-khoe">#SứcKhỏeMèo</button>
+                                <button class="tag-cloud-btn" data-tag="huan-luyen">#HuấnLuyệnChó</button>
+                                <button class="tag-cloud-btn" data-tag="tiêm">#TiêmPhòng</button>
+                                <button class="tag-cloud-btn" data-tag="hạt">#ChọnThứcĂn</button>
+                                <button class="tag-cloud-btn" data-tag="triệt-sản">#TriệtSảnAnToàn</button>
+                                <button class="tag-cloud-btn" data-tag="khử-mùi">#VệSinhKhửMùi</button>
                             </div>
                         </div>
-                    </div>
 
-                    <div id="blog-hero-spotlight-wrapper">
-                    </div>
-                </div>
-            </section>
-
-            <section class="blog-section blog-filters-section">
-                <div class="blog-filter-shell">
-                    <div class="blog-filter-group main-filters">
-                        <button class="btn-filter-pill active" type="button" data-main-target="tips" data-scroll-target="#blog-latest">Kiến thức chăm sóc</button>
-                        <button class="btn-filter-pill" type="button" data-main-target="promo" data-scroll-target="#blog-news">Khuyến mãi</button>
-                        <button class="btn-filter-pill" type="button" data-main-target="news" data-scroll-target="#blog-news">Tin tức</button>
-                    </div>
-                    <div class="blog-filter-group sub-filters">
-                        <button class="btn-filter-tag active" type="button" data-tag="all">Tất cả</button>
-                        <button class="btn-filter-tag" type="button" data-tag="cho">Chó</button>
-                        <button class="btn-filter-tag" type="button" data-tag="meo">Mèo</button>
-                        <button class="btn-filter-tag" type="button" data-tag="cho-con">Chó con</button>
-                        <button class="btn-filter-tag" type="button" data-tag="meo-con">Mèo con</button>
-                        <button class="btn-filter-tag" type="button" data-tag="dinh-duong">Dinh dưỡng</button>
-                        <button class="btn-filter-tag" type="button" data-tag="suc-khoe">Sức khỏe</button>
-                        <button class="btn-filter-tag" type="button" data-tag="huan-luyen">Huấn luyện</button>
-                    </div>
-                </div>
-            </section>
-
-            <section class="blog-section blog-quick-links-section">
-                <div class="section-header">
-                    <h2 class="section-title">Lối đọc nhanh</h2>
-                </div>
-                <div class="blog-quick-links-grid">
-                    <a href="#blog-latest" class="quick-link-card">
-                        <strong>Mới đăng</strong>
-                        <span>Đọc những bài vừa cập nhật gần đây nhất</span>
-                    </a>
-                    <a href="#blog-trending" class="quick-link-card">
-                        <strong>Đọc nhiều</strong>
-                        <span>Xem các chủ đề được Sen quan tâm nhất</span>
-                    </a>
-                    <a href="#blog-news" class="quick-link-card">
-                        <strong>Tin + deal</strong>
-                        <span>Không bỏ lỡ khuyến mãi và cập nhật từ PawPal</span>
-                    </a>
-                </div>
-            </section>
-
-            <section class="blog-section blog-latest-section" id="blog-latest">
-                <div class="section-header">
-                    <h2 class="section-title">Mới lên cẩm nang</h2>
-                </div>
-
-                <div class="latest-grid-wrapper" id="latest-grid-wrapper">
-                </div>
-
-                <div class="blog-card-grid" id="blog-card-grid">
-                </div>
-            </section>
-
-            <section class="blog-section blog-trending-section" id="blog-trending">
-                <div class="section-header">
-                    <h2 class="section-title">Được xem nhiều nhất</h2>
-                </div>
-                <div class="trending-list-wrapper" id="trending-list-wrapper">
-                </div>
-            </section>
-
-            <section class="blog-section blog-news-promo-section" id="blog-news">
-                <div class="blog-news-grid">
-                    <div class="news-column" id="blog-promo-column">
-                        <div class="section-header">
-                            <h2 class="section-title">Khuyến mãi</h2>
+                        <!-- Widget 3: Quick Care Recommendation -->
+                        <div class="sidebar-widget promo-banner-widget">
+                            <div class="sidebar-promo-card">
+                                <div class="promo-badge">Dịch vụ Pawpal</div>
+                                <h4 class="promo-card-title">Bé cần Spa tắm sấy hay gửi phòng Hotel?</h4>
+                                <p class="promo-card-desc">Đội ngũ Groomer và Bác sĩ tận tâm luôn sẵn sàng chăm sóc bé cưng chu đáo.</p>
+                                <div class="promo-card-actions">
+                                    <a href="/pages/services/services.html" class="btn-sidebar-cta">Đặt lịch ngay</a>
+                                    <a href="/pages/shop/shop.html" class="btn-sidebar-outline">Xem đồ dùng</a>
+                                </div>
+                            </div>
                         </div>
-                        <div class="news-list" id="blog-promo-list">
-                        </div>
-                    </div>
 
-                    <div class="news-column" id="blog-news-column">
-                        <div class="section-header">
-                            <h2 class="section-title">Tin từ PawPal</h2>
+                        <!-- Widget 4: Newsletter Box -->
+                        <div class="sidebar-widget newsletter-widget">
+                            <div class="newsletter-card">
+                                <h4 class="newsletter-title">Nhận cẩm nang nuôi Boss</h4>
+                                <p class="newsletter-desc">Đăng ký để nhận bí kíp chăm sóc bé cưng và ưu đãi mới nhất hàng tuần.</p>
+                                <form class="newsletter-form" id="newsletterForm">
+                                    <input type="email" placeholder="Nhập địa chỉ email của bạn..." required>
+                                    <button type="submit" class="btn-newsletter-submit">Đăng ký</button>
+                                </form>
+                            </div>
                         </div>
-                        <div class="news-list" id="blog-news-list">
-                        </div>
-                    </div>
+
+                    </aside>
+
                 </div>
             </section>
 
-            <section class="blog-section blog-cta-section">
-                <div class="blog-cta-shell">
-                    <div class="blog-cta-copy">
-                        <h2 class="section-title">Đọc xong rồi thì mình chăm Boss tiếp nhé</h2>
-                        <div class="blog-cta-actions">
-                            <a href="/pages/services/services.html" class="btn-cta">Đặt lịch chăm sóc</a>
-                            <a href="/pages/shop/shop.html" class="btn-green-outline">Xem sản phẩm liên quan</a>
-                        </div>
-                    </div>
-                    <div class="blog-cta-media">
-                        <img src="../../../assets/images/publics/pet4.jpg" alt="Boss đáng yêu tại PawPal">
-                    </div>
-                </div>
-            </section>
+            <!-- End Magazine Main Content -->
 
-            <div class="blog-empty-state" id="blogEmptyState" hidden>
-                <strong>Chưa có bài đúng với lựa chọn này.</strong>
-                <p>Thử đổi chủ đề hoặc bỏ từ khóa tìm kiếm để xem thêm bài khác.</p>
-            </div>
         </div>
     </main>
 

@@ -1,263 +1,74 @@
-// support-create.js - Xử lý tạo Khiếu nại và Yêu cầu Hỗ trợ phía User
-(function() {
-    let userBookings = [];
-    let userOrders = [];
-    let userPets = [];
-    let selectedFileBase64 = null;
+// support-create.js - Xử lý tạo Khiếu nại và Yêu cầu Hỗ trợ phía User (Chuẩn SPA & AGENTS.md)
+import '/scripts/shared/support-handler.js';
 
-    document.addEventListener('DOMContentLoaded', async () => {
-        const ticketTypeSelect = document.getElementById('ticketType');
-        const serviceContextSection = document.getElementById('serviceContextSection');
-        const orderContextSection = document.getElementById('orderContextSection');
-        const serviceBookingSelect = document.getElementById('serviceBookingSelect');
-        const serviceIssueType = document.getElementById('serviceIssueType');
-        const orderSelect = document.getElementById('orderSelect');
-        const orderIssueType = document.getElementById('orderIssueType');
-        const orderCustomerDemand = document.getElementById('orderCustomerDemand');
-        const ticketTitleInput = document.getElementById('ticketTitle');
-        const ticketContentInput = document.getElementById('ticketContent');
-        const ticketFileInput = document.getElementById('ticketFile');
-        const filePreviewContainer = document.getElementById('filePreviewContainer');
-        const filePreviewImg = document.getElementById('filePreviewImg');
-        const filePreviewName = document.getElementById('filePreviewName');
-        const filePreviewSize = document.getElementById('filePreviewSize');
-        const btnRemoveFile = document.getElementById('btnRemoveFile');
-        const createComplaintForm = document.getElementById('createComplaintForm');
-        const btnSubmit = document.getElementById('btnSubmitComplaint');
+let userBookings = [];
+let userOrders = [];
+let selectedFileBase64 = null;
 
-        // 1. Đọc URL Parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const queryType = urlParams.get('type'); // 'service', 'order', 'payment', 'other'
-        const queryBookingId = urlParams.get('bookingId');
-        const queryOrderId = urlParams.get('orderId');
+export async function initSupportCreate() {
+    if (typeof window.setUserSubBreadcrumb === 'function') {
+        window.setUserSubBreadcrumb('Gửi yêu cầu mới', 'support');
+    }
 
-        // 2. Tải dữ liệu Bookings và Orders của Khách hàng
-        await loadUserEntities();
+    const ticketTypeSelect = document.getElementById('ticketType');
+    const serviceContextSection = document.getElementById('serviceContextSection');
+    const orderContextSection = document.getElementById('orderContextSection');
+    const serviceBookingSelect = document.getElementById('serviceBookingSelect');
+    const serviceIssueType = document.getElementById('serviceIssueType');
+    const orderSelect = document.getElementById('orderSelect');
+    const orderIssueType = document.getElementById('orderIssueType');
+    const orderCustomerDemand = document.getElementById('orderCustomerDemand');
+    const ticketTitleInput = document.getElementById('ticketTitle');
+    const ticketContentInput = document.getElementById('ticketContent');
+    const ticketFileInput = document.getElementById('ticketFile');
+    const filePreviewContainer = document.getElementById('filePreviewContainer');
+    const filePreviewImg = document.getElementById('filePreviewImg');
+    const filePreviewName = document.getElementById('filePreviewName');
+    const filePreviewSize = document.getElementById('filePreviewSize');
+    const btnRemoveFile = document.getElementById('btnRemoveFile');
+    const createComplaintForm = document.getElementById('createComplaintForm');
+    const btnSubmit = document.getElementById('btnSubmitComplaint');
 
-        // 3. Khởi tạo trạng thái ban đầu theo URL Param
-        if (queryType && ['service', 'order', 'payment', 'other'].includes(queryType)) {
-            ticketTypeSelect.value = queryType;
-        } else if (queryBookingId) {
-            ticketTypeSelect.value = 'service';
-        } else if (queryOrderId) {
-            ticketTypeSelect.value = 'order';
-        }
+    if (!createComplaintForm || !ticketTypeSelect) return;
 
-        handleTypeChange();
-
-        // Nếu có queryBookingId, chọn sẵn ca dịch vụ đó
-        if (queryBookingId && serviceBookingSelect) {
-            serviceBookingSelect.value = queryBookingId;
-            updateServiceSummary();
-            autoGenerateTitle();
-        }
-
-        // Nếu có queryOrderId, chọn sẵn đơn hàng đó
-        if (queryOrderId && orderSelect) {
-            orderSelect.value = queryOrderId;
-            autoGenerateTitle();
-        }
-
-        // 4. Lắng nghe sự kiện thay đổi Type
-        ticketTypeSelect.addEventListener('change', () => {
-            handleTypeChange();
-            autoGenerateTitle();
-        });
-
-        // Lắng nghe thay đổi chọn Lịch hẹn
-        serviceBookingSelect.addEventListener('change', () => {
-            updateServiceSummary();
-            autoGenerateTitle();
-        });
-
-        serviceIssueType.addEventListener('change', autoGenerateTitle);
-        orderSelect.addEventListener('change', autoGenerateTitle);
-        orderIssueType.addEventListener('change', autoGenerateTitle);
-
-        // 5. Xử lý tải và xem trước file minh chứng
-        if (ticketFileInput) {
-            ticketFileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('Dung lượng tệp vượt quá 5MB. Vui lòng chọn ảnh dung lượng nhẹ hơn hoặc liên hệ Hotline để hỗ trợ.');
-                    ticketFileInput.value = '';
-                    filePreviewContainer.classList.add('d-none');
-                    selectedFileBase64 = null;
-                    return;
-                }
-
-                filePreviewName.textContent = file.name;
-                filePreviewSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
-
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        selectedFileBase64 = event.target.result;
-                        filePreviewImg.src = selectedFileBase64;
-                        filePreviewImg.style.display = 'block';
-                        filePreviewContainer.classList.remove('d-none');
-                        filePreviewContainer.classList.add('d-flex');
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    filePreviewImg.style.display = 'none';
-                    filePreviewContainer.classList.remove('d-none');
-                    filePreviewContainer.classList.add('d-flex');
-                }
-            });
-        }
-
-        if (btnRemoveFile) {
-            btnRemoveFile.addEventListener('click', () => {
-                if (ticketFileInput) ticketFileInput.value = '';
-                selectedFileBase64 = null;
-                filePreviewContainer.classList.add('d-none');
-                filePreviewContainer.classList.remove('d-flex');
-            });
-        }
-
-        // 6. Xử lý Submit Form
-        if (createComplaintForm) {
-            createComplaintForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const type = ticketTypeSelect.value;
-                const title = ticketTitleInput.value.trim();
-                const content = ticketContentInput.value.trim();
-
-                if (!type) {
-                    alert('Vui lòng chọn phân loại sự cố.');
-                    ticketTypeSelect.focus();
-                    return;
-                }
-
-                if (!title) {
-                    alert('Vui lòng nhập chủ đề khiếu nại.');
-                    ticketTitleInput.focus();
-                    return;
-                }
-
-                if (!content) {
-                    alert('Vui lòng nhập nội dung chi tiết để PawPal hỗ trợ tốt nhất.');
-                    ticketContentInput.focus();
-                    return;
-                }
-
-                let contextData = {};
-                let complaintId = '';
-
-                if (type === 'service') {
-                    const bookingId = serviceBookingSelect.value;
-                    if (!bookingId) {
-                        alert('Vui lòng chọn ca dịch vụ cần phản ánh.');
-                        serviceBookingSelect.focus();
-                        return;
-                    }
-                    const selectedBooking = userBookings.find(b => String(b.id || b.code) === String(bookingId));
-                    contextData = {
-                        bookingId: bookingId,
-                        serviceName: selectedBooking?.service || selectedBooking?.serviceName || 'Dịch vụ PawPal',
-                        serviceType: selectedBooking?.serviceType || 'spa',
-                        petName: selectedBooking?.petName || selectedBooking?.petInfo?.petName || 'Bé cưng',
-                        petBreed: selectedBooking?.petBreed || selectedBooking?.petInfo?.breed || '',
-                        staffExecuted: selectedBooking?.staff || 'Kỹ thuật viên Chi nhánh',
-                        issueType: serviceIssueType.value,
-                        issueLabel: serviceIssueType.options[serviceIssueType.selectedIndex].text
-                    };
-                } else if (type === 'order') {
-                    const orderId = orderSelect.value;
-                    if (!orderId) {
-                        alert('Vui lòng chọn đơn hàng cần phản ánh.');
-                        orderSelect.focus();
-                        return;
-                    }
-                    const selectedOrder = userOrders.find(o => String(o.id) === String(orderId));
-                    const firstProd = selectedOrder?.products?.[0];
-                    contextData = {
-                        orderId: orderId,
-                        productName: firstProd?.name || 'Sản phẩm PawPal Shop',
-                        productSku: firstProd?.sku || 'PROD-SKU',
-                        issueType: orderIssueType.value,
-                        issueLabel: orderIssueType.options[orderIssueType.selectedIndex].text,
-                        customerDemand: orderCustomerDemand.value,
-                        demandLabel: orderCustomerDemand.options[orderCustomerDemand.selectedIndex].text
-                    };
-                }
-
-                btnSubmit.disabled = true;
-                btnSubmit.textContent = 'Đang gửi...';
-
-                try {
-                    const files = [];
-                    if (ticketFileInput && ticketFileInput.files.length > 0) {
-                        files.push(ticketFileInput.files[0].name);
-                    }
-
-                    // Gửi thông qua PawPalSupport
-                    let createdTicket = null;
-                    if (window.PawPalSupport && window.PawPalSupport.createTicket) {
-                        createdTicket = await window.PawPalSupport.createTicket(title, type, content, files, contextData);
-                    }
-
-                    // Đồng bộ ngay lập tức vào LocalStorage dùng chung cho Admin Complaints
-                    saveComplaintToAdminSync(type, title, content, files, contextData, createdTicket);
-
-                    btnSubmit.textContent = 'Gửi thành công!';
-                    alert('Khiếu nại của bạn đã được tiếp nhận thành công!\nĐội ngũ CSKH PawPal sẽ xử lý và liên hệ bạn trong thời gian cam kết.');
-                    window.location.href = '../support-tickets/support-tickets.html';
-                } catch (err) {
-                    console.error('Lỗi khi gửi khiếu nại:', err);
-                    alert('Có lỗi xảy ra khi gửi khiếu nại. Vui lòng thử lại!');
-                    btnSubmit.disabled = false;
-                    btnSubmit.textContent = 'Gửi yêu cầu';
-                }
-            });
-        }
-    });
+    // 1. Đọc URL Parameters / Hash search
+    const hashParts = window.location.hash.split('?');
+    const urlParams = new URLSearchParams(hashParts[1] || window.location.search);
+    const queryType = urlParams.get('type');
+    const queryBookingId = urlParams.get('bookingId');
+    const queryOrderId = urlParams.get('orderId');
 
     // Hàm chuyển đổi giao diện khi đổi loại sự cố
     function handleTypeChange() {
-        const ticketTypeSelect = document.getElementById('ticketType');
-        const serviceContextSection = document.getElementById('serviceContextSection');
-        const orderContextSection = document.getElementById('orderContextSection');
-
         const val = ticketTypeSelect.value;
         if (val === 'service') {
-            serviceContextSection.classList.remove('d-none');
-            orderContextSection.classList.add('d-none');
+            serviceContextSection?.classList.remove('d-none');
+            orderContextSection?.classList.add('d-none');
         } else if (val === 'order') {
-            serviceContextSection.classList.add('d-none');
-            orderContextSection.classList.remove('d-none');
+            serviceContextSection?.classList.add('d-none');
+            orderContextSection?.classList.remove('d-none');
         } else {
-            serviceContextSection.classList.add('d-none');
-            orderContextSection.classList.add('d-none');
+            serviceContextSection?.classList.add('d-none');
+            orderContextSection?.classList.add('d-none');
         }
     }
 
     // Tự động gợi ý tiêu đề theo ngữ cảnh nếu người dùng chưa nhập tiêu đề riêng
     function autoGenerateTitle() {
-        const ticketTypeSelect = document.getElementById('ticketType');
-        const ticketTitleInput = document.getElementById('ticketTitle');
-        const serviceBookingSelect = document.getElementById('serviceBookingSelect');
-        const serviceIssueType = document.getElementById('serviceIssueType');
-        const orderSelect = document.getElementById('orderSelect');
-        const orderIssueType = document.getElementById('orderIssueType');
-
+        if (!ticketTitleInput) return;
         const type = ticketTypeSelect.value;
 
         if (type === 'service') {
-            const bId = serviceBookingSelect.value;
+            const bId = serviceBookingSelect?.value;
             const booking = userBookings.find(b => String(b.id || b.code) === String(bId));
-            const issueLabel = serviceIssueType.options[serviceIssueType.selectedIndex]?.text || '';
+            const issueLabel = serviceIssueType?.options[serviceIssueType.selectedIndex]?.text || '';
             const pet = booking?.petName || 'Bé cưng';
             const srv = booking?.service || booking?.serviceName || 'Dịch vụ';
 
             ticketTitleInput.value = `[Khiếu nại Dịch vụ] ${pet} - ${srv}: ${issueLabel}`;
         } else if (type === 'order') {
-            const oId = orderSelect.value;
-            const issueLabel = orderIssueType.options[orderIssueType.selectedIndex]?.text || '';
+            const oId = orderSelect?.value;
+            const issueLabel = orderIssueType?.options[orderIssueType.selectedIndex]?.text || '';
             ticketTitleInput.value = `[Khiếu nại Đơn hàng ${oId || ''}] ${issueLabel}`;
         } else if (type === 'payment') {
             ticketTitleInput.value = '[Sự cố Thanh toán] Lỗi giao dịch / Hoàn tiền';
@@ -266,13 +77,14 @@
 
     // Cập nhật card tóm tắt ca dịch vụ
     function updateServiceSummary() {
-        const serviceBookingSelect = document.getElementById('serviceBookingSelect');
         const serviceSummaryBox = document.getElementById('serviceSummaryBox');
         const summaryServiceName = document.getElementById('summaryServiceName');
         const summaryBookingCode = document.getElementById('summaryBookingCode');
         const summaryPetName = document.getElementById('summaryPetName');
         const summaryDateTime = document.getElementById('summaryDateTime');
         const summaryStaff = document.getElementById('summaryStaff');
+
+        if (!serviceBookingSelect || !serviceSummaryBox) return;
 
         const bookingId = serviceBookingSelect.value;
         const b = userBookings.find(item => String(item.id || item.code) === String(bookingId));
@@ -283,213 +95,402 @@
         }
 
         serviceSummaryBox.classList.remove('d-none');
-        summaryServiceName.textContent = b.service || b.serviceName || 'Dịch vụ PawPal';
-        summaryBookingCode.textContent = `Mã: ${b.id || b.code}`;
-        summaryPetName.textContent = b.petName || b.petInfo?.petName || 'Bé cưng';
-        summaryDateTime.textContent = b.date || b.timeStart ? `${b.date || ''} ${b.timeStart || ''}` : 'Gần đây';
-        summaryStaff.textContent = b.staff || 'Chuyên viên kỹ thuật';
+        if (summaryServiceName) summaryServiceName.textContent = b.service || b.serviceName || 'Dịch vụ PawPal';
+        if (summaryBookingCode) summaryBookingCode.textContent = `Mã: ${b.id || b.code}`;
+        if (summaryPetName) summaryPetName.textContent = b.petName || b.petInfo?.petName || 'Bé cưng';
+        if (summaryDateTime) summaryDateTime.textContent = b.date || b.timeStart ? `${b.date || ''} ${b.timeStart || ''}` : 'Gần đây';
+        if (summaryStaff) summaryStaff.textContent = b.staff || 'Chuyên viên kỹ thuật';
     }
 
-    // Tải dữ liệu thực thể người dùng
-    async function loadUserEntities() {
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || { id: 'USER-001', name: 'Lê Lệ Quyên', phone: '0901234567' };
-        
-        // 1. Tải Bookings
-        try {
-            if (window.API && window.API.getUserBookings) {
-                userBookings = await window.API.getUserBookings(currentUser.id);
+    // 2. Tải dữ liệu Bookings và Orders của Khách hàng
+    await loadUserEntities();
+
+    // 3. Khởi tạo trạng thái ban đầu theo URL Param
+    if (queryType && ['service', 'order', 'payment', 'other'].includes(queryType)) {
+        ticketTypeSelect.value = queryType;
+    } else if (queryBookingId) {
+        ticketTypeSelect.value = 'service';
+    } else if (queryOrderId) {
+        ticketTypeSelect.value = 'order';
+    }
+
+    handleTypeChange();
+
+    if (queryBookingId && serviceBookingSelect) {
+        serviceBookingSelect.value = queryBookingId;
+        updateServiceSummary();
+        autoGenerateTitle();
+    }
+
+    if (queryOrderId && orderSelect) {
+        orderSelect.value = queryOrderId;
+        autoGenerateTitle();
+    }
+
+    // 4. Lắng nghe sự kiện thay đổi Type
+    ticketTypeSelect.addEventListener('change', () => {
+        handleTypeChange();
+        autoGenerateTitle();
+    });
+
+    if (serviceBookingSelect) {
+        serviceBookingSelect.addEventListener('change', () => {
+            updateServiceSummary();
+            autoGenerateTitle();
+        });
+    }
+
+    if (serviceIssueType) serviceIssueType.addEventListener('change', autoGenerateTitle);
+    if (orderSelect) orderSelect.addEventListener('change', autoGenerateTitle);
+    if (orderIssueType) orderIssueType.addEventListener('change', autoGenerateTitle);
+
+    // 5. Xử lý tải và xem trước file minh chứng
+    if (ticketFileInput) {
+        ticketFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Dung lượng tệp vượt quá 5MB. Vui lòng chọn ảnh dung lượng nhẹ hơn hoặc liên hệ Hotline để hỗ trợ.');
+                ticketFileInput.value = '';
+                if (filePreviewContainer) filePreviewContainer.classList.add('d-none');
+                selectedFileBase64 = null;
+                return;
             }
-        } catch (e) {
-            console.warn('Lỗi load bookings từ API:', e);
-        }
 
-        if (!userBookings || userBookings.length === 0) {
-            try {
-                userBookings = JSON.parse(localStorage.getItem('pawpal_bookings')) || [];
-            } catch (e) {}
-        }
+            if (filePreviewName) filePreviewName.textContent = file.name;
+            if (filePreviewSize) filePreviewSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
 
-        // Mock dữ liệu mẫu nếu chưa có lịch hẹn nào
-        if (!userBookings || userBookings.length === 0) {
-            userBookings = [
-                { id: 'BKG-1001', service: 'Gói Tắm Vệ Sinh Cơ Bản', serviceType: 'spa', petName: 'Miu Con', date: '28/09/2026', timeStart: '14:00', staff: 'Ngọc Anh (Chi nhánh Quận 1)', status: 'completed' },
-                { id: 'BKG-1008', service: 'Tắm Thuốc Trị Liệu Da Liễu', serviceType: 'spa', petName: 'Bông Xù', date: '27/09/2026', timeStart: '10:30', staff: 'Trần Văn Hùng', status: 'completed' },
-                { id: 'BKG-1004', service: 'Pet Hotel Phòng Tiêu Chuẩn', serviceType: 'hotel', petName: 'Lu Lu', date: '26/09/2026', timeStart: '12:00', staff: 'Trần Thị B', status: 'completed' },
-                { id: 'BKG-1015', service: 'Pet Taxi Đưa Đón Sân Bay', serviceType: 'taxi', petName: 'Mochi', date: '25/09/2026', timeStart: '08:30', staff: 'Hoàng Văn E (Tài xế)', status: 'completed' }
-            ];
-        }
-
-        // Đổ dữ liệu vào select Lịch hẹn
-        const serviceBookingSelect = document.getElementById('serviceBookingSelect');
-        if (serviceBookingSelect) {
-            serviceBookingSelect.innerHTML = '<option value="">-- Chọn ca dịch vụ cần khiếu nại --</option>' +
-                userBookings.map(b => {
-                    const pet = b.petName || b.petInfo?.petName || 'Bé cưng';
-                    const srv = b.service || b.serviceName || 'Dịch vụ';
-                    const date = b.date || '';
-                    return `<option value="${b.id || b.code}">${b.id || b.code} - ${srv} (${pet}) ${date ? '• ' + date : ''}</option>`;
-                }).join('');
-        }
-
-        // 2. Tải Orders
-        try {
-            if (window.API && window.API.getUserOrders) {
-                userOrders = await window.API.getUserOrders(currentUser.id);
-            }
-        } catch (e) {
-            console.warn('Lỗi load orders từ API:', e);
-        }
-
-        if (!userOrders || userOrders.length === 0) {
-            try {
-                userOrders = JSON.parse(localStorage.getItem('pawpal_orders')) || [];
-            } catch (e) {}
-        }
-
-        if (!userOrders || userOrders.length === 0) {
-            userOrders = [
-                {
-                    id: 'ORD-2026-001',
-                    createdAt: '2026-09-28',
-                    status: 'completed',
-                    products: [{ id: 'P-01', name: 'Đồ chơi gặm xương cao su tự nhiên an toàn', quantity: 1, price: 150000 }]
-                },
-                {
-                    id: 'ORD-2026-005',
-                    createdAt: '2026-09-27',
-                    status: 'completed',
-                    products: [{ id: 'P-02', name: 'Pate Mèo Nắp Bật Thảo Dược Hộp 85g', quantity: 4, price: 45000 }]
-                },
-                {
-                    id: 'ORD-2026-008',
-                    createdAt: '2026-09-25',
-                    status: 'completed',
-                    products: [{ id: 'P-03', name: 'Vòng Cổ Phát Sáng Định Vị GPS', quantity: 1, price: 450000 }]
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    selectedFileBase64 = event.target.result;
+                    if (filePreviewImg) {
+                        filePreviewImg.src = selectedFileBase64;
+                        filePreviewImg.style.display = 'block';
+                    }
+                    if (filePreviewContainer) {
+                        filePreviewContainer.classList.remove('d-none');
+                        filePreviewContainer.classList.add('d-flex');
+                    }
+                };
+                reader.readAsDataURL(file);
+            } else {
+                if (filePreviewImg) filePreviewImg.style.display = 'none';
+                if (filePreviewContainer) {
+                    filePreviewContainer.classList.remove('d-none');
+                    filePreviewContainer.classList.add('d-flex');
                 }
-            ];
-        }
-
-        // Đổ dữ liệu vào select Đơn hàng
-        const orderSelect = document.getElementById('orderSelect');
-        if (orderSelect) {
-            orderSelect.innerHTML = '<option value="">-- Chọn đơn hàng cần khiếu nại --</option>' +
-                userOrders.map(o => {
-                    const prodName = o.products?.[0]?.name || 'Sản phẩm';
-                    return `<option value="${o.id}">${o.id} - ${prodName} (${o.createdAt || 'Gần đây'})</option>`;
-                }).join('');
-        }
+            }
+        });
     }
 
-    // Lưu khiếu nại vào kho dữ liệu đồng bộ Admin
-    function saveComplaintToAdminSync(type, title, content, files, context, createdTicket) {
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || {
-            name: 'Lê Lệ Quyên',
-            phone: '0901234567'
-        };
+    if (btnRemoveFile) {
+        btnRemoveFile.addEventListener('click', () => {
+            if (ticketFileInput) ticketFileInput.value = '';
+            selectedFileBase64 = null;
+            if (filePreviewContainer) {
+                filePreviewContainer.classList.add('d-none');
+                filePreviewContainer.classList.remove('d-flex');
+            }
+        });
+    }
 
-        const now = new Date();
-        const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        const timeHeader = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} - ${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+    // 6. Xử lý Submit Form
+    createComplaintForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const type = ticketTypeSelect.value;
+        const title = ticketTitleInput.value.trim();
+        const content = ticketContentInput.value.trim();
+
+        if (!type) {
+            alert('Vui lòng chọn phân loại sự cố.');
+            ticketTypeSelect.focus();
+            return;
+        }
+
+        if (!title) {
+            alert('Vui lòng nhập chủ đề khiếu nại.');
+            ticketTitleInput.focus();
+            return;
+        }
+
+        if (!content) {
+            alert('Vui lòng nhập nội dung chi tiết để PawPal hỗ trợ tốt nhất.');
+            ticketContentInput.focus();
+            return;
+        }
+
+        let contextData = {};
 
         if (type === 'service') {
-            const syncKey = 'pawpal_service_complaints';
-            let list = [];
-            try {
-                list = JSON.parse(localStorage.getItem(syncKey)) || [];
-            } catch (e) {
-                list = [];
+            const bookingId = serviceBookingSelect.value;
+            if (!bookingId) {
+                alert('Vui lòng chọn ca dịch vụ cần phản ánh.');
+                serviceBookingSelect.focus();
+                return;
             }
-
-            const newId = createdTicket?.id 
-                ? (createdTicket.id.startsWith('TK-') ? createdTicket.id : `TK-${createdTicket.id.substring(0, 8)}`) 
-                : `TK-2026-${String(Math.floor(100 + Math.random() * 900))}`;
-            const isUrgent = context.issueType === 'injury' || title.toLowerCase().includes('đau') || title.toLowerCase().includes('xước') || title.toLowerCase().includes('máu');
-
-            const item = {
-                id: newId,
-                customerName: currentUser.name || 'Khách hàng PawPal',
-                phone: currentUser.phone || '0901234567',
-                petName: context.petName || 'Bé cưng',
-                petBreed: context.petBreed || 'Thú cưng',
-                petNotes: 'Gửi từ giao diện khách hàng',
-                bookingId: context.bookingId || 'BKG-NEW',
-                serviceType: context.serviceType || 'spa',
-                serviceName: context.serviceName || 'Dịch vụ PawPal',
-                staffExecuted: context.staffExecuted || 'Chi nhánh tiếp nhận',
-                title: title,
-                content: content,
-                priority: isUrgent ? 'high' : 'medium',
-                slaStatus: isUrgent ? 'URGENT' : 'NORMAL',
-                slaRemainingText: isUrgent ? 'Còn 2 giờ' : 'Còn 4 giờ',
-                staffAssigned: 'Chưa phân công',
-                createdAt: dateStr,
-                status: 'new',
-                evidence: files && files.length > 0 ? files : ['minh-chung-khach-hang.jpg'],
-                checkinHealth: 'Ghi nhận ban đầu: Khách phản ánh sau khi hoàn tất ca dịch vụ.',
-                checkinPhotos: [],
-                staffLogNote: 'Đang chờ quản lý ca đối soát và trích xuất camera theo quy trình.',
-                timeline: [
-                    {
-                        time: timeHeader,
-                        author: `${currentUser.name || 'Khách hàng'} (Khách hàng)`,
-                        title: 'Gửi khiếu nại qua Website',
-                        desc: content,
-                        isInternal: false
-                    }
-                ]
+            const selectedBooking = userBookings.find(b => String(b.id || b.code) === String(bookingId));
+            contextData = {
+                bookingId: bookingId,
+                serviceName: selectedBooking?.service || selectedBooking?.serviceName || 'Dịch vụ PawPal',
+                serviceType: selectedBooking?.serviceType || 'spa',
+                petName: selectedBooking?.petName || selectedBooking?.petInfo?.petName || 'Bé cưng',
+                petBreed: selectedBooking?.petBreed || selectedBooking?.petInfo?.breed || '',
+                staffExecuted: selectedBooking?.staff || 'Kỹ thuật viên Chi nhánh',
+                issueType: serviceIssueType.value,
+                issueLabel: serviceIssueType.options[serviceIssueType.selectedIndex].text
             };
-
-            list.unshift(item);
-            localStorage.setItem(syncKey, JSON.stringify(list));
-            console.log('[SupportSync] Đã lưu khiếu nại dịch vụ vào pawpal_service_complaints:', item);
-
         } else if (type === 'order') {
-            const syncKey = 'pawpal_order_complaints';
-            let list = [];
-            try {
-                list = JSON.parse(localStorage.getItem(syncKey)) || [];
-            } catch (e) {
-                list = [];
+            const orderId = orderSelect.value;
+            if (!orderId) {
+                alert('Vui lòng chọn đơn hàng cần phản ánh.');
+                orderSelect.focus();
+                return;
+            }
+            const selectedOrder = userOrders.find(o => String(o.id) === String(orderId));
+            const firstProd = selectedOrder?.products?.[0];
+            contextData = {
+                orderId: orderId,
+                productName: firstProd?.name || 'Sản phẩm PawPal Shop',
+                productSku: firstProd?.sku || 'PROD-SKU',
+                issueType: orderIssueType.value,
+                issueLabel: orderIssueType.options[orderIssueType.selectedIndex].text,
+                customerDemand: orderCustomerDemand.value,
+                demandLabel: orderCustomerDemand.options[orderCustomerDemand.selectedIndex].text
+            };
+        }
+
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Đang gửi...';
+
+        try {
+            const files = [];
+            if (ticketFileInput && ticketFileInput.files.length > 0) {
+                files.push(ticketFileInput.files[0].name);
             }
 
-            const newId = createdTicket?.id 
-                ? (createdTicket.id.startsWith('TK-') ? createdTicket.id : `TK-${createdTicket.id.substring(0, 8)}`) 
-                : `TK-ORD-${String(Math.floor(100 + Math.random() * 900))}`;
-            const item = {
-                id: newId,
-                customerName: currentUser.name || 'Khách hàng PawPal',
-                phone: currentUser.phone || '0901234567',
-                orderId: context.orderId || 'ORD-NEW',
-                productName: context.productName || 'Sản phẩm mua sắm',
-                productSku: context.productSku || 'SKU-01',
-                issueType: context.issueType || 'wrong_item',
-                customerDemand: context.demandLabel || 'Đổi sản phẩm mới nguyên vẹn',
-                priority: context.issueType === 'damaged' ? 'high' : 'medium',
-                slaStatus: 'NORMAL',
-                slaRemainingText: 'Còn 4 giờ',
-                staffAssigned: 'Chưa phân công',
-                createdAt: dateStr,
-                status: 'new',
-                content: content,
-                evidence: files && files.length > 0 ? files : ['minh-chung-don-hang.jpg'],
-                warehousePhotos: [],
-                carrier: 'Giao Hàng Nhanh (GHN)',
-                trackingCode: 'GHN' + Math.floor(10000000 + Math.random() * 90000000) + 'VN',
-                deliveryStatus: 'Giao thành công',
-                timeline: [
-                    {
-                        time: timeHeader,
-                        author: `${currentUser.name || 'Khách hàng'} (Khách hàng)`,
-                        title: 'Phản ánh sự cố đơn hàng',
-                        desc: content,
-                        isInternal: false
-                    }
-                ]
-            };
+            let createdTicket = null;
+            if (window.PawPalSupport && window.PawPalSupport.createTicket) {
+                createdTicket = await window.PawPalSupport.createTicket(title, type, content, files, contextData);
+            }
 
-            list.unshift(item);
-            localStorage.setItem(syncKey, JSON.stringify(list));
-            console.log('[SupportSync] Đã lưu khiếu nại đơn hàng vào pawpal_order_complaints:', item);
+            saveComplaintToAdminSync(type, title, content, files, contextData, createdTicket);
+
+            btnSubmit.textContent = 'Gửi thành công!';
+            alert('Khiếu nại của bạn đã được tiếp nhận thành công!\nĐội ngũ CSKH PawPal sẽ xử lý và phản hồi trong thời gian sớm nhất.');
+            window.location.hash = '#support';
+        } catch (err) {
+            console.error('Lỗi khi gửi khiếu nại:', err);
+            alert('Có lỗi xảy ra khi gửi khiếu nại. Vui lòng thử lại!');
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = 'Gửi yêu cầu';
         }
+    });
+}
+
+// Tải dữ liệu thực thể người dùng (Bookings & Orders)
+async function loadUserEntities() {
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || { id: 'USER-001', name: 'Lê Lệ Quyên', phone: '0901234567' };
+    
+    // 1. Tải Bookings
+    try {
+        if (window.API && window.API.getUserBookings) {
+            userBookings = await window.API.getUserBookings(currentUser.id);
+        }
+    } catch (e) {
+        console.warn('Lỗi load bookings từ API:', e);
     }
-})();
+
+    if (!userBookings || userBookings.length === 0) {
+        try {
+            userBookings = JSON.parse(localStorage.getItem('pawpal_bookings')) || [];
+        } catch (e) {}
+    }
+
+    // Mock dữ liệu mẫu nếu chưa có lịch hẹn nào
+    if (!userBookings || userBookings.length === 0) {
+        userBookings = [
+            { id: 'BKG-1001', service: 'Gói Tắm Vệ Sinh Cơ Bản', serviceType: 'spa', petName: 'Miu Con', date: '28/09/2026', timeStart: '14:00', staff: 'Ngọc Anh (Chi nhánh Quận 1)', status: 'completed' },
+            { id: 'BKG-1008', service: 'Tắm Thuốc Trị Liệu Da Liễu', serviceType: 'spa', petName: 'Bông Xù', date: '27/09/2026', timeStart: '10:30', staff: 'Trần Văn Hùng', status: 'completed' },
+            { id: 'BKG-1004', service: 'Pet Hotel Phòng Tiêu Chuẩn', serviceType: 'hotel', petName: 'Lu Lu', date: '26/09/2026', timeStart: '12:00', staff: 'Trần Thị B', status: 'completed' },
+            { id: 'BKG-1015', service: 'Pet Taxi Đưa Đón Sân Bay', serviceType: 'taxi', petName: 'Mochi', date: '25/09/2026', timeStart: '08:30', staff: 'Hoàng Văn E (Tài xế)', status: 'completed' }
+        ];
+    }
+
+    // Đổ dữ liệu vào select Lịch hẹn
+    const serviceBookingSelect = document.getElementById('serviceBookingSelect');
+    if (serviceBookingSelect) {
+        serviceBookingSelect.innerHTML = '<option value="">-- Chọn ca dịch vụ cần khiếu nại --</option>' +
+            userBookings.map(b => {
+                const pet = b.petName || b.petInfo?.petName || 'Bé cưng';
+                const srv = b.service || b.serviceName || 'Dịch vụ';
+                const date = b.date || '';
+                return `<option value="${b.id || b.code}">${b.id || b.code} - ${srv} (${pet}) ${date ? '• ' + date : ''}</option>`;
+            }).join('');
+    }
+
+    // 2. Tải Orders
+    try {
+        if (window.API && window.API.getUserOrders) {
+            userOrders = await window.API.getUserOrders(currentUser.id);
+        }
+    } catch (e) {
+        console.warn('Lỗi load orders từ API:', e);
+    }
+
+    if (!userOrders || userOrders.length === 0) {
+        try {
+            userOrders = JSON.parse(localStorage.getItem('pawpal_orders')) || [];
+        } catch (e) {}
+    }
+
+    if (!userOrders || userOrders.length === 0) {
+        userOrders = [
+            {
+                id: 'ORD-2026-001',
+                createdAt: '2026-09-28',
+                status: 'completed',
+                products: [{ id: 'P-01', name: 'Đồ chơi gặm xương cao su tự nhiên an toàn', quantity: 1, price: 150000 }]
+            },
+            {
+                id: 'ORD-2026-005',
+                createdAt: '2026-09-27',
+                status: 'completed',
+                products: [{ id: 'P-02', name: 'Pate Mèo Nắp Bật Thảo Dược Hộp 85g', quantity: 4, price: 45000 }]
+            },
+            {
+                id: 'ORD-2026-008',
+                createdAt: '2026-09-25',
+                status: 'completed',
+                products: [{ id: 'P-03', name: 'Vòng Cổ Phát Sáng Định Vị GPS', quantity: 1, price: 450000 }]
+            }
+        ];
+    }
+
+    // Đổ dữ liệu vào select Đơn hàng
+    const orderSelect = document.getElementById('orderSelect');
+    if (orderSelect) {
+        orderSelect.innerHTML = '<option value="">-- Chọn đơn hàng cần khiếu nại --</option>' +
+            userOrders.map(o => {
+                const prodName = o.products?.[0]?.name || 'Sản phẩm';
+                return `<option value="${o.id}">${o.id} - ${prodName} (${o.createdAt || 'Gần đây'})</option>`;
+            }).join('');
+    }
+}
+
+// Lưu khiếu nại vào kho dữ liệu đồng bộ Admin
+function saveComplaintToAdminSync(type, title, content, files, context, createdTicket) {
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || {
+        name: 'Lê Lệ Quyên',
+        phone: '0901234567'
+    };
+
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const timeHeader = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} - ${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+
+    if (type === 'service') {
+        const syncKey = 'pawpal_service_complaints';
+        let list = [];
+        try {
+            list = JSON.parse(localStorage.getItem(syncKey)) || [];
+        } catch (e) {
+            list = [];
+        }
+
+        const newId = createdTicket?.id 
+            ? (createdTicket.id.startsWith('TK-') ? createdTicket.id : `TK-${createdTicket.id.substring(0, 8)}`) 
+            : `TK-2026-${String(Math.floor(100 + Math.random() * 900))}`;
+        const isUrgent = context.issueType === 'injury' || title.toLowerCase().includes('đau') || title.toLowerCase().includes('xước') || title.toLowerCase().includes('máu');
+
+        const item = {
+            id: newId,
+            customerName: currentUser.name || 'Khách hàng PawPal',
+            phone: currentUser.phone || '0901234567',
+            petName: context.petName || 'Bé cưng',
+            petBreed: context.petBreed || 'Thú cưng',
+            petNotes: 'Gửi từ giao diện khách hàng',
+            bookingId: context.bookingId || 'BKG-NEW',
+            serviceType: context.serviceType || 'spa',
+            serviceName: context.serviceName || 'Dịch vụ PawPal',
+            staffExecuted: context.staffExecuted || 'Chi nhánh tiếp nhận',
+            title: title,
+            content: content,
+            priority: isUrgent ? 'high' : 'medium',
+            slaStatus: isUrgent ? 'URGENT' : 'NORMAL',
+            slaRemainingText: isUrgent ? 'Còn 2 giờ' : 'Còn 4 giờ',
+            staffAssigned: 'Chưa phân công',
+            createdAt: dateStr,
+            status: 'new',
+            evidence: files && files.length > 0 ? files : ['minh-chung-khach-hang.jpg'],
+            checkinHealth: 'Ghi nhận ban đầu: Khách phản ánh sau khi hoàn tất ca dịch vụ.',
+            checkinPhotos: [],
+            staffLogNote: 'Đang chờ quản lý ca đối soát và trích xuất camera theo quy trình.',
+            timeline: [
+                {
+                    time: timeHeader,
+                    author: `${currentUser.name || 'Khách hàng'} (Khách hàng)`,
+                    title: 'Gửi khiếu nại qua Website',
+                    desc: content,
+                    isInternal: false
+                }
+            ]
+        };
+
+        list.unshift(item);
+        localStorage.setItem(syncKey, JSON.stringify(list));
+        console.log('[SupportSync] Đã lưu khiếu nại dịch vụ vào pawpal_service_complaints:', item);
+
+    } else if (type === 'order') {
+        const syncKey = 'pawpal_order_complaints';
+        let list = [];
+        try {
+            list = JSON.parse(localStorage.getItem(syncKey)) || [];
+        } catch (e) {
+            list = [];
+        }
+
+        const newId = createdTicket?.id 
+            ? (createdTicket.id.startsWith('TK-') ? createdTicket.id : `TK-${createdTicket.id.substring(0, 8)}`) 
+            : `TK-ORD-${String(Math.floor(100 + Math.random() * 900))}`;
+        const item = {
+            id: newId,
+            customerName: currentUser.name || 'Khách hàng PawPal',
+            phone: currentUser.phone || '0901234567',
+            orderId: context.orderId || 'ORD-NEW',
+            productName: context.productName || 'Sản phẩm mua sắm',
+            productSku: context.productSku || 'SKU-01',
+            issueType: context.issueType || 'wrong_item',
+            customerDemand: context.demandLabel || 'Đổi sản phẩm mới nguyên vẹn',
+            priority: context.issueType === 'damaged' ? 'high' : 'medium',
+            slaStatus: 'NORMAL',
+            slaRemainingText: 'Còn 4 giờ',
+            staffAssigned: 'Chưa phân công',
+            createdAt: dateStr,
+            status: 'new',
+            content: content,
+            evidence: files && files.length > 0 ? files : ['minh-chung-don-hang.jpg'],
+            warehousePhotos: [],
+            carrier: 'Giao Hàng Nhanh (GHN)',
+            trackingCode: 'GHN' + Math.floor(10000000 + Math.random() * 90000000) + 'VN',
+            deliveryStatus: 'Giao thành công',
+            timeline: [
+                {
+                    time: timeHeader,
+                    author: `${currentUser.name || 'Khách hàng'} (Khách hàng)`,
+                    title: 'Phản ánh sự cố đơn hàng',
+                    desc: content,
+                    isInternal: false
+                }
+            ]
+        };
+
+        list.unshift(item);
+        localStorage.setItem(syncKey, JSON.stringify(list));
+        console.log('[SupportSync] Đã lưu khiếu nại đơn hàng vào pawpal_order_complaints:', item);
+    }
+}
+
+export const init = initSupportCreate;

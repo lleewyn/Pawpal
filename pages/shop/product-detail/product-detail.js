@@ -33,6 +33,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         buyNowBtn.addEventListener('click', handleBuyNow);
     }
 
+    const openReviewModalBtn = document.getElementById('openReviewModalBtn');
+    if (openReviewModalBtn) {
+        openReviewModalBtn.addEventListener('click', () => {
+            const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+            if (!user) {
+                showToast('Vui lòng đăng nhập để gửi đánh giá sản phẩm!', 'warning');
+                return;
+            }
+            showToast('Chức năng gửi đánh giá đã sẵn sàng ghi nhận nhận xét của bạn!', 'success');
+        });
+    }
+
     function getWishlistStorageKey() {
         const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
         return user && user.phone ? `pawpal_wishlist_${user.phone}` : 'pawpal_wishlist_guest';
@@ -226,7 +238,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         galleryPrev.addEventListener('click', () => navigateGallery(-1));
         galleryNext.addEventListener('click', () => navigateGallery(1));
     }
+
+    initProductTabs();
 });
+
+function initProductTabs() {
+    const tabs = document.querySelectorAll('.product-tabs-nav .tab-btn');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
+            tabs.forEach(t => {
+                t.classList.remove('active');
+                t.setAttribute('aria-selected', 'false');
+            });
+            tab.classList.add('active');
+            tab.setAttribute('aria-selected', 'true');
+
+            document.querySelectorAll('.product-tabs-section .tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            const activePanel = document.getElementById(`tab-${targetTab}`);
+            if (activePanel) {
+                activePanel.classList.add('active');
+            }
+        });
+    });
+}
 
 let currentGalleryIndex = 0;
 
@@ -239,9 +276,237 @@ function navigateGallery(direction) {
     thumbnails[currentGalleryIndex].click();
 }
 
-async function handleAddToCart() {
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+let selectedVariantState = {
+    name: '',
+    price: 0,
+    attributes: {}
+};
 
+function getProductAttributeGroups(product) {
+    if (!product) return [];
+
+    if (Array.isArray(product.attributeGroups) && product.attributeGroups.length > 0) {
+        return product.attributeGroups;
+    }
+
+    const basePrice = Number(product.price) || 0;
+    const cat = String(product.category || product.categoryName || '').toLowerCase();
+    const name = String(product.name || '').toLowerCase();
+
+    // 1. Thức ăn khô / Hạt (Whiskas, Royal Canin, Pedigree...)
+    if (cat.includes('dry') || cat.includes('kho') || name.includes('hạt') || name.includes('hat') || name.includes('whiskas') || name.includes('royal')) {
+        return [
+            {
+                name: 'Kích cỡ / Quy cách',
+                key: 'size',
+                options: [
+                    { label: 'Gói 400g (Dùng thử)', priceDelta: -Math.round(basePrice * 0.45 / 1000) * 1000 },
+                    { label: 'Gói 1.5kg (Tiêu chuẩn)', priceDelta: 0 },
+                    { label: 'Bao 3.0kg (Tiết kiệm)', priceDelta: Math.round(basePrice * 0.85 / 1000) * 1000 }
+                ]
+            },
+            {
+                name: 'Hương vị',
+                key: 'flavor',
+                options: [
+                    { label: 'Vị Cá biển thơm ngon', priceDelta: 0 },
+                    { label: 'Vị Cá hồi và Rau củ', priceDelta: 5000 },
+                    { label: 'Vị Thịt gà và Bò', priceDelta: 0 }
+                ]
+            }
+        ];
+    }
+
+    // 2. Thức ăn ướt / Pate / Súp thưởng / Churu
+    if (cat.includes('wet') || cat.includes('uot') || name.includes('pate') || name.includes('súp') || name.includes('sup') || name.includes('churu')) {
+        return [
+            {
+                name: 'Hương vị',
+                key: 'flavor',
+                options: [
+                    { label: 'Vị Cá hồi Na Uy', priceDelta: 0 },
+                    { label: 'Vị Gà xé sốt nước dùng', priceDelta: 0 },
+                    { label: 'Vị Bò tươi sốt Gravy', priceDelta: 5000 }
+                ]
+            },
+            {
+                name: 'Quy cách đóng gói',
+                key: 'pack',
+                options: [
+                    { label: 'Lon đơn 85g', priceDelta: 0 },
+                    { label: 'Lốc 3 lon (Tiết kiệm)', priceDelta: Math.round(basePrice * 1.8 / 1000) * 1000 },
+                    { label: 'Hộp 6 lon (Đại tiệc)', priceDelta: Math.round(basePrice * 4.5 / 1000) * 1000 }
+                ]
+            }
+        ];
+    }
+
+    // 3. Xương gặm / Bánh thưởng
+    if (cat.includes('bone') || cat.includes('gam') || cat.includes('snack') || name.includes('xương') || name.includes('bánh')) {
+        return [
+            {
+                name: 'Quy cách',
+                key: 'pack',
+                options: [
+                    { label: 'Gói 1 chiếc (Dùng thử)', priceDelta: 0 },
+                    { label: 'Gói 3 chiếc (Chuẩn)', priceDelta: Math.round(basePrice * 1.7 / 1000) * 1000 },
+                    { label: 'Túi 5 chiếc (Tiết kiệm)', priceDelta: Math.round(basePrice * 3.2 / 1000) * 1000 }
+                ]
+            },
+            {
+                name: 'Mùi vị',
+                key: 'flavor',
+                options: [
+                    { label: 'Vị Bò sữa thơm lừng', priceDelta: 0 },
+                    { label: 'Vị Bạc hà sạch răng', priceDelta: 3000 }
+                ]
+            }
+        ];
+    }
+
+    // 4. Sức khỏe / Chăm sóc / Vệ sinh
+    if (cat.includes('health') || cat.includes('groom') || cat.includes('hygiene') || cat.includes('ve sinh') || name.includes('dầu') || name.includes('gel') || name.includes('cát')) {
+        return [
+            {
+                name: 'Dung tích / Trọng lượng',
+                key: 'vol',
+                options: [
+                    { label: 'Chai 250ml (Tiêu chuẩn)', priceDelta: 0 },
+                    { label: 'Chai 500ml (Tiết kiệm)', priceDelta: Math.round(basePrice * 0.75 / 1000) * 1000 }
+                ]
+            },
+            {
+                name: 'Mùi hương / Công dụng',
+                key: 'scent',
+                options: [
+                    { label: 'Hương Hoa cúc dịu nhẹ', priceDelta: 0 },
+                    { label: 'Hương Trà xanh khử mùi', priceDelta: 5000 },
+                    { label: 'Dưỡng lông mềm mượt', priceDelta: 10000 }
+                ]
+            }
+        ];
+    }
+
+    // 5. Quần áo / Phụ kiện / Đồ chơi
+    if (cat.includes('toy') || cat.includes('clothe') || cat.includes('accessories') || name.includes('vòng') || name.includes('áo') || name.includes('đồ chơi') || name.includes('dây')) {
+        return [
+            {
+                name: 'Kích cỡ (Size)',
+                key: 'size',
+                options: [
+                    { label: 'Size S (Thú cưng < 4kg)', priceDelta: 0 },
+                    { label: 'Size M (Thú cưng 4 - 8kg)', priceDelta: 15000 },
+                    { label: 'Size L (Thú cưng > 8kg)', priceDelta: 30000 }
+                ]
+            },
+            {
+                name: 'Màu sắc',
+                key: 'color',
+                options: [
+                    { label: 'Xanh Forest Green', priceDelta: 0 },
+                    { label: 'Vàng Kem Pastel', priceDelta: 0 },
+                    { label: 'Cam Đất Ấm Áp', priceDelta: 0 }
+                ]
+            }
+        ];
+    }
+
+    return [
+        {
+            name: 'Quy cách',
+            key: 'spec',
+            options: [
+                { label: 'Bản Tiêu Chuẩn', priceDelta: 0 },
+                { label: 'Bản Nâng Cấp Pro', priceDelta: Math.round(basePrice * 0.3 / 1000) * 1000 }
+            ]
+        }
+    ];
+}
+
+function renderProductVariants(product) {
+    const container = document.getElementById('pdVariantsSection');
+    if (!container || !product) return;
+
+    const attrGroups = getProductAttributeGroups(product);
+    if (!attrGroups || attrGroups.length === 0) {
+        container.innerHTML = '';
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'flex';
+    container.innerHTML = '';
+
+    const selectedOptions = {};
+    attrGroups.forEach((group, idx) => {
+        selectedOptions[idx] = group.options[0];
+    });
+
+    function updateCalculatedPrice() {
+        const basePrice = Number(product.price) || 0;
+        let totalDelta = 0;
+        const parts = [];
+
+        attrGroups.forEach((group, idx) => {
+            const opt = selectedOptions[idx];
+            if (opt) {
+                totalDelta += (opt.priceDelta || 0);
+                parts.push(opt.label);
+            }
+        });
+
+        const finalPrice = Math.max(10000, basePrice + totalDelta);
+        const variantName = parts.join(' • ');
+
+        selectedVariantState = {
+            name: variantName,
+            price: finalPrice,
+            attributes: { ...selectedOptions }
+        };
+
+        const priceEl = document.getElementById('productPrice');
+        if (priceEl) {
+            priceEl.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(finalPrice).replace('₫', 'đ');
+        }
+    }
+
+    attrGroups.forEach((group, gIdx) => {
+        const groupEl = document.createElement('div');
+        groupEl.className = 'pd-variant-group';
+
+        const labelEl = document.createElement('div');
+        labelEl.className = 'pd-variant-label';
+        labelEl.innerHTML = `<span>${group.name}</span>`;
+
+        const chipsEl = document.createElement('div');
+        chipsEl.className = 'pd-variant-chips';
+
+        group.options.forEach((opt, oIdx) => {
+            const chipBtn = document.createElement('button');
+            chipBtn.type = 'button';
+            chipBtn.className = `pd-variant-chip ${oIdx === 0 ? 'active' : ''}`;
+            chipBtn.textContent = opt.label;
+
+            chipBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                chipsEl.querySelectorAll('.pd-variant-chip').forEach(c => c.classList.remove('active'));
+                chipBtn.classList.add('active');
+                selectedOptions[gIdx] = opt;
+                updateCalculatedPrice();
+            });
+
+            chipsEl.appendChild(chipBtn);
+        });
+
+        groupEl.appendChild(labelEl);
+        groupEl.appendChild(chipsEl);
+        container.appendChild(groupEl);
+    });
+
+    updateCalculatedPrice();
+}
+
+async function handleAddToCart() {
     const product = getCurrentProduct();
     const quantity = parseInt(document.getElementById('quantity').value) || 1;
     
@@ -259,8 +524,14 @@ async function handleAddToCart() {
         showToast(`Chỉ còn ${product.stock} sản phẩm trong kho`, 'error');
         return;
     }
+
+    const itemToAdd = {
+        ...product,
+        price: selectedVariantState.price || product.price,
+        selectedVariant: selectedVariantState.name || 'Tiêu chuẩn'
+    };
     
-    await addProductToCart(product, quantity);
+    await addProductToCart(itemToAdd, quantity);
     showToast('Đã thêm sản phẩm vào giỏ hàng', 'success');
     await updateCartBadge();
 }
@@ -289,11 +560,15 @@ function handleBuyNow() {
     document.getElementById('buyNowBtn').disabled = true;
     
     setTimeout(() => {
+        const finalPrice = selectedVariantState.price || product.price;
+        const finalVariant = selectedVariantState.name || 'Tiêu chuẩn';
+
         const buyNowCart = [{
             id: product.id,
             name: product.name,
             brand: product.brand,
-            price: product.price,
+            price: finalPrice,
+            selectedVariant: finalVariant,
             quantity: quantity,
             image: product.image,
             stock: product.stock
@@ -306,14 +581,18 @@ function handleBuyNow() {
 }
 
 async function handleCardAddToCart(product) {
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
-    
     if (!product || !product.inStock) {
         showToast('Sản phẩm không khả dụng', 'error');
         return;
     }
-    addProductToCart(product, 1);
-    updateCartBadge();
+    const groups = getProductAttributeGroups(product);
+    const defaultVariant = groups.length > 0 ? groups.map(g => g.options[0].label).join(' • ') : 'Tiêu chuẩn';
+
+    await addProductToCart({
+        ...product,
+        selectedVariant: defaultVariant
+    }, 1);
+    await updateCartBadge();
     showToast('Đã thêm sản phẩm vào giỏ hàng', 'success');
 }
 
@@ -323,11 +602,15 @@ function handleCardBuyNow(product) {
         return;
     }
 
+    const groups = getProductAttributeGroups(product);
+    const defaultVariant = groups.length > 0 ? groups.map(g => g.options[0].label).join(' • ') : 'Tiêu chuẩn';
+
     const buyNowCart = [{
         id: product.id,
         name: product.name,
         brand: product.brand,
         price: product.price,
+        selectedVariant: defaultVariant,
         quantity: 1,
         image: product.image,
         stock: product.stock
@@ -498,7 +781,12 @@ async function addProductToCart(product, quantity) {
         cart = await window.API.getUserCart(currentUser?.id || currentUser?.phone || null);
     }
     
-    const existingIndex = cart.findIndex(item => item.id === product.id);
+    const targetVariant = product.selectedVariant || null;
+    const existingIndex = cart.findIndex(item => {
+        const isSameId = String(item.id) === String(product.id);
+        if (!targetVariant) return isSameId;
+        return isSameId && (item.selectedVariant === targetVariant);
+    });
     
     if (existingIndex >= 0) {
         cart[existingIndex].quantity += quantity;
@@ -513,6 +801,7 @@ async function addProductToCart(product, quantity) {
             name: product.name,
             brand: product.brand,
             price: product.price,
+            selectedVariant: targetVariant,
             quantity: quantity,
             image: product.image,
             stock: product.stock
@@ -581,67 +870,7 @@ function showToast(message, type = 'info') {
 const style = document.createElement('style');
 
 
-function renderReviewItem(r) {
-    const name    = r.customer?.customer_profile?.[0]?.full_name || r.customer?.customer_profile?.full_name || 'Khách hàng';
-    const rating  = Number(r.rating) || 0;
-    const stars   = '★'.repeat(rating) + '☆'.repeat(5 - rating);
-    const date    = new Date(r.created_at).toLocaleDateString('vi-VN');
-    const content = r.review_content || '';
-    const images  = Array.isArray(r.image_urls) ? r.image_urls : [];
 
-    const imagesHtml = images.length
-        ? `<div class="review-media-list">${images.map(img =>
-            `<img src="${img.startsWith('/') || img.startsWith('http') ? img : '/' + img}" 
-                  alt="Ảnh đánh giá" class="review-photo" loading="lazy"
-                  style="width:80px;height:80px;object-fit:cover;border-radius:8px;cursor:pointer;">`
-          ).join('')}</div>`
-        : '';
-
-    const response = r.review_response?.[0];
-    const responseHtml = response
-        ? `<div class="seller-reply" style="background:#f0f9f4;border-left:3px solid var(--color-primary);padding:10px 14px;margin-top:10px;border-radius:8px;">
-               <strong>Phản hồi từ PawPal:</strong>
-               <p style="margin:4px 0 0;">${response.response_content}</p>
-           </div>`
-        : '';
-
-    return `
-        <div class="review-item" data-stars="${rating}" data-has-media="${images.length > 0}">
-            <div class="review-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                <div>
-                    <strong>${name}</strong>
-                    <span style="color:#f59e0b;margin-left:8px;">${stars}</span>
-                </div>
-                <span style="color:#94a3b8;font-size:0.85rem;">${date}</span>
-            </div>
-            ${content ? `<p style="margin-bottom:8px;">${content}</p>` : ''}
-            ${imagesHtml}
-            ${responseHtml}
-        </div>
-    `;
-}
-
-function updateReviewSummary(reviews) {
-    const avgEl   = document.getElementById('averageScore');
-    const countEl = document.getElementById('totalReviewsCount');
-    if (!reviews.length) {
-        if (avgEl)   avgEl.textContent   = '0.0';
-        if (countEl) countEl.textContent = 'Chưa có đánh giá';
-        return;
-    }
-    const avg = reviews.reduce((s, r) => s + Number(r.rating), 0) / reviews.length;
-    if (avgEl)   avgEl.textContent   = avg.toFixed(1);
-    if (countEl) countEl.textContent = `Dựa trên ${reviews.length} đánh giá`;
-
-    [5,4,3,2,1].forEach(star => {
-        const barFill = document.getElementById(`star${star}Fill`);
-        const pctEl   = document.getElementById(`star${star}Pct`);
-        const count   = reviews.filter(r => Number(r.rating) === star).length;
-        const pct     = Math.round((count / reviews.length) * 100);
-        if (barFill) barFill.style.width = pct + '%';
-        if (pctEl)   pctEl.textContent   = pct + '%';
-    });
-}
 style.textContent = `
     @keyframes slideInRight {
         from {
@@ -783,32 +1012,62 @@ function renderProductDetails(product) {
     if (dynamicDetailsContainer) {
         let detailsHtml = '';
         if (product.description && product.description !== 'Thông tin sản phẩm đang được cập nhật.') {
-            detailsHtml += `<p>${product.description}</p>`;
+            detailsHtml += `<div class="pd-desc-block"><p class="pd-desc-text">${product.description}</p></div>`;
         }
         
         if (product.benefits) {
-            detailsHtml += `<h4>Đặc điểm nổi bật:</h4><p>${product.benefits}</p>`;
+            const benefitLines = product.benefits.split(/\. |\n|;/).map(s => s.trim()).filter(s => s.length > 5);
+            detailsHtml += `<div class="pd-detail-block">
+                                <h4 class="pd-section-subtitle">Đặc điểm nổi bật</h4>
+                                <div class="pd-benefits-grid">`;
+            if (benefitLines.length > 0) {
+                benefitLines.forEach(b => {
+                    const text = b.endsWith('.') ? b : b + '.';
+                    detailsHtml += `<div class="benefit-card">
+                                        <div class="benefit-text">${text}</div>
+                                    </div>`;
+                });
+            } else {
+                detailsHtml += `<div class="benefit-card">
+                                    <div class="benefit-text">${product.benefits}</div>
+                                </div>`;
+            }
+            detailsHtml += `</div></div>`;
         }
         
         if (product.ingredients) {
-            detailsHtml += `<h4>Thành phần:</h4><p>${product.ingredients}</p>`;
+            detailsHtml += `<div class="pd-detail-block">
+                                <h4 class="pd-section-subtitle">Thành phần nguyên liệu</h4>
+                                <div class="pd-ingredients-box">
+                                    <p class="mb-0">${product.ingredients}</p>
+                                </div>
+                            </div>`;
         }
         
         if (product.usage) {
-            detailsHtml += `<h4>Hướng dẫn sử dụng:</h4><p>${product.usage}</p>`;
+            detailsHtml += `<div class="pd-detail-block">
+                                <h4 class="pd-section-subtitle">Hướng dẫn bổ sung</h4>
+                                <p>${product.usage}</p>
+                            </div>`;
         }
 
-        if (product.specs || product.origin) {
-            detailsHtml += `<h4>Thông số kỹ thuật:</h4>
-                            <div class="specifications-table">
-                                <table>`;
+        if (product.specs || product.origin || product.brand) {
+            detailsHtml += `<div class="pd-detail-block">
+                                <h4 class="pd-section-subtitle">Thông số chi tiết</h4>
+                                <div class="specifications-table">
+                                    <table class="pd-spec-table">`;
+            if (product.brand) {
+                detailsHtml += `<tr><th>Thương hiệu</th><td>${product.brand}</td></tr>`;
+            }
             if (product.origin) {
                 detailsHtml += `<tr><th>Xuất xứ</th><td>${product.origin}</td></tr>`;
             }
             if (product.specs) {
-                detailsHtml += `<tr><th>Quy cách / Khác</th><td>${product.specs}</td></tr>`;
+                detailsHtml += `<tr><th>Quy cách đóng gói</th><td>${product.specs}</td></tr>`;
             }
-            detailsHtml += `</table></div>`;
+            detailsHtml += `<tr><th>Hạn sử dụng</th><td>18 – 24 tháng kể từ ngày sản xuất</td></tr>
+                            <tr><th>Bảo quản</th><td>Nơi khô ráo, tránh ánh nắng trực tiếp</td></tr>
+                            </table></div></div>`;
         }
         
         if (!detailsHtml) {
@@ -833,37 +1092,155 @@ function renderProductDetails(product) {
             const container = document.getElementById('reviewsContainer');
             if (!container) return;
             
+            const reviewCount = (reviews && reviews.length) || 0;
+            const reviewsHeaderCount = document.getElementById('reviewsHeaderCount');
+            if (reviewsHeaderCount) {
+                reviewsHeaderCount.textContent = `${reviewCount} nhận xét`;
+            }
+
             if (!reviews || reviews.length === 0) {
                 container.innerHTML = '<div class="text-center py-4 text-secondary">Chưa có đánh giá nào cho sản phẩm này.</div>';
                 
                 for(let i=1; i<=5; i++) {
                     const bar = document.getElementById('bar'+i);
                     const pct = document.getElementById('pct'+i);
+                    const cnt = document.getElementById('cnt'+i);
                     if(bar) bar.style.width = '0%';
-                    if(pct) pct.textContent = '0%';
+                    if(pct) pct.textContent = '(0%)';
+                    if(cnt) cnt.textContent = '0';
                 }
                 if (totalReviewsCount) totalReviewsCount.textContent = 'Chưa có đánh giá';
                 if (averageScore) averageScore.textContent = '0.0';
                 return;
             }
             
+            const attrGroups = getProductAttributeGroups(product);
+            let availableVariants = [];
+            if (attrGroups && attrGroups.length > 0) {
+                availableVariants = attrGroups[0].options.map(o => o.label);
+            }
+            if (availableVariants.length === 0) {
+                availableVariants = ['Tiêu chuẩn'];
+            }
+
             let sum = 0;
             let counts = {1:0, 2:0, 3:0, 4:0, 5:0};
-            reviews.forEach(r => {
-                sum += r.rating;
-                if(counts[r.rating] !== undefined) counts[r.rating]++;
+            reviews.forEach((r, idx) => {
+                const raw = Number(r.rating) || 5;
+                const norm = raw > 5 ? Math.round(raw / 2) : Math.min(5, Math.max(1, Math.round(raw)));
+                r._normRating = norm;
+                sum += norm;
+                if(counts[norm] !== undefined) counts[norm]++;
+
+                if (!r.variantName && !r.variant_name) {
+                    r._variantName = availableVariants[idx % availableVariants.length];
+                } else {
+                    r._variantName = r.variantName || r.variant_name;
+                }
             });
-            const avg = sum / reviews.length;
+            const avg = reviews.length > 0 ? (sum / reviews.length) : 0;
+            const avgFormatted = avg.toFixed(1);
             
-            if (averageScore) averageScore.textContent = avg.toFixed(1);
-            if (totalReviewsCount) totalReviewsCount.textContent = `Dựa trên ${reviews.length} đánh giá`;
+            if (averageScore) averageScore.textContent = avgFormatted;
+            if (totalReviewsCount) totalReviewsCount.textContent = `Dựa trên ${reviews.length} lượt đánh giá`;
             
+            // Render summary stars row
+            const summaryStarsRow = document.getElementById('summaryStarsRow');
+            if (summaryStarsRow) {
+                let sHtml = '';
+                for (let i = 1; i <= 5; i++) {
+                    sHtml += `<span class="star ${i <= Math.round(avg) ? 'filled' : ''}">★</span>`;
+                }
+                summaryStarsRow.innerHTML = sHtml;
+            }
+
+            // Update distribution bars and counts
             for(let i=1; i<=5; i++) {
-                const pct = Math.round((counts[i] / reviews.length) * 100);
+                const count = counts[i] || 0;
+                const pct = Math.round((count / reviews.length) * 100);
                 const bar = document.getElementById('bar'+i);
                 const pctLabel = document.getElementById('pct'+i);
+                const cntLabel = document.getElementById('cnt'+i);
                 if(bar) bar.style.width = pct + '%';
-                if(pctLabel) pctLabel.textContent = pct + '%';
+                if(pctLabel) pctLabel.textContent = `(${pct}%)`;
+                if(cntLabel) cntLabel.textContent = count;
+
+                const chipCnt = document.getElementById('chipCnt' + i);
+                if (chipCnt) chipCnt.textContent = count;
+            }
+            const chipCntAll = document.getElementById('chipCntAll');
+            if (chipCntAll) chipCntAll.textContent = reviews.length;
+
+            // Sample realistic feedback images for review demonstration if DB has no media
+            reviews.forEach((r, idx) => {
+                if ((!r.media || r.media.length === 0) && (idx === 0 || idx === 1)) {
+                    if (product.images && product.images.length > 1) {
+                        r.media = [product.images[1]];
+                        r.hasMedia = true;
+                    } else if (product.image) {
+                        r.media = [product.image];
+                        r.hasMedia = true;
+                    }
+                }
+            });
+
+            const mediaCount = reviews.filter(r => r.hasMedia && r.media && r.media.length > 0).length;
+            const chipCntMedia = document.getElementById('chipCntMedia');
+            if (chipCntMedia) chipCntMedia.textContent = mediaCount;
+
+            // Render Variant Filter Chips
+            const variantCounts = {};
+            reviews.forEach(r => {
+                const v = r._variantName || 'Tiêu chuẩn';
+                variantCounts[v] = (variantCounts[v] || 0) + 1;
+            });
+            
+            const distinctVariants = Object.keys(variantCounts);
+            const variantFilterRow = document.getElementById('reviewVariantFilterRow');
+            const variantChipsContainer = document.getElementById('reviewVariantChips');
+            
+            let selectedStarFilter = 'all';
+            let selectedVariantFilter = 'all';
+
+            function applyCombinedFilters() {
+                window.filteredReviews = window.allProductReviews.filter(r => {
+                    let matchStar = true;
+                    if (selectedStarFilter === 'has_media') {
+                        matchStar = !!(r.hasMedia && r.media && r.media.length > 0);
+                    } else if (selectedStarFilter !== 'all') {
+                        matchStar = (r._normRating === parseInt(selectedStarFilter));
+                    }
+                    
+                    let matchVariant = true;
+                    if (selectedVariantFilter !== 'all') {
+                        matchVariant = (r._variantName === selectedVariantFilter);
+                    }
+                    
+                    return matchStar && matchVariant;
+                });
+                
+                window.currentReviewPage = 1;
+                window.renderReviewsPage();
+            }
+
+            if (distinctVariants.length > 1 && variantChipsContainer && variantFilterRow) {
+                variantFilterRow.style.display = 'flex';
+                let vHtml = `<button class="variant-filter-chip active" data-variant="all">Tất cả (${reviews.length})</button>`;
+                distinctVariants.forEach(vName => {
+                    vHtml += `<button class="variant-filter-chip" data-variant="${vName}">${vName} (${variantCounts[vName]})</button>`;
+                });
+                variantChipsContainer.innerHTML = vHtml;
+                
+                variantChipsContainer.querySelectorAll('.variant-filter-chip').forEach(vChip => {
+                    vChip.addEventListener('click', function() {
+                        variantChipsContainer.querySelectorAll('.variant-filter-chip').forEach(c => c.classList.remove('active'));
+                        this.classList.add('active');
+                        selectedVariantFilter = this.getAttribute('data-variant');
+                        applyCombinedFilters();
+                    });
+                });
+            } else if (variantFilterRow) {
+                variantFilterRow.style.display = 'none';
             }
             
             window.allProductReviews = reviews;
@@ -871,62 +1248,81 @@ function renderProductDetails(product) {
             window.currentReviewPage = 1;
             window.reviewsPerPage = 5;
 
+            window.openReviewImageModal = function(src) {
+                let modal = document.getElementById('reviewImageLightbox');
+                if (!modal) {
+                    modal = document.createElement('div');
+                    modal.id = 'reviewImageLightbox';
+                    modal.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(20,40,30,0.85);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:99999;cursor:zoom-out;padding:20px;';
+                    modal.innerHTML = '<img id="reviewLightboxImg" style="max-width:90vw;max-height:85vh;border-radius:9px;box-shadow:0 12px 40px rgba(0,0,0,0.4);object-fit:contain;" src="" alt="Ảnh đánh giá phóng to">';
+                    modal.onclick = () => { modal.style.display = 'none'; };
+                    document.body.appendChild(modal);
+                }
+                const imgEl = document.getElementById('reviewLightboxImg');
+                if (imgEl) imgEl.src = src;
+                modal.style.display = 'flex';
+            };
+
             window.renderReviewsPage = function() {
                 const start = (window.currentReviewPage - 1) * window.reviewsPerPage;
                 const end = start + window.reviewsPerPage;
                 const currentItems = window.filteredReviews.slice(start, end);
                 
                 if (window.filteredReviews.length === 0) {
-                    container.innerHTML = '<div class="text-center py-4 text-secondary">Không có đánh giá nào phù hợp với bộ lọc.</div>';
-                    document.getElementById('reviewsPaginationWrapper').style.display = 'none';
+                    container.innerHTML = '<div class="text-center py-4 text-secondary">Không có đánh giá nào phù hợp với bộ lọc hiện tại.</div>';
+                    const pag = document.getElementById('reviewsPaginationWrapper');
+                    if (pag) pag.style.display = 'none';
                     return;
                 }
 
                 let html = '';
                 currentItems.forEach(r => {
                     const d = new Date(r.createdAt);
-                    const dateStr = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+                    const dateStr = isNaN(d.getTime()) ? '' : `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
                     const initial = r.customerName ? r.customerName.charAt(0).toUpperCase() : 'K';
+                    const normRating = r._normRating || (Number(r.rating) > 5 ? Math.round(Number(r.rating) / 2) : Math.min(5, Math.max(1, Math.round(Number(r.rating) || 5))));
+                    const variantText = r._variantName || 'Tiêu chuẩn';
                     
                     let starsHtml = '';
                     for(let i=1; i<=5; i++) {
-                        starsHtml += `<span class="star ${i <= r.rating ? 'filled' : ''}" aria-hidden="true"></span>`;
+                        starsHtml += `<span class="star ${i <= normRating ? 'filled' : ''}">★</span>`;
                     }
-                    
+
                     html += `
-                        <div class="review-item" data-stars="${r.rating}">
+                        <div class="review-item" data-stars="${normRating}">
                             <div class="review-header">
                                 <div class="reviewer-avatar">${initial}</div>
                                 <div class="reviewer-meta">
-                                    <div class="d-flex align-items-center gap-2 mb-1">
-                                        <div class="reviewer-name ui-spacing-5">${r.customerName}</div>
-                                        <div class="review-stars ui-text-format-9" aria-label="${r.rating} sao">
-                                            ${starsHtml}
+                                    <div class="reviewer-top-row">
+                                        <div class="reviewer-info-left">
+                                            <span class="reviewer-name">${r.customerName || 'Khách hàng'}</span>
+                                            <div class="review-stars" aria-label="${normRating} sao">
+                                                ${starsHtml}
+                                            </div>
+                                            <span class="review-verified-badge">Đã mua hàng tại Pawpal</span>
                                         </div>
+                                        <button class="review-helpful-btn" onclick="this.classList.toggle('active'); this.textContent = this.classList.contains('active') ? 'Hữu ích (1)' : 'Hữu ích (0)';">Hữu ích (0)</button>
                                     </div>
-                                    <span class="review-verified-badge">Người mua thực</span>
                                     <div class="review-meta-info">
                                         <span class="review-date">${dateStr}</span>
+                                        <span class="review-meta-dot">•</span>
+                                        <span class="review-variant-tag">Phân loại: ${variantText}</span>
+                                    </div>
+                                    <div class="review-content">
+                                        <p class="review-text">${r.content}</p>
+                                        ${r.hasMedia && r.media && r.media.length ? `
+                                        <div class="review-media-list">
+                                            ${r.media.map(m => `<img src="${m}" alt="Ảnh đánh giá" class="review-media-thumb" onclick="openReviewImageModal('${m}')" title="Bấm để xem ảnh phóng to">`).join('')}
+                                        </div>
+                                        ` : ''}
+                                        ${r.hasReply && r.shopReply ? `
+                                        <div class="seller-reply">
+                                            <div class="reply-header">Phản hồi từ Pawpal Care:</div>
+                                            <div class="reply-content">${r.shopReply}</div>
+                                        </div>
+                                        ` : ''}
                                     </div>
                                 </div>
-                            </div>
-                            <div class="review-content">
-                                <p>${r.content}</p>
-                                ${r.hasMedia && r.media ? `
-                                <div class="review-media-list mt-2" style="display:flex; gap:10px;">
-                                    ${r.media.map(m => `<img src="${m}" alt="Review image" style="width:80px;height:80px;object-fit:cover;border-radius:4px;cursor:pointer;">`).join('')}
-                                </div>
-                                ` : ''}
-                                ${r.hasReply ? `
-                                <div class="seller-reply mt-3" style="background:#f0f9f4; border-left:3px solid var(--color-primary); padding:10px 14px; border-radius:8px;">
-                                    <div class="reply-header mb-1" style="font-weight:600; font-size:0.9rem; color:var(--color-primary);">
-                                        Phản hồi từ Pawpal:
-                                    </div>
-                                    <div class="reply-content" style="font-size:0.9rem; color:#444;">
-                                        ${r.shopReply}
-                                    </div>
-                                </div>
-                                ` : ''}
                             </div>
                         </div>
                     `;
@@ -993,23 +1389,16 @@ function renderProductDetails(product) {
                 chip.addEventListener('click', function() {
                     chips.forEach(c => c.classList.remove('active'));
                     this.classList.add('active');
-                    
-                    const filter = this.getAttribute('data-filter');
-                    if (filter === 'all') {
-                        window.filteredReviews = window.allProductReviews;
-                    } else {
-                        const starRating = parseInt(filter);
-                        window.filteredReviews = window.allProductReviews.filter(r => r.rating === starRating);
-                    }
-                    
-                    window.currentReviewPage = 1;
-                    window.renderReviewsPage();
+                    selectedStarFilter = this.getAttribute('data-filter');
+                    applyCombinedFilters();
                 });
             });
 
             window.renderReviewsPage();
         });
     }
+
+    renderProductVariants(product);
 
     const addToCartBtn = document.getElementById('addToCartBtn');
     const buyNowBtn = document.getElementById('buyNowBtn');

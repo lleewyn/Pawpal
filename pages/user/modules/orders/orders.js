@@ -458,7 +458,7 @@ function createOrderCard(order) {
     const detailUrl = `/pages/user/index.html#order-detail?id=${encodeURIComponent(orderId)}`;
 
     return `
-        <article class="order-card status-${normalizedStatus}" data-order-id="${orderId}">
+        <article class="order-card pawpal-smooth-entrance status-${normalizedStatus}" data-order-id="${orderId}">
             <div class="order-card-main-content" onclick="window.location.href='${detailUrl}'" role="link" tabindex="0">
                 <div class="order-product-thumb-wrapper">
                     <img src="${firstProduct.image || '/assets/images/shared/product_placeholder.png'}" alt="${escapeHtml(firstProduct.name)}" class="order-product-thumb" loading="lazy">

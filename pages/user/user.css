@@ -88,9 +88,18 @@ body.user-portal-body {
 }
 
 /* Dynamic Content Area */
+.user-portal-main-col {
+    min-width: 0;
+    max-width: 100%;
+}
+
 .user-app-content {
     min-height: 480px;
     position: relative;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 /* Module Container Animation */
@@ -109,22 +118,89 @@ body.user-portal-body {
     }
 }
 
-/* Loading Box */
+/* ========================================================
+   SKELETON LOADING SHIMMER SYSTEM (Chuẩn UX 9px & Flat Solid)
+   ======================================================== */
+@keyframes pawpalShimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.pawpal-skeleton {
+    background: linear-gradient(90deg, #EEF5F1 25%, #F7FAF8 50%, #EEF5F1 75%) !important;
+    background-size: 200% 100% !important;
+    animation: pawpalShimmer 1.5s infinite linear !important;
+    border-radius: 9px !important;
+    border: none !important;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.pawpal-smooth-entrance {
+    animation: userModuleFadeIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.pawpal-skeleton-card {
+    background: #FFFFFF;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+}
+
+.user-module-skeleton-view {
+    animation: userModuleFadeIn 0.2s ease-out;
+    width: 100%;
+}
+
+.skeleton-box {
+    background: #FFFFFF;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 20px;
+}
+
+.skeleton-table-wrapper {
+    background: #FFFFFF;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.skeleton-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid #ECF2EE;
+    gap: 16px;
+}
+
+.skeleton-row:last-child {
+    border-bottom: none;
+}
+
+/* Loading Box Fallback */
 .user-module-loading-box {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 80px 20px;
+    padding: 60px 20px;
     background: rgba(255, 255, 255, 0.7);
-    border-radius: 14px;
+    border-radius: 9px;
     border: 1px solid var(--user-border-subtle);
 }
 
 .user-module-loading-box .spinner-border {
     color: var(--user-primary-green) !important;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.2rem;
+    height: 2.2rem;
 }
 
 /* Mobile Sidebar Toggle & Container */

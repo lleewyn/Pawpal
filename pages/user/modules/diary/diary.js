@@ -320,7 +320,9 @@ function showEmptyPetState() {
     const diaryContent = document.getElementById('diaryContent');
     const emptyState = document.getElementById('emptyState');
     const petSelector = document.getElementById('petSelector');
+    const skeletonEl = document.getElementById('diaryLoadingSkeleton');
 
+    if (skeletonEl) skeletonEl.classList.add('d-none');
     if (dashboardState) dashboardState.classList.remove('d-none');
     if (diaryContent) diaryContent.classList.add('d-none');
     if (emptyState) emptyState.classList.remove('d-none');
@@ -344,6 +346,7 @@ async function selectAndLoadPet(petId, targetSessionId = null) {
     const emptyState = document.getElementById('emptyState');
     const diaryContent = document.getElementById('diaryContent');
     const dashboardState = document.getElementById('dashboardState');
+    const skeletonEl = document.getElementById('diaryLoadingSkeleton');
 
     if (!petId) {
         await showDashboardState();
@@ -388,7 +391,9 @@ async function selectAndLoadPet(petId, targetSessionId = null) {
 
     if (dashboardState) dashboardState.classList.add('d-none');
     if (emptyState) emptyState.classList.add('d-none');
-    if (diaryContent) diaryContent.classList.remove('d-none');
+    // Giữ Skeleton hiển thị, chưa hiện diaryContent vội để tránh lộ khung rỗng
+    if (skeletonEl) skeletonEl.classList.remove('d-none');
+    if (diaryContent) diaryContent.classList.add('d-none');
 
     currentPetId = pet.id;
     currentPetObject = pet;
@@ -403,6 +408,10 @@ async function selectAndLoadPet(petId, targetSessionId = null) {
 
     await renderPetSwitcherPills(currentPetId);
     await loadPetDiary(currentPetId, targetSessionId);
+
+    // KHI TOÀN BỘ DỮ LIỆU ĐÃ RENDER XONG: ẨN SKELETON VÀ HIỆN DIARYCONTENT
+    if (skeletonEl) skeletonEl.classList.add('d-none');
+    if (diaryContent) diaryContent.classList.remove('d-none');
 }
 
 window.selectAndLoadPet = selectAndLoadPet;

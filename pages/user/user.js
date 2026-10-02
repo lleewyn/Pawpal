@@ -67,6 +67,8 @@
         'booking-detail': {
             title: 'Chi tiết lịch hẹn - PawPal',
             breadcrumb: 'Chi tiết lịch hẹn',
+            parentRoute: 'bookings',
+            parentBreadcrumb: 'Lịch hẹn của bé',
             modulePath: 'modules/bookings/booking-detail.html',
             moduleScript: 'modules/bookings/booking-detail.js',
             moduleCss: 'modules/bookings/booking-detail.css',
@@ -84,6 +86,8 @@
         'order-detail': {
             title: 'Chi tiết đơn hàng - PawPal',
             breadcrumb: 'Chi tiết đơn hàng',
+            parentRoute: 'orders',
+            parentBreadcrumb: 'Đơn hàng của bé',
             modulePath: 'modules/orders/order-detail.html',
             moduleScript: 'modules/orders/order-detail.js',
             moduleCss: 'modules/orders/order-detail.css',
@@ -92,6 +96,8 @@
         'return-detail': {
             title: 'Chi tiết đổi trả - PawPal',
             breadcrumb: 'Chi tiết đổi trả',
+            parentRoute: 'orders',
+            parentBreadcrumb: 'Đơn hàng của bé',
             modulePath: 'modules/orders/return-detail.html',
             moduleScript: 'modules/orders/return-detail.js',
             moduleCss: 'modules/orders/return-detail.css',
@@ -125,6 +131,8 @@
         'support-create': {
             title: 'Gửi yêu cầu hỗ trợ - PawPal',
             breadcrumb: 'Gửi yêu cầu mới',
+            parentRoute: 'support',
+            parentBreadcrumb: 'Hỗ trợ',
             modulePath: 'modules/support/support-create.html',
             moduleScript: 'modules/support/support-create.js',
             moduleCss: 'modules/support/support.css',
@@ -191,7 +199,45 @@
         const list = document.getElementById('userBreadcrumbList');
         if (!list) return;
 
-        if (subTitle) {
+        if (config.parentRoute) {
+            let currentText = subTitle;
+            if (!currentText) {
+                const hash = window.location.hash || '';
+                const qIdx = hash.indexOf('?');
+                if (qIdx !== -1) {
+                    const params = new URLSearchParams(hash.substring(qIdx + 1));
+                    const id = params.get('id') || params.get('orderId') || params.get('bookingId');
+                    if (id) {
+                        currentText = id.startsWith('#') ? id : '#' + id;
+                    }
+                } else if (window.location.search) {
+                    const params = new URLSearchParams(window.location.search);
+                    const id = params.get('id') || params.get('orderId') || params.get('bookingId');
+                    if (id) {
+                        currentText = id.startsWith('#') ? id : '#' + id;
+                    }
+                }
+            }
+            if (!currentText) currentText = config.breadcrumb;
+
+            document.title = `${currentText} - ${config.parentBreadcrumb} - PawPal`;
+            list.innerHTML = `
+                <li class="breadcrumb-item"><a href="/pages/public/landing/landing.html">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="#${config.parentRoute}" class="breadcrumb-parent-link">${config.parentBreadcrumb}</a></li>
+                <li class="breadcrumb-item active" id="userBreadcrumbCurrent">${String(currentText).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</li>
+            `;
+            const parentLink = list.querySelector('.breadcrumb-parent-link');
+            if (parentLink) {
+                parentLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (window.location.hash === `#${config.parentRoute}`) {
+                        window.dispatchEvent(new HashChangeEvent('hashchange'));
+                    } else {
+                        window.location.hash = `#${config.parentRoute}`;
+                    }
+                });
+            }
+        } else if (subTitle) {
             document.title = `${subTitle} - ${config.breadcrumb} - PawPal`;
             list.innerHTML = `
                 <li class="breadcrumb-item"><a href="/pages/public/landing/landing.html">Trang chủ</a></li>
@@ -268,17 +314,7 @@
         updateBreadcrumb(routeKey);
         highlightActiveSidebar(routeKey);
 
-        // Hiển thị loading box
-        contentContainer.innerHTML = `
-            <div class="user-module-loading-box">
-                <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Đang tải...</span>
-                </div>
-                <p class="mt-3 text-muted">Đang tải dữ liệu ${config.breadcrumb}...</p>
-            </div>
-        `;
-
-        // Nạp module chuẩn từ modules/
+        // Nạp trực tiếp module chuẩn từ modules/ để tránh hiện tượng tải 2 bước
         if (config.modulePath) {
             try {
                 const fullModuleUrl = (config.modulePath.startsWith('/') ? config.modulePath : `/pages/user/${config.modulePath}`) + `?v=${Date.now()}`;
@@ -399,23 +435,14 @@
         appContent.addEventListener('click', function (e) {
             // Xem chi tiết đơn hàng
             const orderLink = e.target.closest('a[href*="order-detail.html"]');
-            const orderCardBody = e.target.closest('.order-card-body');
-            if (orderLink || orderCardBody) {
-                let orderId = '';
-                if (orderLink) {
-                    const href = orderLink.getAttribute('href') || '';
-                    const match = href.match(/[?&]id=([^&#]+)/);
-                    if (match) orderId = decodeURIComponent(match[1]);
-                }
-                if (!orderId && orderCardBody) {
-                    const card = orderCardBody.closest('.order-card');
-                    if (card && card.dataset.id) orderId = card.dataset.id;
-                }
-
-                if (orderId) {
+            if (orderLink) {
+                const href = orderLink.getAttribute('href') || '';
+                const match = href.match(/[?&]id=([^&#]+)/);
+                if (match) {
                     e.preventDefault();
                     e.stopPropagation();
-                    openDetailDrawer('order', orderId);
+                    const orderId = decodeURIComponent(match[1]);
+                    window.location.hash = `#order-detail?id=${encodeURIComponent(orderId)}`;
                     return;
                 }
             }
@@ -429,7 +456,7 @@
                     e.preventDefault();
                     e.stopPropagation();
                     const bookingId = decodeURIComponent(match[1]);
-                    openDetailDrawer('booking', bookingId);
+                    window.location.hash = `#booking-detail?id=${encodeURIComponent(bookingId)}`;
                     return;
                 }
             }
@@ -537,19 +564,6 @@
             const route = resolveRoute(rawHash);
             sessionStorage.setItem('pawpal_user_active_tab', route);
             loadModule(route);
-
-            // Kiểm tra xem hash có chứa query param id để mở Drawer không
-            const hashParts = rawHash.split('?');
-            if (hashParts.length > 1) {
-                const params = new URLSearchParams(hashParts[1]);
-                const targetId = params.get('id');
-                if (targetId) {
-                    setTimeout(() => {
-                        if (route.includes('order')) openDetailDrawer('order', targetId);
-                        else if (route.includes('booking')) openDetailDrawer('booking', targetId);
-                    }, 400);
-                }
-            }
         };
 
         window.addEventListener('hashchange', handleRoute);

@@ -1,23 +1,75 @@
-<!-- modules/loyalty/loyalty.html - Module Điểm thưởng Paw Points -->
+<!-- modules/loyalty/loyalty.html - Module Điểm thưởng Paw Points (Chuẩn AGENTS.md: 9px radius, Flat Solid, Text-Only, Real Voucher Ticket) -->
 <div class="loyalty-module-container">
-    <div id="loyalty-warning-banner" class="loyalty-warning-banner"></div>
+    <div id="loyalty-warning-banner" class="loyalty-warning-banner d-none"></div>
 
     <div class="dashboard-content-panel">
-        <!-- Thẻ thành viên & Điểm tích lũy -->
+        <!-- Thẻ thành viên và Điểm tích lũy -->
         <div id="loyalty-card-wrapper">
-            <p class="text-muted text-center py-4">Đang tải thẻ thành viên...</p>
+            <div class="pawpal-skeleton-card mb-4" style="min-height: 140px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="pawpal-skeleton" style="width: 160px; height: 22px;"></div>
+                    <div class="pawpal-skeleton" style="width: 100px; height: 26px; border-radius: 9px;"></div>
+                </div>
+                <div class="pawpal-skeleton mb-3" style="width: 40%; height: 32px;"></div>
+                <div class="pawpal-skeleton" style="width: 70%; height: 16px;"></div>
+            </div>
         </div>
 
         <!-- Voucher của tôi -->
-        <h3 class="my-vouchers-title mt-5">Voucher của tôi</h3>
+        <div class="loyalty-section-header mt-4 mb-3">
+            <h3 class="my-vouchers-title">Voucher của tôi</h3>
+            <span class="vouchers-count-label" id="myVouchersCountLabel">0 voucher khả dụng</span>
+        </div>
         <div id="my-vouchers-list" class="my-vouchers-wrapper">
-            <p class="text-muted text-center py-4">Đang tải Voucher của tôi...</p>
+            <div class="d-flex gap-3 flex-wrap">
+                <div class="pawpal-skeleton-card" style="width: 280px; height: 110px;">
+                    <div class="pawpal-skeleton mb-2" style="width: 70%; height: 18px;"></div>
+                    <div class="pawpal-skeleton mb-2" style="width: 50%; height: 14px;"></div>
+                    <div class="pawpal-skeleton" style="width: 40%; height: 14px;"></div>
+                </div>
+                <div class="pawpal-skeleton-card" style="width: 280px; height: 110px;">
+                    <div class="pawpal-skeleton mb-2" style="width: 65%; height: 18px;"></div>
+                    <div class="pawpal-skeleton mb-2" style="width: 45%; height: 14px;"></div>
+                    <div class="pawpal-skeleton" style="width: 50%; height: 14px;"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Đổi điểm lấy voucher -->
-        <h3 class="vouchers-section-title mt-5">Ưu đãi đổi điểm thưởng</h3>
+        <div class="loyalty-section-header mt-5 mb-3">
+            <h3 class="vouchers-section-title">Ưu đãi đổi điểm thưởng</h3>
+            <span class="vouchers-hint-label">Dùng Paw Points để đổi mã giảm giá mua sắm và dịch vụ</span>
+        </div>
         <div id="vouchers-grid" class="vouchers-grid-wrapper">
-            <p class="text-muted text-center py-4">Đang tải danh sách voucher...</p>
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-4">
+                    <div class="pawpal-skeleton-card" style="height: 160px;">
+                        <div class="pawpal-skeleton mb-3" style="width: 60%; height: 20px;"></div>
+                        <div class="pawpal-skeleton mb-2" style="width: 80%; height: 14px;"></div>
+                        <div class="pawpal-skeleton mb-3" style="width: 50%; height: 14px;"></div>
+                        <div class="pawpal-skeleton" style="width: 100%; height: 32px; border-radius: 9px;"></div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="pawpal-skeleton-card" style="height: 160px;">
+                        <div class="pawpal-skeleton mb-3" style="width: 60%; height: 20px;"></div>
+                        <div class="pawpal-skeleton mb-2" style="width: 80%; height: 14px;"></div>
+                        <div class="pawpal-skeleton mb-3" style="width: 50%; height: 14px;"></div>
+                        <div class="pawpal-skeleton" style="width: 100%; height: 32px; border-radius: 9px;"></div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="pawpal-skeleton-card" style="height: 160px;">
+                        <div class="pawpal-skeleton mb-3" style="width: 60%; height: 20px;"></div>
+                        <div class="pawpal-skeleton mb-2" style="width: 80%; height: 14px;"></div>
+                        <div class="pawpal-skeleton mb-3" style="width: 50%; height: 14px;"></div>
+                        <div class="pawpal-skeleton" style="width: 100%; height: 32px; border-radius: 9px;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Container Toast thông báo -->
+<div class="toast-container-custom" id="toastContainer"></div>

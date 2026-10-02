@@ -199,7 +199,7 @@ async function loadMyPets(user) {
         const petAvatar = pet.avatar || pet.image || defaultAvatars[pet.species] || defaultAvatars.other;
         const speciesLabel = pet.species === 'dog' ? 'Chó' : pet.species === 'cat' ? 'Mèo' : pet.species === 'rabbit' ? 'Thỏ' : 'Thú cưng';
         html += `
-            <div class="pet-avatar-item">
+            <div class="pet-avatar-item pawpal-smooth-entrance">
                 <a href="#pets" style="text-decoration: none;">
                     <img src="${petAvatar}" alt="${escapeHtml(pet.name || 'Bé cưng')}" class="pet-image-circle" onerror="this.src='/assets/images/publics/pet.jpg'">
                     <div class="pet-avatar-name">${escapeHtml(pet.name || 'Bé cưng')}</div>

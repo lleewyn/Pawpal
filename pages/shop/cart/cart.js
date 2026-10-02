@@ -135,10 +135,155 @@ document.addEventListener('DOMContentLoaded', async () => {
         return price.toLocaleString('vi-VN') + 'đ';
     }
 
+    function getProductAttributeGroups(product) {
+        if (!product) return [];
+
+        const basePrice = Number(product.price) || 0;
+        const cat = String(product.category || product.categoryName || '').toLowerCase();
+        const name = String(product.name || '').toLowerCase();
+
+        // 1. Thức ăn khô / Hạt (Whiskas, Royal Canin, Pedigree...)
+        if (cat.includes('dry') || cat.includes('kho') || name.includes('hạt') || name.includes('hat') || name.includes('whiskas') || name.includes('royal')) {
+            return [
+                {
+                    name: 'Kích cỡ / Quy cách',
+                    key: 'size',
+                    options: [
+                        { label: 'Gói 400g (Dùng thử)', priceDelta: -Math.round(basePrice * 0.45 / 1000) * 1000 },
+                        { label: 'Gói 1.5kg (Tiêu chuẩn)', priceDelta: 0 },
+                        { label: 'Bao 3.0kg (Tiết kiệm)', priceDelta: Math.round(basePrice * 0.85 / 1000) * 1000 }
+                    ]
+                },
+                {
+                    name: 'Hương vị',
+                    key: 'flavor',
+                    options: [
+                        { label: 'Vị Cá biển thơm ngon', priceDelta: 0 },
+                        { label: 'Vị Cá hồi và Rau củ', priceDelta: 5000 },
+                        { label: 'Vị Thịt gà và Bò', priceDelta: 0 }
+                    ]
+                }
+            ];
+        }
+
+        // 2. Thức ăn ướt / Pate / Súp thưởng / Churu
+        if (cat.includes('wet') || cat.includes('uot') || name.includes('pate') || name.includes('súp') || name.includes('sup') || name.includes('churu')) {
+            return [
+                {
+                    name: 'Hương vị',
+                    key: 'flavor',
+                    options: [
+                        { label: 'Vị Cá hồi Na Uy', priceDelta: 0 },
+                        { label: 'Vị Gà xé sốt nước dùng', priceDelta: 0 },
+                        { label: 'Vị Bò tươi sốt Gravy', priceDelta: 5000 }
+                    ]
+                },
+                {
+                    name: 'Quy cách đóng gói',
+                    key: 'pack',
+                    options: [
+                        { label: 'Lon đơn 85g', priceDelta: 0 },
+                        { label: 'Lốc 3 lon (Tiết kiệm)', priceDelta: Math.round(basePrice * 1.8 / 1000) * 1000 },
+                        { label: 'Hộp 6 lon (Đại tiệc)', priceDelta: Math.round(basePrice * 4.5 / 1000) * 1000 }
+                    ]
+                }
+            ];
+        }
+
+        // 3. Xương gặm / Bánh thưởng
+        if (cat.includes('bone') || cat.includes('gam') || cat.includes('snack') || name.includes('xương') || name.includes('bánh')) {
+            return [
+                {
+                    name: 'Quy cách',
+                    key: 'pack',
+                    options: [
+                        { label: 'Gói 1 chiếc (Dùng thử)', priceDelta: 0 },
+                        { label: 'Gói 3 chiếc (Chuẩn)', priceDelta: Math.round(basePrice * 1.7 / 1000) * 1000 },
+                        { label: 'Túi 5 chiếc (Tiết kiệm)', priceDelta: Math.round(basePrice * 3.2 / 1000) * 1000 }
+                    ]
+                },
+                {
+                    name: 'Mùi vị',
+                    key: 'flavor',
+                    options: [
+                        { label: 'Vị Bò sữa thơm lừng', priceDelta: 0 },
+                        { label: 'Vị Bạc hà sạch răng', priceDelta: 3000 }
+                    ]
+                }
+            ];
+        }
+
+        // 4. Sức khỏe / Chăm sóc / Vệ sinh
+        if (cat.includes('health') || cat.includes('groom') || cat.includes('hygiene') || cat.includes('ve sinh') || name.includes('dầu') || name.includes('gel') || name.includes('cát')) {
+            return [
+                {
+                    name: 'Dung tích / Trọng lượng',
+                    key: 'vol',
+                    options: [
+                        { label: 'Chai 250ml (Tiêu chuẩn)', priceDelta: 0 },
+                        { label: 'Chai 500ml (Tiết kiệm)', priceDelta: Math.round(basePrice * 0.75 / 1000) * 1000 }
+                    ]
+                },
+                {
+                    name: 'Mùi hương / Công dụng',
+                    key: 'scent',
+                    options: [
+                        { label: 'Hương Hoa cúc dịu nhẹ', priceDelta: 0 },
+                        { label: 'Hương Trà xanh khử mùi', priceDelta: 5000 },
+                        { label: 'Dưỡng lông mềm mượt', priceDelta: 10000 }
+                    ]
+                }
+            ];
+        }
+
+        // 5. Quần áo / Phụ kiện / Vòng cổ
+        if (cat.includes('toy') || cat.includes('clothe') || cat.includes('accessories') || name.includes('vòng') || name.includes('áo') || name.includes('đồ chơi') || name.includes('dây')) {
+            return [
+                {
+                    name: 'Kích cỡ (Size)',
+                    key: 'size',
+                    options: [
+                        { label: 'Size S (Thú cưng < 4kg)', priceDelta: 0 },
+                        { label: 'Size M (Thú cưng 4 - 8kg)', priceDelta: 15000 },
+                        { label: 'Size L (Thú cưng > 8kg)', priceDelta: 30000 }
+                    ]
+                },
+                {
+                    name: 'Màu sắc',
+                    key: 'color',
+                    options: [
+                        { label: 'Xanh Forest Green', priceDelta: 0 },
+                        { label: 'Vàng Kem Pastel', priceDelta: 0 },
+                        { label: 'Cam Đất Ấm Áp', priceDelta: 0 }
+                    ]
+                }
+            ];
+        }
+
+        // Mặc định
+        return [
+            {
+                name: 'Quy cách',
+                key: 'spec',
+                options: [
+                    { label: 'Bản Tiêu Chuẩn', priceDelta: 0 },
+                    { label: 'Bản Nâng Cấp Pro', priceDelta: Math.round(basePrice * 0.3 / 1000) * 1000 }
+                ]
+            },
+            {
+                name: 'Tùy chọn',
+                key: 'option',
+                options: [
+                    { label: 'Mặc định', priceDelta: 0 },
+                    { label: 'Bản Đặc Biệt', priceDelta: 5000 }
+                ]
+            }
+        ];
+    }
+
     function getProductVariants(product) {
         if (!product) return [];
 
-        // 1. Nếu database hoặc product đã có sẵn cấu trúc variants
         if (Array.isArray(product.variants) && product.variants.length > 0) {
             return product.variants.map((v, idx) => ({
                 id: v.id || `v-${idx}`,
@@ -148,60 +293,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const basePrice = Number(product.price) || 0;
-        const cat = String(product.category || product.categoryName || '').toLowerCase();
-        const name = String(product.name || '').toLowerCase();
+        const groups = getProductAttributeGroups(product);
 
-        // 2. Bộ sinh phân loại con thông minh theo từng ngành hàng (Fallback cho tới khi DB cập nhật)
-        // Thức ăn khô / Hạt
-        if (cat.includes('dry') || cat.includes('kho') || name.includes('hạt') || name.includes('hat') || name.includes('mother & babycat')) {
-            return [
-                { id: 'size-small', name: 'Gói 400g (Dùng thử)', price: Math.max(10000, Math.round(basePrice * 0.45 / 1000) * 1000) },
-                { id: 'size-standard', name: 'Gói 1.5kg (Tiêu chuẩn)', price: basePrice },
-                { id: 'size-large', name: 'Bao 3.0kg (Tiết kiệm)', price: Math.round(basePrice * 1.85 / 1000) * 1000 }
-            ];
+        if (groups.length === 1) {
+            return groups[0].options.map(opt => ({
+                id: opt.label,
+                name: opt.label,
+                price: Math.max(10000, basePrice + (opt.priceDelta || 0))
+            }));
         }
 
-        // Thức ăn ướt / Pate / Súp thưởng
-        if (cat.includes('wet') || cat.includes('uot') || name.includes('pate') || name.includes('súp') || name.includes('sup') || name.includes('churu')) {
-            return [
-                { id: 'flavor-salmon', name: 'Vị Cá Hồi & Rau Củ', price: basePrice },
-                { id: 'flavor-chicken', name: 'Vị Thịt Gà Chín Mềm', price: basePrice },
-                { id: 'flavor-beef', name: 'Vị Bò Tươi Sốt Đậm Đà', price: basePrice + 5000 },
-                { id: 'flavor-combo', name: 'Hộp Combo 6 gói/lon', price: Math.round(basePrice * 5.5 / 1000) * 1000 }
-            ];
+        if (groups.length >= 2) {
+            const list = [];
+            groups[0].options.forEach(opt1 => {
+                groups[1].options.forEach(opt2 => {
+                    list.push({
+                        id: `${opt1.label} • ${opt2.label}`,
+                        name: `${opt1.label} • ${opt2.label}`,
+                        price: Math.max(10000, basePrice + (opt1.priceDelta || 0) + (opt2.priceDelta || 0))
+                    });
+                });
+            });
+            return list;
         }
 
-        // Xương gặm / Bánh thưởng
-        if (cat.includes('bone') || cat.includes('gam') || cat.includes('snack') || name.includes('xương') || name.includes('bánh')) {
-            return [
-                { id: 'opt-single', name: 'Gói 1 chiếc (Dùng thử)', price: basePrice },
-                { id: 'opt-pack3', name: 'Gói 3 chiếc (Tiêu chuẩn)', price: Math.round(basePrice * 2.7 / 1000) * 1000 },
-                { id: 'opt-pack5', name: 'Túi tiết kiệm 5 chiếc', price: Math.round(basePrice * 4.2 / 1000) * 1000 }
-            ];
-        }
-
-        // Sức khỏe / Chăm sóc / Vệ sinh
-        if (cat.includes('health') || cat.includes('groom') || cat.includes('hygiene') || cat.includes('ve sinh') || name.includes('dầu') || name.includes('gel') || name.includes('men')) {
-            return [
-                { id: 'vol-std', name: 'Dung tích tiêu chuẩn (Tiêu chuẩn)', price: basePrice },
-                { id: 'vol-large', name: 'Dung tích lớn (Tiết kiệm)', price: Math.round(basePrice * 1.75 / 1000) * 1000 },
-                { id: 'formula-pro', name: 'Dòng cao cấp (Bổ sung vi khoáng)', price: Math.round(basePrice * 1.25 / 1000) * 1000 }
-            ];
-        }
-
-        // Đồ chơi / Phụ kiện / Quần áo
-        if (cat.includes('toy') || cat.includes('clothe') || cat.includes('accessories') || name.includes('vòng') || name.includes('áo') || name.includes('đồ chơi')) {
-            return [
-                { id: 'size-s', name: 'Kích cỡ S (Thú cưng < 4kg)', price: basePrice },
-                { id: 'size-m', name: 'Kích cỡ M (Thú cưng 4 - 8kg)', price: basePrice + 15000 },
-                { id: 'size-l', name: 'Kích cỡ L (Thú cưng > 8kg)', price: basePrice + 30000 }
-            ];
-        }
-
-        // Mặc định chung cho sản phẩm khác
         return [
-            { id: 'var-std', name: 'Quy cách tiêu chuẩn', price: basePrice },
-            { id: 'var-pro', name: 'Bản nâng cấp cao cấp', price: Math.round(basePrice * 1.25 / 1000) * 1000 }
+            { id: 'var-std', name: 'Quy cách tiêu chuẩn', price: basePrice }
         ];
     }
 
@@ -383,6 +500,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const cartItemsData = cart.map(item => {
             const product = products.find(p => isSameCartItemId(p.id, item.id));
             const baseObj = product ? { ...product, ...item } : { ...item };
+            const attrGroups = getProductAttributeGroups(product || item);
             const variants = getProductVariants(product || item);
 
             // Xác định phân loại đang được chọn
@@ -394,7 +512,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 currentVariant = variants.find(v => v.price === Number(item.price)) || variants[0];
             }
 
-            const activeVariantName = currentVariant ? currentVariant.name : 'Tiêu chuẩn';
+            const activeVariantName = currentVariant ? currentVariant.name : (variants[0] ? variants[0].name : 'Tiêu chuẩn');
             const unitPrice = currentVariant ? currentVariant.price : (Number(item.price) || Number(product?.price) || 0);
 
             // Đồng bộ lại vào item trong cart
@@ -408,6 +526,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 brand: baseObj.brand || 'PawPal',
                 price: unitPrice,
                 selectedVariant: activeVariantName,
+                attrGroups: attrGroups,
                 variants: variants,
                 image: baseObj.image || '/assets/images/shop/products/placeholder.webp',
                 quantity: getItemQuantity(item),
@@ -428,6 +547,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         cartItemsData.forEach(item => {
             const itemTotal = item.price * getItemQuantity(item);
+            const selectedParts = String(item.selectedVariant || '').split(' • ').map(s => s.trim());
 
             const row = document.createElement('div');
             row.className = 'cart-item-row';
@@ -442,7 +562,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <img src="${item.image}" alt="${item.name}" class="cart-item-img" onerror="this.onerror=null; this.src='/assets/images/shop/products/placeholder.webp'">
                 <div class="cart-item-details">
                     <a href="/pages/shop/product-detail/product-detail.html?id=${item.id}" class="cart-item-name">${item.name}</a>
-                    <div class="cart-item-meta">Thương hiệu: ${item.brand}</div>
+                    <div class="cart-item-meta">Thương hiệu: <strong>${item.brand}</strong></div>
                     
                     <div class="cart-item-variant-wrapper">
                         <button type="button" class="btn-variant-toggle" data-id="${item.id}" aria-expanded="false" title="Nhấn để đổi phân loại sản phẩm">
@@ -453,37 +573,60 @@ document.addEventListener('DOMContentLoaded', async () => {
                             </svg>
                         </button>
                         <div class="variant-dropdown-menu" data-menu-id="${item.id}">
-                            <div class="variant-dropdown-header">Chọn phân loại sản phẩm</div>
-                            <div class="variant-options-list">
-                                ${item.variants.map(v => `
-                                    <div class="variant-option-item ${v.name === item.selectedVariant ? 'active' : ''}" data-id="${item.id}" data-variant="${v.name}">
-                                        <div class="variant-opt-info">
-                                            <span class="variant-opt-name">${v.name}</span>
-                                            <span class="variant-opt-price">${formatPrice(v.price)}</span>
+                            <div class="variant-dropdown-header">
+                                <span class="variant-header-title">Chọn phân loại</span>
+                                <span class="variant-header-preview-price" data-preview-price-id="${item.id}">${formatPrice(item.price)}</span>
+                            </div>
+                            <div class="variant-multi-body">
+                                ${item.attrGroups.map((group, gIdx) => {
+                                    const currentSelectedLabel = selectedParts[gIdx] || (group.options[0] ? group.options[0].label : '');
+                                    return `
+                                        <div class="variant-attr-group" data-group-index="${gIdx}">
+                                            <div class="variant-attr-title">${group.name}</div>
+                                            <div class="variant-chips-container">
+                                                ${group.options.map((opt, oIdx) => {
+                                                    const isOptActive = (opt.label === currentSelectedLabel) || (!selectedParts[gIdx] && oIdx === 0);
+                                                    return `
+                                                        <button type="button" 
+                                                                class="variant-chip-btn ${isOptActive ? 'active' : ''}"
+                                                                data-item-id="${item.id}"
+                                                                data-group-index="${gIdx}"
+                                                                data-option-index="${oIdx}"
+                                                                data-label="${opt.label}"
+                                                                data-delta="${opt.priceDelta || 0}">
+                                                            ${opt.label}
+                                                        </button>
+                                                    `;
+                                                }).join('')}
+                                            </div>
                                         </div>
-                                        ${v.name === item.selectedVariant ? '<span class="variant-opt-check">✓</span>' : ''}
-                                    </div>
-                                `).join('')}
+                                    `;
+                                }).join('')}
+                            </div>
+                            <div class="variant-dropdown-footer">
+                                <button type="button" class="btn-variant-cancel" data-id="${item.id}">Trở lại</button>
+                                <button type="button" class="btn-variant-confirm" data-id="${item.id}">Xác nhận</button>
                             </div>
                         </div>
                     </div>
-
-                    <div class="cart-item-price-unit mt-1">${formatPrice(item.price)}</div>
                 </div>
+                <div class="cart-item-price-unit">${formatPrice(item.price)}</div>
                 <div class="cart-item-qty-actions">
                     <button type="button" class="cart-item-qty-btn btn-qty-minus" ${getItemQuantity(item) <= 1 ? 'disabled' : ''}>-</button>
                     <span class="cart-item-qty-value">${getItemQuantity(item)}</span>
                     <button type="button" class="cart-item-qty-btn btn-qty-plus">+</button>
                 </div>
                 <div class="cart-item-total-price">${formatPrice(itemTotal)}</div>
-                <button type="button" class="btn-remove-cart-item" title="Xóa sản phẩm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                    </svg>
-                </button>
+                <div class="cart-item-action-wrapper">
+                    <button type="button" class="btn-remove-cart-item" title="Xóa sản phẩm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                    </button>
+                </div>
             `;
 
             const btnMinus = row.querySelector('.btn-qty-minus');
@@ -512,6 +655,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Gắn sự kiện cho nút mở dropdown phân loại
             const btnVariantToggle = row.querySelector('.btn-variant-toggle');
             const variantMenu = row.querySelector('.variant-dropdown-menu');
+            const previewPriceEl = row.querySelector(`[data-preview-price-id="${item.id}"]`);
 
             if (btnVariantToggle && variantMenu) {
                 btnVariantToggle.addEventListener('click', (e) => {
@@ -540,14 +684,63 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 });
 
-                variantMenu.querySelectorAll('.variant-option-item').forEach(opt => {
-                    opt.addEventListener('click', (e) => {
+                // Hàm tính giá preview dựa trên các chip đang được active
+                const calculatePreviewPrice = () => {
+                    let totalDelta = 0;
+                    const activeChips = variantMenu.querySelectorAll('.variant-chip-btn.active');
+                    activeChips.forEach(chip => {
+                        totalDelta += Number(chip.dataset.delta) || 0;
+                    });
+                    const currentProd = products.find(p => isSameCartItemId(p.id, item.id));
+                    const basePrice = Number(currentProd?.price) || Number(item.price) || 0;
+                    const calculatedPrice = Math.max(10000, basePrice + totalDelta);
+                    if (previewPriceEl) {
+                        previewPriceEl.textContent = formatPrice(calculatedPrice);
+                    }
+                    return calculatedPrice;
+                };
+
+                // Xử lý bấm vào từng Chip
+                variantMenu.querySelectorAll('.variant-chip-btn').forEach(chip => {
+                    chip.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        const targetId = opt.dataset.id;
-                        const targetVariant = opt.dataset.variant;
-                        updateItemVariant(targetId, targetVariant);
+                        const parentGroup = chip.closest('.variant-attr-group');
+                        if (parentGroup) {
+                            parentGroup.querySelectorAll('.variant-chip-btn').forEach(c => c.classList.remove('active'));
+                            chip.classList.add('active');
+                        }
+                        calculatePreviewPrice();
                     });
                 });
+
+                // Nút Trở lại / Hủy
+                const btnCancel = variantMenu.querySelector('.btn-variant-cancel');
+                if (btnCancel) {
+                    btnCancel.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        variantMenu.classList.remove('open');
+                        btnVariantToggle.classList.remove('active');
+                        btnVariantToggle.setAttribute('aria-expanded', 'false');
+                    });
+                }
+
+                // Nút Xác nhận
+                const btnConfirm = variantMenu.querySelector('.btn-variant-confirm');
+                if (btnConfirm) {
+                    btnConfirm.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const activeChips = Array.from(variantMenu.querySelectorAll('.variant-chip-btn.active'));
+                        const selectedLabels = activeChips.map(c => c.dataset.label);
+                        const combinedName = selectedLabels.join(' • ');
+                        const finalPrice = calculatePreviewPrice();
+
+                        variantMenu.classList.remove('open');
+                        btnVariantToggle.classList.remove('active');
+                        btnVariantToggle.setAttribute('aria-expanded', 'false');
+
+                        updateItemVariant(item.id, combinedName, finalPrice);
+                    });
+                }
             }
 
             cartItemsList.appendChild(row);
@@ -586,6 +779,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (cartCountHeader) {
             cartCountHeader.textContent = cart.reduce((sum, item) => sum + getItemQuantity(item), 0);
+        }
+
+        const cartSelectCount = document.getElementById('cart-select-count');
+        if (cartSelectCount) {
+            cartSelectCount.textContent = selectedCount;
         }
 
         cartSubtotal.textContent = formatPrice(subtotal);
@@ -759,31 +957,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const now = new Date();
         const activeVouchers = vouchers.filter(v => v.active
-            && new Date(v.validFrom) <= now
-            && new Date(v.validUntil) >= now);
+            && (!v.validFrom || new Date(v.validFrom) <= now)
+            && (!v.validUntil || new Date(v.validUntil) >= now)
+            && (!v.applicableFor || !v.applicableFor.every(cat => ['services', 'hotel', 'spa', 'grooming'].includes(cat))));
 
         if (activeVouchers.length === 0) {
-            availableVouchersList.innerHTML = '<div class="text-muted">Hiện không có mã ưu đãi nào.</div>';
+            availableVouchersList.innerHTML = '<div class="text-muted small py-1">Hiện không có mã ưu đãi nào cho giỏ hàng.</div>';
             return;
         }
 
         availableVouchersList.innerHTML = activeVouchers.map(voucher => {
             let label = voucher.type === 'fixed'
-                ? `-${formatPrice(voucher.value)}`
+                ? `Giảm ${formatPrice(voucher.value)}`
                 : voucher.type === 'percentage'
-                    ? `-${voucher.value}%` : `Freeship tối đa ${formatPrice(voucher.value)}`;
+                    ? `Giảm ${voucher.value}%` : `Freeship tối đa ${formatPrice(voucher.value)}`;
             
             if (voucher.type === 'percentage' && voucher.maxDiscount) {
                 label += ` (Tối đa ${formatPrice(voucher.maxDiscount)})`;
             }
 
             const minOrderLabel = voucher.minOrderValue
-                ? `Áp dụng cho đơn từ ${formatPrice(voucher.minOrderValue)}`
-                : 'Áp dụng cho mọi đơn hàng';
+                ? `Đơn từ ${formatPrice(voucher.minOrderValue)}`
+                : 'Mọi đơn hàng';
             return `
-                <button type="button" class="btn btn-outline-secondary btn-sm voucher-select-btn" data-code="${voucher.code}">
-                    <strong>${voucher.code}</strong> • ${label}<br>
-                    <small class="text-muted">${minOrderLabel}</small>
+                <button type="button" class="btn voucher-select-btn" data-code="${voucher.code}">
+                    <div class="voucher-btn-top">
+                        <span class="voucher-code-tag">${voucher.code}</span>
+                        <span class="voucher-discount-tag">${label}</span>
+                    </div>
+                    <div class="voucher-min-order">${minOrderLabel}</div>
                 </button>
             `;
         }).join('');

@@ -240,7 +240,10 @@ function bindTabs() {
 }
 
 async function renderWishlist() {
+    const skeletonEl = document.getElementById('wishlistSkeleton');
     const items = await getWishlistItems();
+    if (skeletonEl) skeletonEl.remove();
+
     const filteredItems = currentFilter === 'all' ? items : items.filter((item) => item.type === currentFilter);
     const emptyState = document.getElementById('emptyWishlist');
     const grid = document.getElementById('wishlistGrid');
@@ -263,7 +266,7 @@ async function renderWishlist() {
             const typeLabel = item.type === 'service' ? 'Dịch vụ' : 'Sản phẩm';
 
             return `
-                <div class="wishlist-card" data-type="${item.type}" data-id="${item.id}">
+                <div class="wishlist-card pawpal-smooth-entrance" data-type="${item.type}" data-id="${item.id}">
                     <div class="wishlist-card-image-wrapper">
                         <img src="${item.image}" alt="${item.title}" class="wishlist-card-image">
                         <button class="wishlist-card-remove" data-type="${item.type}" data-id="${item.id}" aria-label="Xóa khỏi yêu thích">

@@ -459,20 +459,75 @@ async function loadServices() {
                 status: svc.status === 'ACTIVE' ? 'Đang phục vụ' : 'Ngưng phục vụ'
             };
         });
-        
-        console.log(` Transformed ${services.length} services from DB`);
-        dataCache.services = services;
-        return services;
+
+        if (services.length > 0) {
+            console.log(` Transformed ${services.length} services from DB`);
+            dataCache.services = services;
+            return services;
+        }
+        throw new Error("Supabase returned empty services list");
     } catch (error) {
-        console.error(' Error loading services from DB:', error);
+        console.warn(' Error loading services from DB, falling back to CSV:', error);
+        try {
+            let csvText = '';
+            try {
+                const res = await fetch('/data/dichvu.csv');
+                if (res.ok) csvText = await res.text();
+            } catch (e) {
+                const res = await fetch('../../data/dichvu.csv');
+                if (res.ok) csvText = await res.text();
+            }
+            if (csvText) {
+                const rawData = parseCSV(csvText);
+                const csvServices = transformServiceData(rawData);
+                console.log(` Loaded ${csvServices.length} services from CSV fallback`);
+                dataCache.services = csvServices;
+                return csvServices;
+            }
+        } catch (csvErr) {
+            console.error(' Failed to load services from CSV fallback:', csvErr);
+        }
         return [];
     }
 }
 
 async function getServiceById(serviceId) {
+    if (!serviceId) return null;
     const services = await loadServices();
-    const service = services.find(s => s.serviceId === serviceId);
-    
+    if (!services || services.length === 0) return null;
+
+    const rawQuery = String(serviceId).trim();
+    const cleanQuery = rawQuery.toLowerCase().replace(/[-_\s]/g, '');
+
+    // 1. Exact match by serviceId
+    let service = services.find(s => s.serviceId === rawQuery);
+
+    // 2. Case-insensitive match by serviceId
+    if (!service) {
+        service = services.find(s => String(s.serviceId || '').toLowerCase() === rawQuery.toLowerCase());
+    }
+
+    // 3. Normalized match (e.g., HTL01 matches HTL-01 or HTL01)
+    if (!service) {
+        service = services.find(s => {
+            const sCode = String(s.serviceId || '').toLowerCase().replace(/[-_\s]/g, '');
+            return sCode === cleanQuery;
+        });
+    }
+
+    // 4. Match by dbId or numeric id
+    if (!service) {
+        service = services.find(s => String(s.dbId) === rawQuery || String(s.id) === rawQuery);
+    }
+
+    // 5. Match by partial code
+    if (!service) {
+        service = services.find(s => {
+            const sCode = String(s.serviceId || '').toLowerCase();
+            return sCode.includes(rawQuery.toLowerCase()) || rawQuery.toLowerCase().includes(sCode);
+        });
+    }
+
     if (!service) {
         console.error(` Service not found: ID ${serviceId}`);
         return null;

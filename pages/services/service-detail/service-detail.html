@@ -9,8 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../../../styles/style.css">
-    <link rel="stylesheet" href="../../../components/ui/review-form.css">
-    <link rel="stylesheet" href="../../../components/ui/reviews.css">
     <link rel="stylesheet" href="../services.css">
     <link rel="stylesheet" href="service-detail.css">
     
@@ -32,6 +30,7 @@
     <div id="site-header" class="min-h-110px bg-bg-light"></div>
 
     <main class="service-detail-main">
+        <!-- Breadcrumb Section -->
         <section class="service-breadcrumb-section">
             <div class="container-xl">
                 <nav aria-label="breadcrumb">
@@ -54,183 +53,366 @@
                 <span>Quay lại danh sách dịch vụ</span>
             </a>
 
-            <div class="showcase-layout">
-                <div class="gallery-container">
-                    <div class="gallery-main-wrapper">
-                        <img id="mainShowcaseImg" src="" alt="Dịch vụ PawPal" class="gallery-main-img">
-                        <button class="gallery-nav-btn gallery-nav-prev" id="galleryPrev" aria-label="Ảnh trước">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="15 18 9 12 15 6"></polyline>
-                            </svg>
-                        </button>
-                        <button class="gallery-nav-btn gallery-nav-next" id="galleryNext" aria-label="Ảnh sau">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="9 18 15 12 9 6"></polyline>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="gallery-thumbnails" id="galleryThumbnails">
-                    </div>
-                    <div class="gallery-actions">
-                        <button class="btn-gallery-action" id="btnLikeService">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                            </svg>
-                            <span id="likeText">Lưu yêu thích</span>
-                        </button>
-                        <button class="btn-gallery-action" id="btnShareService">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="18" cy="5" r="3"></circle>
-                                <circle cx="6" cy="12" r="3"></circle>
-                                <circle cx="18" cy="19" r="3"></circle>
-                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                            </svg>
-                            <span>Chia sẻ dịch vụ</span>
-                        </button>
+            <!-- Service Showcase Layout -->
+            <div class="service-detail-layout">
+                <!-- Left: Gallery Card -->
+                <div class="service-images-column">
+                    <div class="sd-gallery-card">
+                        <div class="service-main-image-wrapper">
+                            <img id="mainShowcaseImg" src="" alt="Dịch vụ PawPal" class="service-main-image">
+                            <button class="service-wishlist-btn-large" id="btnLikeService" aria-label="Lưu yêu thích">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                            </button>
+                            <button class="sd-nav-btn sd-nav-prev" id="galleryPrev" aria-label="Ảnh trước">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </button>
+                            <button class="sd-nav-btn sd-nav-next" id="galleryNext" aria-label="Ảnh sau">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="service-thumbnails-row" id="galleryThumbnails">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                        <div class="sd-gallery-actions">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="share-label">Chia sẻ dịch vụ:</span>
+                                <button class="btn-share-service" id="btnShareService" title="Sao chép liên kết chia sẻ">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="18" cy="5" r="3"></circle>
+                                        <circle cx="6" cy="12" r="3"></circle>
+                                        <circle cx="18" cy="19" r="3"></circle>
+                                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                    </svg>
+                                    <span>Sao chép liên kết</span>
+                                </button>
+                            </div>
+                            <div class="favorite-section d-flex align-items-center gap-2">
+                                <span class="favorite-counter text-secondary fw-semibold" id="likeText">Lưu yêu thích</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="summary-panel">
-                    <span class="detail-service-id" id="detailServiceId"></span>
-                    <h1 class="detail-service-title" id="detailServiceTitle"></h1>
+                <!-- Right: Summary Card -->
+                <div class="service-info-column">
+                    <div class="sd-summary-card">
+                        <div class="sd-top-header-row">
+                            <span class="sd-service-id" id="detailServiceId">HTL01</span>
+                            <span class="service-category-tag" id="detailCategoryLabel">Khách sạn thú cưng</span>
+                            <span class="sd-meta-separator">•</span>
+                            <div class="service-rating-badge">
+                                <div class="stars" id="detailHeaderStars">
+                                    <span class="star filled">★</span>
+                                    <span class="star filled">★</span>
+                                    <span class="star filled">★</span>
+                                    <span class="star filled">★</span>
+                                    <span class="star filled">★</span>
+                                </div>
+                                <span class="rating-text" id="detailRatingText">(4.7 - 115 đánh giá)</span>
+                            </div>
+                        </div>
 
-                    <div class="detail-rating-row">
-                        <span class="stars-row"></span>
-                        <span class="detail-rating-score" id="detailRatingScore"></span>
-                        <span class="detail-rating-count" id="detailRatingCount"></span>
-                    </div>
+                        <h1 class="service-title" id="detailServiceTitle">Phòng Standard</h1>
 
-                    <div class="detail-meta-list">
-                        <div class="detail-meta-item">
-                            <span class="detail-meta-label">Bé cưng:</span>
-                            <span id="detailPetType"></span>
+                        <div class="sd-compact-meta-row">
+                            <span class="sd-meta-tag">Bé cưng: <strong id="detailPetType">Chó và Mèo</strong></span>
+                            <span class="sd-meta-separator">•</span>
+                            <span class="sd-meta-tag">Thời gian: <strong id="detailDuration">60 phút</strong></span>
+                            <span class="sd-meta-separator">•</span>
+                            <span class="sd-meta-tag">Trạng thái: <strong id="detailStatus" class="text-success">Đang phục vụ</strong></span>
                         </div>
-                        <div class="detail-meta-item">
-                            <span class="detail-meta-label">Thời gian:</span>
-                            <span id="detailDuration"></span>
-                        </div>
-                        <div class="detail-meta-item">
-                            <span class="detail-meta-label">Trạng thái:</span>
-                            <span id="detailStatus" class="fw-semibold text-success"></span>
-                        </div>
-                    </div>
 
-                    <div class="service-configurator mt-minus-10" id="serviceConfigurator" >
-                        <div class="config-group d-none" id="petTypeGroup">
-                            <label class="config-label fw-bold mb-2">Chọn loại thú cưng</label>
-                            <div class="config-options d-flex gap-2 flex-wrap" id="petTypeOptions"></div>
+                        <!-- Configurator / Variants -->
+                        <div class="sd-variants-section" id="serviceConfigurator">
+                            <div class="variant-group" id="weightClassGroup">
+                                <label class="variant-label">Chọn hạng cân / Gói dịch vụ:</label>
+                                <div class="variant-options" id="weightClassOptions">
+                                    <!-- Populated dynamically by JS -->
+                                </div>
+                            </div>
                         </div>
-                        <div class="config-group" id="weightClassGroup">
-                            <label class="config-label fw-bold mb-2">Chọn hạng cân</label>
-                            <div class="config-options d-flex gap-1 flex-wrap" id="weightClassOptions"></div>
-                        </div>
-                    </div>
 
-                    <div class="summary-panel-footer">
-                        <div class="detail-price-box">
-                            <div class="detail-price-label">Giá niêm yết tạm tính:</div>
-                            <div class="detail-price-value" id="detailBasePrice"></div>
+                        <!-- Price Box and Member Tier Breakdown -->
+                        <div class="sd-summary-footer">
+                            <div class="sd-price-row">
+                                <div class="service-price-block">
+                                    <span class="price-label-small">Giá niêm yết tạm tính:</span>
+                                    <div class="price-main" id="detailBasePrice">180.000 VNĐ</div>
+                                </div>
+                                <div class="member-tier-price-card">
+                                    <div class="member-tier-item">
+                                        <span class="tier-label silver">PawPass Bạc (-5%)</span>
+                                        <span class="tier-val" id="priceTierSilver">171.000 VNĐ</span>
+                                    </div>
+                                    <div class="member-tier-item">
+                                        <span class="tier-label gold">PawPass Vàng (-10%)</span>
+                                        <span class="tier-val" id="priceTierGold">162.000 VNĐ</span>
+                                    </div>
+                                    <div class="member-tier-item">
+                                        <span class="tier-label diamond">PawPass Kim Cương (-15%)</span>
+                                        <span class="tier-val" id="priceTierDiamond">153.000 VNĐ</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="action-buttons-row">
+                                <a href="#" id="btnPanelBook" class="btn-book-service-now">
+                                    Đặt lịch ngay
+                                </a>
+                            </div>
                         </div>
-                        <a href="#" id="btnPanelBook" class="btn-panel-book">Đặt lịch ngay</a>
+
+                        <!-- Trust Perks (2x2 Grid) -->
+                        <div class="sd-trust-perks">
+                            <div class="trust-perk-item">
+                                <span class="trust-perk-icon">✓</span>
+                                <span>Chuyên viên chuẩn thú y</span>
+                            </div>
+                            <div class="trust-perk-item">
+                                <span class="trust-perk-icon">✓</span>
+                                <span>100% Không dùng an thần</span>
+                            </div>
+                            <div class="trust-perk-item">
+                                <span class="trust-perk-icon">✓</span>
+                                <span>Bảo hiểm thú cưng trọn gói</span>
+                            </div>
+                            <div class="trust-perk-item">
+                                <span class="trust-perk-icon">✓</span>
+                                <span>Cập nhật video liên tục</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="timeline-section-card">
-                <div class="benefits-box">
-                    <h3 class="benefits-title">Lợi ích chính mang lại</h3>
-                    <ul class="benefits-list" id="benefitsList">
-                    </ul>
+            <!-- Service Tabs Section -->
+            <section class="service-tabs-section mt-4">
+                <div class="service-tabs-nav" role="tablist">
+                    <button class="tab-btn active" data-tab="description" role="tab" aria-selected="true">Mô tả và Lợi ích</button>
+                    <button class="tab-btn" data-tab="timeline" role="tab" aria-selected="false">Quy trình thực hiện</button>
+                    <button class="tab-btn" data-tab="amenities" role="tab" aria-selected="false" id="tabBtnAmenities">Tiện ích và Cơ sở vật chất</button>
+                    <button class="tab-btn" data-tab="faqs" role="tab" aria-selected="false">Câu hỏi thường gặp</button>
                 </div>
 
-                <div class="safety-assurance-box">
-                    <h4 class="safety-title">Cam kết an toàn tuyệt đối từ PawPal</h4>
-                    <p class="safety-text">Chúng tôi cam kết hoàn tiền 100% nếu phát hiện nhân viên bạo hành bé hoặc tự ý sử dụng thuốc an thần không có chỉ định từ bác sĩ thú y. Đồng thời, toàn bộ quá trình chăm sóc đều được bảo hiểm sức khỏe thú cưng trọn gói.</p>
+                <!-- Tab 1: Description & Key Benefits -->
+                <div class="tab-content active" id="tab-description" role="tabpanel">
+                    <div class="desc-meta-card">
+                        <div class="desc-meta-grid">
+                            <div class="desc-meta-item">
+                                <span class="meta-label">Mã dịch vụ:</span>
+                                <span class="meta-value" id="tabMetaServiceId">HTL01</span>
+                            </div>
+                            <div class="desc-meta-item">
+                                <span class="meta-label">Phân loại:</span>
+                                <span class="meta-value" id="tabMetaCategory">Khách sạn thú cưng</span>
+                            </div>
+                            <div class="desc-meta-item">
+                                <span class="meta-label">Đối tượng:</span>
+                                <span class="meta-value" id="tabMetaPetType">Chó và Mèo</span>
+                            </div>
+                            <div class="desc-meta-item">
+                                <span class="meta-label">Cam kết PawPal:</span>
+                                <span class="meta-value text-success fw-semibold">An toàn 100% / Chuyên nghiệp</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-section-body">
+                        <h3 class="sd-tab-title">Mô tả chi tiết dịch vụ</h3>
+                        <p class="sd-desc-text" id="tabServiceDescription">
+                            Dịch vụ chăm sóc và lưu trú chuyên nghiệp tại PawPal mang lại trải nghiệm êm ái, an toàn và toàn diện cho bé cưng của bạn.
+                        </p>
+
+                        <h4 class="sd-section-subtitle">Lợi ích chính mang lại</h4>
+                        <div class="sd-benefits-grid" id="benefitsGridContainer">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+
+                        <div class="safety-assurance-callout mt-4">
+                            <div class="safety-badge">Cam kết từ PawPal</div>
+                            <h5 class="safety-heading">Cam kết an toàn tuyệt đối và tôn trọng bé cưng</h5>
+                            <p class="safety-desc">
+                                PawPal cam kết hoàn tiền 100% nếu phát hiện nhân viên có hành vi thô bạo với bé hoặc tự ý sử dụng thuốc an thần không có chỉ định từ bác sĩ thú y. Toàn bộ quá trình thực hiện dịch vụ được bảo hiểm thú cưng và phụ huynh có thể theo dõi trực tiếp.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                <h3 class="bento-title mt-3">Quy trình thực hiện chi tiết</h3>
-                <div class="checklist-timeline" id="checklistTimeline">
+                <!-- Tab 2: Checklist Timeline -->
+                <div class="tab-content" id="tab-timeline" role="tabpanel">
+                    <div class="tab-section-body">
+                        <h3 class="sd-tab-title">Quy trình thực hiện chi tiết từng bước</h3>
+                        <p class="text-secondary mb-4">Các bước được chuẩn hóa nghiêm ngặt bởi đội ngũ chuyên viên thú y giàu kinh nghiệm tại PawPal.</p>
+                        
+                        <div class="checklist-timeline" id="checklistTimeline">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <button class="btn-timeline-toggle" id="timelineToggleBtn" hidden>Xem thêm quy trình</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="amenities-section-card d-none" id="amenitiesSection" >
-                <h2 class="bento-title" style="margin-bottom: var(--space-md);">Tiện ích & Cơ sở vật chất</h2>
-                <ul class="amenities-list amenities-list-custom" id="amenitiesGrid" >
-                </ul>
-            </div>
-
-            <div class="faq-section-card">
-                <h2 class="bento-title">Câu hỏi thường gặp về dịch vụ</h2>
-                <div class="faq-list-wrapper" id="faqList">
+                <!-- Tab 3: Amenities & Facilities -->
+                <div class="tab-content" id="tab-amenities" role="tabpanel">
+                    <div class="tab-section-body">
+                        <h3 class="sd-tab-title">Tiện ích và Cơ sở vật chất</h3>
+                        <p class="text-secondary mb-4">Không gian phòng ốc và trang thiết bị hiện đại chuẩn 5 sao dành riêng cho các bé.</p>
+                        
+                        <ul class="amenities-feature-grid" id="amenitiesGrid">
+                            <!-- Populated dynamically by JS -->
+                        </ul>
+                    </div>
                 </div>
-            </div>
 
-            <div class="reviews-section-card">
-                <h2 class="bento-title">Đánh giá thực tế từ khách hàng</h2>
+                <!-- Tab 4: FAQs -->
+                <div class="tab-content" id="tab-faqs" role="tabpanel">
+                    <div class="tab-section-body">
+                        <h3 class="sd-tab-title">Câu hỏi thường gặp về dịch vụ</h3>
+                        <p class="text-secondary mb-4">Những thắc mắc phổ biến nhất của các ba mẹ trước khi đặt lịch cho bé.</p>
+                        
+                        <div class="faq-list-wrapper" id="faqList">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Customer Reviews Section (100% Match with Product Detail) -->
+            <section class="service-reviews-section mt-4">
+                <div class="reviews-header-bar">
+                    <h2 class="reviews-title">Đánh giá dịch vụ</h2>
+                    <span class="reviews-count-badge" id="reviewsHeaderCount">0 nhận xét</span>
+                </div>
                 
                 <div class="reviews-summary-block">
+                    <!-- Left: Average Score -->
                     <div class="rating-average-box">
-                        <div class="average-score-huge" id="averageScore"></div>
-                        <div class="stars-row"></div>
-                        <div class="total-reviews-count" id="totalReviewsCount"></div>
+                        <div class="average-score-huge" id="averageScore">5.0</div>
+                        <div class="stars-row" id="summaryStarsRow">
+                            <span class="star filled">★</span>
+                            <span class="star filled">★</span>
+                            <span class="star filled">★</span>
+                            <span class="star filled">★</span>
+                            <span class="star filled">★</span>
+                        </div>
+                        <div class="total-reviews-count" id="totalReviewsCount">Dựa trên 0 lượt đánh giá</div>
                     </div>
 
+                    <!-- Right: Distribution Bars -->
                     <div class="stars-distribution">
                         <div class="distribution-row">
                             <span class="distribution-label">5 Sao</span>
                             <div class="distribution-bar-bg">
-                                <div class="distribution-bar-fill ui-box-9"></div>
+                                <div class="distribution-bar-fill" id="bar5"></div>
                             </div>
-                            <span class="distribution-percent">92%</span>
+                            <span class="distribution-stat"><strong id="cnt5">0</strong> <span id="pct5">(0%)</span></span>
                         </div>
                         <div class="distribution-row">
                             <span class="distribution-label">4 Sao</span>
                             <div class="distribution-bar-bg">
-                                <div class="distribution-bar-fill ui-box-10"></div>
+                                <div class="distribution-bar-fill" id="bar4"></div>
                             </div>
-                            <span class="distribution-percent">6%</span>
+                            <span class="distribution-stat"><strong id="cnt4">0</strong> <span id="pct4">(0%)</span></span>
                         </div>
                         <div class="distribution-row">
                             <span class="distribution-label">3 Sao</span>
                             <div class="distribution-bar-bg">
-                                <div class="distribution-bar-fill ui-box-11"></div>
+                                <div class="distribution-bar-fill" id="bar3"></div>
                             </div>
-                            <span class="distribution-percent">2%</span>
+                            <span class="distribution-stat"><strong id="cnt3">0</strong> <span id="pct3">(0%)</span></span>
+                        </div>
+                        <div class="distribution-row">
+                            <span class="distribution-label">2 Sao</span>
+                            <div class="distribution-bar-bg">
+                                <div class="distribution-bar-fill" id="bar2"></div>
+                            </div>
+                            <span class="distribution-stat"><strong id="cnt2">0</strong> <span id="pct2">(0%)</span></span>
+                        </div>
+                        <div class="distribution-row">
+                            <span class="distribution-label">1 Sao</span>
+                            <div class="distribution-bar-bg">
+                                <div class="distribution-bar-fill" id="bar1"></div>
+                            </div>
+                            <span class="distribution-stat"><strong id="cnt1">0</strong> <span id="pct1">(0%)</span></span>
                         </div>
                     </div>
                 </div>
 
-                <div class="review-chips-wrapper">
-                    <button class="review-filter-chip active" data-filter="all">Tất cả</button>
-                    <button class="review-filter-chip" data-filter="5">5 Sao</button>
-                    <button class="review-filter-chip" data-filter="4">4 Sao</button>
-                    <button class="review-filter-chip" data-filter="media">Có hình ảnh</button>
+                <!-- Review Filter Chips & Service Package Filters -->
+                <div class="review-toolbar-container">
+                    <div class="review-chips-wrapper" id="reviewChips">
+                        <button class="review-filter-chip active" data-filter="all">Tất cả (<span id="chipCntAll">0</span>)</button>
+                        <button class="review-filter-chip" data-filter="5">5 Sao (<span id="chipCnt5">0</span>)</button>
+                        <button class="review-filter-chip" data-filter="4">4 Sao (<span id="chipCnt4">0</span>)</button>
+                        <button class="review-filter-chip" data-filter="3">3 Sao (<span id="chipCnt3">0</span>)</button>
+                        <button class="review-filter-chip" data-filter="2">2 Sao (<span id="chipCnt2">0</span>)</button>
+                        <button class="review-filter-chip" data-filter="1">1 Sao (<span id="chipCnt1">0</span>)</button>
+                        <button class="review-filter-chip" data-filter="has_media">Có hình ảnh (<span id="chipCntMedia">0</span>)</button>
+                    </div>
+                    
+                    <div class="review-variant-filter-row" id="reviewVariantFilterRow" style="display: none;">
+                        <span class="variant-filter-label">Lọc theo phân loại:</span>
+                        <div class="variant-chips-wrapper" id="reviewVariantChips">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
                 </div>
 
-                <div class="reviews-list-container" id="reviewsContainer">
+                <!-- Reviews List Container -->
+                <div class="reviews-list" id="reviewsContainer">
+                    <div class="text-center py-4 text-secondary">Đang tải đánh giá...</div>
                 </div>
-            </div>
 
+                <nav aria-label="Review Pagination" class="mt-4" id="reviewsPaginationWrapper" style="display: none;">
+                    <ul class="pagination justify-content-center" id="reviewsPagination"></ul>
+                </nav>
+            </section>
+
+            <!-- Related Services Section -->
             <div class="related-services-section-card my-4">
-                <h2 class="bento-title">Có thể bạn sẽ quan tâm</h2>
-                <div class="related-services-grid" id="relatedServicesGrid" >
+                <div class="related-header-row">
+                    <h2 class="bento-title">Dịch vụ tương tự gợi ý cho bạn</h2>
+                    <a href="../services.html" class="view-all-link">Xem tất cả dịch vụ ›</a>
+                </div>
+                <div class="related-services-grid" id="relatedServicesGrid">
+                    <!-- Populated dynamically by JS -->
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- Sticky Bottom Booking Bar -->
     <div class="sticky-bottom-booking-bar" id="stickyBookingBar">
-        <div class="sticky-price-col">
-            <span class="sticky-price-label">Tổng chi phí tạm tính:</span>
-            <div class="sticky-price-wrapper">
-                <span class="sticky-price-val" id="stickyPriceVal"></span>
-                <span class="sticky-price-unit">VNĐ</span>
+        <div class="container-xl d-flex align-items-center justify-content-between">
+            <div class="sticky-service-info d-flex align-items-center gap-3">
+                <img id="stickyServiceThumb" src="" alt="Thumbnail" class="sticky-thumb-img">
+                <div>
+                    <h4 class="sticky-service-name" id="stickyServiceName">Dịch vụ</h4>
+                    <span class="sticky-service-sub" id="stickyServiceSub">Hạng cân / Gói dịch vụ</span>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-4">
+                <div class="sticky-price-col">
+                    <span class="sticky-price-label">Giá niêm yết tạm tính:</span>
+                    <div class="sticky-price-wrapper">
+                        <span class="sticky-price-val" id="stickyPriceVal">0</span>
+                        <span class="sticky-price-unit">VNĐ</span>
+                    </div>
+                </div>
+                <a href="" id="btnStickyBookAction" class="btn-sticky-book">Đặt lịch ngay</a>
             </div>
         </div>
-        <a href="" id="btnStickyBookAction" class="btn-sticky-book">Đặt lịch ngay</a>
     </div>
 
+    <!-- Review Lightbox Modal -->
     <div class="lightbox-modal d-none" id="lightboxModal">
         <div class="lightbox-content-wrapper">
             <button class="btn-lightbox-close" id="btnLightboxClose">&times;</button>
@@ -239,9 +421,7 @@
     </div>
 
     <div id="site-footer"></div>
-
     <div class="toast-container-custom" id="toastContainer"></div>
     <div id="site-fab"></div>
 </body>
 </html>
-

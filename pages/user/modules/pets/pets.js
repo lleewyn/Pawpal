@@ -342,7 +342,7 @@ async function renderPetGrids() {
 
 function createPetCard(pet, isArchived = false) {
     const card = document.createElement('div');
-    card.className = `pet-card ${isArchived ? 'pet-card-archived' : ''}`;
+    card.className = `pet-card pawpal-smooth-entrance ${isArchived ? 'pet-card-archived' : ''}`;
     const avatarSrc = pet.avatar || getDefaultPetAvatar(pet.species);
     const isMale = (pet.gender === 'male' || pet.gender === 'Đực');
     const displayWeight = typeof pet.weight === 'number' ? pet.weight : (parseFloat(pet.weight) || pet.weightNum || 0);

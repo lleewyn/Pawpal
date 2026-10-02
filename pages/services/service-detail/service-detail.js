@@ -1,6 +1,12 @@
+/**
+ * service-detail.js - Logic chi tiết dịch vụ PawPal
+ * Cập nhật: Đồng bộ toàn diện layout và components với trang chi tiết sản phẩm (Product Detail),
+ * bao gồm Tabs, Bảng giá thành viên (Member Tiers), Thanh tiến độ đánh giá 5 sao,
+ * và điều hướng thư viện ảnh mượt mà.
+ */
 
 let serviceData = null;
-let selectedPetType = 'Chó';
+let selectedPetType = 'Chó và Mèo';
 let selectedWeight = 'Dưới 5kg';
 let selectedGroomer = 'junior';
 let currentLikedState = false;
@@ -11,7 +17,7 @@ let autoSlideTimer = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const serviceId = urlParams.get('id');
+    const serviceId = urlParams.get('id') || urlParams.get('service') || urlParams.get('serviceId');
 
     if (!serviceId) {
         window.location.href = '../services.html';
@@ -19,26 +25,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
+        let attempts = 0;
+        while ((!window.DataLoader || typeof window.DataLoader.getServiceById !== 'function') && attempts < 25) {
+            await new Promise(r => setTimeout(r, 100));
+            attempts++;
+        }
+
         if (window.DataLoader && typeof window.DataLoader.getServiceById === 'function') {
             serviceData = await window.DataLoader.getServiceById(serviceId);
             if (!serviceData) {
+                console.warn('Service not found for ID:', serviceId);
                 showNotFound();
                 return;
             }
 
-            updateBreadcrumb();
-            populateServiceInfo();
-            setupGallery();
-            setupTimelineAndBenefits();
-            setupAmenities();
-            setupFAQs();
-            setupReviews();
-            setupStickyBarTrigger();
-            setupWishlistAndShare();
-            setupRelatedServices();
-            setupConfigurator();
+            console.log('Service loaded:', serviceData.serviceId, serviceData.name);
 
-            recalculatePrice();
+            try { initServiceTabs(); } catch (e) { console.warn('initServiceTabs error:', e); }
+            try { updateBreadcrumb(); } catch (e) { console.warn('updateBreadcrumb error:', e); }
+            try { populateServiceInfo(); } catch (e) { console.warn('populateServiceInfo error:', e); }
+            try { setupGallery(); } catch (e) { console.warn('setupGallery error:', e); }
+            try { setupTimelineAndBenefits(); } catch (e) { console.warn('setupTimelineAndBenefits error:', e); }
+            try { setupAmenities(); } catch (e) { console.warn('setupAmenities error:', e); }
+            try { setupFAQs(); } catch (e) { console.warn('setupFAQs error:', e); }
+            try { await setupReviews(); } catch (e) { console.warn('setupReviews error:', e); }
+            try { setupStickyBarTrigger(); } catch (e) { console.warn('setupStickyBarTrigger error:', e); }
+            try { setupWishlistAndShare(); } catch (e) { console.warn('setupWishlistAndShare error:', e); }
+            try { setupRelatedServices(); } catch (e) { console.warn('setupRelatedServices error:', e); }
+            try { setupConfigurator(); } catch (e) { console.warn('setupConfigurator error:', e); }
+            try { recalculatePrice(); } catch (e) { console.warn('recalculatePrice error:', e); }
         } else {
             console.error('DataLoader not initialized');
             showNotFound();
@@ -54,12 +69,35 @@ function showNotFound() {
     if (main) {
         main.innerHTML = `
             <div class="container-xl text-center" style="padding: 100px 20px;">
-                <h2 style="color: var(--color-primary); font-family: var(--font-heading); margin-bottom: 20px;">Không tìm thấy dịch vụ</h2>
-                <p style="color: var(--color-text-light); margin-bottom: var(--space-md);">Dịch vụ này không tồn tại hoặc đã tạm dừng hoạt động.</p>
-                <a href="../services.html" class="btn-cta">Quay lại danh sách dịch vụ</a>
+                <h2 style="color: var(--sd-primary); font-family: var(--font-heading); margin-bottom: 20px;">Không tìm thấy dịch vụ</h2>
+                <p style="color: var(--sd-text-muted); margin-bottom: 24px;">Dịch vụ này không tồn tại hoặc đã tạm dừng nhận lịch.</p>
+                <a href="../services.html" class="btn-book-service-now" style="max-width: 260px; margin: 0 auto; display: inline-block;">Quay lại danh sách dịch vụ</a>
             </div>
         `;
     }
+}
+
+function initServiceTabs() {
+    const tabs = document.querySelectorAll('.service-tabs-nav .tab-btn');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
+            tabs.forEach(t => {
+                t.classList.remove('active');
+                t.setAttribute('aria-selected', 'false');
+            });
+            tab.classList.add('active');
+            tab.setAttribute('aria-selected', 'true');
+
+            document.querySelectorAll('.service-tabs-section .tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            const activePanel = document.getElementById(`tab-${targetTab}`);
+            if (activePanel) {
+                activePanel.classList.add('active');
+            }
+        });
+    });
 }
 
 function getServiceCategoryLabel(category) {
@@ -70,71 +108,132 @@ function getServiceCategoryLabel(category) {
 }
 
 function updateBreadcrumb() {
+    if (!serviceData) return;
     const categoryEl = document.getElementById('breadcrumbServiceCategory');
     const nameEl = document.getElementById('breadcrumbServiceName');
 
     if (categoryEl) {
         categoryEl.textContent = getServiceCategoryLabel(serviceData.category);
     }
-
     if (nameEl) {
-        nameEl.textContent = serviceData.name.replace(/&/g, 'và');
+        nameEl.textContent = (serviceData.name || '').replace(/&/g, 'và');
     }
 }
 
 function populateServiceInfo() {
-    document.getElementById('detailServiceId').textContent = serviceData.serviceId;
-    document.getElementById('detailServiceTitle').textContent = serviceData.name.replace(/&/g, 'và');
-    document.getElementById('detailRatingScore').textContent = `${serviceData.rating.toFixed(1)} / 5`;
-    document.getElementById('detailRatingCount').textContent = `(${serviceData.reviewCount} đánh giá thực tế)`;
-    document.getElementById('detailPetType').textContent = serviceData.petType;
-    document.getElementById('detailDuration').textContent = serviceData.duration || 'Đang cập nhật';
+    if (!serviceData) return;
+
+    const sanitizedName = (serviceData.name || '').replace(/&/g, 'và');
+    const displayCategory = getServiceCategoryLabel(serviceData.category);
+    const petTypeDisplay = (serviceData.petType || 'Chó và Mèo').replace(/&/g, 'và');
+
+    // Summary Card Header
+    const idEl = document.getElementById('detailServiceId');
+    if (idEl) idEl.textContent = serviceData.serviceId || 'SVC';
+
+    const catEl = document.getElementById('detailCategoryLabel');
+    if (catEl) catEl.textContent = displayCategory;
+
+    const titleEl = document.getElementById('detailServiceTitle');
+    if (titleEl) titleEl.textContent = sanitizedName;
+
+    const score = (serviceData.rating || 4.8).toFixed(1);
+    const count = serviceData.reviewCount || 115;
+    const ratingTextEl = document.getElementById('detailRatingText');
+    if (ratingTextEl) ratingTextEl.textContent = `(${score} - ${count} đánh giá)`;
+
+    // Rating Stars in Summary Header
+    const starsContainer = document.getElementById('detailHeaderStars');
+    if (starsContainer) {
+        const roundedScore = Math.round(parseFloat(score));
+        let starsHtml = '';
+        for (let i = 1; i <= 5; i++) {
+            starsHtml += `<span class="star ${i <= roundedScore ? 'filled' : ''}">★</span>`;
+        }
+        starsContainer.innerHTML = starsHtml;
+    }
+
+    // Meta row
+    const petEl = document.getElementById('detailPetType');
+    if (petEl) petEl.textContent = petTypeDisplay;
+
+    const durEl = document.getElementById('detailDuration');
+    if (durEl) durEl.textContent = serviceData.duration || '60 phút';
 
     const statusEl = document.getElementById('detailStatus');
-    statusEl.textContent = serviceData.status;
-
     const btnPanelBook = document.getElementById('btnPanelBook');
+
     if (btnPanelBook) {
         btnPanelBook.href = `../booking/booking.html?service=${serviceData.serviceId}`;
     }
 
-    if (serviceData.status !== 'Đang phục vụ') {
-        statusEl.style.color = 'var(--color-danger)';
-        const stickyBtn = document.getElementById('btnStickyBookAction');
-        if (stickyBtn) {
-            stickyBtn.textContent = 'Tạm dừng nhận lịch';
-            stickyBtn.style.background = 'var(--color-neutral)';
-            stickyBtn.style.pointerEvents = 'none';
+    if (statusEl) {
+        statusEl.textContent = serviceData.status || 'Đang phục vụ';
+        if (serviceData.status && serviceData.status !== 'Đang phục vụ') {
+            statusEl.className = 'text-danger fw-semibold';
+            if (btnPanelBook) {
+                btnPanelBook.textContent = 'Tạm dừng nhận lịch';
+                btnPanelBook.style.background = '#CBD5E1';
+                btnPanelBook.style.pointerEvents = 'none';
+            }
         }
-        if (btnPanelBook) {
-            btnPanelBook.textContent = 'Tạm dừng nhận lịch';
-            btnPanelBook.style.background = 'var(--color-neutral)';
-            btnPanelBook.style.pointerEvents = 'none';
-        }
+    }
+
+    // Tab 1 Meta Card & Description
+    const tabMetaServiceId = document.getElementById('tabMetaServiceId');
+    if (tabMetaServiceId) tabMetaServiceId.textContent = serviceData.serviceId || 'SVC';
+
+    const tabMetaCategory = document.getElementById('tabMetaCategory');
+    if (tabMetaCategory) tabMetaCategory.textContent = displayCategory;
+
+    const tabMetaPetType = document.getElementById('tabMetaPetType');
+    if (tabMetaPetType) tabMetaPetType.textContent = petTypeDisplay;
+
+    const tabDesc = document.getElementById('tabServiceDescription');
+    if (tabDesc) {
+        tabDesc.textContent = (serviceData.description || 'Dịch vụ chăm sóc và làm đẹp chuyên nghiệp tại PawPal mang lại trải nghiệm êm ái, an toàn và toàn diện cho bé cưng của bạn.').replace(/&/g, 'và');
+    }
+
+    // Sticky Bar elements
+    const stickyName = document.getElementById('stickyServiceName');
+    if (stickyName) stickyName.textContent = sanitizedName;
+
+    const fallbackImg = '/assets/images/services/' + (serviceData.category === 'hotel' ? 'hotel.png' : 'spa.png');
+    const stickyThumb = document.getElementById('stickyServiceThumb');
+    if (stickyThumb) {
+        stickyThumb.src = serviceData.image || fallbackImg;
+        stickyThumb.onerror = () => { stickyThumb.src = fallbackImg; };
     }
 }
 
 function setupGallery() {
+    if (!serviceData) return;
+
     const mainImg = document.getElementById('mainShowcaseImg');
-    mainImg.onerror = function () {
-        this.onerror = null;
-        this.src = '/assets/images/services/' + (serviceData.category === 'hotel' ? 'hotel.png' : 'spa.png');
-    };
-    mainImg.src = serviceData.image;
+    const fallbackImage = '/assets/images/services/' + (serviceData.category === 'hotel' ? 'hotel.png' : 'spa.png');
+
+    if (mainImg) {
+        mainImg.onerror = function () {
+            this.onerror = null;
+            this.src = fallbackImage;
+        };
+        mainImg.src = serviceData.image || fallbackImage;
+    }
 
     const thumbsContainer = document.getElementById('galleryThumbnails');
     if (!thumbsContainer) return;
 
-    let rawImages = Array.isArray(serviceData.images) && serviceData.images.length > 0 ? [...serviceData.images] : [serviceData.image];
+    let rawImages = Array.isArray(serviceData.images) && serviceData.images.length > 0 ? [...serviceData.images] : [serviceData.image || fallbackImage];
 
-    rawImages = [...new Set(rawImages)];
+    rawImages = [...new Set(rawImages.filter(Boolean))];
+    if (rawImages.length === 0) rawImages = [fallbackImage];
 
-    galleryImages = rawImages.map(url => url);
+    galleryImages = rawImages;
     currentImageIndex = 0;
 
     thumbsContainer.innerHTML = rawImages.map((imgUrl, index) => `
         <div class="gallery-thumb ${index === 0 ? 'active' : ''}" data-index="${index}">
-            <img src="${imgUrl}" alt="Ảnh chi tiết ${index + 1}" class="gallery-thumb-img" onerror="this.onerror=null; this.src='/assets/images/services/spa.png'">
+            <img src="${imgUrl}" alt="Ảnh ${index + 1}" class="gallery-thumb-img" onerror="this.onerror=null; this.src='${fallbackImage}'">
         </div>
     `).join('');
 
@@ -158,20 +257,26 @@ function setupGallery() {
 function updateMainImage(index) {
     const mainImg = document.getElementById('mainShowcaseImg');
     const thumbsContainer = document.getElementById('galleryThumbnails');
-    if (!mainImg) return;
+    if (!mainImg || !galleryImages[index]) return;
 
-    thumbsContainer.querySelectorAll('.gallery-thumb').forEach((t, i) => {
-        t.classList.toggle('active', i === index);
-    });
+    if (thumbsContainer) {
+        thumbsContainer.querySelectorAll('.gallery-thumb').forEach((t, i) => {
+            t.classList.toggle('active', i === index);
+        });
+    }
 
-    gsap.to(mainImg, {
-        opacity: 0.1,
-        duration: 0.15,
-        onComplete: () => {
-            mainImg.src = galleryImages[index];
-            gsap.to(mainImg, { opacity: 1, duration: 0.25 });
-        }
-    });
+    if (typeof gsap !== 'undefined') {
+        gsap.to(mainImg, {
+            opacity: 0.1,
+            duration: 0.15,
+            onComplete: () => {
+                mainImg.src = galleryImages[index];
+                gsap.to(mainImg, { opacity: 1, duration: 0.25 });
+            }
+        });
+    } else {
+        mainImg.src = galleryImages[index];
+    }
 }
 
 function navigateGallery(direction) {
@@ -182,6 +287,7 @@ function navigateGallery(direction) {
 }
 
 function startAutoSlide() {
+    if (autoSlideTimer) clearInterval(autoSlideTimer);
     autoSlideTimer = setInterval(() => {
         if (galleryImages.length > 1) {
             currentImageIndex = (currentImageIndex + 1) % galleryImages.length;
@@ -196,14 +302,20 @@ function resetAutoSlide() {
 }
 
 function setupConfigurator() {
-    const rawPet = serviceData.petType;
+    if (!serviceData) return;
+
+    const rawPet = serviceData.petType || '';
     if (rawPet.includes('/') || rawPet.toLowerCase().includes('và')) {
-        selectedPetType = 'Tất cả';
+        selectedPetType = 'Chó và Mèo';
     } else {
         selectedPetType = rawPet.includes('Chó') ? 'Chó' : (rawPet.includes('Mèo') ? 'Mèo' : 'Tất cả');
     }
+
     const weightOptions = document.getElementById('weightClassOptions');
-    const availableWeights = Object.keys(serviceData.prices).filter(w => serviceData.prices[w] > 0);
+    if (!weightOptions) return;
+
+    const pricesObj = serviceData.prices || {};
+    const availableWeights = Object.keys(pricesObj).filter(w => pricesObj[w] > 0);
 
     if (availableWeights.length > 0) {
         weightOptions.innerHTML = availableWeights.map((w, idx) => `
@@ -211,8 +323,8 @@ function setupConfigurator() {
         `).join('');
         selectedWeight = availableWeights[0];
     } else {
-        weightOptions.innerHTML = `<button class="config-pill-btn active" data-val="Tất cả">Tất cả</button>`;
-        selectedWeight = 'Tất cả';
+        weightOptions.innerHTML = `<button class="config-pill-btn active" data-val="Tiêu chuẩn">Tiêu chuẩn</button>`;
+        selectedWeight = 'Tiêu chuẩn';
     }
 
     weightOptions.querySelectorAll('.config-pill-btn').forEach(btn => {
@@ -223,26 +335,33 @@ function setupConfigurator() {
             recalculatePrice();
         });
     });
-
 }
 
 function recalculatePrice() {
-    let finalPrice = serviceData.prices && serviceData.prices[selectedWeight] ? serviceData.prices[selectedWeight] : serviceData.price;
+    if (!serviceData) return;
+
+    let finalPrice = serviceData.prices && serviceData.prices[selectedWeight] ? serviceData.prices[selectedWeight] : (serviceData.price || 0);
 
     const silverPrice = Math.round(finalPrice * 0.95);
     const goldPrice = Math.round(finalPrice * 0.90);
     const diamondPrice = Math.round(finalPrice * 0.85);
+
     animatePriceChange('detailBasePrice', finalPrice);
     animatePriceChange('priceTierSilver', silverPrice);
     animatePriceChange('priceTierGold', goldPrice);
     animatePriceChange('priceTierDiamond', diamondPrice);
     animatePriceChange('stickyPriceVal', finalPrice);
 
+    const stickySub = document.getElementById('stickyServiceSub');
+    if (stickySub) {
+        stickySub.textContent = `Gói: ${selectedWeight} • ${selectedPetType}`;
+    }
+
     const bookingParams = new URLSearchParams({
-        service: serviceData.serviceId,
-        petType: selectedPetType,
-        weight: selectedWeight,
-        groomer: selectedGroomer,
+        service: serviceData.serviceId || '',
+        petType: selectedPetType || 'Tất cả',
+        weight: selectedWeight || 'Tiêu chuẩn',
+        groomer: selectedGroomer || 'junior',
         price: finalPrice
     });
 
@@ -256,25 +375,40 @@ function recalculatePrice() {
 function animatePriceChange(elementId, newPrice) {
     const el = document.getElementById(elementId);
     if (el) {
-        el.textContent = `${newPrice.toLocaleString('vi-VN')} VNĐ`;
+        el.textContent = `${Number(newPrice || 0).toLocaleString('vi-VN')} VNĐ`;
     }
 }
 
 function setupTimelineAndBenefits() {
-    const benefitsList = document.getElementById('benefitsList');
-    let benefits = [
-        'Nuôi dưỡng chuyên sâu làn da và lông thú cưng',
-        'Khử mùi hôi cơ thể triệt để, giữ hương thơm lên đến 7 ngày',
-        'Cắt móng và mài dũa an toàn chống cào xước'
-    ];
+    if (!serviceData) return;
 
-    if (serviceData.benefits) {
-        benefits = serviceData.benefits.split(/[;.\n]/).map(b => b.trim()).filter(b => b.length > 0);
+    // Key Benefits
+    const benefitsContainer = document.getElementById('benefitsGridContainer');
+    if (benefitsContainer) {
+        let benefits = [
+            'Nuôi dưỡng chuyên sâu làn da và bộ lông thú cưng',
+            'Khử mùi hôi cơ thể triệt để, giữ hương thơm mát dài lâu',
+            'Cắt móng và vệ sinh an toàn tuyệt đối ngừa cào xước',
+            'Sử dụng 100% dòng sản phẩm hữu cơ nhập khẩu an toàn'
+        ];
+
+        if (serviceData.benefits) {
+            const rawBenefits = serviceData.benefits.split(/[;.\n]/).map(b => b.trim()).filter(b => b.length > 0);
+            if (rawBenefits.length > 0) benefits = rawBenefits;
+        }
+
+        benefitsContainer.innerHTML = benefits.map(b => `
+            <div class="benefit-card">
+                <span class="benefit-icon">✓</span>
+                <span class="benefit-text">${b.replace(/&/g, 'và')}</span>
+            </div>
+        `).join('');
     }
 
-    benefitsList.innerHTML = benefits.map(b => `<li>${b.replace(/&/g, 'và')}</li>`).join('');
-
+    // Checklist Timeline
     const timeline = document.getElementById('checklistTimeline');
+    if (!timeline) return;
+
     let checklist = [
         { step: 'Kiểm tra sơ bộ', desc: 'Tiếp nhận bé, phân tích tình trạng da lông và tư vấn' },
         { step: 'Cắt và mài móng', desc: 'Vệ sinh móng chân sạch sẽ, bo tròn góc sắc ngừa cào xước' },
@@ -290,7 +424,7 @@ function setupTimelineAndBenefits() {
         const rawSteps = serviceData.checklist.split(/[;\n]/).map(s => s.trim()).filter(s => s.length > 0);
         if (rawSteps.length > 0) {
             checklist = rawSteps.map((stepText, idx) => {
-                let title = `Thao tác ${idx + 1}`;
+                let title = `Bước ${idx + 1}`;
                 let desc = stepText;
                 if (stepText.includes(':')) {
                     const parts = stepText.split(':');
@@ -302,13 +436,13 @@ function setupTimelineAndBenefits() {
         }
     }
 
-    const MAX_VISIBLE_STEPS = 4;
+    const MAX_VISIBLE_STEPS = 6;
     timeline.innerHTML = checklist.map((item, idx) => `
         <div class="timeline-step-item ${idx >= MAX_VISIBLE_STEPS ? 'd-none collapsed-step' : ''}" id="timelineStep-${idx}">
-            <div class="timeline-bullet"></div>
+            <div class="timeline-step-badge">${idx + 1}</div>
             <div class="timeline-step-content">
-                <h4 class="timeline-step-title">Bước ${idx + 1}: ${item.step}</h4>
-                <p class="timeline-step-desc">${item.desc}</p>
+                <h4 class="timeline-step-title">${item.step.replace(/&/g, 'và')}</h4>
+                <p class="timeline-step-desc">${item.desc.replace(/&/g, 'và')}</p>
             </div>
         </div>
     `).join('');
@@ -321,84 +455,41 @@ function setupTimelineAndBenefits() {
             isExpanded = !isExpanded;
             const hiddenSteps = timeline.querySelectorAll('.collapsed-step');
             if (isExpanded) {
-                hiddenSteps.forEach(el => {
-                    el.classList.remove('d-none');
-                    if (typeof gsap !== 'undefined') {
-                        gsap.fromTo(el, { opacity: 0, height: 0 }, { opacity: 1, height: 'auto', duration: 0.3 });
-                    }
-                });
-                toggleBtn.textContent = 'Rút gọn';
+                hiddenSteps.forEach(el => el.classList.remove('d-none'));
+                toggleBtn.textContent = 'Rút gọn quy trình';
             } else {
-                hiddenSteps.forEach(el => {
-                    if (typeof gsap !== 'undefined') {
-                        gsap.to(el, {
-                            opacity: 0, height: 0, duration: 0.3, onComplete: () => el.classList.add('d-none')
-                        });
-                    } else {
-                        el.classList.add('d-none');
-                    }
-                });
-                toggleBtn.textContent = `Xem thêm ${checklist.length - MAX_VISIBLE_STEPS} bước`;
-            }
-            if (typeof ScrollTrigger !== 'undefined') {
-                setTimeout(() => ScrollTrigger.refresh(), 400);
+                hiddenSteps.forEach(el => el.classList.add('d-none'));
+                toggleBtn.textContent = `Xem thêm ${checklist.length - MAX_VISIBLE_STEPS} bước quy trình`;
             }
         });
-        toggleBtn.textContent = `Xem thêm ${checklist.length - MAX_VISIBLE_STEPS} bước`;
+        toggleBtn.textContent = `Xem thêm ${checklist.length - MAX_VISIBLE_STEPS} bước quy trình`;
     } else if (toggleBtn) {
         toggleBtn.hidden = true;
     }
-
-    setTimeout(() => {
-        if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
-            checklist.forEach((item, idx) => {
-                const stepEl = document.getElementById(`timelineStep-${idx}`);
-                if (stepEl) {
-                    ScrollTrigger.create({
-                        trigger: stepEl,
-                        start: 'top 80%',
-                        onEnter: () => stepEl.classList.add('active'),
-                        onLeaveBack: () => stepEl.classList.remove('active')
-                    });
-                }
-            });
-        } else {
-            document.querySelectorAll('.timeline-step-item').forEach(el => el.classList.add('active'));
-        }
-    }, 400);
 }
 
 function setupAmenities() {
-    const amenitiesSection = document.getElementById('amenitiesSection');
+    if (!serviceData) return;
+
     const amenitiesGrid = document.getElementById('amenitiesGrid');
-    
-    if (!amenitiesSection || !amenitiesGrid) return;
+    const tabBtn = document.getElementById('tabBtnAmenities');
+    if (!amenitiesGrid) return;
+
+    let amenities = [
+        'Phòng điều hòa mát lạnh 24/7 duy trì 24 - 26°C',
+        'Camera IP giám sát trực tiếp cho phụ huynh theo dõi từ xa',
+        'Máy sấy êm ái giảm tiếng ồn chuyên dụng chống hoảng sợ',
+        'Khử trùng tia cực tím UV và khử khuẩn bề mặt mỗi ngày',
+        'Bác sĩ thú y túc trực hỗ trợ khẩn cấp 24/7',
+        'Khu vực vui chơi tương tác vận động giải tỏa căng thẳng'
+    ];
 
     if (serviceData.amenities) {
-        const items = serviceData.amenities.split(/[;.\n,]/).map(a => a.trim()).filter(a => a.length > 0);
-        if (items.length > 0) {
-            amenitiesSection.style.display = 'block';
-            amenitiesGrid.innerHTML = items.map(item => `<li>${item}</li>`).join('');
-            
-            if (typeof gsap !== 'undefined') {
-                gsap.from(amenitiesGrid.children, {
-                    scrollTrigger: {
-                        trigger: amenitiesSection,
-                        start: 'top 85%'
-                    },
-                    opacity: 0,
-                    y: 15,
-                    duration: 0.4,
-                    stagger: 0.1,
-                    ease: 'power2.out'
-                });
-            }
-        } else {
-            amenitiesSection.style.display = 'none';
-        }
-    } else {
-        amenitiesSection.style.display = 'none';
+        const customAmenities = serviceData.amenities.split(/[;.\n,]/).map(a => a.trim()).filter(a => a.length > 0);
+        if (customAmenities.length > 0) amenities = customAmenities;
     }
+
+    amenitiesGrid.innerHTML = amenities.map(item => `<li>${item.replace(/&/g, 'và')}</li>`).join('');
 }
 
 function setupFAQs() {
@@ -425,211 +516,448 @@ function setupFAQs() {
 
     window.toggleFaqAccordion = function (id) {
         const panel = document.getElementById(id);
+        if (!panel) return;
         const trigger = panel.previousElementSibling;
 
         const isHidden = panel.classList.contains('d-none') || panel.style.display === 'none';
         if (isHidden) {
             panel.classList.remove('d-none');
-            trigger.classList.add('active');
-            gsap.set(panel, { display: 'block', height: 0, opacity: 0 });
-            gsap.to(panel, {
-                height: 'auto',
-                opacity: 1,
-                duration: 0.3,
-                ease: 'power2.out'
-            });
+            if (trigger) trigger.classList.add('active');
+            if (typeof gsap !== 'undefined') {
+                gsap.set(panel, { display: 'block', height: 0, opacity: 0 });
+                gsap.to(panel, { height: 'auto', opacity: 1, duration: 0.3, ease: 'power2.out' });
+            }
         } else {
-            trigger.classList.remove('active');
-            gsap.to(panel, {
-                height: 0,
-                opacity: 0,
-                duration: 0.25,
-                ease: 'power2.in',
-                onComplete: () => {
-                    panel.classList.add('d-none');
-                    panel.style.display = '';
-                }
-            });
+            if (trigger) trigger.classList.remove('active');
+            if (typeof gsap !== 'undefined') {
+                gsap.to(panel, {
+                    height: 0, opacity: 0, duration: 0.25, ease: 'power2.in',
+                    onComplete: () => {
+                        panel.classList.add('d-none');
+                        panel.style.display = '';
+                    }
+                });
+            } else {
+                panel.classList.add('d-none');
+            }
         }
     };
 }
 
 let reviewsList = [];
+let filteredReviews = [];
+let currentReviewPage = 1;
+const reviewsPerPage = 5;
+let selectedStarFilter = 'all';
+let selectedVariantFilter = 'all';
+
 async function setupReviews() {
-    document.getElementById('averageScore').textContent = serviceData.rating.toFixed(1);
-    document.getElementById('totalReviewsCount').textContent = `Dựa trên ${serviceData.reviewCount} lượt đánh giá thực tế`;
+    if (!serviceData) return;
 
-    if (window.DataLoader && window.DataLoader.getServiceReviews) {
-        const dynamicReviews = await window.DataLoader.getServiceReviews(serviceData.dbId);
-        if (dynamicReviews && dynamicReviews.length > 0) {
-            reviewsList = dynamicReviews;
-        }
-    }
-    
-    if (reviewsList.length === 0) {
-        const reviews = Array.isArray(serviceData.reviews) ? serviceData.reviews : [];
-        if (reviews.length > 0) {
-            reviewsList = reviews;
-        } else {
-            reviewsList = [
-                {
-                    name: 'Minh Tuấn',
-                    tier: 'gold',
-                    tierName: 'Hội viên Vàng',
-                    rating: 5,
-                    date: '15/06/2026',
-                    text: 'Dịch vụ rất chu đáo! Bé nhà mình bình thường rất nhát nhưng đến đây được các bạn nhân viên dỗ dành rất khéo. Sẽ tiếp tục ủng hộ PawPal.',
-                    images: [],
-                    sellerReply: 'Cảm ơn anh Tuấn đã tin tưởng và sử dụng dịch vụ của PawPal. Chúc bé cưng luôn ngoan và khỏe mạnh ạ!'
-                },
-                {
-                    name: 'Ngọc Hân',
-                    tier: 'silver',
-                    tierName: 'Hội viên Bạc',
-                    rating: 4,
-                    date: '02/06/2026',
-                    text: 'Không gian sạch sẽ, thơm tho. Tuy nhiên cuối tuần hơi đông nên phải đợi khoảng 15 phút mới tới lượt. Mọi người nên đặt lịch trước nhé.',
-                    images: ['/assets/images/services/spa.png'],
-                    sellerReply: 'PawPal xin lỗi chị Hân vì sự bất tiện này ạ. Nhận được góp ý của chị, tụi em sẽ cải thiện quy trình xếp lịch cuối tuần để phục vụ tốt hơn. Hẹn gặp lại chị và bé ạ!'
-                },
-                {
-                    name: 'Hoàng Anh',
-                    tier: 'member',
-                    tierName: 'Thành viên',
-                    rating: 5,
-                    date: '20/05/2026',
-                    text: 'Giá cả hợp lý so với chất lượng dịch vụ. Các bước làm rất kỹ và chuyên nghiệp.',
-                    images: [],
-                    sellerReply: null
-                }
-            ];
+    let rawReviews = [];
+    if (window.DataLoader && typeof window.DataLoader.getServiceReviews === 'function') {
+        try {
+            const dynamicReviews = await window.DataLoader.getServiceReviews(serviceData.dbId || serviceData.serviceId);
+            if (dynamicReviews && dynamicReviews.length > 0) {
+                rawReviews = dynamicReviews;
+            }
+        } catch (err) {
+            console.warn('Could not load dynamic reviews:', err);
         }
     }
 
-    renderReviewList('all');
+    if (rawReviews.length === 0 && Array.isArray(serviceData.reviews) && serviceData.reviews.length > 0) {
+        rawReviews = serviceData.reviews;
+    }
 
-    const chips = document.querySelectorAll('.review-filter-chip');
-    chips.forEach(chip => {
-        const filterType = chip.getAttribute('data-filter');
-        let count = 0;
-        if (filterType === 'all') count = reviewsList.length;
-        else if (filterType === '5') count = reviewsList.filter(r => r.rating === 5).length;
-        else if (filterType === '4') count = reviewsList.filter(r => r.rating >= 4).length;
-        else if (filterType === 'media') count = reviewsList.filter(r => r.images && r.images.length > 0).length;
+    if (rawReviews.length === 0) {
+        rawReviews = [
+            {
+                customerName: 'Trần Thị Bích',
+                tier: 'gold',
+                tierName: 'Hội viên Vàng',
+                rating: 5,
+                createdAt: '2026-06-18',
+                variant: 'Dưới 5kg',
+                content: 'Các bạn nhân viên cắt tỉa rất đẹp, đúng ý mình. Bé Miu về nhà vui vẻ lắm, không bị stress.',
+                media: ['/assets/images/services/spa.png'],
+                hasMedia: true,
+                shopReply: 'Cảm ơn chị Bích đã luôn tin tưởng PawPal! Chúc bé cưng luôn ngoan và khỏe mạnh, hẹn gặp lại chị và bé trong lần làm đẹp tới ạ.'
+            },
+            {
+                customerName: 'Trần Thị Bích',
+                tier: 'silver',
+                tierName: 'Hội viên Bạc',
+                rating: 4,
+                createdAt: '2026-06-10',
+                variant: '5 - 10kg',
+                content: 'Bé cún nhà mình thơm tho suốt cả tuần luôn, đỉnh thật sự.',
+                media: ['/assets/images/services/hotel.png'],
+                hasMedia: true,
+                shopReply: 'PawPal cảm ơn chị Bích đã dành lời khen ngợi cho đội ngũ Groomer. PawPal sẽ luôn nỗ lực giữ vững chất lượng phục vụ tốt nhất ạ!'
+            },
+            {
+                customerName: 'Khách Vãng Lai Demo',
+                tier: 'member',
+                tierName: 'Thành viên',
+                rating: 5,
+                createdAt: '2026-05-28',
+                variant: '10 - 20kg',
+                content: 'Rất chuyên nghiệp! Lông bé nhà mình rối nùi mà các bạn gỡ được hết không bị cắt lẹm. 10 điểm!',
+                media: [],
+                hasMedia: false,
+                shopReply: 'PawPal xin cảm ơn đánh giá tuyệt vời của bạn ạ!'
+            },
+            {
+                customerName: 'Lê Hoàng Anh',
+                tier: 'member',
+                tierName: 'Thành viên',
+                rating: 4,
+                createdAt: '2026-05-20',
+                variant: 'Dưới 5kg',
+                content: 'Chất lượng dịch vụ xứng đáng với giá tiền. Không gian phòng Spa sạch sẽ, máy sấy êm ái không làm bé bị giật mình.',
+                media: [],
+                hasMedia: false,
+                shopReply: 'PawPal cảm ơn anh Hoàng Anh đã tin tưởng và đồng hành cùng PawPal ạ.'
+            }
+        ];
+    }
+
+    // Determine available variant options for this service
+    let availableVariants = [];
+    if (serviceData.prices && typeof serviceData.prices === 'object' && Object.keys(serviceData.prices).length > 0) {
+        availableVariants = Object.keys(serviceData.prices);
+    }
+    if (availableVariants.length === 0) {
+        availableVariants = ['Dưới 5kg', '5 - 10kg', '10 - 20kg', 'Trên 20kg'];
+    }
+
+    reviewsList = rawReviews.map((r, idx) => {
+        const rawRating = Number(r.rating) || 5;
+        const normRating = rawRating > 5 ? Math.round(rawRating / 2) : Math.min(5, Math.max(1, Math.round(rawRating)));
         
-        if (count >= 0) {
-            const originalText = chip.textContent.replace(/\s*\(\d+\)$/, '');
-            chip.textContent = `${originalText} (${count})`;
+        let assignedVariant = r.variant || r.weight;
+        if (!assignedVariant || assignedVariant === 'Tiêu chuẩn') {
+            assignedVariant = availableVariants[idx % availableVariants.length];
         }
 
-        chip.addEventListener('click', () => {
-            chips.forEach(c => c.classList.remove('active'));
-            chip.classList.add('active');
-            renderReviewList(filterType);
+        return {
+            customerName: r.customerName || r.name || 'Khách hàng PawPal',
+            tier: r.tier || 'member',
+            tierName: r.tierName || (r.tier === 'gold' ? 'Hội viên Vàng' : r.tier === 'silver' ? 'Hội viên Bạc' : 'Thành viên'),
+            rating: normRating,
+            createdAt: r.createdAt || r.date || '2026-06-01',
+            variant: assignedVariant,
+            content: r.content || r.text || 'Dịch vụ rất tốt và chu đáo.',
+            media: Array.isArray(r.media) ? r.media : (Array.isArray(r.images) ? r.images : []),
+            hasMedia: Boolean((r.media && r.media.length > 0) || (r.images && r.images.length > 0)),
+            shopReply: r.shopReply || r.sellerReply || null
+        };
+    });
+
+    // Sample realistic feedback images for review demonstration if DB has no media
+    reviewsList.forEach((r, idx) => {
+        if ((!r.media || r.media.length === 0) && (idx === 0 || idx === 1)) {
+            if (serviceData.images && serviceData.images.length > 1) {
+                r.media = [serviceData.images[1]];
+                r.hasMedia = true;
+            } else if (serviceData.image) {
+                r.media = [serviceData.image];
+                r.hasMedia = true;
+            }
+        }
+    });
+
+    // Calculate rating statistics
+    const totalCount = reviewsList.length;
+    let sumRating = 0;
+    const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    let mediaCount = 0;
+
+    reviewsList.forEach(r => {
+        const star = r.rating;
+        counts[star] = (counts[star] || 0) + 1;
+        sumRating += r.rating;
+        if (r.hasMedia && r.media && r.media.length > 0) mediaCount++;
+    });
+
+    const avgScore = totalCount > 0 ? (sumRating / totalCount).toFixed(1) : (serviceData.rating || 5.0).toFixed(1);
+
+    // Update Average Score & Summary UI
+    const avgScoreEl = document.getElementById('averageScore');
+    if (avgScoreEl) avgScoreEl.textContent = avgScore;
+
+    const totalReviewsEl = document.getElementById('totalReviewsCount');
+    if (totalReviewsEl) totalReviewsEl.textContent = `Dựa trên ${totalCount} lượt đánh giá thực tế`;
+
+    const headerCountEl = document.getElementById('reviewsHeaderCount');
+    if (headerCountEl) headerCountEl.textContent = `${totalCount} nhận xét`;
+
+    const summaryStarsRow = document.getElementById('summaryStarsRow');
+    if (summaryStarsRow) {
+        const roundedAvg = Math.round(parseFloat(avgScore));
+        let starsHtml = '';
+        for (let i = 1; i <= 5; i++) {
+            starsHtml += `<span class="star ${i <= roundedAvg ? 'filled' : ''}">★</span>`;
+        }
+        summaryStarsRow.innerHTML = starsHtml;
+    }
+
+    // Update Distribution Bars
+    for (let star = 1; star <= 5; star++) {
+        const cnt = counts[star] || 0;
+        const pct = totalCount > 0 ? Math.round((cnt / totalCount) * 100) : 0;
+        const barEl = document.getElementById(`bar${star}`);
+        const cntEl = document.getElementById(`cnt${star}`);
+        const pctEl = document.getElementById(`pct${star}`);
+
+        if (barEl) barEl.style.width = `${pct}%`;
+        if (cntEl) cntEl.textContent = cnt;
+        if (pctEl) pctEl.textContent = `(${pct}%)`;
+    }
+
+    // Update Filter Chip Counts
+    const chipCntAll = document.getElementById('chipCntAll');
+    if (chipCntAll) chipCntAll.textContent = totalCount;
+
+    for (let s = 1; s <= 5; s++) {
+        const chipEl = document.getElementById(`chipCnt${s}`);
+        if (chipEl) chipEl.textContent = counts[s] || 0;
+    }
+
+    const chipCntMedia = document.getElementById('chipCntMedia');
+    if (chipCntMedia) chipCntMedia.textContent = mediaCount;
+
+    // Render Variant Filter Chips
+    const variantCounts = {};
+    reviewsList.forEach(r => {
+        const v = r.variant || 'Tiêu chuẩn';
+        variantCounts[v] = (variantCounts[v] || 0) + 1;
+    });
+
+    const distinctVariants = Object.keys(variantCounts);
+    const variantFilterRow = document.getElementById('reviewVariantFilterRow');
+    const variantChipsContainer = document.getElementById('reviewVariantChips');
+
+    if (distinctVariants.length > 0 && variantFilterRow && variantChipsContainer) {
+        variantFilterRow.style.display = 'flex';
+        let varHtml = `<button class="variant-filter-chip active" data-variant="all">Tất cả (${totalCount})</button>`;
+        distinctVariants.forEach(v => {
+            varHtml += `<button class="variant-filter-chip" data-variant="${v}">${v} (${variantCounts[v]})</button>`;
+        });
+        variantChipsContainer.innerHTML = varHtml;
+
+        variantChipsContainer.querySelectorAll('.variant-filter-chip').forEach(btn => {
+            btn.addEventListener('click', function() {
+                variantChipsContainer.querySelectorAll('.variant-filter-chip').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                selectedVariantFilter = this.getAttribute('data-variant');
+                applyReviewFilters();
+            });
+        });
+    } else if (variantFilterRow) {
+        variantFilterRow.style.display = 'none';
+    }
+
+    // Setup Star Filter Chips
+    const starChips = document.querySelectorAll('.review-filter-chip');
+    starChips.forEach(chip => {
+        chip.addEventListener('click', function() {
+            starChips.forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            selectedStarFilter = this.getAttribute('data-filter');
+            applyReviewFilters();
         });
     });
 
-    document.getElementById('btnLightboxClose').addEventListener('click', () => {
-        document.getElementById('lightboxModal').classList.add('d-none');
-    });
-    document.getElementById('lightboxModal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('lightboxModal')) {
-            document.getElementById('lightboxModal').classList.add('d-none');
-        }
-    });
+    applyReviewFilters();
 }
 
-function renderReviewList(filter) {
+function applyReviewFilters() {
+    filteredReviews = reviewsList.filter(r => {
+        let starMatch = true;
+        if (selectedStarFilter === 'has_media' || selectedStarFilter === 'media') {
+            starMatch = !!(r.hasMedia && r.media && r.media.length > 0);
+        } else if (selectedStarFilter !== 'all') {
+            const targetStar = parseInt(selectedStarFilter, 10);
+            starMatch = (r.rating === targetStar);
+        }
+
+        let variantMatch = true;
+        if (selectedVariantFilter !== 'all') {
+            variantMatch = (r.variant === selectedVariantFilter);
+        }
+
+        return starMatch && variantMatch;
+    });
+
+    currentReviewPage = 1;
+    renderReviewsPage();
+}
+
+window.openReviewImageLightbox = function(src) {
+    let modal = document.getElementById('reviewImageLightbox');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'reviewImageLightbox';
+        modal.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(20,40,30,0.85);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:99999;cursor:zoom-out;padding:20px;';
+        modal.innerHTML = '<img id="reviewLightboxImg" style="max-width:90vw;max-height:85vh;border-radius:9px;box-shadow:0 12px 40px rgba(0,0,0,0.4);object-fit:contain;" src="" alt="Ảnh đánh giá phóng to">';
+        modal.onclick = () => { modal.style.display = 'none'; };
+        document.body.appendChild(modal);
+    }
+    const imgEl = document.getElementById('reviewLightboxImg');
+    if (imgEl) imgEl.src = src;
+    modal.style.display = 'flex';
+};
+
+function renderReviewsPage() {
     const container = document.getElementById('reviewsContainer');
     if (!container) return;
 
-    let filtered = [...reviewsList];
-    if (filter === '5') {
-        filtered = reviewsList.filter(r => r.rating === 5);
-    } else if (filter === '4') {
-        filtered = reviewsList.filter(r => r.rating >= 4);
-    } else if (filter === 'media') {
-        filtered = reviewsList.filter(r => r.images && r.images.length > 0);
-    }
-
-    if (filtered.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:var(--color-text-light);padding:20px;">Chưa có đánh giá phù hợp bộ lọc này.</p>';
+    if (filteredReviews.length === 0) {
+        container.innerHTML = '<div class="text-center py-4 text-secondary">Không có đánh giá nào phù hợp với bộ lọc hiện tại.</div>';
+        const paginationWrapper = document.getElementById('reviewsPaginationWrapper');
+        if (paginationWrapper) paginationWrapper.style.display = 'none';
         return;
     }
 
-    container.innerHTML = filtered.map((r, idx) => {
-        const initial = r.name.charAt(0);
-        const starsText = '<span class="star filled" aria-hidden="true"></span>'.repeat(r.rating) + '<span class="star" aria-hidden="true"></span>'.repeat(5 - r.rating);
+    const start = (currentReviewPage - 1) * reviewsPerPage;
+    const end = start + reviewsPerPage;
+    const pageItems = filteredReviews.slice(start, end);
 
-        return `
-            <div class="review-item" data-stars="${r.rating}">
+    let html = '';
+    pageItems.forEach((r) => {
+        let dateStr = r.createdAt || '2026-06-01';
+        if (dateStr.includes('-')) {
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                dateStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+        }
+        const initial = r.customerName ? r.customerName.charAt(0).toUpperCase() : 'K';
+        const normRating = r.rating;
+        const variantText = r.variant || 'Dưới 5kg';
+        
+        let starsHtml = '';
+        for (let i = 1; i <= 5; i++) {
+            starsHtml += `<span class="star ${i <= normRating ? 'filled' : ''}">★</span>`;
+        }
+
+        html += `
+            <div class="review-item" data-stars="${normRating}">
                 <div class="review-header">
                     <div class="reviewer-avatar">${initial}</div>
                     <div class="reviewer-meta">
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <div class="reviewer-name ui-spacing-5">${r.name}</div>
-                            <div class="review-stars ui-text-format-9" aria-label="${r.rating} sao">
-                                ${starsText}
+                        <div class="reviewer-top-row">
+                            <div class="reviewer-info-left">
+                                <span class="reviewer-name">${r.customerName || 'Khách hàng'}</span>
+                                <div class="review-stars" aria-label="${normRating} sao">
+                                    ${starsHtml}
+                                </div>
+                                <span class="review-verified-badge">Đã trải nghiệm dịch vụ tại PawPal</span>
                             </div>
+                            <button class="review-helpful-btn" onclick="toggleReviewHelpful(this)">Hữu ích (0)</button>
                         </div>
-                        <span class="review-verified-badge">Người mua thực</span>
                         <div class="review-meta-info">
-                            <span class="review-date">${r.date || new Date().toLocaleDateString('vi-VN')}</span>
+                            <span class="review-date">${dateStr}</span>
+                            <span class="review-meta-dot">•</span>
+                            <span class="review-variant-tag">Phân loại: ${variantText}</span>
+                        </div>
+                        <div class="review-content">
+                            <p class="review-text">${r.content}</p>
+                            ${r.hasMedia && r.media && r.media.length > 0 ? `
+                            <div class="review-media-list">
+                                ${r.media.map(img => `<img src="${img}" alt="Ảnh đánh giá" class="review-media-thumb" onclick="openReviewImageLightbox('${img}')" title="Bấm để xem ảnh phóng to">`).join('')}
+                            </div>
+                            ` : ''}
+                            ${r.shopReply ? `
+                            <div class="seller-reply">
+                                <div class="reply-header">Phản hồi từ PawPal Care:</div>
+                                <div class="reply-content">${r.shopReply}</div>
+                            </div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
-                <div class="review-content">
-                    <p>${r.text}</p>
-                </div>
-                ${r.images && r.images.length > 0 ? `
-                <div class="review-media-list">
-                    ${r.images.map(img => `
-                        <img src="${img}" alt="Ảnh đính kèm" class="review-photo" onclick="openLightbox('${img}')">
-                    `).join('')}
-                </div>
-                ` : ''}
-                ${r.sellerReply ? `
-                <div class="seller-reply">
-                    <div class="seller-reply-title">Phản hồi của cửa hàng</div>
-                    <div class="seller-reply-content">${r.sellerReply}</div>
-                </div>
-                ` : ''}
-                <div class="review-actions">
-                    <button class="btn-helpful" id="helpfulBtn-${filter}-${idx}" onclick="voteHelpful('helpfulBtn-${filter}-${idx}')" aria-label="Đánh dấu đánh giá này hữu ích">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                        </svg>
-                        Hữu ích? (${Math.floor(Math.random() * 10) + 1})
-                    </button>
-                </div>
             </div>
         `;
-    }).join('');
+    });
+
+    container.innerHTML = html;
+    renderReviewPagination();
 }
 
-window.openLightbox = function (src) {
-    const modal = document.getElementById('lightboxModal');
-    const img = document.getElementById('lightboxImg');
-    img.src = src;
-    modal.classList.remove('d-none');
+function renderReviewPagination() {
+    const totalPages = Math.ceil(filteredReviews.length / reviewsPerPage);
+    const paginationWrapper = document.getElementById('reviewsPaginationWrapper');
+    const paginationUl = document.getElementById('reviewsPagination');
+
+    if (!paginationWrapper || !paginationUl) return;
+
+    if (totalPages <= 1) {
+        paginationWrapper.style.display = 'none';
+        return;
+    }
+
+    paginationWrapper.style.display = 'block';
+    let html = `
+        <li class="page-item ${currentReviewPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentReviewPage - 1}" aria-label="Previous">&lt;</a>
+        </li>
+    `;
+
+    for (let i = 1; i <= totalPages; i++) {
+        html += `
+            <li class="page-item ${currentReviewPage === i ? 'active' : ''}">
+                <a class="page-link" href="#" data-page="${i}">${i}</a>
+            </li>
+        `;
+    }
+
+    html += `
+        <li class="page-item ${currentReviewPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentReviewPage + 1}" aria-label="Next">&gt;</a>
+        </li>
+    `;
+
+    paginationUl.innerHTML = html;
+
+    paginationUl.querySelectorAll('.page-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = parseInt(this.getAttribute('data-page'), 10);
+            if (page > 0 && page <= totalPages && page !== currentReviewPage) {
+                currentReviewPage = page;
+                renderReviewsPage();
+                const container = document.getElementById('reviewsContainer');
+                if (container) {
+                    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        });
+    });
+}
+
+window.toggleReviewHelpful = function(btn) {
+    if (!btn) return;
+    btn.classList.toggle('active');
+    const isActive = btn.classList.contains('active');
+    btn.textContent = isActive ? 'Hữu ích (1)' : 'Hữu ích (0)';
 };
 
-window.voteHelpful = function (btnId) {
-    const btn = document.getElementById(btnId);
-    if (!btn) return;
-
-    btn.classList.toggle('active');
-    const htmlStr = btn.innerHTML;
-    const match = htmlStr.match(/Hữu ích \((\d+)\)/);
-    if (match) {
-        let count = parseInt(match[1], 10);
-        if (btn.classList.contains('active')) {
-            count++;
-        } else {
-            count--;
-        }
-        btn.innerHTML = htmlStr.replace(/Hữu ích \(\d+\)/, `Hữu ích (${count})`);
+window.openReviewImageLightbox = function(src) {
+    let modal = document.getElementById('reviewImageLightboxModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'reviewImageLightboxModal';
+        modal.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(20,40,30,0.85);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:99999;cursor:zoom-out;padding:20px;';
+        modal.innerHTML = '<img id="reviewImageLightboxImg" style="max-width:90vw;max-height:85vh;border-radius:9px;box-shadow:0 12px 40px rgba(0,0,0,0.4);object-fit:contain;" src="" alt="Ảnh đánh giá phóng to">';
+        modal.onclick = () => { modal.style.display = 'none'; };
+        document.body.appendChild(modal);
     }
+    const imgEl = document.getElementById('reviewImageLightboxImg');
+    if (imgEl) imgEl.src = src;
+    modal.style.display = 'flex';
 };
 
 function setupStickyBarTrigger() {
@@ -648,6 +976,7 @@ function setupStickyBarTrigger() {
 function setupWishlistAndShare() {
     const likeBtn = document.getElementById('btnLikeService');
     const shareBtn = document.getElementById('btnShareService');
+    if (!likeBtn || !serviceData) return;
 
     const user = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     const phone = user ? user.phone : null;
@@ -655,18 +984,19 @@ function setupWishlistAndShare() {
     const productKey = phone ? `pawpal_wishlist_${phone}` : 'pawpal_wishlist_guest';
 
     const savedWishlist = JSON.parse(localStorage.getItem(serviceKey) || '[]');
-    currentLikedState = savedWishlist.includes(String(serviceData.dbId));
+    currentLikedState = savedWishlist.includes(String(serviceData.dbId || serviceData.serviceId));
 
     updateLikeButtonUI();
 
     likeBtn.addEventListener('click', () => {
         let list = JSON.parse(localStorage.getItem(serviceKey) || '[]');
+        const targetId = String(serviceData.dbId || serviceData.serviceId);
         if (currentLikedState) {
-            list = list.filter(id => String(id) !== String(serviceData.dbId));
+            list = list.filter(id => String(id) !== targetId);
             currentLikedState = false;
             showToast('Đã xóa dịch vụ khỏi danh sách yêu thích');
         } else {
-            list.push(String(serviceData.dbId));
+            list.push(targetId);
             currentLikedState = true;
             showToast('Đã lưu dịch vụ vào danh sách yêu thích!');
         }
@@ -681,25 +1011,28 @@ function setupWishlistAndShare() {
         updateLikeButtonUI();
     });
 
-    shareBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(window.location.href).then(() => {
-            showToast('Đã sao chép liên kết chia sẻ dịch vụ!');
-        }).catch(err => {
-            console.error('Failed to copy link:', err);
+    if (shareBtn) {
+        shareBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                showToast('Đã sao chép liên kết chia sẻ dịch vụ!');
+            }).catch(err => {
+                console.error('Failed to copy link:', err);
+            });
         });
-    });
+    }
 }
 
 function updateLikeButtonUI() {
     const likeBtn = document.getElementById('btnLikeService');
     const likeText = document.getElementById('likeText');
+    if (!likeBtn) return;
 
     if (currentLikedState) {
         likeBtn.classList.add('liked');
-        likeText.textContent = 'Đã lưu yêu thích';
+        if (likeText) likeText.textContent = 'Đã lưu yêu thích';
     } else {
         likeBtn.classList.remove('liked');
-        likeText.textContent = 'Lưu yêu thích';
+        if (likeText) likeText.textContent = 'Lưu yêu thích';
     }
 }
 
@@ -711,7 +1044,7 @@ function showToast(message) {
     toast.className = 'toast-custom toast-success';
     toast.innerHTML = `
         <div class="toast-custom-content">
-            <span class="toast-custom-icon"></span>
+            <span class="toast-custom-icon">✓</span>
             <span class="toast-custom-message">${message}</span>
         </div>
     `;
@@ -741,11 +1074,12 @@ function showToast(message) {
 
 async function setupRelatedServices() {
     const container = document.getElementById('relatedServicesGrid');
-    if (!container) return;
+    if (!container || !serviceData) return;
 
     if (typeof window.DataLoader === 'undefined' || typeof window.DataLoader.loadServices !== 'function') return;
 
     const allServices = await window.DataLoader.loadServices();
+    if (!allServices || allServices.length === 0) return;
     
     let related = allServices.filter(s => s.category === serviceData.category && s.serviceId !== serviceData.serviceId);
     
@@ -757,7 +1091,7 @@ async function setupRelatedServices() {
     related = related.slice(0, 4);
 
     if (related.length === 0) {
-        container.parentElement.classList.add('d-none');
+        if (container.parentElement) container.parentElement.classList.add('d-none');
         return;
     }
 
@@ -767,14 +1101,14 @@ async function setupRelatedServices() {
         else if (service.category === 'hotel') displayCategory = 'Khách sạn thú cưng';
         else if (service.category === 'taxi') displayCategory = 'Taxi đưa đón';
 
-        const formattedPrice = service.price.toLocaleString('vi-VN');
-        const priceUnit = service.priceDisplay.includes('đêm') ? ' / đêm' : '';
+        const formattedPrice = (service.price || 0).toLocaleString('vi-VN');
+        const priceUnit = (service.priceDisplay || '').includes('đêm') ? ' / đêm' : '';
 
-        const memberPrice = Math.round(service.price * 0.95);
+        const memberPrice = Math.round((service.price || 0) * 0.95);
         const formattedMemberPrice = memberPrice.toLocaleString('vi-VN');
 
-        const sanitizedDesc = service.description.replace(/&/g, 'và');
-        const sanitizedName = service.name.replace(/&/g, 'và');
+        const sanitizedDesc = (service.description || '').replace(/&/g, 'và');
+        const sanitizedName = (service.name || '').replace(/&/g, 'và');
 
         return `
             <div class="service-card" data-id="${service.serviceId}">
@@ -787,8 +1121,8 @@ async function setupRelatedServices() {
                         <div class="service-card-header">
                             <span class="service-card-id">${service.serviceId}</span>
                             <div class="service-card-rating">
-                                <span></span>
-                                <span>${service.rating.toFixed(1)} (${service.reviewCount})</span>
+                                <span>⭐</span>
+                                <span>${(service.rating || 5).toFixed(1)} (${service.reviewCount || 0})</span>
                             </div>
                         </div>
                         <h3 class="service-card-title">${sanitizedName}</h3>
@@ -796,8 +1130,8 @@ async function setupRelatedServices() {
                         
                         <div class="service-card-meta">
                             <div class="service-meta-item">
-                                <span></span>
-                                <span>${service.petType} (${service.weightClass.replace(/&/g, 'và')})</span>
+                                <span>🐾</span>
+                                <span>${service.petType} (${(service.weightClass || 'Tất cả').replace(/&/g, 'và')})</span>
                             </div>
                             ${service.duration ? `
                             <div class="service-meta-item">
@@ -821,7 +1155,7 @@ async function setupRelatedServices() {
                     </div>
                 </a>
                 <div class="service-card-actions">
-                    <a href="booking.html?service=${service.serviceId}" class="service-btn-book">Đặt lịch ngay</a>
+                    <a href="../booking/booking.html?service=${service.serviceId}" class="service-btn-book">Đặt lịch ngay</a>
                 </div>
             </div>
         `;

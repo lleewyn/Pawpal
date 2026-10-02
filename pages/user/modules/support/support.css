@@ -642,6 +642,61 @@
 /* support-tickets.css - Chuẩn hóa giao diện Hỗ trợ & Khiếu nại PawPal */
 
 /* =========================================================
+   0. BỘ LỌC SUBTABS TEXT-ONLY (FOREST GREEN & SAGE)
+   ========================================================= */
+.support-toolbar-row {
+    margin-bottom: 20px;
+    padding-bottom: 4px;
+}
+
+.support-filter-tabs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.support-filter-tab {
+    background: transparent;
+    border: none;
+    padding: 6px 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    color: #4F7A65;
+    cursor: pointer;
+    border-radius: 9px !important;
+    transition: color 0.2s ease, font-weight 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    outline: none;
+}
+
+.support-filter-tab:hover {
+    color: #236B48;
+    background: transparent;
+}
+
+.support-filter-tab.active {
+    color: #236B48;
+    font-weight: 700;
+    background: transparent;
+}
+
+.support-filter-tab .tab-count {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.tab-separator {
+    color: #AEC8B9;
+    font-size: 14px;
+    user-select: none;
+}
+
+/* =========================================================
    1. BẢNG PHIẾU HỖ TRỢ (TICKETS TABLE)
    ========================================================= */
 .tickets-table-wrapper {
@@ -1241,8 +1296,117 @@ body.ticket-modal-open {
     color: #FFFFFF;
     border: none;
     cursor: pointer;
+    transition: all 0.15s ease;
 }
 
 .btn-submit-rating:hover {
     background: #1A5438;
+}
+
+/* =========================================================
+   7. GIAO DIỆN TẠO YÊU CẦU HỖ TRỢ / KHIẾU NẠI (SUPPORT CREATE)
+   ========================================================= */
+.btn-support-create {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #236B48;
+    color: #FFFFFF !important;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 9px;
+    border: none;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.btn-support-create:hover {
+    background: #1A5438;
+    color: #FFFFFF !important;
+}
+
+.support-create-container {
+    animation: userModuleFadeIn 0.2s ease-out;
+}
+
+.support-create-form {
+    background: #FFFFFF;
+    border: 1px solid #ECF2EE;
+    border-radius: 9px;
+    padding: 24px 28px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.support-context-box {
+    background: #F8FAF9 !important;
+    border: 1px solid #ECF2EE !important;
+    border-radius: 9px !important;
+}
+
+.support-form-select,
+.support-form-input,
+.support-form-textarea {
+    border: 1px solid #ECF2EE !important;
+    border-radius: 9px !important;
+    font-size: 13.5px !important;
+    color: #203A2C !important;
+    padding: 10px 14px !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.support-form-select:focus,
+.support-form-input:focus,
+.support-form-textarea:focus {
+    border-color: #236B48 !important;
+    box-shadow: 0 0 0 2px rgba(35, 107, 72, 0.12) !important;
+    outline: none !important;
+}
+
+.file-preview-box {
+    border: 1px solid #ECF2EE !important;
+    border-radius: 9px !important;
+    background: #FFFFFF !important;
+}
+
+.btn-support-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #236B48;
+    color: #FFFFFF;
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 9px 24px;
+    border-radius: 9px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.btn-support-submit:hover {
+    background: #1A5438;
+}
+
+.btn-cancel-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: #4F7A65 !important;
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 9px 20px;
+    border-radius: 9px;
+    border: 1px solid #AEC8B9;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-cancel-link:hover {
+    background: #EEF5F1;
+    color: #236B48 !important;
+    border-color: #236B48;
 }

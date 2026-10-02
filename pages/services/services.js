@@ -178,7 +178,7 @@ function updateServicesFilterCount() {
 
 let currentWishlistServiceIds = [];
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initServicesPage() {
     console.log('=== SERVICES PAGE LOADING ===');
     initResponsiveServicesSidebar();
     initServicesFilterControls();
@@ -195,6 +195,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (window.DataLoader && typeof window.DataLoader.loadServices === 'function') {
             allServices = await window.DataLoader.loadServices();
+        }
+        
+        if (!allServices || allServices.length === 0) {
+            try {
+                const res = await fetch('/data/services.json?v=' + Date.now());
+                if (res.ok) allServices = await res.json();
+            } catch(e) {
+                console.warn('Fallback fetch /data/services.json error:', e);
+            }
+        }
+
+        if (allServices && allServices.length > 0) {
             console.log(` Loaded ${allServices.length} services`);
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -207,14 +219,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             applyFilters();
             updateServicesFilterCount();
         } else {
-            console.error('DataLoader.loadServices not found');
+            console.error('No services loaded');
             showErrorMessage();
         }
     } catch (error) {
         console.error('Error loading services:', error);
         showErrorMessage();
     }
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initServicesPage);
+} else {
+    initServicesPage();
+}
 
 function showErrorMessage() {
     const grid = document.getElementById('servicesGrid');
@@ -338,16 +356,16 @@ function renderServices() {
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                     </svg>
                 </button>
-                <a href="service-detail/service-detail.html?id=${service.serviceId}" class="service-card-link">
+                <a href="/pages/services/service-detail/service-detail.html?id=${service.serviceId}" class="service-card-link">
                     <div class="service-image-wrapper">
                         <span class="service-category-badge">${displayCategory}</span>
-                        <img src="${service.image}" alt="${sanitizedName}" class="service-image" loading="lazy" onerror="this.onerror=null; this.src='../../assets/images/services/${service.category === 'hotel' ? 'hotel.png' : 'spa.png'}'">
+                        <img src="${service.image}" alt="${sanitizedName}" class="service-image" loading="lazy" onerror="this.onerror=null; this.src='/assets/images/services/${service.category === 'hotel' ? 'hotel.png' : 'spa.png'}'">
                     </div>
                     <div class="service-card-info">
                         <div class="service-card-header">
                             <span class="service-card-id">${service.serviceId}</span>
                             <div class="service-card-rating">
-                                <span></span>
+                                <span>⭐</span>
                                 <span>${service.rating.toFixed(1)} (${service.reviewCount})</span>
                             </div>
                         </div>
@@ -356,7 +374,7 @@ function renderServices() {
                         
                         <div class="service-card-meta">
                             <div class="service-meta-item">
-                                <span></span>
+                                <span>🐾</span>
                                 <span>${service.petType} (${service.weightClass.replace(/&/g, 'và')})</span>
                             </div>
                             ${service.duration ? `
@@ -381,7 +399,7 @@ function renderServices() {
                     </div>
                 </a>
                 <div class="service-card-actions">
-                    <a href="booking/booking.html?service=${service.serviceId}" class="service-btn-book">Đặt lịch ngay</a>
+                    <a href="/pages/services/booking/booking.html?service=${service.serviceId}" class="service-btn-book">Đặt lịch ngay</a>
                 </div>
             </div>
         `;

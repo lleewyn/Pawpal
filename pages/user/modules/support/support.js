@@ -15,6 +15,7 @@ export function initSupportTickets() {
     ensureSupportReady(async () => {
         let activeTicketId = null;
         let currentSelectedRating = 5;
+        let currentFilter = 'all';
 
         const ticketsTableBody = document.getElementById('ticketsListTableBody');
         const detailModalOverlay = document.getElementById('ticketDetailModalOverlay');
@@ -34,6 +35,70 @@ export function initSupportTickets() {
         const btnSubmitRating = document.getElementById('btnSubmitRating');
         const createTicketForm = document.getElementById('createTicketForm');
         const fileInput = document.getElementById('ticketFile');
+
+        const countAll = document.getElementById('countAll');
+        const countPending = document.getElementById('countPending');
+        const countProcessing = document.getElementById('countProcessing');
+        const countCompleted = document.getElementById('countCompleted');
+        const filterTabs = document.querySelectorAll('.support-filter-tab');
+
+        function renderSkeletonRows() {
+            if (!ticketsTableBody) return;
+            ticketsTableBody.innerHTML = `
+                <tr>
+                    <td><span class="pawpal-skeleton" style="width: 85px; height: 22px;"></span></td>
+                    <td>
+                        <div class="d-flex flex-column gap-1">
+                            <span class="pawpal-skeleton" style="width: 220px; height: 14px;"></span>
+                            <span class="pawpal-skeleton" style="width: 130px; height: 12px;"></span>
+                        </div>
+                    </td>
+                    <td class="text-center"><span class="pawpal-skeleton" style="width: 80px; height: 22px;"></span></td>
+                    <td class="text-center"><span class="pawpal-skeleton" style="width: 60px; height: 22px;"></span></td>
+                    <td class="text-center"><span class="pawpal-skeleton" style="width: 55px; height: 26px;"></span></td>
+                </tr>
+                <tr>
+                    <td><span class="pawpal-skeleton" style="width: 85px; height: 22px;"></span></td>
+                    <td>
+                        <div class="d-flex flex-column gap-1">
+                            <span class="pawpal-skeleton" style="width: 250px; height: 14px;"></span>
+                            <span class="pawpal-skeleton" style="width: 140px; height: 12px;"></span>
+                        </div>
+                    </td>
+                    <td class="text-center"><span class="pawpal-skeleton" style="width: 80px; height: 22px;"></span></td>
+                    <td class="text-center"><span class="pawpal-skeleton" style="width: 60px; height: 22px;"></span></td>
+                    <td class="text-center"><span class="pawpal-skeleton" style="width: 55px; height: 26px;"></span></td>
+                </tr>
+            `;
+        }
+
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                filterTabs.forEach(t => {
+                    t.classList.remove('active');
+                    t.setAttribute('aria-selected', 'false');
+                });
+                tab.classList.add('active');
+                tab.setAttribute('aria-selected', 'true');
+                currentFilter = tab.getAttribute('data-status') || 'all';
+                renderSkeletonRows();
+                setTimeout(() => {
+                    renderTable();
+                }, 160);
+            });
+        });
+
+        function updateCounts(tickets) {
+            const allCount = tickets.length;
+            const pendingCount = tickets.filter(t => !t.status || t.status === 'pending').length;
+            const processingCount = tickets.filter(t => t.status === 'processing').length;
+            const completedCount = tickets.filter(t => t.status === 'completed' || t.status === 'resolved' || t.status === 'closed').length;
+
+            if (countAll) countAll.textContent = `(${allCount})`;
+            if (countPending) countPending.textContent = `(${pendingCount})`;
+            if (countProcessing) countProcessing.textContent = `(${processingCount})`;
+            if (countCompleted) countCompleted.textContent = `(${completedCount})`;
+        }
 
         function escapeHtml(str) {
             if (!str) return '';
@@ -109,14 +174,27 @@ export function initSupportTickets() {
 
         function renderTable() {
             if (!ticketsTableBody) return;
-            const tickets = window.PawPalSupport.getTickets();
+            const allTickets = window.PawPalSupport.getTickets();
+            updateCounts(allTickets);
+
+            let tickets = allTickets;
+            if (currentFilter === 'pending') {
+                tickets = allTickets.filter(t => !t.status || t.status === 'pending');
+            } else if (currentFilter === 'processing') {
+                tickets = allTickets.filter(t => t.status === 'processing');
+            } else if (currentFilter === 'completed') {
+                tickets = allTickets.filter(t => t.status === 'completed' || t.status === 'resolved' || t.status === 'closed');
+            }
+
             ticketsTableBody.innerHTML = '';
 
             if (tickets.length === 0) {
+                const emptyMsg = currentFilter === 'all' 
+                    ? 'Bạn chưa gửi yêu cầu hỗ trợ nào.' 
+                    : `Không có phiếu hỗ trợ nào ở trạng thái "${currentFilter === 'pending' ? 'Chờ xử lý' : (currentFilter === 'processing' ? 'Đang giải quyết' : 'Hoàn tất')}".`;
                 ticketsTableBody.innerHTML = `
                     <tr><td colspan="5" class="tickets-empty-cell">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        <p>Bạn chưa gửi yêu cầu hỗ trợ nào.</p>
+                        <p class="mb-0 text-muted">${emptyMsg}</p>
                     </td></tr>`;
                 return;
             }
@@ -220,7 +298,7 @@ export function initSupportTickets() {
                             <div class="ticket-context-card">
                                 <div class="context-card-header">
                                     <span class="context-type-badge">Ca Dịch vụ liên quan</span>
-                                    ${ticket.context.bookingId ? `<a href="../booking-detail/booking-detail.html?id=${encodeURIComponent(ticket.context.bookingId)}" class="context-link-btn">Xem chi tiết ca này &rarr;</a>` : ''}
+                                    ${ticket.context.bookingId ? `<a href="#booking-detail?id=${encodeURIComponent(ticket.context.bookingId)}" class="context-link-btn">Xem chi tiết ca này &rarr;</a>` : ''}
                                 </div>
                                 <div class="context-specs">
                                     <div class="context-spec-item">
@@ -570,28 +648,17 @@ export function initSupportTickets() {
         await window.PawPalSupport.loadTickets();
         renderTable();
 
-        // Kiểm tra xem có yêu cầu mở trực tiếp mã ticket từ URL không (?id=...)
-        const urlParams = new URLSearchParams(window.location.search);
+        // Kiểm tra xem có yêu cầu mở trực tiếp mã ticket từ URL / Hash không (?id=...)
+        const hashParts = window.location.hash.split('?');
+        const urlParams = new URLSearchParams(hashParts[1] || window.location.search);
         const queryTicketId = urlParams.get('id');
         if (queryTicketId) {
             setTimeout(() => {
                 showTicketDetail(queryTicketId);
-            }, 100);
+            }, 150);
         }
     });
 }
 window.initSupportTickets = initSupportTickets;
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSupportTickets);
-} else {
-    initSupportTickets();
-}
-
 export const init = initSupportTickets;
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}

@@ -51,18 +51,42 @@ let currentCareLog = null;
 let bannerTimeout = null;
 let currentServiceReviewRating = 0;
 
-document.addEventListener('DOMContentLoaded', async function () {
+function getBookingIdFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
-    const bookingId = urlParams.get('id');
+    let id = urlParams.get('id') || urlParams.get('bookingId');
+    if (id) return id;
+
+    const hash = window.location.hash || '';
+    const qIndex = hash.indexOf('?');
+    if (qIndex !== -1) {
+        const hashParams = new URLSearchParams(hash.substring(qIndex + 1));
+        id = hashParams.get('id') || hashParams.get('bookingId');
+        if (id) return id;
+    }
+
+    return null;
+}
+
+export async function init() {
+    const bookingId = getBookingIdFromUrl();
 
     if (!bookingId) {
         showToast('Không tìm thấy thông tin lịch hẹn', 'error');
-        setTimeout(() => { window.location.href = '../bookings/bookings.html'; }, 1500);
+        setTimeout(() => { window.location.hash = '#bookings'; }, 1500);
         return;
     }
 
     await loadBookingDetail(bookingId);
-});
+}
+
+export const initBookingDetail = init;
+window.initBookingDetail = init;
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
 
 async function loadBookingDetail(bookingId) {
     await API.initData();
@@ -74,8 +98,12 @@ async function loadBookingDetail(bookingId) {
 
     if (!currentBooking) {
         showToast('Không tìm thấy lịch hẹn này', 'error');
-        setTimeout(() => { window.location.href = '../bookings/bookings.html'; }, 1500);
+        setTimeout(() => { window.location.hash = '#bookings'; }, 1500);
         return;
+    }
+
+    if (typeof window.setUserSubBreadcrumb === 'function') {
+        window.setUserSubBreadcrumb(currentBooking.code || currentBooking.id || 'Chi tiết', 'bookings');
     }
 
     const userPets = currentUser ? await API.getUserPets(currentUser.id) : [];
@@ -101,6 +129,10 @@ async function loadBookingDetail(bookingId) {
     renderServiceReviewSection(currentBooking);
     checkBookingModifiability(currentBooking);
 
+    if (window.setUserSubBreadcrumb && currentBooking) {
+        window.setUserSubBreadcrumb('#' + (currentBooking.code || currentBooking.id), 'booking-detail');
+    }
+
     awardBookingLoyaltyPoints(currentBooking, currentUser);
 
     if (window.location.hash === '#service-review') {
@@ -122,18 +154,28 @@ function renderBookingDetail(booking) {
     const serviceName = booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal';
     const servicePackage = booking.package ? ` - ${booking.package}` : '';
 
-    document.getElementById('headerStatusBadge').className = `badge-status badge-${normalizedStatus}`;
-    document.getElementById('headerStatusBadge').textContent = statusLabels[normalizedStatus] || normalizedStatus;
+    const headerBadge = document.getElementById('headerStatusBadge');
+    if (headerBadge) {
+        headerBadge.className = `admin-badge badge-${normalizedStatus}`;
+        headerBadge.textContent = statusLabels[normalizedStatus] || normalizedStatus;
+    }
 
     const statusInfo = document.getElementById('statusInfo');
     if (statusInfo) {
-        statusInfo.innerHTML = `<span class="badge-status badge-${normalizedStatus}">${statusLabels[normalizedStatus] || normalizedStatus}</span>`;
+        statusInfo.innerHTML = `<span class="admin-badge badge-${normalizedStatus}">${statusLabels[normalizedStatus] || normalizedStatus}</span>`;
     }
 
-    document.getElementById('bookingCode').textContent = booking.id;
-    document.getElementById('bannerBookingCode').textContent = booking.id;
-    document.getElementById('petInfo').textContent = `${petName}${petBreed || petWeight ? ` (${[petBreed, petWeight].filter(Boolean).join(', ')})` : ''}`;
-    document.getElementById('serviceInfo').textContent = `${serviceName}${servicePackage}`;
+    const codeEl = document.getElementById('bookingCode');
+    if (codeEl) codeEl.textContent = booking.id;
+
+    const bannerCode = document.getElementById('bannerBookingCode');
+    if (bannerCode) bannerCode.textContent = booking.id;
+
+    const petInfoEl = document.getElementById('petInfo');
+    if (petInfoEl) petInfoEl.textContent = `${petName}${petBreed || petWeight ? ` (${[petBreed, petWeight].filter(Boolean).join(', ')})` : ''}`;
+
+    const serviceInfoEl = document.getElementById('serviceInfo');
+    if (serviceInfoEl) serviceInfoEl.textContent = `${serviceName}${servicePackage}`;
 
     let dateTimeText = formatDate(booking.date || booking.schedule?.date);
     if (booking.timeStart) {
@@ -145,13 +187,23 @@ function renderBookingDetail(booking) {
     } else if (booking.dateEnd) {
         dateTimeText = `${dateTimeText} - ${formatDate(booking.dateEnd)}`;
     }
-    document.getElementById('dateTimeInfo').textContent = dateTimeText;
-    document.getElementById('staffInfo').textContent = booking.staff || 'Chưa phân công';
-    document.getElementById('priceInfo').textContent = formatPrice(booking.price || 0);
 
-    if (booking.note) {
-        document.getElementById('noteRow').classList.remove('d-none');
-        document.getElementById('noteInfo').textContent = booking.note;
+    const dateTimeEl = document.getElementById('dateTimeInfo');
+    if (dateTimeEl) dateTimeEl.textContent = dateTimeText;
+
+    const staffEl = document.getElementById('staffInfo');
+    if (staffEl) staffEl.textContent = booking.staff || 'Chưa phân công';
+
+    const priceEl = document.getElementById('priceInfo');
+    if (priceEl) priceEl.textContent = formatPrice(booking.price || 0);
+
+    const noteRow = document.getElementById('noteRow');
+    const noteInfo = document.getElementById('noteInfo');
+    if (booking.note && noteRow && noteInfo) {
+        noteRow.classList.remove('d-none');
+        noteInfo.textContent = booking.note;
+    } else if (noteRow) {
+        noteRow.classList.add('d-none');
     }
 
     const careLogSection = document.getElementById('careLogActionSection');

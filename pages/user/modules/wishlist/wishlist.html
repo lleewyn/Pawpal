@@ -10,8 +10,48 @@
             </div>
         </div>
 
+        <!-- Skeleton Shimmer Placeholder trong lúc tải danh sách yêu thích -->
+        <div class="wishlist-grid mb-4" id="wishlistSkeleton">
+            <div class="wishlist-card" style="background: #fff; border: 1px solid #E2ECE5; border-radius: 9px; overflow: hidden;">
+                <div class="pawpal-skeleton" style="width: 100%; height: 170px; border-radius: 0 !important;"></div>
+                <div class="p-3">
+                    <div class="pawpal-skeleton mb-2" style="width: 50%; height: 12px;"></div>
+                    <div class="pawpal-skeleton mb-2" style="width: 85%; height: 16px;"></div>
+                    <div class="pawpal-skeleton mb-3" style="width: 40%; height: 16px;"></div>
+                    <div class="pawpal-skeleton" style="width: 100%; height: 34px; border-radius: 9px;"></div>
+                </div>
+            </div>
+            <div class="wishlist-card" style="background: #fff; border: 1px solid #E2ECE5; border-radius: 9px; overflow: hidden;">
+                <div class="pawpal-skeleton" style="width: 100%; height: 170px; border-radius: 0 !important;"></div>
+                <div class="p-3">
+                    <div class="pawpal-skeleton mb-2" style="width: 45%; height: 12px;"></div>
+                    <div class="pawpal-skeleton mb-2" style="width: 75%; height: 16px;"></div>
+                    <div class="pawpal-skeleton mb-3" style="width: 50%; height: 16px;"></div>
+                    <div class="pawpal-skeleton" style="width: 100%; height: 34px; border-radius: 9px;"></div>
+                </div>
+            </div>
+            <div class="wishlist-card" style="background: #fff; border: 1px solid #E2ECE5; border-radius: 9px; overflow: hidden;">
+                <div class="pawpal-skeleton" style="width: 100%; height: 170px; border-radius: 0 !important;"></div>
+                <div class="p-3">
+                    <div class="pawpal-skeleton mb-2" style="width: 55%; height: 12px;"></div>
+                    <div class="pawpal-skeleton mb-2" style="width: 80%; height: 16px;"></div>
+                    <div class="pawpal-skeleton mb-3" style="width: 45%; height: 16px;"></div>
+                    <div class="pawpal-skeleton" style="width: 100%; height: 34px; border-radius: 9px;"></div>
+                </div>
+            </div>
+            <div class="wishlist-card" style="background: #fff; border: 1px solid #E2ECE5; border-radius: 9px; overflow: hidden;">
+                <div class="pawpal-skeleton" style="width: 100%; height: 170px; border-radius: 0 !important;"></div>
+                <div class="p-3">
+                    <div class="pawpal-skeleton mb-2" style="width: 40%; height: 12px;"></div>
+                    <div class="pawpal-skeleton mb-2" style="width: 70%; height: 16px;"></div>
+                    <div class="pawpal-skeleton mb-3" style="width: 35%; height: 16px;"></div>
+                    <div class="pawpal-skeleton" style="width: 100%; height: 34px; border-radius: 9px;"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Trạng thái trống -->
-        <div id="emptyWishlist" class="empty-wishlist text-center py-5">
+        <div id="emptyWishlist" class="empty-wishlist text-center py-5 d-none">
             <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-muted mb-3">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
             </svg>

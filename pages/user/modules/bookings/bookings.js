@@ -206,6 +206,9 @@ function renderBookings(status) {
         filteredBookings.sort((a, b) => (statusOrder[resolveBookingStatus(a)] || 99) - (statusOrder[resolveBookingStatus(b)] || 99));
     }
 
+    const skeletonEl = document.getElementById('bookingsSkeleton');
+    if (skeletonEl) skeletonEl.remove();
+
     bookingsList.querySelectorAll('.booking-card').forEach((card) => card.remove());
 
     if (filteredBookings.length === 0) {
@@ -219,6 +222,7 @@ function renderBookings(status) {
 
 function createBookingCard(booking) {
     const card = document.createElement('div');
+    card.className = 'booking-card pawpal-smooth-entrance';
     const normalizedStatus = resolveBookingStatus(booking);
     const changeCount = Number(booking.changeCount || 0);
     const cancelCount = Number(booking.cancelCount || 0);
@@ -273,7 +277,7 @@ function createBookingCard(booking) {
     if (normalizedStatus === 'completed') {
         if (!alreadyReviewed) {
             actionButtonsHtml += `
-                <a class="btn-booking-action btn-action-review" href="../booking-detail/booking-detail.html?id=${bookingId}#service-review" onclick="event.stopPropagation()">
+                <a class="btn-booking-action btn-action-review" href="#booking-detail?id=${encodeURIComponent(bookingId)}#service-review" onclick="event.stopPropagation()">
                     Đánh giá
                 </a>
             `;
@@ -297,18 +301,18 @@ function createBookingCard(booking) {
         `;
     }
 
-    card.className = `booking-card status-${normalizedStatus}`;
+    card.className = `booking-card pawpal-smooth-entrance status-${normalizedStatus}`;
     card.tabIndex = 0;
     card.setAttribute('role', 'link');
     card.onclick = () => {
-        window.location.href = `../booking-detail/booking-detail.html?id=${bookingId}`;
+        window.location.hash = `#booking-detail?id=${encodeURIComponent(bookingId)}`;
     };
     card.setAttribute('aria-label', `Xem chi tiết lịch hẹn ${petName}`);
 
     card.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
-            window.location.href = `../booking-detail/booking-detail.html?id=${bookingId}`;
+            window.location.hash = `#booking-detail?id=${encodeURIComponent(bookingId)}`;
         }
     });
 
