@@ -11,7 +11,7 @@
             status: 'shipping',
             paymentStatus: 'unpaid',
             paymentMethod: 'cod',
-            carrier: 'J&T Express',
+            carrier: 'J và T Express',
             trackingNumber: 'JT123456789',
             createdAt: '2026-06-10T14:30:00',
             subtotal: 850000,
@@ -45,7 +45,7 @@
             timeline: [
                 { title: 'Đặt hàng thành công', time: '14:30 - 10/06/2026', desc: 'Đơn hàng được đặt qua Website PawPal', done: true },
                 { title: 'Đã xác nhận đơn hàng', time: '15:00 - 10/06/2026', desc: 'Nhân viên kho đã kiểm tra tồn và xuất phiếu nhặt hàng', done: true },
-                { title: 'Đã bàn giao vận chuyển', time: '09:00 - 11/06/2026', desc: 'Bàn giao cho J&T Express. Mã vận đơn: JT123456789', done: true },
+                { title: 'Đã bàn giao vận chuyển', time: '09:00 - 11/06/2026', desc: 'Bàn giao cho J và T Express. Mã vận đơn: JT123456789', done: true },
                 { title: 'Đang giao hàng', time: '10:30 - 11/06/2026', desc: 'Bưu tá đang trên đường giao đến người nhận', done: true },
                 { title: 'Giao hàng thành công', time: 'Dự kiến hôm nay', desc: 'Chờ người nhận kiểm tra hàng và ký nhận', done: false }
             ]
@@ -290,7 +290,7 @@
             status: 'delivered',
             paymentStatus: 'cod_pending', // Đã giao hàng nhưng tiền COD chưa về
             paymentMethod: 'cod',
-            carrier: 'J&T Express',
+            carrier: 'J và T Express',
             trackingNumber: 'JT99281203',
             createdAt: '2026-06-11T13:00:00',
             subtotal: 650000,
@@ -299,7 +299,7 @@
             pawPointsUsed: 0,
             total: 680000,
             customerNote: 'Kiểm tra hàng trước khi nhận.',
-            internalNote: 'Bưu tá J&T báo phát thành công, tiền thu hộ COD đang chờ bưu cục chuyển đợt thứ 6.',
+            internalNote: 'Bưu tá J và T báo phát thành công, tiền thu hộ COD đang chờ bưu cục chuyển đợt thứ 6.',
             alertType: 'warning',
             alertMessage: 'Chờ đối soát COD (680.000 đ)',
             products: [
@@ -324,9 +324,9 @@
             ],
             timeline: [
                 { title: 'Đặt hàng thành công', time: '13:00 - 11/06/2026', desc: 'Đặt hàng COD trực tuyến', done: true },
-                { title: 'Đã bàn giao vận chuyển', time: '15:00 - 11/06/2026', desc: 'J&T Express tiếp nhận', done: true },
+                { title: 'Đã bàn giao vận chuyển', time: '15:00 - 11/06/2026', desc: 'J và T Express tiếp nhận', done: true },
                 { title: 'Giao hàng thành công', time: '10:00 - 12/06/2026', desc: 'Khách đã nhận hàng và trả tiền mặt cho bưu tá', done: true },
-                { title: 'Chờ đối soát tiền COD', time: '10:30 - 12/06/2026', desc: 'Tiền thu hộ 680.000 đ đang chờ J&T đối soát kỳ tuần', done: false }
+                { title: 'Chờ đối soát tiền COD', time: '10:30 - 12/06/2026', desc: 'Tiền thu hộ 680.000 đ đang chờ J và T đối soát kỳ tuần', done: false }
             ]
         },
         {
@@ -484,6 +484,20 @@
         { code: 'VIPGOLD50', title: 'Tri ân khách hàng hạng Vàng', discount: '50.000 đ', minOrder: '500.000 đ', points: '500 điểm', expiry: '31/12/2026', used: '28 / 100', status: 'Đang chạy' },
         { code: 'PAWPOINT100', title: 'Đổi điểm thưởng Pawpoint lấy voucher 100k', discount: '100.000 đ', minOrder: '800.000 đ', points: '1.000 điểm', expiry: '15/07/2026', used: '64 / 100', status: 'Sắp hết' }
     ];
+
+    let currentProductsList = [];
+    try {
+        const savedProducts = sessionStorage.getItem('pawpal_admin_products_data');
+        currentProductsList = savedProducts ? JSON.parse(savedProducts) : [...initialProducts];
+    } catch (e) {
+        currentProductsList = [...initialProducts];
+    }
+
+    function persistProductsData() {
+        try {
+            sessionStorage.setItem('pawpal_admin_products_data', JSON.stringify(currentProductsList));
+        } catch (e) {}
+    }
 
     let currentOrdersList = [];
     try {
@@ -1072,7 +1086,7 @@
                                     Hình thức: <strong>${rma.solutionTypeName}</strong> | Lý do: <strong>${rma.reasonText}</strong> | Kiểm định kho: <strong>${rma.restockText}</strong> | Bồi hoàn: <strong style="color: #236B48;">${rma.refundText}</strong>
                                 </div>
                             </div>
-                            <button type="button" class="btn-rma-link-complaint" onclick="PawpalOrdersModule.openComplaintModule('${rma.id}')">Xem hồ sơ tại phân hệ Khiếu nại &rarr;</button>
+                            <button type="button" class="btn-rma-link-complaint" onclick="PawpalOrdersModule.openComplaintModule('${rma.id}')">Xem hồ sơ tại phân hệ Khiếu nại -></button>
                         </div>
                     `;
                 } else {
@@ -1179,7 +1193,7 @@
             const catVal = document.getElementById('productFilterCategory')?.value || 'ALL';
             const stockVal = document.getElementById('productFilterStockStatus')?.value || 'ALL';
 
-            const filtered = initialProducts.filter(p => {
+            const filtered = currentProductsList.filter(p => {
                 if (catVal !== 'ALL' && p.category !== catVal) return false;
                 if (stockVal === 'LOW' && (p.stock > p.minStock || p.stock === 0)) return false;
                 if (stockVal === 'OUT' && p.stock !== 0) return false;
@@ -1433,12 +1447,12 @@
                 return;
             }
 
-            if (initialProducts.some(p => p.sku.toLowerCase() === sku.toLowerCase())) {
+            if (currentProductsList.some(p => p.sku.toLowerCase() === sku.toLowerCase())) {
                 alert(`Mã SKU "${sku}" đã tồn tại trong kho. Vui lòng nhập mã khác.`);
                 return;
             }
 
-            initialProducts.unshift({
+            currentProductsList.unshift({
                 sku: sku,
                 name: name,
                 category: cat,
@@ -1448,6 +1462,7 @@
                 minStock: minStock,
                 status: 'Còn hàng'
             });
+            persistProductsData();
 
             document.getElementById('modalAddProduct')?.classList.remove('active');
             renderProductsTable();
@@ -1457,7 +1472,7 @@
         // Xác nhận lưu điều chỉnh tồn kho
         document.getElementById('btnSubmitAdjustStock')?.addEventListener('click', () => {
             const sku = activeAdjustProductSku;
-            const prod = initialProducts.find(p => p.sku === sku);
+            const prod = currentProductsList.find(p => p.sku === sku);
             if (!prod) return;
 
             const opType = document.getElementById('adjustOperationType')?.value || 'ADD';
@@ -1479,6 +1494,7 @@
             }
 
             prod.status = newStatus;
+            persistProductsData();
 
             document.getElementById('modalAdjustStock')?.classList.remove('active');
             renderProductsTable();
@@ -1554,9 +1570,60 @@
         });
 
         // Tạo đơn tại quầy
+        function populateCreateOrderProducts() {
+            const prodSelect = document.getElementById('createOrderProductSelect');
+            if (!prodSelect) return;
+            prodSelect.innerHTML = '<option value="">-- Chọn mặt hàng từ kho --</option>' + 
+                currentProductsList.map(p => `
+                    <option value="${p.sku}" data-price="${p.price}" ${p.stock <= 0 ? 'disabled' : ''}>
+                        ${p.name} (Tồn: ${p.stock}) - ${formatVND(p.price)} ${p.stock <= 0 ? '[Hết hàng]' : ''}
+                    </option>
+                `).join('');
+        }
+
         document.getElementById('btnOpenCreateOrderModal')?.addEventListener('click', () => {
+            populateCreateOrderProducts();
             document.getElementById('modalCreateOrder')?.classList.add('active');
         });
+
+        // Tự động tìm kiếm thông tin khách hàng khi nhập số điện thoại
+        document.getElementById('createOrderPhone')?.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            if (val.length >= 9) {
+                let foundName = '';
+                let foundAddr = '';
+
+                // Tìm trong danh sách đơn hàng đã có
+                const matchedOrder = currentOrdersList.find(o => o.phone && o.phone.replace(/\s+/g, '') === val.replace(/\s+/g, ''));
+                if (matchedOrder) {
+                    foundName = matchedOrder.customerName;
+                    foundAddr = matchedOrder.address;
+                }
+
+                // Tìm trong bộ nhớ khách hàng nếu có
+                try {
+                    const savedCusts = sessionStorage.getItem('pawpal_admin_customers');
+                    if (savedCusts) {
+                        const parsed = JSON.parse(savedCusts);
+                        const c = parsed.find(x => (x.phone || '').replace(/\s+/g, '') === val.replace(/\s+/g, ''));
+                        if (c) {
+                            foundName = c.fullName || c.name || foundName;
+                            foundAddr = c.address || (c.addresses && c.addresses[0]?.address) || foundAddr;
+                        }
+                    }
+                } catch (err) {}
+
+                const nameInput = document.getElementById('createOrderName');
+                if (nameInput && foundName && !nameInput.value) {
+                    nameInput.value = foundName;
+                }
+                const customAddrInput = document.getElementById('createOrderCustomAddress');
+                if (customAddrInput && foundAddr && !customAddrInput.value) {
+                    customAddrInput.value = foundAddr;
+                }
+            }
+        });
+
         document.getElementById('btnSubmitCreateOrder')?.addEventListener('click', () => {
             const phone = document.getElementById('createOrderPhone')?.value.trim();
             const name = document.getElementById('createOrderName')?.value.trim();
@@ -1570,6 +1637,13 @@
             }
             if (!prodSelect || !prodSelect.value) {
                 alert('Vui lòng chọn ít nhất một sản phẩm để tạo đơn.');
+                return;
+            }
+
+            const sku = prodSelect.value;
+            const prodItem = currentProductsList.find(p => p.sku === sku);
+            if (prodItem && prodItem.stock < qty) {
+                alert(`Sản phẩm "${prodItem.name}" hiện chỉ còn ${prodItem.stock} trong kho, không đủ số lượng ${qty}.`);
                 return;
             }
 
@@ -1604,8 +1678,8 @@
                 alertType: null,
                 products: [
                     {
-                        sku: prodSelect.value,
-                        name: opt.text.split(' (Tồn:')[0],
+                        sku: sku,
+                        name: opt.text.split(' (Tồn:')[0].trim(),
                         spec: 'Tiêu chuẩn',
                         price: price,
                         quantity: qty,
@@ -1618,11 +1692,21 @@
                 ]
             };
 
+            // Trừ tồn kho sản phẩm
+            if (prodItem) {
+                prodItem.stock = Math.max(0, prodItem.stock - qty);
+                if (prodItem.stock === 0) {
+                    prodItem.status = 'Hết hàng';
+                }
+                persistProductsData();
+            }
+
             currentOrdersList.unshift(newOrder);
             persistOrdersData();
             window.__currentOrderPresetCust = null;
             document.getElementById('modalCreateOrder')?.classList.remove('active');
             renderOrdersTable();
+            renderProductsTable();
             alert(`Đã tạo thành công đơn hàng ${newCode}!`);
             PawpalOrdersModule.openOrderDetail(newCode);
         });
@@ -1791,12 +1875,13 @@
 
                     // Nếu kiểm định đạt chuẩn -> Tự động nhập lại kho khả dụng
                     if (restockVal === 'restock') {
-                        const stockItem = initialProducts.find(p => p.sku === sku);
+                        const stockItem = currentProductsList.find(p => p.sku === sku);
                         if (stockItem) {
                             stockItem.stock += qty;
                             if (stockItem.stock > 0 && stockItem.status === 'Hết hàng') {
                                 stockItem.status = 'Còn hàng';
                             }
+                            persistProductsData();
                         }
                     }
                 }
@@ -2254,7 +2339,7 @@
             popover.classList.add('active');
         },
         openAdjustStockModal: function(sku) {
-            const prod = initialProducts.find(p => p.sku === sku);
+            const prod = currentProductsList.find(p => p.sku === sku);
             if (!prod) return;
 
             activeAdjustProductSku = sku;

@@ -33,7 +33,11 @@ const legacyRedirectMap = {
     '/pages/public/login/login.html': '/login',
     '/pages/public/login/login': '/login',
     '/pages/public/return-guest/return-guest.html': '/return-guest',
-    '/pages/public/return-guest/return-guest': '/return-guest'
+    '/pages/public/return-guest/return-guest': '/return-guest',
+    '/pages/services/booking-success/booking-success.html': '/booking-success',
+    '/pages/services/booking-success/booking-success': '/booking-success',
+    '/booking-success/booking-success.html': '/booking-success',
+    '/booking-success.html': '/booking-success'
 };
 
 app.use((req, res, next) => {
@@ -58,7 +62,13 @@ app.get('/services.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/s
 app.get('/shop.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/shop.css')));
 app.get('/shop.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/shop.js')));
 app.get('/booking', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/booking/booking.html')));
+app.get('/booking.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/booking/booking.css')));
+app.get('/booking.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/booking/booking.js')));
 app.get('/booking-success', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/booking-success/booking-success.html')));
+app.get('/booking-success.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/booking-success/booking-success.html')));
+app.get('/booking-success/booking-success.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/booking-success/booking-success.html')));
+app.get('/booking-success.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/booking-success/booking-success.css')));
+app.get('/booking-success.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/booking-success/booking-success.js')));
 app.get('/about', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/about/about.html')));
 app.get('/about.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/about/about.css')));
 app.get('/contact', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/contact/contact.html')));
@@ -68,12 +78,21 @@ app.get('/blog', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/b
 app.get('/blog.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/blog/blog.css')));
 app.get('/blog.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/blog/blog.js')));
 app.get('/blog-detail', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/blog-detail/blog-detail.html')));
+app.get('/blog-detail.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/blog-detail/blog-detail.html')));
+app.get('/blog-detail/blog-detail.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/blog-detail/blog-detail.html')));
 app.get('/blog-detail.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/blog-detail/blog-detail.css')));
 app.get('/blog-detail.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/blog-detail/blog-detail.js')));
+app.get('/service-detail', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/service-detail/service-detail.html')));
+app.get('/service-detail.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/service-detail/service-detail.html')));
+app.get('/service-detail/service-detail.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/service-detail/service-detail.html')));
+app.get('/service-detail.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/service-detail/service-detail.css')));
+app.get('/service-detail.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/services/service-detail/service-detail.js')));
 app.get('/cart.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/cart/cart.css')));
 app.get('/cart.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/cart/cart.js')));
 app.get('/checkout.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/checkout/checkout.css')));
 app.get('/checkout.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/checkout/checkout.js')));
+app.get('/product-detail.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/product-detail/product-detail.html')));
+app.get('/product-detail/product-detail.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/product-detail/product-detail.html')));
 app.get('/product-detail.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/product-detail/product-detail.css')));
 app.get('/product-detail.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/product-detail/product-detail.js')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/login/login.html')));
@@ -83,7 +102,7 @@ app.get('/return-guest', (req, res) => res.sendFile(path.join(__dirname, 'pages/
 app.get('/return-guest.css', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/return-guest/return-guest.css')));
 app.get('/return-guest.js', (req, res) => res.sendFile(path.join(__dirname, 'pages/public/return-guest/return-guest.js')));
 app.get('/user', (req, res) => res.sendFile(path.join(__dirname, 'pages/user/index.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/index/index.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/index.html')));
 
 // 3. Phục vụ các file tĩnh (html, css, js) từ thư mục gốc
 app.use(express.static(path.join(__dirname, '.'), { extensions: ['html'] }));

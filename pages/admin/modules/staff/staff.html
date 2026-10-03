@@ -60,7 +60,7 @@
                             <option value="ALL">Tất cả</option>
                             <option value="Receptionist">Lễ tân</option>
                             <option value="Groomer">Groomer</option>
-                            <option value="Veterinarian">Bác sĩ/Bảo mẫu</option>
+                            <option value="Caregiver">Bảo mẫu Pet Hotel</option>
                             <option value="CSKH">CSKH</option>
                             <option value="Driver">Tài xế Taxi Pet</option>
                         </select>
@@ -226,20 +226,55 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="drawer-info-block" style="margin-top: 24px;">
+                        <div class="drawer-section-title">Bảng tính hoa hồng và Thu nhập ước tính tháng này</div>
+                        <div class="commission-breakdown-card">
+                            <div class="commission-row">
+                                <span class="commission-label">Lương cơ bản (Theo định biên ca):</span>
+                                <span class="commission-val" id="viewStaffBaseSalary">7.500.000 đ</span>
+                            </div>
+                            <div class="commission-row">
+                                <span class="commission-label">Hoa hồng dịch vụ (Doanh số ca thực hiện):</span>
+                                <span class="commission-val text-success" id="viewStaffServiceCommission">+ 4.850.000 đ</span>
+                            </div>
+                            <div class="commission-row">
+                                <span class="commission-label">Thưởng khách chỉ định KTV ruột (+20k/lượt):</span>
+                                <span class="commission-val text-indigo" id="viewStaffRequestedBonus">+ 840.000 đ</span>
+                            </div>
+                            <div class="commission-row">
+                                <span class="commission-label">Thưởng an toàn 100% không khiếu nại:</span>
+                                <span class="commission-val text-primary" id="viewStaffSafetyBonus">+ 1.000.000 đ</span>
+                            </div>
+                            <div class="commission-total-divider"></div>
+                            <div class="commission-row total-row">
+                                <span class="commission-total-label">Tổng thu nhập ước tính tháng này:</span>
+                                <span class="commission-total-val" id="viewStaffTotalIncome">14.190.000 đ</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="staff-profile-right-col">
                     <div class="drawer-info-block">
-                        <div class="drawer-section-title">Quyền truy cập hệ thống</div>
-                        <div class="permission-tags-list" id="viewStaffPermissionsList">
-                            <span class="perm-tag">Xem lịch hẹn</span>
-                            <span class="perm-tag">Xác nhận lịch hẹn</span>
-                            <span class="perm-tag">Hủy lịch hẹn</span>
-                            <span class="perm-tag">Tạo đơn hàng</span>
-                            <span class="perm-tag">Thanh toán</span>
-                            <span class="perm-tag">Quản lý nhân viên</span>
-                            <span class="perm-tag">Quản lý khuyến mãi</span>
-                            <span class="perm-tag">Quản lý nội dung Web</span>
+                        <div class="drawer-section-title">Đánh giá và Phản hồi từ Khách hàng</div>
+                        <div class="csat-summary-grid">
+                            <div class="csat-metric-card">
+                                <span class="csat-metric-val" id="viewStaffCsatScore">4.9 / 5.0</span>
+                                <span class="csat-metric-sub" id="viewStaffCsatReviews">128 lượt đánh giá</span>
+                            </div>
+                            <div class="csat-metric-card">
+                                <span class="csat-metric-val text-success" id="viewStaffRequestedCount">42 lượt</span>
+                                <span class="csat-metric-sub">Khách chỉ định KTV ruột</span>
+                            </div>
+                            <div class="csat-metric-card">
+                                <span class="csat-metric-val text-primary" id="viewStaffZeroComplaintRate">100%</span>
+                                <span class="csat-metric-sub">An toàn và Không khiếu nại</span>
+                            </div>
+                        </div>
+
+                        <div class="customer-reviews-list" id="viewStaffCustomerReviewsList" style="margin-top: 14px;">
+                            <!-- Render dynamically by JS -->
                         </div>
                     </div>
 
@@ -280,7 +315,7 @@
                 </div>
                 <div class="quota-detail">
                     <span class="quota-count" id="quotaMorningCount">4 / 4 nhân sự</span>
-                    <span class="quota-note" id="quotaMorningNote">1 Lễ tân • 2 Groomer • 1 Thú y</span>
+                    <span class="quota-note" id="quotaMorningNote">1 Lễ tân • 2 Groomer • 1 Bảo mẫu</span>
                 </div>
             </div>
             <div class="quota-card quota-warning" data-target-shift="AFTERNOON">
@@ -310,8 +345,24 @@
                 </div>
                 <div class="quota-detail">
                     <span class="quota-count" id="quotaNightCount">1 / 1 nhân sự</span>
-                    <span class="quota-note" id="quotaNightNote">1 Bác sĩ/Bảo mẫu trực 24/7</span>
+                    <span class="quota-note" id="quotaNightNote">1 Bảo mẫu Pet Hotel trực 24/7</span>
                 </div>
+            </div>
+        </div>
+
+        <!-- KHỐI BÀN LÀM VIỆC CA TRỰC THỜI GIAN THỰC (GIAI ĐOẠN 3: LIVE WORKSTATIONS VÀ PROGRESS) -->
+        <div class="admin-card live-workstations-card">
+            <div class="workstations-header">
+                <div class="workstations-title-group">
+                    <span class="workstations-title">Tiến độ bàn dịch vụ trực tiếp</span>
+                    <span class="admin-badge badge-active" id="liveWorkstationsActiveCount">3 bàn đang phục vụ</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenIncidentReportModal">+ Báo cáo sự cố ca</button>
+                </div>
+            </div>
+            <div class="workstations-grid" id="liveWorkstationsGrid">
+                <!-- Render dynamically by JS -->
             </div>
         </div>
 
@@ -344,7 +395,7 @@
                             <option value="ALL">Tất cả</option>
                             <option value="Receptionist">Lễ tân</option>
                             <option value="Groomer">Groomer</option>
-                            <option value="Veterinarian">Bác sĩ/Bảo mẫu</option>
+                            <option value="Caregiver">Bảo mẫu Pet Hotel</option>
                             <option value="CSKH">CSKH</option>
                             <option value="Driver">Tài xế Taxi Pet</option>
                         </select>
@@ -456,7 +507,7 @@
                             <option value="CSKH">CSKH</option>
                             <option value="Taxi Pet">Taxi Pet</option>
                             <option value="Lưu trú 24/7">Lưu trú 24/7</option>
-                            <option value="Thú y">Thú y và Cấp cứu</option>
+                            <option value="Sơ cứu an toàn">Sơ cứu và An toàn thú cưng</option>
                         </select>
                     </div>
 
@@ -625,7 +676,8 @@
                         <select class="admin-select" id="staffInputPosition">
                             <option value="Lễ tân">Lễ tân</option>
                             <option value="Groomer">Groomer</option>
-                            <option value="Bác sĩ/Bảo mẫu">Bác sĩ/Bảo mẫu</option>
+                            <option value="Chuyên viên Spa thú cưng">Chuyên viên Spa thú cưng</option>
+                            <option value="Bảo mẫu Pet Hotel">Bảo mẫu Pet Hotel</option>
                             <option value="CSKH">CSKH</option>
                             <option value="Tài xế Taxi Pet">Tài xế Taxi Pet</option>
                         </select>
@@ -635,7 +687,7 @@
                         <select class="admin-select" id="staffInputRole">
                             <option value="Receptionist">Receptionist</option>
                             <option value="Groomer">Groomer</option>
-                            <option value="Veterinarian">Veterinarian</option>
+                            <option value="Caregiver">Caregiver</option>
                             <option value="CSKH">CSKH</option>
                             <option value="Driver">Driver</option>
                             <option value="Admin">Admin</option>
@@ -752,7 +804,7 @@
                             <option value="CSKH">CSKH</option>
                             <option value="Taxi Pet">Taxi Pet</option>
                             <option value="Lưu trú 24/7">Lưu trú 24/7</option>
-                            <option value="Thú y">Thú y và Cấp cứu</option>
+                            <option value="Sơ cứu an toàn">Sơ cứu và An toàn thú cưng</option>
                         </select>
                     </div>
                 </div>
@@ -954,6 +1006,114 @@
             </div>
             <div class="modal-footer-clean">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissLeaveRequestsTray">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ĐIỀU PHỐI LẠI CA HẸN TỰ ĐỘNG (RE-ASSIGNMENT MODAL) -->
+    <div class="admin-modal-overlay" id="reassignModalOverlay">
+        <div class="admin-modal-card" style="width: 780px; max-width: 95vw;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Điều phối lại ca hẹn khi KTV tạm khóa hoặc Nghỉ phép</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelReassignModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div style="font-size: 13.5px; color: #DC2626; line-height: 1.5; margin-bottom: 12px;" id="reassignModalWarningText">
+                    Nhân viên đang có ca hẹn đã gán trước đó. Vui lòng chọn nhân sự thay thế để đảm bảo phục vụ khách hàng đúng giờ.
+                </div>
+
+                <div class="table-responsive-wrapper" style="max-height: 260px; overflow-y: auto;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 100px;">Mã hẹn</th>
+                                <th style="width: 180px;">Khách hàng và Bé cưng</th>
+                                <th>Dịch vụ yêu cầu</th>
+                                <th style="width: 110px;">Khung giờ</th>
+                                <th style="width: 130px;">Phân công lại</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reassignBookingsTableBody">
+                            <!-- Render by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="form-group-item" style="margin-top: 14px;">
+                    <label class="form-label-clean">Chuyển nhanh tất cả ca hẹn sang:</label>
+                    <select class="admin-select" id="reassignSelectAllStaff">
+                        <!-- Render options by JS -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer-clean" style="justify-content: space-between;">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissReassignModal">Bỏ qua (Chỉ khóa KTV)</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmReassign">Xác nhận chuyển giao ca</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GHI NHẬN SỰ CỐ CA TRỰC VÀ GIA HẠN THỜI GIAN (GIAI ĐOẠN 3: INCIDENT REPORT MODAL) -->
+    <div class="admin-modal-overlay" id="incidentReportModalOverlay">
+        <div class="admin-modal-card" style="width: 660px; max-width: 95vw;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Ghi nhận sự cố ca trực và Cập nhật tiến độ</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelIncidentModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Nhân sự phụ trách ca *</label>
+                        <select class="admin-select" id="incidentInputStaff">
+                            <!-- JS Render -->
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Bàn / Ca dịch vụ liên quan *</label>
+                        <select class="admin-select" id="incidentInputBooking">
+                            <!-- JS Render -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Phân loại sự cố *</label>
+                        <select class="admin-select" id="incidentInputType">
+                            <option value="SKIN_ISSUE">Phát hiện vết thương hoặc bệnh ngoài da cũ</option>
+                            <option value="TIMING_DELAY">Bé nhút nhát hoặc lông rối cần thêm thời gian</option>
+                            <option value="TEMPERAMENT">Bé hung dữ cần 2 nhân sự phối hợp an toàn</option>
+                            <option value="EQUIPMENT">Sự cố thiết bị hoặc dụng cụ ca làm</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Điều chỉnh thời gian hoàn tất (ETC)</label>
+                        <select class="admin-select" id="incidentInputExtend">
+                            <option value="0">Đúng giờ (Không gia hạn)</option>
+                            <option value="15">+15 phút (Gia hạn hoàn tất)</option>
+                            <option value="30">+30 phút (Gia hạn hoàn tất)</option>
+                            <option value="45">+45 phút (Gia hạn hoàn tất)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Mức độ xử lý *</label>
+                    <select class="admin-select" id="incidentInputSeverity">
+                        <option value="INTERNAL">Lưu ý nội bộ ca trực</option>
+                        <option value="PRE_NOTIFY">Thông báo trước cho khách hàng khi đến đón</option>
+                        <option value="URGENT">Chuyển quản lý / Lưu vết bảo vệ cửa hàng</option>
+                    </select>
+                </div>
+
+                <div class="form-group-item">
+                    <label class="form-label-clean">Mô tả chi tiết sự cố và Phương án xử lý</label>
+                    <textarea class="admin-input" id="incidentInputNote" rows="3" placeholder="Ghi nhận rõ tình trạng của bé cưng, vị trí nấm/vết thương hoặc lưu ý phối hợp an toàn..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer-clean" style="justify-content: space-between;">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissIncidentModal">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveIncidentReport">Lưu biên bản và Cập nhật tiến độ</button>
             </div>
         </div>
     </div>

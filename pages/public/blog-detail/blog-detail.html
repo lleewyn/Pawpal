@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="view-transition" content="same-origin">
-    <title>Có nên tắm cho chó vào mùa mưa? - PawPal Blog</title>
+    <title>Cẩm nang chăm sóc thú cưng - PawPal Blog</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/styles/style.css">
     <link rel="stylesheet" href="/pages/public/blog/blog.css">
     <link rel="stylesheet" href="/pages/public/blog-detail/blog-detail.css">
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmxc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/scripts/api/supabase-client.js"></script>
     <script type="module" src="/scripts/api/api-global.js"></script>
@@ -28,201 +28,203 @@
 </head>
 <body class="blog-detail-body">
 
+    <!-- Thanh tiến trình đọc bài viết -->
+    <div class="reading-progress-track" aria-hidden="true">
+        <div class="reading-progress-bar" id="readingProgressBar"></div>
+    </div>
+
     <div id="site-header"></div>
 
-    <main class="blog-detail-main pb-5">
-        <div class="blog-detail-header-wrapper">
-            <div class="container">
+    <main class="blog-detail-main">
+        <!-- Hero Header Wrapper with Warm Soft Green Tint -->
+        <header class="blog-detail-header-wrapper">
+            <div class="container-xl">
+                <!-- Breadcrumbs -->
                 <nav aria-label="breadcrumb" class="blog-breadcrumb">
                     <ol class="breadcrumb" id="blog-breadcrumb">
-                        <li class="breadcrumb-item"><a href="../landing/landing.html">Trang chủ</a></li>
-                        <li class="breadcrumb-item"><a href="../blog/blog.html">Cẩm nang</a></li>
+                        <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+                        <li class="breadcrumb-item"><a href="/blog">Cẩm nang</a></li>
+                        <li class="breadcrumb-item active" aria-current="page" id="breadcrumbCurrentTitle">Đang tải...</li>
                     </ol>
                 </nav>
 
-                <div class="blog-hero">
-                    <h1 class="blog-hero-title" id="blog-title">Loading...</h1>
-                    
+                <div class="blog-hero-content">
+                    <!-- Category Chip -->
+                    <div class="blog-hero-cat-wrap mb-2" id="blogHeroCatWrap">
+                        <span class="blog-hero-category-chip" id="blogCategoryBadge">Cẩm nang</span>
+                    </div>
+
+                    <!-- Article Title -->
+                    <h1 class="blog-hero-title" id="blog-title">Đang tải bài viết...</h1>
+
+                    <!-- Article Meta & Text-Only Social Share Toolbar -->
                     <div class="blog-hero-meta">
                         <div class="meta-author" id="blog-author-meta">
+                            <div class="author-avatar-wrap">
+                                <img src="/assets/images/publics/cat7.jpg" alt="PawPal Editor" class="author-avatar">
+                                <span class="author-verified-dot" title="Tác giả được xác thực"></span>
+                            </div>
+                            <div class="author-info">
+                                <span class="author-name">Bởi <strong id="blogAuthorName">Đội ngũ Bác sĩ Thú y PawPal</strong></span>
+                                <span class="post-date" id="blogMetaStats">24/07/2026 • 5 phút đọc</span>
+                            </div>
                         </div>
-                        
+
                         <div class="meta-actions">
-                            <button class="btn-share" title="Chia sẻ Facebook">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                            <button type="button" class="btn-share-pill" id="btnCopyLink" title="Sao chép liên kết bài viết">
+                                <span>Sao chép link</span>
                             </button>
-                            <button class="btn-share" title="Copy Link">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                            <button type="button" class="btn-share-pill btn-share-fb" id="btnShareFB" title="Chia sẻ lên Facebook">
+                                <span>Chia sẻ Facebook</span>
                             </button>
                         </div>
                     </div>
-                    
-                    <div class="blog-hero-cover mt-4" id="blog-hero-cover">
+
+                    <!-- Hero Cover Image -->
+                    <div class="blog-hero-cover-container mt-4" id="blog-hero-cover">
+                        <div class="cover-loading-skeleton"></div>
                     </div>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <div class="container mt-5">
-            <div class="row g-5">
+        <!-- Main Content Area & Sticky Sidebar -->
+        <div class="container-xl mt-4">
+            <div class="row g-4 g-lg-5">
                 
+                <!-- Left Column: Article Body -->
                 <div class="col-lg-8">
                     <article class="blog-article-content" id="blog-content">
+                        <!-- Loaded dynamically by JS -->
                     </article>
 
-                    <div class="blog-footer-meta mt-5 pt-4 border-top">
-                        <div class="blog-tags mb-4" id="blog-tags">
-                            <strong>Tags:</strong>
+                    <!-- Article Tags & Expert Author Box -->
+                    <div class="blog-footer-meta mt-4 pt-3">
+                        <div class="blog-tags-wrapper mb-4" id="blog-tags">
+                            <span class="tags-label">Chủ đề liên quan:</span>
+                            <div class="tags-list" id="tagsList"></div>
                         </div>
                         
-                        <div class="author-box p-4 bg-light rounded-4 d-flex gap-4 align-items-center">
-                            <img src="../../../assets/images/publics/cat7.jpg" alt="PawPal Editor" class="rounded-circle shadow-sm post-meta-date">
-                            <div>
-                                <h5 class="mb-1">Đội ngũ PawPal</h5>
-                                <p class="text-muted small mb-0">Chúng tôi luôn tâm huyết mang đến những kiến thức chuẩn khoa học và kinh nghiệm thực tiễn nhất để giúp bạn chăm sóc những người bạn bốn chân một cách hoàn hảo.</p>
+                        <div class="author-expert-box">
+                            <div class="author-expert-avatar-col">
+                                <img src="/assets/images/publics/cat7.jpg" alt="PawPal Veterinary Team" class="author-expert-avatar">
+                            </div>
+                            <div class="author-expert-info">
+                                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                    <h4 class="author-expert-name">Hội đồng Chuyên môn PawPal</h4>
+                                    <span class="author-expert-badge">Ban Cố Vấn Y Khoa</span>
+                                </div>
+                                <p class="author-expert-bio">Được biên soạn và kiểm duyệt bởi đội ngũ Bác sĩ Thú y và Chuyên viên Grooming giàu kinh nghiệm tại PawPal, cam kết mang đến những kiến thức khoa học, an toàn và thiết thực nhất cho thú cưng của bạn.</p>
+                                <div class="author-expert-action">
+                                    <a href="/pages/public/about/about.html" class="author-consult-link">Tìm hiểu thêm về PawPal ›</a>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="blog-comments mt-5">
-                        <h4 class="mb-4">Bình luận (3)</h4>
+                    <!-- Comments & Community Interaction -->
+                    <section class="blog-comments-section mt-4" id="blogCommentsSection">
+                        <div class="comments-header-row mb-4">
+                            <h3 class="comments-title">Bình luận và Thảo luận (<span id="commentsCount">3</span>)</h3>
+                        </div>
                         
-                        <div class="comment-form-wrapper p-4 border rounded-4 mb-5">
-                            <h5 class="mb-3">Để lại bình luận của bạn</h5>
-                            <form>
+                        <!-- Comment Form -->
+                        <div class="comment-form-card mb-4">
+                            <h4 class="comment-form-heading">Để lại ý kiến hoặc câu hỏi của bạn</h4>
+                            <form id="commentSubmitForm">
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <input type="text" class="form-control" placeholder="Tên của bạn *" required>
+                                        <label class="form-label-custom">Họ và tên <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control-custom" id="commentAuthorInput" placeholder="Ví dụ: Minh Châu" required>
                                     </div>
                                     <div class="col-md-6">
-                                        <input type="email" class="form-control" placeholder="Email (Không hiển thị công khai) *" required>
+                                        <label class="form-label-custom">Email <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control-custom" id="commentEmailInput" placeholder="name@domain.com" required>
                                     </div>
                                     <div class="col-12">
-                                        <textarea class="form-control" rows="4" placeholder="Nhập nội dung bình luận..." required></textarea>
+                                        <label class="form-label-custom">Nội dung bình luận <span class="text-danger">*</span></label>
+                                        <textarea class="form-control-custom" id="commentContentInput" rows="3" placeholder="Chia sẻ kinh nghiệm hoặc đặt câu hỏi cho chuyên gia PawPal..." required></textarea>
                                     </div>
                                     <div class="col-12 text-end">
-                                        <button type="submit" class="btn btn-primary px-4">Gửi bình luận</button>
+                                        <button type="submit" class="btn-submit-comment">Gửi bình luận</button>
                                     </div>
                                 </div>
                             </form>
                         </div>
 
-                        <div class="comment-list">
-                            <div class="comment-item d-flex gap-3 mb-4">
-                                <div class="comment-avatar">
-                                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center fw-bold post-meta-comments">M</div>
-                                </div>
-                                <div class="comment-content flex-grow-1">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <h6 class="mb-0 fw-bold">Minh Châu</h6>
-                                        <span class="text-muted small">24/07/2026 - 10:30</span>
-                                    </div>
-                                    <p class="mb-2">Bài viết hữu ích quá, cún nhà mình lông dài nên đợt này hôi rình mà chưa dám tắm. Chắc phải mua thử bọt tắm khô xem sao.</p>
-                                    <a href="#" class="text-primary small fw-semibold text-decoration-none">Trả lời</a>
-                                </div>
-                            </div>
-                            
-                            <div class="comment-item reply d-flex gap-3 mb-4 ms-5 border-start border-3 border-primary ps-4">
-                                <div class="comment-avatar">
-                                    <img src="../../../assets/images/publics/cat7.jpg" class="rounded-circle author-box-avatar">
-                                </div>
-                                <div class="comment-content flex-grow-1">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <h6 class="mb-0 fw-bold">PawPal Team <span class="badge bg-primary ms-2">Admin</span></h6>
-                                        <span class="text-muted small">24/07/2026 - 11:15</span>
-                                    </div>
-                                    <p class="mb-2">Chào bạn Minh Châu, bọt tắm khô rất tiện cho các bé lông dài mùa mưa đó ạ. Bạn nhớ kết hợp chải lông thường xuyên để lấy bớt lông rụng và bụi bẩn nữa nhé!</p>
-                                </div>
-                            </div>
-
-                            <div class="comment-item d-flex gap-3 mb-4">
-                                <div class="comment-avatar">
-                                    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold post-meta-comments">T</div>
-                                </div>
-                                <div class="comment-content flex-grow-1">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <h6 class="mb-0 fw-bold">Thanh Tùng</h6>
-                                        <span class="text-muted small">25/07/2026 - 08:20</span>
-                                    </div>
-                                    <p class="mb-2">Mình hay dùng máy sấy tóc của người sấy cho chó được không shop?</p>
-                                    <a href="#" class="text-primary small fw-semibold text-decoration-none">Trả lời</a>
-                                </div>
-                            </div>
+                        <!-- Comment Feed List -->
+                        <div class="comments-feed-list" id="commentsFeedList">
+                            <!-- Populated dynamically / with initial comments -->
                         </div>
-                    </div>
+                    </section>
                 </div>
 
+                <!-- Right Column: Sidebar Widgets -->
                 <div class="col-lg-4">
-                    <aside class="blog-sidebar sticky-top author-box-desc">
-                        <div class="sidebar-widget bg-white border rounded-4 p-4 mb-4 shadow-sm">
-                            <h5 class="widget-title mb-3 fs-6 fw-bold">Tìm kiếm bài viết</h5>
-                            <div class="input-group">
-                                <input type="text" class="form-control border-end-0" placeholder="Nhập từ khóa...">
-                                <button class="btn border border-start-0 bg-white text-muted" type="button">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                                </button>
-                            </div>
+                    <aside class="blog-detail-sidebar">
+                        
+                        <!-- 1. Quick Search Widget (100% Text-Only Button) -->
+                        <div class="sidebar-card">
+                            <h4 class="sidebar-card-title">Tìm kiếm cẩm nang</h4>
+                            <form class="sidebar-search-form" id="sidebarSearchForm">
+                                <div class="sidebar-search-box">
+                                    <input type="search" id="sidebarSearchInput" placeholder="Tìm kiến thức, mẹo nuôi Boss..." autocomplete="off">
+                                    <button type="submit" class="btn-sidebar-search">Tìm</button>
+                                </div>
+                            </form>
                         </div>
 
-                        <div class="sidebar-widget toc-widget bg-light border rounded-4 p-4 mb-4">
-                            <h5 class="widget-title mb-3 fs-6 fw-bold">Nội dung chính</h5>
-                            <nav id="toc-nav" class="nav flex-column">
-                                <a class="nav-link text-muted small py-1" href="#section-1">1. Chó có cần tắm vào mùa mưa không?</a>
-                                <a class="nav-link text-muted small py-1" href="#section-2">2. Bao lâu thì nên tắm một lần?</a>
-                                <a class="nav-link text-muted small py-1" href="#section-3">3. Những lưu ý "sống còn" khi tắm</a>
-                                <a class="nav-link text-muted small py-1" href="#section-4">4. Giải pháp thay thế tắm ướt</a>
+                        <!-- 2. Table of Contents (TOC - 100% Text-Only) -->
+                        <div class="sidebar-card toc-card sticky-top" id="tocSidebarCard">
+                            <h4 class="sidebar-card-title toc-title-text">Mục lục bài viết</h4>
+                            <nav id="toc-nav" class="toc-nav-list">
+                                <!-- Populated dynamically by JS -->
                             </nav>
                         </div>
 
-                        <div class="sidebar-widget bg-white border rounded-4 p-4 mb-4 shadow-sm">
-                            <h5 class="widget-title mb-4 fs-6 fw-bold">Bài viết xem nhiều</h5>
-                            <div class="d-flex flex-column gap-3">
-                                <article class="d-flex gap-3 align-items-center">
-                                    <img src="../../../assets/images/publics/cat11.jpg" class="rounded-3 trending-post-thumb"  alt="Pate">
-                                    <div>
-                                        <h6 class="mb-1 trending-post-title"><a href="#" class="text-dark text-decoration-none fw-bold">Cách làm Pate cho mèo ngon bổ rẻ tại nhà</a></h6>
-                                        <span class="text-muted trending-post-date">10 thg 7, 2026</span>
-                                    </div>
-                                </article>
-                                <article class="d-flex gap-3 align-items-center">
-                                    <img src="../../../assets/images/publics/dog5.svg" class="rounded-3 trending-post-thumb"  alt="Chó">
-                                    <div>
-                                        <h6 class="mb-1 trending-post-title"><a href="#" class="text-dark text-decoration-none fw-bold">Top 10 giống chó thông minh nhất thế giới</a></h6>
-                                        <span class="text-muted trending-post-date">29 thg 5, 2026</span>
-                                    </div>
-                                </article>
-                                <article class="d-flex gap-3 align-items-center">
-                                    <img src="../../../assets/images/publics/pet.png" class="rounded-3 trending-post-thumb"  alt="Sữa tắm">
-                                    <div>
-                                        <h6 class="mb-1 trending-post-title"><a href="#" class="text-dark text-decoration-none fw-bold">5 loại sữa tắm cho chó tốt nhất thị trường</a></h6>
-                                        <span class="text-muted trending-post-date">18 thg 5, 2026</span>
-                                    </div>
-                                </article>
+                        <!-- 3. Trending / Most Read Articles (100% Text-Only Badge) -->
+                        <div class="sidebar-card">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <h4 class="sidebar-card-title mb-0">Bài viết đọc nhiều</h4>
+                                <span class="trending-badge-fire">Nổi bật</span>
+                            </div>
+                            <div class="sidebar-trending-list" id="sidebarTrendingList">
+                                <!-- Loaded dynamically by JS -->
                             </div>
                         </div>
 
-                        <div class="sidebar-widget rounded-4 overflow-hidden position-relative">
-                            <img src="../../../assets/images/publics/cat6.jpg" class="img-fluid w-100 related-post-thumb"  alt="Spa Banner">
-                            <div class="position-absolute w-100 h-100 top-0 start-0 d-flex flex-column justify-content-end p-4 blog-overlay-gradient" >
-                                <h4 class="text-white fw-bold mb-2">Combo Spa Trọn Gói Chỉ Từ 199K</h4>
-                                <p class="text-white small mb-3">Tắm rửa thơm tho, cắt tỉa gọn gàng đón mưa.</p>
-                                <a href="../../../services/booking/booking.html" class="btn btn-primary btn-sm w-100 fw-bold">Đặt lịch ngay</a>
+                        <!-- 4. Service Booking Promo Card -->
+                        <div class="sidebar-promo-card">
+                            <img src="/assets/images/publics/cat6.jpg" alt="Dịch vụ Spa PawPal" class="promo-card-bg">
+                            <div class="promo-card-overlay">
+                                <span class="promo-badge-tag">Ưu Đãi Đặc Biệt</span>
+                                <h4 class="promo-card-title">Combo Spa và Tắm Dưỡng Toàn Diện</h4>
+                                <p class="promo-card-desc">Chăm sóc chuẩn y khoa, sấy êm ái ngừa hoảng sợ cho các bé cưng.</p>
+                                <a href="/pages/services/index.html" class="btn-promo-action">Đặt lịch trải nghiệm ngay ›</a>
                             </div>
                         </div>
+
                     </aside>
                 </div>
             </div>
         </div>
 
-        <div class="container mt-5 pt-5 border-top">
-            <h3 class="mb-4 fw-bold">Bài Viết Liên Quan</h3>
-            <div class="row g-4" id="related-posts-container">
+        <!-- Related Articles Grid Section -->
+        <section class="related-articles-section mt-5 pt-5">
+            <div class="container-xl">
+                <div class="related-section-header mb-4">
+                    <h2 class="related-section-title">Bài viết liên quan gợi ý cho bạn</h2>
+                    <a href="/blog" class="related-view-all-link">Xem tất cả bài viết ›</a>
+                </div>
+                <div class="row g-4" id="related-posts-container">
+                    <!-- Populated dynamically by JS -->
+                </div>
             </div>
-        </div>
+        </section>
     </main>
     
     <div id="site-footer"></div>
+    <div class="toast-container-custom" id="toastContainer"></div>
     <div id="site-fab"></div>
 </body>
 </html>
-

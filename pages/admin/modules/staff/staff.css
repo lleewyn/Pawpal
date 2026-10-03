@@ -1433,3 +1433,352 @@
     border-left: 3px solid #DC2626;
 }
 
+/* ==========================================================================
+   GIAI ĐOẠN 1 & 2: ĐÁNH GIÁ KHÁCH HÀNG (CSAT) VÀ ĐIỀU PHỐI LẠI CA HẸN TỰ ĐỘNG
+   ========================================================================== */
+
+/* 1. KHỐI TỔNG QUAN CSAT & REVIEWS */
+.csat-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+@media (max-width: 900px) {
+    .csat-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.csat-metric-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 10px;
+    background-color: #F8FAF9;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius, 9px);
+    gap: 2px;
+    text-align: center;
+}
+
+.csat-metric-val {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-heading);
+    letter-spacing: -0.2px;
+}
+
+.csat-metric-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* 2. DANH SÁCH NHẬN XÉT CỦA KHÁCH HÀNG */
+.customer-reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.customer-review-card {
+    padding: 12px 14px;
+    background-color: #F8FAF9;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius, 9px);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.review-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.review-customer-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.review-customer-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.review-pet-name {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.review-rating-stars {
+    font-size: 12px;
+    font-weight: 700;
+    color: #D97706;
+}
+
+.review-comment-body {
+    font-size: 12.5px;
+    color: var(--text-main);
+    line-height: 1.45;
+}
+
+.review-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.badge-requested-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 7px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 9px !important;
+    border: none !important;
+    background-color: #DCEAF2;
+    color: #20495E;
+}
+
+/* 3. MODAL ĐIỀU PHỐI LẠI CA HẸN */
+#reassignBookingsTableBody td {
+    font-size: 12.5px;
+    padding: 9px 12px;
+}
+
+.reassign-select-row {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 9px;
+    border: 1px solid var(--border-neutral);
+    background-color: #FFFFFF;
+    color: var(--text-main);
+}
+
+/* ==========================================================================
+   GIAI ĐOẠN 3: BÀN LÀM VIỆC TRỰC TIẾP (LIVE WORKSTATIONS) VÀ BÁO CÁO SỰ CỐ
+   ========================================================================== */
+
+.live-workstations-card {
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.workstations-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.workstations-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.workstations-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+.workstations-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+@media (max-width: 1100px) {
+    .workstations-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 700px) {
+    .workstations-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.workstation-card {
+    padding: 14px 16px;
+    background-color: #F8FAF9;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius, 9px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+
+.workstation-card.in-service {
+    border-color: #C3DEC7;
+    background-color: #F4FAF6;
+}
+
+.workstation-card.delayed {
+    border-color: #F3DCB7;
+    background-color: #FDF6EC;
+}
+
+.workstation-card.idle {
+    border-color: var(--border-neutral);
+    background-color: #F8FAF9;
+}
+
+.workstation-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.workstation-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.workstation-staff-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+}
+
+.workstation-staff-name {
+    font-weight: 600;
+    color: var(--text-heading);
+}
+
+.workstation-booking-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 10px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 9px;
+    border: 1px solid var(--border-neutral);
+    font-size: 12px;
+}
+
+.booking-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.booking-desc-row {
+    color: var(--text-muted);
+    font-size: 11.5px;
+}
+
+.workstation-actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.btn-extend-chip {
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #734718;
+    background-color: #F5E8D3;
+    border: none !important;
+    border-radius: 9px;
+    cursor: pointer;
+}
+
+.btn-extend-chip:hover {
+    background-color: #EDDECA;
+}
+
+.btn-incident-chip {
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #8F2424;
+    background-color: #F7DCDC;
+    border: none !important;
+    border-radius: 9px;
+    cursor: pointer;
+}
+
+.btn-incident-chip:hover {
+    background-color: #F0CECE;
+}
+
+/* ==========================================================================
+   GIAI ĐOẠN 4: BẢNG TÍNH HOA HỒNG DỊCH VỤ VÀ THU NHẬP ƯỚC TÍNH
+   ========================================================================== */
+
+.commission-breakdown-card {
+    padding: 14px 16px;
+    background-color: #F8FAF9;
+    border: 1px solid var(--border-neutral);
+    border-radius: var(--admin-radius, 9px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.commission-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-main);
+}
+
+.commission-label {
+    color: var(--text-muted);
+}
+
+.commission-val {
+    font-weight: 600;
+}
+
+.commission-total-divider {
+    height: 1px;
+    background-color: var(--border-neutral);
+    margin: 2px 0;
+}
+
+.commission-row.total-row {
+    margin-top: 2px;
+}
+
+.commission-total-label {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+.commission-total-val {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+
+
+

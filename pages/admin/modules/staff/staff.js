@@ -1,6 +1,6 @@
 // staff.js - Logic cho phân hệ Nhân sự Pawpal-er
 (function() {
-    function initStaffModule() {
+    async function initStaffModule() {
         const subtabsContainer = document.getElementById('headerSubtabsGroup');
         const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
         const moduleTitleEl = document.getElementById('headerModuleTitle');
@@ -27,200 +27,58 @@
         }
 
         // ---------------------------------------------------------
-        // 1. DATA MOCK & TRẠNG THÁI HỆ THỐNG (Định nghĩa toàn bộ ở đầu file)
+        // 1. TRẠNG THÁI DỮ LIỆU HỆ THỐNG (Được nạp từ /data/staff.json)
         // ---------------------------------------------------------
-        const mockStaff = [
-            { 
-                id: 'EMP-001', 
-                name: 'Lê Lệ Quyên', 
-                position: 'Quản trị viên', 
-                role: 'Admin', 
-                phone: '0901234567', 
-                email: 'quyen.le@pawpal.vn', 
-                shift: 'MORNING', 
-                status: 'ACTIVE', 
-                join_date: '2024-01-10', 
-                dob: '1996-08-15', 
-                address: '68 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh',
-                skillScore: 95,
-                skillResult: 'PASS',
-                skillExam: 'Đạt (95đ)',
-                serviceLocked: false,
-                note: 'Quản lý toàn diện cơ sở và giám sát nghiệp vụ'
-            },
-            { 
-                id: 'EMP-002', 
-                name: 'Nguyễn Văn A', 
-                position: 'Groomer', 
-                role: 'Groomer', 
-                phone: '0912345678', 
-                email: 'a.nguyen@pawpal.vn', 
-                shift: 'AFTERNOON', 
-                status: 'ACTIVE', 
-                join_date: '2025-02-15', 
-                dob: '1998-04-12', 
-                address: '124 Cách Mạng Tháng 8, Quận 3, TP. Hồ Chí Minh',
-                skillScore: 85,
-                skillResult: 'PASS',
-                skillExam: 'Đạt (85đ)',
-                serviceLocked: false,
-                note: 'Chuyên cắt tạo kiểu Poodle và Corgi'
-            },
-            { 
-                id: 'EMP-003', 
-                name: 'Trần Thị B', 
-                position: 'Lễ tân', 
-                role: 'Receptionist', 
-                phone: '0987654321', 
-                email: 'b.tran@pawpal.vn', 
-                shift: 'MORNING', 
-                status: 'LEAVE', 
-                join_date: '2025-05-20', 
-                dob: '2000-11-20', 
-                address: '45 Lê Duẩn, Quận 1, TP. Hồ Chí Minh',
-                skillScore: 55,
-                skillResult: 'RETRAIN',
-                skillExam: 'Cần đào tạo (55đ)',
-                serviceLocked: true,
-                note: 'Đang nghỉ phép và cần củng cố quy trình đón tiếp'
-            },
-            { 
-                id: 'EMP-004', 
-                name: 'Lê Văn C', 
-                position: 'Bác sĩ/Bảo mẫu', 
-                role: 'Veterinarian', 
-                phone: '0909090909', 
-                email: 'c.le@pawpal.vn', 
-                shift: 'NIGHT', 
-                status: 'ACTIVE', 
-                join_date: '2024-11-01', 
-                dob: '1994-07-08', 
-                address: '88 Hoàng Hoa Thám, Bình Thạnh, TP. Hồ Chí Minh',
-                skillScore: 90,
-                skillResult: 'PASS',
-                skillExam: 'Đạt (90đ)',
-                serviceLocked: false,
-                note: 'Phụ trách cấp cứu 24/7 và lưu trú đêm'
-            },
-            { 
-                id: 'EMP-005', 
-                name: 'Phạm Thị D', 
-                position: 'CSKH', 
-                role: 'CSKH', 
-                phone: '0911223344', 
-                email: 'd.pham@pawpal.vn', 
-                shift: 'AFTERNOON', 
-                status: 'PAUSE', 
-                join_date: '2026-01-15', 
-                dob: '1999-03-25', 
-                address: '15/2 Trần Hưng Đạo, Quận 5, TP. Hồ Chí Minh',
-                skillScore: 78,
-                skillResult: 'PASS',
-                skillExam: 'Đạt (78đ)',
-                serviceLocked: false,
-                note: 'Tạm nghỉ việc cá nhân 2 tuần'
-            },
-            { 
-                id: 'EMP-006', 
-                name: 'Hoàng Văn E', 
-                position: 'Tài xế Taxi Pet', 
-                role: 'Driver', 
-                phone: '0933445566', 
-                email: 'e.hoang@pawpal.vn', 
-                shift: 'ALL', 
-                status: 'RESIGNED', 
-                join_date: '2023-06-10', 
-                dob: '1992-12-05', 
-                address: '204 Nguyễn Thị Minh Khai, Quận 3, TP. Hồ Chí Minh',
-                skillScore: 40,
-                skillResult: 'FAIL',
-                skillExam: 'Không đạt (40đ)',
-                serviceLocked: true,
-                note: 'Đã hoàn tất thủ tục nghỉ việc'
-            },
-            { 
-                id: 'EMP-007', 
-                name: 'Trần Văn Hùng', 
-                position: 'Groomer', 
-                role: 'Groomer', 
-                phone: '0945678901', 
-                email: 'hung.tran@pawpal.vn', 
-                shift: 'AFTERNOON', 
-                status: 'ACTIVE', 
-                join_date: '2026-02-01', 
-                dob: '2001-05-18', 
-                address: '56 Phan Đăng Lưu, Phú Nhuận, TP. Hồ Chí Minh',
-                skillScore: 58,
-                skillResult: 'RETRAIN',
-                skillExam: 'Cần đào tạo (58đ)',
-                serviceLocked: true,
-                note: 'Cần kèm cặp tạo kiểu kéo cong trước khi nhận khách độc lập'
-            },
-            { 
-                id: 'EMP-008', 
-                name: 'Nguyễn Thị Thảo', 
-                position: 'Groomer', 
-                role: 'Groomer', 
-                phone: '0978901234', 
-                email: 'thao.nguyen@pawpal.vn', 
-                shift: 'MORNING', 
-                status: 'ACTIVE', 
-                join_date: '2024-08-12', 
-                dob: '1997-10-30', 
-                address: '310 Hai Bà Trưng, Tân Định, Quận 1, TP. Hồ Chí Minh',
-                skillScore: 92,
-                skillResult: 'PASS',
-                skillExam: 'Đạt (92đ)',
-                serviceLocked: false,
-                note: 'Tay nghề cao, phụ trách đào tạo nội bộ'
-            },
-            { 
-                id: 'EMP-009', 
-                name: 'Vũ Đình Trọng', 
-                position: 'Bác sĩ/Bảo mẫu', 
-                role: 'Veterinarian', 
-                phone: '0967891234', 
-                email: 'trong.vu@pawpal.vn', 
-                shift: 'MORNING', 
-                status: 'ACTIVE', 
-                join_date: '2025-01-08', 
-                dob: '1993-02-14', 
-                address: '72 Điện Biên Phủ, Bình Thạnh, TP. Hồ Chí Minh',
-                skillScore: 88,
-                skillResult: 'PASS',
-                skillExam: 'Đạt (88đ)',
-                serviceLocked: false,
-                note: 'Khám lâm sàng và xét nghiệm nhanh'
-            },
-            { 
-                id: 'EMP-010', 
-                name: 'Đỗ Bảo Ngọc', 
-                position: 'Lễ tân', 
-                role: 'Receptionist', 
-                phone: '0988776655', 
-                email: 'ngoc.do@pawpal.vn', 
-                shift: 'EVENING', 
-                status: 'ACTIVE', 
-                join_date: '2025-09-01', 
-                dob: '2002-09-09', 
-                address: '18 Võ Văn Tần, Quận 3, TP. Hồ Chí Minh',
-                skillScore: 82,
-                skillResult: 'PASS',
-                skillExam: 'Đạt (82đ)',
-                serviceLocked: false,
-                note: 'Điều phối đặt lịch hẹn và trực ca tối'
-            }
-        ];
+        let mockStaff = [];
+        let mockAssessments = [];
+        let mockRoster = {};
+        let mockLeaveSwapRequests = [];
 
-        const mockAssessments = [
-            { id: 'ASM-001', date: '2026-09-20', staff_id: 'EMP-002', name: 'Nguyễn Văn A', position: 'Groomer', type: 'Grooming', score: 85, result: 'PASS', evaluator: 'Lê Lệ Quyên', note: 'Kỹ thuật cắt kéo cong Poodle chuẩn xác, thao tác dứt khoát' },
-            { id: 'ASM-002', date: '2026-09-22', staff_id: 'EMP-003', name: 'Trần Thị B', position: 'Lễ tân', type: 'CSKH', score: 55, result: 'RETRAIN', evaluator: 'Lê Lệ Quyên', note: 'Chưa nắm vững quy trình xử lý phàn nàn và điều phối lịch khẩn cấp' },
-            { id: 'ASM-003', date: '2026-09-24', staff_id: 'EMP-007', name: 'Trần Văn Hùng', position: 'Groomer', type: 'Grooming', score: 58, result: 'RETRAIN', evaluator: 'Lê Lệ Quyên', note: 'Cần kèm cặp tạo kiểu kéo cong trước khi nhận khách độc lập' },
-            { id: 'ASM-004', date: '2026-09-25', staff_id: 'EMP-006', name: 'Hoàng Văn E', position: 'Tài xế Taxi Pet', type: 'Taxi Pet', score: 40, result: 'FAIL', evaluator: 'Lê Lệ Quyên', note: 'Không kiểm tra lồng an toàn trước khi đón thú cưng' },
-            { id: 'ASM-005', date: '2026-09-26', staff_id: 'EMP-008', name: 'Nguyễn Thị Thảo', position: 'Groomer', type: 'Grooming', score: 92, result: 'PASS', evaluator: 'Lê Lệ Quyên', note: 'Tay nghề Master Grooming xuất sắc, kỹ năng định hình form chuẩn' },
-            { id: 'ASM-006', date: '2026-09-27', staff_id: 'EMP-004', name: 'Lê Văn C', position: 'Bác sĩ/Bảo mẫu', type: 'Lưu trú 24/7', score: 90, result: 'PASS', evaluator: 'Lê Lệ Quyên', note: 'Quy trình theo dõi camera đêm và xử lý triệu chứng co giật đạt chuẩn thú y' },
-            { id: 'ASM-007', date: '2026-09-28', staff_id: 'EMP-009', name: 'Vũ Đình Trọng', position: 'Bác sĩ/Bảo mẫu', type: 'Thú y', score: 88, result: 'PASS', evaluator: 'Lê Lệ Quyên', note: 'Khám lâm sàng và xét nghiệm da nấm chuẩn đoán chính xác' }
-        ];
+        // Hàm nạp dữ liệu từ /data/staff.json hoặc localStorage
+        async function loadStaffModuleData() {
+            let hasLoaded = false;
+            try {
+                const savedStaff = localStorage.getItem('pawpal_staff_data');
+                const savedAss = localStorage.getItem('pawpal_staff_assessments');
+                const savedRos = localStorage.getItem('pawpal_staff_roster');
+                const savedReq = localStorage.getItem('pawpal_staff_leave_requests');
+
+                if (savedStaff && savedAss && savedRos) {
+                    const parsedStaff = JSON.parse(savedStaff);
+                    if (Array.isArray(parsedStaff) && parsedStaff.length > 0) {
+                        // Kiểm tra nếu dữ liệu cũ chưa có customer_reviews thì nạp lại từ json
+                        if (parsedStaff[1] && parsedStaff[1].customer_reviews) {
+                            mockStaff = parsedStaff;
+                            mockAssessments = JSON.parse(savedAss) || [];
+                            mockRoster = JSON.parse(savedRos) || {};
+                            mockLeaveSwapRequests = savedReq ? JSON.parse(savedReq) : [];
+                            hasLoaded = true;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Lỗi đọc pawpal_staff_data từ localStorage:', e);
+            }
+
+            if (!hasLoaded || mockStaff.length === 0) {
+                try {
+                    const res = await fetch('/data/staff.json?v=' + Date.now());
+                    if (res.ok) {
+                        const data = await res.json();
+                        mockStaff = data.staff || [];
+                        mockAssessments = data.assessments || [];
+                        mockRoster = data.roster || {};
+                        mockLeaveSwapRequests = data.leaveRequests || [];
+                        saveStaffDataToStorage();
+                        saveAssessmentDataToStorage();
+                        saveRosterDataToStorage();
+                        saveLeaveRequestsDataToStorage();
+                    }
+                } catch (err) {
+                    console.error('Không thể nạp dữ liệu từ /data/staff.json:', err);
+                }
+            }
+        }
 
         // Biến trạng thái toàn cục phân hệ
         let selectedStaffId = sessionStorage.getItem('pawpal_admin_staff_selected_id') || 'EMP-001';
@@ -237,87 +95,155 @@
         let scheduleFilterPos = 'ALL';
         let scheduleFilterShf = 'ALL';
 
-        // Dữ liệu Roster (Phân ca theo ngày thực tế)
-        const mockRoster = {
-            '2026-09-28': {
-                'EMP-001': ['MORNING'],
-                'EMP-002': ['AFTERNOON'],
-                'EMP-003': ['LEAVE'],
-                'EMP-004': ['NIGHT'],
-                'EMP-005': ['PAUSE'],
-                'EMP-006': ['RESIGNED'],
-                'EMP-007': ['AFTERNOON'],
-                'EMP-008': ['MORNING'],
-                'EMP-009': ['MORNING'],
-                'EMP-010': ['EVENING']
-            }
-        };
-
         // Biến trạng thái Modal phân ca
         let modalActiveDate = currentScheduleDate;
         let modalActiveShift = 'MORNING';
         let modalCurrentAssignedIds = [];
 
-        // GIAI ĐOẠN 3: DỮ LIỆU ĐƠN NGHỈ PHÉP VÀ ĐỔI CA (LEAVE & SHIFT SWAP)
-        const mockLeaveSwapRequests = [
+        let currentReqFilter = 'ALL';
+        let activeLeaveSwapMode = 'LEAVE';
+
+        // ---------------------------------------------------------
+        // DỮ LIỆU BÀN LÀM VIỆC CA TRỰC THỜI GIAN THỰC (GIAI ĐOẠN 3: LIVE WORKSTATIONS)
+        // ---------------------------------------------------------
+        let mockWorkstations = [
             {
-                id: 'REQ-001',
-                type: 'LEAVE',
-                staffId: 'EMP-003',
-                staffName: 'Trần Thị B',
-                staffPos: 'Lễ tân',
-                leaveType: 'SICK',
-                leaveTypeLabel: 'Nghỉ ốm và Khám bệnh',
-                startDate: '2026-09-28',
-                endDate: '2026-09-28',
-                scope: 'ALL',
-                scopeLabel: 'Cả ngày',
-                replacementId: '',
-                replacementName: 'Chưa có người thay',
-                reason: 'Khám chuyên khoa định kỳ tại bệnh viện',
-                status: 'PENDING',
-                createdAt: '28/09/2026 08:30'
+                id: 'WS-01',
+                name: 'Bàn Grooming 01',
+                status: 'IN_SERVICE',
+                staffId: 'EMP-001',
+                staffName: 'Nguyễn Văn An',
+                staffPos: 'Trưởng nhóm Groomer',
+                bookingId: 'BK-8842',
+                customerName: 'Chị Mai Anh',
+                petName: 'Bé Mochi (Poodle)',
+                serviceName: 'Cắt tỉa tạo kiểu và Tắm dưỡng sinh',
+                startTime: '14:00',
+                estEndTime: '15:30',
+                extendedMinutes: 0,
+                isRequested: true,
+                incidentNote: ''
             },
             {
-                id: 'REQ-002',
-                type: 'SWAP',
-                staffId: 'EMP-002',
-                staffName: 'Nguyễn Văn A',
-                staffPos: 'Groomer',
-                swapWithId: 'EMP-008',
-                swapWithName: 'Nguyễn Thị Thảo',
-                dateFrom: '2026-09-29',
-                shiftFrom: 'AFTERNOON',
-                shiftFromLabel: 'Ca chiều (13:00 - 17:00)',
-                dateTo: '2026-09-29',
-                shiftTo: 'MORNING',
-                shiftToLabel: 'Ca sáng (08:00 - 12:00)',
-                reason: 'Bận việc gia đình buổi chiều, đổi ca sáng với Thảo',
-                status: 'PENDING',
-                createdAt: '28/09/2026 09:15'
-            },
-            {
-                id: 'REQ-003',
-                type: 'LEAVE',
+                id: 'WS-02',
+                name: 'Bàn Grooming 02',
+                status: 'DELAYED',
                 staffId: 'EMP-005',
-                staffName: 'Phạm Thị D',
-                staffPos: 'CSKH',
-                leaveType: 'PERSONAL',
-                leaveTypeLabel: 'Việc riêng gia đình',
-                startDate: '2026-09-25',
-                endDate: '2026-10-02',
-                scope: 'ALL',
-                scopeLabel: 'Cả ngày (1 tuần)',
-                replacementId: '',
-                replacementName: '',
-                reason: 'Gia đình có việc hiếu',
-                status: 'APPROVED',
-                createdAt: '24/09/2026 14:00'
+                staffName: 'Lê Hoàng Nam',
+                staffPos: 'Kỹ thuật viên Grooming',
+                bookingId: 'BK-8845',
+                customerName: 'Anh Quốc Bảo',
+                petName: 'Bé Bơ (Corgi)',
+                serviceName: 'Tắm vệ sinh và Cắt tỉa móng',
+                startTime: '14:15',
+                estEndTime: '15:15',
+                extendedMinutes: 15,
+                isRequested: false,
+                incidentNote: 'Lông rối chân sau, đã xin phép khách gỡ rối thêm +15p'
+            },
+            {
+                id: 'WS-03',
+                name: 'Bàn Tắm Spa 03',
+                status: 'IN_SERVICE',
+                staffId: 'EMP-008',
+                staffName: 'Đặng Thị Mai',
+                staffPos: 'Chuyên viên Spa thú cưng',
+                bookingId: 'BK-8849',
+                customerName: 'Chị Thu Hà',
+                petName: 'Bé Lu (Mèo Anh lông ngắn)',
+                serviceName: 'Tắm khử mùi và Massage thư giãn',
+                startTime: '14:30',
+                estEndTime: '15:30',
+                extendedMinutes: 0,
+                isRequested: true,
+                incidentNote: ''
+            },
+            {
+                id: 'WS-04',
+                name: 'Pet Taxi 01',
+                status: 'IN_SERVICE',
+                staffId: 'EMP-004',
+                staffName: 'Phạm Minh Đức',
+                staffPos: 'Tài xế Taxi Pet',
+                bookingId: 'BK-8851',
+                customerName: 'Cô Thanh Trúc',
+                petName: 'Bé Sam (Golden)',
+                serviceName: 'Đón tận nhà về cơ sở dưỡng lông',
+                startTime: '14:00',
+                estEndTime: '15:00',
+                extendedMinutes: 0,
+                isRequested: false,
+                incidentNote: ''
+            },
+            {
+                id: 'WS-05',
+                name: 'Khu Pet Hotel 24/7',
+                status: 'IDLE',
+                staffId: 'EMP-003',
+                staffName: 'Lê Thị Cúc',
+                staffPos: 'Bảo mẫu Pet Hotel',
+                bookingId: '',
+                customerName: '',
+                petName: '',
+                serviceName: 'Giám sát phòng lưu trú và Chăm sóc bữa ăn',
+                startTime: '',
+                estEndTime: '',
+                extendedMinutes: 0,
+                isRequested: false,
+                incidentNote: ''
+            },
+            {
+                id: 'WS-06',
+                name: 'Bàn Tắm Sấy 02',
+                status: 'IDLE',
+                staffId: 'EMP-003',
+                staffName: 'Lê Thị Cúc',
+                staffPos: 'Kỹ thuật viên Tắm sấy',
+                bookingId: '',
+                customerName: '',
+                petName: '',
+                serviceName: 'Sẵn sàng tiếp nhận ca tắm sấy vệ sinh hoặc dưỡng lông',
+                startTime: '',
+                estEndTime: '',
+                extendedMinutes: 0,
+                isRequested: false,
+                incidentNote: ''
             }
         ];
 
-        let currentReqFilter = 'ALL';
-        let activeLeaveSwapMode = 'LEAVE';
+        function addMinutesToTime(timeStr, minsToAdd) {
+            if (!timeStr || !timeStr.includes(':')) return timeStr;
+            const [h, m] = timeStr.split(':').map(Number);
+            let total = h * 60 + m + minsToAdd;
+            let newH = Math.floor(total / 60) % 24;
+            let newM = total % 60;
+            return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+        }
+
+        // Các hàm lưu trữ dữ liệu sang localStorage
+        function saveStaffDataToStorage() {
+            try {
+                localStorage.setItem('pawpal_staff_data', JSON.stringify(mockStaff));
+            } catch (e) {}
+        }
+
+        function saveRosterToStorage() {
+            try {
+                localStorage.setItem('pawpal_staff_roster', JSON.stringify(mockRoster));
+            } catch (e) {}
+        }
+
+        function saveAssessmentsToStorage() {
+            try {
+                localStorage.setItem('pawpal_staff_assessments', JSON.stringify(mockAssessments));
+            } catch (e) {}
+        }
+
+        function saveLeaveRequestsToStorage() {
+            try {
+                localStorage.setItem('pawpal_staff_leave_requests', JSON.stringify(mockLeaveSwapRequests));
+            } catch (e) {}
+        }
 
         // ---------------------------------------------------------
         // 2. HELPER FUNCTIONS & RENDERING LOGIC
@@ -530,13 +456,100 @@
                 elMonthlyHours.textContent = staff.monthlyHours || (staff.shift === 'NIGHT' ? '184.0h' : (staff.status === 'LEAVE' ? '128.0h' : (staff.status === 'RESIGNED' ? '0.0h' : '168.0h')));
             }
             if (elNightShifts) {
-                elNightShifts.textContent = staff.nightShiftsCount !== undefined ? `${staff.nightShiftsCount} ca` : (staff.shift === 'NIGHT' ? '14 ca' : (staff.role === 'Veterinarian' ? '6 ca' : '2 ca'));
+                elNightShifts.textContent = staff.nightShiftsCount !== undefined ? `${staff.nightShiftsCount} ca` : (staff.shift === 'NIGHT' ? '14 ca' : (staff.role === 'Caregiver' ? '6 ca' : '2 ca'));
             }
             if (elCompletedServices) {
-                elCompletedServices.textContent = staff.completedServicesCount !== undefined ? `${staff.completedServicesCount} lượt` : (staff.role === 'Groomer' ? '68 lượt' : (staff.role === 'Veterinarian' ? '45 ca' : (staff.role === 'Driver' ? '52 chuyến' : '38 lượt')));
+                elCompletedServices.textContent = staff.completedServicesCount !== undefined ? `${staff.completedServicesCount} lượt` : (staff.role === 'Groomer' ? '68 lượt' : (staff.role === 'Caregiver' ? '45 ca' : (staff.role === 'Driver' ? '52 chuyến' : '38 lượt')));
             }
             if (elPunctuality) {
                 elPunctuality.textContent = staff.punctualityRate || (staff.serviceLocked ? '92.0%' : '98.5%');
+            }
+
+            // Bảng tính hoa hồng và Ước tính thu nhập tháng (Giai đoạn 4)
+            const elBaseSalary = document.getElementById('viewStaffBaseSalary');
+            const elServiceCommission = document.getElementById('viewStaffServiceCommission');
+            const elRequestedBonus = document.getElementById('viewStaffRequestedBonus');
+            const elSafetyBonus = document.getElementById('viewStaffSafetyBonus');
+            const elTotalIncome = document.getElementById('viewStaffTotalIncome');
+
+            let baseSalary = 7500000;
+            if (staff.role === 'Admin') baseSalary = 12000000;
+            else if (staff.role === 'Groomer') baseSalary = 8000000;
+            else if (staff.role === 'Caregiver') baseSalary = 7000000;
+            else if (staff.role === 'Driver') baseSalary = 6500000;
+            else if (staff.role === 'Receptionist' || staff.role === 'CSKH') baseSalary = 8500000;
+
+            if (staff.status === 'LEAVE') baseSalary = Math.round(baseSalary * 0.85);
+            if (staff.status === 'PAUSE') baseSalary = Math.round(baseSalary * 0.5);
+            if (staff.status === 'RESIGNED') baseSalary = 0;
+
+            const servicesCount = staff.completedServicesCount !== undefined ? staff.completedServicesCount : (staff.role === 'Groomer' ? 68 : (staff.role === 'Caregiver' ? 45 : (staff.role === 'Driver' ? 52 : 38)));
+            const commissionPerService = staff.role === 'Groomer' ? 85000 : (staff.role === 'Caregiver' ? 65000 : (staff.role === 'Driver' ? 40000 : 35000));
+            const serviceCommission = (staff.status === 'RESIGNED') ? 0 : (servicesCount * commissionPerService);
+
+            const reqCount = staff.requested_count !== undefined ? staff.requested_count : (staff.role === 'Groomer' ? 42 : 12);
+            const requestedBonus = (staff.status === 'RESIGNED') ? 0 : (reqCount * 20000);
+
+            const safetyBonus = (staff.complaint_count === 0 && !staff.serviceLocked && staff.status !== 'RESIGNED') ? 1000000 : 0;
+            const totalIncome = baseSalary + serviceCommission + requestedBonus + safetyBonus;
+
+            if (elBaseSalary) elBaseSalary.textContent = baseSalary.toLocaleString('vi-VN') + ' đ';
+            if (elServiceCommission) elServiceCommission.textContent = '+ ' + serviceCommission.toLocaleString('vi-VN') + ' đ';
+            if (elRequestedBonus) elRequestedBonus.textContent = '+ ' + requestedBonus.toLocaleString('vi-VN') + ' đ';
+            if (elSafetyBonus) elSafetyBonus.textContent = safetyBonus > 0 ? ('+ ' + safetyBonus.toLocaleString('vi-VN') + ' đ') : '0 đ (Không đạt)';
+            if (elTotalIncome) elTotalIncome.textContent = totalIncome.toLocaleString('vi-VN') + ' đ';
+
+            // Đánh giá và Phản hồi từ Khách hàng (Giai đoạn 1)
+            const elCsatScore = document.getElementById('viewStaffCsatScore');
+            const elCsatReviews = document.getElementById('viewStaffCsatReviews');
+            const elRequestedCount = document.getElementById('viewStaffRequestedCount');
+            const elZeroComplaint = document.getElementById('viewStaffZeroComplaintRate');
+            const elReviewsList = document.getElementById('viewStaffCustomerReviewsList');
+
+            if (elCsatScore) {
+                elCsatScore.textContent = staff.customer_rating ? `${staff.customer_rating.avg_score} / 5.0` : '5.0 / 5.0';
+            }
+            if (elCsatReviews) {
+                elCsatReviews.textContent = staff.customer_rating ? `${staff.customer_rating.total_reviews} lượt đánh giá` : '0 lượt đánh giá';
+            }
+            if (elRequestedCount) {
+                elRequestedCount.textContent = staff.requested_count !== undefined ? `${staff.requested_count} lượt` : '0 lượt';
+            }
+            if (elZeroComplaint) {
+                elZeroComplaint.textContent = staff.zero_complaint_rate || (staff.complaint_count === 0 ? '100%' : '95.0%');
+            }
+
+            if (elReviewsList) {
+                elReviewsList.innerHTML = '';
+                const reviews = staff.customer_reviews || [];
+                if (reviews.length === 0) {
+                    elReviewsList.innerHTML = `
+                        <div style="font-size: 12.5px; color: var(--text-muted); padding: 12px 0;">
+                            Chưa có nhận xét trực tiếp từ khách hàng cho nhân viên này.
+                        </div>
+                    `;
+                } else {
+                    reviews.forEach(rv => {
+                        const requestedBadgeHtml = rv.is_requested ? '<span class="badge-requested-pill">Khách chỉ định KTV</span>' : '';
+                        const card = document.createElement('div');
+                        card.className = 'customer-review-card';
+                        card.innerHTML = `
+                            <div class="review-card-top">
+                                <div class="review-customer-info">
+                                    <span class="review-customer-name">${escapeHtml(rv.customer_name)}</span>
+                                    <span class="review-pet-name">• ${escapeHtml(rv.pet_name)}</span>
+                                </div>
+                                <div class="review-rating-stars">★ ${rv.rating}.0 / 5.0</div>
+                            </div>
+                            <div class="review-comment-body">"${escapeHtml(rv.comment)}"</div>
+                            <div class="review-card-meta">
+                                <span>${escapeHtml(rv.service_name)} • ${rv.date}</span>
+                                ${requestedBadgeHtml}
+                            </div>
+                        `;
+                        elReviewsList.appendChild(card);
+                    });
+                }
             }
 
             // Lịch sử đánh giá nghiệp vụ gần nhất của nhân viên (Giai đoạn 4)
@@ -1035,8 +1048,202 @@
             attachProfileDrawerEvents();
         }
 
+        // ---------------------------------------------------------
+        // GIAI ĐOẠN 3: TIẾN ĐỘ BÀN DỊCH VỤ TRỰC TIẾP (LIVE WORKSTATIONS)
+        // ---------------------------------------------------------
+        function renderLiveWorkstations() {
+            const grid = document.getElementById('liveWorkstationsGrid');
+            const countBadge = document.getElementById('liveWorkstationsActiveCount');
+            if (!grid) return;
+
+            const inServiceCount = mockWorkstations.filter(w => w.status === 'IN_SERVICE' || w.status === 'DELAYED').length;
+            if (countBadge) {
+                countBadge.textContent = `${inServiceCount} bàn đang phục vụ`;
+            }
+
+            grid.innerHTML = '';
+            mockWorkstations.forEach(ws => {
+                let cardClass = 'idle';
+                let statusBadge = '<span class="admin-badge badge-pause">Sẵn sàng</span>';
+
+                if (ws.status === 'IN_SERVICE') {
+                    cardClass = 'in-service';
+                    statusBadge = '<span class="admin-badge badge-active">Đang phục vụ</span>';
+                } else if (ws.status === 'DELAYED') {
+                    cardClass = 'delayed';
+                    statusBadge = `<span class="admin-badge badge-leave">Kéo dài (+${ws.extendedMinutes}p)</span>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = `workstation-card ${cardClass}`;
+
+                let bookingHtml = '';
+                let actionsHtml = '';
+
+                if (ws.status === 'IDLE') {
+                    bookingHtml = `
+                        <div class="workstation-booking-info" style="color: var(--text-muted); font-size: 12px; font-style: italic;">
+                            ${ws.serviceName}
+                        </div>
+                    `;
+                    actionsHtml = `
+                        <div class="workstation-actions-row" style="justify-content: flex-end;">
+                            <span style="font-size: 11.5px; color: var(--text-muted);">Sẵn sàng tiếp nhận ca mới</span>
+                        </div>
+                    `;
+                } else {
+                    const extendText = ws.extendedMinutes > 0 ? ` <span style="color: #D97706; font-size: 11px;">(+${ws.extendedMinutes}p)</span>` : '';
+                    const incidentHtml = ws.incidentNote ? `
+                        <div style="font-size: 11.5px; color: #DC2626; margin-top: 3px; font-weight: 500;">
+                            Lưu ý ca: ${ws.incidentNote}
+                        </div>
+                    ` : '';
+
+                    bookingHtml = `
+                        <div class="workstation-booking-info">
+                            <div class="booking-title-row">
+                                <span>${ws.petName} • ${ws.customerName}</span>
+                                <span style="font-size: 11.5px; color: var(--text-heading); font-weight: 700;">${ws.startTime} ➔ ${ws.estEndTime}${extendText}</span>
+                            </div>
+                            <div class="booking-desc-row">${ws.serviceName}</div>
+                            ${incidentHtml}
+                        </div>
+                    `;
+
+                    actionsHtml = `
+                        <div class="workstation-actions-row">
+                            <button type="button" class="btn-extend-chip" data-ws-id="${ws.id}">+15p gia hạn</button>
+                            <button type="button" class="btn-incident-chip" data-ws-id="${ws.id}">Báo sự cố</button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="workstation-top">
+                        <span class="workstation-name">${ws.name}</span>
+                        ${statusBadge}
+                    </div>
+                    <div class="workstation-staff-info">
+                        <span class="workstation-staff-name" style="cursor: pointer;" data-staff-id="${ws.staffId}">${ws.staffName}</span>
+                        <span style="font-size: 11px; color: var(--text-muted);">${ws.staffPos}</span>
+                        ${ws.isRequested ? '<span class="badge-requested-pill">Yêu cầu KTV</span>' : ''}
+                    </div>
+                    ${bookingHtml}
+                    ${actionsHtml}
+                `;
+
+                grid.appendChild(card);
+            });
+
+            // Gán sự kiện xem hồ sơ nhân viên từ bàn làm việc
+            grid.querySelectorAll('.workstation-staff-name').forEach(el => {
+                el.addEventListener('click', () => {
+                    const id = el.getAttribute('data-staff-id');
+                    if (id) {
+                        selectedStaffId = id;
+                        sessionStorage.setItem('pawpal_admin_staff_selected_id', id);
+                        renderStaffProfile(id);
+                        switchSubtab('tab-staff-profile');
+                    }
+                });
+            });
+
+            // Gán sự kiện nút +15p gia hạn
+            grid.querySelectorAll('.btn-extend-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const wsId = btn.getAttribute('data-ws-id');
+                    const ws = mockWorkstations.find(w => w.id === wsId);
+                    if (ws) {
+                        ws.extendedMinutes = (ws.extendedMinutes || 0) + 15;
+                        ws.estEndTime = addMinutesToTime(ws.estEndTime, 15);
+                        ws.status = 'DELAYED';
+                        renderLiveWorkstations();
+                    }
+                });
+            });
+
+            // Gán sự kiện nút Báo sự cố
+            grid.querySelectorAll('.btn-incident-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const wsId = btn.getAttribute('data-ws-id');
+                    openIncidentReportModal(wsId);
+                });
+            });
+        }
+
+        function openIncidentReportModal(defaultWsId) {
+            const modal = document.getElementById('incidentReportModalOverlay');
+            if (!modal) return;
+
+            const staffSelect = document.getElementById('incidentInputStaff');
+            const bookingSelect = document.getElementById('incidentInputBooking');
+            const noteInput = document.getElementById('incidentInputNote');
+
+            if (staffSelect) {
+                staffSelect.innerHTML = mockStaff
+                    .filter(s => s.status !== 'RESIGNED')
+                    .map(s => `<option value="${s.id}">${s.name} (${s.position})</option>`)
+                    .join('');
+            }
+
+            if (bookingSelect) {
+                bookingSelect.innerHTML = mockWorkstations
+                    .map(w => {
+                        const label = w.status === 'IDLE' 
+                            ? `${w.name} (Sẵn sàng / Trống)`
+                            : `${w.name} - ${w.petName} (${w.customerName})`;
+                        return `<option value="${w.id}">${label}</option>`;
+                    })
+                    .join('');
+            }
+
+            if (defaultWsId) {
+                const ws = mockWorkstations.find(w => w.id === defaultWsId);
+                if (ws) {
+                    if (bookingSelect) bookingSelect.value = defaultWsId;
+                    if (staffSelect && ws.staffId) staffSelect.value = ws.staffId;
+                }
+            }
+
+            if (noteInput) noteInput.value = '';
+            modal.classList.add('active');
+        }
+
+        function handleSaveIncidentReport() {
+            const modal = document.getElementById('incidentReportModalOverlay');
+            const staffId = document.getElementById('incidentInputStaff')?.value;
+            const wsId = document.getElementById('incidentInputBooking')?.value;
+            const incidentTypeLabel = document.getElementById('incidentInputType')?.selectedOptions[0]?.text || 'Sự cố ca trực';
+            const extendMinutes = parseInt(document.getElementById('incidentInputExtend')?.value || '0', 10);
+            const severity = document.getElementById('incidentInputSeverity')?.value;
+            const note = document.getElementById('incidentInputNote')?.value.trim();
+
+            const ws = mockWorkstations.find(w => w.id === wsId);
+            const staff = mockStaff.find(s => s.id === staffId);
+
+            if (ws) {
+                if (extendMinutes > 0) {
+                    ws.extendedMinutes = (ws.extendedMinutes || 0) + extendMinutes;
+                    ws.estEndTime = addMinutesToTime(ws.estEndTime, extendMinutes);
+                    ws.status = 'DELAYED';
+                }
+                ws.incidentNote = note || incidentTypeLabel;
+            }
+
+            if (staff && severity === 'URGENT') {
+                if (!staff.flags) staff.flags = [];
+                staff.flags.push(`Sự cố ca trực: ${incidentTypeLabel}`);
+            }
+
+            modal?.classList.remove('active');
+            renderLiveWorkstations();
+            renderStaffAlertBar();
+            alert(`Đã ghi nhận sự cố ca trực cho bàn ${ws ? ws.name : ''} thành công!`);
+        }
+
         function renderScheduleTable() {
             updateShiftQuotas(currentScheduleDate);
+            renderLiveWorkstations();
 
             const dayWrapper = document.getElementById('scheduleDayViewWrapper');
             const weekWrapper = document.getElementById('scheduleWeekViewWrapper');
@@ -1393,6 +1600,19 @@
                         }
                     }
                 }
+
+                // Tự động chuyển giao ca hẹn cho nhân sự thay thế (nếu có)
+                if (req.replacementId) {
+                    const repStaff = mockStaff.find(s => s.id === req.replacementId);
+                    if (repStaff) {
+                        mockActiveBookings.forEach(b => {
+                            if (b.staffId === req.staffId && b.date >= req.startDate && b.date <= req.endDate) {
+                                b.staffId = repStaff.id;
+                                b.staffName = repStaff.name;
+                            }
+                        });
+                    }
+                }
             } else if (req.type === 'SWAP') {
                 // Áp dụng hoán đổi ca lên Roster
                 if (!mockRoster[req.dateFrom]) {
@@ -1740,7 +1960,7 @@
             if (assessModalEl) assessModalEl.classList.add('active');
         }
 
-        function handleSaveAssessment() {
+        function handleSaveAssessment(shouldNotify = false) {
             const staffSelect = document.getElementById('assessInputStaff');
             const dateInput = document.getElementById('assessInputDate');
             const typeSelect = document.getElementById('assessInputType');
@@ -1805,6 +2025,9 @@
                 note: note || (result === 'PASS' ? 'Nghiệp vụ chuẩn xác' : 'Yêu cầu kèm cặp chuyên môn')
             });
 
+            saveAssessmentsToStorage();
+            saveStaffDataToStorage();
+
             updateKpiCounters();
             updateAssessmentKpiCounters();
             renderStaffAlertBar();
@@ -1817,7 +2040,25 @@
             }
 
             if (assessModalEl) assessModalEl.classList.remove('active');
-            alert(`Đã lưu kết quả đánh giá nghiệp vụ cho nhân viên ${staff.name} (${staff.id})!${safetyLockMessage}`);
+            const notifyMsg = shouldNotify ? '\nĐã gửi thông báo kết quả đánh giá tới ứng dụng nhân viên.' : '';
+            alert(`Đã lưu kết quả đánh giá nghiệp vụ cho nhân viên ${staff.name} (${staff.id})!${safetyLockMessage}${notifyMsg}`);
+
+            // Nếu bị khóa an toàn và có ca hẹn đang gán, kích hoạt ngay luồng điều phối lại ca
+            if (result !== 'PASS') {
+                const affected = getAffectedBookingsForStaff(staff.id);
+                if (affected.length > 0) {
+                    openReassignModal(staff.id, (reassigned) => {
+                        saveStaffDataToStorage();
+                        updateKpiCounters();
+                        renderStaffAlertBar();
+                        renderStaffList();
+                        renderAssessmentList();
+                        if (reassigned) {
+                            alert(`Đã chuyển giao ${affected.length} ca hẹn của nhân viên ${staff.name} sang KTV khả dụng khác do chưa đạt chuẩn nghiệp vụ!`);
+                        }
+                    });
+                }
+            }
         }
 
         // ---------------------------------------------------------
@@ -1925,20 +2166,174 @@
 
         // Modal Thêm/Sửa nhân sự
         const staffModal = document.getElementById('staffModalOverlay');
-        document.getElementById('btnOpenAddStaffModal')?.addEventListener('click', () => {
+
+        function openStaffModal(staffId) {
             const titleEl = document.getElementById('staffModalTitle');
-            if (titleEl) titleEl.innerText = 'Thêm nhân viên mới';
-            staffModal?.classList.add('active');
-        });
-        document.getElementById('btnCancelStaff')?.addEventListener('click', () => staffModal?.classList.remove('active'));
-        document.getElementById('btnDismissStaffModal')?.addEventListener('click', () => staffModal?.classList.remove('active'));
-        document.getElementById('btnSaveStaff')?.addEventListener('click', () => {
-            alert('Lưu thông tin nhân viên thành công!');
+            const nameIn = document.getElementById('staffInputName');
+            const phoneIn = document.getElementById('staffInputPhone');
+            const emailIn = document.getElementById('staffInputEmail');
+            const addrIn = document.getElementById('staffInputAddress');
+            const dobIn = document.getElementById('staffInputDob');
+            const joinIn = document.getElementById('staffInputJoinDate');
+            const posIn = document.getElementById('staffInputPosition');
+            const roleIn = document.getElementById('staffInputRole');
+
+            if (!staffModal) return;
+
+            if (staffId) {
+                const staff = mockStaff.find(s => s.id === staffId);
+                if (staff) {
+                    if (titleEl) titleEl.innerText = `Chỉnh sửa hồ sơ: ${staff.name} (${staff.id})`;
+                    staffModal.setAttribute('data-editing-id', staff.id);
+                    if (nameIn) nameIn.value = staff.name || '';
+                    if (phoneIn) phoneIn.value = staff.phone || '';
+                    if (emailIn) emailIn.value = staff.email || '';
+                    if (addrIn) addrIn.value = staff.address || '';
+                    if (dobIn) dobIn.value = staff.dob || '1998-01-01';
+                    if (joinIn) joinIn.value = staff.join_date || new Date().toISOString().split('T')[0];
+                    if (posIn) posIn.value = staff.position || 'Groomer';
+                    if (roleIn) roleIn.value = staff.role || 'Groomer';
+                }
+            } else {
+                if (titleEl) titleEl.innerText = 'Thêm nhân viên mới';
+                staffModal.removeAttribute('data-editing-id');
+                if (nameIn) nameIn.value = '';
+                if (phoneIn) phoneIn.value = '';
+                if (emailIn) emailIn.value = '';
+                if (addrIn) addrIn.value = '';
+                if (dobIn) dobIn.value = '1998-01-01';
+                if (joinIn) joinIn.value = new Date().toISOString().split('T')[0];
+                if (posIn) posIn.value = 'Groomer';
+                if (roleIn) roleIn.value = 'Groomer';
+            }
+
+            staffModal.classList.add('active');
+        }
+
+        function handleSaveStaff() {
+            const nameIn = document.getElementById('staffInputName');
+            const phoneIn = document.getElementById('staffInputPhone');
+            const emailIn = document.getElementById('staffInputEmail');
+            const addrIn = document.getElementById('staffInputAddress');
+            const dobIn = document.getElementById('staffInputDob');
+            const joinIn = document.getElementById('staffInputJoinDate');
+            const posIn = document.getElementById('staffInputPosition');
+            const roleIn = document.getElementById('staffInputRole');
+
+            const name = nameIn?.value.trim();
+            const phone = phoneIn?.value.trim();
+            const email = emailIn?.value.trim();
+            const address = addrIn?.value.trim() || '';
+            const dob = dobIn?.value || '1998-01-01';
+            const join_date = joinIn?.value || new Date().toISOString().split('T')[0];
+            const position = posIn?.value || 'Groomer';
+            const role = roleIn?.value || 'Groomer';
+
+            if (!name || name.length < 2) {
+                alert('Vui lòng nhập họ và tên nhân viên (tối thiểu 2 ký tự)!');
+                nameIn?.focus();
+                return;
+            }
+            if (!phone || phone.length < 10) {
+                alert('Vui lòng nhập số điện thoại hợp lệ (10 chữ số)!');
+                phoneIn?.focus();
+                return;
+            }
+            if (!email || !email.includes('@')) {
+                alert('Vui lòng nhập địa chỉ email công việc hợp lệ!');
+                emailIn?.focus();
+                return;
+            }
+
+            const editingId = staffModal?.getAttribute('data-editing-id');
+
+            if (editingId) {
+                const staff = mockStaff.find(s => s.id === editingId);
+                if (staff) {
+                    staff.name = name;
+                    staff.phone = phone;
+                    staff.email = email;
+                    staff.address = address;
+                    staff.dob = dob;
+                    staff.join_date = join_date;
+                    staff.position = position;
+                    staff.role = role;
+                    alert(`Đã cập nhật thông tin nhân viên ${staff.name} (${staff.id})!`);
+                }
+            } else {
+                const maxNum = mockStaff.reduce((max, s) => {
+                    const num = parseInt(s.id.replace(/[^\d]/g, ''), 10);
+                    return !isNaN(num) && num > max ? num : max;
+                }, 0);
+                const newId = `EMP-${String(maxNum + 1).padStart(3, '0')}`;
+
+                const newStaff = {
+                    id: newId,
+                    name: name,
+                    position: position,
+                    role: role,
+                    phone: phone,
+                    email: email,
+                    shift: 'MORNING',
+                    status: 'ACTIVE',
+                    join_date: join_date,
+                    dob: dob,
+                    address: address,
+                    skillScore: 85,
+                    skillResult: 'PASS',
+                    skillExam: 'Đạt (85đ)',
+                    serviceLocked: false,
+                    note: 'Nhân sự mới bổ sung vào hệ thống PawPal'
+                };
+                mockStaff.unshift(newStaff);
+                selectedStaffId = newId;
+                alert(`Đã thêm mới nhân viên ${newStaff.name} với mã ${newStaff.id}!`);
+            }
+
+            saveStaffDataToStorage();
             staffModal?.classList.remove('active');
             updateKpiCounters();
             renderStaffAlertBar();
             renderStaffList();
-        });
+            if (selectedStaffId) {
+                const s = mockStaff.find(x => x.id === selectedStaffId);
+                if (s) renderStaffProfileDetail(s);
+            }
+        }
+
+        function exportStaffToExcel() {
+            const headers = ['Mã NV', 'Họ tên', 'Chức vụ', 'Vai trò', 'Số điện thoại', 'Email', 'Ca làm việc', 'Trạng thái', 'Điểm tay nghề', 'Khóa nhận việc', 'Địa chỉ'];
+            const rows = mockStaff.map(s => [
+                s.id,
+                `"${(s.name || '').replace(/"/g, '""')}"`,
+                `"${(s.position || '').replace(/"/g, '""')}"`,
+                `"${(s.role || '').replace(/"/g, '""')}"`,
+                `"${s.phone || ''}"`,
+                `"${s.email || ''}"`,
+                `"${s.shift || ''}"`,
+                `"${s.status || ''}"`,
+                `"${s.skillExam || ''}"`,
+                s.serviceLocked ? 'Đang khóa' : 'Sẵn sàng',
+                `"${(s.address || '').replace(/"/g, '""')}"`
+            ]);
+
+            const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Pawpal_Staff_List_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.getElementById('btnOpenAddStaffModal')?.addEventListener('click', () => openStaffModal(null));
+        document.getElementById('btnCancelStaff')?.addEventListener('click', () => staffModal?.classList.remove('active'));
+        document.getElementById('btnDismissStaffModal')?.addEventListener('click', () => staffModal?.classList.remove('active'));
+        document.getElementById('btnSaveStaff')?.addEventListener('click', handleSaveStaff);
+        document.getElementById('btnExportStaffExcel')?.addEventListener('click', exportStaffToExcel);
+        document.getElementById('btnExportStaff')?.addEventListener('click', exportStaffToExcel);
 
         // Thao tác từ dropdown 3 chấm
         document.getElementById('menuActionViewProfile')?.addEventListener('click', () => {
@@ -1952,46 +2347,233 @@
             }
         });
 
+        // Dữ liệu ca hẹn sắp tới liên kết phục vụ điều phối lại ca tự động (Giai đoạn 2)
+        let mockActiveBookings = [
+            { id: 'BKG-1002', customerName: 'Lê Lệ Quyên', petName: 'Miu Miu (Poodle)', serviceName: 'Grooming Tạo Kiểu Boo', date: '2026-09-29', time: '14:00', staffId: 'EMP-007', staffName: 'Trần Văn Hùng', isRequested: true },
+            { id: 'BKG-1005', customerName: 'Trần Minh Quân', petName: 'Bông Xù (Samoyed)', serviceName: 'Tắm sấy và Cắt tỉa lông', date: '2026-09-29', time: '15:30', staffId: 'EMP-007', staffName: 'Trần Văn Hùng', isRequested: false },
+            { id: 'BKG-1006', customerName: 'Đặng Thu Thảo', petName: 'Bông (Mèo Ta)', serviceName: 'Vệ sinh tai móng chuyên sâu', date: '2026-09-30', time: '10:00', staffId: 'EMP-002', staffName: 'Nguyễn Văn A', isRequested: true },
+            { id: 'BKG-1008', customerName: 'Phan Thị Bích', petName: 'Coco (Poodle Tiny)', serviceName: 'Cắt tỉa tạo kiểu Asian Style', date: '2026-09-30', time: '09:30', staffId: 'EMP-003', staffName: 'Trần Thị B', isRequested: false },
+            { id: 'BKG-1009', customerName: 'Nguyễn Hoàng Nam', petName: 'Lucky (Corgi)', serviceName: 'Khách sạn thú cưng Deluxe (2 ngày)', date: '2026-10-01', time: '08:00', staffId: 'EMP-004', staffName: 'Lê Văn C', isRequested: false },
+            { id: 'BKG-1011', customerName: 'Vũ Hải Đăng', petName: 'Bim Bim (Pug)', serviceName: 'Pet Taxi đưa đón tận nhà', date: '2026-10-01', time: '14:30', staffId: 'EMP-011', staffName: 'Nguyễn Quốc Bảo', isRequested: true }
+        ];
+
+        // Đọc dữ liệu ca hẹn đã điều phối từ localStorage nếu có
+        try {
+            const savedBkg = localStorage.getItem('pawpal_staff_active_bookings');
+            if (savedBkg) {
+                const parsedBkg = JSON.parse(savedBkg);
+                if (Array.isArray(parsedBkg) && parsedBkg.length > 0) {
+                    mockActiveBookings = parsedBkg;
+                }
+            }
+        } catch (e) {}
+
+        function saveActiveBookingsToStorage() {
+            try {
+                localStorage.setItem('pawpal_staff_active_bookings', JSON.stringify(mockActiveBookings));
+            } catch (e) {}
+        }
+
+        function getAffectedBookingsForStaff(staffId) {
+            return mockActiveBookings.filter(b => b.staffId === staffId);
+        }
+
+        function openReassignModal(staffId, onLockConfirmed) {
+            const modal = document.getElementById('reassignModalOverlay');
+            const warningText = document.getElementById('reassignModalWarningText');
+            const tbody = document.getElementById('reassignBookingsTableBody');
+            const selectAll = document.getElementById('reassignSelectAllStaff');
+            if (!modal || !tbody || !selectAll) return;
+
+            const staff = mockStaff.find(s => s.id === staffId);
+            if (!staff) return;
+
+            const affected = getAffectedBookingsForStaff(staffId);
+            if (affected.length === 0) {
+                if (typeof onLockConfirmed === 'function') onLockConfirmed(false);
+                return;
+            }
+
+            if (warningText) {
+                warningText.innerHTML = `Nhân viên <strong>${escapeHtml(staff.name)} (${staff.id})</strong> đang có <strong>${affected.length} ca hẹn</strong> đã gán trước đó. Vui lòng chọn nhân sự thay thế để đảm bảo phục vụ khách hàng đúng giờ.`;
+            }
+
+            const availableReplacements = mockStaff.filter(s => s.id !== staffId && s.status === 'ACTIVE' && !s.serviceLocked && (s.role === staff.role || s.role === 'Groomer' || s.role === 'Admin'));
+
+            selectAll.innerHTML = availableReplacements.map(s => `
+                <option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.position)} • Điểm tay nghề ${s.skillScore}đ)</option>
+            `).join('');
+
+            tbody.innerHTML = '';
+            affected.forEach(b => {
+                const tr = document.createElement('tr');
+                const reqBadge = b.isRequested ? '<span class="badge-requested-pill" style="margin-left: 4px;">Khách chỉ định</span>' : '';
+                tr.innerHTML = `
+                    <td><strong>${b.id}</strong></td>
+                    <td>
+                        <div style="font-weight: 600; color: var(--text-main);">${escapeHtml(b.customerName)}</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(b.petName)} ${reqBadge}</div>
+                    </td>
+                    <td>${escapeHtml(b.serviceName)}</td>
+                    <td>${b.date}<br><span style="font-size: 11px; color: var(--text-muted);">${b.time}</span></td>
+                    <td>
+                        <select class="reassign-select-row" data-bkg-id="${b.id}">
+                            ${availableReplacements.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('')}
+                        </select>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            selectAll.onchange = () => {
+                const val = selectAll.value;
+                tbody.querySelectorAll('.reassign-select-row').forEach(sel => sel.value = val);
+            };
+
+            const confirmBtn = document.getElementById('btnConfirmReassign');
+            const dismissBtn = document.getElementById('btnDismissReassignModal');
+            const cancelBtn = document.getElementById('btnCancelReassignModal');
+
+            confirmBtn.onclick = () => {
+                tbody.querySelectorAll('.reassign-select-row').forEach(sel => {
+                    const bkgId = sel.getAttribute('data-bkg-id');
+                    const targetNewStaffId = sel.value;
+                    const newStaff = mockStaff.find(s => s.id === targetNewStaffId);
+                    const bkg = mockActiveBookings.find(b => b.id === bkgId);
+                    if (bkg && newStaff) {
+                        bkg.staffId = newStaff.id;
+                        bkg.staffName = newStaff.name;
+                    }
+                });
+
+                modal.classList.remove('active');
+                if (typeof onLockConfirmed === 'function') onLockConfirmed(true);
+            };
+
+            dismissBtn.onclick = () => {
+                modal.classList.remove('active');
+                if (typeof onLockConfirmed === 'function') onLockConfirmed(false);
+            };
+
+            cancelBtn.onclick = () => modal.classList.remove('active');
+
+            modal.classList.add('active');
+        }
+
+        function handleToggleStaffLock(staffId) {
+            const staff = mockStaff.find(s => s.id === staffId);
+            if (!staff) return;
+
+            if (!staff.serviceLocked) {
+                const affected = getAffectedBookingsForStaff(staff.id);
+                if (affected.length > 0) {
+                    openReassignModal(staff.id, (reassigned) => {
+                        staff.serviceLocked = true;
+                        saveStaffDataToStorage();
+                        renderStaffProfile(staff.id);
+                        updateKpiCounters();
+                        renderStaffAlertBar();
+                        renderStaffList();
+                        const msg = reassigned 
+                            ? `Đã chuyển giao ${affected.length} ca hẹn và tạm khóa nhận việc an toàn cho nhân viên ${staff.name}!` 
+                            : `Đã tạm khóa nhận việc an toàn cho nhân viên ${staff.name}!`;
+                        alert(msg);
+                    });
+                    return;
+                }
+            }
+
+            staff.serviceLocked = !staff.serviceLocked;
+            saveStaffDataToStorage();
+            renderStaffProfile(staff.id);
+            updateKpiCounters();
+            renderStaffAlertBar();
+            renderStaffList();
+
+            const actionMsg = staff.serviceLocked 
+                ? `Đã tạm khóa nhận việc an toàn cho nhân viên ${staff.name}!` 
+                : `Đã mở khóa nhận việc cho nhân viên ${staff.name}!`;
+            alert(actionMsg);
+        }
+
         document.getElementById('menuActionToggleLock')?.addEventListener('click', () => {
             const id = document.getElementById('staffActionDropdown')?.getAttribute('data-current-id');
+            const dropdown = document.getElementById('staffActionDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+            if (id) handleToggleStaffLock(id);
+        });
+
+        document.getElementById('menuActionEditStaff')?.addEventListener('click', () => {
+            const id = document.getElementById('staffActionDropdown')?.getAttribute('data-current-id');
+            const dropdown = document.getElementById('staffActionDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+            if (id) openStaffModal(id);
+        });
+
+        document.getElementById('menuActionViewSchedule')?.addEventListener('click', () => {
+            const id = document.getElementById('staffActionDropdown')?.getAttribute('data-current-id');
+            if (id) {
+                selectedStaffId = id;
+                sessionStorage.setItem('pawpal_admin_staff_selected_id', id);
+            }
+            const dropdown = document.getElementById('staffActionDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+            switchSubtab('tab-staff-schedule');
+        });
+
+        document.getElementById('menuActionViewAssess')?.addEventListener('click', () => {
+            const id = document.getElementById('staffActionDropdown')?.getAttribute('data-current-id');
+            if (id) {
+                selectedStaffId = id;
+                sessionStorage.setItem('pawpal_admin_staff_selected_id', id);
+            }
+            const dropdown = document.getElementById('staffActionDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+            switchSubtab('tab-staff-assessment');
+        });
+
+        document.getElementById('menuActionDeleteStaff')?.addEventListener('click', () => {
+            const id = document.getElementById('staffActionDropdown')?.getAttribute('data-current-id');
             const staff = mockStaff.find(s => s.id === id);
+            const dropdown = document.getElementById('staffActionDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+
             if (staff) {
-                staff.serviceLocked = !staff.serviceLocked;
-                const dropdown = document.getElementById('staffActionDropdown');
-                if (dropdown) dropdown.style.display = 'none';
-                
-                updateKpiCounters();
-                renderStaffAlertBar();
-                renderStaffList();
-                
-                const actionMsg = staff.serviceLocked 
-                    ? `Đã tạm khóa nhận việc an toàn cho nhân viên ${staff.name}!` 
-                    : `Đã mở khóa nhận việc cho nhân viên ${staff.name}!`;
-                alert(actionMsg);
+                const confirmed = confirm(`Bạn có chắc chắn muốn xóa nhân viên ${staff.name} (${staff.id}) khỏi hệ thống?`);
+                if (confirmed) {
+                    const idx = mockStaff.findIndex(s => s.id === id);
+                    if (idx !== -1) {
+                        mockStaff.splice(idx, 1);
+                        saveStaffDataToStorage();
+                        updateKpiCounters();
+                        renderStaffAlertBar();
+                        renderStaffList();
+                        alert(`Đã xóa nhân viên ${staff.name} thành công!`);
+                    }
+                }
             }
         });
 
         // Nút Khóa / Mở nhận việc trực tiếp trong Subtab Hồ sơ
         document.getElementById('btnProfileToggleSafetyLock')?.addEventListener('click', () => {
-            const staff = mockStaff.find(s => s.id === selectedStaffId);
-            if (staff) {
-                staff.serviceLocked = !staff.serviceLocked;
-                renderStaffProfile(staff.id);
-                updateKpiCounters();
-                renderStaffAlertBar();
-                
-                const actionMsg = staff.serviceLocked 
-                    ? `Đã tạm khóa nhận việc an toàn cho nhân viên ${staff.name}!` 
-                    : `Đã mở khóa nhận việc cho nhân viên ${staff.name}!`;
-                alert(actionMsg);
-            }
+            if (selectedStaffId) handleToggleStaffLock(selectedStaffId);
         });
 
         // Các nút trong Subtab Hồ sơ riêng
         document.getElementById('btnProfileEditStaff')?.addEventListener('click', () => {
-            const titleEl = document.getElementById('staffModalTitle');
-            if (titleEl) titleEl.innerText = 'Chỉnh sửa nhân viên';
-            staffModal?.classList.add('active');
+            openStaffModal(selectedStaffId);
+        });
+
+        document.getElementById('btnEditStaffProfile')?.addEventListener('click', () => {
+            openStaffModal(selectedStaffId);
+        });
+
+        document.getElementById('btnAssignShift')?.addEventListener('click', () => {
+            openShiftModal(currentScheduleDate, 'MORNING', selectedStaffId);
+        });
+
+        document.getElementById('btnRecordAssessment')?.addEventListener('click', () => {
+            openAssessmentModal(selectedStaffId);
         });
 
         document.getElementById('btnProfileAssignShift')?.addEventListener('click', () => {
@@ -2034,6 +2616,7 @@
                 }
             });
 
+            saveRosterToStorage();
             shiftModalEl?.classList.remove('active');
             renderScheduleTable();
             renderStaffAlertBar();
@@ -2113,8 +2696,8 @@
         });
         document.getElementById('btnCancelAssessmentModal')?.addEventListener('click', () => assessModalEl?.classList.remove('active'));
         document.getElementById('btnDismissAssessmentModal')?.addEventListener('click', () => assessModalEl?.classList.remove('active'));
-        document.getElementById('btnSaveAssessment')?.addEventListener('click', handleSaveAssessment);
-        document.getElementById('btnSendAssessNotify')?.addEventListener('click', handleSaveAssessment);
+        document.getElementById('btnSaveAssessment')?.addEventListener('click', () => handleSaveAssessment(false));
+        document.getElementById('btnSendAssessNotify')?.addEventListener('click', () => handleSaveAssessment(true));
 
         // Real-time listener: Tự động phân loại kết quả (Đạt / Cần đào tạo / Không đạt) khi nhập điểm
         const assessScoreInput = document.getElementById('assessInputScore');
@@ -2212,37 +2795,122 @@
             });
         });
 
+        // Sự kiện Modal Báo cáo sự cố ca trực (Giai đoạn 3)
+        const incidentModalEl = document.getElementById('incidentReportModalOverlay');
+        document.getElementById('btnOpenIncidentReportModal')?.addEventListener('click', () => {
+            openIncidentReportModal();
+        });
+        document.getElementById('btnCancelIncidentModal')?.addEventListener('click', () => {
+            incidentModalEl?.classList.remove('active');
+        });
+        document.getElementById('btnDismissIncidentModal')?.addEventListener('click', () => {
+            incidentModalEl?.classList.remove('active');
+        });
+        document.getElementById('btnSaveIncidentReport')?.addEventListener('click', () => {
+            handleSaveIncidentReport();
+        });
+
         // =========================================================
         // 9. CROSS-MODULE API (PAWPAL STAFF MANAGER)
         // =========================================================
         window.PawpalStaffManager = {
             getAllStaff: () => [...mockStaff],
             getStaffById: (id) => mockStaff.find(s => s.id === id) || null,
-            getStaffByName: (name) => mockStaff.find(s => s.name.toLowerCase() === name.toLowerCase()) || null,
+            getStaffByName: (name) => {
+                if (!name) return null;
+                const clean = name.split('(')[0].trim().toLowerCase();
+                return mockStaff.find(s => s.name.toLowerCase().includes(clean) || clean.includes(s.name.toLowerCase()));
+            },
             isStaffLocked: (id) => {
-                const staff = mockStaff.find(s => s.id === id);
+                const staff = mockStaff.find(s => s.id === id || s.name.toLowerCase() === (id || '').toLowerCase());
                 return staff ? Boolean(staff.serviceLocked) : false;
             },
             getStaffStatus: (id) => {
                 const staff = mockStaff.find(s => s.id === id);
                 return staff ? staff.status : null;
             },
-            getAvailableStaffForService: (serviceType, shift) => {
-                return mockStaff.filter(s => {
-                    if (s.status !== 'ACTIVE') return false;
-                    if (s.serviceLocked) return false;
-                    if (shift && s.shift !== shift) return false;
-                    return true;
-                });
-            },
             getStaffSchedule: (id, dateStr) => {
                 return getStaffShiftsForDate(dateStr || currentScheduleDate, id);
+            },
+            toggleSafetyLock: (nameOrId, isLocked) => {
+                const s = window.PawpalStaffManager.getStaffByName(nameOrId) || mockStaff.find(st => st.id === nameOrId);
+                if (s) {
+                    s.serviceLocked = (isLocked !== undefined) ? isLocked : !s.serviceLocked;
+                    try {
+                        localStorage.setItem('pawpal_staff_locked_' + s.id, s.serviceLocked ? '1' : '0');
+                        localStorage.setItem('pawpal_staff_locked_name_' + s.name.toLowerCase(), s.serviceLocked ? '1' : '0');
+                    } catch (e) {}
+                    saveStaffDataToStorage();
+                    return s;
+                }
+                return null;
+            },
+            getAvailableStaff: ({ category, serviceName, duration, date, timeSlot }) => {
+                const targetDate = date || '2026-09-28';
+                return mockStaff.filter(staff => {
+                    // 1. Chỉ nhận nhân viên ACTIVE
+                    if (staff.status !== 'ACTIVE') return false;
+                    // 2. Không bị khóa nhận việc an toàn
+                    if (staff.serviceLocked) return false;
+
+                    // 3. Khớp vị trí / chuyên môn với loại dịch vụ
+                    const cat = (category || '').toLowerCase();
+                    const sName = (serviceName || '').toLowerCase();
+                    if (cat === 'spa' || sName.includes('tắm') || sName.includes('cắt tỉa') || sName.includes('grooming') || sName.includes('nhuộm')) {
+                        if (staff.role !== 'Groomer' && staff.role !== 'Admin') return false;
+                    } else if (cat === 'hotel' || sName.includes('khách sạn') || sName.includes('lưu trú')) {
+                        if (staff.role !== 'Caregiver' && staff.role !== 'Receptionist' && staff.role !== 'Admin') return false;
+                    } else if (cat === 'taxi' || sName.includes('taxi') || sName.includes('đưa đón')) {
+                        if (staff.role !== 'Driver' && staff.role !== 'Admin') return false;
+                    }
+
+                    // 4. Nếu có khung giờ bắt đầu và thời lượng, kiểm tra ca làm việc bao phủ
+                    if (timeSlot) {
+                        const [startH, startM] = timeSlot.split(':').map(Number);
+                        const startTotalMin = startH * 60 + startM;
+
+                        let durMin = 60;
+                        if (duration) {
+                            if (typeof duration === 'number') durMin = duration;
+                            else if (duration.includes('phút')) durMin = parseInt(duration.replace(/[^\d]/g, ''), 10) || 60;
+                            else if (duration.includes('giờ') || duration.includes('tiếng')) durMin = (parseFloat(duration.replace(/[^\d.]/g, '')) || 1) * 60;
+                        }
+                        const endTotalMin = startTotalMin + durMin;
+
+                        const assignedShifts = getStaffShiftsForDate(targetDate, staff.id);
+                        if (assignedShifts.includes('LEAVE') || assignedShifts.includes('PAUSE') || assignedShifts.includes('RESIGNED')) {
+                            return false;
+                        }
+
+                        let covered = false;
+                        if (assignedShifts.includes('ALL')) covered = true;
+                        // Ca sáng: 08:00 - 12:00 (480 - 720)
+                        if (assignedShifts.includes('MORNING') && startTotalMin >= 480 && endTotalMin <= 720) covered = true;
+                        // Ca chiều: 13:00 - 17:00 (780 - 1020)
+                        if (assignedShifts.includes('AFTERNOON') && startTotalMin >= 780 && endTotalMin <= 1020) covered = true;
+                        // Ca tối: 17:30 - 21:30 (1050 - 1290)
+                        if (assignedShifts.includes('EVENING') && startTotalMin >= 1050 && endTotalMin <= 1290) covered = true;
+                        // Ca đêm: 21:30 - 07:30
+                        if (assignedShifts.includes('NIGHT') && (startTotalMin >= 1290 || endTotalMin <= 480)) covered = true;
+
+                        // Nếu làm cả ca sáng và ca chiều
+                        if (assignedShifts.includes('MORNING') && assignedShifts.includes('AFTERNOON') && startTotalMin >= 480 && endTotalMin <= 1020) {
+                            covered = true;
+                        }
+
+                        if (!covered) return false;
+                    }
+
+                    return true;
+                });
             }
         };
 
         // ---------------------------------------------------------
         // 8. KHỞI TẠO VÀ PHỤC HỒI SUBTAB
         // ---------------------------------------------------------
+        await loadStaffModuleData();
+
         updateKpiCounters();
         updateAssessmentKpiCounters();
         updatePendingRequestsCounters();
@@ -2255,28 +2923,6 @@
             : (savedSubtab && document.getElementById('subtab-' + savedSubtab))
                 ? savedSubtab 
                 : 'tab-staff-list';
-
-        // Expose Staff Manager for cross-module integration
-        window.PawpalStaffManager = {
-            getAllStaff: () => mockStaff,
-            getStaffByName: (name) => {
-                if (!name) return null;
-                const clean = name.split('(')[0].trim().toLowerCase();
-                return mockStaff.find(s => s.name.toLowerCase().includes(clean) || clean.includes(s.name.toLowerCase()));
-            },
-            toggleSafetyLock: (name, isLocked) => {
-                const s = window.PawpalStaffManager.getStaffByName(name);
-                if (s) {
-                    s.serviceLocked = (isLocked !== undefined) ? isLocked : !s.serviceLocked;
-                    try {
-                        localStorage.setItem('pawpal_staff_locked_' + s.id, s.serviceLocked ? '1' : '0');
-                        localStorage.setItem('pawpal_staff_locked_name_' + s.name.toLowerCase(), s.serviceLocked ? '1' : '0');
-                    } catch (e) {}
-                    return s;
-                }
-                return null;
-            }
-        };
 
         // Đồng bộ trạng thái khóa từ localStorage nếu có
         mockStaff.forEach(s => {

@@ -224,7 +224,7 @@ function renderHeroBentoSpotlight() {
     const spotlight = allBlogs.find(b => b.title.includes('tắm cho chó') || b.categorySlug === 'tips') || allBlogs[0];
     const sideArticles = allBlogs.filter(b => b.id !== spotlight.id).slice(0, 2);
 
-    const spotlightUrl = `../blog-detail/blog-detail.html?slug=${spotlight.slug}`;
+    const spotlightUrl = `/pages/public/blog-detail/blog-detail.html?slug=${encodeURIComponent(spotlight.slug)}`;
 
     let html = `
         <a href="${spotlightUrl}" class="bento-hero-card">
@@ -254,7 +254,7 @@ function renderHeroBentoSpotlight() {
 
         <div class="bento-stacked-cards">
             ${sideArticles.map(article => {
-                const articleUrl = `../blog-detail/blog-detail.html?slug=${article.slug}`;
+                const articleUrl = `/pages/public/blog-detail/blog-detail.html?slug=${encodeURIComponent(article.slug)}`;
                 return `
                     <a href="${articleUrl}" class="bento-mini-card">
                         <div class="bento-mini-media">
@@ -287,7 +287,7 @@ function renderSidebarWidgets() {
     if (trendingContainer && allBlogs.length > 0) {
         const top5 = [...allBlogs].sort((a, b) => b.viewCount - a.viewCount).slice(0, 5);
         trendingContainer.innerHTML = top5.map((b, i) => {
-            const url = `../blog-detail/blog-detail.html?slug=${b.slug}`;
+            const url = `/pages/public/blog-detail/blog-detail.html?slug=${encodeURIComponent(b.slug)}`;
             const num = (i + 1).toString().padStart(2, '0');
             return `
                 <a href="${url}" class="trending-row-item">
@@ -383,7 +383,7 @@ function renderArticlesFeed() {
     const currentItems = filteredBlogs.slice(startIndex, startIndex + itemsPerPage);
 
     grid.innerHTML = currentItems.map(blog => {
-        const url = `../blog-detail/blog-detail.html?slug=${blog.slug}`;
+        const url = `/pages/public/blog-detail/blog-detail.html?slug=${encodeURIComponent(blog.slug)}`;
         return `
             <article class="magazine-article-card">
                 <a href="${url}" class="article-card-media">

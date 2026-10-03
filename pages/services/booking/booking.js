@@ -4,7 +4,7 @@ import { getPets, savePets } from '../../../scripts/api/petService.js';
 let allServices = [];
 let initDiagnostics = "Not initialized yet.";
 const MEMBER_DISCOUNT_PERCENT = 0.05;
-const MEMBER_DISCOUNT_TEXT = 'Thành viên được giảm thêm';
+const MEMBER_DISCOUNT_TEXT = 'Ưu đãi hội viên';
 let selectedService = null;
 let bookingVouchers = null;
 let appliedBookingVoucher = null;
@@ -56,7 +56,7 @@ async function handleApplyBookingVoucher() {
 
     if (!code) {
         msg.textContent = 'Vui lòng nhập mã giảm giá';
-        msg.style.color = 'red';
+        msg.style.color = '#dc2626';
         msg.style.display = 'block';
         return;
     }
@@ -65,13 +65,20 @@ async function handleApplyBookingVoucher() {
         appliedBookingVoucher = null;
         input.value = '';
         msg.textContent = 'Đã gỡ mã giảm giá';
-        msg.style.color = 'var(--bs-gray-600)';
+        msg.style.color = '#4F7A65';
         msg.style.display = 'block';
         document.getElementById('btnApplyBookingVoucher').textContent = 'Áp dụng';
         updateSummary();
         if (document.getElementById('step4') && !document.getElementById('step4').classList.contains('d-none')) {
             renderStep4Confirm();
         }
+        return;
+    }
+
+    if (!selectedService) {
+        msg.textContent = 'Vui lòng chọn dịch vụ trước khi áp dụng mã';
+        msg.style.color = '#dc2626';
+        msg.style.display = 'block';
         return;
     }
 
@@ -88,14 +95,14 @@ async function handleApplyBookingVoucher() {
     const voucher = bookingVouchers.find(v => v.code === code && v.active);
     if (!voucher) {
         msg.textContent = 'Mã không hợp lệ hoặc đã hết hạn';
-        msg.style.color = 'red';
+        msg.style.color = '#dc2626';
         msg.style.display = 'block';
         return;
     }
 
     if (!voucher.applicableFor.includes('all') && !voucher.applicableFor.includes('services')) {
         msg.textContent = 'Mã không áp dụng cho dịch vụ';
-        msg.style.color = 'red';
+        msg.style.color = '#dc2626';
         msg.style.display = 'block';
         return;
     }
@@ -112,14 +119,14 @@ async function handleApplyBookingVoucher() {
 
     if (subtotal < voucher.minOrderValue) {
         msg.textContent = `Đơn tối thiểu ${voucher.minOrderValue.toLocaleString('vi-VN')}đ`;
-        msg.style.color = 'red';
+        msg.style.color = '#dc2626';
         msg.style.display = 'block';
         return;
     }
 
     appliedBookingVoucher = voucher;
-    msg.textContent = 'Áp dụng mã thành công!';
-    msg.style.color = 'green';
+    msg.textContent = `Đã áp dụng mã: ${voucher.code}`;
+    msg.style.color = '#165335';
     msg.style.display = 'block';
     document.getElementById('btnApplyBookingVoucher').textContent = 'Gỡ bỏ';
     updateSummary();
@@ -127,6 +134,9 @@ async function handleApplyBookingVoucher() {
         renderStep4Confirm();
     }
 }
+
+const SESSION_STORAGE_KEY = 'pawpal_booking_session_state';
+let goToStep = null;
 
 let bookingState = {
     step: 1,
@@ -140,10 +150,293 @@ let bookingState = {
     petNote: '',
     serviceId: null,
     date: '',
+    checkOutDate: '',
+    nights: 1,
     timeSlot: '',
     staff: '',
     addons: []
 };
+
+let debounceSaveTimer = null;
+function debouncedSaveBookingSession(delay = 120) {
+    if (debounceSaveTimer) clearTimeout(debounceSaveTimer);
+    debounceSaveTimer = setTimeout(() => {
+        saveBookingSession(false);
+    }, delay);
+}
+
+function saveBookingSession(updateUrlHash = true) {
+    try {
+        const stateToSave = {
+            ...bookingState,
+            selectedServiceId: selectedService?.serviceId || bookingState.serviceId || null,
+            serviceName: selectedService?.name || bookingState.serviceName || '',
+            serviceCategory: selectedService?.category || bookingState.serviceCategory || '',
+            servicePrice: selectedService?.price || bookingState.servicePrice || 0,
+            servicePrices: selectedService?.prices || bookingState.servicePrices || null,
+            serviceDuration: selectedService?.duration || bookingState.serviceDuration || '',
+            selectedServiceObj: selectedService ? {
+                id: selectedService.id,
+                dbId: selectedService.dbId || null,
+                serviceId: selectedService.serviceId,
+                name: selectedService.name,
+                category: selectedService.category,
+                price: selectedService.price,
+                prices: selectedService.prices,
+                priceDisplay: selectedService.priceDisplay || '',
+                duration: selectedService.duration || '',
+                description: selectedService.description || ''
+            } : null,
+            appliedVoucherCode: appliedBookingVoucher?.code || null
+        };
+        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stateToSave));
+        if (updateUrlHash) {
+            const targetHash = bookingState.step > 1 ? `#step=${bookingState.step}` : '';
+            if (window.location.hash !== targetHash) {
+                if (targetHash) {
+                    history.replaceState(null, '', targetHash);
+                } else if (window.location.hash.startsWith('#step=')) {
+                    history.replaceState(null, '', window.location.pathname + window.location.search);
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('[booking] Could not save session state:', e);
+    }
+}
+
+function loadBookingSession() {
+    try {
+        const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch (e) {
+        return null;
+    }
+}
+
+function clearBookingSession() {
+    try {
+        sessionStorage.removeItem(SESSION_STORAGE_KEY);
+        if (window.location.hash.startsWith('#step=')) {
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+    } catch (e) {}
+}
+
+function populateFormInputsFromState(state) {
+    if (!state) return;
+    const ownerNameEl = document.getElementById('ownerName');
+    const ownerPhoneEl = document.getElementById('ownerPhone');
+    const petNameEl = document.getElementById('petName');
+    const petTypeEl = document.getElementById('petType');
+    const petTypeOtherEl = document.getElementById('petTypeOther');
+    const petTypeOtherGroup = document.getElementById('petTypeOtherGroup');
+    const petBreedEl = document.getElementById('petBreed');
+    const petWeightEl = document.getElementById('petWeight');
+    const petNoteEl = document.getElementById('petNote');
+
+    if (ownerNameEl && state.ownerName) ownerNameEl.value = state.ownerName;
+    if (ownerPhoneEl && state.ownerPhone) ownerPhoneEl.value = state.ownerPhone;
+    if (petNameEl && state.petName) petNameEl.value = state.petName;
+    if (petBreedEl && state.petBreed && state.petBreed !== 'Chưa rõ') petBreedEl.value = state.petBreed;
+    if (petWeightEl && state.petWeight) petWeightEl.value = state.petWeight;
+    if (petNoteEl && state.petNote) petNoteEl.value = state.petNote;
+
+    if (petTypeEl && state.petType) {
+        const knownOptions = ['Chó', 'Mèo', 'Thỏ', 'Khác'];
+        if (knownOptions.includes(state.petType)) {
+            petTypeEl.value = state.petType;
+        } else {
+            petTypeEl.value = 'Khác';
+            if (petTypeOtherGroup) petTypeOtherGroup.classList.remove('d-none');
+            if (petTypeOtherEl) petTypeOtherEl.value = state.petType;
+        }
+    }
+
+    const mName = document.getElementById('memberOwnerName');
+    const mPhone = document.getElementById('memberOwnerPhone');
+    if (mName && state.ownerName) mName.value = state.ownerName;
+    if (mPhone && state.ownerPhone) mPhone.value = state.ownerPhone;
+}
+
+async function restoreBookingSession() {
+    const saved = loadBookingSession();
+    if (!saved) return;
+
+    if (saved.ownerName) bookingState.ownerName = saved.ownerName;
+    if (saved.ownerPhone) bookingState.ownerPhone = saved.ownerPhone;
+    if (saved.petId) bookingState.petId = saved.petId;
+    if (saved.petName) bookingState.petName = saved.petName;
+    if (saved.petType) bookingState.petType = saved.petType;
+    if (saved.petBreed) bookingState.petBreed = saved.petBreed;
+    if (typeof saved.petWeight === 'number' && !isNaN(saved.petWeight)) bookingState.petWeight = saved.petWeight;
+    if (saved.petNote) bookingState.petNote = saved.petNote;
+    if (saved.serviceId || saved.selectedServiceId) bookingState.serviceId = saved.serviceId || saved.selectedServiceId;
+    if (saved.date) bookingState.date = saved.date;
+    if (saved.checkOutDate) bookingState.checkOutDate = saved.checkOutDate;
+    if (saved.nights) bookingState.nights = saved.nights;
+    if (saved.timeSlot) bookingState.timeSlot = saved.timeSlot;
+    if (saved.staff) bookingState.staff = saved.staff;
+    if (Array.isArray(saved.addons)) bookingState.addons = saved.addons;
+
+    populateFormInputsFromState(saved);
+
+    const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
+    const isMemberUser = Boolean(currentUser && (!currentUser.is_temporary));
+
+    if (isMemberUser && saved.petId) {
+        const petCard = document.querySelector(`.pet-select-card[data-pet-id="${saved.petId}"]`);
+        if (petCard) {
+            document.querySelectorAll('.pet-select-card').forEach(c => c.classList.remove('selected'));
+            petCard.classList.add('selected');
+        }
+    }
+
+    validateStep1();
+
+    // Match service from allServices or fallback to saved.selectedServiceObj
+    const targetServiceId = String(saved.selectedServiceId || saved.serviceId || '').toLowerCase();
+    const targetServiceName = String(saved.serviceName || (saved.selectedServiceObj && saved.selectedServiceObj.name) || '').toLowerCase();
+
+    if (allServices && allServices.length > 0) {
+        const foundSvc = allServices.find(s => 
+            (targetServiceId && (String(s.serviceId).toLowerCase() === targetServiceId || String(s.id).toLowerCase() === targetServiceId || String(s.dbId || '').toLowerCase() === targetServiceId)) ||
+            (targetServiceName && String(s.name).toLowerCase() === targetServiceName)
+        );
+
+        if (foundSvc) {
+            selectedService = foundSvc;
+            bookingState.serviceId = foundSvc.serviceId;
+            const foundGroup = getServiceGroup(foundSvc);
+
+            const tabs = document.querySelectorAll('.svc-type-tab');
+            tabs.forEach(tab => {
+                if (tab.dataset.type === foundGroup) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            renderServices(foundGroup);
+            const step2Next = document.getElementById('step2Next');
+            if (step2Next) step2Next.disabled = false;
+        } else if (saved.selectedServiceObj) {
+            selectedService = saved.selectedServiceObj;
+        }
+    } else if (saved.selectedServiceObj) {
+        selectedService = saved.selectedServiceObj;
+    }
+
+    if (selectedService) {
+        if (selectedService.category === 'hotel') {
+            const checkInInput = document.getElementById('checkInDate');
+            const checkOutInput = document.getElementById('checkOutDate');
+            if (checkInInput && saved.date) checkInInput.value = saved.date;
+            if (checkOutInput && saved.checkOutDate) checkOutInput.value = saved.checkOutDate;
+            if (saved.nights && saved.nights > 0) {
+                const nightsDisp = document.getElementById('hotelNightsDisplay');
+                const nightsTxt = document.getElementById('hotelNightsText');
+                if (nightsDisp) nightsDisp.classList.remove('d-none');
+                if (nightsTxt) nightsTxt.textContent = `${saved.nights} đêm`;
+                const calculatedPrice = calculateDynamicPrice(selectedService, bookingState.petWeight);
+                const totalPrice = calculatedPrice * saved.nights;
+                const priceEl = document.getElementById('hotelTotalPrice');
+                if (priceEl) priceEl.textContent = `Tạm tính: ${totalPrice.toLocaleString('vi-VN')}đ`;
+            }
+
+            if (Array.isArray(saved.addons)) {
+                if (saved.addons.some(a => a.name.includes('dinh dưỡng'))) {
+                    const chk = document.getElementById('addonMeal');
+                    if (chk) chk.checked = true;
+                }
+                const walkAddon = saved.addons.find(a => a.name.includes('dạo'));
+                if (walkAddon) {
+                    const chk = document.getElementById('addonWalk');
+                    if (chk) chk.checked = true;
+                    const qtyEl = document.getElementById('addonWalkQty');
+                    const qtyCtrl = document.getElementById('qtyWalkCtrl');
+                    if (qtyCtrl) qtyCtrl.classList.remove('d-none');
+                    const match = walkAddon.name.match(/x(\d+)/);
+                    if (qtyEl && match) qtyEl.value = match[1];
+                }
+                const playAddon = saved.addons.find(a => a.name.includes('tương tác'));
+                if (playAddon) {
+                    const chk = document.getElementById('addonPlay');
+                    if (chk) chk.checked = true;
+                    const qtyEl = document.getElementById('addonPlayQty');
+                    const qtyCtrl = document.getElementById('qtyPlayCtrl');
+                    if (qtyCtrl) qtyCtrl.classList.remove('d-none');
+                    const match = playAddon.name.match(/x(\d+)/);
+                    if (qtyEl && match) qtyEl.value = match[1];
+                }
+                if (saved.addons.some(a => a.name.includes('Tắm vệ sinh'))) {
+                    const chk = document.getElementById('addonBath');
+                    if (chk) chk.checked = true;
+                }
+            }
+        } else {
+            const bookingDateInput = document.getElementById('bookingDate');
+            if (bookingDateInput && saved.date) bookingDateInput.value = saved.date;
+        }
+
+        const timeslotGrid = document.getElementById('timeslotGrid');
+        const staffList = document.getElementById('staffList');
+        if (saved.date) {
+            [timeslotGrid, staffList].forEach(el => {
+                if (el) {
+                    el.style.opacity = '';
+                    el.style.pointerEvents = '';
+                }
+            });
+            renderTimeslots();
+            renderStaff();
+        }
+    }
+
+    if (saved.appliedVoucherCode) {
+        if (!bookingVouchers) {
+            try {
+                const res = await fetch('/data/vouchers.json');
+                if (res.ok) bookingVouchers = await res.json();
+                else bookingVouchers = [];
+            } catch (e) {
+                bookingVouchers = [];
+            }
+        }
+        const voucher = bookingVouchers ? bookingVouchers.find(v => v.code === saved.appliedVoucherCode && v.active) : null;
+        if (voucher) {
+            appliedBookingVoucher = voucher;
+            const input = document.getElementById('bookingVoucherInput');
+            const msg = document.getElementById('bookingVoucherMessage');
+            const btn = document.getElementById('btnApplyBookingVoucher');
+            if (input) input.value = voucher.code;
+            if (msg) {
+                msg.textContent = `Đã áp dụng mã: ${voucher.code}`;
+                msg.style.color = '#165335';
+                msg.style.display = 'block';
+            }
+            if (btn) btn.textContent = 'Gỡ bỏ';
+        }
+    }
+
+    validateStep3();
+    updateSummary();
+
+    let targetStep = saved.step || 1;
+    const hashMatch = window.location.hash.match(/#step=([1-4])/);
+    if (hashMatch) {
+        targetStep = parseInt(hashMatch[1], 10);
+    }
+
+    if (typeof goToStep === 'function') {
+        goToStep(targetStep);
+    }
+
+    updateSummary();
+    saveBookingSession();
+}
 
 let holdTimerInterval = null;
 let holdExpirationTime = null;
@@ -171,13 +464,19 @@ async function loadBookingConfig() {
             throw new Error(staffsErr.message);
         }
 
-        let generatedSlots = new Set();
+        const defaultOperatingSlots = [
+            "08:00", "09:00", "10:00", "11:00", "12:00",
+            "13:00", "14:00", "15:00", "16:00", "17:00",
+            "18:00", "19:00", "20:00"
+        ];
+
+        let generatedSlots = new Set(defaultOperatingSlots);
         if (scheduleData && scheduleData.length > 0) {
             scheduleData.forEach(schedule => {
                 if (!schedule.start_time || !schedule.end_time) return;
                 let startHour = parseInt(schedule.start_time.split(':')[0], 10);
                 let endHour = parseInt(schedule.end_time.split(':')[0], 10);
-                for (let i = startHour; i < endHour; i++) {
+                for (let i = startHour; i <= endHour; i++) {
                     let hourStr = i.toString().padStart(2, '0') + ':00';
                     generatedSlots.add(hourStr);
                 }
@@ -185,9 +484,6 @@ async function loadBookingConfig() {
         }
 
         let finalSlots = Array.from(generatedSlots).sort();
-        if (finalSlots.length === 0) {
-            finalSlots = ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"];
-        }
 
         const staffsArray = (staffsData || []).map(s => ({
             id: s.id,
@@ -197,7 +493,7 @@ async function loadBookingConfig() {
 
         staffsArray.unshift({
             id: 'random',
-            name: 'Phân bố ngẫu nhiên',
+            name: 'Phân bổ ngẫu nhiên',
             desc: 'PawPal tự động chọn chuyên viên trống lịch'
         });
 
@@ -218,6 +514,26 @@ async function loadBookingConfig() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('=== BOOKING MODULE INITIALIZING ===');
+
+    setupStepActions();
+
+    const earlySaved = loadBookingSession();
+    if (earlySaved) {
+        bookingState = { ...bookingState, ...earlySaved };
+        if (earlySaved.selectedServiceObj) {
+            selectedService = earlySaved.selectedServiceObj;
+        }
+        populateFormInputsFromState(earlySaved);
+        updateSummary();
+    }
+
+    let earlyStep = bookingState.step || 1;
+    const hashMatch = window.location.hash.match(/#step=([1-4])/);
+    if (hashMatch) earlyStep = parseInt(hashMatch[1], 10);
+    if (earlyStep > 1 && earlyStep <= 4) {
+        goToStep(earlyStep);
+    }
+    document.documentElement.className = document.documentElement.className.replace(/booking-pre-step-\d/g, '').trim();
 
     await loadBookingConfig();
 
@@ -244,6 +560,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderVoucherDropdown();
             voucherDropdown.style.display = 'block';
         });
+
+        voucherDropdown.addEventListener('wheel', (e) => {
+            e.stopPropagation();
+        }, { passive: true });
+
+        voucherDropdown.addEventListener('touchmove', (e) => {
+            e.stopPropagation();
+        }, { passive: true });
 
         document.addEventListener('click', (e) => {
             if (voucherInput && voucherDropdown) {
@@ -272,6 +596,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         initDiagnostics = `Error loading services (direct fallback): ${error.message}`;
         console.error('Error loading services:', error);
+        allServices = await loadServicesDirectly();
     }
 
     const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
@@ -293,11 +618,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const resolvedName = resolveCurrentUserName(currentUser);
             const resolvedPhone = resolveCurrentUserPhone(currentUser);
 
-            if (ownerNameInput) ownerNameInput.value = resolvedName;
-            if (ownerPhoneInput) ownerPhoneInput.value = resolvedPhone;
+            if (ownerNameInput && !ownerNameInput.value) ownerNameInput.value = resolvedName;
+            if (ownerPhoneInput && !ownerPhoneInput.value) ownerPhoneInput.value = resolvedPhone;
 
-            bookingState.ownerName = resolvedName;
-            bookingState.ownerPhone = resolvedPhone;
+            if (!bookingState.ownerName) bookingState.ownerName = resolvedName;
+            if (!bookingState.ownerPhone) bookingState.ownerPhone = resolvedPhone;
 
             setupGuestValidation();
             bindQuickAddPetModal(currentUser);
@@ -316,7 +641,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         bindQuickAddPetModal(currentUser);
     }
 
-    setupStepActions();
     setupServiceSelection();
     setupScheduleSelection();
     setupConfirmation();
@@ -347,6 +671,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateSummary();
         }
     }
+
+    await restoreBookingSession();
 });
 
 function resolveCurrentUserName(user) {
@@ -374,11 +700,11 @@ async function loadMemberPets(user) {
     const resolvedName = resolveCurrentUserName(user);
     const resolvedPhone = resolveCurrentUserPhone(user);
 
-    if (mNameInput) mNameInput.value = resolvedName;
-    if (mPhoneInput) mPhoneInput.value = resolvedPhone;
+    if (mNameInput && !mNameInput.value) mNameInput.value = resolvedName;
+    if (mPhoneInput && !mPhoneInput.value) mPhoneInput.value = resolvedPhone;
 
-    bookingState.ownerName = resolvedName;
-    bookingState.ownerPhone = resolvedPhone;
+    if (!bookingState.ownerName) bookingState.ownerName = resolvedName;
+    if (!bookingState.ownerPhone) bookingState.ownerPhone = resolvedPhone;
 
     ['memberOwnerName', 'memberOwnerPhone'].forEach(id => {
         const el = document.getElementById(id);
@@ -386,10 +712,16 @@ async function loadMemberPets(user) {
             el.addEventListener('input', () => {
                 validateGuestInput(id, false);
                 validateStep1();
+                bookingState.ownerName = document.getElementById('memberOwnerName')?.value.trim() || '';
+                bookingState.ownerPhone = document.getElementById('memberOwnerPhone')?.value.trim() || '';
+                debouncedSaveBookingSession();
             });
             el.addEventListener('blur', () => {
                 validateGuestInput(id, true);
                 validateStep1();
+                bookingState.ownerName = document.getElementById('memberOwnerName')?.value.trim() || '';
+                bookingState.ownerPhone = document.getElementById('memberOwnerPhone')?.value.trim() || '';
+                saveBookingSession(false);
             });
         }
     });
@@ -462,23 +794,27 @@ async function loadMemberPets(user) {
 
     function getSpeciesAndBreed(pet) {
         let speciesName = '';
-        switch (pet.species) {
-            case 'dog': speciesName = 'Chó'; break;
-            case 'cat': speciesName = 'Mèo'; break;
-            case 'rabbit': speciesName = 'Thỏ'; break;
-            case 'other': speciesName = pet.otherSpecies || 'Khác'; break;
-            default: speciesName = pet.species || 'Thú cưng';
-        }
-        if (pet.breed && pet.breed.trim() !== '') {
-            return `${speciesName} ${pet.breed.trim()}`;
+        const sp = String(pet.species || '').toLowerCase().trim();
+        if (sp === 'dog' || sp === 'chó') speciesName = 'Chó';
+        else if (sp === 'cat' || sp === 'mèo') speciesName = 'Mèo';
+        else if (sp === 'rabbit' || sp === 'thỏ') speciesName = 'Thỏ';
+        else if (sp === 'other' || sp === 'khác') speciesName = pet.otherSpecies || 'Khác';
+        else speciesName = pet.species || 'Thú cưng';
+
+        const breed = (pet.breed || '').trim();
+        if (breed) {
+            if (breed.toLowerCase().startsWith(speciesName.toLowerCase())) {
+                return breed;
+            }
+            return `${speciesName} ${breed}`;
         }
         return speciesName;
     }
 
     listContainer.innerHTML = activePets.map(pet => `
         <div class="pet-select-card" data-pet-id="${pet.id}" data-name="${pet.name}" data-type="${pet.species}" data-breed="${pet.breed}" data-weight="${pet.weight}" tabindex="0" role="button">
-            <div class="pet-avatar-placeholder" style="font-size: 1.5rem; width: 44px; height: 44px; overflow: hidden; border-radius: 50%;">
-                <img src="${getPetAvatar(pet)}" alt="${pet.name}" style="width: 100%; height: 100%; object-fit: cover;">
+            <div class="pet-avatar-placeholder">
+                <img src="${getPetAvatar(pet)}" alt="${pet.name}">
             </div>
             <div class="pet-select-details">
                 <span class="pet-select-name">${pet.name}</span>
@@ -499,19 +835,18 @@ async function loadMemberPets(user) {
             bookingState.petWeight = parseFloat(card.dataset.weight);
 
             validateStep1();
+            saveBookingSession();
         });
     });
 
     const addCard = document.createElement('button');
     addCard.type = 'button';
     addCard.className = 'pet-select-card pet-select-card-add';
-    addCard.style.justifyContent = 'center';
-    addCard.style.gap = '10px';
     addCard.innerHTML = `
-        <div class="pet-avatar-placeholder" style="font-size: 1.5rem; width: 44px; height: 44px; display:flex;align-items:center;justify-content:center;">+</div>
+        <div class="pet-avatar-placeholder add-icon">+</div>
         <div class="pet-select-details">
             <span class="pet-select-name">Thêm bé mới</span>
-            <span class="pet-select-meta">Tạo hồ sơ ngay tại trang đặt lịch</span>
+            <span class="pet-select-meta">Tạo hồ sơ nhanh</span>
         </div>
     `;
     addCard.addEventListener('click', () => openQuickAddPetModal(user));
@@ -594,6 +929,7 @@ async function createPetInline(user) {
     bookingState.petBreed = newPet.breed;
     bookingState.petWeight = newPet.weight;
     validateStep1();
+    saveBookingSession();
     return true;
 }
 
@@ -615,17 +951,45 @@ function bindQuickAddPetModal(user) {
 }
 
 function setupGuestValidation() {
-    const inputs = ['ownerName', 'ownerPhone', 'petName', 'petType', 'petTypeOther', 'petWeight'];
+    const inputs = ['ownerName', 'ownerPhone', 'petName', 'petType', 'petTypeOther', 'petWeight', 'petBreed', 'petNote'];
+    
+    const syncGuestState = (immediate = false) => {
+        const ownerName = document.getElementById('ownerName')?.value.trim() || '';
+        const ownerPhone = document.getElementById('ownerPhone')?.value.trim() || '';
+        const petName = document.getElementById('petName')?.value.trim() || '';
+        const petTypeVal = document.getElementById('petType')?.value || '';
+        const petTypeOtherVal = document.getElementById('petTypeOther')?.value.trim() || '';
+        const petBreed = document.getElementById('petBreed')?.value.trim() || '';
+        const petWeight = parseFloat(document.getElementById('petWeight')?.value) || 0;
+        const petNote = document.getElementById('petNote')?.value.trim() || '';
+
+        bookingState.ownerName = ownerName;
+        bookingState.ownerPhone = ownerPhone;
+        bookingState.petName = petName;
+        bookingState.petType = (petTypeVal === 'Khác' && petTypeOtherVal) ? petTypeOtherVal : petTypeVal;
+        bookingState.petBreed = petBreed || 'Chưa rõ';
+        bookingState.petWeight = petWeight;
+        bookingState.petNote = petNote;
+        
+        if (immediate) {
+            saveBookingSession(false);
+        } else {
+            debouncedSaveBookingSession();
+        }
+    };
+
     inputs.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('input', () => {
                 validateGuestInput(id, false);
                 validateStep1();
+                syncGuestState(false);
             });
             el.addEventListener('blur', () => {
                 validateGuestInput(id, true);
                 validateStep1();
+                syncGuestState(true);
             });
         }
     });
@@ -644,6 +1008,7 @@ function setupGuestValidation() {
                 if (otherWarn) { otherWarn.classList.add('d-none'); }
             }
             validateStep1();
+            syncGuestState();
         });
         if (petTypeEl.value === 'Khác') petTypeOtherGroup && petTypeOtherGroup.classList.remove('d-none');
     }
@@ -723,28 +1088,33 @@ function validateStep1() {
     const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || null;
     let isValid = false;
 
-    if (currentUser && (!currentUser.is_temporary)) {
-        const mName = document.getElementById('memberOwnerName')?.value.trim() || '';
-        const mPhone = document.getElementById('memberOwnerPhone')?.value.trim() || '';
+    const isMemberFlow = Boolean(currentUser && (!currentUser.is_temporary) && !bookingState.isMemberWithNoPets && !bookingState.isGuest);
+
+    if (isMemberFlow) {
+        const mName = document.getElementById('memberOwnerName')?.value.trim() || bookingState.ownerName || '';
+        const mPhone = document.getElementById('memberOwnerPhone')?.value.trim() || bookingState.ownerPhone || '';
         const phoneRegex = /^0[0-9]{9}$/;
 
-        isValid = bookingState.petId !== null && mName && mPhone && phoneRegex.test(mPhone);
+        const hasPet = Boolean(bookingState.petId || bookingState.petName);
+        isValid = Boolean(hasPet && mName && mPhone && phoneRegex.test(mPhone));
     } else {
-        const ownerName = document.getElementById('ownerName').value.trim();
-        const ownerPhone = document.getElementById('ownerPhone').value.trim();
-        const petName = document.getElementById('petName').value.trim();
-        const petType = document.getElementById('petType').value;
+        const ownerName = document.getElementById('ownerName')?.value.trim() || bookingState.ownerName || '';
+        const ownerPhone = document.getElementById('ownerPhone')?.value.trim() || bookingState.ownerPhone || '';
+        const petName = document.getElementById('petName')?.value.trim() || bookingState.petName || '';
+        const petType = document.getElementById('petType')?.value || bookingState.petType || '';
         const petTypeOtherVal = document.getElementById('petTypeOther')?.value.trim() || '';
-        const petWeight = parseFloat(document.getElementById('petWeight').value);
+        const petWeight = parseFloat(document.getElementById('petWeight')?.value) || bookingState.petWeight || 0;
 
         const phoneRegex = /^0[0-9]{9}$/;
-        isValid = ownerName && ownerPhone && phoneRegex.test(ownerPhone) && petName && petType && !isNaN(petWeight) && petWeight > 0;
+        isValid = Boolean(ownerName && ownerPhone && phoneRegex.test(ownerPhone) && petName && petType && !isNaN(petWeight) && petWeight > 0);
         if (isValid && petType === 'Khác') {
-            isValid = petTypeOtherVal.length > 0;
+            isValid = Boolean(petTypeOtherVal.length > 0 || (bookingState.petType && bookingState.petType !== 'Khác'));
         }
     }
 
-    document.getElementById('step1Next').disabled = !isValid;
+    const step1Next = document.getElementById('step1Next');
+    if (step1Next) step1Next.disabled = !isValid;
+    return isValid;
 }
 
 function setupServiceSelection() {
@@ -824,7 +1194,7 @@ function renderServices(type, searchQuery = '') {
                 </div>
                 <div class="svc-select-price">
                     <div class="svc-price-main">${formattedPrice}đ${priceUnit}</div>
-                    <div class="svc-price-duration" style="color: var(--color-primary); font-size: 0.8rem; font-weight: 600;">${formattedMemberPrice}đ (${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}% giảm cho thành viên)</div>
+                    <div class="svc-price-duration" style="color: var(--color-primary); font-size: 0.82rem; font-weight: 600; margin-top: 3px;">Hội viên: ${formattedMemberPrice}đ</div>
                 </div>
             </div>
         `;
@@ -840,14 +1210,16 @@ function renderServices(type, searchQuery = '') {
 
             document.getElementById('step2Next').disabled = false;
             updateSummary();
+            saveBookingSession();
         });
     });
 }
 
 function calculateDynamicPrice(service, weight) {
-    if (!service.prices) return service.price;
+    if (!service) return 0;
+    if (!service.prices) return service.price || 0;
 
-    let targetPrice = service.price;
+    let targetPrice = service.price || 0;
     if (weight < 5 && service.prices['< 5kg']) targetPrice = service.prices['< 5kg'];
     else if (weight >= 5 && weight < 10 && service.prices['5 - 10kg']) targetPrice = service.prices['5 - 10kg'];
     else if (weight >= 10 && weight < 20 && service.prices['10 - 20kg']) targetPrice = service.prices['10 - 20kg'];
@@ -877,7 +1249,8 @@ function setupScheduleSelection() {
         });
     }
 
-    setScheduleLocked(true);
+    const hasDate = Boolean(bookingState.date);
+    setScheduleLocked(!hasDate);
 
     if (checkInInput && checkOutInput) {
         const onDateChange = () => {
@@ -904,12 +1277,14 @@ function setupScheduleSelection() {
                     renderTimeslots();
                     validateStep3();
                     updateSummary();
+                    saveBookingSession();
                 } else {
                     alert('Ngày check-out phải sau ngày check-in.');
                     checkOutInput.value = '';
                     document.getElementById('hotelNightsDisplay').classList.add('d-none');
                     setScheduleLocked(true);
                     validateStep3();
+                    saveBookingSession();
                 }
             } else {
                 setScheduleLocked(true);
@@ -925,7 +1300,9 @@ function setupScheduleSelection() {
             bookingState.date = bookingDateInput.value;
             setScheduleLocked(!bookingDateInput.value);
             renderTimeslots();
+            renderStaff();
             validateStep3();
+            saveBookingSession();
         });
     }
 
@@ -940,6 +1317,7 @@ function setupScheduleSelection() {
                 }
                 updateAddons();
                 updateSummary();
+                saveBookingSession();
             });
         }
     });
@@ -966,6 +1344,7 @@ function updateAddons() {
         const bathPrice = Math.round(120000 * 0.8);
         bookingState.addons.push({ name: 'Tắm vệ sinh lưu trú', price: bathPrice, perNight: false });
     }
+    saveBookingSession();
 }
 
 window.updateAddonQty = function (id, delta) {
@@ -978,6 +1357,7 @@ window.updateAddonQty = function (id, delta) {
 
     updateAddons();
     updateSummary();
+    saveBookingSession();
 };
 
 function renderTimeslots() {
@@ -1043,6 +1423,7 @@ function renderTimeslots() {
             renderStaff();
             validateStep3();
             updateSummary();
+            saveBookingSession();
         });
     });
 }
@@ -1092,6 +1473,7 @@ function startHoldTimer(slot) {
             heldSlot = '';
             document.getElementById('step3Next').disabled = true;
             updateSummary();
+            saveBookingSession();
         } else {
             updateTimerDisplay();
         }
@@ -1102,37 +1484,220 @@ function renderStaff() {
     const listContainer = document.getElementById('staffList');
     if (!listContainer) return;
 
-    const staffs = (window.PawPalBookingConfig && Array.isArray(window.PawPalBookingConfig.staffs))
-        ? window.PawPalBookingConfig.staffs
-        : [
-            { name: 'Phân bổ ngẫu nhiên', desc: 'PawPal tự động chọn bảo mẫu trống lịch', id: 'random' },
-            { name: 'Nguyễn Minh An', desc: 'Chuyên viên Spa • 3 năm kinh nghiệm', id: 'staff1' },
-            { name: 'Trần An Nhiên', desc: 'Bảo mẫu Hotel • Cực kỳ nhẹ nhàng', id: 'staff2' },
-            { name: 'Lê Hoàng Tiến', desc: 'Chuyên viên cắt tỉa Grooming', id: 'staff3' }
-        ];
+    // Lấy danh sách nhân viên từ Staff Module hoặc LocalStorage hoặc Fallback
+    let rawStaffList = [];
+    if (window.PawpalStaffManager && typeof window.PawpalStaffManager.getAllStaff === 'function') {
+        rawStaffList = window.PawpalStaffManager.getAllStaff();
+    } else {
+        try {
+            const saved = localStorage.getItem('pawpal_staff_data');
+            if (saved) rawStaffList = JSON.parse(saved);
+        } catch(e) {}
+    }
 
-    listContainer.innerHTML = staffs.map(staff => {
+    if (!rawStaffList || rawStaffList.length === 0) {
+        rawStaffList = [
+            { id: 'EMP-001', name: 'Lê Lệ Quyên', role: 'Admin', position: 'Quản trị viên', status: 'ACTIVE', shift: 'MORNING', skillExam: 'Đạt (95đ)', serviceLocked: false },
+            { id: 'EMP-002', name: 'Nguyễn Văn A', role: 'Groomer', position: 'Groomer', status: 'ACTIVE', shift: 'AFTERNOON', skillExam: 'Đạt (85đ)', serviceLocked: false },
+            { id: 'EMP-004', name: 'Lê Văn C', role: 'Veterinarian', position: 'Bác sĩ/Bảo mẫu', status: 'ACTIVE', shift: 'NIGHT', skillExam: 'Đạt (90đ)', serviceLocked: false },
+            { id: 'EMP-008', name: 'Nguyễn Thị Thảo', role: 'Groomer', position: 'Groomer', status: 'ACTIVE', shift: 'MORNING', skillExam: 'Đạt (92đ)', serviceLocked: false },
+            { id: 'EMP-009', name: 'Vũ Đình Trọng', role: 'Veterinarian', position: 'Bác sĩ/Bảo mẫu', status: 'ACTIVE', shift: 'MORNING', skillExam: 'Đạt (88đ)', serviceLocked: false },
+            { id: 'EMP-010', name: 'Đỗ Bảo Ngọc', role: 'Receptionist', position: 'Lễ tân & Chăm sóc', status: 'ACTIVE', shift: 'EVENING', skillExam: 'Đạt (82đ)', serviceLocked: false },
+            { id: 'EMP-011', name: 'Nguyễn Quốc Bảo', role: 'Driver', position: 'Tài xế Taxi Pet', status: 'ACTIVE', shift: 'ALL', skillExam: 'Đạt (90đ)', serviceLocked: false }
+        ];
+    }
+
+    // Lấy Roster từ LocalStorage
+    let roster = {};
+    try {
+        const savedRos = localStorage.getItem('pawpal_staff_roster');
+        if (savedRos) roster = JSON.parse(savedRos);
+    } catch(e) {}
+
+    // Thông tin dịch vụ hiện tại
+    const serviceCategory = (selectedService?.category || '').toLowerCase();
+    const serviceName = (selectedService?.name || '').toLowerCase();
+    const serviceDuration = selectedService?.duration || bookingState.serviceDuration || '60 phút';
+    const chosenDate = bookingState.date || '2026-09-28';
+    const chosenSlot = bookingState.timeSlot;
+
+    // Cập nhật Tiêu đề chọn nhân viên phù hợp theo từng loại dịch vụ
+    const staffLabelEl = document.querySelector('#staffSelection .timeslot-label');
+    if (staffLabelEl) {
+        if (serviceCategory === 'spa' || serviceName.includes('tắm') || serviceName.includes('cắt tỉa') || serviceName.includes('groom')) {
+            staffLabelEl.innerHTML = 'Chọn chuyên viên Grooming và Spa <span class="required">*</span>';
+        } else if (serviceCategory === 'hotel' || serviceName.includes('khách sạn') || serviceName.includes('lưu trú')) {
+            staffLabelEl.innerHTML = 'Chọn bảo mẫu và Bác sĩ thú y trực lưu trú <span class="required">*</span>';
+        } else if (serviceCategory === 'taxi' || serviceName.includes('taxi') || serviceName.includes('đưa đón')) {
+            staffLabelEl.innerHTML = 'Chọn tài xế xe chuyên dụng đưa đón <span class="required">*</span>';
+        } else {
+            staffLabelEl.innerHTML = 'Chọn nhân viên thực hiện <span class="required">*</span>';
+        }
+    }
+
+    // Tính thời gian kết thúc của dịch vụ nếu đã chọn khung giờ
+    let startMin = null;
+    let endMin = null;
+    if (chosenSlot) {
+        const [h, m] = chosenSlot.split(':').map(Number);
+        startMin = h * 60 + m;
+        let durMin = 60;
+        if (serviceDuration.includes('phút')) {
+            durMin = parseInt(serviceDuration.replace(/[^\d]/g, ''), 10) || 60;
+        } else if (serviceDuration.includes('giờ') || serviceDuration.includes('tiếng')) {
+            durMin = (parseFloat(serviceDuration.replace(/[^\d.]/g, '')) || 1) * 60;
+        }
+        endMin = startMin + durMin;
+    }
+
+    // Lọc và tính trạng thái cho từng nhân viên
+    const mappedStaffs = [];
+
+    // Luôn có tùy chọn "Phân bổ ngẫu nhiên" ở đầu
+    mappedStaffs.push({
+        id: 'random',
+        name: 'Phân bổ ngẫu nhiên',
+        desc: 'PawPal tự động chọn chuyên viên trống lịch',
+        isAvailable: true,
+        tag: 'Tự động'
+    });
+
+    rawStaffList.forEach(staff => {
+        // 1. Kiểm tra phù hợp chuyên môn cho từng loại dịch vụ (Spa, Hotel, Taxi)
+        let matchRole = false;
+        if (serviceCategory === 'spa' || serviceName.includes('tắm') || serviceName.includes('cắt tỉa') || serviceName.includes('grooming') || serviceName.includes('nhuộm')) {
+            if (staff.role === 'Groomer' || staff.role === 'Admin') matchRole = true;
+        } else if (serviceCategory === 'hotel' || serviceName.includes('khách sạn') || serviceName.includes('lưu trú')) {
+            if (staff.role === 'Veterinarian' || staff.role === 'Receptionist') matchRole = true;
+        } else if (serviceCategory === 'taxi' || serviceName.includes('taxi') || serviceName.includes('đưa đón')) {
+            if (staff.role === 'Driver') matchRole = true;
+        } else if (serviceCategory === 'vet' || serviceName.includes('khám') || serviceName.includes('thú y') || serviceName.includes('tiêm')) {
+            if (staff.role === 'Veterinarian' || staff.role === 'Admin') matchRole = true;
+        } else {
+            matchRole = true;
+        }
+
+        if (!matchRole) return; // Không hiển thị nhân viên sai chuyên môn
+
+        // 2. Kiểm tra trạng thái làm việc & khóa an toàn
+        let isAvailable = true;
+        let reason = '';
+
+        if (staff.status === 'RESIGNED') {
+            return; // Ẩn nhân viên đã nghỉ việc
+        } else if (staff.status === 'LEAVE') {
+            isAvailable = false;
+            reason = 'Đang nghỉ phép';
+        } else if (staff.status === 'PAUSE') {
+            isAvailable = false;
+            reason = 'Tạm nghỉ';
+        } else if (staff.serviceLocked) {
+            isAvailable = false;
+            reason = 'Tạm khóa đào tạo';
+        }
+
+        // 3. Kiểm tra ca làm việc bao phủ khung giờ thực hiện dịch vụ
+        if (isAvailable && startMin !== null && endMin !== null) {
+            let shifts = [];
+            if (roster[chosenDate] && roster[chosenDate][staff.id]) {
+                shifts = roster[chosenDate][staff.id];
+            } else {
+                shifts = [staff.shift || 'MORNING'];
+            }
+
+            if (shifts.includes('LEAVE') || shifts.includes('PAUSE') || shifts.includes('RESIGNED')) {
+                isAvailable = false;
+                reason = 'Nghỉ phép ngày này';
+            } else {
+                let covered = false;
+                if (shifts.includes('ALL')) covered = true;
+                if (shifts.includes('MORNING') && startMin >= 480 && endMin <= 720) covered = true;
+                if (shifts.includes('AFTERNOON') && startMin >= 780 && endMin <= 1020) covered = true;
+                if (shifts.includes('EVENING') && startMin >= 1050 && endMin <= 1290) covered = true;
+                if (shifts.includes('NIGHT') && (startMin >= 1290 || endMin <= 480)) covered = true;
+
+                if (shifts.includes('MORNING') && shifts.includes('AFTERNOON') && startMin >= 480 && endMin <= 1020) {
+                    covered = true;
+                }
+
+                if (!covered) {
+                    isAvailable = false;
+                    const shiftLabels = shifts.map(sh => {
+                        if (sh === 'MORNING') return 'Ca sáng (08:00 - 12:00)';
+                        if (sh === 'AFTERNOON') return 'Ca chiều (13:00 - 17:00)';
+                        if (sh === 'EVENING') return 'Ca tối (17:30 - 21:30)';
+                        return 'Ca khác';
+                    }).join(', ');
+                    reason = `Trực ${shiftLabels || 'khung giờ khác'}`;
+                }
+            }
+        }
+
+        let descText = staff.position || 'Chuyên viên';
+        if (staff.skillExam) descText += ` • ${staff.skillExam}`;
+        if (!isAvailable && reason) {
+            descText = reason;
+        } else if (isAvailable && chosenSlot) {
+            descText = `Trống lịch • Phù hợp (${serviceDuration})`;
+        }
+
+        mappedStaffs.push({
+            id: staff.id,
+            name: staff.name,
+            desc: descText,
+            isAvailable: isAvailable,
+            reason: reason
+        });
+    });
+
+    listContainer.innerHTML = mappedStaffs.map(staff => {
         const isSelected = bookingState.staff === staff.name ? 'selected' : '';
-        const initials = staff.name === 'Phân bổ ngẫu nhiên' ? '' : staff.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+        const isRandom = staff.id === 'random' || staff.name.toLowerCase().includes('ngẫu nhiên');
+        const words = staff.name.split(' ').filter(Boolean);
+        const initials = isRandom ? 'PB' : words.map(w => w[0]).slice(-2).join('').toUpperCase();
+        const disabledClass = !staff.isAvailable ? 'disabled-staff' : '';
+        const statusBadge = staff.isAvailable 
+            ? `<span style="color: #236B48; font-size: 0.76rem; font-weight: 500;">${staff.desc}</span>` 
+            : `<span style="color: #DC2626; font-size: 0.76rem; font-weight: 500;">${staff.desc}</span>`;
+
         return `
-            <div class="staff-card ${isSelected}" data-name="${staff.name}" tabindex="0" role="button">
-                <div class="staff-card-avatar" style="font-size: 1.1rem;">${initials}</div>
+            <div class="staff-card ${isSelected} ${disabledClass}" data-name="${staff.name}" data-available="${staff.isAvailable ? '1' : '0'}" tabindex="0" role="button" ${!staff.isAvailable ? 'style="opacity: 0.55; cursor: not-allowed;"' : ''}>
+                <div class="staff-card-avatar" ${!staff.isAvailable ? 'style="background: #E5E7EB; color: #9CA3AF;"' : ''}>${initials}</div>
                 <div class="staff-card-info">
-                    <span class="staff-select-name" style="font-weight:700; display:block; color:var(--color-primary-dark); font-size:0.9rem; margin-bottom: 2px;">${staff.name}</span>
-                    <span class="staff-card-status" style="font-size:0.75rem; color: var(--color-text-light); line-height: 1.2; display: block;">${staff.desc}</span>
+                    <span class="staff-select-name">${staff.name}</span>
+                    <span class="staff-card-status">${statusBadge}</span>
                 </div>
             </div>
         `;
     }).join('');
 
+    // Nếu nhân viên đang chọn không khả dụng trong khung giờ mới chọn, tự động chuyển về 'Phân bổ ngẫu nhiên'
+    if (bookingState.staff && bookingState.staff !== 'Phân bổ ngẫu nhiên') {
+        const currentSelected = mappedStaffs.find(s => s.name === bookingState.staff);
+        if (!currentSelected || !currentSelected.isAvailable) {
+            bookingState.staff = 'Phân bổ ngẫu nhiên';
+            const randomCard = listContainer.querySelector('.staff-card[data-name="Phân bổ ngẫu nhiên"]');
+            if (randomCard) {
+                listContainer.querySelectorAll('.staff-card').forEach(c => c.classList.remove('selected'));
+                randomCard.classList.add('selected');
+            }
+            updateSummary();
+            saveBookingSession();
+        }
+    }
+
     listContainer.querySelectorAll('.staff-card').forEach(card => {
         card.addEventListener('click', () => {
+            if (card.getAttribute('data-available') === '0') {
+                return; // Không cho phép chọn nhân viên bận / không khả dụng
+            }
             listContainer.querySelectorAll('.staff-card').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
 
             bookingState.staff = card.dataset.name;
             validateStep3();
             updateSummary();
+            saveBookingSession();
         });
     });
 }
@@ -1167,16 +1732,18 @@ function setupStepActions() {
         4: document.getElementById('step4')
     };
 
-    const stepsIndicator = document.getElementById('bookingStepper').querySelectorAll('.step');
+    const stepsIndicator = document.querySelectorAll('#bookingStepper .step');
 
-    const goToStep = (targetStep) => {
+    goToStep = (targetStep) => {
         Object.values(panels).forEach(p => p.classList.remove('active'));
-        panels[targetStep].classList.add('active');
+        if (panels[targetStep]) panels[targetStep].classList.add('active');
+
         stepsIndicator.forEach((indicator, index) => {
-            if (index + 1 < targetStep) {
+            const stepNum = index + 1;
+            if (stepNum < targetStep) {
                 indicator.classList.add('completed');
                 indicator.classList.remove('active');
-            } else if (index + 1 === targetStep) {
+            } else if (stepNum === targetStep) {
                 indicator.classList.add('active');
                 indicator.classList.remove('completed');
             } else {
@@ -1199,7 +1766,7 @@ function setupStepActions() {
             renderServices(categoryToRender);
         } else if (targetStep === 3) {
             const timeSlotLabel = document.getElementById('timeSlotLabel');
-            if (selectedService.category === 'hotel') {
+            if (selectedService && selectedService.category === 'hotel') {
                 if (timeSlotLabel) timeSlotLabel.innerHTML = 'Chọn giờ check-in <span class="required">*</span>';
                 document.getElementById('hotelDateRange').classList.remove('d-none');
                 document.getElementById('hotelAddonsSection').classList.remove('d-none');
@@ -1220,9 +1787,11 @@ function setupStepActions() {
             }
         } else if (targetStep === 4) {
             renderStep4Confirm();
+            setupConfirmation();
         }
 
         updateSummary();
+        saveBookingSession();
     };
 
     // Next click
@@ -1257,6 +1826,22 @@ function setupStepActions() {
     backButtons[2].addEventListener('click', () => goToStep(1));
     backButtons[3].addEventListener('click', () => goToStep(2));
     backButtons[4].addEventListener('click', () => goToStep(3));
+
+    stepsIndicator.forEach(indicator => {
+        indicator.addEventListener('click', () => {
+            const stepNum = parseInt(indicator.dataset.step, 10);
+            if (!stepNum) return;
+            if (stepNum < bookingState.step) {
+                goToStep(stepNum);
+            } else if (stepNum === 2 && !document.getElementById('step1Next')?.disabled) {
+                goToStep(2);
+            } else if (stepNum === 3 && selectedService && !document.getElementById('step1Next')?.disabled) {
+                goToStep(3);
+            } else if (stepNum === 4 && selectedService && !document.getElementById('step1Next')?.disabled && !document.getElementById('step3Next')?.disabled) {
+                goToStep(4);
+            }
+        });
+    });
 }
 
 function updateSummary() {
@@ -1295,7 +1880,7 @@ function updateSummary() {
         sumOwner.classList.add('d-none');
     }
 
-    if (selectedService.category === 'spa' && bookingState.staff) {
+    if (bookingState.staff) {
         sumStaff.classList.remove('d-none');
         document.getElementById('sumStaffVal').textContent = bookingState.staff;
     } else {
@@ -1363,7 +1948,7 @@ function updateSummary() {
         sumDiscountRow.classList.remove('d-none');
         let discountLabel = '';
         if (isMember && appliedBookingVoucher) {
-            discountLabel = `Giảm giá (TV & Voucher)`;
+            discountLabel = `Ưu đãi hội viên và Voucher`;
         } else if (isMember) {
             discountLabel = `${MEMBER_DISCOUNT_TEXT} (-${Math.round(MEMBER_DISCOUNT_PERCENT * 100)}%)`;
         } else {
@@ -1453,27 +2038,34 @@ function renderStep4Confirm() {
         `;
     }
 
+    const petWeightDisplay = bookingState.petWeight ? `${bookingState.petWeight}kg` : 'chưa xác định';
+
     const container = document.getElementById('confirmSummary');
     container.innerHTML = `
-        <div class="confirm-bill-card" style="background: rgba(0,0,0,0.02); border: 1px solid var(--color-border); border-radius: var(--card-border-radius); padding: 20px; margin-bottom: 20px;">
-            <h4 style="font-family: var(--font-heading); color: var(--color-primary-dark); margin-top:0; margin-bottom: 15px;">Chi tiết hóa đơn</h4>
+        <div class="confirm-bill-card">
+            <h4>Chi tiết hóa đơn</h4>
             
             ${billLines}
             
-            <div class="summary-divider" style="margin: 15px 0; border-top: 1px solid var(--color-border);"></div>
+            <div class="summary-divider" style="margin: 14px 0;"></div>
             
-            <div class="summary-row price-row" style="font-size: 1.2rem; font-weight: bold; color: var(--color-primary-dark);">
-                <span class="sum-label">Tổng tiền hóa đơn:</span>
-                <span class="sum-value" style="color: var(--color-primary);">${finalTotal.toLocaleString('vi-VN')} VNĐ</span>
+            <div class="summary-row price-row" style="font-size: 1.1rem; font-weight: 700; color: var(--color-primary-dark); margin-top: 6px;">
+                <span class="sum-label" style="font-size: 0.95rem; font-weight: 700;">Tổng tiền hóa đơn:</span>
+                <span class="sum-value" style="color: var(--color-primary); font-size: 1.3rem;">${finalTotal.toLocaleString('vi-VN')} VNĐ</span>
             </div>
 
-            <div class="summary-row price-row" style="font-size: 1.1rem; font-weight: bold; margin-top: 8px;">
+            <div class="summary-row price-row" style="font-size: 0.95rem; font-weight: 600; margin-top: 6px;">
                 <span class="sum-label">Chi phí đặt cọc:</span>
-                <span class="sum-value" style="color: #27ae60; font-size: 1.3rem;">0 VNĐ</span>
+                <span class="sum-value" style="color: #16a34a; font-size: 1.15rem;">0 VNĐ</span>
             </div>
 
-            <div class="alert-bill-note" style="margin-top: 15px; padding: 12px; border: 1px dashed #e67e22; background: rgba(230,126,34,0.08); border-radius: 8px; font-size: 0.85rem; color: #d35400; line-height: 1.5;">
-                ️ <strong>Cảnh báo:</strong> Mức giá hiện tại chỉ là dự kiến dựa trên số cân nặng tự khai báo (${bookingState.petWeight}kg). Nhân viên sẽ tiến hành cân lại thực tế tại quầy để áp giá chuẩn nhất theo quy định.
+            <div class="alert-bill-note">
+                <div class="alert-bill-title">Lưu ý về chi phí và dịch vụ phát sinh:</div>
+                <ul class="alert-bill-list">
+                    <li>Mức giá tạm tính theo số cân khai báo (${petWeightDisplay}), nhân viên sẽ cân lại bé tại quầy để áp dụng giá chuẩn xác nhất.</li>
+                    <li>Có thể phát sinh phụ phí nếu bé bị bết rối lông nặng, nhiều ve rận/bọ chét hoặc cần gói vệ sinh đặc trị chuyên sâu.</li>
+                    <li>Chuyên viên tiếp nhận luôn kiểm tra thể trạng bé và <strong>thông báo xác nhận chi phí phát sinh trước khi thực hiện</strong> dịch vụ.</li>
+                </ul>
             </div>
         </div>
     `;
@@ -1484,15 +2076,22 @@ function setupConfirmation() {
     const confirmBtn = document.getElementById('confirmBookingBtn');
 
     if (policyChk && confirmBtn) {
+        confirmBtn.disabled = !policyChk.checked;
+
         if (!confirmBtn.dataset.listenerAttached) {
             confirmBtn.dataset.listenerAttached = 'true';
 
-            policyChk.addEventListener('change', () => {
+            const syncState = () => {
                 confirmBtn.disabled = !policyChk.checked;
-            });
+            };
+
+            policyChk.addEventListener('change', syncState);
+            policyChk.addEventListener('input', syncState);
+            policyChk.addEventListener('click', syncState);
 
             confirmBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                if (confirmBtn.disabled) return;
                 processBookingSubmit();
             });
         }
@@ -1540,15 +2139,15 @@ async function processBookingSubmit() {
         petEmoji: bookingState.petType === 'Mèo' ? '' : (bookingState.petType === 'Chó' ? '' : (bookingState.petType === 'Thỏ' ? '' : (bookingState.petType === 'Chuột Hamster' ? '' : ''))),
         petEmoji: '',
         petWeight: bookingState.petWeight,
-        service: selectedService.category === 'hotel' ? 'Pet Hotel' : 'Spa và Grooming',
+        service: selectedService.category === 'hotel' ? 'Pet Hotel' : (selectedService.category === 'taxi' ? 'Pet Taxi' : 'Spa và Grooming'),
         serviceName: selectedService.name,
         package: selectedService.name,
         date: bookingState.date,
         dateEnd: selectedService.category === 'hotel' ? bookingState.checkOutDate : null,
-        time: selectedService.category === 'spa' ? bookingState.timeSlot : null,
-        timeStart: selectedService.category === 'spa' ? bookingState.timeSlot : null,
-        timeEnd: selectedService.category === 'spa' ? calculateEndTime(bookingState.timeSlot, selectedService.duration) : null,
-        staff: selectedService.category === 'spa' ? bookingState.staff : 'Bảo mẫu khách sạn',
+        time: bookingState.timeSlot || null,
+        timeStart: bookingState.timeSlot || null,
+        timeEnd: bookingState.timeSlot ? calculateEndTime(bookingState.timeSlot, selectedService.duration) : null,
+        staff: bookingState.staff || (selectedService.category === 'hotel' ? 'Bảo mẫu khách sạn' : (selectedService.category === 'taxi' ? 'Tài xế chuyên dụng' : 'Chuyên viên Spa')),
         branch: 'PawPal Chi nhánh Quận 1',
         price: finalPrice,
         status: 'upcoming',
@@ -1632,10 +2231,11 @@ async function processBookingSubmit() {
         clearInterval(holdTimerInterval);
     }
     sessionStorage.setItem('last_booking_id', finalBookingId);
+    clearBookingSession();
 
     setTimeout(() => {
         confirmBtn.innerHTML = ` Đặt lịch thành công!`;
-        let url = `../booking-success/booking-success.html?code=${finalBookingId}`;
+        let url = `/booking-success?code=${finalBookingId}`;
         if (generatedToken) url += `&token=${generatedToken}`;
         window.location.href = url;
     }, 1200);
