@@ -1745,22 +1745,21 @@
             };
         }
 
-        function populateCreateOrderProducts() {
+        let activePendingServiceData = null;
+
+        function populateCreateOrderProducts(passedPending) {
             const prodSelect = document.getElementById('createOrderProductSelect');
             if (!prodSelect) return;
 
             let extraOptions = '';
             try {
-                const rawPending = sessionStorage.getItem('pawpal_pos_pending_service_checkout');
-                if (rawPending) {
-                    const data = JSON.parse(rawPending);
-                    if (data && data.bookingId) {
-                        extraOptions = `
-                            <option value="SVC-${data.bookingId}" data-price="${data.total || data.basePrice || 250000}" selected>
-                                [Dịch vụ] ${data.serviceName} (${data.bookingId}) - ${formatVND(data.total || data.basePrice || 250000)}
-                            </option>
-                        `;
-                    }
+                const data = passedPending !== undefined ? passedPending : activePendingServiceData;
+                if (data && data.bookingId) {
+                    extraOptions = `
+                        <option value="SVC-${data.bookingId}" data-price="${data.total || data.basePrice || 250000}" selected>
+                            [Dịch vụ] ${data.serviceName} (${data.bookingId}) - ${formatVND(data.total || data.basePrice || 250000)}
+                        </option>
+                    `;
                 }
             } catch (e) {}
 
@@ -1777,8 +1776,13 @@
             try {
                 const rawPending = sessionStorage.getItem('pawpal_pos_pending_service_checkout');
                 if (!rawPending) return;
+                
+                // Tiêu thụ ngay lập tức để không tự động bật lại ở các lần chuyển tab tiếp theo
+                sessionStorage.removeItem('pawpal_pos_pending_service_checkout');
+                
                 const data = JSON.parse(rawPending);
                 if (!data || !data.bookingId) return;
+                activePendingServiceData = data;
 
                 const banner = document.getElementById('posServiceCheckoutBanner');
                 const titleEl = document.getElementById('posServiceBannerTitle');
@@ -1802,7 +1806,7 @@
                 if (nameInput && data.customerName) nameInput.value = data.customerName;
                 if (noteInput) noteInput.value = data.note || `Thanh toán ca dịch vụ ${data.bookingId}`;
 
-                populateCreateOrderProducts();
+                populateCreateOrderProducts(data);
                 document.getElementById('modalCreateOrder')?.classList.add('active');
                 updatePosLiveCalculation();
             } catch (err) {
@@ -1812,16 +1816,17 @@
 
         document.getElementById('btnOpenCreateOrderModal')?.addEventListener('click', () => {
             activePosCustomer = null;
+            activePendingServiceData = null;
             const memberBanner = document.getElementById('createOrderMemberBanner');
             if (memberBanner) memberBanner.style.display = 'none';
 
             // Ẩn banner pending service nếu mở thủ công thông thường
             const banner = document.getElementById('posServiceCheckoutBanner');
-            if (banner && !sessionStorage.getItem('pawpal_pos_pending_service_checkout')) {
+            if (banner) {
                 banner.style.display = 'none';
             }
 
-            populateCreateOrderProducts();
+            populateCreateOrderProducts(null);
             document.getElementById('modalCreateOrder')?.classList.add('active');
             updatePosLiveCalculation();
         });
@@ -2015,32 +2020,29 @@
 
             // Hoàn tất ca dịch vụ liên kết nếu đây là đơn thanh toán từ phân hệ Dịch vụ
             try {
-                const rawPending = sessionStorage.getItem('pawpal_pos_pending_service_checkout');
-                if (rawPending) {
-                    const pendingData = JSON.parse(rawPending);
-                    if (pendingData && pendingData.bookingId) {
-                        const rawBookings = sessionStorage.getItem('pawpal_admin_services_bookings');
-                        if (rawBookings) {
-                            const bookings = JSON.parse(rawBookings);
-                            const targetBooking = bookings.find(b => b.id === pendingData.bookingId);
-                            if (targetBooking) {
-                                targetBooking.paymentStatus = `Đã thanh toán (Tại POS - Đơn ${newCode})`;
-                                targetBooking.status = (targetBooking.status === 'pending' || targetBooking.status === 'confirmed') ? 'in_progress' : targetBooking.status;
-                                targetBooking.timeline = targetBooking.timeline || [];
-                                targetBooking.timeline.push({
-                                    time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-                                    title: `Đã thanh toán tại POS (${newCode})`,
-                                    desc: `Đã thu tiền tại quầy ${formatVND(calc.grandTotal)} qua hình thức ${payMethod}. Đơn hàng POS: ${newCode}.`,
-                                    done: true,
-                                    staff: 'Thu ngân'
-                                });
-                                sessionStorage.setItem('pawpal_admin_services_bookings', JSON.stringify(bookings));
-                            }
+                const pendingData = activePendingServiceData;
+                if (pendingData && pendingData.bookingId) {
+                    const rawBookings = sessionStorage.getItem('pawpal_admin_services_bookings');
+                    if (rawBookings) {
+                        const bookings = JSON.parse(rawBookings);
+                        const targetBooking = bookings.find(b => b.id === pendingData.bookingId);
+                        if (targetBooking) {
+                            targetBooking.paymentStatus = `Đã thanh toán (Tại POS - Đơn ${newCode})`;
+                            targetBooking.status = (targetBooking.status === 'pending' || targetBooking.status === 'confirmed') ? 'in_progress' : targetBooking.status;
+                            targetBooking.timeline = targetBooking.timeline || [];
+                            targetBooking.timeline.push({
+                                time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+                                title: `Đã thanh toán tại POS (${newCode})`,
+                                desc: `Đã thu tiền tại quầy ${formatVND(calc.grandTotal)} qua hình thức ${payMethod}. Đơn hàng POS: ${newCode}.`,
+                                done: true,
+                                staff: 'Thu ngân'
+                            });
+                            sessionStorage.setItem('pawpal_admin_services_bookings', JSON.stringify(bookings));
                         }
-                        sessionStorage.removeItem('pawpal_pos_pending_service_checkout');
-                        const banner = document.getElementById('posServiceCheckoutBanner');
-                        if (banner) banner.style.display = 'none';
                     }
+                    activePendingServiceData = null;
+                    const banner = document.getElementById('posServiceCheckoutBanner');
+                    if (banner) banner.style.display = 'none';
                 }
             } catch (err) {
                 console.error('Lỗi cập nhật ca dịch vụ sau thanh toán POS:', err);
@@ -2444,6 +2446,12 @@
         },
         closeModal: function(modalId) {
             document.getElementById(modalId)?.classList.remove('active');
+            if (modalId === 'modalCreateOrder') {
+                activePendingServiceData = null;
+                sessionStorage.removeItem('pawpal_pos_pending_service_checkout');
+                const banner = document.getElementById('posServiceCheckoutBanner');
+                if (banner) banner.style.display = 'none';
+            }
         },
         confirmOrder: function(orderId) {
             const order = currentOrdersList.find(o => o.id === orderId);

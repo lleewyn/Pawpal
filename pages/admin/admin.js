@@ -419,6 +419,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Thu gọn / Mở rộng Sidebar & Lưu trạng thái vào localStorage
+    const adminLayout = document.querySelector('.admin-layout');
+    const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+
+    // Khôi phục trạng thái sidebar đã lưu
+    const isSidebarCollapsed = localStorage.getItem('pawpal_admin_sidebar_collapsed') === 'true';
+    if (isSidebarCollapsed && adminLayout) {
+        adminLayout.classList.add('sidebar-collapsed');
+    }
+
+    if (btnToggleSidebar && adminLayout) {
+        btnToggleSidebar.addEventListener('click', () => {
+            adminLayout.classList.toggle('sidebar-collapsed');
+            const collapsed = adminLayout.classList.contains('sidebar-collapsed');
+            localStorage.setItem('pawpal_admin_sidebar_collapsed', collapsed ? 'true' : 'false');
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
+    }
+
     // Khởi tạo Lucide
     if (window.lucide) {
         lucide.createIcons();

@@ -11,7 +11,7 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- CSS Quản Trị -->
-    <link rel="stylesheet" href="admin.css?v=36">
+    <link rel="stylesheet" href="admin.css?v=38">
     <link rel="stylesheet" href="modules/dashboard/dashboard.css?v=23">
     <link rel="stylesheet" href="modules/customers/customers.css?v=41">
     <link rel="stylesheet" href="modules/pets/pets.css?v=40">
@@ -27,46 +27,50 @@
     <div class="admin-layout">
         <!-- THANH ĐIỀU HƯỚNG BÊN TRÁI (SIDEBAR) -->
         <aside class="admin-sidebar">
-            <!-- LOGO VÀ TIÊU ĐỀ -->
+            <!-- LOGO VÀ TIÊU ĐỀ + NÚT THU GỌN SIDEBAR -->
             <div class="admin-sidebar-brand">
                 <div class="brand-title">Pawpal-er</div>
+                <button type="button" class="btn-sidebar-toggle" id="btnToggleSidebar" title="Thu gọn / Mở rộng menu" aria-label="Thu gọn hoặc mở rộng menu">
+                    <span class="menu-icon toggle-icon-collapse"><i data-lucide="panel-left-close"></i></span>
+                    <span class="menu-icon toggle-icon-expand"><i data-lucide="panel-left-open"></i></span>
+                </button>
             </div>
 
             <!-- DANH SÁCH 9 MENU QUẢN TRỊ THEO THỨ TỰ YÊU CẦU -->
             <nav class="admin-sidebar-nav" id="sidebarNav">
-                <button type="button" class="sidebar-menu-btn" data-title="Dashboard">
+                <button type="button" class="sidebar-menu-btn" data-title="Dashboard" title="Dashboard">
                     <span class="menu-icon"><i data-lucide="layout-dashboard"></i></span>
                     <span class="menu-text">Dashboard</span>
                 </button>
-                <button type="button" class="sidebar-menu-btn" data-title="Khách hàng">
+                <button type="button" class="sidebar-menu-btn" data-title="Khách hàng" title="Khách hàng">
                     <span class="menu-icon"><i data-lucide="users"></i></span>
                     <span class="menu-text">Khách hàng</span>
                 </button>
-                <button type="button" class="sidebar-menu-btn" data-title="Thú cưng">
+                <button type="button" class="sidebar-menu-btn" data-title="Thú cưng" title="Thú cưng">
                     <span class="menu-icon"><i data-lucide="paw-print"></i></span>
                     <span class="menu-text">Thú cưng</span>
                 </button>
-                <button type="button" class="sidebar-menu-btn" data-title="Dịch vụ">
+                <button type="button" class="sidebar-menu-btn" data-title="Dịch vụ" title="Dịch vụ">
                     <span class="menu-icon"><i data-lucide="calendar"></i></span>
                     <span class="menu-text">Dịch vụ</span>
                 </button>
-                <button type="button" class="sidebar-menu-btn active" data-title="Bán hàng">
+                <button type="button" class="sidebar-menu-btn active" data-title="Bán hàng" title="Bán hàng">
                     <span class="menu-icon"><i data-lucide="shopping-bag"></i></span>
                     <span class="menu-text">Bán hàng</span>
                 </button>
-                <button type="button" class="sidebar-menu-btn" data-title="Nhân sự">
+                <button type="button" class="sidebar-menu-btn" data-title="Nhân sự" title="Nhân sự">
                     <span class="menu-icon"><i data-lucide="id-card"></i></span>
                     <span class="menu-text">Nhân sự</span>
                 </button>
-                <button type="button" class="sidebar-menu-btn" data-title="Khiếu nại">
+                <button type="button" class="sidebar-menu-btn" data-title="Khiếu nại" title="Khiếu nại">
                     <span class="menu-icon"><i data-lucide="alert-circle"></i></span>
                     <span class="menu-text">Khiếu nại</span>
                 </button>
-                <button type="button" class="sidebar-menu-btn" data-title="Chatbot">
+                <button type="button" class="sidebar-menu-btn" data-title="Chatbot" title="Chatbot">
                     <span class="menu-icon"><i data-lucide="message-square"></i></span>
                     <span class="menu-text">Chatbot</span>
                 </button>
-                <button type="button" class="sidebar-menu-btn" data-title="Cấu hình">
+                <button type="button" class="sidebar-menu-btn" data-title="Cấu hình" title="Cấu hình">
                     <span class="menu-icon"><i data-lucide="settings"></i></span>
                     <span class="menu-text">Cấu hình</span>
                 </button>
@@ -74,11 +78,11 @@
 
             <!-- CHÂN SIDEBAR -->
             <div class="admin-sidebar-footer">
-                <a href="/pages/public/landing/landing.html" class="btn-sidebar-footer">
+                <a href="/pages/public/landing/landing.html" class="btn-sidebar-footer" title="Về trang khách">
                     <span class="menu-icon"><i data-lucide="globe"></i></span>
                     <span>Về trang khách</span>
                 </a>
-                <button type="button" class="btn-sidebar-footer btn-logout-danger" id="btnSidebarLogout">
+                <button type="button" class="btn-sidebar-footer btn-logout-danger" id="btnSidebarLogout" title="Đăng xuất">
                     <span class="menu-icon"><i data-lucide="log-out"></i></span>
                     <span>Đăng xuất</span>
                 </button>

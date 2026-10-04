@@ -100,25 +100,78 @@ body.admin-body {
     flex-direction: column;
     height: 100%;
     border-right: 1px solid var(--sidebar-brand-border);
+    flex-shrink: 0;
+    overflow-x: hidden !important;
 }
 
 /* KHỐI LOGO & THƯƠNG HIỆU ĐẦU SIDEBAR (KHÔNG DÙNG SUBTITLE) */
 .admin-sidebar-brand {
-    padding: 22px 20px;
+    padding: 18px 16px;
     border-bottom: 1px solid var(--sidebar-brand-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: var(--header-height);
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .brand-title {
-    font-size: 21px;
+    font-size: 20px;
     font-weight: 800;
     letter-spacing: -0.3px;
     color: #1E2922;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* NÚT THU GỌN / MỞ RỘNG SIDEBAR */
+.btn-sidebar-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--admin-radius);
+    border: none;
+    background-color: transparent;
+    color: var(--sidebar-text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+    outline: none;
+}
+
+.btn-sidebar-toggle:hover {
+    background-color: #EEF5F1;
+    color: var(--text-heading);
+}
+
+.btn-sidebar-toggle .menu-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.btn-sidebar-toggle .menu-icon svg {
+    width: 19px;
+    height: 19px;
+}
+
+.btn-sidebar-toggle .toggle-icon-collapse {
+    display: inline-flex !important;
+}
+
+.btn-sidebar-toggle .toggle-icon-expand {
+    display: none !important;
 }
 
 /* DANH SÁCH 9 MENU CHỨC NĂNG */
 .admin-sidebar-nav {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden !important;
     overscroll-behavior: contain;
     overscroll-behavior-y: contain;
     padding: 16px 12px;
@@ -142,6 +195,8 @@ body.admin-body {
     cursor: pointer;
     border-radius: var(--admin-radius);
     outline: none;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 /* Định dạng Icon trên menu */
@@ -187,6 +242,7 @@ body.admin-body {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    overflow: hidden;
 }
 
 .btn-sidebar-footer {
@@ -205,6 +261,8 @@ body.admin-body {
     background-color: #F4F7F5;
     color: var(--sidebar-item-text);
     cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .btn-sidebar-footer.btn-logout-danger {
@@ -213,6 +271,74 @@ body.admin-body {
 
 .btn-sidebar-footer:hover {
     background-color: #F4F7F5;
+}
+
+/* ==========================================================================
+   TRẠNG THÁI THU GỌN SIDEBAR (COLLAPSED)
+   ========================================================================== */
+.admin-layout.sidebar-collapsed .admin-sidebar {
+    width: 68px;
+    min-width: 68px;
+    max-width: 68px;
+    overflow-x: hidden !important;
+}
+
+.admin-layout.sidebar-collapsed .admin-sidebar-brand {
+    padding: 18px 0;
+    justify-content: center;
+    width: 100%;
+    overflow: hidden;
+}
+
+.admin-layout.sidebar-collapsed .brand-title {
+    display: none !important;
+}
+
+.admin-layout.sidebar-collapsed .toggle-icon-collapse {
+    display: none !important;
+}
+
+.admin-layout.sidebar-collapsed .toggle-icon-expand {
+    display: inline-flex !important;
+}
+
+.admin-layout.sidebar-collapsed .admin-sidebar-nav {
+    padding: 16px 10px;
+    align-items: center;
+    overflow-x: hidden !important;
+}
+
+.admin-layout.sidebar-collapsed .sidebar-menu-btn {
+    padding: 0;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.admin-layout.sidebar-collapsed .sidebar-menu-btn .menu-text {
+    display: none !important;
+}
+
+.admin-layout.sidebar-collapsed .admin-sidebar-footer {
+    padding: 14px 10px;
+    align-items: center;
+    overflow: hidden;
+}
+
+.admin-layout.sidebar-collapsed .btn-sidebar-footer {
+    padding: 0;
+    width: 44px;
+    height: 44px;
+    margin: 0 auto;
+    justify-content: center;
+    font-size: 0;
+    overflow: hidden;
+}
+
+.admin-layout.sidebar-collapsed .btn-sidebar-footer span:not(.menu-icon) {
+    display: none !important;
 }
 
 /* ==========================================================================
