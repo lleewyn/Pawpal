@@ -383,6 +383,19 @@ function initPrivacyActions(user) {
     if (btnDeactivate) {
         btnDeactivate.addEventListener('click', () => {
             if (window.confirm('Bạn có chắc chắn muốn tạm dừng hoạt động tài khoản này? Bạn có thể đăng nhập lại bất cứ lúc nào để kích hoạt lại.')) {
+                const currentUser = getCurrentUser();
+                if (currentUser) {
+                    const updatedUser = { ...currentUser, status: 'DEACTIVATED' };
+                    updateCurrentUserRecord(updatedUser);
+                    try {
+                        const custDb = JSON.parse(localStorage.getItem('pawpal_customers_db') || '[]');
+                        const idx = custDb.findIndex(c => String(c.phone) === String(currentUser.phone) || c.id === currentUser.id);
+                        if (idx !== -1) {
+                            custDb[idx].status = 'DEACTIVATED';
+                            localStorage.setItem('pawpal_customers_db', JSON.stringify(custDb));
+                        }
+                    } catch (e) {}
+                }
                 showToast('warning', 'Tài khoản đã được đặt sang trạng thái tạm dừng.');
             }
         });

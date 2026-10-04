@@ -221,7 +221,7 @@
 
                         <!-- Nhóm 2: Thể trạng & Sức khỏe -->
                         <div class="pet-form-section mt-4">
-                            <h4 class="form-section-heading">2. Thể trạng và Y tế</h4>
+                            <h4 class="form-section-heading">2. Thể trạng và Sổ tiêm chủng</h4>
                             <div class="form-grid-2">
                                 <div class="form-group">
                                     <label for="weight" class="form-label-custom">Cân nặng (kg) <span class="text-danger">*</span></label>
@@ -240,8 +240,36 @@
                                 <div class="form-group d-flex align-items-center pt-md-4">
                                     <label class="checkbox-label-custom">
                                         <input type="checkbox" id="vaccinated">
-                                        <span>Đã tiêm phòng định kỳ</span>
+                                        <span>Đã tiêm phòng định kỳ (Có sổ tiêm)</span>
                                     </label>
+                                </div>
+                            </div>
+
+                            <!-- Ảnh Sổ tiêm chủng & Chứng nhận thú y -->
+                            <div class="vaccine-card-upload-group mt-3" style="background: #F4FAF6; border: 1px solid #C3DEC7; border-radius: 9px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap;">
+                                    <div style="flex: 1; min-width: 240px;">
+                                        <div style="font-size: 13.5px; font-weight: 700; color: #236B48;">Ảnh chụp Sổ tiêm chủng thú y (Tùy chọn)</div>
+                                        <div style="font-size: 12px; color: #4F7A65; margin-top: 3px; line-height: 1.5;">
+                                            Tải ảnh trang sổ tiêm vắc-xin dại và bệnh truyền nhiễm để PawPal phê duyệt nhanh điều kiện nhận phòng Pet Hotel mà không cần mang sổ giấy.
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <img id="vaccineCardPreview" src="" alt="Sổ tiêm" style="display: none; width: 56px; height: 56px; object-fit: cover; border-radius: 9px; border: 1px solid #C3DEC7;">
+                                        <button type="button" class="btn-change-avatar" id="btnTriggerVaccineCard" style="font-size: 12px; padding: 6px 12px;">+ Tải ảnh sổ tiêm</button>
+                                        <input type="file" id="vaccine-card-input" accept="image/*" class="d-none">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Phân khúc giá & Lịch sử cân nặng đo tại tiệm -->
+                            <div class="pet-weight-insight-box mt-3 d-none" id="userPetWeightInsightBox" style="border: 1px solid #ECF2EE; border-radius: 9px; padding: 14px 16px; background: #FAFCFA;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 13px; font-weight: 700; color: #236B48;">Phân khúc giá Spa và Hotel áp dụng</span>
+                                    <span class="badge-neutral" id="userPetTierBadge" style="font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 9px; background: #EEF5F1; color: #236B48;">Phân khúc 5 - 10 kg</span>
+                                </div>
+                                <div id="userPetWeightHistoryRows" style="font-size: 12.5px; color: #4F7A65; line-height: 1.6;">
+                                    <!-- Lịch sử cân nặng đo tại tiệm render động -->
                                 </div>
                             </div>
                         </div>

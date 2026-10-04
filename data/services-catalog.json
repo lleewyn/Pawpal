@@ -1,0 +1,257 @@
+[
+  {
+    "code": "SPA01",
+    "group": "spa",
+    "categoryName": "Spa và Grooming – Chăm sóc cơ bản",
+    "name": "Gói Tắm Vệ Sinh Cơ Bản",
+    "petType": "Chó / Mèo",
+    "duration": "60 phút",
+    "rating": 4.8,
+    "reviews": 154,
+    "priceFrom": "120.000",
+    "prices": {
+      "under5": "120.000",
+      "to10": "150.000",
+      "to20": "200.000",
+      "over20": "250.000"
+    },
+    "desc": "Liệu trình tắm làm sạch và khử mùi hôi cơ bản dành cho các bé chó mèo có sức khỏe da lông bình thường.",
+    "staffLevel": "Junior Groomer",
+    "status": "Đang phục vụ",
+    "image": "/assets/images/services/spa/process/spa01.webp",
+    "steps": [
+      "Tiếp nhận bé và kiểm tra da lông sơ bộ",
+      "Tắm sạch sâu và xả thơm thảo dược dịu nhẹ",
+      "Sấy khô và đánh tơi phồng lông",
+      "Vệ sinh tai, tuyến hôi và mài dũa móng",
+      "Chụp ảnh hoàn tất và bàn giao cho chủ"
+    ]
+  },
+  {
+    "code": "SPA02",
+    "group": "spa",
+    "categoryName": "Spa và Grooming – Chăm sóc cơ bản",
+    "name": "Gói Tắm Dưỡng Premium",
+    "petType": "Chó / Mèo",
+    "duration": "90 phút",
+    "rating": 4.9,
+    "reviews": 92,
+    "priceFrom": "220.000",
+    "prices": {
+      "under5": "220.000",
+      "to10": "270.000",
+      "to20": "350.000",
+      "over20": "450.000"
+    },
+    "desc": "Liệu trình tắm dưỡng chuyên sâu kết hợp massage thư giãn, phục hồi lông hư tổn.",
+    "staffLevel": "Senior Groomer",
+    "status": "Đang phục vụ",
+    "image": "/assets/images/services/spa/process/tam_cho5.jpg",
+    "steps": [
+      "Tiếp nhận và mát-xa bấm huyệt thư giãn",
+      "Tắm dưỡng phục hồi chuyên sâu",
+      "Ủ dầu xả tinh chất mượt lông",
+      "Sấy ion âm chống tĩnh điện",
+      "Vệ sinh tai mắt và dũa móng",
+      "Bàn giao và gửi ảnh kỷ niệm"
+    ]
+  },
+  {
+    "code": "SPA07",
+    "group": "spa",
+    "categoryName": "Spa và Grooming – Tạo kiểu",
+    "name": "Grooming Tạo Kiểu Cơ Bản",
+    "petType": "Chó",
+    "duration": "150 phút",
+    "rating": 4.9,
+    "reviews": 210,
+    "priceFrom": "350.000",
+    "prices": {
+      "under5": "350.000",
+      "to10": "400.000",
+      "to20": "500.000",
+      "over20": "650.000"
+    },
+    "desc": "Gói làm đẹp toàn diện bao gồm tắm vệ sinh kỹ lưỡng kết hợp cắt tỉa lông tạo kiểu cơ bản.",
+    "staffLevel": "Senior Groomer",
+    "status": "Đang phục vụ",
+    "image": "/assets/images/services/spa/process/cat_long1.jpg",
+    "steps": [
+      "Tiếp nhận và tư vấn form dáng cắt tỉa",
+      "Tắm xả dưỡng phồng và sấy tơi lông",
+      "Cắt tỉa mặt tròn Boo / Poodle",
+      "Bo tròn 4 chân và cắt gọn móng",
+      "Xịt nước hoa dưỡng lông hữu cơ",
+      "Bàn giao cho chủ"
+    ]
+  },
+  {
+    "code": "SPA08",
+    "group": "spa",
+    "categoryName": "Spa và Grooming – Tạo kiểu",
+    "name": "Grooming Theo Yêu Cầu",
+    "petType": "Chó",
+    "duration": "180 phút",
+    "rating": 4.9,
+    "reviews": 74,
+    "priceFrom": "450.000",
+    "prices": {
+      "under5": "450.000",
+      "to10": "500.000",
+      "to20": "600.000",
+      "over20": "750.000"
+    },
+    "desc": "Dịch vụ tạo mẫu tóc cao cấp thiết kế kiểu dáng lông theo hình ảnh mẫu yêu cầu riêng của chủ nuôi.",
+    "staffLevel": "Master Groomer",
+    "status": "Đang phục vụ",
+    "image": "/assets/images/services/spa/process/cao_long.jpg",
+    "steps": [
+      "Xem ảnh mẫu và phác thảo kiểu dáng",
+      "Tắm xả cao cấp và sấy chuyên sâu",
+      "Tỉa dáng thủ công Master Groomer",
+      "Hoàn thiện chi tiết và kiểm tra da lông",
+      "Bàn giao và chụp ảnh studio"
+    ]
+  },
+  {
+    "code": "SPA10",
+    "group": "spa",
+    "categoryName": "Spa và Grooming – Đặc trị",
+    "name": "Tắm Thuốc Trị Liệu Da Liễu",
+    "petType": "Chó / Mèo",
+    "duration": "90 phút",
+    "rating": 4.7,
+    "reviews": 53,
+    "priceFrom": "280.000",
+    "prices": {
+      "under5": "280.000",
+      "to10": "320.000",
+      "to20": "400.000",
+      "over20": "500.000"
+    },
+    "desc": "Dịch vụ tắm trị liệu viêm da, nấm, ghẻ, ký sinh trùng bằng các loại dầu tắm y khoa.",
+    "staffLevel": "Senior Groomer",
+    "status": "Đang phục vụ",
+    "image": "/assets/images/services/spa/process/tam_cho4.jpg",
+    "steps": [
+      "Kiểm tra và khoanh vùng mảng nấm/viêm da",
+      "Ngâm bồn dầu tắm thảo dược đông y y tế",
+      "Thoa thuốc đặc trị vùng tổn thương",
+      "Sấy khô dịu mát và khử trùng tia UV",
+      "Ghi đơn thuốc và dặn dò chủ nuôi"
+    ]
+  },
+  {
+    "code": "HTL01",
+    "group": "hotel",
+    "categoryName": "Pet Hotel – Standard",
+    "name": "Phòng Standard",
+    "petType": "Chó / Mèo",
+    "duration": "Theo ngày",
+    "rating": 4.7,
+    "reviews": 115,
+    "priceFrom": "180.000",
+    "prices": {
+      "under5": "180.000 / đêm",
+      "to10": "200.000 / đêm",
+      "to20": "-",
+      "over20": "-"
+    },
+    "desc": "Không gian phòng lưu trú cơ bản tiêu chuẩn sạch sẽ, thoáng mát, thích hợp cho chó mèo nhỏ.",
+    "staffLevel": "Nhân viên chăm sóc lưu trú",
+    "status": "Đang phục vụ",
+    "image": "/assets/images/services/hotel/htl01.webp",
+    "steps": [
+      "Check-in tiếp nhận và nhận thức ăn riêng",
+      "Bữa ăn dinh dưỡng trưa và chiều",
+      "Vận động vui chơi sân trong nhà",
+      "Dọn phòng vệ sinh và đo thân nhiệt",
+      "Check-out bàn giao"
+    ]
+  },
+  {
+    "code": "HTL03",
+    "group": "hotel",
+    "categoryName": "Pet Hotel – Deluxe",
+    "name": "Phòng Deluxe",
+    "petType": "Chó / Mèo",
+    "duration": "Theo ngày",
+    "rating": 4.9,
+    "reviews": 102,
+    "priceFrom": "380.000",
+    "prices": {
+      "under5": "380.000 / đêm",
+      "to10": "380.000 / đêm",
+      "to20": "450.000 / đêm",
+      "over20": "-"
+    },
+    "desc": "Hạng phòng cao cấp có camera IP giám sát 24/7 trực tiếp cho từng phòng.",
+    "staffLevel": "Nhân viên chăm sóc lưu trú",
+    "status": "Đang phục vụ",
+    "image": "/assets/images/services/hotel/htl03.jpg",
+    "steps": [
+      "Check-in nhận phòng và mở link camera IP cho chủ",
+      "Bữa ăn thượng hạng theo lịch riêng",
+      "Dắt dạo vận động sân cỏ nhân tạo",
+      "Dọn phòng khử khuẩn tia UV",
+      "Chải lông massage tối trước khi ngủ",
+      "Check-out bàn giao"
+    ]
+  },
+  {
+    "code": "HTL05",
+    "group": "hotel",
+    "categoryName": "Pet Hotel – Luxury Suite",
+    "name": "Luxury Suite",
+    "petType": "Chó / Mèo",
+    "duration": "Theo ngày",
+    "rating": 4.9,
+    "reviews": 89,
+    "priceFrom": "520.000",
+    "prices": {
+      "under5": "520.000 / đêm",
+      "to10": "520.000 / đêm",
+      "to20": "650.000 / đêm",
+      "over20": "800.000 / đêm"
+    },
+    "desc": "Biệt thự lưu trú hoàng gia siêu rộng rãi có sân chơi riêng biệt và chế độ chăm sóc 1:1.",
+    "staffLevel": "Chuyên gia chăm sóc thú cưng",
+    "status": "Đang phục vụ",
+    "image": "/assets/images/services/hotel/htl05.webp",
+    "steps": [
+      "Đón bé và nhận chế độ chăm sóc riêng 1:1",
+      "Bữa ăn dinh dưỡng cao cấp tự chọn",
+      "Vui chơi sân cỏ và bể bơi thủy trị liệu",
+      "Massage tinh dầu thư giãn",
+      "Chụp ảnh video 4K gửi chủ mỗi ngày",
+      "Check-out kèm quà tặng tri ân"
+    ]
+  },
+  {
+    "code": "TXI01",
+    "group": "taxi",
+    "categoryName": "Pet Taxi – Vận chuyển",
+    "name": "Dịch Vụ Xe Đưa Đón Tận Nơi",
+    "petType": "Chó / Mèo / Thú nhỏ",
+    "duration": "Tính theo chuyến",
+    "rating": 4.7,
+    "reviews": 64,
+    "priceFrom": "150.000",
+    "prices": {
+      "under5": "150.000",
+      "to10": "150.000",
+      "to20": "200.000",
+      "over20": "250.000"
+    },
+    "desc": "Dịch vụ đưa đón thú cưng an toàn tận nhà bằng xe ô tô chuyên dụng có điều hòa mát mẻ.",
+    "staffLevel": "Tài xế kiêm cứu hộ thú cưng",
+    "status": "Đang phục vụ",
+    "image": "/assets/images/services/txi01.webp",
+    "steps": [
+      "Tài xế xuất phát đến điểm đón đúng giờ",
+      "Tiếp nhận bé vào lồng vận chuyển an toàn",
+      "Di chuyển cabin máy lạnh êm ái",
+      "Bàn giao bé an toàn tại điểm đến"
+    ]
+  }
+]

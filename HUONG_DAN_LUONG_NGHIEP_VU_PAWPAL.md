@@ -1,21 +1,23 @@
 # SỔ TAY VẬN HÀNH VÀ HƯỚNG DẪN LUỒNG NGHIỆP VỤ HỆ THỐNG QUẢN TRỊ PAWPAL-ER
 
-> **Dành cho:** Ban Quản lý cửa hàng, Lễ tân ca trực, Chuyên viên Chăm sóc khách hàng và Kỹ thuật viên Spa/Grooming.  
-> **Phiên bản:** 2.0 (Chuẩn hóa quy tắc thiết kế `AGENTS.md` và luồng nghiệp vụ liên phân hệ).
+> **Dành cho:** Ban Quản lý cửa hàng, Lễ tân ca trực, Chuyên viên Chăm sóc khách hàng, Kỹ thuật viên Grooming / Spa, Nhân viên Khách sạn thú cưng và Thủ kho Bán lẻ.  
+> **Phiên bản:** 2.6 (Chuẩn hóa toàn diện 3 Subtab Phân hệ Khách hàng, Đồng bộ 2 chiều Cổng Người dùng - Admin, Bán hàng và Kho vận, Điều phối Dịch vụ không Thú y và Cơ chế Lưu trữ Trạng thái theo `AGENTS.md`).
 
 ---
 
 ## MỤC LỤC
 1. [Tổng quan hệ sinh thái và Nguyên tắc cốt lõi](#1-tổng-quan-hệ-sinh-thái-và-nguyên-tắc-cốt-lõi)
 2. [Sơ đồ luồng nghiệp vụ liên phân hệ (Cross-Module Workflows)](#2-sơ-đồ-luồng-nghiệp-vụ-liên-phân-hệ)
-   - [Luồng 1: Tiếp nhận khách hàng và bé cưng mới tại quầy](#luồng-1-tiếp-nhận-khách-hàng-và-bé-cưng-mới-tại-quầy-walk-in)
+   - [Luồng 1: Tiếp nhận khách hàng và bé cưng mới tại quầy (Walk-in & Chống trùng SĐT)](#luồng-1-tiếp-nhận-khách-hàng-và-bé-cưng-mới-tại-quầy-walk-in)
    - [Luồng 2: Đặt lịch, Đo thể trạng và Thực hiện dịch vụ Spa / Hotel](#luồng-2-đặt-lịch-đo-thể-trạng-và-thực-hiện-dịch-vụ)
-   - [Luồng 3: Bán hàng tại quầy và Quản trị tồn kho](#luồng-3-bán-hàng-tại-quầy-và-quản-trị-tồn-kho)
+   - [Luồng 3: Bán hàng tại quầy (POS), Vận hành Kho 2 lớp và Xử lý Đơn hàng](#luồng-3-bán-hàng-tại-quầy-pos-vận-hành-kho-2-lớp-và-xử-lý-đơn-hàng)
    - [Luồng 4: Tiếp nhận và Xử lý Khiếu nại / Đổi trả theo SLA](#luồng-4-tiếp-nhận-và-xử-lý-khiếu-nại--đổi-trả-theo-sla)
-   - [Luồng 5: Giám sát Trợ lý Chatbot AI và Chuyển giao nhân viên](#luồng-5-giám-sát-trợ-lý-chatbot-ai-và-chuyển-giao-nhân-viên)
+   - [Luồng 5: Tiếp nhận khiếu nại tại quầy hoặc qua Hotline (Ngoại tuyến)](#luồng-5-tiếp-nhận-khiếu-nại-tại-quầy-hoặc-qua-hotline-ngoại-tuyến)
+   - [Luồng 6: Luồng tương tác khép kín giữa Trực chat AI và Phân hệ Khiếu nại (Closed-Loop Escalation)](#luồng-6-luồng-tương-tác-khép-kín-giữa-trực-chat-ai-và-phân-hệ-khiếu-nại-closed-loop-escalation)
+   - [Luồng 7: Đồng bộ Dữ liệu và Điểm thưởng 2 chiều giữa Cổng Người dùng và Admin (2-Way User-Admin Lifecycle)](#luồng-7-đồng-bộ-dữ-liệu-và-điểm-thưởng-2-chiều-giữa-cổng-người-dùng-và-admin)
 3. [Hướng dẫn chi tiết từng phân hệ chức năng](#3-hướng-dẫn-chi-tiết-từng-phân-hệ-chức-năng)
    - [3.1. Phân hệ Tổng quan (Dashboard)](#31-phân-hệ-tổng-quan-dashboard)
-   - [3.2. Phân hệ Khách hàng (Customers)](#32-phân-hệ-khách-hàng-customers)
+   - [3.2. Phân hệ Khách hàng (Customers - Chuẩn 3 Subtabs)](#32-phân-hệ-khách-hàng-customers)
    - [3.3. Phân hệ Thú cưng (Pets)](#33-phân-hệ-thú-cưng-pets)
    - [3.4. Phân hệ Dịch vụ (Services)](#34-phân-hệ-dịch-vụ-services)
    - [3.5. Phân hệ Bán hàng và Kho (Orders)](#35-phân-hệ-bán-hàng-và-kho-orders)
@@ -24,28 +26,32 @@
    - [3.8. Phân hệ Trợ lý ảo Chatbot AI (Chatbot)](#38-phân-hệ-trợ-lý-ảo-chatbot-ai-chatbot)
    - [3.9. Phân hệ Cấu hình hệ thống (Settings)](#39-phân-hệ-cấu-hình-hệ-thống-settings)
 4. [Bảng tra cứu nhanh trạng thái và Quy tắc giao diện](#4-bảng-tra-cứu-nhanh-trạng-thái-và-quy-tắc-giao-diện)
+5. [Cơ chế lưu và khôi phục trạng thái toàn hệ thống (State Persistence)](#5-cơ-chế-lưu-và-khôi-phục-trạng-thái-toàn-hệ-thống-state-persistence-và-f5reload)
 
 ---
 
 ## 1. TỔNG QUAN HỆ SINH THÁI VÀ NGUYÊN TẮC CỐT LÕI
 
 ### 1.1. Phạm vi dịch vụ của Pawpal
-Pawpal là chuỗi tổ hợp **Chăm sóc và Khách sạn Thú cưng Cao cấp (Pet Care & Hospitality)**, bao gồm 4 nhóm dịch vụ cốt lõi:
-1. **Dịch vụ Spa và Grooming**: Tắm sấy thư giãn, Vệ sinh tai móng, Nhổ lông tai, Cắt tỉa tạo hình phong cách, Nhuộm lông tai đuôi thảo mộc.
-2. **Khách sạn thú cưng (Pet Hotel)**: Lưu trú phòng Deluxe / Suite, sân chơi máy lạnh, camera giám sát 24/7, chế độ ăn hạt cao cấp hoặc pate tươi.
-3. **Đưa đón thú cưng tận nhà (Pet Taxi)**: Đón trả thú cưng theo khung giờ yêu cầu bằng lồng vận chuyển chuyên dụng an toàn.
-4. **Cửa hàng bán lẻ (Pet Shop)**: Thức ăn dinh dưỡng (Pate, Hạt), Phụ kiện, Sữa tắm chuyên dụng và Đồ chơi an toàn.
+Pawpal là chuỗi tổ hợp **Chăm sóc và Khách sạn Thú cưng Cao cấp (Pet Lifestyle Care và Hospitality)**, bao gồm 4 nhóm dịch vụ cốt lõi:
+1. **Dịch vụ Spa và Grooming**: Tắm sấy thư giãn, Vệ sinh tai móng, Nhổ lông tai, Cắt tỉa tạo hình phong cách, Nhuộm lông tai đuôi thảo mộc an toàn.
+2. **Khách sạn thú cưng (Pet Hotel)**: Lưu trú phòng Deluxe / Suite máy lạnh, sân chơi vận động, camera giám sát 24/7, chế độ ăn hạt cao cấp hoặc pate tươi theo yêu cầu.
+3. **Đưa đón thú cưng tận nhà (Pet Taxi)**: Đón trả thú cưng theo khung giờ yêu cầu bằng lồng vận chuyển chuyên dụng an toàn và tài xế riêng.
+4. **Cửa hàng bán lẻ (Pet Shop)**: Thức ăn dinh dưỡng (Pate, Hạt), Phụ kiện thời trang, Sữa tắm chuyên dụng và Đồ chơi tương tác an toàn.
 
 > [!IMPORTANT]
 > **ĐỊNH VỊ BẤT BIẾN - TUYỆT ĐỐI KHÔNG CÓ THÚ Y:**  
-> Hệ thống Pawpal **hoàn toàn không cung cấp dịch vụ khám chữa bệnh thú y, tiêm thuốc y tế hoặc phẫu thuật lâm sàng**. Toàn bộ giao diện, danh mục và hóa đơn dịch vụ phải sử dụng đúng thuật ngữ chăm sóc thẩm mỹ (Grooming / Spa / Hotel). Không sử dụng các từ ngữ "Bác sĩ", "Khám bệnh", "Kê đơn", "Phòng khám".
+> Hệ thống Pawpal **hoàn toàn không cung cấp dịch vụ khám chữa bệnh thú y, tiêm thuốc y tế hoặc phẫu thuật lâm sàng**. Toàn bộ giao diện, danh mục, bảng giá và hóa đơn dịch vụ phải sử dụng đúng thuật ngữ chăm sóc thẩm mỹ (Grooming / Spa / Hotel / Taxi). Tuyệt đối cấm sử dụng các từ ngữ "Bác sĩ", "Khám bệnh", "Kê đơn", "Phòng khám thú y", "Bệnh án".
 
 ### 1.2. Quy tắc giao diện vàng (`AGENTS.md`)
-- **Bo góc cố định 9px**: Áp dụng chuẩn `--admin-radius: 9px;` cho toàn bộ Card, Button, Input, Modal, Badge.
-- **100% Text-Only bên ngoài Sidebar**: Chỉ có thanh menu Sidebar bên trái được hiển thị icon. Toàn bộ Header, Toolbar, Bảng dữ liệu, Nút bấm và Modal là **100% chữ thuần** (không chèn icon minh họa).
-- **Văn phong chuẩn xác**: Tuyệt đối không dùng ký hiệu `&` để thay cho chữ "và" (luôn viết rõ: `Spa và Hotel`, `Hạng và Điểm`, `Lưu và Thoát`).
-- **Nền kính mờ bán trong suốt**: Các khối thẻ chính dùng `--surface-white: rgba(255, 255, 255, 0.70);` kết hợp `backdrop-filter: blur(10px);`.
-- **Cảnh báo khẩn cấp**: Thể hiện bằng dòng chữ đỏ thuần tự nhiên (`color: #DC2626; background: transparent; border: none;`), không vẽ khung hộp hay bôi nền đỏ để tránh rối mắt.
+- **Bo góc cố định 9px**: Áp dụng chuẩn `--admin-radius: 9px;` cho toàn bộ Card, Button, Input, Modal, Popover, Badge.
+- **100% Text-Only bên ngoài Sidebar**: Chỉ có thanh menu Sidebar bên trái được hiển thị icon nét mảnh Lucide. Toàn bộ Header Bar, Toolbar, Bảng dữ liệu, Nút bấm và Modal là **100% chữ thuần** (sử dụng text `•••` cho nút tác vụ bảng, nút hành động dạng text pill).
+- **Văn phong chuẩn xác**: Tuyệt đối không dùng ký hiệu `&` để thay cho chữ "và" (luôn viết rõ: `Spa và Hotel`, `Hạng và Điểm`, `Sản phẩm và Kho`, `Lưu và Thoát`).
+- **Nền kính mờ bán trong suốt (Frosted Glass)**: Các khối thẻ chính dùng `--surface-white: rgba(255, 255, 255, 0.70);` kết hợp `backdrop-filter: blur(10px);`.
+- **Triệt tiêu xếp lớp nền (Anti-Opacity Stacking)**: Các thành phần bên trong bảng dữ liệu (`table`, `tbody`, `tr`, `td`) để nền trong suốt.
+- **Cảnh báo khẩn cấp**: Thể hiện bằng dòng chữ đỏ thuần tự nhiên (`color: #DC2626; background: transparent; border: none;`), không vẽ khung hộp hay bôi nền đỏ.
+- **Viền mép trái (`border-left`)**: Độc quyền duy nhất cho ô đầu tiên của dòng bảng cần Alert (vạch đỏ 3px cho khiếu nại, vạch cam 3px cho lưu ý).
+- **Khóa cố định màn hình (Anti-Overscroll)**: Khóa cứng khung màn hình ngoài, triệt tiêu 100% hiện tượng cuộn nảy (Rubber-band bounce).
 
 ---
 
@@ -106,20 +112,34 @@ sequenceDiagram
 
 ---
 
-### Luồng 3: Bán hàng tại quầy và Quản trị tồn kho
-Quy trình bán lẻ các sản phẩm thức ăn, cát vệ sinh, phụ kiện và theo dõi cảnh báo nhập hàng.
+### Luồng 3: Bán hàng tại quầy (POS), Vận hành Kho 2 lớp và Xử lý Đơn hàng
+Quy trình tiếp nhận đơn hàng đa kênh, bán hàng tại quầy thông minh, kiểm soát tồn kho 2 lớp, đóng gói bưu cục hàng loạt, đối soát dòng tiền COD và xử lý đổi trả RMA.
 
 ```mermaid
 flowchart TD
-    A[Khách chọn sản phẩm tại quầy] --> B[Lễ tân bấm '+ Lên đơn bán lẻ' từ Dashboard]
-    B --> C[Quét mã vạch SKU hoặc tìm tên sản phẩm]
-    C --> D{Kiểm tra tồn kho thực tế}
-    D -- Tồn kho an toàn --> E[Nhập SĐT khách hàng]
-    D -- Tồn kho < 5 sản phẩm --> D1[Hệ thống tự động kích hoạt Cảnh báo Tồn kho sắp hết trên Dashboard]
-    D1 --> E
-    E --> F[Tự động trừ điểm Pawpoint giảm giá nếu khách yêu cầu]
-    F --> G[Xác nhận thanh toán: Tiền mặt / Chuyển khoản / Thẻ]
-    G --> H[In hóa đơn nhiệt và tự động trừ số lượng trong kho]
+    A[Khách mua hàng tại quầy / Website / Hotline] --> B{Kênh đặt hàng}
+    B -->|Bán tại quầy| POS[Mở Modal '+ Tạo đơn tại quầy']
+    B -->|Đơn hàng trực tuyến| WEB[Đơn mới vào danh sách Chờ xác nhận]
+    
+    POS --> POS1[Nhập SĐT khách -> Nhận diện Hạng thẻ và Số dư Pawpoint]
+    POS1 --> POS2[Chọn sản phẩm -> Kiểm tra Tồn kho 2 lớp: Tồn thực tế vs Khả dụng]
+    POS2 --> POS3[Áp dụng Chiết khấu hạng + Voucher + Đổi điểm 100đ = 10k]
+    POS3 --> POS4[Live Financial Breakdown -> Thanh toán Tiền mặt / Chuyển khoản QR]
+    POS4 --> POS5[In hóa đơn K80 nhiệt + Trừ tồn kho thực tế + Cập nhật ví điểm]
+    
+    WEB --> WEB1[Quản trị viên kiểm tra SLA Chờ xử lý gấp]
+    WEB1 --> WEB2[Xác nhận đơn -> Tự động Tạm giữ tồn kho Khả dụng]
+    WEB2 --> WEB3[Thanh thao tác hàng loạt: In phiếu đóng gói A6/K80]
+    WEB3 --> WEB4[Bàn giao vận chuyển 3PL hàng loạt + Cấp mã vận đơn]
+    WEB4 --> WEB5[Xuất Bảng kê bàn giao Manifest ký nhận bưu tá]
+    
+    WEB5 --> DELIV{Kết quả giao hàng}
+    DELIV -->|Giao thành công COD| COD[Dải đối soát COD: 1-click Chốt dòng tiền]
+    DELIV -->|Khách yêu cầu đổi trả| RMA[Mở Desk Đổi trả và Hoàn tiền RMA]
+    
+    RMA --> RMA1{Kiểm định hàng hoàn}
+    RMA1 -->|Còn nguyên tem mác| RMA2[Nhập lại kho bán tiếp -> Tăng tồn khả dụng]
+    RMA1 -->|Hàng hỏng móp méo| RMA3[Xuất hủy phế phẩm -> Ghi nhận tổn thất]
 ```
 
 ---
@@ -141,7 +161,7 @@ sequenceDiagram
     Admin->>DB: Nhìn thấy "Ưu tiên xử lý" -> Bấm "Xử lý ngay"
     DB->>Comp: Deep-link mở thẳng Ticket đang chờ theo đúng SLA còn lại
     Admin->>Comp: Đối chiếu hình ảnh trước/sau và nhật ký ca làm việc
-    alt Đổi trả sản phẩm hợp lệ
+    alt Đổi trả sản phẩm hợp lệ (RMA)
         Admin->>Comp: Duyệt đổi hàng mới / Hoàn tiền
     else Khiếu nại dịch vụ
         Admin->>Comp: Gửi lời xin lỗi + Đền bù điểm thưởng Pawpoint
@@ -181,7 +201,7 @@ sequenceDiagram
 ---
 
 ### Luồng 6: Luồng tương tác khép kín giữa Trực chat AI và Phân hệ Khiếu nại (Closed-Loop Escalation)
-*Đây là luồng tương tác quan trọng bậc nhất đảm bảo không bỏ sót bất kỳ sự cố nào của khách hàng trên không gian số, phân định rõ ràng giữa CSKH tuyến đầu (Frontline) và Thẩm định khiếu nại tuyến sau (Back-office).*
+*Phân định rõ ràng giữa CSKH tuyến đầu (Frontline) và Thẩm định khiếu nại tuyến sau (Back-office).*
 
 #### 1. Ma trận phân tầng xử lý sự cố (Triage Matrix):
 - **Cấp độ 1 - Xử lý ngay tại chỗ trên Chat (First-Contact Resolution)**:
@@ -189,7 +209,7 @@ sequenceDiagram
   - *Hành động*: Chuyên viên CSKH sử dụng mẫu câu gợi ý từ AI để đồng cảm, bấm nút **"Tặng điểm Pawpoint"** (50 - 100 điểm) trực tiếp trong khung chat để tạ lỗi.
   - *Kết quả*: Đóng ca chat thành công, **không tạo ticket khiếu nại** để tránh làm cồng kềnh bộ máy vận hành.
 - **Cấp độ 2 - Chuyển giao thành Ticket Khiếu nại chính thức (Escalate to Ticket)**:
-  - *Dấu hiệu*: Bé cưng bị trầy xước/chảy máu/dị ứng sau dịch vụ, grooming sai kiểu nghiêm trọng, pet hotel bỏ quên bữa ăn của bé, thất lạc kiện hàng giá trị lớn, khách giận dữ mức độ 4-5 đòi gặp cấp trên hoặc hoàn tiền.
+  - *Dấu hiệu*: Bé cưng bị trầy xước/chảy máu sau dịch vụ, grooming sai kiểu nghiêm trọng, pet hotel bỏ quên bữa ăn của bé, thất lạc kiện hàng giá trị lớn, khách giận dữ mức độ 4-5 đòi gặp cấp trên hoặc hoàn tiền.
   - *Hành động*: Bắt buộc bấm menu `•••` ➔ **"Chuyển thành Ticket"**. Hệ thống tự động trích xuất biên bản hội thoại (Chat Transcript) và tóm tắt AI sang phân hệ Khiếu nại.
 
 #### 2. Sơ đồ tương tác khép kín 2 chiều:
@@ -198,10 +218,10 @@ sequenceDiagram
 sequenceDiagram
     autonumber
     actor Khach as Khách hàng
-    participant Bot as Chatbot AI & Màng lọc tâm lý
+    participant Bot as Chatbot AI và Màng lọc tâm lý
     participant CSKH as Chuyên viên CSKH Trực chat
     participant Comp as Phân hệ Khiếu nại (Quản lý)
-    participant CRM as Hồ sơ 360° Khách & Thú cưng
+    participant CRM as Hồ sơ 360° Khách và Thú cưng
 
     Khach->>Bot: Nhắn tin bức xúc (Ví dụ: Bé bị xước tai sau tắm)
     Bot->>Bot: Nhận diện cảm xúc mức 4-5 (Giận dữ) + Lọc từ thô tục
@@ -219,22 +239,41 @@ sequenceDiagram
     Comp->>CRM: Ghi nhận vĩnh viễn tiền sử khiếu nại vào Hồ sơ 360° của bé
 ```
 
-#### 3. Hướng dẫn thao tác từng bước trên giao diện (Step-by-Step Actions):
+---
 
-| Bước | Phân hệ / Khu vực | Thao tác của nhân sự | Phản hồi của hệ thống |
-| :--- | :--- | :--- | :--- |
-| **Bước 1** | **Chatbot** ➔ Cột Trái (Danh sách hội thoại) | Nhân viên theo dõi tab con **"Xử lý ngay"** (có số đếm màu đỏ). Bấm vào ca chat có nhãn **"Bực bội"** hoặc đồng hồ SLA báo đỏ. | Khung giữa lập tức hiển thị toàn bộ tin nhắn. Thẻ trên đầu tóm tắt trong 3 giây: Tên khách, Mã đơn/Lịch hẹn và cốt lõi vấn đề. |
-| **Bước 2** | **Chatbot** ➔ Khung giữa (Thanh tiêu đề ca chat) | Nhân viên bấm nút **"Tiếp nhận"** (`btnToggleTakeover`). Chế độ chat chuyển sang "Nhân viên trực tiếp". | AI tạm dừng trả lời tự động để nhân viên toàn quyền trao đổi với khách. Màng lọc tâm lý tự động che mờ các từ ngữ kích động. |
-| **Bước 3A** | *(Nếu sự cố nhẹ)* ➔ Dưới khung soạn thảo | Nhân viên bấm nút gợi ý AI mẫu xoa dịu, hoặc bấm nút **"Tặng điểm Pawpoint"** (50 - 100 điểm) để tạ lỗi ngay. | Hệ thống cộng điểm tức thì vào ví khách hàng, gửi tin nhắn thông báo vào đoạn chat. **Kết thúc ca chat tại chỗ mà không cần mở Ticket.** |
-| **Bước 3B** | *(Nếu sự cố nặng)* ➔ Nút menu `•••` trên tiêu đề chat | Nhân viên bấm `•••` ➔ Chọn **"Chuyển thành Ticket"** (`btnConvertToTicket`). Điền loại (Dịch vụ/Đơn hàng), mức độ ưu tiên và bấm **"Xác nhận chuyển"**. | Hệ thống sinh mã `TK-xxxx`, tự động trích xuất toàn bộ lịch sử tin nhắn (Chat Transcript) và lưu vào bộ nhớ chia sẻ. Đưa thẻ vé vào khung chat. |
-| **Bước 4** | **Chatbot** ➔ Thẻ vé trong khung chat | Nhân viên hoặc Quản lý bấm nút **"Mở vé trong Khiếu nại"** (`btn-jump-ticket`). | Bộ định tuyến tự động chuyển sang phân hệ **Khiếu nại**, tự động nạp ticket mới vào bảng và mở thẳng màn hình **Chi tiết khiếu nại**. |
-| **Bước 5** | **Khiếu nại** ➔ Màn hình Chi tiết Ticket | Quản lý/Admin đọc trích đoạn tại khối **"Biên bản đối thoại từ Kênh Trực chat"**, đối chiếu ảnh check-in đầu vào, camera phòng sấy hoặc mã vận đơn. | Quản lý nắm bắt 100% ngữ cảnh mà **không cần gọi điện hỏi lại khách**. Nếu có sai sót nghiêm trọng, có thể bấm nút *"Tạm khóa an toàn KTV"*. |
-| **Bước 6** | **Khiếu nại** ➔ Nút "Chọn phương án giải quyết" | Quản lý bấm nút, chọn 1 trong các phương án: **Tặng Voucher/Điểm**, **Làm lại dịch vụ miễn phí**, **Hoàn tiền**, hoặc **Đổi trả hàng RMA**. | Hệ thống ghi nhận biên bản vào Timeline, chuyển trạng thái Ticket sang **"Đã giải quyết"** và xóa cảnh báo quá hạn trên Dashboard. |
-| **Bước 7** | **Vòng lặp đóng (Closed-Loop)** | Hệ thống tự động bắn cờ kết quả giải quyết về phân hệ **Chatbot** và lưu vĩnh viễn vào **Hồ sơ 360° Khách hàng**. | Bên phân hệ Chatbot, cột hồ sơ khách hàng lập tức hiển thị huy hiệu xanh **`[Đã giải quyết ✓]`**. Nhân viên chat có căn cứ báo tin vui dứt điểm cho khách. |
+### Luồng 7: Đồng bộ Dữ liệu và Điểm thưởng 2 chiều giữa Cổng Người dùng và Admin (2-Way User-Admin Lifecycle)
+*Quy trình đảm bảo tính toàn vẹn dữ liệu thời gian thực giữa Khách hàng cá nhân và Ban Quản trị Pawpal-er.*
 
-#### 4. Quy tắc bàn giao dữ liệu không mất dấu:
-- **Biên bản đối thoại (Chat Transcript)**: Toàn bộ lịch sử tin nhắn giữa khách và CSKH được lưu nguyên vẹn trong Ticket. Quản lý khi tiếp nhận xác minh không được hỏi lại những gì khách đã trình bày trên chat.
-- **Vòng lặp đóng (Closed-loop)**: Sau khi Quản lý xử lý xong bên phân hệ Khiếu nại, bảng thông tin khách hàng ở phân hệ Chatbot tự động hiển thị huy hiệu `[Đã giải quyết]` kèm phương án cụ thể, giúp CSKH tự tin phản hồi nếu khách tiếp tục nhắn tin hỏi tiến độ.
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Khach as Khách hàng (User Portal)
+    participant UserDB as Bộ nhớ User (pawpal_current_user / db)
+    participant AdminDB as Kho Dữ liệu Admin (pawpal_admin_customers_data)
+    actor Admin as Lễ tân / Quản trị viên (Admin)
+
+    Note over Khach,Admin: 1. Cập nhật hồ sơ & Sổ đa địa chỉ
+    Khach->>UserDB: Sửa họ tên, ngày sinh, thêm địa chỉ nhận hàng mới
+    UserDB->>AdminDB: Đồng bộ tức thì sang Database Admin
+    Admin->>AdminDB: Mở Subtab 2 Hồ sơ 360° -> Thấy ngay Sổ địa chỉ mới
+
+    Note over Khach,Admin: 2. Tích điểm, Điều chỉnh & Đổi voucher
+    Admin->>AdminDB: Mở Modal Điều chỉnh điểm -> Nhập SĐT -> Cộng 200 Pawpoint
+    AdminDB->>UserDB: Tự động cập nhật số dư ví điểm & thăng hạng lên Hạng Vàng
+    Khach->>UserDB: Mở trang Điểm thưởng (#loyalty) -> Thấy ngay 200 pts & Thẻ Hạng Vàng
+    Khach->>UserDB: Bấm "Đổi ngay" Voucher 100k (Trừ 100 pts)
+    UserDB->>AdminDB: Ghi nhận giao dịch trừ điểm (SUB) vào Lịch sử Pawpoint Admin
+
+    Note over Khach,Admin: 3. Khóa tài khoản & Xử lý Khiếu nại khẩn cấp
+    Admin->>AdminDB: Bấm menu tác vụ ••• -> Chọn "Khóa tài khoản"
+    AdminDB->>UserDB: Cổng Người dùng hiển thị Dải cảnh báo đỏ khóa tài khoản
+    Khach->>UserDB: Gửi Ticket hỗ trợ/khiếu nại (#support)
+    UserDB->>AdminDB: Đẩy cảnh báo khẩn cấp (vạch đỏ 3px, thanh alert, số đếm KPI)
+    Admin->>AdminDB: CSKH tiếp nhận bồi hoàn voucher 50% + 50 Pawpoint
+    AdminDB->>UserDB: Ticket chuyển trạng thái "Đã giải quyết" kèm mã voucher bồi hoàn
+    Khach->>UserDB: Chấp nhận giải pháp & Đánh giá CSAT 5 sao
+    UserDB->>AdminDB: Hoàn tất đóng vòng đời khiếu nại 2 chiều thành công
+```
 
 ---
 
@@ -265,21 +304,54 @@ sequenceDiagram
 
 ---
 
-### 3.2. Phân hệ Khách hàng (Customers)
-*Quản lý thông tin chủ nuôi, lịch sử mua sắm và chính sách chăm sóc cá nhân hóa.*
+### 3.2. Phân hệ Khách hàng (Customers - Chuẩn 3 Subtabs)
+*Trung tâm Quản trị Dữ liệu Chủ nuôi, Hồ sơ Khách hàng 360°, Sổ Đa địa chỉ, Vận hành Tiếp nhận tại quầy và Hệ sinh thái Tích điểm Pawpoint.*
 
-- **Danh sách khách hàng**:
-  - Thể hiện: Mã KH, Họ tên (liên kết mở hồ sơ), Số điện thoại, Hạng và Điểm Pawpoint, Cảnh báo (nợ tiền, khiếu nại), Trạng thái tài khoản.
-  - Nút tác vụ `•••` (cột Tác vụ rộng 70px):
-    1. `Xem hồ sơ 360°`: Mở subtab Hồ sơ đầy đủ.
-    2. `Sửa hồ sơ`: Mở modal cập nhật thông tin cá nhân.
-    3. `Điều chỉnh điểm`: Mở modal nạp/trừ Pawpoint có điền sẵn SĐT.
-    4. `Khóa / Mở khóa tài khoản`: Khóa tài khoản sẽ làm mờ dòng dữ liệu (opacity 52%).
-- **Sổ địa chỉ nhận hàng (Address Book)**:
-  - Cho phép 1 khách hàng lưu nhiều địa chỉ.
-  - Có tùy chọn radio chọn duy nhất 1 "Địa chỉ mặc định" (thẻ nền xanh `#F4FAF6`, viền `#C3DEC7`), các địa chỉ khác có nút `Xóa`.
-- **Hồ sơ 360° Khách hàng**:
-  - Tích hợp 4 tab con: Thông tin cá nhân, Danh sách thú cưng đang nuôi, Lịch sử dịch vụ và đơn hàng, Lịch sử biến động điểm Pawpoint.
+- **Cấu trúc 3 Subtab chuyên sâu trên Header Bar**:
+  1. *Danh sách (`tab-list`)*:
+     - **5 Thẻ thống kê KPI nhanh**: Tổng khách hàng, Khách thành viên, Khách vãng lai, Tài khoản bị khóa, Có khiếu nại (hỗ trợ bấm lọc 1 chạm tương tác trực tiếp với bảng dữ liệu).
+     - **Dải cảnh báo khiếu nại khẩn cấp (`#custComplaintAlertBar`)**: Tự động nhận diện và hiển thị danh sách các khách hàng đang có Ticket khiếu nại chưa xử lý kèm mã ticket, họ tên và lý do phản ánh. Nhấp vào để lọc ngay bảng dữ liệu.
+     - **Thanh công cụ và Bàn tiếp nhận tại quầy (Quick Add Desk)**:
+       * *Nút `+ Thêm khách` (`#btnOpenAddCustomerModal`)*: Mở Modal tiếp nhận nhanh khách vãng lai tại quầy.
+       * *Tính năng Chống trùng Số điện thoại theo thời gian thực*: Khi lễ tân nhập SĐT từ 9 số trở lên, hệ thống tự động kiểm tra kho dữ liệu. Nếu phát hiện số điện thoại đã tồn tại, hiển thị ngay thông báo cảnh báo đỏ kèm nút **`Xem hồ sơ khách hàng này` (`#btnOpenDupCustomer`)** giúp lễ tân chuyển thẳng sang hồ sơ cũ mà không tạo tài khoản rác.
+       * *Nút `Xuất file` (`#btnExportCustomerReport`)*: Xuất toàn bộ danh sách khách hàng ra file CSV mã hóa chuẩn UTF-8 BOM, đảm bảo hiển thị hoàn hảo tiếng Việt có dấu trong Microsoft Excel.
+     - **Bảng dữ liệu Khách hàng chuẩn `AGENTS.md`**:
+       * *Cột dữ liệu*: Mã KH, Họ tên & Email (liên kết mở hồ sơ), Số điện thoại, Thú cưng đang nuôi (dạng pill xô thơm nhẹ kèm giống loài), Hạng thành viên & Điểm Pawpoint, Cảnh báo, Trạng thái tài khoản, Tác vụ `•••`.
+       * *Quy chuẩn viền mép trái (`border-left`)*: Áp dụng độc quyền vạch đỏ 3px (`border-left: 3px solid #DC2626;`) cho khách hàng có khiếu nại và vạch cam 3px (`#D97706;`) cho khách có thú cưng cần lưu ý y tế/tính khí. Ô tiêu đề cột đầu tiên (`th:first-child`) có viền cùng màu nền để căn hàng thẳng tắp.
+       * *Tài khoản bị khóa (`.row-locked`)*: Áp dụng `opacity: 0.52;` cho toàn bộ dòng dữ liệu để phân biệt tức thì.
+     - **Menu Tác vụ thả xuống Toàn cục (Global Action Dropdown)**:
+       * Nút `•••` sử dụng kiến trúc Direct Body Portal (không bao giờ bị che khuất hoặc tràn khung cuộn).
+       * Chứa 4 tác vụ chuẩn: `Xem hồ sơ 360°`, `Sửa hồ sơ`, `Điều chỉnh điểm`, `Khóa / Mở khóa tài khoản`.
+     - **Thanh Phân trang Căn giữa & Nằm ngoài bảng (`#customerPaginationBar`)**:
+       * Nền hoàn toàn trong suốt, không viền khung, căn giữa màn hình.
+       * Tiêu chuẩn hiển thị tối đa **10 dòng dữ liệu trên 1 trang**.
+       * Sử dụng ký tự điều hướng `<` và `>` (không dùng chữ Trước / Sau).
+  2. *Hồ sơ 360° (`tab-profile`)*:
+     - **Đường dẫn cấp con (Deep Breadcrumb)**: Tự động cập nhật `/ [Tên khách hàng]` với định dạng chữ nhỏ hơn (13px), màu xanh xô thơm (`#4F7A65`), độ đậm 500 trên Header Bar.
+     - **Thanh Thao tác Nhanh Một Chạm (One-Touch Action Bar)**:
+       * `Gọi điện`: Kích hoạt giao thức cuộc gọi trực tiếp `tel:[SĐT]`.
+       * `Zalo`: Mở cửa sổ chat Zalo trực tiếp với khách `https://zalo.me/[SĐT]`.
+       * `Đặt lịch`: Thiết lập sẵn Preset thông tin khách hàng và bé cưng, tự động chuyển sang phân hệ Dịch vụ.
+       * `Lên đơn`: Thiết lập sẵn Preset thông tin khách và địa chỉ mặc định, tự động chuyển sang phân hệ Bán hàng.
+       * `Khiếu nại`: Thiết lập sẵn Preset thông tin khách, tự động chuyển sang phân hệ Khiếu nại.
+     - **Dòng cảnh báo khẩn cấp (Emergency Alert Banner)**: Thuần chữ đỏ `#DC2626` không nền và không viền bao quanh khi khách hàng có sự cố đang xử lý.
+     - **5 Tabs Con Chi Tiết Khép Kín**:
+       * *Tab 1 - Cá nhân*: Hiển thị thông tin cá nhân, **Sổ đa địa chỉ nhận hàng (Multi-Address Book)** với 1 địa chỉ mặc định (viền xanh `#C3DEC7`, nền `#F4FAF6`) và các địa chỉ phụ (có nút xóa), ô ghi chú nội bộ groomer (lưu trữ độc lập) và nút gửi lại tin nhắn SMS tạo mật khẩu. Modal Chỉnh sửa hồ sơ (`#modalEditCustomer`) hỗ trợ cập nhật họ tên, SĐT, email, giới tính, ngày sinh, hạng thẻ và thêm/sửa/xóa địa chỉ nhận hàng.
+       * *Tab 2 - Thú cưng*: Danh sách các bé cưng thuộc sở hữu của khách hàng. Mỗi thẻ bé cưng có nút **`Xem hồ sơ bé`** (chuyển sang phân hệ Thú cưng), nút **`Sửa`** và nút **`Xóa`** (kèm Modal Sửa thông tin bé `#modalEditPet` và Modal Thêm bé mới `#modalAddPet`).
+       * *Tab 3 - Đơn hàng*: Danh sách lịch sử đơn hàng bán lẻ tự động đồng bộ từ phân hệ Bán hàng, nút xem chi tiết đơn hàng và huy hiệu số đếm màu đỏ (`.tab-badge-count`) khi có đơn đang xử lý.
+       * *Tab 4 - Lịch hẹn*: Lịch sử các ca dịch vụ Spa/Hotel kèm KTV thực hiện, nút xem nhật ký quy trình chăm sóc và huy hiệu số đếm màu đỏ khi có lịch hẹn chưa hoàn tất.
+       * *Tab 5 - Khiếu nại*: Danh sách các phản ánh sự cố dịch vụ hoặc đơn hàng kèm mức độ ưu tiên, nút **`Mở Ticket xử lý`** chuyển thẳng sang phân hệ Khiếu nại và huy hiệu số đếm màu đỏ khi có sự cố đang chờ giải quyết.
+  3. *Pawpoint (`tab-pawpoint`)*:
+     - **Bảng Quy chế 4 Cấp bậc Thành viên**: Thể hiện chi tiết điều kiện chi tiêu, tỷ lệ tích điểm và quyền lợi đặc quyền của 4 hạng (*Đồng, Bạc, Vàng, Kim Cương*).
+     - **Bảng Lịch sử Biến động Pawpoint Toàn Hệ Thống**:
+       * Ghi nhận đầy đủ: Mã giao dịch (`PWH-xxx`), Thời gian, Mã và Tên khách hàng, Số điện thoại, Loại biến động (Cộng điểm `ADD` / Trừ điểm `SUB`), Số điểm thay đổi, Số dư sau giao dịch, Lý do phát sinh.
+       * Bộ lọc loại giao dịch nhanh (`Tất cả`, `Cộng điểm`, `Trừ điểm`), thanh tìm kiếm thời gian thực và nút xuất file báo cáo CSV UTF-8 BOM.
+     - **Modal Điều chỉnh Pawpoint Thủ công (`#modalAdjustPoints`)**:
+       * Hỗ trợ lễ tân/CSKH thực hiện cộng hoặc trừ điểm cho khách hàng.
+       * *Gợi ý khách hàng thời gian thực (`#adjustPhoneCustomerHint`)*: Khi nhập số điện thoại, hệ thống tự động tìm và hiển thị ngay tên khách, hạng thẻ hiện tại và số dư điểm khả dụng.
+       * *5 Lý do điều chỉnh chuẩn nghiệp vụ*: Tích điểm ca dịch vụ tại quầy, Bồi hoàn sự cố CSKH, Thưởng chương trình tri ân sinh nhật, Thu hồi điểm do hủy dịch vụ / hoàn tiền, Điều chỉnh sai sót kỹ thuật.
+       * *Tự động Đánh giá và Thăng hạng Thành viên*: Khi cộng điểm làm số dư vượt ngưỡng (Bạc 500 pts, Vàng 2.000 pts, Kim Cương 5.000 pts), hệ thống tự động nâng hạng thẻ tương ứng.
+       * *Đồng bộ 2 chiều tức thì*: Cập nhật đồng thời vào Database Khách hàng Admin, Lịch sử Pawpoint và ví điểm của Người dùng trên Cổng cá nhân (`pawpal_current_user`).
 
 ---
 
@@ -302,39 +374,107 @@ sequenceDiagram
 ---
 
 ### 3.4. Phân hệ Dịch vụ (Services)
-*Điều phối lịch hẹn Spa, Khách sạn thú cưng Pet Hotel và đưa đón Pet Taxi.*
+*Điều phối lịch hẹn Spa và Grooming, Khách sạn thú cưng Pet Hotel 24/7 và đưa đón Pet Taxi tận nơi.*
 
-- **Quy trình tiếp nhận ca dịch vụ**:
-  1. *Chờ xác nhận (`pending`)*: Lịch mới đặt từ website hoặc hotline.
-  2. *Đã xác nhận (`confirmed`)*: Nhân viên đã gọi điện chốt giờ với chủ nuôi và gán Kỹ thuật viên (Groomer).
-  3. *Đang thực hiện (`in_progress`)*: Bé đang được tắm sấy/cắt tỉa hoặc đang lưu trú tại phòng Hotel.
-  4. *Đã hoàn thành (`completed`)*: Bé đã làm xong đẹp đẽ, sẵn sàng đón về.
-  5. *Đã hủy (`cancelled`)*: Khách báo hủy trước hoặc không đến.
-- **Cảnh báo an toàn trong ca**:
-  - Thẻ dịch vụ hiển thị rõ nhãn cảnh báo: Dị ứng xà phòng, cắn khi sấy tai, da mẫn cảm... Kỹ thuật viên bắt buộc phải đọc kỹ trước khi đưa bé vào bồn tắm.
+- **Cấu trúc 4 Subtab chuyên sâu trên Header Bar**:
+  1. *Lịch hẹn (`tab-service-bookings`)*:
+     - **6 Thẻ thống kê KPI nhanh**: Tổng lịch hôm nay, Chờ xác nhận, Sắp tới trong 60 phút, Đang thực hiện, Hoàn thành, Yêu cầu đổi và Hủy.
+     - **Thanh cảnh báo lịch hẹn sắp tới trong 60 phút (`#upcomingAlertBar`)**: Tự động lọc và hiển thị danh sách các ca chuẩn bị diễn ra giúp KTV chủ động đón bé.
+     - **Bảng dữ liệu điều phối đa dịch vụ**:
+       * *Pet Hotel*: Hiển thị khoảng thời gian lưu trú (`01/07 ➔ 04/07`), badge số đêm (`3 đêm`), hạng phòng (`DLX-04`) và khẩu phần dinh dưỡng.
+       * *Pet Taxi*: Hiển thị lộ trình đưa đón (`45 Lê Duẩn ➔ Q.1`), khoảng cách km, loại chuyến (`2 chiều khứ hồi`) và tài xế chuyên trách.
+       * *Spa và Grooming*: Hiển thị yêu cầu tạo hình (`Mặt tròn Boo`), cấp độ thợ (`Senior / Master Groomer`) và vạch đỏ cảnh báo an toàn da lông / tính khí.
+     - **Modal Tạo lịch hẹn tại quầy / Hotline (`#modalCreateBooking`)**: Tự động chuyển đổi các trường nhập liệu tương ứng theo phân nhóm (Hotel / Taxi / Spa).
+  2. *Hồ sơ ca 360° (`tab-service-detail`)*:
+     - **Thanh tiêu đề và Nút thao tác một chạm**: Xác nhận lịch, Tiếp nhận bé, Hoàn thành dịch vụ, Đổi KTV, Tạo khiếu nại.
+     - **Dòng cảnh báo an toàn thú cưng (Safety Alert Banner)**: Thuần chữ đỏ cảnh báo dị ứng hương liệu, vết thương cũ hoặc tính khí nhút nhát/dữ dằn.
+     - **Khối thông tin đặc thù theo dịch vụ (`#detailSpecialServiceFields`)**: Thể hiện đầy đủ phòng chuồng & camera IP (Hotel), lộ trình & SĐT tài xế (Taxi), kiểu dáng tạo hình (Spa).
+     - **Biên bản tiếp nhận an toàn Zero-Claim (`#detailIntakeSafetySection`)**: Đối chiếu cân nặng thực tế tại quầy, checklist 4 vùng ngoại quan (Da lông, Mắt mũi tai, Vết xước cũ, Tính khí), tư trang gửi lại và ảnh bằng chứng tiếp nhận.
+     - **Bảng kê chi phí 2 tầng Add-ons & Dịch vụ đi cùng (`#detailCostBase`, `#detailAccompanyingServicesList`, `#detailSurchargeBreakdownList`)**:
+       * *Tầng 1 (Pre-booked Web Add-ons / Dịch vụ đi cùng)*: Gói dịch vụ ghép thêm do khách chọn trước.
+       * *Tầng 2 (On-site Surcharges Desk)*: Phụ phí phát sinh tại quầy có ghi nhận lý do, hình ảnh bằng chứng và phương thức xác nhận với khách hàng (Zalo / Gọi điện / Trực tiếp).
+     - **Nhật ký chăm sóc thời gian thực (Care-Log Timeline)**: KTV cập nhật tiến trình từng bước, đính kèm ảnh thực tế, nút chia sẻ liên kết công khai cho chủ nuôi và Photo Lightbox xem ảnh to.
+  3. *Danh mục và Bảng giá (`tab-service-catalog`)*:
+     - Quản lý danh mục 3 phân nhóm: Spa và Grooming, Pet Hotel, Pet Taxi.
+     - Ma trận bảng giá theo 4 phân khúc cân nặng (<5kg, 5-10kg, 10-20kg, >20kg).
+     - Cấu hình quy trình kỹ thuật chuẩn SOP (SOP Spa trọn gói 7 bước, Cắt tỉa tạo kiểu 6 bước, Hotel 6 bước/ngày, Taxi 4 bước).
+  4. *Đánh giá và Phản hồi (`tab-service-reviews`)*:
+     - **4 Thẻ KPI đánh giá**: Điểm trung bình toàn chi nhánh, Tổng lượt đánh giá, Chưa phản hồi, Cảnh báo (1-3 sao).
+     - **Modal Phản hồi đánh giá chuyên nghiệp (`#modalReplyReview`)**: Cung cấp các mẫu câu trả lời lịch sự theo từng mức sao, tùy chọn gửi kèm Voucher đền bù (50k, 100k, lượt tắm miễn phí).
+     - **Chuyển giao 1-chạm thành Phiếu khiếu nại CSKH (`#btnEscalateToComplaint`)**: Tự động trích xuất thông tin sang phân hệ Khiếu nại khi khách hàng không hài lòng.
+
+- **Cơ chế Tích lũy điểm thưởng PawPoint tự động**:
+  - Khi hoàn tất ca dịch vụ tại quầy (`#formCompleteBooking`), hệ thống tự động quy đổi `10.000 đ = 1 Pawpoint` dựa trên tổng tiền thanh toán thực tế và cộng thẳng vào ví điểm của khách hàng trong hệ thống CRM.
+  - Hỗ trợ đổi điểm Pawpoint trừ trực tiếp vào hóa đơn thanh toán dịch vụ (*100 điểm = 10.000 đ*).
 
 ---
 
 ### 3.5. Phân hệ Bán hàng và Kho (Orders)
-*Quản lý đơn hàng mua sắm, xuất nhập tồn kho và kiểm soát hàng sắp hết.*
+*Quản lý vòng đời đơn hàng đa kênh, trung tâm xử lý RMA đổi trả, đối soát dòng tiền COD bưu cục, quản trị tồn kho 2 lớp và lập đơn POS tại quầy.*
 
-- **Quy trình đơn hàng**:
-  `Chờ xác nhận` -> `Đang chuẩn bị` -> `Đang giao hàng` -> `Đã hoàn tất` (hoặc `Đổi trả / Hủy`).
-- **Ngưỡng an toàn kho hàng**:
-  - Sản phẩm có tồn kho dưới 5 đơn vị được gắn nhãn vàng `Còn ít`.
-  - Sản phẩm tồn kho bằng 0 gắn nhãn đỏ `Hết hàng` và tự động phát cảnh báo lên Dashboard.
-- **Quản lý Voucher Khuyến mãi**:
-  - Thiết lập mã giảm giá theo số tiền cố định hoặc theo phần trăm (kèm hạn sử dụng và số lượt dùng tối đa).
+- **Cấu trúc 4 Subtab chuyên sâu trên Header Bar**:
+  1. *Đơn hàng (`tab-order-list`)*:
+     - **6 Thẻ thống kê KPI nhanh**: Tổng đơn hôm nay, Chờ xác nhận, Đang chuẩn bị, Đang giao hàng, Đã hoàn tất, Đổi trả và Hủy.
+     - **Thanh thao tác hàng loạt (Batch Actions Toolbar)**:
+       * *In hàng loạt phiếu đóng gói (`#modalPackingSlip`)*: Xem trước khổ in A6 / K80 nhiệt liên tiếp, tự động gom danh sách mặt hàng cho kho nhặt đồ.
+       * *Bàn giao vận chuyển hàng loạt (`#modalBatchDispatch`)*: Chỉ định bưu cục tiếp nhận (*J và T Express, GHTK, Viettel Post, Đội giao PawPal*), tự động cấp dải mã vận đơn chuẩn.
+       * *Xuất bảng kê bàn giao (`#modalDispatchManifest`)*: Xuất biên bản ký nhận bưu tá kèm tổng số kiện và số tiền thu hộ COD.
+     - **Bộ lọc SLA Quá hạn và Cảnh báo nhanh**:
+       * *Có khiếu nại*: Lọc nhanh các đơn có yêu cầu đổi trả RMA hoặc khiếu nại chất lượng.
+       * *Chờ xử lý gấp*: Lọc các đơn mới đặt cần xác nhận ngay.
+       * *Quá hạn SLA (>30p)*: Cảnh báo đơn chờ duyệt quá thời gian cam kết.
+     - **Dải đối soát dòng tiền COD bưu cục (`#codReconcileSummaryStrip`)**:
+       * Tự động hiển thị khi có đơn giao thành công nhưng tiền thu hộ COD đang chờ bưu cục chuyển về tài khoản (`cod_pending`).
+       * Nút `Xác nhận đối soát toàn bộ` 1-chạm giúp kế toán chốt sổ dòng tiền COD tức thì.
+  2. *Hồ sơ đơn (`tab-order-detail`)*:
+     - **Thẻ Hồ sơ Đổi trả và Hoàn tiền (RMA)**: Hiển thị ngay đầu trang khi đơn có phát sinh khiếu nại (*Mã RMA, phương án giải quyết, lý do, kết quả kiểm định kho, số tiền bồi hoàn*) kèm nút điều hướng trực tiếp sang phân hệ Khiếu nại.
+     - **Bảng danh sách sản phẩm và Bảng kê tài chính chi tiết**: Thể hiện tiền hàng tạm tính, phí vận chuyển, chiết khấu voucher, giảm trừ điểm Pawpoint và tổng thanh toán.
+     - **Thông tin giao nhận và Đơn vị vận chuyển**: Tên người nhận (liên kết mở hồ sơ khách), SĐT, địa chỉ, phương thức thanh toán, hãng giao nhận, mã vận đơn bưu cục và lịch trình Timeline thời gian thực.
+     - **Nút thao tác một chạm theo trạng thái**: In phiếu đóng gói, Bàn giao vận chuyển, Xác nhận thu tiền, Đối soát tiền COD, Tạo khiếu nại và Đổi trả (`#modalReturnRefund`), Hoàn tất đơn hàng.
+  3. *Sản phẩm và Kho (`tab-order-products`)*:
+     - **4 Thẻ chỉ số kho hàng**: Tổng mặt hàng, Đang còn hàng, Sắp hết hàng, Tạm ngưng bán.
+     - **Cơ chế Tồn kho 2 lớp (2-Layer Inventory)**:
+       * *Tổng tồn*: Số lượng vật lý thực tế trong kho.
+       * *Tạm giữ*: Số lượng tự động khóa cho các đơn đang chờ xử lý / đóng gói (`pending`, `confirmed`) để triệt tiêu hiện tượng bán vượt tồn (*Overselling*).
+       * *Khả dụng*: Số lượng thực tế sẵn sàng để bán (`Khả dụng = Tổng tồn - Tạm giữ`).
+     - **Cảnh báo ngưỡng an toàn (Min Stock Alert)**:
+       * `An toàn (Min+)`: Số khả dụng trên mức an toàn (*Muted Pastel xanh*).
+       * `Sắp hết (<=Min)`: Số khả dụng chạm hoặc dưới ngưỡng tối thiểu (*Muted Pastel hổ phách*).
+       * `Hết hàng`: Số khả dụng bằng 0 (*Muted Pastel đỏ đất*).
+     - **Modal Điều chỉnh Tồn kho (`#modalAdjustStock`)**: Hỗ trợ thao tác Nhập thêm `+`, Xuất hủy `-`, Kiểm kê đặt lại `=`, cập nhật giá niêm yết mới và trạng thái kinh doanh.
+     - **Modal Thêm sản phẩm mới (`#modalAddProduct`)**: Thiết lập mã SKU, danh mục, giá bán lẻ, tồn ban đầu và ngưỡng cảnh báo tối thiểu.
+  4. *Khuyến mãi (`tab-order-promos`)*:
+     - **3 Thẻ KPI khuyến mãi**: Voucher đang chạy, Lượt đã dùng hôm nay, Voucher sắp hết hạn.
+     - **Bảng quản trị Voucher**: Quản lý mã voucher, mức giảm giá, đơn hàng tối thiểu, điểm Pawpoint cần đổi, thời hạn áp dụng, lượt đã dùng và trạng thái phát hành.
+     - **Modal Tạo mã khuyến mãi (`#modalCreateVoucher`) và Quản lý / Gia hạn Voucher (`#modalVoucherAction`)**.
+- **Quy trình Lập đơn POS tại quầy thông minh (`#modalCreateOrder`)**:
+  - **Tra cứu khách hàng tự động**: Nhập số điện thoại khách hàng, hệ thống tự động nhận diện và hiển thị Banner Thành viên (*Hạng thẻ Kim Cương / Vàng / Bạc / Đồng và Số dư điểm Pawpoint*).
+  - **Áp dụng chiết khấu tự động**: Chiết khấu hạng thành viên (*Kim Cương 10%, Vàng 5%, Bạc 3%*), áp dụng mã giảm giá Voucher hợp lệ và quy đổi trừ điểm Pawpoint (*100 điểm = 10.000 đ*).
+  - **Bảng kê tính tiền thời gian thực (Live Financial Breakdown)**: Cập nhật tức thời từng dòng giảm trừ và tổng tiền cần thanh toán.
+  - **Đồng bộ kho và ví điểm**: Tự động trừ tồn kho thực tế, trừ số dư ví điểm khách hàng, tăng lượt sử dụng voucher và mở màn hình xem đơn hàng.
 
 ---
 
 ### 3.6. Phân hệ Nhân sự và Ca làm (Staff)
-*Quản lý danh sách nhân viên, xếp lịch ca trực và theo dõi hiệu suất Groomer.*
+*Quản lý danh sách nhân viên, xếp lịch ca trực, phân quyền nghiệp vụ và theo dõi đánh giá CSAT.*
 
-- **Phân bổ ca trực**:
-  - Ca sáng (08:00 - 16:00), Ca chiều (13:00 - 21:00), Ca trực đêm Pet Hotel (20:00 - 08:00 hôm sau).
-- **Hồ sơ chuyên môn**:
-  - Theo dõi tay nghề Groomer: Chứng chỉ cắt tỉa, số ca hoàn thành trong tháng, đánh giá sao trung bình từ khách hàng.
+- **Cấu trúc 4 Subtab chuyên sâu trên Header Bar**:
+  1. *Danh sách nhân sự (`tab-staff-list`)*:
+     - 4 Thẻ KPI nhân sự: Tổng nhân sự, Đang làm việc, Nghỉ phép / Tạm nghỉ, Đánh giá CSAT trung bình toàn chi nhánh.
+     - Bộ lọc vai trò: Lễ tân ca trực, Kỹ thuật viên Grooming / Spa, Chăm sóc Khách sạn Pet Hotel, Tài xế Pet Taxi, Quản lý chi nhánh.
+     - Bảng danh sách: Mã NV, Họ tên, Chức vụ, Số điện thoại, Ca làm việc hôm nay, Điểm CSAT, Trạng thái hoạt động.
+  2. *Hồ sơ nhân sự 360° (`tab-staff-profile`)*:
+     - Thông tin cá nhân, hợp đồng lao động, chứng chỉ nghề nghiệp Grooming quốc tế.
+     - Lịch sử ca làm việc, tổng số ca hoàn thành và nhật ký ghi nhận khen thưởng / nhắc nhở.
+  3. *Lịch phân ca trực (`tab-staff-schedule`)*:
+     - Bảng lịch phân ca theo Tuần và Ngày:
+       * *Ca sáng*: 08:00 - 16:00 (Lễ tân, Groomer tắm sấy, Pet Taxi).
+       * *Ca chiều*: 13:00 - 21:00 (Groomer cắt tỉa tạo hình, Lễ tân chốt ca).
+       * *Ca trực đêm Pet Hotel*: 20:00 - 08:00 sáng hôm sau (Giám sát phòng lưu trú, camera an ninh 24/7, cho ăn đêm).
+     - Điều phối và đổi ca trực linh hoạt giữa các nhân sự cùng chuyên môn.
+  4. *Đánh giá CSAT và Hiệu suất KPI (`tab-staff-assessment`)*:
+     - Thống kê tỷ lệ hài lòng của khách hàng (CSAT 1-5 sao) theo từng nhân sự.
+     - Đánh giá năng suất: Số thú cưng đã chăm sóc, số đơn bán lẻ phụ kiện đã lập, thời gian hoàn thành ca trung bình.
 
 ---
 
@@ -342,14 +482,14 @@ sequenceDiagram
 *Giải quyết sự cố dịch vụ và đổi trả hàng minh bạch, bảo vệ uy tín thương hiệu.*
 
 - **Cấu trúc 3 Subtab chuyên sâu trên Header Bar**:
-  1. *Theo Dịch vụ (`tab-complaint-services`)*: Quản lý các sự cố về Spa & Grooming, Pet Hotel, Pet Taxi (kèm nhãn mức độ, KTV thực hiện, đồng hồ đếm ngược SLA).
+  1. *Theo Dịch vụ (`tab-complaint-services`)*: Quản lý các sự cố về Spa và Grooming, Pet Hotel, Pet Taxi (kèm nhãn mức độ, KTV thực hiện, đồng hồ đếm ngược SLA).
   2. *Theo Đơn hàng (`tab-complaint-orders`)*: Quản lý khiếu nại về hàng lỗi, giao trễ, giao sai màu/kích thước, quy trình đổi trả hàng RMA.
   3. *Chi tiết khiếu nại (`tab-complaint-detail`)*: Màn hình thẩm định và giải quyết 360°.
 - **Dữ liệu đối chứng 360° (Cross-Check Data)**:
   - *Dành cho Dịch vụ*: Đối chiếu tình trạng sức khỏe lúc check-in đón bé, hình ảnh chụp vành tai/da lông đầu vào, nhật ký chăm sóc của KTV. Có nút *"Tạm khóa an toàn KTV"* để đình chỉ tạm thời KTV có nguy cơ vi phạm quy chuẩn.
   - *Dành cho Đơn hàng*: Đối chiếu hình ảnh kiểm hàng trước khi đóng gói tại kho, thông tin đơn vị vận chuyển (GHN/GHTK), mã vận đơn và chữ ký người nhận.
   - *Nguồn từ Trực chat*: Tự động hiển thị khối **"Biên bản đối thoại từ Kênh Trực chat"** trích xuất nguyên văn trao đổi giữa khách và CSKH.
-- **4 Phương án giải quyết & Đền bù chính thức**:
+- **4 Phương án giải quyết và Đền bù chính thức**:
   1. *Tặng Voucher và Pawpoint bồi hoàn*: Cộng trực tiếp điểm thưởng vào tài khoản khách và cấp mã voucher giảm giá cho lần chăm sóc kế tiếp.
   2. *Làm lại dịch vụ miễn phí (Redo Service)*: Lên lịch hẹn mới miễn phí 100%, chỉ định KTV trưởng hoặc Groomer tay nghề cao thực hiện.
   3. *Hoàn tiền bồi thường*: Nhập số tiền hoàn và chọn phương thức chuyển khoản/tiền mặt.
@@ -364,14 +504,14 @@ sequenceDiagram
 *Trung tâm Tiếp nhận và Điều phối CSKH thông minh kết hợp Gemini AI và Nhân viên trực tuyến.*
 
 - **Bố cục Hộp thư 3 khu vực chuẩn quốc tế**:
-  1. *Cột 1 (Trái) - Danh sách hội thoại & Bộ lọc thông minh*:
+  1. *Cột 1 (Trái) - Danh sách hội thoại và Bộ lọc thông minh*:
      - Tab **"Xử lý ngay"**: Chỉ hiển thị các ca chat khẩn cấp (khách bực bội cấp 4-5, sự cố thú cưng, quá hạn SLA) kèm số đếm màu đỏ.
      - Tab **"Đang chat"**: Danh sách các ca nhân viên đã bấm "Tiếp nhận" và đang trực tiếp gõ phím.
      - Tab **"Tất cả"**: Toàn bộ lịch sử ca chat của Bot và các ca đã hoàn tất.
-  2. *Cột 2 (Giữa) - Khung chat trực tiếp & Điều phối nghiệp vụ*:
+  2. *Cột 2 (Giữa) - Khung chat trực tiếp và Điều phối nghiệp vụ*:
      - **Thẻ tóm tắt ngữ cảnh AI 3 giây**: Tự động nhận diện tên khách, số điện thoại, vấn đề cốt lõi, mã đơn/lịch hẹn và đề xuất hướng xử lý.
      - **Màng lọc bảo vệ tâm lý nhân viên**: Tự động che mờ các từ ngữ thô tục, lăng mạ thành thông báo an toàn, giúp nhân viên giữ vững bình tĩnh.
-     - **Gợi ý AI & Thư viện câu mẫu**: Trợ lý AI gợi ý sẵn câu trả lời đồng cảm/xoa dịu theo ngữ cảnh, bấm "Dùng mẫu này" để đưa ngay vào ô soạn thảo.
+     - **Gợi ý AI và Thư viện câu mẫu**: Trợ lý AI gợi ý sẵn câu trả lời đồng cảm/xoa dịu theo ngữ cảnh, bấm "Dùng mẫu này" để đưa ngay vào ô soạn thảo.
      - **Nút 3 chấm `•••` Tác vụ một chạm**:
        * *Tặng điểm Pawpoint*: Nạp ngay 50 - 100 điểm tạ lỗi trực tiếp vào ví khách hàng.
        * *Chuyển thành Ticket*: Trích xuất toàn bộ biên bản đoạn chat chuyển sang phân hệ Khiếu nại.
@@ -385,13 +525,35 @@ sequenceDiagram
 
 ---
 
-### 3.9. Phân hệ Cấu hình hệ thống (Settings)
-*Thiết lập quy chế tích điểm, thông tin chi nhánh và mẫu in hóa đơn.*
+### 3.9. Phân hệ Cấu hình hệ thống (Settings và System Configuration)
+*Trung tâm Thiết lập và Đồng bộ Nguồn Dữ liệu Duy nhất (Single Source of Truth - SSOT) cho toàn bộ hệ sinh thái PawPal (Admin POS, User Portal, Web Store, Service Booking).*
 
-- **Cấu hình ví điểm thưởng Pawpoint**:
-  - Tỷ lệ tích điểm: 10.000 VNĐ chi tiêu = 1 Pawpoint.
-  - Tỷ lệ quy đổi: 1 Pawpoint = 100 VNĐ khấu trừ trực tiếp khi thanh toán.
-  - Hạng thành viên: Thành viên Đồng, Bạc, Vàng, Kim Cương.
+- **Cấu trúc 3 Subtab chuyên sâu trên Header Bar (Chuẩn `AGENTS.md`)**:
+  1. *Banner và Khuyến mãi (`tab-banner-promos`)*:
+     - **Thanh cảnh báo Zero Miss Strip**: Tự động quét và cảnh báo các Voucher sắp cạn quota ($\le 10$ lượt) hoặc hết sạch lượt ($0$ lượt), các Banner sắp hết hạn trong vòng 24 - 48 giờ để không đứt gãy luồng tương tác khách hàng.
+     - **Quản lý Banner**: Danh sách Banner hiển thị ngoài trang chủ và trang dịch vụ, hỗ trợ thao tác 1 chạm gia hạn 30 ngày (`btn-extend-banner`), bật/tắt hiển thị.
+     - **Bảng Master Voucher Khuyến mãi**: Lọc theo phân hệ (Shop, Spa, Hotel, System), hiển thị tiến độ hạn ngạch phát hành (ví dụ: `86/200`, `96/100`), menu tác vụ 3 chấm text-only `•••` (Gia hạn thêm 50 lượt, Đổi trạng thái Bật/Tắt, Xóa voucher).
+     - **Cấu hình Quy chế Điểm thưởng PawPoints**: Tỷ lệ tích điểm (*10.000 VNĐ = 1 điểm*), tỷ lệ quy đổi (*1 điểm = 100 VNĐ*), thưởng đăng ký mới (+50 điểm), thưởng đơn đầu (+100 điểm), thưởng sinh nhật (+200 điểm).
+     - **Thông báo Website**: Quản lý dải băng thông báo Top-bar và Popup thông báo khẩn cấp cho khách hàng.
+  2. *Quản lý Nội dung Website (`tab-content-management`)*:
+     - **5 Thẻ KPI Thống kê Nội dung**: Tổng bài viết, Đã công khai, Bản nháp, Tạm ẩn, Tổng lượt xem tháng.
+     - **Bảng Quản lý Blog và Cẩm nang**: Lọc theo danh mục (Chó, Mèo, Dinh dưỡng, Grooming, Mẹo chăm sóc) và trạng thái (Công khai, Bản nháp, Tạm ẩn).
+     - **Cơ chế Nạp Tri thức AI RAG (Retrieval-Augmented Generation)**: Mỗi bài viết cẩm nang được tự động trích xuất các từ khóa cốt lõi (Entities & Keywords) và nội dung tóm lược chuẩn mực để nạp trực tiếp vào Prompt Context của Trợ lý ảo Chatbot AI PawPal, giúp Chatbot luôn tư vấn đúng kiến thức chuẩn chuyên gia.
+  3. *Cấu hình Hệ thống (`tab-system-config`)*:
+     - **Card 1: Thông tin Cửa hàng và Chi nhánh (Store Profile)**: Tên thương hiệu, Tên công ty pháp lý, Hotline tiếp nhận 24/7 (`1900 888 999`), Số khẩn cấp, Email CSKH (`cskh@pawpal.vn`), Mã số thuế VAT (`0316889988`), Địa chỉ trụ sở cơ sở và liên kết mạng xã hội (Zalo OA, Facebook).
+     - **Card 2: Phương thức Thanh toán**: Quản lý bật/tắt 4 cổng thanh toán độc lập (COD, Chuyển khoản QR Banking Vietcombank, Ví điện tử MoMo, Cổng thanh toán VNPay) và thông tin tài khoản thụ hưởng.
+     - **Card 3: Đơn vị Vận chuyển và Biểu phí**: Mức đơn miễn phí giao hàng (*Đơn từ 300.000 VNĐ*), Biểu phí giao hàng nội thành (*25.000 VNĐ*), ngoại tỉnh (*35.000 VNĐ*), giao hỏa tốc 2 giờ (*45.000 VNĐ*), và thông số kết nối API đối tác 3PL (GHN, GHTK, GrabExpress).
+     - **Card 4: Chính sách Đặt lịch, Giờ mở cửa và Pet Hotel**: Khung giờ phục vụ chi nhánh (*08:00 - 20:00 ngày thường, đến 21:00 cuối tuần*), Quy định Pet Hotel (*Check-in sau 14:00, Check-out trước 12:00, Phụ phí trả trễ 100.000 VNĐ / nửa ngày*), Công suất tối đa (*4 bé / ca*), Quy tắc hủy miễn phí (*trước 4 giờ, phí trễ 50.000 VNĐ*).
+     - **Card 5: Kết nối Đối tác API và Live Healthcheck**: Đo ping thời gian thực tới hạ tầng GHN Express, MoMo Merchant Gateway, VNPay Payment Engine.
+
+- **Cơ chế Khóa an toàn (Safe Mode) và Xác nhận Tác động Đa phân hệ (SSOT Impact Confirmation)**:
+  - **Khóa an toàn chống thao tác nhầm**: Mặc định hệ thống luôn ở trạng thái **`Khóa an toàn: Đang bật`** để bảo vệ toàn bộ tham số vận hành lõi. Quản trị viên phải bấm *"Mở khóa để sửa"* trước khi lưu bất kỳ thay đổi nào.
+  - **Modal Cảnh báo Tác động Đa phân hệ (Impact Modal)**: Khi lưu thay đổi (Thanh toán, Giao hàng, Đặt lịch, Cửa hàng), hệ thống tự động mở modal cảnh báo trực quan liệt kê chính xác các phân hệ con chịu ảnh hưởng tức thì (ví dụ: User Portal, Shop Checkout, Lịch hẹn Dịch vụ, Hóa đơn VAT) trước khi bấm *"Xác nhận và Đồng bộ ngay"*.
+  - **Nhật ký Thay đổi Cấu hình (Audit Trail SSOT)**: Tự động ghi nhận thời gian chi tiết, người thực hiện, phân hệ tác động và nội dung điều chỉnh kèm nhãn `Đã đồng bộ SSOT`.
+
+- **Cơ chế Phân biệt Trạng thái Tài khoản Người dùng (User Deactivation vs Admin Lock)**:
+  - **Khách hàng tự tạm dừng (`status: 'DEACTIVATED'`)**: Người dùng tự thao tác tạm dừng tài khoản trong User Portal Settings (`#btnDeactivateAccount`). Trạng thái này cho phép khách tự đăng nhập lại bất kỳ lúc nào để tái kích hoạt.
+  - **Admin khóa tài khoản (`status: 'LOCKED'`)**: Quản trị viên chủ động vô hiệu hóa tài khoản vi phạm trong Admin Customers Module. Dòng khách hàng trong bảng quản trị bị làm mờ `opacity: 0.52` và khách không thể tự mở khóa trừ khi Admin phê duyệt.
 
 ---
 
@@ -399,8 +561,8 @@ sequenceDiagram
 
 | Nhóm trạng thái | Gam màu chuẩn (`AGENTS.md`) | Màu nền | Màu chữ | Ví dụ hiển thị |
 | :--- | :--- | :--- | :--- | :--- |
-| **Tích cực / Hoàn thành** | Muted Forest Green | `#DCEEE2` | `#165335` | `Đang hoạt động`, `Đã xác nhận`, `Đã hoàn tất`, `Đã thanh toán` |
-| **Chờ duyệt / Lưu ý** | Warm Amber (Hổ phách dịu) | `#F5E8D3` | `#734718` | `Chờ xác nhận`, `Chờ xử lý`, `Đang chuẩn bị`, `Tạm dừng` |
+| **Tích cực / Hoàn thành** | Muted Forest Green | `#DCEEE2` | `#165335` | `Đang hoạt động`, `Đã xác nhận`, `Đã hoàn tất`, `Đã thanh toán`, `Còn hàng` |
+| **Chờ duyệt / Lưu ý** | Warm Amber (Hổ phách dịu) | `#F5E8D3` | `#734718` | `Chờ xác nhận`, `Chờ xử lý`, `Đang chuẩn bị`, `Sắp hết hàng`, `Tạm dừng` |
 | **Khẩn cấp / Tiêu cực** | Muted Earth Red (Đỏ đất) | `#F7DCDC` | `#8F2424` | `Đã hủy`, `Bị khóa`, `Hết hàng`, `Khiếu nại khẩn` |
 | **Tiến trình / Thông tin** | Muted Soft Blue (Xanh phấn) | `#DCEAF2` | `#20495E` | `Đang thực hiện`, `Đang giao hàng`, `Đang lưu trú Hotel` |
 | **Trung tính / Mặc định** | Muted Sage Slate (Xám xô thơm)| `#E2ECE5` | `#2D483B` | `Bản nháp`, `Lưu trữ`, `Sắp tới` |
@@ -412,7 +574,7 @@ sequenceDiagram
 
 ---
 
-## 5. CƠ CHẾ LƯU VÀ KHÔI PHỤC TRẠNG THÁI TOÀN HỆ THỐNG (STATE PERSISTENCE & F5/RELOAD)
+## 5. CƠ CHẾ LƯU VÀ KHÔI PHỤC TRẠNG THÁI TOÀN HỆ THỐNG (STATE PERSISTENCE VÀ F5/RELOAD)
 
 Toàn bộ **9 phân hệ quản trị** của Pawpal-er đã được kiểm tra và chuẩn hóa 100% cơ chế lưu trữ liên thông giữa **URL Hash**, **`sessionStorage`** và **Bộ điều hướng Sidebar**:
 
@@ -426,9 +588,9 @@ Toàn bộ **9 phân hệ quản trị** của Pawpal-er đã được kiểm tr
 | **6. Nhân sự** | `pawpal_admin_staff_active_subtab` | `#tab-staff-list`, `#tab-staff-profile`, `#tab-staff-schedule`, `#tab-staff-assessment` | Giữ nguyên nhân viên đang xem (`pawpal_admin_staff_selected_id`), lịch làm việc, đánh giá KPI và Deep Breadcrumb `/ [Tên NV]`. |
 | **7. Khiếu nại** | `pawpal_admin_complaint_active_subtab` | `#tab-complaint-services`, `#tab-complaint-orders`, `#tab-complaint-detail` | Giữ nguyên Ticket đang xử lý (`pawpal_admin_complaint_selected_id`), biên bản đối thoại Chat Transcript và Deep Breadcrumb `/ [Mã Ticket]`. |
 | **8. Chatbot AI** | `pawpal_admin_chatbot_subtab` | `#tab-live-support`, `#tab-ai-copilot`, `#tab-chatbot-rules` | Giữ nguyên ca hội thoại đang trực tiếp trao đổi (`pawpal_admin_chatbot_conv_id`) và Deep Breadcrumb `/ [Tên khách]`. |
-| **9. Cấu hình** | `pawpal_admin_settings_subtab` | `#tab-banner-promos`, `#tab-content-management`, `#tab-system-config` | Giữ nguyên phân mục đang chỉnh sửa (Banner & Vouchers, Bài viết tin tức hoặc Cấu hình hệ thống). |
+| **9. Cấu hình** | `pawpal_admin_settings_subtab` | `#tab-banner-promos`, `#tab-content-management`, `#tab-system-config` | Giữ nguyên phân mục đang chỉnh sửa (Banner và Vouchers, Bài viết tin tức hoặc Cấu hình hệ thống). |
 
-*Quy tắc điều hướng Sidebar & Browser History:*
+*Quy tắc điều hướng Sidebar và Browser History:*
 - Khi bấm chuyển phân hệ trên Sidebar, URL Hash tự động cập nhật ngay lập tức theo phân mục đang làm việc của phân hệ đó.
 - Nút bấm **Back / Forward (`<` / `>`)** của trình duyệt tự động chuyển đổi mượt mà giữa các phân hệ và subtab mà không bị giật trang hay mất dữ liệu làm việc.
 

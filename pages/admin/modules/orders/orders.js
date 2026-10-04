@@ -109,6 +109,28 @@
             internalNote: 'Đang có khiếu nại RMA-2026-001: Khách báo máy lọc nước bị nứt đế.',
             alertType: 'danger',
             alertMessage: 'Có khiếu nại đổi trả (RMA-2026-001)',
+            rmaInfo: {
+                id: 'RMA-2026-001',
+                solutionType: 'exchange',
+                solutionTypeName: 'Đổi hàng mới (1-đổi-1)',
+                reason: 'damaged',
+                reasonText: 'Hàng bị vỡ hoặc móp méo seal do vận chuyển',
+                restockAction: 'writeoff',
+                restockText: 'Chuyển vào kho Hủy (Write-off)',
+                refundMethod: 'none',
+                refundAmount: 0,
+                refundText: 'Đổi sản phẩm mới (không hoàn tiền mặt)',
+                items: [
+                    {
+                        sku: 'DD-MAY-03',
+                        name: 'Đài phun nước lọc tự động thông minh Petkit Eversweet 3',
+                        quantity: 1,
+                        price: 950000
+                    }
+                ],
+                note: 'Khách báo đài phun nước bị nứt đế khi nhận hàng. Đã lập đơn bù sản phẩm mới và chuyển hàng vỡ sang kho hủy kiểm định.',
+                createdAt: '2026-06-08T17:30:00'
+            },
             products: [
                 {
                     sku: 'DD-MAY-03',
@@ -1189,15 +1211,45 @@
             const tbody = document.getElementById('productsTableBody');
             if (!tbody) return;
 
+            // Tính số lượng tạm giữ theo các đơn hàng đang xử lý (pending, confirmed)
+            const reservedMap = {};
+            currentOrdersList.forEach(o => {
+                if (o.status === 'pending' || o.status === 'confirmed') {
+                    o.products.forEach(p => {
+                        reservedMap[p.sku] = (reservedMap[p.sku] || 0) + (p.quantity || 1);
+                    });
+                }
+            });
+
+            // Cập nhật 4 thẻ KPI chỉ số kho hàng
+            const totalProd = currentProductsList.length;
+            const inStockProd = currentProductsList.filter(p => p.status !== 'Tạm ngưng' && Math.max(0, (p.stock || 0) - (reservedMap[p.sku] || 0)) > p.minStock).length;
+            const lowStockProd = currentProductsList.filter(p => p.status !== 'Tạm ngưng' && Math.max(0, (p.stock || 0) - (reservedMap[p.sku] || 0)) <= p.minStock && Math.max(0, (p.stock || 0) - (reservedMap[p.sku] || 0)) > 0).length;
+            const inactiveProd = currentProductsList.filter(p => p.status === 'Tạm ngưng' || Math.max(0, (p.stock || 0) - (reservedMap[p.sku] || 0)) === 0).length;
+
+            const statTotalEl = document.getElementById('statTotalProducts');
+            const statInStockEl = document.getElementById('statInStockProducts');
+            const statLowStockEl = document.getElementById('statLowStockProducts');
+            const statInactiveEl = document.getElementById('statInactiveProducts');
+
+            if (statTotalEl) statTotalEl.textContent = totalProd;
+            if (statInStockEl) statInStockEl.textContent = inStockProd;
+            if (statLowStockEl) statLowStockEl.textContent = lowStockProd;
+            if (statInactiveEl) statInactiveEl.textContent = inactiveProd;
+
             const searchVal = (document.getElementById('productSearchInput')?.value || '').toLowerCase().trim();
             const catVal = document.getElementById('productFilterCategory')?.value || 'ALL';
             const stockVal = document.getElementById('productFilterStockStatus')?.value || 'ALL';
 
             const filtered = currentProductsList.filter(p => {
+                const physical = p.stock || 0;
+                const reserved = reservedMap[p.sku] || 0;
+                const available = Math.max(0, physical - reserved);
+
                 if (catVal !== 'ALL' && p.category !== catVal) return false;
-                if (stockVal === 'LOW' && (p.stock > p.minStock || p.stock === 0)) return false;
-                if (stockVal === 'OUT' && p.stock !== 0) return false;
-                if (stockVal === 'IN_STOCK' && p.stock <= p.minStock) return false;
+                if (stockVal === 'LOW' && (available > p.minStock || available === 0)) return false;
+                if (stockVal === 'OUT' && available !== 0) return false;
+                if (stockVal === 'IN_STOCK' && available <= p.minStock) return false;
 
                 if (searchVal) {
                     const matchName = p.name.toLowerCase().includes(searchVal);
@@ -1209,15 +1261,19 @@
             });
 
             tbody.innerHTML = filtered.map(p => {
-                let stockBadge = `<span class="stock-badge-ok">${p.stock}</span>`;
-                let alertBadge = '<span style="color: var(--text-muted); font-size: 12px;">Bình thường</span>';
+                const physical = p.stock || 0;
+                const reserved = reservedMap[p.sku] || 0;
+                const available = Math.max(0, physical - reserved);
 
-                if (p.stock === 0) {
-                    stockBadge = '<span class="stock-badge-low">0</span>';
-                    alertBadge = '<span class="admin-badge badge-alert">Hết hàng</span>';
-                } else if (p.stock <= p.minStock) {
-                    stockBadge = `<span class="stock-badge-low">${p.stock}</span>`;
-                    alertBadge = '<span class="admin-badge badge-warning">Sắp hết</span>';
+                let availableClass = '';
+                let alertBadge = `<span class="admin-badge badge-paid">An toàn (${p.minStock}+)</span>`;
+
+                if (available === 0) {
+                    availableClass = 'out';
+                    alertBadge = '<span class="admin-badge badge-cancelled">Hết hàng</span>';
+                } else if (available <= p.minStock) {
+                    availableClass = 'low';
+                    alertBadge = `<span class="admin-badge badge-warning">Sắp hết (&lt;=${p.minStock})</span>`;
                 }
 
                 let statusBadge = p.status === 'Tạm ngưng' 
@@ -1231,7 +1287,11 @@
                         <td>${p.category}</td>
                         <td>${p.brand}</td>
                         <td style="font-weight: 600;">${formatVND(p.price)}</td>
-                        <td>${stockBadge}</td>
+                        <td class="stock-val-physical">${physical}</td>
+                        <td style="text-align: center;">
+                            <span class="stock-val-reserved ${reserved === 0 ? 'none' : ''}">${reserved > 0 ? reserved : '0'}</span>
+                        </td>
+                        <td class="stock-val-available ${availableClass}">${available}</td>
                         <td>${alertBadge}</td>
                         <td>${statusBadge}</td>
                         <td style="text-align: center;">
@@ -1247,21 +1307,44 @@
             const tbody = document.getElementById('vouchersTableBody');
             if (!tbody) return;
 
-            tbody.innerHTML = initialVouchers.map(v => `
-                <tr>
-                    <td><span class="voucher-code-pill">${v.code}</span></td>
-                    <td style="font-weight: 500;">${v.title}</td>
-                    <td style="font-weight: 600; color: #236B48;">${v.discount}</td>
-                    <td>${v.minOrder}</td>
-                    <td>${v.points}</td>
-                    <td>${v.expiry}</td>
-                    <td>${v.used}</td>
-                    <td><span class="admin-badge badge-paid">${v.status}</span></td>
-                    <td style="text-align: center;">
-                        <button type="button" class="btn-action-trigger" onclick="PawpalOrdersModule.openVoucherActionModal('${v.code}')">•••</button>
-                    </td>
-                </tr>
-            `).join('');
+            const searchVal = (document.getElementById('promoSearchInput')?.value || '').toLowerCase().trim();
+
+            const statActive = document.getElementById('statActiveVouchers');
+            const statExpiring = document.getElementById('statExpiringVouchers');
+            if (statActive) statActive.textContent = initialVouchers.filter(v => v.status === 'Đang chạy').length;
+            if (statExpiring) statExpiring.textContent = initialVouchers.filter(v => v.status === 'Sắp hết' || v.status === 'Hết hạn').length;
+
+            const filtered = initialVouchers.filter(v => {
+                if (searchVal) {
+                    const matchCode = v.code.toLowerCase().includes(searchVal);
+                    const matchTitle = v.title.toLowerCase().includes(searchVal);
+                    if (!matchCode && !matchTitle) return false;
+                }
+                return true;
+            });
+
+            tbody.innerHTML = filtered.map(v => {
+                let badgeClass = 'badge-paid';
+                if (v.status === 'Tạm ngưng') badgeClass = 'badge-unpaid';
+                else if (v.status === 'Hết hạn') badgeClass = 'badge-cancelled';
+                else if (v.status === 'Sắp hết') badgeClass = 'badge-warning';
+
+                return `
+                    <tr>
+                        <td><span class="voucher-code-pill">${v.code}</span></td>
+                        <td style="font-weight: 500;">${v.title}</td>
+                        <td style="font-weight: 600; color: #236B48;">${v.discount}</td>
+                        <td>${v.minOrder}</td>
+                        <td>${v.points}</td>
+                        <td>${v.expiry}</td>
+                        <td>${v.used}</td>
+                        <td><span class="admin-badge ${badgeClass}">${v.status}</span></td>
+                        <td style="text-align: center;">
+                            <button type="button" class="btn-action-trigger" onclick="PawpalOrdersModule.openVoucherActionModal('${v.code}')">•••</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         // Gắn sự kiện bộ lọc bảng đơn hàng
@@ -1409,15 +1492,17 @@
                     done: true
                 });
             });
+            persistOrdersData();
             renderOrdersTable();
             if (selectedOrderId) renderOrderDetail(selectedOrderId);
             alert(`Đã đối soát và xác nhận tiền về tài khoản thành công cho toàn bộ ${codOrders.length} đơn hàng COD!`);
         });
 
-        // Bộ lọc bảng sản phẩm
+        // Bộ lọc bảng sản phẩm và khuyến mãi
         document.getElementById('productSearchInput')?.addEventListener('input', renderProductsTable);
         document.getElementById('productFilterCategory')?.addEventListener('change', renderProductsTable);
         document.getElementById('productFilterStockStatus')?.addEventListener('change', renderProductsTable);
+        document.getElementById('promoSearchInput')?.addEventListener('input', renderVouchersTable);
 
         // Xuất file
         document.getElementById('btnExportOrderReport')?.addEventListener('click', () => {
@@ -1570,6 +1655,96 @@
         });
 
         // Tạo đơn tại quầy
+        let activePosCustomer = null;
+
+        function updatePosLiveCalculation() {
+            const prodSelect = document.getElementById('createOrderProductSelect');
+            const qty = parseInt(document.getElementById('createOrderQty')?.value || '1', 10);
+            const voucherInput = document.getElementById('createOrderVoucherCode')?.value.trim().toUpperCase();
+            const pointsInput = parseInt(document.getElementById('createOrderPointsInput')?.value || '0', 10);
+
+            const subtotalEl = document.getElementById('posLiveSubtotal');
+            const totalEl = document.getElementById('posLiveTotal');
+            const rowTier = document.getElementById('posRowTierDiscount');
+            const rowVoucher = document.getElementById('posRowVoucherDiscount');
+            const rowPoints = document.getElementById('posRowPointsDiscount');
+
+            if (!prodSelect || !prodSelect.value) {
+                if (subtotalEl) subtotalEl.textContent = '0 đ';
+                if (totalEl) totalEl.textContent = '0 đ';
+                if (rowTier) rowTier.style.display = 'none';
+                if (rowVoucher) rowVoucher.style.display = 'none';
+                if (rowPoints) rowPoints.style.display = 'none';
+                return { subtotal: 0, tierDiscount: 0, voucherDiscount: 0, pointsDiscount: 0, pointsUsed: 0, grandTotal: 0 };
+            }
+
+            const opt = prodSelect.options[prodSelect.selectedIndex];
+            const price = parseInt(opt.getAttribute('data-price') || '0', 10);
+            const subtotal = price * qty;
+
+            // 1. Chiết khấu hạng thành viên
+            let tierDiscountPercent = 0;
+            if (activePosCustomer && activePosCustomer.rank) {
+                if (activePosCustomer.rank.includes('Kim Cương')) tierDiscountPercent = 10;
+                else if (activePosCustomer.rank.includes('Vàng')) tierDiscountPercent = 5;
+                else if (activePosCustomer.rank.includes('Bạc')) tierDiscountPercent = 3;
+            }
+            const tierDiscount = Math.round(subtotal * (tierDiscountPercent / 100));
+
+            // 2. Mã giảm giá Voucher
+            let voucherDiscount = 0;
+            if (voucherInput) {
+                const matchedVoucher = initialVouchers.find(v => v.code === voucherInput && v.status === 'Đang chạy');
+                if (matchedVoucher) {
+                    if (matchedVoucher.discount.includes('%')) {
+                        const pct = parseInt(matchedVoucher.discount.match(/\d+/)?.[0] || '10', 10);
+                        voucherDiscount = Math.min(50000, Math.round(subtotal * (pct / 100)));
+                    } else {
+                        voucherDiscount = parseInt(matchedVoucher.discount.replace(/[^\d]/g, '') || '0', 10);
+                    }
+                }
+            }
+
+            // 3. Đổi điểm PawPoint (100 điểm = 10.000 đ)
+            let maxPointsAvailable = (activePosCustomer && activePosCustomer.points) || 0;
+            let actualPointsUsed = Math.min(pointsInput || 0, maxPointsAvailable);
+            if (actualPointsUsed < 0) actualPointsUsed = 0;
+            const pointsDiscount = actualPointsUsed * 100;
+
+            const grandTotal = Math.max(0, subtotal - tierDiscount - voucherDiscount - pointsDiscount);
+
+            if (subtotalEl) subtotalEl.textContent = formatVND(subtotal);
+            
+            if (rowTier) {
+                rowTier.style.display = tierDiscount > 0 ? 'flex' : 'none';
+                const el = document.getElementById('posLiveTierDiscount');
+                if (el) el.textContent = '- ' + formatVND(tierDiscount);
+            }
+
+            if (rowVoucher) {
+                rowVoucher.style.display = voucherDiscount > 0 ? 'flex' : 'none';
+                const el = document.getElementById('posLiveVoucherDiscount');
+                if (el) el.textContent = '- ' + formatVND(voucherDiscount);
+            }
+
+            if (rowPoints) {
+                rowPoints.style.display = pointsDiscount > 0 ? 'flex' : 'none';
+                const el = document.getElementById('posLivePointsDiscount');
+                if (el) el.textContent = '- ' + formatVND(pointsDiscount);
+            }
+
+            if (totalEl) totalEl.textContent = formatVND(grandTotal);
+
+            return {
+                subtotal,
+                tierDiscount,
+                voucherDiscount,
+                pointsDiscount,
+                pointsUsed: actualPointsUsed,
+                grandTotal
+            };
+        }
+
         function populateCreateOrderProducts() {
             const prodSelect = document.getElementById('createOrderProductSelect');
             if (!prodSelect) return;
@@ -1582,46 +1757,96 @@
         }
 
         document.getElementById('btnOpenCreateOrderModal')?.addEventListener('click', () => {
+            activePosCustomer = null;
+            const memberBanner = document.getElementById('createOrderMemberBanner');
+            if (memberBanner) memberBanner.style.display = 'none';
+
             populateCreateOrderProducts();
             document.getElementById('modalCreateOrder')?.classList.add('active');
+            updatePosLiveCalculation();
         });
+
+        // Gắn sự kiện tính tiền tức thời khi thay đổi trường trong form POS
+        document.getElementById('createOrderProductSelect')?.addEventListener('change', updatePosLiveCalculation);
+        document.getElementById('createOrderQty')?.addEventListener('input', updatePosLiveCalculation);
+        document.getElementById('createOrderVoucherCode')?.addEventListener('input', updatePosLiveCalculation);
+        document.getElementById('createOrderPointsInput')?.addEventListener('input', updatePosLiveCalculation);
 
         // Tự động tìm kiếm thông tin khách hàng khi nhập số điện thoại
         document.getElementById('createOrderPhone')?.addEventListener('input', (e) => {
             const val = e.target.value.trim();
+            const memberBanner = document.getElementById('createOrderMemberBanner');
+            const rankLabel = document.getElementById('createOrderRankLabel');
+            const pointsLabel = document.getElementById('createOrderPointsLabel');
+
             if (val.length >= 9) {
                 let foundName = '';
                 let foundAddr = '';
+                let foundRank = 'Thành viên Đồng';
+                let foundPoints = 0;
+                let foundUserId = 'USER-001';
 
-                // Tìm trong danh sách đơn hàng đã có
-                const matchedOrder = currentOrdersList.find(o => o.phone && o.phone.replace(/\s+/g, '') === val.replace(/\s+/g, ''));
-                if (matchedOrder) {
-                    foundName = matchedOrder.customerName;
-                    foundAddr = matchedOrder.address;
-                }
-
-                // Tìm trong bộ nhớ khách hàng nếu có
+                // Tìm trong bộ nhớ khách hàng hệ thống
                 try {
-                    const savedCusts = sessionStorage.getItem('pawpal_admin_customers');
-                    if (savedCusts) {
-                        const parsed = JSON.parse(savedCusts);
-                        const c = parsed.find(x => (x.phone || '').replace(/\s+/g, '') === val.replace(/\s+/g, ''));
-                        if (c) {
-                            foundName = c.fullName || c.name || foundName;
-                            foundAddr = c.address || (c.addresses && c.addresses[0]?.address) || foundAddr;
-                        }
+                    const rawCusts = sessionStorage.getItem('pawpal_admin_customers_data');
+                    if (rawCusts) {
+                        const parsed = JSON.parse(rawCusts);
+                        Object.keys(parsed).forEach(cId => {
+                            const c = parsed[cId];
+                            if (c.phone && c.phone.replace(/\s+/g, '') === val.replace(/\s+/g, '')) {
+                                foundName = c.fullName || c.name || foundName;
+                                foundAddr = c.address || (c.addresses && c.addresses[0]?.address) || foundAddr;
+                                foundRank = c.membershipTier || c.tier || 'Thành viên Vàng';
+                                foundPoints = c.points || 0;
+                                foundUserId = cId;
+                            }
+                        });
                     }
                 } catch (err) {}
 
-                const nameInput = document.getElementById('createOrderName');
-                if (nameInput && foundName && !nameInput.value) {
-                    nameInput.value = foundName;
+                // Tìm trong danh sách đơn hàng đã có
+                if (!foundName) {
+                    const matchedOrder = currentOrdersList.find(o => o.phone && o.phone.replace(/\s+/g, '') === val.replace(/\s+/g, ''));
+                    if (matchedOrder) {
+                        foundName = matchedOrder.customerName;
+                        foundAddr = matchedOrder.address;
+                        foundUserId = matchedOrder.userId || 'USER-001';
+                        foundRank = 'Thành viên Vàng (Giảm 5%)';
+                        foundPoints = 500;
+                    }
                 }
-                const customAddrInput = document.getElementById('createOrderCustomAddress');
-                if (customAddrInput && foundAddr && !customAddrInput.value) {
-                    customAddrInput.value = foundAddr;
+
+                if (foundName) {
+                    activePosCustomer = {
+                        userId: foundUserId,
+                        name: foundName,
+                        phone: val,
+                        address: foundAddr,
+                        rank: foundRank,
+                        points: foundPoints
+                    };
+
+                    const nameInput = document.getElementById('createOrderName');
+                    if (nameInput && !nameInput.value) nameInput.value = foundName;
+
+                    const customAddrInput = document.getElementById('createOrderCustomAddress');
+                    if (customAddrInput && foundAddr && !customAddrInput.value) customAddrInput.value = foundAddr;
+
+                    if (memberBanner) {
+                        memberBanner.style.display = 'flex';
+                        if (rankLabel) rankLabel.textContent = foundRank;
+                        if (pointsLabel) pointsLabel.textContent = `${foundPoints.toLocaleString('vi-VN')} điểm`;
+                    }
+                } else {
+                    activePosCustomer = null;
+                    if (memberBanner) memberBanner.style.display = 'none';
                 }
+            } else {
+                activePosCustomer = null;
+                if (memberBanner) memberBanner.style.display = 'none';
             }
+
+            updatePosLiveCalculation();
         });
 
         document.getElementById('btnSubmitCreateOrder')?.addEventListener('click', () => {
@@ -1630,6 +1855,7 @@
             const prodSelect = document.getElementById('createOrderProductSelect');
             const qty = parseInt(document.getElementById('createOrderQty')?.value || '1', 10);
             const payMethod = document.getElementById('createOrderPaymentMethod')?.value || 'cash';
+            const voucherInput = document.getElementById('createOrderVoucherCode')?.value.trim().toUpperCase();
 
             if (!phone || !name) {
                 alert('Vui lòng nhập họ tên và số điện thoại người nhận.');
@@ -1647,14 +1873,15 @@
                 return;
             }
 
+            const calc = updatePosLiveCalculation();
             const newCode = 'ORD-2026-00' + (currentOrdersList.length + 1);
             const opt = prodSelect.options[prodSelect.selectedIndex];
             const price = parseInt(opt.getAttribute('data-price') || '0', 10);
 
             const addrInput = document.getElementById('createOrderCustomAddress')?.value?.trim();
             const preset = window.__currentOrderPresetCust;
-            const finalAddr = addrInput || (preset && preset.address) || 'Chi nhánh Quận 1, TP. Hồ Chí Minh';
-            const finalUserId = (preset && (preset.custId || preset.userId)) || 'USER-001';
+            const finalAddr = addrInput || (preset && preset.address) || (activePosCustomer && activePosCustomer.address) || 'Chi nhánh Quận 1, TP. Hồ Chí Minh';
+            const finalUserId = (preset && (preset.custId || preset.userId)) || (activePosCustomer && activePosCustomer.userId) || 'USER-001';
 
             const newOrder = {
                 id: newCode,
@@ -1668,13 +1895,13 @@
                 carrier: (payMethod === 'cod' || addrInput) ? 'Giao tận nơi' : 'Tại quầy PawPal',
                 trackingNumber: '--',
                 createdAt: new Date().toISOString(),
-                subtotal: price * qty,
+                subtotal: calc.subtotal,
                 shippingFee: 0,
-                discount: 0,
-                pawPointsUsed: 0,
-                total: price * qty,
+                discount: calc.tierDiscount + calc.voucherDiscount,
+                pawPointsUsed: calc.pointsUsed,
+                total: calc.grandTotal,
                 customerNote: 'Tạo đơn tại quầy',
-                internalNote: 'Đơn bán trực tiếp tại cửa hàng',
+                internalNote: `Đơn bán trực tiếp POS | Khách: ${activePosCustomer ? activePosCustomer.rank : 'Thành viên mới'}`,
                 alertType: null,
                 products: [
                     {
@@ -1683,12 +1910,12 @@
                         spec: 'Tiêu chuẩn',
                         price: price,
                         quantity: qty,
-                        total: price * qty,
+                        total: calc.subtotal,
                         image: '/assets/images/shop/products/tp-hat-01.png'
                     }
                 ],
                 timeline: [
-                    { title: 'Tạo đơn hàng tại quầy', time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay', desc: 'Nhân viên thu ngân tiếp nhận và thu tiền', done: true }
+                    { title: 'Tạo đơn hàng tại quầy (POS)', time: new Date().toLocaleTimeString('vi-VN') + ' - Hôm nay', desc: `Nhân viên thu ngân lập đơn và thu tiền ${formatVND(calc.grandTotal)}`, done: true }
                 ]
             };
 
@@ -1701,13 +1928,40 @@
                 persistProductsData();
             }
 
+            // Trừ điểm PawPoint nếu có dùng
+            if (calc.pointsUsed > 0 && activePosCustomer) {
+                try {
+                    const rawCusts = sessionStorage.getItem('pawpal_admin_customers_data');
+                    if (rawCusts) {
+                        const parsed = JSON.parse(rawCusts);
+                        if (parsed[finalUserId]) {
+                            parsed[finalUserId].points = Math.max(0, (parsed[finalUserId].points || 0) - calc.pointsUsed);
+                            sessionStorage.setItem('pawpal_admin_customers_data', JSON.stringify(parsed));
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            // Tăng số lượt đã dùng của voucher nếu có dùng
+            if (voucherInput) {
+                const voucher = initialVouchers.find(v => v.code === voucherInput);
+                if (voucher) {
+                    const parts = voucher.used.split('/');
+                    const usedCount = parseInt(parts[0].trim(), 10) + 1;
+                    const maxCount = parts[1] ? parts[1].trim() : '500';
+                    voucher.used = `${usedCount} / ${maxCount}`;
+                }
+            }
+
             currentOrdersList.unshift(newOrder);
             persistOrdersData();
             window.__currentOrderPresetCust = null;
             document.getElementById('modalCreateOrder')?.classList.remove('active');
             renderOrdersTable();
             renderProductsTable();
-            alert(`Đã tạo thành công đơn hàng ${newCode}!`);
+            renderVouchersTable();
+            
+            alert(`Đã tạo thành công đơn hàng ${newCode} tại quầy!\nTổng thanh toán: ${formatVND(calc.grandTotal)}.`);
             PawpalOrdersModule.openOrderDetail(newCode);
         });
 
@@ -1960,6 +2214,7 @@
             }
 
             document.getElementById('modalReturnRefund')?.classList.remove('active');
+            persistOrdersData();
             renderOrdersTable();
             renderProductsTable();
             renderOrderDetail(order.id);
@@ -2112,6 +2367,7 @@
             const order = currentOrdersList.find(o => o.id === orderId);
             if (order) {
                 order.paymentStatus = 'paid';
+                persistOrdersData();
                 alert(`Đã xác nhận thu tiền cho đơn hàng ${orderId}!`);
                 window.PawpalOrdersModule.openOrderDetail(orderId);
             }
@@ -2131,6 +2387,7 @@
                         : 'Bưu tá xác nhận khách đã nhận hàng thành công',
                     done: true
                 });
+                persistOrdersData();
                 alert(`Đã cập nhật trạng thái Đã giao cho đơn ${orderId}!`);
                 renderOrdersTable();
                 window.PawpalOrdersModule.openOrderDetail(orderId);
@@ -2146,6 +2403,7 @@
                     desc: 'Kế toán xác nhận bưu cục đã chuyển khoản tiền COD về tài khoản PawPal',
                     done: true
                 });
+                persistOrdersData();
                 alert(`Đã đối soát thành công tiền COD cho đơn hàng ${orderId}!`);
                 renderOrdersTable();
                 window.PawpalOrdersModule.openOrderDetail(orderId);
@@ -2342,6 +2600,13 @@
             const prod = currentProductsList.find(p => p.sku === sku);
             if (!prod) return;
 
+            // Tính tạm giữ và khả dụng
+            const reserved = currentOrdersList.filter(o => o.status === 'pending' || o.status === 'confirmed').reduce((sum, o) => {
+                const item = o.products.find(x => x.sku === sku);
+                return sum + (item ? item.quantity : 0);
+            }, 0);
+            const available = Math.max(0, prod.stock - reserved);
+
             activeAdjustProductSku = sku;
             const skuEl = document.getElementById('adjustSkuCode');
             const nameEl = document.getElementById('adjustProdName');
@@ -2351,7 +2616,7 @@
 
             if (skuEl) skuEl.textContent = prod.sku;
             if (nameEl) nameEl.textContent = prod.name;
-            if (stockEl) stockEl.textContent = `${prod.stock} đơn vị`;
+            if (stockEl) stockEl.innerHTML = `${prod.stock} tổng tồn (${reserved > 0 ? `Đang giữ: ${reserved} • ` : ''}Khả dụng: ${available})`;
             if (priceInput) priceInput.value = prod.price || '';
             if (statusSelect) statusSelect.value = prod.status || 'Đang bán';
 

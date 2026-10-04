@@ -1,655 +1,58 @@
 // services.js - Phân hệ Quản lý Dịch vụ Pawpal-er
 (function() {
-    // Dữ liệu mẫu lịch hẹn khởi tạo từ bookings.json kết hợp chi tiết dịch vụ
-    const initialBookings = [
-        {
-            id: 'BKG-1001',
-            userId: 'USER-001',
-            customerName: 'Lê Lệ Quyên',
-            phone: '0901234567',
-            petId: 'PET-001',
-            petName: 'Miu Con',
-            petBreed: 'Mèo Anh Lông Ngắn',
-            petWeight: '4.2 kg',
-            petAge: '2 tuổi',
-            serviceCode: 'SPA01',
-            category: 'Spa',
-            categoryName: 'Spa và Grooming',
-            serviceName: 'Gói Tắm Vệ Sinh Cơ Bản',
-            date: '2026-06-25',
-            time: '14:00',
-            duration: '60 phút',
-            staff: 'Ngọc Anh',
-            branch: 'PawPal Chi nhánh Quận 1',
-            price: 250000,
-            addonPrice: 0,
-            discount: 0,
-            total: 250000,
-            paymentStatus: 'Chưa thanh toán (Tại quầy)',
-            status: 'confirmed',
-            alertType: 'upcoming',
-            petAlert: 'Dị ứng phấn hoa và các loại dầu tắm chứa hương liệu đậm đặc.',
-            customerNote: 'Bé hơi nhát nước, xin hãy massage nhẹ nhàng trước khi xả nước.',
-            addons: [],
-            intakeSafety: {
-                actualWeight: '4.2 kg',
-                weightEval: 'Đúng khung giá đăng ký',
-                skinCoat: 'Da lông sạch sẽ, có lưu ý dị ứng hương liệu',
-                eyesEarsNose: 'Mắt sáng, vành tai sạch sẽ',
-                wounds: 'Không có vết thương cũ',
-                temperament: 'Nhút nhát / Hơi sợ nước',
-                belongings: '01 Dây dắt đỏ bản to',
-                proofImages: ['/assets/images/services/spa/process/spa01.webp'],
-                intakeStaff: 'Ngọc Anh',
-                intakeTime: '13:50'
-            },
-            timeline: [
-                { time: '13:50', title: 'Tiếp nhận Pet', desc: 'Đã đón bé tại quầy tiếp tân cơ sở Quận 1', done: true, staff: 'Ngọc Anh', images: ['/assets/images/services/spa/process/spa01.webp'] },
-                { time: '14:00', title: 'Kiểm tra da lông sơ bộ', desc: 'Kiểm tra vết nấm, ve rận và độ dài móng', done: true, staff: 'Ngọc Anh', images: ['/assets/images/services/spa/process/tam_cho5.jpg'] },
-                { time: '14:15', title: 'Tắm và Sấy khô', desc: 'Sử dụng dầu tắm thảo dược Hypoallergenic dịu nhẹ', done: false, staff: 'Ngọc Anh', images: [] },
-                { time: '14:45', title: 'Cắt móng và Vệ sinh tai', desc: 'Mài dũa móng và vệ sinh vành tai', done: false, staff: 'Ngọc Anh', images: [] },
-                { time: '15:00', title: 'Hoàn tất và Bàn giao', desc: 'Chụp ảnh gửi chủ và xuất phiếu hoàn tất ca', done: false, staff: 'Ngọc Anh', images: [] }
-            ]
-        },
-        {
-            id: 'BKG-1002',
-            userId: 'USER-001',
-            customerName: 'Lê Lệ Quyên',
-            phone: '0901234567',
-            petId: 'PET-002',
-            petName: 'Miu Miu',
-            petBreed: 'Chó Poodle Tiny',
-            petWeight: '3.1 kg',
-            petAge: '1.5 tuổi',
-            serviceCode: 'SPA07',
-            category: 'Spa',
-            categoryName: 'Spa và Grooming',
-            serviceName: 'Grooming Tạo Kiểu Cơ Bản',
-            date: '2026-06-10',
-            time: '09:30',
-            duration: '150 phút',
-            staff: 'Hoàng Nam',
-            branch: 'PawPal Chi nhánh Quận 10',
-            price: 400000,
-            addonPrice: 0,
-            discount: 0,
-            total: 400000,
-            paymentStatus: 'Đã thanh toán (VNPay)',
-            status: 'completed',
-            alertType: null,
-            petAlert: null,
-            customerNote: 'Tỉa tròn mặt kiểu Boo xinh xắn.',
-            addons: [],
-            timeline: [
-                { time: '09:30', title: 'Tiếp nhận và Tạo kiểu', desc: 'Tiếp nhận bé Poodle và kiểm tra dáng lông', done: true, staff: 'Hoàng Nam', images: [] },
-                { time: '10:15', title: 'Tắm xả dưỡng phồng lông', desc: 'Sấy khô và đánh tơi lông chuyên nghiệp', done: true, staff: 'Hoàng Nam', images: ['/assets/images/services/spa/process/tam_cho4.jpg'] },
-                { time: '11:30', title: 'Cắt tỉa tạo kiểu Boo', desc: 'Cắt tỉa mặt tròn Boo và bo tròn 4 chân', done: true, staff: 'Hoàng Nam', images: ['/assets/images/services/spa/process/cat_long1.jpg'] },
-                { time: '12:00', title: 'Bàn giao cho chủ', desc: 'Bé đã được chủ đón về trong tình trạng vui vẻ', done: true, staff: 'Hoàng Nam', images: [] }
-            ]
-        },
-        {
-            id: 'BKG-1003',
-            userId: 'USER-ADMIN',
-            customerName: 'Trần Minh Quân',
-            phone: '0912345678',
-            petId: 'PET-003',
-            petName: 'Bông Xù',
-            petBreed: 'Chó Samoyed',
-            petWeight: '18.5 kg',
-            petAge: '3 tuổi',
-            serviceCode: 'HTL03',
-            category: 'Hotel',
-            categoryName: 'Pet Hotel',
-            serviceName: 'Phòng Deluxe (3 ngày)',
-            date: '2026-07-01',
-            time: '08:00',
-            duration: '3 ngày',
-            staff: 'Thu Thảo',
-            branch: 'PawPal Chi nhánh Quận 1',
-            price: 1200000,
-            addonPrice: 150000,
-            discount: 50000,
-            total: 1300000,
-            paymentStatus: 'Đã thanh toán (MoMo)',
-            status: 'confirmed',
-            alertType: null,
-            petAlert: 'Thích ăn thịt bò luộc, không ăn thức ăn hạt vị cá ngừ.',
-            customerNote: 'Bật điều hòa 24/24 và mở link camera cho mình theo dõi nhé.',
-            addons: [
-                {
-                    id: 'ADD-1001',
-                    name: 'Vệ sinh tai nấm và viêm chuyên sâu',
-                    amount: 50000,
-                    reason: 'Vành tai có mảng sáp nâu, cần nhỏ dung dịch sát khuẩn y tế',
-                    consent: 'Đã gửi ảnh và video qua Zalo cho khách',
-                    time: '08:45'
-                },
-                {
-                    id: 'ADD-1002',
-                    name: 'Tắm bùn khoáng phục hồi da lông',
-                    amount: 100000,
-                    reason: 'Chủ yêu cầu bổ sung gói ủ bùn dưỡng lông dày mượt trước khi nhận phòng',
-                    consent: 'Khách hàng yêu cầu trực tiếp tại quầy',
-                    time: '09:15'
-                }
-            ],
-            timeline: [
-                { time: '08:00', title: 'Check-in tiếp nhận', desc: 'Đã đón bé và nhận hướng dẫn chăm sóc riêng', done: true, staff: 'Thu Thảo' },
-                { time: '08:45', title: 'Phát sinh: Vệ sinh tai nấm và viêm chuyên sâu (+50.000 đ)', desc: '[Đã gửi ảnh và video qua Zalo cho khách] Vành tai có mảng sáp nâu, cần nhỏ dung dịch sát khuẩn y tế', done: true, staff: 'Thu Thảo' },
-                { time: '09:15', title: 'Phát sinh: Tắm bùn khoáng phục hồi da lông (+100.000 đ)', desc: '[Khách hàng yêu cầu trực tiếp tại quầy] Chủ yêu cầu bổ sung gói ủ bùn dưỡng lông dày mượt', done: true, staff: 'Thu Thảo' },
-                { time: '12:00', title: 'Bữa trưa dinh dưỡng', desc: 'Cho bé ăn thịt bò áp chảo trộn rau củ luộc', done: false, staff: 'Thu Thảo' },
-                { time: '16:00', title: 'Vận động sân cỏ', desc: 'Dắt đi dạo và vui chơi sân cỏ nhân tạo', done: false, staff: 'Thu Thảo' }
-            ]
-        },
-        {
-            id: 'BKG-1004',
-            userId: 'USER-001',
-            customerName: 'Lê Lệ Quyên',
-            phone: '0901234567',
-            petId: 'PET-001',
-            petName: 'Miu Con',
-            petBreed: 'Mèo Anh Lông Ngắn',
-            petWeight: '4.2 kg',
-            petAge: '2 tuổi',
-            serviceCode: 'SPA01',
-            category: 'Spa',
-            categoryName: 'Spa và Grooming',
-            serviceName: 'Tắm sấy trọn gói',
-            date: '2026-06-24',
-            time: '10:00',
-            duration: '60 phút',
-            staff: 'Ngọc Anh',
-            branch: 'PawPal Chi nhánh Quận 1',
-            price: 280000,
-            addonPrice: 0,
-            discount: 0,
-            total: 280000,
-            paymentStatus: 'Đã thanh toán (Tiền mặt)',
-            status: 'completed',
-            alertType: null,
-            petAlert: null,
-            customerNote: 'Cần uốn tóc sau khi tắm.',
-            addons: [],
-            timeline: [
-                { time: '10:00', title: 'Tiếp nhận', desc: 'Đã tiếp nhận bé', done: true, staff: 'Ngọc Anh' },
-                { time: '10:45', title: 'Tắm sấy', desc: 'Hoàn tất tắm sấy', done: true, staff: 'Ngọc Anh' },
-                { time: '11:00', title: 'Hoàn thành ca', desc: 'Khách hàng ký nhận', done: true, staff: 'Ngọc Anh' }
-            ]
-        },
-        {
-            id: 'BKG-1005',
-            userId: 'USER-001',
-            customerName: 'Lê Lệ Quyên',
-            phone: '0901234567',
-            petId: 'PET-002',
-            petName: 'Miu Miu',
-            petBreed: 'Chó Poodle Tiny',
-            petWeight: '3.1 kg',
-            petAge: '1.5 tuổi',
-            serviceCode: 'SPA05',
-            category: 'Spa',
-            categoryName: 'Spa và Grooming',
-            serviceName: 'Cắt tỉa vệ sinh',
-            date: '2026-06-24',
-            time: '16:30',
-            duration: '30 phút',
-            staff: 'Thu Thảo',
-            branch: 'PawPal Chi nhánh Quận 10',
-            price: 180000,
-            addonPrice: 0,
-            discount: 0,
-            total: 180000,
-            paymentStatus: 'Đã hoàn tiền',
-            status: 'cancelled',
-            alertType: null,
-            petAlert: null,
-            customerNote: 'Khách đã hủy vì bận đột xuất.',
-            addons: [],
-            timeline: [
-                { time: '16:00', title: 'Khách báo hủy', desc: 'Khách gọi điện xin hủy vì lịch trình bận đột xuất', done: true, staff: 'Thu Thảo' }
-            ]
-        },
-        {
-            id: 'BKG-1006',
-            userId: 'USER-003',
-            customerName: 'Hoàng Hải Yến',
-            phone: '0987654321',
-            petId: 'PET-004',
-            petName: 'Lucky',
-            petBreed: 'Chó Corgi Pembroke',
-            petWeight: '11.2 kg',
-            petAge: '2.5 tuổi',
-            serviceCode: 'SPA02',
-            category: 'Spa',
-            categoryName: 'Spa và Grooming',
-            serviceName: 'Gói Tắm Dưỡng Premium',
-            date: '2026-06-27',
-            time: '09:00',
-            duration: '90 phút',
-            staff: '',
-            branch: 'PawPal Chi nhánh Quận 1',
-            price: 350000,
-            addonPrice: 0,
-            discount: 0,
-            total: 350000,
-            paymentStatus: 'Chưa thanh toán (Tại quầy)',
-            status: 'pending',
-            alertType: 'urgent',
-            petAlert: null,
-            customerNote: 'Mong xếp bạn nhân viên khéo tay vì bé Corgi rất hiếu động.',
-            addons: [],
-            timeline: [
-                { time: '08:30', title: 'Tạo lịch Online', desc: 'Khách hàng đặt lịch hẹn qua Website PawPal', done: true, staff: 'Hệ thống', images: [] }
-            ]
-        },
-        {
-            id: 'BKG-1007',
-            userId: 'USER-004',
-            customerName: 'Phạm Đức Trọng',
-            phone: '0978112233',
-            petId: 'PET-005',
-            petName: 'Bơ Béo',
-            petBreed: 'Mèo Ba Tư Mặt Tịt',
-            petWeight: '5.0 kg',
-            petAge: '4 tuổi',
-            serviceCode: 'TXI01',
-            category: 'Taxi',
-            categoryName: 'Pet Taxi',
-            serviceName: 'Dịch Vụ Xe Đưa Đón Tận Nơi',
-            date: '2026-06-27',
-            time: '10:30',
-            duration: 'Theo chuyến',
-            staff: 'Hữu Phúc',
-            branch: 'PawPal Chi nhánh Quận 1',
-            price: 150000,
-            addonPrice: 0,
-            discount: 0,
-            total: 150000,
-            paymentStatus: 'Chưa thanh toán (Tại quầy)',
-            status: 'in_progress',
-            alertType: 'upcoming',
-            petAlert: 'Dễ bị say xe, cần lót khăn êm và giữ khoang cabin mát mẻ.',
-            customerNote: 'Đón tại số 45 Lê Duẩn, P. Bến Nghé, Q.1.',
-            addons: [],
-            timeline: [
-                { time: '10:15', title: 'Xuất phát đón bé', desc: 'Tài xế Hữu Phúc xuất phát đến điểm hẹn', done: true, staff: 'Hữu Phúc' },
-                { time: '10:30', title: 'Tiếp nhận bé lên xe', desc: 'Đã đưa bé Bơ Béo vào lồng vận chuyển an toàn', done: true, staff: 'Hữu Phúc' },
-                { time: '10:45', title: 'Đang di chuyển', desc: 'Xe đang trên đường về PawPal Chi nhánh Quận 1', done: false, staff: 'Hữu Phúc' }
-            ]
-        },
-        {
-            id: 'BKG-1008',
-            userId: 'USER-002',
-            customerName: 'Trần Minh Quân',
-            phone: '0912345678',
-            petId: 'PET-003',
-            petName: 'Bông Xù',
-            petBreed: 'Chó Samoyed',
-            petWeight: '18.5 kg',
-            petAge: '3 tuổi',
-            serviceCode: 'SPA10',
-            category: 'Spa',
-            categoryName: 'Spa và Grooming',
-            serviceName: 'Tắm Thuốc Trị Liệu Da Liễu',
-            date: '2026-06-27',
-            time: '14:30',
-            duration: '90 phút',
-            staff: 'Ngọc Anh',
-            branch: 'PawPal Chi nhánh Quận 1',
-            price: 400000,
-            addonPrice: 0,
-            discount: 0,
-            total: 400000,
-            paymentStatus: 'Đã thanh toán (VNPay)',
-            status: 'confirmed',
-            alertType: 'upcoming',
-            petAlert: 'Da lưng đang có mảng viêm đỏ nhẹ, cần thoa dầu tắm y tế cẩn thận.',
-            customerNote: 'Nhờ tắm thuốc kỹ vùng bả vai cho bé.',
-            addons: [],
-            timeline: [
-                { time: '14:00', title: 'Chuẩn bị phòng thuốc', desc: 'Đã chuẩn bị bồn ngâm thảo dược đông y', done: true, staff: 'Ngọc Anh' }
-            ]
-        },
-        {
-            id: 'BKG-1009',
-            userId: 'USER-001',
-            customerName: 'Trần Thị Mai',
-            phone: '0933445566',
-            petId: 'PET-006',
-            petName: 'Bông Gòn',
-            petBreed: 'Chó Bichon Frise',
-            petWeight: '5.2 kg',
-            petAge: '2 tuổi',
-            serviceCode: 'SPA07',
-            category: 'Spa',
-            categoryName: 'Spa và Grooming',
-            serviceName: 'Grooming Tạo Kiểu Cơ Bản',
-            date: '2026-06-25',
-            time: '13:00',
-            duration: '90 phút',
-            staff: 'Hoàng Nam',
-            branch: 'PawPal Chi nhánh Quận 1',
-            price: 450000,
-            addonPrice: 0,
-            discount: 0,
-            total: 450000,
-            paymentStatus: 'Chưa thanh toán (Tại quầy)',
-            status: 'in_progress',
-            alertType: 'urgent',
-            petAlert: 'Lông bị rối bết nhiều vùng háng và nách chân trước.',
-            customerNote: 'Xin hãy kiên nhẫn gỡ rối, đừng cạo sát da bé.',
-            addons: [],
-            intakeSafety: {
-                actualWeight: '5.2 kg',
-                weightEval: 'Đúng khung giá đăng ký',
-                skinCoat: 'Lông bết rối nhiều mảng háng và bụng',
-                eyesEarsNose: 'Mắt tai sạch sẽ bình thường',
-                wounds: 'Có vết xước nhỏ ở đệm chân trước',
-                temperament: 'Ngoan hiền / Thân thiện',
-                belongings: '01 Chuồng vận chuyển nhựa xám',
-                proofImages: ['/assets/images/services/spa/process/cat_long1.jpg'],
-                intakeStaff: 'Hoàng Nam',
-                intakeTime: '13:00'
-            },
-            timeline: [
-                { time: '13:00', title: 'Tiếp nhận bé và Kiểm tra an toàn', desc: 'Đã kiểm tra cân nặng 5.2kg, ghi nhận lông bết rối, có vết xước nhẹ đệm chân trước', done: true, staff: 'Hoàng Nam', images: ['/assets/images/services/spa/process/cat_long1.jpg'] },
-                { time: '13:15', title: 'Tắm xả và sấy bông lông', desc: 'Hoàn tất tắm dưỡng phục hồi', done: true, staff: 'Hoàng Nam' },
-                { time: '14:30', title: 'Gỡ rối và Cắt tỉa tạo kiểu', desc: 'Đang gỡ rối lông dày và cắt tỉa form chuẩn', done: false, staff: 'Hoàng Nam' }
-            ]
-        }
-    ];
-
-    // Dữ liệu danh mục dịch vụ mẫu lấy từ dichvu.csv
-    const initialServices = [
-        {
-            code: 'SPA01',
-            group: 'spa',
-            categoryName: 'Spa và Grooming – Chăm sóc cơ bản',
-            name: 'Gói Tắm Vệ Sinh Cơ Bản',
-            petType: 'Chó / Mèo',
-            duration: '60 phút',
-            rating: 4.8,
-            reviews: 154,
-            priceFrom: '120.000',
-            prices: { under5: '120.000', to10: '150.000', to20: '200.000', over20: '250.000' },
-            desc: 'Liệu trình tắm làm sạch và khử mùi hôi cơ bản dành cho các bé chó mèo có sức khỏe da lông bình thường.',
-            staffLevel: 'Junior Groomer',
-            status: 'Đang phục vụ',
-            image: '/assets/images/services/spa/process/spa01.webp',
-            steps: [
-                'Tiếp nhận bé và kiểm tra da lông sơ bộ',
-                'Tắm sạch sâu và xả thơm thảo dược dịu nhẹ',
-                'Sấy khô và đánh tơi phồng lông',
-                'Vệ sinh tai, tuyến hôi và mài dũa móng',
-                'Chụp ảnh hoàn tất và bàn giao cho chủ'
-            ]
-        },
-        {
-            code: 'SPA02',
-            group: 'spa',
-            categoryName: 'Spa và Grooming – Chăm sóc cơ bản',
-            name: 'Gói Tắm Dưỡng Premium',
-            petType: 'Chó / Mèo',
-            duration: '90 phút',
-            rating: 4.9,
-            reviews: 92,
-            priceFrom: '220.000',
-            prices: { under5: '220.000', to10: '270.000', to20: '350.000', over20: '450.000' },
-            desc: 'Liệu trình tắm dưỡng chuyên sâu kết hợp massage thư giãn, phục hồi lông hư tổn.',
-            staffLevel: 'Senior Groomer',
-            status: 'Đang phục vụ',
-            image: '/assets/images/services/spa/process/tam_cho5.jpg',
-            steps: [
-                'Tiếp nhận và mát-xa bấm huyệt thư giãn',
-                'Tắm dưỡng phục hồi chuyên sâu',
-                'Ủ dầu xả tinh chất mượt lông',
-                'Sấy ion âm chống tĩnh điện',
-                'Vệ sinh tai mắt và dũa móng',
-                'Bàn giao và gửi ảnh kỷ niệm'
-            ]
-        },
-        {
-            code: 'SPA07',
-            group: 'spa',
-            categoryName: 'Spa và Grooming – Tạo kiểu',
-            name: 'Grooming Tạo Kiểu Cơ Bản',
-            petType: 'Chó',
-            duration: '150 phút',
-            rating: 4.9,
-            reviews: 210,
-            priceFrom: '350.000',
-            prices: { under5: '350.000', to10: '400.000', to20: '500.000', over20: '650.000' },
-            desc: 'Gói làm đẹp toàn diện bao gồm tắm vệ sinh kỹ lưỡng kết hợp cắt tỉa lông tạo kiểu cơ bản.',
-            staffLevel: 'Senior Groomer',
-            status: 'Đang phục vụ',
-            image: '/assets/images/services/spa/process/cat_long1.jpg',
-            steps: [
-                'Tiếp nhận và tư vấn form dáng cắt tỉa',
-                'Tắm xả dưỡng phồng và sấy tơi lông',
-                'Cắt tỉa mặt tròn Boo / Poodle',
-                'Bo tròn 4 chân và cắt gọn móng',
-                'Xịt nước hoa dưỡng lông hữu cơ',
-                'Bàn giao cho chủ'
-            ]
-        },
-        {
-            code: 'SPA08',
-            group: 'spa',
-            categoryName: 'Spa và Grooming – Tạo kiểu',
-            name: 'Grooming Theo Yêu Cầu',
-            petType: 'Chó',
-            duration: '180 phút',
-            rating: 4.9,
-            reviews: 74,
-            priceFrom: '450.000',
-            prices: { under5: '450.000', to10: '500.000', to20: '600.000', over20: '750.000' },
-            desc: 'Dịch vụ tạo mẫu tóc cao cấp thiết kế kiểu dáng lông theo hình ảnh mẫu yêu cầu riêng của chủ nuôi.',
-            staffLevel: 'Master Groomer',
-            status: 'Đang phục vụ',
-            image: '/assets/images/services/spa/process/cao_long.jpg',
-            steps: [
-                'Xem ảnh mẫu và phác thảo kiểu dáng',
-                'Tắm xả cao cấp và sấy chuyên sâu',
-                'Tỉa dáng thủ công Master Groomer',
-                'Hoàn thiện chi tiết và kiểm tra da lông',
-                'Bàn giao và chụp ảnh studio'
-            ]
-        },
-        {
-            code: 'SPA10',
-            group: 'spa',
-            categoryName: 'Spa và Grooming – Đặc trị',
-            name: 'Tắm Thuốc Trị Liệu Da Liễu',
-            petType: 'Chó / Mèo',
-            duration: '90 phút',
-            rating: 4.7,
-            reviews: 53,
-            priceFrom: '280.000',
-            prices: { under5: '280.000', to10: '320.000', to20: '400.000', over20: '500.000' },
-            desc: 'Dịch vụ tắm trị liệu viêm da, nấm, ghẻ, ký sinh trùng bằng các loại dầu tắm y khoa.',
-            staffLevel: 'Senior Groomer',
-            status: 'Đang phục vụ',
-            image: '/assets/images/services/spa/process/tam_cho4.jpg',
-            steps: [
-                'Kiểm tra và khoanh vùng mảng nấm/viêm da',
-                'Ngâm bồn dầu tắm thảo dược đông y y tế',
-                'Thoa thuốc đặc trị vùng tổn thương',
-                'Sấy khô dịu mát và khử trùng tia UV',
-                'Ghi đơn thuốc và dặn dò chủ nuôi'
-            ]
-        },
-        {
-            code: 'HTL01',
-            group: 'hotel',
-            categoryName: 'Pet Hotel – Standard',
-            name: 'Phòng Standard',
-            petType: 'Chó / Mèo',
-            duration: 'Theo ngày',
-            rating: 4.7,
-            reviews: 115,
-            priceFrom: '180.000',
-            prices: { under5: '180.000 / đêm', to10: '200.000 / đêm', to20: '-', over20: '-' },
-            desc: 'Không gian phòng lưu trú cơ bản tiêu chuẩn sạch sẽ, thoáng mát, thích hợp cho chó mèo nhỏ.',
-            staffLevel: 'Nhân viên chăm sóc lưu trú',
-            status: 'Đang phục vụ',
-            image: '/assets/images/services/hotel/htl01.webp',
-            steps: [
-                'Check-in tiếp nhận và nhận thức ăn riêng',
-                'Bữa ăn dinh dưỡng trưa và chiều',
-                'Vận động vui chơi sân trong nhà',
-                'Dọn phòng vệ sinh và đo thân nhiệt',
-                'Check-out bàn giao'
-            ]
-        },
-        {
-            code: 'HTL03',
-            group: 'hotel',
-            categoryName: 'Pet Hotel – Deluxe',
-            name: 'Phòng Deluxe',
-            petType: 'Chó / Mèo',
-            duration: 'Theo ngày',
-            rating: 4.9,
-            reviews: 102,
-            priceFrom: '380.000',
-            prices: { under5: '380.000 / đêm', to10: '380.000 / đêm', to20: '450.000 / đêm', over20: '-' },
-            desc: 'Hạng phòng cao cấp có camera IP giám sát 24/7 trực tiếp cho từng phòng.',
-            staffLevel: 'Nhân viên chăm sóc lưu trú',
-            status: 'Đang phục vụ',
-            image: '/assets/images/services/hotel/htl03.jpg',
-            steps: [
-                'Check-in nhận phòng và mở link camera IP cho chủ',
-                'Bữa ăn thượng hạng theo lịch riêng',
-                'Dắt dạo vận động sân cỏ nhân tạo',
-                'Dọn phòng khử khuẩn tia UV',
-                'Chải lông massage tối trước khi ngủ',
-                'Check-out bàn giao'
-            ]
-        },
-        {
-            code: 'HTL05',
-            group: 'hotel',
-            categoryName: 'Pet Hotel – Luxury Suite',
-            name: 'Luxury Suite',
-            petType: 'Chó / Mèo',
-            duration: 'Theo ngày',
-            rating: 4.9,
-            reviews: 89,
-            priceFrom: '520.000',
-            prices: { under5: '520.000 / đêm', to10: '520.000 / đêm', to20: '650.000 / đêm', over20: '800.000 / đêm' },
-            desc: 'Biệt thự lưu trú hoàng gia siêu rộng rãi có sân chơi riêng biệt và chế độ chăm sóc 1:1.',
-            staffLevel: 'Chuyên gia chăm sóc thú cưng',
-            status: 'Đang phục vụ',
-            image: '/assets/images/services/hotel/htl05.webp',
-            steps: [
-                'Đón bé và nhận chế độ chăm sóc riêng 1:1',
-                'Bữa ăn dinh dưỡng cao cấp tự chọn',
-                'Vui chơi sân cỏ và bể bơi thủy trị liệu',
-                'Massage tinh dầu thư giãn',
-                'Chụp ảnh video 4K gửi chủ mỗi ngày',
-                'Check-out kèm quà tặng tri ân'
-            ]
-        },
-        {
-            code: 'TXI01',
-            group: 'taxi',
-            categoryName: 'Pet Taxi – Vận chuyển',
-            name: 'Dịch Vụ Xe Đưa Đón Tận Nơi',
-            petType: 'Chó / Mèo / Thú nhỏ',
-            duration: 'Tính theo chuyến',
-            rating: 4.7,
-            reviews: 64,
-            priceFrom: '150.000',
-            prices: { under5: '150.000', to10: '150.000', to20: '200.000', over20: '250.000' },
-            desc: 'Dịch vụ đưa đón thú cưng an toàn tận nhà bằng xe ô tô chuyên dụng có điều hòa mát mẻ.',
-            staffLevel: 'Tài xế kiêm cứu hộ thú cưng',
-            status: 'Đang phục vụ',
-            image: '/assets/images/services/txi01.webp',
-            steps: [
-                'Tài xế xuất phát đến điểm đón đúng giờ',
-                'Tiếp nhận bé vào lồng vận chuyển an toàn',
-                'Di chuyển cabin máy lạnh êm ái',
-                'Bàn giao bé an toàn tại điểm đến'
-            ]
-        }
-    ];
-
-    // Dữ liệu đánh giá từ khách hàng
-    const initialReviews = [
-        {
-            id: 'REV-101',
-            bookingId: 'BKG-1002',
-            customerName: 'Lê Lệ Quyên',
-            phone: '0901234567',
-            petName: 'Miu Miu',
-            serviceName: 'Grooming Tạo Kiểu Cơ Bản',
-            category: 'Spa',
-            staff: 'Hoàng Nam',
-            rating: 5,
-            comment: 'Tỉa tròn mặt Boo cực kỳ xinh xắn, nhân viên Hoàng Nam rất kiên nhẫn với bé.',
-            date: '2026-06-10',
-            status: 'replied',
-            replyText: 'PawPal cảm ơn chị Quyên ạ! Rất hân hạnh được phục vụ bé Miu Miu.',
-            replyDate: '2026-06-10',
-            voucherSent: null
-        },
-        {
-            id: 'REV-102',
-            bookingId: 'BKG-1004',
-            customerName: 'Lê Lệ Quyên',
-            phone: '0901234567',
-            petName: 'Miu Con',
-            serviceName: 'Gói Tắm Vệ Sinh Cơ Bản',
-            category: 'Spa',
-            staff: 'Ngọc Anh',
-            rating: 5,
-            comment: 'Bé tắm xong thơm nức, lông mềm mượt màng. Sẽ ghé lại lần sau.',
-            date: '2026-06-24',
-            status: 'replied',
-            replyText: 'Cảm ơn chị Quyên đã luôn tin tưởng dịch vụ Spa của PawPal ạ!',
-            replyDate: '2026-06-24',
-            voucherSent: null
-        },
-        {
-            id: 'REV-103',
-            bookingId: 'BKG-1008',
-            customerName: 'Trần Minh Quân',
-            phone: '0912345678',
-            petName: 'Bông Xù',
-            serviceName: 'Tắm Thuốc Trị Liệu Da Liễu',
-            category: 'Spa',
-            staff: 'Ngọc Anh',
-            rating: 4,
-            comment: 'Dịch vụ tốt, bé bớt ngứa hẳn nhưng khung giờ chiều hơi đông nên phải chờ 15 phút.',
-            date: '2026-06-27',
-            status: 'pending',
-            replyText: null,
-            replyDate: null,
-            voucherSent: null
-        },
-        {
-            id: 'REV-104',
-            bookingId: 'BKG-1006',
-            customerName: 'Hoàng Hải Yến',
-            phone: '0987654321',
-            petName: 'Lucky',
-            serviceName: 'Gói Tắm Dưỡng Premium',
-            category: 'Spa',
-            staff: 'Thu Thảo',
-            rating: 2,
-            comment: 'Móng bé bị cắt hơi sát làm bé giật mình nhẹ. Cần cẩn thận hơn khi thao tác.',
-            date: '2026-06-27',
-            status: 'pending',
-            replyText: null,
-            replyDate: null,
-            voucherSent: null
-        }
-    ];
-
-    // Trạng thái vận hành của module
-    let bookingsData = JSON.parse(sessionStorage.getItem('pawpal_admin_services_bookings')) || initialBookings;
-    let servicesData = JSON.parse(sessionStorage.getItem('pawpal_admin_services_catalog')) || initialServices;
-    let reviewsData = JSON.parse(sessionStorage.getItem('pawpal_admin_services_reviews')) || initialReviews;
+    // Dữ liệu vận hành của phân hệ Dịch vụ
+    let bookingsData = [];
+    let servicesData = [];
+    let reviewsData = [];
     let selectedBookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001';
+
+    // Hàm nạp dữ liệu từ các file JSON tĩnh trong /data/ (hoặc từ sessionStorage nếu đã chỉnh sửa)
+    async function loadServicesData(forceReload = false) {
+        try {
+            if (!forceReload) {
+                const savedBookings = sessionStorage.getItem('pawpal_admin_services_bookings');
+                const savedCatalog = sessionStorage.getItem('pawpal_admin_services_catalog');
+                const savedReviews = sessionStorage.getItem('pawpal_admin_services_reviews');
+
+                if (savedBookings && savedCatalog && savedReviews) {
+                    try {
+                        bookingsData = JSON.parse(savedBookings);
+                        servicesData = JSON.parse(savedCatalog);
+                        reviewsData = JSON.parse(savedReviews);
+                        if (Array.isArray(bookingsData) && bookingsData.length > 0 &&
+                            Array.isArray(servicesData) && servicesData.length > 0 &&
+                            Array.isArray(reviewsData) && reviewsData.length > 0) {
+                            return;
+                        }
+                    } catch (e) {
+                        console.warn('Lỗi phân giải JSON từ sessionStorage, tiến hành nạp từ file JSON gốc:', e);
+                    }
+                }
+            }
+
+            // Nạp từ các tệp JSON tĩnh trong /data/
+            const [bookingsRes, catalogRes, reviewsRes] = await Promise.all([
+                fetch('/data/services-bookings.json?v=' + Date.now()).catch(() => null),
+                fetch('/data/services-catalog.json?v=' + Date.now()).catch(() => null),
+                fetch('/data/services-reviews.json?v=' + Date.now()).catch(() => null)
+            ]);
+
+            if (bookingsRes && bookingsRes.ok) {
+                bookingsData = await bookingsRes.json();
+                sessionStorage.setItem('pawpal_admin_services_bookings', JSON.stringify(bookingsData));
+            }
+            if (catalogRes && catalogRes.ok) {
+                servicesData = await catalogRes.json();
+                sessionStorage.setItem('pawpal_admin_services_catalog', JSON.stringify(servicesData));
+            }
+            if (reviewsRes && reviewsRes.ok) {
+                reviewsData = await reviewsRes.json();
+                sessionStorage.setItem('pawpal_admin_services_reviews', JSON.stringify(reviewsData));
+            }
+        } catch (error) {
+            console.error('Lỗi khi nạp dữ liệu phân hệ Dịch vụ từ JSON:', error);
+        }
+    }
     let currentCatalogGroup = 'spa';
     let activeDropdownBookingId = null;
     let currentEditingServiceSteps = [];
@@ -666,6 +69,7 @@
     let intakeProofImagesTemp = [];
     let surchargeProofImagesTemp = [];
     let completeProofImagesTemp = [];
+    let editCarelogStepPhotosTemp = [];
 
     // Bộ lọc Danh mục
     let catalogSearchTerm = '';
@@ -1018,6 +422,44 @@
 
             const isLocked = item.status === 'cancelled' ? 'row-locked' : '';
 
+            let serviceCellHtml = '';
+            let datetimeCellHtml = '';
+
+            if (item.category === 'Hotel') {
+                serviceCellHtml = `
+                    <div style="font-weight: 500; color: var(--text-main);">${item.serviceName}</div>
+                    <div style="margin-top: 3px;">
+                        <span class="service-pill-tag tag-hotel">${item.roomCode || 'DLX-04'} • ${item.nights || 3} đêm • ${item.dietPlan ? 'Pate tươi' : 'Ăn theo yêu cầu'}</span>
+                    </div>
+                `;
+                datetimeCellHtml = `
+                    <div style="font-weight: 600; color: var(--text-main);">${item.checkInDate ? `${item.checkInDate} ➔ ${item.checkOutDate}` : item.date}</div>
+                    <div style="font-size: 11.5px; color: var(--text-muted);">${item.nights ? `${item.nights} đêm (${item.checkInTime || '08:00'} check-in)` : item.time}</div>
+                `;
+            } else if (item.category === 'Taxi') {
+                const shortPickup = item.pickupAddress ? (item.pickupAddress.length > 22 ? item.pickupAddress.substring(0, 22) + '...' : item.pickupAddress) : 'Đón tận nơi';
+                serviceCellHtml = `
+                    <div style="font-weight: 500; color: var(--text-main);">${item.serviceName}</div>
+                    <div style="margin-top: 3px;">
+                        <span class="service-pill-tag tag-taxi">${shortPickup} ➔ Q.1 (${item.distanceKm || 4.2}km)</span>
+                    </div>
+                `;
+                datetimeCellHtml = `
+                    <div style="font-weight: 600; color: var(--text-main);">${item.time}</div>
+                    <div style="font-size: 11.5px; color: var(--text-muted);">${item.date} • <span class="service-pill-mini">${item.tripType || '2 chiều'}</span></div>
+                `;
+            } else {
+                // Spa và Grooming
+                serviceCellHtml = `
+                    <div style="font-weight: 500; color: var(--text-main);">${item.serviceName}</div>
+                    ${item.styleType ? `<div style="margin-top: 3px;"><span class="service-pill-tag tag-spa">${item.styleType}</span></div>` : `<div style="font-size: 12px; color: var(--text-muted);">${item.duration}</div>`}
+                `;
+                datetimeCellHtml = `
+                    <div style="font-weight: 600; color: var(--text-main);">${item.time}</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">${item.date} • ${item.duration}</div>
+                `;
+            }
+
             return `
                 <tr class="${alertClass} ${isLocked}" data-booking-id="${item.id}">
                     <td>
@@ -1037,12 +479,10 @@
                         <span style="font-size: 13px; color: var(--text-main);">${item.categoryName}</span>
                     </td>
                     <td>
-                        <div style="font-weight: 500; color: var(--text-main);">${item.serviceName}</div>
-                        <div style="font-size: 12px; color: var(--text-muted);">${item.duration}</div>
+                        ${serviceCellHtml}
                     </td>
                     <td>
-                        <div style="font-weight: 600; color: var(--text-main);">${item.time}</div>
-                        <div style="font-size: 12px; color: var(--text-muted);">${item.date}</div>
+                        ${datetimeCellHtml}
                     </td>
                     <td>
                         ${item.staff ? `<span style="font-size: 13px; font-weight: 500;">${item.staff}</span>` : '<span class="text-danger" style="font-size: 12px; font-weight: 600;">Chưa phân công</span>'}
@@ -1113,7 +553,16 @@
         const codeEl = document.getElementById('detailBookingCode');
         const metaEl = document.getElementById('detailBookingMeta');
         if (codeEl) codeEl.textContent = booking.id;
-        if (metaEl) metaEl.textContent = `Thời gian hẹn: ${booking.time} - ${booking.date} | Cơ sở: ${booking.branch}`;
+        if (metaEl) {
+            if (booking.category === 'Hotel') {
+                metaEl.textContent = `Lưu trú: ${booking.checkInDate || booking.date} ➔ ${booking.checkOutDate || '2026-07-04'} (${booking.nights || 3} đêm) | Phòng: ${booking.roomCode || 'DLX-04'} | Cơ sở: ${booking.branch}`;
+            } else if (booking.category === 'Taxi') {
+                const shortPickup = booking.pickupAddress ? (booking.pickupAddress.length > 22 ? booking.pickupAddress.substring(0, 22) + '...' : booking.pickupAddress) : 'Đón tận nơi';
+                metaEl.textContent = `Giờ đón: ${booking.time} - ${booking.date} | ${booking.tripType || '2 chiều'} | Lộ trình: ${shortPickup} ➔ Q.1 | Cơ sở: ${booking.branch}`;
+            } else {
+                metaEl.textContent = `Thời gian hẹn: ${booking.time} - ${booking.date} | Cơ sở: ${booking.branch}`;
+            }
+        }
 
         // Cảnh báo an toàn Pet (Thuần chữ đỏ, không viền, không nền)
         const petAlertBanner = document.getElementById('detailPetAlertBanner');
@@ -1158,6 +607,7 @@
             const btnComplete = actionButtonsContainer.querySelector('.btn-action-complete');
             const btnCancel = actionButtonsContainer.querySelector('.btn-action-cancel');
             const btnChange = actionButtonsContainer.querySelector('.btn-action-change');
+            const btnComplaint = actionButtonsContainer.querySelector('.btn-action-complaint');
 
             if (btnConfirm) {
                 btnConfirm.addEventListener('click', () => {
@@ -1184,6 +634,11 @@
                     openChangeStaffModal(booking.id);
                 });
             }
+            if (btnComplaint) {
+                btnComplaint.addEventListener('click', () => {
+                    escalateBookingToComplaint(booking.id);
+                });
+            }
         }
 
         // Cập nhật thông tin dịch vụ
@@ -1203,6 +658,89 @@
         if (addonsText) addonsText.textContent = booking.addonPrice > 0 ? `Gói chăm sóc mở rộng (${formatCurrency(booking.addonPrice)})` : 'Không có';
         if (customerNote) customerNote.textContent = booking.customerNote || 'Không có';
 
+        // Cập nhật Khối đặc thù theo loại dịch vụ (Hotel / Taxi / Spa)
+        const specialFieldsContainer = document.getElementById('detailSpecialServiceFields');
+        if (specialFieldsContainer) {
+            if (booking.category === 'Hotel') {
+                specialFieldsContainer.innerHTML = `
+                    <div style="font-size: 13px; font-weight: 700; color: #236B48; margin-bottom: 8px;">Thông tin lưu trú Khách sạn thú cưng (Pet Hotel):</div>
+                    <div class="info-grid-2col">
+                        <div class="info-pair">
+                            <span class="info-label">Thời gian lưu trú:</span>
+                            <span class="info-value" style="font-weight: 600; color: #236B48;">${booking.checkInDate || booking.date} (${booking.checkInTime || '08:00'}) ➔ ${booking.checkOutDate || '2026-07-04'} (${booking.checkOutTime || '10:00'})</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Tổng thời lượng:</span>
+                            <span class="info-value"><span class="admin-badge badge-warning">${booking.nights || 3} đêm lưu trú</span></span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Loại phòng và Chuồng:</span>
+                            <span class="info-value" style="font-weight: 600;">${booking.roomType || 'Phòng Deluxe (Máy lạnh 24/7)'} (Mã: ${booking.roomCode || 'DLX-04'})</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Camera phòng 24/7:</span>
+                            <span class="info-value" style="color: #0369A1; font-weight: 600;">${booking.cameraCode || 'CAM-HOTEL-04'} (Trực tuyến)</span>
+                        </div>
+                        <div class="info-pair" style="grid-column: span 2;">
+                            <span class="info-label">Khẩu phần dinh dưỡng:</span>
+                            <span class="info-value" style="font-weight: 500;">${booking.dietPlan || 'Pate tươi dinh dưỡng + Thịt bò luộc (2 bữa/ngày)'}</span>
+                        </div>
+                    </div>
+                `;
+            } else if (booking.category === 'Taxi') {
+                const shortPickup = booking.pickupAddress || '45 Lê Duẩn, P. Bến Nghé, Quận 1';
+                const shortDropoff = booking.dropoffAddress || booking.branch || 'PawPal Chi nhánh Quận 1';
+                specialFieldsContainer.innerHTML = `
+                    <div style="font-size: 13px; font-weight: 700; color: #236B48; margin-bottom: 8px;">Thông tin điều phối Pet Taxi đưa đón:</div>
+                    <div class="info-grid-2col">
+                        <div class="info-pair" style="grid-column: span 2;">
+                            <span class="info-label">Lộ trình đưa đón:</span>
+                            <span class="info-value" style="font-weight: 600; color: #236B48;">${shortPickup} ➔ ${shortDropoff}</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Hình thức đưa đón:</span>
+                            <span class="info-value"><span class="admin-badge badge-info">${booking.tripType || '2 chiều khứ hồi'}</span></span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Khoảng cách ước tính:</span>
+                            <span class="info-value" style="font-weight: 600;">${booking.distanceKm || 4.2} km</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Tài xế chuyên trách:</span>
+                            <span class="info-value" style="font-weight: 600;">${booking.driverName || booking.staff || 'Hữu Phúc'}</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">SĐT tài xế khẩn cấp:</span>
+                            <span class="info-value" style="color: #0369A1;">${booking.driverPhone || '0978.112.233'}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Spa và Grooming
+                specialFieldsContainer.innerHTML = `
+                    <div style="font-size: 13px; font-weight: 700; color: #236B48; margin-bottom: 8px;">Yêu cầu tạo hình và Grooming:</div>
+                    <div class="info-grid-2col">
+                        <div class="info-pair">
+                            <span class="info-label">Phong cách tạo hình:</span>
+                            <span class="info-value" style="font-weight: 600; color: #236B48;">${booking.styleType || 'Tắm sấy và Vệ sinh tiêu chuẩn'}</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Cấp độ thợ phụ trách:</span>
+                            <span class="info-value" style="font-weight: 500;">${booking.groomerLevel || 'Senior Groomer'}</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Khung cân nặng áp dụng:</span>
+                            <span class="info-value">${booking.petWeight ? `${booking.petWeight} (Phân khúc chuẩn)` : 'Dưới 5kg'}</span>
+                        </div>
+                        <div class="info-pair">
+                            <span class="info-label">Thời lượng ước tính:</span>
+                            <span class="info-value">${booking.duration || '60 phút'}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
         // Cập nhật khách hàng, Pet và Thông tin tiếp nhận
         const customerName = document.getElementById('detailCustomerName');
         const customerPhone = document.getElementById('detailCustomerPhone');
@@ -1211,7 +749,6 @@
         const petWeight = document.getElementById('detailPetWeight');
         const petAge = document.getElementById('detailPetAge');
         const belongingsText = document.getElementById('detailBelongingsText');
-        const btnEditIntakeInfo = document.getElementById('btnEditIntakeInfo');
 
         if (customerName) {
             customerName.textContent = booking.customerName;
@@ -1234,12 +771,6 @@
         if (petWeight) petWeight.textContent = booking.petWeight || '4.0 kg';
         if (petAge) petAge.textContent = booking.petAge || 'Chưa rõ';
         if (belongingsText) belongingsText.textContent = booking.belongings || 'Không có';
-
-        if (btnEditIntakeInfo) {
-            // Chỉ hiện nút Sửa thông tin tiếp nhận khi ca đã xác nhận trở đi (không hiện khi đang chờ xác nhận)
-            const showEditIntake = (booking.status === 'confirmed' || booking.status === 'in_progress');
-            btnEditIntakeInfo.style.display = showEditIntake ? 'inline-block' : 'none';
-        }
 
         // Cập nhật Khối Biên bản tiếp nhận an toàn (Zero-Claim)
         const intakeSection = document.getElementById('detailIntakeSafetySection');
@@ -1460,10 +991,12 @@
                        </div>`
                     : '';
 
-                const actionsHtml = (booking.status === 'in_progress')
+                const actionsHtml = (booking.status !== 'cancelled')
                     ? `<div class="step-action-bar">
-                        ${!step.done ? `<button type="button" class="btn-step-action complete-action btn-mark-step-done" data-step-index="${idx}">Đánh dấu xong</button>` : ''}
+                        ${(!step.done && booking.status === 'in_progress') ? `<button type="button" class="btn-step-action complete-action btn-mark-step-done" data-step-index="${idx}">Đánh dấu xong</button>` : ''}
+                        <button type="button" class="btn-step-action btn-edit-step" data-step-index="${idx}">Sửa bước</button>
                         <button type="button" class="btn-step-action btn-add-step-photo" data-step-index="${idx}">+ Thêm ảnh</button>
+                        ${booking.status === 'in_progress' ? `<button type="button" class="btn-step-action btn-del-step" data-step-index="${idx}" style="color: #DC2626;">Xóa</button>` : ''}
                        </div>`
                     : '';
 
@@ -1488,10 +1021,33 @@
                 });
             });
 
+            // Gắn sự kiện Sửa bước nhật ký
+            carelogContainer.querySelectorAll('.btn-edit-step').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.getAttribute('data-step-index'), 10);
+                    openEditCarelogStepModal(idx);
+                });
+            });
+
+            // Gắn sự kiện Xóa bước nhật ký
+            carelogContainer.querySelectorAll('.btn-del-step').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.getAttribute('data-step-index'), 10);
+                    if (booking.timeline && booking.timeline[idx]) {
+                        const stepTitle = booking.timeline[idx].title;
+                        if (confirm(`Bạn có chắc chắn muốn xóa bước nhật ký "${stepTitle}"?`)) {
+                            booking.timeline.splice(idx, 1);
+                            persistData();
+                            renderBookingDetail(booking.id);
+                        }
+                    }
+                });
+            });
+
             // Gắn sự kiện Đánh dấu hoàn tất bước (1-chạm)
             carelogContainer.querySelectorAll('.btn-mark-step-done').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const idx = parseInt(btn.getAttribute('data-step-index'));
+                    const idx = parseInt(btn.getAttribute('data-step-index'), 10);
                     if (booking.timeline && booking.timeline[idx]) {
                         booking.timeline[idx].done = true;
                         booking.timeline[idx].time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
@@ -1505,7 +1061,7 @@
             // Gắn sự kiện Thêm ảnh vào bước có sẵn
             carelogContainer.querySelectorAll('.btn-add-step-photo').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const idx = parseInt(btn.getAttribute('data-step-index'));
+                    const idx = parseInt(btn.getAttribute('data-step-index'), 10);
                     const tempInput = document.createElement('input');
                     tempInput.type = 'file';
                     tempInput.accept = 'image/*';
@@ -1984,6 +1540,144 @@
     }
 
     // ==========================================================================
+    // 6a. CHUYỂN SANG BỘ PHẬN KHIẾU NẠI (1-CLICK ESCALATION TO COMPLAINTS)
+    // ==========================================================================
+    function escalateBookingToComplaint(bookingId, customTitle, customContent) {
+        const booking = bookingsData.find(b => b.id === bookingId);
+        if (!booking) return;
+
+        const defaultTitle = `Sự cố ca ${booking.id} - ${booking.serviceName} (${booking.petName})`;
+        const defaultContent = `Khách hàng ${booking.customerName} phản ánh về ca dịch vụ ${booking.serviceName} của bé ${booking.petName}. KTV phụ trách: ${booking.staff || 'Chưa phân công'}.`;
+
+        const title = customTitle || prompt('Nhập tiêu đề phản ánh / khiếu nại ca dịch vụ:', defaultTitle);
+        if (!title) return;
+
+        const content = customContent || prompt('Nhập nội dung chi tiết phản ánh của khách hàng:', defaultContent);
+        if (!content) return;
+
+        const ticketId = 'TK-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 900) + 100);
+        const nowStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN');
+
+        // Tạo đối tượng Ticket Khiếu nại chuẩn đồng bộ với complaints.js
+        const newComplaint = {
+            id: ticketId,
+            customerName: booking.customerName,
+            phone: booking.phone,
+            petName: booking.petName,
+            petBreed: `${booking.petBreed} • ${booking.petWeight || '5.0 kg'}`,
+            petNotes: booking.petAlert || 'Không có ghi chú dị ứng',
+            bookingId: booking.id,
+            serviceType: booking.category ? booking.category.toLowerCase() : 'spa',
+            serviceName: booking.serviceName,
+            staffExecuted: `${booking.staff || 'Chưa phân công'} (${booking.branch || 'PawPal Chi nhánh Quận 1'})`,
+            title: title,
+            content: content,
+            priority: 'high',
+            slaStatus: 'URGENT',
+            slaRemainingText: 'Còn 120 phút',
+            staffAssigned: 'Lê Lệ Quyên',
+            createdAt: nowStr,
+            status: 'pending',
+            evidence: [],
+            checkinHealth: booking.intakeSafety ? `Cân nặng ${booking.intakeSafety.actualWeight}. Da lông: ${booking.intakeSafety.skinCoat}. Tính khí: ${booking.intakeSafety.temperament}.` : 'Chưa có biên bản ngoại quan',
+            checkinPhotos: booking.intakeSafety ? (booking.intakeSafety.proofImages || []) : [],
+            staffLogNote: 'Ca dịch vụ được chuyển sang bộ phận CSKH xử lý từ phân hệ Dịch vụ.',
+            timeline: [
+                { time: nowStr, author: `${booking.customerName} (Khách hàng)`, title: 'Tiếp nhận phản ánh', desc: content, isInternal: false },
+                { time: nowStr, author: 'Quản trị viên Dịch vụ', title: 'Khởi tạo Ticket Khiếu nại khẩn cấp', desc: `Đã chuyển tiếp từ phân hệ Dịch vụ (Mã ca: ${booking.id}) sang CSKH.`, isInternal: true }
+            ]
+        };
+
+        // Lưu vào sessionStorage khiếu nại
+        try {
+            const rawComplaints = sessionStorage.getItem('pawpal_admin_complaints_data');
+            let complaintsList = rawComplaints ? JSON.parse(rawComplaints) : [];
+            complaintsList.unshift(newComplaint);
+            sessionStorage.setItem('pawpal_admin_complaints_data', JSON.stringify(complaintsList));
+        } catch (e) {}
+
+        // Cập nhật ca dịch vụ
+        booking.alertType = 'urgent';
+        booking.timeline = booking.timeline || [];
+        booking.timeline.push({
+            time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+            title: `Chuyển CSKH: Ticket ${ticketId}`,
+            desc: `Đã khởi tạo hồ sơ khiếu nại [${title}] chuyển sang bộ phận CSKH xử lý đền bù.`,
+            done: false,
+            staff: 'Quản trị viên'
+        });
+
+        persistData();
+        renderBookingDetail(booking.id);
+        renderBookingsTable();
+
+        if (confirm(`Đã tạo thành công Phiếu Khiếu Nại ${ticketId}!\nBạn có muốn chuyển sang phân hệ Khiếu Nại để xử lý ngay không?`)) {
+            sessionStorage.setItem('pawpal_admin_complaint_selected_id', ticketId);
+            sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-services');
+            window.location.hash = '#tab-complaints';
+        } else {
+            showToast(`Đã chuyển ca ${booking.id} sang bộ phận Khiếu nại (Ticket: ${ticketId})!`);
+        }
+    }
+
+    // ==========================================================================
+    // 6a1. MỞ MODAL SỬA BƯỚC NHẬT KÝ CARE-LOG (CARE-LOG STEP EDITOR)
+    // ==========================================================================
+    function openEditCarelogStepModal(stepIdx) {
+        const booking = bookingsData.find(b => b.id === selectedBookingId);
+        if (!booking || !booking.timeline || !booking.timeline[stepIdx]) return;
+
+        const step = booking.timeline[stepIdx];
+        const modal = document.getElementById('modalEditCarelogStep');
+        const metaEl = document.getElementById('editCarelogModalMeta');
+        const idxHidden = document.getElementById('editCarelogStepIndexHidden');
+        const titleInput = document.getElementById('editCarelogStepTitle');
+        const staffInput = document.getElementById('editCarelogStepStaff');
+        const timeInput = document.getElementById('editCarelogStepTime');
+        const descInput = document.getElementById('editCarelogStepDesc');
+        const doneCheck = document.getElementById('editCarelogStepDone');
+
+        if (metaEl) {
+            metaEl.textContent = `Mã ca: ${booking.id} | Bé: ${booking.petName} (${booking.petBreed}) | KTV: ${booking.staff || 'Chưa phân công'}`;
+        }
+        if (idxHidden) idxHidden.value = stepIdx;
+        if (titleInput) titleInput.value = step.title || '';
+        if (staffInput) staffInput.value = step.staff || booking.staff || '';
+        if (timeInput) timeInput.value = step.time || new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        if (descInput) descInput.value = step.desc || '';
+        if (doneCheck) doneCheck.checked = !!step.done;
+
+        editCarelogStepPhotosTemp = step.images ? [...step.images] : [];
+        renderEditCarelogPhotosPreview();
+
+        if (modal) modal.classList.add('active');
+    }
+
+    function renderEditCarelogPhotosPreview() {
+        const listEl = document.getElementById('editCarelogPhotosPreviewList');
+        if (!listEl) return;
+        if (editCarelogStepPhotosTemp.length === 0) {
+            listEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted);">Chưa có ảnh đính kèm trong bước này</span>';
+            return;
+        }
+        listEl.innerHTML = editCarelogStepPhotosTemp.map((img, idx) => `
+            <div class="intake-proof-preview-item">
+                <img src="${img}" alt="Ảnh bước ${idx + 1}" onerror="this.src='/assets/images/services/spa/process/spa01.webp'">
+                <button type="button" class="btn-remove-proof" data-step-photo-idx="${idx}" title="Gỡ ảnh">×</button>
+            </div>
+        `).join('');
+
+        listEl.querySelectorAll('.btn-remove-proof').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(btn.getAttribute('data-step-photo-idx'), 10);
+                editCarelogStepPhotosTemp.splice(idx, 1);
+                renderEditCarelogPhotosPreview();
+            });
+        });
+    }
+
+    // ==========================================================================
     // 6b. MỞ BIÊN BẢN TIẾP NHẬN BÉ VÀ KIỂM TRA AN TOÀN (ZERO-CLAIM INTAKE)
     // ==========================================================================
     function openIntakeModal(bookingId, mode) {
@@ -2001,6 +1695,9 @@
         const origWeightLabel = document.getElementById('intakeOriginalWeightLabel');
         const staffSelect = document.getElementById('intakeStaffSelect');
         const weightAlertBox = document.getElementById('intakeWeightAlertBox');
+        const weightAlertText = document.getElementById('intakeWeightAlertText');
+        const checkAutoWeightLabel = document.getElementById('checkAutoAddWeightSurchargeLabel');
+        const checkAutoWeightInput = document.getElementById('checkAutoAddWeightSurcharge');
         const intakeBelongingsInput = document.getElementById('intakeBelongingsInput');
         const woundNoteInput = document.getElementById('intakeExistingWoundNote');
 
@@ -2024,20 +1721,61 @@
             staffSelect.value = booking.staff || '';
         }
 
+        // Hàm tính khung giá theo cân nặng (Dưới 5kg, 5-10kg, 10-20kg, Trên 20kg)
+        function getWeightTier(w) {
+            if (w < 5.0) return { name: 'Dưới 5kg (<5kg)', tierIdx: 0, extra: 0 };
+            if (w <= 10.0) return { name: '5kg - 10kg', tierIdx: 1, extra: 50000 };
+            if (w <= 20.0) return { name: '10kg - 20kg', tierIdx: 2, extra: 100000 };
+            return { name: 'Trên 20kg (>20kg)', tierIdx: 3, extra: 150000 };
+        }
+
+        let currentPriceDelta = 0;
+
         // Hàm kiểm tra lệch cân nặng
         const checkWeightDiff = () => {
             if (!intakeWeightInput || !weightAlertBox) return;
             const actualVal = parseFloat(intakeWeightInput.value);
             if (isNaN(actualVal)) {
                 weightAlertBox.style.display = 'none';
+                currentPriceDelta = 0;
                 return;
             }
-            const diff = Math.abs(actualVal - originalWeightNum);
-            if (diff >= 1.0) {
+
+            const origTier = getWeightTier(originalWeightNum);
+            const actualTier = getWeightTier(actualVal);
+            const diff = actualVal - originalWeightNum;
+            const isTierDiff = (origTier.tierIdx !== actualTier.tierIdx);
+
+            if (isTierDiff && diff > 0) {
+                currentPriceDelta = Math.max(0, actualTier.extra - origTier.extra);
                 weightAlertBox.style.display = 'block';
-                weightAlertBox.innerHTML = `<strong>Lưu ý lệch khung cân nặng:</strong> Đo tại quầy ${actualVal} kg (chênh lệch ${diff.toFixed(1)} kg so với đăng ký ban đầu ${originalWeightNum} kg). Hệ thống sẽ tự động cập nhật phụ phí khung cân nặng nếu vượt bậc.`;
+                if (weightAlertText) {
+                    weightAlertText.innerHTML = `Cảnh báo: Cân thực tế ${actualVal} kg vượt phân khúc đăng ký (${origTier.name} ➔ ${actualTier.name}). Chênh lệch giá dịch vụ: +${formatCurrency(currentPriceDelta)}.`;
+                }
+                if (checkAutoWeightLabel) {
+                    checkAutoWeightLabel.textContent = `Tự động cộng phụ phí chênh lệch phân khúc cân nặng (+${formatCurrency(currentPriceDelta)}) vào ca`;
+                }
+                if (checkAutoWeightInput) {
+                    checkAutoWeightInput.checked = true;
+                    checkAutoWeightInput.setAttribute('data-price-delta', currentPriceDelta);
+                }
+            } else if (Math.abs(diff) >= 1.0) {
+                currentPriceDelta = 0;
+                weightAlertBox.style.display = 'block';
+                if (weightAlertText) {
+                    weightAlertText.innerHTML = `Lưu ý: Đo tại quầy ${actualVal} kg (chênh lệch ${diff > 0 ? '+' : ''}${diff.toFixed(1)} kg so với đăng ký ban đầu ${originalWeightNum} kg, cùng phân khúc ${actualTier.name}).`;
+                }
+                if (checkAutoWeightLabel) {
+                    checkAutoWeightLabel.textContent = 'Cân nặng cùng phân khúc giá (Không phát sinh phụ phí)';
+                }
+                if (checkAutoWeightInput) {
+                    checkAutoWeightInput.checked = false;
+                    checkAutoWeightInput.setAttribute('data-price-delta', 0);
+                }
             } else {
                 weightAlertBox.style.display = 'none';
+                currentPriceDelta = 0;
+                if (checkAutoWeightInput) checkAutoWeightInput.setAttribute('data-price-delta', 0);
             }
         };
         checkWeightDiff();
@@ -2177,11 +1915,34 @@
         const btnCancelCreate = document.getElementById('btnCancelCreateBooking');
         const formCreate = document.getElementById('formCreateBooking');
 
+        // Tự động chuyển đổi hiển thị trường theo phân nhóm dịch vụ (Hotel / Taxi / Spa)
+        const catSelect = document.getElementById('newBookingCategory');
+        const hotelFields = document.getElementById('createBookingHotelFields');
+        const taxiFields = document.getElementById('createBookingTaxiFields');
+        const spaFields = document.getElementById('createBookingSpaFields');
+
+        function updateCreateCategoryFields() {
+            const val = catSelect ? catSelect.value : 'Spa';
+            if (hotelFields) hotelFields.style.display = (val === 'Hotel') ? 'block' : 'none';
+            if (taxiFields) taxiFields.style.display = (val === 'Taxi') ? 'block' : 'none';
+            if (spaFields) spaFields.style.display = (val === 'Spa') ? 'block' : 'none';
+        }
+        if (catSelect) {
+            catSelect.addEventListener('change', updateCreateCategoryFields);
+        }
+
         if (btnOpenCreate) {
             btnOpenCreate.addEventListener('click', () => {
                 const todayStr = new Date().toISOString().split('T')[0];
                 const dateInput = document.getElementById('newBookingDate');
                 if (dateInput) dateInput.value = todayStr;
+                const checkOutDateInput = document.getElementById('newBookingHotelCheckOutDate');
+                if (checkOutDateInput) {
+                    const nextDate = new Date();
+                    nextDate.setDate(nextDate.getDate() + 3);
+                    checkOutDateInput.value = nextDate.toISOString().split('T')[0];
+                }
+                updateCreateCategoryFields();
                 if (modalCreate) modalCreate.classList.add('active');
             });
         }
@@ -2212,6 +1973,7 @@
                         dateInput.value = todayStr;
                     }
 
+                    updateCreateCategoryFields();
                     if (modalCreate) modalCreate.classList.add('active');
                     sessionStorage.removeItem('pawpal_admin_booking_preset');
                     showToast(`Đã tự động điền thông tin bé ${preset.petName} và cảnh báo an toàn vào phiếu đặt lịch!`);
@@ -2223,6 +1985,7 @@
                 const todayStr = new Date().toISOString().split('T')[0];
                 const dateInput = document.getElementById('newBookingDate');
                 if (dateInput) dateInput.value = todayStr;
+                updateCreateCategoryFields();
                 if (modalCreate) modalCreate.classList.add('active');
             }
         };
@@ -2267,8 +2030,63 @@
                     }))
                     : [ { time: time, title: 'Tiếp nhận ca mới', desc: 'Đã tạo lịch hẹn thành công', done: true, staff: staff || 'PawPal' } ];
 
+                let extraProps = {};
+                let calculatedDuration = matchedSvc ? matchedSvc.duration : '60 phút';
+                let calculatedPrice = 250000;
+
+                if (category === 'Hotel') {
+                    const checkOutDate = document.getElementById('newBookingHotelCheckOutDate')?.value || date;
+                    const checkOutTime = document.getElementById('newBookingHotelCheckOutTime')?.value || '10:00';
+                    const roomType = document.getElementById('newBookingHotelRoomType')?.value || 'Phòng Deluxe (Máy lạnh 24/7)';
+                    const dietPlan = document.getElementById('newBookingHotelDiet')?.value || 'Pate tươi dinh dưỡng (2 bữa/ngày)';
+
+                    const d1 = new Date(date);
+                    const d2 = new Date(checkOutDate);
+                    const diffTime = Math.abs(d2 - d1);
+                    const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+                    calculatedDuration = `${diffDays} đêm`;
+                    calculatedPrice = diffDays * 380000;
+
+                    extraProps = {
+                        checkInDate: date,
+                        checkInTime: time,
+                        checkOutDate: checkOutDate,
+                        checkOutTime: checkOutTime,
+                        nights: diffDays,
+                        roomType: roomType,
+                        roomCode: 'DLX-0' + (bookingsData.length + 1),
+                        dietPlan: dietPlan,
+                        cameraCode: 'CAM-HOTEL-0' + (bookingsData.length + 1),
+                        duration: calculatedDuration
+                    };
+                } else if (category === 'Taxi') {
+                    const pickup = document.getElementById('newBookingTaxiPickup')?.value || 'Địa chỉ đón bé';
+                    const dropoff = document.getElementById('newBookingTaxiDropoff')?.value || 'PawPal Chi nhánh Quận 1';
+                    const tripType = document.getElementById('newBookingTaxiTripType')?.value || '2 chiều khứ hồi';
+                    const dist = parseFloat(document.getElementById('newBookingTaxiDistance')?.value) || 4.0;
+                    calculatedPrice = 150000;
+
+                    extraProps = {
+                        pickupAddress: pickup,
+                        dropoffAddress: dropoff,
+                        tripType: tripType,
+                        distanceKm: dist,
+                        driverName: staff || 'Hữu Phúc',
+                        driverPhone: '0978.112.233'
+                    };
+                } else {
+                    const style = document.getElementById('newBookingSpaStyle')?.value || 'Tắm sấy và Tạo hình tiêu chuẩn';
+                    const lvl = document.getElementById('newBookingSpaGroomerLevel')?.value || 'Senior Groomer';
+                    calculatedPrice = 350000;
+
+                    extraProps = {
+                        styleType: style,
+                        groomerLevel: lvl
+                    };
+                }
+
                 const preset = activeBookingPreset;
-                const newBooking = {
+                const newBooking = Object.assign({
                     id: newId,
                     userId: 'USER-001',
                     customerName: customer,
@@ -2284,20 +2102,20 @@
                     serviceName: serviceName,
                     date: date,
                     time: time,
-                    duration: matchedSvc ? matchedSvc.duration : '60 phút',
+                    duration: calculatedDuration,
                     staff: staff,
                     branch: branch,
-                    price: 250000,
+                    price: calculatedPrice,
                     addonPrice: 0,
                     discount: 0,
-                    total: 250000,
+                    total: calculatedPrice,
                     paymentStatus: 'Chưa thanh toán (Tại quầy)',
                     status: 'pending',
                     alertType: !staff ? 'urgent' : null,
                     petAlert: petAlert.trim() || null,
                     customerNote: note,
                     timeline: initialTimeline
-                };
+                }, extraProps);
 
                 bookingsData.unshift(newBooking);
                 persistData();
@@ -2306,6 +2124,7 @@
                 renderUpcomingBar();
                 updateKPIs();
                 formCreate.reset();
+                showToast(`Đã tạo thành công lịch hẹn ${newId} (${categoryName})!`);
             });
         }
 
@@ -2605,6 +2424,87 @@
             });
         }
 
+        // Modal 6B: Chỉnh sửa bước nhật ký Care-Log
+        const modalEditCarelog = document.getElementById('modalEditCarelogStep');
+        const formEditCarelog = document.getElementById('formEditCarelogStep');
+        const btnCloseEditCarelog = document.getElementById('btnCloseEditCarelogStep');
+        const btnCancelEditCarelog = document.getElementById('btnCancelEditCarelogStep');
+        const btnDeleteCarelog = document.getElementById('btnDeleteCarelogStep');
+        const btnAddCarelogPhoto = document.getElementById('btnEditCarelogAddPhoto');
+        const editCarelogFileInput = document.getElementById('editCarelogFileInput');
+
+        const closeEditCarelogModal = () => {
+            if (modalEditCarelog) modalEditCarelog.classList.remove('active');
+        };
+
+        if (btnCloseEditCarelog) btnCloseEditCarelog.addEventListener('click', closeEditCarelogModal);
+        if (btnCancelEditCarelog) btnCancelEditCarelog.addEventListener('click', closeEditCarelogModal);
+        if (modalEditCarelog) modalEditCarelog.addEventListener('click', (e) => {
+            if (e.target === modalEditCarelog) closeEditCarelogModal();
+        });
+
+        if (btnAddCarelogPhoto && editCarelogFileInput) {
+            btnAddCarelogPhoto.onclick = () => editCarelogFileInput.click();
+            editCarelogFileInput.onchange = (e) => {
+                const files = e.target.files;
+                if (!files || files.length === 0) return;
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        editCarelogStepPhotosTemp.push(evt.target.result);
+                        renderEditCarelogPhotosPreview();
+                    };
+                    reader.readAsDataURL(file);
+                });
+                editCarelogFileInput.value = '';
+            };
+        }
+
+        if (btnDeleteCarelog) {
+            btnDeleteCarelog.addEventListener('click', () => {
+                const idxHidden = document.getElementById('editCarelogStepIndexHidden');
+                const idx = parseInt(idxHidden ? idxHidden.value : '-1', 10);
+                const booking = bookingsData.find(b => b.id === selectedBookingId);
+                if (!booking || idx < 0 || !booking.timeline || !booking.timeline[idx]) return;
+
+                if (confirm(`Bạn có chắc chắn muốn xóa bước nhật ký "${booking.timeline[idx].title}"?`)) {
+                    booking.timeline.splice(idx, 1);
+                    persistData();
+                    closeEditCarelogModal();
+                    renderBookingDetail(booking.id);
+                }
+            });
+        }
+
+        if (formEditCarelog) {
+            formEditCarelog.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const idxHidden = document.getElementById('editCarelogStepIndexHidden');
+                const idx = parseInt(idxHidden ? idxHidden.value : '-1', 10);
+                const booking = bookingsData.find(b => b.id === selectedBookingId);
+                if (!booking || idx < 0 || !booking.timeline || !booking.timeline[idx]) return;
+
+                const titleInput = document.getElementById('editCarelogStepTitle');
+                const staffInput = document.getElementById('editCarelogStepStaff');
+                const timeInput = document.getElementById('editCarelogStepTime');
+                const descInput = document.getElementById('editCarelogStepDesc');
+                const doneCheck = document.getElementById('editCarelogStepDone');
+
+                booking.timeline[idx] = {
+                    title: titleInput ? titleInput.value.trim() : booking.timeline[idx].title,
+                    staff: staffInput ? staffInput.value.trim() : (booking.timeline[idx].staff || booking.staff || 'KTV'),
+                    time: timeInput ? timeInput.value.trim() : booking.timeline[idx].time,
+                    desc: descInput ? descInput.value.trim() : '',
+                    done: doneCheck ? doneCheck.checked : true,
+                    images: [...editCarelogStepPhotosTemp]
+                };
+
+                persistData();
+                closeEditCarelogModal();
+                renderBookingDetail(booking.id);
+            });
+        }
+
         // Nút chia sẻ link nhật ký cho khách
         const btnShareCarelog = document.getElementById('btnShareCarelogLink');
         if (btnShareCarelog) {
@@ -2660,30 +2560,17 @@
                 const review = reviewsData.find(r => r.id === reviewId);
                 if (!review) return;
 
-                if (confirm(`Bạn có chắc chắn muốn chuyển phản ánh của khách hàng "${review.customerName}" (${review.rating} sao) thành Phiếu Khiếu Nại khẩn cấp gửi sang bộ phận CSKH xử lý đền bù?`)) {
-                    review.status = 'escalated';
+                review.status = 'escalated';
+                persistData();
+                closeReplyModal();
+                renderReviewsTable();
+                updateReviewKPIs();
 
-                    // Thêm mốc Timeline vào ca dịch vụ tương ứng
-                    const targetBooking = bookingsData.find(b => b.id === review.bookingId);
-                    if (targetBooking) {
-                        targetBooking.alertType = 'urgent';
-                        targetBooking.timeline = targetBooking.timeline || [];
-                        targetBooking.timeline.push({
-                            time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-                            title: 'Chuyển đánh giá thành Khiếu nại CSKH',
-                            desc: `Khách hàng phản ánh ${review.rating} sao: "${review.comment}". Đã chuyển bộ phận CSKH xử lý đền bù.`,
-                            done: false,
-                            staff: 'Quản lý Dịch vụ'
-                        });
-                    }
-
-                    persistData();
-                    closeReplyModal();
-                    renderReviewsTable();
-                    renderBookingsTable();
-                    updateReviewKPIs();
-                    showToast(`Đã chuyển phản ánh của ca ${review.bookingId} sang bộ phận CSKH thành công!`);
-                }
+                escalateBookingToComplaint(
+                    review.bookingId,
+                    `Phản ánh đánh giá ${review.rating} sao (${review.serviceName || 'Dịch vụ'})`,
+                    `Khách hàng ${review.customerName} đánh giá ${review.rating} sao: "${review.comment}". KTV phụ trách: ${review.staff || 'Chưa rõ'}.`
+                );
             });
         }
 
@@ -2950,22 +2837,9 @@
 
         // Modal 8: Sửa thông tin tiếp nhận tại quầy
         const modalIntake = document.getElementById('modalEditIntakeInfo');
-        const btnOpenIntake = document.getElementById('btnEditIntakeInfo');
         const btnCloseIntake = document.getElementById('btnCloseEditIntakeInfo');
         const btnCancelIntake = document.getElementById('btnCancelEditIntakeInfo');
         const formIntake = document.getElementById('formEditIntakeInfo');
-        const intakeWeightInput = document.getElementById('intakePetWeightInput');
-        const intakeAgeInput = document.getElementById('intakePetAgeInput');
-        const intakeBelongingsInput = document.getElementById('intakeBelongingsInput');
-        const intakeAlertInput = document.getElementById('intakePetAlertInput');
-
-        // Hàm mở Modal 8 đã được định nghĩa bên ngoài setupModals (openIntakeModal)
-
-        if (btnOpenIntake) {
-            btnOpenIntake.addEventListener('click', () => {
-                openIntakeModal(selectedBookingId, 'edit');
-            });
-        }
 
         const closeIntakeModal = () => {
             if (modalIntake) modalIntake.classList.remove('active');
@@ -3051,6 +2925,28 @@
                 booking.petWeight = actualWeightStr;
                 booking.staff = staffVal;
                 booking.belongings = belongingsVal;
+
+                // Tự động thêm phụ phí chênh lệch cân nặng nếu được chọn
+                const checkAutoWeight = document.getElementById('checkAutoAddWeightSurcharge');
+                const priceDelta = parseInt(checkAutoWeight ? (checkAutoWeight.getAttribute('data-price-delta') || '0') : '0', 10);
+                if (checkAutoWeight && checkAutoWeight.checked && priceDelta > 0) {
+                    booking.addons = booking.addons || [];
+                    const existingWeightAddon = booking.addons.find(a => a.name.includes('chênh lệch phân khúc cân nặng') || a.name.includes('khung cân nặng'));
+                    if (!existingWeightAddon) {
+                        booking.addons.push({
+                            id: 'ADD-' + Date.now(),
+                            name: 'Phụ phí chênh lệch phân khúc cân nặng thực tế',
+                            amount: priceDelta,
+                            reason: `Cân nặng thực tế ${actualWeightStr} lệch phân khúc so với đăng ký ban đầu (${origNum} kg)`,
+                            consent: 'Khách hàng đồng ý trực tiếp tại quầy lúc đón bé',
+                            time: timeNow,
+                            staff: staffVal
+                        });
+                        booking.addonPrice = booking.addons.reduce((sum, a) => sum + Number(a.amount || 0), 0);
+                        const curAccTotal = (booking.accompanyingServices || []).reduce((sum, a) => sum + Number(a.price || 0), 0);
+                        booking.total = Math.max(0, Number(booking.price || 0) + curAccTotal + booking.addonPrice - Number(booking.discount || 0));
+                    }
+                }
 
                 // Tự động cập nhật cân nặng mới nhất vào Hồ sơ Thú cưng liên kết
                 if (booking.petId) {
@@ -3296,13 +3192,47 @@
         const accompanyingTotal = (booking.accompanyingServices || []).reduce((sum, a) => sum + Number(a.price || 0), 0);
         const addonTotal = (booking.addons || []).reduce((sum, a) => sum + Number(a.amount || 0), 0);
         booking.addonPrice = addonTotal;
-        booking.total = Math.max(0, Number(booking.price || 0) + accompanyingTotal + addonTotal - Number(booking.discount || 0));
+        const subtotal = Number(booking.price || 0) + accompanyingTotal + addonTotal;
 
-        if (priceBaseEl) priceBaseEl.textContent = formatCurrency(booking.price);
-        if (priceAccEl) priceAccEl.textContent = accompanyingTotal > 0 ? `+${formatCurrency(accompanyingTotal)}` : '+0 đ';
-        if (priceAddonsEl) priceAddonsEl.textContent = addonTotal > 0 ? `+${formatCurrency(addonTotal)}` : '+0 đ';
-        if (priceDiscountEl) priceDiscountEl.textContent = `-${formatCurrency(booking.discount || 0)}`;
-        if (priceTotalEl) priceTotalEl.textContent = formatCurrency(booking.total);
+        const voucherSelect = document.getElementById('completeVoucherSelect');
+        const pointsSelect = document.getElementById('completePointsSelect');
+        const earnedPointsEl = document.getElementById('completeEarnedPointsText');
+
+        if (voucherSelect) voucherSelect.value = '0';
+        if (pointsSelect) pointsSelect.value = '0';
+
+        function recalculateCompleteBill() {
+            let discount = 0;
+            if (voucherSelect && voucherSelect.value !== '0') {
+                const vVal = parseFloat(voucherSelect.value);
+                if (vVal > 0 && vVal < 1) {
+                    discount += Math.round(subtotal * vVal);
+                } else if (vVal >= 1000) {
+                    discount += vVal;
+                }
+            }
+            if (pointsSelect && pointsSelect.value !== '0') {
+                const pVal = parseInt(pointsSelect.value, 10);
+                discount += Math.round(pVal * 100); // 100 điểm = 10.000 đ
+            }
+
+            const finalTotal = Math.max(0, subtotal - discount);
+            const earnedPoints = Math.max(1, Math.floor(finalTotal / 10000));
+
+            if (priceBaseEl) priceBaseEl.textContent = formatCurrency(booking.price);
+            if (priceAccEl) priceAccEl.textContent = accompanyingTotal > 0 ? `+${formatCurrency(accompanyingTotal)}` : '+0 đ';
+            if (priceAddonsEl) priceAddonsEl.textContent = addonTotal > 0 ? `+${formatCurrency(addonTotal)}` : '+0 đ';
+            if (priceDiscountEl) priceDiscountEl.textContent = `-${formatCurrency(discount)}`;
+            if (priceTotalEl) priceTotalEl.textContent = formatCurrency(finalTotal);
+            if (earnedPointsEl) earnedPointsEl.textContent = `+${earnedPoints} Pawpoint`;
+
+            return { subtotal, discount, finalTotal, earnedPoints };
+        }
+
+        recalculateCompleteBill();
+
+        if (voucherSelect) voucherSelect.onchange = recalculateCompleteBill;
+        if (pointsSelect) pointsSelect.onchange = recalculateCompleteBill;
 
         // Hình thức thanh toán
         if (payMethodSelect) {
@@ -3364,26 +3294,86 @@
 
                 const payMethodSelect = document.getElementById('completePaymentMethodSelect');
                 const checkPaid = document.getElementById('completeCheckPaid');
+                const voucherSelect = document.getElementById('completeVoucherSelect');
+                const pointsSelect = document.getElementById('completePointsSelect');
                 const payMethod = payMethodSelect ? payMethodSelect.value : 'Tiền mặt (Tại quầy)';
                 const isPaid = checkPaid ? checkPaid.checked : true;
+
+                const accompanyingTotal = (booking.accompanyingServices || []).reduce((sum, a) => sum + Number(a.price || 0), 0);
+                const addonTotal = (booking.addons || []).reduce((sum, a) => sum + Number(a.amount || 0), 0);
+                const subtotal = Number(booking.price || 0) + accompanyingTotal + addonTotal;
+
+                let discount = 0;
+                let voucherCodeUsed = '';
+                if (voucherSelect && voucherSelect.value !== '0') {
+                    const vVal = parseFloat(voucherSelect.value);
+                    voucherCodeUsed = voucherSelect.options[voucherSelect.selectedIndex].getAttribute('data-code') || '';
+                    if (vVal > 0 && vVal < 1) {
+                        discount += Math.round(subtotal * vVal);
+                    } else if (vVal >= 1000) {
+                        discount += vVal;
+                    }
+                }
+
+                let usedPoints = 0;
+                if (pointsSelect && pointsSelect.value !== '0') {
+                    usedPoints = parseInt(pointsSelect.value, 10);
+                    discount += Math.round(usedPoints * 100);
+                }
+
+                const finalTotal = Math.max(0, subtotal - discount);
+                const earnedPoints = Math.max(1, Math.floor(finalTotal / 10000));
 
                 const timeNow = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
                 booking.status = 'completed';
                 booking.alertType = null;
+                booking.discount = discount;
+                booking.total = finalTotal;
                 booking.paymentStatus = isPaid ? `Đã thanh toán (${payMethod})` : `Chưa thanh toán (${payMethod})`;
+
+                // Đồng bộ tích điểm tự động vào tài khoản khách hàng PawPal
+                try {
+                    const rawCusts = sessionStorage.getItem('pawpal_admin_customers_data');
+                    if (rawCusts) {
+                        const custData = JSON.parse(rawCusts);
+                        const cId = booking.userId || 'USER-001';
+                        if (custData[cId]) {
+                            if (usedPoints > 0) {
+                                custData[cId].points = Math.max(0, (custData[cId].points || 0) - usedPoints);
+                            }
+                            custData[cId].points = (custData[cId].points || 0) + earnedPoints;
+                            custData[cId].pointHistory = custData[cId].pointHistory || custData[cId].pointsHistory || [];
+                            if (usedPoints > 0) {
+                                custData[cId].pointHistory.unshift({
+                                    date: new Date().toLocaleDateString('vi-VN'),
+                                    points: `-${usedPoints}`,
+                                    reason: `Đổi ưu đãi giảm giá ca ${booking.id}`
+                                });
+                            }
+                            custData[cId].pointHistory.unshift({
+                                date: new Date().toLocaleDateString('vi-VN'),
+                                points: `+${earnedPoints}`,
+                                reason: `Tích điểm hoàn tất ca ${booking.id} (${booking.serviceName})`
+                            });
+                            sessionStorage.setItem('pawpal_admin_customers_data', JSON.stringify(custData));
+                        }
+                    }
+                } catch (err) {}
 
                 // Đánh dấu hoàn tất toàn bộ các bước trong Care-Log
                 booking.timeline = booking.timeline || [];
                 booking.timeline.forEach(st => st.done = true);
 
                 const belongings = booking.belongings || (booking.intakeSafety && booking.intakeSafety.belongings) || 'Không có';
-                const belongingsNote = (belongings && belongings !== 'Không có') ? `Đã trao trả đầy đủ tư trang: ${belongings}.` : 'Không có tư trang gửi lại.';
+                const belongingsNote = (belongings && belongings !== 'Không có') ? `Đã đối chiếu và trao trả đầy đủ tư trang: ${belongings}.` : 'Không có tư trang gửi lại.';
+                const voucherNote = voucherCodeUsed ? ` (Áp dụng voucher ${voucherCodeUsed})` : '';
+                const pointsNote = usedPoints > 0 ? ` (Dùng ${usedPoints} Pawpoint)` : '';
 
                 booking.timeline.push({
                     time: timeNow,
                     title: 'Nghiệm thu ca dịch vụ và Bàn giao bé',
-                    desc: `Đã hoàn tất toàn bộ liệu trình chăm sóc đạt chuẩn chất lượng. ${belongingsNote} Xuất phiếu thanh toán: ${formatCurrency(booking.total)} (${booking.paymentStatus}).`,
+                    desc: `Đã hoàn tất toàn bộ liệu trình chăm sóc đạt chuẩn chất lượng. ${belongingsNote} Xuất hóa đơn: ${formatCurrency(booking.total)}${voucherNote}${pointsNote} (${booking.paymentStatus}). Tích lũy +${earnedPoints} Pawpoint cho khách.`,
                     done: true,
                     staff: booking.staff || 'KTV',
                     images: [...completeProofImagesTemp]
@@ -3395,7 +3385,7 @@
                 renderBookingsTable();
                 renderUpcomingBar();
                 updateKPIs();
-                showToast(`Ca dịch vụ ${booking.id} đã hoàn tất và bàn giao bé thành công!`);
+                showToast(`Ca dịch vụ ${booking.id} đã hoàn tất bàn giao bé! Tích lũy +${earnedPoints} Pawpoint cho khách hàng.`);
             });
         }
     }
@@ -3790,7 +3780,8 @@
     // ==========================================================================
     // 10. KHỞI CHẠY PHÂN HỆ
     // ==========================================================================
-    function init() {
+    async function init() {
+        await loadServicesData();
         setupHeaderSubtabs();
         renderUpcomingBar();
         updateKPIs();

@@ -473,10 +473,10 @@ async function loadPetDiary(petId, targetSessionId = null) {
 
     if (activeSession) {
         currentSessionId = activeSession.id;
-        renderTimeline(activeSession.timeline);
+        renderTimeline(activeSession.timeline, activeSession);
     } else {
         currentSessionId = null;
-        renderTimeline([]);
+        renderTimeline([], null);
     }
 }
 
@@ -647,6 +647,135 @@ async function getOrSeedTrackerLogs(pet) {
             petSeedCache = await fetchJsonSafely('/data/pet-diary-seed.json');
         }
         baseData = seedDemoLogs(pet, petSeedCache);
+    }
+
+    if (!baseData.history) baseData.history = [];
+
+    // Gộp ca từ pet.carelogs (đồng bộ từ Admin Hồ sơ 360° & Quản lý thú cưng)
+    if (Array.isArray(pet.carelogs) && pet.carelogs.length > 0) {
+        pet.carelogs.forEach((cl, idx) => {
+            const clId = cl.careId || `CL-${pet.id}-${idx}`;
+            if (!baseData.history.some(h => h.id === clId)) {
+                const dateParts = (cl.time || '').split(' ');
+                const dateStr = dateParts[1] ? dateParts[1].split('/').reverse().join('-') : (dateParts[0] || '2026-05-18');
+                const timeStr = dateParts[0] && dateParts[0].includes(':') ? dateParts[0] : '14:30';
+                
+                const careSession = {
+                    id: clId,
+                    service: cl.service || 'Tắm sấy và Cắt tỉa tạo phom',
+                    date: dateStr,
+                    status: 'Hoàn thành',
+                    technician: cl.ktv || 'Hoàng Tuấn • Bàn 2',
+                    beforePhoto: cl.imgBefore || '/assets/images/services/spa/process/process_chai_long_chai_long.jpg',
+                    afterPhoto: cl.imgAfter || '/assets/images/services/spa/process/process_nghi_ngoi_nghi_ngoi.jpg',
+                    checklist: cl.checklist || { ear: true, nail: true, anal: true, skin: true },
+                    ownerMessage: cl.ownerMessage || 'Bé rất ngoan và hoàn thành tốt toàn bộ dịch vụ!',
+                    rating: cl.rating || 5,
+                    reviewText: cl.reviewText || '',
+                    reviewSubmitted: Boolean(cl.reviewText || cl.rating),
+                    timeline: [
+                        {
+                            id: `${clId}-4`,
+                            status: 'Hoàn thành dịch vụ và Sẵn sàng đón bé',
+                            timestamp: `${dateStr}T${timeStr}:00`,
+                            description: cl.ownerMessage || 'Bé đã hoàn tất toàn bộ quy trình chăm sóc, sạch thơm và xinh xắn.',
+                            staff: cl.ktv || 'Hoàng Tuấn • Bàn 2',
+                            type: 'completed',
+                            image: cl.imgAfter
+                        },
+                        {
+                            id: `${clId}-3`,
+                            status: 'Cắt tỉa tạo phom và Chăm sóc chi tiết',
+                            timestamp: `${dateStr}T13:45:00`,
+                            description: 'Cắt tỉa gọn gàng lông bàn chân, tạo dáng khuôn mặt tròn xinh xắn.',
+                            staff: cl.ktv || 'Hoàng Tuấn • Bàn 2',
+                            type: 'in_progress',
+                            image: cl.imgBefore
+                        },
+                        {
+                            id: `${clId}-2`,
+                            status: 'Tắm sạch và Vệ sinh 4 mục',
+                            timestamp: `${dateStr}T13:00:00`,
+                            description: 'Vệ sinh tai, cắt mài móng, vắt tuyến hôi và tắm dưỡng thảo mộc dịu nhẹ.',
+                            staff: cl.ktv || 'Hoàng Tuấn • Bàn 2',
+                            type: 'in_progress',
+                            image: '/assets/images/services/spa/process/process_tam_tam.jpg'
+                        },
+                        {
+                            id: `${clId}-1`,
+                            status: 'Tiếp nhận bé và Kiểm tra thể trạng',
+                            timestamp: `${dateStr}T12:30:00`,
+                            description: `Kiểm tra cân nặng ${pet.weight || '8.5kg'}, tiếp nhận yêu cầu từ phụ huynh.`,
+                            staff: 'Trần Văn Nam',
+                            type: 'check_in',
+                            image: '/assets/images/services/spa/process/massage.jpg'
+                        }
+                    ],
+                    invoice: {
+                        code: `HD-${clId}`,
+                        items: [
+                            { name: cl.service || 'Tắm sấy và Cắt tỉa tạo phom', price: 350000 },
+                            { name: 'Vệ sinh 4 mục chuyên sâu', price: 0 }
+                        ],
+                        total: 350000,
+                        paid: true
+                    }
+                };
+                baseData.history.unshift(careSession);
+            }
+        });
+    }
+
+    // Gộp ca từ allLogs[pet.id]?.sessions (đồng bộ từ Admin Groomer Workbench Subtab 3)
+    if (Array.isArray(allLogs[pet.id]?.sessions)) {
+        allLogs[pet.id].sessions.forEach(ss => {
+            if (!baseData.history.some(h => h.id === ss.id)) {
+                const dateStr = ss.date || new Date().toISOString().split('T')[0];
+                const ssSession = {
+                    id: ss.id,
+                    service: ss.serviceName || 'Tắm sấy toàn diện và Vệ sinh 4 mục',
+                    date: dateStr,
+                    status: 'Hoàn thành',
+                    technician: ss.technician || 'Hoàng Tuấn • Bàn 2',
+                    beforePhoto: ss.beforePhoto,
+                    afterPhoto: ss.afterPhoto,
+                    checklist: ss.checklist || { ear: true, nail: true, anal: true, skin: true },
+                    ownerMessage: ss.ownerMessage || 'Bé rất ngoan và hoàn thành tốt dịch vụ!',
+                    rating: ss.rating || 5,
+                    reviewText: ss.reviewText || '',
+                    reviewSubmitted: Boolean(ss.reviewText || ss.rating),
+                    timeline: [
+                        {
+                            id: `${ss.id}-4`,
+                            status: 'Hoàn thành dịch vụ',
+                            timestamp: `${dateStr}T${ss.time || '15:00'}:00`,
+                            description: ss.ownerMessage || 'Bé rất ngoan và hoàn thành tốt dịch vụ!',
+                            staff: ss.technician || 'Hoàng Tuấn • Bàn 2',
+                            type: 'completed',
+                            image: ss.afterPhoto
+                        },
+                        {
+                            id: `${ss.id}-3`,
+                            status: 'Tắm sấy và Tạo phom',
+                            timestamp: `${dateStr}T14:15:00`,
+                            description: 'Đã hoàn tất tắm sấy và cắt tỉa theo yêu cầu.',
+                            staff: ss.technician || 'Hoàng Tuấn • Bàn 2',
+                            type: 'in_progress',
+                            image: ss.beforePhoto
+                        }
+                    ],
+                    invoice: {
+                        code: `HD-${ss.id}`,
+                        items: [
+                            { name: ss.serviceName || 'Tắm sấy toàn diện và Vệ sinh 4 mục', price: 350000 }
+                        ],
+                        total: 350000,
+                        paid: true
+                    }
+                };
+                baseData.history.unshift(ssSession);
+            }
+        });
     }
 
     // Gộp ca thực tế từ Admin Services nếu có
@@ -871,12 +1000,166 @@ function renderServiceStepper(currentSession, pet) {
     `;
 }
 
-function renderTimeline(timeline) {
+function buildCareLogShowcaseHtml(session) {
+    if (!session) return '';
+    const beforePhoto = session.beforePhoto || (session.photos && session.photos[0]);
+    const afterPhoto = session.afterPhoto || (session.photos && session.photos[1]);
+    const ownerMessage = session.ownerMessage;
+    const technician = session.technician || DEMO_STAFF_PRIMARY;
+    const rating = session.rating || 5;
+    const reviewText = session.reviewText || '';
+    const hasReview = Boolean(session.reviewSubmitted);
+
+    if (!beforePhoto && !afterPhoto && !ownerMessage) {
+        return '';
+    }
+
+    return `
+        <div class="carelog-showcase-card" id="careLogShowcaseCard">
+            <div class="showcase-header">
+                <div class="showcase-title-group">
+                    <h4 class="showcase-title">Tổng kết dịch vụ và Bàn giao bé</h4>
+                </div>
+                <span class="showcase-badge-success">Đã nghiệm thu</span>
+            </div>
+
+            ${(beforePhoto || afterPhoto) ? `
+            <div class="before-after-grid">
+                ${beforePhoto ? `
+                <div class="photo-compare-col" onclick="window.openDiaryImageModal('${beforePhoto}', 'Ảnh trước khi làm — ${escapeHtml(currentPetObject?.name || '')}')" title="Bấm để xem ảnh phóng to">
+                    <span class="photo-compare-tag tag-before">Trước khi làm</span>
+                    <img src="${beforePhoto}" alt="Trước khi làm" class="photo-compare-img" loading="lazy" />
+                    <span class="photo-compare-overlay">Phóng to</span>
+                </div>` : ''}
+                ${afterPhoto ? `
+                <div class="photo-compare-col" onclick="window.openDiaryImageModal('${afterPhoto}', 'Ảnh sau khi hoàn thiện — ${escapeHtml(currentPetObject?.name || '')}')" title="Bấm để xem ảnh phóng to">
+                    <span class="photo-compare-tag tag-after">Sau khi hoàn thiện</span>
+                    <img src="${afterPhoto}" alt="Sau khi hoàn thiện" class="photo-compare-img" loading="lazy" />
+                    <span class="photo-compare-overlay">Phóng to</span>
+                </div>` : ''}
+            </div>` : ''}
+
+            <div class="hygiene-proof-section">
+                <div class="hygiene-proof-title">
+                    <span>Chứng thực vệ sinh 4 mục tiêu chuẩn</span>
+                    <span style="font-size: 11px; font-weight: 600; color: #165335;">4/4 mục đạt chuẩn</span>
+                </div>
+                <div class="hygiene-proof-grid">
+                    <div class="hygiene-item">
+                        <span class="hygiene-item-check">✓</span>
+                        <span>Vệ sinh tai sạch sẽ</span>
+                    </div>
+                    <div class="hygiene-item">
+                        <span class="hygiene-item-check">✓</span>
+                        <span>Cắt và mài móng an toàn</span>
+                    </div>
+                    <div class="hygiene-item">
+                        <span class="hygiene-item-check">✓</span>
+                        <span>Vắt tuyến hôi sạch sẽ</span>
+                    </div>
+                    <div class="hygiene-item">
+                        <span class="hygiene-item-check">✓</span>
+                        <span>Chăm sóc và dưỡng da lông</span>
+                    </div>
+                </div>
+            </div>
+
+            ${ownerMessage ? `
+            <div class="technician-advice-box">
+                <div class="technician-advice-title">Lời dặn dò từ chuyên viên (${escapeHtml(technician)}):</div>
+                <p class="technician-advice-desc">${escapeHtml(ownerMessage)}</p>
+            </div>` : ''}
+
+            <div class="user-review-box">
+                <div class="user-review-header">
+                    <h5 class="user-review-title">Đánh giá chất lượng dịch vụ</h5>
+                    ${!hasReview ? `
+                    <div class="star-rating-widget" id="starRatingWidget">
+                        <button type="button" class="star-btn active" data-val="1">★</button>
+                        <button type="button" class="star-btn active" data-val="2">★</button>
+                        <button type="button" class="star-btn active" data-val="3">★</button>
+                        <button type="button" class="star-btn active" data-val="4">★</button>
+                        <button type="button" class="star-btn active" data-val="5">★</button>
+                    </div>` : ''}
+                </div>
+
+                ${hasReview ? `
+                <div class="submitted-review-view">
+                    <div class="submitted-review-stars">${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}</div>
+                    <p class="m-0">${escapeHtml(reviewText || 'Dịch vụ rất tốt, bé được chăm sóc chu đáo!')}</p>
+                </div>` : `
+                <div class="user-review-input-group">
+                    <textarea class="user-review-textarea" id="txtUserReview" placeholder="Chia sẻ cảm nhận của bạn về trải nghiệm của bé tại PawPal...">${escapeHtml(reviewText)}</textarea>
+                    <button type="button" class="btn-submit-review" id="btnSubmitReview" onclick="window.submitCareLogReview('${session.id}')">Gửi đánh giá</button>
+                </div>`}
+            </div>
+        </div>
+    `;
+}
+
+window.submitCareLogReview = function(sessionId) {
+    const txtEl = document.getElementById('txtUserReview');
+    const reviewText = txtEl ? txtEl.value.trim() : '';
+    const ratingWidget = document.getElementById('starRatingWidget');
+    let selectedRating = 5;
+    if (ratingWidget) {
+        const activeStars = ratingWidget.querySelectorAll('.star-btn.active');
+        selectedRating = activeStars.length || 5;
+    }
+
+    // 1. Cập nhật vào trackerLogs
+    const allLogs = getTrackerLogs();
+    if (currentPetId && allLogs[currentPetId]) {
+        const petLogs = allLogs[currentPetId];
+        let target = null;
+        if (petLogs.currentSession?.id === sessionId) target = petLogs.currentSession;
+        else if (petLogs.history) target = petLogs.history.find(s => s.id === sessionId);
+
+        if (target) {
+            target.rating = selectedRating;
+            target.reviewText = reviewText;
+            target.reviewSubmitted = true;
+            saveTrackerLogs(allLogs);
+        }
+    }
+
+    // 2. Cập nhật vào petsData / pawpal_admin_pets_data nếu có
+    try {
+        const rawAdminPets = sessionStorage.getItem('pawpal_admin_pets_data') || localStorage.getItem('pawpal_admin_pets_data');
+        if (rawAdminPets) {
+            const adminPets = JSON.parse(rawAdminPets);
+            const petObj = adminPets.find(p => String(p.code || p.id).toLowerCase() === String(currentPetId).toLowerCase());
+            if (petObj && Array.isArray(petObj.carelogs)) {
+                const logItem = petObj.carelogs.find(cl => cl.careId === sessionId || sessionId.includes(cl.careId || ''));
+                if (logItem) {
+                    logItem.rating = selectedRating;
+                    logItem.reviewText = reviewText;
+                }
+                sessionStorage.setItem('pawpal_admin_pets_data', JSON.stringify(adminPets));
+                localStorage.setItem('pawpal_admin_pets_data', JSON.stringify(adminPets));
+            }
+        }
+    } catch (e) {
+        console.warn('Sync review to admin pets error:', e);
+    }
+
+    showToast('Cảm ơn bạn đã gửi đánh giá! Ý kiến của bạn giúp PawPal phục vụ bé ngày càng tốt hơn.');
+    if (currentPetId) {
+        selectAndLoadPet(currentPetId, sessionId);
+    }
+};
+
+function renderTimeline(timeline, activeSession = null) {
     const wrapper = document.getElementById('timelineWrapper');
     const emptyTimeline = document.getElementById('emptyTimeline');
     if (!wrapper) return;
 
-    if (!timeline || timeline.length === 0) {
+    let showcaseHtml = '';
+    if (activeSession) {
+        showcaseHtml = buildCareLogShowcaseHtml(activeSession);
+    }
+
+    if ((!timeline || timeline.length === 0) && !showcaseHtml) {
         wrapper.innerHTML = '';
         if (emptyTimeline) emptyTimeline.classList.remove('d-none');
         return;
@@ -884,9 +1167,25 @@ function renderTimeline(timeline) {
 
     if (emptyTimeline) emptyTimeline.classList.add('d-none');
 
-    const sorted = [...timeline].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const sorted = [...(timeline || [])].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-    wrapper.innerHTML = sorted.map((item, idx) => buildTimelineItemHtml(item, sorted.length - idx, sorted.length)).join('');
+    const timelineItemsHtml = sorted.map((item, idx) => buildTimelineItemHtml(item, sorted.length - idx, sorted.length)).join('');
+    wrapper.innerHTML = showcaseHtml + timelineItemsHtml;
+
+    // Gắn sự kiện đánh giá sao
+    const ratingWidget = document.getElementById('starRatingWidget');
+    if (ratingWidget) {
+        const starBtns = ratingWidget.querySelectorAll('.star-btn');
+        starBtns.forEach((btn, index) => {
+            btn.addEventListener('click', () => {
+                const val = index + 1;
+                starBtns.forEach((b, i) => {
+                    if (i < val) b.classList.add('active');
+                    else b.classList.remove('active');
+                });
+            });
+        });
+    }
 
     sorted.forEach(item => {
         if (item.urgent || item.type === 'urgent') {
@@ -1357,7 +1656,7 @@ function switchSession(sessionId) {
 
     currentSessionId = session.id;
     renderServiceStepper(session, currentPetObject);
-    renderTimeline(session.timeline);
+    renderTimeline(session.timeline, session);
 }
 
 async function openSessionFromUrlOrFallback(sessionId) {

@@ -10,13 +10,31 @@ const PAWPAL_MY_VOUCHERS_KEY = 'pawpal_my_vouchers_db';
 
 function getCurrentUser() {
     try {
-        return JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || {
+        let user = JSON.parse(localStorage.getItem(CURRENT_USER_KEY)) || {
             phone: '0901234567',
             name: 'Nguyễn Văn A',
             points: 250,
             spend: 3500000,
             is_temporary: false
         };
+
+        // Đồng bộ dữ liệu điểm mới nhất từ Admin Customers Data nếu có
+        try {
+            const adminDataRaw = sessionStorage.getItem('pawpal_admin_customers_data') || localStorage.getItem('pawpal_admin_customers_data');
+            if (adminDataRaw && user.phone) {
+                const adminData = JSON.parse(adminDataRaw);
+                const cleanPhone = user.phone.replace(/[^0-9]/g, '');
+                const matched = Object.values(adminData).find(c => c.phone && c.phone.replace(/[^0-9]/g, '') === cleanPhone);
+                if (matched) {
+                    if (matched.points !== undefined) user.points = matched.points;
+                    if (matched.tierName) user.tier = matched.tierName;
+                    if (matched.name) user.name = matched.name;
+                    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+                }
+            }
+        } catch (err) {}
+
+        return user;
     } catch (e) {
         return {
             phone: null,
@@ -916,6 +934,45 @@ async function doRedeem(voucherInfo, user) {
     if (user.points >= voucherInfo.pointsCost) {
         user.points -= voucherInfo.pointsCost;
         setCurrentUser(user);
+
+        // Đồng bộ trừ điểm sang pawpal_admin_customers_data và ghi lịch sử Pawpoint
+        try {
+            const cleanPhone = (user.phone || '').replace(/[^0-9]/g, '');
+            const syncAdminData = (storage) => {
+                const raw = storage.getItem('pawpal_admin_customers_data');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    const matched = Object.values(data).find(c => c.phone && c.phone.replace(/[^0-9]/g, '') === cleanPhone);
+                    if (matched) {
+                        matched.points = user.points;
+                        storage.setItem('pawpal_admin_customers_data', JSON.stringify(data));
+                    }
+                }
+            };
+            syncAdminData(sessionStorage);
+            syncAdminData(localStorage);
+
+            // Thêm vào lịch sử giao dịch Pawpoint Admin
+            const rawHist = localStorage.getItem('pawpal_admin_pawpoint_history') || sessionStorage.getItem('pawpal_admin_pawpoint_history');
+            let hist = rawHist ? JSON.parse(rawHist) : [];
+            const now = new Date();
+            const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            hist.unshift({
+                id: 'PWH-' + String(hist.length + 1).padStart(3, '0'),
+                time: timeStr,
+                custId: user.id || 'CUST-001',
+                custName: user.name || 'Khách hàng',
+                phone: user.phone || '',
+                type: 'SUB',
+                points: voucherInfo.pointsCost,
+                balance: user.points,
+                reason: `Đổi ưu đãi: ${voucherInfo.name}`
+            });
+            localStorage.setItem('pawpal_admin_pawpoint_history', JSON.stringify(hist));
+            sessionStorage.setItem('pawpal_admin_pawpoint_history', JSON.stringify(hist));
+        } catch (e) {
+            console.warn('Lỗi đồng bộ điểm voucher sang admin:', e);
+        }
 
         const newVoucherCode = voucherInfo.code || ('PAW-' + Math.random().toString(36).substring(2, 8).toUpperCase());
         const myVouchers = getStoredMyVouchers();

@@ -117,14 +117,11 @@
         </div>
 
         <!-- PHÂN TRANG NGOÀI BẢNG, NỀN TRONG SUỐT, CĂN GIỮA -->
-        <div class="admin-pagination-bar">
-            <div class="pagination-controls">
-                <button type="button" class="pagination-btn disabled" title="Trang trước">&lt;</button>
-                <button type="button" class="pagination-btn active">1</button>
-                <button type="button" class="pagination-btn">2</button>
-                <button type="button" class="pagination-btn">3</button>
-                <span class="pagination-dots">...</span>
-                <button type="button" class="pagination-btn" title="Trang sau">&gt;</button>
+        <div class="admin-pagination-bar" id="petPaginationBar">
+            <div class="pagination-controls" id="petPaginationControls">
+                <button type="button" class="pagination-btn disabled" id="petPrevPageBtn" title="Trang trước">&lt;</button>
+                <div id="petPageNumbersContainer" style="display: flex; gap: 4px;"></div>
+                <button type="button" class="pagination-btn" id="petNextPageBtn" title="Trang sau">&gt;</button>
             </div>
         </div>
     </section>
@@ -535,12 +532,11 @@
             </div>
         </div>
 
-        <div class="admin-pagination-bar">
-            <div class="pagination-controls">
-                <button type="button" class="pagination-btn disabled">&lt;</button>
-                <button type="button" class="pagination-btn active">1</button>
-                <button type="button" class="pagination-btn">2</button>
-                <button type="button" class="pagination-btn">&gt;</button>
+        <div class="admin-pagination-bar" id="remPaginationBar">
+            <div class="pagination-controls" id="remPaginationControls">
+                <button type="button" class="pagination-btn disabled" id="remPrevPageBtn" title="Trang trước">&lt;</button>
+                <div id="remPageNumbersContainer" style="display: flex; gap: 4px;"></div>
+                <button type="button" class="pagination-btn" id="remNextPageBtn" title="Trang sau">&gt;</button>
             </div>
         </div>
     </section>

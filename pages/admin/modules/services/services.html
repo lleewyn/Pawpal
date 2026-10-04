@@ -193,14 +193,15 @@
                             <span class="info-label">Ghi chú của khách:</span>
                             <span class="info-value" id="detailBookingCustomerNote" style="font-weight: 400;">Không có</span>
                         </div>
+                        <!-- KHỐI ĐẶC THÙ THEO NHÓM DỊCH VỤ (HOTEL / TAXI / SPA) -->
+                        <div id="detailSpecialServiceFields" class="special-service-fields-container" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-neutral);">
+                            <!-- Nạp động theo loại dịch vụ từ services.js -->
+                        </div>
                     </div>
 
                     <!-- KHỐI 2: KHÁCH HÀNG VÀ THÚ CƯNG -->
                     <div class="detail-info-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <div class="detail-section-title" style="margin-bottom: 0;">Khách hàng và Thú cưng</div>
-                            <button type="button" class="btn-text-action" id="btnEditIntakeInfo">Sửa thông tin tiếp nhận</button>
-                        </div>
+                        <div class="detail-section-title">Khách hàng và Thú cưng</div>
                         <div class="info-grid-2col">
                             <div class="info-pair">
                                 <span class="info-label">Chủ nuôi:</span>
@@ -587,9 +588,88 @@
                         <input type="time" class="admin-input" id="newBookingTime" value="09:00" required>
                     </div>
                 </div>
+                <!-- CÁC TRƯỜNG ĐẶC THÙ CHO HOTEL -->
+                <div id="createBookingHotelFields" style="display: none; background: #F8FAF9; padding: 12px 14px; border-radius: var(--admin-radius); margin-bottom: 12px;">
+                    <div style="font-size: 12.5px; font-weight: 600; color: #236B48; margin-bottom: 8px;">Thông tin lưu trú Khách sạn thú cưng:</div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Ngày trả phòng (Check-out):</label>
+                            <input type="date" class="admin-input" id="newBookingHotelCheckOutDate">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Giờ trả phòng:</label>
+                            <input type="time" class="admin-input" id="newBookingHotelCheckOutTime" value="10:00">
+                        </div>
+                    </div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Loại phòng và Chuồng:</label>
+                            <select class="admin-select" id="newBookingHotelRoomType">
+                                <option value="Phòng Standard (STD-01)">Phòng Standard (STD-01)</option>
+                                <option value="Phòng Deluxe (DLX-04)">Phòng Deluxe (DLX-04 - Máy lạnh 24/7)</option>
+                                <option value="Phòng VIP Penthouse (VIP-02)">Phòng VIP Penthouse (VIP-02 - Camera riêng)</option>
+                            </select>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Khẩu phần dinh dưỡng:</label>
+                            <select class="admin-select" id="newBookingHotelDiet">
+                                <option value="Pate tươi dinh dưỡng + Thịt bò luộc (2 bữa/ngày)">Pate tươi dinh dưỡng (2 bữa/ngày)</option>
+                                <option value="Hạt cao cấp Royal Canin (2 bữa/ngày)">Hạt cao cấp Royal Canin (2 bữa/ngày)</option>
+                                <option value="Thức ăn riêng chủ nuôi tự gửi">Thức ăn riêng chủ nuôi tự gửi</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CÁC TRƯỜNG ĐẶC THÙ CHO PET TAXI -->
+                <div id="createBookingTaxiFields" style="display: none; background: #F8FAF9; padding: 12px 14px; border-radius: var(--admin-radius); margin-bottom: 12px;">
+                    <div style="font-size: 12.5px; font-weight: 600; color: #236B48; margin-bottom: 8px;">Thông tin lộ trình Pet Taxi đưa đón:</div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Địa chỉ đón:</label>
+                        <input type="text" class="admin-input" id="newBookingTaxiPickup" placeholder="Nhập địa chỉ đón bé (Số nhà, đường, phường, quận)...">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Địa chỉ trả:</label>
+                        <input type="text" class="admin-input" id="newBookingTaxiDropoff" placeholder="Nhập địa chỉ trả (Mặc định: PawPal Chi nhánh Quận 1)...">
+                    </div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Hình thức đưa đón:</label>
+                            <select class="admin-select" id="newBookingTaxiTripType">
+                                <option value="2 chiều khứ hồi">2 chiều khứ hồi (Đón đến và Chở về)</option>
+                                <option value="1 chiều (Đón đến quầy)">1 chiều (Đón đến quầy)</option>
+                                <option value="1 chiều (Chở về nhà)">1 chiều (Chở về nhà)</option>
+                            </select>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Khoảng cách ước tính (km):</label>
+                            <input type="number" step="0.1" class="admin-input" id="newBookingTaxiDistance" value="4.0" placeholder="4.0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CÁC TRƯỜNG ĐẶC THÙ CHO SPA VÀ GROOMING -->
+                <div id="createBookingSpaFields" style="background: #F8FAF9; padding: 12px 14px; border-radius: var(--admin-radius); margin-bottom: 12px;">
+                    <div style="font-size: 12.5px; font-weight: 600; color: #236B48; margin-bottom: 8px;">Yêu cầu tạo hình và Grooming:</div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Kiểu dáng tạo hình yêu cầu:</label>
+                            <input type="text" class="admin-input" id="newBookingSpaStyle" placeholder="VD: Mặt tròn Boo, bo 4 chân phồng, tỉa form Poodle...">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Cấp độ KTV Groomer:</label>
+                            <select class="admin-select" id="newBookingSpaGroomerLevel">
+                                <option value="Senior Groomer">Senior Groomer</option>
+                                <option value="Master Groomer">Master Groomer</option>
+                                <option value="Junior Groomer">Junior Groomer</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-row-2col">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Kỹ thuật viên phụ trách:</label>
+                        <label class="form-label-clean">Kỹ thuật viên / Tài xế phụ trách:</label>
                         <select class="admin-select" id="newBookingStaff">
                             <option value="">Chưa phân công (Phân công sau)</option>
                             <option value="Ngọc Anh">Ngọc Anh (Senior Groomer)</option>
@@ -930,6 +1010,67 @@
     </div>
 
     <!-- ====================================================================
+         MODAL 6B: CHỈNH SỬA BƯỚC NHẬT KÝ CHĂM SÓC (CARE-LOG STEP EDITOR)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalEditCarelogStep">
+        <div class="admin-modal-card" style="width: 580px; max-width: 95vw;">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Chỉnh sửa bước nhật ký Care-Log</div>
+                    <div id="editCarelogModalMeta" style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
+                        Mã ca: BKG-1001 | Bé: Miu Con
+                    </div>
+                </div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseEditCarelogStep">Đóng</button>
+            </div>
+            <form id="formEditCarelogStep" class="modal-body-clean">
+                <input type="hidden" id="editCarelogStepIndexHidden">
+                <div class="form-group-item">
+                    <label class="form-label-clean">Tên bước kỹ thuật / chăm sóc:</label>
+                    <input type="text" class="admin-input" id="editCarelogStepTitle" placeholder="Ví dụ: Tắm xả và Massage da..." required>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Người thực hiện / Kỹ thuật viên:</label>
+                        <input type="text" class="admin-input" id="editCarelogStepStaff" placeholder="Tên KTV phụ trách..." required>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Thời gian ghi nhận:</label>
+                        <input type="text" class="admin-input" id="editCarelogStepTime" placeholder="14:15" required>
+                    </div>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Ghi chú chi tiết cho chủ nuôi theo dõi:</label>
+                    <textarea class="admin-input" id="editCarelogStepDesc" style="height: 70px; padding: 8px 14px;" placeholder="Mô tả chi tiết quá trình thực hiện bước này..."></textarea>
+                </div>
+                <div class="form-group-item">
+                    <label class="intake-check-item">
+                        <input type="checkbox" id="editCarelogStepDone">
+                        <span>Đã hoàn thành bước kỹ thuật này</span>
+                    </label>
+                </div>
+                <div class="form-group-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label class="form-label-clean" style="margin-bottom: 0;">Hình ảnh đính kèm của bước này:</label>
+                        <button type="button" class="btn-text-action" id="btnEditCarelogAddPhoto">+ Thêm ảnh mới</button>
+                        <input type="file" id="editCarelogFileInput" accept="image/*" multiple style="display: none;">
+                    </div>
+                    <div class="intake-proof-preview-container" id="editCarelogPhotosPreviewList">
+                        <!-- Nạp động ảnh bước đang sửa -->
+                    </div>
+                </div>
+                <div class="modal-footer-clean" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <button type="button" class="admin-btn admin-btn-danger-outline" id="btnDeleteCarelogStep">Xóa bước này</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelEditCarelogStep">Hủy bỏ</button>
+                        <button type="submit" class="admin-btn admin-btn-primary">Lưu thay đổi</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
          MODAL 7: THÊM DỊCH VỤ ĐI CÙNG VÀO CA (ACCOMPANYING SERVICE)
          ==================================================================== -->
     <div class="admin-modal-overlay" id="modalAddAccompanyingService">
@@ -1020,8 +1161,12 @@
                 </div>
 
                 <!-- CẢNH BÁO LỆCH KHUNG CÂN NẶNG (THUẦN CHỮ HỔ PHÁCH/ĐỎ, KHÔNG VIỀN KHUNG DÀY) -->
-                <div id="intakeWeightAlertBox" class="intake-weight-alert" style="display: none;">
-                    <!-- Nội dung cảnh báo chênh lệch khung giá cân nặng -->
+                <div id="intakeWeightAlertBox" class="intake-weight-alert" style="display: none; padding: 8px 12px; margin-bottom: 12px; background: #FEF3C7; border-radius: var(--admin-radius); font-size: 12.5px; color: #92400E;">
+                    <div id="intakeWeightAlertText" style="font-weight: 600; margin-bottom: 4px;"></div>
+                    <label class="intake-check-item" style="margin-top: 4px; font-weight: normal; color: #78350F;">
+                        <input type="checkbox" id="checkAutoAddWeightSurcharge" checked>
+                        <span id="checkAutoAddWeightSurchargeLabel">Tự động cộng phụ phí chênh lệch phân khúc cân nặng vào ca</span>
+                    </label>
                 </div>
 
                 <!-- KHỐI 2: CHECKLIST NGOẠI QUAN 4 VÙNG AN TOÀN (ZERO-CLAIM INSPECTION) -->
@@ -1270,6 +1415,26 @@
                             <span>Phụ phí phát sinh đã xác nhận:</span>
                             <span id="completePriceAddons" style="font-weight: 600;">+0 đ</span>
                         </div>
+                        <div class="form-row-2col" style="margin-top: 6px; margin-bottom: 6px; gap: 8px;">
+                            <div>
+                                <label style="font-size: 11.5px; color: var(--text-muted); display: block; margin-bottom: 2px;">Mã ưu đãi / Voucher:</label>
+                                <select class="admin-select" id="completeVoucherSelect" style="height: 32px; font-size: 12px; padding: 0 8px;">
+                                    <option value="0" data-code="">-- Không dùng voucher --</option>
+                                    <option value="50000" data-code="PAWSPA50">PAWSPA50 - Giảm 50.000 đ</option>
+                                    <option value="100000" data-code="VIPCARE100">VIPCARE100 - Giảm 100.000 đ</option>
+                                    <option value="0.1" data-code="MEMBER10">MEMBER10 - Giảm 10% tổng bill</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size: 11.5px; color: var(--text-muted); display: block; margin-bottom: 2px;">Dùng điểm Pawpoint:</label>
+                                <select class="admin-select" id="completePointsSelect" style="height: 32px; font-size: 12px; padding: 0 8px;">
+                                    <option value="0">-- Không trừ điểm --</option>
+                                    <option value="100">Dùng 100 điểm (-10.000 đ)</option>
+                                    <option value="200">Dùng 200 điểm (-20.000 đ)</option>
+                                    <option value="500">Dùng 500 điểm (-50.000 đ)</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="summary-row" style="padding: 3px 0; color: #15803D;">
                             <span>Giảm giá / Ưu đãi thành viên:</span>
                             <span id="completePriceDiscount" style="font-weight: 600;">-0 đ</span>
@@ -1277,6 +1442,10 @@
                         <div class="summary-row" style="border-top: 1px solid var(--border-neutral); margin-top: 6px; padding-top: 6px;">
                             <span style="font-weight: 700;">Tổng thanh toán cuối cùng:</span>
                             <span id="completePriceTotal" style="font-size: 16px; font-weight: 700; color: #236B48;">250.000 đ</span>
+                        </div>
+                        <div style="font-size: 11.5px; color: #165335; margin-top: 4px; display: flex; align-items: center; justify-content: space-between;">
+                            <span>Tích điểm thành viên (10.000 đ = 1 điểm):</span>
+                            <span id="completeEarnedPointsText" style="font-weight: 700;">+25 Pawpoint</span>
                         </div>
                     </div>
                 </div>

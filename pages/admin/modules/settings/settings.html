@@ -295,35 +295,71 @@
     </section>
 
     <!-- ====================================================================
-         SUB-TAB 3: CẤU HÌNH HỆ THỐNG (THANH TOÁN, VẬN CHUYỂN, ĐẶT LỊCH, ĐỐI TÁC)
+         SUB-TAB 3: CẤU HÌNH HỆ THỐNG (THÔNG TIN CHI NHÁNH, THANH TOÁN, VẬN CHUYỂN, ĐẶT LỊCH, ĐỐI TÁC)
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-system-config">
         <div class="system-cards-grid">
-            <!-- CARD 1: PHƯƠNG THỨC THANH TOÁN -->
+            <!-- CARD 1: THÔNG TIN CỬA HÀNG VÀ CHI NHÁNH (STORE PROFILE) -->
+            <div class="admin-card system-module-card">
+                <div class="system-card-header">
+                    <div>
+                        <div class="system-card-title">Thông tin Cửa hàng và Chi nhánh</div>
+                        <div class="system-card-desc">Tên thương hiệu, Hotline 24/7, Email CSKH, Địa chỉ và Mã số thuế VAT</div>
+                    </div>
+                    <span class="admin-badge badge-active" id="badgeStoreStatus">Trụ sở Q.3</span>
+                </div>
+                <div class="system-card-body">
+                    <div class="info-pair">
+                        <span class="info-label">Tên thương hiệu:</span>
+                        <span class="info-value" id="dispStoreBrand">PawPal Pet Center</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 6px;">
+                        <span class="info-label">Hotline tiếp nhận:</span>
+                        <span class="info-value" id="dispStoreHotline" style="font-weight: 700; color: var(--text-heading);">1900 888 999</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 6px;">
+                        <span class="info-label">Email hỗ trợ:</span>
+                        <span class="info-value" id="dispStoreEmail">cskh@pawpal.vn</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 6px;">
+                        <span class="info-label">Địa chỉ cơ sở:</span>
+                        <span class="info-value" id="dispStoreAddress">120 Nguyễn Thị Minh Khai, P.6, Q.3, TP.HCM</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 6px;">
+                        <span class="info-label">Mã số thuế (MST):</span>
+                        <span class="info-value" id="dispStoreTaxId">0316889988</span>
+                    </div>
+                </div>
+                <div class="system-card-footer">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnConfigureStoreProfile">Cấu hình thông tin</button>
+                </div>
+            </div>
+
+            <!-- CARD 2: PHƯƠNG THỨC THANH TOÁN -->
             <div class="admin-card system-module-card">
                 <div class="system-card-header">
                     <div>
                         <div class="system-card-title">Phương thức thanh toán</div>
                         <div class="system-card-desc">Cấu hình COD, chuyển khoản QR Banking và ví điện tử MoMo, VNPay</div>
                     </div>
-                    <span class="admin-badge badge-active">4 Cổng</span>
+                    <span class="admin-badge badge-active" id="badgePaymentCount">4 Cổng hoạt động</span>
                 </div>
                 <div class="system-card-body">
                     <div class="method-toggle-row">
                         <span>Thanh toán khi nhận hàng (COD)</span>
-                        <span class="admin-badge badge-active">Bật</span>
+                        <span class="admin-badge badge-active" id="statusCodBadge">Bật</span>
                     </div>
                     <div class="method-toggle-row">
                         <span>Chuyển khoản QR Banking (Vietcombank)</span>
-                        <span class="admin-badge badge-active">Bật</span>
+                        <span class="admin-badge badge-active" id="statusBankBadge">Bật</span>
                     </div>
                     <div class="method-toggle-row">
                         <span>Ví điện tử MoMo</span>
-                        <span class="admin-badge badge-active">Bật</span>
+                        <span class="admin-badge badge-active" id="statusMomoBadge">Bật</span>
                     </div>
                     <div class="method-toggle-row">
                         <span>Cổng thanh toán VNPay</span>
-                        <span class="admin-badge badge-active">Bật</span>
+                        <span class="admin-badge badge-active" id="statusVnpayBadge">Bật</span>
                     </div>
                 </div>
                 <div class="system-card-footer">
@@ -331,27 +367,31 @@
                 </div>
             </div>
 
-            <!-- CARD 2: ĐƠN VỊ VẬN CHUYỂN -->
+            <!-- CARD 3: ĐƠN VỊ VẬN CHUYỂN VÀ BIỂU PHÍ GIAO HÀNG -->
             <div class="admin-card system-module-card">
                 <div class="system-card-header">
                     <div>
-                        <div class="system-card-title">Đơn vị vận chuyển</div>
-                        <div class="system-card-desc">Tích hợp API kết nối Giao Hàng Nhanh, GHTK, GrabExpress</div>
+                        <div class="system-card-title">Đơn vị vận chuyển và Biểu phí</div>
+                        <div class="system-card-desc">Cấu hình mức Miễn phí ship, phí giao hàng nội/ngoại thành và API GHN/GHTK</div>
                     </div>
-                    <span class="admin-badge badge-active">GHN (Mặc định)</span>
+                    <span class="admin-badge badge-active" id="dispShippingPartnerBadge">GHN Express</span>
                 </div>
                 <div class="system-card-body">
                     <div class="info-pair">
-                        <span class="info-label">Đối tác chính:</span>
-                        <span class="info-value">Giao Hàng Nhanh (GHN)</span>
+                        <span class="info-label">Miễn phí giao hàng:</span>
+                        <span class="info-value" id="dispFreeShipThreshold" style="color: var(--text-heading); font-weight: 700;">Đơn từ 300,000 đ</span>
                     </div>
                     <div class="info-pair" style="margin-top: 6px;">
-                        <span class="info-label">Giao trong ngày:</span>
-                        <span class="info-value">Kích hoạt (Ahamove / GrabExpress)</span>
+                        <span class="info-label">Phí nội thành / Ngoại tỉnh:</span>
+                        <span class="info-value" id="dispStandardShippingFees">25,000 đ / 35,000 đ</span>
                     </div>
                     <div class="info-pair" style="margin-top: 6px;">
-                        <span class="info-label">Thu hộ COD:</span>
-                        <span class="info-value">Cho phép toàn quốc</span>
+                        <span class="info-label">Giao hỏa tốc 2h:</span>
+                        <span class="info-value" id="dispExpressShippingFee">45,000 đ (Grab / Aha)</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 6px;">
+                        <span class="info-label">Đối tác API tích hợp:</span>
+                        <span class="info-value" id="dispShippingApiStatus">GHN (Shop ID: PAWPAL_Q1)</span>
                     </div>
                 </div>
                 <div class="system-card-footer">
@@ -359,27 +399,31 @@
                 </div>
             </div>
 
-            <!-- CARD 3: CHÍNH SÁCH ĐẶT LỊCH DỊCH VỤ -->
+            <!-- CARD 4: CHÍNH SÁCH ĐẶT LỊCH, GIỜ MỞ CỬA VÀ PET HOTEL -->
             <div class="admin-card system-module-card">
                 <div class="system-card-header">
                     <div>
-                        <div class="system-card-title">Chính sách đặt lịch</div>
-                        <div class="system-card-desc">Quy tắc hủy lịch, chọn nhân viên và phụ thu ngoài giờ cho Spa và Hotel</div>
+                        <div class="system-card-title">Chính sách Đặt lịch và Giờ mở cửa</div>
+                        <div class="system-card-desc">Quy tắc hủy lịch, giờ nhận/trả Pet Hotel, công suất ca và giờ hoạt động chi nhánh</div>
                     </div>
                     <span class="admin-badge badge-active">Áp dụng ngay</span>
                 </div>
                 <div class="system-card-body">
                     <div class="info-pair">
-                        <span class="info-label">Thời gian hủy miễn phí:</span>
-                        <span class="info-value">Trước 4 giờ</span>
+                        <span class="info-label">Giờ phục vụ chi nhánh:</span>
+                        <span class="info-value" id="dispOperatingHours">08:00 - 20:00 (T7/CN: 21:00)</span>
                     </div>
                     <div class="info-pair" style="margin-top: 6px;">
-                        <span class="info-label">Phí hủy muộn:</span>
-                        <span class="info-value">50,000 VNĐ</span>
+                        <span class="info-label">Khung giờ Pet Hotel:</span>
+                        <span class="info-value" id="dispHotelCheckInOut">Nhận sau 14:00 • Trả trước 12:00</span>
                     </div>
                     <div class="info-pair" style="margin-top: 6px;">
-                        <span class="info-label">Chọn nhân viên yêu thích:</span>
-                        <span class="info-value">Cho phép khách chọn</span>
+                        <span class="info-label">Công suất tối đa / Ca:</span>
+                        <span class="info-value" id="dispSlotCapacity">Tối đa 4 bé / Khung giờ</span>
+                    </div>
+                    <div class="info-pair" style="margin-top: 6px;">
+                        <span class="info-label">Hủy miễn phí / Phí trễ:</span>
+                        <span class="info-value" id="dispCancelPolicy">Trước 4 giờ • Phí trễ 50,000 đ</span>
                     </div>
                 </div>
                 <div class="system-card-footer">
@@ -387,7 +431,7 @@
                 </div>
             </div>
 
-            <!-- CARD 4: KẾT NỐI ĐỐI TÁC BÊN THỨ BA -->
+            <!-- CARD 5: KẾT NỐI ĐỐI TÁC BÊN THỨ BA -->
             <div class="admin-card system-module-card">
                 <div class="system-card-header">
                     <div>
@@ -716,7 +760,67 @@
         </div>
     </div>
 
-    <!-- MODAL 6: CẤU HÌNH THANH TOÁN -->
+    <!-- MODAL 6: CẤU HÌNH THÔNG TIN CỬA HÀNG VÀ CHI NHÁNH -->
+    <div class="admin-modal-overlay" id="storeProfileModalOverlay">
+        <div class="admin-modal-card wide-modal">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Cấu hình Thông tin Cửa hàng và Chi nhánh</div>
+                <button type="button" class="modal-btn-close-text" id="btnCancelStoreProfileModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean">
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Tên thương hiệu *</label>
+                        <input type="text" class="admin-input" id="inputStoreBrandName" value="PawPal Pet Center">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Tên công ty pháp lý</label>
+                        <input type="text" class="admin-input" id="inputStoreCompanyName" value="CÔNG TY CỔ PHẦN PAWPAL VIỆT NAM">
+                    </div>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Hotline tiếp nhận 24/7 *</label>
+                        <input type="text" class="admin-input" id="inputStoreHotline" value="1900 888 999">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Số điện thoại khẩn cấp</label>
+                        <input type="text" class="admin-input" id="inputStoreEmergency" value="0901 234 567">
+                    </div>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Email CSKH tiếp nhận</label>
+                        <input type="email" class="admin-input" id="inputStoreEmail" value="cskh@pawpal.vn">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Mã số thuế (MST xuất VAT)</label>
+                        <input type="text" class="admin-input" id="inputStoreTaxId" value="0316889988">
+                    </div>
+                </div>
+                <div class="form-group-item">
+                    <label class="form-label-clean">Địa chỉ trụ sở / Cơ sở chính *</label>
+                    <input type="text" class="admin-input" id="inputStoreAddress" value="120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP. Hồ Chí Minh">
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Liên kết Zalo OA</label>
+                        <input type="text" class="admin-input" id="inputStoreZalo" value="https://zalo.me/0901234567">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Liên kết Fanpage Facebook</label>
+                        <input type="text" class="admin-input" id="inputStoreFacebook" value="https://facebook.com/pawpalvietnam">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissStoreProfileModal">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveStoreProfile">Lưu thông tin cửa hàng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 7: CẤU HÌNH CỔNG THANH TOÁN -->
     <div class="admin-modal-overlay" id="paymentConfigModalOverlay">
         <div class="admin-modal-card">
             <div class="modal-header-clean">
@@ -724,28 +828,53 @@
                 <button type="button" class="modal-btn-close-text" id="btnCancelPaymentModal">Đóng</button>
             </div>
             <div class="modal-body-clean">
-                <div class="form-group-item">
-                    <label class="form-label-clean">Ngân hàng thụ hưởng QR Banking</label>
-                    <select class="admin-select" id="inputPaymentBank">
-                        <option value="vietcombank">Vietcombank - Ngân hàng Ngoại thương</option>
-                        <option value="techcombank">Techcombank - Ngân hàng Kỹ thương</option>
-                        <option value="mb">MB Bank - Ngân hàng Quân đội</option>
-                        <option value="acb">ACB - Ngân hàng Á Châu</option>
-                    </select>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">Trạng thái Bật/Tắt các Cổng thanh toán:</div>
+                <div class="form-row-2col" style="margin-bottom: 12px;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
+                        <input type="checkbox" id="toggleCodEnabled" checked>
+                        <span>Thanh toán COD</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
+                        <input type="checkbox" id="toggleBankEnabled" checked>
+                        <span>QR Banking</span>
+                    </label>
                 </div>
-                <div class="form-row-2col">
+                <div class="form-row-2col" style="margin-bottom: 16px;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
+                        <input type="checkbox" id="toggleMomoEnabled" checked>
+                        <span>Ví điện tử MoMo</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer;">
+                        <input type="checkbox" id="toggleVnpayEnabled" checked>
+                        <span>Cổng VNPay</span>
+                    </label>
+                </div>
+
+                <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">Thông tin thụ hưởng Chuyển khoản QR:</div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Số tài khoản</label>
-                        <input type="text" class="admin-input" id="inputPaymentAccNo" value="999888666">
+                        <label class="form-label-clean">Ngân hàng thụ hưởng QR Banking</label>
+                        <select class="admin-select" id="inputPaymentBank">
+                            <option value="vietcombank">Vietcombank - Ngân hàng Ngoại thương</option>
+                            <option value="techcombank">Techcombank - Ngân hàng Kỹ thương</option>
+                            <option value="mb">MB Bank - Ngân hàng Quân đội</option>
+                            <option value="acb">ACB - Ngân hàng Á Châu</option>
+                        </select>
+                    </div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Số tài khoản</label>
+                            <input type="text" class="admin-input" id="inputPaymentAccNo" value="999888666">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Chủ tài khoản</label>
+                            <input type="text" class="admin-input" id="inputPaymentAccHolder" value="CONG TY CP PAWPAL VIET NAM">
+                        </div>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Chủ tài khoản</label>
-                        <input type="text" class="admin-input" id="inputPaymentAccHolder" value="CONG TY CP PAWPAL VIET NAM">
+                        <label class="form-label-clean">Cú pháp chuyển khoản mặc định</label>
+                        <input type="text" class="admin-input" id="inputPaymentSyntax" value="PAWPAL [MA_DON_HANG] [SDT]">
                     </div>
-                </div>
-                <div class="form-group-item">
-                    <label class="form-label-clean">Cú pháp chuyển khoản mặc định</label>
-                    <input type="text" class="admin-input" id="inputPaymentSyntax" value="PAWPAL [MA_DON_HANG] [SDT]">
                 </div>
             </div>
             <div class="modal-footer-clean">
@@ -755,69 +884,141 @@
         </div>
     </div>
 
-    <!-- MODAL 7: CẤU HÌNH GIAO HÀNG -->
+    <!-- MODAL 8: CẤU HÌNH GIAO HÀNG VÀ BIỂU PHÍ VẬN CHUYỂN -->
     <div class="admin-modal-overlay" id="shippingConfigModalOverlay">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card wide-modal">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Cấu hình Đơn vị Giao hàng</div>
+                <div class="modal-title-clean">Cấu hình Đơn vị Giao hàng và Biểu phí Vận chuyển</div>
                 <button type="button" class="modal-btn-close-text" id="btnCancelShippingModal">Đóng</button>
             </div>
             <div class="modal-body-clean">
-                <div class="form-group-item">
-                    <label class="form-label-clean">Đơn vị vận chuyển chính</label>
-                    <select class="admin-select" id="inputShippingProvider">
-                        <option value="ghn">Giao Hàng Nhanh (GHN Express)</option>
-                        <option value="ghtk">Giao Hàng Tiết Kiệm (GHTK)</option>
-                        <option value="grab">GrabExpress Siêu Tốc</option>
-                    </select>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">1. Chính sách Biểu phí giao hàng áp dụng cho Khách hàng:</div>
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Mức đơn Miễn phí giao hàng (VNĐ) *</label>
+                        <input type="number" class="admin-input" id="inputFreeShippingThreshold" value="300000" placeholder="Ví dụ: 300000">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Phí giao hàng nội thành (VNĐ) *</label>
+                        <input type="number" class="admin-input" id="inputInnerCityFee" value="25000">
+                    </div>
                 </div>
                 <div class="form-row-2col">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Shop ID</label>
-                        <input type="text" class="admin-input" id="inputShippingShopId" value="PAWPAL_Q1_STORE">
+                        <label class="form-label-clean">Phí giao hàng ngoại tỉnh (VNĐ) *</label>
+                        <input type="number" class="admin-input" id="inputOuterCityFee" value="35000">
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">API Token</label>
-                        <input type="password" class="admin-input" id="inputShippingApiKey" value="ghn_prod_secret_token_12345">
+                        <label class="form-label-clean">Phí giao hỏa tốc 2 giờ (VNĐ)</label>
+                        <input type="number" class="admin-input" id="inputExpressFee" value="45000">
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px; margin-top: 6px;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">2. Tích hợp Đối tác vận chuyển 3PL:</div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Đơn vị vận chuyển chính</label>
+                        <select class="admin-select" id="inputShippingProvider">
+                            <option value="ghn">Giao Hàng Nhanh (GHN Express)</option>
+                            <option value="ghtk">Giao Hàng Tiết Kiệm (GHTK)</option>
+                            <option value="grab">GrabExpress Siêu Tốc</option>
+                        </select>
+                    </div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Shop ID</label>
+                            <input type="text" class="admin-input" id="inputShippingShopId" value="PAWPAL_Q1_STORE">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">API Secret Token</label>
+                            <input type="password" class="admin-input" id="inputShippingApiKey" value="ghn_prod_secret_token_12345">
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer-clean">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissShippingModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveShippingConfig">Lưu cấu hình</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveShippingConfig">Lưu cấu hình giao hàng</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 8: CHÍNH SÁCH ĐẶT LỊCH DỊCH VỤ -->
+    <!-- MODAL 9: CHÍNH SÁCH ĐẶT LỊCH, GIỜ MỞ CỬA VÀ PET HOTEL -->
     <div class="admin-modal-overlay" id="bookingPolicyModalOverlay">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card wide-modal">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Chính sách Đặt lịch Dịch vụ</div>
+                <div class="modal-title-clean">Chính sách Đặt lịch, Giờ mở cửa và Pet Hotel</div>
                 <button type="button" class="modal-btn-close-text" id="btnCancelBookingPolicyModal">Đóng</button>
             </div>
             <div class="modal-body-clean">
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">1. Khung giờ phục vụ chi nhánh:</div>
                 <div class="form-row-2col">
                     <div class="form-group-item">
-                        <label class="form-label-clean">Thời gian hủy miễn phí (giờ)</label>
-                        <input type="number" class="admin-input" id="inputFreeCancelHours" value="4">
+                        <label class="form-label-clean">Ngày thường (Thứ 2 - Thứ 6)</label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="time" class="admin-input" id="inputWeekdayOpen" value="08:00">
+                            <span>đến</span>
+                            <input type="time" class="admin-input" id="inputWeekdayClose" value="20:00">
+                        </div>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Phí hủy muộn (VNĐ)</label>
-                        <input type="number" class="admin-input" id="inputLateCancelFee" value="50000">
+                        <label class="form-label-clean">Cuối tuần (Thứ 7 - Chủ Nhật)</label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="time" class="admin-input" id="inputWeekendOpen" value="08:00">
+                            <span>đến</span>
+                            <input type="time" class="admin-input" id="inputWeekendClose" value="21:00">
+                        </div>
                     </div>
                 </div>
-                <div class="form-group-item">
-                    <label class="form-label-clean">Tùy chọn nhân viên yêu thích</label>
-                    <select class="admin-select" id="inputAllowPickStaff">
-                        <option value="yes">Cho phép khách chỉ định nhân viên chăm sóc</option>
-                        <option value="no">Hệ thống tự động xếp ca ngẫu nhiên</option>
-                    </select>
+
+                <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px; margin-top: 6px;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">2. Quy định Lưu trú Khách sạn thú cưng (Pet Hotel):</div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Giờ Check-in quy định</label>
+                            <input type="time" class="admin-input" id="inputHotelCheckIn" value="14:00">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Giờ Check-out quy định</label>
+                            <input type="time" class="admin-input" id="inputHotelCheckOut" value="12:00">
+                        </div>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Phụ phí trả phòng trễ sau 12:00 (VNĐ / nửa ngày)</label>
+                        <input type="number" class="admin-input" id="inputHotelLateFee" value="100000">
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid var(--border-neutral); padding-top: 12px; margin-top: 6px;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">3. Quy tắc Đặt lịch Spa và Hủy ca:</div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Công suất tối đa (Số bé / Khung giờ) *</label>
+                            <input type="number" class="admin-input" id="inputSlotCapacity" value="4">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Thời gian hủy miễn phí trước ca (giờ)</label>
+                            <input type="number" class="admin-input" id="inputFreeCancelHours" value="4">
+                        </div>
+                    </div>
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Phí hủy muộn (VNĐ)</label>
+                            <input type="number" class="admin-input" id="inputLateCancelFee" value="50000">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Tùy chọn nhân viên yêu thích</label>
+                            <select class="admin-select" id="inputAllowPickStaff">
+                                <option value="yes">Cho phép khách chỉ định nhân viên chăm sóc</option>
+                                <option value="no">Hệ thống tự động xếp ca ngẫu nhiên</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer-clean">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissBookingPolicyModal">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveBookingPolicy">Lưu chính sách</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveBookingPolicy">Lưu chính sách và Giờ mở cửa</button>
             </div>
         </div>
     </div>

@@ -114,6 +114,7 @@ export async function initPetProfilePage() {
         setupNavigationEvents();
         setupForm();
         setupAvatar();
+        setupVaccineCardUploader();
         setupSpeciesToggle();
         setupDeleteModal();
         loadPetBottomInsights();
@@ -271,6 +272,7 @@ function populatePetForm(pet) {
     const notesEl = document.getElementById('notes');
     if (notesEl) notesEl.value = pet.notes || '';
     
+    // Ảnh đại diện
     const avatarPreview = document.getElementById('avatarPreview');
     const avatarCircle = document.getElementById('avatarCircle');
     const targetAvatar = pet.avatar || getDefaultPetAvatar(pet.species);
@@ -282,6 +284,47 @@ function populatePetForm(pet) {
         avatarPreview.src = '';
         avatarPreview.style.display = 'none';
         if (avatarCircle) avatarCircle.classList.remove('has-image');
+    }
+
+    // Ảnh Sổ tiêm chủng
+    const vaccineCardPreview = document.getElementById('vaccineCardPreview');
+    const targetVaccineCard = pet.vaccineCardPhoto || pet.vaccineCard || '';
+    if (vaccineCardPreview && targetVaccineCard) {
+        vaccineCardPreview.src = targetVaccineCard;
+        vaccineCardPreview.style.display = 'block';
+    } else if (vaccineCardPreview) {
+        vaccineCardPreview.src = '';
+        vaccineCardPreview.style.display = 'none';
+    }
+
+    // Phân khúc giá & Lịch sử cân nặng
+    const weightInsightBox = document.getElementById('userPetWeightInsightBox');
+    const tierBadge = document.getElementById('userPetTierBadge');
+    const weightRows = document.getElementById('userPetWeightHistoryRows');
+    if (weightInsightBox && tierBadge && weightRows) {
+        const kg = typeof numWeight === 'number' ? numWeight : (parseFloat(numWeight) || 0);
+        let tierText = 'Phân khúc 1: Dưới 5 kg (Gói nhỏ)';
+        if (kg >= 5 && kg <= 10) tierText = 'Phân khúc 2: 5 - 10 kg (Gói vừa)';
+        else if (kg > 10 && kg <= 20) tierText = 'Phân khúc 3: 10 - 20 kg (Gói lớn)';
+        else if (kg > 20) tierText = 'Phân khúc 4: Trên 20 kg (Gói đại)';
+
+        tierBadge.textContent = tierText;
+
+        const history = pet.weightHistory || [];
+        if (history.length > 0) {
+            weightRows.innerHTML = `
+                <div style="font-weight: 600; margin-bottom: 4px; color: #203A2C;">Lịch sử cân đo gần nhất tại PawPal:</div>
+                ${history.slice(0, 3).map(h => `
+                    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
+                        <span>• Ngày ${h.date}: <strong>${h.weight}</strong></span>
+                        <span style="color: #4F7A65;">(${h.tier || h.by || 'Ghi nhận tại quầy'})</span>
+                    </div>
+                `).join('')}
+            `;
+        } else {
+            weightRows.innerHTML = `<div>Cân nặng của bé sẽ được tự động đồng bộ và lưu lịch sử mỗi lần ghé PawPal Spa & Hotel.</div>`;
+        }
+        weightInsightBox.classList.remove('d-none');
     }
 }
 
@@ -301,6 +344,15 @@ function resetPetForm() {
     }
     if (avatarCircle) {
         avatarCircle.classList.remove('has-image');
+    }
+    const vaccineCardPreview = document.getElementById('vaccineCardPreview');
+    if (vaccineCardPreview) {
+        vaccineCardPreview.src = '';
+        vaccineCardPreview.style.display = 'none';
+    }
+    const weightInsightBox = document.getElementById('userPetWeightInsightBox');
+    if (weightInsightBox) {
+        weightInsightBox.classList.add('d-none');
     }
     document.querySelectorAll('.error-msg').forEach(el => el.classList.add('d-none'));
 }
@@ -362,9 +414,10 @@ function createPetCard(pet, isArchived = false) {
         <div class="pet-card-header">
             <img src="${avatarSrc}" class="pet-avatar" alt="${escapeHtml(pet.name)}" loading="lazy">
             <div class="pet-card-info">
-                <div class="pet-title-row">
+                <div class="pet-title-row" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                     <h4 class="pet-name">${escapeHtml(pet.name)}</h4>
                     <span class="pet-gender-badge ${isMale ? 'gender-male' : 'gender-female'}">${isMale ? 'Đực' : 'Cái'}</span>
+                    ${pet.vaccinated ? '<span class="pet-gender-badge" style="background:#DCEEE2; color:#165335; border:none; font-size:11px;">Đã có sổ tiêm</span>' : ''}
                 </div>
                 <div class="pet-id">#${escapeHtml(petId)}</div>
                 <div class="pet-meta">${escapeHtml(getSpeciesName(pet))}</div>
@@ -447,6 +500,8 @@ function setupForm() {
         const notes = document.getElementById('notes')?.value.trim() || '';
         const avatarPreview = document.getElementById('avatarPreview');
         const avatar = avatarPreview?.src || '';
+        const vaccineCardPreview = document.getElementById('vaccineCardPreview');
+        const vaccineCardPhoto = (vaccineCardPreview && vaccineCardPreview.style.display !== 'none') ? vaccineCardPreview.src : '';
         const petId = document.getElementById('petId')?.value || null;
 
         const errors = [];
@@ -542,6 +597,7 @@ function setupForm() {
             dobRaw: dob,
             color,
             vaccinated: !!vaccinated,
+            vaccineCardPhoto: vaccineCardPhoto,
             allergies,
             allergy: allergies,
             notes,
@@ -579,6 +635,29 @@ function setupAvatar() {
                     preview.src = ev.target.result;
                     preview.style.display = 'block';
                     if (circle) circle.classList.add('has-image');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+}
+
+function setupVaccineCardUploader() {
+    const triggerBtn = document.getElementById('btnTriggerVaccineCard');
+    const input = document.getElementById('vaccine-card-input');
+    const preview = document.getElementById('vaccineCardPreview');
+    if (triggerBtn && input) {
+        triggerBtn.addEventListener('click', () => input.click());
+    }
+    if (input && preview) {
+        input.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    preview.src = ev.target.result;
+                    preview.style.display = 'block';
+                    if (triggerBtn) triggerBtn.textContent = 'Đổi ảnh sổ tiêm';
                 };
                 reader.readAsDataURL(file);
             }

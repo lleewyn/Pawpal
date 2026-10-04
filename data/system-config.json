@@ -1,0 +1,95 @@
+{
+  "storeInfo": {
+    "brandName": "PawPal Pet Center",
+    "companyName": "CÔNG TY CỔ PHẦN PAWPAL VIỆT NAM",
+    "hotline": "1900 888 999",
+    "emergencyPhone": "0901 234 567",
+    "email": "cskh@pawpal.vn",
+    "address": "120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP. Hồ Chí Minh",
+    "taxId": "0316889988",
+    "zaloUrl": "https://zalo.me/0901234567",
+    "facebookUrl": "https://facebook.com/pawpalvietnam"
+  },
+  "operatingHours": {
+    "weekday": {
+      "open": "08:00",
+      "close": "20:00"
+    },
+    "weekend": {
+      "open": "08:00",
+      "close": "21:00"
+    },
+    "holidayNotice": "Mở cửa phục vụ xuyên suốt tất cả các ngày lễ và Tết Nguyên Đán."
+  },
+  "hotelRules": {
+    "checkInTime": "14:00",
+    "checkOutTime": "12:00",
+    "lateCheckOutFeePerHalfDay": 100000,
+    "includedMealsPerDay": 3,
+    "cameraAccessEnabled": true
+  },
+  "bookingPolicy": {
+    "freeCancelHours": 4,
+    "lateCancelFee": 50000,
+    "allowPickStaff": true,
+    "slotCapacityMax": 4,
+    "timeSlots": [
+      "08:00",
+      "09:00",
+      "10:00",
+      "11:00",
+      "12:00",
+      "13:00",
+      "14:00",
+      "15:00",
+      "16:00",
+      "17:00",
+      "18:00",
+      "19:00",
+      "20:00"
+    ]
+  },
+  "shippingPolicy": {
+    "freeShippingThreshold": 300000,
+    "innerCityFee": 25000,
+    "outerCityFee": 35000,
+    "expressFee": 45000,
+    "primaryPartner": "ghn",
+    "partnerName": "Giao Hàng Nhanh (GHN Express)",
+    "shopId": "PAWPAL_Q1_STORE",
+    "apiKey": "ghn_prod_secret_token_12345"
+  },
+  "paymentMethods": {
+    "cod": {
+      "enabled": true,
+      "name": "Thanh toán khi nhận hàng (COD)",
+      "fee": 0
+    },
+    "bank": {
+      "enabled": true,
+      "name": "Chuyển khoản QR Banking",
+      "bankName": "Vietcombank",
+      "accountNumber": "999888666",
+      "accountHolder": "CONG TY CP PAWPAL VIET NAM",
+      "syntax": "PAWPAL [MA_DON_HANG] [SDT]"
+    },
+    "momo": {
+      "enabled": true,
+      "name": "Ví điện tử MoMo",
+      "merchantId": "MOMO_PAWPAL_PROD"
+    },
+    "vnpay": {
+      "enabled": true,
+      "name": "Cổng thanh toán VNPay",
+      "tmnCode": "PAWPALVN"
+    }
+  },
+  "pawpointsPolicy": {
+    "pointValueVnd": 100,
+    "spendToPointsRatio": 10000,
+    "registerBonus": 50,
+    "firstOrderBonus": 100,
+    "firstBookingBonus": 100,
+    "birthdayBonus": 200
+  }
+}

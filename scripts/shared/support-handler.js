@@ -241,6 +241,48 @@
         localList.unshift(localTicket);
         saveLocalTickets(localList);
 
+        // Đồng bộ Ticket khiếu nại sang Phân hệ Khách hàng Admin (pawpal_admin_customers_data)
+        try {
+            const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
+            const cleanPhone = (currentUser?.phone || '').replace(/[^0-9]/g, '');
+            const syncCustomerComplaint = (storage) => {
+                const raw = storage.getItem('pawpal_admin_customers_data');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    let matched = null;
+                    if (cleanPhone) {
+                        matched = Object.values(data).find(c => c.phone && c.phone.replace(/[^0-9]/g, '') === cleanPhone);
+                    }
+                    if (!matched && currentUser?.name) {
+                        matched = Object.values(data).find(c => c.name && c.name.toLowerCase() === currentUser.name.toLowerCase());
+                    }
+                    if (!matched) {
+                        matched = data['CUST-001'];
+                    }
+
+                    if (matched) {
+                        if (!matched.complaints) matched.complaints = [];
+                        matched.complaints.unshift({
+                            id: localTicket.id,
+                            date: dateStr,
+                            issue: title,
+                            level: priority === 'Cao' ? 'Khẩn cấp' : 'Trung bình',
+                            status: 'Đang xử lý',
+                            statusClass: 'badge-danger'
+                        });
+                        matched.emergencyAlert = title;
+                        matched.has_complaint = true;
+                        matched.complaint_note = content;
+                        storage.setItem('pawpal_admin_customers_data', JSON.stringify(data));
+                    }
+                }
+            };
+            syncCustomerComplaint(sessionStorage);
+            syncCustomerComplaint(localStorage);
+        } catch (err) {
+            console.warn('[Support] Sync ticket to customer DB error:', err);
+        }
+
         // Thử đồng bộ lên Supabase nếu có
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
         if (db) {

@@ -1,0 +1,553 @@
+[
+  {
+    "id": "BKG-1001",
+    "userId": "USER-001",
+    "customerName": "Lê Lệ Quyên",
+    "phone": "0901234567",
+    "petId": "PET-001",
+    "petName": "Miu Con",
+    "petBreed": "Mèo Anh Lông Ngắn",
+    "petWeight": "4.2 kg",
+    "petAge": "2 tuổi",
+    "serviceCode": "SPA01",
+    "category": "Spa",
+    "categoryName": "Spa và Grooming",
+    "serviceName": "Gói Tắm Vệ Sinh Cơ Bản",
+    "date": "2026-06-25",
+    "time": "14:00",
+    "duration": "60 phút",
+    "staff": "Ngọc Anh",
+    "branch": "PawPal Chi nhánh Quận 1",
+    "price": 250000,
+    "addonPrice": 0,
+    "discount": 0,
+    "total": 250000,
+    "paymentStatus": "Chưa thanh toán (Tại quầy)",
+    "status": "confirmed",
+    "alertType": "upcoming",
+    "petAlert": "Dị ứng phấn hoa và các loại dầu tắm chứa hương liệu đậm đặc.",
+    "customerNote": "Bé hơi nhát nước, xin hãy massage nhẹ nhàng trước khi xả nước.",
+    "addons": [],
+    "intakeSafety": {
+      "actualWeight": "4.2 kg",
+      "weightEval": "Đúng khung giá đăng ký",
+      "skinCoat": "Da lông sạch sẽ, có lưu ý dị ứng hương liệu",
+      "eyesEarsNose": "Mắt sáng, vành tai sạch sẽ",
+      "wounds": "Không có vết thương cũ",
+      "temperament": "Nhút nhát / Hơi sợ nước",
+      "belongings": "01 Dây dắt đỏ bản to",
+      "proofImages": [
+        "/assets/images/services/spa/process/spa01.webp"
+      ],
+      "intakeStaff": "Ngọc Anh",
+      "intakeTime": "13:50"
+    },
+    "timeline": [
+      {
+        "time": "13:50",
+        "title": "Tiếp nhận Pet",
+        "desc": "Đã đón bé tại quầy tiếp tân cơ sở Quận 1",
+        "done": true,
+        "staff": "Ngọc Anh",
+        "images": [
+          "/assets/images/services/spa/process/spa01.webp"
+        ]
+      },
+      {
+        "time": "14:00",
+        "title": "Kiểm tra da lông sơ bộ",
+        "desc": "Kiểm tra vết nấm, ve rận và độ dài móng",
+        "done": true,
+        "staff": "Ngọc Anh",
+        "images": [
+          "/assets/images/services/spa/process/tam_cho5.jpg"
+        ]
+      },
+      {
+        "time": "14:15",
+        "title": "Tắm và Sấy khô",
+        "desc": "Sử dụng dầu tắm thảo dược Hypoallergenic dịu nhẹ",
+        "done": false,
+        "staff": "Ngọc Anh",
+        "images": []
+      },
+      {
+        "time": "14:45",
+        "title": "Cắt móng và Vệ sinh tai",
+        "desc": "Mài dũa móng và vệ sinh vành tai",
+        "done": false,
+        "staff": "Ngọc Anh",
+        "images": []
+      },
+      {
+        "time": "15:00",
+        "title": "Hoàn tất và Bàn giao",
+        "desc": "Chụp ảnh gửi chủ và xuất phiếu hoàn tất ca",
+        "done": false,
+        "staff": "Ngọc Anh",
+        "images": []
+      }
+    ]
+  },
+  {
+    "id": "BKG-1002",
+    "userId": "USER-001",
+    "customerName": "Lê Lệ Quyên",
+    "phone": "0901234567",
+    "petId": "PET-002",
+    "petName": "Miu Miu",
+    "petBreed": "Chó Poodle Tiny",
+    "petWeight": "3.1 kg",
+    "petAge": "1.5 tuổi",
+    "serviceCode": "SPA07",
+    "category": "Spa",
+    "categoryName": "Spa và Grooming",
+    "serviceName": "Grooming Tạo Kiểu Cơ Bản",
+    "date": "2026-06-10",
+    "time": "09:30",
+    "duration": "150 phút",
+    "staff": "Hoàng Nam",
+    "branch": "PawPal Chi nhánh Quận 10",
+    "price": 400000,
+    "addonPrice": 0,
+    "discount": 0,
+    "total": 400000,
+    "paymentStatus": "Đã thanh toán (VNPay)",
+    "status": "completed",
+    "alertType": null,
+    "petAlert": null,
+    "customerNote": "Tỉa tròn mặt kiểu Boo xinh xắn.",
+    "addons": [],
+    "timeline": [
+      {
+        "time": "09:30",
+        "title": "Tiếp nhận và Tạo kiểu",
+        "desc": "Tiếp nhận bé Poodle và kiểm tra dáng lông",
+        "done": true,
+        "staff": "Hoàng Nam",
+        "images": []
+      },
+      {
+        "time": "10:15",
+        "title": "Tắm xả dưỡng phồng lông",
+        "desc": "Sấy khô và đánh tơi lông chuyên nghiệp",
+        "done": true,
+        "staff": "Hoàng Nam",
+        "images": [
+          "/assets/images/services/spa/process/tam_cho4.jpg"
+        ]
+      },
+      {
+        "time": "11:30",
+        "title": "Cắt tỉa tạo kiểu Boo",
+        "desc": "Cắt tỉa mặt tròn Boo và bo tròn 4 chân",
+        "done": true,
+        "staff": "Hoàng Nam",
+        "images": [
+          "/assets/images/services/spa/process/cat_long1.jpg"
+        ]
+      },
+      {
+        "time": "12:00",
+        "title": "Bàn giao cho chủ",
+        "desc": "Bé đã được chủ đón về trong tình trạng vui vẻ",
+        "done": true,
+        "staff": "Hoàng Nam",
+        "images": []
+      }
+    ]
+  },
+  {
+    "id": "BKG-1003",
+    "userId": "USER-ADMIN",
+    "customerName": "Trần Minh Quân",
+    "phone": "0912345678",
+    "petId": "PET-003",
+    "petName": "Bông Xù",
+    "petBreed": "Chó Samoyed",
+    "petWeight": "18.5 kg",
+    "petAge": "3 tuổi",
+    "serviceCode": "HTL03",
+    "category": "Hotel",
+    "categoryName": "Pet Hotel",
+    "serviceName": "Phòng Deluxe (3 đêm)",
+    "date": "2026-07-01",
+    "time": "08:00",
+    "duration": "3 đêm",
+    "checkInDate": "2026-07-01",
+    "checkInTime": "08:00",
+    "checkOutDate": "2026-07-04",
+    "checkOutTime": "10:00",
+    "nights": 3,
+    "roomType": "Phòng Deluxe (Máy lạnh 24/7)",
+    "roomCode": "DLX-04",
+    "dietPlan": "Pate tươi dinh dưỡng + Thịt bò luộc (2 bữa/ngày)",
+    "cameraCode": "CAM-HOTEL-04",
+    "staff": "Thu Thảo",
+    "branch": "PawPal Chi nhánh Quận 1",
+    "price": 1200000,
+    "addonPrice": 150000,
+    "discount": 50000,
+    "total": 1300000,
+    "paymentStatus": "Đã thanh toán (MoMo)",
+    "status": "confirmed",
+    "alertType": null,
+    "petAlert": "Thích ăn thịt bò luộc, không ăn thức ăn hạt vị cá ngừ.",
+    "customerNote": "Bật điều hòa 24/24 và mở link camera cho mình theo dõi nhé.",
+    "addons": [
+      {
+        "id": "ADD-1001",
+        "name": "Vệ sinh tai nấm và viêm chuyên sâu",
+        "amount": 50000,
+        "reason": "Vành tai có mảng sáp nâu, cần nhỏ dung dịch sát khuẩn y tế",
+        "consent": "Đã gửi ảnh và video qua Zalo cho khách",
+        "time": "08:45"
+      },
+      {
+        "id": "ADD-1002",
+        "name": "Tắm bùn khoáng phục hồi da lông",
+        "amount": 100000,
+        "reason": "Chủ yêu cầu bổ sung gói ủ bùn dưỡng lông dày mượt trước khi nhận phòng",
+        "consent": "Khách hàng yêu cầu trực tiếp tại quầy",
+        "time": "09:15"
+      }
+    ],
+    "timeline": [
+      {
+        "time": "08:00",
+        "title": "Check-in tiếp nhận",
+        "desc": "Đã đón bé và nhận hướng dẫn chăm sóc riêng",
+        "done": true,
+        "staff": "Thu Thảo"
+      },
+      {
+        "time": "08:45",
+        "title": "Phát sinh: Vệ sinh tai nấm và viêm chuyên sâu (+50.000 đ)",
+        "desc": "[Đã gửi ảnh và video qua Zalo cho khách] Vành tai có mảng sáp nâu, cần nhỏ dung dịch sát khuẩn y tế",
+        "done": true,
+        "staff": "Thu Thảo"
+      },
+      {
+        "time": "09:15",
+        "title": "Phát sinh: Tắm bùn khoáng phục hồi da lông (+100.000 đ)",
+        "desc": "[Khách hàng yêu cầu trực tiếp tại quầy] Chủ yêu cầu bổ sung gói ủ bùn dưỡng lông dày mượt",
+        "done": true,
+        "staff": "Thu Thảo"
+      },
+      {
+        "time": "12:00",
+        "title": "Bữa trưa dinh dưỡng",
+        "desc": "Cho bé ăn thịt bò áp chảo trộn rau củ luộc",
+        "done": false,
+        "staff": "Thu Thảo"
+      },
+      {
+        "time": "16:00",
+        "title": "Vận động sân cỏ",
+        "desc": "Dắt đi dạo và vui chơi sân cỏ nhân tạo",
+        "done": false,
+        "staff": "Thu Thảo"
+      }
+    ]
+  },
+  {
+    "id": "BKG-1004",
+    "userId": "USER-001",
+    "customerName": "Lê Lệ Quyên",
+    "phone": "0901234567",
+    "petId": "PET-001",
+    "petName": "Miu Con",
+    "petBreed": "Mèo Anh Lông Ngắn",
+    "petWeight": "4.2 kg",
+    "petAge": "2 tuổi",
+    "serviceCode": "SPA01",
+    "category": "Spa",
+    "categoryName": "Spa và Grooming",
+    "serviceName": "Tắm sấy trọn gói",
+    "date": "2026-06-24",
+    "time": "10:00",
+    "duration": "60 phút",
+    "staff": "Ngọc Anh",
+    "branch": "PawPal Chi nhánh Quận 1",
+    "price": 280000,
+    "addonPrice": 0,
+    "discount": 0,
+    "total": 280000,
+    "paymentStatus": "Đã thanh toán (Tiền mặt)",
+    "status": "completed",
+    "alertType": null,
+    "petAlert": null,
+    "customerNote": "Cần uốn tóc sau khi tắm.",
+    "addons": [],
+    "timeline": [
+      {
+        "time": "10:00",
+        "title": "Tiếp nhận",
+        "desc": "Đã tiếp nhận bé",
+        "done": true,
+        "staff": "Ngọc Anh"
+      },
+      {
+        "time": "10:45",
+        "title": "Tắm sấy",
+        "desc": "Hoàn tất tắm sấy",
+        "done": true,
+        "staff": "Ngọc Anh"
+      },
+      {
+        "time": "11:00",
+        "title": "Hoàn thành ca",
+        "desc": "Khách hàng ký nhận",
+        "done": true,
+        "staff": "Ngọc Anh"
+      }
+    ]
+  },
+  {
+    "id": "BKG-1005",
+    "userId": "USER-001",
+    "customerName": "Lê Lệ Quyên",
+    "phone": "0901234567",
+    "petId": "PET-002",
+    "petName": "Miu Miu",
+    "petBreed": "Chó Poodle Tiny",
+    "petWeight": "3.1 kg",
+    "petAge": "1.5 tuổi",
+    "serviceCode": "SPA05",
+    "category": "Spa",
+    "categoryName": "Spa và Grooming",
+    "serviceName": "Cắt tỉa vệ sinh",
+    "date": "2026-06-24",
+    "time": "16:30",
+    "duration": "30 phút",
+    "staff": "Thu Thảo",
+    "branch": "PawPal Chi nhánh Quận 10",
+    "price": 180000,
+    "addonPrice": 0,
+    "discount": 0,
+    "total": 180000,
+    "paymentStatus": "Đã hoàn tiền",
+    "status": "cancelled",
+    "alertType": null,
+    "petAlert": null,
+    "customerNote": "Khách đã hủy vì bận đột xuất.",
+    "addons": [],
+    "timeline": [
+      {
+        "time": "16:00",
+        "title": "Khách báo hủy",
+        "desc": "Khách gọi điện xin hủy vì lịch trình bận đột xuất",
+        "done": true,
+        "staff": "Thu Thảo"
+      }
+    ]
+  },
+  {
+    "id": "BKG-1006",
+    "userId": "USER-003",
+    "customerName": "Hoàng Hải Yến",
+    "phone": "0987654321",
+    "petId": "PET-004",
+    "petName": "Lucky",
+    "petBreed": "Chó Corgi Pembroke",
+    "petWeight": "11.2 kg",
+    "petAge": "2.5 tuổi",
+    "serviceCode": "SPA02",
+    "category": "Spa",
+    "categoryName": "Spa và Grooming",
+    "serviceName": "Gói Tắm Dưỡng Premium",
+    "date": "2026-06-27",
+    "time": "09:00",
+    "duration": "90 phút",
+    "staff": "",
+    "branch": "PawPal Chi nhánh Quận 1",
+    "price": 350000,
+    "addonPrice": 0,
+    "discount": 0,
+    "total": 350000,
+    "paymentStatus": "Chưa thanh toán (Tại quầy)",
+    "status": "pending",
+    "alertType": "urgent",
+    "petAlert": null,
+    "customerNote": "Mong xếp bạn nhân viên khéo tay vì bé Corgi rất hiếu động.",
+    "addons": [],
+    "timeline": [
+      {
+        "time": "08:30",
+        "title": "Tạo lịch Online",
+        "desc": "Khách hàng đặt lịch hẹn qua Website PawPal",
+        "done": true,
+        "staff": "Hệ thống",
+        "images": []
+      }
+    ]
+  },
+  {
+    "id": "BKG-1007",
+    "userId": "USER-004",
+    "customerName": "Phạm Đức Trọng",
+    "phone": "0978112233",
+    "petId": "PET-005",
+    "petName": "Bơ Béo",
+    "petBreed": "Mèo Ba Tư Mặt Tịt",
+    "petWeight": "5.0 kg",
+    "petAge": "4 tuổi",
+    "serviceCode": "TXI01",
+    "category": "Taxi",
+    "categoryName": "Pet Taxi",
+    "serviceName": "Dịch Vụ Xe Đưa Đón Tận Nơi",
+    "date": "2026-06-27",
+    "time": "10:30",
+    "duration": "Theo chuyến",
+    "pickupAddress": "45 Lê Duẩn, P. Bến Nghé, Quận 1, TP.HCM",
+    "dropoffAddress": "PawPal Chi nhánh Quận 1 (124 Nguyễn Thị Minh Khai, Q.1)",
+    "tripType": "2 chiều khứ hồi",
+    "distanceKm": 4.2,
+    "driverName": "Hữu Phúc",
+    "driverPhone": "0978.112.233",
+    "staff": "Hữu Phúc",
+    "branch": "PawPal Chi nhánh Quận 1",
+    "price": 150000,
+    "addonPrice": 0,
+    "discount": 0,
+    "total": 150000,
+    "paymentStatus": "Chưa thanh toán (Tại quầy)",
+    "status": "in_progress",
+    "alertType": "upcoming",
+    "petAlert": "Dễ bị say xe, cần lót khăn êm và giữ khoang cabin mát mẻ.",
+    "customerNote": "Đón tại số 45 Lê Duẩn, P. Bến Nghé, Q.1.",
+    "addons": [],
+    "timeline": [
+      {
+        "time": "10:15",
+        "title": "Xuất phát đón bé",
+        "desc": "Tài xế Hữu Phúc xuất phát đến điểm hẹn",
+        "done": true,
+        "staff": "Hữu Phúc"
+      },
+      {
+        "time": "10:30",
+        "title": "Tiếp nhận bé lên xe",
+        "desc": "Đã đưa bé Bơ Béo vào lồng vận chuyển an toàn",
+        "done": true,
+        "staff": "Hữu Phúc"
+      },
+      {
+        "time": "10:45",
+        "title": "Đang di chuyển",
+        "desc": "Xe đang trên đường về PawPal Chi nhánh Quận 1",
+        "done": false,
+        "staff": "Hữu Phúc"
+      }
+    ]
+  },
+  {
+    "id": "BKG-1008",
+    "userId": "USER-002",
+    "customerName": "Trần Minh Quân",
+    "phone": "0912345678",
+    "petId": "PET-003",
+    "petName": "Bông Xù",
+    "petBreed": "Chó Samoyed",
+    "petWeight": "18.5 kg",
+    "petAge": "3 tuổi",
+    "serviceCode": "SPA10",
+    "category": "Spa",
+    "categoryName": "Spa và Grooming",
+    "serviceName": "Tắm Thuốc Trị Liệu Da Liễu",
+    "date": "2026-06-27",
+    "time": "14:30",
+    "duration": "90 phút",
+    "staff": "Ngọc Anh",
+    "branch": "PawPal Chi nhánh Quận 1",
+    "price": 400000,
+    "addonPrice": 0,
+    "discount": 0,
+    "total": 400000,
+    "paymentStatus": "Đã thanh toán (VNPay)",
+    "status": "confirmed",
+    "alertType": "upcoming",
+    "petAlert": "Da lưng đang có mảng viêm đỏ nhẹ, cần thoa dầu tắm y tế cẩn thận.",
+    "customerNote": "Nhờ tắm thuốc kỹ vùng bả vai cho bé.",
+    "addons": [],
+    "timeline": [
+      {
+        "time": "14:00",
+        "title": "Chuẩn bị phòng thuốc",
+        "desc": "Đã chuẩn bị bồn ngâm thảo dược đông y",
+        "done": true,
+        "staff": "Ngọc Anh"
+      }
+    ]
+  },
+  {
+    "id": "BKG-1009",
+    "userId": "USER-001",
+    "customerName": "Trần Thị Mai",
+    "phone": "0933445566",
+    "petId": "PET-006",
+    "petName": "Bông Gòn",
+    "petBreed": "Chó Bichon Frise",
+    "petWeight": "5.2 kg",
+    "petAge": "2 tuổi",
+    "serviceCode": "SPA07",
+    "category": "Spa",
+    "categoryName": "Spa và Grooming",
+    "serviceName": "Grooming Tạo Kiểu Cơ Bản",
+    "date": "2026-06-25",
+    "time": "13:00",
+    "duration": "90 phút",
+    "staff": "Hoàng Nam",
+    "branch": "PawPal Chi nhánh Quận 1",
+    "price": 450000,
+    "addonPrice": 0,
+    "discount": 0,
+    "total": 450000,
+    "paymentStatus": "Chưa thanh toán (Tại quầy)",
+    "status": "in_progress",
+    "alertType": "urgent",
+    "petAlert": "Lông bị rối bết nhiều vùng háng và nách chân trước.",
+    "customerNote": "Xin hãy kiên nhẫn gỡ rối, đừng cạo sát da bé.",
+    "addons": [],
+    "intakeSafety": {
+      "actualWeight": "5.2 kg",
+      "weightEval": "Đúng khung giá đăng ký",
+      "skinCoat": "Lông bết rối nhiều mảng háng và bụng",
+      "eyesEarsNose": "Mắt tai sạch sẽ bình thường",
+      "wounds": "Có vết xước nhỏ ở đệm chân trước",
+      "temperament": "Ngoan hiền / Thân thiện",
+      "belongings": "01 Chuồng vận chuyển nhựa xám",
+      "proofImages": [
+        "/assets/images/services/spa/process/cat_long1.jpg"
+      ],
+      "intakeStaff": "Hoàng Nam",
+      "intakeTime": "13:00"
+    },
+    "timeline": [
+      {
+        "time": "13:00",
+        "title": "Tiếp nhận bé và Kiểm tra an toàn",
+        "desc": "Đã kiểm tra cân nặng 5.2kg, ghi nhận lông bết rối, có vết xước nhẹ đệm chân trước",
+        "done": true,
+        "staff": "Hoàng Nam",
+        "images": [
+          "/assets/images/services/spa/process/cat_long1.jpg"
+        ]
+      },
+      {
+        "time": "13:15",
+        "title": "Tắm xả và sấy bông lông",
+        "desc": "Hoàn tất tắm dưỡng phục hồi",
+        "done": true,
+        "staff": "Hoàng Nam"
+      },
+      {
+        "time": "14:30",
+        "title": "Gỡ rối và Cắt tỉa tạo kiểu",
+        "desc": "Đang gỡ rối lông dày và cắt tỉa form chuẩn",
+        "done": false,
+        "staff": "Hoàng Nam"
+      }
+    ]
+  }
+]

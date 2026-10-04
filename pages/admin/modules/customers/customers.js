@@ -411,8 +411,18 @@
             }
         };
 
+        async function fetchJsonSafely(url) {
+            try {
+                const res = await fetch(url + '?v=' + Date.now());
+                if (res.ok) return await res.json();
+            } catch (e) {
+                console.warn(`[customers] fetch ${url} failed:`, e);
+            }
+            return null;
+        }
+
         function getCustomersData() {
-            const saved = sessionStorage.getItem('pawpal_admin_customers_data');
+            const saved = sessionStorage.getItem('pawpal_admin_customers_data') || localStorage.getItem('pawpal_admin_customers_data');
             if (saved) {
                 try {
                     return JSON.parse(saved);
@@ -423,10 +433,70 @@
             return JSON.parse(JSON.stringify(defaultCustomerDatabase));
         }
 
-        const customerDatabase = getCustomersData();
+        let customerDatabase = getCustomersData();
 
         function persistCustomersData() {
             sessionStorage.setItem('pawpal_admin_customers_data', JSON.stringify(customerDatabase));
+            localStorage.setItem('pawpal_admin_customers_data', JSON.stringify(customerDatabase));
+        }
+
+        async function syncCustomerDatabaseFromSources() {
+            try {
+                const fetched = await fetchJsonSafely('/data/customers.json');
+                if (fetched && typeof fetched === 'object') {
+                    Object.entries(fetched).forEach(([k, v]) => {
+                        if (!customerDatabase[k]) {
+                            customerDatabase[k] = v;
+                        }
+                    });
+                }
+
+                // Đồng bộ từ pawpal_users_db nếu có tài khoản mới đăng ký phía User
+                const rawUsers = localStorage.getItem('pawpal_users_db');
+                if (rawUsers) {
+                    const localUsers = JSON.parse(rawUsers);
+                    if (Array.isArray(localUsers)) {
+                        localUsers.forEach(u => {
+                            const uPhone = u.phone || u.phoneNumber;
+                            if (uPhone) {
+                                const cleanPhone = String(uPhone).replace(/[^0-9]/g, '').trim();
+                                const exists = Object.values(customerDatabase).some(c => c.phone && String(c.phone).replace(/[^0-9]/g, '').trim() === cleanPhone);
+                                if (!exists) {
+                                    const newId = u.id || `CUST-${String(Object.keys(customerDatabase).length + 1).padStart(3, '0')}`;
+                                    customerDatabase[newId] = {
+                                        id: newId,
+                                        name: u.name || u.fullName || 'Khách hàng ' + uPhone,
+                                        phone: uPhone,
+                                        email: u.email || 'Chưa cập nhật',
+                                        gender: u.gender || 'Khác',
+                                        dob: u.dob || u.birthday || 'Chưa cập nhật',
+                                        tier: u.membershipTier === 'Vàng' ? 'GOLD' : (u.membershipTier === 'Bạc' ? 'SILVER' : (u.membershipTier === 'Kim Cương' ? 'DIAMOND' : 'BRONZE')),
+                                        tierName: u.membershipTier || 'Đồng',
+                                        tierBadgeClass: u.membershipTier === 'Vàng' ? 'badge-tier-gold' : (u.membershipTier === 'Bạc' ? 'badge-tier-silver' : (u.membershipTier === 'Kim Cương' ? 'badge-tier-diamond' : 'badge-neutral')),
+                                        points: u.points || u.pawPoints || 0,
+                                        status: u.isLocked ? 'LOCKED' : (u.is_temporary ? 'TEMP' : 'ACTIVE'),
+                                        authStatus: u.is_temporary ? 'Chưa kích hoạt' : 'Đã kích hoạt',
+                                        note: u.note || 'Tài khoản đăng ký trực tuyến qua Sen App.',
+                                        emergencyAlert: null,
+                                        addresses: u.addresses || (u.address ? [{ address: u.address, isDefault: true, label: 'Nhà riêng' }] : [{ address: 'Tiếp nhận trực tiếp tại quầy', isDefault: true, label: 'Tại quầy' }]),
+                                        pets: u.pets || [],
+                                        orders: [],
+                                        bookings: [],
+                                        complaints: []
+                                    };
+                                }
+                            }
+                        });
+                    }
+                }
+
+                persistCustomersData();
+                renderCustomersTable();
+                updateCustomerKPIs();
+                renderComplaintBar();
+            } catch (e) {
+                console.warn('[customers] syncCustomerDatabaseFromSources error:', e);
+            }
         }
 
         // ====================================================================
@@ -1673,6 +1743,40 @@
 
                 persistPawpointHistory();
                 persistCustomersData();
+
+                // Đồng bộ sang pawpal_current_user và pawpal_users_db trong localStorage nếu cùng số điện thoại
+                try {
+                    const rawCurrentUser = localStorage.getItem('pawpal_current_user');
+                    if (rawCurrentUser) {
+                        const currentUser = JSON.parse(rawCurrentUser);
+                        if (currentUser && currentUser.phone && currentUser.phone.replace(/[^0-9]/g, '') === cleanPhone) {
+                            currentUser.points = newBalance;
+                            currentUser.pawPoints = newBalance;
+                            if (tierResult.changed) {
+                                currentUser.membershipTier = tierResult.newTierName;
+                                currentUser.tier = tierResult.newTierName;
+                            }
+                            localStorage.setItem('pawpal_current_user', JSON.stringify(currentUser));
+                        }
+                    }
+                    const rawUsersDb = localStorage.getItem('pawpal_users_db');
+                    if (rawUsersDb) {
+                        const usersDb = JSON.parse(rawUsersDb);
+                        const idx = usersDb.findIndex(u => u.phone && u.phone.replace(/[^0-9]/g, '') === cleanPhone);
+                        if (idx !== -1) {
+                            usersDb[idx].points = newBalance;
+                            usersDb[idx].pawPoints = newBalance;
+                            if (tierResult.changed) {
+                                usersDb[idx].membershipTier = tierResult.newTierName;
+                                usersDb[idx].tier = tierResult.newTierName;
+                            }
+                            localStorage.setItem('pawpal_users_db', JSON.stringify(usersDb));
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Lỗi đồng bộ điểm sang user storage:', err);
+                }
+
                 renderCustomersTable();
                 updateCustomerKPIs();
                 renderPawpointHistory();
@@ -2417,6 +2521,7 @@
         renderCustomersTable();
         updateCustomerKPIs();
         renderPawpointHistory();
+        syncCustomerDatabaseFromSources();
 
         // 18. KHỞI TẠO VÀ KHÔI PHỤC TRẠNG THÁI KHI F5 / RELOAD
         const hashSubtab = window.location.hash ? window.location.hash.replace('#', '') : null;

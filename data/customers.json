@@ -1,0 +1,431 @@
+{
+  "CUST-001": {
+    "id": "CUST-001",
+    "name": "Nguyễn Văn An",
+    "phone": "0912345678",
+    "email": "an.nguyen@email.com",
+    "gender": "Nam",
+    "dob": "15/08/1992",
+    "tier": "GOLD",
+    "tierName": "Vàng",
+    "tierBadgeClass": "badge-tier-gold",
+    "points": 1250,
+    "status": "ACTIVE",
+    "authStatus": "Đã kích hoạt",
+    "note": "Khách hàng thân thiết từ 2024. Rất yêu quý bé Milu (Poodle). Khách yêu cầu thợ cắt tỉa nhẹ nhàng, không xịt nước hoa nồng.",
+    "emergencyAlert": "Khách hàng đang có vé khiếu nại mức độ Cao chưa giải quyết (Mã: TK-008 - Bé Milu bị trầy móng chân). Cần giải quyết dứt điểm trước khi nhận giao dịch mới!",
+    "addresses": [
+      {
+        "address": "120 Nguyễn Thị Minh Khai, Phường 6, Quận 3, TP.HCM",
+        "isDefault": true,
+        "label": "Nhà riêng"
+      },
+      {
+        "address": "Toà nhà Bitexco, 2 Hải Triều, Bến Nghé, Quận 1, TP.HCM",
+        "isDefault": false,
+        "label": "Văn phòng"
+      }
+    ],
+    "pets": [
+      {
+        "id": "PET-001",
+        "name": "Milu",
+        "species": "Chó",
+        "breed": "Poodle",
+        "weight": "8.5",
+        "vaccine": "Sổ theo dõi tiêm phòng định kỳ đầy đủ (Chủ xuất trình tháng 8/2026)",
+        "alertNote": "Cảnh báo: Dị ứng phấn hoa và sữa tắm có mùi nồng"
+      }
+    ],
+    "orders": [
+      {
+        "id": "ORD-8921",
+        "date": "25/09/2026",
+        "total": "450.000 đ",
+        "payment": "Đã thanh toán",
+        "status": "Đang giao",
+        "statusClass": "badge-info"
+      }
+    ],
+    "bookings": [
+      {
+        "id": "AP-201",
+        "date": "27/09/2026 09:00",
+        "service": "Spa Grooming và Cắt tỉa tạo kiểu",
+        "staff": "Trần Hoàng (Thợ bậc 2)",
+        "status": "Đang thực hiện",
+        "statusClass": "badge-warning"
+      }
+    ],
+    "complaints": [
+      {
+        "id": "TK-008",
+        "date": "27/09/2026 10:15",
+        "issue": "Bé Milu bị trầy móng sau buổi cắt tỉa",
+        "level": "Cao",
+        "status": "Đang xử lý",
+        "statusClass": "badge-warning"
+      }
+    ]
+  },
+  "CUST-002": {
+    "id": "CUST-002",
+    "name": "Lê Thị Bình",
+    "phone": "0987654321",
+    "email": "binh.le@email.com",
+    "gender": "Nữ",
+    "dob": "20/11/1995",
+    "tier": "SILVER",
+    "tierName": "Bạc",
+    "tierBadgeClass": "badge-tier-silver",
+    "points": 420,
+    "status": "ACTIVE",
+    "authStatus": "Đã kích hoạt",
+    "note": "Khách cẩn thận, bé Miu rất nhát người lạ nên ưu tiên nhân viên nữ chăm sóc.",
+    "emergencyAlert": null,
+    "addresses": [
+      {
+        "address": "45 Lê Duẩn, Phường Bến Nghé, Quận 1, TP.HCM",
+        "isDefault": true,
+        "label": "Nhà riêng"
+      }
+    ],
+    "pets": [
+      {
+        "id": "PET-002",
+        "name": "Bé Miu",
+        "species": "Mèo",
+        "breed": "Mèo Anh lông ngắn",
+        "weight": "4.2",
+        "vaccine": "Đã tiêm phòng 4 bệnh mèo mũi nhắc lại 2026",
+        "alertNote": "Lưu ý: Nhát người lạ, sợ tiếng máy sấy lớn"
+      }
+    ],
+    "orders": [
+      {
+        "id": "ORD-8920",
+        "date": "25/09/2026",
+        "total": "420.000 đ",
+        "payment": "Đã thanh toán",
+        "status": "Hoàn tất",
+        "statusClass": "badge-success"
+      }
+    ],
+    "bookings": [
+      {
+        "id": "AP-198",
+        "date": "24/09/2026 14:00",
+        "service": "Tắm vệ sinh và cạo lông đệm chân",
+        "staff": "Nguyễn Thị Hoa",
+        "status": "Hoàn tất",
+        "statusClass": "badge-success"
+      }
+    ],
+    "complaints": []
+  },
+  "CUST-003": {
+    "id": "CUST-003",
+    "name": "Trần Khách Vãng Lai",
+    "phone": "0933221100",
+    "email": "Chưa cập nhật",
+    "gender": "Nam",
+    "dob": "01/01/1990",
+    "tier": "BRONZE",
+    "tierName": "Đồng",
+    "tierBadgeClass": "badge-neutral",
+    "points": 0,
+    "status": "TEMP",
+    "authStatus": "Chưa kích hoạt",
+    "note": "Khách ghé mua phụ kiện tại quầy, chưa tải app Pawpal.",
+    "emergencyAlert": null,
+    "addresses": [
+      {
+        "address": "Tiếp nhận trực tiếp tại quầy Pawpal Pet Center",
+        "isDefault": true,
+        "label": "Tại quầy"
+      }
+    ],
+    "pets": [
+      {
+        "id": "PET-003",
+        "name": "Bé Bông",
+        "species": "Chó",
+        "breed": "Corgi",
+        "weight": "11.2",
+        "vaccine": "Chưa xuất trình sổ tiêm",
+        "alertNote": "Lưu ý: Mới tiêm ngừa tuần trước"
+      }
+    ],
+    "orders": [],
+    "bookings": [],
+    "complaints": []
+  },
+  "CUST-004": {
+    "id": "CUST-004",
+    "name": "Phạm Văn Vi Phạm",
+    "phone": "0944556677",
+    "email": "pham.vipham@email.com",
+    "gender": "Nam",
+    "dob": "12/03/1988",
+    "tier": "BRONZE",
+    "tierName": "Đồng",
+    "tierBadgeClass": "badge-neutral",
+    "points": 50,
+    "status": "LOCKED",
+    "authStatus": "Tài khoản bị khóa",
+    "note": "Tạm khóa do có tranh chấp thanh toán đơn hàng.",
+    "emergencyAlert": "Tài khoản đang bị tạm khóa quản trị do tranh chấp thanh toán. Không thực hiện giao dịch ghi nợ!",
+    "addresses": [
+      {
+        "address": "88 Nguyễn Trãi, Phường 3, Quận 5, TP.HCM",
+        "isDefault": true,
+        "label": "Nhà riêng"
+      }
+    ],
+    "pets": [
+      {
+        "id": "PET-004",
+        "name": "Bé Lu",
+        "species": "Chó",
+        "breed": "Phốc Sóc (Pomeranian)",
+        "weight": "3.1",
+        "vaccine": "Sổ tiêm đầy đủ 7 bệnh",
+        "alertNote": "Cảnh báo: Dễ kích động khi đụng vào vùng tai"
+      }
+    ],
+    "orders": [
+      {
+        "id": "ORD-8810",
+        "date": "10/09/2026",
+        "total": "1.250.000 đ",
+        "payment": "Tranh chấp",
+        "status": "Tạm giữ",
+        "statusClass": "badge-warning"
+      }
+    ],
+    "bookings": [],
+    "complaints": []
+  },
+  "CUST-005": {
+    "id": "CUST-005",
+    "name": "Hoàng Minh Tuấn",
+    "phone": "0903112233",
+    "email": "tuan.hoang@email.com",
+    "gender": "Nam",
+    "dob": "05/06/1985",
+    "tier": "GOLD",
+    "tierName": "Vàng",
+    "tierBadgeClass": "badge-tier-gold",
+    "points": 1100,
+    "status": "ACTIVE",
+    "authStatus": "Đã kích hoạt",
+    "note": "Thường đặt gửi Pet Hotel phòng VIP vào cuối tuần.",
+    "emergencyAlert": null,
+    "addresses": [
+      {
+        "address": "15 Thảo Điền, Phường Thảo Điền, TP. Thủ Đức",
+        "isDefault": true,
+        "label": "Biệt thự"
+      }
+    ],
+    "pets": [
+      {
+        "id": "PET-005",
+        "name": "Bé Max",
+        "species": "Chó",
+        "breed": "Golden Retriever",
+        "weight": "28.0",
+        "vaccine": "Đầy đủ sổ tiêm dại và 7 bệnh",
+        "alertNote": "Bình thường"
+      }
+    ],
+    "orders": [],
+    "bookings": [],
+    "complaints": []
+  },
+  "CUST-006": {
+    "id": "CUST-006",
+    "name": "Đỗ Thị Thu Hà",
+    "phone": "0977889900",
+    "email": "ha.do@email.com",
+    "gender": "Nữ",
+    "dob": "18/09/1993",
+    "tier": "SILVER",
+    "tierName": "Bạc",
+    "tierBadgeClass": "badge-tier-silver",
+    "points": 560,
+    "status": "ACTIVE",
+    "authStatus": "Đã kích hoạt",
+    "note": "Khách thích sử dụng dịch vụ đưa đón Pet Taxi tận nhà.",
+    "emergencyAlert": null,
+    "addresses": [
+      {
+        "address": "204 Pasteur, Phường Võ Thị Sáu, Quận 3, TP.HCM",
+        "isDefault": true,
+        "label": "Nhà riêng"
+      }
+    ],
+    "pets": [
+      {
+        "id": "PET-006",
+        "name": "Bé Cacao",
+        "species": "Mèo",
+        "breed": "Mèo Ba Tư",
+        "weight": "4.8",
+        "vaccine": "Đầy đủ sổ tiêm định kỳ",
+        "alertNote": "Lưu ý: Mắt hay chảy nước mắt, cần lau vệ sinh mắt cẩn thận"
+      }
+    ],
+    "orders": [],
+    "bookings": [],
+    "complaints": []
+  },
+  "CUST-007": {
+    "id": "CUST-007",
+    "name": "Vũ Đức Thắng",
+    "phone": "0966554433",
+    "email": "thang.vu@email.com",
+    "gender": "Nam",
+    "dob": "22/04/1991",
+    "tier": "DIAMOND",
+    "tierName": "Kim Cương",
+    "tierBadgeClass": "badge-tier-diamond",
+    "points": 3400,
+    "status": "ACTIVE",
+    "authStatus": "Đã kích hoạt",
+    "note": "Khách hàng VIP Kim Cương. Thường xuyên sử dụng trọn gói Spa & Dinh dưỡng cao cấp.",
+    "emergencyAlert": null,
+    "addresses": [
+      {
+        "address": "72 Landmark 81, Vinhomes Central Park, Bình Thạnh, TP.HCM",
+        "isDefault": true,
+        "label": "Căn hộ VIP"
+      }
+    ],
+    "pets": [
+      {
+        "id": "PET-007",
+        "name": "Bé Mochi",
+        "species": "Chó",
+        "breed": "Shiba Inu",
+        "weight": "9.8",
+        "vaccine": "Đầy đủ chứng nhận tiêm phòng quốc tế",
+        "alertNote": "Cảnh báo: Không thích người lạ chạm vào chân sau"
+      }
+    ],
+    "orders": [],
+    "bookings": [],
+    "complaints": []
+  },
+  "CUST-008": {
+    "id": "CUST-008",
+    "name": "Bùi Thanh Hương",
+    "phone": "0918776655",
+    "email": "huong.bui@email.com",
+    "gender": "Nữ",
+    "dob": "09/12/1996",
+    "tier": "BRONZE",
+    "tierName": "Đồng",
+    "tierBadgeClass": "badge-neutral",
+    "points": 180,
+    "status": "ACTIVE",
+    "authStatus": "Đã kích hoạt",
+    "note": "Khách mới nuôi mèo con, cần tư vấn dinh dưỡng và chải lông định kỳ.",
+    "emergencyAlert": null,
+    "addresses": [
+      {
+        "address": "156 Hoàng Diệu, Phường 9, Quận 4, TP.HCM",
+        "isDefault": true,
+        "label": "Nhà riêng"
+      }
+    ],
+    "pets": [
+      {
+        "id": "PET-008",
+        "name": "Bé Kem",
+        "species": "Mèo",
+        "breed": "Mèo Ragdoll",
+        "weight": "5.5",
+        "vaccine": "Đầy đủ sổ tiêm 4 bệnh mèo",
+        "alertNote": "Bình thường"
+      }
+    ],
+    "orders": [],
+    "bookings": [],
+    "complaints": []
+  },
+  "CUST-009": {
+    "id": "CUST-009",
+    "name": "Ngô Quốc Bảo",
+    "phone": "0908123456",
+    "email": "bao.ngo@email.com",
+    "gender": "Nam",
+    "dob": "14/07/1994",
+    "tier": "SILVER",
+    "tierName": "Bạc",
+    "tierBadgeClass": "badge-tier-silver",
+    "points": 720,
+    "status": "ACTIVE",
+    "authStatus": "Đã kích hoạt",
+    "note": "Bé cún Husky rất năng động, cần phòng vận động rộng rãi khi gửi Hotel.",
+    "emergencyAlert": null,
+    "addresses": [
+      {
+        "address": "52 Song Hành, Phường An Phú, TP. Thủ Đức",
+        "isDefault": true,
+        "label": "Nhà riêng"
+      }
+    ],
+    "pets": [
+      {
+        "id": "PET-009",
+        "name": "Bé Đậu Đậu",
+        "species": "Chó",
+        "breed": "Husky",
+        "weight": "22.5",
+        "vaccine": "Đầy đủ tiêm phòng dại và 7 bệnh",
+        "alertNote": "Cảnh báo: Rất hiếu động, dễ nhảy chồm lên người"
+      }
+    ],
+    "orders": [],
+    "bookings": [],
+    "complaints": []
+  },
+  "CUST-010": {
+    "id": "CUST-010",
+    "name": "Đặng Kim Yến",
+    "phone": "0938998877",
+    "email": "yen.dang@email.com",
+    "gender": "Nữ",
+    "dob": "30/03/1997",
+    "tier": "GOLD",
+    "tierName": "Vàng",
+    "tierBadgeClass": "badge-tier-gold",
+    "points": 1450,
+    "status": "ACTIVE",
+    "authStatus": "Đã kích hoạt",
+    "note": "Khách thường xuyên mua pate và phụ kiện nhập khẩu cao cấp.",
+    "emergencyAlert": null,
+    "addresses": [
+      {
+        "address": "34 Phan Xích Long, Phường 2, Phú Nhuận, TP.HCM",
+        "isDefault": true,
+        "label": "Nhà riêng"
+      }
+    ],
+    "pets": [
+      {
+        "id": "PET-010",
+        "name": "Bé Gấu",
+        "species": "Thú cưng khác",
+        "breed": "Thỏ Minilop",
+        "weight": "1.8",
+        "vaccine": "Khám định kỳ thú nhỏ",
+        "alertNote": "Lưu ý: Thính giác rất nhạy, tránh tiếng ồn mạnh"
+      }
+    ],
+    "orders": [],
+    "bookings": [],
+    "complaints": []
+  }
+}

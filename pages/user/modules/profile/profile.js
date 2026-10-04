@@ -102,6 +102,26 @@ function escapeHtml(text) {
 async function loadProfileData(user) {
     if (!user) return;
 
+    // Kiểm tra trạng thái tài khoản bị khóa
+    let isAccountLocked = Boolean(user.isLocked || user.status === 'LOCKED');
+    try {
+        const rawAdminCusts = sessionStorage.getItem('pawpal_admin_customers_data') || localStorage.getItem('pawpal_admin_customers_data');
+        if (rawAdminCusts && user.phone) {
+            const adminCusts = JSON.parse(rawAdminCusts);
+            const cleanP = user.phone.replace(/[^0-9]/g, '');
+            const foundCust = Object.values(adminCusts).find(c => c.phone && c.phone.replace(/[^0-9]/g, '') === cleanP);
+            if (foundCust && foundCust.status === 'LOCKED') {
+                isAccountLocked = true;
+            }
+        }
+    } catch (e) {}
+
+    const lockAlertEl = document.getElementById('userAccountLockAlert');
+    if (lockAlertEl) {
+        if (isAccountLocked) lockAlertEl.classList.remove('d-none');
+        else lockAlertEl.classList.add('d-none');
+    }
+
     // Header stats
     const welcomeEl = document.getElementById('welcomeName');
     if (welcomeEl) welcomeEl.textContent = user.name || user.fullName || 'bạn';
@@ -525,6 +545,34 @@ function initProfileEditModal(user) {
         };
 
         setCurrentUser(updatedUser);
+
+        // Đồng bộ ngược sang pawpal_admin_customers_data
+        try {
+            const rawAdminCustomers = sessionStorage.getItem('pawpal_admin_customers_data') || localStorage.getItem('pawpal_admin_customers_data');
+            if (rawAdminCustomers) {
+                const adminCusts = JSON.parse(rawAdminCustomers);
+                const cleanP = phoneVal.replace(/[^0-9]/g, '');
+                const matchedKey = Object.keys(adminCusts).find(k => {
+                    const c = adminCusts[k];
+                    return (c.phone && c.phone.replace(/[^0-9]/g, '') === cleanP) || (currentUser.id && c.id === currentUser.id);
+                });
+                if (matchedKey && adminCusts[matchedKey]) {
+                    adminCusts[matchedKey].name = nameVal;
+                    adminCusts[matchedKey].email = emailVal;
+                    adminCusts[matchedKey].phone = phoneVal;
+                    adminCusts[matchedKey].addresses = tempAddresses.map(a => ({
+                        address: a.street || a.address,
+                        isDefault: !!a.isDefault,
+                        label: a.label || (a.isDefault ? 'Nhà riêng' : 'Phụ')
+                    }));
+                    sessionStorage.setItem('pawpal_admin_customers_data', JSON.stringify(adminCusts));
+                    localStorage.setItem('pawpal_admin_customers_data', JSON.stringify(adminCusts));
+                }
+            }
+        } catch (e) {
+            console.warn('Lỗi đồng bộ sang admin customers:', e);
+        }
+
         loadProfileData(updatedUser);
 
         closeModal();

@@ -681,12 +681,33 @@
             switchSubtab('tab-pet-profile');
         }
 
+        // Lưu Ghi chú kỹ thuật Groomer
+        const btnSaveGroomerNotes = document.getElementById('btnSaveGroomerNotes');
+        if (btnSaveGroomerNotes) {
+            btnSaveGroomerNotes.addEventListener('click', () => {
+                const currentPetId = sessionStorage.getItem('pawpal_admin_pet_id') || 'PET-001';
+                const pet = petsData[currentPetId];
+                const notesVal = document.getElementById('petGroomerNotes')?.value || '';
+                if (pet) {
+                    pet.groomerNotes = notesVal;
+                    persistPetsData();
+                    showToast(`Đã lưu ghi chú kỹ thuật Groomer cho bé ${pet.name}!`);
+                }
+            });
+        }
+
         // Gắn sự kiện mở hồ sơ từ bảng
         document.addEventListener('click', (e) => {
             const btnOpen = e.target.closest('.btn-open-pet-drawer');
             if (btnOpen) {
                 const petId = btnOpen.getAttribute('data-id') || btnOpen.closest('tr')?.getAttribute('data-id');
                 if (petId) openPetProfile(petId);
+            }
+
+            // Nút chuyển nhanh sang nhật ký từ Drawer
+            const btnQuickCarelog = e.target.closest('.btn-quick-carelog');
+            if (btnQuickCarelog) {
+                switchSubtab('tab-pet-carelog');
             }
 
             // Liên kết chuyển sang module Khách hàng
@@ -895,6 +916,77 @@
             if (statAlert) statAlert.textContent = activePets.filter(p => Boolean(p.alert)).length;
         }
 
+        let petCurrentPage = 1;
+        const PETS_PER_PAGE = 10;
+
+        function renderPetPagination(totalItems, totalPages) {
+            const paginationBar = document.getElementById('petPaginationBar');
+            const pageNumbersContainer = document.getElementById('petPageNumbersContainer');
+            const prevBtn = document.getElementById('petPrevPageBtn');
+            const nextBtn = document.getElementById('petNextPageBtn');
+
+            if (!paginationBar || !pageNumbersContainer) return;
+
+            if (totalItems <= PETS_PER_PAGE) {
+                paginationBar.style.display = totalItems === 0 ? 'none' : 'flex';
+            } else {
+                paginationBar.style.display = 'flex';
+            }
+
+            if (prevBtn) {
+                prevBtn.classList.toggle('disabled', petCurrentPage <= 1);
+                prevBtn.disabled = petCurrentPage <= 1;
+            }
+
+            if (nextBtn) {
+                nextBtn.classList.toggle('disabled', petCurrentPage >= totalPages);
+                nextBtn.disabled = petCurrentPage >= totalPages;
+            }
+
+            pageNumbersContainer.innerHTML = '';
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `pagination-btn ${i === petCurrentPage ? 'active' : ''}`;
+                btn.textContent = i;
+                btn.addEventListener('click', () => {
+                    if (petCurrentPage !== i) {
+                        petCurrentPage = i;
+                        renderPetsTable();
+                        const scrollBox = document.querySelector('.table-responsive-wrapper');
+                        if (scrollBox) scrollBox.scrollTop = 0;
+                    }
+                });
+                pageNumbersContainer.appendChild(btn);
+            }
+        }
+
+        const petPrevBtn = document.getElementById('petPrevPageBtn');
+        if (petPrevBtn) {
+            petPrevBtn.addEventListener('click', () => {
+                if (petCurrentPage > 1) {
+                    petCurrentPage--;
+                    renderPetsTable();
+                    const scrollBox = document.querySelector('.table-responsive-wrapper');
+                    if (scrollBox) scrollBox.scrollTop = 0;
+                }
+            });
+        }
+
+        const petNextBtn = document.getElementById('petNextPageBtn');
+        if (petNextBtn) {
+            petNextBtn.addEventListener('click', () => {
+                const petsList = Object.values(petsData);
+                const totalPages = Math.ceil(petsList.length / PETS_PER_PAGE) || 1;
+                if (petCurrentPage < totalPages) {
+                    petCurrentPage++;
+                    renderPetsTable();
+                    const scrollBox = document.querySelector('.table-responsive-wrapper');
+                    if (scrollBox) scrollBox.scrollTop = 0;
+                }
+            });
+        }
+
         function renderPetsTable() {
             closePetGlobalDropdown();
             const tbody = document.getElementById('petTableTbody');
@@ -942,7 +1034,14 @@
                 return true;
             });
 
-            if (filteredPets.length === 0) {
+            const totalItems = filteredPets.length;
+            const totalPages = Math.ceil(totalItems / PETS_PER_PAGE) || 1;
+            if (petCurrentPage > totalPages) petCurrentPage = totalPages;
+            if (petCurrentPage < 1) petCurrentPage = 1;
+
+            renderPetPagination(totalItems, totalPages);
+
+            if (totalItems === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 36px 16px; font-size: 13.5px;">
@@ -953,7 +1052,9 @@
                 return;
             }
 
-            tbody.innerHTML = filteredPets.map(pet => {
+            const pagedPets = filteredPets.slice((petCurrentPage - 1) * PETS_PER_PAGE, petCurrentPage * PETS_PER_PAGE);
+
+            tbody.innerHTML = pagedPets.map(pet => {
                 let alertRowClass = '';
                 let alertBadgeClass = 'badge-neutral';
                 let alertText = pet.alert ? pet.alert : 'Bình thường';
@@ -1014,10 +1115,46 @@
             }).join('');
         }
 
+        // Xuất file CSV danh sách thú cưng
+        const btnExportPetReport = document.getElementById('btnExportPetReport');
+        if (btnExportPetReport) {
+            btnExportPetReport.addEventListener('click', () => {
+                const petsList = Object.values(petsData);
+                const headers = ['Mã bé cưng', 'Tên bé cưng', 'Loài và Giống', 'Giới tính', 'Cân nặng', 'Ngày sinh', 'Chủ sở hữu', 'Số điện thoại', 'Cảnh báo an toàn', 'Trạng thái'];
+                const rows = petsList.map(p => [
+                    `"${p.code || ''}"`,
+                    `"${p.name || ''}"`,
+                    `"${p.speciesBreed || p.breed || ''}"`,
+                    `"${p.gender || ''}"`,
+                    `"${p.weight || ''}"`,
+                    `"${p.dob || ''}"`,
+                    `"${p.ownerName || ''}"`,
+                    `"${p.ownerPhone || ''}"`,
+                    `"${(p.alert || 'Bình thường').replace(/"/g, '""')}"`,
+                    `"${p.status || 'Đang nuôi'}"`
+                ]);
+
+                const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                const now = new Date();
+                const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+                link.setAttribute('href', url);
+                link.setAttribute('download', `danh_sach_thu_cung_pawpal_${dateStr}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                showToast('Đã xuất thành công danh sách thú cưng sang file CSV!');
+            });
+        }
+
         if (btnFilterHotelOnly) {
             btnFilterHotelOnly.addEventListener('click', () => {
                 isHotelOnly = !isHotelOnly;
                 btnFilterHotelOnly.classList.toggle('active', isHotelOnly);
+                petCurrentPage = 1;
                 renderPetsTable();
             });
         }
@@ -1026,15 +1163,16 @@
             btnFilterAlertOnly.addEventListener('click', () => {
                 isAlertOnly = !isAlertOnly;
                 btnFilterAlertOnly.classList.toggle('active', isAlertOnly);
+                petCurrentPage = 1;
                 renderPetsTable();
             });
         }
 
-        if (petSearchInput) petSearchInput.addEventListener('input', renderPetsTable);
-        if (petFilterSpecies) petFilterSpecies.addEventListener('change', renderPetsTable);
-        if (petFilterBreed) petFilterBreed.addEventListener('change', renderPetsTable);
-        if (petFilterWeight) petFilterWeight.addEventListener('change', renderPetsTable);
-        if (petFilterVaccine) petFilterVaccine.addEventListener('change', renderPetsTable);
+        if (petSearchInput) petSearchInput.addEventListener('input', () => { petCurrentPage = 1; renderPetsTable(); });
+        if (petFilterSpecies) petFilterSpecies.addEventListener('change', () => { petCurrentPage = 1; renderPetsTable(); });
+        if (petFilterBreed) petFilterBreed.addEventListener('change', () => { petCurrentPage = 1; renderPetsTable(); });
+        if (petFilterWeight) petFilterWeight.addEventListener('change', () => { petCurrentPage = 1; renderPetsTable(); });
+        if (petFilterVaccine) petFilterVaccine.addEventListener('change', () => { petCurrentPage = 1; renderPetsTable(); });
 
         // ====================================================================
         // 7. TÁC VỤ LƯU TRỮ VÀ KHÔI PHỤC HỒ SƠ THÚ CƯNG TRÊN MENU 3 CHẤM
@@ -1776,6 +1914,70 @@
             }
         }
 
+        let remCurrentPage = 1;
+        const REMINDERS_PER_PAGE = 10;
+
+        function renderReminderPagination(totalItems, totalPages) {
+            const paginationBar = document.getElementById('remPaginationBar');
+            const pageNumbersContainer = document.getElementById('remPageNumbersContainer');
+            const prevBtn = document.getElementById('remPrevPageBtn');
+            const nextBtn = document.getElementById('remNextPageBtn');
+
+            if (!paginationBar || !pageNumbersContainer) return;
+
+            if (totalItems <= REMINDERS_PER_PAGE) {
+                paginationBar.style.display = totalItems === 0 ? 'none' : 'flex';
+            } else {
+                paginationBar.style.display = 'flex';
+            }
+
+            if (prevBtn) {
+                prevBtn.classList.toggle('disabled', remCurrentPage <= 1);
+                prevBtn.disabled = remCurrentPage <= 1;
+            }
+
+            if (nextBtn) {
+                nextBtn.classList.toggle('disabled', remCurrentPage >= totalPages);
+                nextBtn.disabled = remCurrentPage >= totalPages;
+            }
+
+            pageNumbersContainer.innerHTML = '';
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `pagination-btn ${i === remCurrentPage ? 'active' : ''}`;
+                btn.textContent = i;
+                btn.addEventListener('click', () => {
+                    if (remCurrentPage !== i) {
+                        remCurrentPage = i;
+                        renderRemindersTable();
+                    }
+                });
+                pageNumbersContainer.appendChild(btn);
+            }
+        }
+
+        const remPrevBtn = document.getElementById('remPrevPageBtn');
+        if (remPrevBtn) {
+            remPrevBtn.addEventListener('click', () => {
+                if (remCurrentPage > 1) {
+                    remCurrentPage--;
+                    renderRemindersTable();
+                }
+            });
+        }
+
+        const remNextBtn = document.getElementById('remNextPageBtn');
+        if (remNextBtn) {
+            remNextBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(remindersData.length / REMINDERS_PER_PAGE) || 1;
+                if (remCurrentPage < totalPages) {
+                    remCurrentPage++;
+                    renderRemindersTable();
+                }
+            });
+        }
+
         function renderRemindersTable() {
             if (!reminderTableTbody) return;
             const query = (reminderSearchInput?.value || '').toLowerCase().trim();
@@ -1795,7 +1997,14 @@
                 return matchSearch && matchType && matchStatus;
             });
 
-            if (filtered.length === 0) {
+            const totalItems = filtered.length;
+            const totalPages = Math.ceil(totalItems / REMINDERS_PER_PAGE) || 1;
+            if (remCurrentPage > totalPages) remCurrentPage = totalPages;
+            if (remCurrentPage < 1) remCurrentPage = 1;
+
+            renderReminderPagination(totalItems, totalPages);
+
+            if (totalItems === 0) {
                 reminderTableTbody.innerHTML = `
                     <tr>
                         <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">
@@ -1806,7 +2015,9 @@
                 return;
             }
 
-            reminderTableTbody.innerHTML = filtered.map(item => {
+            const pagedReminders = filtered.slice((remCurrentPage - 1) * REMINDERS_PER_PAGE, remCurrentPage * REMINDERS_PER_PAGE);
+
+            reminderTableTbody.innerHTML = pagedReminders.map(item => {
                 // Vạch cảnh báo border-left duy nhất ở td:first-child theo quy tắc AGENTS.md
                 const isAlertRow = (item.type === 'HOTEL_VACCINE');
                 const borderStyle = isAlertRow ? 'border-left: 3px solid #D97706;' : 'border-left: 3px solid transparent;';
@@ -1855,9 +2066,9 @@
             }).join('');
         }
 
-        if (reminderSearchInput) reminderSearchInput.addEventListener('input', renderRemindersTable);
-        if (reminderFilterType) reminderFilterType.addEventListener('change', renderRemindersTable);
-        if (reminderFilterStatus) reminderFilterStatus.addEventListener('change', renderRemindersTable);
+        if (reminderSearchInput) reminderSearchInput.addEventListener('input', () => { remCurrentPage = 1; renderRemindersTable(); });
+        if (reminderFilterType) reminderFilterType.addEventListener('change', () => { remCurrentPage = 1; renderRemindersTable(); });
+        if (reminderFilterStatus) reminderFilterStatus.addEventListener('change', () => { remCurrentPage = 1; renderRemindersTable(); });
 
         // Khởi tạo bảng nhắc lịch và 4 KPI ban đầu
         renderRemindersTable();
@@ -2350,6 +2561,40 @@
                     if (!pet.carelogs) pet.carelogs = [];
                     pet.carelogs.unshift(newCareLog);
                     persistPetsData();
+
+                    // Đồng bộ phiên làm việc sang pawpal_pet_tracker_logs trong localStorage
+                    try {
+                        const trackerLogs = JSON.parse(localStorage.getItem('pawpal_pet_tracker_logs') || '{}');
+                        const pId = pet.code || pet.id;
+                        if (!trackerLogs[pId]) trackerLogs[pId] = { sessions: [], currentSession: null };
+                        
+                        const completedSession = {
+                            id: 'SS-' + Date.now(),
+                            serviceName: 'Tắm sấy toàn diện và Vệ sinh 4 mục',
+                            date: timeStr.split(' ')[0],
+                            time: timeStr.split(' ')[1] || '',
+                            status: 'Đã hoàn thành',
+                            technician: 'Hoàng Tuấn • Bàn 2',
+                            petName: pet.name,
+                            photos: [beforeSrc, afterSrc],
+                            beforePhoto: beforeSrc,
+                            afterPhoto: afterSrc,
+                            checklist: {
+                                ear: document.getElementById('chkEar')?.checked !== false,
+                                nail: document.getElementById('chkNail')?.checked !== false,
+                                anal: document.getElementById('chkAnal')?.checked !== false,
+                                skin: document.getElementById('chkSkin')?.checked !== false
+                            },
+                            ownerMessage: document.getElementById('wbOwnerMessage')?.value || 'Bé rất ngoan và hoàn thành tốt dịch vụ!'
+                        };
+                        
+                        if (!trackerLogs[pId].sessions) trackerLogs[pId].sessions = [];
+                        trackerLogs[pId].sessions.unshift(completedSession);
+                        trackerLogs[pId].currentSession = null;
+                        localStorage.setItem('pawpal_pet_tracker_logs', JSON.stringify(trackerLogs));
+                    } catch (e) {
+                        console.warn('Sync to tracker logs error:', e);
+                    }
 
                     // Nếu Drawer đang mở bé này, render lại subtabs
                     const currentOpenId = sessionStorage.getItem('pawpal_admin_pet_id');
