@@ -83,12 +83,67 @@
     let reviewFilterStatus = 'ALL';
     let currentReplyingReview = null;
 
+    // Cấu hình danh mục KTV và định mức tải ca trong ngày (Chuẩn Forest Palette & Muted Pastel)
+    const STAFF_DIRECTORY = [
+        { name: 'Ngọc Anh', role: 'Senior Groomer', maxCapacity: 4, level: 'Senior' },
+        { name: 'Thu Thảo', role: 'Junior Groomer', maxCapacity: 4, level: 'Junior' },
+        { name: 'Hoàng Nam', role: 'Master Groomer và Pet Hotel', maxCapacity: 4, level: 'Master' },
+        { name: 'Hữu Phúc', role: 'Pet Taxi và Phụ tá chăm sóc', maxCapacity: 4, level: 'Assistant' }
+    ];
+
+    function getStaffActiveBookings(staffName) {
+        if (!staffName) return [];
+        return bookingsData.filter(b => b.staff === staffName && b.status !== 'cancelled');
+    }
+
+    function getShiftForBooking(booking) {
+        const timeStr = booking.time || booking.date || '';
+        const match = timeStr.match(/(\d{1,2}):(\d{2})/);
+        if (match) {
+            const hour = parseInt(match[1], 10);
+            if (hour < 12) return 'MORNING';
+            if (hour < 17) return 'AFTERNOON';
+            return 'EVENING';
+        }
+        return 'AFTERNOON';
+    }
+
     // Lưu dữ liệu vào SessionStorage
     function persistData() {
         sessionStorage.setItem('pawpal_admin_services_bookings', JSON.stringify(bookingsData));
         sessionStorage.setItem('pawpal_admin_services_catalog', JSON.stringify(servicesData));
         sessionStorage.setItem('pawpal_admin_services_reviews', JSON.stringify(reviewsData));
         sessionStorage.setItem('pawpal_admin_service_selected_id', selectedBookingId);
+    }
+
+    // Helper: Hiển thị thông báo Toast chuẩn 9px
+    function showToast(msg, type = 'success') {
+        let toast = document.getElementById('adminGlobalToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'adminGlobalToast';
+            document.body.appendChild(toast);
+        }
+        const isAlert = type === 'warning' || type === 'error' || type === 'danger';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background-color: ${isAlert ? '#8F2424' : '#236B48'};
+            color: #FFFFFF;
+            padding: 12px 20px;
+            border-radius: 9px;
+            font-size: 13.5px;
+            font-weight: 500;
+            box-shadow: 0 8px 24px rgba(26, 43, 35, 0.2);
+            z-index: 9999;
+            display: block;
+        `;
+        toast.textContent = msg;
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => {
+            toast.style.display = 'none';
+        }, 2500);
     }
 
     // Helper: Định dạng tiền tệ
@@ -777,6 +832,18 @@
         const intakeEmptyNotice = document.getElementById('detailIntakeEmptyNotice');
         const intakeContent = document.getElementById('detailIntakeContentContainer');
         const btnEditSafety = document.getElementById('btnEditIntakeSafety');
+        const btnPrintWaiver = document.getElementById('btnPrintIntakeWaiver');
+
+        if (btnPrintWaiver) {
+            btnPrintWaiver.style.display = (booking.status !== 'cancelled') ? 'inline-block' : 'none';
+            btnPrintWaiver.onclick = () => openIntakeWaiverModal(booking.id);
+        }
+
+        const btnNotifyPickup = document.getElementById('btnNotifyCustomerPickup');
+        if (btnNotifyPickup) {
+            btnNotifyPickup.style.display = (booking.status === 'in_progress' || booking.status === 'completed') ? 'inline-block' : 'none';
+            btnNotifyPickup.onclick = () => openNotifyPickupModal(booking.id);
+        }
 
         if (intakeSection) {
             const hasIntake = !!booking.intakeSafety;
@@ -849,6 +916,13 @@
         if (costTotal) costTotal.textContent = formatCurrency(booking.total);
         if (paymentStatus) paymentStatus.textContent = booking.paymentStatus;
         if (addonsText) addonsText.textContent = booking.addonPrice > 0 ? `Gói chăm sóc mở rộng (${formatCurrency(booking.addonPrice)})` : 'Không có';
+
+        // Nút Thanh toán tại POS
+        const btnSettlePos = document.getElementById('btnSettleToPos');
+        if (btnSettlePos) {
+            btnSettlePos.style.display = (booking.status !== 'cancelled') ? 'inline-block' : 'none';
+            btnSettlePos.onclick = () => settleBookingToPos(booking.id);
+        }
 
         // Thêm dịch vụ đi cùng và phụ phí chỉ mở khi đang thực hiện ca (in_progress)
         // Trước khi vào ca chưa nên ghi phụ phí và thêm dịch vụ
@@ -1994,9 +2068,38 @@
         const closeCreateModal = () => {
             if (modalCreate) modalCreate.classList.remove('active');
             activeBookingPreset = null;
+            const newBookingStaffHint = document.getElementById('newBookingStaffWorkloadHint');
+            if (newBookingStaffHint) newBookingStaffHint.style.display = 'none';
         };
         if (btnCloseCreate) btnCloseCreate.addEventListener('click', closeCreateModal);
         if (btnCancelCreate) btnCancelCreate.addEventListener('click', closeCreateModal);
+
+        const newBookingStaffSelect = document.getElementById('newBookingStaff');
+        const newBookingStaffHint = document.getElementById('newBookingStaffWorkloadHint');
+        if (newBookingStaffSelect && newBookingStaffHint) {
+            newBookingStaffSelect.addEventListener('change', () => {
+                const staff = newBookingStaffSelect.value;
+                if (!staff) {
+                    newBookingStaffHint.style.display = 'none';
+                    return;
+                }
+                const staffItem = STAFF_DIRECTORY.find(s => s.name === staff) || { maxCapacity: 4 };
+                const count = getStaffActiveBookings(staff).length;
+                const max = staffItem.maxCapacity || 4;
+                newBookingStaffHint.style.display = 'block';
+                newBookingStaffHint.className = '';
+                if (count >= max) {
+                    newBookingStaffHint.classList.add('staff-workload-hint-danger');
+                    newBookingStaffHint.textContent = `🟡 ${staff} đã nhận ${count}/${max} ca hôm nay (Cảnh báo quá tải - nên cân nhắc chọn KTV khác).`;
+                } else if (count >= max - 1) {
+                    newBookingStaffHint.classList.add('staff-workload-hint-warning');
+                    newBookingStaffHint.textContent = `⚠️ ${staff} đang nhận ${count}/${max} ca hôm nay (Sắp đầy ca).`;
+                } else {
+                    newBookingStaffHint.classList.add('staff-workload-hint-available');
+                    newBookingStaffHint.textContent = `🟢 ${staff} đang nhận ${count}/${max} ca hôm nay (Khả dụng - còn ${max - count} ca trống).`;
+                }
+            });
+        }
 
         if (formCreate) {
             formCreate.addEventListener('submit', (e) => {
@@ -2609,6 +2712,8 @@
         const surchargePresetSelect = document.getElementById('surchargePresetSelect');
         const surchargeNameInput = document.getElementById('surchargeNameInput');
         const surchargeAmountInput = document.getElementById('surchargeAmountInput');
+        const surchargeCommissionSelect = document.getElementById('surchargeCommissionSelect');
+        const surchargeCommissionEarned = document.getElementById('surchargeCommissionEarned');
         const surchargeReasonInput = document.getElementById('surchargeReasonInput');
         const surchargeConsentSelect = document.getElementById('surchargeConsentSelect');
         const surchargeConsentNote = document.getElementById('surchargeConsentNote');
@@ -2616,10 +2721,28 @@
         const btnAddSurchargePhoto = document.getElementById('btnAddSurchargePhotoBtn');
         const surchargeFileInput = document.getElementById('surchargeProofFileInput');
 
+        function updateSurchargeCommissionDisplay() {
+            const amount = parseInt(surchargeAmountInput ? surchargeAmountInput.value : '0', 10) || 0;
+            const rate = parseInt(surchargeCommissionSelect ? surchargeCommissionSelect.value : '15', 10) || 0;
+            const earned = Math.round(amount * (rate / 100));
+            if (surchargeCommissionEarned) {
+                surchargeCommissionEarned.textContent = `+${formatCurrency(earned)}`;
+            }
+        }
+
+        if (surchargeAmountInput) {
+            surchargeAmountInput.addEventListener('input', updateSurchargeCommissionDisplay);
+        }
+        if (surchargeCommissionSelect) {
+            surchargeCommissionSelect.addEventListener('change', updateSurchargeCommissionDisplay);
+        }
+
         if (btnOpenAddSurcharge) {
             btnOpenAddSurcharge.addEventListener('click', () => {
                 if (formAddSurcharge) formAddSurcharge.reset();
                 if (surchargePresetSelect) surchargePresetSelect.value = 'CUSTOM';
+                if (surchargeCommissionSelect) surchargeCommissionSelect.value = '15';
+                updateSurchargeCommissionDisplay();
                 surchargeProofImagesTemp = [];
                 renderSurchargeProofPreviewList();
 
@@ -2663,6 +2786,7 @@
                     const [presetName, presetPrice] = val.split('|');
                     if (surchargeNameInput) surchargeNameInput.value = presetName || '';
                     if (surchargeAmountInput) surchargeAmountInput.value = presetPrice || '';
+                    updateSurchargeCommissionDisplay();
                 }
             });
         }
@@ -2675,6 +2799,8 @@
 
                 const name = surchargeNameInput.value.trim();
                 const amount = parseInt(surchargeAmountInput.value) || 0;
+                const commissionRate = parseInt(surchargeCommissionSelect ? surchargeCommissionSelect.value : '15', 10) || 0;
+                const commissionAmount = Math.round(amount * (commissionRate / 100));
                 const reason = surchargeReasonInput.value.trim();
                 const consent = surchargeConsentSelect.value;
                 const noteVal = surchargeConsentNote ? surchargeConsentNote.value.trim() : '';
@@ -2685,6 +2811,8 @@
                     id: 'ADD-' + (1000 + booking.addons.length + 1),
                     name: name,
                     amount: amount,
+                    commissionRate: commissionRate,
+                    commissionAmount: commissionAmount,
                     reason: reason,
                     consent: consent,
                     consentNote: noteVal,
@@ -2697,12 +2825,12 @@
                 const currentAccompanyingTotal = (booking.accompanyingServices || []).reduce((sum, a) => sum + Number(a.price || 0), 0);
                 booking.total = Math.max(0, Number(booking.price || 0) + currentAccompanyingTotal + booking.addonPrice - Number(booking.discount || 0));
 
-                // Tự động ghi nhật ký vào Timeline Care-Log kèm bằng chứng
+                // Tự động ghi nhật ký vào Timeline Care-Log kèm bằng chứng và hoa hồng KTV
                 booking.timeline = booking.timeline || [];
                 booking.timeline.push({
                     time: currentTime,
                     title: `Phát sinh: ${name} (+${formatCurrency(amount)})`,
-                    desc: `[${consent}${noteVal ? ' - ' + noteVal : ''}] ${reason}`,
+                    desc: `[${consent}${noteVal ? ' - ' + noteVal : ''}] ${reason}. Hoa hồng KTV (${booking.staff || 'KTV'}): ${commissionRate}% (~${formatCurrency(commissionAmount)}).`,
                     done: true,
                     staff: booking.staff || 'KTV',
                     images: [...surchargeProofImagesTemp]
@@ -2712,7 +2840,7 @@
                 closeAddSurchargeModal();
                 renderBookingDetail(booking.id);
                 renderBookingsTable();
-                showToast(`Đã thêm phụ phí phát sinh "${name}" (+${formatCurrency(amount)})!`);
+                showToast(`Đã thêm phụ phí phát sinh "${name}" (+${formatCurrency(amount)}, Hoa hồng KTV: +${formatCurrency(commissionAmount)})!`);
             });
         }
 
@@ -3048,6 +3176,9 @@
         if (staffSelect) {
             staffSelect.value = '';
         }
+        const changeStaffHint = document.getElementById('changeStaffWorkloadHint');
+        if (changeStaffHint) changeStaffHint.style.display = 'none';
+
         if (presetReason) presetReason.value = 'CUSTOM';
         if (reasonInput) reasonInput.value = '';
 
@@ -3063,6 +3194,8 @@
         const form = document.getElementById('formChangeStaff');
         const btnClose = document.getElementById('btnCloseChangeStaff');
         const btnCancel = document.getElementById('btnCancelChangeStaff');
+        const staffSelect = document.getElementById('changeStaffSelect');
+        const changeStaffHint = document.getElementById('changeStaffWorkloadHint');
         const presetReason = document.getElementById('changeStaffPresetReason');
         const reasonInput = document.getElementById('changeStaffReasonInput');
 
@@ -3070,6 +3203,31 @@
         if (btnClose) btnClose.addEventListener('click', closeModal);
         if (btnCancel) btnCancel.addEventListener('click', closeModal);
         if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        if (staffSelect && changeStaffHint) {
+            staffSelect.addEventListener('change', () => {
+                const staff = staffSelect.value;
+                if (!staff) {
+                    changeStaffHint.style.display = 'none';
+                    return;
+                }
+                const staffItem = STAFF_DIRECTORY.find(s => s.name === staff) || { maxCapacity: 4 };
+                const count = getStaffActiveBookings(staff).length;
+                const max = staffItem.maxCapacity || 4;
+                changeStaffHint.style.display = 'block';
+                changeStaffHint.className = '';
+                if (count >= max) {
+                    changeStaffHint.classList.add('staff-workload-hint-danger');
+                    changeStaffHint.textContent = `🟡 ${staff} đã nhận ${count}/${max} ca hôm nay (Cảnh báo quá tải - khuyến nghị chọn KTV khác).`;
+                } else if (count >= max - 1) {
+                    changeStaffHint.classList.add('staff-workload-hint-warning');
+                    changeStaffHint.textContent = `⚠️ ${staff} đang nhận ${count}/${max} ca hôm nay (Sắp đầy công suất).`;
+                } else {
+                    changeStaffHint.classList.add('staff-workload-hint-available');
+                    changeStaffHint.textContent = `🟢 ${staff} đang nhận ${count}/${max} ca hôm nay (Khả dụng - còn ${max - count} ca trống).`;
+                }
+            });
+        }
 
         if (presetReason) {
             presetReason.addEventListener('change', (e) => {
@@ -3087,7 +3245,6 @@
                 const booking = bookingsData.find(b => b.id === bookingId);
                 if (!booking) return;
 
-                const staffSelect = document.getElementById('changeStaffSelect');
                 const newStaff = staffSelect ? staffSelect.value.trim() : '';
                 const reason = reasonInput ? reasonInput.value.trim() : 'Điều phối nhân sự ca trực';
                 const scopeRadio = form.elements['changeStaffScope'];
@@ -3778,6 +3935,426 @@
     }
 
     // ==========================================================================
+    // 9B. GIAI ĐOẠN 1: BIÊN BẢN TIẾP NHẬN, POS CHECKOUT VÀ BÁO ĐÓN BÉ
+    // ==========================================================================
+
+    // 1. Mở Modal In Biên bản tiếp nhận (Zero-Claim & Waiver)
+    function openIntakeWaiverModal(bookingId) {
+        const modal = document.getElementById('modalPrintIntakeWaiver');
+        const booking = bookingsData.find(b => b.id === bookingId);
+        if (!modal || !booking) return;
+
+        const s = booking.intakeSafety || {};
+        const safeText = (val, fallback = 'Bình thường / Chuẩn') => val || fallback;
+
+        // Meta và Brand
+        const codeEl = document.getElementById('waiverBookingCode');
+        const dateEl = document.getElementById('waiverPrintDate');
+        const branchEl = document.getElementById('waiverBranchInfo');
+        if (codeEl) codeEl.textContent = booking.id;
+        if (dateEl) dateEl.textContent = `Tiếp nhận: ${booking.time || '14:00'} - ${booking.date || 'Hôm nay'}`;
+        if (branchEl) branchEl.textContent = `Hệ thống chăm sóc thú cưng chuẩn Nhật Bản • Cơ sở: ${booking.branch || 'PawPal Chi nhánh Quận 1'}`;
+
+        // Customer và Pet
+        const custNameEl = document.getElementById('waiverCustName');
+        const custPhoneEl = document.getElementById('waiverCustPhone');
+        const petNameEl = document.getElementById('waiverPetName');
+        const petBreedEl = document.getElementById('waiverPetBreed');
+        const petWeightEl = document.getElementById('waiverPetWeight');
+        const petAgeEl = document.getElementById('waiverPetAge');
+
+        if (custNameEl) custNameEl.textContent = booking.customerName || 'Khách hàng';
+        if (custPhoneEl) custPhoneEl.textContent = booking.phone || '0901234567';
+        if (petNameEl) petNameEl.textContent = booking.petName || 'Bé cưng';
+        if (petBreedEl) petBreedEl.textContent = booking.petBreed || 'Chó / Mèo';
+        if (petWeightEl) petWeightEl.textContent = s.actualWeight || booking.petWeight || '4.0 kg';
+        if (petAgeEl) petAgeEl.textContent = booking.petAge || '2 tuổi';
+
+        // Zero-Claim Inspection
+        const actualWeightEl = document.getElementById('waiverActualWeight');
+        const weightEvalEl = document.getElementById('waiverWeightEval');
+        const skinCoatEl = document.getElementById('waiverSkinCoat');
+        const eyesEarsEl = document.getElementById('waiverEyesEars');
+        const woundsEl = document.getElementById('waiverWounds');
+        const tempEl = document.getElementById('waiverTemperament');
+        const belongingsEl = document.getElementById('waiverBelongings');
+
+        if (actualWeightEl) actualWeightEl.textContent = s.actualWeight || booking.petWeight || 'Chưa cân';
+        if (weightEvalEl) weightEvalEl.textContent = s.weightEval || 'Đúng khung giá đăng ký';
+        if (skinCoatEl) skinCoatEl.textContent = safeText(s.skinCoat, 'Sạch sẽ, không ve rận');
+        if (eyesEarsEl) eyesEarsEl.textContent = safeText(s.eyesEarsNose, 'Bình thường, không viêm');
+        if (woundsEl) woundsEl.textContent = safeText(s.wounds, 'Không có vết thương / sẹo cũ');
+        if (tempEl) tempEl.textContent = safeText(s.temperament, 'Ngoan hiền, hợp tác');
+        if (belongingsEl) belongingsEl.textContent = s.belongings || booking.belongings || 'Không có tư trang gửi lại quầy';
+
+        // Service và Financials
+        const svcNameEl = document.getElementById('waiverServiceName');
+        const priceBaseEl = document.getElementById('waiverPriceBase');
+        const staffNameEl = document.getElementById('waiverStaffName');
+        const durationEl = document.getElementById('waiverDuration');
+        const priceTotalEl = document.getElementById('waiverPriceTotal');
+        const extraItemsBlock = document.getElementById('waiverExtraItemsBlock');
+        const extraItemsText = document.getElementById('waiverExtraItemsText');
+
+        if (svcNameEl) svcNameEl.textContent = booking.serviceName || 'Dịch vụ PawPal';
+        if (priceBaseEl) priceBaseEl.textContent = formatCurrency(booking.price);
+        if (staffNameEl) staffNameEl.textContent = s.intakeStaff || booking.staff || 'KTV PawPal';
+        if (durationEl) durationEl.textContent = booking.duration || '60 phút';
+        if (priceTotalEl) priceTotalEl.textContent = formatCurrency(booking.total || booking.price);
+
+        const accompanying = booking.accompanyingServices || [];
+        const addons = booking.addons || [];
+        if (accompanying.length > 0 || addons.length > 0) {
+            if (extraItemsBlock) extraItemsBlock.style.display = 'block';
+            const accNames = accompanying.map(a => `${a.name} (+${formatCurrency(a.price)})`);
+            const addonNames = addons.map(a => `${a.name} (+${formatCurrency(a.amount)})`);
+            if (extraItemsText) extraItemsText.textContent = [...accNames, ...addonNames].join(', ');
+        } else {
+            if (extraItemsBlock) extraItemsBlock.style.display = 'none';
+        }
+
+        // Signatures
+        const staffSignEl = document.getElementById('waiverStaffSignName');
+        const custSignEl = document.getElementById('waiverCustSignName');
+        if (staffSignEl) staffSignEl.textContent = `KTV. ${s.intakeStaff || booking.staff || 'PawPal Team'}`;
+        if (custSignEl) custSignEl.textContent = booking.customerName || 'Chủ nuôi';
+
+        modal.classList.add('active');
+    }
+
+    function setupIntakeWaiverModal() {
+        const modal = document.getElementById('modalPrintIntakeWaiver');
+        const btnClose = document.getElementById('btnCloseIntakeWaiver');
+        const btnDismiss = document.getElementById('btnDismissIntakeWaiver');
+        const btnPrint = document.getElementById('btnPrintIntakeWaiverAction');
+
+        const closeModal = () => { if (modal) modal.classList.remove('active'); };
+        if (btnClose) btnClose.addEventListener('click', closeModal);
+        if (btnDismiss) btnDismiss.addEventListener('click', closeModal);
+        if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        if (btnPrint) {
+            btnPrint.addEventListener('click', () => {
+                window.print();
+            });
+        }
+    }
+
+    // 2. 1-Click "Thanh toán tại POS" (Service-to-POS Checkout Handshake)
+    function settleBookingToPos(bookingId) {
+        const booking = bookingsData.find(b => b.id === bookingId);
+        if (!booking) return;
+
+        const posPayload = {
+            bookingId: booking.id,
+            userId: booking.userId || 'USER-001',
+            customerName: booking.customerName,
+            phone: booking.phone,
+            petName: booking.petName,
+            petBreed: booking.petBreed,
+            serviceName: booking.serviceName,
+            serviceCode: booking.serviceCode || booking.serviceId || 'SVC-SPA',
+            basePrice: booking.price,
+            accompanyingServices: booking.accompanyingServices || [],
+            surcharges: booking.addons || [],
+            total: booking.total || booking.price,
+            note: `Thanh toán ca dịch vụ ${booking.id} - ${booking.serviceName} cho bé ${booking.petName}`
+        };
+
+        sessionStorage.setItem('pawpal_pos_pending_service_checkout', JSON.stringify(posPayload));
+        sessionStorage.setItem('pawpal_admin_active_module', 'Bán hàng');
+        sessionStorage.setItem('pawpal_admin_order_subtab', 'tab-order-list');
+        showToast(`Đang chuyển sang phân hệ Bán hàng (POS) để tạo đơn thanh toán cho ca ${booking.id}...`);
+
+        // Điều hướng sang phân hệ Bán hàng
+        window.location.hash = '#tab-order-list';
+        const sidebarOrderBtn = Array.from(document.querySelectorAll('.sidebar-menu-btn')).find(b => b.getAttribute('data-title') === 'Bán hàng');
+        if (sidebarOrderBtn) {
+            sidebarOrderBtn.click();
+        }
+    }
+
+    // 3. Mở Modal Báo khách đón bé qua Zalo / SMS
+    let currentNotifyBooking = null;
+
+    function openNotifyPickupModal(bookingId) {
+        const modal = document.getElementById('modalNotifyPickup');
+        const booking = bookingsData.find(b => b.id === bookingId);
+        if (!modal || !booking) return;
+        currentNotifyBooking = booking;
+
+        const metaEl = document.getElementById('notifyPickupMeta');
+        const svcNameEl = document.getElementById('notifyPickupServiceName');
+        const totalCostEl = document.getElementById('notifyPickupTotalCost');
+        const staffNameEl = document.getElementById('notifyPickupStaffName');
+        const belongingsEl = document.getElementById('notifyPickupBelongings');
+        const msgTextarea = document.getElementById('notifyPickupMessageText');
+
+        if (metaEl) metaEl.textContent = `Mã ca: ${booking.id} • Bé: ${booking.petName} (${booking.petBreed}) • Chủ nuôi: ${booking.customerName} (${booking.phone})`;
+        if (svcNameEl) svcNameEl.textContent = booking.serviceName || 'Dịch vụ PawPal';
+        if (totalCostEl) totalCostEl.textContent = formatCurrency(booking.total || booking.price);
+        if (staffNameEl) staffNameEl.textContent = booking.staff || 'KTV PawPal';
+
+        const belongings = booking.belongings || (booking.intakeSafety && booking.intakeSafety.belongings) || 'Không có';
+        if (belongingsEl) belongingsEl.textContent = belongings;
+
+        const defaultChannelRadio = modal.querySelector('input[name="pickupChannel"]:checked');
+        const channel = defaultChannelRadio ? defaultChannelRadio.value : 'Zalo ZNS';
+
+        if (msgTextarea) {
+            msgTextarea.value = buildPickupMessageTemplate(booking, channel);
+        }
+
+        modal.classList.add('active');
+    }
+
+    function buildPickupMessageTemplate(booking, channel = 'Zalo ZNS') {
+        const branch = booking.branch || 'PawPal Chi nhánh Quận 1 (123 Nguyễn Huệ, Q.1)';
+        const totalText = formatCurrency(booking.total || booking.price);
+        const belongings = booking.belongings || (booking.intakeSafety && booking.intakeSafety.belongings);
+        const belongingsText = (belongings && belongings !== 'Không có') ? ` (Đã kèm tư trang: ${belongings})` : '';
+
+        if (channel.includes('Zalo')) {
+            return `[PAWPAL PET CARE] Kính gửi Quý khách ${booking.customerName},\n\n` +
+                `Bé ${booking.petName} đã hoàn thành xuất sắc ca chăm sóc [${booking.serviceName}] tại ${branch}!\n\n` +
+                `Hiện bé đang rất thơm tho, khỏe mạnh và sẵn sàng chờ ba mẹ ghé đón${belongingsText}.\n` +
+                `Tổng chi phí thanh toán: ${totalText} (${booking.paymentStatus || 'Thanh toán tại quầy'}).\n\n` +
+                `Kính mời Quý khách ghé cơ sở trước 20:00 hôm nay hoặc liên hệ hotline 1900 8888 nếu cần hỗ trợ xe Pet Taxi đưa đón bé tận nơi. PawPal trân trọng cảm ơn!`;
+        } else {
+            return `[PAWPAL] Be ${booking.petName} da hoan tat goi ${booking.serviceName} tai ${branch}. Moi Quy khach ${booking.customerName} den don be truoc 20h. Tong tien: ${totalText}. Hotline: 19008888.`;
+        }
+    }
+
+    function setupNotifyPickupModal() {
+        const modal = document.getElementById('modalNotifyPickup');
+        const form = document.getElementById('formNotifyPickup');
+        const btnClose = document.getElementById('btnCloseNotifyPickup');
+        const btnCancel = document.getElementById('btnCancelNotifyPickup');
+        const btnReset = document.getElementById('btnResetNotifyTemplate');
+        const msgTextarea = document.getElementById('notifyPickupMessageText');
+
+        const closeModal = () => { if (modal) modal.classList.remove('active'); };
+        if (btnClose) btnClose.addEventListener('click', closeModal);
+        if (btnCancel) btnCancel.addEventListener('click', closeModal);
+        if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        modal?.querySelectorAll('input[name="pickupChannel"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (currentNotifyBooking && msgTextarea) {
+                    msgTextarea.value = buildPickupMessageTemplate(currentNotifyBooking, radio.value);
+                }
+            });
+        });
+
+        if (btnReset) {
+            btnReset.addEventListener('click', () => {
+                if (!currentNotifyBooking || !msgTextarea) return;
+                const channel = modal.querySelector('input[name="pickupChannel"]:checked')?.value || 'Zalo ZNS';
+                msgTextarea.value = buildPickupMessageTemplate(currentNotifyBooking, channel);
+            });
+        }
+
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (!currentNotifyBooking) return;
+
+                const channel = modal.querySelector('input[name="pickupChannel"]:checked')?.value || 'Zalo ZNS';
+                const includeCarelog = document.getElementById('notifyIncludeCarelogLink')?.checked;
+                const logTimeline = document.getElementById('notifyLogTimelineEvent')?.checked;
+                const timeNow = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+                if (logTimeline) {
+                    currentNotifyBooking.timeline = currentNotifyBooking.timeline || [];
+                    currentNotifyBooking.timeline.push({
+                        time: timeNow,
+                        title: `Báo khách đón bé (${channel})`,
+                        desc: `Đã gửi thông báo hoàn thành ca dịch vụ cho chủ nuôi ${currentNotifyBooking.customerName} (${currentNotifyBooking.phone}) qua ${channel}.${includeCarelog ? ' Kèm link nhật ký Care-Log.' : ''}`,
+                        done: true,
+                        staff: currentNotifyBooking.staff || 'CSKH',
+                        images: []
+                    });
+                    persistData();
+                    renderBookingDetail(currentNotifyBooking.id);
+                }
+
+                closeModal();
+                showToast(`Đã gửi thông báo đón bé ${currentNotifyBooking.petName} thành công qua ${channel} tới SĐT ${currentNotifyBooking.phone}!`);
+            });
+        }
+    }
+
+    // ==========================================================================
+    // 7E. LỊCH TRỰC VÀ ĐIỀU PHỐI KỸ THUẬT VIÊN (MODAL 14)
+    // ==========================================================================
+    let currentStaffScheduleShiftFilter = 'ALL';
+
+    function renderStaffScheduleCards(filterShift = 'ALL') {
+        currentStaffScheduleShiftFilter = filterShift;
+        const grid = document.getElementById('staffScheduleGrid');
+        if (!grid) return;
+
+        const totalStaffEl = document.getElementById('summaryTotalStaffCount');
+        const totalBookingsEl = document.getElementById('summaryTotalAssignedBookings');
+        const avgCapacityEl = document.getElementById('summaryAvgCapacity');
+        const overloadedEl = document.getElementById('summaryOverloadedCount');
+
+        let totalAssigned = 0;
+        let overloadedCount = 0;
+
+        STAFF_DIRECTORY.forEach(staff => {
+            const bookings = getStaffActiveBookings(staff.name);
+            totalAssigned += bookings.length;
+            if (bookings.length >= staff.maxCapacity) {
+                overloadedCount++;
+            }
+        });
+
+        const totalCapacitySlots = STAFF_DIRECTORY.length * 4;
+        const avgCap = Math.round((totalAssigned / totalCapacitySlots) * 100);
+
+        if (totalStaffEl) totalStaffEl.textContent = `${STAFF_DIRECTORY.length}`;
+        if (totalBookingsEl) totalBookingsEl.textContent = `${totalAssigned} ca`;
+        if (avgCapacityEl) avgCapacityEl.textContent = `${avgCap}%`;
+        if (overloadedEl) overloadedEl.textContent = `${overloadedCount}`;
+
+        grid.innerHTML = STAFF_DIRECTORY.map(staff => {
+            const allActiveBookings = getStaffActiveBookings(staff.name);
+            const count = allActiveBookings.length;
+            const max = staff.maxCapacity;
+            const pct = Math.min(100, Math.round((count / max) * 100));
+
+            // Lọc theo ca trực nếu người dùng chọn
+            const filteredBookings = (filterShift === 'ALL')
+                ? allActiveBookings
+                : allActiveBookings.filter(b => getShiftForBooking(b) === filterShift);
+
+            let statusBadge = '';
+            let barColor = '#236B48';
+            let cardClass = 'staff-schedule-card';
+
+            if (count >= max) {
+                statusBadge = '<span class="admin-badge badge-danger">Đầy ca</span>';
+                barColor = '#DC2626';
+                cardClass += ' is-overloaded';
+            } else if (count >= max - 1) {
+                statusBadge = '<span class="admin-badge badge-warning">Tải cao</span>';
+                barColor = '#D97706';
+            } else if (count > 0) {
+                statusBadge = '<span class="admin-badge badge-info">Đang nhận ca</span>';
+                barColor = '#236B48';
+            } else {
+                statusBadge = '<span class="admin-badge badge-success">Khả dụng</span>';
+                barColor = '#236B48';
+            }
+
+            const initials = staff.name.split(' ').map(w => w[0]).slice(-2).join('').toUpperCase();
+
+            const bookingsHtml = filteredBookings.length > 0
+                ? filteredBookings.map(b => {
+                    const timeShort = b.time ? b.time.split('-')[0].trim() : '14:00';
+                    return `
+                        <div class="staff-assigned-booking-item">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <strong style="color: #236B48; font-weight: 700;">${timeShort}</strong>
+                                <span style="color: var(--text-main);">${b.petName} • ${b.serviceName}</span>
+                            </div>
+                            <button type="button" class="staff-assigned-booking-link" data-bkg-id="${b.id}">Chi tiết</button>
+                        </div>
+                    `;
+                }).join('')
+                : `<div style="font-size: 12px; color: var(--text-muted); padding: 10px 0; text-align: center;">${filterShift === 'ALL' ? 'Chưa có ca hẹn' : 'Không có ca trong khung giờ này'}</div>`;
+
+            return `
+                <div class="${cardClass}">
+                    <div class="staff-schedule-card-header">
+                        <div class="staff-card-left">
+                            <div class="staff-avatar-initials">
+                                ${initials}
+                            </div>
+                            <div>
+                                <div class="staff-meta-name">${staff.name}</div>
+                                <div class="staff-meta-role">${staff.role}</div>
+                            </div>
+                        </div>
+                        <div>
+                            ${statusBadge}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 2px;">
+                            <span style="color: var(--text-muted);">Công suất:</span>
+                            <span style="font-weight: 700; color: ${barColor};">${count}/${max} ca</span>
+                        </div>
+                        <div class="staff-workload-bar-wrap">
+                            <div class="staff-workload-bar-fill" style="width: ${pct}%; background-color: ${barColor};"></div>
+                        </div>
+                    </div>
+
+                    <div class="staff-assigned-bookings-list" style="margin-top: 4px;">
+                        ${bookingsHtml}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Gắn sự kiện bấm vào link "Chi tiết" ca
+        grid.querySelectorAll('.staff-assigned-booking-link').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const bkgId = e.currentTarget.getAttribute('data-bkg-id');
+                const modal = document.getElementById('modalStaffSchedule');
+                if (modal) modal.classList.remove('active');
+                if (bkgId) openBookingDetail(bkgId);
+            });
+        });
+    }
+
+    function openStaffScheduleModal() {
+        const modal = document.getElementById('modalStaffSchedule');
+        if (!modal) return;
+        renderStaffScheduleCards('ALL');
+        modal.classList.add('active');
+    }
+
+    function setupStaffScheduleModal() {
+        const modal = document.getElementById('modalStaffSchedule');
+        const btnOpen = document.getElementById('btnOpenStaffScheduleModal');
+        const btnClose = document.getElementById('btnCloseStaffSchedule');
+        const btnDismiss = document.getElementById('btnDismissStaffSchedule');
+        const btnNavStaff = document.getElementById('btnNavToStaffModule');
+
+        const closeModal = () => { if (modal) modal.classList.remove('active'); };
+        if (btnOpen) btnOpen.addEventListener('click', openStaffScheduleModal);
+        if (btnClose) btnClose.addEventListener('click', closeModal);
+        if (btnDismiss) btnDismiss.addEventListener('click', closeModal);
+        if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        if (modal) {
+            modal.querySelectorAll('.staff-shift-tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modal.querySelectorAll('.staff-shift-tab-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const shift = btn.getAttribute('data-shift-filter') || 'ALL';
+                    renderStaffScheduleCards(shift);
+                });
+            });
+        }
+
+        if (btnNavStaff) {
+            btnNavStaff.addEventListener('click', () => {
+                closeModal();
+                sessionStorage.setItem('pawpal_admin_active_module', 'Nhân sự');
+                sessionStorage.setItem('pawpal_admin_staff_subtab', 'tab-staff-list');
+                showToast('Đang chuyển sang phân hệ Quản lý Nhân sự...');
+                window.location.hash = '#tab-staff-list';
+                const sidebarStaffBtn = Array.from(document.querySelectorAll('.sidebar-menu-btn')).find(b => b.getAttribute('data-title') === 'Nhân sự');
+                if (sidebarStaffBtn) sidebarStaffBtn.click();
+            });
+        }
+    }
+
+    // ==========================================================================
     // 10. KHỞI CHẠY PHÂN HỆ
     // ==========================================================================
     async function init() {
@@ -3794,6 +4371,9 @@
         setupChangeStaffModal();
         setupCompleteBookingModal();
         setupSopDetailsModal();
+        setupIntakeWaiverModal();
+        setupNotifyPickupModal();
+        setupStaffScheduleModal();
         setupActionDropdownEvents();
     }
 
@@ -3804,6 +4384,8 @@
     window.PawpalServicesModule = {
         init: init,
         switchSubtab: switchSubtab,
-        openBookingDetail: openBookingDetail
+        openBookingDetail: openBookingDetail,
+        openStaffScheduleModal: openStaffScheduleModal
     };
 })();
+

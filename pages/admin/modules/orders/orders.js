@@ -1748,7 +1748,24 @@
         function populateCreateOrderProducts() {
             const prodSelect = document.getElementById('createOrderProductSelect');
             if (!prodSelect) return;
+
+            let extraOptions = '';
+            try {
+                const rawPending = sessionStorage.getItem('pawpal_pos_pending_service_checkout');
+                if (rawPending) {
+                    const data = JSON.parse(rawPending);
+                    if (data && data.bookingId) {
+                        extraOptions = `
+                            <option value="SVC-${data.bookingId}" data-price="${data.total || data.basePrice || 250000}" selected>
+                                [Dịch vụ] ${data.serviceName} (${data.bookingId}) - ${formatVND(data.total || data.basePrice || 250000)}
+                            </option>
+                        `;
+                    }
+                }
+            } catch (e) {}
+
             prodSelect.innerHTML = '<option value="">-- Chọn mặt hàng từ kho --</option>' + 
+                extraOptions +
                 currentProductsList.map(p => `
                     <option value="${p.sku}" data-price="${p.price}" ${p.stock <= 0 ? 'disabled' : ''}>
                         ${p.name} (Tồn: ${p.stock}) - ${formatVND(p.price)} ${p.stock <= 0 ? '[Hết hàng]' : ''}
@@ -1756,10 +1773,53 @@
                 `).join('');
         }
 
+        function checkPendingServiceCheckout() {
+            try {
+                const rawPending = sessionStorage.getItem('pawpal_pos_pending_service_checkout');
+                if (!rawPending) return;
+                const data = JSON.parse(rawPending);
+                if (!data || !data.bookingId) return;
+
+                const banner = document.getElementById('posServiceCheckoutBanner');
+                const titleEl = document.getElementById('posServiceBannerTitle');
+                const detailsEl = document.getElementById('posServiceBannerDetails');
+                const costEl = document.getElementById('posServiceBannerCost');
+                const phoneInput = document.getElementById('createOrderPhone');
+                const nameInput = document.getElementById('createOrderName');
+                const noteInput = document.getElementById('createOrderNote');
+
+                if (banner) {
+                    banner.style.display = 'block';
+                    if (titleEl) titleEl.textContent = `🧾 Thanh toán ca dịch vụ: ${data.bookingId}`;
+                    if (detailsEl) detailsEl.textContent = `${data.serviceName} (Bé ${data.petName || 'Pet'} • ${data.petBreed || ''})`;
+                    if (costEl) costEl.textContent = formatVND(data.total || data.basePrice || 250000);
+                }
+
+                if (phoneInput && data.phone) {
+                    phoneInput.value = data.phone;
+                    phoneInput.dispatchEvent(new Event('input'));
+                }
+                if (nameInput && data.customerName) nameInput.value = data.customerName;
+                if (noteInput) noteInput.value = data.note || `Thanh toán ca dịch vụ ${data.bookingId}`;
+
+                populateCreateOrderProducts();
+                document.getElementById('modalCreateOrder')?.classList.add('active');
+                updatePosLiveCalculation();
+            } catch (err) {
+                console.error('Lỗi khi nạp đơn dịch vụ chờ thanh toán tại POS:', err);
+            }
+        }
+
         document.getElementById('btnOpenCreateOrderModal')?.addEventListener('click', () => {
             activePosCustomer = null;
             const memberBanner = document.getElementById('createOrderMemberBanner');
             if (memberBanner) memberBanner.style.display = 'none';
+
+            // Ẩn banner pending service nếu mở thủ công thông thường
+            const banner = document.getElementById('posServiceCheckoutBanner');
+            if (banner && !sessionStorage.getItem('pawpal_pos_pending_service_checkout')) {
+                banner.style.display = 'none';
+            }
 
             populateCreateOrderProducts();
             document.getElementById('modalCreateOrder')?.classList.add('active');
@@ -1951,6 +2011,39 @@
                     const maxCount = parts[1] ? parts[1].trim() : '500';
                     voucher.used = `${usedCount} / ${maxCount}`;
                 }
+            }
+
+            // Hoàn tất ca dịch vụ liên kết nếu đây là đơn thanh toán từ phân hệ Dịch vụ
+            try {
+                const rawPending = sessionStorage.getItem('pawpal_pos_pending_service_checkout');
+                if (rawPending) {
+                    const pendingData = JSON.parse(rawPending);
+                    if (pendingData && pendingData.bookingId) {
+                        const rawBookings = sessionStorage.getItem('pawpal_admin_services_bookings');
+                        if (rawBookings) {
+                            const bookings = JSON.parse(rawBookings);
+                            const targetBooking = bookings.find(b => b.id === pendingData.bookingId);
+                            if (targetBooking) {
+                                targetBooking.paymentStatus = `Đã thanh toán (Tại POS - Đơn ${newCode})`;
+                                targetBooking.status = (targetBooking.status === 'pending' || targetBooking.status === 'confirmed') ? 'in_progress' : targetBooking.status;
+                                targetBooking.timeline = targetBooking.timeline || [];
+                                targetBooking.timeline.push({
+                                    time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+                                    title: `Đã thanh toán tại POS (${newCode})`,
+                                    desc: `Đã thu tiền tại quầy ${formatVND(calc.grandTotal)} qua hình thức ${payMethod}. Đơn hàng POS: ${newCode}.`,
+                                    done: true,
+                                    staff: 'Thu ngân'
+                                });
+                                sessionStorage.setItem('pawpal_admin_services_bookings', JSON.stringify(bookings));
+                            }
+                        }
+                        sessionStorage.removeItem('pawpal_pos_pending_service_checkout');
+                        const banner = document.getElementById('posServiceCheckoutBanner');
+                        if (banner) banner.style.display = 'none';
+                    }
+                }
+            } catch (err) {
+                console.error('Lỗi cập nhật ca dịch vụ sau thanh toán POS:', err);
             }
 
             currentOrdersList.unshift(newOrder);
@@ -2301,6 +2394,9 @@
                     renderProductsTable();
                 }
             }
+
+            // Kiểm tra và tự động mở form POS thanh toán cho ca dịch vụ nếu được chuyển sang từ module Dịch vụ
+            checkPendingServiceCheckout();
         };
         setTimeout(checkPresetOrder, 150);
     }

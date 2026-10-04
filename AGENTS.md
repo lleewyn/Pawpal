@@ -36,6 +36,8 @@
 * **Khóa Cố Định Màn Hình & Triệt Tiêu Cuộn Nảy (Viewport Lock & Anti-Overscroll)**:
   - `html, body.admin-body`: BẮT BUỘC áp dụng `height: 100%; width: 100%; overflow: hidden; overscroll-behavior: none; overscroll-behavior-y: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;` để khóa cứng toàn bộ khung màn hình ngoài, triệt tiêu 100% hiện tượng lướt quá tay bị hở mép trên/dưới (Rubber-band scroll bounce).
   - Khung nội dung cuộn bên trong (`.admin-preview-content`, Drawer, Modal card): Áp dụng `overscroll-behavior: contain;` để khi cuộn chạm đỉnh/đáy sẽ dừng dứt khoát tại chỗ, không bao giờ truyền sự kiện cuộn làm nảy hay rung giật khung layout chính.
+* **Avatar Cá Nhân Luôn Là Hình Tròn (`border-radius: 50%`)**:
+  - Toàn bộ avatar hiển thị hình đại diện hoặc chữ cái viết tắt của Kỹ thuật viên, Nhân viên, Khách hàng, Quản trị viên (`.staff-avatar-initials`, `.customer-avatar`, `.user-avatar`...) BẮT BUỘC có `border-radius: 50%;` hình tròn hoàn hảo, tạo sự phân biệt trực quan sinh động so với hình khối bo góc 9px của khung thẻ và nút bấm.
 * **Bố Cục Modal & Sổ Địa Chỉ Nhận Hàng (Address Book)**:
   - **Khoảng cách thoáng & Không kẻ ngang**: Modal có độ rộng thoáng chuẩn `width: 560px; max-width: 94vw;`, padding `26px 30px;`, các nhóm trường cách đều `gap: 16px;`. Tuyệt đối không kẻ đường viền xám 100% cắt ngang chia vụn vặt ở Header và Footer của Modal (`border-bottom: none; border-top: none;`).
   - **Đa địa chỉ & 1 địa chỉ mặc định**: Hỗ trợ 1 khách hàng có thể lưu nhiều địa chỉ nhận hàng, có radio chọn đúng 1 "Địa chỉ mặc định" (thẻ mặc định có viền xanh `#C3DEC7`, nền `#F4FAF6`), các địa chỉ khác là địa chỉ phụ (có nút text `Xóa`). Nút `+ Thêm địa chỉ` text-only màu xanh thương hiệu `#236B48`.
@@ -44,6 +46,9 @@
 
 ## 2. QUY TẮC ICON BẤM, TEXT-ONLY & VĂN PHONG (COPYWRITING)
 
+* **Triệt Tiêu Dòng Phụ Chú Thích Dài Dòng (No Redundant Subtitles)**:
+  - Đưa mốc thời gian / ngày tháng trực tiếp lên dòng Tiêu đề chính (ví dụ: `Lịch trực và Điều phối Kỹ thuật viên (25/06/2026)`).
+  - Tuyệt đối không thêm dòng phụ chú thích mô tả chức năng rườm rà dưới tiêu đề modal/card làm vụn vặt giao diện.
 * **Chỉ Sidebar bên trái được dùng Lucide Icons**:
   - 9 menu chức năng và 2 nút chân sidebar là nơi duy nhất được hiển thị icon nét mảnh Lucide.
 * **Tất cả các khu vực khác bên ngoài Sidebar là 100% Text-Only**:
@@ -84,9 +89,13 @@
   - Tiêu đề khối, tiêu đề thẻ, tên hồ sơ, tiêu đề modal (`.admin-card-title`, `h4`, `.headline-name`): `--text-heading: #236B48;` (Forest Green đậm đà, sắc nét).
   - Tiêu đề cột bảng dữ liệu (`th`), nhãn bộ lọc: `--table-header-text: #236B48;`.
   - Tên liên kết bấm vào xem hồ sơ (`.user-name-link`): `#236B48; font-weight: 600;`.
+* **Quy chuẩn Viết hoa Tiêu đề chuẩn Tiếng Việt (Sentence Case - Chỉ viết hoa chữ cái đầu tiên)**:
+  - Toàn bộ tiêu đề modal, tiêu đề khối thẻ, tiêu đề phân hệ, nhãn bộ lọc, nút bấm BẮT BUỘC chỉ viết hoa duy nhất chữ cái đầu tiên của câu/cụm từ (ngoại trừ tên riêng, tên thú cưng, từ viết tắt SOP/KTV/COD/RMA/POS hoặc mã ID).
+  - *Ví dụ chuẩn*: `Lịch trực và điều phối kỹ thuật viên (25/06/2026)`, `Biên bản tiếp nhận an toàn`, `Hồ sơ ca dịch vụ 360°`, `Thêm lịch hẹn mới`, `Đổi kỹ thuật viên`.
+  - *Tuyệt đối cấm viết hoa từng từ kiểu Tiếng Anh (Title Case)*: Không viết `Lịch Trực Và Điều Phối Kỹ Thuật Viên`, `Thêm Lịch Hẹn Mới`.
 * **Tiêu đề cột bảng (Table Headers)**:
   - **Tuyệt đối không in hoa toàn bộ chữ** (bỏ `text-transform: uppercase`).
-  - Viết hoa chữ cái đầu tiêu chuẩn: `Mã KH`, `Họ tên`, `Số điện thoại`, `Hạng và Điểm`, `Cảnh báo`, `Trạng thái`.
+  - Viết hoa chữ cái đầu tiêu chuẩn: `Mã KH`, `Họ tên`, `Số điện thoại`, `Hạng và điểm`, `Cảnh báo`, `Trạng thái`.
   - Nền tiêu đề bảng: `--table-header-bg: #EEF5F1;` (xanh xô thơm rất nhạt).
 * **Chữ chính & Chữ phụ**:
   - Chữ chính: `--text-main: #203A2C;` (xanh than sẫm, êm mắt).

@@ -239,11 +239,11 @@
     opacity: 0.52;
 }
 
-/* AVATAR THÚ CƯNG TRONG BẢNG */
+/* AVATAR THÚ CƯNG TRONG BẢNG (CHUẨN HÌNH TRÒN 50%) */
 .pet-avatar-cell {
     width: 38px;
     height: 38px;
-    border-radius: var(--admin-radius);
+    border-radius: 50%;
     object-fit: cover;
     display: block;
     border: 1px solid var(--border-neutral);
@@ -406,7 +406,7 @@
 .drawer-pet-avatar {
     width: 52px;
     height: 52px;
-    border-radius: var(--admin-radius);
+    border-radius: 50%;
     object-fit: cover;
     border: 1px solid var(--border-neutral);
 }

@@ -54,6 +54,7 @@
                         <input type="text" class="admin-input" id="serviceSearchInput" placeholder="Tìm mã BKG, tên khách, số điện thoại, tên thú cưng...">
                     </div>
                     <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenStaffScheduleModal">Lịch trực KTV</button>
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportServiceReport">Xuất file</button>
                         <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateBookingModal">+ Thêm lịch hẹn</button>
                     </div>
@@ -238,7 +239,10 @@
                     <div class="detail-info-group" id="detailIntakeSafetySection">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <div class="detail-section-title" style="margin-bottom: 0;">Biên bản tiếp nhận an toàn (Zero-Claim)</div>
-                            <button type="button" class="btn-text-action" id="btnEditIntakeSafety">Sửa biên bản tiếp nhận</button>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button type="button" class="btn-text-action" id="btnPrintIntakeWaiver" style="display: none;">In biên bản tiếp nhận</button>
+                                <button type="button" class="btn-text-action" id="btnEditIntakeSafety">Sửa biên bản tiếp nhận</button>
+                            </div>
                         </div>
                         <div id="detailIntakeEmptyNotice" style="font-size: 13px; color: var(--text-muted); padding: 6px 0; display: none;">
                             Ca dịch vụ chưa thực hiện tiếp nhận và kiểm tra an toàn tại quầy.
@@ -292,7 +296,8 @@
                     <div class="detail-info-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <div class="detail-section-title" style="margin-bottom: 0;">Bảng kê chi phí và Dịch vụ đi cùng</div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button type="button" class="btn-text-action text-success" id="btnSettleToPos" style="font-weight: 700; color: #165335; background: #DCEEE2; padding: 3px 8px; border-radius: 6px;">Thanh toán tại POS</button>
                                 <button type="button" class="btn-text-action" id="btnOpenAddAccompanyingServiceModal">+ Thêm dịch vụ đi cùng</button>
                                 <button type="button" class="btn-text-action" id="btnOpenAddSurchargeModal">+ Thêm phụ phí</button>
                             </div>
@@ -334,7 +339,10 @@
                     <div class="detail-info-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                             <div class="detail-section-title" style="margin-bottom: 0;">Nhật ký chăm sóc (Care-Log)</div>
-                            <button type="button" class="btn-text-action" id="btnShareCarelogLink">Chia sẻ cho khách</button>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button type="button" class="btn-text-action" id="btnNotifyCustomerPickup" style="color: #236B48; font-weight: 600;">Báo khách đón bé</button>
+                                <button type="button" class="btn-text-action" id="btnShareCarelogLink">Chia sẻ cho khách</button>
+                            </div>
                         </div>
                         <div class="carelog-hint-text">Cập nhật tiến trình và hình ảnh thực tế để chủ nuôi theo dõi theo thời gian thực.</div>
                         <div class="carelog-timeline-list" id="detailCarelogList">
@@ -677,6 +685,7 @@
                             <option value="Hoàng Nam">Hoàng Nam (Master Groomer)</option>
                             <option value="Hữu Phúc">Hữu Phúc (Tài xế / Chăm sóc)</option>
                         </select>
+                        <div id="newBookingStaffWorkloadHint" style="display: none; margin-top: 4px; font-size: 11.5px; padding: 4px 8px; border-radius: var(--admin-radius);"></div>
                     </div>
                     <div class="form-group-item">
                         <label class="form-label-clean">Cơ sở chi nhánh:</label>
@@ -950,6 +959,25 @@
                     <div class="form-group-item">
                         <label class="form-label-clean">Số tiền phụ thu (VNĐ):</label>
                         <input type="number" class="admin-input" id="surchargeAmountInput" placeholder="50000" min="0" step="1000" required>
+                    </div>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Trích tỷ lệ hoa hồng KTV (%):</label>
+                        <select class="admin-select" id="surchargeCommissionSelect">
+                            <option value="15" selected>15% (Mặc định)</option>
+                            <option value="10">10% (Gói hỗ trợ nhẹ)</option>
+                            <option value="20">20% (Ca phức tạp / Bé dữ)</option>
+                            <option value="30">30% (Chuyên sâu y tế / Cấp cứu)</option>
+                            <option value="0">0% (Không trích hoa hồng)</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Hoa hồng KTV thực nhận:</label>
+                        <div id="surchargeCommissionEarned" style="font-weight: 700; color: #236B48; height: 38px; display: flex; align-items: center; background: #EEF5F1; padding: 0 12px; border-radius: var(--admin-radius); font-size: 13.5px;">
+                            +7.500 đ
+                        </div>
                     </div>
                 </div>
 
@@ -1325,6 +1353,7 @@
                         <option value="Minh Tú">Minh Tú</option>
                         <option value="Bảo Châu">Bảo Châu</option>
                     </select>
+                    <div id="changeStaffWorkloadHint" style="display: none; margin-top: 6px; font-size: 12px; padding: 6px 10px; border-radius: var(--admin-radius);"></div>
                 </div>
 
                 <div class="form-group-item">
@@ -1517,8 +1546,248 @@
                 </div>
             </div>
             <div class="modal-footer-clean">
-                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissSopViewer">Đóng</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnEditSopFromViewer">Chỉnh sửa quy trình này</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnDismissSopViewer">Đóng</button>
+            </div>
+        </div>
+    </div>
+    <!-- ====================================================================
+         MODAL 12: IN BIÊN BẢN TIẾP NHẬN VÀ CAM KẾT AN TOÀN (INTAKE & WAIVER FORM)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalPrintIntakeWaiver">
+        <div class="admin-modal-card" style="width: 720px; max-width: 96vw;">
+            <div class="modal-header-clean no-print">
+                <div>
+                    <div class="modal-title-clean">Phiếu tiếp nhận dịch vụ và Cam kết an toàn</div>
+                    <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
+                        Mẫu in chuẩn đối chiếu Zero-Claim và điều khoản miễn trừ trách nhiệm PawPal
+                    </div>
+                </div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseIntakeWaiver">Đóng</button>
+            </div>
+            
+            <div class="modal-body-clean" style="max-height: 72vh; overflow-y: auto;">
+                <!-- VÙNG IN BIÊN BẢN CHUẨN A4/A5 (PRINTABLE RECEIPT CARD) -->
+                <div class="waiver-receipt-card" id="intakeWaiverPrintArea">
+                    <!-- HEADER PHIẾU IN -->
+                    <div class="waiver-print-header">
+                        <div class="waiver-brand-block">
+                            <div class="waiver-brand-name">PAWPAL PET CARE AND CLINIC</div>
+                            <div class="waiver-brand-sub" id="waiverBranchInfo">Hệ thống chăm sóc thú cưng chuẩn Nhật Bản • Chi nhánh Quận 1, TP. HCM</div>
+                            <div class="waiver-brand-sub">Hotline CSKH: 1900 8888 | Website: pawpal.vn</div>
+                        </div>
+                        <div class="waiver-meta-block">
+                            <div class="waiver-code" id="waiverBookingCode">BKG-1001</div>
+                            <div class="waiver-date" id="waiverPrintDate">Ngày: 25/06/2026 14:00</div>
+                        </div>
+                    </div>
+
+                    <div class="waiver-doc-title">BIÊN BẢN TIẾP NHẬN THÚ CƯNG VÀ CAM KẾT DỊCH VỤ</div>
+
+                    <!-- PHẦN 1: THÔNG TIN KHÁCH HÀNG VÀ THÚ CƯNG -->
+                    <div class="waiver-section-box">
+                        <div class="waiver-section-title">1. Thông tin Khách hàng và Thú cưng</div>
+                        <div class="waiver-grid-2col">
+                            <div><strong>Chủ nuôi:</strong> <span id="waiverCustName">Lê Lệ Quyên</span></div>
+                            <div><strong>Số điện thoại:</strong> <span id="waiverCustPhone">0901234567</span></div>
+                            <div><strong>Tên bé cưng:</strong> <span id="waiverPetName">Miu Con</span></div>
+                            <div><strong>Loài và Giống:</strong> <span id="waiverPetBreed">Mèo Anh Lông Ngắn</span></div>
+                            <div><strong>Cân nặng tiếp nhận:</strong> <span id="waiverPetWeight">4.2 kg</span></div>
+                            <div><strong>Tuổi / Giới tính:</strong> <span id="waiverPetAge">2 tuổi</span></div>
+                        </div>
+                    </div>
+
+                    <!-- PHẦN 2: KẾT QUẢ KIỂM TRA NGOẠI QUAN BAN ĐẦU (ZERO-CLAIM) -->
+                    <div class="waiver-section-box">
+                        <div class="waiver-section-title">2. Tình trạng ngoại quan khi tiếp nhận tại quầy (Zero-Claim)</div>
+                        <div class="waiver-grid-2col">
+                            <div><strong>Cân nặng thực tế:</strong> <span id="waiverActualWeight">4.2 kg</span></div>
+                            <div><strong>Đánh giá thể trọng:</strong> <span id="waiverWeightEval">Đúng khung giá chuẩn</span></div>
+                            <div><strong>Da và Lông:</strong> <span id="waiverSkinCoat">Sạch sẽ, không ve rận</span></div>
+                            <div><strong>Mắt, Mũi và Tai:</strong> <span id="waiverEyesEars">Bình thường</span></div>
+                            <div><strong>Vết thương / Sẹo cũ:</strong> <span id="waiverWounds">Không có vết thương cũ</span></div>
+                            <div><strong>Tâm lý / Tính khí:</strong> <span id="waiverTemperament">Ngoan hiền</span></div>
+                        </div>
+                        <div style="margin-top: 6px; font-size: 12px;">
+                            <strong>Tư trang gửi lại quầy:</strong> <span id="waiverBelongings">01 Dây dắt đỏ</span>
+                        </div>
+                    </div>
+
+                    <!-- PHẦN 3: GÓI DỊCH VỤ VÀ BẢNG KÊ CHI PHÍ TẠM TÍNH -->
+                    <div class="waiver-section-box">
+                        <div class="waiver-section-title">3. Gói dịch vụ đăng ký và Bảng kê tạm tính</div>
+                        <div class="waiver-grid-2col">
+                            <div><strong>Gói dịch vụ chính:</strong> <span id="waiverServiceName">Gói Tắm Vệ Sinh Cơ Bản</span></div>
+                            <div><strong>Giá gói chính:</strong> <span id="waiverPriceBase">250.000 đ</span></div>
+                            <div><strong>KTV tiếp nhận:</strong> <span id="waiverStaffName">Ngọc Anh</span></div>
+                            <div><strong>Thời lượng ước tính:</strong> <span id="waiverDuration">60 phút</span></div>
+                        </div>
+                        <div id="waiverExtraItemsBlock" style="margin-top: 6px; font-size: 12px; display: none;">
+                            <strong>Dịch vụ đi cùng và Phụ phí:</strong> <span id="waiverExtraItemsText">Không có</span>
+                        </div>
+                        <div style="margin-top: 6px; text-align: right; font-size: 13px; font-weight: 700; color: #236B48;">
+                            Tổng chi phí dự kiến: <span id="waiverPriceTotal">250.000 đ</span>
+                        </div>
+                    </div>
+
+                    <!-- PHẦN 4: ĐIỀU KHOẢN CAM KẾT VÀ MIỄN TRỪ TRÁCH NHIỆM (SOP PAWPAL) -->
+                    <div class="waiver-section-box waiver-terms-box">
+                        <div class="waiver-section-title">4. Điều khoản cam kết và Miễn trừ trách nhiệm</div>
+                        <ol class="waiver-terms-list">
+                            <li>Chủ nuôi cam kết các thông tin về tiền sử bệnh lý, dị ứng thuốc/hóa mỹ phẩm, co giật và tính khí của thú cưng đã được khai báo trung thực và đầy đủ cho nhân viên tiếp nhận.</li>
+                            <li>PawPal cam kết thực hiện quy trình chăm sóc chuyên nghiệp theo chuẩn SOP, tuyệt đối không sử dụng thuốc an thần hoặc bạo lực với thú cưng trong suốt quá trình phục vụ.</li>
+                            <li>Đối với các trường hợp thú cưng có bệnh nền tiềm ẩn (tim mạch, hen suyễn, sốc nhiệt do thời tiết), hai bên thỏa thuận xử lý y tế khẩn cấp theo hướng có lợi nhất cho thú cưng và PawPal được miễn trừ các trách nhiệm phát sinh ngoài ý muốn từ bệnh lý nền.</li>
+                            <li>Hai bên đã cùng kiểm tra ngoại quan bé và kiểm kê tư trang gửi lại quầy trước khi bắt đầu dịch vụ.</li>
+                        </ol>
+                    </div>
+
+                    <!-- PHẦN 5: CHỮ KÝ XÁC NHẬN HAI BÊN -->
+                    <div class="waiver-signature-row">
+                        <div class="waiver-sign-col">
+                            <div class="sign-title">ĐẠI DIỆN PAWPAL</div>
+                            <div class="sign-sub">(Ký và ghi rõ họ tên)</div>
+                            <div class="sign-space"></div>
+                            <div class="sign-name" id="waiverStaffSignName">KTV. Nguyễn Ngọc Anh</div>
+                        </div>
+                        <div class="waiver-sign-col">
+                            <div class="sign-title">KHÁCH HÀNG / CHỦ NUÔI</div>
+                            <div class="sign-sub">(Ký xác nhận đồng ý điều khoản)</div>
+                            <div class="sign-space"></div>
+                            <div class="sign-name" id="waiverCustSignName">Lê Lệ Quyên</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-clean no-print">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissIntakeWaiver">Đóng</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnPrintIntakeWaiverAction">In phiếu tiếp nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 13: BÁO KHÁCH ĐÓN BÉ QUA ZALO / SMS (PICKUP DISPATCH NOTIFICATION)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalNotifyPickup">
+        <div class="admin-modal-card" style="width: 580px; max-width: 95vw;">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Thông báo hoàn thành dịch vụ và Mời đón bé</div>
+                    <div id="notifyPickupMeta" style="font-size: 12.5px; color: var(--text-muted); margin-top: 3px;">
+                        Mã ca: BKG-1001 • Bé: Miu Con • Chủ nuôi: Lê Lệ Quyên (0901234567)
+                    </div>
+                </div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseNotifyPickup">Đóng</button>
+            </div>
+
+            <form id="formNotifyPickup" class="modal-body-clean" style="max-height: 70vh; overflow-y: auto;">
+                <!-- KÊNH GỬI THÔNG BÁO -->
+                <div class="form-group-item">
+                    <label class="form-label-clean">Kênh gửi thông báo:</label>
+                    <div class="channel-radio-group" style="display: flex; gap: 16px;">
+                        <label class="intake-check-item" style="cursor: pointer;">
+                            <input type="radio" name="pickupChannel" value="Zalo ZNS" checked>
+                            <strong>Zalo ZNS / OA</strong> (Khuyến nghị - Tiết kiệm và Tương tác cao)
+                        </label>
+                        <label class="intake-check-item" style="cursor: pointer;">
+                            <input type="radio" name="pickupChannel" value="SMS Brandname">
+                            <strong>SMS Brandname</strong>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- THÔNG TIN TÓM TẮT CA -->
+                <div class="notify-summary-banner" style="background: #F4FAF6; border: 1px solid #C3DEC7; border-radius: var(--admin-radius); padding: 10px 14px; font-size: 12.5px; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Gói dịch vụ: <strong id="notifyPickupServiceName">Gói Tắm Vệ Sinh Cơ Bản</strong></span>
+                        <span>Tổng chi phí: <strong id="notifyPickupTotalCost" style="color: #236B48;">250.000 đ</strong></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; color: var(--text-muted);">
+                        <span>KTV phụ trách: <strong id="notifyPickupStaffName">Ngọc Anh</strong></span>
+                        <span>Tư trang cần bàn giao: <strong id="notifyPickupBelongings">01 Dây dắt đỏ</strong></span>
+                    </div>
+                </div>
+
+                <!-- SOẠN THẢO VÀ XEM TRƯỚC NỘI DUNG TIN NHẮN -->
+                <div class="form-group-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <label class="form-label-clean" style="margin-bottom: 0;">Nội dung tin nhắn gửi khách hàng:</label>
+                        <button type="button" class="btn-text-action" id="btnResetNotifyTemplate" style="font-size: 11.5px;">Khôi phục mẫu chuẩn</button>
+                    </div>
+                    <textarea class="admin-input" id="notifyPickupMessageText" rows="6" style="height: auto; padding: 10px; font-size: 13px; line-height: 1.5; resize: vertical;"></textarea>
+                </div>
+
+                <!-- TÙY CHỌN KÈM THEO -->
+                <div class="form-group-item">
+                    <label class="intake-check-item" style="font-size: 12.5px;">
+                        <input type="checkbox" id="notifyIncludeCarelogLink" checked>
+                        Đính kèm đường dẫn xem ảnh thành phẩm và Nhật ký chăm sóc thực tế
+                    </label>
+                    <label class="intake-check-item" style="font-size: 12.5px; margin-top: 4px;">
+                        <input type="checkbox" id="notifyLogTimelineEvent" checked>
+                        Ghi nhận sự kiện thông báo này vào Timeline Care-Log
+                    </label>
+                </div>
+
+                <div class="modal-footer-clean">
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelNotifyPickup">Hủy bỏ</button>
+                    <button type="submit" class="admin-btn admin-btn-primary" id="btnSendNotifyPickup">Gửi thông báo ngay</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 14: LỊCH TRỰC VÀ ĐIỀU PHỐI KỸ THUẬT VIÊN (STAFF SHIFT & WORKLOAD DISPATCHER)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalStaffSchedule">
+        <div class="admin-modal-card" style="width: 820px; max-width: 96vw;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Lịch trực và điều phối kỹ thuật viên (25/06/2026)</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseStaffSchedule">Đóng</button>
+            </div>
+            
+            <div class="modal-body-clean" style="max-height: 72vh; overflow-y: auto;">
+                <!-- THANH TỔNG QUAN TẢI TOÀN HỆ THỐNG (THOÁNG ĐÃNG, TINH GỌN) -->
+                <div class="staff-schedule-summary-strip">
+                    <div class="schedule-summary-item">
+                        <span class="summary-item-label">Tổng KTV trực ca:</span>
+                        <span class="summary-item-val" id="summaryTotalStaffCount">4</span>
+                    </div>
+                    <div class="schedule-summary-item">
+                        <span class="summary-item-label">Tổng ca hôm nay:</span>
+                        <span class="summary-item-val" id="summaryTotalAssignedBookings">8 ca</span>
+                    </div>
+                    <div class="schedule-summary-item">
+                        <span class="summary-item-label">Công suất trung bình:</span>
+                        <span class="summary-item-val" id="summaryAvgCapacity" style="color: #165335;">50%</span>
+                    </div>
+                    <div class="schedule-summary-item">
+                        <span class="summary-item-label">Cảnh báo đầy tải:</span>
+                        <span class="summary-item-val" id="summaryOverloadedCount" style="color: #734718;">0</span>
+                    </div>
+                </div>
+
+                <!-- BỘ LỌC CA TRỰC THEO KHUNG GIỜ (TEXT-ONLY SUBTABS VỚI VẠCH ACTIVE DƯỚI CHỮ) -->
+                <div class="staff-shift-filter-row">
+                    <button type="button" class="staff-shift-tab-btn active" data-shift-filter="ALL">Tất cả ca trực</button>
+                    <span class="subtab-divider">|</span>
+                    <button type="button" class="staff-shift-tab-btn" data-shift-filter="MORNING">Ca sáng (08:00 - 12:00)</button>
+                    <span class="subtab-divider">|</span>
+                    <button type="button" class="staff-shift-tab-btn" data-shift-filter="AFTERNOON">Ca chiều (13:00 - 17:00)</button>
+                    <span class="subtab-divider">|</span>
+                    <button type="button" class="staff-shift-tab-btn" data-shift-filter="EVENING">Ca tối (17:00 - 21:00)</button>
+                </div>
+
+                <!-- LƯỚI DANH SÁCH THẺ KTV VÀ CÔNG SUẤT -->
+                <div class="staff-schedule-cards-grid" id="staffScheduleGrid">
+                    <!-- Nạp động từ services.js -->
+                </div>
+            </div>
+
+            <div class="modal-footer-clean" style="display: flex; justify-content: space-between; align-items: center;">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnNavToStaffModule">Quản lý nhân sự</button>
+                <button type="button" class="modal-btn-close-text" id="btnDismissStaffSchedule" style="font-size: 13.5px;">Đóng</button>
             </div>
         </div>
     </div>

@@ -45,6 +45,8 @@ Pawpal là chuỗi tổ hợp **Chăm sóc và Khách sạn Thú cưng Cao cấp
 
 ### 1.2. Quy tắc giao diện vàng (`AGENTS.md`)
 - **Bo góc cố định 9px**: Áp dụng chuẩn `--admin-radius: 9px;` cho toàn bộ Card, Button, Input, Modal, Popover, Badge.
+- **Avatar cá nhân luôn là hình tròn (`border-radius: 50%`)**: Toàn bộ avatar hiển thị hình đại diện hoặc chữ cái viết tắt của Kỹ thuật viên, Nhân viên, Khách hàng, Quản trị viên BẮT BUỘC dùng hình tròn hoàn hảo `border-radius: 50%;`.
+- **Triệt tiêu dòng phụ chú thích dài dòng (No Redundant Subtitles)**: Đưa mốc thời gian / ngày tháng trực tiếp lên dòng Tiêu đề chính (ví dụ: `Lịch trực và Điều phối Kỹ thuật viên (25/06/2026)`), không thêm dòng phụ chú thích mô tả chức năng rườm rà dưới tiêu đề.
 - **100% Text-Only bên ngoài Sidebar**: Chỉ có thanh menu Sidebar bên trái được hiển thị icon nét mảnh Lucide. Toàn bộ Header Bar, Toolbar, Bảng dữ liệu, Nút bấm và Modal là **100% chữ thuần** (sử dụng text `•••` cho nút tác vụ bảng, nút hành động dạng text pill).
 - **Văn phong chuẩn xác**: Tuyệt đối không dùng ký hiệu `&` để thay cho chữ "và" (luôn viết rõ: `Spa và Hotel`, `Hạng và Điểm`, `Sản phẩm và Kho`, `Lưu và Thoát`).
 - **Nền kính mờ bán trong suốt (Frosted Glass)**: Các khối thẻ chính dùng `--surface-white: rgba(255, 255, 255, 0.70);` kết hợp `backdrop-filter: blur(10px);`.
@@ -328,72 +330,81 @@ sequenceDiagram
        * Sử dụng ký tự điều hướng `<` và `>` (không dùng chữ Trước / Sau).
   2. *Hồ sơ 360° (`tab-profile`)*:
      - **Đường dẫn cấp con (Deep Breadcrumb)**: Tự động cập nhật `/ [Tên khách hàng]` với định dạng chữ nhỏ hơn (13px), màu xanh xô thơm (`#4F7A65`), độ đậm 500 trên Header Bar.
-     - **Thanh Thao tác Nhanh Một Chạm (One-Touch Action Bar)**:
-       * `Gọi điện`: Kích hoạt giao thức cuộc gọi trực tiếp `tel:[SĐT]`.
-       * `Zalo`: Mở cửa sổ chat Zalo trực tiếp với khách `https://zalo.me/[SĐT]`.
-       * `Đặt lịch`: Thiết lập sẵn Preset thông tin khách hàng và bé cưng, tự động chuyển sang phân hệ Dịch vụ.
-       * `Lên đơn`: Thiết lập sẵn Preset thông tin khách và địa chỉ mặc định, tự động chuyển sang phân hệ Bán hàng.
-       * `Khiếu nại`: Thiết lập sẵn Preset thông tin khách, tự động chuyển sang phân hệ Khiếu nại.
-     - **Dòng cảnh báo khẩn cấp (Emergency Alert Banner)**: Thuần chữ đỏ `#DC2626` không nền và không viền bao quanh khi khách hàng có sự cố đang xử lý.
-     - **5 Tabs Con Chi Tiết Khép Kín**:
-       * *Tab 1 - Cá nhân*: Hiển thị thông tin cá nhân, **Sổ đa địa chỉ nhận hàng (Multi-Address Book)** với 1 địa chỉ mặc định (viền xanh `#C3DEC7`, nền `#F4FAF6`) và các địa chỉ phụ (có nút xóa), ô ghi chú nội bộ groomer (lưu trữ độc lập) và nút gửi lại tin nhắn SMS tạo mật khẩu. Modal Chỉnh sửa hồ sơ (`#modalEditCustomer`) hỗ trợ cập nhật họ tên, SĐT, email, giới tính, ngày sinh, hạng thẻ và thêm/sửa/xóa địa chỉ nhận hàng.
-       * *Tab 2 - Thú cưng*: Danh sách các bé cưng thuộc sở hữu của khách hàng. Mỗi thẻ bé cưng có nút **`Xem hồ sơ bé`** (chuyển sang phân hệ Thú cưng), nút **`Sửa`** và nút **`Xóa`** (kèm Modal Sửa thông tin bé `#modalEditPet` và Modal Thêm bé mới `#modalAddPet`).
-       * *Tab 3 - Đơn hàng*: Danh sách lịch sử đơn hàng bán lẻ tự động đồng bộ từ phân hệ Bán hàng, nút xem chi tiết đơn hàng và huy hiệu số đếm màu đỏ (`.tab-badge-count`) khi có đơn đang xử lý.
-       * *Tab 4 - Lịch hẹn*: Lịch sử các ca dịch vụ Spa/Hotel kèm KTV thực hiện, nút xem nhật ký quy trình chăm sóc và huy hiệu số đếm màu đỏ khi có lịch hẹn chưa hoàn tất.
-       * *Tab 5 - Khiếu nại*: Danh sách các phản ánh sự cố dịch vụ hoặc đơn hàng kèm mức độ ưu tiên, nút **`Mở Ticket xử lý`** chuyển thẳng sang phân hệ Khiếu nại và huy hiệu số đếm màu đỏ khi có sự cố đang chờ giải quyết.
-  3. *Pawpoint (`tab-pawpoint`)*:
-     - **Bảng Quy chế 4 Cấp bậc Thành viên**: Thể hiện chi tiết điều kiện chi tiêu, tỷ lệ tích điểm và quyền lợi đặc quyền của 4 hạng (*Đồng, Bạc, Vàng, Kim Cương*).
-     - **Bảng Lịch sử Biến động Pawpoint Toàn Hệ Thống**:
-       * Ghi nhận đầy đủ: Mã giao dịch (`PWH-xxx`), Thời gian, Mã và Tên khách hàng, Số điện thoại, Loại biến động (Cộng điểm `ADD` / Trừ điểm `SUB`), Số điểm thay đổi, Số dư sau giao dịch, Lý do phát sinh.
-       * Bộ lọc loại giao dịch nhanh (`Tất cả`, `Cộng điểm`, `Trừ điểm`), thanh tìm kiếm thời gian thực và nút xuất file báo cáo CSV UTF-8 BOM.
-     - **Modal Điều chỉnh Pawpoint Thủ công (`#modalAdjustPoints`)**:
-       * Hỗ trợ lễ tân/CSKH thực hiện cộng hoặc trừ điểm cho khách hàng.
-       * *Gợi ý khách hàng thời gian thực (`#adjustPhoneCustomerHint`)*: Khi nhập số điện thoại, hệ thống tự động tìm và hiển thị ngay tên khách, hạng thẻ hiện tại và số dư điểm khả dụng.
-       * *5 Lý do điều chỉnh chuẩn nghiệp vụ*: Tích điểm ca dịch vụ tại quầy, Bồi hoàn sự cố CSKH, Thưởng chương trình tri ân sinh nhật, Thu hồi điểm do hủy dịch vụ / hoàn tiền, Điều chỉnh sai sót kỹ thuật.
-       * *Tự động Đánh giá và Thăng hạng Thành viên*: Khi cộng điểm làm số dư vượt ngưỡng (Bạc 500 pts, Vàng 2.000 pts, Kim Cương 5.000 pts), hệ thống tự động nâng hạng thẻ tương ứng.
-       * *Đồng bộ 2 chiều tức thì*: Cập nhật đồng thời vào Database Khách hàng Admin, Lịch sử Pawpoint và ví điểm của Người dùng trên Cổng cá nhân (`pawpal_current_user`).
+     - **Thanh Thao tác Nhanh Một Chạm (One-Touch Action Bar)**: Gọi điện, Nhắn Zalo, Đặt lịch hẹn mới, Lên đơn POS bán lẻ, Sửa hồ sơ, Điều chỉnh điểm và Khóa tài khoản.
+     - **Sổ Đa địa chỉ nhận hàng (Address Book)**:
+       * Quản lý nhiều địa chỉ nhận hàng cho cùng một chủ nuôi.
+       * Đánh dấu 1 "Địa chỉ mặc định" (thẻ viền xanh `#C3DEC7`, nền `#F4FAF6`) và các địa chỉ giao hàng phụ.
+       * Thao tác thêm/xóa/đặt mặc định trực quan không làm gián đoạn trải nghiệm.
+     - **Thẻ định danh và Thống kê chi tiêu trọn đời (LTV)**: Hạng thành viên, Tổng chi tiêu, Tổng đơn hàng, Số thú cưng đang nuôi, Tỷ lệ hủy lịch và Điểm tích lũy hiện có.
+     - **Hệ thống 4 Tab dữ liệu con trong Hồ sơ**:
+       * *Tổng quan và Thú cưng*: Danh sách thẻ bé cưng kèm nút chuyển nhanh sang hồ sơ thú cưng.
+       * *Lịch sử Dịch vụ*: Toàn bộ ca Spa, Khách sạn, Taxi đã từng đặt kèm trạng thái và chi phí.
+       * *Lịch sử Mua hàng*: Danh mục đơn hàng, phương thức thanh toán và tổng tiền.
+       * *Lịch sử Pawpoint*: Bảng kê chi tiết mọi biến động cộng/trừ điểm của khách hàng.
+  3. *Điểm Pawpoint (`tab-loyalty`)*:
+     - **3 Thẻ KPI tổng quan**: Tổng điểm đang lưu hành, Tổng điểm đã đổi thưởng và Số lượt khách hàng thăng hạng.
+     - **Modal Điều chỉnh điểm linh hoạt (`#modalAdjustPoints`)**:
+       * Hỗ trợ tìm kiếm nhanh theo SĐT hoặc mã khách hàng.
+       * Hỗ trợ 2 hình thức: `Cộng điểm (+)` (Thưởng sự kiện, Đền bù khiếu nại) và `Trừ điểm (-)` (Thu hồi lỗi, Đổi quà tại quầy).
+       * Tự động đồng bộ số dư điểm và hạng thành viên sang Cổng Người dùng (User Portal).
+     - **Bảng kê Lịch sử biến động điểm toàn hệ thống**: Phân trang chuẩn 10 dòng/trang, nhãn badge xanh/đỏ thể hiện trực quan chiều giao dịch (Cộng/Trừ).
 
 ---
 
-### 3.3. Phân hệ Thú cưng (Pets)
-*Quản trị danh tính, thể trạng và tập tính của từng bé cưng.*
+### 3.3. Phân hệ Thú cưng (Pets - Chuẩn 4 Subtabs)
+*Hồ sơ Sức khỏe Trọn đời, Nhật ký Chăm sóc Care-Log Thời gian thực, Lịch tiêm phòng và Tẩy giun tự động và Nhãn in Thẻ đeo cổ QR.*
 
-- **Mã định danh bé cưng (Pet ID)**: Mỗi bé cưng có 1 mã duy nhất (`PET-001`, `PET-002`...).
-- **Cân bé và Ma trận phân khúc giá**:
-  - Nhấp nút `Cân bé` trên menu tác vụ `•••` hoặc trong hồ sơ để nhập cân nặng mới.
-  - Hệ thống tự động tính phân khúc giá dịch vụ Spa/Grooming và Hotel tương ứng:
-    * *Dưới 5 kg*: Spa 180.000đ • Hotel 200.000đ/ngày.
-    * *5 - 10 kg*: Spa 250.000đ • Hotel 300.000đ/ngày.
-    * *10 - 20 kg*: Spa 350.000đ • Hotel 400.000đ/ngày.
-    * *Trên 20 kg*: Spa 500.000đ • Hotel 550.000đ/ngày.
-- **In thẻ đeo cổ (80mm)**:
-  - Lệnh in nhãn nhiệt quầy tiếp nhận: Mã bé, Tên bé, Tên chủ nuôi, SĐT khẩn cấp và cảnh báo tập tính (ví dụ: *Dữ khi sấy chân sau*).
-- **Lưu trữ và Khôi phục hồ sơ**:
-  - Bé cưng đã chuyển chủ hoặc không còn sử dụng dịch vụ có thể đưa vào trạng thái `Lưu trữ`. Khi khách đưa bé trở lại có thể bấm `Khôi phục hồ sơ`.
+- **Cấu trúc 4 Subtab chuyên sâu trên Header Bar**:
+  1. *Danh sách (`tab-pet-list`)*:
+     - **5 Thẻ thống kê KPI nhanh**: Tổng số bé, Đang dùng dịch vụ, Cần lưu ý đặc biệt, Đến hạn tiêm/tẩy giun và Hồ sơ đã lưu trữ.
+     - **Bộ lọc và Thanh tìm kiếm đa năng**: Lọc nhanh theo loài (Chó, Mèo, Khác), mức độ cảnh báo (Bình thường, Lưu ý, Cảnh báo đỏ).
+     - **Nút `+ Thêm bé mới` (`#btnOpenAddPetModal`)**: Form tiếp nhận thông tin thú cưng đầy đủ (Giống loài, giới tính, ngày sinh, cân nặng, tiền sử bệnh, tính khí, ảnh đại diện).
+     - **In Thẻ đeo cổ quầy tiếp nhận (`#btnPrintPetCollarTag` / `#modalPrintPetTag`)**: Xuất nhãn in nhiệt 80mm chuẩn quầy Grooming gồm Tên bé, Mã định danh, Tên chủ, SĐT khẩn cấp và cảnh báo an toàn.
+  2. *Hồ sơ 360° (`tab-pet-profile`)*:
+     - Thẻ thông tin thể trạng chi tiết: Cân nặng hiện tại, biểu đồ biến động cân nặng, tiền sử phẫu thuật, dị ứng thuốc và thực phẩm.
+     - Sổ tiêm chủng điện tử (Vaccination Passport): Danh sách mũi tiêm vắc xin, thuốc tẩy giun, phòng ngừa ve rận kèm ngày hẹn mũi kế tiếp.
+     - Thẻ phân loại tính khí và Lưu ý an toàn thao tác cho KTV Grooming.
+  3. *Nhật ký Care-Log (`tab-pet-carelog`)*:
+     - **Dòng thời gian chăm sóc thời gian thực (Care-Log Live Feed)**: Toàn bộ ảnh chụp trước/sau dịch vụ, nhật ký ăn uống, vận động trong thời gian lưu trú tại Khách sạn thú cưng.
+     - **Xem trước Cổng Khách hàng (`#btnPreviewCarelogCustomer` / `#modalPreviewCarelogCustomer`)**: Giúp quản trị viên kiểm tra trực quan giao diện nhật ký trước khi gửi link cho chủ nuôi.
+  4. *Nhắc lịch hẹn (`tab-pet-reminders`)*:
+     - Bảng tổng hợp các bé cưng đến hạn tiêm nhắc lại, tẩy giun hoặc bảo dưỡng lông định kỳ.
+     - Tích hợp nút gửi thông báo tự động (Zalo ZNS / SMS Brandname) nhắc nhở chủ nuôi 1-chạm.
 
 ---
 
-### 3.4. Phân hệ Dịch vụ (Services)
-*Điều phối lịch hẹn Spa và Grooming, Khách sạn thú cưng Pet Hotel 24/7 và đưa đón Pet Taxi tận nơi.*
+### 3.4. Phân hệ Dịch vụ (Services - Chuẩn 4 Subtabs)
+*Điều phối lịch hẹn Spa và Grooming, Khách sạn thú cưng Pet Hotel 24/7, đưa đón Pet Taxi tận nơi và Quản lý Lịch trực - Công suất Kỹ thuật viên.*
 
 - **Cấu trúc 4 Subtab chuyên sâu trên Header Bar**:
   1. *Lịch hẹn (`tab-service-bookings`)*:
      - **6 Thẻ thống kê KPI nhanh**: Tổng lịch hôm nay, Chờ xác nhận, Sắp tới trong 60 phút, Đang thực hiện, Hoàn thành, Yêu cầu đổi và Hủy.
      - **Thanh cảnh báo lịch hẹn sắp tới trong 60 phút (`#upcomingAlertBar`)**: Tự động lọc và hiển thị danh sách các ca chuẩn bị diễn ra giúp KTV chủ động đón bé.
+     - **Lịch trực KTV và Điều phối ca trực quan (`#btnOpenStaffScheduleModal` / `#modalStaffSchedule`)**:
+       * Theo dõi công suất tải ca toàn hệ thống (*Tổng KTV trực ca, Tổng ca dịch vụ, Công suất trung bình %, Cảnh báo KTV quá tải >=4 ca*).
+       * Bộ lọc ca trực theo 3 khung giờ: Ca Sáng (08:00 - 12:00), Ca Chiều (13:00 - 17:00), Ca Tối (17:00 - 21:00) và Tất cả.
+       * Thẻ trực quan từng KTV (*Avatar, Chức danh, Thanh tiến độ công suất, Badge trạng thái Khả dụng / Đang nhận ca / Tải cao / Đầy ca*).
+       * Danh sách ca phụ trách hôm nay kèm link `Chi tiết` 1-chạm mở trực tiếp hồ sơ ca và nút chuyển nhanh sang phân hệ Nhân sự.
      - **Bảng dữ liệu điều phối đa dịch vụ**:
        * *Pet Hotel*: Hiển thị khoảng thời gian lưu trú (`01/07 ➔ 04/07`), badge số đêm (`3 đêm`), hạng phòng (`DLX-04`) và khẩu phần dinh dưỡng.
        * *Pet Taxi*: Hiển thị lộ trình đưa đón (`45 Lê Duẩn ➔ Q.1`), khoảng cách km, loại chuyến (`2 chiều khứ hồi`) và tài xế chuyên trách.
        * *Spa và Grooming*: Hiển thị yêu cầu tạo hình (`Mặt tròn Boo`), cấp độ thợ (`Senior / Master Groomer`) và vạch đỏ cảnh báo an toàn da lông / tính khí.
-     - **Modal Tạo lịch hẹn tại quầy / Hotline (`#modalCreateBooking`)**: Tự động chuyển đổi các trường nhập liệu tương ứng theo phân nhóm (Hotel / Taxi / Spa).
+     - **Modal Tạo lịch hẹn tại quầy / Hotline (`#modalCreateBooking`)**: Tự động chuyển đổi các trường nhập liệu tương ứng theo phân nhóm (Hotel / Taxi / Spa) kèm **Cảnh báo công suất tải KTV trực quan** khi chọn nhân sự phụ trách.
   2. *Hồ sơ ca 360° (`tab-service-detail`)*:
      - **Thanh tiêu đề và Nút thao tác một chạm**: Xác nhận lịch, Tiếp nhận bé, Hoàn thành dịch vụ, Đổi KTV, Tạo khiếu nại.
+     - **Điều phối Kỹ thuật viên và Cảnh báo quá tải (`#modalChangeStaff`)**: Tự động tính toán số ca KTV đã nhận hôm nay và hiển thị cảnh báo quá tải / gợi ý KTV còn trống ngay khi chọn trên dropdown.
      - **Dòng cảnh báo an toàn thú cưng (Safety Alert Banner)**: Thuần chữ đỏ cảnh báo dị ứng hương liệu, vết thương cũ hoặc tính khí nhút nhát/dữ dằn.
-     - **Khối thông tin đặc thù theo dịch vụ (`#detailSpecialServiceFields`)**: Thể hiện đầy đủ phòng chuồng & camera IP (Hotel), lộ trình & SĐT tài xế (Taxi), kiểu dáng tạo hình (Spa).
-     - **Biên bản tiếp nhận an toàn Zero-Claim (`#detailIntakeSafetySection`)**: Đối chiếu cân nặng thực tế tại quầy, checklist 4 vùng ngoại quan (Da lông, Mắt mũi tai, Vết xước cũ, Tính khí), tư trang gửi lại và ảnh bằng chứng tiếp nhận.
-     - **Bảng kê chi phí 2 tầng Add-ons & Dịch vụ đi cùng (`#detailCostBase`, `#detailAccompanyingServicesList`, `#detailSurchargeBreakdownList`)**:
+     - **Khối thông tin đặc thù theo dịch vụ (`#detailSpecialServiceFields`)**: Thể hiện đầy đủ phòng chuồng và camera IP (Hotel), lộ trình và SĐT tài xế (Taxi), kiểu dáng tạo hình (Spa).
+     - **Biên bản tiếp nhận an toàn Zero-Claim (`#detailIntakeSafetySection`)**:
+       * Đối chiếu cân nặng thực tế tại quầy, checklist 4 vùng ngoại quan (Da lông, Mắt mũi tai, Vết xước cũ, Tính khí), tư trang gửi lại và ảnh bằng chứng tiếp nhận.
+       * **In biên bản tiếp nhận (`#btnPrintIntakeWaiver` / `#modalPrintIntakeWaiver`)**: Xuất phiếu in tiếp nhận khổ A4/A5 chuyên nghiệp gồm toàn bộ thông tin ngoại quan, điều khoản cam kết và miễn trừ trách nhiệm SOP PawPal và 2 ô chữ ký (KTV tiếp nhận và Khách hàng cam kết).
+     - **Bảng kê chi phí 2 tầng Add-ons, Dịch vụ đi cùng và Phụ phí có Hoa hồng KTV (`#modalAddSurcharge`)**:
        * *Tầng 1 (Pre-booked Web Add-ons / Dịch vụ đi cùng)*: Gói dịch vụ ghép thêm do khách chọn trước.
-       * *Tầng 2 (On-site Surcharges Desk)*: Phụ phí phát sinh tại quầy có ghi nhận lý do, hình ảnh bằng chứng và phương thức xác nhận với khách hàng (Zalo / Gọi điện / Trực tiếp).
-     - **Nhật ký chăm sóc thời gian thực (Care-Log Timeline)**: KTV cập nhật tiến trình từng bước, đính kèm ảnh thực tế, nút chia sẻ liên kết công khai cho chủ nuôi và Photo Lightbox xem ảnh to.
+       * *Tầng 2 (On-site Surcharges Desk)*: Phụ phí phát sinh tại quầy có ghi nhận lý do, hình ảnh bằng chứng, phương thức xác nhận với khách hàng (Zalo / Gọi điện / Trực tiếp), **tỷ lệ hoa hồng KTV trích từ phụ phí (0%, 10%, 15%, 20%, 30%)** và hiển thị số tiền hoa hồng KTV thực nhận.
+       * **1-Click "Thanh toán tại POS" (`#btnSettleToPos`)**: Tự động đóng gói toàn bộ chi phí ca dịch vụ chuyển sang phân hệ Bán hàng (POS), mở form tạo đơn với banner liên kết dịch vụ, hỗ trợ gộp mua thêm hàng hóa và tự động cập nhật trạng thái đã thanh toán cho ca dịch vụ khi hoàn tất.
+     - **Nhật ký chăm sóc thời gian thực (Care-Log Timeline)**:
+       * KTV cập nhật tiến trình từng bước, đính kèm ảnh thực tế, nút chia sẻ liên kết công khai cho chủ nuôi và Photo Lightbox xem ảnh to.
+       * **Báo khách đón bé qua Zalo / SMS (`#btnNotifyCustomerPickup` / `#modalNotifyPickup`)**: Soạn và gửi tin nhắn tự động (Zalo ZNS / SMS Brandname) báo hoàn tất dịch vụ, tổng chi phí, tư trang và link Care-Log kèm ghi nhận tự động vào Timeline.
   3. *Danh mục và Bảng giá (`tab-service-catalog`)*:
      - Quản lý danh mục 3 phân nhóm: Spa và Grooming, Pet Hotel, Pet Taxi.
      - Ma trận bảng giá theo 4 phân khúc cân nặng (<5kg, 5-10kg, 10-20kg, >20kg).
