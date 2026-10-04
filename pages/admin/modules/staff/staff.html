@@ -1127,4 +1127,23 @@
         <button type="button" class="action-menu-item" id="menuActionViewAssess">Xem lịch sử đánh giá</button>
         <button type="button" class="action-menu-item danger-item" id="menuActionDeleteStaff">Xóa nhân viên</button>
     </div>
+
+    <!-- MODAL: XÁC NHẬN THAO TÁC NHÂN SỰ (CUSTOM CONFIRM DIALOG) -->
+    <div class="admin-modal-overlay" id="modalConfirmStaffAction">
+        <div class="admin-modal-card" style="width: 480px; max-width: 92vw;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean" id="confirmStaffActionTitle">Xác nhận thao tác</div>
+                <button type="button" class="modal-btn-close-text" id="btnCloseConfirmStaffModal">Đóng</button>
+            </div>
+            <div class="modal-body-clean" style="padding-top: 10px; padding-bottom: 20px;">
+                <div id="confirmStaffActionMessage" style="font-size: 13.5px; color: var(--text-main); line-height: 1.6;">
+                    Bạn có chắc chắn muốn thực hiện thao tác này không?
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelStaffConfirm">Hủy bỏ</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnAcceptStaffConfirm">Đồng ý</button>
+            </div>
+        </div>
+    </div>
 </div>

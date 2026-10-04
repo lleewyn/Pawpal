@@ -13,6 +13,126 @@
 (function initChatbotModule() {
     console.log('Khởi tạo Module Chatbot và Trực chat CSKH...');
 
+    // Helper: Hiển thị Toast Notification nhẹ nhàng chuẩn AGENTS.md
+    function showToast(message, type = 'info') {
+        let container = document.getElementById('adminToastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'adminToastContainer';
+            container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        const bgColors = {
+            success: '#DCEEE2',
+            warning: '#F5E8D3',
+            danger: '#F7DCDC',
+            info: '#DCEAF2'
+        };
+        const textColors = {
+            success: '#165335',
+            warning: '#734718',
+            danger: '#8F2424',
+            info: '#20495E'
+        };
+
+        const bg = bgColors[type] || bgColors.info;
+        const color = textColors[type] || textColors.info;
+
+        toast.style.cssText = `
+            background: ${bg};
+            color: ${color};
+            padding: 10px 16px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            pointer-events: auto;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            opacity: 0;
+            transform: translateY(-8px);
+            max-width: 380px;
+            line-height: 1.45;
+            white-space: pre-line;
+        `;
+        toast.textContent = message;
+
+        container.appendChild(toast);
+        requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+        });
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-8px)';
+            setTimeout(() => toast.remove(), 250);
+        }, 3500);
+    }
+
+    // Helper: Custom Confirm Modal cho phân hệ Chatbot
+    function showChatbotConfirmModal({ title = 'Xác nhận thao tác', message, onConfirm, onCancel, confirmText = 'Đồng ý', isDanger = false }) {
+        const modal = document.getElementById('modalConfirmChatbotAction');
+        const titleEl = document.getElementById('confirmChatbotActionTitle');
+        const msgEl = document.getElementById('confirmChatbotActionMessage');
+        const btnAccept = document.getElementById('btnAcceptChatbotConfirm');
+        const btnCancel = document.getElementById('btnCancelChatbotConfirm');
+        const btnClose = document.getElementById('btnCloseConfirmChatbotModal');
+
+        if (!modal) {
+            if (window.confirm(message)) {
+                if (typeof onConfirm === 'function') onConfirm();
+            } else {
+                if (typeof onCancel === 'function') onCancel();
+            }
+            return;
+        }
+
+        if (titleEl) titleEl.textContent = title;
+        if (msgEl) msgEl.textContent = message;
+        if (btnAccept) {
+            btnAccept.textContent = confirmText;
+            if (isDanger) {
+                btnAccept.style.backgroundColor = '#DC2626';
+                btnAccept.style.color = '#FFFFFF';
+            } else {
+                btnAccept.style.backgroundColor = '';
+                btnAccept.style.color = '';
+            }
+        }
+
+        const cleanup = () => {
+            modal.style.display = 'none';
+            if (btnAccept) btnAccept.onclick = null;
+            if (btnCancel) btnCancel.onclick = null;
+            if (btnClose) btnClose.onclick = null;
+        };
+
+        if (btnAccept) {
+            btnAccept.onclick = () => {
+                cleanup();
+                if (typeof onConfirm === 'function') onConfirm();
+            };
+        }
+
+        if (btnCancel) {
+            btnCancel.onclick = () => {
+                cleanup();
+                if (typeof onCancel === 'function') onCancel();
+            };
+        }
+
+        if (btnClose) {
+            btnClose.onclick = () => {
+                cleanup();
+                if (typeof onCancel === 'function') onCancel();
+            };
+        }
+
+        modal.style.display = 'flex';
+    }
+
     // -------------------------------------------------------------
     // 1. DỮ LIỆU MẪU MÔ PHỎNG (MOCK DATA)
     // -------------------------------------------------------------
@@ -461,23 +581,30 @@
         });
 
         clearBtn?.addEventListener('click', () => {
-            if (confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử trò chuyện nội bộ với AI?')) {
-                messagesArea.innerHTML = `
-                    <div class="copilot-msg msg-ai">
-                        <div class="copilot-msg-header">
-                            <span class="copilot-sender-name">PawPal Copilot (Nội bộ)</span>
-                            <span class="copilot-msg-time">Vừa xong</span>
+            showChatbotConfirmModal({
+                title: 'Làm mới hội thoại AI',
+                message: 'Bạn có chắc chắn muốn xóa toàn bộ lịch sử trò chuyện nội bộ với AI?',
+                confirmText: 'Làm mới',
+                isDanger: true,
+                onConfirm: () => {
+                    messagesArea.innerHTML = `
+                        <div class="copilot-msg msg-ai">
+                            <div class="copilot-msg-header">
+                                <span class="copilot-sender-name">PawPal Copilot (Nội bộ)</span>
+                                <span class="copilot-msg-time">Vừa xong</span>
+                            </div>
+                            <div class="copilot-msg-bubble">
+                                Đã làm mới phiên hội thoại. Tôi có thể hỗ trợ gì cho bạn ngay lúc này?
+                            </div>
                         </div>
-                        <div class="copilot-msg-bubble">
-                            Đã làm mới phiên hội thoại. Tôi có thể hỗ trợ gì cho bạn ngay lúc này?
-                        </div>
-                    </div>
-                `;
-            }
+                    `;
+                    showToast('Đã làm mới phiên hội thoại AI Copilot!', 'success');
+                }
+            });
         });
 
         syncRagBtn?.addEventListener('click', () => {
-            alert('Đã đồng bộ thành công các tài liệu tri thức RAG mới nhất từ Supabase Vector Store!');
+            showToast('Đã đồng bộ thành công các tài liệu tri thức RAG mới nhất từ Supabase Vector Store!', 'success');
         });
     }
 
@@ -1065,7 +1192,7 @@
             if (!text) return;
 
             if (!currentConversation.isHandover) {
-                alert('Vui lòng bấm nút "Tiếp nhận ca chat" trước khi gửi tin nhắn cho khách hàng.');
+                showToast('Vui lòng bấm nút "Tiếp nhận ca chat" trước khi gửi tin nhắn cho khách hàng.', 'warning');
                 return;
             }
 
@@ -1104,7 +1231,7 @@
             if (!currentConversation) return;
             const note = document.getElementById('chatInternalNoteInput')?.value || '';
             currentConversation.internalNotes = note;
-            alert('Đã lưu ghi chú nội bộ an toàn cho ca trò chuyện này!');
+            showToast('Đã lưu ghi chú nội bộ an toàn cho ca trò chuyện này!', 'success');
         });
 
         // --- MODAL 1: TẶNG ĐIỂM PAWPOINT ---

@@ -1,0 +1,578 @@
+STT	Thực thể	Mô tả thực thể	Thuộc tính	Mô tả
+1	customer	Lưu thông tin tài khoản đăng nhập và trạng thái sử dụng hệ thống của khách hàng	id	Mã định danh khách hàng
+			email	Email đăng ký tài khoản
+			password_hash	Mật khẩu đã mã hóa
+			account_status	Trạng thái tài khoản
+			is_temporary	Trạng thái tài khoản khách hàng 
+			phone_main	Số điện thoại đăng ký tài khoản
+			registered_at	Thời điểm đăng ký tài khoản
+			note	ghi chú đặc điểm khách hàng chỉ nội bộ thấy
+			created_at	Thời điểm tạo dữ liệu
+			updated_at	Thời điểm cập nhật dữ liệu
+2	customer_profile	Lưu thông tin hồ sơ cá nhân của khách hàng	id	Mã định danh hồ sơ
+			customer_id	Khách hàng sở hữu hồ sơ
+			full_name	Họ và tên khách hàng
+			date_of_birth	Ngày sinh
+			gender	Giới tính
+			created_at	Thời điểm tạo hồ sơ
+			updated_at	Thời điểm cập nhật hồ sơ
+3	customer_membership	Lưu thông tin hạng thành viên và điểm thưởng của khách hàng	id	Mã định danh thông tin thành viên
+			customer_id	Khách hàng sở hữu thông tin thành viên
+			membership_tier_id	Hạng thành viên hiện tại
+			total_paw_points	Tổng số Paw Points hiện có
+			created_at	Thời điểm tạo dữ liệu
+			updated_at	Thời điểm cập nhật dữ liệu
+4	customer_address	Lưu nhiều địa chỉ giao hàng, đón trả thú cưng hoặc địa chỉ đặt hộ của khách hàng	id	Mã định danh địa chỉ
+			customer_id	Khách hàng sở hữu địa chỉ
+			receiver_name	Tên người nhận
+				
+				
+			receiver_phone	Số điện thoại người nhận
+			province	Tỉnh hoặc thành phố
+			street_address	Địa chỉ chi tiết
+			postal_code	Mã bưu chính nếu có
+			is_default	Xác định địa chỉ mặc định
+			created_at	Thời điểm tạo địa chỉ
+				
+			updated_at	Thời điểm cập nhật địa chỉ
+				
+5	customer_phone	Lưu nhiều số điện thoại liên hệ của khách hàng, người thân hoặc người nhận thay	id	Mã định danh số điện thoại
+			customer_id	Khách hàng sở hữu số điện thoại
+			phone_number	Số điện thoại
+			is_verified	Trạng thái xác thực OTP
+				
+			created_at	Thời điểm thêm số điện thoại
+			updated_at	Thời điểm cập nhật số điện thoại
+6	pet_profile	Lưu hồ sơ định danh Pet ID, tên thú cưng, giống loài, giới tính, ngày sinh và trạng thái hoạt động	id	Mã định danh thú cưng
+			customer_id	Chủ sở hữu thú cưng
+			pet_code	Mã Pet ID hiển thị trong hệ thống
+				
+				
+			pet_name	Tên thú cưng
+			avatar_url	Ảnh đại diện thú cưng
+			species	Loài thú cưng
+			breed	Giống thú cưng
+			gender	Giới tính
+				
+				
+			date_of_birth	Ngày sinh
+			color	Màu lông
+			routine	Sở thích và thói quen sinh hoạt
+			weight	Cân nặng tại thời điểm cập nhật
+			vaccination_history	Thông tin tiêm phòng
+			allergy	Thông tin dị ứng
+			status	Trạng thái hoạt động của hồ sơ thú cưng
+			created_at	Thời điểm tạo hồ sơ
+			updated_at	Thời điểm cập nhật hồ sơ
+7	service	Lưu danh mục các dịch vụ thuộc các nhóm Grooming & Spa, Pet Hotel và Pet Taxi	id	Mã định danh dịch vụ
+				
+			hotel_room_type	Loại phòng (Luxury, Standard,..)
+			service_code	Mã dịch vụ
+			service_name	Tên dịch vụ
+			service_category	Nhóm dịch vụ gồm Grooming & Spa, Pet Hotel hoặc Pet Taxi
+			description	Mô tả dịch vụ
+			estimated_duration	Thời gian thực hiện dự kiến
+			thumbnail_url	Hình ảnh đại diện dịch vụ
+			status	Trạng thái hoạt động
+			rating	Điểm đánh giá
+			review_count	Số lượt xem nhận xét
+			benefits	Công dụng
+				
+			checklist	Danh sách việc làm
+			amenities	Tiện nghi sẵn có
+			groomer_level	Mức độ tay nghề của người thực hiện dịch vụ
+			pet_type	Loại thú cưng đáp ứng được
+			images	Hình ảnh minh họa
+			created_at	Thời điểm tạo dịch vụ
+			updated_at	Thời điểm cập nhật dịch vụ
+8	service_price_matrix	Lưu bảng giá của từng dịch vụ theo loài thú cưng, cân nặng hoặc điều kiện áp dụng	id	Mã định danh bảng giá
+			service_id	Dịch vụ áp dụng
+			weight_from	Cân nặng tối thiểu
+			weight_to	Cân nặng tối đa
+			unit_price	Giá dịch vụ
+			effective_from	Ngày bắt đầu áp dụng
+			effective_to	Ngày kết thúc áp dụng nếu có
+			status	Trạng thái áp dụng
+			created_at	Thời điểm tạo bảng giá
+			updated_at	Thời điểm cập nhật bảng giá
+9	appointment	Lưu phiếu đặt lịch dịch vụ của khách hàng cho từng thú cưng	id	Mã định danh lịch hẹn
+			appointment_code	Mã lịch hẹn hiển thị
+			customer_id	Khách hàng đặt lịch
+			pet_id	Thú cưng sử dụng dịch vụ
+			service_id	Dịch vụ đã đặt
+			staff_id	Nhân viên được phân công thực hiện dịch vụ
+			support_ticket_id	Phiếu yêu cầu liên quan
+			appointment_date	Ngày sử dụng dịch vụ
+			appointment_time	Giờ hẹn
+			Check_in_time	Giờ check-in
+			Check_out_time	Giờ check-out
+			note	Ghi chú của khách hàng
+			change_count	Số lần thay đổi thông tin lịch hẹn
+			appointment_status	Trạng thái lịch hẹn
+			payment_status	Trạng thái thanh toán
+			total_price	Tổng thành tiền
+			created_at	Thời điểm tạo lịch hẹn
+			updated_at	Thời điểm cập nhật lịch hẹn
+10	care_log	Lưu toàn bộ timeline chăm sóc trong quá trình thực hiện dịch vụ	id	Mã định danh Care Log
+			appointment_id	Lịch hẹn liên quan
+			pet_id	Thú cưng được chăm sóc
+			care_action_id	Hoạt động chăm sóc liên quan
+			description	Nội dung chăm sóc
+			health_status	Tình trạng sức khỏe tại thời điểm cập nhật
+			recorded_at	Thời điểm ghi nhận
+			created_at	Thời điểm tạo dữ liệu
+			updated_at	Thời điểm cập nhật dữ liệu
+11	care_log_media	Lưu ảnh và video minh chứng được cập nhật vào Care Log	id	Mã định danh tệp phương tiện
+			care_log_id	Care Log liên quan
+			media_type	Loại tệp gồm hình ảnh hoặc video
+			media_url	Đường dẫn lưu trữ tệp
+			file_name	Tên tệp
+			file_size	Kích thước tệp
+			staff_id	Nhân viên thực hiện cập nhật
+			uploaded_at	Thời điểm tải tệp lên
+			created_at	Thời điểm tạo dữ liệu
+12	care_action	Lưu danh mục các mốc chăm sóc như Tắm, Sấy, Cho ăn, Nghỉ ngơi	id	Mã định danh hoạt động chăm sóc
+			service_id	Dịch vụ tương ứng
+			action_name	Tên hoạt động chăm sóc
+			service_category	Nhóm dịch vụ áp dụng gồm Grooming & Spa, Pet Hotel hoặc Pet Taxi
+			display_order	Thứ tự hiển thị
+			estimated_duration	Thời gian thực hiện dự kiến
+			is_active	Trạng thái sử dụng
+			created_at	Thời điểm tạo dữ liệu
+			updated_at	Thời điểm cập nhật dữ liệu
+13	cart	Lưu giỏ hàng hiện tại của khách trước khi tạo đơn hàng	id	Mã định danh giỏ hàng
+			customer_id	Khách hàng sở hữu giỏ hàng
+			cart_status	Trạng thái giỏ hàng
+			total_quantity	Tổng số lượng sản phẩm trong giỏ
+			total_amount	Tổng giá trị tạm tính của giỏ hàng
+			created_at	Thời điểm tạo giỏ hàng
+			updated_at	Thời điểm cập nhật giỏ hàng
+14	cart_item	Lưu danh sách sản phẩm được thêm vào giỏ hàng	id	Mã định danh sản phẩm trong giỏ hàng
+			cart_id	Giỏ hàng chứa sản phẩm
+			product_variant_id	Sản phẩm được thêm vào
+			quantity	Số lượng sản phẩm
+			unit_price	Đơn giá tại thời điểm thêm vào giỏ
+			subtotal	Thành tiền của sản phẩm trong giỏ
+			created_at	Thời điểm thêm sản phẩm
+			updated_at	Thời điểm cập nhật sản phẩm
+15	wishlist	Lưu danh sách sản phẩm yêu thích của khách hàng	id	Mã định danh danh sách yêu thích
+			customer_id	Khách hàng sở hữu danh sách
+			created_at	Thời điểm tạo danh sách
+			updated_at	Thời điểm cập nhật danh sách
+16	wishlist_item	Lưu các sản phẩm cụ thể nằm trong Wishlist	id	Mã định danh sản phẩm yêu thích
+			wishlist_id	Danh sách yêu thích chứa sản phẩm
+			product_id	Sản phẩm yêu thích
+			service_id	Dịch vụ yêu thích
+			added_at	Thời điểm thêm vào danh sách
+17	sales_order	Lưu đơn hàng mua sắm trên website hoặc tại cửa hàng	id	Mã định danh đơn hàng
+			order_code	Mã đơn hàng
+			customer_id	Khách hàng đặt hàng
+			shipping_address_id	Địa chỉ giao hàng
+			delivery_id	Hình thức giao hàng
+			shipping_provider_id	Đơn vị vận chuyển
+			tracking_code	Mã vận đơn của đơn hàng.
+			shipped_at	Thời điểm bàn giao cho đơn vị vận chuyển.
+			delivered_at	Thời điểm giao thành công.
+			order_status	Trạng thái xử lý đơn hàng
+			payment_status	Trạng thái thanh toán
+			total_amount	Tổng số tiền thanh toán
+			note	Ghi chú của khách hàng
+			created_at	Thời điểm tạo đơn hàng
+			updated_at	Thời điểm cập nhật đơn hàng
+18	sales_order_detail	Lưu chi tiết sản phẩm, số lượng và đơn giá trong từng đơn hàng	id	Mã định danh chi tiết đơn hàng
+			order_id	Đơn hàng chứa sản phẩm
+			product_variant_id	Sản phẩm được đặt mua
+			quantity	Số lượng sản phẩm
+			unit_price	Đơn giá sản phẩm
+			discount_amount	Giá trị giảm giá của sản phẩm
+			subtotal	Thành tiền của sản phẩm
+19	payment	Lưu lịch sử thanh toán, phương thức thanh toán và trạng thái giao dịch	id	Mã định danh giao dịch thanh toán
+			payment_code	Mã giao dịch thanh toán
+			customer_id	Khách hàng thực hiện thanh toán
+			appointment_id	Lịch hẹn được thanh toán nếu có
+			order_id	Đơn hàng được thanh toán nếu có
+			voucher_id	Voucher được áp dụng nếu có
+			payment_method_id	Phương thức thanh toán
+			parent_payment_id	Giao dịch gốc nếu đây là hoàn tiền
+			transaction_type	PAYMENT, REFUND
+			payment_type	Loại thanh toán gồm mua sắm hoặc đặt lịch
+			amount	Số tiền thanh toán
+			paw_points_used	Số Paw Points đã sử dụng
+			paw_points_earned	Số Paw Points được cộng sau giao dịch
+			transaction_status	Trạng thái giao dịch
+			created_at	Thời điểm tạo giao dịch
+			updated_at	Thời điểm cập nhật trạng thái
+20	payment_method_config	Lưu thông tin các loại phương thức thanh toán khả dụng	id	Mã phương thức thanh toán
+			name	Tên phương thức
+			short_name	Tên viết tắt
+			description	Mô tả phương thức
+			icon	Nhãn minh họa
+			fee	Phí thanh toán
+			available	Có sẵn dàng phục vụ thanh toán
+			requires_info	Thông tin yêu cầu
+			redirect_url	Đường dẫn kết nối cổng thanh toán
+			bank_info	Thông tin ngân hàng
+			created_at	Thời điểm tạo giao dịch
+21	membership_tier	Lưu cấu hình các hạng thành viên như Bạc, Vàng, Kim Cương	id	Mã định danh hạng thành viên
+			tier_name	Tên hạng thành viên
+			minimum_expenditure	Số tiền chi tiêu tối thiểu để đạt hạng
+			discount_percent	Phần trăm ưu đãi của hạng thành viên
+			description	Mô tả quyền lợi của hạng thành viên
+			is_active	Trạng thái áp dụng
+			created_at	Thời điểm tạo dữ liệu
+			updated_at	Thời điểm cập nhật dữ liệu
+22	reward_rule	Lưu quy tắc cộng hoặc trừ Paw Points theo từng sự kiện như đăng ký, đặt lịch, mua hàng, đánh giá hoặc chương trình khuyến mãi	id	Mã định danh quy tắc
+			rule_name	Tên quy tắc
+			reward_type	Loại phần thưởng như Paw Points hoặc Voucher
+			trigger_event	Loại nghiệp vụ phát sinh điểm như đăng ký, mua sắm, đặt lịch, đánh giá hoặc chỉnh sửa thủ công
+			reward_value	Giá trị điểm thưởng hoặc voucher
+			description	Mô tả quy tắc
+			is_active	Trạng thái áp dụng
+			created_at	Thời điểm tạo dữ liệu
+			updated_at	Thời điểm cập nhật dữ liệu
+23	paw_point_transaction	Lưu toàn bộ lịch sử cộng, trừ và quy đổi Paw Point	id	Mã định danh giao dịch điểm thưởng
+			customer_id	Khách hàng phát sinh giao dịch
+			payment_id	Giao dịch thanh toán liên quan nếu có
+			review_id	Đánh giá liên quan nếu có
+			reward_rule_id	Quy tắc cộng hoặc trừ điểm được áp dụng
+			points	Số Paw Points cộng hoặc trừ
+			balance_after	Tổng số Paw Points sau giao dịch
+			description	Nội dung giao dịch điểm thưởng
+			created_at	Thời điểm phát sinh giao dịch
+24	voucher	Lưu danh mục voucher có thể phát hành hoặc quy đổi bằng điểm thưởng	id	Mã định danh voucher
+			voucher_code	Mã voucher
+			voucher_name	Tên voucher
+			discount_value	Giá trị giảm giá
+			minimum_order_amount	Giá trị đơn hàng tối thiểu để áp dụng
+			required_points	Số Paw Points cần để đổi voucher
+			start_date	Ngày bắt đầu hiệu lực
+			end_date	Ngày hết hiệu lực
+			is_active	Trạng thái sử dụng
+			type	Loại hình khuyến mãi
+			description	Mô tả nội dung khuyến mãi
+			applicable_for	Đối tượng dịch vụ hoặc sản phẩm được áp dụng
+			usage_count	Số lượng đã dùng
+			max_usage	Lượt dùng tối đa
+			created_at	Thời điểm tạo dữ liệu
+			updated_at	Thời điểm cập nhật dữ liệu
+25	customer_voucher	Lưu danh sách voucher mà khách hàng đang sở hữu hoặc đã sử dụng	id	Mã định danh voucher của khách hàng
+			customer_id	Khách hàng sở hữu voucher
+			voucher_id	Voucher được cấp
+			acquired_method	Hình thức nhận voucher như Đổi điểm hoặc Khuyến mãi
+			voucher_status	Trạng thái voucher
+			acquired_at	Thời điểm nhận voucher
+			used_at	Thời điểm sử dụng voucher
+			expired_at	Thời điểm hết hiệu lực
+26	promotion	Lưu các chương trình khuyến mãi đang áp dụng	id	Mã định danh chương trình
+			promotion_name	Tên chương trình
+			description	Mô tả chương trình
+			discount_type	Loại ưu đãi
+			discount_value	Giá trị ưu đãi
+			start_date	Ngày bắt đầu
+			end_date	Ngày kết thúc
+			minimum_order_value	Giá trị đơn hàng tối thiểu
+			status	Trạng thái chương trình
+			created_at	Thời điểm tạo
+			updated_at	Thời điểm cập nhật
+27	support_ticket	Lưu các yêu cầu hỗ trợ từ khách hàng	id	PK
+			ticket_code	Mã TK-000123
+			customer_id	FK khách hàng
+			order_id	FK đơn hàng (nullable)
+			appointment_id	FK lịch hẹn (nullable)
+			channel	CHATBOT, WEB, PHONE, FACEBOOK, ZALO, EMAIL
+			category	ORDER, APPOINTMENT, PAYMENT, PRODUCT, PET_CARE...
+			subject	Tiêu đề
+			description	Nội dung ban đầu
+			priority	LOW, MEDIUM, HIGH, URGENT
+			status	OPEN, PROCESSING, WAITING_CUSTOMER, RESOLVED, CLOSED
+			assigned_staff_id	Nhân viên CSKH phụ trách
+			first_response_at	Thời điểm phản hồi đầu tiên
+			closed_at	Thời điểm đóng
+			rating	Điểm hài lòng
+			rating_comment	Nhận xét sau xử lý
+			created_at	Tạo ticket
+			updated_at	Cập nhật
+28	support_ticket_message 	Lưu trữ nội sung trao đổi hỗ trợ khách hàng	id	Mã định danh đoạn hội thoại
+			ticket_id	Yêu cầu hỗ trợ liên quan
+			sender_type	Đối tượng gửi tin nhắn
+			agent_name	Tên người liên quan
+			content	Nội dung tin nhắn
+			attachment_url	Ảnh/video đính kèm
+			is_internal	Ghi chú nội bộ hay gửi khách
+			created_at	Thời gian gửi
+29	promotion_product	Lưu danh sách sản phẩm được áp dụng trong chương trình khuyến mãi	id	Mã định danh bản ghi áp dụng khuyến mãi
+			promotion_id	Chương trình khuyến mãi được áp dụng
+			product_variant_id	Sản phẩm được áp dụng khuyến mãi
+30	promotion_service	Lưu danh sách dịch vụ được áp dụng trong chương trình khuyến mãi	id	Mã định danh bản ghi áp dụng khuyến mãi
+			promotion_id	Chương trình khuyến mãi được áp dụng
+			service_id	Dịch vụ được áp dụng khuyến mãi
+31	staff	Lưu thông tin tài khoản nhân viên, lễ tân, chuyên môn, CSKH và quản lý	id	Mã định danh nhân viên
+			full_name	Họ và tên nhân viên
+			phone_number	Số điện thoại liên hệ
+			role	Vai trò gồm chủ admin, lễ tân, nhân viên chăm sóc
+			specialization	Chuyên môn hoặc bộ phận làm việc
+			hire_date	Ngày bắt đầu làm việc
+			created_at	Thời điểm tạo dữ liệu
+			updated_at	Thời điểm cập nhật dữ liệu
+32	staff_schedule	Lưu lịch làm việc, ca trực và thời gian hoạt động của nhân viên	id	Mã định danh lịch làm việc
+			staff_id	Nhân viên được phân công
+			work_date	Ngày làm việc
+			shift	Ca làm việc sáng, trưa, chiều, tối
+			start_time	Thời gian bắt đầu ca
+			end_time	Thời gian kết thúc ca
+			availability_status	Trạng thái ca làm việc
+			reason	Lý do không đi làm
+			created_at	Thời điểm tạo lịch
+			updated_at	Thời điểm cập nhật lịch
+33	product	Lưu danh mục sản phẩm kinh doanh tại cửa hàng và website	id	Mã định danh sản phẩm
+			category_id	Nhóm sản phẩm
+			product_name	Tên sản phẩm
+			brand_name	Tên thương hiệu
+			unit	Đơn vị tính
+			target_pet	Loài động vật sử dụng
+			min_price	Giá bán tối thiểu
+			description	Mô tả thành phần nguyên liệu
+			slug	Đường dẫn trang chi tiết sản phẩm
+			status	Trạng thái kinh doanh
+			created_at	Thời điểm tạo sản phẩm
+			updated_at	Thời điểm cập nhật sản phẩm
+34	product_category	Lưu danh mục nhóm sản phẩm	id	Mã định danh nhóm sản phẩm
+			category_name	Tên nhóm sản phẩm
+			description	Mô tả nhóm sản phẩm
+			status	Trạng thái sử dụng
+			created_at	Thời điểm tạo nhóm
+			updated_at	Thời điểm cập nhật nhóm
+35	inventory	Lưu số lượng tồn kho hiện tại của từng sản phẩm	id	Mã định danh tồn kho
+			product_variant_id	Sản phẩm được quản lý tồn kho
+			quantity_in_stock	Số lượng tồn hiện tại
+			minimum_stock	Mức tồn tối thiểu
+			quantity_reserved	Số lượng sản phẩm đang bị giữ
+			last_updated_at	Thời điểm cập nhật tồn kho gần nhất
+36	inventory_transaction	Lưu lịch sử nhập kho, xuất kho và điều chỉnh tồn kho	id	Mã định danh giao dịch kho
+			purchase_order_id	Phiếu nhập liên quan nếu có
+			product_variant_id	Sản phẩm được ghi nhận thay đổi tồn kho
+			transaction_type	Loại thay đổi như nhập kho, xuất kho
+			quantity	Số lượng thay đổi
+			stock_before	Tồn kho trước khi cập nhật
+			stock_after	Tồn kho sau khi cập nhật
+			note	Ghi chú điều chỉnh
+			staff_id	Nhân viên thực hiện
+			created_at	Thời điểm phát sinh giao dịch
+37	supplier	Lưu thông tin nhà cung cấp sản phẩm	id	Mã định danh nhà cung cấp
+			supplier_name	Tên nhà cung cấp
+			contact_person	Người liên hệ
+			phone_number	Số điện thoại
+			email	Email liên hệ
+			address	Địa chỉ
+			status	Trạng thái hợp tác
+			created_at	Thời điểm tạo
+			updated_at	Thời điểm cập nhật
+38	purchase_order	Lưu phiếu nhập hàng từ nhà cung cấp	id	Mã định danh phiếu nhập
+			supplier_id	Nhà cung cấp
+			order_number	Mã phiếu nhập
+			order_date	Ngày lập phiếu
+			expected_date	Ngày dự kiến nhận hàng
+			total_amount	Tổng giá trị phiếu nhập
+			order_status	Trạng thái phiếu nhập
+			note	Ghi chú
+			created_at	Thời điểm tạo
+			updated_at	Thời điểm cập nhật
+39	purchase_order_detail	Lưu chi tiết từng sản phẩm trong phiếu nhập hàng	id	Mã định danh chi tiết phiếu nhập
+			purchase_order_id	Phiếu nhập liên quan
+			product_variant_id	Sản phẩm nhập
+			quantity	Số lượng nhập
+			unit_price	Đơn giá nhập
+			subtotal	Thành tiền
+			received_quantity	Số lượng đã nhận thực tế
+40	blog_post	Lưu bài viết chia sẻ kiến thức và tin tức trên website	id	Mã định danh bài viết
+			category_id	Danh mục bài viết
+			title	Tiêu đề bài viết
+			slug	Đường dẫn thân thiện của bài viết
+			summary	Tóm tắt nội dung
+			content	Nội dung chi tiết
+			thumbnail_url	Ảnh đại diện bài viết
+			author_id	Nhân viên tạo bài viết
+			publish_at	Thời điểm xuất bản
+			status	Trạng thái bài viết
+			view_count	Số lượt xem
+			created_at	Thời điểm tạo
+			updated_at	Thời điểm cập nhật
+41	blog_category	Lưu danh mục bài viết	id	Mã định danh danh mục
+			category_name	Tên danh mục
+			description	Mô tả danh mục
+			display_order	Thứ tự hiển thị
+			status	Trạng thái sử dụng
+			created_at	Thời điểm tạo
+			updated_at	Thời điểm cập nhật
+42	review_response	Lưu phản hồi của Admin đối với đánh giá của khách hàng	id	Mã định danh phản hồi
+			review_id	Đánh giá được phản hồi
+			staff_id	Nhân viên phản hồi
+			response_content	Nội dung phản hồi
+			created_at	Thời điểm phản hồi
+			updated_at	Thời điểm chỉnh sửa
+43	audit_log	Lưu lịch sử thao tác quan trọng của nhân viên nhằm phục vụ kiểm tra và truy vết hệ thống	id	Mã định danh nhật ký
+			staff_id	Nhân viên thực hiện thao tác
+			action	Hành động thực hiện
+			entity_name	Tên thực thể bị tác động
+			description	Mô tả thao tác
+			created_at	Thời điểm phát sinh thao tác
+44	review	Lưu đánh giá của khách hàng cho sản phẩm hoặc dịch vụ	id	Mã định danh đánh giá
+			customer_id	Khách hàng thực hiện đánh giá
+			appointment_id	Lịch hẹn liên quan nếu đánh giá dịch vụ
+			sales_order_id	Đơn hàng liên quan nếu đánh giá sản phẩm
+			product_id	Sản phẩm liên quan
+			service_id	Dịch vụ liên quan
+			review_type	Loại đánh giá liên quan đến dịch vụ hoặc sản phẩm
+			rating	Điểm đánh giá từ 1 đến 5 sao
+			review_content	Nội dung đánh giá
+			image_urls	Danh sách hình ảnh minh họa
+			review_status	Trạng thái hiển thị hoặc kiểm duyệt
+			created_at	Thời điểm tạo đánh giá
+			updated_at	Thời điểm cập nhật đánh giá
+45	return_request	Lưu yêu cầu đổi trả sản phẩm và thông tin hậu mãi	id	Mã định danh yêu cầu đổi trả
+			sales_order_id	Đơn hàng yêu cầu đổi trả
+			customer_id	Khách hàng gửi yêu cầu
+			refund_payment_id	Giao dịch hoàn tiền thực tế, giúp đối chiếu chứng từ thanh toán.
+			resolution_type	Hình thức xử lý cuối cùng (đổi/trả sản phẩm, hoàn tiền, từ chối).
+			refund_amount	Số tiền hoàn lại cho khách (một phần hoặc toàn bộ)
+			resolved_by	Nhân viên/Admin chịu trách nhiệm chốt kết quả xử lý yêu cầu đổi/trả.
+			reason	Lý do đổi trả
+			return_type	Hình thức đổi trả
+			description	Nội dung chi tiết
+			evidence_images	Hình ảnh minh chứng
+			request_status	Trạng thái xử lý
+			created_at	Thời điểm tạo yêu cầu
+			updated_at	Thời điểm cập nhật yêu cầu
+46	return_request_detail	Lưu chi tiết sản phẩm được đổi trả	id	Mã định danh chi tiết yêu cầu đổi trả
+			return_request_id	Đơn hàng được đổi trả
+			product_variant_id	Sản phẩm được đổi trả
+			quantity	Số lượng đổi trả
+			unit_price	Đơn giá tiền mua sản phẩm
+47	notification	Lưu thông báo gửi đến khách hàng từ hệ thống	id	Mã định danh thông báo
+			customer_id	Khách hàng nhận thông báo
+			notification_type	Loại thông báo
+			title	Tiêu đề thông báo
+			content	Nội dung thông báo
+			related_entity_type	Loại đối tượng liên quan như đặt lịch dịch vụ, mua sắm, thanh toán
+			is_read	Trạng thái đã đọc
+			sent_at	Thời điểm gửi thông báo
+			read_at	Thời điểm khách hàng đọc
+48	delivery_option_config	Lưu thông tin các hình thức giao hàng	id	Mã hình thức giao hàng
+			name	Tên hình thức giao hàng
+			description	Mô tả hình thức giao hàng
+			fee	Phí giao hàng
+			estimated_days	Thòi gian vận chuyển
+			icon	Nhãn minh họa
+			available	Có sẵn sàng phục vụ
+			created_at	Thời điểm khởi tạo
+	shipping_provider	Lưu danh sách các đơn vị vận chuyển mà PawPal sử dụng để giao đơn hàng, giúp Admin quản lý đối tác giao hàng và liên kết với từng đơn hàng.	id	Mã định danh đơn vị vận chuyển.
+			provider_name	Tên đơn vị vận chuyển (GHN, GHTK, J&T Express, Viettel Post...).
+			provider_code	Mã viết tắt của đơn vị vận chuyển.
+			logo_url	Logo hiển thị trên giao diện.
+			contact_phone	Số hotline của đơn vị vận chuyển.
+			tracking_url	Mẫu đường dẫn tra cứu vận đơn.
+			status	Trạng thái hoạt động
+			created_at	Thời điểm tạo dữ liệu.
+			updated_at	Thời điểm cập nhật dữ liệu.
+	product_variant_media		id	PK
+			product_variant_id	FK → product_variant
+			image_url	URL ảnh
+			display_order	Thứ tự hiển thị
+			is_thumbnail	Ảnh đại diện
+			created_at	Thời điểm tạo dữ liệu.
+			updated_at	Thời điểm cập nhật dữ liệu.
+STT	THỰC THỂ	MÔ TẢ	THUỘC TÍNH	MÔ TẢ
+1	service_addon	Lưu danh sách các dịch vụ bổ sung đi kèm dịch vụ chính (Spa, Hotel, Taxi), bao gồm giá, thời lượng và trạng thái áp dụng.	id	Mã định danh dịch vụ thêm
+			service_id	Mã dịch vụ chính đi kèm (Spa/Hotel/Taxi)
+			addon_name	Tên dịch vụ thêm (cắt móng, nhuộm lông,...)
+			description	Mô tả chi tiết dịch vụ
+			price	Giá tiền dịch vụ thêm
+			estimated_duration	Thời lượng thực hiện dự kiến (phút)
+			is_required	Đánh dấu bắt buộc chọn hay không (true/false)
+			status	Trạng thái dịch vụ (đang bán/tạm ngưng)
+			created_at	Ngày giờ tạo
+			updated_at	Ngày giờ cập nhật mới nhất
+2	hotel_room_type	Lưu thông tin các phòng Pet Hotel như số phòng, loại phòng, sức chứa, giá theo ngày và trạng thái sử dụng	id	Mã định danh phòng/loại phòng
+			room_number	Số phòng hoặc mã phòng cụ thể
+			room_type	Loại phòng (VIP, Standard, Deluxe,...)
+			capacity	Sức chứa tối đa (số lượng thú cưng)
+			daily_price	Giá thuê phòng theo ngày
+			description	Mô tả tiện nghi trong phòng
+			status	Trạng thái phòng (trống/có khách/bảo trì)
+			created_at	Ngày giờ tạo
+			updated_at	Ngày giờ cập nhật mới nhất
+3	taxi_price_rule	Lưu các quy tắc tính giá dịch vụ Pet Taxi theo khoảng cách, cân nặng và thời gian hiệu lực của bảng giá.	id	Mã định danh quy tắc tính giá
+			distance_from	Khoảng cách bắt đầu (km)
+			distance_to	Khoảng cách kết thúc (km)
+			weight_from	Cân nặng thú cưng tối thiểu (kg)
+			weight_to	Cân nặng thú cưng tối đa (kg)
+			base_price	Giá cước cơ bản
+			surcharge	Phụ phí cộng thêm
+			effective_from	Ngày giờ bắt đầu áp dụng bảng giá
+			effective_to	Ngày giờ kết thúc/hết hạn áp dụng
+			status	Trạng thái quy tắc (đang áp dụng/hết hạn)
+			created_at	Ngày giờ tạo
+			updated_at	Ngày giờ cập nhật mới nhất
+4	product_variant	Lưu từng phiên bản cụ thể của một sản phẩm theo màu sắc, kích thước, kiểu dáng, SKU và giá bán riêng.	id	Mã định danh biến thể sản phẩm
+			product_id	Mã sản phẩm gốc
+			color_id	Mã màu sắc áp dụng (liên kết variant_color)
+			size_id	Mã kích thước áp dụng (liên kết variant_size)
+			flavor_id	Mã hương vị áp dụng (liên kết variant_flavor)
+			sku_variant	Mã quản lý kho riêng cho từng biến thể (SKU)
+			cost_price	Giá vốn nhập vào
+			sale_price	Giá bán thực tế
+			compare_at_price	Giá gốc / Giá gạch đi để hiển thị giảm giá
+			image_url	Link ảnh riêng của biến thể
+			weight	Trọng lượng sản phẩm (dùng tính phí vận chuyển)
+			barcode	Mã vạch barcode/EAN
+			status	Trạng thái kinh doanh (đang bán/ngừng bán)
+			created_at	Ngày giờ tạo
+			updated_at	Ngày giờ cập nhật mới nhất
+5	variant_size	Lưu định dạng kích thước sản phẩm	id	Mã định danh kích thước
+			size_name	Tên kích thước (S, M, L, XL,...)
+			display_order	Thứ tự hiển thị trên giao diện
+			is_active	Bật/Tắt kích thước (true/false)
+			created_at	Ngày giờ tạo
+			updated_at	Ngày giờ cập nhật mới nhất
+6	variant_color	Lưu định dạng màu sắc sản phẩm	id	Mã định danh màu sắc
+			color_name	Tên màu (Đỏ, Xanh, Vàng,...)
+			hex_code	Mã màu Hex hiển thị trên web (vd: #FF0000)
+			display_order	Thứ tự hiển thị trên giao diện
+			is_active	Bật/Tắt màu sắc (true/false)
+			created_at	Ngày giờ tạo
+			updated_at	Ngày giờ cập nhật mới nhất
+7	stock_reservation	Lưu thông tin giữ trước số lượng tồn kho của từng biến thể sản phẩm trong quá trình khách hàng Checkout.	id	Mã định danh lượt giữ kho
+			product_variant_id	Mã biến thể sản phẩm được giữ
+			customer_id	Mã khách hàng thực hiện giữ hàng
+			cart_id	Mã giỏ hàng liên quan
+			quantity	Số lượng sản phẩm giữ trước trong kho
+			reserved_at	Ngày giờ bắt đầu giữ
+			expires_at	Ngày giờ hết hạn giữ (tự động nhả tồn kho)
+			status	Trạng thái giữ hàng (chờ thanh toán/đã hoàn tất/đã hết hạn)
+			created_at	Ngày giờ tạo
+			updated_at	Ngày giờ cập nhật mới nhất
+8	banner	Lưu thông tin Banner quảng bá hiển thị trên website, gồm hình ảnh, tiêu đề, liên kết và thời gian hiển thị.	id	Mã định danh banner
+			image_url	Đường dẫn hình ảnh banner
+			title	Tiêu đề hiển thị trên banner
+			description	Đoạn mô tả ngắn/khuyến mãi trên banner
+			link	Đường dẫn chuyển hướng khi bấm vào banner
+			button_text	Chữ hiển thị trên nút bấm (CTA)
+			display_order	Thứ tự ưu tiên hiển thị banner
+			start_date	Ngày giờ bắt đầu hiển thị
+			end_date	Ngày giờ kết thúc/hết hạn hiển thị
+			is_active	Bật/Tắt hiển thị banner (true/false)
+			created_at	Ngày giờ tạo
+			updated_at	Ngày giờ cập nhật mới nhất
+9	pawpal_setting	Lưu các cấu hình chung của website như hotline, popup, top-bar và các thiết lập hệ thống khác.	id	Mã định danh cấu hình
+			setting_key	Mã/Khóa định danh thiết lập (vd: site_hotline, top_bar_text)
+			setting_value	Giá trị của thiết lập tương ứng
+			setting_type	Kiểu dữ liệu của giá trị (string, boolean, json, number)
+			description	Giải thích tác dụng của cấu hình này
+			created_at	Ngày giờ tạo
+			updated_at	Ngày giờ cập nhật mới nhất
+10	variant_flavor	Lưu danh mục hương vị hoặc mùi hương dùng chung cho các biến thể sản phẩm.	id	Mã định danh hương vị
+			flavor_name	Tên hương vị/mùi hương (Gà, Bò, Cá hồi,...)
+			display_order	Thứ tự hiển thị trên giao diện
+			is_active	Bật/Tắt hương vị (true/false)
+			created_at	Ngày giờ tạo
+			updated_at	Ngày giờ cập nhật mới nhất

@@ -23,6 +23,127 @@
             `;
         }
 
+        // Helper: Hiển thị Toast Notification nhẹ nhàng chuẩn AGENTS.md
+        function showToast(message, type = 'info') {
+            let container = document.getElementById('adminToastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'adminToastContainer';
+                container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            const bgColors = {
+                success: '#DCEEE2',
+                warning: '#F5E8D3',
+                danger: '#F7DCDC',
+                info: '#DCEAF2'
+            };
+            const textColors = {
+                success: '#165335',
+                warning: '#734718',
+                danger: '#8F2424',
+                info: '#20495E'
+            };
+
+            const bg = bgColors[type] || bgColors.info;
+            const color = textColors[type] || textColors.info;
+
+            toast.style.cssText = `
+                background: ${bg};
+                color: ${color};
+                padding: 10px 16px;
+                border-radius: 9px;
+                font-size: 13px;
+                font-weight: 500;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                pointer-events: auto;
+                opacity: 0;
+                transform: translateY(-8px);
+                transition: opacity 0.2s ease, transform 0.2s ease;
+                max-width: 380px;
+                line-height: 1.4;
+            `;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateY(0)';
+            });
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+                setTimeout(() => toast.remove(), 200);
+            }, 3000);
+        }
+
+        // Helper: Custom Confirm Modal cho phân hệ Thú cưng
+        function showPetConfirmModal({ title = 'Xác nhận thao tác', message, onConfirm, onCancel, confirmText = 'Đồng ý', isDanger = false }) {
+            const modal = document.getElementById('modalConfirmPetAction');
+            const titleEl = document.getElementById('confirmPetActionTitle');
+            const msgEl = document.getElementById('confirmPetActionMessage');
+            const btnAccept = document.getElementById('btnAcceptPetConfirm');
+            const btnCancel = document.getElementById('btnCancelPetConfirm');
+            const btnClose = document.getElementById('btnCloseConfirmPetModal');
+
+            if (!modal) {
+                if (window.confirm(message)) {
+                    if (typeof onConfirm === 'function') onConfirm();
+                } else {
+                    if (typeof onCancel === 'function') onCancel();
+                }
+                return;
+            }
+
+            if (titleEl) titleEl.textContent = title;
+            if (msgEl) msgEl.textContent = message;
+            if (btnAccept) {
+                btnAccept.textContent = confirmText;
+                if (isDanger) {
+                    btnAccept.style.backgroundColor = '#DC2626';
+                    btnAccept.style.color = '#FFFFFF';
+                } else {
+                    btnAccept.style.backgroundColor = '';
+                    btnAccept.style.color = '';
+                }
+            }
+
+            const cleanup = () => {
+                modal.classList.remove('open');
+                modal.classList.remove('show');
+                if (btnAccept) btnAccept.onclick = null;
+                if (btnCancel) btnCancel.onclick = null;
+                if (btnClose) btnClose.onclick = null;
+            };
+
+            if (btnAccept) {
+                btnAccept.onclick = () => {
+                    cleanup();
+                    if (typeof onConfirm === 'function') onConfirm();
+                };
+            }
+
+            if (btnCancel) {
+                btnCancel.onclick = () => {
+                    cleanup();
+                    if (typeof onCancel === 'function') onCancel();
+                };
+            }
+
+            if (btnClose) {
+                btnClose.onclick = () => {
+                    cleanup();
+                    if (typeof onCancel === 'function') onCancel();
+                };
+            }
+
+            modal.classList.add('open');
+            modal.classList.add('show');
+        }
+
         // ====================================================================
         // DATA STORE MÔ PHỎNG CHI TIẾT TỪNG BÉ CƯNG (ĐẦY ĐỦ 4 TAB CON)
         // ====================================================================
@@ -329,18 +450,150 @@
             }
         };
 
-        // Khởi tạo petsData từ sessionStorage hoặc fallback initialPetsData
+        // Khởi tạo petsData từ sessionStorage / localStorage hoặc fallback initialPetsData
         let petsData = {};
         try {
-            const savedPets = sessionStorage.getItem('pawpal_admin_pets_data');
+            const savedPets = sessionStorage.getItem('pawpal_admin_pets_data') || localStorage.getItem('pawpal_admin_pets_data');
             petsData = savedPets ? JSON.parse(savedPets) : JSON.parse(JSON.stringify(initialPetsData));
         } catch (e) {
             petsData = JSON.parse(JSON.stringify(initialPetsData));
         }
 
+        // Tự động đồng bộ các bé từ localStorage.pawpal_pets (User Portal) nếu có
+        try {
+            const rawUserPets = localStorage.getItem('pawpal_pets');
+            if (rawUserPets) {
+                const userPets = JSON.parse(rawUserPets);
+                if (Array.isArray(userPets)) {
+                    const speciesNameMap = { 'dog': 'Chó', 'cat': 'Mèo', 'rabbit': 'Thỏ', 'other': 'Khác' };
+                    userPets.forEach(p => {
+                        const code = p.id || p.code;
+                        if (!code) return;
+                        if (!petsData[code]) {
+                            const spec = p.species || 'dog';
+                            const br = p.breed || '';
+                            const specBreed = `${speciesNameMap[spec] || 'Chó'} ${br}`.trim();
+                            const wNum = typeof p.weight === 'number' ? p.weight : (parseFloat(p.weight) || 0);
+                            const allg = p.allergies || p.allergy || '';
+                            const isArch = Boolean(p.isArchived);
+                            petsData[code] = {
+                                id: code,
+                                code: code,
+                                name: p.name || '',
+                                species: spec,
+                                speciesBreed: specBreed,
+                                breed: br || 'Chưa cập nhật',
+                                gender: (p.gender === 'female' || p.gender === 'Cái') ? 'Cái' : 'Đực',
+                                weight: `${wNum} kg`,
+                                weightNum: wNum,
+                                dob: p.dobRaw || p.dob || 'Chưa cập nhật',
+                                dobRaw: p.dobRaw || p.dob || '',
+                                color: p.color || 'Chưa cập nhật',
+                                allergy: allg || 'Không',
+                                allergies: allg,
+                                notes: p.notes || '',
+                                alert: allg && allg !== 'Không' ? `Cảnh báo dị ứng: ${allg}` : '',
+                                ownerName: p.ownerName || 'Khách hàng',
+                                ownerPhone: p.ownerPhone || '',
+                                custId: p.custId || p.userId || 'CUST-001',
+                                avatar: p.avatar || (spec === 'cat' ? '/assets/images/publics/catcute5.jpg' : '/assets/images/publics/dogcute3.jpg'),
+                                status: isArch ? 'Lưu trữ' : (p.status || 'Đang nuôi'),
+                                vaccinated: p.vaccinated != null ? p.vaccinated : false,
+                                isHotel: false,
+                                isArchived: isArch,
+                                weightHistory: wNum > 0 ? [{ date: new Date().toLocaleDateString('vi-VN'), weight: `${wNum} kg`, tier: wNum < 5 ? 'Dưới 5kg (180.000đ)' : (wNum <= 10 ? 'Phân khúc 5 - 10kg (250.000đ)' : 'Phân khúc trên 10kg (350.000đ)'), by: 'Quầy tiếp nhận' }] : [],
+                                vaccines: p.vaccinated ? [{ title: 'Sổ theo dõi tiêm phòng định kỳ', status: 'Đã tiêm đủ', date: new Date().toLocaleDateString('vi-VN'), nextDate: 'Hằng năm', place: 'Sổ tiêm đối chiếu' }] : [],
+                                carelogs: [],
+                                history: []
+                            };
+                        }
+                    });
+                }
+            }
+        } catch (e) {}
+
         function persistPetsData() {
             try {
                 sessionStorage.setItem('pawpal_admin_pets_data', JSON.stringify(petsData));
+                localStorage.setItem('pawpal_admin_pets_data', JSON.stringify(petsData));
+                
+                // Đồng bộ 2 chiều sang localStorage.pawpal_pets cho User Portal
+                try {
+                    let userPets = [];
+                    const rawUserPets = localStorage.getItem('pawpal_pets');
+                    if (rawUserPets) {
+                        try { userPets = JSON.parse(rawUserPets); } catch (e) {}
+                    }
+                    if (!Array.isArray(userPets)) userPets = [];
+                    
+                    Object.values(petsData).forEach(adminPet => {
+                        const petCode = adminPet.code || adminPet.id;
+                        if (!petCode) return;
+                        const idx = userPets.findIndex(p => (p.id === petCode || p.code === petCode));
+                        const userPetItem = {
+                            id: petCode,
+                            userId: adminPet.custId || 'USER-001',
+                            custId: adminPet.custId || 'CUST-001',
+                            name: adminPet.name,
+                            species: adminPet.species || 'dog',
+                            breed: adminPet.breed || '',
+                            gender: (adminPet.gender === 'Cái' || adminPet.gender === 'female') ? 'female' : 'male',
+                            weight: adminPet.weightNum || parseFloat(adminPet.weight) || 0,
+                            dob: adminPet.dobRaw || adminPet.dob || '',
+                            dobRaw: adminPet.dobRaw || adminPet.dob || '',
+                            color: adminPet.color || '',
+                            vaccinated: !!adminPet.vaccinated,
+                            allergies: adminPet.allergies || (adminPet.allergy !== 'Không' ? adminPet.allergy : ''),
+                            allergy: adminPet.allergy || '',
+                            notes: adminPet.notes || '',
+                            ownerName: adminPet.ownerName || '',
+                            ownerPhone: adminPet.ownerPhone || '',
+                            avatar: adminPet.avatar || '/assets/images/publics/dogcute3.jpg',
+                            status: adminPet.status || 'Đang nuôi',
+                            isArchived: adminPet.status === 'Lưu trữ' || !!adminPet.isArchived
+                        };
+                        if (idx >= 0) {
+                            userPets[idx] = { ...userPets[idx], ...userPetItem };
+                        } else {
+                            userPets.push(userPetItem);
+                        }
+                    });
+                    localStorage.setItem('pawpal_pets', JSON.stringify(userPets));
+                } catch (e) {}
+
+                // Đồng bộ Customer 360° nếu có
+                try {
+                    const rawCust = sessionStorage.getItem('pawpal_admin_customers_data');
+                    if (rawCust) {
+                        const custObj = JSON.parse(rawCust);
+                        Object.values(petsData).forEach(p => {
+                            if (p.custId && custObj[p.custId]) {
+                                const cust = custObj[p.custId];
+                                if (!Array.isArray(cust.pets)) cust.pets = [];
+                                const existingPIdx = cust.pets.findIndex(cp => cp.id === p.code || cp.id === p.id);
+                                const petSummary = {
+                                    id: p.code || p.id,
+                                    name: p.name,
+                                    species: p.species === 'cat' ? 'Mèo' : (p.species === 'rabbit' ? 'Thỏ' : 'Chó'),
+                                    breed: p.breed || '',
+                                    weight: String(p.weightNum || parseFloat(p.weight) || 0),
+                                    vaccine: p.vaccinated ? 'Sổ theo dõi tiêm phòng định kỳ đầy đủ' : 'Chưa cập nhật sổ tiêm',
+                                    alertNote: p.alert || p.allergy || 'Bình thường'
+                                };
+                                if (existingPIdx >= 0) {
+                                    if (p.status === 'Lưu trữ' || p.isArchived) {
+                                        cust.pets.splice(existingPIdx, 1);
+                                    } else {
+                                        cust.pets[existingPIdx] = { ...cust.pets[existingPIdx], ...petSummary };
+                                    }
+                                } else if (p.status !== 'Lưu trữ' && !p.isArchived) {
+                                    cust.pets.push(petSummary);
+                                }
+                            }
+                        });
+                        sessionStorage.setItem('pawpal_admin_customers_data', JSON.stringify(custObj));
+                    }
+                } catch (e) {}
             } catch (e) {}
         }
 
@@ -847,13 +1100,19 @@
             } else if (action === 'service') {
                 handleCreateServiceForPet(petId);
             } else if (action === 'archive') {
-                if (confirm(`Bạn có chắc muốn lưu trữ hồ sơ của bé cưng ${pet.name || petId}?`)) {
-                    pet.status = 'Lưu trữ';
-                    persistPetsData();
-                    renderPetsTable();
-                    updatePetKPIs();
-                    showToast(`Đã lưu trữ hồ sơ bé cưng ${pet.name}!`);
-                }
+                showPetConfirmModal({
+                    title: 'Lưu trữ hồ sơ',
+                    message: `Bạn có chắc muốn lưu trữ hồ sơ của bé cưng ${pet.name || petId}?`,
+                    confirmText: 'Lưu trữ',
+                    isDanger: true,
+                    onConfirm: () => {
+                        pet.status = 'Lưu trữ';
+                        persistPetsData();
+                        renderPetsTable();
+                        updatePetKPIs();
+                        showToast(`Đã lưu trữ hồ sơ bé cưng ${pet.name}!`, 'success');
+                    }
+                });
             } else if (action === 'restore') {
                 pet.status = 'Đang nuôi';
                 persistPetsData();
@@ -1185,12 +1444,20 @@
                 e.stopPropagation();
                 const petId = btnArchive.getAttribute('data-id');
                 const pet = petsData[petId];
-                if (pet && confirm(`Bạn có chắc muốn lưu trữ hồ sơ của bé cưng ${pet.name || petId}?`)) {
-                    pet.status = 'Lưu trữ';
-                    persistPetsData();
-                    renderPetsTable();
-                    updatePetKPIs();
-                    showToast(`Đã lưu trữ hồ sơ bé cưng ${pet.name}!`);
+                if (pet) {
+                    showPetConfirmModal({
+                        title: 'Lưu trữ hồ sơ',
+                        message: `Bạn có chắc muốn lưu trữ hồ sơ của bé cưng ${pet.name || petId}?`,
+                        confirmText: 'Lưu trữ',
+                        isDanger: true,
+                        onConfirm: () => {
+                            pet.status = 'Lưu trữ';
+                            persistPetsData();
+                            renderPetsTable();
+                            updatePetKPIs();
+                            showToast(`Đã lưu trữ hồ sơ bé cưng ${pet.name}!`, 'success');
+                        }
+                    });
                 }
             }
 
@@ -1490,7 +1757,7 @@
                 const address = document.getElementById('quickOwnerAddress')?.value.trim();
 
                 if (!name || !phone) {
-                    alert('Vui lòng nhập đầy đủ Họ tên và Số điện thoại của chủ nuôi!');
+                    showToast('Vui lòng nhập đầy đủ Họ tên và Số điện thoại của chủ nuôi!', 'warning');
                     return;
                 }
 
@@ -2202,17 +2469,22 @@
                     return;
                 }
 
-                if (confirm(`Bạn có chắc chắn muốn gửi tin nhắn chăm sóc tự động qua Zalo ZNS cho ${unsentList.length} bé cưng đang đến chu kỳ làm đẹp?`)) {
-                    unsentList.forEach(r => {
-                        r.status = 'SENT';
-                        r.statusText = 'Đã gửi Zalo vừa xong';
-                        r.statusBadgeClass = 'badge-success';
-                    });
-                    persistRemindersData();
-                    renderRemindersTable();
-                    updateReminderKPIs();
-                    showToast(`Đã gửi tin nhắn chăm sóc đồng loạt thành công tới ${unsentList.length} chủ nuôi qua Zalo Official Account!`);
-                }
+                showPetConfirmModal({
+                    title: 'Gửi tin nhắn chăm sóc Zalo ZNS',
+                    message: `Bạn có chắc chắn muốn gửi tin nhắn chăm sóc tự động qua Zalo ZNS cho ${unsentList.length} bé cưng đang đến chu kỳ làm đẹp?`,
+                    confirmText: 'Gửi tin nhắn Zalo',
+                    onConfirm: () => {
+                        unsentList.forEach(r => {
+                            r.status = 'SENT';
+                            r.statusText = 'Đã gửi Zalo vừa xong';
+                            r.statusBadgeClass = 'badge-success';
+                        });
+                        persistRemindersData();
+                        renderRemindersTable();
+                        updateReminderKPIs();
+                        showToast(`Đã gửi tin nhắn chăm sóc đồng loạt thành công tới ${unsentList.length} chủ nuôi qua Zalo Official Account!`, 'success');
+                    }
+                });
             });
         }
 
@@ -2280,20 +2552,64 @@
             }
         });
 
-        // 13. Sub-tab 4: Nhật ký chăm sóc (Bàn làm việc Groomer & Hotel)
+        // 13. Sub-tab 3: Nhật ký chăm sóc (Bàn làm việc Groomer và Hotel)
         const queueItems = document.querySelectorAll('.queue-card-item');
         const wbFormTitle = document.getElementById('wbFormTitle');
         const wbStatusBadge = document.getElementById('wbStatusBadge');
         const wbFormSub = document.getElementById('wbFormSub');
+        const wbBeforeImg = document.getElementById('wbBeforeImgPreview');
+        const wbAfterImg = document.getElementById('wbAfterImgPreview');
+        const wbOwnerMsg = document.getElementById('wbOwnerMessage');
+
+        const queuePresets = {
+            'CL-001': {
+                before: '/assets/images/publics/dogcute3.jpg',
+                after: '/assets/images/publics/dogcute1.jpg',
+                msg: 'Lông vùng nách bé hơi rối nhẹ, tiệm đã gỡ và xịt dưỡng mượt mà. Vệ sinh tai sạch bóng, móng chân sau đã mài tròn nhẵn.',
+                status: 'Đang tiến hành',
+                statusClass: 'badge-warning'
+            },
+            'CL-002': {
+                before: '/assets/images/publics/dogcute6.jpg',
+                after: '/assets/images/publics/dogcute1.jpg',
+                msg: 'Bé Trà Sữa cắt tỉa tạo kiểu Poodle mặt gấu bông rất ngoan, tai sạch và móng đã mài nhẵn.',
+                status: 'Hoàn thiện',
+                statusClass: 'badge-success'
+            },
+            'CL-003': {
+                before: '/assets/images/publics/catcute8.jpg',
+                after: '/assets/images/publics/catcute7.jpg',
+                msg: 'Bé Bông ngoan ngoãn khi vệ sinh tai và cắt mài móng, đã làm sạch kẽ chân.',
+                status: 'Đang tiến hành',
+                statusClass: 'badge-warning'
+            },
+            'CL-004': {
+                before: '/assets/images/publics/catcute5.jpg',
+                after: '/assets/images/publics/catcute5.jpg',
+                msg: 'Bé Mimi phòng VIP 03 đã ăn hết khẩu phần pate cá hồi chiều nay, vận động vui vẻ trong khu vui chơi chung.',
+                status: 'Đang lưu trú',
+                statusClass: 'badge-neutral'
+            }
+        };
 
         queueItems.forEach(item => {
             item.addEventListener('click', () => {
                 queueItems.forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
 
+                const careId = item.getAttribute('data-care-id') || 'CL-001';
+                const preset = queuePresets[careId] || queuePresets['CL-001'];
                 const petName = item.querySelector('.queue-pet-name')?.textContent || 'Bé cưng';
+
                 if (wbFormTitle) wbFormTitle.textContent = `Cập nhật nhật ký ca: ${petName}`;
-                if (wbStatusBadge) wbStatusBadge.textContent = 'Đang tiến hành';
+                if (wbStatusBadge) {
+                    wbStatusBadge.textContent = preset.status;
+                    wbStatusBadge.className = `admin-badge ${preset.statusClass}`;
+                }
+
+                if (wbBeforeImg) wbBeforeImg.src = preset.before;
+                if (wbAfterImg) wbAfterImg.src = preset.after;
+                if (wbOwnerMsg) wbOwnerMsg.value = preset.msg;
 
                 const subTexts = Array.from(item.querySelectorAll('.queue-card-sub')).map(el => el.textContent.trim());
                 if (wbFormSub && subTexts.length > 0) {
@@ -2340,7 +2656,7 @@
 
                 const rawDate = document.getElementById('newVaccineDate')?.value;
                 if (!rawDate) {
-                    alert('Vui lòng chọn ngày tiêm gần nhất!');
+                    showToast('Vui lòng chọn ngày tiêm gần nhất!', 'warning');
                     return;
                 }
                 const parts = rawDate.split('-');

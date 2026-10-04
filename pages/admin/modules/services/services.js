@@ -146,6 +146,44 @@
         }, 2500);
     }
 
+    // Helper: Mở Custom Confirm Modal chuẩn AGENTS.md thay thế window.confirm()
+    function showServiceConfirmModal({ title = 'Xác nhận thao tác', message = 'Bạn có chắc chắn muốn thực hiện thao tác này?', acceptText = 'Đồng ý', onAccept }) {
+        const modal = document.getElementById('modalConfirmServiceAction');
+        const titleEl = document.getElementById('confirmServiceActionTitle');
+        const msgEl = document.getElementById('confirmServiceActionMessage');
+        const btnAccept = document.getElementById('btnAcceptServiceConfirm');
+        const btnCancel = document.getElementById('btnCancelServiceConfirm');
+        const btnClose = document.getElementById('btnCloseConfirmServiceAction');
+
+        if (!modal) {
+            if (typeof onAccept === 'function') onAccept();
+            return;
+        }
+
+        if (titleEl) titleEl.textContent = title;
+        if (msgEl) msgEl.textContent = message;
+        if (btnAccept) btnAccept.textContent = acceptText;
+
+        const closeModal = () => {
+            modal.classList.remove('active');
+            if (btnAccept) btnAccept.onclick = null;
+            if (btnCancel) btnCancel.onclick = null;
+            if (btnClose) btnClose.onclick = null;
+        };
+
+        if (btnCancel) btnCancel.onclick = closeModal;
+        if (btnClose) btnClose.onclick = closeModal;
+
+        if (btnAccept) {
+            btnAccept.onclick = () => {
+                closeModal();
+                if (typeof onAccept === 'function') onAccept();
+            };
+        }
+
+        modal.classList.add('active');
+    }
+
     // Helper: Định dạng tiền tệ
     function formatCurrency(num) {
         if (!num && num !== 0) return '0 đ';
@@ -965,25 +1003,31 @@
                             const targetAcc = booking.accompanyingServices.find(a => a.id === accId);
                             if (!targetAcc) return;
 
-                            if (confirm(`Bạn có chắc chắn muốn xóa dịch vụ đi cùng "${targetAcc.name}" (${formatCurrency(targetAcc.price)}) khỏi ca?`)) {
-                                booking.accompanyingServices = booking.accompanyingServices.filter(a => a.id !== accId);
-                                const newAccTotal = booking.accompanyingServices.reduce((sum, a) => sum + Number(a.price || 0), 0);
-                                booking.total = Math.max(0, Number(booking.price || 0) + newAccTotal + booking.addonPrice - Number(booking.discount || 0));
+                            showServiceConfirmModal({
+                                title: 'Xóa dịch vụ đi cùng',
+                                message: `Bạn có chắc chắn muốn xóa dịch vụ đi cùng "${targetAcc.name}" (${formatCurrency(targetAcc.price)}) khỏi ca?`,
+                                acceptText: 'Xác nhận xóa',
+                                onAccept: () => {
+                                    booking.accompanyingServices = booking.accompanyingServices.filter(a => a.id !== accId);
+                                    const newAccTotal = booking.accompanyingServices.reduce((sum, a) => sum + Number(a.price || 0), 0);
+                                    booking.total = Math.max(0, Number(booking.price || 0) + newAccTotal + booking.addonPrice - Number(booking.discount || 0));
 
-                                // Ghi nhật ký hủy dịch vụ đi cùng
-                                booking.timeline = booking.timeline || [];
-                                booking.timeline.push({
-                                    time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-                                    title: `Đã hủy dịch vụ đi cùng: ${targetAcc.name}`,
-                                    desc: `Đã loại bỏ gói ${targetAcc.name} (${formatCurrency(targetAcc.price)}) khỏi ca`,
-                                    done: true,
-                                    staff: 'Admin'
-                                });
+                                    // Ghi nhật ký hủy dịch vụ đi cùng
+                                    booking.timeline = booking.timeline || [];
+                                    booking.timeline.push({
+                                        time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+                                        title: `Đã hủy dịch vụ đi cùng: ${targetAcc.name}`,
+                                        desc: `Đã loại bỏ gói ${targetAcc.name} (${formatCurrency(targetAcc.price)}) khỏi ca`,
+                                        done: true,
+                                        staff: 'Admin'
+                                    });
 
-                                persistData();
-                                renderBookingDetail(booking.id);
-                                renderBookingsTable();
-                            }
+                                    persistData();
+                                    renderBookingDetail(booking.id);
+                                    renderBookingsTable();
+                                    showToast(`Đã xóa dịch vụ đi cùng "${targetAcc.name}" thành công!`);
+                                }
+                            });
                         });
                     });
                 }
@@ -1027,26 +1071,32 @@
                             const targetAddon = booking.addons.find(a => a.id === addonId);
                             if (!targetAddon) return;
 
-                            if (confirm(`Bạn có chắc chắn muốn xóa phụ phí "${targetAddon.name}" (${formatCurrency(targetAddon.amount)})?`)) {
-                                booking.addons = booking.addons.filter(a => a.id !== addonId);
-                                booking.addonPrice = booking.addons.reduce((sum, a) => sum + Number(a.amount || 0), 0);
-                                const currentAccTotal = (booking.accompanyingServices || []).reduce((sum, a) => sum + Number(a.price || 0), 0);
-                                booking.total = Math.max(0, Number(booking.price || 0) + currentAccTotal + booking.addonPrice - Number(booking.discount || 0));
+                            showServiceConfirmModal({
+                                title: 'Xóa phụ phí phát sinh',
+                                message: `Bạn có chắc chắn muốn xóa phụ phí "${targetAddon.name}" (${formatCurrency(targetAddon.amount)})?`,
+                                acceptText: 'Xác nhận xóa',
+                                onAccept: () => {
+                                    booking.addons = booking.addons.filter(a => a.id !== addonId);
+                                    booking.addonPrice = booking.addons.reduce((sum, a) => sum + Number(a.amount || 0), 0);
+                                    const currentAccTotal = (booking.accompanyingServices || []).reduce((sum, a) => sum + Number(a.price || 0), 0);
+                                    booking.total = Math.max(0, Number(booking.price || 0) + currentAccTotal + booking.addonPrice - Number(booking.discount || 0));
 
-                                // Ghi lại nhật ký xóa phụ phí
-                                booking.timeline = booking.timeline || [];
-                                booking.timeline.push({
-                                    time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-                                    title: `Đã xóa phụ phí: ${targetAddon.name}`,
-                                    desc: `Đã loại bỏ khoản phụ thu ${formatCurrency(targetAddon.amount)} khỏi ca dịch vụ`,
-                                    done: true,
-                                    staff: 'Admin'
-                                });
+                                    // Ghi lại nhật ký xóa phụ phí
+                                    booking.timeline = booking.timeline || [];
+                                    booking.timeline.push({
+                                        time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+                                        title: `Đã xóa phụ phí: ${targetAddon.name}`,
+                                        desc: `Đã loại bỏ khoản phụ thu ${formatCurrency(targetAddon.amount)} khỏi ca dịch vụ`,
+                                        done: true,
+                                        staff: 'Admin'
+                                    });
 
-                                persistData();
-                                renderBookingDetail(booking.id);
-                                renderBookingsTable();
-                            }
+                                    persistData();
+                                    renderBookingDetail(booking.id);
+                                    renderBookingsTable();
+                                    showToast(`Đã xóa phụ phí "${targetAddon.name}" thành công!`);
+                                }
+                            });
                         });
                     });
                 }
@@ -1109,11 +1159,17 @@
                     const idx = parseInt(btn.getAttribute('data-step-index'), 10);
                     if (booking.timeline && booking.timeline[idx]) {
                         const stepTitle = booking.timeline[idx].title;
-                        if (confirm(`Bạn có chắc chắn muốn xóa bước nhật ký "${stepTitle}"?`)) {
-                            booking.timeline.splice(idx, 1);
-                            persistData();
-                            renderBookingDetail(booking.id);
-                        }
+                        showServiceConfirmModal({
+                            title: 'Xóa bước nhật ký',
+                            message: `Bạn có chắc chắn muốn xóa bước nhật ký "${stepTitle}"?`,
+                            acceptText: 'Xác nhận xóa',
+                            onAccept: () => {
+                                booking.timeline.splice(idx, 1);
+                                persistData();
+                                renderBookingDetail(booking.id);
+                                showToast(`Đã xóa bước nhật ký "${stepTitle}"!`);
+                            }
+                        });
                     }
                 });
             });
@@ -1681,17 +1737,17 @@
             staff: 'Quản trị viên'
         });
 
-        persistData();
-        renderBookingDetail(booking.id);
-        renderBookingsTable();
-
-        if (confirm(`Đã tạo thành công Phiếu Khiếu Nại ${ticketId}!\nBạn có muốn chuyển sang phân hệ Khiếu Nại để xử lý ngay không?`)) {
-            sessionStorage.setItem('pawpal_admin_complaint_selected_id', ticketId);
-            sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-services');
-            window.location.hash = '#tab-complaints';
-        } else {
-            showToast(`Đã chuyển ca ${booking.id} sang bộ phận Khiếu nại (Ticket: ${ticketId})!`);
-        }
+        showServiceConfirmModal({
+            title: 'Khởi tạo Ticket Khiếu nại thành công',
+            message: `Đã tạo thành công Phiếu Khiếu Nại ${ticketId}! Bạn có muốn chuyển sang phân hệ Khiếu Nại để xử lý ngay không?`,
+            acceptText: 'Đến phân hệ Khiếu nại',
+            onAccept: () => {
+                sessionStorage.setItem('pawpal_admin_complaint_selected_id', ticketId);
+                sessionStorage.setItem('pawpal_admin_complaint_active_subtab', 'tab-complaint-services');
+                window.location.hash = '#tab-complaints';
+            }
+        });
+        showToast(`Đã chuyển ca ${booking.id} sang bộ phận Khiếu nại (Ticket: ${ticketId})!`);
     }
 
     // ==========================================================================
@@ -2491,7 +2547,7 @@
                 const noteInput = document.getElementById('newLogStepNote');
 
                 if (!titleInput.value.trim()) {
-                    alert('Vui lòng nhập tên bước chăm sóc.');
+                    showToast('Vui lòng nhập tên bước chăm sóc!', 'warning');
                     return;
                 }
 
@@ -2513,6 +2569,7 @@
                     noteInput.value = '';
                     currentCarelogStepImages = [];
                     renderCarelogPreviewStrip();
+                    showToast('Đã thêm bước chăm sóc mới vào nhật ký!');
                 }
             });
         }
@@ -2570,12 +2627,19 @@
                 const booking = bookingsData.find(b => b.id === selectedBookingId);
                 if (!booking || idx < 0 || !booking.timeline || !booking.timeline[idx]) return;
 
-                if (confirm(`Bạn có chắc chắn muốn xóa bước nhật ký "${booking.timeline[idx].title}"?`)) {
-                    booking.timeline.splice(idx, 1);
-                    persistData();
-                    closeEditCarelogModal();
-                    renderBookingDetail(booking.id);
-                }
+                const stepTitle = booking.timeline[idx].title;
+                showServiceConfirmModal({
+                    title: 'Xóa bước nhật ký',
+                    message: `Bạn có chắc chắn muốn xóa bước nhật ký "${stepTitle}"?`,
+                    acceptText: 'Xác nhận xóa',
+                    onAccept: () => {
+                        booking.timeline.splice(idx, 1);
+                        persistData();
+                        closeEditCarelogModal();
+                        renderBookingDetail(booking.id);
+                        showToast(`Đã xóa bước nhật ký "${stepTitle}"!`);
+                    }
+                });
             });
         }
 
@@ -2605,6 +2669,7 @@
                 persistData();
                 closeEditCarelogModal();
                 renderBookingDetail(booking.id);
+                showToast('Đã lưu cập nhật bước nhật ký chăm sóc!');
             });
         }
 
@@ -2615,10 +2680,12 @@
                 const url = window.location.origin + `/pages/carelog.html?booking=${selectedBookingId}`;
                 if (navigator.clipboard) {
                     navigator.clipboard.writeText(url).then(() => {
-                        alert(`Đã sao chép liên kết Nhật ký chăm sóc thời gian thực gửi cho khách hàng:\n${url}`);
+                        showToast('Đã sao chép liên kết Nhật ký chăm sóc thời gian thực!');
+                    }).catch(() => {
+                        showToast('Đã tạo liên kết xem nhật ký chăm sóc!');
                     });
                 } else {
-                    alert(`Liên kết Nhật ký chăm sóc cho khách hàng:\n${url}`);
+                    showToast('Đã tạo liên kết xem nhật ký chăm sóc!');
                 }
             });
         }

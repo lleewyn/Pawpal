@@ -1104,7 +1104,7 @@
                 <div class="form-group">
                     <label class="form-label">Loại vắc-xin hoặc dịch tễ ghi trên sổ (*):</label>
                     <select class="admin-select" id="newVaccineType" required>
-                        <option value="Vắc-xin phòng dại (Rabies)">Vắc-xin phòng dại (Rabies) - Bắt buộc khi nhận Pet Hotel</option>
+                        <option value="Vắc-xin phòng dại (Rabies)">Vắc-xin phòng dại (Rabies) - Khuyến nghị theo dõi sức khỏe</option>
                         <option value="Vắc-xin 7 bệnh cho Chó (Vanguard Plus 5/CV-L)">Vắc-xin 7 bệnh cho Chó (Vanguard Plus 5/CV-L)</option>
                         <option value="Vắc-xin 4 bệnh cho Mèo (PureVax / Felocell)">Vắc-xin 4 bệnh cho Mèo (PureVax / Felocell)</option>
                         <option value="Xổ giun định kỳ và Nhỏ gáy ve rận">Xổ giun định kỳ và Nhỏ gáy ve rận (NexGard / Revolution)</option>
@@ -1246,6 +1246,25 @@
 
             <div class="modal-actions-footer" style="margin-top: 16px;">
                 <button type="button" class="admin-btn admin-btn-secondary" data-close-modal="modalSelectPhoto">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 11: XÁC NHẬN THAO TÁC THÚ CƯNG (CUSTOM CONFIRM DIALOG)
+         ==================================================================== -->
+    <div class="admin-modal-backdrop" id="modalConfirmPetAction">
+        <div class="admin-modal-card" style="width: 480px; max-width: 92vw;">
+            <div class="admin-modal-header">
+                <span class="admin-modal-title" id="confirmPetActionTitle">Xác nhận thao tác</span>
+                <button type="button" class="btn-modal-close" id="btnCloseConfirmPetModal" data-close-modal="modalConfirmPetAction">Đóng</button>
+            </div>
+            <div style="font-size: 13.5px; color: var(--text-main); line-height: 1.6; margin: 12px 0 20px 0;" id="confirmPetActionMessage">
+                Bạn có chắc chắn muốn thực hiện thao tác này không?
+            </div>
+            <div class="modal-actions-footer">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelPetConfirm" data-close-modal="modalConfirmPetAction">Hủy bỏ</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnAcceptPetConfirm">Đồng ý</button>
             </div>
         </div>
     </div>

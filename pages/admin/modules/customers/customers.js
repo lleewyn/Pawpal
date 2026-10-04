@@ -21,6 +21,104 @@
             `;
         }
 
+        // Helper: Hiển thị Toast Notification nhẹ nhàng chuẩn AGENTS.md
+        function showToast(message, type = 'info') {
+            let container = document.getElementById('adminToastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'adminToastContainer';
+                container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            const bgColors = {
+                success: '#DCEEE2',
+                warning: '#F5E8D3',
+                danger: '#F7DCDC',
+                info: '#DCEAF2'
+            };
+            const textColors = {
+                success: '#165335',
+                warning: '#734718',
+                danger: '#8F2424',
+                info: '#20495E'
+            };
+
+            const bg = bgColors[type] || bgColors.info;
+            const color = textColors[type] || textColors.info;
+
+            toast.style.cssText = `
+                background: ${bg};
+                color: ${color};
+                padding: 10px 16px;
+                border-radius: 9px;
+                font-size: 13px;
+                font-weight: 500;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                pointer-events: auto;
+                opacity: 0;
+                transform: translateY(-8px);
+                transition: opacity 0.2s ease, transform 0.2s ease;
+                max-width: 380px;
+                line-height: 1.4;
+            `;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateY(0)';
+            });
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+                setTimeout(() => toast.remove(), 200);
+            }, 3000);
+        }
+
+        // Helper: Mở Custom Confirm Modal chuẩn AGENTS.md thay thế window.confirm()
+        let activeCustConfirmCallback = null;
+        function showCustomerConfirmModal({ title, message, acceptText = 'Xác nhận', onAccept }) {
+            const modal = document.getElementById('modalConfirmCustomerAction');
+            const titleEl = document.getElementById('custConfirmTitle');
+            const msgEl = document.getElementById('custConfirmMessage');
+            const acceptBtn = document.getElementById('btnAcceptCustConfirm');
+            if (!modal) {
+                if (onAccept) onAccept();
+                return;
+            }
+
+            if (titleEl && title) titleEl.textContent = title;
+            if (msgEl && message) msgEl.innerHTML = message;
+            if (acceptBtn) acceptBtn.textContent = acceptText;
+
+            activeCustConfirmCallback = onAccept;
+            modal.style.display = 'flex';
+        }
+
+        document.getElementById('btnAcceptCustConfirm')?.addEventListener('click', () => {
+            const modal = document.getElementById('modalConfirmCustomerAction');
+            if (modal) modal.style.display = 'none';
+            if (typeof activeCustConfirmCallback === 'function') {
+                activeCustConfirmCallback();
+                activeCustConfirmCallback = null;
+            }
+        });
+
+        document.getElementById('btnCancelCustConfirm')?.addEventListener('click', () => {
+            const modal = document.getElementById('modalConfirmCustomerAction');
+            if (modal) modal.style.display = 'none';
+            activeCustConfirmCallback = null;
+        });
+
+        document.getElementById('btnCloseCustConfirm')?.addEventListener('click', () => {
+            const modal = document.getElementById('modalConfirmCustomerAction');
+            if (modal) modal.style.display = 'none';
+            activeCustConfirmCallback = null;
+        });
+
         // ====================================================================
         // DATA STORE MÔ PHỎNG CHI TIẾT THEO TỪNG KHÁCH HÀNG (CÁ NHÂN, PET, ĐƠN, LỊCH, KHIẾU NẠI)
         // ====================================================================
@@ -1000,13 +1098,18 @@
                     const cId = btn.getAttribute('data-cust-id');
                     const pIdx = parseInt(btn.getAttribute('data-pet-index'), 10);
                     const pet = customerDatabase[cId]?.pets[pIdx];
-                    if (confirm(`Bạn có chắc chắn muốn xóa bé cưng ${pet?.name || ''} khỏi hồ sơ của khách?`)) {
-                        customerDatabase[cId].pets.splice(pIdx, 1);
-                        renderDrawerPets(cId);
-                        persistCustomersData();
-                        renderCustomersTable();
-                        showToast('Đã xóa bé cưng khỏi hồ sơ thành công!');
-                    }
+                    showCustomerConfirmModal({
+                        title: 'Xác nhận xóa thú cưng',
+                        message: `Bạn có chắc chắn muốn xóa bé cưng <strong>${pet?.name || ''}</strong> khỏi hồ sơ của khách hàng này?`,
+                        acceptText: 'Xóa thú cưng',
+                        onAccept: () => {
+                            customerDatabase[cId].pets.splice(pIdx, 1);
+                            renderDrawerPets(cId);
+                            persistCustomersData();
+                            renderCustomersTable();
+                            showToast('Đã xóa bé cưng khỏi hồ sơ thành công!', 'success');
+                        }
+                    });
                 });
             });
         }

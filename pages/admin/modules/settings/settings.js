@@ -11,6 +11,126 @@
 (function initSettingsModule() {
     console.log('Khởi tạo Module Cấu hình Hệ thống...');
 
+    // Helper: Hiển thị Toast Notification nhẹ nhàng chuẩn AGENTS.md
+    function showToast(message, type = 'info') {
+        let container = document.getElementById('adminToastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'adminToastContainer';
+            container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        const bgColors = {
+            success: '#DCEEE2',
+            warning: '#F5E8D3',
+            danger: '#F7DCDC',
+            info: '#DCEAF2'
+        };
+        const textColors = {
+            success: '#165335',
+            warning: '#734718',
+            danger: '#8F2424',
+            info: '#20495E'
+        };
+
+        const bg = bgColors[type] || bgColors.info;
+        const color = textColors[type] || textColors.info;
+
+        toast.style.cssText = `
+            background: ${bg};
+            color: ${color};
+            padding: 10px 16px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            pointer-events: auto;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            opacity: 0;
+            transform: translateY(-8px);
+            max-width: 380px;
+            line-height: 1.45;
+            white-space: pre-line;
+        `;
+        toast.textContent = message;
+
+        container.appendChild(toast);
+        requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+        });
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-8px)';
+            setTimeout(() => toast.remove(), 250);
+        }, 3500);
+    }
+
+    // Helper: Custom Confirm Modal cho phân hệ Cấu hình
+    function showSettingsConfirmModal({ title = 'Xác nhận thao tác', message, onConfirm, onCancel, confirmText = 'Đồng ý', isDanger = false }) {
+        const modal = document.getElementById('modalConfirmSettingsAction');
+        const titleEl = document.getElementById('confirmSettingsActionTitle');
+        const msgEl = document.getElementById('confirmSettingsActionMessage');
+        const btnAccept = document.getElementById('btnAcceptSettingsConfirm');
+        const btnCancel = document.getElementById('btnCancelSettingsConfirm');
+        const btnClose = document.getElementById('btnCloseConfirmSettingsModal');
+
+        if (!modal) {
+            if (window.confirm(message)) {
+                if (typeof onConfirm === 'function') onConfirm();
+            } else {
+                if (typeof onCancel === 'function') onCancel();
+            }
+            return;
+        }
+
+        if (titleEl) titleEl.textContent = title;
+        if (msgEl) msgEl.textContent = message;
+        if (btnAccept) {
+            btnAccept.textContent = confirmText;
+            if (isDanger) {
+                btnAccept.style.backgroundColor = '#DC2626';
+                btnAccept.style.color = '#FFFFFF';
+            } else {
+                btnAccept.style.backgroundColor = '';
+                btnAccept.style.color = '';
+            }
+        }
+
+        const cleanup = () => {
+            modal.classList.remove('active');
+            if (btnAccept) btnAccept.onclick = null;
+            if (btnCancel) btnCancel.onclick = null;
+            if (btnClose) btnClose.onclick = null;
+        };
+
+        if (btnAccept) {
+            btnAccept.onclick = () => {
+                cleanup();
+                if (typeof onConfirm === 'function') onConfirm();
+            };
+        }
+
+        if (btnCancel) {
+            btnCancel.onclick = () => {
+                cleanup();
+                if (typeof onCancel === 'function') onCancel();
+            };
+        }
+
+        if (btnClose) {
+            btnClose.onclick = () => {
+                cleanup();
+                if (typeof onCancel === 'function') onCancel();
+            };
+        }
+
+        modal.classList.add('active');
+    }
+
     // -------------------------------------------------------------
     // 1. DỮ LIỆU VÀ CƠ CHẾ LƯU TRỮ TẬP TRUNG (SSOT LOCALSTORAGE)
     // -------------------------------------------------------------
@@ -461,7 +581,7 @@
                     setStoredItem('pawpal_settings_banners', mockBanners);
                     renderBanners();
                     renderZeroMissAlerts();
-                    alert(`Đã gia hạn Banner "${banner.title}" thêm 30 ngày thành công! Hiệu lực mới đến ngày ${banner.endDate}.`);
+                    showToast(`Đã gia hạn Banner "${banner.title}" thêm 30 ngày thành công! Hiệu lực mới đến ngày ${banner.endDate}.`, 'success');
                 }
             });
         });
@@ -959,7 +1079,7 @@
         document.getElementById('btnSaveBanner')?.addEventListener('click', () => {
             const title = document.getElementById('inputBannerTitle')?.value.trim();
             if (!title) {
-                alert('Vui lòng nhập tiêu đề Banner!');
+                showToast('Vui lòng nhập tiêu đề Banner!', 'warning');
                 return;
             }
             mockBanners.unshift({
@@ -975,7 +1095,7 @@
             setStoredItem('pawpal_settings_banners', mockBanners);
             bannerModal.style.display = 'none';
             renderBanners();
-            alert('Đã thêm Banner mới và đồng bộ sang Website thành công!');
+            showToast('Đã thêm Banner mới và đồng bộ sang Website thành công!', 'success');
         });
 
         // --- MODAL VOUCHER (GIAI ĐOẠN 3: TỰ ĐỘNG HÓA VÀ XEM TRƯỚC TRỰC QUAN) ---
@@ -1066,7 +1186,7 @@
             const name = document.getElementById('inputVoucherName')?.value.trim();
             const val = parseFloat(document.getElementById('inputVoucherValue')?.value) || 0;
             if (!code || !name || val <= 0) {
-                alert('Vui lòng nhập đầy đủ mã, tên và giá trị giảm của Voucher!');
+                showToast('Vui lòng nhập đầy đủ mã, tên và giá trị giảm của Voucher!', 'warning');
                 return;
             }
             mockVouchers.unshift({
@@ -1084,7 +1204,7 @@
             setStoredItem('pawpal_settings_vouchers', mockVouchers);
             voucherModal.style.display = 'none';
             renderVouchers();
-            alert(`Đã tạo thành công Voucher ${code} và đồng bộ sang phân hệ Bán hàng!`);
+            showToast(`Đã tạo thành công Voucher ${code} và đồng bộ sang phân hệ Bán hàng!`, 'success');
         });
 
         // --- MODAL PAWPOINTS ---
@@ -1103,7 +1223,7 @@
         });
         document.getElementById('btnSavePawpointsPolicy')?.addEventListener('click', () => {
             if (isSafeModeLocked) {
-                alert('CẢNH BÁO AN TOÀN:\nKhóa an toàn cấu hình đang BẬT để chống sửa nhầm tham số lõi!\nVui lòng vào tab "Cấu hình Hệ thống" và bấm "Mở khóa để sửa" trước khi lưu thay đổi điểm thưởng PawPoints.');
+                showToast('Khóa an toàn cấu hình đang BẬT! Vui lòng vào tab "Cấu hình Hệ thống" và bấm "Mở khóa để sửa" trước khi lưu thay đổi điểm thưởng PawPoints.', 'warning');
                 return;
             }
             const pointVal = document.getElementById('inputCfgPointValue')?.value || '100';
@@ -1136,7 +1256,7 @@
                     setStoredItem('pawpal_settings_audit_logs', mockAuditLogs);
                     setStoredItem('pawpal_settings_pawpoint_rate', parsedVal);
                     renderAuditLogs();
-                    alert('Đã lưu chính sách PawPoints và đồng bộ thành công sang phân hệ Khách hàng và Bán hàng!');
+                    showToast('Đã lưu chính sách PawPoints và đồng bộ thành công sang phân hệ Khách hàng và Bán hàng!', 'success');
                 }
             });
         });
@@ -1157,7 +1277,7 @@
         document.getElementById('btnSaveNotice')?.addEventListener('click', () => {
             const content = document.getElementById('inputNoticeContent')?.value.trim();
             if (!content) {
-                alert('Vui lòng nhập nội dung thông báo!');
+                showToast('Vui lòng nhập nội dung thông báo!', 'warning');
                 return;
             }
             mockNotifications.unshift({
@@ -1169,7 +1289,7 @@
             setStoredItem('pawpal_settings_notices', mockNotifications);
             noticeModal.style.display = 'none';
             renderNotifications();
-            alert('Đã lưu và đồng bộ thông báo mới sang Website!');
+            showToast('Đã lưu và đồng bộ thông báo mới sang Website!', 'success');
         });
 
         // --- MODAL BÀI VIẾT ---
@@ -1191,7 +1311,7 @@
             const status = document.getElementById('inputArticleStatus')?.value || 'published';
 
             if (!title) {
-                alert('Vui lòng nhập tiêu đề bài viết!');
+                showToast('Vui lòng nhập tiêu đề bài viết!', 'warning');
                 return;
             }
 
@@ -1215,7 +1335,7 @@
             setStoredItem('pawpal_settings_articles', mockArticles);
             articleModal.style.display = 'none';
             renderArticles();
-            alert('Đã lưu bài viết và đồng bộ dữ liệu sang tri thức RAG của Chatbot!');
+            showToast('Đã lưu bài viết và đồng bộ dữ liệu sang tri thức RAG của Chatbot!', 'success');
         });
 
         // --- MODALS SUB-TAB 3: CẤU HÌNH VẬN HÀNH VÀ HỆ THỐNG ---
@@ -1254,7 +1374,7 @@
 
         document.getElementById('btnSaveStoreProfile')?.addEventListener('click', () => {
             if (isSafeModeLocked) {
-                alert('CẢNH BÁO AN TOÀN:\nKhóa an toàn cấu hình đang BẬT!\nVui lòng bấm "Mở khóa để sửa" ở bảng Nhật ký Cấu hình trước khi thay đổi thông tin cửa hàng.');
+                showToast('Khóa an toàn cấu hình đang BẬT! Vui lòng bấm "Mở khóa để sửa" ở bảng Nhật ký Cấu hình trước khi thay đổi thông tin cửa hàng.', 'warning');
                 return;
             }
 
@@ -1304,7 +1424,7 @@
 
                     renderSystemConfigCards();
                     renderAuditLogs();
-                    alert('Đã cập nhật thông tin cửa hàng và đồng bộ sang User Portal thành công!');
+                    showToast('Đã cập nhật thông tin cửa hàng và đồng bộ sang User Portal thành công!', 'success');
                 }
             });
         });
@@ -1344,7 +1464,7 @@
 
         document.getElementById('btnSavePaymentConfig')?.addEventListener('click', () => {
             if (isSafeModeLocked) {
-                alert('CẢNH BÁO AN TOÀN:\nKhóa an toàn cấu hình đang BẬT!\nVui lòng bấm "Mở khóa để sửa" trước khi lưu cấu hình cổng thanh toán.');
+                showToast('Khóa an toàn cấu hình đang BẬT! Vui lòng bấm "Mở khóa để sửa" trước khi lưu cấu hình cổng thanh toán.', 'warning');
                 return;
             }
 
@@ -1395,7 +1515,7 @@
 
                     renderSystemConfigCards();
                     renderAuditLogs();
-                    alert('Đã cập nhật cổng thanh toán và đồng bộ sang phân hệ Bán hàng & User Portal thành công!');
+                    showToast('Đã cập nhật cổng thanh toán và đồng bộ sang phân hệ Bán hàng và User Portal thành công!', 'success');
                 }
             });
         });
@@ -1431,7 +1551,7 @@
 
         document.getElementById('btnSaveShippingConfig')?.addEventListener('click', () => {
             if (isSafeModeLocked) {
-                alert('CẢNH BÁO AN TOÀN:\nKhóa an toàn cấu hình đang BẬT!\nVui lòng bấm "Mở khóa để sửa" trước khi lưu cấu hình vận chuyển.');
+                showToast('Khóa an toàn cấu hình đang BẬT! Vui lòng bấm "Mở khóa để sửa" trước khi lưu cấu hình vận chuyển.', 'warning');
                 return;
             }
 
@@ -1484,7 +1604,7 @@
 
                     renderSystemConfigCards();
                     renderAuditLogs();
-                    alert('Đã lưu cấu hình vận chuyển và đồng bộ sang User Portal & Bán hàng thành công!');
+                    showToast('Đã lưu cấu hình vận chuyển và đồng bộ sang User Portal và Bán hàng thành công!', 'success');
                 }
             });
         });
@@ -1535,7 +1655,7 @@
 
         document.getElementById('btnSaveBookingPolicy')?.addEventListener('click', () => {
             if (isSafeModeLocked) {
-                alert('CẢNH BÁO AN TOÀN:\nKhóa an toàn cấu hình đang BẬT!\nVui lòng bấm "Mở khóa để sửa" ở bảng Nhật ký Cấu hình trước khi thay đổi quy tắc đặt lịch.');
+                showToast('Khóa an toàn cấu hình đang BẬT! Vui lòng bấm "Mở khóa để sửa" ở bảng Nhật ký Cấu hình trước khi thay đổi quy tắc đặt lịch.', 'warning');
                 return;
             }
 
@@ -1597,7 +1717,7 @@
 
                     renderSystemConfigCards();
                     renderAuditLogs();
-                    alert('Đã áp dụng chính sách đặt lịch mới và đồng bộ sang phân hệ Dịch vụ & Nhân sự thành công!');
+                    showToast('Đã áp dụng chính sách đặt lịch mới và đồng bộ sang phân hệ Dịch vụ và Nhân sự thành công!', 'success');
                 }
             });
         });
@@ -1633,7 +1753,7 @@
                 renderVouchers();
                 renderZeroMissAlerts();
                 closeVoucherActionMenu();
-                alert(`Đã gia hạn thêm 50 lượt phát hành cho Voucher ${voucher.code} thành công!\nHạn mức mới: ${voucher.used}/${voucher.limit} lượt.`);
+                showToast(`Đã gia hạn thêm 50 lượt phát hành cho Voucher ${voucher.code} thành công! Hạn mức mới: ${voucher.used}/${voucher.limit} lượt.`, 'success');
             }
         });
 
@@ -1647,7 +1767,7 @@
                 renderVouchers();
                 renderZeroMissAlerts();
                 closeVoucherActionMenu();
-                alert(`Voucher ${voucher.code} hiện đã được chuyển sang trạng thái: ${voucher.status === 'active' ? 'Đang hoạt động' : 'Tạm dừng'}.`);
+                showToast(`Voucher ${voucher.code} hiện đã được chuyển sang trạng thái: ${voucher.status === 'active' ? 'Đang hoạt động' : 'Tạm dừng'}.`, 'info');
             }
         });
 
@@ -1657,14 +1777,20 @@
             const idx = mockVouchers.findIndex(v => v.code === currentActiveVoucherCode);
             if (idx !== -1) {
                 const code = mockVouchers[idx].code;
-                if (confirm(`Bạn có chắc chắn muốn xóa Voucher ${code} khỏi hệ thống?`)) {
-                    mockVouchers.splice(idx, 1);
-                    setStoredItem('pawpal_settings_vouchers', mockVouchers);
-                    renderVouchers();
-                    renderZeroMissAlerts();
-                    closeVoucherActionMenu();
-                    alert(`Đã xóa thành công Voucher ${code}.`);
-                }
+                showSettingsConfirmModal({
+                    title: 'Xóa Voucher',
+                    message: `Bạn có chắc chắn muốn xóa Voucher ${code} khỏi hệ thống?`,
+                    confirmText: 'Xóa Voucher',
+                    isDanger: true,
+                    onConfirm: () => {
+                        mockVouchers.splice(idx, 1);
+                        setStoredItem('pawpal_settings_vouchers', mockVouchers);
+                        renderVouchers();
+                        renderZeroMissAlerts();
+                        closeVoucherActionMenu();
+                        showToast(`Đã xóa thành công Voucher ${code}.`, 'success');
+                    }
+                });
             }
         });
 
@@ -1723,7 +1849,7 @@
                 setStoredItem('pawpal_settings_articles', mockArticles);
                 renderArticles();
                 closeArticleActionMenu();
-                alert(`Đã nạp thành công bài viết "${article.title}" vào cơ sở tri thức RAG của Chatbot PawPal!`);
+                showToast(`Đã nạp thành công bài viết "${article.title}" vào cơ sở tri thức RAG của Chatbot PawPal!`, 'success');
             }
         });
 
@@ -1740,7 +1866,7 @@
                     statusEl.textContent = 'Đã nạp RAG';
                 }
                 renderArticles();
-                alert(`Đã nạp và đồng bộ bài viết "${article.title}" vào Chatbot thành công!`);
+                showToast(`Đã nạp và đồng bộ bài viết "${article.title}" vào Chatbot thành công!`, 'success');
             }
         });
 
@@ -1753,7 +1879,7 @@
                 setStoredItem('pawpal_settings_articles', mockArticles);
                 renderArticles();
                 closeArticleActionMenu();
-                alert(`Bài viết "${article.title}" hiện đã chuyển sang trạng thái: ${article.status === 'published' ? 'Công khai' : 'Tạm ẩn'}.`);
+                showToast(`Bài viết "${article.title}" hiện đã chuyển sang trạng thái: ${article.status === 'published' ? 'Công khai' : 'Tạm ẩn'}.`, 'info');
             }
         });
 
@@ -1763,13 +1889,19 @@
             const idx = mockArticles.findIndex(a => a.id === currentActiveArticleId);
             if (idx !== -1) {
                 const title = mockArticles[idx].title;
-                if (confirm(`Bạn có chắc chắn muốn xóa bài viết "${title}" khỏi hệ thống?`)) {
-                    mockArticles.splice(idx, 1);
-                    setStoredItem('pawpal_settings_articles', mockArticles);
-                    renderArticles();
-                    closeArticleActionMenu();
-                    alert(`Đã xóa thành công bài viết "${title}".`);
-                }
+                showSettingsConfirmModal({
+                    title: 'Xóa bài viết',
+                    message: `Bạn có chắc chắn muốn xóa bài viết "${title}" khỏi hệ thống?`,
+                    confirmText: 'Xóa bài viết',
+                    isDanger: true,
+                    onConfirm: () => {
+                        mockArticles.splice(idx, 1);
+                        setStoredItem('pawpal_settings_articles', mockArticles);
+                        renderArticles();
+                        closeArticleActionMenu();
+                        showToast(`Đã xóa thành công bài viết "${title}".`, 'success');
+                    }
+                });
             }
         });
 
@@ -1804,7 +1936,7 @@
                 if (momoBadge) { momoBadge.className = 'admin-badge badge-active'; momoBadge.textContent = `Trực tuyến (${momoPing}ms)`; }
                 if (vnpayBadge) { vnpayBadge.className = 'admin-badge badge-active'; vnpayBadge.textContent = `Trực tuyến (${vnpayPing}ms)`; }
 
-                alert(`Kết quả kiểm tra đối tác bên thứ ba (Live Healthcheck):\n- GHN Express API: 200 OK (${ghnPing}ms)\n- MoMo Merchant Gateway: 200 OK (${momoPing}ms)\n- VNPay Payment Engine: 200 OK (${vnpayPing}ms)\n\nToàn bộ kênh kết nối đang thông suốt, không phát hiện nghẽn mạng!`);
+                showToast(`Live Healthcheck: GHN (${ghnPing}ms), MoMo (${momoPing}ms), VNPay (${vnpayPing}ms). Kênh kết nối thông suốt!`, 'success');
             }, 350);
         });
 
@@ -1835,9 +1967,9 @@
             isSafeModeLocked = !isSafeModeLocked;
             updateSafeModeUI();
             if (isSafeModeLocked) {
-                alert('Đã BẬT Khóa an toàn! Toàn bộ tham số cấu hình lõi được bảo vệ chống thao tác nhầm.');
+                showToast('Đã BẬT Khóa an toàn! Toàn bộ tham số cấu hình lõi được bảo vệ chống thao tác nhầm.', 'warning');
             } else {
-                alert('Đã MỞ KHÓA thành công! Bạn có thể chỉnh sửa các chính sách và cấu hình vận hành.');
+                showToast('Đã MỞ KHÓA thành công! Bạn có thể chỉnh sửa các chính sách và cấu hình vận hành.', 'success');
             }
         };
 

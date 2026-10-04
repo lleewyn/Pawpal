@@ -26,6 +26,126 @@
             `;
         }
 
+        // Helper: Hiển thị Toast Notification nhẹ nhàng chuẩn AGENTS.md
+        function showToast(message, type = 'info') {
+            let container = document.getElementById('adminToastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'adminToastContainer';
+                container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            const bgColors = {
+                success: '#DCEEE2',
+                warning: '#F5E8D3',
+                danger: '#F7DCDC',
+                info: '#DCEAF2'
+            };
+            const textColors = {
+                success: '#165335',
+                warning: '#734718',
+                danger: '#8F2424',
+                info: '#20495E'
+            };
+
+            const bg = bgColors[type] || bgColors.info;
+            const color = textColors[type] || textColors.info;
+
+            toast.style.cssText = `
+                background: ${bg};
+                color: ${color};
+                padding: 10px 16px;
+                border-radius: 9px;
+                font-size: 13px;
+                font-weight: 500;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                pointer-events: auto;
+                transition: opacity 0.25s ease, transform 0.25s ease;
+                opacity: 0;
+                transform: translateY(-8px);
+                max-width: 360px;
+                line-height: 1.45;
+                white-space: pre-line;
+            `;
+            toast.textContent = message;
+
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateY(0)';
+            });
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+                setTimeout(() => toast.remove(), 250);
+            }, 3500);
+        }
+
+        // Helper: Custom Confirm Modal cho phân hệ Nhân sự
+        function showStaffConfirmModal({ title = 'Xác nhận thao tác', message, onConfirm, onCancel, confirmText = 'Đồng ý', isDanger = false }) {
+            const modal = document.getElementById('modalConfirmStaffAction');
+            const titleEl = document.getElementById('confirmStaffActionTitle');
+            const msgEl = document.getElementById('confirmStaffActionMessage');
+            const btnAccept = document.getElementById('btnAcceptStaffConfirm');
+            const btnCancel = document.getElementById('btnCancelStaffConfirm');
+            const btnClose = document.getElementById('btnCloseConfirmStaffModal');
+
+            if (!modal) {
+                if (window.confirm(message)) {
+                    if (typeof onConfirm === 'function') onConfirm();
+                } else {
+                    if (typeof onCancel === 'function') onCancel();
+                }
+                return;
+            }
+
+            if (titleEl) titleEl.textContent = title;
+            if (msgEl) msgEl.textContent = message;
+            if (btnAccept) {
+                btnAccept.textContent = confirmText;
+                if (isDanger) {
+                    btnAccept.style.backgroundColor = '#DC2626';
+                    btnAccept.style.color = '#FFFFFF';
+                } else {
+                    btnAccept.style.backgroundColor = '';
+                    btnAccept.style.color = '';
+                }
+            }
+
+            const cleanup = () => {
+                modal.classList.remove('active');
+                if (btnAccept) btnAccept.onclick = null;
+                if (btnCancel) btnCancel.onclick = null;
+                if (btnClose) btnClose.onclick = null;
+            };
+
+            if (btnAccept) {
+                btnAccept.onclick = () => {
+                    cleanup();
+                    if (typeof onConfirm === 'function') onConfirm();
+                };
+            }
+
+            if (btnCancel) {
+                btnCancel.onclick = () => {
+                    cleanup();
+                    if (typeof onCancel === 'function') onCancel();
+                };
+            }
+
+            if (btnClose) {
+                btnClose.onclick = () => {
+                    cleanup();
+                    if (typeof onCancel === 'function') onCancel();
+                };
+            }
+
+            modal.classList.add('active');
+        }
+
         // ---------------------------------------------------------
         // 1. TRẠNG THÁI DỮ LIỆU HỆ THỐNG (Được nạp từ /data/staff.json)
         // ---------------------------------------------------------
@@ -1238,7 +1358,7 @@
             modal?.classList.remove('active');
             renderLiveWorkstations();
             renderStaffAlertBar();
-            alert(`Đã ghi nhận sự cố ca trực cho bàn ${ws ? ws.name : ''} thành công!`);
+            showToast(`Đã ghi nhận sự cố ca trực cho bàn ${ws ? ws.name : ''} thành công!`, 'success');
         }
 
         function renderScheduleTable() {
@@ -1649,7 +1769,7 @@
             renderStaffAlertBar();
             renderScheduleTable();
             renderLeaveRequestsList();
-            alert(`Đã duyệt đơn ${req.id} và cập nhật lịch làm việc thành công!`);
+            showToast(`Đã duyệt đơn ${req.id} và cập nhật lịch làm việc thành công!`, 'success');
         }
 
         function rejectLeaveSwapRequest(reqId) {
@@ -1659,7 +1779,7 @@
             updatePendingRequestsCounters();
             renderStaffAlertBar();
             renderLeaveRequestsList();
-            alert(`Đã từ chối đơn ${req.id}.`);
+            showToast(`Đã từ chối đơn ${req.id}.`, 'info');
         }
 
         function openLeaveSwapModal(defaultStaffId) {
@@ -1767,7 +1887,7 @@
                 } else {
                     updatePendingRequestsCounters();
                     renderStaffAlertBar();
-                    alert(`Đã tạo đơn xin nghỉ phép ${newId} (trạng thái Chờ duyệt)!`);
+                    showToast(`Đã tạo đơn xin nghỉ phép ${newId} (trạng thái Chờ duyệt)!`, 'success');
                 }
             } else {
                 const staffFromId = document.getElementById('swapInputStaffFrom')?.value;
@@ -1808,7 +1928,7 @@
                 } else {
                     updatePendingRequestsCounters();
                     renderStaffAlertBar();
-                    alert(`Đã gửi đề xuất đổi ca ${newId} (trạng thái Chờ duyệt)!`);
+                    showToast(`Đã gửi đề xuất đổi ca ${newId} (trạng thái Chờ duyệt)!`, 'success');
                 }
             }
 
@@ -1972,7 +2092,7 @@
             const staffId = (staffSelect && staffSelect.value) ? staffSelect.value : selectedStaffId;
             const staff = mockStaff.find(s => s.id === staffId);
             if (!staff) {
-                alert('Không tìm thấy thông tin nhân viên được chọn!');
+                showToast('Không tìm thấy thông tin nhân viên được chọn!', 'danger');
                 return;
             }
 
@@ -2041,7 +2161,7 @@
 
             if (assessModalEl) assessModalEl.classList.remove('active');
             const notifyMsg = shouldNotify ? '\nĐã gửi thông báo kết quả đánh giá tới ứng dụng nhân viên.' : '';
-            alert(`Đã lưu kết quả đánh giá nghiệp vụ cho nhân viên ${staff.name} (${staff.id})!${safetyLockMessage}${notifyMsg}`);
+            showToast(`Đã lưu kết quả đánh giá nghiệp vụ cho nhân viên ${staff.name} (${staff.id})!${safetyLockMessage}${notifyMsg}`, 'success');
 
             // Nếu bị khóa an toàn và có ca hẹn đang gán, kích hoạt ngay luồng điều phối lại ca
             if (result !== 'PASS') {
@@ -2054,7 +2174,7 @@
                         renderStaffList();
                         renderAssessmentList();
                         if (reassigned) {
-                            alert(`Đã chuyển giao ${affected.length} ca hẹn của nhân viên ${staff.name} sang KTV khả dụng khác do chưa đạt chuẩn nghiệp vụ!`);
+                            showToast(`Đã chuyển giao ${affected.length} ca hẹn của nhân viên ${staff.name} sang KTV khả dụng khác do chưa đạt chuẩn nghiệp vụ!`, 'warning');
                         }
                     });
                 }
@@ -2230,17 +2350,17 @@
             const role = roleIn?.value || 'Groomer';
 
             if (!name || name.length < 2) {
-                alert('Vui lòng nhập họ và tên nhân viên (tối thiểu 2 ký tự)!');
+                showToast('Vui lòng nhập họ và tên nhân viên (tối thiểu 2 ký tự)!', 'warning');
                 nameIn?.focus();
                 return;
             }
             if (!phone || phone.length < 10) {
-                alert('Vui lòng nhập số điện thoại hợp lệ (10 chữ số)!');
+                showToast('Vui lòng nhập số điện thoại hợp lệ (10 chữ số)!', 'warning');
                 phoneIn?.focus();
                 return;
             }
             if (!email || !email.includes('@')) {
-                alert('Vui lòng nhập địa chỉ email công việc hợp lệ!');
+                showToast('Vui lòng nhập địa chỉ email công việc hợp lệ!', 'warning');
                 emailIn?.focus();
                 return;
             }
@@ -2258,7 +2378,7 @@
                     staff.join_date = join_date;
                     staff.position = position;
                     staff.role = role;
-                    alert(`Đã cập nhật thông tin nhân viên ${staff.name} (${staff.id})!`);
+                    showToast(`Đã cập nhật thông tin nhân viên ${staff.name} (${staff.id})!`, 'success');
                 }
             } else {
                 const maxNum = mockStaff.reduce((max, s) => {
@@ -2287,7 +2407,7 @@
                 };
                 mockStaff.unshift(newStaff);
                 selectedStaffId = newId;
-                alert(`Đã thêm mới nhân viên ${newStaff.name} với mã ${newStaff.id}!`);
+                showToast(`Đã thêm mới nhân viên ${newStaff.name} với mã ${newStaff.id}!`, 'success');
             }
 
             saveStaffDataToStorage();
@@ -2477,7 +2597,7 @@
                         const msg = reassigned 
                             ? `Đã chuyển giao ${affected.length} ca hẹn và tạm khóa nhận việc an toàn cho nhân viên ${staff.name}!` 
                             : `Đã tạm khóa nhận việc an toàn cho nhân viên ${staff.name}!`;
-                        alert(msg);
+                        showToast(msg, 'warning');
                     });
                     return;
                 }
@@ -2493,7 +2613,7 @@
             const actionMsg = staff.serviceLocked 
                 ? `Đã tạm khóa nhận việc an toàn cho nhân viên ${staff.name}!` 
                 : `Đã mở khóa nhận việc cho nhân viên ${staff.name}!`;
-            alert(actionMsg);
+            showToast(actionMsg, staff.serviceLocked ? 'warning' : 'success');
         }
 
         document.getElementById('menuActionToggleLock')?.addEventListener('click', () => {
@@ -2539,18 +2659,23 @@
             if (dropdown) dropdown.style.display = 'none';
 
             if (staff) {
-                const confirmed = confirm(`Bạn có chắc chắn muốn xóa nhân viên ${staff.name} (${staff.id}) khỏi hệ thống?`);
-                if (confirmed) {
-                    const idx = mockStaff.findIndex(s => s.id === id);
-                    if (idx !== -1) {
-                        mockStaff.splice(idx, 1);
-                        saveStaffDataToStorage();
-                        updateKpiCounters();
-                        renderStaffAlertBar();
-                        renderStaffList();
-                        alert(`Đã xóa nhân viên ${staff.name} thành công!`);
+                showStaffConfirmModal({
+                    title: 'Xóa nhân viên',
+                    message: `Bạn có chắc chắn muốn xóa nhân viên ${staff.name} (${staff.id}) khỏi hệ thống?`,
+                    confirmText: 'Xóa nhân viên',
+                    isDanger: true,
+                    onConfirm: () => {
+                        const idx = mockStaff.findIndex(s => s.id === id);
+                        if (idx !== -1) {
+                            mockStaff.splice(idx, 1);
+                            saveStaffDataToStorage();
+                            updateKpiCounters();
+                            renderStaffAlertBar();
+                            renderStaffList();
+                            showToast(`Đã xóa nhân viên ${staff.name} thành công!`, 'success');
+                        }
                     }
-                }
+                });
             }
         });
 
@@ -2620,7 +2745,7 @@
             shiftModalEl?.classList.remove('active');
             renderScheduleTable();
             renderStaffAlertBar();
-            alert(`Đã lưu lịch phân ca cho ngày ${modalActiveDate}!`);
+            showToast(`Đã lưu lịch phân ca cho ngày ${modalActiveDate}!`, 'success');
         });
 
         document.getElementById('btnOpenAssignShiftModal')?.addEventListener('click', () => {

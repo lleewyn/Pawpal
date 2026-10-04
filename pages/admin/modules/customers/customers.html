@@ -626,4 +626,23 @@
             </form>
         </div>
     </div>
+
+    <!-- ====================================================================
+         MODAL 6: XÁC NHẬN HÀNH ĐỘNG KHÁCH HÀNG (CUSTOM CONFIRM MODAL)
+         ==================================================================== -->
+    <div class="admin-modal-backdrop" id="modalConfirmCustomerAction" style="display: none;">
+        <div class="admin-modal-card" style="max-width: 440px;">
+            <div class="admin-modal-header" style="border-bottom: none; padding-bottom: 0;">
+                <span class="admin-modal-title" id="custConfirmTitle">Xác nhận thao tác</span>
+                <button type="button" class="btn-modal-close" id="btnCloseCustConfirm">Đóng</button>
+            </div>
+            <div style="padding: 16px 0 24px; font-size: 13.5px; color: var(--text-main); line-height: 1.5;" id="custConfirmMessage">
+                Bạn có chắc chắn muốn thực hiện hành động này không?
+            </div>
+            <div class="modal-actions-footer" style="border-top: none; padding-top: 0;">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelCustConfirm">Hủy bỏ</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnAcceptCustConfirm">Xác nhận</button>
+            </div>
+        </div>
+    </div>
 </div>

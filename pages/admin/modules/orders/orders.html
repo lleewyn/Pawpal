@@ -291,23 +291,27 @@
          SUB-TAB 3: SẢN PHẨM VÀ KHO
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-order-products">
-        <!-- 4 THẺ CHỈ SỐ KHO HÀNG -->
-        <div class="orders-kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <!-- 5 THẺ CHỈ SỐ KHO HÀNG (GIAI ĐOẠN 3) -->
+        <div class="orders-kpi-grid" style="grid-template-columns: repeat(5, 1fr);">
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Tổng mặt hàng</span>
-                <span class="kpi-val" id="statTotalProducts">38</span>
+                <span class="kpi-val" id="statTotalProducts">11</span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Đang còn hàng</span>
-                <span class="kpi-val text-success" id="statInStockProducts">32</span>
+                <span class="kpi-val text-success" id="statInStockProducts">8</span>
             </div>
             <div class="admin-card kpi-card">
                 <span class="kpi-label">Sắp hết hàng</span>
-                <span class="kpi-val text-danger" id="statLowStockProducts">4</span>
+                <span class="kpi-val text-warning" id="statLowStockProducts">1</span>
             </div>
             <div class="admin-card kpi-card">
-                <span class="kpi-label">Tạm ngưng bán</span>
-                <span class="kpi-val text-neutral" id="statInactiveProducts">2</span>
+                <span class="kpi-label">Đã hết hàng</span>
+                <span class="kpi-val text-danger" id="statOutStockProducts">2</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Giá trị quy đổi tồn kho</span>
+                <span class="kpi-val" id="statTotalStockValue" style="color: #236B48; font-size: 16px;">48.500.000 đ</span>
             </div>
         </div>
 
@@ -319,6 +323,8 @@
                         <input type="text" class="admin-input" id="productSearchInput" placeholder="Tìm tên sản phẩm, mã SKU, thương hiệu...">
                     </div>
                     <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenGoodsReceiptModal">+ Nhập hàng NCC</button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenStocktakeModal">Kiểm kê kho</button>
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportProductStock">Xuất file kho</button>
                         <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddProductModal">+ Thêm sản phẩm</button>
                     </div>
@@ -408,6 +414,7 @@
                         <input type="text" class="admin-input" id="promoSearchInput" placeholder="Tìm mã voucher, tên chương trình khuyến mãi...">
                     </div>
                     <div class="filter-actions-right">
+                        <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.navigateToSettingsMarketing()">Cấu hình Marketing và Banner</button>
                         <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateVoucherModal">+ Tạo mã khuyến mãi</button>
                     </div>
                 </div>
@@ -453,8 +460,12 @@
          MODAL 1: TẠO ĐƠN HÀNG TẠI QUẦY (POS và PHONE ORDER)
          Quy chuẩn: 560px, padding 26px 30px, bo góc 9px, không kẻ ngang cắt xén
          ==================================================================== -->
+    <!-- ====================================================================
+         MODAL 1: TẠO ĐƠN HÀNG TẠI QUẦY (POS và PHONE ORDER)
+         Quy chuẩn: 680px thoáng rộng, padding 24px 28px, bo góc 9px, không kẻ ngang cắt xén
+         ==================================================================== -->
     <div class="admin-modal-overlay" id="modalCreateOrder">
-        <div class="admin-modal-card wide-modal">
+        <div class="admin-modal-card wide-modal" style="width: 720px; max-width: 95vw;">
             <div class="modal-header-clean">
                 <div class="modal-title-clean">Tạo đơn hàng tại quầy</div>
                 <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalCreateOrder')">Đóng</button>
@@ -473,7 +484,7 @@
                 </div>
 
                 <!-- BANNER THÔNG TIN HẠNG THÀNH VIÊN VÀ ĐIỂM PAWPOINT -->
-                <div class="pos-member-banner" id="createOrderMemberBanner">
+                <div class="pos-member-banner" id="createOrderMemberBanner" style="display: none;">
                     <div class="pos-member-banner-left">
                         <span>Hạng thành viên:</span>
                         <strong id="createOrderRankLabel" style="color: #236B48;">Kim Cương (Giảm 10%)</strong>
@@ -499,43 +510,65 @@
                 <div class="form-group-item">
                     <label class="form-label-clean">Địa chỉ nhận hàng:</label>
                     <div class="address-select-group">
-                        <div class="address-item-card selected">
-                            <input type="radio" name="addrSelect" class="address-item-radio" checked>
+                        <div class="address-item-card selected" id="cardAddrInStore">
+                            <input type="radio" name="addrSelect" id="radioAddrInStore" class="address-item-radio" checked>
                             <div class="address-item-content">
                                 <span class="address-person-line">Tại cửa hàng PawPal - Khách nhận trực tiếp</span>
                                 <span class="address-street-line">Chi nhánh Quận 1, TP. Hồ Chí Minh</span>
                             </div>
                         </div>
-                        <div class="address-item-card">
-                            <input type="radio" name="addrSelect" class="address-item-radio">
-                            <div class="address-item-content">
+                        <div class="address-item-card" id="cardAddrDelivery">
+                            <input type="radio" name="addrSelect" id="radioAddrDelivery" class="address-item-radio">
+                            <div class="address-item-content" style="width: 100%;">
                                 <span class="address-person-line">Giao tận nơi theo địa chỉ</span>
-                                <input type="text" class="admin-input" id="createOrderCustomAddress" placeholder="Nhập số nhà, tên đường, phường xã..." style="margin-top: 6px; height: 32px;">
+                                <input type="text" class="admin-input" id="createOrderCustomAddress" placeholder="Nhập số nhà, tên đường, phường xã..." style="margin-top: 6px; height: 32px; width: 100%;">
+                                <div class="delivery-options-subrow" style="display: flex; gap: 14px; margin-top: 8px; font-size: 12.5px; align-items: center;">
+                                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #236B48; font-weight: 600;">
+                                        <input type="checkbox" id="createOrderFastDelivery"> Giao hỏa tốc 2 giờ (+25.000 đ)
+                                    </label>
+                                    <select class="admin-select" id="createOrderDeliverySlot" style="height: 28px; font-size: 12px; width: auto; padding: 0 8px;">
+                                        <option value="any">Khung giờ: Trong ngày (08:00 - 18:00)</option>
+                                        <option value="morning">Buổi sáng (08:00 - 12:00)</option>
+                                        <option value="afternoon">Buổi chiều (14:00 - 18:00)</option>
+                                        <option value="evening">Buổi tối (18:00 - 21:00)</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group-item">
-                    <label class="form-label-clean">Chọn sản phẩm bán:</label>
-                    <select class="admin-select" id="createOrderProductSelect">
-                        <option value="">-- Chọn mặt hàng từ kho --</option>
-                    </select>
-                </div>
-
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Số lượng mua:</label>
-                        <input type="number" class="admin-input" id="createOrderQty" value="1" min="1">
-                    </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Phương thức thanh toán:</label>
-                        <select class="admin-select" id="createOrderPaymentMethod">
-                            <option value="cash">Tiền mặt tại quầy</option>
-                            <option value="pos">Quẹt thẻ ngân hàng POS</option>
-                            <option value="qr">Chuyển khoản QR code</option>
-                            <option value="cod">Giao hàng thu tiền COD</option>
+                <!-- KHU VỰC CHỌN SẢN PHẨM & GIỎ HÀNG NHIỀU MÓN (MULTI-ITEM POS CART) -->
+                <div class="pos-cart-section">
+                    <label class="form-label-clean">Thêm mặt hàng vào giỏ hàng:</label>
+                    <div class="pos-add-item-bar" style="display: flex; gap: 8px; margin-bottom: 10px;">
+                        <select class="admin-select" id="createOrderProductSelect" style="flex: 1;">
+                            <option value="">-- Chọn mặt hàng từ kho --</option>
                         </select>
+                        <input type="number" class="admin-input" id="createOrderQty" value="1" min="1" style="width: 70px; text-align: center;" title="Số lượng">
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnPosAddToCart" style="white-space: nowrap; height: 36px; padding: 0 14px;">+ Thêm món</button>
+                    </div>
+
+                    <!-- BẢNG GIỎ HÀNG POS -->
+                    <div class="pos-cart-table-wrapper" style="border: 1px solid var(--border-neutral); border-radius: var(--admin-radius); overflow: hidden; margin-bottom: 14px;">
+                        <table class="pos-cart-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                            <thead>
+                                <tr style="background-color: var(--table-header-bg); color: var(--table-header-text); font-weight: 600; text-align: left; height: 34px;">
+                                    <th style="padding: 6px 12px;">Sản phẩm / Dịch vụ</th>
+                                    <th style="padding: 6px 10px; text-align: right; width: 100px;">Đơn giá</th>
+                                    <th style="padding: 6px 10px; text-align: center; width: 110px;">Số lượng</th>
+                                    <th style="padding: 6px 12px; text-align: right; width: 110px;">Thành tiền</th>
+                                    <th style="padding: 6px 8px; text-align: center; width: 44px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="posCartItemsList">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 18px 12px;">
+                                        Chưa có món nào trong giỏ hàng. Vui lòng chọn sản phẩm và bấm "+ Thêm món" ở trên.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -550,11 +583,48 @@
                     </div>
                 </div>
 
+                <div class="form-group-item">
+                    <label class="form-label-clean">Phương thức thanh toán:</label>
+                    <select class="admin-select" id="createOrderPaymentMethod">
+                        <option value="cash">Tiền mặt tại quầy</option>
+                        <option value="pos">Quẹt thẻ ngân hàng POS</option>
+                        <option value="qr">Chuyển khoản QR code</option>
+                        <option value="cod">Giao hàng thu tiền COD</option>
+                    </select>
+                </div>
+
+                <!-- MÁY TÍNH TIỀN MẶT VÀ TIỀN THỪA (CHỈ HIỂN THỊ KHI CHỌN TIỀN MẶT) -->
+                <div class="pos-cash-calc-box" id="posCashCalcSection" style="background-color: #F4FAF6; border: 1px solid #C3DEC7; border-radius: var(--admin-radius); padding: 12px 16px; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                        <span style="font-weight: 600; color: #236B48; font-size: 13px;">Thu tiền mặt tại quầy:</span>
+                        <div class="pos-quick-cash-btns" style="display: flex; gap: 6px;">
+                            <button type="button" class="pos-cash-chip" id="btnCashExact" style="background: #FFFFFF; border: 1px solid #C3DEC7; border-radius: var(--admin-radius); padding: 2px 8px; font-size: 12px; cursor: pointer; color: #236B48; font-weight: 600;">Đủ tiền</button>
+                            <button type="button" class="pos-cash-chip" onclick="PawpalOrdersModule.addCashTendered(100000)" style="background: #FFFFFF; border: 1px solid #C3DEC7; border-radius: var(--admin-radius); padding: 2px 8px; font-size: 12px; cursor: pointer; color: #236B48;">+100k</button>
+                            <button type="button" class="pos-cash-chip" onclick="PawpalOrdersModule.addCashTendered(200000)" style="background: #FFFFFF; border: 1px solid #C3DEC7; border-radius: var(--admin-radius); padding: 2px 8px; font-size: 12px; cursor: pointer; color: #236B48;">+200k</button>
+                            <button type="button" class="pos-cash-chip" onclick="PawpalOrdersModule.addCashTendered(500000)" style="background: #FFFFFF; border: 1px solid #C3DEC7; border-radius: var(--admin-radius); padding: 2px 8px; font-size: 12px; cursor: pointer; color: #236B48;">+500k</button>
+                        </div>
+                    </div>
+                    <div class="form-row-2col" style="margin-bottom: 0;">
+                        <div class="form-group-item" style="margin-bottom: 0;">
+                            <label class="form-label-clean" style="font-size: 12px;">Tiền khách đưa (VND):</label>
+                            <input type="number" class="admin-input" id="createOrderCashTendered" placeholder="Nhập số tiền..." min="0" step="10000" style="font-size: 14px; font-weight: 600; color: #203A2C;">
+                        </div>
+                        <div class="form-group-item" style="margin-bottom: 0;">
+                            <label class="form-label-clean" style="font-size: 12px;">Tiền thừa trả khách:</label>
+                            <div class="pos-change-display" id="posLiveCashChange" style="height: 36px; display: flex; align-items: center; font-size: 15px; font-weight: 700; color: #236B48;">0 đ</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- BẢNG KÊ TÍNH TIỀN TỨC THỜI (LIVE BREAKDOWN) -->
                 <div class="pos-financial-live-summary" id="createOrderLiveSummary">
                     <div class="pos-summary-row">
-                        <span>Tiền hàng tạm tính:</span>
+                        <span>Tiền hàng tạm tính (<span id="posCartItemCount">0</span> món):</span>
                         <strong id="posLiveSubtotal" style="color: var(--text-main);">0 đ</strong>
+                    </div>
+                    <div class="pos-summary-row" id="posRowShippingFee" style="display: none;">
+                        <span>Phí giao hàng:</span>
+                        <strong id="posLiveShippingFee" style="color: var(--text-main);">0 đ</strong>
                     </div>
                     <div class="pos-summary-row" id="posRowTierDiscount" style="display: none;">
                         <span>Chiết khấu hạng thành viên:</span>
@@ -574,7 +644,7 @@
                     </div>
                 </div>
 
-                <div class="form-group-item">
+                <div class="form-group-item" style="margin-top: 10px;">
                     <label class="form-label-clean">Ghi chú đơn hàng:</label>
                     <input type="text" class="admin-input" id="createOrderNote" placeholder="Ghi chú đóng gói hoặc giao hàng...">
                 </div>
@@ -582,7 +652,88 @@
 
             <div class="modal-footer-clean">
                 <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalCreateOrder')">Hủy bỏ</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitCreateOrder">Xác nhận tạo đơn</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitCreateOrder">Xác nhận tạo đơn và In bill</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL IN HÓA ĐƠN BILL NHIỆT POS K80 (80MM)
+         Quy chuẩn: Khổ in dọc nhiệt, không icon, bo góc 9px, sắc nét
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalPosReceipt">
+        <div class="admin-modal-card" style="width: 420px; max-width: 94vw;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean">Hóa đơn thanh toán tại quầy</div>
+                <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalPosReceipt')">Đóng</button>
+            </div>
+
+            <div class="modal-body-clean receipt-print-wrapper" id="posReceiptPrintArea" style="background-color: #FFFFFF; padding: 18px 20px; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral); font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 12.5px; color: #1E2922;">
+                <div class="receipt-paper">
+                    <div class="receipt-header" style="text-align: center; margin-bottom: 12px;">
+                        <div style="font-size: 16px; font-weight: 800; color: #236B48; letter-spacing: -0.2px;">PAWPAL PET CARE VÀ RETAIL</div>
+                        <div style="font-size: 11.5px; color: #5C6E64; margin-top: 2px;">123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh</div>
+                        <div style="font-size: 11.5px; color: #5C6E64;">Hotline: 1900 8888 • www.pawpal.vn</div>
+                        <div style="font-size: 13.5px; font-weight: 700; margin-top: 8px; color: #203A2C; letter-spacing: 0.5px;">PHIẾU THANH TOÁN</div>
+                    </div>
+
+                    <div style="border-top: 1px dashed #C3DEC7; margin: 8px 0;"></div>
+
+                    <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between;"><span>Mã đơn:</span><strong id="recOrderId" style="color: #236B48;">ORD-2026-001</strong></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Thời gian:</span><span id="recOrderTime">14:30 - Hôm nay</span></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Thu ngân:</span><span id="recCashier">Quản trị viên</span></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Khách hàng:</span><strong id="recCustName">Lê Lệ Quyên</strong></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Số điện thoại:</span><span id="recCustPhone">0901234567</span></div>
+                    </div>
+
+                    <div style="border-top: 1px dashed #C3DEC7; margin: 8px 0;"></div>
+
+                    <!-- DANH SÁCH MÓN HÀNG TRONG HÓA ĐƠN -->
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 10px;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #ECF2EE; color: #236B48; font-weight: 600; text-align: left;">
+                                <th style="padding: 4px 0;">Mặt hàng</th>
+                                <th style="padding: 4px 4px; text-align: center; width: 36px;">SL</th>
+                                <th style="padding: 4px 4px; text-align: right; width: 70px;">Đ.Giá</th>
+                                <th style="padding: 4px 0; text-align: right; width: 75px;">T.Tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recItemsBody"></tbody>
+                    </table>
+
+                    <div style="border-top: 1px dashed #C3DEC7; margin: 8px 0;"></div>
+
+                    <!-- BẢNG TỔNG HỢP TIỀN -->
+                    <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+                        <div style="display: flex; justify-content: space-between;"><span>Tiền hàng:</span><span id="recSubtotal">0 đ</span></div>
+                        <div style="display: flex; justify-content: space-between; color: #15803D;" id="recRowDiscount"><span>Giảm giá và Voucher:</span><span id="recDiscount">- 0 đ</span></div>
+                        <div style="display: flex; justify-content: space-between; color: #15803D;" id="recRowPoints"><span>Đổi điểm Pawpoint:</span><span id="recPointsDiscount">- 0 đ</span></div>
+                        <div style="display: flex; justify-content: space-between;" id="recRowShipping"><span>Phí giao hàng:</span><span id="recShipping">0 đ</span></div>
+                        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; color: #236B48; padding-top: 6px; border-top: 1px solid #ECF2EE; margin-top: 2px;">
+                            <span>TỔNG THANH TOÁN:</span>
+                            <span id="recTotal">0 đ</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 4px;"><span>Hình thức:</span><span id="recPayMethod" style="font-weight: 600;">Tiền mặt</span></div>
+                        <div style="display: flex; justify-content: space-between;" id="recRowCashTendered"><span>Khách đưa:</span><span id="recCashTendered">0 đ</span></div>
+                        <div style="display: flex; justify-content: space-between; font-weight: 700; color: #236B48;" id="recRowCashChange"><span>Tiền thừa:</span><span id="recCashChange">0 đ</span></div>
+                    </div>
+
+                    <div style="border-top: 1px dashed #C3DEC7; margin: 10px 0;"></div>
+
+                    <div style="text-align: center; font-size: 11.5px; color: #5C6E64;">
+                        <div style="background-color: #F4FAF6; padding: 6px 10px; border-radius: var(--admin-radius); margin-bottom: 8px; color: #236B48; font-weight: 600;">
+                            Tích lũy: <span id="recPointsEarned">+15 điểm Pawpoint</span> • Hạng <span id="recCustRank">Vàng</span>
+                        </div>
+                        <div>Cảm ơn Quý khách và Hẹn gặp lại bé yêu!</div>
+                        <div style="font-family: monospace; font-size: 11px; letter-spacing: 2px; color: #203A2C; margin-top: 6px;">* PAWPAL-POS-2026 *</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalPosReceipt')">Hoàn tất và Đóng</button>
+                <button type="button" class="admin-btn admin-btn-primary" onclick="PawpalOrdersModule.printReceiptDirectly()">In hóa đơn K80</button>
             </div>
         </div>
     </div>
@@ -1146,5 +1297,294 @@
                 <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitUpdateVoucher">Lưu thay đổi</button>
             </div>
         </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 12: LỊCH SỬ BIẾN ĐỘNG KHO (AUDIT TRAIL / STOCK LOGS)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalStockLogs">
+        <div class="admin-modal-card" style="width: 1000px; max-width: 95vw;">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Lịch sử biến động kho</div>
+                    <div class="sub-meta-text" id="stockLogsSubtitle">Mã SKU: TP-HAT-01 • Thức ăn hạt Royal Canin</div>
+                </div>
+                <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalStockLogs')">Đóng</button>
+            </div>
+
+            <div class="modal-body-clean">
+                <div class="rma-order-summary-box" style="margin-bottom: 16px;">
+                    <div class="info-pair">
+                        <span class="info-label">Tồn kho hiện tại:</span>
+                        <span class="info-value text-heading" id="stockLogsCurrentTotal" style="font-weight: 700; font-size: 15px;">45 gói</span>
+                    </div>
+                    <div class="info-pair">
+                        <span class="info-label">Định mức an toàn:</span>
+                        <span class="info-value" id="stockLogsMinStock" style="font-weight: 500;">5 gói</span>
+                    </div>
+                    <div class="info-pair">
+                        <span class="info-label">Tình trạng:</span>
+                        <span class="info-value text-success" id="stockLogsStatusText" style="font-weight: 600;">An toàn</span>
+                    </div>
+                </div>
+
+                <div class="table-responsive-wrapper" style="max-height: 420px; overflow-y: auto;">
+                    <table class="admin-table" style="font-size: 12.5px; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="white-space: nowrap;">Thời gian</th>
+                                <th style="white-space: nowrap;">Loại nghiệp vụ</th>
+                                <th style="text-align: center; white-space: nowrap;">Thay đổi</th>
+                                <th style="text-align: center; white-space: nowrap;">Tồn trước</th>
+                                <th style="text-align: center; white-space: nowrap;">Tồn sau</th>
+                                <th style="white-space: nowrap;">Chứng từ tham chiếu</th>
+                                <th style="white-space: nowrap;">Người thực hiện</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockLogsTableBody">
+                            <!-- Nạp động từ orders.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalStockLogs')">Đóng</button>
+                <button type="button" class="admin-btn admin-btn-primary" onclick="PawpalOrdersModule.openAdjustStockModalFromLogs()">Điều chỉnh tồn kho</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 13: PHIẾU NHẬP HÀNG TỪ NHÀ CUNG CẤP (GOODS RECEIPT NOTE - GRN)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalGoodsReceipt">
+        <div class="admin-modal-card" style="width: 1000px; max-width: 95vw;">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Tạo phiếu nhập hàng từ nhà cung cấp</div>
+                    <div class="sub-meta-text">Tăng tồn kho vật lý và ghi nhận giá vốn đầu vào</div>
+                </div>
+                <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalGoodsReceipt')">Đóng</button>
+            </div>
+
+            <div class="modal-body-clean">
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Mã phiếu nhập kho:</label>
+                        <input type="text" class="admin-input" id="grnReceiptCode" readonly style="background: rgba(238, 245, 241, 0.5); font-family: monospace; font-weight: 700;">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Nhà cung cấp / Đối tác:</label>
+                        <select class="admin-select" id="grnSupplierSelect">
+                            <option value="Công ty TNHH Royal Canin Việt Nam">Công ty TNHH Royal Canin Việt Nam</option>
+                            <option value="Công ty CP King's Pet Việt Nam">Công ty CP King's Pet Việt Nam</option>
+                            <option value="Inaba Petfood Japan (Nhập khẩu Ciao)">Inaba Petfood Japan (Nhập khẩu Ciao)</option>
+                            <option value="Petkit Smart Living Distributor">Petkit Smart Living Distributor</option>
+                            <option value="Virbac Animal Health VN">Virbac Animal Health VN</option>
+                            <option value="Xưởng gia công phụ kiện thú cưng PawPal">Xưởng gia công phụ kiện thú cưng PawPal</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row-2col">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Số hóa đơn / Chứng từ NCC:</label>
+                        <input type="text" class="admin-input" id="grnInvoiceNo" placeholder="Ví dụ: HD-RC-2026-9921...">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Kho tiếp nhận:</label>
+                        <input type="text" class="admin-input" id="grnWarehouseLocation" value="Kho Tổng PawPal - 45 Lê Duẩn, Quận 1" readonly style="background: rgba(238, 245, 241, 0.5);">
+                    </div>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span class="form-label-clean" style="margin: 0; font-weight: 600;">Danh sách mặt hàng nhập kho:</span>
+                        <div style="display: flex; gap: 8px;">
+                            <select class="admin-select" id="grnProductPicker" style="width: 320px; height: 32px; font-size: 12.5px;">
+                                <!-- Nạp danh sách sản phẩm từ orders.js -->
+                            </select>
+                            <button type="button" class="admin-btn admin-btn-secondary" id="btnGrnAddItem" style="height: 32px; padding: 0 12px; font-size: 12.5px;">+ Thêm dòng</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive-wrapper" style="max-height: 260px; overflow-y: auto;">
+                        <table class="admin-table" style="font-size: 12.5px; width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 120px; white-space: nowrap;">Mã SKU</th>
+                                    <th>Tên sản phẩm</th>
+                                    <th style="width: 120px; text-align: center; white-space: nowrap;">Số lượng nhập</th>
+                                    <th style="width: 140px; text-align: right; white-space: nowrap;">Đơn giá nhập</th>
+                                    <th style="width: 150px; text-align: right; white-space: nowrap;">Thành tiền</th>
+                                    <th style="width: 60px; text-align: center; white-space: nowrap;">Xóa</th>
+                                </tr>
+                            </thead>
+                            <tbody id="grnItemsTableBody">
+                                <!-- Nạp động khi chọn món -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="rma-order-summary-box" style="margin-top: 12px; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span class="info-label">Tổng số lượng nhập:</span>
+                        <span class="info-value text-heading" id="grnTotalQtyDisp" style="font-weight: 700; margin-left: 6px;">0 món</span>
+                    </div>
+                    <div>
+                        <span class="info-label">Tổng giá trị phiếu nhập:</span>
+                        <span class="info-value text-heading" id="grnTotalAmountDisp" style="font-weight: 700; font-size: 16px; margin-left: 6px; color: #236B48;">0 đ</span>
+                    </div>
+                </div>
+
+                <div class="form-group-item" style="margin-top: 12px;">
+                    <label class="form-label-clean">Ghi chú phiếu nhập kho:</label>
+                    <input type="text" class="admin-input" id="grnNoteInput" placeholder="Ví dụ: Lô hàng nhập bổ sung định kỳ tháng 6, hàng nguyên đai nguyên kiện...">
+                </div>
+            </div>
+
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalGoodsReceipt')">Hủy</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitGoodsReceipt">Xác nhận nhập kho và cộng tồn</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 14: PHIẾU KIỂM KÊ KHO (STOCKTAKE AUDIT)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalStocktake">
+        <div class="admin-modal-card" style="width: 1000px; max-width: 95vw;">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Phiếu kiểm kê và cân đối kho hàng</div>
+                    <div class="sub-meta-text">Đối chiếu số lượng thực tế tại kệ và cân đối số tồn sổ sách</div>
+                </div>
+                <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalStocktake')">Đóng</button>
+            </div>
+
+            <div class="modal-body-clean">
+                <div class="form-row-2col" style="margin-bottom: 12px;">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Mã phiên kiểm kê:</label>
+                        <input type="text" class="admin-input" id="stkAuditCode" readonly style="background: rgba(238, 245, 241, 0.5); font-family: monospace; font-weight: 700;">
+                    </div>
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Lý do kiểm kê:</label>
+                        <select class="admin-select" id="stkReasonSelect">
+                            <option value="Kiểm kê định kỳ tháng 06/2026">Kiểm kê định kỳ tháng 06/2026</option>
+                            <option value="Kiểm kê đột xuất khu vực hàng bán chạy">Kiểm kê đột xuất khu vực hàng bán chạy</option>
+                            <option value="Bàn giao ca quản lý kho vận">Bàn giao ca quản lý kho vận</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive-wrapper" style="max-height: 320px; overflow-y: auto;">
+                    <table class="admin-table" style="font-size: 12.5px;">
+                        <thead>
+                            <tr>
+                                <th>Mã SKU</th>
+                                <th>Tên sản phẩm</th>
+                                <th style="text-align: center; width: 90px;">Tồn hệ thống</th>
+                                <th style="text-align: center; width: 110px;">Thực tế đếm</th>
+                                <th style="text-align: center; width: 100px;">Chênh lệch</th>
+                                <th>Lý do chênh lệch</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stocktakeTableBody">
+                            <!-- Nạp danh sách sản phẩm từ orders.js -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="rma-order-summary-box" style="margin-top: 12px; justify-content: space-between;">
+                    <div style="font-size: 12.5px; color: var(--text-muted);">
+                        Hệ thống sẽ tự động cập nhật số lượng tồn khả dụng về đúng số thực tế sau khi xác nhận.
+                    </div>
+                    <div id="stkDiscrepancySummary" style="font-weight: 600; color: var(--text-main);">
+                        Chênh lệch: <span class="text-success" id="stkTotalDiff">0 mặt hàng lệch</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalStocktake')">Bỏ qua</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitStocktake">Cân đối và cập nhật kho</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 15: XÁC NHẬN ĐỔI TRẠNG THÁI KINH DOANH SẢN PHẨM
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalConfirmToggleProductStatus">
+        <div class="admin-modal-card" style="width: 540px; max-width: 95vw;">
+            <div class="modal-header-clean">
+                <div>
+                    <div class="modal-title-clean">Đổi trạng thái kinh doanh</div>
+                    <div class="sub-meta-text" id="toggleStatusProdSubtitle">Mã SKU: TP-HAT-01</div>
+                </div>
+                <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalConfirmToggleProductStatus')">Đóng</button>
+            </div>
+
+            <div class="modal-body-clean">
+                <div class="rma-order-summary-box" style="margin-bottom: 16px;">
+                    <div class="info-pair">
+                        <span class="info-label">Sản phẩm:</span>
+                        <span class="info-value text-heading" id="toggleStatusProdName" style="font-weight: 600;">Thức ăn hạt Royal Canin</span>
+                    </div>
+                    <div class="info-pair">
+                        <span class="info-label">Trạng thái hiện tại:</span>
+                        <span class="info-value" id="toggleStatusCurrentBadge">Đang bán</span>
+                    </div>
+                    <div class="info-pair">
+                        <span class="info-label">Trạng thái mới:</span>
+                        <span class="info-value" id="toggleStatusNewBadge" style="font-weight: 700; color: #236B48;">Tạm ngưng</span>
+                    </div>
+                </div>
+
+                <div style="font-size: 13px; line-height: 1.5; color: var(--text-muted); background: rgba(238, 245, 241, 0.4); border-radius: var(--admin-radius); padding: 12px 16px;" id="toggleStatusDescText">
+                    Khi chuyển sang <strong>Tạm ngưng</strong>, sản phẩm sẽ tạm thời bị ẩn khỏi gian hàng và khách hàng không thể đặt mua.
+                </div>
+            </div>
+
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalConfirmToggleProductStatus')">Hủy bỏ</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnConfirmToggleProductStatus">Xác nhận chuyển trạng thái</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL 16: XÁC NHẬN THAO TÁC ĐƠN HÀNG (CUSTOM CONFIRM DIALOG)
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalConfirmOrderAction">
+        <div class="admin-modal-card" style="width: 480px; max-width: 92vw;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean" id="confirmOrderActionTitle">Xác nhận thao tác</div>
+                <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalConfirmOrderAction')">Đóng</button>
+            </div>
+            <div class="modal-body-clean" style="padding-top: 10px; padding-bottom: 20px;">
+                <div id="confirmOrderActionMessage" style="font-size: 13.5px; color: var(--text-main); line-height: 1.6;">
+                    Bạn có chắc chắn muốn thực hiện thao tác này không?
+                </div>
+            </div>
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" id="btnCancelOrderConfirm" onclick="PawpalOrdersModule.closeModal('modalConfirmOrderAction')">Hủy bỏ</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnAcceptOrderConfirm">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         POPOVER MENU TÁC VỤ KHO CHO TỪNG SẢN PHẨM (TEXT-ONLY)
+         ==================================================================== -->
+    <div class="action-dropdown-menu" id="stockActionDropdown">
+        <button type="button" class="action-menu-item" id="menuStockActionLogs" onclick="PawpalOrdersModule.handleStockAction('logs')">Xem lịch sử biến động kho</button>
+        <button type="button" class="action-menu-item" id="menuStockActionAdjust" onclick="PawpalOrdersModule.handleStockAction('adjust')">Điều chỉnh số lượng tồn</button>
+        <button type="button" class="action-menu-item" id="menuStockActionQuickGrn" onclick="PawpalOrdersModule.handleStockAction('grn')">Tạo phiếu nhập hàng nhanh</button>
+        <button type="button" class="action-menu-item" id="menuStockActionToggleStatus" onclick="PawpalOrdersModule.handleStockAction('toggle')">Đổi trạng thái kinh doanh</button>
     </div>
 </div>
