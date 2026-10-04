@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hash.startsWith('#tab-staff')) return 'Nhân sự';
         if (hash.startsWith('#tab-complaint')) return 'Khiếu nại';
         if (hash.startsWith('#tab-chatbot') || hash.startsWith('#tab-ai-') || hash.startsWith('#tab-live-support')) return 'Chatbot';
-        if (hash.startsWith('#tab-setting') || hash.startsWith('#tab-banner') || hash.startsWith('#tab-blog') || hash.startsWith('#tab-system') || hash.startsWith('#tab-content')) return 'Cấu hình';
+        if (hash.startsWith('#tab-setting') || hash.startsWith('#tab-banner') || hash.startsWith('#tab-blog') || hash.startsWith('#tab-system') || hash.startsWith('#tab-content') || hash.startsWith('#tab-audit') || hash === '#settings') return 'Cấu hình';
         if (hash.startsWith('#tab-pet')) return 'Thú cưng';
         if (hash.startsWith('#tab-list') || hash.startsWith('#tab-profile') || hash.startsWith('#tab-pawpoint') || hash.startsWith('#tab-customer')) return 'Khách hàng';
         if (hash.startsWith('#tab-dashboard')) return 'Dashboard';
