@@ -32,7 +32,7 @@
             <!-- THANH THÔNG BÁO NHANH KHÁCH HÀNG CÓ KHIẾU NẠI (MỎNG, GỌN, ALERT TONE, THUẦN CHỮ, KHÔNG ICON) -->
             <div class="customer-complaint-strip" id="custComplaintAlertBar">
                 <div class="complaint-strip-left">
-                    <span class="complaint-strip-badge">Cảnh báo khiếu nại đang xử lý:</span>
+                    <span class="complaint-strip-badge">Cảnh báo vận hành:</span>
                     <div class="complaint-strip-items" id="custComplaintItemsContainer">
                         <!-- Danh sách tóm tắt render động -->
                     </div>
@@ -50,7 +50,7 @@
                     </div>
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportCustomerReport">Xuất file</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddCustomerModal">+ Thêm khách</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddCustomerModal">Thêm khách</button>
                     </div>
                 </div>
 
@@ -205,7 +205,7 @@
                 <div class="drawer-tab-panel" id="dtab-pets">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h4 class="detail-box-title" style="margin-bottom: 0;">Danh sách thú cưng sở hữu</h4>
-                        <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenAddPetModal">+ Thêm bé cưng</button>
+                        <button type="button" class="admin-btn admin-btn-secondary btn-sm" id="btnOpenAddPetModal">Thêm bé cưng</button>
                     </div>
                     <div class="pet-cards-list" id="petCardsListContainer">
                         <!-- Render động theo khách hàng -->
@@ -333,8 +333,8 @@
                     <input type="text" class="admin-input" id="pawpointSearchInput" placeholder="Tìm theo tên hoặc SĐT..." style="max-width: 240px; height: 32px; font-size: 13px;">
                     <select class="admin-select" id="pawpointFilterType" style="max-width: 150px; height: 32px; font-size: 13px;">
                         <option value="ALL">Tất cả giao dịch</option>
-                        <option value="ADD">+ Cộng điểm</option>
-                        <option value="SUB">- Trừ điểm</option>
+                        <option value="ADD">Cộng điểm</option>
+                        <option value="SUB">Trừ điểm</option>
                     </select>
                 </div>
                 <table class="admin-table">
@@ -430,8 +430,8 @@
                     <div class="form-group">
                         <label class="form-label">Loại điều chỉnh</label>
                         <select class="admin-select" id="adjustType">
-                            <option value="ADD">+ Cộng điểm (Thưởng / Bù sự cố)</option>
-                            <option value="SUB">- Trừ điểm (Thu hồi / Đổi quà thủ công)</option>
+                            <option value="ADD">Cộng điểm (Thưởng hoặc bù sự cố)</option>
+                            <option value="SUB">Trừ điểm (Thu hồi hoặc đổi quà thủ công)</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -509,7 +509,7 @@
                 <div class="address-book-wrapper">
                     <div class="address-book-header">
                         <label class="form-label">Sổ địa chỉ nhận hàng</label>
-                        <button type="button" class="btn-text-add-address" id="btnAddAddressItem">+ Thêm địa chỉ</button>
+                        <button type="button" class="btn-text-add-address" id="btnAddAddressItem">Thêm địa chỉ</button>
                     </div>
                     <div class="address-list-container" id="editCustAddressList">
                         <!-- Render danh sách địa chỉ bằng JavaScript -->

@@ -40,7 +40,7 @@
   - Toàn bộ avatar hiển thị hình đại diện hoặc chữ cái viết tắt của Kỹ thuật viên, Nhân viên, Khách hàng, Quản trị viên (`.staff-avatar-initials`, `.customer-avatar`, `.user-avatar`...) BẮT BUỘC có `border-radius: 50%;` hình tròn hoàn hảo, tạo sự phân biệt trực quan sinh động so với hình khối bo góc 9px của khung thẻ và nút bấm.
 * **Bố Cục Modal & Sổ Địa Chỉ Nhận Hàng (Address Book)**:
   - **Khoảng cách thoáng & Không kẻ ngang**: Modal có độ rộng thoáng chuẩn `width: 560px; max-width: 94vw;`, padding `26px 30px;`, các nhóm trường cách đều `gap: 16px;`. Tuyệt đối không kẻ đường viền xám 100% cắt ngang chia vụn vặt ở Header và Footer của Modal (`border-bottom: none; border-top: none;`).
-  - **Đa địa chỉ & 1 địa chỉ mặc định**: Hỗ trợ 1 khách hàng có thể lưu nhiều địa chỉ nhận hàng, có radio chọn đúng 1 "Địa chỉ mặc định" (thẻ mặc định có viền xanh `#C3DEC7`, nền `#F4FAF6`), các địa chỉ khác là địa chỉ phụ (có nút text `Xóa`). Nút `+ Thêm địa chỉ` text-only màu xanh thương hiệu `#236B48`.
+  - **Đa địa chỉ & 1 địa chỉ mặc định**: Hỗ trợ 1 khách hàng có thể lưu nhiều địa chỉ nhận hàng, có radio chọn đúng 1 "Địa chỉ mặc định" (thẻ mặc định có viền xanh `#C3DEC7`, nền `#F4FAF6`), các địa chỉ khác là địa chỉ phụ (có nút text `Xóa`). Nút `Thêm địa chỉ` text-only màu xanh thương hiệu `#236B48`.
 
 ---
 
@@ -49,11 +49,18 @@
 * **Triệt Tiêu Dòng Phụ Chú Thích Dài Dòng (No Redundant Subtitles)**:
   - Đưa mốc thời gian / ngày tháng trực tiếp lên dòng Tiêu đề chính (ví dụ: `Lịch trực và Điều phối Kỹ thuật viên (25/06/2026)`).
   - Tuyệt đối không thêm dòng phụ chú thích mô tả chức năng rườm rà dưới tiêu đề modal/card làm vụn vặt giao diện.
+* **Triệt tiêu ký hiệu `+` thừa trên các nút bấm thao tác (Clean Flat Text Buttons)**:
+  - Nút bấm trình bày dạng text thuần túy, phẳng và thanh lịch, **tuyệt đối KHÔNG gắn tiền tố `+ `** (viết `Thêm khách`, `Tạo đơn tại quầy`, `Phân ca làm việc`, `Thêm sản phẩm`, `Ghi nhật ký`, `Tạo bài viết mới`, `Tạo khiếu nại`... thay vì viết `+ Thêm khách`, `+ Tạo đơn`...).
+  - Ký hiệu toán học `+` chỉ được phép sử dụng duy nhất trong ngữ cảnh tính toán số liệu thực tế (ví dụ: `+15 phút gia hạn`, `+50 điểm Pawpoint`, `+100k phụ phí`).
+* **Triệt tiêu từ Tiếng Anh và Chú thích trong ngoặc đơn không cần thiết (Pure Natural Vietnamese)**:
+  - Toàn bộ giao diện sử dụng 100% Tiếng Việt chuẩn mực, tự nhiên, thanh thoát và gãy gọn.
+  - Tuyệt đối không chèn thêm các từ tiếng Anh dịch kèm / chú giải rườm rà trong ngoặc đơn (ví dụ: cấm viết `Tóm tắt ngắn (Summary)`, `Từ khóa cốt lõi (Keywords và Entities)`, `Bảng kê (Manifest)`, `Thời gian hoàn tất (ETC)`, `Ngưỡng tồn kho (Min Stock)`, `Hoàn tiền (Refund)`, `Nhập lại kho (Restock)`...).
+  - Chỉ giữ lại các thuật ngữ viết tắt kỹ thuật / mã nghiệp vụ chuẩn ngành bắt buộc: `COD`, `POS`, `RMA`, `SKU`, `SOP`, `SLA`, `KTV`, `VIP`, `Zalo`.
 * **Chỉ Sidebar bên trái được dùng Lucide Icons**:
   - 9 menu chức năng và 2 nút chân sidebar là nơi duy nhất được hiển thị icon nét mảnh Lucide.
 * **Tất cả các khu vực khác bên ngoài Sidebar là 100% Text-Only**:
   - **Header Bar**: Thuần chữ, không icon.
-  - **Toolbar & Bộ lọc**: Nút bấm dùng text thuần (ví dụ: `+ Thêm khách`, `Xuất file`, `Có khiếu nại`), không gắn icon.
+  - **Toolbar & Bộ lọc**: Nút bấm dùng text thuần (ví dụ: `Thêm khách`, `Xuất file`, `Có khiếu nại`), không gắn icon.
   - **Bảng dữ liệu**: Cột tác vụ dùng nút 3 chấm text `•••`.
   - **Menu tác vụ thả xuống (Dropdown)**: Các mục hành động là Text thuần (`Xem hồ sơ 360°`, `Khóa tài khoản`), không icon.
   - **Drawer & Nút thao tác một chạm**: Dùng các nút text pill (`Gọi điện`, `Zalo`, `Đặt lịch`, `Lên đơn`), không icon.
@@ -110,6 +117,21 @@
   - **Đồng bộ hàng tiêu đề cột (`th:first-child`)**: Ô đầu tiên của hàng tiêu đề bảng BẮT BUỘC có `border-left: 3px solid var(--table-header-bg);` để ăn khớp thẳng tắp với các dòng dữ liệu bên dưới, triệt tiêu hoàn toàn khe hở màu trắng bên trái.
   - **TUYỆT ĐỐI CẤM DÙNG `border-left` Ở BẤT KỲ VỊ TRÍ NÀO KHÁC**: Ngoại trừ dòng trong bảng, tuyệt đối không dùng viền mép trái làm trang trí (callout, trích dẫn quote, danh sách, khối ghi chú, thẻ thông tin...). Các khối trích dẫn/nội dung phản ánh phải trình bày dạng chữ phẳng tự nhiên, thoáng đãng (`border: none; background: transparent;`).
   - **Dòng cảnh báo thuần chữ đỏ (Không nền & Không viền khung)**: Cảnh báo khẩn cấp trình bày dạng dòng chữ màu đỏ thuần (`color: #DC2626; background: transparent; border: none;`), không vẽ khung viền hộp và không bôi màu nền để triệt tiêu hoàn toàn cảm giác "hộp viền bao quanh".
+* **Triệt Tiêu Badge Hộp Màu Ở Cột Cảnh Báo (No Boxed Alert Badges - Text Dot Indicators)**:
+  - Cột Cảnh báo **TUYỆT ĐỐI KHÔNG DÙNG BADGE KHUNG HỘP NỀN MÀU**: Triệt tiêu hoàn toàn các khối pill nền đỏ/cam/xanh lồng nhau gây rối mắt.
+  - **Chỉ hiển thị khi THẬT SỰ CẦN LƯU Ý / KHẨN CẤP**: Hiển thị dưới dạng Text phẳng màu dịu kèm dấu chấm tròn (`• Pet có lưu ý`, `• Quá hạn duyệt (>30p)`, `• Chờ thanh toán COD`).
+  - **Dòng bình thường / Hoàn tất**: Không bôi chữ "Bình thường", không bôi badge màu, chỉ hiển thị dấu gạch ngang nhẹ `—` (`color: var(--text-muted); opacity: 0.35; font-size: 13px;`) để mắt người quản trị được nghỉ ngơi và tập trung 100% vào các dòng có vấn đề.
+  - **Triệt tiêu các nhãn hiển nhiên**: Không gắn nhãn *"Đúng tiến độ"*, *"Đang chạy bình thường"*.
+* **Triệt Tiêu Các Chip Màu Con Lồng Trong Cột Dữ Liệu (No Nested Colored Sub-Chips)**:
+  - Toàn bộ thông tin phụ bên trong các cột dữ liệu (như mã phòng, số đêm, thực đơn, cự ly taxi, phương thức giao nhận, chi nhánh): Trình bày dạng **dòng chữ phụ mỏng nhẹ** (`color: var(--text-muted); font-size: 11.5px; margin-top: 2px;`), tuyệt đối **không bọc chip nền màu cam, xanh, vàng** lồng bên trong ô bảng làm vụn vặt và nặng nề giao diện.
+* **Dải Thông Báo Nhanh Đầu Bảng (Translucent Upcoming / Alert Strip)**:
+  - **Nền dải chung**: Dùng nền trắng bán trong suốt thanh thoát tiệp màu hệ thống `background-color: rgba(244, 249, 246, 0.85); border-bottom: 1px solid var(--border-neutral);`. Tiêu đề dải và liên kết lọc dùng màu xanh Forest Green `--text-heading: #236B48; font-weight: 700;`, không dùng màu vàng cam chói gắt.
+  - **Đồng nhất 100% hình khối các thẻ tag con (`.alert-item-tag`, `.upcoming-item-tag`, `.complaint-item-tag`)**: 
+    * Toàn bộ các tag con dùng chung một nền xanh xô thơm rất nhạt thanh lịch `background-color: #EEF5F1; border-radius: 9px; border: none !important; padding: 3px 10px; font-size: 12.5px;`, hover nhẹ sang `#E2ECE5`.
+    * **Triệt tiêu hoàn toàn các hộp tag nền vàng/cam/hồng chói mắt** lồng trên dải thông báo.
+    * Điểm nhấn / Mốc thời gian / Số lượng: In đậm `font-weight: 700; color: #236B48;`.
+    * Tên chính: `font-weight: 600; color: #203A2C;`.
+    * Chú thích phụ / Tên thú cưng / Ghi chú trong ngoặc: Chữ nhỏ hơn `font-size: 11.5px; color: #4F7A65;`.
 * **Tài khoản bị khóa (`.row-locked`)**:
   - **Làm mờ rõ rệt toàn bộ dòng**: Áp dụng `opacity: 0.52;` cho cả hàng dữ liệu để người quản trị phân biệt ngay lập tức tài khoản đã bị vô hiệu hóa so với các tài khoản đang hoạt động.
 * **Huy hiệu trạng thái (`.admin-badge`) - Muted Pastel & Không viền**:

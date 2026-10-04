@@ -14,16 +14,16 @@
         if (subtabsContainer) {
             subtabsContainer.innerHTML = `
                 <button type="button" class="header-subtab-btn active" data-subtab="tab-complaint-services" style="position: relative;">
-                    Theo Dịch vụ
+                    Theo dịch vụ
                     <span class="tab-badge-count" id="badgeServiceComplaintsCount" style="display: none;">0</span>
                 </button>
                 <span class="header-subtab-divider">|</span>
                 <button type="button" class="header-subtab-btn" data-subtab="tab-complaint-orders" style="position: relative;">
-                    Theo Đơn hàng
+                    Theo đơn hàng
                     <span class="tab-badge-count" id="badgeOrderComplaintsCount" style="display: none;">0</span>
                 </button>
                 <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-complaint-detail">Chi tiết khiếu nại</button>
+                <button type="button" class="header-subtab-btn" data-subtab="tab-complaint-detail">Hồ sơ</button>
             `;
         }
 
@@ -606,15 +606,15 @@
         function getSlaBadge(item) {
             calculateSla(item);
             if (item.status === 'resolved' || item.status === 'closed') {
-                return '<span class="sla-badge sla-done">Đã giải quyết</span>';
+                return '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>';
             }
             if (item.slaStatus === 'OVERDUE') {
-                return `<span class="sla-badge sla-overdue">${escapeHtml(item.slaRemainingText)}</span>`;
+                return `<span class="alert-indicator text-danger">• ${escapeHtml(item.slaRemainingText)}</span>`;
             }
             if (item.slaStatus === 'URGENT') {
-                return `<span class="sla-badge sla-urgent">${escapeHtml(item.slaRemainingText)}</span>`;
+                return `<span class="alert-indicator text-warning">• ${escapeHtml(item.slaRemainingText)}</span>`;
             }
-            return `<span class="sla-badge sla-normal">${escapeHtml(item.slaRemainingText)}</span>`;
+            return `<span style="font-size: 12px; color: var(--text-muted);">${escapeHtml(item.slaRemainingText)}</span>`;
         }
 
         function updateComplaintsKpis() {
@@ -702,6 +702,9 @@
                     const ids = overdueService.map(i => i.id).join(', ');
                     alerts.push({
                         type: 'danger',
+                        prefix: `${overdueService.length} ca`,
+                        main: 'Quá hạn SLA',
+                        sub: `(${ids})`,
                         text: `${overdueService.length} khiếu nại dịch vụ quá hạn SLA (${ids})`,
                         filter: 'OVERDUE'
                     });
@@ -711,6 +714,9 @@
                 if (urgentInjury.length > 0) {
                     alerts.push({
                         type: 'warning',
+                        prefix: 'Khẩn cấp',
+                        main: 'Sự cố can thiệp Pet',
+                        sub: `(${urgentInjury[0].id})`,
                         text: `Có sự cố Pet cần can thiệp chăm sóc khẩn cấp (${urgentInjury[0].id})`,
                         filter: 'HIGH'
                     });
@@ -720,13 +726,20 @@
                 if (unassignedService.length > 0) {
                     alerts.push({
                         type: 'info',
+                        prefix: `${unassignedService.length} ca`,
+                        main: 'Chưa phân công',
+                        sub: '(Dịch vụ)',
                         text: `${unassignedService.length} ca khiếu nại dịch vụ chưa phân công người phụ trách`,
                         filter: 'UNASSIGNED'
                     });
                 }
 
                 let html = alerts.map(a => `
-                    <span class="alert-item-tag alert-${a.type}" data-filter="${a.filter}" title="${escapeHtml(a.text)}">${escapeHtml(a.text)}</span>
+                    <span class="alert-item-tag alert-${a.type}" data-filter="${a.filter}" title="${escapeHtml(a.text)}">
+                        <span class="tag-highlight">${escapeHtml(a.prefix)}</span>
+                        <span class="tag-main">${escapeHtml(a.main)}</span>
+                        <span class="tag-sub">${escapeHtml(a.sub)}</span>
+                    </span>
                 `).join('');
 
                 if (alerts.length > 2) {
@@ -751,6 +764,9 @@
                     const ids = overdueOrder.map(i => i.id).join(', ');
                     alerts.push({
                         type: 'danger',
+                        prefix: `${overdueOrder.length} ca`,
+                        main: 'Quá hạn SLA',
+                        sub: `(${ids})`,
                         text: `${overdueOrder.length} khiếu nại đơn hàng quá hạn SLA (${ids})`,
                         filter: 'OVERDUE'
                     });
@@ -760,13 +776,20 @@
                 if (unassignedOrder.length > 0) {
                     alerts.push({
                         type: 'info',
+                        prefix: `${unassignedOrder.length} ca`,
+                        main: 'Chưa phân công',
+                        sub: '(Đơn hàng)',
                         text: `${unassignedOrder.length} khiếu nại đơn hàng mới chưa phân công`,
                         filter: 'UNASSIGNED'
                     });
                 }
 
                 let html = alerts.map(a => `
-                    <span class="alert-item-tag alert-${a.type}" data-filter="${a.filter}" title="${escapeHtml(a.text)}">${escapeHtml(a.text)}</span>
+                    <span class="alert-item-tag alert-${a.type}" data-filter="${a.filter}" title="${escapeHtml(a.text)}">
+                        <span class="tag-highlight">${escapeHtml(a.prefix)}</span>
+                        <span class="tag-main">${escapeHtml(a.main)}</span>
+                        <span class="tag-sub">${escapeHtml(a.sub)}</span>
+                    </span>
                 `).join('');
 
                 if (alerts.length > 2) {
@@ -934,12 +957,12 @@
                 if (item.status === 'new') statusBadge = '<span class="admin-badge badge-warning">Mới tiếp nhận</span>';
                 else if (item.status === 'processing') statusBadge = '<span class="admin-badge badge-info">Đang xử lý</span>';
                 else if (item.status === 'waiting_customer') statusBadge = '<span class="admin-badge badge-neutral">Chờ phản hồi</span>';
-                else if (item.status === 'resolved') statusBadge = '<span class="admin-badge badge-active">Đã giải quyết</span>';
-                else statusBadge = '<span class="admin-badge">Đã đóng</span>';
+                else if (item.status === 'resolved') statusBadge = '<span class="admin-badge badge-success">Đã giải quyết</span>';
+                else statusBadge = '<span class="admin-badge badge-neutral">Đã đóng</span>';
 
                 let priorityBadge = item.priority === 'high'
                     ? '<span class="admin-badge badge-danger">Cao</span>'
-                    : (item.priority === 'medium' ? '<span class="admin-badge badge-tier-gold">Trung bình</span>' : '<span class="admin-badge badge-neutral">Thấp</span>');
+                    : (item.priority === 'medium' ? '<span class="admin-badge badge-warning">Trung bình</span>' : '<span class="admin-badge badge-neutral">Thấp</span>');
 
                 let rowClass = '';
                 if (item.slaStatus === 'OVERDUE' || item.priority === 'high') {
@@ -1076,12 +1099,12 @@
                 if (item.status === 'new') statusBadge = '<span class="admin-badge badge-warning">Mới tiếp nhận</span>';
                 else if (item.status === 'processing') statusBadge = '<span class="admin-badge badge-info">Đang xử lý</span>';
                 else if (item.status === 'waiting_return') statusBadge = '<span class="admin-badge badge-neutral">Chờ nhận hàng</span>';
-                else if (item.status === 'resolved') statusBadge = '<span class="admin-badge badge-active">Đã giải quyết</span>';
-                else statusBadge = '<span class="admin-badge">Đã đóng</span>';
+                else if (item.status === 'resolved') statusBadge = '<span class="admin-badge badge-success">Đã giải quyết</span>';
+                else statusBadge = '<span class="admin-badge badge-neutral">Đã đóng</span>';
 
                 let priorityBadge = item.priority === 'high'
                     ? '<span class="admin-badge badge-danger">Cao</span>'
-                    : '<span class="admin-badge badge-tier-gold">Trung bình</span>';
+                    : '<span class="admin-badge badge-warning">Trung bình</span>';
 
                 let rowClass = '';
                 if (item.slaStatus === 'OVERDUE' || item.priority === 'high') {
@@ -1820,7 +1843,7 @@
         // Modal Tạo Ticket
         const createModal = document.getElementById('createTicketModalOverlay');
         document.getElementById('btnOpenCreateServiceTicket')?.addEventListener('click', () => {
-            document.getElementById('createTicketModalTitle').textContent = 'Tiếp nhận khiếu nại Dịch vụ';
+            document.getElementById('createTicketModalTitle').textContent = 'Tiếp nhận khiếu nại dịch vụ';
             document.getElementById('labelTicketRefId').textContent = 'Chọn lịch hẹn liên quan *';
             const sel = document.getElementById('selectTicketRefId');
             sel.innerHTML = `
@@ -1834,7 +1857,7 @@
         });
 
         document.getElementById('btnOpenCreateOrderTicket')?.addEventListener('click', () => {
-            document.getElementById('createTicketModalTitle').textContent = 'Tiếp nhận khiếu nại Đơn hàng';
+            document.getElementById('createTicketModalTitle').textContent = 'Tiếp nhận khiếu nại đơn hàng';
             document.getElementById('labelTicketRefId').textContent = 'Chọn đơn hàng liên quan *';
             const sel = document.getElementById('selectTicketRefId');
             sel.innerHTML = `

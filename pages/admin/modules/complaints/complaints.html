@@ -32,7 +32,7 @@
             <!-- THANH CẢNH BÁO KHIẾU NẠI VẬN HÀNH (DẢI MỎNG ALERT TONE, THUẦN CHỮ, KHÔNG VIỀN) -->
             <div class="complaints-alert-strip" id="serviceComplaintsAlertBar">
                 <div class="alert-strip-left">
-                    <span class="alert-strip-badge">Cảnh báo khẩn cấp:</span>
+                    <span class="alert-strip-badge">Cảnh báo vận hành:</span>
                     <div class="alert-strip-items" id="serviceAlertItemsContainer">
                         <!-- Render by JS -->
                     </div>
@@ -50,7 +50,7 @@
                     </div>
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportServiceComplaints">Xuất file</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateServiceTicket">+ Tạo khiếu nại</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateServiceTicket">Tạo khiếu nại</button>
                     </div>
                 </div>
 
@@ -181,7 +181,7 @@
             <!-- THANH CẢNH BÁO KHIẾU NẠI VẬN HÀNH ĐƠN HÀNG -->
             <div class="complaints-alert-strip" id="orderComplaintsAlertBar">
                 <div class="alert-strip-left">
-                    <span class="alert-strip-badge">Cảnh báo khẩn cấp:</span>
+                    <span class="alert-strip-badge">Cảnh báo vận hành:</span>
                     <div class="alert-strip-items" id="orderAlertItemsContainer">
                         <!-- Render by JS -->
                     </div>
@@ -198,7 +198,7 @@
                     </div>
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportOrderComplaints">Xuất file</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateOrderTicket">+ Tạo khiếu nại</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateOrderTicket">Tạo khiếu nại</button>
                     </div>
                 </div>
 
@@ -325,7 +325,7 @@
                             <div class="drawer-section-title">Phản ánh của khách</div>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <input type="file" id="inputUploadMoreEvidence" multiple accept="image/*" style="display: none;">
-                                <button type="button" class="btn-upload-evidence-pill" id="btnTriggerUploadMoreEvidence">+ Tải ảnh bằng chứng từ máy</button>
+                                <button type="button" class="btn-upload-evidence-pill" id="btnTriggerUploadMoreEvidence">Tải ảnh bằng chứng từ máy</button>
                             </div>
                         </div>
                         <div class="complaint-quote-box" id="viewTicketCustomerContent">
@@ -339,7 +339,7 @@
                     <!-- KHỐI 1.1: BIÊN BẢN ĐỐI THOẠI TỪ KÊNH CHAT TRỰC TUYẾN (NẾU CÓ) -->
                     <div class="drawer-info-block" id="viewTicketChatTranscriptBlock" style="margin-top: 24px; display: none;">
                         <div class="drawer-section-header">
-                            <div class="drawer-section-title">Biên bản đối thoại từ Kênh Trực chat</div>
+                            <div class="drawer-section-title">Biên bản đối thoại từ kênh trực chat</div>
                             <span class="admin-badge badge-info" style="font-size: 11px;">Nguồn: CSKH Trực tuyến</span>
                         </div>
                         <div class="chat-transcript-box" id="viewTicketChatTranscript" style="max-height: 200px; overflow-y: auto; font-size: 12.5px; line-height: 1.6; white-space: pre-line; padding: 12px 14px; background: rgba(238, 245, 241, 0.65); border-radius: 9px; color: var(--text-main); font-family: monospace;">
@@ -387,7 +387,7 @@
                                     <div style="display: flex; align-items: center; justify-content: space-between;">
                                         <span class="info-label">Ảnh chụp check-in lúc đón bé:</span>
                                         <input type="file" id="inputUploadCheckinPhoto" multiple accept="image/*" style="display: none;">
-                                        <button type="button" class="btn-upload-evidence-pill" id="btnTriggerUploadCheckinPhoto" style="height: 28px; padding: 2px 10px; font-size: 11.5px;">+ Bổ sung ảnh đón bé</button>
+                                        <button type="button" class="btn-upload-evidence-pill" id="btnTriggerUploadCheckinPhoto" style="height: 28px; padding: 2px 10px; font-size: 11.5px;">Bổ sung ảnh đón bé</button>
                                     </div>
                                     <div class="evidence-photos-list" id="viewTicketCheckinPhotos" style="margin-top: 6px;">
                                         <!-- Render by JS -->
@@ -413,7 +413,7 @@
                                     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
                                         <span class="info-label">Ảnh chụp kiểm tra đóng gói tại kho:</span>
                                         <input type="file" id="inputUploadWarehousePhoto" multiple accept="image/*" style="display: none;">
-                                        <button type="button" class="btn-upload-evidence-pill" id="btnTriggerUploadWarehousePhoto" style="height: 28px; padding: 2px 10px; font-size: 11.5px;">+ Bổ sung ảnh kho</button>
+                                        <button type="button" class="btn-upload-evidence-pill" id="btnTriggerUploadWarehousePhoto" style="height: 28px; padding: 2px 10px; font-size: 11.5px;">Bổ sung ảnh kho</button>
                                     </div>
                                     <div class="evidence-photos-list" id="viewTicketOrderWarehousePhotos" style="margin-top: 6px;">
                                         <!-- Render by JS -->
@@ -443,7 +443,7 @@
 
                     <!-- KHỐI 4: PHƯƠNG ÁN BỒI HOÀN VÀ XỬ LÝ RMA (PHASE 3) -->
                     <div class="drawer-info-block" id="ticketResolutionBlock" style="margin-top: 24px; display: none;">
-                        <div class="drawer-section-title">Phương án bồi hoàn và Xử lý khiếu nại</div>
+                        <div class="drawer-section-title">Phương án bồi hoàn và xử lý khiếu nại</div>
                         <div class="resolution-card">
                             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -553,14 +553,14 @@
 
                     <!-- KHỐI THÊM PHẢN HỒI / GHI CHÚ NỘI BỘ -->
                     <div class="drawer-info-block" style="margin-top: 24px;">
-                        <div class="drawer-section-title">Phản hồi và Ghi chú</div>
+                        <div class="drawer-section-title">Phản hồi và ghi chú</div>
                         <div class="reply-type-tabs">
                             <label class="reply-tab-option active"><input type="radio" name="replyType" value="internal" checked> Ghi chú nội bộ (Chỉ nhân viên thấy)</label>
                             <label class="reply-tab-option"><input type="radio" name="replyType" value="customer"> Phản hồi cho khách hàng</label>
                         </div>
                         <textarea class="admin-input" id="replyContentInput" rows="3" placeholder="Nhập nội dung ghi nhận vào nhật ký..."></textarea>
                         <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
-                            <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitReply">Lưu và Cập nhật Timeline</button>
+                            <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitReply">Lưu và cập nhật nhật ký</button>
                         </div>
                     </div>
                 </div>
@@ -572,7 +572,7 @@
     <div class="admin-modal-overlay" id="createTicketModalOverlay">
         <div class="admin-modal-card wide-modal">
             <div class="modal-header-clean">
-                <div class="modal-title-clean" id="createTicketModalTitle">Tiếp nhận khiếu nại Dịch vụ</div>
+                <div class="modal-title-clean" id="createTicketModalTitle">Tiếp nhận khiếu nại dịch vụ</div>
                 <button type="button" class="modal-btn-close-text" id="btnCancelCreateTicket">Đóng</button>
             </div>
             <div class="modal-body-clean">
@@ -623,7 +623,7 @@
                         <label class="form-label-clean">Hình ảnh / Bằng chứng đính kèm</label>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <input type="file" id="inputTicketFiles" multiple accept="image/*" style="display: none;">
-                            <button type="button" class="admin-btn admin-btn-secondary" id="btnTriggerUploadTicketFiles" style="width: 100%;">+ Chọn ảnh từ máy tính / điện thoại</button>
+                            <button type="button" class="admin-btn admin-btn-secondary" id="btnTriggerUploadTicketFiles" style="width: 100%;">Chọn ảnh từ máy tính hoặc điện thoại</button>
                         </div>
                         <div class="uploaded-previews-container" id="createTicketPreviewsContainer" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
                     </div>
@@ -631,7 +631,7 @@
             </div>
             <div class="modal-footer-clean">
                 <button type="button" class="admin-btn admin-btn-secondary" id="btnDismissCreateTicket">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveCreateTicket">Tạo Ticket</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSaveCreateTicket">Tạo khiếu nại</button>
             </div>
         </div>
     </div>
@@ -760,7 +760,7 @@
     <div class="admin-modal-overlay" id="assignHandlerModalOverlay">
         <div class="admin-modal-card">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Chuyển người phụ trách Ticket</div>
+                <div class="modal-title-clean">Chuyển người phụ trách xử lý</div>
                 <button type="button" class="modal-btn-close-text" id="btnCancelAssignHandler">Đóng</button>
             </div>
             <div class="modal-body-clean">

@@ -56,7 +56,7 @@
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenStaffScheduleModal">Lịch trực KTV</button>
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportServiceReport">Xuất file</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateBookingModal">+ Thêm lịch hẹn</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateBookingModal">Thêm lịch hẹn</button>
                     </div>
                 </div>
 
@@ -298,8 +298,8 @@
                             <div class="detail-section-title" style="margin-bottom: 0;">Bảng kê chi phí và Dịch vụ đi cùng</div>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <button type="button" class="btn-text-action text-success" id="btnSettleToPos" style="font-weight: 700; color: #165335; background: #DCEEE2; padding: 3px 8px; border-radius: 6px;">Thanh toán tại POS</button>
-                                <button type="button" class="btn-text-action" id="btnOpenAddAccompanyingServiceModal">+ Thêm dịch vụ đi cùng</button>
-                                <button type="button" class="btn-text-action" id="btnOpenAddSurchargeModal">+ Thêm phụ phí</button>
+                                <button type="button" class="btn-text-action" id="btnOpenAddAccompanyingServiceModal">Thêm dịch vụ đi cùng</button>
+                                <button type="button" class="btn-text-action" id="btnOpenAddSurchargeModal">Thêm phụ phí</button>
                             </div>
                         </div>
                         <div class="financial-summary-list">
@@ -367,14 +367,14 @@
                             <div class="carelog-image-upload-wrapper">
                                 <input type="file" id="carelogImageFileInput" accept="image/*" multiple style="display: none;">
                                 <div style="display: flex; align-items: center; justify-content: space-between;">
-                                    <button type="button" class="btn-text-action" id="btnTriggerCarelogImageUpload">+ Đính kèm ảnh thực tế</button>
+                                    <button type="button" class="btn-text-action" id="btnTriggerCarelogImageUpload">Đính kèm ảnh thực tế</button>
                                     <span id="carelogImageCountText" style="font-size: 11.5px; color: var(--text-muted);">0 ảnh đã chọn</span>
                                 </div>
                                 <div class="carelog-image-preview-strip" id="carelogImagePreviewStrip" style="display: none;"></div>
                             </div>
 
                             <div style="text-align: right; margin-top: 4px;">
-                                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitCarelogStep">+ Ghi nhật ký</button>
+                                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitCarelogStep">Ghi nhật ký</button>
                             </div>
                         </div>
                     </div>
@@ -397,7 +397,7 @@
                         <button type="button" class="catalog-tab-btn" data-group="taxi">Pet Taxi</button>
                     </div>
                     <div class="filter-actions-right">
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateServiceModal">+ Thêm dịch vụ</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateServiceModal">Thêm dịch vụ</button>
                     </div>
                 </div>
                 <div class="filter-row-bottom">
@@ -797,7 +797,7 @@
                     </div>
                     <div class="add-step-input-row" style="display: flex; gap: 8px; margin-top: 6px;">
                         <input type="text" class="admin-input" id="newServiceStepInput" placeholder="Nhập tên bước tiếp theo (VD: Tắm xả mượt lông, Sấy tạo phồng...)...">
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnAddStepToService" style="white-space: nowrap; flex-shrink: 0;">+ Thêm bước</button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnAddStepToService" style="white-space: nowrap; flex-shrink: 0;">Thêm bước</button>
                     </div>
                 </div>
 
@@ -1005,7 +1005,7 @@
                 <div class="form-group-item">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                         <label class="form-label-clean" style="margin-bottom: 0;">Ảnh bằng chứng hiện trạng phát sinh (Đối chứng Zero-Dispute):</label>
-                        <button type="button" class="btn-text-action" id="btnAddSurchargePhotoBtn">+ Đính kèm ảnh bằng chứng</button>
+                        <button type="button" class="btn-text-action" id="btnAddSurchargePhotoBtn">Đính kèm ảnh bằng chứng</button>
                         <input type="file" id="surchargeProofFileInput" accept="image/*" multiple style="display: none;">
                     </div>
                     <div class="intake-proof-preview-container" id="surchargeProofPreviewList">
@@ -1080,7 +1080,7 @@
                 <div class="form-group-item">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <label class="form-label-clean" style="margin-bottom: 0;">Hình ảnh đính kèm của bước này:</label>
-                        <button type="button" class="btn-text-action" id="btnEditCarelogAddPhoto">+ Thêm ảnh mới</button>
+                        <button type="button" class="btn-text-action" id="btnEditCarelogAddPhoto">Thêm ảnh mới</button>
                         <input type="file" id="editCarelogFileInput" accept="image/*" multiple style="display: none;">
                     </div>
                     <div class="intake-proof-preview-container" id="editCarelogPhotosPreviewList">
@@ -1295,7 +1295,7 @@
                 <div class="form-group-item">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <label class="form-label-clean" style="margin-bottom: 0;">Ảnh chụp hiện trạng tiếp nhận lúc đón bé:</label>
-                        <button type="button" class="btn-text-action" id="btnAddProofPhotoBtn">+ Tải ảnh bằng chứng</button>
+                        <button type="button" class="btn-text-action" id="btnAddProofPhotoBtn">Tải ảnh bằng chứng</button>
                         <input type="file" id="intakeProofFileInput" accept="image/*" multiple style="display: none;">
                     </div>
                     <div class="intake-proof-preview-container" id="intakeProofPreviewList">
@@ -1504,7 +1504,7 @@
                 <div class="form-group-item">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                         <label class="form-label-clean" style="margin-bottom: 0;">Ảnh chụp thành phẩm bé sau khi hoàn thành (tùy chọn):</label>
-                        <button type="button" class="btn-text-action" id="btnAddCompletePhotoBtn">+ Tải ảnh thành phẩm</button>
+                        <button type="button" class="btn-text-action" id="btnAddCompletePhotoBtn">Tải ảnh thành phẩm</button>
                         <input type="file" id="completeProofFileInput" accept="image/*" multiple style="display: none;">
                     </div>
                     <div class="intake-proof-preview-container" id="completeProofPreviewList">

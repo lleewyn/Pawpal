@@ -83,9 +83,9 @@
         let selectedDate = new Date(today);
         let calendarView = 'month';
         let services = [
-            { pet: 'Bé Bông', customer: 'Nguyễn Thu Hà', service: 'Tắm sấy và cắt tỉa', time: '09:30', status: 'Đã xác nhận', badge: 'badge-success', id: 'BKG-1001' },
+            { pet: 'Bé Bông', customer: 'Nguyễn Thu Hà', service: 'Tắm sấy và cắt tỉa', time: '09:30', status: 'Đã xác nhận', badge: 'badge-neutral', id: 'BKG-1001' },
             { pet: 'Bé Đậu', customer: 'Trần Minh Khang', service: 'Combo Vệ sinh tai móng', time: '10:15', status: 'Chờ xác nhận', badge: 'badge-warning', id: 'BKG-1002' },
-            { pet: 'Bé Milu', customer: 'Lê Lệ Quyên', service: 'Nhận phòng Pet Hotel', time: '11:00', status: 'Đã xác nhận', badge: 'badge-success', id: 'BKG-1003' },
+            { pet: 'Bé Milu', customer: 'Lê Lệ Quyên', service: 'Nhận phòng Pet Hotel', time: '11:00', status: 'Đã xác nhận', badge: 'badge-neutral', id: 'BKG-1003' },
             { pet: 'Bé Mây', customer: 'Phạm Hoàng Yến', service: 'Tắm sấy dưỡng lông', time: '13:30', status: 'Sắp tới', badge: 'badge-neutral', id: 'BKG-1004' }
         ];
 
@@ -101,7 +101,7 @@
                         service: b.serviceName || b.service || 'Chăm sóc thú cưng',
                         time: b.time || '10:00',
                         status: b.status === 'completed' ? 'Đã hoàn thành' : b.status === 'confirmed' ? 'Đã xác nhận' : 'Chờ xác nhận',
-                        badge: b.status === 'completed' ? 'badge-neutral' : b.status === 'confirmed' ? 'badge-success' : 'badge-warning'
+                        badge: b.status === 'completed' ? 'badge-success' : b.status === 'confirmed' ? 'badge-neutral' : 'badge-warning'
                     }));
                 }
             }

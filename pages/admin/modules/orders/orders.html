@@ -43,7 +43,7 @@
                     </div>
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportOrderReport">Xuất file</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateOrderModal">+ Tạo đơn tại quầy</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateOrderModal">Tạo đơn tại quầy</button>
                     </div>
                 </div>
 
@@ -323,10 +323,10 @@
                         <input type="text" class="admin-input" id="productSearchInput" placeholder="Tìm tên sản phẩm, mã SKU, thương hiệu...">
                     </div>
                     <div class="filter-actions-right">
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenGoodsReceiptModal">+ Nhập hàng NCC</button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenGoodsReceiptModal">Nhập hàng NCC</button>
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenStocktakeModal">Kiểm kê kho</button>
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportProductStock">Xuất file kho</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddProductModal">+ Thêm sản phẩm</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddProductModal">Thêm sản phẩm</button>
                     </div>
                 </div>
 
@@ -415,7 +415,7 @@
                     </div>
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.navigateToSettingsMarketing()">Cấu hình Marketing và Banner</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateVoucherModal">+ Tạo mã khuyến mãi</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenCreateVoucherModal">Tạo mã khuyến mãi</button>
                     </div>
                 </div>
             </div>
@@ -452,7 +452,7 @@
         <button type="button" class="action-menu-item" id="menuActionShipOrder">Bàn giao vận chuyển</button>
         <button type="button" class="action-menu-item" id="menuActionConfirmPayment">Xác nhận thu tiền</button>
         <button type="button" class="action-menu-item text-success" id="menuActionReconcileCod">Đối soát tiền COD bưu cục</button>
-        <button type="button" class="action-menu-item" id="menuActionReturnRefund" style="color: #734718;">Đổi trả và Hoàn tiền (RMA)</button>
+        <button type="button" class="action-menu-item" id="menuActionReturnRefund" style="color: #734718;">Đổi trả và hoàn tiền (RMA)</button>
         <button type="button" class="action-menu-item danger-item" id="menuActionCancelOrder">Hủy đơn hàng</button>
     </div>
 
@@ -546,7 +546,7 @@
                             <option value="">-- Chọn mặt hàng từ kho --</option>
                         </select>
                         <input type="number" class="admin-input" id="createOrderQty" value="1" min="1" style="width: 70px; text-align: center;" title="Số lượng">
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnPosAddToCart" style="white-space: nowrap; height: 36px; padding: 0 14px;">+ Thêm món</button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnPosAddToCart" style="white-space: nowrap; height: 36px; padding: 0 14px;">Thêm món</button>
                     </div>
 
                     <!-- BẢNG GIỎ HÀNG POS -->
@@ -564,7 +564,7 @@
                             <tbody id="posCartItemsList">
                                 <tr>
                                     <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 18px 12px;">
-                                        Chưa có món nào trong giỏ hàng. Vui lòng chọn sản phẩm và bấm "+ Thêm món" ở trên.
+                                        Chưa có món nào trong giỏ hàng. Vui lòng chọn sản phẩm và bấm "Thêm món" ở trên.
                                     </td>
                                 </tr>
                             </tbody>
@@ -765,7 +765,7 @@
                 </div>
 
                 <div class="form-group-item">
-                    <label class="form-label-clean">Mã vận đơn bưu cục (Tracking Number):</label>
+                    <label class="form-label-clean">Mã vận đơn bưu cục:</label>
                     <input type="text" class="admin-input" id="shipTrackingInput" placeholder="Ví dụ: JT8839201923...">
                 </div>
 
@@ -901,7 +901,7 @@
         <div class="admin-modal-card manifest-modal-card">
             <div class="modal-header-clean">
                 <div>
-                    <div class="modal-title-clean">Bảng kê bàn giao bưu cục (Manifest)</div>
+                    <div class="modal-title-clean">Bảng kê bàn giao bưu cục</div>
                     <div class="sub-meta-text" id="manifestSubtitle">Danh sách bàn giao bưu tá ký xác nhận</div>
                 </div>
                 <div style="display: flex; gap: 8px;">
@@ -924,7 +924,7 @@
         <div class="admin-modal-card rma-modal-card">
             <div class="modal-header-clean">
                 <div>
-                    <div class="modal-title-clean">Tiếp nhận Đổi trả và Hoàn tiền (RMA Desk)</div>
+                    <div class="modal-title-clean">Tiếp nhận đổi trả và hoàn tiền (RMA)</div>
                     <div class="sub-meta-text">Xử lý khiếu nại, thu hồi hàng và bồi hoàn cho khách hàng</div>
                 </div>
                 <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalReturnRefund')">Đóng</button>
@@ -952,7 +952,7 @@
                         <label class="form-label-clean">Hình thức giải quyết bồi hoàn:</label>
                         <select class="admin-select" id="rmaSolutionType">
                             <option value="exchange">Đổi hàng mới (1-đổi-1 miễn phí vận chuyển)</option>
-                            <option value="refund">Trả hàng và Hoàn tiền (Refund)</option>
+                            <option value="refund">Trả hàng và hoàn tiền</option>
                             <option value="resend">Gửi bù sản phẩm thiếu hoặc móp vỡ</option>
                         </select>
                     </div>
@@ -997,7 +997,7 @@
                         <label class="rma-radio-label">
                             <input type="radio" name="rmaRestockAction" value="restock" checked>
                             <div>
-                                <strong style="color: #236B48;">Hàng còn nguyên seal -> Nhập lại kho bán (Restock)</strong>
+                                <strong style="color: #236B48;">Hàng còn nguyên seal -> Nhập lại kho bán</strong>
                                 <div class="sub-meta-text">Hệ thống sẽ tự động cộng lại số lượng khả dụng vào tồn kho sản phẩm.</div>
                             </div>
                         </label>
@@ -1174,7 +1174,7 @@
                 </div>
 
                 <div class="form-group-item">
-                    <label class="form-label-clean">Ngưỡng cảnh báo sắp hết hàng (Min Stock):</label>
+                    <label class="form-label-clean">Ngưỡng cảnh báo sắp hết hàng:</label>
                     <input type="number" class="admin-input" id="newProdMinStock" value="5" min="1">
                 </div>
             </div>
@@ -1405,7 +1405,7 @@
                             <select class="admin-select" id="grnProductPicker" style="width: 320px; height: 32px; font-size: 12.5px;">
                                 <!-- Nạp danh sách sản phẩm từ orders.js -->
                             </select>
-                            <button type="button" class="admin-btn admin-btn-secondary" id="btnGrnAddItem" style="height: 32px; padding: 0 12px; font-size: 12.5px;">+ Thêm dòng</button>
+                            <button type="button" class="admin-btn admin-btn-secondary" id="btnGrnAddItem" style="height: 32px; padding: 0 12px; font-size: 12.5px;">Thêm dòng</button>
                         </div>
                     </div>
 

@@ -413,11 +413,11 @@
         subtabsContainer.innerHTML = `
             <button type="button" class="header-subtab-btn ${activeTabId === 'tab-banner-promos' ? 'active' : ''}" data-tab="tab-banner-promos">Banner và Khuyến mãi</button>
             <span class="subtab-divider">|</span>
-            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-content-management' ? 'active' : ''}" data-tab="tab-content-management">Quản lý Nội dung</button>
+            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-content-management' ? 'active' : ''}" data-tab="tab-content-management">Bài viết</button>
             <span class="subtab-divider">|</span>
-            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-system-config' ? 'active' : ''}" data-tab="tab-system-config">Cấu hình Hệ thống</button>
+            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-system-config' ? 'active' : ''}" data-tab="tab-system-config">Cấu hình</button>
             <span class="subtab-divider">|</span>
-            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-audit-logs' ? 'active' : ''}" data-tab="tab-audit-logs">Nhật ký Cấu hình</button>
+            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-audit-logs' ? 'active' : ''}" data-tab="tab-audit-logs">Nhật ký</button>
         `;
 
         subtabsContainer.querySelectorAll('.header-subtab-btn').forEach(btn => {

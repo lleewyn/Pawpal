@@ -49,7 +49,7 @@
                     </div>
                     <div class="filter-actions-right">
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportStaff">Xuất Excel</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddStaffModal">+ Thêm nhân viên</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddStaffModal">Thêm nhân viên</button>
                     </div>
                 </div>
 
@@ -358,7 +358,7 @@
                     <span class="admin-badge badge-active" id="liveWorkstationsActiveCount">3 bàn đang phục vụ</span>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenIncidentReportModal">+ Báo cáo sự cố ca</button>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenIncidentReportModal">Báo cáo sự cố ca</button>
                 </div>
             </div>
             <div class="workstations-grid" id="liveWorkstationsGrid">
@@ -382,9 +382,9 @@
                     </div>
                     
                     <div class="filter-actions-right">
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenLeaveRequestsTray">Đơn xin nghỉ và Đổi ca (<span id="trayPendingCount">2</span>)</button>
-                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenLeaveSwapModal">+ Tạo đơn nghỉ / Đổi ca</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAssignShiftModal">+ Phân ca làm việc</button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenLeaveRequestsTray">Đơn xin nghỉ và đổi ca (<span id="trayPendingCount">2</span>)</button>
+                        <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenLeaveSwapModal">Tạo đơn nghỉ hoặc đổi ca</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAssignShiftModal">Phân ca làm việc</button>
                     </div>
                 </div>
 
@@ -493,7 +493,7 @@
                         <input type="text" class="admin-input" id="assessmentSearchInput" placeholder="Tìm mã nhân viên, họ tên...">
                     </div>
                     <div class="filter-actions-right">
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddAssessmentModal">+ Ghi nhận đánh giá</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddAssessmentModal">Ghi nhận đánh giá</button>
                     </div>
                 </div>
 
@@ -844,7 +844,7 @@
     <div class="admin-modal-overlay" id="leaveSwapModalOverlay">
         <div class="admin-modal-card">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Đơn xin nghỉ phép và Đổi ca</div>
+                <div class="modal-title-clean">Đơn xin nghỉ phép và đổi ca</div>
                 <button type="button" class="modal-btn-close-text" id="btnCancelLeaveSwapModal">Đóng</button>
             </div>
             <div class="modal-body-clean">
@@ -986,7 +986,7 @@
     <div class="admin-modal-overlay" id="leaveRequestsTrayModal">
         <div class="admin-modal-card" style="width: 720px; max-width: 95vw;">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Quản lý Đơn xin nghỉ phép và Đổi ca</div>
+                <div class="modal-title-clean">Quản lý đơn xin nghỉ phép và đổi ca</div>
                 <button type="button" class="modal-btn-close-text" id="btnCancelLeaveRequestsTray">Đóng</button>
             </div>
             <div class="modal-body-clean">
@@ -997,7 +997,7 @@
                         <button type="button" class="admin-btn-filter-toggle" id="btnFilterReqApproved">Đã duyệt</button>
                         <button type="button" class="admin-btn-filter-toggle" id="btnFilterReqRejected">Từ chối</button>
                     </div>
-                    <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenLeaveModalFromTray">+ Tạo đơn mới</button>
+                    <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenLeaveModalFromTray">Tạo đơn mới</button>
                 </div>
 
                 <div class="leave-requests-list-container" id="leaveRequestsListContainer">
@@ -1014,7 +1014,7 @@
     <div class="admin-modal-overlay" id="reassignModalOverlay">
         <div class="admin-modal-card" style="width: 780px; max-width: 95vw;">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Điều phối lại ca hẹn khi KTV tạm khóa hoặc Nghỉ phép</div>
+                <div class="modal-title-clean">Điều phối lại ca hẹn khi KTV tạm khóa hoặc nghỉ phép</div>
                 <button type="button" class="modal-btn-close-text" id="btnCancelReassignModal">Đóng</button>
             </div>
             <div class="modal-body-clean">
@@ -1057,7 +1057,7 @@
     <div class="admin-modal-overlay" id="incidentReportModalOverlay">
         <div class="admin-modal-card" style="width: 660px; max-width: 95vw;">
             <div class="modal-header-clean">
-                <div class="modal-title-clean">Ghi nhận sự cố ca trực và Cập nhật tiến độ</div>
+                <div class="modal-title-clean">Ghi nhận sự cố ca trực và cập nhật tiến độ</div>
                 <button type="button" class="modal-btn-close-text" id="btnCancelIncidentModal">Đóng</button>
             </div>
             <div class="modal-body-clean">
@@ -1087,7 +1087,7 @@
                         </select>
                     </div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Điều chỉnh thời gian hoàn tất (ETC)</label>
+                        <label class="form-label-clean">Điều chỉnh thời gian hoàn tất</label>
                         <select class="admin-select" id="incidentInputExtend">
                             <option value="0">Đúng giờ (Không gia hạn)</option>
                             <option value="15">+15 phút (Gia hạn hoàn tất)</option>

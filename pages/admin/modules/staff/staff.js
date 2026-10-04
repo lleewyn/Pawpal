@@ -22,7 +22,7 @@
                     <span class="tab-badge-count" id="schedulePendingBadge" style="display: none;">0</span>
                 </button>
                 <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-staff-assessment">Đánh giá nghiệp vụ</button>
+                <button type="button" class="header-subtab-btn" data-subtab="tab-staff-assessment">Đánh giá</button>
             `;
         }
 
@@ -417,7 +417,9 @@
                 const lockedStaff = afternoonGroomers.filter(s => s.serviceLocked).map(s => s.name).join(', ');
                 alerts.push({
                     type: 'danger',
-                    shortText: `Ca chiều thiếu Groomer (1/2 khả dụng, ${lockedStaff} tạm khóa)`,
+                    prefix: 'Ca chiều',
+                    main: 'Thiếu Groomer',
+                    sub: `(1/2 khả dụng, ${lockedStaff})`,
                     fullText: `Ca chiều thiếu Groomer: Chỉ có ${availableAfternoonGroomers.length}/${afternoonGroomers.length} nhân sự sẵn sàng làm việc (${lockedStaff} đang khóa nhận việc)`
                 });
             }
@@ -428,7 +430,9 @@
                 const retrainIds = retrainStaff.map(s => s.id).join(', ');
                 alerts.push({
                     type: 'warning',
-                    shortText: `${retrainStaff.length} nhân viên cần đào tạo lại (${retrainIds})`,
+                    prefix: `${retrainStaff.length} nhân sự`,
+                    main: 'Cần đào tạo lại',
+                    sub: `(${retrainIds})`,
                     fullText: `${retrainStaff.length} nhân viên cần đào tạo lại tay nghề trước ngày 05/10 (${retrainIds})`
                 });
             }
@@ -439,7 +443,9 @@
                 const names = leaveStaff.map(s => s.name).join(', ');
                 alerts.push({
                     type: 'info',
-                    shortText: `${leaveStaff.length} nhân viên nghỉ phép hôm nay (${names})`,
+                    prefix: `${leaveStaff.length} nhân sự`,
+                    main: 'Nghỉ phép hôm nay',
+                    sub: `(${names})`,
                     fullText: `${leaveStaff.length} nhân viên đang nghỉ phép hôm nay (${names})`
                 });
             }
@@ -449,13 +455,19 @@
             if (pendingReqs.length > 0) {
                 alerts.push({
                     type: 'warning',
-                    shortText: `${pendingReqs.length} đơn xin nghỉ và đổi ca chờ duyệt`,
+                    prefix: `${pendingReqs.length} đơn`,
+                    main: 'Xin nghỉ và đổi ca',
+                    sub: '(Chờ duyệt)',
                     fullText: `Có ${pendingReqs.length} đơn xin nghỉ phép và đề xuất đổi ca đang chờ quản trị viên phê duyệt`
                 });
             }
 
             let tagsHtml = alerts.map(a => `
-                <span class="alert-item-tag alert-${a.type}" title="${a.fullText}">${a.shortText}</span>
+                <span class="alert-item-tag alert-${a.type}" title="${a.fullText}">
+                    <span class="tag-highlight">${a.prefix}</span>
+                    <span class="tag-main">${a.main}</span>
+                    <span class="tag-sub">${a.sub}</span>
+                </span>
             `).join('');
 
             // Ký hiệu 3 chấm (...) thuần chữ (không phải button)
@@ -769,25 +781,25 @@
 
             list.forEach(staff => {
                 let statusBadge = '';
-                if (staff.status === 'ACTIVE') statusBadge = '<span class="admin-badge badge-active">Đang làm việc</span>';
-                else if (staff.status === 'LEAVE') statusBadge = '<span class="admin-badge badge-leave">Nghỉ phép</span>';
-                else if (staff.status === 'PAUSE') statusBadge = '<span class="admin-badge badge-pause">Tạm nghỉ</span>';
-                else statusBadge = '<span class="admin-badge badge-resigned">Nghỉ việc</span>';
+                if (staff.status === 'ACTIVE') statusBadge = '<span class="admin-badge badge-success">Đang làm việc</span>';
+                else if (staff.status === 'LEAVE') statusBadge = '<span class="admin-badge badge-warning">Nghỉ phép</span>';
+                else if (staff.status === 'PAUSE') statusBadge = '<span class="admin-badge badge-neutral">Tạm nghỉ</span>';
+                else statusBadge = '<span class="admin-badge badge-danger">Nghỉ việc</span>';
 
                 let shiftText = staff.shift === 'MORNING' ? 'Ca sáng' : staff.shift === 'AFTERNOON' ? 'Ca chiều' : staff.shift === 'EVENING' ? 'Ca tối' : staff.shift === 'NIGHT' ? 'Ca khuya' : 'Toàn thời gian';
 
-                let skillBadge = '';
+                let skillText = '';
                 if (staff.skillResult === 'PASS') {
-                    skillBadge = `<span class="admin-badge badge-pass">${staff.skillExam}</span>`;
+                    skillText = `<span style="color: var(--text-main); font-size: 13px;">${staff.skillExam}</span>`;
                 } else if (staff.skillResult === 'RETRAIN') {
-                    skillBadge = `<span class="admin-badge badge-retrain">${staff.skillExam}</span>`;
+                    skillText = `<span class="alert-indicator text-warning" style="font-weight: 500;">• ${staff.skillExam}</span>`;
                 } else {
-                    skillBadge = `<span class="admin-badge badge-fail">${staff.skillExam}</span>`;
+                    skillText = `<span class="alert-indicator text-danger" style="font-weight: 500;">• ${staff.skillExam}</span>`;
                 }
 
                 let lockStatusText = staff.serviceLocked 
-                    ? `<div style="font-size: 11px; color: #DC2626; font-weight: 500; margin-top: 3px;">Tạm khóa nhận việc</div>`
-                    : `<div style="font-size: 11px; color: #4F7A65; margin-top: 3px;">Sẵn sàng nhận lịch</div>`;
+                    ? `<div style="font-size: 11.5px; color: #DC2626; font-weight: 500; margin-top: 2px;">• Tạm khóa nhận việc</div>`
+                    : '';
 
                 const tr = document.createElement('tr');
 
@@ -808,7 +820,7 @@
                     <td>${shiftText}</td>
                     <td>
                         <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                            ${skillBadge}
+                            ${skillText}
                             ${lockStatusText}
                         </div>
                     </td>
@@ -1038,7 +1050,7 @@
                             <span class="shift-cell-time">${shiftTimeLabel}</span>
                         </div>`;
                     }
-                    return `<div class="shift-cell empty" data-shift="${shiftKey}" data-id="${staff.id}">+ Xếp ca</div>`;
+                    return `<div class="shift-cell empty" data-shift="${shiftKey}" data-id="${staff.id}">Xếp ca</div>`;
                 }
 
                 const mCell = createCell('MORNING', '08:00 - 12:00');
@@ -1208,7 +1220,7 @@
                     `;
                     actionsHtml = `
                         <div class="workstation-actions-row" style="justify-content: flex-end;">
-                            <span style="font-size: 11.5px; color: var(--text-muted);">Sẵn sàng tiếp nhận ca mới</span>
+                            <span style="font-size: 12px; color: var(--text-muted); font-style: italic;">Bàn trống • Sẵn sàng tiếp nhận</span>
                         </div>
                     `;
                 } else {
@@ -1232,7 +1244,7 @@
 
                     actionsHtml = `
                         <div class="workstation-actions-row">
-                            <button type="button" class="btn-extend-chip" data-ws-id="${ws.id}">+15p gia hạn</button>
+                            <button type="button" class="btn-extend-chip" data-ws-id="${ws.id}">Gia hạn +15p</button>
                             <button type="button" class="btn-incident-chip" data-ws-id="${ws.id}">Báo sự cố</button>
                         </div>
                     `;
@@ -1453,7 +1465,7 @@
                             <span class="shift-staff-name">${s.name} ${s.serviceLocked ? '<span style="color: #DC2626; font-size: 10.5px;">(Khóa nhận việc)</span>' : ''}</span>
                             <span class="shift-staff-pos">${s.position} • ${s.status === 'LEAVE' ? '<span style="color: #B45309;">Nghỉ phép</span>' : 'Sẵn sàng'}</span>
                         </div>
-                        <button type="button" class="btn-shift-action btn-add-to-shift" data-id="${s.id}">+ Thêm vào ca</button>
+                        <button type="button" class="btn-shift-action btn-add-to-shift" data-id="${s.id}">Thêm vào ca</button>
                     `;
                     availContainer.appendChild(item);
                 });

@@ -89,8 +89,8 @@
     justify-content: space-between;
     gap: 12px;
     padding: 9px 18px;
-    background-color: rgba(245, 232, 211, 0.50);
-    border: none !important;
+    background-color: rgba(244, 249, 246, 0.85);
+    border-bottom: 1px solid var(--border-neutral) !important;
     border-radius: var(--admin-radius, 9px) var(--admin-radius, 9px) 0 0;
     font-size: 13px;
     overflow: hidden;
@@ -108,7 +108,7 @@
 
 .alert-strip-badge {
     font-weight: 600;
-    color: #734718;
+    color: #236B48;
     font-size: 12.5px;
     flex-shrink: 0;
 }
@@ -124,60 +124,43 @@
 }
 
 .alert-item-tag {
-    display: inline-block;
-    max-width: 320px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    vertical-align: middle;
-    height: 24px;
-    line-height: 24px;
-    padding: 0 10px;
-    background-color: #F5E8D3;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    background-color: #EEF5F1;
     border: none !important;
     border-radius: 9px !important;
     color: var(--text-main);
-    font-size: 12px;
+    font-size: 12.5px;
     cursor: pointer;
     flex-shrink: 0;
     transition: background-color 0.15s;
-}
-
-.alert-item-tag.alert-danger,
-.alert-item-tag.tag-danger {
-    background-color: #F7DCDC;
-    color: #8F2424;
-}
-
-.alert-item-tag.alert-warning,
-.alert-item-tag.tag-warning {
-    background-color: #F5E8D3;
-    color: #734718;
-}
-
-.alert-item-tag.alert-info,
-.alert-item-tag.tag-info {
-    background-color: #DCEAF2;
-    color: #20495E;
+    white-space: nowrap;
 }
 
 .alert-item-tag:hover {
-    background-color: #EDDECA;
+    background-color: #E2ECE5;
 }
 
-.alert-item-tag.alert-danger:hover,
-.alert-item-tag.tag-danger:hover {
-    background-color: #F0CECE;
+.alert-item-tag .tag-highlight {
+    font-weight: 700;
+    color: var(--text-heading);
 }
 
-.alert-item-tag.alert-info:hover,
-.alert-item-tag.tag-info:hover {
-    background-color: #CDE2EC;
+.alert-item-tag .tag-main {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.alert-item-tag .tag-sub {
+    color: var(--text-muted);
+    font-size: 11.5px;
 }
 
 /* DẤU 3 CHẤM (...) THUẦN CHỮ (KHÔNG PHẢI NÚT BẤM) KHI CẢNH BÁO DÀI */
 .alert-dots-text {
-    color: #734718;
+    color: var(--text-muted);
     font-size: 14px;
     font-weight: 700;
     letter-spacing: 1.5px;
@@ -194,7 +177,7 @@
 .btn-alert-strip-filter {
     background: transparent;
     border: none !important;
-    color: #734718;
+    color: #236B48;
     font-family: inherit;
     font-size: 12px;
     font-weight: 600;
@@ -206,12 +189,12 @@
 }
 
 .btn-alert-strip-filter:hover {
-    color: #55330F;
-    background-color: rgba(115, 71, 24, 0.08);
+    color: #1a5237;
+    background-color: rgba(35, 107, 72, 0.08);
 }
 
 .btn-alert-strip-filter.active {
-    background-color: #734718;
+    background-color: #236B48;
     color: #FFFFFF !important;
     text-decoration: none;
 }
@@ -224,34 +207,42 @@
     padding: 6px 12px;
     font-size: 13px;
     font-weight: 500;
-    color: #734718;
-    background-color: #F5E8D3;
-    border: none !important;
+    color: var(--text-muted);
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-neutral) !important;
     border-radius: 9px !important;
     cursor: pointer;
+    transition: all 0.15s ease;
 }
 
 .admin-btn-filter-toggle:hover {
-    background-color: #EDDECA;
+    background-color: #F4FAF6;
+    border-color: #C3DEC7 !important;
+    color: #236B48;
 }
 
 .admin-btn-filter-toggle.active {
-    background-color: #236B48;
-    color: #FFFFFF;
+    background-color: #236B48 !important;
+    border-color: #236B48 !important;
+    color: #FFFFFF !important;
 }
 
 .admin-btn-filter-toggle.toggle-danger {
-    color: #8F2424;
-    background-color: #F7DCDC;
+    color: var(--text-muted);
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-neutral) !important;
 }
 
 .admin-btn-filter-toggle.toggle-danger:hover {
-    background-color: #F0CECE;
+    background-color: #FEF2F2;
+    border-color: #FECACA !important;
+    color: #DC2626;
 }
 
 .admin-btn-filter-toggle.toggle-danger.active {
-    background-color: #8F2424;
-    color: #FFFFFF;
+    background-color: #8F2424 !important;
+    border-color: #8F2424 !important;
+    color: #FFFFFF !important;
 }
 
 /* DÒNG CẢNH BÁO BẢNG: VIỀN MÉP TRÁI DUY NHẤT */
@@ -359,6 +350,9 @@
 .quota-card {
     padding: 14px 18px;
     border-radius: var(--admin-radius, 9px);
+    background-color: rgba(255, 255, 255, 0.70);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid var(--border-neutral);
     cursor: pointer;
     transition: background-color 0.15s, border-color 0.15s;
@@ -367,22 +361,21 @@
     gap: 4px;
 }
 
-.quota-card.quota-ok {
-    background-color: #EEF5F1;
+.quota-card:hover {
+    background-color: #FFFFFF;
     border-color: #C3DEC7;
 }
 
-.quota-card.quota-ok:hover {
-    background-color: #E3EDE7;
+.quota-card.quota-ok {
+    border-color: var(--border-neutral);
 }
 
 .quota-card.quota-warning {
-    background-color: #FDF6EC;
     border-color: #F3DCB7;
 }
 
 .quota-card.quota-warning:hover {
-    background-color: #F8EEDB;
+    border-color: #E2B777;
 }
 
 .quota-header {
@@ -406,7 +399,7 @@
 }
 
 .quota-status-pill.pill-ok {
-    background-color: #DCEEE2;
+    background-color: #EEF5F1;
     color: #165335;
 }
 
@@ -1616,7 +1609,9 @@
 
 .workstation-card {
     padding: 14px 16px;
-    background-color: #F8FAF9;
+    background-color: rgba(255, 255, 255, 0.70);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid var(--border-neutral);
     border-radius: var(--admin-radius, 9px);
     display: flex;
@@ -1627,17 +1622,15 @@
 
 .workstation-card.in-service {
     border-color: #C3DEC7;
-    background-color: #F4FAF6;
 }
 
 .workstation-card.delayed {
     border-color: #F3DCB7;
-    background-color: #FDF6EC;
 }
 
 .workstation-card.idle {
     border-color: var(--border-neutral);
-    background-color: #F8FAF9;
+    opacity: 0.85;
 }
 
 .workstation-top {
@@ -1664,15 +1657,23 @@
     color: var(--text-heading);
 }
 
+.badge-requested-pill {
+    font-size: 11px;
+    color: #236B48;
+    background-color: #EEF5F1;
+    padding: 2px 8px;
+    border-radius: 9px;
+    font-weight: 600;
+}
+
 .workstation-booking-info {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    padding: 8px 10px;
-    background-color: rgba(255, 255, 255, 0.7);
-    border-radius: 9px;
-    border: 1px solid var(--border-neutral);
-    font-size: 12px;
+    gap: 4px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    font-size: 12.5px;
 }
 
 .booking-title-row {
@@ -1685,45 +1686,58 @@
 
 .booking-desc-row {
     color: var(--text-muted);
-    font-size: 11.5px;
+    font-size: 12px;
 }
 
 .workstation-actions-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 6px;
-    margin-top: 2px;
+    gap: 8px;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-neutral);
 }
 
 .btn-extend-chip {
-    padding: 3px 8px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #734718;
-    background-color: #F5E8D3;
-    border: none !important;
-    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-main);
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-neutral) !important;
+    border-radius: 9px !important;
     cursor: pointer;
+    transition: all 0.15s ease;
 }
 
 .btn-extend-chip:hover {
-    background-color: #EDDECA;
+    background-color: #F4FAF6;
+    border-color: #C3DEC7 !important;
+    color: #236B48;
 }
 
 .btn-incident-chip {
-    padding: 3px 8px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #8F2424;
-    background-color: #F7DCDC;
-    border: none !important;
-    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #DC2626;
+    background-color: #FFFFFF;
+    border: 1px solid #FECDCA !important;
+    border-radius: 9px !important;
     cursor: pointer;
+    transition: all 0.15s ease;
 }
 
 .btn-incident-chip:hover {
-    background-color: #F0CECE;
+    background-color: #FEF2F2;
+    border-color: #DC2626 !important;
 }
 
 /* ==========================================================================

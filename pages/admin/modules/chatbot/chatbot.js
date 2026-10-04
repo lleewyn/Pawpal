@@ -440,6 +440,76 @@
                 input.focus();
             }
         });
+
+        // Toggle Quick Templates Dropdown Popover
+        const quickTemplatesWrap = document.getElementById('quickTemplatesDropdownWrap');
+        const btnToggleQuick = document.getElementById('btnToggleQuickTemplates');
+
+        btnToggleQuick?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            quickTemplatesWrap?.classList.toggle('open');
+        });
+
+        document.querySelectorAll('.quick-templates-dropdown-panel .quick-reply-pill').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const replyText = btn.getAttribute('data-reply');
+                const input = document.getElementById('chatMessageInput');
+                if (input && replyText) {
+                    input.value = replyText;
+                    input.focus();
+                }
+                quickTemplatesWrap?.classList.remove('open');
+            });
+        });
+
+        document.addEventListener('click', () => {
+            quickTemplatesWrap?.classList.remove('open');
+        });
+
+        // Toggle Smart Assistant Bar (Đóng / Mở)
+        const assistantBar = document.getElementById('smartAssistantBar');
+        const btnHideAssistant = document.getElementById('btnHideAssistantBar');
+        const btnShowAssistant = document.getElementById('btnShowAssistantBar');
+
+        btnHideAssistant?.addEventListener('click', () => {
+            if (assistantBar) assistantBar.style.display = 'none';
+            if (btnShowAssistant) btnShowAssistant.style.display = 'inline-flex';
+            sessionStorage.setItem('pawpal_assistant_bar_hidden', 'true');
+        });
+
+        btnShowAssistant?.addEventListener('click', () => {
+            if (assistantBar) assistantBar.style.display = 'flex';
+            if (btnShowAssistant) btnShowAssistant.style.display = 'none';
+            sessionStorage.removeItem('pawpal_assistant_bar_hidden');
+        });
+
+        if (sessionStorage.getItem('pawpal_assistant_bar_hidden') === 'true') {
+            if (assistantBar) assistantBar.style.display = 'none';
+            if (btnShowAssistant) btnShowAssistant.style.display = 'inline-flex';
+        }
+
+        // Toggle AI Context Strip (Đóng / Mở)
+        const aiContextCard = document.getElementById('aiContextCard');
+        const btnHideAiContext = document.getElementById('btnHideAiContext');
+        const btnShowAiContext = document.getElementById('btnShowAiContext');
+
+        btnHideAiContext?.addEventListener('click', () => {
+            if (aiContextCard) aiContextCard.style.display = 'none';
+            if (btnShowAiContext) btnShowAiContext.style.display = 'inline-flex';
+            sessionStorage.setItem('pawpal_ai_context_hidden', 'true');
+        });
+
+        btnShowAiContext?.addEventListener('click', () => {
+            if (aiContextCard) aiContextCard.style.display = 'flex';
+            if (btnShowAiContext) btnShowAiContext.style.display = 'none';
+            sessionStorage.removeItem('pawpal_ai_context_hidden');
+        });
+
+        if (sessionStorage.getItem('pawpal_ai_context_hidden') === 'true') {
+            if (aiContextCard) aiContextCard.style.display = 'none';
+            if (btnShowAiContext) btnShowAiContext.style.display = 'inline-flex';
+        }
     }
 
 
@@ -452,7 +522,7 @@
     function renderHeaderSubtabs(activeTabId) {
         if (!subtabsContainer) return;
         subtabsContainer.innerHTML = `
-            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-live-support' ? 'active' : ''}" data-tab="tab-live-support">Trực chat CSKH</button>
+            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-live-support' ? 'active' : ''}" data-tab="tab-live-support">Trực chat</button>
             <span class="subtab-divider">|</span>
             <button type="button" class="header-subtab-btn ${activeTabId === 'tab-ai-copilot' ? 'active' : ''}" data-tab="tab-ai-copilot">Trợ lý AI</button>
             <span class="subtab-divider">|</span>
@@ -646,18 +716,14 @@
             const lastMsg = conv.messages[conv.messages.length - 1];
             const snippet = lastMsg ? (lastMsg.isToxic ? '[Nội dung đã được che mờ]' : lastMsg.text) : '...';
 
-            let sentimentBadge = '';
+            let sentimentDot = '';
             if (conv.sentimentLevel >= 4) {
-                sentimentBadge = `<span class="admin-badge badge-danger" style="font-size: 10.5px;">Cảm xúc ${conv.sentimentLevel}</span>`;
+                sentimentDot = '<span style="color: #DC2626; font-size: 11px; font-weight: 600;">• Bực bội</span>';
             } else if (conv.sentimentLevel === 3) {
-                sentimentBadge = `<span class="admin-badge badge-warning" style="font-size: 10.5px;">Cảm xúc 3</span>`;
-            } else {
-                sentimentBadge = `<span class="admin-badge badge-active" style="font-size: 10.5px;">Cảm xúc ${conv.sentimentLevel}</span>`;
+                sentimentDot = '<span style="color: #D97706; font-size: 11px; font-weight: 600;">• Cần lưu ý</span>';
             }
 
-            const handoverTag = conv.isHandover
-                ? `<span class="admin-badge badge-info" style="font-size: 10.5px;">Nhân viên</span>`
-                : `<span class="admin-badge badge-neutral" style="font-size: 10.5px;">Bot</span>`;
+            const handoverTag = `<span class="admin-badge badge-neutral" style="font-size: 10.5px; height: 20px; padding: 0 6px;">${conv.isHandover ? 'Nhân viên' : 'Bot'}</span>`;
 
             const sla = formatSlaInfo(conv.waitingSeconds, conv.isHandover);
 
@@ -673,7 +739,7 @@
                 </div>
                 <div class="conversation-item-bottom">
                     <div class="conv-bottom-left">
-                        ${sentimentBadge}
+                        ${sentimentDot}
                         ${handoverTag}
                         <span class="sla-timer-pill ${sla.className} sla-pill-${conv.id}">${sla.text}</span>
                     </div>
@@ -714,20 +780,20 @@
         if (sentimentBadgeEl) {
             const shortSentiment = (() => {
                 const level = currentConversation.sentimentLevel;
-                if (level >= 5) return 'Giận dữ';
-                if (level === 4) return 'Bực bội';
-                if (level === 3) return 'Khó chịu';
-                if (level === 2) return 'Thắc mắc';
-                return 'Bình thường';
+                if (level >= 5) return '• Giận dữ';
+                if (level === 4) return '• Bực bội';
+                if (level === 3) return '• Cần lưu ý';
+                if (level === 2) return '• Thắc mắc';
+                return '';
             })();
-            sentimentBadgeEl.textContent = shortSentiment;
-            sentimentBadgeEl.style.cssText = '';
-            if (currentConversation.sentimentLevel >= 4) {
-                sentimentBadgeEl.className = 'admin-badge badge-danger';
-            } else if (currentConversation.sentimentLevel === 3) {
-                sentimentBadgeEl.className = 'admin-badge badge-warning';
+            if (shortSentiment) {
+                sentimentBadgeEl.style.display = 'inline-block';
+                sentimentBadgeEl.textContent = shortSentiment;
+                sentimentBadgeEl.className = currentConversation.sentimentLevel >= 4 ? 'alert-indicator text-danger' : 'alert-indicator text-warning';
+                sentimentBadgeEl.style.fontSize = '12px';
+                sentimentBadgeEl.style.fontWeight = '600';
             } else {
-                sentimentBadgeEl.className = 'admin-badge badge-active';
+                sentimentBadgeEl.style.display = 'none';
             }
         }
 
@@ -767,17 +833,16 @@
                         cardWrap.innerHTML = `
                             <div class="chat-action-card card-reward">
                                 <div class="action-card-header">
-                                    <span class="admin-badge badge-active">Bồi hoàn Pawpoint</span>
+                                    <span class="action-card-badge-title" style="font-weight: 700; color: #165335; font-size: 12.5px;">Bồi hoàn Pawpoint</span>
                                     <span class="action-card-time">${msg.time}</span>
                                 </div>
                                 <div class="action-card-body">
                                     <div class="action-card-reward-pts">+${msg.rewardData.points} Pawpoint</div>
                                     <div class="action-card-meta">
-                                        <div><strong>Khách nhận:</strong> ${msg.rewardData.customerName}</div>
                                         <div><strong>Lý do:</strong> ${msg.rewardData.reason}</div>
                                         <div><strong>Mã bồi hoàn:</strong> ${msg.rewardData.txId}</div>
                                     </div>
-                                    <div style="font-size: 13px;">${msg.text}</div>
+                                    <div style="font-size: 12.5px; color: var(--text-main);">${msg.text}</div>
                                 </div>
                                 <div class="action-card-footer">
                                     <button type="button" class="btn-card-action btn-jump-pawpoint">Xem ví Pawpoint</button>
@@ -788,7 +853,7 @@
                         cardWrap.innerHTML = `
                             <div class="chat-action-card card-ticket">
                                 <div class="action-card-header">
-                                    <span class="admin-badge badge-attention">Biên bản Vé Ticket</span>
+                                    <span class="action-card-badge-title" style="font-weight: 700; color: #734718; font-size: 12.5px;">Biên bản Vé Ticket</span>
                                     <span class="action-card-time">${msg.time}</span>
                                 </div>
                                 <div class="action-card-body">
@@ -796,9 +861,8 @@
                                     <div class="action-card-meta">
                                         <div><strong>Phân loại:</strong> ${msg.ticketData.category}</div>
                                         <div><strong>Tham chiếu:</strong> ${msg.ticketData.refId || 'Đơn hàng hiện tại'}</div>
-                                        <div><strong>Mức độ:</strong> ${msg.ticketData.priority}</div>
                                     </div>
-                                    <div style="font-size: 13px;">${msg.text}</div>
+                                    <div style="font-size: 12.5px; color: var(--text-main);">${msg.text}</div>
                                 </div>
                                 <div class="action-card-footer">
                                     <button type="button" class="btn-card-action btn-jump-ticket" data-id="${msg.ticketData.id}">Mở vé trong Khiếu nại</button>
@@ -809,7 +873,7 @@
                         cardWrap.innerHTML = `
                             <div class="chat-action-card card-escalate">
                                 <div class="action-card-header">
-                                    <span class="admin-badge badge-danger">Chuyển cấp Quản lý</span>
+                                    <span class="action-card-badge-title" style="font-weight: 700; color: #8F2424; font-size: 12.5px;">Chuyển cấp Quản lý</span>
                                     <span class="action-card-time">${msg.time}</span>
                                 </div>
                                 <div class="action-card-body">
@@ -818,7 +882,7 @@
                                         <div><strong>Lý do:</strong> ${msg.escalateData.reason}</div>
                                         ${msg.escalateData.notes ? `<div><strong>Ghi chú:</strong> ${msg.escalateData.notes}</div>` : ''}
                                     </div>
-                                    <div style="font-size: 13px;">${msg.text}</div>
+                                    <div style="font-size: 12.5px; color: var(--text-main);">${msg.text}</div>
                                 </div>
                             </div>
                         `;
@@ -826,17 +890,16 @@
                         cardWrap.innerHTML = `
                             <div class="chat-action-card card-tracking">
                                 <div class="action-card-header">
-                                    <span class="admin-badge badge-progress">Vận đơn Hỏa tốc</span>
+                                    <span class="action-card-badge-title" style="font-weight: 700; color: #20495E; font-size: 12.5px;">Vận đơn Hỏa tốc</span>
                                     <span class="action-card-time">${msg.time}</span>
                                 </div>
                                 <div class="action-card-body">
                                     <div style="font-weight: 700; color: #20495E;">${msg.trackingData.orderId} • ${msg.trackingData.carrier}</div>
                                     <div class="action-card-meta">
                                         <div><strong>Bưu tá:</strong> ${msg.trackingData.shipperName} (${msg.trackingData.shipperPhone})</div>
-                                        <div><strong>Trạng thái:</strong> ${msg.trackingData.status}</div>
-                                        <div><strong>Vị trí:</strong> ${msg.trackingData.location}</div>
+                                        <div><strong>Vị trí:</strong> ${msg.trackingData.location} (${msg.trackingData.status})</div>
                                     </div>
-                                    <div style="font-size: 13px;">${msg.text}</div>
+                                    <div style="font-size: 12.5px; color: var(--text-main);">${msg.text}</div>
                                 </div>
                             </div>
                         `;
@@ -844,16 +907,16 @@
                         cardWrap.innerHTML = `
                             <div class="chat-action-card card-camera">
                                 <div class="action-card-header">
-                                    <span class="admin-badge badge-active">Snapshot Camera Phòng</span>
+                                    <span class="action-card-badge-title" style="font-weight: 700; color: #165335; font-size: 12.5px;">Camera Giám sát</span>
                                     <span class="action-card-time">${msg.time}</span>
                                 </div>
                                 <div class="action-card-body">
                                     <div style="font-weight: 700; color: #236B48;">${msg.cameraData.roomName} • ${msg.cameraData.petName}</div>
                                     <div class="action-card-meta">
                                         <div><strong>Tình trạng:</strong> ${msg.cameraData.caption}</div>
-                                        <div><strong>Nhiệt độ:</strong> ${msg.cameraData.temp} | <strong>Độ ẩm:</strong> ${msg.cameraData.humidity}</div>
+                                        <div><strong>Môi trường:</strong> ${msg.cameraData.temp} | ${msg.cameraData.humidity}</div>
                                     </div>
-                                    <div style="font-size: 13px;">${msg.text}</div>
+                                    <div style="font-size: 12.5px; color: var(--text-main);">${msg.text}</div>
                                 </div>
                             </div>
                         `;
@@ -993,9 +1056,12 @@
             currentConversation.pets.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'pet-mini-card';
+                const notesHtml = (p.notes === 'Bình thường' || !p.notes)
+                    ? '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>'
+                    : `<span style="font-size: 11.5px; color: ${p.notes.includes('Dị ứng') || p.notes.includes('sợ') ? '#DC2626' : 'var(--text-muted)'};">${p.notes}</span>`;
                 card.innerHTML = `
                     <span class="pet-mini-name">${p.name} (${p.breed})</span>
-                    <span style="font-size: 11.5px; color: ${p.notes.includes('Dị ứng') || p.notes.includes('sợ') ? '#DC2626' : 'var(--text-muted)'};">${p.notes}</span>
+                    ${notesHtml}
                 `;
                 petsListEl.appendChild(card);
             });

@@ -1315,17 +1315,17 @@
 
             tbody.innerHTML = pagedPets.map(pet => {
                 let alertRowClass = '';
-                let alertBadgeClass = 'badge-neutral';
-                let alertText = pet.alert ? pet.alert : 'Bình thường';
+                let alertHtml = '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>';
                 
                 if (pet.alert) {
                     const lowAlert = pet.alert.toLowerCase();
+                    let displayAlert = pet.alert.length > 26 ? pet.alert.substring(0, 24) + '...' : pet.alert;
                     if (lowAlert.includes('cắn') || lowAlert.includes('dữ') || lowAlert.includes('chưa xác nhận tiêm dại') || lowAlert.includes('nguy hiểm')) {
                         alertRowClass = 'row-alert-critical';
-                        alertBadgeClass = 'badge-danger';
+                        alertHtml = `<span class="alert-indicator text-danger" title="${pet.alert}">• ${displayAlert}</span>`;
                     } else {
                         alertRowClass = 'row-alert-warning';
-                        alertBadgeClass = 'badge-warning';
+                        alertHtml = `<span class="alert-indicator text-warning" title="${pet.alert}">• ${displayAlert}</span>`;
                     }
                 }
 
@@ -1335,12 +1335,6 @@
                 let statusBadgeClass = 'badge-success';
                 if (pet.status === 'Lưu trú Hotel') statusBadgeClass = 'badge-warning';
                 else if (pet.status === 'Lưu trữ') statusBadgeClass = 'badge-neutral';
-
-                // Tóm gọn alert để hiển thị gọn gàng
-                let displayAlert = alertText;
-                if (displayAlert.length > 26) {
-                    displayAlert = displayAlert.substring(0, 24) + '...';
-                }
 
                 return `
                     <tr class="${rowClass}" data-id="${pet.code}">
@@ -1360,9 +1354,7 @@
                             <a href="javascript:void(0)" class="user-name-link btn-jump-customer" data-cust-id="${pet.custId || 'CUST-001'}">${pet.ownerName || 'Chủ nuôi'}</a>
                             <div class="pet-sub-cell">${pet.ownerPhone || ''}</div>
                         </td>
-                        <td>
-                            <span class="admin-badge ${alertBadgeClass}" title="${pet.alert || ''}">${displayAlert}</span>
-                        </td>
+                        <td>${alertHtml}</td>
                         <td>
                             <span class="admin-badge ${statusBadgeClass}">${pet.status}</span>
                         </td>

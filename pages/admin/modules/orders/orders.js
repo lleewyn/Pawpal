@@ -935,7 +935,7 @@
             subtabsContainer.innerHTML = `
                 <button type="button" class="header-subtab-btn active" data-subtab="tab-order-list">Đơn hàng</button>
                 <span class="header-subtab-divider">|</span>
-                <button type="button" class="header-subtab-btn" data-subtab="tab-order-detail">Hồ sơ đơn</button>
+                <button type="button" class="header-subtab-btn" data-subtab="tab-order-detail">Hồ sơ</button>
                 <span class="header-subtab-divider">|</span>
                 <button type="button" class="header-subtab-btn" data-subtab="tab-order-products">Sản phẩm và Kho</button>
                 <span class="header-subtab-divider">|</span>
@@ -1068,37 +1068,34 @@
                 const sla = getOrderSlaInfo(o);
 
                 let statusBadge = '';
-                if (o.status === 'pending') statusBadge = '<span class="admin-badge badge-pending">Chờ xác nhận</span>';
-                else if (o.status === 'confirmed') statusBadge = '<span class="admin-badge badge-confirmed">Đang chuẩn bị</span>';
-                else if (o.status === 'shipping') statusBadge = '<span class="admin-badge badge-shipping">Đang giao</span>';
-                else if (o.status === 'delivered') statusBadge = '<span class="admin-badge badge-delivered">Đã giao</span>';
-                else if (o.status === 'completed') statusBadge = '<span class="admin-badge badge-completed">Hoàn tất</span>';
-                else if (o.status === 'cancelled') statusBadge = '<span class="admin-badge badge-cancelled">Đã hủy</span>';
-                else if (o.status === 'returned') statusBadge = '<span class="admin-badge badge-cancelled">Đổi trả</span>';
+                if (o.status === 'pending') statusBadge = '<span class="admin-badge badge-warning">Chờ xác nhận</span>';
+                else if (o.status === 'confirmed') statusBadge = '<span class="admin-badge badge-neutral">Đang chuẩn bị</span>';
+                else if (o.status === 'shipping') statusBadge = '<span class="admin-badge badge-info">Đang giao</span>';
+                else if (o.status === 'delivered') statusBadge = '<span class="admin-badge badge-success">Đã giao</span>';
+                else if (o.status === 'completed') statusBadge = '<span class="admin-badge badge-success">Hoàn tất</span>';
+                else if (o.status === 'cancelled') statusBadge = '<span class="admin-badge badge-danger">Đã hủy</span>';
+                else if (o.status === 'returned') statusBadge = '<span class="admin-badge badge-danger">Đổi trả</span>';
 
                 let payBadge = '';
                 if (o.paymentStatus === 'paid') {
-                    payBadge = '<span class="admin-badge badge-paid">Đã thanh toán</span>';
+                    payBadge = '<span class="admin-badge badge-success">Đã thanh toán</span>';
                 } else if (o.paymentStatus === 'cod_pending') {
-                    payBadge = '<span class="admin-badge badge-cod-pending">Chờ đối soát COD</span>';
+                    payBadge = '<span class="admin-badge badge-warning">Chờ đối soát COD</span>';
                 } else {
                     payBadge = '<span class="admin-badge badge-unpaid">Chưa thanh toán</span>';
                 }
 
                 let rowAlertClass = '';
-                let alertLabel = '<span style="color: var(--text-muted); font-size: 12px;">--</span>';
-                if (sla.level === 'danger') {
-                    rowAlertClass = 'row-alert-danger';
-                    alertLabel = `<span class="admin-badge ${sla.badgeClass}">${sla.label}</span>`;
-                } else if (sla.level === 'warning') {
-                    rowAlertClass = 'row-alert-warning';
-                    alertLabel = `<span class="admin-badge ${sla.badgeClass}">${sla.label}</span>`;
-                } else if (sla.level === 'ok') {
-                    alertLabel = `<span class="admin-badge ${sla.badgeClass}">${sla.label}</span>`;
-                }
-
+                let alertLabel = '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>';
                 if (o.status === 'cancelled') {
                     rowAlertClass += ' row-locked';
+                    alertLabel = '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>';
+                } else if (sla.level === 'danger') {
+                    rowAlertClass = 'row-alert-danger';
+                    alertLabel = `<span class="alert-indicator text-danger">• ${sla.label}</span>`;
+                } else if (sla.level === 'warning') {
+                    rowAlertClass = 'row-alert-warning';
+                    alertLabel = `<span class="alert-indicator text-warning">• ${sla.label}</span>`;
                 }
 
                 const firstProd = o.products[0];
@@ -1401,19 +1398,19 @@
                 const available = Math.max(0, physical - reserved);
 
                 let availableClass = '';
-                let alertBadge = `<span class="admin-badge badge-paid">An toàn (${p.minStock}+)</span>`;
+                let alertBadge = '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>';
 
                 if (available === 0) {
                     availableClass = 'out';
-                    alertBadge = '<span class="admin-badge badge-cancelled">Hết hàng</span>';
+                    alertBadge = '<span class="alert-indicator text-danger">• Hết hàng</span>';
                 } else if (available <= p.minStock) {
                     availableClass = 'low';
-                    alertBadge = `<span class="admin-badge badge-warning">Sắp hết (&lt;=${p.minStock})</span>`;
+                    alertBadge = `<span class="alert-indicator text-warning">• Sắp hết (còn ${available})</span>`;
                 }
 
                 let statusBadge = p.status === 'Tạm ngưng' 
-                    ? '<span class="admin-badge badge-cancelled">Tạm ngưng</span>' 
-                    : '<span class="admin-badge badge-paid">Đang bán</span>';
+                    ? '<span class="admin-badge badge-danger">Tạm ngưng</span>' 
+                    : '<span class="admin-badge badge-neutral">Đang bán</span>';
 
                 return `
                     <tr>
@@ -1811,7 +1808,7 @@
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 18px 12px;">
-                            Chưa có mặt hàng nào. Vui lòng chọn sản phẩm ở trên và bấm "+ Thêm dòng".
+                            Chưa có mặt hàng nào. Vui lòng chọn sản phẩm ở trên và bấm "Thêm dòng".
                         </td>
                     </tr>
                 `;
@@ -2092,7 +2089,7 @@
                 listEl.innerHTML = `
                     <tr>
                         <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 18px 12px;">
-                            Chưa có món nào trong giỏ hàng. Vui lòng chọn sản phẩm và bấm "+ Thêm món" ở trên.
+                            Chưa có món nào trong giỏ hàng. Vui lòng chọn sản phẩm và bấm "Thêm món" ở trên.
                         </td>
                     </tr>
                 `;
@@ -2793,7 +2790,7 @@
                 return;
             }
             if (posCartItems.length === 0) {
-                showToast('Giỏ hàng đang trống! Vui lòng chọn sản phẩm và bấm "+ Thêm món" trước khi tạo đơn.', 'warning');
+                showToast('Giỏ hàng đang trống! Vui lòng chọn sản phẩm và bấm "Thêm món" trước khi tạo đơn.', 'warning');
                 return;
             }
 

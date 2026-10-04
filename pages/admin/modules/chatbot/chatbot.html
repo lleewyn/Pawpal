@@ -6,11 +6,11 @@
         <!-- THANH CẢNH BÁO CA CHAT KHẨN CẤP / CHẬM TRỄ (ANTI-MISS ALERT STRIP) -->
         <div class="chatbot-alert-strip" id="chatbotAlertBar">
             <div class="alert-strip-left">
-                <span class="alert-strip-badge">Cảnh báo khẩn</span>
+                <span class="alert-strip-badge">Cảnh báo vận hành:</span>
                 <span class="alert-strip-text" id="alertStripText">Có ca chat khách hàng bực bội chưa tiếp nhận và đã quá hạn SLA!</span>
             </div>
             <div class="alert-strip-right">
-                <button type="button" class="btn-alert-strip-action" id="btnFilterUrgentChat">Xử lý ngay ca khẩn cấp</button>
+                <button type="button" class="btn-alert-strip-filter" id="btnFilterUrgentChat">Lọc ca cần xử lý gấp</button>
             </div>
         </div>
 
@@ -60,6 +60,8 @@
                         </div>
                     </div>
 
+                    <button type="button" class="btn-toggle-context-pill" id="btnShowAiContext" style="display: none;">Tóm tắt AI</button>
+
                     <div class="chat-header-actions-spacer"></div>
                     <span class="sla-timer-pill sla-danger" id="currentChatSlaBadge">Quá hạn: 2m 25s</span>
                     <button type="button" class="admin-btn admin-btn-primary btn-takeover-compact" id="btnToggleTakeover">Tiếp nhận</button>
@@ -75,6 +77,7 @@
                         <button type="button" class="btn-context-action" id="btnContextTrackOrder">Vận đơn</button>
                         <button type="button" class="btn-context-action" id="btnContextPetCamera">Camera</button>
                     </div>
+                    <button type="button" class="btn-context-close" id="btnHideAiContext" title="Thu gọn tóm tắt AI">✕</button>
                 </div>
 
                 <!-- MÀN HÌNH DÒNG THỜI GIAN TIN NHẮN -->
@@ -82,38 +85,49 @@
                     <!-- Render by JS -->
                 </div>
 
-                <!-- VÙNG CÔNG CỤ PHÍA DƯỚI: GỢI Ý AI + MACROS GOM 1 KHU -->
+                <!-- VÙNG CÔNG CỤ SOẠN THẢO TINH GỌN (2 TẦNG CHUẨN CAO CẤP) -->
                 <div class="chat-bottom-toolbar">
-                    <!-- DÒNG 1: GỢI Ý AI DẠNG CAROUSEL 1 NÚT -->
-                    <div class="ai-smart-suggestions-box" id="aiSmartSuggestionsBox">
-                        <div class="suggest-carousel-label">Gợi ý AI:</div>
-                        <button type="button" class="suggest-carousel-prev" id="btnSuggestPrev" title="Gợi ý trước">‹</button>
-                        <div class="suggest-carousel-main" id="suggestCarouselMain">
-                            <span class="suggest-carousel-tag" id="suggestCarouselTag">Đồng cảm và Xoa dịu</span>
-                            <span class="suggest-carousel-text" id="suggestCarouselText">Dạ PawPal thành thật xin lỗi sen và bé...</span>
+                    <!-- TẦNG 1: THANH TRỢ LÝ THÔNG MINH (GỢI Ý AI + MẪU NHANH GOM 1 DÒNG) -->
+                    <div class="smart-assistant-bar" id="smartAssistantBar">
+                        <div class="ai-smart-suggestions-box" id="aiSmartSuggestionsBox">
+                            <span class="suggest-carousel-label">Gợi ý AI:</span>
+                            <button type="button" class="suggest-carousel-prev" id="btnSuggestPrev" title="Gợi ý trước">‹</button>
+                            <div class="suggest-carousel-main" id="suggestCarouselMain">
+                                <span class="suggest-carousel-tag" id="suggestCarouselTag">Đồng cảm</span>
+                                <span class="suggest-carousel-text" id="suggestCarouselText">Dạ PawPal thành thật xin lỗi sen và bé...</span>
+                            </div>
+                            <button type="button" class="suggest-carousel-next" id="btnSuggestNext" title="Gợi ý tiếp theo">›</button>
+                            <button type="button" class="suggest-carousel-apply" id="btnApplySuggest">Áp dụng</button>
                         </div>
-                        <button type="button" class="suggest-carousel-next" id="btnSuggestNext" title="Gợi ý tiếp theo">›</button>
-                        <button type="button" class="suggest-carousel-apply" id="btnApplySuggest">Dùng mẫu này</button>
+                        <div class="quick-macros-wrap">
+                            <div class="quick-templates-dropdown-wrap" id="quickTemplatesDropdownWrap">
+                                <button type="button" class="btn-quick-templates-menu" id="btnToggleQuickTemplates">Mẫu nhanh ▾</button>
+                                <div class="quick-templates-dropdown-panel" id="quickTemplatesPanel">
+                                    <button type="button" class="quick-reply-pill" data-reply="Dạ PawPal xin chào sen, em là chuyên viên CSKH đã tiếp nhận ca chat này để trực tiếp hỗ trợ mình ngay ạ!">Lời chào tiếp nhận</button>
+                                    <button type="button" class="quick-reply-pill" data-reply="Dạ PawPal thành thật xin lỗi vì sự bất tiện này. Em đã kiểm tra bưu tá đang trên đường giao hàng và sẽ đến trong chiều nay ạ.">Xin lỗi giao trễ</button>
+                                    <button type="button" class="quick-reply-pill" data-reply="Dạ để hỗ trợ tốt nhất, sen vui lòng chụp giúp em hình ảnh tình trạng hiện tại gửi qua đây nhé ạ.">Yêu cầu gửi ảnh</button>
+                                    <button type="button" class="quick-reply-pill" data-reply="Dạ để tạ lỗi vì sự cố vừa rồi, PawPal xin gửi tặng mình 50 điểm Pawpoint vào tài khoản nhé ạ.">Tặng điểm tạ lỗi</button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-canned-lib-link" id="btnOpenCannedModal">Thư viện câu mẫu</button>
+                            <button type="button" class="btn-assistant-close" id="btnHideAssistantBar" title="Thu gọn thanh gợi ý">✕</button>
+                        </div>
                     </div>
-                    <!-- DÒNG 2: MACRO PHẢN HỒI NHANH -->
-                    <div class="chat-quick-templates">
-                        <span class="macros-label">Mẫu nhanh:</span>
-                        <button type="button" class="quick-reply-pill" data-reply="Dạ PawPal xin chào sen, em là chuyên viên CSKH đã tiếp nhận ca chat này để trực tiếp hỗ trợ mình ngay ạ!">Lời chào tiếp nhận</button>
-                        <button type="button" class="quick-reply-pill" data-reply="Dạ PawPal thành thật xin lỗi vì sự bất tiện này. Em đã kiểm tra bưu tá đang trên đường giao hàng và sẽ đến trong chiều nay ạ.">Xin lỗi giao trễ</button>
-                        <button type="button" class="quick-reply-pill" data-reply="Dạ để hỗ trợ tốt nhất, sen vui lòng chụp giúp em hình ảnh tình trạng hiện tại gửi qua đây nhé ạ.">Yêu cầu gửi ảnh</button>
-                        <button type="button" class="quick-reply-pill" data-reply="Dạ để tạ lỗi vì sự cố vừa rồi, PawPal xin gửi tặng mình 50 điểm Pawpoint vào tài khoản nhé ạ.">Tặng điểm tạ lỗi</button>
-                        <button type="button" class="quick-reply-pill btn-canned-lib-link" id="btnOpenCannedModal">Thư viện câu mẫu</button>
-                    </div>
-                </div>
 
-                <!-- KHUNG SOẠN THẢO VÀ GỬI TIN NHẮN -->
-                <div class="chat-composer-box">
-                    <textarea class="admin-input chat-composer-textarea" id="chatMessageInput" rows="2" placeholder="Gõ tin nhắn gửi khách hàng... (Chỉ gửi được khi đã Tiếp nhận ca chat)"></textarea>
-                    <div class="chat-composer-footer">
-                        <div class="composer-mode-status" id="composerModeStatus">
-                            Chế độ: <strong>Nhân viên trực tiếp</strong>
+                    <!-- TẦNG 2: KHUNG SOẠN THẢO VÀ GỬI TIN NHẮN -->
+                    <div class="chat-composer-box">
+                        <textarea class="admin-input chat-composer-textarea" id="chatMessageInput" rows="2" placeholder="Gõ tin nhắn gửi khách hàng... (Enter để gửi, Shift+Enter xuống dòng)"></textarea>
+                        <div class="chat-composer-footer">
+                            <div class="composer-mode-left">
+                                <div class="composer-mode-status" id="composerModeStatus">
+                                    Chế độ: <strong>Nhân viên trực tiếp</strong>
+                                </div>
+                                <button type="button" class="btn-toggle-assistant-pill" id="btnShowAssistantBar" style="display: none;">Mở gợi ý AI</button>
+                            </div>
+                            <div class="composer-actions-right">
+                                <button type="button" class="admin-btn admin-btn-primary btn-send-message" id="btnSendLiveMessage">Gửi tin</button>
+                            </div>
                         </div>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnSendLiveMessage">Gửi tin</button>
                     </div>
                 </div>
             </div>

@@ -1036,7 +1036,7 @@
             if (pets.length === 0) {
                 container.innerHTML = `
                     <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13.5px;">
-                        Khách hàng chưa có bé cưng nào trong danh sách theo dõi. Bấm <strong>+ Thêm bé cưng</strong> để tạo mới.
+                        Khách hàng chưa có bé cưng nào trong danh sách theo dõi. Bấm <strong>Thêm bé cưng</strong> để tạo mới.
                     </div>
                 `;
                 return;
@@ -1502,6 +1502,15 @@
             });
         }
 
+        function isRealPetAlert(note) {
+            if (!note || note === 'Bình thường') return false;
+            const l = note.toLowerCase().trim();
+            if (l.includes('thân thiện') || l.includes('ngoan') || l.includes('dễ chăm sóc') || l.includes('dễ thương') || l.includes('năng động') || l.includes('bình thường') || l.includes('lông dài')) {
+                return false;
+            }
+            return true;
+        }
+
         function renderCustomersTable() {
             const tbody = document.getElementById('customerTableTbody');
             if (!tbody) return;
@@ -1556,7 +1565,8 @@
             tbody.innerHTML = pageItems.map(c => {
                 const isLocked = (c.status === 'LOCKED');
                 const hasEmergency = Boolean(c.emergencyAlert || (c.complaints && c.complaints.some(tc => tc.status === 'Đang xử lý')));
-                const hasPetAlert = Boolean(c.pets && c.pets.some(p => p.alertNote && p.alertNote !== 'Bình thường'));
+                const alertPet = (c.pets && Array.isArray(c.pets)) ? c.pets.find(p => isRealPetAlert(p.alertNote)) : null;
+                const hasPetAlert = Boolean(alertPet);
 
                 // Vạch border-left duy nhất ở td:first-child theo AGENTS.md
                 let firstTdBorder = 'border-left: 3px solid transparent;';
@@ -1569,20 +1579,19 @@
                 const rowLockedClass = isLocked ? 'row-locked' : '';
                 const rowComplaintClass = hasEmergency ? 'row-highlight-complaint' : '';
 
-                let alertBadgeHtml = '<span class="admin-badge badge-neutral">Bình thường</span>';
+                let alertBadgeHtml = '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>';
                 if (hasEmergency) {
-                    const ticketId = (c.complaints && c.complaints.length > 0) ? c.complaints[0].id : 'Khiếu nại';
-                    alertBadgeHtml = `<span class="admin-badge badge-danger">Khiếu nại ${ticketId}</span>`;
-                } else if (hasPetAlert) {
-                    const alertPet = c.pets.find(p => p.alertNote && p.alertNote !== 'Bình thường');
-                    alertBadgeHtml = `<span class="admin-badge badge-warning">${alertPet.name}: ${alertPet.alertNote}</span>`;
+                    const ticketId = (c.complaints && c.complaints.length > 0 && c.complaints[0].id) ? c.complaints[0].id : '';
+                    alertBadgeHtml = `<span class="alert-indicator text-danger">• Khiếu nại ${ticketId || 'đang xử lý'}</span>`;
+                } else if (hasPetAlert && alertPet) {
+                    alertBadgeHtml = `<span class="alert-indicator text-warning">• ${alertPet.name}: ${alertPet.alertNote}</span>`;
                 }
 
                 let statusBadgeHtml = '<span class="admin-badge badge-success">Đang hoạt động</span>';
                 if (isLocked) {
                     statusBadgeHtml = '<span class="admin-badge badge-danger">Bị khóa</span>';
                 } else if (c.status === 'TEMP') {
-                    statusBadgeHtml = '<span class="admin-badge badge-warning">Tạm thời</span>';
+                    statusBadgeHtml = '<span class="admin-badge badge-neutral">Tạm thời</span>';
                 }
 
                 const lockBtnText = isLocked ? 'Mở khóa tài khoản' : 'Khóa tài khoản';

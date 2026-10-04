@@ -196,7 +196,7 @@
             case 'pending':
                 return '<span class="admin-badge badge-warning">Chờ xác nhận</span>';
             case 'confirmed':
-                return '<span class="admin-badge badge-success">Đã xác nhận</span>';
+                return '<span class="admin-badge badge-neutral">Đã xác nhận</span>';
             case 'in_progress':
                 return '<span class="admin-badge badge-info">Đang thực hiện</span>';
             case 'completed':
@@ -204,7 +204,7 @@
             case 'cancelled':
                 return '<span class="admin-badge badge-danger">Đã hủy</span>';
             default:
-                return `<span class="admin-badge">${status}</span>`;
+                return `<span class="admin-badge badge-neutral">${status}</span>`;
         }
     }
 
@@ -250,33 +250,30 @@
         return { level: 'ok', label: 'Bình thường', minutesLate: 0 };
     }
 
-    // Helper: Nhãn cảnh báo (Tích hợp Pet Alert, SLA Alert, và Phân công KTV)
+    // Helper: Nhãn cảnh báo (Tích hợp Pet Alert, SLA Alert, và Phân công KTV - Tối giản, thuần chữ, không hộp màu)
     function getAlertBadge(item) {
-        const badges = [];
+        if (item.status === 'cancelled') {
+            return '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>';
+        }
+        const alerts = [];
         const sla = getServiceSlaInfo(item);
 
         if (item.petAlert) {
-            badges.push('<span class="alert-pill-mini alert-red">Pet có lưu ý</span>');
+            alerts.push('<span class="alert-indicator text-danger">• Pet có lưu ý</span>');
         }
-        if (!item.staff && item.status !== 'cancelled') {
-            badges.push('<span class="alert-pill-mini alert-orange">Chưa phân công</span>');
-        }
-
         if (sla.level === 'danger') {
-            badges.push(`<span class="alert-pill-mini alert-red">${sla.label}</span>`);
+            alerts.push(`<span class="alert-indicator text-danger">• ${sla.label}</span>`);
         } else if (sla.level === 'warning') {
-            badges.push(`<span class="alert-pill-mini alert-orange">${sla.label}</span>`);
+            alerts.push(`<span class="alert-indicator text-warning">• ${sla.label}</span>`);
         } else if (sla.level === 'info') {
-            badges.push(`<span class="alert-pill-mini alert-blue">${sla.label}</span>`);
-        } else if (item.status === 'in_progress') {
-            badges.push('<span class="alert-pill-mini alert-green">Đúng tiến độ</span>');
+            alerts.push(`<span class="alert-indicator text-info">• ${sla.label}</span>`);
         }
 
-        if (badges.length === 0) {
-            return '<span style="color: var(--text-muted); font-size: 12px;">Bình thường</span>';
+        if (alerts.length === 0) {
+            return '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>';
         }
 
-        return `<div class="alert-badges-stack">${badges.join('')}</div>`;
+        return `<div class="alert-text-stack">${alerts.join('')}</div>`;
     }
 
     // ==========================================================================
@@ -301,7 +298,7 @@
             <span class="header-subtab-divider">|</span>
             <button type="button" class="header-subtab-btn" data-subtab="tab-service-detail">Hồ sơ</button>
             <span class="header-subtab-divider">|</span>
-            <button type="button" class="header-subtab-btn" data-subtab="tab-service-catalog">Danh mục và Bảng giá</button>
+            <button type="button" class="header-subtab-btn" data-subtab="tab-service-catalog">Bảng giá</button>
             <span class="header-subtab-divider">|</span>
             <button type="button" class="header-subtab-btn" data-subtab="tab-service-reviews">Đánh giá</button>
         `;
@@ -521,8 +518,8 @@
             if (item.category === 'Hotel') {
                 serviceCellHtml = `
                     <div style="font-weight: 500; color: var(--text-main);">${item.serviceName}</div>
-                    <div style="margin-top: 3px;">
-                        <span class="service-pill-tag tag-hotel">${item.roomCode || 'DLX-04'} • ${item.nights || 3} đêm • ${item.dietPlan ? 'Pate tươi' : 'Ăn theo yêu cầu'}</span>
+                    <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                        ${item.roomCode || 'DLX-04'} • ${item.nights || 3} đêm • ${item.dietPlan ? 'Pate tươi' : 'Ăn theo yêu cầu'}
                     </div>
                 `;
                 datetimeCellHtml = `
@@ -533,19 +530,19 @@
                 const shortPickup = item.pickupAddress ? (item.pickupAddress.length > 22 ? item.pickupAddress.substring(0, 22) + '...' : item.pickupAddress) : 'Đón tận nơi';
                 serviceCellHtml = `
                     <div style="font-weight: 500; color: var(--text-main);">${item.serviceName}</div>
-                    <div style="margin-top: 3px;">
-                        <span class="service-pill-tag tag-taxi">${shortPickup} ➔ Q.1 (${item.distanceKm || 4.2}km)</span>
+                    <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+                        ${shortPickup} ➔ Q.1 (${item.distanceKm || 4.2}km)
                     </div>
                 `;
                 datetimeCellHtml = `
                     <div style="font-weight: 600; color: var(--text-main);">${item.time}</div>
-                    <div style="font-size: 11.5px; color: var(--text-muted);">${item.date} • <span class="service-pill-mini">${item.tripType || '2 chiều'}</span></div>
+                    <div style="font-size: 11.5px; color: var(--text-muted);">${item.date} • ${item.tripType || '2 chiều khứ hồi'}</div>
                 `;
             } else {
                 // Spa và Grooming
                 serviceCellHtml = `
                     <div style="font-weight: 500; color: var(--text-main);">${item.serviceName}</div>
-                    ${item.styleType ? `<div style="margin-top: 3px;"><span class="service-pill-tag tag-spa">${item.styleType}</span></div>` : `<div style="font-size: 12px; color: var(--text-muted);">${item.duration}</div>`}
+                    ${item.styleType ? `<div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">${item.styleType}</div>` : `<div style="font-size: 12px; color: var(--text-muted);">${item.duration}</div>`}
                 `;
                 datetimeCellHtml = `
                     <div style="font-weight: 600; color: var(--text-main);">${item.time}</div>
@@ -1119,7 +1116,7 @@
                     ? `<div class="step-action-bar">
                         ${(!step.done && booking.status === 'in_progress') ? `<button type="button" class="btn-step-action complete-action btn-mark-step-done" data-step-index="${idx}">Đánh dấu xong</button>` : ''}
                         <button type="button" class="btn-step-action btn-edit-step" data-step-index="${idx}">Sửa bước</button>
-                        <button type="button" class="btn-step-action btn-add-step-photo" data-step-index="${idx}">+ Thêm ảnh</button>
+                        <button type="button" class="btn-step-action btn-add-step-photo" data-step-index="${idx}">Thêm ảnh</button>
                         ${booking.status === 'in_progress' ? `<button type="button" class="btn-step-action btn-del-step" data-step-index="${idx}" style="color: #DC2626;">Xóa</button>` : ''}
                        </div>`
                     : '';
