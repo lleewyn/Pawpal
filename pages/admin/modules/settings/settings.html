@@ -298,6 +298,16 @@
          SUB-TAB 3: CẤU HÌNH HỆ THỐNG (THÔNG TIN CHI NHÁNH, THANH TOÁN, VẬN CHUYỂN, ĐẶT LỊCH, ĐỐI TÁC)
          ==================================================================== -->
     <section class="subtab-content" id="subtab-tab-system-config">
+        <!-- DẢI ĐIỀU HÀNH KHÓA AN TOÀN VÀ TRẠNG THÁI SSOT -->
+        <div class="admin-card" style="padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; background-color: var(--surface-white); border: 1px solid var(--border-neutral); border-radius: var(--admin-radius);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 13.5px; font-weight: 700; color: var(--text-heading);">Cơ chế bảo vệ thông số lõi:</span>
+                <span class="safe-mode-badge" id="safeModeBadge">Khóa an toàn: Đang bật</span>
+                <span style="font-size: 12.5px; color: var(--text-muted);">Mở khóa trước khi lưu thay đổi các chính sách vận hành</span>
+            </div>
+            <button type="button" class="admin-btn admin-btn-secondary" id="btnToggleSafeMode" style="height: 32px; font-size: 12.5px; padding: 0 12px;">Mở khóa để sửa</button>
+        </div>
+
         <div class="system-cards-grid">
             <!-- CARD 1: THÔNG TIN CỬA HÀNG VÀ CHI NHÁNH (STORE PROFILE) -->
             <div class="admin-card system-module-card">
@@ -459,15 +469,55 @@
                 </div>
             </div>
         </div>
+    </section>
 
-        <!-- KHỐI NHẬT KÝ THAY ĐỔI CẤU HÌNH (AUDIT LOG VÀ ĐỒNG BỘ ĐA PHÂN HỆ SSOT - GIAI ĐOẠN 2) -->
-        <div class="admin-card settings-master-card" style="margin-top: 4px;">
+    <!-- ====================================================================
+         SUB-TAB 4: NHẬT KÝ THAY ĐỔI CẤU HÌNH (AUDIT LOG VÀ ĐỒNG BỘ ĐA PHÂN HỆ SSOT)
+         ==================================================================== -->
+    <section class="subtab-content" id="subtab-tab-audit-logs">
+        <!-- 4 THẺ KPI NHẬT KÝ AUDIT LOG -->
+        <div class="settings-kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Tổng lượt thay đổi</span>
+                <span class="kpi-val text-heading" id="statTotalAuditLogs">3</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Đã đồng bộ SSOT</span>
+                <span class="kpi-val text-success" id="statSyncedAuditLogs">3</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Phân hệ tác động gần nhất</span>
+                <span class="kpi-val text-heading" id="statLastModule" style="font-size: 17px;">Khách hàng và Bán hàng</span>
+            </div>
+            <div class="admin-card kpi-card">
+                <span class="kpi-label">Trạng thái Khóa an toàn</span>
+                <span class="kpi-val text-warning" id="statSafeModeStatus" style="font-size: 17px;">Đang bật</span>
+            </div>
+        </div>
+
+        <!-- BẢNG MASTER NHẬT KÝ AUDIT LOG (GOM BỘ LỌC + BẢNG THÀNH 1 KHỐI) -->
+        <div class="admin-card settings-master-card">
             <div class="table-toolbar-section">
                 <div class="filter-row-top">
-                    <span style="font-size: 15px; font-weight: 700; color: var(--text-heading);">Nhật ký thay đổi cấu hình (Audit Log)</span>
+                    <div class="search-box-wrapper">
+                        <input type="text" class="admin-input search-input" id="searchAuditLogInput" placeholder="Tìm theo nội dung thay đổi hoặc người thực hiện...">
+                    </div>
                     <div class="filter-actions-right">
-                        <span class="safe-mode-badge" id="safeModeBadge">Khóa an toàn: Đang bật</span>
-                        <button type="button" class="btn-alert-strip-filter" id="btnToggleSafeMode">Mở khóa để sửa</button>
+                        <span class="safe-mode-badge" id="safeModeBadgeAudit">Khóa an toàn: Đang bật</span>
+                        <button type="button" class="btn-alert-strip-filter" id="btnToggleSafeModeAudit">Mở khóa để sửa</button>
+                    </div>
+                </div>
+                <div class="filter-row-bottom">
+                    <div class="filter-dropdown-group">
+                        <label class="filter-label">Phân hệ tác động:</label>
+                        <select class="admin-select" id="filterAuditTargetModule" style="width: 175px;">
+                            <option value="all">Tất cả phân hệ</option>
+                            <option value="Khách hàng">Khách hàng</option>
+                            <option value="Dịch vụ">Dịch vụ</option>
+                            <option value="Bán hàng">Bán hàng</option>
+                            <option value="Nhân sự">Nhân sự</option>
+                            <option value="Cửa hàng">Cửa hàng</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -475,9 +525,9 @@
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th style="width: 140px;">Thời gian</th>
-                            <th style="width: 130px;">Người thực hiện</th>
-                            <th style="width: 180px;">Phân hệ tác động</th>
+                            <th style="width: 160px;">Thời gian</th>
+                            <th style="width: 150px;">Người thực hiện</th>
+                            <th style="width: 220px;">Phân hệ tác động</th>
                             <th>Nội dung thay đổi</th>
                             <th style="width: 150px;">Trạng thái đồng bộ</th>
                         </tr>
@@ -486,6 +536,15 @@
                         <!-- Render by JS -->
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- PHÂN TRANG NẰM NGOÀI BẢNG, NỀN TRONG SUỐT, CĂN GIỮA -->
+        <div class="admin-pagination-bar">
+            <div class="pagination-controls">
+                <button type="button" class="pagination-btn disabled" title="Trang trước">&lt;</button>
+                <button type="button" class="pagination-btn active">1</button>
+                <button type="button" class="pagination-btn" title="Trang sau">&gt;</button>
             </div>
         </div>
     </section>

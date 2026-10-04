@@ -296,6 +296,8 @@
             <button type="button" class="header-subtab-btn ${activeTabId === 'tab-content-management' ? 'active' : ''}" data-tab="tab-content-management">Quản lý Nội dung</button>
             <span class="subtab-divider">|</span>
             <button type="button" class="header-subtab-btn ${activeTabId === 'tab-system-config' ? 'active' : ''}" data-tab="tab-system-config">Cấu hình Hệ thống</button>
+            <span class="subtab-divider">|</span>
+            <button type="button" class="header-subtab-btn ${activeTabId === 'tab-audit-logs' ? 'active' : ''}" data-tab="tab-audit-logs">Nhật ký Cấu hình</button>
         `;
 
         subtabsContainer.querySelectorAll('.header-subtab-btn').forEach(btn => {
@@ -329,6 +331,7 @@
             renderArticles();
         } else if (tabId === 'tab-system-config') {
             renderSystemConfigCards();
+        } else if (tabId === 'tab-audit-logs') {
             renderAuditLogs();
         }
     }
@@ -827,13 +830,47 @@
         const tbody = document.getElementById('auditLogTableBody');
         if (!tbody) return;
 
+        // Cập nhật 4 Thẻ KPI trên Subtab 4
+        const totalLogs = mockAuditLogs.length;
+        const syncedLogs = mockAuditLogs.filter(l => l.status === 'Đã đồng bộ SSOT').length;
+        const lastMod = mockAuditLogs[0]?.targetModules || 'Chưa có';
+
+        const totalEl = document.getElementById('statTotalAuditLogs');
+        const syncedEl = document.getElementById('statSyncedAuditLogs');
+        const lastModEl = document.getElementById('statLastModule');
+        const safeModeEl = document.getElementById('statSafeModeStatus');
+
+        if (totalEl) totalEl.textContent = totalLogs;
+        if (syncedEl) syncedEl.textContent = syncedLogs;
+        if (lastModEl) lastModEl.textContent = lastMod;
+        if (safeModeEl) {
+            safeModeEl.textContent = isSafeModeLocked ? 'Đang bật' : 'Đã mở';
+            safeModeEl.className = isSafeModeLocked ? 'kpi-val text-warning' : 'kpi-val text-success';
+        }
+
+        // Lọc dữ liệu theo Từ khóa và Phân hệ
+        const keyword = (document.getElementById('searchAuditLogInput')?.value || '').toLowerCase().trim();
+        const targetFilter = document.getElementById('filterAuditTargetModule')?.value || 'all';
+
+        const filtered = mockAuditLogs.filter(log => {
+            if (targetFilter !== 'all' && !log.targetModules.includes(targetFilter)) return false;
+            if (keyword) {
+                return (
+                    log.actionText.toLowerCase().includes(keyword) ||
+                    log.actor.toLowerCase().includes(keyword) ||
+                    log.targetModules.toLowerCase().includes(keyword)
+                );
+            }
+            return true;
+        });
+
         tbody.innerHTML = '';
-        if (mockAuditLogs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">Chưa có lịch sử thay đổi cấu hình nào.</td></tr>`;
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">Không tìm thấy nhật ký thay đổi nào phù hợp.</td></tr>`;
             return;
         }
 
-        mockAuditLogs.forEach(log => {
+        filtered.forEach(log => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><span style="font-size: 12.5px; color: var(--text-muted);">${log.time}</span></td>
@@ -1772,25 +1809,47 @@
         });
 
         // --- SỰ KIỆN GIAI ĐOẠN 2: KHÓA AN TOÀN VÀ XÁC NHẬN TÁC ĐỘNG ĐA PHÂN HỆ ---
-        document.getElementById('btnToggleSafeMode')?.addEventListener('click', () => {
-            isSafeModeLocked = !isSafeModeLocked;
-            const badge = document.getElementById('safeModeBadge');
-            const btn = document.getElementById('btnToggleSafeMode');
+        function updateSafeModeUI() {
+            const badge1 = document.getElementById('safeModeBadge');
+            const btn1 = document.getElementById('btnToggleSafeMode');
+            const badge2 = document.getElementById('safeModeBadgeAudit');
+            const btn2 = document.getElementById('btnToggleSafeModeAudit');
+            const kpiStatus = document.getElementById('statSafeModeStatus');
+
             if (isSafeModeLocked) {
-                if (badge) {
-                    badge.className = 'safe-mode-badge';
-                    badge.textContent = 'Khóa an toàn: Đang bật';
-                }
-                if (btn) btn.textContent = 'Mở khóa để sửa';
+                if (badge1) { badge1.className = 'safe-mode-badge'; badge1.textContent = 'Khóa an toàn: Đang bật'; }
+                if (btn1) btn1.textContent = 'Mở khóa để sửa';
+                if (badge2) { badge2.className = 'safe-mode-badge'; badge2.textContent = 'Khóa an toàn: Đang bật'; }
+                if (btn2) btn2.textContent = 'Mở khóa để sửa';
+                if (kpiStatus) { kpiStatus.textContent = 'Đang bật'; kpiStatus.className = 'kpi-val text-warning'; }
+            } else {
+                if (badge1) { badge1.className = 'safe-mode-badge is-unlocked'; badge1.textContent = 'Khóa an toàn: Đã mở'; }
+                if (btn1) btn1.textContent = 'Bật lại khóa an toàn';
+                if (badge2) { badge2.className = 'safe-mode-badge is-unlocked'; badge2.textContent = 'Khóa an toàn: Đã mở'; }
+                if (btn2) btn2.textContent = 'Bật lại khóa an toàn';
+                if (kpiStatus) { kpiStatus.textContent = 'Đã mở'; kpiStatus.className = 'kpi-val text-success'; }
+            }
+        }
+
+        const handleSafeModeToggle = () => {
+            isSafeModeLocked = !isSafeModeLocked;
+            updateSafeModeUI();
+            if (isSafeModeLocked) {
                 alert('Đã BẬT Khóa an toàn! Toàn bộ tham số cấu hình lõi được bảo vệ chống thao tác nhầm.');
             } else {
-                if (badge) {
-                    badge.className = 'safe-mode-badge is-unlocked';
-                    badge.textContent = 'Khóa an toàn: Đã mở';
-                }
-                if (btn) btn.textContent = 'Bật lại khóa an toàn';
                 alert('Đã MỞ KHÓA thành công! Bạn có thể chỉnh sửa các chính sách và cấu hình vận hành.');
             }
+        };
+
+        document.getElementById('btnToggleSafeMode')?.addEventListener('click', handleSafeModeToggle);
+        document.getElementById('btnToggleSafeModeAudit')?.addEventListener('click', handleSafeModeToggle);
+
+        // Lọc và tìm kiếm trên Subtab 4: Nhật ký Cấu hình
+        document.getElementById('searchAuditLogInput')?.addEventListener('input', () => {
+            renderAuditLogs();
+        });
+        document.getElementById('filterAuditTargetModule')?.addEventListener('change', () => {
+            renderAuditLogs();
         });
 
         document.getElementById('btnConfirmAndSyncImpact')?.addEventListener('click', () => {
@@ -1818,7 +1877,7 @@
 
     const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
     const savedTab = sessionStorage.getItem('pawpal_admin_settings_subtab');
-    const validTabs = ['tab-banner-promos', 'tab-content-management', 'tab-system-config'];
+    const validTabs = ['tab-banner-promos', 'tab-content-management', 'tab-system-config', 'tab-audit-logs'];
 
     let initTab = 'tab-banner-promos';
     if (validTabs.includes(hash)) {

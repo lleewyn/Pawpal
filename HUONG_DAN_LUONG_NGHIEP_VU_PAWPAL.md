@@ -528,7 +528,7 @@ sequenceDiagram
 ### 3.9. Phân hệ Cấu hình hệ thống (Settings và System Configuration)
 *Trung tâm Thiết lập và Đồng bộ Nguồn Dữ liệu Duy nhất (Single Source of Truth - SSOT) cho toàn bộ hệ sinh thái PawPal (Admin POS, User Portal, Web Store, Service Booking).*
 
-- **Cấu trúc 3 Subtab chuyên sâu trên Header Bar (Chuẩn `AGENTS.md`)**:
+- **Cấu trúc 4 Subtab chuyên sâu trên Header Bar (Chuẩn `AGENTS.md`)**:
   1. *Banner và Khuyến mãi (`tab-banner-promos`)*:
      - **Thanh cảnh báo Zero Miss Strip**: Tự động quét và cảnh báo các Voucher sắp cạn quota ($\le 10$ lượt) hoặc hết sạch lượt ($0$ lượt), các Banner sắp hết hạn trong vòng 24 - 48 giờ để không đứt gãy luồng tương tác khách hàng.
      - **Quản lý Banner**: Danh sách Banner hiển thị ngoài trang chủ và trang dịch vụ, hỗ trợ thao tác 1 chạm gia hạn 30 ngày (`btn-extend-banner`), bật/tắt hiển thị.
@@ -545,6 +545,9 @@ sequenceDiagram
      - **Card 3: Đơn vị Vận chuyển và Biểu phí**: Mức đơn miễn phí giao hàng (*Đơn từ 300.000 VNĐ*), Biểu phí giao hàng nội thành (*25.000 VNĐ*), ngoại tỉnh (*35.000 VNĐ*), giao hỏa tốc 2 giờ (*45.000 VNĐ*), và thông số kết nối API đối tác 3PL (GHN, GHTK, GrabExpress).
      - **Card 4: Chính sách Đặt lịch, Giờ mở cửa và Pet Hotel**: Khung giờ phục vụ chi nhánh (*08:00 - 20:00 ngày thường, đến 21:00 cuối tuần*), Quy định Pet Hotel (*Check-in sau 14:00, Check-out trước 12:00, Phụ phí trả trễ 100.000 VNĐ / nửa ngày*), Công suất tối đa (*4 bé / ca*), Quy tắc hủy miễn phí (*trước 4 giờ, phí trễ 50.000 VNĐ*).
      - **Card 5: Kết nối Đối tác API và Live Healthcheck**: Đo ping thời gian thực tới hạ tầng GHN Express, MoMo Merchant Gateway, VNPay Payment Engine.
+  4. *Nhật ký Cấu hình (`tab-audit-logs`)*:
+     - **4 Thẻ KPI Nhật ký**: Tổng lượt thay đổi, Đã đồng bộ SSOT, Phân hệ tác động gần nhất, Trạng thái Khóa an toàn.
+     - **Bảng Master Nhật ký Thay đổi**: Lọc theo từ khóa, phân hệ tác động (Khách hàng, Dịch vụ, Bán hàng, Nhân sự, Cửa hàng), ghi nhận thời gian chi tiết, người thực hiện, nội dung thay đổi và trạng thái `Đã đồng bộ SSOT`.
 
 - **Cơ chế Khóa an toàn (Safe Mode) và Xác nhận Tác động Đa phân hệ (SSOT Impact Confirmation)**:
   - **Khóa an toàn chống thao tác nhầm**: Mặc định hệ thống luôn ở trạng thái **`Khóa an toàn: Đang bật`** để bảo vệ toàn bộ tham số vận hành lõi. Quản trị viên phải bấm *"Mở khóa để sửa"* trước khi lưu bất kỳ thay đổi nào.
@@ -588,7 +591,7 @@ Toàn bộ **9 phân hệ quản trị** của Pawpal-er đã được kiểm tr
 | **6. Nhân sự** | `pawpal_admin_staff_active_subtab` | `#tab-staff-list`, `#tab-staff-profile`, `#tab-staff-schedule`, `#tab-staff-assessment` | Giữ nguyên nhân viên đang xem (`pawpal_admin_staff_selected_id`), lịch làm việc, đánh giá KPI và Deep Breadcrumb `/ [Tên NV]`. |
 | **7. Khiếu nại** | `pawpal_admin_complaint_active_subtab` | `#tab-complaint-services`, `#tab-complaint-orders`, `#tab-complaint-detail` | Giữ nguyên Ticket đang xử lý (`pawpal_admin_complaint_selected_id`), biên bản đối thoại Chat Transcript và Deep Breadcrumb `/ [Mã Ticket]`. |
 | **8. Chatbot AI** | `pawpal_admin_chatbot_subtab` | `#tab-live-support`, `#tab-ai-copilot`, `#tab-chatbot-rules` | Giữ nguyên ca hội thoại đang trực tiếp trao đổi (`pawpal_admin_chatbot_conv_id`) và Deep Breadcrumb `/ [Tên khách]`. |
-| **9. Cấu hình** | `pawpal_admin_settings_subtab` | `#tab-banner-promos`, `#tab-content-management`, `#tab-system-config` | Giữ nguyên phân mục đang chỉnh sửa (Banner và Vouchers, Bài viết tin tức hoặc Cấu hình hệ thống). |
+| **9. Cấu hình** | `pawpal_admin_settings_subtab` | `#tab-banner-promos`, `#tab-content-management`, `#tab-system-config`, `#tab-audit-logs` | Giữ nguyên phân mục đang chỉnh sửa (Banner và Vouchers, Bài viết tin tức, Cấu hình hệ thống hoặc Nhật ký cấu hình). |
 
 *Quy tắc điều hướng Sidebar và Browser History:*
 - Khi bấm chuyển phân hệ trên Sidebar, URL Hash tự động cập nhật ngay lập tức theo phân mục đang làm việc của phân hệ đó.
