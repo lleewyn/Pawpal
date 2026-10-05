@@ -310,7 +310,7 @@
                 <span class="kpi-val text-danger" id="statOutStockProducts">2</span>
             </div>
             <div class="admin-card kpi-card">
-                <span class="kpi-label">Giá trị quy đổi tồn kho</span>
+                <span class="kpi-label">Giá trị vốn tồn kho</span>
                 <span class="kpi-val" id="statTotalStockValue" style="color: #236B48; font-size: 16px;">48.500.000 đ</span>
             </div>
         </div>
@@ -326,7 +326,7 @@
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenGoodsReceiptModal">Nhập hàng NCC</button>
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnOpenStocktakeModal">Kiểm kê kho</button>
                         <button type="button" class="admin-btn admin-btn-secondary" id="btnExportProductStock">Xuất file kho</button>
-                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddProductModal">Thêm sản phẩm</button>
+                        <button type="button" class="admin-btn admin-btn-primary" id="btnOpenAddProductModal" onclick="PawpalOrdersModule.openAddProductModal()">Thêm sản phẩm</button>
                     </div>
                 </div>
 
@@ -363,6 +363,7 @@
                             <th>Danh mục</th>
                             <th>Thương hiệu</th>
                             <th>Giá niêm yết</th>
+                            <th style="text-align: center;">Đánh giá</th>
                             <th style="text-align: center;">Tổng tồn</th>
                             <th style="text-align: center;">Tạm giữ</th>
                             <th style="text-align: center;">Khả dụng</th>
@@ -378,11 +379,8 @@
             </div>
         </div>
 
-        <div class="admin-pagination-container">
-            <button type="button" class="btn-pagination">&lt;</button>
-            <button type="button" class="btn-pagination active">1</button>
-            <button type="button" class="btn-pagination">2</button>
-            <button type="button" class="btn-pagination">&gt;</button>
+        <div class="admin-pagination-container" id="productsPagination">
+            <!-- Nạp động qua orders.js -->
         </div>
     </section>
 
@@ -1121,67 +1119,324 @@
     <!-- ====================================================================
          MODAL 9: THÊM SẢN PHẨM MỚI VÀO KHO
          ==================================================================== -->
+    <!-- ====================================================================
+         MODAL 9: THÊM VÀ CẬP NHẬT SẢN PHẨM MỚI VÀO KHO (PHƯƠNG ÁN A - CUỘN LIỀN MẠCH)
+         ==================================================================== -->
     <div class="admin-modal-overlay" id="modalAddProduct">
-        <div class="admin-modal-card">
+        <div class="admin-modal-card product-form-modal">
             <div class="modal-header-clean">
-                <div>
-                    <div class="modal-title-clean">Thêm sản phẩm mới vào kho</div>
-                    <div class="sub-meta-text">Tạo mã SKU và thiết lập số lượng tồn ban đầu</div>
-                </div>
+                <div class="modal-title-clean" id="productModalTitle">Thêm sản phẩm mới</div>
                 <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalAddProduct')">Đóng</button>
             </div>
 
             <div class="modal-body-clean">
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Mã SKU sản phẩm:</label>
-                        <input type="text" class="admin-input" id="newProdSku" placeholder="Ví dụ: TP-PATE-15...">
+                <!-- KHỐI 1: THÔNG TIN CHUNG -->
+                <div class="product-form-section">
+                    <div class="product-section-heading">1. Thông tin chung</div>
+                    <div class="form-row-3col">
+                        <div class="form-group-item">
+                            <input type="hidden" id="newProdStt" value="1">
+                            <label class="form-label-clean">Mã SKU: <span style="color: #DC2626;">*</span></label>
+                            <input type="text" class="admin-input" id="newProdSku" placeholder="Ví dụ: TP-PATE-15" style="font-family: monospace; font-weight: 600;">
+                        </div>
+                        <div class="form-group-item" style="grid-column: span 2;">
+                            <label class="form-label-clean">Tên sản phẩm: <span style="color: #DC2626;">*</span></label>
+                            <input type="text" class="admin-input" id="newProdName" placeholder="Nhập tên sản phẩm...">
+                        </div>
                     </div>
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Tên mặt hàng:</label>
-                        <input type="text" class="admin-input" id="newProdName" placeholder="Tên sản phẩm đầy đủ...">
+
+                    <div class="form-row-3col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Danh mục: <span style="color: #DC2626;">*</span></label>
+                            <select class="admin-select" id="newProdCategory" onchange="PawpalOrdersModule.handleCategoryChangeSuggestSku()">
+                                <option value="Thức ăn khô">Thức ăn khô</option>
+                                <option value="Thức ăn ướt">Thức ăn ướt</option>
+                                <option value="Xương gặm">Xương gặm và Bánh thưởng</option>
+                                <option value="Sức khỏe">Sức khỏe và Dinh dưỡng</option>
+                                <option value="Bát ăn">Bát ăn và Bình nước</option>
+                                <option value="Đồ chơi">Đồ chơi và Huấn luyện</option>
+                                <option value="Vệ sinh">Vệ sinh và Chăm sóc</option>
+                                <option value="Thời trang">Thời trang và Dây dắt</option>
+                                <option value="Nội thất">Nội thất và Giường nệm</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Thương hiệu:</label>
+                            <input type="text" class="admin-input" id="newProdBrand" list="productBrandList" placeholder="Royal Canin, King's Pet, PawPal...">
+                            <datalist id="productBrandList">
+                                <option value="Royal Canin">
+                                <option value="King's Pet">
+                                <option value="Inaba Ciao">
+                                <option value="Whiskas">
+                                <option value="Orijen">
+                                <option value="Taste of the Wild">
+                                <option value="PawPal">
+                                <option value="Virbac">
+                                <option value="Petkit">
+                                <option value="Jolly">
+                                <option value="Wanpy">
+                                <option value="PetAg">
+                                <option value="Nupet">
+                                <option value="Pawise">
+                                <option value="OEM">
+                            </datalist>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Đối tượng thú cưng:</label>
+                            <select class="admin-select" id="newProdPetType">
+                                <option value="Chó và Mèo">Chó và Mèo</option>
+                                <option value="Chó">Chó</option>
+                                <option value="Mèo">Mèo</option>
+                                <option value="Hamster">Hamster</option>
+                                <option value="Thỏ và Bọ ú">Thỏ và Bọ ú</option>
+                                <option value="Thú nhỏ">Thú nhỏ</option>
+                                <option value="Tất cả bé cưng">Tất cả bé cưng</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row-3col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Xuất xứ:</label>
+                            <input type="text" class="admin-input" id="newProdOrigin" list="productOriginList" placeholder="Việt Nam, Pháp, Mỹ...">
+                            <datalist id="productOriginList">
+                                <option value="Việt Nam">
+                                <option value="Pháp">
+                                <option value="Mỹ">
+                                <option value="Nhật Bản">
+                                <option value="Thái Lan">
+                                <option value="Canada">
+                                <option value="Na Uy">
+                                <option value="Trung Quốc">
+                                <option value="Đức">
+                                <option value="Hàn Quốc">
+                            </datalist>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Nhãn sản phẩm:</label>
+                            <select class="admin-select" id="newProdBadge">
+                                <option value="">Không có nhãn</option>
+                                <option value="Bán chạy">Bán chạy</option>
+                                <option value="Mới">Mới</option>
+                                <option value="Khuyên dùng">Khuyên dùng</option>
+                                <option value="Đề xuất">Đề xuất</option>
+                                <option value="Cao cấp">Cao cấp</option>
+                                <option value="Phổ biến">Phổ biến</option>
+                                <option value="Ưu đãi">Ưu đãi</option>
+                            </select>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Trạng thái:</label>
+                            <select class="admin-select" id="newProdStatus">
+                                <option value="Còn hàng">Còn hàng</option>
+                                <option value="Sắp hết">Sắp hết hàng</option>
+                                <option value="Hết hàng">Hết hàng</option>
+                                <option value="Tạm ngưng">Tạm ngưng</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-row-2col">
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Danh mục ngành hàng:</label>
-                        <select class="admin-select" id="newProdCategory">
-                            <option value="Thức ăn khô">Thức ăn khô</option>
-                            <option value="Thức ăn ướt">Thức ăn ướt</option>
-                            <option value="Sức khỏe">Sức khỏe và Dinh dưỡng</option>
-                            <option value="Bát ăn">Bát ăn và Phụ kiện</option>
-                            <option value="Đồ chơi">Đồ chơi và Huấn luyện</option>
-                        </select>
+                <!-- KHỐI 2: GIÁ BÁN VÀ PHÂN LOẠI -->
+                <div class="product-form-section">
+                    <div class="section-header-inline">
+                        <div class="product-section-heading" style="margin-bottom: 0;">2. Giá bán và phân loại</div>
+                        <div class="variant-toggle-group">
+                            <label class="radio-label-clean">
+                                <input type="radio" name="prodVariantType" value="single" checked onchange="PawpalOrdersModule.toggleVariantMode(false)">
+                                <span>Sản phẩm đơn</span>
+                            </label>
+                            <label class="radio-label-clean">
+                                <input type="radio" name="prodVariantType" value="multiple" onchange="PawpalOrdersModule.toggleVariantMode(true)">
+                                <span>Nhiều phân loại</span>
+                            </label>
+                        </div>
                     </div>
 
-                    <div class="form-group-item">
-                        <label class="form-label-clean">Thương hiệu / Nhà sản xuất:</label>
-                        <input type="text" class="admin-input" id="newProdBrand" placeholder="Royal Canin, King's Pet, PawPal...">
+                    <!-- 2A. GIAO DIỆN SẢN PHẨM ĐƠN -->
+                    <div id="singleProductPriceBox">
+                        <div class="form-row-2col">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Đơn vị tính:</label>
+                                <select class="admin-select" id="newProdUnit">
+                                    <option value="Túi">Túi</option>
+                                    <option value="Lon">Lon</option>
+                                    <option value="Hộp">Hộp</option>
+                                    <option value="Gói">Gói</option>
+                                    <option value="Chai">Chai</option>
+                                    <option value="Tuýp">Tuýp</option>
+                                    <option value="Cái">Cái</option>
+                                    <option value="Chiếc">Chiếc</option>
+                                    <option value="Bộ">Bộ</option>
+                                    <option value="Khay">Khay</option>
+                                </select>
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Quy cách đóng gói:</label>
+                                <input type="text" class="admin-input" id="newProdSpec" placeholder="Ví dụ: Lon 180g, Túi 2kg...">
+                            </div>
+                        </div>
+
+                        <!-- 3 CỘT GIÁ CHUẨN ERP -->
+                        <div class="form-row-3col" style="margin-top: 14px;">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Giá vốn (Nhập kho):</label>
+                                <input type="number" class="admin-input" id="newProdCostPrice" placeholder="Ví dụ: 95000" min="0">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Giá bán thực tế: <span style="color: #DC2626;">*</span></label>
+                                <input type="number" class="admin-input" id="newProdPrice" placeholder="Ví dụ: 150000" min="0">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Giá gốc (Trước giảm):</label>
+                                <input type="number" class="admin-input" id="newProdOriginalPrice" placeholder="Ví dụ: 180000 (Hiện gạch)" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-row-2col" style="margin-top: 14px;">
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Tồn kho ban đầu:</label>
+                                <input type="number" class="admin-input" id="newProdInitialStock" value="20" min="0">
+                            </div>
+                            <div class="form-group-item">
+                                <label class="form-label-clean">Ngưỡng cảnh báo tồn thấp:</label>
+                                <input type="number" class="admin-input" id="newProdMinStock" value="5" min="1">
+                            </div>
+                        </div>
+
+                        <div class="form-group-item" style="margin-top: 14px;">
+                            <label class="form-label-clean">Hình ảnh sản phẩm (Nhập URL hoặc danh sách link ảnh cách nhau dấu phẩy):</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" class="admin-input" id="newProdImages" placeholder="assets/images/shop/products/TP-PATE-02.png, assets/images/shop/products/TP-PATE-02_2.png" style="flex: 1;" oninput="PawpalOrdersModule.updateProductImagePreview()">
+                                <div class="product-thumb-preview-box" id="productThumbPreviewBox" title="Xem trước ảnh chính">
+                                    <img id="productThumbPreviewImg" src="/assets/images/shop/products/TP-PATE-02.png" alt="Xem trước" onerror="this.src='/assets/images/shop/products/tp-hat-01.png';">
+                                </div>
+                            </div>
+                            <div id="productGalleryThumbnailsRow" style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;"></div>
+                        </div>
+                    </div>
+
+                    <!-- 2B. GIAO DIỆN SẢN PHẨM NHIỀU BIẾN THỂ (2 NHÓM THUỘC TÍNH ĐỘC LẬP) -->
+                    <div id="multipleProductVariantsBox" style="display: none;">
+                        <!-- KHU VỰC THIẾT LẬP 2 NHÓM PHÂN LOẠI -->
+                        <div class="variant-attribute-builder">
+                            <!-- Nhóm 1 -->
+                            <div class="attr-group-card">
+                                <div class="attr-header">
+                                    <span class="attr-title">Nhóm phân loại 1 (Hương vị / Màu sắc):</span>
+                                </div>
+                                <div class="form-row-2col" style="grid-template-columns: 1fr 2.5fr; gap: 12px;">
+                                    <input type="text" class="admin-input" id="attr1Name" placeholder="Tên nhóm (ví dụ: Hương vị)" value="Hương vị" oninput="PawpalOrdersModule.generateVariantMatrix()">
+                                    <div class="tag-input-container" id="attr1TagBox" onclick="document.getElementById('attr1TagInput').focus()">
+                                        <div class="tags-list" id="attr1TagsList"></div>
+                                        <input type="text" class="tag-raw-input" id="attr1TagInput" placeholder="Nhập giá trị rồi nhấn Enter hoặc phẩy (,)..." onkeydown="PawpalOrdersModule.handleTagInputKeyDown(event, 1)">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Nhóm 2 -->
+                            <div class="attr-group-card" style="margin-top: 10px;">
+                                <div class="attr-header">
+                                    <span class="attr-title">Nhóm phân loại 2 (Quy cách / Trọng lượng / Kích cỡ):</span>
+                                    <span class="attr-hint">(Để trống nếu sản phẩm chỉ có 1 nhóm phân loại)</span>
+                                </div>
+                                <div class="form-row-2col" style="grid-template-columns: 1fr 2.5fr; gap: 12px;">
+                                    <input type="text" class="admin-input" id="attr2Name" placeholder="Tên nhóm (ví dụ: Quy cách)" value="Quy cách" oninput="PawpalOrdersModule.generateVariantMatrix()">
+                                    <div class="tag-input-container" id="attr2TagBox" onclick="document.getElementById('attr2TagInput').focus()">
+                                        <div class="tags-list" id="attr2TagsList"></div>
+                                        <input type="text" class="tag-raw-input" id="attr2TagInput" placeholder="Nhập giá trị rồi nhấn Enter hoặc phẩy (,)..." onkeydown="PawpalOrdersModule.handleTagInputKeyDown(event, 2)">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ÁP DỤNG NHANH TOÀN BỘ -->
+                            <div class="bulk-apply-bar">
+                                <span class="bulk-apply-label">Áp dụng tất cả:</span>
+                                <input type="number" class="admin-input bulk-input" id="bulkCostPrice" placeholder="Giá vốn" min="0">
+                                <input type="number" class="admin-input bulk-input" id="bulkPrice" placeholder="Giá bán *" min="0">
+                                <input type="number" class="admin-input bulk-input" id="bulkOriginalPrice" placeholder="Giá gốc" min="0">
+                                <input type="number" class="admin-input bulk-input" id="bulkStock" placeholder="Tồn kho" min="0">
+                                <input type="text" class="admin-input bulk-input" id="bulkImage" placeholder="URL ảnh chung" style="flex: 1.2;">
+                                <button type="button" class="admin-btn admin-btn-secondary" style="height: 32px; font-size: 12px; padding: 0 14px; white-space: nowrap;" onclick="PawpalOrdersModule.applyBulkVariantValues()">Áp dụng</button>
+                            </div>
+                        </div>
+
+                        <!-- BẢNG MA TRẬN BIẾN THỂ TỔ HỢP -->
+                        <div class="variant-table-wrapper" style="margin-top: 14px;">
+                            <table class="admin-table variant-matrix-table" id="variantMatrixTable">
+                                <thead>
+                                    <tr>
+                                        <th id="thAttr1" style="width: 13%;">Hương vị</th>
+                                        <th id="thAttr2" style="width: 13%;">Quy cách</th>
+                                        <th style="width: 15%;">Mã SKU</th>
+                                        <th style="width: 13%;">Giá vốn</th>
+                                        <th style="width: 13%;">Giá bán *</th>
+                                        <th style="width: 13%;">Giá gốc</th>
+                                        <th style="width: 8%;">Tồn kho</th>
+                                        <th style="width: 8%;">Hình ảnh</th>
+                                        <th style="width: 4%; text-align: center;">Xóa</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productVariantsTableBody">
+                                    <!-- Nạp động qua orders.js -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-row-2col">
+                <!-- KHỐI 3: THÔNG TIN CHI TIẾT -->
+                <div class="product-form-section">
+                    <div class="product-section-heading">3. Thông tin chi tiết</div>
                     <div class="form-group-item">
-                        <label class="form-label-clean">Giá niêm yết bán lẻ (VNĐ):</label>
-                        <input type="number" class="admin-input" id="newProdPrice" placeholder="Ví dụ: 150000" min="0">
+                        <label class="form-label-clean">Đặc tính nổi bật:</label>
+                        <input type="text" class="admin-input" id="newProdFeatures" placeholder="Ví dụ: Không ngũ cốc, giàu Omega 3...">
                     </div>
 
                     <div class="form-group-item">
-                        <label class="form-label-clean">Số lượng nhập ban đầu:</label>
-                        <input type="number" class="admin-input" id="newProdInitialStock" value="20" min="0">
+                        <label class="form-label-clean">Mô tả chi tiết:</label>
+                        <textarea class="admin-input form-textarea-clean" id="newProdDescription" rows="3" placeholder="Mô tả tổng quan công năng và trải nghiệm sản phẩm..."></textarea>
                     </div>
-                </div>
 
-                <div class="form-group-item">
-                    <label class="form-label-clean">Ngưỡng cảnh báo sắp hết hàng:</label>
-                    <input type="number" class="admin-input" id="newProdMinStock" value="5" min="1">
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Thành phần nguyên liệu:</label>
+                        <textarea class="admin-input form-textarea-clean" id="newProdIngredients" rows="3" placeholder="Thịt cá tươi, phụ gia an toàn hoặc chất liệu cấu thành..."></textarea>
+                    </div>
+
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Công dụng và lợi ích:</label>
+                            <textarea class="admin-input form-textarea-clean" id="newProdBenefits" rows="3" placeholder="Lợi ích nuôi dưỡng lông da, hỗ trợ tiêu hóa..."></textarea>
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Hướng dẫn sử dụng:</label>
+                            <textarea class="admin-input form-textarea-clean" id="newProdUsage" rows="3" placeholder="Cách dùng, tần suất sử dụng hoặc khẩu phần ăn..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group-item">
+                        <label class="form-label-clean">Khẩu phần khuyến nghị:</label>
+                        <input type="text" class="admin-input" id="newProdFeedingGuide" placeholder="Ví dụ: Bé 1-3kg: 30-55g/ngày; Bé 3-5kg: 55-85g/ngày...">
+                    </div>
+
+                    <div class="form-row-2col">
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Hạn sử dụng:</label>
+                            <input type="text" class="admin-input" id="newProdExpiry" placeholder="Ví dụ: 24 tháng kể từ ngày sản xuất">
+                        </div>
+                        <div class="form-group-item">
+                            <label class="form-label-clean">Hướng dẫn bảo quản:</label>
+                            <input type="text" class="admin-input" id="newProdStorage" placeholder="Ví dụ: Nơi khô ráo, thoáng mát, tránh ánh nắng; ngăn mát 2-6°C sau mở nắp">
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="modal-footer-clean">
+                <input type="hidden" id="editProductOriginalSku" value="">
                 <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalAddProduct')">Hủy</button>
-                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAddProduct">Xác nhận thêm sản phẩm</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnSubmitAddProduct">Lưu sản phẩm</button>
             </div>
         </div>
     </div>
@@ -1579,9 +1834,47 @@
     </div>
 
     <!-- ====================================================================
+         MODAL 17: DANH SÁCH ĐÁNH GIÁ SẢN PHẨM TỪ KHÁCH HÀNG
+         ==================================================================== -->
+    <div class="admin-modal-overlay" id="modalProductReviews">
+        <div class="admin-modal-card" style="width: 740px; max-width: 95vw;">
+            <div class="modal-header-clean">
+                <div class="modal-title-clean" id="productReviewsModalTitle">Đánh giá sản phẩm</div>
+                <button type="button" class="modal-btn-close-text" onclick="PawpalOrdersModule.closeModal('modalProductReviews')">Đóng</button>
+            </div>
+
+            <div class="modal-body-clean" style="max-height: 70vh; overflow-y: auto; overscroll-behavior: contain;">
+                <!-- TỔNG QUAN ĐIỂM ĐÁNH GIÁ (PHẲNG - KHÔNG NỀN HỘP) -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--border-neutral);">
+                    <div style="display: flex; align-items: baseline; gap: 10px;">
+                        <span id="prodReviewsScoreBig" style="font-size: 24px; font-weight: 700; color: #B45309; line-height: 1;">4.8 ★</span>
+                        <span style="font-weight: 600; color: var(--text-heading); font-size: 13.5px;" id="prodReviewsScoreDesc">Rất hài lòng</span>
+                        <span style="font-size: 12px; color: var(--text-muted);" id="prodReviewsCountTotal">(128 nhận xét)</span>
+                    </div>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="prodReviewsStarFilterRow">
+                        <!-- Render dynamic chips -->
+                    </div>
+                </div>
+
+                <!-- DANH SÁCH NHẬN XÉT (PHẲNG - KHÔNG ĐÓNG KHUNG CON) -->
+                <div class="product-reviews-list-container" id="productReviewsListContainer" style="display: flex; flex-direction: column;">
+                    <!-- Render động bằng JS -->
+                </div>
+            </div>
+
+            <div class="modal-footer-clean">
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="PawpalOrdersModule.closeModal('modalProductReviews')">Đóng</button>
+                <button type="button" class="admin-btn admin-btn-primary" id="btnOpenStorefrontProductDetail" onclick="PawpalOrdersModule.viewProductOnStorefront()">Xem trên gian hàng User</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
          POPOVER MENU TÁC VỤ KHO CHO TỪNG SẢN PHẨM (TEXT-ONLY)
          ==================================================================== -->
     <div class="action-dropdown-menu" id="stockActionDropdown">
+        <button type="button" class="action-menu-item" id="menuStockActionEdit" onclick="PawpalOrdersModule.handleStockAction('edit')">Xem và sửa chi tiết sản phẩm</button>
+        <button type="button" class="action-menu-item" id="menuStockActionReviews" onclick="PawpalOrdersModule.handleStockAction('reviews')">Xem đánh giá của khách</button>
         <button type="button" class="action-menu-item" id="menuStockActionLogs" onclick="PawpalOrdersModule.handleStockAction('logs')">Xem lịch sử biến động kho</button>
         <button type="button" class="action-menu-item" id="menuStockActionAdjust" onclick="PawpalOrdersModule.handleStockAction('adjust')">Điều chỉnh số lượng tồn</button>
         <button type="button" class="action-menu-item" id="menuStockActionQuickGrn" onclick="PawpalOrdersModule.handleStockAction('grn')">Tạo phiếu nhập hàng nhanh</button>

@@ -1051,7 +1051,16 @@ function renderProductDetails(product) {
                             </div>`;
         }
 
-        if (product.specs || product.origin || product.brand) {
+        if (product.feedingGuide) {
+            detailsHtml += `<div class="pd-detail-block">
+                                <h4 class="pd-section-subtitle">Khẩu phần khuyến nghị</h4>
+                                <div class="pd-ingredients-box">
+                                    <p class="mb-0">${product.feedingGuide}</p>
+                                </div>
+                            </div>`;
+        }
+
+        if (product.specs || product.spec || product.origin || product.brand || product.expiry || product.storage) {
             detailsHtml += `<div class="pd-detail-block">
                                 <h4 class="pd-section-subtitle">Thông số chi tiết</h4>
                                 <div class="specifications-table">
@@ -1062,11 +1071,13 @@ function renderProductDetails(product) {
             if (product.origin) {
                 detailsHtml += `<tr><th>Xuất xứ</th><td>${product.origin}</td></tr>`;
             }
-            if (product.specs) {
-                detailsHtml += `<tr><th>Quy cách đóng gói</th><td>${product.specs}</td></tr>`;
+            if (product.specs || product.spec) {
+                detailsHtml += `<tr><th>Quy cách đóng gói</th><td>${product.specs || product.spec}</td></tr>`;
             }
-            detailsHtml += `<tr><th>Hạn sử dụng</th><td>18 – 24 tháng kể từ ngày sản xuất</td></tr>
-                            <tr><th>Bảo quản</th><td>Nơi khô ráo, tránh ánh nắng trực tiếp</td></tr>
+            const expiryText = product.expiry || '18 – 24 tháng kể từ ngày sản xuất';
+            const storageText = product.storage || 'Nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp';
+            detailsHtml += `<tr><th>Hạn sử dụng</th><td>${expiryText}</td></tr>
+                            <tr><th>Bảo quản</th><td>${storageText}</td></tr>
                             </table></div></div>`;
         }
         

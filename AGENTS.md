@@ -38,8 +38,13 @@
   - Khung nội dung cuộn bên trong (`.admin-preview-content`, Drawer, Modal card): Áp dụng `overscroll-behavior: contain;` để khi cuộn chạm đỉnh/đáy sẽ dừng dứt khoát tại chỗ, không bao giờ truyền sự kiện cuộn làm nảy hay rung giật khung layout chính.
 * **Avatar Cá Nhân Luôn Là Hình Tròn (`border-radius: 50%`)**:
   - Toàn bộ avatar hiển thị hình đại diện hoặc chữ cái viết tắt của Kỹ thuật viên, Nhân viên, Khách hàng, Quản trị viên (`.staff-avatar-initials`, `.customer-avatar`, `.user-avatar`...) BẮT BUỘC có `border-radius: 50%;` hình tròn hoàn hảo, tạo sự phân biệt trực quan sinh động so với hình khối bo góc 9px của khung thẻ và nút bấm.
-* **Bố Cục Modal & Sổ Địa Chỉ Nhận Hàng (Address Book)**:
-  - **Khoảng cách thoáng & Không kẻ ngang**: Modal có độ rộng thoáng chuẩn `width: 560px; max-width: 94vw;`, padding `26px 30px;`, các nhóm trường cách đều `gap: 16px;`. Tuyệt đối không kẻ đường viền xám 100% cắt ngang chia vụn vặt ở Header và Footer của Modal (`border-bottom: none; border-top: none;`).
+* **Bố Cục Modal & Tiêu Chuẩn Kích Thước (Modal Layout & Width Standards)**:
+  - **Khoảng cách thoáng & Không kẻ ngang**: Modal có padding `26px 30px;`, các nhóm trường cách đều `gap: 16px;`. Tuyệt đối không kẻ đường viền xám 100% cắt ngang chia vụn vặt ở Header và Footer của Modal (`border-bottom: none; border-top: none;`).
+  - **Tiêu chuẩn chiều rộng Modal (Width Standards)**:
+    * *Modal xác nhận / Hộp thoại ngắn*: `width: 480px - 540px; max-width: 92vw;`
+    * *Modal Form chuẩn (Thêm khách, Sổ địa chỉ, Thêm dịch vụ)*: `width: 560px - 600px; max-width: 94vw;`
+    * *Modal Danh sách / Đánh giá sản phẩm / Lịch sử / Bộ lọc nhiều chip*: `width: 720px - 760px; max-width: 95vw;` để đảm bảo thanh tóm tắt chỉ số, các nút lọc và nội dung hiển thị dàn hàng ngang thoáng đãng, triệt tiêu hoàn toàn hiện tượng rớt dòng chật chội.
+    * *Modal Bảng ma trận / Soạn thảo / Hồ sơ mở rộng*: `width: 880px - 1000px; max-width: 96vw;`
   - **Đa địa chỉ & 1 địa chỉ mặc định**: Hỗ trợ 1 khách hàng có thể lưu nhiều địa chỉ nhận hàng, có radio chọn đúng 1 "Địa chỉ mặc định" (thẻ mặc định có viền xanh `#C3DEC7`, nền `#F4FAF6`), các địa chỉ khác là địa chỉ phụ (có nút text `Xóa`). Nút `Thêm địa chỉ` text-only màu xanh thương hiệu `#236B48`.
 
 ---

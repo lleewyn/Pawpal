@@ -484,19 +484,305 @@
         }
     ];
 
-    // Dữ liệu sản phẩm mẫu (kế thừa từ data/sanpham.csv)
+    // Dữ liệu sản phẩm mẫu chuẩn đầy đủ trường (kế thừa từ data/sanpham.csv)
     const initialProducts = [
-        { sku: 'TP-HAT-01', name: 'Thức ăn hạt cao cấp Royal Canin Mother và Babycat', category: 'Thức ăn khô', brand: 'Royal Canin', price: 200000, stock: 45, minStock: 5, status: 'Còn hàng' },
-        { sku: 'TP-PATE-02', name: 'Pate lon hỗn hợp cá hồi và gà chín mềm King\'s Pet', category: 'Thức ăn ướt', brand: 'King\'s Pet', price: 45000, stock: 120, minStock: 10, status: 'Còn hàng' },
-        { sku: 'TP-SUP-03', name: 'Súp thưởng Ciao Churu vị cá ngừ thanh mát', category: 'Thức ăn ướt', brand: 'Inaba Ciao', price: 55000, stock: 3, minStock: 5, status: 'Sắp hết' },
-        { sku: 'TP-HAT-04', name: 'Thức ăn hạt Whiskas vị cá biển thơm ngon cho mèo lớn', category: 'Thức ăn khô', brand: 'Whiskas', price: 130000, stock: 0, minStock: 5, status: 'Hết hàng' },
-        { sku: 'TP-HAT-05', name: 'Thức ăn hạt không ngũ cốc Orijen Fit và Trim cho mèo', category: 'Thức ăn khô', brand: 'Orijen', price: 350000, stock: 22, minStock: 3, status: 'Còn hàng' },
-        { sku: 'TP-HAT-06', name: 'Thức ăn hạt Taste of the Wild High Prairie cho chó', category: 'Thức ăn khô', brand: 'Taste of the Wild', price: 280000, stock: 15, minStock: 4, status: 'Còn hàng' },
-        { sku: 'TP-PATE-07', name: 'Pate tươi vị bò và rau củ dinh dưỡng PawPal Home-cooked', category: 'Thức ăn ướt', brand: 'PawPal', price: 65000, stock: 50, minStock: 10, status: 'Còn hàng' },
-        { sku: 'TP-SUP-10', name: 'Dầu cá hồi Na Uy dưỡng lông ép lạnh hồi phục da', category: 'Sức khỏe', brand: 'PawPal', price: 185000, stock: 35, minStock: 5, status: 'Còn hàng' },
-        { sku: 'TP-SUP-11', name: 'Gel dinh dưỡng Virbac Nutri-Plus Gel phục hồi sức khỏe', category: 'Sức khỏe', brand: 'Virbac', price: 240000, stock: 28, minStock: 5, status: 'Còn hàng' },
-        { sku: 'DD-BAT-01', name: 'Bát ăn đôi bằng inox đế nhựa PP cao cấp chống kiến bò', category: 'Bát ăn', brand: 'OEM', price: 85000, stock: 25, minStock: 3, status: 'Còn hàng' },
-        { sku: 'DD-MAY-03', name: 'Đài phun nước lọc tự động thông minh Petkit Eversweet 3', category: 'Bát ăn', brand: 'Petkit', price: 950000, stock: 0, minStock: 2, status: 'Tạm ngưng' }
+        {
+            sku: 'TP-HAT-01',
+            name: 'Thức ăn hạt cao cấp Royal Canin Mother và Babycat',
+            category: 'Thức ăn khô',
+            brand: 'Royal Canin',
+            petType: 'Mèo',
+            origin: 'Pháp',
+            unit: 'Túi',
+            spec: 'Túi 2kg',
+            badge: 'Bán chạy',
+            rating: 4.9,
+            reviewCount: 128,
+            features: 'Phức hợp chống oxy hóa, L.I.P protein dễ tiêu hóa',
+            price: 200000,
+            memberPrice: 185000,
+            stock: 45,
+            minStock: 5,
+            status: 'Còn hàng',
+            images: 'assets/images/shop/products/tp-hat-01.png, assets/images/shop/products/TP-HAT-01_2.png',
+            description: 'Cung cấp nguồn dinh dưỡng siêu cao cấp cho mèo mẹ mang thai / cho con bú và mèo con từ 1 đến 4 tháng tuổi.',
+            ingredients: 'Protein gia cầm sấy khô, mỡ động vật, bột bắp, gạo, protein thực vật cô lập, dầu cá, men thủy phân.',
+            benefits: 'Xây dựng hệ miễn dịch tự nhiên, hỗ trợ tối đa hệ tiêu hóa chưa hoàn thiện.',
+            usage: 'Cho ăn trực tiếp hoặc ngâm với nước ấm trong 10-15 phút. Chia 3-4 bữa/ngày theo cân nặng.',
+            feedingGuide: 'Mèo 1-3kg: 30-55g/ngày; Mèo 3-5kg: 55-85g/ngày; Mèo >5kg: 85-145g/ngày',
+            expiry: '24 tháng kể từ ngày sản xuất in trên bao bì',
+            storage: 'Bảo quản nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp; đậy kín miệng túi sau khi mở'
+        },
+        {
+            sku: 'TP-PATE-02',
+            name: 'Pate lon hỗn hợp cá hồi và gà chín mềm King\'s Pet',
+            category: 'Thức ăn ướt',
+            brand: 'King\'s Pet',
+            petType: 'Chó và Mèo',
+            origin: 'Việt Nam',
+            unit: 'Lon',
+            spec: 'Lon 180g',
+            badge: 'Khuyên dùng',
+            rating: 4.8,
+            reviewCount: 94,
+            features: 'Không chất bảo quản, Độ ẩm tự nhiên >80%, Giàu Omega 3',
+            price: 45000,
+            memberPrice: 39000,
+            stock: 120,
+            minStock: 10,
+            status: 'Còn hàng',
+            images: 'assets/images/shop/products/TP-PATE-02.png, assets/images/shop/products/TP-PATE-02_2.png',
+            description: 'Pate hỗn hợp cá hồi và thịt gà tươi thơm ngon, cung cấp bữa ăn giàu dinh dưỡng và độ ẩm tự nhiên.',
+            ingredients: 'Cá hồi tươi (30%), thịt ức gà không da (50%), gan gà tươi (10%), thạch agar Nhật Bản (5%).',
+            benefits: 'Nuôi dưỡng lông da bóng mượt, bổ sung nước hạn chế nguy cơ sỏi tiết niệu ở chó mèo.',
+            usage: 'Cho ăn trực tiếp hoặc trộn cùng hạt. Bảo quản ngăn mát dùng trong 3 ngày sau khi mở nắp.',
+            feedingGuide: 'Chó mèo 1-4kg: 0.5-1 lon/ngày; 4-8kg: 1-2 lon/ngày; >8kg: 2-3 lon/ngày',
+            expiry: '36 tháng kể từ ngày sản xuất',
+            storage: 'Nơi thoáng mát khi chưa mở lon; bảo quản ngăn mát tủ lạnh (2-6°C) và dùng trong 48h sau mở nắp'
+        },
+        {
+            sku: 'TP-SUP-03',
+            name: 'Súp thưởng Ciao Churu vị cá ngừ thanh mát',
+            category: 'Thức ăn ướt',
+            brand: 'Inaba Ciao',
+            petType: 'Mèo',
+            origin: 'Nhật Bản',
+            unit: 'Gói',
+            spec: 'Gói 4 thanh x 14g',
+            badge: 'Mới',
+            rating: 4.7,
+            reviewCount: 256,
+            features: 'Chiết xuất trà xanh kháng khuẩn, Bổ sung Taurine',
+            price: 55000,
+            memberPrice: 49000,
+            stock: 3,
+            minStock: 5,
+            status: 'Sắp hết',
+            images: 'assets/images/shop/products/tp-sup-03.png',
+            description: 'Súp thưởng dạng sốt kem thơm ngậy giúp tương tác vui vẻ giữa chủ nuôi và bé mèo.',
+            ingredients: 'Cá ngừ đại dương tươi ngon (90%), bột cá ngừ, chiết xuất trà xanh, vitamin E, taurine.',
+            benefits: 'Kích thích vị giác, bổ sung nước nhanh chóng và khử mùi hôi chất thải.',
+            usage: 'Bóp cho mèo liếm trực tiếp hoặc trộn vào hạt. Dùng 2-4 thanh/ngày làm bữa phụ.',
+            feedingGuide: 'Dùng 2-4 thanh mỗi ngày làm món thưởng bữa phụ hoặc trộn vào thức ăn chính',
+            expiry: '24 tháng kể từ ngày sản xuất',
+            storage: 'Bảo quản nơi khô ráo thoáng mát; thanh đã bóc nên dùng hết ngay'
+        },
+        {
+            sku: 'TP-HAT-04',
+            name: 'Thức ăn hạt Whiskas vị cá biển thơm ngon cho mèo lớn',
+            category: 'Thức ăn khô',
+            brand: 'Whiskas',
+            petType: 'Mèo',
+            origin: 'Thái Lan',
+            unit: 'Túi',
+            spec: 'Túi 1.2kg',
+            badge: 'Phổ biến',
+            rating: 4.5,
+            reviewCount: 87,
+            features: 'Hạt nhân giòn thơm sốt cá, Cân bằng Canxi và Phốt pho',
+            price: 130000,
+            memberPrice: 119000,
+            stock: 0,
+            minStock: 5,
+            status: 'Hết hàng',
+            images: 'assets/images/shop/products/TP-HAT-04.png',
+            description: 'Thức ăn hạt giàu dinh dưỡng cho mèo trưởng thành từ 1 tuổi trở lên.',
+            ingredients: 'Ngũ cốc nguyên cám, thịt gia cầm, bột cá biển, dầu thực vật, vitamin và khoáng chất.',
+            benefits: 'Giúp xương răng chắc khỏe, bổ sung kẽm và Omega cho bộ lông bóng mượt.',
+            usage: 'Cho ăn trực tiếp, chia 2 bữa/ngày. Luôn để sẵn bát nước sạch bên cạnh.',
+            feedingGuide: 'Mèo 2-3kg: 40-50g/ngày; Mèo 3-4kg: 50-60g/ngày; Mèo 4-5kg: 60-75g/ngày',
+            expiry: '18 tháng kể từ ngày sản xuất',
+            storage: 'Bảo quản nơi khô ráo, tránh ánh nắng trực tiếp; đóng kín bao sau khi dùng'
+        },
+        {
+            sku: 'TP-HAT-05',
+            name: 'Thức ăn hạt không ngũ cốc Orijen Fit và Trim cho mèo',
+            category: 'Thức ăn khô',
+            brand: 'Orijen',
+            petType: 'Mèo',
+            origin: 'Canada',
+            unit: 'Túi',
+            spec: 'Túi 1.8kg',
+            badge: 'Cao cấp',
+            rating: 4.9,
+            reviewCount: 94,
+            features: 'Không ngũ cốc (Grain-Free), 85% nguyên liệu thịt gia cầm và cá tươi',
+            price: 350000,
+            memberPrice: 325000,
+            stock: 22,
+            minStock: 3,
+            status: 'Còn hàng',
+            images: 'assets/images/shop/products/TP-HAT-05.png',
+            description: 'Thức ăn khô cao cấp giàu đạm sinh học, tối ưu cân nặng và kiểm soát mỡ thừa cho mèo.',
+            ingredients: 'Thịt gà tươi (20%), thịt gà tây tươi (15%), gan gà tươi (10%), cá trích nguyên con.',
+            benefits: 'Phát triển cơ bắp săn chắc, hạn chế nguy cơ béo phì ở mèo nuôi trong nhà.',
+            usage: 'Cho ăn trực tiếp theo bảng định lượng cân nặng trên bao bì.',
+            feedingGuide: 'Mèo 2-3kg: 35-45g/ngày; Mèo 3-5kg: 45-65g/ngày; Mèo 5-7kg: 65-85g/ngày',
+            expiry: '18 tháng kể từ ngày sản xuất',
+            storage: 'Bảo quản nơi mát mẻ, khô ráo, tránh ẩm thấp'
+        },
+        {
+            sku: 'TP-HAT-06',
+            name: 'Thức ăn hạt Taste of the Wild High Prairie cho chó',
+            category: 'Thức ăn khô',
+            brand: 'Taste of the Wild',
+            petType: 'Chó',
+            origin: 'Mỹ',
+            unit: 'Túi',
+            spec: 'Túi 2.0kg',
+            badge: 'Đề xuất',
+            rating: 4.8,
+            reviewCount: 76,
+            features: 'Thịt bò Bison và nai nướng hoang dã, Men vi sinh K9 độc quyền',
+            price: 280000,
+            memberPrice: 260000,
+            stock: 15,
+            minStock: 4,
+            status: 'Còn hàng',
+            images: 'assets/images/shop/products/TP-HAT-06.png',
+            description: 'Hương vị thịt nướng độc đáo kích thích vị giác cún cưng khó tính.',
+            ingredients: 'Thịt bò Bison nướng (15%), thịt nai nướng (15%), khoai lang, đậu bản, cà chua, việt quất.',
+            benefits: 'Nguồn năng lượng dồi dào dễ tiêu hóa, tăng cường đề kháng tự nhiên.',
+            usage: 'Cho ăn trực tiếp 2 lần/ngày theo cân nặng và mức độ vận động.',
+            feedingGuide: 'Chó 3-5kg: 60-85g/ngày; Chó 5-10kg: 85-150g/ngày; Chó 10-20kg: 150-250g/ngày',
+            expiry: '24 tháng kể từ ngày sản xuất',
+            storage: 'Bảo quản nơi khô ráo, bọc kín túi sau khi mở'
+        },
+        {
+            sku: 'TP-PATE-07',
+            name: 'Pate tươi vị bò và rau củ dinh dưỡng PawPal Home-cooked',
+            category: 'Thức ăn ướt',
+            brand: 'PawPal',
+            petType: 'Chó và Mèo',
+            origin: 'Việt Nam',
+            unit: 'Hộp',
+            spec: 'Hộp 300g',
+            badge: 'Bán chạy',
+            rating: 4.9,
+            reviewCount: 115,
+            features: 'Nấu chậm thủ công, 100% nguyên liệu tươi sạch chuẩn Organic',
+            price: 65000,
+            memberPrice: 59000,
+            stock: 50,
+            minStock: 10,
+            status: 'Còn hàng',
+            images: 'assets/images/shop/products/TP-PATE-07.png',
+            description: 'Pate tươi nấu chậm giữ nguyên dưỡng chất và hương vị thơm lừng tự nhiên.',
+            ingredients: 'Thịt thăn bò tươi (55%), bí đỏ (15%), cà rốt (10%), khoai tây (10%), dầu dừa nguyên chất (2%).',
+            benefits: 'Bổ sung sắt kẽm phát triển thể trọng khỏe mạnh, bổ mắt nhờ tiền vitamin A.',
+            usage: 'Ăn trực tiếp hoặc trộn hạt. Hâm nóng 10-15s bằng lò vi sóng trước khi ăn.',
+            feedingGuide: 'Chó mèo 1-3kg: 50-80g/ngày; 3-6kg: 80-150g/ngày; >6kg: 150-250g/ngày',
+            expiry: '14 ngày ngăn mát (0-4°C) hoặc 3 tháng ngăn đông kể từ ngày đóng gói',
+            storage: 'Luôn bảo quản trong tủ lạnh ngăn mát hoặc ngăn đông'
+        },
+        {
+            sku: 'TP-SUP-10',
+            name: 'Dầu cá hồi Na Uy dưỡng lông ép lạnh hồi phục da',
+            category: 'Sức khỏe',
+            brand: 'PawPal',
+            petType: 'Chó và Mèo',
+            origin: 'Na Uy',
+            unit: 'Chai',
+            spec: 'Chai nhôm 150ml vòi xịt',
+            badge: 'Mới',
+            rating: 4.9,
+            reviewCount: 98,
+            features: '100% dầu cá hồi biển sâu ép lạnh, EPA 8% và DHA 10%',
+            price: 185000,
+            memberPrice: 169000,
+            stock: 35,
+            minStock: 5,
+            status: 'Còn hàng',
+            images: 'assets/images/shop/products/TP-SUP-10.png',
+            description: 'Dầu cá hồi cao cấp phục hồi da ngứa dị ứng và kích thích mọc lông dày bóng mượt.',
+            ingredients: '100% dầu cá hồi Na Uy tự nhiên nguyên chất ép lạnh tinh khiết.',
+            benefits: 'Giảm viêm da ngứa, ngăn rụng lông rõ rệt sau 2-4 tuần, phát triển trí não.',
+            usage: 'Xịt trực tiếp vào thức ăn hạt hoặc pate: 1-2 lần xịt (pet <5kg), 3-4 lần xịt (pet >5kg).',
+            feedingGuide: 'Bé <5kg: 1-2 lần xịt/ngày; Bé 5-15kg: 3-4 lần xịt/ngày; Bé >15kg: 5-6 lần xịt/ngày',
+            expiry: '24 tháng kể từ ngày sản xuất',
+            storage: 'Bảo quản nơi râm mát, tránh ánh sáng trực tiếp; đậy nắp vòi xịt sau dùng'
+        },
+        {
+            sku: 'TP-SUP-11',
+            name: 'Gel dinh dưỡng Virbac Nutri-Plus Gel phục hồi sức khỏe',
+            category: 'Sức khỏe',
+            brand: 'Virbac',
+            petType: 'Chó và Mèo',
+            origin: 'Pháp',
+            unit: 'Tuýp',
+            spec: 'Tuýp 120.5g',
+            badge: 'Khuyên dùng',
+            rating: 4.9,
+            reviewCount: 156,
+            features: 'Đậm đặc năng lượng và vitamin khoáng, Vị mạch nha thơm ngon',
+            price: 240000,
+            memberPrice: 220000,
+            stock: 28,
+            minStock: 5,
+            status: 'Còn hàng',
+            images: 'assets/images/shop/products/TP-SUP-11.png',
+            description: 'Cung cấp năng lượng tức thì cho thú cưng suy nhược, biếng ăn hoặc đang dưỡng bệnh.',
+            ingredients: 'Vitamin A, D3, E, B1, B2, B6, B12, Canxi, Sắt, Magiê, dầu thực vật và mỡ động vật.',
+            benefits: 'Hồi phục thể lực nhanh chóng, kích thích thèm ăn, tăng sức đề kháng.',
+            usage: 'Cho ăn trực tiếp hoặc bôi lên miệng/bàn chân: 1-2 muỗng cà phê cho mỗi 5kg thể trọng/ngày.',
+            feedingGuide: '1-2 muỗng cà phê (5-10cm gel) cho mỗi 5kg thể trọng mỗi ngày',
+            expiry: '36 tháng kể từ ngày sản xuất',
+            storage: 'Bảo quản nơi khô ráo dưới 30°C, tránh ánh sáng trực tiếp'
+        },
+        {
+            sku: 'DD-BAT-01',
+            name: 'Bát ăn đôi bằng inox đế nhựa PP cao cấp chống kiến bò',
+            category: 'Bát ăn',
+            brand: 'OEM',
+            petType: 'Chó và Mèo',
+            origin: 'Trung Quốc',
+            unit: 'Bộ',
+            spec: 'Bộ đôi lòng bát Inox 304',
+            badge: 'Mới',
+            rating: 4.6,
+            reviewCount: 62,
+            features: 'Rãnh chứa nước chống côn trùng, Inox 304 kháng khuẩn, Đế cao su chống trượt',
+            price: 85000,
+            memberPrice: 75000,
+            stock: 25,
+            minStock: 3,
+            status: 'Còn hàng',
+            images: 'assets/images/shop/products/DD-BAT-01.png',
+            description: 'Thiết kế rãnh nước viền ngoài ngăn kiến gián bò vào thức ăn, lòng bát inox tháo rời dễ rửa.',
+            ingredients: 'Nhựa PP nguyên sinh không chứa BPA, lòng bát bằng Inox 304 không gỉ, đệm cao su đáy.',
+            benefits: 'Bảo vệ thức ăn sạch sẽ khỏi côn trùng, ngăn ngừa tình trạng đen cằm ở mèo.',
+            usage: 'Đổ ít nước vào rãnh xung quanh, vệ sinh lòng bát inox hàng ngày bằng nước ấm.',
+            feedingGuide: 'Phù hợp làm bát đựng thức ăn và nước uống hàng ngày cho chó mèo mọi lứa tuổi',
+            expiry: 'Độ bền vật liệu trên 5 năm',
+            storage: 'Rửa sạch và để nơi khô ráo sau khi sử dụng'
+        },
+        {
+            sku: 'DD-MAY-03',
+            name: 'Đài phun nước lọc tự động thông minh Petkit Eversweet 3',
+            category: 'Bát ăn',
+            brand: 'Petkit',
+            petType: 'Chó và Mèo',
+            origin: 'Trung Quốc',
+            unit: 'Cái',
+            spec: 'Dung tích 1.35L - Cổng USB',
+            badge: 'Đề xuất',
+            rating: 4.9,
+            reviewCount: 54,
+            features: 'Lọc 3 tầng tuần hoàn, Bơm không dây chống giật, Cảm biến ánh sáng thông minh',
+            price: 950000,
+            memberPrice: 890000,
+            stock: 0,
+            minStock: 2,
+            status: 'Tạm ngưng',
+            images: 'assets/images/shop/products/DD-MAY-03.png',
+            description: 'Máy lọc nước tự động kích thích thú cưng uống nước nhiều hơn, ngăn ngừa bệnh thận.',
+            ingredients: 'Nhựa Tritan cao cấp tiêu chuẩn thực phẩm, lõi lọc than hoạt tính gáo dừa và nhựa trao đổi ion.',
+            benefits: 'Lọc sạch lông bụi, clo và kim loại nặng, tạo dòng suối tuần hoàn giàu oxy.',
+            usage: 'Đổ nước sạch tối đa 1.35L, cắm điện USB. Thay lõi lọc định kỳ sau 30-45 ngày sử dụng.',
+            feedingGuide: 'Chứa tối đa 1.35L nước lọc tinh khiết, cấp nước tự động cho 1-2 bé trong 3-5 ngày',
+            expiry: 'Bảo hành chính hãng 12 tháng',
+            storage: 'Vệ sinh thân máy và thay lõi lọc định kỳ sau 30 ngày sử dụng'
+        }
     ];
 
     // Dữ liệu khuyến mãi và voucher dùng chung với phân hệ Cấu hình (Single Source of Truth)
@@ -946,6 +1232,15 @@
         const headerSubtabBtns = document.querySelectorAll('.header-subtab-btn');
         const subtabPanels = document.querySelectorAll('.subtab-content');
 
+        // Khởi tạo phân trang cho Đơn hàng và Sản phẩm kho (10 dòng/trang theo chuẩn AGENTS.md)
+        const ORDERS_PER_PAGE = 10;
+        let ordersCurrentPage = parseInt(sessionStorage.getItem('pawpal_admin_orders_page') || '1', 10);
+        if (isNaN(ordersCurrentPage) || ordersCurrentPage < 1) ordersCurrentPage = 1;
+
+        const PRODUCTS_PER_PAGE = 10;
+        let productsCurrentPage = parseInt(sessionStorage.getItem('pawpal_admin_products_page') || '1', 10);
+        if (isNaN(productsCurrentPage) || productsCurrentPage < 1) productsCurrentPage = 1;
+
         function updateBreadcrumb(orderId) {
             if (!deepBreadcrumbEl) return;
             if (orderId) {
@@ -960,30 +1255,35 @@
 
         function switchSubtab(targetSubtab) {
             headerSubtabBtns.forEach(btn => {
-                if (btn.getAttribute('data-subtab') === targetSubtab) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+                btn.classList.toggle('active', btn.getAttribute('data-subtab') === targetSubtab);
             });
 
             subtabPanels.forEach(panel => {
-                if (panel.id === `subtab-${targetSubtab}`) {
-                    panel.classList.add('active');
-                } else {
-                    panel.classList.remove('active');
-                }
+                panel.classList.toggle('active', panel.id === `subtab-${targetSubtab}`);
             });
 
             if (targetSubtab === 'tab-order-detail') {
+                const targetId = selectedOrderId || sessionStorage.getItem('pawpal_admin_order_selected_id') || sessionStorage.getItem('pawpal_admin_order_id') || currentOrdersList[0]?.id;
+                selectedOrderId = targetId;
+                renderOrderDetail(selectedOrderId);
                 updateBreadcrumb(selectedOrderId);
             } else {
                 updateBreadcrumb('');
+                if (targetSubtab === 'tab-order-list') {
+                    renderOrdersTable();
+                } else if (targetSubtab === 'tab-order-products') {
+                    renderProductsTable();
+                } else if (targetSubtab === 'tab-order-promos') {
+                    renderVouchersTable();
+                }
             }
 
             sessionStorage.setItem('pawpal_admin_order_subtab', targetSubtab);
-            window.location.hash = targetSubtab;
+            try {
+                history.replaceState(null, '', '#' + targetSubtab);
+            } catch (e) {}
         }
+        switchSubtabRef = switchSubtab;
 
         headerSubtabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -991,6 +1291,58 @@
                 switchSubtab(target);
             });
         });
+
+        // Hàm render phân trang danh sách đơn hàng
+        function renderOrdersPagination(totalPages) {
+            const pagContainer = document.getElementById('ordersPagination');
+            if (!pagContainer) return;
+
+            if (totalPages <= 1) {
+                pagContainer.style.display = 'none';
+                return;
+            }
+            pagContainer.style.display = 'flex';
+
+            let html = '';
+            const prevDisabled = ordersCurrentPage === 1 ? 'disabled' : '';
+            html += `<button type="button" class="btn-pagination ${prevDisabled}" data-page="prev" title="Trang trước">&lt;</button>`;
+
+            for (let p = 1; p <= totalPages; p++) {
+                const activeClass = p === ordersCurrentPage ? 'active' : '';
+                html += `<button type="button" class="btn-pagination ${activeClass}" data-page="${p}">${p}</button>`;
+            }
+
+            const nextDisabled = ordersCurrentPage === totalPages ? 'disabled' : '';
+            html += `<button type="button" class="btn-pagination ${nextDisabled}" data-page="next" title="Trang sau">&gt;</button>`;
+
+            pagContainer.innerHTML = html;
+
+            pagContainer.querySelectorAll('.btn-pagination').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const pageAction = btn.getAttribute('data-page');
+                    if (pageAction === 'prev') {
+                        if (ordersCurrentPage > 1) {
+                            ordersCurrentPage--;
+                            sessionStorage.setItem('pawpal_admin_orders_page', ordersCurrentPage);
+                            renderOrdersTable();
+                        }
+                    } else if (pageAction === 'next') {
+                        if (ordersCurrentPage < totalPages) {
+                            ordersCurrentPage++;
+                            sessionStorage.setItem('pawpal_admin_orders_page', ordersCurrentPage);
+                            renderOrdersTable();
+                        }
+                    } else {
+                        const targetP = parseInt(pageAction, 10);
+                        if (targetP && targetP !== ordersCurrentPage) {
+                            ordersCurrentPage = targetP;
+                            sessionStorage.setItem('pawpal_admin_orders_page', ordersCurrentPage);
+                            renderOrdersTable();
+                        }
+                    }
+                });
+            });
+        }
 
         // 2. Render bảng danh sách đơn hàng
         function renderOrdersTable() {
@@ -1053,7 +1405,16 @@
                 checkAllEl.checked = filtered.length > 0 && filtered.every(o => selectedBatchOrderIds.includes(o.id));
             }
 
-            if (filtered.length === 0) {
+            // Tính toán phân trang
+            const totalOrdersPages = Math.ceil(filtered.length / ORDERS_PER_PAGE) || 1;
+            if (ordersCurrentPage > totalOrdersPages) ordersCurrentPage = totalOrdersPages;
+            if (ordersCurrentPage < 1) ordersCurrentPage = 1;
+            sessionStorage.setItem('pawpal_admin_orders_page', ordersCurrentPage);
+
+            const startIdx = (ordersCurrentPage - 1) * ORDERS_PER_PAGE;
+            const pagedOrders = filtered.slice(startIdx, startIdx + ORDERS_PER_PAGE);
+
+            if (pagedOrders.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="10" style="text-align: center; padding: 36px; color: var(--text-muted);">
@@ -1061,10 +1422,11 @@
                         </td>
                     </tr>
                 `;
+                renderOrdersPagination(0);
                 return;
             }
 
-            tbody.innerHTML = filtered.map(o => {
+            tbody.innerHTML = pagedOrders.map(o => {
                 const sla = getOrderSlaInfo(o);
 
                 let statusBadge = '';
@@ -1146,6 +1508,8 @@
                     </tr>
                 `;
             }).join('');
+
+            renderOrdersPagination(totalOrdersPages);
         }
 
         // 3. Render chi tiết đơn hàng
@@ -1155,7 +1519,6 @@
 
             selectedOrderId = order.id;
             sessionStorage.setItem('pawpal_admin_order_selected_id', order.id);
-            sessionStorage.setItem('pawpal_admin_order_id', order.id);
 
             // Header bar
             const codeEl = document.getElementById('detailOrderCode');
@@ -1344,7 +1707,10 @@
             const inStockProd = currentProductsList.filter(p => p.status !== 'Tạm ngưng' && Math.max(0, (p.stock || 0) - (reservedMap[p.sku] || 0)) > p.minStock).length;
             const lowStockProd = currentProductsList.filter(p => p.status !== 'Tạm ngưng' && Math.max(0, (p.stock || 0) - (reservedMap[p.sku] || 0)) <= p.minStock && Math.max(0, (p.stock || 0) - (reservedMap[p.sku] || 0)) > 0).length;
             const outStockProd = currentProductsList.filter(p => Math.max(0, (p.stock || 0) - (reservedMap[p.sku] || 0)) === 0).length;
-            const totalStockValue = currentProductsList.reduce((sum, p) => sum + ((p.stock || 0) * (p.price || 0)), 0);
+            const totalStockValue = currentProductsList.reduce((sum, p) => {
+                const unitCost = (p.costPrice && p.costPrice > 0) ? p.costPrice : Math.round((p.price || 0) * 0.65);
+                return sum + ((p.stock || 0) * unitCost);
+            }, 0);
 
             const statTotalEl = document.getElementById('statTotalProducts');
             const statInStockEl = document.getElementById('statInStockProducts');
@@ -1381,18 +1747,28 @@
                 return true;
             });
 
-            if (filtered.length === 0) {
+            // Tính toán phân trang cho Sản phẩm kho
+            const totalProductsPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE) || 1;
+            if (productsCurrentPage > totalProductsPages) productsCurrentPage = totalProductsPages;
+            if (productsCurrentPage < 1) productsCurrentPage = 1;
+            sessionStorage.setItem('pawpal_admin_products_page', productsCurrentPage);
+
+            const startIdx = (productsCurrentPage - 1) * PRODUCTS_PER_PAGE;
+            const pagedProducts = filtered.slice(startIdx, startIdx + PRODUCTS_PER_PAGE);
+
+            if (pagedProducts.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="11" style="text-align: center; padding: 28px; color: var(--text-muted);">
+                        <td colspan="12" style="text-align: center; padding: 28px; color: var(--text-muted);">
                             Không tìm thấy sản phẩm nào phù hợp với bộ lọc hiện tại.
                         </td>
                     </tr>
                 `;
+                renderProductsPagination(0);
                 return;
             }
 
-            tbody.innerHTML = filtered.map(p => {
+            tbody.innerHTML = pagedProducts.map(p => {
                 const physical = p.stock || 0;
                 const reserved = reservedMap[p.sku] || 0;
                 const available = Math.max(0, physical - reserved);
@@ -1412,18 +1788,28 @@
                     ? '<span class="admin-badge badge-danger">Tạm ngưng</span>' 
                     : '<span class="admin-badge badge-neutral">Đang bán</span>';
 
+                let ratingHtml = '<span style="color: var(--text-muted); opacity: 0.35; font-size: 13px;">—</span>';
+                if (p.rating && p.rating > 0) {
+                    const rScore = Number(p.rating).toFixed(1);
+                    const rCount = p.reviewCount ? ` (${p.reviewCount})` : '';
+                    ratingHtml = `<a href="javascript:void(0)" class="catalog-rating-link" onclick="PawpalOrdersModule.openProductReviewsModal('${p.sku}')" style="text-decoration: none; cursor: pointer;" title="Bấm để xem các nhận xét và đánh giá của khách hàng"><span style="font-weight: 700; color: #B45309; font-size: 12.5px;">${rScore} ★</span><span style="color: var(--text-muted); font-size: 11.5px; margin-left: 2px;">${rCount}</span></a>`;
+                }
+
                 return `
                     <tr>
                         <td style="font-family: monospace; font-weight: 600; color: #236B48;">${p.sku}</td>
                         <td style="font-weight: 500;">
-                            <div>${p.name}</div>
-                            <div style="margin-top: 2px;">
-                                <a href="javascript:void(0)" class="user-link-text" style="font-size: 11.5px;" onclick="PawpalOrdersModule.openStockLogsModal('${p.sku}')">Xem lịch sử kho</a>
+                            <div><a href="javascript:void(0)" class="user-name-link" onclick="PawpalOrdersModule.openEditProductModal('${p.sku}')" title="Xem và sửa thông tin chi tiết">${p.name}</a></div>
+                            <div style="margin-top: 2px; display: flex; gap: 8px; align-items: center;">
+                                <a href="javascript:void(0)" class="user-link-text" style="font-size: 11.5px;" onclick="PawpalOrdersModule.openEditProductModal('${p.sku}')">Sửa thông tin</a>
+                                <span style="color: #AEC8B9;">|</span>
+                                <a href="javascript:void(0)" class="user-link-text" style="font-size: 11.5px;" onclick="PawpalOrdersModule.openStockLogsModal('${p.sku}')">Lịch sử kho</a>
                             </div>
                         </td>
                         <td>${p.category}</td>
                         <td>${p.brand}</td>
                         <td style="font-weight: 600;">${formatVND(p.price)}</td>
+                        <td style="text-align: center; white-space: nowrap;">${ratingHtml}</td>
                         <td class="stock-val-physical">${physical}</td>
                         <td style="text-align: center;">
                             <span class="stock-val-reserved ${reserved === 0 ? 'none' : ''}">${reserved > 0 ? reserved : '0'}</span>
@@ -1437,8 +1823,62 @@
                     </tr>
                 `;
             }).join('');
+
+            renderProductsPagination(totalProductsPages);
         }
         renderProductsTableRef = renderProductsTable;
+
+        // Hàm render phân trang danh sách sản phẩm kho
+        function renderProductsPagination(totalPages) {
+            const pagContainer = document.getElementById('productsPagination');
+            if (!pagContainer) return;
+
+            if (totalPages <= 1) {
+                pagContainer.style.display = 'none';
+                return;
+            }
+            pagContainer.style.display = 'flex';
+
+            let html = '';
+            const prevDisabled = productsCurrentPage === 1 ? 'disabled' : '';
+            html += `<button type="button" class="btn-pagination ${prevDisabled}" data-page="prev" title="Trang trước">&lt;</button>`;
+
+            for (let p = 1; p <= totalPages; p++) {
+                const activeClass = p === productsCurrentPage ? 'active' : '';
+                html += `<button type="button" class="btn-pagination ${activeClass}" data-page="${p}">${p}</button>`;
+            }
+
+            const nextDisabled = productsCurrentPage === totalPages ? 'disabled' : '';
+            html += `<button type="button" class="btn-pagination ${nextDisabled}" data-page="next" title="Trang sau">&gt;</button>`;
+
+            pagContainer.innerHTML = html;
+
+            pagContainer.querySelectorAll('.btn-pagination').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const pageAction = btn.getAttribute('data-page');
+                    if (pageAction === 'prev') {
+                        if (productsCurrentPage > 1) {
+                            productsCurrentPage--;
+                            sessionStorage.setItem('pawpal_admin_products_page', productsCurrentPage);
+                            renderProductsTable();
+                        }
+                    } else if (pageAction === 'next') {
+                        if (productsCurrentPage < totalPages) {
+                            productsCurrentPage++;
+                            sessionStorage.setItem('pawpal_admin_products_page', productsCurrentPage);
+                            renderProductsTable();
+                        }
+                    } else {
+                        const targetP = parseInt(pageAction, 10);
+                        if (targetP && targetP !== productsCurrentPage) {
+                            productsCurrentPage = targetP;
+                            sessionStorage.setItem('pawpal_admin_products_page', productsCurrentPage);
+                            renderProductsTable();
+                        }
+                    }
+                });
+            });
+        }
 
         // 5. Render danh sách khuyến mãi dùng chung toàn hệ thống (Single Source of Truth)
         function renderVouchersTable() {
@@ -1522,29 +1962,43 @@
         }
 
         // Gắn sự kiện bộ lọc bảng đơn hàng
-        document.getElementById('orderSearchInput')?.addEventListener('input', renderOrdersTable);
+        document.getElementById('orderSearchInput')?.addEventListener('input', () => {
+            ordersCurrentPage = 1;
+            sessionStorage.setItem('pawpal_admin_orders_page', '1');
+            renderOrdersTable();
+        });
         document.getElementById('orderFilterStatus')?.addEventListener('change', (e) => {
             currentFilterStatus = e.target.value;
+            ordersCurrentPage = 1;
+            sessionStorage.setItem('pawpal_admin_orders_page', '1');
             renderOrdersTable();
         });
         document.getElementById('orderFilterPayment')?.addEventListener('change', (e) => {
             currentFilterPayment = e.target.value;
+            ordersCurrentPage = 1;
+            sessionStorage.setItem('pawpal_admin_orders_page', '1');
             renderOrdersTable();
         });
         document.getElementById('orderFilterPayStatus')?.addEventListener('change', (e) => {
             currentFilterPayStatus = e.target.value;
+            ordersCurrentPage = 1;
+            sessionStorage.setItem('pawpal_admin_orders_page', '1');
             renderOrdersTable();
         });
 
         document.getElementById('btnFilterComplaintOrders')?.addEventListener('click', function() {
             filterComplaintOnly = !filterComplaintOnly;
             this.classList.toggle('active', filterComplaintOnly);
+            ordersCurrentPage = 1;
+            sessionStorage.setItem('pawpal_admin_orders_page', '1');
             renderOrdersTable();
         });
 
         document.getElementById('btnFilterUrgentOrders')?.addEventListener('click', function() {
             filterUrgentOnly = !filterUrgentOnly;
             this.classList.toggle('active', filterUrgentOnly);
+            ordersCurrentPage = 1;
+            sessionStorage.setItem('pawpal_admin_orders_page', '1');
             renderOrdersTable();
         });
 
@@ -1552,6 +2006,8 @@
         document.getElementById('btnFilterSlaOverdue')?.addEventListener('click', function() {
             filterSlaOverdueOnly = !filterSlaOverdueOnly;
             this.classList.toggle('active', filterSlaOverdueOnly);
+            ordersCurrentPage = 1;
+            sessionStorage.setItem('pawpal_admin_orders_page', '1');
             renderOrdersTable();
         });
 
@@ -1673,9 +2129,21 @@
         });
 
         // Bộ lọc bảng sản phẩm và khuyến mãi
-        document.getElementById('productSearchInput')?.addEventListener('input', renderProductsTable);
-        document.getElementById('productFilterCategory')?.addEventListener('change', renderProductsTable);
-        document.getElementById('productFilterStockStatus')?.addEventListener('change', renderProductsTable);
+        document.getElementById('productSearchInput')?.addEventListener('input', () => {
+            productsCurrentPage = 1;
+            sessionStorage.setItem('pawpal_admin_products_page', '1');
+            renderProductsTable();
+        });
+        document.getElementById('productFilterCategory')?.addEventListener('change', () => {
+            productsCurrentPage = 1;
+            sessionStorage.setItem('pawpal_admin_products_page', '1');
+            renderProductsTable();
+        });
+        document.getElementById('productFilterStockStatus')?.addEventListener('change', () => {
+            productsCurrentPage = 1;
+            sessionStorage.setItem('pawpal_admin_products_page', '1');
+            renderProductsTable();
+        });
         document.getElementById('promoSearchInput')?.addEventListener('input', renderVouchersTable);
 
         // Xuất file
@@ -1688,58 +2156,254 @@
 
         // Mở modal thêm sản phẩm mới
         document.getElementById('btnOpenAddProductModal')?.addEventListener('click', () => {
-            document.getElementById('modalAddProduct')?.classList.add('active');
+            PawpalOrdersModule.openAddProductModal();
         });
 
-        // Xác nhận thêm sản phẩm mới
+        // Xác nhận thêm / cập nhật sản phẩm mới
         document.getElementById('btnSubmitAddProduct')?.addEventListener('click', () => {
+            const editSku = document.getElementById('editProductOriginalSku')?.value.trim();
             const sku = document.getElementById('newProdSku')?.value.trim();
             const name = document.getElementById('newProdName')?.value.trim();
-            const cat = document.getElementById('newProdCategory')?.value;
+            const cat = document.getElementById('newProdCategory')?.value || 'Thức ăn khô';
             const brand = document.getElementById('newProdBrand')?.value.trim() || 'PawPal';
-            const price = parseInt(document.getElementById('newProdPrice')?.value || '0', 10);
-            const stock = parseInt(document.getElementById('newProdInitialStock')?.value || '0', 10);
-            const minStock = parseInt(document.getElementById('newProdMinStock')?.value || '5', 10);
+            const petType = document.getElementById('newProdPetType')?.value || 'Chó và Mèo';
+            const origin = document.getElementById('newProdOrigin')?.value.trim() || 'Việt Nam';
+            const status = document.getElementById('newProdStatus')?.value || 'Còn hàng';
+            const badge = document.getElementById('newProdBadge')?.value || '';
+            const features = document.getElementById('newProdFeatures')?.value.trim() || '';
+            const description = document.getElementById('newProdDescription')?.value.trim() || '';
+            const ingredients = document.getElementById('newProdIngredients')?.value.trim() || '';
+            const benefits = document.getElementById('newProdBenefits')?.value.trim() || '';
+            const usage = document.getElementById('newProdUsage')?.value.trim() || '';
+            const feedingGuide = document.getElementById('newProdFeedingGuide')?.value.trim() || '';
+            const expiry = document.getElementById('newProdExpiry')?.value.trim() || '';
+            const storage = document.getElementById('newProdStorage')?.value.trim() || '';
 
             if (!sku || !name) {
                 showToast('Vui lòng nhập đầy đủ mã SKU và tên sản phẩm.', 'warning');
                 return;
             }
 
-            if (currentProductsList.some(p => p.sku.toLowerCase() === sku.toLowerCase())) {
-                showToast(`Mã SKU "${sku}" đã tồn tại trong kho. Vui lòng nhập mã khác.`, 'warning');
-                return;
+            const isMultiple = document.querySelector('input[name="prodVariantType"]:checked')?.value === 'multiple';
+            let unit = 'Túi';
+            let spec = '';
+            let costPrice = 0;
+            let price = 0;
+            let originalPrice = 0;
+            let memberPrice = 0;
+            let stock = 0;
+            let minStock = 5;
+            let images = 'assets/images/shop/products/tp-hat-01.png';
+            const variants = [];
+
+            if (isMultiple) {
+                const variantRows = document.querySelectorAll('#productVariantsTableBody tr.variant-row-item');
+                if (variantRows.length === 0) {
+                    showToast('Vui lòng tạo ít nhất 1 phân loại biến thể cho sản phẩm.', 'warning');
+                    return;
+                }
+
+                let hasInvalidVariant = false;
+                variantRows.forEach((row, idx) => {
+                    const v1 = row.getAttribute('data-attr-1') || '';
+                    const v2 = row.getAttribute('data-attr-2') || '';
+                    const vName = v2 ? `${v1} - ${v2}` : (v1 || `Phân loại ${idx + 1}`);
+                    const vSku = row.querySelector('.variant-sku-input')?.value.trim() || `${sku}-${String(idx + 1).padStart(2, '0')}`;
+                    const vCost = parseInt(row.querySelector('.variant-cost-input')?.value || '0', 10);
+                    const vPrice = parseInt(row.querySelector('.variant-price-input')?.value || '0', 10);
+                    const vOrig = parseInt(row.querySelector('.variant-orig-input')?.value || '0', 10);
+                    const vMemberPrice = Math.round(vPrice * 0.925 / 1000) * 1000;
+                    const vStock = parseInt(row.querySelector('.variant-stock-input')?.value || '0', 10);
+                    const vImg = row.querySelector('.variant-img-input')?.value.trim() || 'assets/images/shop/products/tp-hat-01.png';
+
+                    if (vPrice <= 0) {
+                        hasInvalidVariant = true;
+                    }
+
+                    variants.push({
+                        attr1: v1,
+                        attr2: v2,
+                        name: vName,
+                        sku: vSku,
+                        costPrice: vCost,
+                        price: vPrice,
+                        originalPrice: vOrig,
+                        memberPrice: vMemberPrice,
+                        stock: vStock,
+                        image: vImg
+                    });
+                });
+
+                if (hasInvalidVariant) {
+                    showToast('Vui lòng điền giá bán hợp lệ (> 0) cho tất cả các biến thể trong bảng.', 'warning');
+                    return;
+                }
+
+                const attr1Name = document.getElementById('attr1Name')?.value.trim() || 'Hương vị';
+                const attr1Vals = (document.getElementById('attr1Values')?.value || '').split(',').map(s => s.trim()).filter(Boolean);
+                const attr2Name = document.getElementById('attr2Name')?.value.trim() || 'Quy cách';
+                const attr2Vals = (document.getElementById('attr2Values')?.value || '').split(',').map(s => s.trim()).filter(Boolean);
+
+                unit = document.getElementById('newProdUnit')?.value || 'Món';
+                spec = variants.map(v => v.name).join(', ');
+                const validCosts = variants.map(v => v.costPrice).filter(cp => cp > 0);
+                costPrice = validCosts.length > 0 ? Math.min(...validCosts) : 0;
+                price = Math.min(...variants.map(v => v.price));
+                originalPrice = Math.max(...variants.map(v => v.originalPrice)) || 0;
+                memberPrice = Math.min(...variants.map(v => v.memberPrice));
+                stock = variants.reduce((sum, v) => sum + v.stock, 0);
+                minStock = 5;
+                const vImgs = variants.map(v => v.image).filter(Boolean);
+                images = vImgs.length > 0 ? vImgs.join(', ') : 'assets/images/shop/products/tp-hat-01.png';
+            } else {
+                unit = document.getElementById('newProdUnit')?.value || 'Túi';
+                spec = document.getElementById('newProdSpec')?.value.trim() || '';
+                costPrice = parseInt(document.getElementById('newProdCostPrice')?.value || '0', 10);
+                price = parseInt(document.getElementById('newProdPrice')?.value || '0', 10);
+                originalPrice = parseInt(document.getElementById('newProdOriginalPrice')?.value || '0', 10);
+                memberPrice = Math.round(price * 0.925 / 1000) * 1000;
+                stock = parseInt(document.getElementById('newProdInitialStock')?.value || '0', 10);
+                minStock = parseInt(document.getElementById('newProdMinStock')?.value || '5', 10);
+                images = document.getElementById('newProdImages')?.value.trim() || 'assets/images/shop/products/tp-hat-01.png';
+
+                if (price <= 0) {
+                    showToast('Vui lòng nhập giá bán thực tế hợp lệ (lớn hơn 0).', 'warning');
+                    return;
+                }
             }
 
-            currentProductsList.unshift({
-                sku: sku,
-                name: name,
-                category: cat,
-                brand: brand,
-                price: price,
-                stock: stock,
-                minStock: minStock,
-                status: 'Còn hàng'
-            });
-            persistProductsData();
+            if (editSku) {
+                // Chế độ Cập nhật sản phẩm
+                const prodIndex = currentProductsList.findIndex(p => p.sku.toLowerCase() === editSku.toLowerCase());
+                if (prodIndex === -1) {
+                    showToast('Không tìm thấy sản phẩm cần cập nhật.', 'error');
+                    return;
+                }
 
-            if (stock > 0) {
-                addStockLog({
+                // Nếu đổi SKU, kiểm tra trùng với các sản phẩm khác
+                if (sku.toLowerCase() !== editSku.toLowerCase() && currentProductsList.some(p => p.sku.toLowerCase() === sku.toLowerCase())) {
+                    showToast(`Mã SKU "${sku}" đã tồn tại cho một sản phẩm khác. Vui lòng chọn mã khác.`, 'warning');
+                    return;
+                }
+
+                const existingProd = currentProductsList[prodIndex];
+                const oldStock = existingProd.stock || 0;
+
+                currentProductsList[prodIndex] = {
+                    ...existingProd,
                     sku: sku,
                     name: name,
-                    type: 'IN',
-                    typeLabel: 'Nhập kho ban đầu khi tạo sản phẩm',
-                    change: `+${stock}`,
-                    beforeStock: 0,
-                    afterStock: stock,
-                    refCode: 'INIT-' + sku,
-                    staff: 'Quản trị viên'
-                });
-            }
+                    category: cat,
+                    brand: brand,
+                    petType: petType,
+                    origin: origin,
+                    status: status,
+                    unit: unit,
+                    spec: spec,
+                    badge: badge,
+                    features: features,
+                    costPrice: costPrice,
+                    price: price,
+                    originalPrice: originalPrice,
+                    memberPrice: memberPrice,
+                    stock: stock,
+                    minStock: minStock,
+                    images: images,
+                    image: images.split(',')[0].trim(),
+                    description: description,
+                    ingredients: ingredients,
+                    benefits: benefits,
+                    usage: usage,
+                    feedingGuide: feedingGuide,
+                    expiry: expiry,
+                    storage: storage,
+                    rating: existingProd.rating || 5.0,
+                    reviewCount: existingProd.reviewCount || 0,
+                    hasVariants: isMultiple,
+                    variants: isMultiple ? variants : []
+                };
 
-            document.getElementById('modalAddProduct')?.classList.remove('active');
-            renderProductsTable();
-            showToast(`Đã thêm thành công sản phẩm mới "${name}" (SKU: ${sku}) vào kho hàng!`, 'success');
+                // Nếu số lượng tồn kho thay đổi, tự động ghi nhận log
+                if (stock !== oldStock) {
+                    const diff = stock - oldStock;
+                    addStockLog({
+                        sku: sku,
+                        name: name,
+                        type: diff > 0 ? 'IN' : 'OUT',
+                        typeLabel: diff > 0 ? 'Điều chỉnh tăng tồn kho trực tiếp' : 'Điều chỉnh giảm tồn kho trực tiếp',
+                        change: diff > 0 ? `+${diff}` : `${diff}`,
+                        beforeStock: oldStock,
+                        afterStock: stock,
+                        refCode: 'ADJ-' + sku,
+                        staff: 'Quản trị viên'
+                    });
+                }
+
+                persistProductsData();
+                document.getElementById('modalAddProduct')?.classList.remove('active');
+                renderProductsTable();
+                showToast(`Đã cập nhật thành công thông tin sản phẩm "${name}" (SKU: ${sku})!`, 'success');
+            } else {
+                // Chế độ Thêm mới sản phẩm
+                if (currentProductsList.some(p => p.sku.toLowerCase() === sku.toLowerCase())) {
+                    showToast(`Mã SKU "${sku}" đã tồn tại trong kho. Vui lòng nhập mã khác.`, 'warning');
+                    return;
+                }
+
+                const newProdObj = {
+                    sku: sku,
+                    name: name,
+                    category: cat,
+                    brand: brand,
+                    petType: petType,
+                    origin: origin,
+                    status: status,
+                    unit: unit,
+                    spec: spec,
+                    badge: badge,
+                    features: features,
+                    costPrice: costPrice,
+                    price: price,
+                    originalPrice: originalPrice,
+                    memberPrice: memberPrice,
+                    stock: stock,
+                    minStock: minStock,
+                    images: images,
+                    image: images.split(',')[0].trim(),
+                    description: description,
+                    ingredients: ingredients,
+                    benefits: benefits,
+                    usage: usage,
+                    feedingGuide: feedingGuide,
+                    expiry: expiry,
+                    storage: storage,
+                    rating: 5.0,
+                    reviewCount: 0,
+                    hasVariants: isMultiple,
+                    variants: isMultiple ? variants : []
+                };
+
+                currentProductsList.unshift(newProdObj);
+                persistProductsData();
+
+                if (stock > 0) {
+                    addStockLog({
+                        sku: sku,
+                        name: name,
+                        type: 'IN',
+                        typeLabel: 'Nhập kho ban đầu khi tạo sản phẩm',
+                        change: `+${stock}`,
+                        beforeStock: 0,
+                        afterStock: stock,
+                        refCode: 'INIT-' + sku,
+                        staff: 'Quản trị viên'
+                    });
+                }
+
+                document.getElementById('modalAddProduct')?.classList.remove('active');
+                renderProductsTable();
+                showToast(`Đã thêm thành công sản phẩm mới "${name}" (SKU: ${sku}) đầy đủ thông số!`, 'success');
+            }
         });
 
         // Xác nhận lưu điều chỉnh tồn kho
@@ -3074,6 +3738,9 @@
             showToast(`Đã phê duyệt thành công phiếu đổi trả ${rmaCode}!`, 'success');
         });
 
+        // Khôi phục selectedOrderId từ sessionStorage
+        selectedOrderId = sessionStorage.getItem('pawpal_admin_order_selected_id') || sessionStorage.getItem('pawpal_admin_order_id') || (currentOrdersList[0] ? currentOrdersList[0].id : 'ORD-2026-001');
+
         // Render lần đầu
         renderOrdersTable();
         renderOrderDetail(selectedOrderId);
@@ -3162,6 +3829,9 @@
 
     // Xuất API công khai cho module Orders
     window.PawpalOrdersModule = {
+        switchSubtab: function(targetSubtab) {
+            if (switchSubtabRef) switchSubtabRef(targetSubtab);
+        },
         navigateToSettingsMarketing: function() {
             sessionStorage.setItem('pawpal_admin_active_module', 'Cấu hình');
             sessionStorage.setItem('pawpal_admin_settings_subtab', 'tab-banner-promos');
@@ -3173,9 +3843,13 @@
         },
         openOrderDetail: function(orderId) {
             selectedOrderId = orderId;
-            const subtabBtn = document.querySelector('.header-subtab-btn[data-subtab="tab-order-detail"]');
-            if (subtabBtn) subtabBtn.click();
-            // Cập nhật lại giao diện chi tiết
+            sessionStorage.setItem('pawpal_admin_order_selected_id', orderId);
+            if (switchSubtabRef) {
+                switchSubtabRef('tab-order-detail');
+            } else {
+                const subtabBtn = document.querySelector('.header-subtab-btn[data-subtab="tab-order-detail"]');
+                if (subtabBtn) subtabBtn.click();
+            }
             if (renderOrderDetailRef) {
                 renderOrderDetailRef(orderId);
             }
@@ -3547,11 +4221,553 @@
             popover.style.left = `${rect.left - 150}px`;
             popover.classList.add('active');
         },
+        switchProductModalTab: function(tabId) {
+            const tabs = document.querySelectorAll('.product-modal-tab-btn');
+            tabs.forEach(btn => {
+                if (btn.getAttribute('data-tab') === tabId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            const panes = document.querySelectorAll('.product-form-tab-pane');
+            panes.forEach(pane => {
+                pane.classList.add('d-none');
+                pane.classList.remove('active');
+            });
+
+            const activePane = document.getElementById(`pane-${tabId}`);
+            if (activePane) {
+                activePane.classList.remove('d-none');
+                activePane.classList.add('active');
+            }
+        },
+        handleCategoryChangeSuggestSku: function() {
+            const editSku = document.getElementById('editProductOriginalSku')?.value;
+            // Chỉ gợi ý nếu đang thêm mới và sku chưa có hoặc đang mang tiền tố cũ
+            if (editSku) return;
+
+            const cat = document.getElementById('newProdCategory')?.value || 'Thức ăn khô';
+            const skuInput = document.getElementById('newProdSku');
+            if (!skuInput) return;
+
+            const categoryPrefixMap = {
+                'Thức ăn khô': 'TP-HAT-',
+                'Thức ăn ướt': 'TP-PATE-',
+                'Xương gặm': 'TP-XUONG-',
+                'Sức khỏe': 'TP-SUP-',
+                'Bát ăn': 'DD-BAT-',
+                'Đồ chơi': 'DD-DOCHOI-',
+                'Vệ sinh': 'DD-VESINH-',
+                'Thời trang': 'PK-AO-',
+                'Nội thất': 'DD-DEM-',
+                'Khác': 'SP-KHAC-'
+            };
+
+            const prefix = categoryPrefixMap[cat] || 'SP-';
+            const count = currentProductsList.filter(p => p.category === cat || (p.sku && p.sku.startsWith(prefix))).length + 1;
+            skuInput.value = `${prefix}${count.toString().padStart(2, '0')}`;
+        },
+        autoCalculateMemberPrice: function() {
+            const price = parseInt(document.getElementById('newProdPrice')?.value || '0', 10);
+            const memberInput = document.getElementById('newProdMemberPrice');
+            if (!memberInput) return;
+            if (price > 0) {
+                const memberVal = Math.round((price * 0.925) / 1000) * 1000;
+                memberInput.value = memberVal;
+            } else {
+                memberInput.value = '';
+            }
+        },
+        updateProductImagePreview: function() {
+            const inputVal = document.getElementById('newProdImages')?.value || '';
+            const previewImg = document.getElementById('productThumbPreviewImg');
+            const galleryRow = document.getElementById('productGalleryThumbnailsRow');
+            
+            const rawImgs = inputVal.split(',').map(s => s.trim()).filter(Boolean);
+            const firstImg = rawImgs[0] || '';
+            
+            if (previewImg) {
+                if (firstImg) {
+                    const formattedSrc = firstImg.startsWith('http') || firstImg.startsWith('/') ? firstImg : `/${firstImg}`;
+                    previewImg.src = formattedSrc;
+                } else {
+                    previewImg.src = '/assets/images/shop/products/tp-hat-01.png';
+                }
+            }
+
+            if (galleryRow) {
+                if (rawImgs.length > 1) {
+                    galleryRow.innerHTML = rawImgs.map((imgSrc, idx) => {
+                        const formatted = imgSrc.startsWith('http') || imgSrc.startsWith('/') ? imgSrc : `/${imgSrc}`;
+                        return `
+                            <div style="position: relative; width: 42px; height: 42px; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral); overflow: hidden; background: #fff;">
+                                <img src="${formatted}" alt="Ảnh ${idx + 1}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/assets/images/shop/products/tp-hat-01.png';">
+                                <span style="position: absolute; bottom: 0; right: 0; background: rgba(35,107,72,0.85); color: #fff; font-size: 9px; padding: 0 3px; border-top-left-radius: 4px;">#${idx + 1}</span>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    galleryRow.innerHTML = '';
+                }
+            }
+        },
+        attr1TagValues: ['Cá hồi', 'Thịt gà', 'Thịt bò'],
+        attr2TagValues: ['Lon 80g', 'Lon 180g'],
+
+        renderAttributeTags: function(group) {
+            const listEl = document.getElementById(group === 1 ? 'attr1TagsList' : 'attr2TagsList');
+            if (!listEl) return;
+            const arr = group === 1 ? this.attr1TagValues : this.attr2TagValues;
+            listEl.innerHTML = arr.map((val, idx) => `
+                <span class="tag-item-chip">
+                    ${val}
+                    <span class="tag-item-remove" onclick="event.stopPropagation(); PawpalOrdersModule.removeTagValue(${group}, ${idx})" title="Xóa tag này">✕</span>
+                </span>
+            `).join('');
+        },
+
+        addTagValue: function(group, val) {
+            const cleanVal = (val || '').trim();
+            if (!cleanVal) return;
+            const arr = group === 1 ? this.attr1TagValues : this.attr2TagValues;
+            if (!arr.includes(cleanVal)) {
+                arr.push(cleanVal);
+                this.renderAttributeTags(group);
+                this.generateVariantMatrix();
+            }
+        },
+
+        removeTagValue: function(group, idx) {
+            const arr = group === 1 ? this.attr1TagValues : this.attr2TagValues;
+            if (idx >= 0 && idx < arr.length) {
+                arr.splice(idx, 1);
+                this.renderAttributeTags(group);
+                this.generateVariantMatrix();
+            }
+        },
+
+        handleTagInputKeyDown: function(e, group) {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                const input = e.target;
+                const val = input.value.replace(',', '').trim();
+                if (val) {
+                    this.addTagValue(group, val);
+                    input.value = '';
+                }
+            } else if (e.key === 'Backspace' && e.target.value === '') {
+                const arr = group === 1 ? this.attr1TagValues : this.attr2TagValues;
+                if (arr.length > 0) {
+                    this.removeTagValue(group, arr.length - 1);
+                }
+            }
+        },
+
+        toggleVariantMode: function(isMultiple) {
+            const radioSingle = document.querySelector('input[name="prodVariantType"][value="single"]');
+            const radioMulti = document.querySelector('input[name="prodVariantType"][value="multiple"]');
+            if (isMultiple && radioMulti) radioMulti.checked = true;
+            if (!isMultiple && radioSingle) radioSingle.checked = true;
+
+            const singleBox = document.getElementById('singleProductPriceBox');
+            const multiBox = document.getElementById('multipleProductVariantsBox');
+            if (singleBox) singleBox.style.display = isMultiple ? 'none' : 'block';
+            if (multiBox) multiBox.style.display = isMultiple ? 'block' : 'none';
+
+            if (isMultiple) {
+                this.renderAttributeTags(1);
+                this.renderAttributeTags(2);
+                this.generateVariantMatrix();
+            }
+        },
+
+        generateVariantMatrix: function(prefillVariants = null) {
+            const tbody = document.getElementById('productVariantsTableBody');
+            if (!tbody) return;
+
+            const attr1Name = document.getElementById('attr1Name')?.value.trim() || 'Hương vị';
+            const attr1Vals = this.attr1TagValues || [];
+
+            const attr2Name = document.getElementById('attr2Name')?.value.trim() || 'Quy cách';
+            const attr2Vals = this.attr2TagValues || [];
+
+            const th1 = document.getElementById('thAttr1');
+            const th2 = document.getElementById('thAttr2');
+            if (th1) th1.textContent = attr1Name;
+            if (th2) {
+                if (attr2Vals.length > 0) {
+                    th2.style.display = '';
+                    th2.textContent = attr2Name;
+                } else {
+                    th2.style.display = 'none';
+                }
+            }
+
+            // Thu thập dữ liệu đã nhập trên các dòng hiện tại để không bị mất khi thêm/xóa tag
+            const existingDataMap = {};
+            if (prefillVariants && Array.isArray(prefillVariants) && prefillVariants.length > 0) {
+                prefillVariants.forEach(v => {
+                    const key = v.attr2 ? `${v.attr1 || ''}|${v.attr2}` : (v.attr1 || v.name || '');
+                    existingDataMap[key] = {
+                        sku: v.sku,
+                        costPrice: v.costPrice,
+                        price: v.price,
+                        originalPrice: v.originalPrice,
+                        stock: v.stock,
+                        image: v.image
+                    };
+                });
+            } else {
+                tbody.querySelectorAll('tr.variant-row-item').forEach(row => {
+                    const key = row.getAttribute('data-attr-key') || '';
+                    if (key) {
+                        existingDataMap[key] = {
+                            sku: row.querySelector('.variant-sku-input')?.value,
+                            costPrice: row.querySelector('.variant-cost-input')?.value,
+                            price: row.querySelector('.variant-price-input')?.value,
+                            originalPrice: row.querySelector('.variant-orig-input')?.value,
+                            stock: row.querySelector('.variant-stock-input')?.value,
+                            image: row.querySelector('.variant-img-input')?.value
+                        };
+                    }
+                });
+            }
+
+            const effectiveList1 = attr1Vals.length > 0 ? attr1Vals : ['Mặc định'];
+            const hasList2 = attr2Vals.length > 0;
+            const masterSku = document.getElementById('newProdSku')?.value.trim() || 'SP-01';
+
+            const rowsHtml = [];
+            let comboIndex = 1;
+
+            effectiveList1.forEach(v1 => {
+                if (hasList2) {
+                    attr2Vals.forEach(v2 => {
+                        const key = `${v1}|${v2}`;
+                        const existing = existingDataMap[key] || {};
+                        const defSku = existing.sku || `${masterSku}-${String(comboIndex).padStart(2, '0')}`;
+                        const defCost = existing.costPrice !== undefined ? existing.costPrice : '';
+                        const defPrice = existing.price !== undefined ? existing.price : '';
+                        const defOrig = existing.originalPrice !== undefined ? existing.originalPrice : '';
+                        const defStock = existing.stock !== undefined ? existing.stock : 15;
+                        const defImg = existing.image || 'assets/images/shop/products/tp-hat-01.png';
+                        const formattedImg = defImg.startsWith('http') || defImg.startsWith('/') ? defImg : `/${defImg}`;
+
+                        rowsHtml.push(`
+                            <tr class="variant-row-item" data-attr-key="${key}" data-attr-1="${v1}" data-attr-2="${v2}">
+                                <td style="font-weight: 600; color: #236B48; white-space: nowrap;">${v1}</td>
+                                <td style="color: var(--text-main); white-space: nowrap;">${v2}</td>
+                                <td>
+                                    <input type="text" class="admin-input variant-input variant-sku-input" value="${defSku}" placeholder="Mã SKU">
+                                </td>
+                                <td>
+                                    <input type="number" class="admin-input variant-input variant-cost-input" value="${defCost}" placeholder="Giá vốn" min="0">
+                                </td>
+                                <td>
+                                    <input type="number" class="admin-input variant-input variant-price-input" value="${defPrice}" placeholder="Giá bán *" min="0">
+                                </td>
+                                <td>
+                                    <input type="number" class="admin-input variant-input variant-orig-input" value="${defOrig}" placeholder="Giá gốc" min="0">
+                                </td>
+                                <td>
+                                    <input type="number" class="admin-input variant-input variant-stock-input" value="${defStock}" placeholder="Tồn" min="0">
+                                </td>
+                                <td>
+                                    <div class="variant-thumb-cell">
+                                        <input type="text" class="admin-input variant-input variant-img-input" value="${defImg}" placeholder="URL ảnh" oninput="PawpalOrdersModule.updateVariantThumbPreview(this)">
+                                        <img class="variant-thumb-preview" src="${formattedImg}" alt="Thumb" onerror="this.src='/assets/images/shop/products/tp-hat-01.png';">
+                                    </div>
+                                </td>
+                                <td style="text-align: center;">
+                                    <button type="button" class="btn-remove-variant" onclick="PawpalOrdersModule.removeVariantRow(this)" title="Xóa">✕</button>
+                                </td>
+                            </tr>
+                        `);
+                        comboIndex++;
+                    });
+                } else {
+                    const key = `${v1}`;
+                    const existing = existingDataMap[key] || {};
+                    const defSku = existing.sku || `${masterSku}-${String(comboIndex).padStart(2, '0')}`;
+                    const defCost = existing.costPrice !== undefined ? existing.costPrice : '';
+                    const defPrice = existing.price !== undefined ? existing.price : '';
+                    const defOrig = existing.originalPrice !== undefined ? existing.originalPrice : '';
+                    const defStock = existing.stock !== undefined ? existing.stock : 15;
+                    const defImg = existing.image || 'assets/images/shop/products/tp-hat-01.png';
+                    const formattedImg = defImg.startsWith('http') || defImg.startsWith('/') ? defImg : `/${defImg}`;
+
+                    rowsHtml.push(`
+                        <tr class="variant-row-item" data-attr-key="${key}" data-attr-1="${v1}" data-attr-2="">
+                            <td style="font-weight: 600; color: #236B48; white-space: nowrap;">${v1}</td>
+                            <td>
+                                <input type="text" class="admin-input variant-input variant-sku-input" value="${defSku}" placeholder="Mã SKU">
+                            </td>
+                            <td>
+                                <input type="number" class="admin-input variant-input variant-cost-input" value="${defCost}" placeholder="Giá vốn" min="0">
+                            </td>
+                            <td>
+                                <input type="number" class="admin-input variant-input variant-price-input" value="${defPrice}" placeholder="Giá bán *" min="0">
+                            </td>
+                            <td>
+                                <input type="number" class="admin-input variant-input variant-orig-input" value="${defOrig}" placeholder="Giá gốc" min="0">
+                            </td>
+                            <td>
+                                <input type="number" class="admin-input variant-input variant-stock-input" value="${defStock}" placeholder="Tồn" min="0">
+                            </td>
+                            <td>
+                                <div class="variant-thumb-cell">
+                                    <input type="text" class="admin-input variant-input variant-img-input" value="${defImg}" placeholder="URL ảnh" oninput="PawpalOrdersModule.updateVariantThumbPreview(this)">
+                                    <img class="variant-thumb-preview" src="${formattedImg}" alt="Thumb" onerror="this.src='/assets/images/shop/products/tp-hat-01.png';">
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" class="btn-remove-variant" onclick="PawpalOrdersModule.removeVariantRow(this)" title="Xóa">✕</button>
+                            </td>
+                        </tr>
+                    `);
+                    comboIndex++;
+                }
+            });
+
+            tbody.innerHTML = rowsHtml.join('');
+        },
+
+        applyBulkVariantValues: function() {
+            const bulkCost = document.getElementById('bulkCostPrice')?.value.trim();
+            const bulkPrice = document.getElementById('bulkPrice')?.value.trim();
+            const bulkOrig = document.getElementById('bulkOriginalPrice')?.value.trim();
+            const bulkStock = document.getElementById('bulkStock')?.value.trim();
+            const bulkImg = document.getElementById('bulkImage')?.value.trim();
+
+            if (!bulkCost && !bulkPrice && !bulkOrig && !bulkStock && !bulkImg) {
+                showToast('Vui lòng nhập ít nhất một thông số (Giá vốn, Giá bán, Giá gốc, Tồn kho hoặc Ảnh) để áp dụng nhanh.', 'warning');
+                return;
+            }
+
+            const rows = document.querySelectorAll('#productVariantsTableBody tr.variant-row-item');
+            if (rows.length === 0) {
+                showToast('Chưa có dòng phân loại nào trong bảng ma trận.', 'warning');
+                return;
+            }
+
+            rows.forEach(row => {
+                if (bulkCost) {
+                    const costInput = row.querySelector('.variant-cost-input');
+                    if (costInput) costInput.value = bulkCost;
+                }
+                if (bulkPrice) {
+                    const priceInput = row.querySelector('.variant-price-input');
+                    if (priceInput) priceInput.value = bulkPrice;
+                }
+                if (bulkOrig) {
+                    const origInput = row.querySelector('.variant-orig-input');
+                    if (origInput) origInput.value = bulkOrig;
+                }
+                if (bulkStock) {
+                    const stockInput = row.querySelector('.variant-stock-input');
+                    if (stockInput) stockInput.value = bulkStock;
+                }
+                if (bulkImg) {
+                    const imgInput = row.querySelector('.variant-img-input');
+                    const imgPreview = row.querySelector('.variant-thumb-preview');
+                    if (imgInput) imgInput.value = bulkImg;
+                    if (imgPreview) {
+                        const formatted = bulkImg.startsWith('http') || bulkImg.startsWith('/') ? bulkImg : `/${bulkImg}`;
+                        imgPreview.src = formatted;
+                    }
+                }
+            });
+
+            showToast('Đã áp dụng thông số thành công cho toàn bộ bảng phân loại!', 'success');
+        },
+
+        removeVariantRow: function(btn) {
+            const tbody = document.getElementById('productVariantsTableBody');
+            const row = btn.closest('.variant-row-item');
+            if (row) {
+                if (tbody && tbody.children.length <= 1) {
+                    showToast('Cần duy trì tối thiểu 1 phân loại cho sản phẩm nhiều biến thể.', 'warning');
+                    return;
+                }
+                row.remove();
+            }
+        },
+
+        calcVariantMemberPrice: function(priceInput) {
+            const row = priceInput.closest('.variant-row-item');
+            if (!row) return;
+            const price = parseInt(priceInput.value || '0', 10);
+            const memberInput = row.querySelector('.variant-member-input');
+            if (memberInput) {
+                if (price > 0) {
+                    memberInput.value = Math.round((price * 0.925) / 1000) * 1000;
+                } else {
+                    memberInput.value = '';
+                }
+            }
+        },
+
+        updateVariantThumbPreview: function(urlInput) {
+            const row = urlInput.closest('.variant-row-item');
+            if (!row) return;
+            const imgEl = row.querySelector('.variant-thumb-preview');
+            if (!imgEl) return;
+            const val = urlInput.value.trim();
+            if (val) {
+                const formatted = val.startsWith('http') || val.startsWith('/') ? val : `/${val}`;
+                imgEl.src = formatted;
+            } else {
+                imgEl.src = '/assets/images/shop/products/tp-hat-01.png';
+            }
+        },
+
+        openAddProductModal: function() {
+            const titleEl = document.getElementById('productModalTitle');
+            const submitBtn = document.getElementById('btnSubmitAddProduct');
+            const editSkuInput = document.getElementById('editProductOriginalSku');
+
+            if (titleEl) titleEl.textContent = 'Thêm sản phẩm mới';
+            if (submitBtn) submitBtn.textContent = 'Lưu sản phẩm';
+            if (editSkuInput) editSkuInput.value = '';
+
+            // STT tự động
+            const sttInput = document.getElementById('newProdStt');
+            if (sttInput) sttInput.value = currentProductsList.length + 1;
+
+            // Reset các trường
+            document.getElementById('newProdName').value = '';
+            document.getElementById('newProdCategory').value = 'Thức ăn khô';
+            document.getElementById('newProdBrand').value = 'PawPal';
+            document.getElementById('newProdPetType').value = 'Chó và Mèo';
+            document.getElementById('newProdOrigin').value = 'Việt Nam';
+            document.getElementById('newProdStatus').value = 'Còn hàng';
+            document.getElementById('newProdUnit').value = 'Túi';
+            document.getElementById('newProdSpec').value = '';
+            document.getElementById('newProdBadge').value = '';
+            document.getElementById('newProdFeatures').value = '';
+            document.getElementById('newProdCostPrice').value = '';
+            document.getElementById('newProdPrice').value = '';
+            document.getElementById('newProdOriginalPrice').value = '';
+            document.getElementById('newProdInitialStock').value = '20';
+            document.getElementById('newProdMinStock').value = '5';
+            document.getElementById('newProdImages').value = 'assets/images/shop/products/tp-hat-01.png';
+            document.getElementById('newProdDescription').value = '';
+            document.getElementById('newProdIngredients').value = '';
+            document.getElementById('newProdBenefits').value = '';
+            document.getElementById('newProdUsage').value = '';
+            document.getElementById('newProdFeedingGuide').value = '';
+            document.getElementById('newProdExpiry').value = '24 tháng kể từ ngày sản xuất';
+            document.getElementById('newProdStorage').value = 'Bảo quản nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp';
+
+            // Reset 2 nhóm thuộc tính
+            const attr1N = document.getElementById('attr1Name');
+            const attr2N = document.getElementById('attr2Name');
+            if (attr1N) attr1N.value = 'Hương vị';
+            if (attr2N) attr2N.value = 'Quy cách';
+            this.attr1TagValues = ['Cá hồi', 'Thịt gà', 'Thịt bò'];
+            this.attr2TagValues = ['Lon 80g', 'Lon 180g'];
+
+            const tagInput1 = document.getElementById('attr1TagInput');
+            const tagInput2 = document.getElementById('attr2TagInput');
+            if (tagInput1) tagInput1.value = '';
+            if (tagInput2) tagInput2.value = '';
+
+            const bulkC = document.getElementById('bulkCostPrice');
+            const bulkP = document.getElementById('bulkPrice');
+            const bulkO = document.getElementById('bulkOriginalPrice');
+            const bulkS = document.getElementById('bulkStock');
+            const bulkI = document.getElementById('bulkImage');
+            if (bulkC) bulkC.value = '';
+            if (bulkP) bulkP.value = '';
+            if (bulkO) bulkO.value = '';
+            if (bulkS) bulkS.value = '';
+            if (bulkI) bulkI.value = '';
+
+            const tbody = document.getElementById('productVariantsTableBody');
+            if (tbody) tbody.innerHTML = '';
+            this.toggleVariantMode(false);
+
+            // Gợi ý SKU
+            this.handleCategoryChangeSuggestSku();
+            this.updateProductImagePreview();
+
+            document.getElementById('modalAddProduct')?.classList.add('active');
+        },
+
+        openEditProductModal: function(sku) {
+            const prod = currentProductsList.find(p => p.sku === sku);
+            if (!prod) return;
+
+            const titleEl = document.getElementById('productModalTitle');
+            const submitBtn = document.getElementById('btnSubmitAddProduct');
+            const editSkuInput = document.getElementById('editProductOriginalSku');
+
+            if (titleEl) titleEl.textContent = `Sửa sản phẩm: ${prod.name}`;
+            if (submitBtn) submitBtn.textContent = 'Lưu thay đổi';
+            if (editSkuInput) editSkuInput.value = prod.sku;
+
+            const prodIndex = currentProductsList.findIndex(p => p.sku === sku);
+            const sttInput = document.getElementById('newProdStt');
+            if (sttInput) sttInput.value = prodIndex >= 0 ? prodIndex + 1 : 1;
+
+            document.getElementById('newProdSku').value = prod.sku || '';
+            document.getElementById('newProdName').value = prod.name || '';
+            document.getElementById('newProdCategory').value = prod.category || 'Thức ăn khô';
+            document.getElementById('newProdBrand').value = prod.brand || 'PawPal';
+            document.getElementById('newProdPetType').value = prod.petType || 'Chó và Mèo';
+            document.getElementById('newProdOrigin').value = prod.origin || 'Việt Nam';
+            document.getElementById('newProdStatus').value = prod.status || 'Còn hàng';
+            document.getElementById('newProdUnit').value = prod.unit || 'Túi';
+            document.getElementById('newProdSpec').value = prod.spec || '';
+            document.getElementById('newProdBadge').value = prod.badge || '';
+            document.getElementById('newProdFeatures').value = prod.features || '';
+            document.getElementById('newProdCostPrice').value = prod.costPrice || '';
+            document.getElementById('newProdPrice').value = prod.price || '';
+            document.getElementById('newProdOriginalPrice').value = prod.originalPrice || '';
+            document.getElementById('newProdInitialStock').value = prod.stock || 0;
+            document.getElementById('newProdMinStock').value = prod.minStock || 5;
+            document.getElementById('newProdImages').value = prod.images ? (Array.isArray(prod.images) ? prod.images.join(', ') : prod.images) : (prod.image || 'assets/images/shop/products/tp-hat-01.png');
+            document.getElementById('newProdDescription').value = prod.description || '';
+            document.getElementById('newProdIngredients').value = prod.ingredients || '';
+            document.getElementById('newProdBenefits').value = prod.benefits || '';
+            document.getElementById('newProdUsage').value = prod.usage || '';
+            document.getElementById('newProdFeedingGuide').value = prod.feedingGuide || '';
+            document.getElementById('newProdExpiry').value = prod.expiry || '';
+            document.getElementById('newProdStorage').value = prod.storage || '';
+
+            const hasVariants = !!(prod.hasVariants && Array.isArray(prod.variants) && prod.variants.length > 0);
+            if (hasVariants) {
+                // Trích xuất các thuộc tính độc nhất từ variants
+                this.attr1TagValues = [...new Set(prod.variants.map(v => v.attr1 || v.name).filter(Boolean))];
+                this.attr2TagValues = [...new Set(prod.variants.map(v => v.attr2).filter(Boolean))];
+
+                const attr1N = document.getElementById('attr1Name');
+                const attr2N = document.getElementById('attr2Name');
+
+                if (attr1N) attr1N.value = prod.attr1Name || 'Hương vị';
+                if (attr2N) attr2N.value = prod.attr2Name || 'Quy cách';
+
+                this.toggleVariantMode(true);
+                this.generateVariantMatrix(prod.variants);
+            } else {
+                this.toggleVariantMode(false);
+            }
+
+            this.updateProductImagePreview();
+
+            document.getElementById('modalAddProduct')?.classList.add('active');
+        },
         handleStockAction: function(action) {
             const sku = activeStockActionSku;
             document.getElementById('stockActionDropdown')?.classList.remove('active');
             if (!sku) return;
-            if (action === 'logs') {
+            if (action === 'edit') {
+                this.openEditProductModal(sku);
+            } else if (action === 'reviews') {
+                this.openProductReviewsModal(sku);
+            } else if (action === 'logs') {
                 this.openStockLogsModal(sku);
             } else if (action === 'adjust') {
                 this.openAdjustStockModal(sku);
@@ -3821,6 +5037,220 @@
             if (expiryInput) expiryInput.value = voucher.validDate || voucher.expiry || '';
 
             document.getElementById('modalVoucherAction')?.classList.add('active');
+        },
+
+        activeReviewsSku: null,
+        activeReviewsFilter: 'ALL',
+
+        openProductReviewsModal: function(sku) {
+            this.activeReviewsSku = sku;
+            this.activeReviewsFilter = 'ALL';
+            const prod = currentProductsList.find(p => p.sku === sku);
+            if (!prod) return;
+
+            const titleEl = document.getElementById('productReviewsModalTitle');
+            if (titleEl) titleEl.textContent = `Đánh giá sản phẩm: ${prod.name}`;
+
+            const bigScoreEl = document.getElementById('prodReviewsScoreBig');
+            const descEl = document.getElementById('prodReviewsScoreDesc');
+            const totalCountEl = document.getElementById('prodReviewsCountTotal');
+
+            const score = prod.rating ? Number(prod.rating).toFixed(1) : '5.0';
+            const count = prod.reviewCount || 0;
+
+            if (bigScoreEl) bigScoreEl.textContent = `${score} ★`;
+            if (descEl) {
+                const numScore = parseFloat(score);
+                descEl.textContent = numScore >= 4.8 ? 'Cực kỳ hài lòng' : numScore >= 4.0 ? 'Rất hài lòng' : numScore >= 3.0 ? 'Hài lòng' : 'Cần cải thiện';
+            }
+            if (totalCountEl) totalCountEl.textContent = `(${count > 0 ? count : 0} nhận xét)`;
+
+            this.renderProductReviewsModalContent(sku);
+            document.getElementById('modalProductReviews')?.classList.add('active');
+        },
+
+        renderProductReviewsModalContent: function(sku) {
+            const prod = currentProductsList.find(p => p.sku === sku);
+            if (!prod) return;
+
+            const prodImgPath = prod.image ? (prod.image.startsWith('/') ? prod.image : '/' + prod.image) : '/assets/images/shop/products/TP-HAT-01.png';
+
+            // Lấy reviews từ sessionStorage hoặc mock
+            const storageKey = `pawpal_prod_reviews_${sku}`;
+            let reviews = [];
+            try {
+                const saved = sessionStorage.getItem(storageKey);
+                if (saved) reviews = JSON.parse(saved);
+            } catch (e) {}
+
+            if (reviews.length === 0) {
+                // Mock reviews thực tế cho sản phẩm
+                reviews = [
+                    {
+                        id: 'REV-01',
+                        customerName: 'Trần Thị Mai Phương',
+                        avatar: 'M',
+                        date: '24/06/2026',
+                        rating: 5,
+                        variant: prod.hasVariants && prod.variants && prod.variants.length > 0 ? prod.variants[0].name : 'Tiêu chuẩn',
+                        comment: `Sản phẩm ${prod.name} dùng cực kỳ ưng ý! Bé cún nhà mình ăn ngon miệng, tiêu hóa rất êm và không bị dị ứng. Đóng gói cẩn thận, giao nhanh chỉ 1 tiếng.`,
+                        images: [prodImgPath],
+                        reply: 'PawPal cảm ơn chị Mai Phương đã tin dùng sản phẩm! Chúc bé cưng luôn khỏe mạnh và mau lớn ạ.'
+                    },
+                    {
+                        id: 'REV-02',
+                        customerName: 'Nguyễn Hoàng Long',
+                        avatar: 'L',
+                        date: '20/06/2026',
+                        rating: 5,
+                        variant: prod.hasVariants && prod.variants && prod.variants.length > 1 ? prod.variants[1].name : 'Tiêu chuẩn',
+                        comment: 'Hàng chính hãng chuẩn xịn, hạn sử dụng còn rất xa. Shop tư vấn nhiệt tình, sẽ ủng hộ dài lâu.',
+                        images: [],
+                        reply: ''
+                    },
+                    {
+                        id: 'REV-03',
+                        customerName: 'Phạm Thu Thảo',
+                        avatar: 'T',
+                        date: '15/06/2026',
+                        rating: 4,
+                        variant: prod.hasVariants && prod.variants && prod.variants.length > 0 ? prod.variants[0].name : 'Tiêu chuẩn',
+                        comment: 'Chất lượng tốt, mùi thơm hấp dẫn. Chỉ tiếc là bên vận chuyển giao hơi trễ 1 chút so với hẹn, nhưng bù lại đóng gói bọc xốp kỹ càng.',
+                        images: [prodImgPath],
+                        reply: 'PawPal chân thành xin lỗi chị Thảo về trải nghiệm giao hàng. Shop đã làm việc lại với đơn vị vận chuyển để tối ưu tốc độ giao nhanh hơn ạ!'
+                    }
+                ];
+                try {
+                    sessionStorage.setItem(storageKey, JSON.stringify(reviews));
+                } catch (e) {}
+            }
+
+            // Render Filter Chips (Muted Pastel per AGENTS.md)
+            const filterRow = document.getElementById('prodReviewsStarFilterRow');
+            if (filterRow) {
+                const currentF = this.activeReviewsFilter;
+                const count5 = reviews.filter(r => r.rating === 5).length;
+                const count4 = reviews.filter(r => r.rating === 4).length;
+                const countMedia = reviews.filter(r => r.images && r.images.length > 0).length;
+
+                const getChipStyle = (isActive) => isActive 
+                    ? 'background-color: #DCEEE2; color: #165335; font-weight: 600; border-radius: var(--admin-radius); border: none; height: 26px; padding: 0 10px; font-size: 12px; cursor: pointer;'
+                    : 'background-color: #EEF5F1; color: #4F7A65; font-weight: 500; border-radius: var(--admin-radius); border: none; height: 26px; padding: 0 10px; font-size: 12px; cursor: pointer;';
+
+                filterRow.innerHTML = `
+                    <button type="button" style="${getChipStyle(currentF === 'ALL')}" onclick="PawpalOrdersModule.setProductReviewsFilter('ALL')">Tất cả (${reviews.length})</button>
+                    <button type="button" style="${getChipStyle(currentF === '5')}" onclick="PawpalOrdersModule.setProductReviewsFilter('5')">5 ★ (${count5})</button>
+                    <button type="button" style="${getChipStyle(currentF === '4')}" onclick="PawpalOrdersModule.setProductReviewsFilter('4')">4 ★ (${count4})</button>
+                    <button type="button" style="${getChipStyle(currentF === 'MEDIA')}" onclick="PawpalOrdersModule.setProductReviewsFilter('MEDIA')">Có ảnh (${countMedia})</button>
+                `;
+            }
+
+            // Filter reviews
+            let displayReviews = reviews;
+            if (this.activeReviewsFilter === '5') displayReviews = reviews.filter(r => r.rating === 5);
+            else if (this.activeReviewsFilter === '4') displayReviews = reviews.filter(r => r.rating === 4);
+            else if (this.activeReviewsFilter === 'MEDIA') displayReviews = reviews.filter(r => r.images && r.images.length > 0);
+
+            const container = document.getElementById('productReviewsListContainer');
+            if (!container) return;
+
+            if (displayReviews.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 13px;">
+                        Không có nhận xét nào phù hợp với bộ lọc đã chọn.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = displayReviews.map((r, idx) => {
+                const isLast = idx === displayReviews.length - 1;
+                const starsHtml = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+                const imagesHtml = (r.images && r.images.length > 0) ? `
+                    <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                        ${r.images.map(img => {
+                            const src = img.startsWith('/') ? img : '/' + img;
+                            return `<img src="${src}" alt="Ảnh feedback" onerror="this.src='/assets/images/shop/products/TP-HAT-01.png'" style="width: 54px; height: 54px; object-fit: cover; border-radius: var(--admin-radius); border: 1px solid var(--border-neutral); cursor: pointer;" onclick="window.open('${src}', '_blank')">`;
+                        }).join('')}
+                    </div>
+                ` : '';
+
+                // Triệt tiêu hộp lồng hộp và border-left theo quy tắc AGENTS.md
+                const replyHtml = r.reply ? `
+                    <div style="margin-top: 8px; font-size: 12.5px; line-height: 1.5; color: var(--text-main);">
+                        <span style="font-weight: 600; color: #236B48;">Phản hồi từ PawPal:</span> ${r.reply}
+                    </div>
+                ` : `
+                    <div style="margin-top: 8px;" id="replyBoxWrapper_${r.id}">
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" class="admin-input" id="replyInput_${r.id}" placeholder="Nhập nội dung phản hồi cho khách hàng..." style="height: 30px; font-size: 12px;">
+                            <button type="button" class="admin-btn admin-btn-primary" style="height: 30px; font-size: 12px; padding: 0 12px; white-space: nowrap;" onclick="PawpalOrdersModule.submitProductReviewReply('${sku}', '${r.id}')">Gửi phản hồi</button>
+                        </div>
+                    </div>
+                `;
+
+                return `
+                    <div style="padding: 14px 0; ${isLast ? '' : 'border-bottom: 1px solid var(--border-neutral);'} background: transparent;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #EEF5F1; color: #236B48; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 12.5px; flex-shrink: 0;">
+                                    ${r.avatar || r.customerName.charAt(0)}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600; font-size: 13.5px; color: var(--text-main);">${r.customerName}</div>
+                                    <div style="font-size: 11.5px; color: var(--text-muted);">${r.date} • Phân loại: <span style="font-weight: 500; color: var(--text-main);">${r.variant}</span></div>
+                                </div>
+                            </div>
+                            <div style="font-weight: 700; color: #B45309; font-size: 12.5px;">${starsHtml}</div>
+                        </div>
+
+                        <div style="font-size: 13px; color: var(--text-main); line-height: 1.55; margin-top: 6px;">
+                            ${r.comment}
+                        </div>
+
+                        ${imagesHtml}
+                        ${replyHtml}
+                    </div>
+                `;
+            }).join('');
+        },
+
+        setProductReviewsFilter: function(filter) {
+            this.activeReviewsFilter = filter;
+            if (this.activeReviewsSku) {
+                this.renderProductReviewsModalContent(this.activeReviewsSku);
+            }
+        },
+
+        submitProductReviewReply: function(sku, reviewId) {
+            const inputEl = document.getElementById(`replyInput_${reviewId}`);
+            const replyText = inputEl?.value.trim();
+            if (!replyText) {
+                showToast('Vui lòng nhập nội dung phản hồi cho khách hàng.', 'warning');
+                return;
+            }
+
+            const storageKey = `pawpal_prod_reviews_${sku}`;
+            try {
+                let reviews = JSON.parse(sessionStorage.getItem(storageKey) || '[]');
+                const target = reviews.find(r => r.id === reviewId);
+                if (target) {
+                    target.reply = replyText;
+                    sessionStorage.setItem(storageKey, JSON.stringify(reviews));
+                    showToast('Đã đăng phản hồi của cửa hàng thành công!', 'success');
+                    this.renderProductReviewsModalContent(sku);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        },
+
+        viewProductOnStorefront: function() {
+            const sku = this.activeReviewsSku;
+            if (!sku) return;
+            const prod = currentProductsList.find(p => p.sku === sku);
+            const prodId = prod ? (prod.id || prod.sku) : sku;
+            window.open(`/pages/shop/product-detail/product-detail.html?id=${encodeURIComponent(prodId)}#tab-reviews`, '_blank');
         }
     };
 
