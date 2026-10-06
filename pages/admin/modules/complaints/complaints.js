@@ -2671,8 +2671,59 @@ document.getElementById('btnSaveCreateTicket')?.addEventListener('click', async 
             }
         }
 
+        
+        // ====================================================================
+        // GIAI ĐOẠN 4: SUPABASE REALTIME CHANNEL ĐỒNG BỘ THỜI GIAN THỰC
+        // ====================================================================
+        let complaintsRealtimeSubscription = null;
+
+        function setupComplaintsRealtimeChannel() {
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client || typeof client.channel !== 'function') return;
+
+            try {
+                if (complaintsRealtimeSubscription) {
+                    client.removeChannel(complaintsRealtimeSubscription);
+                    complaintsRealtimeSubscription = null;
+                }
+
+                const channel = client.channel('admin_complaints_live_sync')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket' }, async (payload) => {
+                        console.log('[Complaints Realtime] support_ticket thay đổi:', payload.eventType);
+                        await loadComplaintsModuleData();
+                        updateComplaintsKpis();
+                        renderComplaintsAlertBar();
+                        if (currentTicketType === 'service') renderServiceComplaintsTable();
+                        else renderOrderComplaintsTable();
+
+                        if (currentActiveTicket) {
+                            const updated = (currentTicketType === 'service' ? serviceComplaints : orderComplaints).find(x => x.id === currentActiveTicket.id);
+                            if (updated) renderTicketDetail(updated);
+                        }
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'support_ticket_message' }, async (payload) => {
+                        console.log('[Complaints Realtime] support_ticket_message thay đổi:', payload.eventType);
+                        await loadComplaintsModuleData();
+                        if (currentActiveTicket) {
+                            const updated = (currentTicketType === 'service' ? serviceComplaints : orderComplaints).find(x => x.id === currentActiveTicket.id);
+                            if (updated) renderTicketDetail(updated);
+                        }
+                    })
+                    .subscribe((status) => {
+                        if (status === 'SUBSCRIBED') {
+                            console.log('[Complaints Realtime] Đã kết nối kênh Realtime Channel cho Khiếu nại & Tin nhắn ✓');
+                        }
+                    });
+
+                complaintsRealtimeSubscription = channel;
+            } catch (err) {
+                console.warn('[Complaints Realtime] Lỗi thiết lập Realtime Channel:', err);
+            }
+        }
+
         // Khởi tạo ban đầu
         await loadComplaintsModuleData();
+        setupComplaintsRealtimeChannel();
         syncSharedTicketsFromChatbot();
         updateComplaintsKpis();
         renderComplaintsAlertBar();
