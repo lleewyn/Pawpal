@@ -93,10 +93,13 @@ window.initBookingDetail = init;
 async function loadBookingDetail(bookingId) {
     await API.initData();
 
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
+    const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
 
-    const userBookings = currentUser ? await API.getUserBookings(currentUser.id) : [];
-    currentBooking = userBookings.find((b) => String(b.id || b._id) === String(bookingId) || b.code === bookingId);
+    const remoteBookings = currentUser ? await API.getUserBookings(currentUser) : [];
+    const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+    const allList = [...(remoteBookings || []), ...localBookings];
+
+    currentBooking = allList.find((b) => String(b.id || b._id || b._supabaseId) === String(bookingId) || b.code === bookingId || b.appointment_code === bookingId);
 
     if (!currentBooking) {
         showToast('Không tìm thấy lịch hẹn này', 'error');

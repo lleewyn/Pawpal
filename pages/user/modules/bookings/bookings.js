@@ -147,11 +147,40 @@ function initFilterTabs() {
 
 async function loadBookings(status) {
     try {
-        const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || { id: 'USER-001', phone: '0901234567' };
+        const currentUser = (window.getCurrentUser && window.getCurrentUser()) || JSON.parse(localStorage.getItem('pawpal_current_user')) || { id: 'USER-001', phone: '0901234567' };
 
         await API.initData();
-        allBookings = currentUser ? await API.getUserBookings(currentUser.id) : [];
-        const userPets = currentUser ? await API.getUserPets(currentUser.id) : [];
+        const remoteBookings = currentUser ? await API.getUserBookings(currentUser) : [];
+        const localBookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+        
+        const userPhone = String(currentUser?.phone || '').trim();
+        const userId = String(currentUser?.id || '').trim();
+
+        const matchingLocalBookings = localBookings.filter(b => {
+            const bUserId = String(b.userId || '');
+            const bPhone = String(b.ownerPhone || b.phone || '');
+            if (userId && (bUserId === userId || bUserId === 'USER-001')) return true;
+            if (userPhone && bPhone === userPhone) return true;
+            if (!userId && !userPhone) return true;
+            return false;
+        });
+
+        const bookingMap = new Map();
+        matchingLocalBookings.forEach(b => {
+            const key = String(b.id || b.appointment_code || b._supabaseId || '');
+            if (key) bookingMap.set(key, b);
+        });
+
+        (remoteBookings || []).forEach(b => {
+            const key = String(b.id || b.appointment_code || b._supabaseId || '');
+            if (key) {
+                const existing = bookingMap.get(key);
+                bookingMap.set(key, { ...b, ...(existing || {}) });
+            }
+        });
+
+        allBookings = Array.from(bookingMap.values());
+        const userPets = currentUser ? await API.getUserPets(currentUser) : [];
         
         currentPetMap = new Map();
         (Array.isArray(userPets) ? userPets : []).forEach((pet) => {

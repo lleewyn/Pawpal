@@ -38,14 +38,60 @@ export const API = {
     async initData() {
     },
 
-    async getUserPets(userId) {
+async function resolveCustomerId(db, userOrId) {
+    if (!db || !userOrId) return null;
+    if (typeof userOrId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userOrId)) {
+        return userOrId;
+    }
+    let phone = null;
+    let email = null;
+    if (typeof userOrId === 'object' && userOrId !== null) {
+        if (userOrId.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userOrId.id)) {
+            return userOrId.id;
+        }
+        phone = userOrId.phone || userOrId.phone_main || null;
+        email = userOrId.email || null;
+    } else if (typeof userOrId === 'string') {
+        if (/^\d{8,12}$/.test(userOrId)) {
+            phone = userOrId;
+        } else {
+            try {
+                const cur = JSON.parse(localStorage.getItem('pawpal_current_user') || '{}');
+                if (cur) {
+                    if (cur.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cur.id)) {
+                        return cur.id;
+                    }
+                    phone = cur.phone || cur.phone_main || null;
+                    email = cur.email || null;
+                }
+            } catch (e) {}
+        }
+    }
+
+    if (phone || email) {
+        let query = db.from('customer').select('id').limit(1);
+        if (phone) query = query.eq('phone_main', phone);
+        else if (email) query = query.eq('email', email);
+        const { data, error } = await query;
+        if (!error && data?.length) {
+            return data[0].id;
+        }
+    }
+    return null;
+}
+
+export const API = {
+    async getUserPets(userOrId) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db || !userId) return [];
+        if (!db || !userOrId) return [];
         try {
+            const customerId = await resolveCustomerId(db, userOrId);
+            if (!customerId) return [];
+
             const { data, error } = await db
                 .from('pet_profile')
                 .select('*')
-                .eq('customer_id', userId);
+                .eq('customer_id', customerId);
             
             if (error) {
                 console.error('[API] Supabase getUserPets error:', error.message);
@@ -68,10 +114,13 @@ export const API = {
         }
     },
 
-    async getUserBookings(userId) {
+    async getUserBookings(userOrId) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db || !userId) return [];
+        if (!db || !userOrId) return [];
         try {
+            const customerId = await resolveCustomerId(db, userOrId);
+            if (!customerId) return [];
+
             const { data, error } = await db
                 .from('appointment')
                 .select(`
@@ -83,7 +132,7 @@ export const API = {
                     ),
                     pet_profile ( id, pet_code, pet_name, breed, species, image_url )
                 `)
-                .eq('customer_id', userId)
+                .eq('customer_id', customerId)
                 .order('appointment_date', { ascending: false });
                 
             if (error) {
@@ -115,7 +164,7 @@ export const API = {
                 return {
                     id:              b.appointment_code || b.id,
                     _supabaseId:     b.id,
-                    userId:          userId,
+                    userId:          customerId,
                     date:            b.appointment_date,
                     time:            b.appointment_time?.slice(0, 5) || '',
                     timeStart:       b.appointment_time?.slice(0, 5) || '',
@@ -142,10 +191,13 @@ export const API = {
         }
     },
 
-    async getUserOrders(userId) {
+    async getUserOrders(userOrId) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db || !userId) return [];
+        if (!db || !userOrId) return [];
         try {
+            const customerId = await resolveCustomerId(db, userOrId);
+            if (!customerId) return [];
+
             const { data, error } = await db
                 .from('sales_order')
                 .select(`
@@ -158,7 +210,7 @@ export const API = {
                     ),
                     customer_address ( receiver_name, receiver_phone, province, street_address )
                 `)
-                .eq('customer_id', userId)
+                .eq('customer_id', customerId)
                 .order('created_at', { ascending: false });
 
             if (error) { 
@@ -206,7 +258,7 @@ export const API = {
                 return {
                     id:          o.order_code || o.id,
                     _supabaseId: o.id,
-                    userId:      userId,
+                    userId:      customerId,
                     status:      mapOrderStatus(o.order_status),
                     orderStatus: o.order_status,
                     paymentStatus: (o.payment_status || '').toLowerCase(),
@@ -236,11 +288,14 @@ export const API = {
         }
     },
 
-    async getUserReviews(userId) {
+    async getUserReviews(userOrId) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db || !userId) return [];
+        if (!db || !userOrId) return [];
         try {
-            const { data, error } = await db.from('review').select('*').eq('customer_id', userId);
+            const customerId = await resolveCustomerId(db, userOrId);
+            if (!customerId) return [];
+
+            const { data, error } = await db.from('review').select('*').eq('customer_id', customerId);
             if (error) { 
                 console.error('[API] Supabase getUserReviews error:', error.message); 
                 return []; 
@@ -252,10 +307,13 @@ export const API = {
         }
     },
 
-    async getUserVouchers(userId) {
+    async getUserVouchers(userOrId) {
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
-        if (!db || !userId) return [];
+        if (!db || !userOrId) return [];
         try {
+            const customerId = await resolveCustomerId(db, userOrId);
+            if (!customerId) return [];
+
             const { data, error } = await db.from('customer_voucher')
                 .select(`
                     id, 
@@ -263,7 +321,7 @@ export const API = {
                     used_at,
                     voucher ( id, voucher_code, discount_value, type, minimum_order_amount, start_date, end_date, description )
                 `)
-                .eq('customer_id', userId);
+                .eq('customer_id', customerId);
             if (error) { 
                 console.error('[API] Supabase getUserVouchers error:', error.message); 
                 return []; 
