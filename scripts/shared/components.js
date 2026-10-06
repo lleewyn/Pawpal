@@ -86,6 +86,12 @@
             supportScript.defer = true;
             document.head.appendChild(supportScript);
         }
+        if (!document.querySelector('script[src*="spa-router.js"]')) {
+            var spaScript = document.createElement('script');
+            spaScript.src = rootPath + 'scripts/shared/spa-router.js';
+            spaScript.defer = true;
+            document.head.appendChild(spaScript);
+        }
     }
 
     function ensureFabJS() {
