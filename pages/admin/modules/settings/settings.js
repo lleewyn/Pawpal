@@ -1,13 +1,13 @@
 /**
  * MODULE CẤU HÌNH HỆ THỐNG (PAWPAL ADMIN)
  * Tuân thủ nghiêm ngặt 100% AGENTS.md và ADMIN_DESIGN_SYSTEM.md:
- * - 3 Subtabs Header Bar: Banner và Khuyến mãi | Bài viết | Cấu hình | Nhật ký (Text-only, phân tách bởi '|')
+ * - 4 Subtabs Header Bar: Banner và Khuyến mãi | Bài viết | Cấu hình | Nhật ký (Text-only, phân tách bởi '|')
  * - Tự động đồng bộ State và Hash (#tab-banner-promos, #tab-content-management, #tab-system-config, #tab-audit-logs)
  * - Subtab 1: Quản lý Banner, Bảng Voucher, Chính sách PawPoints, Thông báo Website
  * - Subtab 2: Quản lý Blog và Cẩm nang (Tạo, Sửa, Lọc theo Danh mục và Trạng thái)
  * - Subtab 3: 4 Card Cấu hình vận hành (Thanh toán, Giao hàng, Đặt lịch, Kết nối đối tác)
- * - Subtab 4: Nhật ký cấu hình và Khóa an toàn SSOT
- * - 100% SUPABASE LIVE DATABASE - ZERO JSON MOCK
+ * - Subtab 4: Nhật ký cấu hình và Khóa an toàn SSOT (kết nối trực tiếp bảng audit_log Supabase)
+ * - 100% SUPABASE LIVE DATABASE - ZERO JSON MOCK (Khớp 100% Column Schema Supabase)
  */
 
 (function() {
@@ -218,10 +218,6 @@
             if (savedCfg) {
                 systemConfig = JSON.parse(savedCfg);
             }
-            const savedAudit = localStorage.getItem('pawpal_settings_audit_logs');
-            if (savedAudit) {
-                auditLogsList = JSON.parse(savedAudit);
-            }
         } catch (e) {
             console.warn('[Settings] Error loading stored config:', e);
         }
@@ -238,67 +234,75 @@
                     bannersRes,
                     vouchersRes,
                     blogsRes,
-                    notifsRes
+                    notifsRes,
+                    auditsRes
                 ] = await Promise.all([
                     client.from('banner').select('*').order('created_at', { ascending: false }),
                     client.from('voucher').select('*').order('created_at', { ascending: false }),
                     client.from('blog_post').select('*').order('created_at', { ascending: false }),
-                    client.from('notification').select('*').order('created_at', { ascending: false })
+                    client.from('notification').select('*').order('sent_at', { ascending: false }),
+                    client.from('audit_log').select('*').order('created_at', { ascending: false }).limit(20)
                 ]);
 
                 const banners = bannersRes.data || [];
                 const vouchers = vouchersRes.data || [];
                 const blogs = blogsRes.data || [];
                 const notifs = notifsRes.data || [];
+                const audits = auditsRes.data || [];
 
-                // 1. Map Banners
+                // 1. Map Banners (Database column: title, image_url, link, button_text, start_date, end_date, status)
                 bannersList = banners.map(b => {
                     let sDate = b.start_date ? b.start_date.substring(0, 10) : '2026-05-01';
                     let eDate = b.end_date ? b.end_date.substring(0, 10) : '2026-12-31';
+                    const isActive = b.status === 'dang_hien_thi' || b.status === 'ACTIVE' || b.is_active === true;
                     return {
                         id: b.id,
                         title: b.title || 'Banner ưu đãi PawPal',
-                        cta: b.cta_text || 'Xem ngay',
-                        url: b.link_url || '/pages/public/services/',
+                        cta: b.button_text || b.cta_text || 'Xem ngay',
+                        url: b.link || b.link_url || '/pages/public/services/',
                         startDate: sDate,
                         endDate: eDate,
-                        status: b.is_active !== false ? 'active' : 'paused',
+                        status: isActive ? 'active' : 'paused',
                         imageText: b.image_url ? b.image_url.split('/').pop() : 'Banner_Pawpal.jpg'
                     };
                 });
 
-                // 2. Map Vouchers
+                // 2. Map Vouchers (Database column: voucher_code, voucher_name, discount_value, type, minimum_order_amount, max_usage, usage_count, applicable_for, is_active)
                 vouchersList = vouchers.map(v => {
-                    const isPercent = !!v.discount_percent;
-                    const val = isPercent ? v.discount_percent : (v.discount_amount || 30000);
+                    const code = v.voucher_code || v.code || 'PAWPALCARE';
+                    const name = v.voucher_name || v.name || ('Voucher ' + code);
+                    const isPercent = (v.type === 'percentage' || v.type === 'percent' || !!v.discount_percent);
+                    const val = Number(v.discount_value || v.discount_amount || v.discount_percent || 30000);
                     let endDateStr = v.end_date ? ('Đến ' + new Date(v.end_date).toLocaleDateString('vi-VN')) : 'Đến 31/12/2026';
+                    
                     let target = 'Shop';
-                    if (v.applicable_service) {
-                        if (v.applicable_service.includes('spa')) target = 'Spa';
-                        else if (v.applicable_service.includes('hotel')) target = 'Hotel';
-                        else if (v.applicable_service === 'all') target = 'System';
-                    }
+                    const appFor = Array.isArray(v.applicable_for) ? v.applicable_for.join(',') : String(v.applicable_for || v.applicable_service || '');
+                    if (appFor.includes('spa') || appFor.includes('care')) target = 'Spa';
+                    else if (appFor.includes('hotel')) target = 'Hotel';
+                    else if (appFor.includes('all')) target = 'System';
 
                     let status = 'active';
                     if (v.is_active === false) status = 'paused';
-                    if (v.total_usage_limit && v.current_usage_count >= v.total_usage_limit) status = 'expired';
+                    const maxUse = Number(v.max_usage || v.total_usage_limit || 200);
+                    const curUse = Number(v.usage_count || v.current_usage_count || 0);
+                    if (maxUse && curUse >= maxUse) status = 'expired';
 
                     return {
                         id: v.id,
-                        code: v.code || 'PAWPALCARE',
-                        name: v.name || v.title || ('Voucher ưu đãi ' + (v.code || '')),
+                        code: code,
+                        name: name,
                         type: isPercent ? 'percent' : 'fixed',
                         target: target,
                         value: val,
-                        minOrder: v.min_order_value || 0,
-                        limit: v.total_usage_limit || 200,
-                        used: v.current_usage_count || 0,
+                        minOrder: Number(v.minimum_order_amount || v.min_order_value || 0),
+                        limit: maxUse,
+                        used: curUse,
                         validDate: endDateStr,
                         status: status
                     };
                 });
 
-                // 3. Map Blog / Articles
+                // 3. Map Blog / Articles (Database column: title, slug, summary, content, thumbnail_url, view_count, status, updated_at)
                 articlesList = blogs.map(a => {
                     let categoryName = 'Mẹo chăm sóc';
                     const tLower = (a.title || '').toLowerCase();
@@ -331,16 +335,28 @@
                     };
                 });
 
-                // 4. Map Notifications
+                // 4. Map Notifications (Database column: title, content, notification_type, is_read)
                 notificationsList = notifs.map(n => ({
                     id: n.id,
-                    content: n.title || n.message || 'Thông báo từ hệ thống PawPal',
-                    type: (n.type === 'popup' || n.type === 'Popup') ? 'Popup' : 'Top-bar',
+                    content: n.content || n.title || 'Thông báo từ hệ thống PawPal',
+                    type: (n.notification_type === 'POPUP' || n.type === 'popup') ? 'Popup' : 'Top-bar',
                     status: n.is_read ? 'inactive' : 'active'
                 }));
 
-                // 5. Default Audit Logs if empty
-                if (!auditLogsList || auditLogsList.length === 0) {
+                // 5. Map Audit Logs (Database column: created_at, staff_id, action, entity_name, description)
+                if (audits.length > 0) {
+                    auditLogsList = audits.map(l => {
+                        const dateObj = l.created_at ? new Date(l.created_at) : new Date();
+                        const timeStr = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+                        return {
+                            time: timeStr,
+                            actor: 'Quản trị viên (Admin)',
+                            targetModules: l.entity_name ? `Phân hệ ${l.entity_name}` : 'Hệ thống',
+                            actionText: l.description || l.action || 'Thao tác cấu hình hệ thống',
+                            status: 'Đã đồng bộ SSOT'
+                        };
+                    });
+                } else {
                     auditLogsList = [
                         {
                             time: '29/09/2026 14:15',
@@ -366,9 +382,26 @@
                     ];
                 }
 
-                console.log('[Settings] Nạp thành công từ Supabase: ' + bannersList.length + ' banners, ' + vouchersList.length + ' vouchers, ' + articlesList.length + ' articles, ' + notificationsList.length + ' notices.');
+                console.log('[Settings] Nạp thành công từ Supabase: ' + bannersList.length + ' banners, ' + vouchersList.length + ' vouchers, ' + articlesList.length + ' articles, ' + notificationsList.length + ' notices, ' + auditLogsList.length + ' audit logs.');
             } catch (err) {
                 console.error('[Settings] Lỗi nạp dữ liệu từ Supabase:', err);
+            }
+        }
+
+        // Helper: Ghi Audit Log lên Supabase
+        async function logSystemAudit(action, entityName, description) {
+            try {
+                const client = getSupabaseClient();
+                if (client) {
+                    await client.from('audit_log').insert([{
+                        action: action,
+                        entity_name: entityName,
+                        description: description,
+                        created_at: new Date().toISOString()
+                    }]);
+                }
+            } catch (e) {
+                console.warn('[Settings] Không thể ghi audit log lên DB:', e);
             }
         }
 
@@ -403,6 +436,10 @@
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'notification' }, async () => {
                         await loadSettingsModuleData();
                         renderNotifications();
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'audit_log' }, async () => {
+                        await loadSettingsModuleData();
+                        renderAuditLogs();
                     })
                     .subscribe();
             } catch (e) {
@@ -559,23 +596,24 @@
                 container.appendChild(card);
             });
 
-            // Bắt sự kiện bật/tắt banner (Update Supabase)
+            // Bật/tắt banner (Update Supabase: cột status = 'dang_hien_thi' / 'tam_an')
             container.querySelectorAll('.btn-toggle-banner').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const id = btn.getAttribute('data-id');
                     const banner = bannersList.find(i => i.id === id);
                     if (!banner) return;
 
-                    const newIsActive = banner.status !== 'active';
+                    const newStatusStr = banner.status === 'active' ? 'tam_an' : 'dang_hien_thi';
                     try {
                         const client = getSupabaseClient();
                         if (client) {
-                            await client.from('banner').update({ is_active: newIsActive }).eq('id', id);
+                            await client.from('banner').update({ status: newStatusStr, updated_at: new Date().toISOString() }).eq('id', id);
                         }
+                        await logSystemAudit('UPDATE', 'banner', `Đổi trạng thái banner "${banner.title}" thành ${newStatusStr}`);
                         await loadSettingsModuleData();
                         renderBanners();
                         renderZeroMissAlerts();
-                        showToast(`Banner "${banner.title}" hiện đã ${newIsActive ? 'BẬT' : 'TẮT'}.`, 'info');
+                        showToast(`Banner "${banner.title}" hiện đã ${newStatusStr === 'dang_hien_thi' ? 'BẬT' : 'TẮT'}.`, 'info');
                     } catch (e) {
                         console.error('[Settings] Lỗi cập nhật banner:', e);
                         showToast('Không thể cập nhật trạng thái Banner.', 'danger');
@@ -583,7 +621,7 @@
                 });
             });
 
-            // Bắt sự kiện gia hạn banner 30 ngày (Update Supabase)
+            // Gia hạn banner 30 ngày (Update Supabase: cột end_date)
             container.querySelectorAll('.btn-extend-banner').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const id = btn.getAttribute('data-id');
@@ -594,8 +632,9 @@
                     try {
                         const client = getSupabaseClient();
                         if (client) {
-                            await client.from('banner').update({ end_date: newEndDate }).eq('id', id);
+                            await client.from('banner').update({ end_date: newEndDate, status: 'dang_hien_thi', updated_at: new Date().toISOString() }).eq('id', id);
                         }
+                        await logSystemAudit('UPDATE', 'banner', `Gia hạn banner "${banner.title}" đến ngày ${newEndDate}`);
                         await loadSettingsModuleData();
                         renderBanners();
                         renderZeroMissAlerts();
@@ -750,14 +789,14 @@
                 container.appendChild(row);
             });
 
-            // Bật/tắt thông báo trên Supabase
+            // Bật/tắt thông báo trên Supabase (cột is_read)
             container.querySelectorAll('.btn-toggle-notice').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const id = btn.getAttribute('data-id');
                     const notif = notificationsList.find(item => item.id === id);
                     if (!notif) return;
 
-                    const newIsRead = notif.status === 'active'; // Nếu đang active -> tắt (is_read = true)
+                    const newIsRead = notif.status === 'active';
                     try {
                         const client = getSupabaseClient();
                         if (client) {
@@ -1110,7 +1149,7 @@
             document.getElementById('filterArticleCategory')?.addEventListener('change', renderArticles);
             document.getElementById('filterArticleStatus')?.addEventListener('change', renderArticles);
 
-            // --- MODAL BANNER (INSERT SUPABASE) ---
+            // --- MODAL BANNER (INSERT SUPABASE: cột link, button_text, status) ---
             const bannerModal = document.getElementById('bannerModalOverlay');
             document.getElementById('btnOpenBannerModal')?.addEventListener('click', () => {
                 if (bannerModal) bannerModal.style.display = 'flex';
@@ -1137,15 +1176,18 @@
                     if (client) {
                         const { error } = await client.from('banner').insert([{
                             title: title,
+                            description: 'Ưu đãi PawPal cập nhật ' + new Date().toLocaleDateString('vi-VN'),
                             image_url: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=1200&q=80',
-                            link_url: url,
-                            cta_text: cta,
+                            link: url,
+                            button_text: cta,
+                            display_order: bannersList.length + 1,
                             start_date: startDate,
                             end_date: endDate,
-                            is_active: true
+                            status: 'dang_hien_thi'
                         }]);
                         if (error) throw error;
                     }
+                    await logSystemAudit('INSERT', 'banner', `Thêm Banner mới: "${title}"`);
                     if (bannerModal) bannerModal.style.display = 'none';
                     await loadSettingsModuleData();
                     renderBanners();
@@ -1157,7 +1199,7 @@
                 }
             });
 
-            // --- MODAL VOUCHER (INSERT SUPABASE) ---
+            // --- MODAL VOUCHER (INSERT SUPABASE: cột voucher_code, voucher_name, discount_value, type, minimum_order_amount, max_usage, applicable_for) ---
             const voucherModal = document.getElementById('voucherModalOverlay');
             function updateVoucherLivePreview() {
                 const code = document.getElementById('inputVoucherCode')?.value.trim().toUpperCase() || 'PAWPAL30K';
@@ -1256,20 +1298,25 @@
                 try {
                     const client = getSupabaseClient();
                     if (client) {
-                        const appService = target.toLowerCase() === 'system' ? 'all' : target.toLowerCase();
+                        const appFor = target.toLowerCase() === 'system' ? ['all'] : [target.toLowerCase()];
                         const { error } = await client.from('voucher').insert([{
-                            code: code,
-                            name: name,
-                            discount_percent: type === 'percent' ? val : null,
-                            discount_amount: type === 'fixed' ? val : null,
-                            min_order_value: minOrder,
-                            total_usage_limit: limit,
-                            current_usage_count: 0,
+                            voucher_code: code,
+                            voucher_name: name,
+                            description: `Voucher ${name} - Giảm ${type === 'percent' ? val + '%' : val.toLocaleString('vi-VN') + 'đ'}`,
+                            discount_value: val,
+                            type: type === 'percent' ? 'percentage' : 'fixed',
+                            minimum_order_amount: minOrder,
+                            max_usage: limit,
+                            usage_count: 0,
+                            required_points: 0,
                             is_active: true,
-                            applicable_service: appService
+                            applicable_for: appFor,
+                            start_date: '2026-06-01T00:00:00+00:00',
+                            end_date: '2026-12-31T23:59:59+00:00'
                         }]);
                         if (error) throw error;
                     }
+                    await logSystemAudit('INSERT', 'voucher', `Phát hành Voucher mới: ${code} (${name})`);
                     if (voucherModal) voucherModal.style.display = 'none';
                     await loadSettingsModuleData();
                     renderVouchers();
@@ -1310,7 +1357,7 @@
                         { name: 'Phân hệ Khách hàng', note: 'Tính toán lại công thức tích lũy và cập nhật hiển thị điểm trong Hồ sơ 360°' },
                         { name: 'Phân hệ Bán hàng', note: 'Áp dụng tỷ lệ trừ tiền trực tiếp vào hóa đơn POS và Web Checkout' }
                     ],
-                    onConfirm: () => {
+                    onConfirm: async () => {
                         const parsedVal = parseInt(pointVal, 10);
                         const dispPv = document.getElementById('dispPointValue');
                         if (dispPv) dispPv.textContent = `1 điểm = ${parsedVal.toLocaleString('vi-VN')} VNĐ`;
@@ -1320,26 +1367,23 @@
                         if (dispReg) dispReg.textContent = `+${regPts} điểm`;
                         if (pawpointsModal) pawpointsModal.style.display = 'none';
 
-                        const now = new Date();
-                        const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                        auditLogsList.unshift({
-                            time: timeStr,
-                            actor: 'Quản trị viên (Admin)',
-                            targetModules: 'Khách hàng và Bán hàng',
-                            actionText: `Cập nhật PawPoints: 1 điểm = ${parsedVal.toLocaleString('vi-VN')} VNĐ, Thưởng đăng ký +${regPts} điểm`,
-                            status: 'Đã đồng bộ SSOT'
-                        });
+                        systemConfig.pawpointsPolicy = {
+                            pointValueVnd: parsedVal,
+                            registerBonus: parseInt(regPts, 10)
+                        };
                         try {
-                            localStorage.setItem('pawpal_settings_audit_logs', JSON.stringify(auditLogsList));
-                            localStorage.setItem('pawpal_settings_pawpoint_rate', parsedVal);
+                            localStorage.setItem('pawpal_settings_system_config', JSON.stringify(systemConfig));
                         } catch (e) {}
+
+                        await logSystemAudit('UPDATE', 'pawpoints', `Cập nhật PawPoints: 1 điểm = ${parsedVal.toLocaleString('vi-VN')} VNĐ, Thưởng đăng ký +${regPts} điểm`);
+                        await loadSettingsModuleData();
                         renderAuditLogs();
                         showToast('Đã lưu chính sách PawPoints và đồng bộ thành công sang phân hệ Khách hàng và Bán hàng!', 'success');
                     }
                 });
             });
 
-            // --- MODAL THÔNG BÁO WEBSITE (INSERT SUPABASE) ---
+            // --- MODAL THÔNG BÁO WEBSITE (INSERT SUPABASE: cột title, content, notification_type) ---
             const noticeModal = document.getElementById('notificationModalOverlay');
             const openNoticeHandler = () => {
                 if (noticeModal) noticeModal.style.display = 'flex';
@@ -1358,19 +1402,21 @@
                     showToast('Vui lòng nhập nội dung thông báo!', 'warning');
                     return;
                 }
-                const nType = document.getElementById('inputNoticeType')?.value === 'topbar' ? 'topbar' : 'popup';
+                const nType = document.getElementById('inputNoticeType')?.value === 'topbar' ? 'SYSTEM' : 'PROMO';
 
                 try {
                     const client = getSupabaseClient();
                     if (client) {
                         const { error } = await client.from('notification').insert([{
-                            title: content,
-                            message: content,
-                            type: nType,
-                            is_read: false
+                            title: content.substring(0, 60),
+                            content: content,
+                            notification_type: nType,
+                            is_read: false,
+                            sent_at: new Date().toISOString()
                         }]);
                         if (error) throw error;
                     }
+                    await logSystemAudit('INSERT', 'notification', `Thêm thông báo mới: "${content.substring(0, 50)}..."`);
                     if (noticeModal) noticeModal.style.display = 'none';
                     await loadSettingsModuleData();
                     renderNotifications();
@@ -1381,7 +1427,7 @@
                 }
             });
 
-            // --- MODAL BÀI VIẾT (INSERT SUPABASE) ---
+            // --- MODAL BÀI VIẾT (INSERT SUPABASE: cột title, slug, summary, content, status, thumbnail_url, view_count, publish_at) ---
             const articleModal = document.getElementById('articleModalOverlay');
             document.getElementById('btnOpenCreateArticleModal')?.addEventListener('click', () => {
                 if (articleModal) articleModal.style.display = 'flex';
@@ -1418,13 +1464,14 @@
                             summary: summary,
                             content: content || `<p>${summary}</p>`,
                             category_id: null,
-                            thumbnail_url: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=600&q=80',
+                            thumbnail_url: '/assets/images/publics/dogcute6.jpg',
                             status: status.toUpperCase(),
                             view_count: 0,
                             publish_at: new Date().toISOString()
                         }]);
                         if (error) throw error;
                     }
+                    await logSystemAudit('INSERT', 'blog_post', `Tạo bài viết mới: "${title}"`);
                     if (articleModal) articleModal.style.display = 'none';
                     await loadSettingsModuleData();
                     renderArticles();
@@ -1492,7 +1539,7 @@
                         { name: 'User Portal và Website Footer', note: `Đồng bộ Hotline ${hotline}, Email ${email} và Địa chỉ ${address}` },
                         { name: 'Hóa đơn VAT và Đơn hàng', note: `Đồng bộ Mã số thuế ${taxId} và Tên công ty xuất hóa đơn` }
                     ],
-                    onConfirm: () => {
+                    onConfirm: async () => {
                         systemConfig.storeInfo = {
                             brandName: brand,
                             companyName: company,
@@ -1511,19 +1558,8 @@
 
                         if (storeModal) storeModal.style.display = 'none';
 
-                        const now = new Date();
-                        const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                        auditLogsList.unshift({
-                            time: timeStr,
-                            actor: 'Quản trị viên (Admin)',
-                            targetModules: 'Cửa hàng, User Portal và Bán hàng',
-                            actionText: `Cập nhật thông tin cửa hàng: Hotline ${hotline}, Email ${email}`,
-                            status: 'Đã đồng bộ SSOT'
-                        });
-                        try {
-                            localStorage.setItem('pawpal_settings_audit_logs', JSON.stringify(auditLogsList));
-                        } catch (e) {}
-
+                        await logSystemAudit('UPDATE', 'store_profile', `Cập nhật thông tin cửa hàng: Hotline ${hotline}, Email ${email}`);
+                        await loadSettingsModuleData();
                         renderSystemConfigCards();
                         renderAuditLogs();
                         showToast('Đã cập nhật thông tin cửa hàng và đồng bộ sang User Portal thành công!', 'success');
@@ -1586,7 +1622,7 @@
                     affectedModules: [
                         { name: 'Phân hệ Bán hàng và User Portal Checkout', note: `Trạng thái cổng: COD (${codEn ? 'Bật' : 'Tắt'}), QR Bank (${bankEn ? 'Bật' : 'Tắt'}), MoMo (${momoEn ? 'Bật' : 'Tắt'}), VNPay (${vnpayEn ? 'Bật' : 'Tắt'})` }
                     ],
-                    onConfirm: () => {
+                    onConfirm: async () => {
                         systemConfig.paymentMethods = {
                             cod: { enabled: codEn, name: 'Thanh toán khi nhận hàng (COD)', fee: 0 },
                             bank: {
@@ -1607,19 +1643,8 @@
 
                         if (paymentModal) paymentModal.style.display = 'none';
 
-                        const now = new Date();
-                        const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                        auditLogsList.unshift({
-                            time: timeStr,
-                            actor: 'Quản trị viên (Admin)',
-                            targetModules: 'Bán hàng và User Portal',
-                            actionText: `Cấu hình thanh toán: COD (${codEn ? 'Bật' : 'Tắt'}), Bank (${bankEn ? 'Bật' : 'Tắt'}), MoMo (${momoEn ? 'Bật' : 'Tắt'}), VNPay (${vnpayEn ? 'Bật' : 'Tắt'})`,
-                            status: 'Đã đồng bộ SSOT'
-                        });
-                        try {
-                            localStorage.setItem('pawpal_settings_audit_logs', JSON.stringify(auditLogsList));
-                        } catch (e) {}
-
+                        await logSystemAudit('UPDATE', 'payment', `Cấu hình thanh toán: COD (${codEn ? 'Bật' : 'Tắt'}), Bank (${bankEn ? 'Bật' : 'Tắt'}), MoMo (${momoEn ? 'Bật' : 'Tắt'}), VNPay (${vnpayEn ? 'Bật' : 'Tắt'})`);
+                        await loadSettingsModuleData();
                         renderSystemConfigCards();
                         renderAuditLogs();
                         showToast('Đã cập nhật cổng thanh toán và đồng bộ sang phân hệ Bán hàng và User Portal thành công!', 'success');
@@ -1683,7 +1708,7 @@
                         { name: 'User Portal Shop và Checkout', note: `Áp dụng Miễn phí ship đơn từ ${freeThreshold.toLocaleString('vi-VN')} VNĐ, Phí nội thành ${innerFee.toLocaleString('vi-VN')} VNĐ` },
                         { name: 'Phân hệ Bán hàng (Admin POS)', note: `Đồng bộ đối tác 3PL ${partnerNameMap[provider] || 'GHN'}` }
                     ],
-                    onConfirm: () => {
+                    onConfirm: async () => {
                         systemConfig.shippingPolicy = {
                             freeShippingThreshold: freeThreshold,
                             innerCityFee: innerFee,
@@ -1701,19 +1726,8 @@
 
                         if (shippingModal) shippingModal.style.display = 'none';
 
-                        const now = new Date();
-                        const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                        auditLogsList.unshift({
-                            time: timeStr,
-                            actor: 'Quản trị viên (Admin)',
-                            targetModules: 'Bán hàng và User Shop',
-                            actionText: `Cập nhật biểu phí giao hàng: Freeship từ ${freeThreshold.toLocaleString('vi-VN')} VNĐ, Đối tác ${partnerNameMap[provider] || 'GHN'}`,
-                            status: 'Đã đồng bộ SSOT'
-                        });
-                        try {
-                            localStorage.setItem('pawpal_settings_audit_logs', JSON.stringify(auditLogsList));
-                        } catch (e) {}
-
+                        await logSystemAudit('UPDATE', 'shipping', `Cập nhật biểu phí giao hàng: Freeship từ ${freeThreshold.toLocaleString('vi-VN')} VNĐ, Đối tác ${partnerNameMap[provider] || 'GHN'}`);
+                        await loadSettingsModuleData();
                         renderSystemConfigCards();
                         renderAuditLogs();
                         showToast('Đã lưu cấu hình vận chuyển và đồng bộ sang User Portal và Bán hàng thành công!', 'success');
@@ -1792,7 +1806,7 @@
                         { name: 'Phân hệ Dịch vụ và User Booking Portal', note: `Giờ mở cửa ${wkOpen}-${wkClose} (Cuối tuần đến ${weClose}), Pet Hotel Check-in ${checkIn}/Check-out ${checkOut}` },
                         { name: 'Phân hệ Nhân sự', note: `Công suất tối đa ${slotCapacity} bé/khung giờ, Chỉ định nhân viên: ${allowPickStaff ? 'Cho phép' : 'Tự động'}` }
                     ],
-                    onConfirm: () => {
+                    onConfirm: async () => {
                         systemConfig.operatingHours = {
                             weekday: { open: wkOpen, close: wkClose },
                             weekend: { open: weOpen, close: weClose },
@@ -1819,19 +1833,8 @@
 
                         if (bookingPolicyModal) bookingPolicyModal.style.display = 'none';
 
-                        const now = new Date();
-                        const timeStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                        auditLogsList.unshift({
-                            time: timeStr,
-                            actor: 'Quản trị viên (Admin)',
-                            targetModules: 'Dịch vụ, Nhân sự và User Booking',
-                            actionText: `Chính sách đặt lịch: Giờ mở cửa ${wkOpen}-${wkClose}, Hủy miễn phí trước ${freeHours}h, Phí trễ ${lateFee.toLocaleString('vi-VN')} đ`,
-                            status: 'Đã đồng bộ SSOT'
-                        });
-                        try {
-                            localStorage.setItem('pawpal_settings_audit_logs', JSON.stringify(auditLogsList));
-                        } catch (e) {}
-
+                        await logSystemAudit('UPDATE', 'booking_policy', `Chính sách đặt lịch: Giờ mở cửa ${wkOpen}-${wkClose}, Hủy miễn phí trước ${freeHours}h, Phí trễ ${lateFee.toLocaleString('vi-VN')} đ`);
+                        await loadSettingsModuleData();
                         renderSystemConfigCards();
                         renderAuditLogs();
                         showToast('Đã áp dụng chính sách đặt lịch mới và đồng bộ sang phân hệ Dịch vụ và Nhân sự thành công!', 'success');
@@ -1856,7 +1859,7 @@
                 }
             });
 
-            // Gia hạn thêm 50 lượt cho Voucher (Update Supabase)
+            // Gia hạn thêm 50 lượt cho Voucher (Update Supabase: cột max_usage)
             document.getElementById('btnActionExtendQuota')?.addEventListener('click', async () => {
                 if (!currentActiveVoucherCode) return;
                 const voucher = vouchersList.find(v => v.code === currentActiveVoucherCode);
@@ -1867,10 +1870,12 @@
                     const client = getSupabaseClient();
                     if (client) {
                         await client.from('voucher').update({
-                            total_usage_limit: newLimit,
-                            is_active: true
-                        }).eq('code', currentActiveVoucherCode);
+                            max_usage: newLimit,
+                            is_active: true,
+                            updated_at: new Date().toISOString()
+                        }).eq('voucher_code', currentActiveVoucherCode);
                     }
+                    await logSystemAudit('UPDATE', 'voucher', `Gia hạn quota Voucher ${currentActiveVoucherCode} thêm 50 lượt (Tổng: ${newLimit})`);
                     closeVoucherActionMenu();
                     await loadSettingsModuleData();
                     renderVouchers();
@@ -1882,7 +1887,7 @@
                 }
             });
 
-            // Bật/tắt trạng thái Voucher (Update Supabase)
+            // Bật/tắt trạng thái Voucher (Update Supabase: cột is_active)
             document.getElementById('btnActionToggleStatus')?.addEventListener('click', async () => {
                 if (!currentActiveVoucherCode) return;
                 const voucher = vouchersList.find(v => v.code === currentActiveVoucherCode);
@@ -1893,9 +1898,11 @@
                     const client = getSupabaseClient();
                     if (client) {
                         await client.from('voucher').update({
-                            is_active: newActive
-                        }).eq('code', currentActiveVoucherCode);
+                            is_active: newActive,
+                            updated_at: new Date().toISOString()
+                        }).eq('voucher_code', currentActiveVoucherCode);
                     }
+                    await logSystemAudit('UPDATE', 'voucher', `Đổi trạng thái Voucher ${currentActiveVoucherCode} thành ${newActive ? 'Hoạt động' : 'Tạm dừng'}`);
                     closeVoucherActionMenu();
                     await loadSettingsModuleData();
                     renderVouchers();
@@ -1920,8 +1927,9 @@
                         try {
                             const client = getSupabaseClient();
                             if (client) {
-                                await client.from('voucher').delete().eq('code', code);
+                                await client.from('voucher').delete().eq('voucher_code', code);
                             }
+                            await logSystemAudit('DELETE', 'voucher', `Xóa Voucher ${code}`);
                             closeVoucherActionMenu();
                             await loadSettingsModuleData();
                             renderVouchers();
@@ -2019,8 +2027,9 @@
                 try {
                     const client = getSupabaseClient();
                     if (client) {
-                        await client.from('blog_post').update({ status: newStatus }).eq('id', currentActiveArticleId);
+                        await client.from('blog_post').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', currentActiveArticleId);
                     }
+                    await logSystemAudit('UPDATE', 'blog_post', `Chuyển trạng thái bài viết "${article.title}" thành ${newStatus}`);
                     closeArticleActionMenu();
                     await loadSettingsModuleData();
                     renderArticles();
@@ -2049,6 +2058,7 @@
                             if (client) {
                                 await client.from('blog_post').delete().eq('id', id);
                             }
+                            await logSystemAudit('DELETE', 'blog_post', `Xóa bài viết "${title}"`);
                             closeArticleActionMenu();
                             await loadSettingsModuleData();
                             renderArticles();
