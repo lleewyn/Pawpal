@@ -459,13 +459,13 @@
         });
     }
 
-    function updateDashboardLiveMetrics() {
-        // 1. Thống kê Đơn hàng
+    async function updateDashboardLiveMetrics() {
+        // 1. Thống kê Đơn hàng & Doanh thu
         let pendingOrdersCount = 4;
         let totalOrdersToday = 12;
         let todayRevenueVal = 25500000;
         try {
-            const rawOrders = sessionStorage.getItem('pawpal_admin_orders_list');
+            const rawOrders = sessionStorage.getItem('pawpal_admin_orders_data') || sessionStorage.getItem('pawpal_admin_orders_list');
             if (rawOrders) {
                 const list = JSON.parse(rawOrders);
                 if (Array.isArray(list) && list.length > 0) {
@@ -509,7 +509,7 @@
             const rawCust = sessionStorage.getItem('pawpal_admin_customers_data');
             if (rawCust) {
                 const obj = JSON.parse(rawCust);
-                const count = Object.keys(obj).length;
+                const count = Array.isArray(obj) ? obj.length : Object.keys(obj).length;
                 if (count > 0) newCustomersCount = count;
             }
         } catch (e) {}
@@ -520,10 +520,42 @@
             const rawPets = sessionStorage.getItem('pawpal_admin_pets_data');
             if (rawPets) {
                 const obj = JSON.parse(rawPets);
-                const count = Object.keys(obj).length;
+                const count = Array.isArray(obj) ? obj.length : Object.keys(obj).length;
                 if (count > 0) newPetsCount = count;
             }
         } catch (e) {}
+
+        // 6. Thử đồng bộ trực tiếp Supabase KPI nếu có client
+        try {
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (client) {
+                const [custRes, petRes, apptRes, ordRes] = await Promise.allSettled([
+                    client.from('customer').select('id', { count: 'exact', head: true }),
+                    client.from('pet_profile').select('id', { count: 'exact', head: true }),
+                    client.from('appointment').select('id', { count: 'exact', head: true }),
+                    client.from('sales_order').select('id, total_amount, order_status')
+                ]);
+
+                if (custRes.status === 'fulfilled' && custRes.value.count !== null && custRes.value.count !== undefined) {
+                    newCustomersCount = custRes.value.count;
+                }
+                if (petRes.status === 'fulfilled' && petRes.value.count !== null && petRes.value.count !== undefined) {
+                    newPetsCount = petRes.value.count;
+                }
+                if (apptRes.status === 'fulfilled' && apptRes.value.count !== null && apptRes.value.count !== undefined) {
+                    todayBookingsCount = apptRes.value.count;
+                }
+                if (ordRes.status === 'fulfilled' && Array.isArray(ordRes.value.data)) {
+                    const ords = ordRes.value.data;
+                    totalOrdersToday = ords.length;
+                    pendingOrdersCount = ords.filter(o => o.order_status === 'pending').length;
+                    const totalRev = ords.filter(o => o.order_status === 'completed').reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
+                    if (totalRev > 0) todayRevenueVal = totalRev;
+                }
+            }
+        } catch (err) {
+            console.warn('Lỗi cập nhật KPI trực tiếp từ Supabase:', err);
+        }
 
         // Render DOM các thẻ KPI
         const elRevenue = document.getElementById('dashboardRevenue');

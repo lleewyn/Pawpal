@@ -877,6 +877,154 @@
         } catch (e) {}
     }
 
+    let renderOrdersTableRef = null;
+
+    async function syncOrdersAndProductsFromSupabase() {
+        try {
+            const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (!client) return;
+
+            // 1. Nạp sản phẩm & tồn kho từ Supabase
+            const { data: prodsData, error: prodsErr } = await client
+                .from('product')
+                .select('*, product_category(*), inventory(*)');
+
+            if (!prodsErr && Array.isArray(prodsData) && prodsData.length > 0) {
+                const mappedProducts = prodsData.map(p => {
+                    const inv = Array.isArray(p.inventory) ? p.inventory[0] : p.inventory;
+                    const stockVal = inv?.quantity_on_hand !== undefined ? inv.quantity_on_hand : 25;
+                    const minStockVal = inv?.safety_stock_level !== undefined ? inv.safety_stock_level : 5;
+                    const imgs = Array.isArray(p.image_urls) ? p.image_urls : (typeof p.image_urls === 'string' && p.image_urls ? p.image_urls.split(',').map(s => s.trim()) : []);
+                    const primaryImg = imgs[0] || '/assets/images/shop/products/TP-HAT-01.png';
+
+                    return {
+                        id: p.id,
+                        sku: p.sku || `SKU-${p.id.slice(0, 6)}`,
+                        name: p.product_name || 'Sản phẩm PawPal',
+                        category: p.product_category?.category_name || 'Thức ăn',
+                        brand: p.origin || 'PawPal',
+                        petType: 'Chó và Mèo',
+                        origin: p.origin || 'Việt Nam',
+                        unit: p.unit || 'Gói',
+                        spec: p.specs || 'Tiêu chuẩn',
+                        badge: p.badge || (stockVal === 0 ? 'Hết hàng' : 'Bán chạy'),
+                        rating: p.rating || 4.8,
+                        reviewCount: p.review_count || 50,
+                        features: p.benefits || '',
+                        price: p.sale_price || p.cost_price || 0,
+                        costPrice: p.cost_price || 0,
+                        memberPrice: Math.round((p.sale_price || 0) * 0.95),
+                        stock: stockVal,
+                        minStock: minStockVal,
+                        status: stockVal === 0 ? 'Hết hàng' : (stockVal <= minStockVal ? 'Sắp hết' : 'Còn hàng'),
+                        images: imgs.join(', ') || primaryImg,
+                        image: primaryImg,
+                        description: p.description || '',
+                        ingredients: p.ingredients || '',
+                        benefits: p.benefits || '',
+                        usage: p.usage_instructions || ''
+                    };
+                });
+
+                if (mappedProducts.length > 0) {
+                    currentProductsList = mappedProducts;
+                    persistProductsData();
+                    if (typeof renderProductsTableRef === 'function') renderProductsTableRef();
+                }
+            }
+
+            // 2. Nạp đơn hàng từ Supabase
+            const { data: ordersData, error: ordersErr } = await client
+                .from('sales_order')
+                .select(`
+                    *,
+                    customer:customer_id (*, customer_profile (*)),
+                    shipping_address:shipping_address_id (*),
+                    delivery:delivery_id (*),
+                    sales_order_detail (*, product (*))
+                `)
+                .order('created_at', { ascending: false });
+
+            if (!ordersErr && Array.isArray(ordersData) && ordersData.length > 0) {
+                const mappedOrders = ordersData.map(o => {
+                    const prof = Array.isArray(o.customer?.customer_profile) ? o.customer?.customer_profile[0] : o.customer?.customer_profile;
+                    const custName = prof?.full_name || o.customer?.full_name || 'Khách hàng';
+                    const custPhone = prof?.phone || o.customer?.phone || '';
+                    const addrObj = o.shipping_address;
+                    const addrStr = addrObj 
+                        ? [addrObj.street_address, addrObj.ward, addrObj.district, addrObj.city].filter(Boolean).join(', ')
+                        : 'Nhận tại cửa hàng PawPal';
+
+                    const details = o.sales_order_detail || [];
+                    const items = details.map(d => {
+                        const pr = d.product || {};
+                        const pImgs = Array.isArray(pr.image_urls) ? pr.image_urls : (typeof pr.image_urls === 'string' && pr.image_urls ? pr.image_urls.split(',').map(s => s.trim()) : []);
+                        return {
+                            sku: pr.sku || `SKU-${d.product_id?.slice(0, 6)}`,
+                            name: pr.product_name || 'Sản phẩm',
+                            spec: pr.specs || 'Tiêu chuẩn',
+                            price: d.unit_price || 0,
+                            quantity: d.quantity || 1,
+                            total: d.total_amount || ((d.unit_price || 0) * (d.quantity || 1)),
+                            image: pImgs[0] || '/assets/images/shop/products/TP-HAT-01.png'
+                        };
+                    });
+
+                    return {
+                        id: o.order_code || `ORD-${o.id.slice(0, 8).toUpperCase()}`,
+                        rawId: o.id,
+                        userId: o.customer_id,
+                        customerName: custName,
+                        phone: custPhone,
+                        address: addrStr,
+                        status: o.order_status || 'pending',
+                        paymentStatus: o.payment_status || 'unpaid',
+                        paymentMethod: o.payment_method || 'cod',
+                        carrier: o.delivery?.carrier_name || 'PawPal Express',
+                        trackingNumber: o.delivery?.tracking_code || '--',
+                        createdAt: o.created_at || new Date().toISOString(),
+                        subtotal: o.total_amount || 0,
+                        shippingFee: 0,
+                        discount: 0,
+                        pawPointsUsed: 0,
+                        total: o.total_amount || 0,
+                        customerNote: o.note || '',
+                        internalNote: '',
+                        alertType: null,
+                        products: items.length > 0 ? items : [
+                            {
+                                sku: 'TP-HAT-01',
+                                name: 'Sản phẩm thú cưng cao cấp PawPal',
+                                spec: 'Tiêu chuẩn',
+                                price: o.total_amount || 0,
+                                quantity: 1,
+                                total: o.total_amount || 0,
+                                image: '/assets/images/shop/products/tp-hat-01.png'
+                            }
+                        ],
+                        timeline: [
+                            { title: 'Đặt hàng thành công', time: new Date(o.created_at || Date.now()).toLocaleString('vi-VN'), desc: 'Đơn hàng được khởi tạo trên hệ thống', done: true },
+                            { title: 'Trạng thái hiện tại: ' + (o.order_status || 'Đang xử lý'), time: 'Hôm nay', desc: 'Hệ thống tự động cập nhật', done: o.order_status === 'completed' }
+                        ]
+                    };
+                });
+
+                if (mappedOrders.length > 0) {
+                    currentOrdersList = mappedOrders;
+                    persistOrdersData();
+                    if (typeof renderOrdersTableRef === 'function') renderOrdersTableRef();
+                    if (typeof renderOrderDetailRef === 'function' && selectedOrderId) {
+                        const exists = currentOrdersList.find(x => x.id === selectedOrderId);
+                        if (!exists) selectedOrderId = currentOrdersList[0].id;
+                        renderOrderDetailRef(selectedOrderId);
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Lỗi đồng bộ Đơn hàng & Kho từ Supabase:', e);
+        }
+    }
+
     let selectedOrderId = sessionStorage.getItem('pawpal_admin_order_selected_id') || sessionStorage.getItem('pawpal_admin_order_id') || 'ORD-2026-001';
     let currentFilterStatus = 'ALL';
     let currentFilterPayment = 'ALL';
@@ -3742,11 +3890,16 @@
         selectedOrderId = sessionStorage.getItem('pawpal_admin_order_selected_id') || sessionStorage.getItem('pawpal_admin_order_id') || (currentOrdersList[0] ? currentOrdersList[0].id : 'ORD-2026-001');
 
         // Render lần đầu
+        renderOrdersTableRef = renderOrdersTable;
+        renderProductsTableRef = renderProductsTable;
+        renderOrderDetailRef = renderOrderDetail;
         renderOrdersTable();
         renderOrderDetail(selectedOrderId);
         renderProductsTable();
         renderVouchersTable();
-        renderOrderDetailRef = renderOrderDetail;
+
+        // Đồng bộ dữ liệu mới nhất từ Supabase
+        syncOrdersAndProductsFromSupabase();
 
         // Khôi phục subtab từ hash hoặc sessionStorage
         const hash = window.location.hash ? window.location.hash.replace('#', '') : '';

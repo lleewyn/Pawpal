@@ -539,6 +539,85 @@
         }
 
         async function syncCustomerDatabaseFromSources() {
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (db) {
+                try {
+                    console.log('[Customers] Đang nạp danh sách khách hàng từ Supabase...');
+                    const { data: dbCustomers, error: custErr } = await db
+                        .from('customer')
+                        .select('id, email, phone_main, account_status, is_temporary, registered_at, note, customer_profile(id, full_name, gender, date_of_birth), customer_membership(total_paw_points, membership_tier_id), customer_address(*), pet_profile(*)');
+
+                    if (!custErr && Array.isArray(dbCustomers) && dbCustomers.length > 0) {
+                        const freshDb = {};
+                        dbCustomers.forEach((c, idx) => {
+                            const custKey = `CUST-${String(idx + 1).padStart(3, '0')}`;
+                            const prof = c.customer_profile || {};
+                            const mem = c.customer_membership || {};
+                            const points = mem.total_paw_points || 0;
+                            
+                            let tier = 'BRONZE';
+                            let tierName = 'Đồng';
+                            let tierBadge = 'badge-neutral';
+                            if (points >= 3000) { tier = 'DIAMOND'; tierName = 'Kim Cương'; tierBadge = 'badge-tier-diamond'; }
+                            else if (points >= 1000) { tier = 'GOLD'; tierName = 'Vàng'; tierBadge = 'badge-tier-gold'; }
+                            else if (points >= 300) { tier = 'SILVER'; tierName = 'Bạc'; tierBadge = 'badge-tier-silver'; }
+
+                            const pets = (c.pet_profile || []).map((p, pIdx) => ({
+                                id: p.pet_code || `PET-${String(pIdx + 1).padStart(3, '0')}`,
+                                dbId: p.id,
+                                name: p.pet_name || 'Bé cưng',
+                                species: p.species === 'cat' ? 'Mèo' : (p.species === 'dog' ? 'Chó' : 'Thú cưng'),
+                                breed: p.breed || 'Chưa rõ',
+                                weight: p.weight ? String(p.weight) : '4.0',
+                                vaccine: p.vaccination_history || 'Đầy đủ tiêm phòng',
+                                alertNote: p.allergy || (p.routine ? p.routine : 'Bình thường')
+                            }));
+
+                            const addresses = (c.customer_address || []).map(a => ({
+                                address: [a.street_address, a.province].filter(Boolean).join(', ') || 'Chưa cập nhật địa chỉ',
+                                isDefault: !!a.is_default
+                            }));
+                            if (addresses.length === 0) {
+                                addresses.push({ address: 'Tiếp nhận trực tiếp tại quầy PawPal', isDefault: true });
+                            }
+
+                            freshDb[custKey] = {
+                                id: custKey,
+                                dbId: c.id,
+                                name: prof.full_name || ('Khách hàng ' + (c.phone_main || '')),
+                                phone: c.phone_main || '—',
+                                email: c.email || 'Chưa cập nhật',
+                                gender: prof.gender || 'Chưa rõ',
+                                dob: prof.date_of_birth ? prof.date_of_birth.split('-').reverse().join('/') : 'Chưa cập nhật',
+                                tier,
+                                tierName,
+                                tierBadgeClass: tierBadge,
+                                points,
+                                status: c.account_status === 'LOCKED' ? 'LOCKED' : (c.is_temporary ? 'TEMP' : 'ACTIVE'),
+                                authStatus: c.account_status === 'LOCKED' ? 'Tài khoản bị khóa' : (c.is_temporary ? 'Chưa kích hoạt' : 'Đã kích hoạt'),
+                                note: c.note || '',
+                                emergencyAlert: null,
+                                addresses,
+                                pets,
+                                orders: [],
+                                bookings: [],
+                                complaints: []
+                            };
+                        });
+
+                        customerDatabase = freshDb;
+                        persistCustomersData();
+                        renderCustomersTable();
+                        updateCustomerKPIs();
+                        renderComplaintBar();
+                        console.log(`[Customers] Đã nạp ${Object.keys(customerDatabase).length} khách hàng từ Supabase thành công ✓`);
+                        return;
+                    }
+                } catch (err) {
+                    console.warn('[Customers] Không thể nạp từ Supabase, chuyển sang cache cục bộ:', err);
+                }
+            }
+
             try {
                 const fetched = await fetchJsonSafely('/data/customers.json');
                 if (fetched && typeof fetched === 'object') {

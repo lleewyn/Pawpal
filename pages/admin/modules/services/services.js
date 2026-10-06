@@ -6,49 +6,139 @@
     let reviewsData = [];
     let selectedBookingId = sessionStorage.getItem('pawpal_admin_service_selected_id') || 'BKG-1001';
 
-    // Hàm nạp dữ liệu từ các file JSON tĩnh trong /data/ (hoặc từ sessionStorage nếu đã chỉnh sửa)
+    // Hàm nạp dữ liệu từ Supabase (kèm fallback tệp JSON tĩnh nếu cần)
     async function loadServicesData(forceReload = false) {
-        try {
-            if (!forceReload) {
-                const savedBookings = sessionStorage.getItem('pawpal_admin_services_bookings');
-                const savedCatalog = sessionStorage.getItem('pawpal_admin_services_catalog');
-                const savedReviews = sessionStorage.getItem('pawpal_admin_services_reviews');
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
 
-                if (savedBookings && savedCatalog && savedReviews) {
-                    try {
-                        bookingsData = JSON.parse(savedBookings);
-                        servicesData = JSON.parse(savedCatalog);
-                        reviewsData = JSON.parse(savedReviews);
-                        if (Array.isArray(bookingsData) && bookingsData.length > 0 &&
-                            Array.isArray(servicesData) && servicesData.length > 0 &&
-                            Array.isArray(reviewsData) && reviewsData.length > 0) {
-                            return;
-                        }
-                    } catch (e) {
-                        console.warn('Lỗi phân giải JSON từ sessionStorage, tiến hành nạp từ file JSON gốc:', e);
-                    }
+        if (db && !forceReload) {
+            try {
+                console.log('[Services] Đang nạp dữ liệu Dịch vụ & Lịch hẹn từ Supabase...');
+                const [appRes, svcRes, priceRes, revRes] = await Promise.all([
+                    db.from('appointment')
+                      .select('id, appointment_code, appointment_date, appointment_time, appointment_status, payment_status, total_price, note, customer(id, phone_main, customer_profile(full_name)), pet_profile(id, pet_code, pet_name, species, breed), service(id, service_code, service_name, service_category), staff(id, full_name)')
+                      .order('created_at', { ascending: false }),
+                    db.from('service')
+                      .select('*')
+                      .order('service_code', { ascending: true }),
+                    db.from('service_price_matrix')
+                      .select('*'),
+                    db.from('review')
+                      .select('id, rating, review_content, review_type, created_at, customer(id, customer_profile(full_name)), service(id, service_name)')
+                      .order('created_at', { ascending: false })
+                ]);
+
+                if (!appRes.error && appRes.data && appRes.data.length > 0) {
+                    bookingsData = appRes.data.map((item, idx) => {
+                        let cat = 'Spa';
+                        const catRaw = item.service?.service_category || '';
+                        if (catRaw === 'PET_HOTEL' || catRaw.includes('HOTEL')) cat = 'Hotel';
+                        else if (catRaw === 'PET_TAXI' || catRaw.includes('TAXI')) cat = 'Taxi';
+
+                        let status = 'pending';
+                        const s = String(item.appointment_status || '').toUpperCase();
+                        if (s === 'CONFIRMED') status = 'confirmed';
+                        else if (s === 'IN_PROGRESS' || s === 'PROCESSING' || s === 'CHECKED_IN') status = 'in_progress';
+                        else if (s === 'COMPLETED') status = 'completed';
+                        else if (s === 'CANCELLED') status = 'cancelled';
+
+                        const customerName = item.customer?.customer_profile?.full_name || 'Khách vãng lai';
+                        const phone = item.customer?.phone_main || '—';
+                        const petName = item.pet_profile?.pet_name || 'Pet cưng';
+                        const petBreed = item.pet_profile?.breed || 'Thú cưng';
+                        const serviceName = item.service?.service_name || 'Dịch vụ Spa';
+                        const staff = item.staff?.full_name || null;
+
+                        return {
+                            id: item.appointment_code || 'BKG-' + (1000 + idx),
+                            dbId: item.id,
+                            customerName,
+                            phone,
+                            petName,
+                            petBreed,
+                            petId: item.pet_profile?.pet_code || 'PET-001',
+                            category: cat,
+                            categoryName: cat === 'Hotel' ? 'Pet Hotel' : (cat === 'Taxi' ? 'Pet Taxi' : 'Spa và Grooming'),
+                            serviceName,
+                            date: item.appointment_date || '2026-07-10',
+                            time: item.appointment_time ? item.appointment_time.substring(0, 5) : '09:00',
+                            staff,
+                            total: item.total_price || 0,
+                            paymentStatus: item.payment_status === 'PAID' ? 'Đã thanh toán' : 'Chưa thu',
+                            status
+                        };
+                    });
                 }
-            }
 
-            // Nạp từ các tệp JSON tĩnh trong /data/
+                if (!svcRes.error && svcRes.data && svcRes.data.length > 0) {
+                    const priceMatrix = priceRes.data || [];
+                    servicesData = svcRes.data.map(svc => {
+                        let cat = 'spa';
+                        if (svc.service_category === 'PET_HOTEL') cat = 'hotel';
+                        else if (svc.service_category === 'PET_TAXI') cat = 'taxi';
+
+                        const svcPrices = priceMatrix.filter(p => p.service_id === svc.id);
+                        const prices = {};
+                        svcPrices.forEach(p => {
+                            let label = '';
+                            if (p.weight_to < 5) label = '< 5kg';
+                            else if (p.weight_from >= 5 && p.weight_to <= 10) label = '5 - 10kg';
+                            else if (p.weight_from >= 10 && p.weight_to <= 20) label = '10 - 20kg';
+                            else if (p.weight_from >= 20) label = '> 20kg';
+                            if (label) prices[label] = p.unit_price;
+                        });
+
+                        return {
+                            id: svc.service_code,
+                            dbId: svc.id,
+                            name: svc.service_name,
+                            category: cat,
+                            description: svc.description,
+                            duration: svc.estimated_duration ? `${svc.estimated_duration} phút` : '60 phút',
+                            status: svc.status === 'ACTIVE' ? 'active' : 'inactive',
+                            rating: parseFloat(svc.rating || 4.8),
+                            reviews: svc.review_count || 0,
+                            prices: prices,
+                            checklist: svc.checklist,
+                            benefits: svc.benefits,
+                            amenities: svc.amenities,
+                            petType: svc.pet_type || 'Chó / Mèo'
+                        };
+                    });
+                }
+
+                if (!revRes.error && revRes.data && revRes.data.length > 0) {
+                    reviewsData = revRes.data.map((r, i) => ({
+                        id: 'REV-' + (2000 + i),
+                        dbId: r.id,
+                        customerName: r.customer?.customer_profile?.full_name || 'Khách hàng',
+                        serviceName: r.service?.service_name || 'Dịch vụ Spa',
+                        star: r.rating || 5,
+                        comment: r.review_content || 'Dịch vụ rất tốt',
+                        date: r.created_at ? r.created_at.split('T')[0] : '2026-07-08',
+                        status: 'approved'
+                    }));
+                }
+
+                if (bookingsData.length > 0 || servicesData.length > 0) {
+                    console.log(`[Services] Đã nạp thành công từ Supabase: ${bookingsData.length} lịch hẹn, ${servicesData.length} dịch vụ, ${reviewsData.length} đánh giá.`);
+                    return;
+                }
+            } catch (err) {
+                console.warn('[Services] Không kết nối được Supabase, chuyển sang đọc JSON tĩnh:', err);
+            }
+        }
+
+        // Fallback đọc từ JSON tĩnh nếu không có Supabase
+        try {
             const [bookingsRes, catalogRes, reviewsRes] = await Promise.all([
                 fetch('/data/services-bookings.json?v=' + Date.now()).catch(() => null),
                 fetch('/data/services-catalog.json?v=' + Date.now()).catch(() => null),
                 fetch('/data/services-reviews.json?v=' + Date.now()).catch(() => null)
             ]);
 
-            if (bookingsRes && bookingsRes.ok) {
-                bookingsData = await bookingsRes.json();
-                sessionStorage.setItem('pawpal_admin_services_bookings', JSON.stringify(bookingsData));
-            }
-            if (catalogRes && catalogRes.ok) {
-                servicesData = await catalogRes.json();
-                sessionStorage.setItem('pawpal_admin_services_catalog', JSON.stringify(servicesData));
-            }
-            if (reviewsRes && reviewsRes.ok) {
-                reviewsData = await reviewsRes.json();
-                sessionStorage.setItem('pawpal_admin_services_reviews', JSON.stringify(reviewsData));
-            }
+            if (bookingsRes && bookingsRes.ok) bookingsData = await bookingsRes.json();
+            if (catalogRes && catalogRes.ok) servicesData = await catalogRes.json();
+            if (reviewsRes && reviewsRes.ok) reviewsData = await reviewsRes.json();
         } catch (error) {
             console.error('Lỗi khi nạp dữ liệu phân hệ Dịch vụ từ JSON:', error);
         }

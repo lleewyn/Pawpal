@@ -154,30 +154,75 @@
         let mockRoster = {};
         let mockLeaveSwapRequests = [];
 
-        // Hàm nạp dữ liệu từ /data/staff.json hoặc localStorage
+        // Hàm nạp dữ liệu từ Supabase hoặc /data/staff.json / localStorage
         async function loadStaffModuleData() {
             let hasLoaded = false;
-            try {
-                const savedStaff = localStorage.getItem('pawpal_staff_data');
-                const savedAss = localStorage.getItem('pawpal_staff_assessments');
-                const savedRos = localStorage.getItem('pawpal_staff_roster');
-                const savedReq = localStorage.getItem('pawpal_staff_leave_requests');
 
-                if (savedStaff && savedAss && savedRos) {
-                    const parsedStaff = JSON.parse(savedStaff);
-                    if (Array.isArray(parsedStaff) && parsedStaff.length > 0) {
-                        // Kiểm tra nếu dữ liệu cũ chưa có customer_reviews thì nạp lại từ json
-                        if (parsedStaff[1] && parsedStaff[1].customer_reviews) {
-                            mockStaff = parsedStaff;
-                            mockAssessments = JSON.parse(savedAss) || [];
-                            mockRoster = JSON.parse(savedRos) || {};
-                            mockLeaveSwapRequests = savedReq ? JSON.parse(savedReq) : [];
-                            hasLoaded = true;
-                        }
+            // 1. Thử nạp trực tiếp từ Supabase
+            try {
+                const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+                if (client) {
+                    const { data: staffData, error: staffErr } = await client
+                        .from('staff')
+                        .select('*')
+                        .order('created_at', { ascending: true });
+
+                    if (!staffErr && Array.isArray(staffData) && staffData.length > 0) {
+                        mockStaff = staffData.map(s => {
+                            const initials = (s.full_name || 'NV').split(' ').map(n => n[0]).slice(-2).join('').toUpperCase();
+                            return {
+                                id: s.employee_code || s.id || `EMP-${s.id.slice(0, 4)}`,
+                                rawId: s.id,
+                                name: s.full_name || 'Nhân viên PawPal',
+                                initials: initials,
+                                role: s.role || 'Kỹ thuật viên Grooming',
+                                department: s.department || 'Dịch vụ Spa và Grooming',
+                                status: s.status === 'locked' ? 'Bị khóa' : (s.status === 'leave' ? 'Nghỉ phép' : 'Đang làm việc'),
+                                phone: s.phone || '0901234567',
+                                email: s.email || 'staff@pawpal.vn',
+                                joinDate: s.created_at ? new Date(s.created_at).toLocaleDateString('vi-VN') : '01/01/2026',
+                                kpiScore: s.kpi_score || 92,
+                                kpiRating: s.kpi_rating || 'Xuất sắc',
+                                monthlyRevenue: s.monthly_revenue || 18500000,
+                                completedTasks: s.completed_tasks || 64,
+                                rating: s.rating || 4.9,
+                                reviewCount: s.review_count || 48,
+                                skills: s.skills || ['Cắt tỉa tạo kiểu', 'Tắm spa massage', 'Vệ sinh tai móng'],
+                                bio: s.bio || 'Chuyên viên chăm sóc thú cưng tận tâm và giàu kinh nghiệm.'
+                            };
+                        });
+                        hasLoaded = true;
+                        saveStaffDataToStorage();
                     }
                 }
-            } catch (e) {
-                console.warn('Lỗi đọc pawpal_staff_data từ localStorage:', e);
+            } catch (err) {
+                console.warn('Lỗi kết nối Supabase Staff:', err);
+            }
+
+            // Fallback nếu chưa có hoặc offline
+            if (!hasLoaded || mockStaff.length === 0) {
+                try {
+                    const savedStaff = localStorage.getItem('pawpal_staff_data');
+                    const savedAss = localStorage.getItem('pawpal_staff_assessments');
+                    const savedRos = localStorage.getItem('pawpal_staff_roster');
+                    const savedReq = localStorage.getItem('pawpal_staff_leave_requests');
+
+                    if (savedStaff && savedAss && savedRos) {
+                        const parsedStaff = JSON.parse(savedStaff);
+                        if (Array.isArray(parsedStaff) && parsedStaff.length > 0) {
+                            // Kiểm tra nếu dữ liệu cũ chưa có customer_reviews thì nạp lại từ json
+                            if (parsedStaff[1] && parsedStaff[1].customer_reviews) {
+                                mockStaff = parsedStaff;
+                                mockAssessments = JSON.parse(savedAss) || [];
+                                mockRoster = JSON.parse(savedRos) || {};
+                                mockLeaveSwapRequests = savedReq ? JSON.parse(savedReq) : [];
+                                hasLoaded = true;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Lỗi đọc pawpal_staff_data từ localStorage:', e);
+                }
             }
 
             if (!hasLoaded || mockStaff.length === 0) {
