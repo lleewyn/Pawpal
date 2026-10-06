@@ -100,6 +100,10 @@
 
     function injectComponent(targetId, componentPath) {
         if (targetId === 'site-header') {
+            try {
+                sessionStorage.removeItem('pawpal_component_site-header');
+                localStorage.removeItem('pawpal_component_site-header');
+            } catch(e) {}
             var existingHeader = document.getElementById('mainHeader') || document.querySelector('.main-header');
             if (existingHeader) {
                 ensureHeaderAuth();
