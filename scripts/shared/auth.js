@@ -58,7 +58,13 @@ window.setCurrentUser = setCurrentUser;
 
 function logout() {
     window.PawpalStorage.remove(CURRENT_USER_KEY);
-    window.location.href = '/pages/public/landing/landing.html';
+    try {
+        sessionStorage.removeItem('pawpal_current_user');
+        localStorage.removeItem('pawpal_cart');
+        sessionStorage.removeItem('pawpal_cart');
+    } catch(e) {}
+    document.dispatchEvent(new CustomEvent('auth_state_changed', { detail: null }));
+    window.location.href = '/';
 }
 
 function showToast(type, message, duration = 5000) {

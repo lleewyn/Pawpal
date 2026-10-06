@@ -48,7 +48,7 @@
         </div>
 
         <div class="sidebar-group">
-            <a href="#" class="sidebar-link text-danger-custom" id="nav-logout" onclick="if(typeof logout === 'function') { logout(); } else { localStorage.removeItem('pawpal_user'); window.location.href='/'; } return false;" >
+            <a href="#" class="sidebar-link text-danger-custom" id="nav-logout" onclick="if(typeof window.pawpalLogout==='function'){window.pawpalLogout(event);}else{localStorage.removeItem('pawpal_current_user');sessionStorage.removeItem('pawpal_current_user');window.location.href='/';}return false;">
                 <span class="icon"><i data-lucide="log-out"></i></span> Đăng xuất
             </a>
         </div>

@@ -521,6 +521,42 @@
         setupLogoutButtons();
     }
 
+    function handleGlobalLogout(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        try {
+            localStorage.removeItem('pawpal_current_user');
+            sessionStorage.removeItem('pawpal_current_user');
+            localStorage.removeItem('pawpal_cart');
+            sessionStorage.removeItem('pawpal_cart');
+            sessionStorage.removeItem('pawpal_component_site-header');
+            localStorage.removeItem('pawpal_component_site-header');
+        } catch(err) {}
+        
+        document.dispatchEvent(new CustomEvent('auth_state_changed', { detail: null }));
+        window.location.href = '/';
+    }
+
+    window.pawpalLogout = handleGlobalLogout;
+
+    function setupLogoutButtons() {
+        document.querySelectorAll('#btnLogout, #logoutBtn, #tempLogoutBtn, #sidebarLogoutBtn, #nav-logout, .mobile-logout-btn, .sidebar-logout-btn, .dropdown-item-danger, a[href*="logout"]').forEach(btn => {
+            if (btn.dataset.logoutBound === 'true') return;
+            btn.addEventListener('click', handleGlobalLogout);
+            btn.dataset.logoutBound = 'true';
+        });
+    }
+
+    // Global event delegation for logout buttons anywhere in DOM
+    document.addEventListener('click', (e) => {
+        const logoutTarget = e.target.closest('#btnLogout, #logoutBtn, #tempLogoutBtn, #sidebarLogoutBtn, #nav-logout, .mobile-logout-btn, .sidebar-logout-btn, .dropdown-item-danger, a[href="#logout"]');
+        if (logoutTarget) {
+            handleGlobalLogout(e);
+        }
+    });
+
     // -------------------------------------------------------------
     // POPUP MODAL TRUNG TÂM THÔNG BÁO (MODAL THEO CHUẨN AGENTS.MD)
     // -------------------------------------------------------------
