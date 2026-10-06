@@ -147,12 +147,13 @@
         }
 
         // ---------------------------------------------------------
-        // 1. TRẠNG THÁI DỮ LIỆU HỆ THỐNG (Được nạp từ /data/staff.json)
+        // 1. TRẠNG THÁI DỮ LIỆU HỆ THỐNG (100% Trực tiếp từ Supabase Database)
         // ---------------------------------------------------------
         let mockStaff = [];
         let mockAssessments = [];
         let mockRoster = {};
         let mockLeaveSwapRequests = [];
+        let mockWorkstations = [];
 
         // Helper ánh xạ vai trò và vị trí chuẩn hóa
         function mapDbRoleToStaffRole(dbRole, specialization = '') {
@@ -239,6 +240,9 @@
                             };
                         });
                     }
+
+                    // Khởi tạo bàn làm việc trực tiếp từ nhân sự thật vừa nạp
+                    initWorkstationsFromStaff();
 
                     // B. Nạp bảng staff_schedule (Lịch trực và phân ca)
                     const { data: schedData, error: schedErr } = await client
@@ -363,6 +367,126 @@
             }
         }
 
+        // Khởi tạo danh sách 6 bàn làm việc trực tiếp từ đội ngũ nhân sự thật
+        function initWorkstationsFromStaff() {
+            const staffList = mockStaff.length > 0 ? mockStaff : [];
+            const groomers = staffList.filter(s => s.role === 'Groomer' || s.role === 'Caregiver') || [];
+            const vets = staffList.filter(s => s.role === 'Veterinarian') || [];
+            const drivers = staffList.filter(s => s.role === 'Driver') || [];
+
+            const g1 = groomers[0] || staffList[0] || { id: 'EMP-001', name: 'Kỹ thuật viên 1', position: 'Kỹ thuật viên Grooming' };
+            const g2 = groomers[1] || staffList[1] || g1;
+            const g3 = groomers[2] || staffList[2] || g1;
+            const drv = drivers[0] || staffList[0] || g1;
+            const vet = vets[0] || staffList[3] || staffList[0] || g1;
+            const g4 = groomers[3] || staffList[1] || g2;
+
+            mockWorkstations = [
+                {
+                    id: 'WS-01',
+                    name: 'Bàn Grooming 01',
+                    status: 'IDLE',
+                    staffId: g1.id,
+                    staffName: g1.name,
+                    staffPos: g1.position,
+                    bookingId: '',
+                    customerName: '',
+                    petName: '',
+                    serviceName: 'Dịch vụ Cắt tỉa tạo kiểu và Chăm sóc toàn diện',
+                    startTime: '',
+                    estEndTime: '',
+                    extendedMinutes: 0,
+                    isRequested: false,
+                    incidentNote: ''
+                },
+                {
+                    id: 'WS-02',
+                    name: 'Bàn Grooming 02',
+                    status: 'IDLE',
+                    staffId: g2.id,
+                    staffName: g2.name,
+                    staffPos: g2.position,
+                    bookingId: '',
+                    customerName: '',
+                    petName: '',
+                    serviceName: 'Dịch vụ Tắm vệ sinh và Cắt tỉa móng',
+                    startTime: '',
+                    estEndTime: '',
+                    extendedMinutes: 0,
+                    isRequested: false,
+                    incidentNote: ''
+                },
+                {
+                    id: 'WS-03',
+                    name: 'Bàn Tắm Spa 03',
+                    status: 'IDLE',
+                    staffId: g3.id,
+                    staffName: g3.name,
+                    staffPos: g3.position,
+                    bookingId: '',
+                    customerName: '',
+                    petName: '',
+                    serviceName: 'Dịch vụ Tắm khử mùi và Thư giãn chuyên sâu',
+                    startTime: '',
+                    estEndTime: '',
+                    extendedMinutes: 0,
+                    isRequested: false,
+                    incidentNote: ''
+                },
+                {
+                    id: 'WS-04',
+                    name: 'Pet Taxi 01',
+                    status: 'IDLE',
+                    staffId: drv.id,
+                    staffName: drv.name,
+                    staffPos: drv.position,
+                    bookingId: '',
+                    customerName: '',
+                    petName: '',
+                    serviceName: 'Đưa đón thú cưng tận nhà an toàn',
+                    startTime: '',
+                    estEndTime: '',
+                    extendedMinutes: 0,
+                    isRequested: false,
+                    incidentNote: ''
+                },
+                {
+                    id: 'WS-05',
+                    name: 'Khu Pet Hotel 24/7',
+                    status: 'IDLE',
+                    staffId: vet.id,
+                    staffName: vet.name,
+                    staffPos: vet.position,
+                    bookingId: '',
+                    customerName: '',
+                    petName: '',
+                    serviceName: 'Giám sát lưu trú và Khám sức khỏe định kỳ',
+                    startTime: '',
+                    estEndTime: '',
+                    extendedMinutes: 0,
+                    isRequested: false,
+                    incidentNote: ''
+                },
+                {
+                    id: 'WS-06',
+                    name: 'Bàn Tắm Sấy 02',
+                    status: 'IDLE',
+                    staffId: g4.id,
+                    staffName: g4.name,
+                    staffPos: g4.position,
+                    bookingId: '',
+                    customerName: '',
+                    petName: '',
+                    serviceName: 'Sẵn sàng tiếp nhận ca tắm sấy vệ sinh hoặc dưỡng lông',
+                    startTime: '',
+                    estEndTime: '',
+                    extendedMinutes: 0,
+                    isRequested: false,
+                    incidentNote: ''
+                }
+            ];
+        }
+
         // Biến trạng thái toàn cục phân hệ
         let selectedStaffId = sessionStorage.getItem('pawpal_admin_staff_selected_id') || 'EMP-001';
 
@@ -385,114 +509,6 @@
 
         let currentReqFilter = 'ALL';
         let activeLeaveSwapMode = 'LEAVE';
-
-        // ---------------------------------------------------------
-        // DỮ LIỆU BÀN LÀM VIỆC CA TRỰC THỜI GIAN THỰC (GIAI ĐOẠN 3: LIVE WORKSTATIONS)
-        // ---------------------------------------------------------
-        let mockWorkstations = [
-            {
-                id: 'WS-01',
-                name: 'Bàn Grooming 01',
-                status: 'IN_SERVICE',
-                staffId: 'EMP-001',
-                staffName: 'Nguyễn Văn An',
-                staffPos: 'Trưởng nhóm Groomer',
-                bookingId: 'BK-8842',
-                customerName: 'Chị Mai Anh',
-                petName: 'Bé Mochi (Poodle)',
-                serviceName: 'Cắt tỉa tạo kiểu và Tắm dưỡng sinh',
-                startTime: '14:00',
-                estEndTime: '15:30',
-                extendedMinutes: 0,
-                isRequested: true,
-                incidentNote: ''
-            },
-            {
-                id: 'WS-02',
-                name: 'Bàn Grooming 02',
-                status: 'DELAYED',
-                staffId: 'EMP-005',
-                staffName: 'Lê Hoàng Nam',
-                staffPos: 'Kỹ thuật viên Grooming',
-                bookingId: 'BK-8845',
-                customerName: 'Anh Quốc Bảo',
-                petName: 'Bé Bơ (Corgi)',
-                serviceName: 'Tắm vệ sinh và Cắt tỉa móng',
-                startTime: '14:15',
-                estEndTime: '15:15',
-                extendedMinutes: 15,
-                isRequested: false,
-                incidentNote: 'Lông rối chân sau, đã xin phép khách gỡ rối thêm +15p'
-            },
-            {
-                id: 'WS-03',
-                name: 'Bàn Tắm Spa 03',
-                status: 'IN_SERVICE',
-                staffId: 'EMP-008',
-                staffName: 'Đặng Thị Mai',
-                staffPos: 'Chuyên viên Spa thú cưng',
-                bookingId: 'BK-8849',
-                customerName: 'Chị Thu Hà',
-                petName: 'Bé Lu (Mèo Anh lông ngắn)',
-                serviceName: 'Tắm khử mùi và Massage thư giãn',
-                startTime: '14:30',
-                estEndTime: '15:30',
-                extendedMinutes: 0,
-                isRequested: true,
-                incidentNote: ''
-            },
-            {
-                id: 'WS-04',
-                name: 'Pet Taxi 01',
-                status: 'IN_SERVICE',
-                staffId: 'EMP-004',
-                staffName: 'Phạm Minh Đức',
-                staffPos: 'Tài xế Taxi Pet',
-                bookingId: 'BK-8851',
-                customerName: 'Cô Thanh Trúc',
-                petName: 'Bé Sam (Golden)',
-                serviceName: 'Đón tận nhà về cơ sở dưỡng lông',
-                startTime: '14:00',
-                estEndTime: '15:00',
-                extendedMinutes: 0,
-                isRequested: false,
-                incidentNote: ''
-            },
-            {
-                id: 'WS-05',
-                name: 'Khu Pet Hotel 24/7',
-                status: 'IDLE',
-                staffId: 'EMP-003',
-                staffName: 'Lê Thị Cúc',
-                staffPos: 'Bảo mẫu Pet Hotel',
-                bookingId: '',
-                customerName: '',
-                petName: '',
-                serviceName: 'Giám sát phòng lưu trú và Chăm sóc bữa ăn',
-                startTime: '',
-                estEndTime: '',
-                extendedMinutes: 0,
-                isRequested: false,
-                incidentNote: ''
-            },
-            {
-                id: 'WS-06',
-                name: 'Bàn Tắm Sấy 02',
-                status: 'IDLE',
-                staffId: 'EMP-003',
-                staffName: 'Lê Thị Cúc',
-                staffPos: 'Kỹ thuật viên Tắm sấy',
-                bookingId: '',
-                customerName: '',
-                petName: '',
-                serviceName: 'Sẵn sàng tiếp nhận ca tắm sấy vệ sinh hoặc dưỡng lông',
-                startTime: '',
-                estEndTime: '',
-                extendedMinutes: 0,
-                isRequested: false,
-                incidentNote: ''
-            }
-        ];
 
         function addMinutesToTime(timeStr, minsToAdd) {
             if (!timeStr || !timeStr.includes(':')) return timeStr;
