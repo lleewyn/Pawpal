@@ -6,19 +6,175 @@ document.addEventListener('DOMContentLoaded', () => {
     const deepBreadcrumbEl = document.getElementById('headerDeepBreadcrumb');
     const contentArea = document.querySelector('.admin-preview-content');
 
+    const MODULE_SUBTABS_MAP = {
+        'Dashboard': {
+            title: 'Dashboard',
+            subtabs: []
+        },
+        'Khách hàng': {
+            title: '',
+            defaultTab: 'tab-list',
+            storageKey: 'pawpal_admin_customer_subtab',
+            subtabs: [
+                { id: 'tab-list', label: 'Khách hàng' },
+                { id: 'tab-profile', label: 'Hồ sơ' },
+                { id: 'tab-pawpoint', label: 'Pawpoint' }
+            ]
+        },
+        'Thú cưng': {
+            title: '',
+            defaultTab: 'tab-pet-list',
+            storageKey: 'pawpal_admin_pet_subtab',
+            subtabs: [
+                { id: 'tab-pet-list', label: 'Thú cưng' },
+                { id: 'tab-pet-profile', label: 'Hồ sơ pet' },
+                { id: 'tab-pet-medical', label: 'Sổ tiêm' }
+            ]
+        },
+        'Dịch vụ': {
+            title: '',
+            defaultTab: 'tab-service-bookings',
+            storageKey: 'pawpal_admin_services_active_subtab',
+            subtabs: [
+                { id: 'tab-service-bookings', label: 'Lịch hẹn' },
+                { id: 'tab-service-catalog', label: 'Danh mục dịch vụ' },
+                { id: 'tab-service-pricing', label: 'Bảng giá' },
+                { id: 'tab-service-reports', label: 'Báo cáo dịch vụ' }
+            ]
+        },
+        'Bán hàng': {
+            title: '',
+            defaultTab: 'tab-order-list',
+            storageKey: 'pawpal_admin_order_subtab',
+            subtabs: [
+                { id: 'tab-order-list', label: 'Đơn hàng' },
+                { id: 'tab-order-catalog', label: 'Danh mục sản phẩm' },
+                { id: 'tab-order-inventory', label: 'Tồn kho' },
+                { id: 'tab-order-reports', label: 'Báo cáo doanh thu' }
+            ]
+        },
+        'Nhân sự': {
+            title: '',
+            defaultTab: 'tab-staff-list',
+            storageKey: 'pawpal_admin_staff_active_subtab',
+            subtabs: [
+                { id: 'tab-staff-list', label: 'Nhân viên' },
+                { id: 'tab-staff-roster', label: 'Lịch trực KTV' },
+                { id: 'tab-staff-timesheet', label: 'Chấm công' },
+                { id: 'tab-staff-reports', label: 'Báo cáo hiệu suất' }
+            ]
+        },
+        'Khiếu nại': {
+            title: '',
+            defaultTab: 'tab-complaint-services',
+            storageKey: 'pawpal_admin_complaint_active_subtab',
+            subtabs: [
+                { id: 'tab-complaint-services', label: 'Dịch vụ' },
+                { id: 'tab-complaint-orders', label: 'Đơn hàng' },
+                { id: 'tab-complaint-reports', label: 'Báo cáo SLA' }
+            ]
+        },
+        'Chatbot': {
+            title: '',
+            defaultTab: 'tab-live-support',
+            storageKey: 'pawpal_admin_chatbot_subtab',
+            subtabs: [
+                { id: 'tab-live-support', label: 'Hỗ trợ trực tuyến' },
+                { id: 'tab-chatbot-flow', label: 'Kịch bản bot' },
+                { id: 'tab-ai-training', label: 'Huấn luyện AI' }
+            ]
+        },
+        'Cấu hình': {
+            title: '',
+            defaultTab: 'tab-banner-promos',
+            storageKey: 'pawpal_admin_settings_subtab',
+            subtabs: [
+                { id: 'tab-banner-promos', label: 'Banner và Khuyến mãi' },
+                { id: 'tab-content-management', label: 'Bài viết' },
+                { id: 'tab-system-config', label: 'Cấu hình' },
+                { id: 'tab-audit-logs', label: 'Nhật ký' }
+            ]
+        }
+    };
+
+    function renderHeaderSubtabsInstant(moduleName) {
+        const config = MODULE_SUBTABS_MAP[moduleName];
+        if (!config) return;
+
+        if (config.title) {
+            if (moduleTitleEl) {
+                moduleTitleEl.textContent = config.title;
+                moduleTitleEl.style.display = 'inline-block';
+            }
+            if (subtabsContainer) subtabsContainer.innerHTML = '';
+            if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
+            return;
+        }
+
+        if (moduleTitleEl) {
+            moduleTitleEl.textContent = '';
+            moduleTitleEl.style.display = 'none';
+        }
+
+        if (!subtabsContainer) return;
+
+        // Xác định subtab active hiện tại từ URL hash hoặc storage
+        const currentHash = (window.location.hash || '').replace('#', '');
+        const savedTab = config.storageKey ? sessionStorage.getItem(config.storageKey) : null;
+        let activeTabId = config.defaultTab;
+
+        if (currentHash && config.subtabs.some(s => s.id === currentHash)) {
+            activeTabId = currentHash;
+        } else if (savedTab && config.subtabs.some(s => s.id === savedTab)) {
+            activeTabId = savedTab;
+        }
+
+        subtabsContainer.innerHTML = config.subtabs.map((s, idx) => {
+            const isActive = s.id === activeTabId;
+            const divider = idx < config.subtabs.length - 1 ? '<span class="subtab-divider">|</span>' : '';
+            return `<button type="button" class="header-subtab-btn ${isActive ? 'active' : ''}" data-subtab="${s.id}" data-tab="${s.id}">${s.label}</button>${divider}`;
+        }).join('');
+
+        if (deepBreadcrumbEl && (!activeTabId.includes('profile') && !activeTabId.includes('detail'))) {
+            deepBreadcrumbEl.innerHTML = '';
+        }
+    }
+
+    function syncActiveSubtabPane(contentArea, moduleName) {
+        if (!contentArea) return;
+        const config = MODULE_SUBTABS_MAP[moduleName];
+        if (!config || !config.subtabs || config.subtabs.length === 0) return;
+
+        const currentHash = (window.location.hash || '').replace('#', '');
+        const savedTab = config.storageKey ? sessionStorage.getItem(config.storageKey) : null;
+        let targetTabId = config.defaultTab;
+
+        if (currentHash && config.subtabs.some(s => s.id === currentHash)) {
+            targetTabId = currentHash;
+        } else if (savedTab && config.subtabs.some(s => s.id === savedTab)) {
+            targetTabId = savedTab;
+        }
+
+        const sections = contentArea.querySelectorAll('.subtab-content');
+        if (sections && sections.length > 0) {
+            sections.forEach(sec => sec.classList.remove('active'));
+            const targetSec = contentArea.querySelector(`#subtab-${targetTabId}`);
+            if (targetSec) {
+                targetSec.classList.add('active');
+            } else if (sections[0]) {
+                sections[0].classList.add('active');
+            }
+        }
+    }
+
     // Nạp module tương ứng
     async function loadModule(moduleName) {
         if (!contentArea) return;
 
-        // Reset Header Subtabs và Breadcrumb trước khi nạp module mới
-        if (subtabsContainer) subtabsContainer.innerHTML = '';
-        if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
+        // Render tức thì Header Bar để triệt tiêu 100% hiện tượng chớp/load header
+        renderHeaderSubtabsInstant(moduleName);
 
         if (moduleName === 'Dashboard') {
-            if (moduleTitleEl) {
-                moduleTitleEl.textContent = 'Dashboard';
-                moduleTitleEl.style.display = 'inline-block';
-            }
             try {
                 const res = await fetch('modules/dashboard/dashboard.html?v=' + Date.now());
                 if (res.ok) {
@@ -37,15 +193,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (moduleName === 'Khách hàng') {
-            if (moduleTitleEl) {
-                moduleTitleEl.textContent = '';
-                moduleTitleEl.style.display = 'none';
-            }
             try {
                 const res = await fetch('modules/customers/customers.html?v=' + Date.now());
                 if (res.ok) {
                     const html = await res.text();
                     contentArea.innerHTML = html;
+                    syncActiveSubtabPane(contentArea, moduleName);
                     
                     // Khởi tạo Lucide
                     if (window.lucide) lucide.createIcons();
@@ -66,20 +219,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (moduleName === 'Thú cưng') {
-            if (moduleTitleEl) {
-                moduleTitleEl.textContent = '';
-                moduleTitleEl.style.display = 'none';
-            }
             try {
                 const res = await fetch('modules/pets/pets.html?v=' + Date.now());
                 if (res.ok) {
                     const html = await res.text();
                     contentArea.innerHTML = html;
+                    syncActiveSubtabPane(contentArea, moduleName);
                     
-                    // Khởi tạo Lucide
                     if (window.lucide) lucide.createIcons();
 
-                    // Tải và chạy script tương tác của module Thú cưng
                     const oldScript = document.getElementById('dynamic-module-script');
                     if (oldScript) oldScript.remove();
 
@@ -95,20 +243,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (moduleName === 'Dịch vụ') {
-            if (moduleTitleEl) {
-                moduleTitleEl.textContent = '';
-                moduleTitleEl.style.display = 'none';
-            }
             try {
                 const res = await fetch('modules/services/services.html?v=' + Date.now());
                 if (res.ok) {
                     const html = await res.text();
                     contentArea.innerHTML = html;
+                    syncActiveSubtabPane(contentArea, moduleName);
                     
-                    // Khởi tạo Lucide
                     if (window.lucide) lucide.createIcons();
 
-                    // Tải và chạy script tương tác của module Dịch vụ
                     const oldScript = document.getElementById('dynamic-module-script');
                     if (oldScript) oldScript.remove();
 
@@ -124,20 +267,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (moduleName === 'Bán hàng') {
-            if (moduleTitleEl) {
-                moduleTitleEl.textContent = '';
-                moduleTitleEl.style.display = 'none';
-            }
             try {
                 const res = await fetch('modules/orders/orders.html?v=' + Date.now());
                 if (res.ok) {
                     const html = await res.text();
                     contentArea.innerHTML = html;
+                    syncActiveSubtabPane(contentArea, moduleName);
                     
-                    // Khởi tạo Lucide
                     if (window.lucide) lucide.createIcons();
 
-                    // Tải và chạy script tương tác của module Bán hàng
                     const oldScript = document.getElementById('dynamic-module-script');
                     if (oldScript) oldScript.remove();
 
@@ -153,24 +291,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (moduleName === 'Nhân sự') {
-            if (moduleTitleEl) {
-                moduleTitleEl.textContent = '';
-                moduleTitleEl.style.display = 'none';
-            }
-            // Subtabs và DeepBreadcrumb sẽ được quản lý chuẩn trong staff.js
-            if (subtabsContainer) subtabsContainer.innerHTML = '';
-            if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
-            
             try {
                 const res = await fetch('modules/staff/staff.html?v=' + Date.now());
                 if (res.ok) {
                     const html = await res.text();
                     contentArea.innerHTML = html;
+                    syncActiveSubtabPane(contentArea, moduleName);
                     
-                    // Khởi tạo Lucide
                     if (window.lucide) lucide.createIcons();
 
-                    // Tải và chạy script tương tác của module Nhân sự
                     const oldScript = document.getElementById('dynamic-module-script');
                     if (oldScript) oldScript.remove();
 
@@ -186,23 +315,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (moduleName === 'Khiếu nại') {
-            if (moduleTitleEl) {
-                moduleTitleEl.textContent = '';
-                moduleTitleEl.style.display = 'none';
-            }
-            if (subtabsContainer) subtabsContainer.innerHTML = '';
-            if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
-            
             try {
                 const res = await fetch('modules/complaints/complaints.html?v=' + Date.now());
                 if (res.ok) {
                     const html = await res.text();
                     contentArea.innerHTML = html;
+                    syncActiveSubtabPane(contentArea, moduleName);
                     
-                    // Khởi tạo Lucide
                     if (window.lucide) lucide.createIcons();
 
-                    // Tải và chạy script tương tác của module Khiếu nại
                     const oldScript = document.getElementById('dynamic-module-script');
                     if (oldScript) oldScript.remove();
 
@@ -218,23 +339,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (moduleName === 'Chatbot') {
-            if (moduleTitleEl) {
-                moduleTitleEl.textContent = '';
-                moduleTitleEl.style.display = 'none';
-            }
-            if (subtabsContainer) subtabsContainer.innerHTML = '';
-            if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
-            
             try {
                 const res = await fetch('modules/chatbot/chatbot.html?v=' + Date.now());
                 if (res.ok) {
                     const html = await res.text();
                     contentArea.innerHTML = html;
+                    syncActiveSubtabPane(contentArea, moduleName);
                     
-                    // Khởi tạo Lucide
                     if (window.lucide) lucide.createIcons();
 
-                    // Tải và chạy script tương tác của module Chatbot
                     const oldScript = document.getElementById('dynamic-module-script');
                     if (oldScript) oldScript.remove();
 
@@ -250,23 +363,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (moduleName === 'Cấu hình') {
-            if (moduleTitleEl) {
-                moduleTitleEl.textContent = '';
-                moduleTitleEl.style.display = 'none';
-            }
-            if (subtabsContainer) subtabsContainer.innerHTML = '';
-            if (deepBreadcrumbEl) deepBreadcrumbEl.innerHTML = '';
-            
             try {
                 const res = await fetch('modules/settings/settings.html?v=' + Date.now());
                 if (res.ok) {
                     const html = await res.text();
                     contentArea.innerHTML = html;
+                    syncActiveSubtabPane(contentArea, moduleName);
                     
-                    // Khởi tạo Lucide
                     if (window.lucide) lucide.createIcons();
 
-                    // Tải và chạy script tương tác của module Cấu hình
                     const oldScript = document.getElementById('dynamic-module-script');
                     if (oldScript) oldScript.remove();
 

@@ -134,8 +134,10 @@
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #E2ECE5;
-    margin-bottom: 5px;
-    transition: border-color 0.2s;
+    background-color: #F4FAF6;
+    display: block;
+    margin: 0 auto 5px;
+    transition: border-color 0.2s ease;
 }
 
 .pet-avatar-item:hover .pet-image-circle {

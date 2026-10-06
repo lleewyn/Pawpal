@@ -1,10 +1,14 @@
 /**
  * modules/settings/settings.js - Logic cho Module Cài đặt tài khoản PawPal
- * Chuẩn AGENTS.md: 9px radius, Flat Solid, Text-Only, Auto-Save
+ * Chuẩn AGENTS.md: 9px radius, Flat Solid, Text-Only, Auto-Save, Zero JSON Mock
  */
 
 const PAWPAL_USERS_KEY = 'pawpal_users_db';
 const CURRENT_USER_KEY = 'pawpal_current_user';
+
+function getSupabaseClient() {
+    return window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+}
 
 function getCurrentUser() {
     try {
@@ -205,16 +209,32 @@ function initChangePasswordForm() {
         });
     }
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const user = getCurrentUser();
         if (!user) return;
+
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Đang lưu...';
 
         const updatedUser = {
             ...user,
             password: newPassword.value,
             is_temporary: false
         };
+
+        // 1. Cập nhật vào Supabase Live Database
+        try {
+            const client = getSupabaseClient();
+            if (client && user.id) {
+                await client.from('customer').update({
+                    password_hash: newPassword.value,
+                    is_temporary: false
+                }).eq('id', user.id);
+            }
+        } catch (dbErr) {
+            console.warn('[Settings] Lỗi cập nhật mật khẩu lên Supabase:', dbErr);
+        }
 
         updateCurrentUserRecord(updatedUser);
 
@@ -223,6 +243,7 @@ function initChangePasswordForm() {
 
         showToast('success', 'Mật khẩu đã được cập nhật thành công!');
         form.reset();
+        btnSubmit.textContent = 'Cập nhật mật khẩu';
         btnSubmit.disabled = true;
         const strengthLabel = document.getElementById('strengthLabel');
         if (strengthLabel) {
@@ -351,17 +372,41 @@ function initPrivacyActions(user) {
     const btnDeactivate = document.getElementById('btnDeactivateAccount');
 
     if (btnExport) {
-        btnExport.addEventListener('click', () => {
+        btnExport.addEventListener('click', async () => {
+            btnExport.disabled = true;
+            btnExport.textContent = 'Đang tải...';
             try {
-                const pets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-                const bookings = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-                const orders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+                const client = getSupabaseClient();
+                let exportPets = [];
+                let exportAppts = [];
+                let exportOrders = [];
+
+                if (client && user.id) {
+                    const [pRes, aRes, oRes] = await Promise.all([
+                        client.from('pet_profile').select('*').eq('customer_id', user.id),
+                        client.from('appointment').select('*').eq('customer_id', user.id),
+                        client.from('sales_order').select('*').eq('customer_id', user.id)
+                    ]);
+                    exportPets = pRes.data || [];
+                    exportAppts = aRes.data || [];
+                    exportOrders = oRes.data || [];
+                }
+
+                if (exportPets.length === 0) {
+                    try { exportPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]'); } catch (e) {}
+                }
+                if (exportAppts.length === 0) {
+                    try { exportAppts = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]'); } catch (e) {}
+                }
+                if (exportOrders.length === 0) {
+                    try { exportOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]'); } catch (e) {}
+                }
                 
                 const exportData = {
-                    user: { name: user.name, phone: user.phone, email: user.email },
-                    pets: pets,
-                    bookingsCount: bookings.length,
-                    ordersCount: orders.length,
+                    user: { id: user.id, name: user.name, phone: user.phone, email: user.email },
+                    pets: exportPets,
+                    appointments: exportAppts,
+                    orders: exportOrders,
                     exportedAt: new Date().toISOString()
                 };
 
@@ -373,28 +418,36 @@ function initPrivacyActions(user) {
                 downloadAnchor.click();
                 downloadAnchor.remove();
 
-                showToast('success', 'Đã tải về bản sao dữ liệu của bạn');
+                showToast('success', 'Đã tải về toàn bộ bản sao dữ liệu của bạn');
             } catch (err) {
                 showToast('error', 'Không thể tạo tệp dữ liệu');
+            } finally {
+                btnExport.disabled = false;
+                btnExport.textContent = 'Tải dữ liệu';
             }
         });
     }
 
     if (btnDeactivate) {
-        btnDeactivate.addEventListener('click', () => {
-            if (window.confirm('Bạn có chắc chắn muốn tạm dừng hoạt động tài khoản này? Bạn có thể đăng nhập lại bất cứ lúc nào để kích hoạt lại.')) {
+        btnDeactivate.addEventListener('click', async () => {
+            const confirmed = window.confirm('Bạn có chắc chắn muốn tạm dừng hoạt động tài khoản này? Bạn có thể đăng nhập lại bất cứ lúc nào để kích hoạt lại.');
+            if (confirmed) {
                 const currentUser = getCurrentUser();
                 if (currentUser) {
-                    const updatedUser = { ...currentUser, status: 'DEACTIVATED' };
+                    const updatedUser = { ...currentUser, status: 'LOCKED', isLocked: true };
                     updateCurrentUserRecord(updatedUser);
+                    
+                    // Cập nhật lên Supabase Live DB
                     try {
-                        const custDb = JSON.parse(localStorage.getItem('pawpal_customers_db') || '[]');
-                        const idx = custDb.findIndex(c => String(c.phone) === String(currentUser.phone) || c.id === currentUser.id);
-                        if (idx !== -1) {
-                            custDb[idx].status = 'DEACTIVATED';
-                            localStorage.setItem('pawpal_customers_db', JSON.stringify(custDb));
+                        const client = getSupabaseClient();
+                        if (client && currentUser.id) {
+                            await client.from('customer').update({
+                                account_status: 'LOCKED'
+                            }).eq('id', currentUser.id);
                         }
-                    } catch (e) {}
+                    } catch (dbErr) {
+                        console.warn('[Settings] Lỗi cập nhật trạng thái tạm khóa lên Supabase:', dbErr);
+                    }
                 }
                 showToast('warning', 'Tài khoản đã được đặt sang trạng thái tạm dừng.');
             }
@@ -402,32 +455,36 @@ function initPrivacyActions(user) {
     }
 }
 
+let isInitRunning = false;
+
 // Khởi tạo toàn bộ module Cài đặt
 export function init() {
-    const user = getCurrentUser();
-    if (!user) return;
+    if (isInitRunning) return;
+    isInitRunning = true;
+    try {
+        const user = getCurrentUser();
+        if (!user) return;
 
-    if (user.is_temporary) {
-        const warning = document.getElementById('tempAccountWarning');
-        if (warning) warning.classList.remove('d-none');
+        if (user.is_temporary) {
+            const warning = document.getElementById('tempAccountWarning');
+            if (warning) warning.classList.remove('d-none');
+        }
+
+        if (typeof window.setUserSubBreadcrumb === 'function') {
+            window.setUserSubBreadcrumb('', 'settings');
+        }
+
+        initPasswordStrengthMeter();
+        initChangePasswordForm();
+        initPasswordToggles();
+        initNotificationSettings(user);
+        initLanguageAndUnit(user);
+        initSocialAccounts(user);
+        initPrivacyActions(user);
+    } finally {
+        isInitRunning = false;
     }
-
-    if (typeof window.setUserSubBreadcrumb === 'function') {
-        window.setUserSubBreadcrumb('', 'settings');
-    }
-
-    initPasswordStrengthMeter();
-    initChangePasswordForm();
-    initPasswordToggles();
-    initNotificationSettings(user);
-    initLanguageAndUnit(user);
-    initSocialAccounts(user);
-    initPrivacyActions(user);
 }
 
-// Tự động chạy nếu tải qua script tag thường
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+export const initSettings = init;
+window.initSettings = init;

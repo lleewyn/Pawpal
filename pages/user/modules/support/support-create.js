@@ -290,17 +290,55 @@ export async function initSupportCreate() {
     });
 }
 
-// Tải dữ liệu thực thể người dùng (Bookings & Orders)
+// Tải dữ liệu thực thể người dùng (Bookings & Orders) từ Supabase Live Database
 async function loadUserEntities() {
-    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || { id: 'USER-001', name: 'Lê Lệ Quyên', phone: '0901234567' };
+    const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || { id: null, name: 'Khách hàng', phone: '0901234567' };
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     
-    // 1. Tải Bookings
+    // 1. Tải Bookings từ Supabase
     try {
-        if (window.API && window.API.getUserBookings) {
-            userBookings = await window.API.getUserBookings(currentUser.id);
+        if (db && currentUser.id) {
+            const { data, error } = await db
+                .from('appointment')
+                .select(`
+                    id,
+                    appointment_code,
+                    appointment_date,
+                    appointment_time,
+                    appointment_status,
+                    service:service_id ( service_name, service_category ),
+                    pet:pet_id ( pet_name, breed ),
+                    staff:staff_id ( full_name )
+                `)
+                .eq('customer_id', currentUser.id)
+                .order('appointment_date', { ascending: false });
+
+            if (!error && data && data.length > 0) {
+                userBookings = data.map(b => ({
+                    id: b.appointment_code || b.id,
+                    code: b.appointment_code || b.id,
+                    service: b.service?.service_name || 'Dịch vụ PawPal',
+                    serviceName: b.service?.service_name || 'Dịch vụ PawPal',
+                    serviceType: b.service?.service_category || 'spa',
+                    petName: b.pet?.pet_name || 'Bé cưng',
+                    petBreed: b.pet?.breed || '',
+                    date: b.appointment_date,
+                    timeStart: b.appointment_time,
+                    staff: b.staff?.full_name || 'Kỹ thuật viên PawPal',
+                    status: b.appointment_status
+                }));
+            }
         }
     } catch (e) {
-        console.warn('Lỗi load bookings từ API:', e);
+        console.warn('[SupportCreate] Lỗi tải lịch hẹn từ Supabase:', e);
+    }
+
+    if (!userBookings || userBookings.length === 0) {
+        try {
+            if (window.API && window.API.getUserBookings) {
+                userBookings = await window.API.getUserBookings(currentUser.id);
+            }
+        } catch (e) {}
     }
 
     if (!userBookings || userBookings.length === 0) {
@@ -309,35 +347,66 @@ async function loadUserEntities() {
         } catch (e) {}
     }
 
-    // Mock dữ liệu mẫu nếu chưa có lịch hẹn nào
-    if (!userBookings || userBookings.length === 0) {
-        userBookings = [
-            { id: 'BKG-1001', service: 'Gói Tắm Vệ Sinh Cơ Bản', serviceType: 'spa', petName: 'Miu Con', date: '28/09/2026', timeStart: '14:00', staff: 'Ngọc Anh (Chi nhánh Quận 1)', status: 'completed' },
-            { id: 'BKG-1008', service: 'Tắm Thuốc Trị Liệu Da Liễu', serviceType: 'spa', petName: 'Bông Xù', date: '27/09/2026', timeStart: '10:30', staff: 'Trần Văn Hùng', status: 'completed' },
-            { id: 'BKG-1004', service: 'Pet Hotel Phòng Tiêu Chuẩn', serviceType: 'hotel', petName: 'Lu Lu', date: '26/09/2026', timeStart: '12:00', staff: 'Trần Thị B', status: 'completed' },
-            { id: 'BKG-1015', service: 'Pet Taxi Đưa Đón Sân Bay', serviceType: 'taxi', petName: 'Mochi', date: '25/09/2026', timeStart: '08:30', staff: 'Hoàng Văn E (Tài xế)', status: 'completed' }
-        ];
-    }
-
     // Đổ dữ liệu vào select Lịch hẹn
     const serviceBookingSelect = document.getElementById('serviceBookingSelect');
     if (serviceBookingSelect) {
-        serviceBookingSelect.innerHTML = '<option value="">-- Chọn ca dịch vụ cần khiếu nại --</option>' +
-            userBookings.map(b => {
-                const pet = b.petName || b.petInfo?.petName || 'Bé cưng';
-                const srv = b.service || b.serviceName || 'Dịch vụ';
-                const date = b.date || '';
-                return `<option value="${b.id || b.code}">${b.id || b.code} - ${srv} (${pet}) ${date ? '• ' + date : ''}</option>`;
-            }).join('');
+        if (userBookings.length === 0) {
+            serviceBookingSelect.innerHTML = '<option value="">-- Chưa có ca dịch vụ nào --</option>';
+        } else {
+            serviceBookingSelect.innerHTML = '<option value="">-- Chọn ca dịch vụ cần khiếu nại --</option>' +
+                userBookings.map(b => {
+                    const pet = b.petName || b.petInfo?.petName || 'Bé cưng';
+                    const srv = b.service || b.serviceName || 'Dịch vụ';
+                    const date = b.date || '';
+                    return `<option value="${b.id || b.code}">${b.id || b.code} - ${srv} (${pet}) ${date ? '• ' + date : ''}</option>`;
+                }).join('');
+        }
     }
 
-    // 2. Tải Orders
+    // 2. Tải Orders từ Supabase
     try {
-        if (window.API && window.API.getUserOrders) {
-            userOrders = await window.API.getUserOrders(currentUser.id);
+        if (db && currentUser.id) {
+            const { data, error } = await db
+                .from('sales_order')
+                .select(`
+                    id,
+                    order_code,
+                    created_at,
+                    order_status,
+                    sales_order_detail (
+                        quantity,
+                        unit_price,
+                        product:product_id ( name, sku )
+                    )
+                `)
+                .eq('customer_id', currentUser.id)
+                .order('created_at', { ascending: false });
+
+            if (!error && data && data.length > 0) {
+                userOrders = data.map(o => ({
+                    id: o.order_code || o.id,
+                    createdAt: o.created_at ? o.created_at.substring(0, 10) : '',
+                    status: o.order_status,
+                    products: (o.sales_order_detail || []).map(d => ({
+                        id: d.product?.sku || 'P-01',
+                        name: d.product?.name || 'Sản phẩm PawPal',
+                        sku: d.product?.sku || 'SKU',
+                        quantity: d.quantity || 1,
+                        price: d.unit_price || 0
+                    }))
+                }));
+            }
         }
     } catch (e) {
-        console.warn('Lỗi load orders từ API:', e);
+        console.warn('[SupportCreate] Lỗi tải đơn hàng từ Supabase:', e);
+    }
+
+    if (!userOrders || userOrders.length === 0) {
+        try {
+            if (window.API && window.API.getUserOrders) {
+                userOrders = await window.API.getUserOrders(currentUser.id);
+            }
+        } catch (e) {}
     }
 
     if (!userOrders || userOrders.length === 0) {
@@ -346,37 +415,18 @@ async function loadUserEntities() {
         } catch (e) {}
     }
 
-    if (!userOrders || userOrders.length === 0) {
-        userOrders = [
-            {
-                id: 'ORD-2026-001',
-                createdAt: '2026-09-28',
-                status: 'completed',
-                products: [{ id: 'P-01', name: 'Đồ chơi gặm xương cao su tự nhiên an toàn', quantity: 1, price: 150000 }]
-            },
-            {
-                id: 'ORD-2026-005',
-                createdAt: '2026-09-27',
-                status: 'completed',
-                products: [{ id: 'P-02', name: 'Pate Mèo Nắp Bật Thảo Dược Hộp 85g', quantity: 4, price: 45000 }]
-            },
-            {
-                id: 'ORD-2026-008',
-                createdAt: '2026-09-25',
-                status: 'completed',
-                products: [{ id: 'P-03', name: 'Vòng Cổ Phát Sáng Định Vị GPS', quantity: 1, price: 450000 }]
-            }
-        ];
-    }
-
     // Đổ dữ liệu vào select Đơn hàng
     const orderSelect = document.getElementById('orderSelect');
     if (orderSelect) {
-        orderSelect.innerHTML = '<option value="">-- Chọn đơn hàng cần khiếu nại --</option>' +
-            userOrders.map(o => {
-                const prodName = o.products?.[0]?.name || 'Sản phẩm';
-                return `<option value="${o.id}">${o.id} - ${prodName} (${o.createdAt || 'Gần đây'})</option>`;
-            }).join('');
+        if (userOrders.length === 0) {
+            orderSelect.innerHTML = '<option value="">-- Chưa có đơn hàng nào --</option>';
+        } else {
+            orderSelect.innerHTML = '<option value="">-- Chọn đơn hàng cần khiếu nại --</option>' +
+                userOrders.map(o => {
+                    const prodName = o.products?.[0]?.name || 'Sản phẩm';
+                    return `<option value="${o.id}">${o.id} - ${prodName} (${o.createdAt || 'Gần đây'})</option>`;
+                }).join('');
+        }
     }
 }
 

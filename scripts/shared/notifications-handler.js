@@ -66,6 +66,31 @@
         });
     }
 
+    async function fetchNotificationsFromSupabase() {
+        try {
+            const db = window.SupabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : null);
+            if (!db) return null;
+            const { data, error } = await db.from('notification')
+                .select('*')
+                .order('sent_at', { ascending: false });
+            if (error) return null;
+            if (data && data.length > 0) {
+                return data.map(n => ({
+                    id: n.id,
+                    type: (n.notification_type || 'info').toLowerCase(),
+                    title: n.title || 'Thông báo PawPal',
+                    content: personalizeText(n.content || n.message || ''),
+                    time: n.sent_at || n.created_at || new Date().toISOString(),
+                    read: Boolean(n.is_read),
+                    link: n.target_url || n.link || '#'
+                }));
+            }
+        } catch(e) {
+            console.warn('[notifications] Error fetching Supabase notices:', e);
+        }
+        return null;
+    }
+
     const initialNotifications = hydrateSeedNotifications(readNotificationsSeed());
 
     function getNotifications() {
@@ -87,6 +112,19 @@
         localStorage.setItem(NOTI_KEY, JSON.stringify(notis));
         document.dispatchEvent(new CustomEvent('notifications_updated'));
     }
+
+    // Tự động đồng bộ từ Supabase Live DB khi tải trang
+    (async function initSupabaseNotis() {
+        let attempts = 0;
+        while (!window.SupabaseClient && attempts < 20) {
+            await new Promise(r => setTimeout(r, 100));
+            attempts++;
+        }
+        const dbNotis = await fetchNotificationsFromSupabase();
+        if (dbNotis && dbNotis.length > 0) {
+            saveNotifications(dbNotis);
+        }
+    })();
 
     function getRelativeTimeString(date) {
         const diffMs = Date.now() - date.getTime();

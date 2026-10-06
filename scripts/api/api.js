@@ -81,7 +81,7 @@ export const API = {
                         service_name, service_category, estimated_duration,
                         service_price_matrix ( unit_price )
                     ),
-                    pet_profile ( id, pet_code, pet_name, breed, species )
+                    pet_profile ( id, pet_code, pet_name, breed, species, image_url )
                 `)
                 .eq('customer_id', userId)
                 .order('appointment_date', { ascending: false });
@@ -128,6 +128,8 @@ export const API = {
                     petId:           pet?.pet_code      || pet?.id || '',
                     petName:         pet?.pet_name      || '',
                     petBreed:        pet?.breed         || '',
+                    petSpecies:      pet?.species       || '',
+                    petAvatar:       pet?.image_url     || '',
                     changeCount:     b.change_count     || 0,
                     note:            b.note             || '',
                     price:           b.total_price      || getPriceFromMatrix(srv?.service_price_matrix, pet?.species) || 0,

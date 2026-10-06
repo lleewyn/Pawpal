@@ -8,7 +8,8 @@ const DEFAULT_PET_AVATARS = {
     dog: '/assets/images/publics/dogcute3.jpg',
     cat: '/assets/images/publics/catcute5.jpg',
     rabbit: '/assets/images/publics/pet1.jpg',
-    other: '/assets/images/publics/pet.jpg'
+    hamster: '/assets/images/publics/hamster.jpg',
+    other: '/assets/images/publics/pet.png'
 };
 
 export function generatePetId() {
@@ -860,10 +861,5 @@ async function loadPetBottomInsights() {
 }
 
 export const init = initPetProfilePage;
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+window.initPetProfilePage = initPetProfilePage;
 

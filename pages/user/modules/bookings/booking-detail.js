@@ -14,7 +14,7 @@ function getBookingPrice(priceMatrix, petSpecies) {
 }
 
 async function cancelBookingOnSupabase(booking) {
-    const db = window.SupabaseClient;
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db || !booking?._supabaseId) return;
     try {
         await db.from('appointment')
@@ -27,7 +27,7 @@ async function cancelBookingOnSupabase(booking) {
 }
 
 async function rescheduleBookingOnSupabase(booking) {
-    const db = window.SupabaseClient;
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db || !booking?._supabaseId) return;
     try {
         const serviceCategory = String(booking?.serviceCategory || booking?.category || booking?.service_type || '').toLowerCase();
@@ -67,26 +67,28 @@ function getBookingIdFromUrl() {
     return null;
 }
 
+let isInitRunning = false;
+
 export async function init() {
-    const bookingId = getBookingIdFromUrl();
+    if (isInitRunning) return;
+    isInitRunning = true;
+    try {
+        const bookingId = getBookingIdFromUrl();
 
-    if (!bookingId) {
-        showToast('Không tìm thấy thông tin lịch hẹn', 'error');
-        setTimeout(() => { window.location.hash = '#bookings'; }, 1500);
-        return;
+        if (!bookingId) {
+            showToast('Không tìm thấy thông tin lịch hẹn', 'error');
+            setTimeout(() => { window.location.hash = '#bookings'; }, 1500);
+            return;
+        }
+
+        await loadBookingDetail(bookingId);
+    } finally {
+        isInitRunning = false;
     }
-
-    await loadBookingDetail(bookingId);
 }
 
 export const initBookingDetail = init;
 window.initBookingDetail = init;
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
 
 async function loadBookingDetail(bookingId) {
     await API.initData();

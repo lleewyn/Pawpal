@@ -696,6 +696,44 @@ async function loadBlogs() {
     }
 }
 
+async function loadBanners() {
+    if (dataCache.banners) return dataCache.banners;
+
+    try {
+        const db = window.SupabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : null);
+        if (!db) throw new Error('Supabase client is not initialized');
+
+        const { data, error } = await db.from('banner')
+            .select('*')
+            .or('status.eq.dang_hien_thi,status.eq.ACTIVE,is_active.eq.true')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
+        const banners = (data || []).map(b => {
+            let imgUrl = b.image_url || b.image_desktop_url || '';
+            if (imgUrl && !imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
+                imgUrl = rootPath + imgUrl;
+            }
+            return {
+                id: b.id,
+                title: b.title || 'Ưu đãi PawPal',
+                image: imgUrl || '/assets/images/banners/spa_animation.png',
+                link: b.link || b.target_url || '/pages/services/services.html',
+                buttonText: b.button_text || b.cta_text || 'Xem ngay',
+                status: b.status || (b.is_active ? 'active' : 'paused')
+            };
+        });
+
+        dataCache.banners = banners;
+        return banners;
+    } catch (error) {
+        console.warn('Error fetching banners from Supabase:', error);
+        return [];
+    }
+}
+
 window.DataLoader = {
     loadProducts,
     getProductById,
@@ -707,7 +745,9 @@ window.DataLoader = {
     getProductReviews,
     getServiceReviews,
     loadBlogs,
-    loadBlogCategories
+    loadBlogCategories,
+    loadBanners
 };
 
 console.log(' DataLoader module initialized');
+

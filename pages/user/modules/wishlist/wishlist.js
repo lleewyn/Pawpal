@@ -68,12 +68,6 @@ async function loadAllProductsSafely() {
             console.warn('[wishlist] DataLoader.loadProducts error:', e);
         }
     }
-    try {
-        const res = await fetch('/data/products.json?v=' + Date.now());
-        if (res.ok) return await res.json();
-    } catch (e) {
-        console.warn('[wishlist] fetch products.json error:', e);
-    }
     return [];
 }
 
@@ -85,12 +79,6 @@ async function loadAllServicesSafely() {
         } catch (e) {
             console.warn('[wishlist] DataLoader.loadServices error:', e);
         }
-    }
-    try {
-        const res = await fetch('/data/services.json?v=' + Date.now());
-        if (res.ok) return await res.json();
-    } catch (e) {
-        console.warn('[wishlist] fetch services.json error:', e);
     }
     return [];
 }
@@ -268,7 +256,7 @@ async function renderWishlist() {
             return `
                 <div class="wishlist-card pawpal-smooth-entrance" data-type="${item.type}" data-id="${item.id}">
                     <div class="wishlist-card-image-wrapper">
-                        <img src="${item.image}" alt="${item.title}" class="wishlist-card-image">
+                        <img src="${item.image || '/assets/images/publics/feed.jpg'}" alt="${item.title}" class="wishlist-card-image" onerror="this.onerror=null; this.src='/assets/images/publics/feed.jpg';">
                         <button class="wishlist-card-remove" data-type="${item.type}" data-id="${item.id}" aria-label="Xóa khỏi yêu thích">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor">
                                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -314,16 +302,18 @@ async function renderWishlist() {
     }
 }
 
+let isInitRunning = false;
+
 export function init() {
-    bindTabs();
-    renderWishlist();
+    if (isInitRunning) return;
+    isInitRunning = true;
+    try {
+        bindTabs();
+        renderWishlist();
+    } finally {
+        isInitRunning = false;
+    }
 }
 
 export const initWishlist = init;
 window.initWishlist = init;
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}

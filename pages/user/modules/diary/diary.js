@@ -147,20 +147,21 @@ function formatWeightDisplay(weightVal) {
     return cleaned ? `${cleaned} kg` : '';
 }
 
-/* ==========================================================================
-   2. KHỞI TẠO MODULE VÀ ĐIỀU HƯỚNG
-   ========================================================================== */
+let isInitRunning = false;
 
 export async function initPetDiary() {
-    setupDiaryNavigation();
-    setupDiaryImageModal();
-    await populatePetSelector();
+    if (isInitRunning) return;
+    isInitRunning = true;
+    try {
+        setupDiaryNavigation();
+        setupDiaryImageModal();
+        await populatePetSelector();
 
-    const petSelector = document.getElementById('petSelector');
-    if (petSelector) {
-        petSelector.removeEventListener('change', handlePetChange);
-        petSelector.addEventListener('change', handlePetChange);
-    }
+        const petSelector = document.getElementById('petSelector');
+        if (petSelector) {
+            petSelector.removeEventListener('change', handlePetChange);
+            petSelector.addEventListener('change', handlePetChange);
+        }
 
     if (!isHashListenerAttached) {
         isHashListenerAttached = true;
@@ -187,13 +188,16 @@ export async function initPetDiary() {
         targetPetId = await getDefaultPetIdToLoad();
     }
 
-    if (targetPetId) {
-        await selectAndLoadPet(targetPetId);
-        if (sessionIdFromUrl) {
-            await openSessionFromUrlOrFallback(sessionIdFromUrl);
+        if (targetPetId) {
+            await selectAndLoadPet(targetPetId);
+            if (sessionIdFromUrl) {
+                await openSessionFromUrlOrFallback(sessionIdFromUrl);
+            }
+        } else {
+            showEmptyPetState();
         }
-    } else {
-        showEmptyPetState();
+    } finally {
+        isInitRunning = false;
     }
 }
 
@@ -432,7 +436,8 @@ async function loadPetDiary(petId, targetSessionId = null) {
 
     // 1. Thử đồng bộ từ Supabase nếu có client
     let logs = null;
-    if (window.SupabaseClient) {
+    const client = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+    if (client) {
         logs = await syncPetDiaryFromSupabase(pet);
     }
     
@@ -481,7 +486,7 @@ async function loadPetDiary(petId, targetSessionId = null) {
 }
 
 async function syncPetDiaryFromSupabase(pet) {
-    const db = window.SupabaseClient;
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) return null;
 
     try {
@@ -1874,9 +1879,4 @@ function escapeHtml(text) {
 }
 
 export const init = initPetDiary;
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+window.initPetDiary = initPetDiary;

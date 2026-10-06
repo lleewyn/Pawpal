@@ -4,7 +4,8 @@ const DEFAULT_PET_AVATARS = {
     dog: '/assets/images/publics/dogcute3.jpg',
     cat: '/assets/images/publics/catcute5.jpg',
     rabbit: '/assets/images/publics/pet1.jpg',
-    other: '/assets/images/publics/pet.jpg'
+    hamster: '/assets/images/publics/hamster.jpg',
+    other: '/assets/images/publics/pet.png'
 };
 
 
@@ -147,10 +148,7 @@ function normalizePetList(pets) {
 
         if (!name) continue;
 
-        // Bỏ các pet rác tạo trong quá trình test tự động nếu trùng lặp
         const cleanName = name.toLowerCase();
-        const isJunkTest = cleanName.startsWith('cún test') || cleanName.startsWith('test') || cleanName === 'bbeobeo';
-
         const nameKey = `${cleanName}|${species}`;
 
         // 1. Kiểm tra trùng theo ID
@@ -168,35 +166,16 @@ function normalizePetList(pets) {
         // 2. Kiểm tra trùng theo Tên + Giống loài
         if (mapByNameSpecies.has(nameKey)) {
             const existing = mapByNameSpecies.get(nameKey);
-            // Ưu tiên giữ ID chuẩn PET-001..PET-004 nếu có
-            if (existing.id && existing.id.startsWith('PET-00') && (!pet.id || !pet.id.startsWith('PET-00'))) {
-                Object.assign(existing, {
-                    avatar: pet.avatar || existing.avatar,
-                    breed: pet.breed || existing.breed,
-                    notes: pet.notes || existing.notes,
-                    allergies: pet.allergies || existing.allergies
-                });
-                continue;
-            } else if (pet.id && pet.id.startsWith('PET-00')) {
-                Object.assign(existing, pet);
-                if (id) mapById.set(id, existing);
-                continue;
-            } else {
-                // Trùng tên (ví dụ nhiều con Misa, Sean) -> gộp thành 1 bé duy nhất
-                Object.assign(existing, {
-                    avatar: pet.avatar || existing.avatar,
-                    breed: pet.breed || existing.breed,
-                    dob: pet.dob || existing.dob,
-                    weight: pet.weight || existing.weight,
-                    notes: pet.notes || existing.notes,
-                    allergies: pet.allergies || existing.allergies
-                });
-                continue;
-            }
-        }
-
-        if (isJunkTest && mapByNameSpecies.size >= 4) {
-            continue; // Bỏ qua test junk pet nếu đã có danh sách pet chính
+            // Gộp thông tin pet trùng lặp thành 1 bé duy nhất
+            Object.assign(existing, {
+                avatar: pet.avatar || existing.avatar,
+                breed: pet.breed || existing.breed,
+                dob: pet.dob || existing.dob,
+                weight: pet.weight || existing.weight,
+                notes: pet.notes || existing.notes,
+                allergies: pet.allergies || existing.allergies
+            });
+            continue;
         }
 
         const cleanPet = { ...pet };
@@ -495,18 +474,6 @@ export async function getPets(targetUserId) {
             }
         } catch (e) {}
         
-        if (localPets.length === 0) {
-            try {
-                const res = await fetch('/data/pets.json');
-                if (res.ok) {
-                    const seedPets = await res.json();
-                    if (Array.isArray(seedPets) && seedPets.length > 0) {
-                        localPets = seedPets;
-                    }
-                }
-            } catch (e) {}
-        }
-        
         if (localPets.length > 0) {
             localStorage.setItem('pawpal_pets', JSON.stringify(localPets));
             syncToAdminPets(localPets, currentUser);
@@ -528,58 +495,34 @@ export async function getPets(targetUserId) {
 }
 
 function isGuestOrTestPet(pet) {
-    if (!pet) return true;
+    if (!pet || !pet.name) return true;
     const id = String(pet.id || pet.code || '').toLowerCase();
-    const name = String(pet.name || '').trim().toLowerCase();
-
-    if (id.includes('guest') || id.includes('booking') || id.includes('test') || id.startsWith('pp-') || id === 'pet-new') return true;
-    if (name.includes('test') || name.includes('bbeobeo') || name === 'chó' || name === 'cún khách' || name === 'ki' || name === 'moo' || name === 'lala' || name === 'miii' || name === 'misa' || name === 'sean' || name === 'meo' || name === 'mít') return true;
-    // Generated timestamp IDs from guest flow (e.g. PET-178... or PET-179...)
-    if (/^pet-17\d{8,}$/i.test(id)) return true;
-
+    if (id === 'pet-new') return true;
     return false;
 }
 
 function sanitizeUserPetsStorage(allPets) {
     if (!Array.isArray(allPets)) return [];
 
-    const canonicalIds = new Set(['PET-001', 'PET-002', 'PET-003', 'PET-004', 'PET-005', 'PET-006', 'PET-007', 'PET-008']);
-    const seenNames = new Set();
+    const seenSignatures = new Set();
     const cleanList = [];
 
-    // 1. Luôn bảo đảm các bé chính thức của gia đình (Milu, Mimi, Boss, Bông, v.v.)
     for (const pet of allPets) {
         if (!pet || !pet.name) continue;
-        const id = String(pet.id || '').toUpperCase();
         const lowerName = String(pet.name).trim().toLowerCase();
+        const lowerSpecies = String(pet.species || 'other').trim().toLowerCase();
+        const signature = `${lowerName}|${lowerSpecies}`;
 
-        if (canonicalIds.has(id)) {
-            if (!seenNames.has(lowerName)) {
-                seenNames.add(lowerName);
-                cleanList.push({
-                    ...pet,
-                    isArchived: Boolean(pet.isArchived)
-                });
-            }
+        if (!seenSignatures.has(signature)) {
+            seenSignatures.add(signature);
+            cleanList.push({
+                ...pet,
+                isArchived: Boolean(pet.isArchived || pet.status === 'INACTIVE' || pet.status === 'Lưu trữ')
+            });
         }
     }
 
-    // 2. Thêm các bé thực tế do chủ nuôi tự tạo (nếu có, không thuộc junk test/guest)
-    for (const pet of allPets) {
-        if (!pet || !pet.name) continue;
-        const id = String(pet.id || '').toUpperCase();
-        const lowerName = String(pet.name).trim().toLowerCase();
-
-        if (canonicalIds.has(id)) continue;
-        if (isGuestOrTestPet(pet)) continue;
-
-        if (!seenNames.has(lowerName)) {
-            seenNames.add(lowerName);
-            cleanList.push(pet);
-        }
-    }
-
-    return cleanList.length > 0 ? cleanList : allPets.slice(0, 4);
+    return cleanList;
 }
 
 export async function savePets(pets) {
@@ -605,7 +548,7 @@ export async function savePets(pets) {
         syncToAdminPets(pets, currentUser);
         
         // 3. Đẩy lên Supabase nếu có kết nối
-        const db = window['SupabaseClient'];
+        const db = window.getSupabaseClient ? window.getSupabaseClient() : window['SupabaseClient'];
         if (db && currentUser) {
             try {
                 const customerId = await getSupabaseCustomerId(db, currentUser);
@@ -663,7 +606,7 @@ export async function deletePet(petId) {
         }
     } catch (e) {}
 
-    const db = window['SupabaseClient'];
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window['SupabaseClient'];
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (db && currentUser) {
         try {
@@ -691,7 +634,7 @@ export async function restorePet(petId) {
         }
     } catch (e) {}
 
-    const db = window['SupabaseClient'];
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window['SupabaseClient'];
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');
     if (db && currentUser) {
         try {

@@ -223,11 +223,20 @@ async function initReturnDetail() {
     }).join('');
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initReturnDetail);
-} else {
-    initReturnDetail();
+let isInitRunning = false;
+
+export async function init() {
+    if (isInitRunning) return;
+    isInitRunning = true;
+    try {
+        await initReturnDetail();
+    } finally {
+        isInitRunning = false;
+    }
 }
+
+export const initReturnDetailExport = init;
+window.initReturnDetail = init;
 
 function deductPointsForRefund(rmaData) {
     const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user') || 'null');

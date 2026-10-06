@@ -6,7 +6,7 @@ let currentOrder = null;
 let isGuest = false; // Giả định: false = Member, true = Guest
 
 async function syncSingleOrderFromSupabase(orderId, currentUser) {
-    const db = window.SupabaseClient;
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db || !currentUser) return null;
     try {
         let customerId = currentUser.id;
@@ -198,12 +198,6 @@ async function loadOrderDetail() {
 
         const localOrders = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
         currentOrder = Array.isArray(localOrders) ? localOrders.find(o => String(o.id) === String(orderId)) : null;
-
-        if (!currentOrder) {
-            const response = await fetch(resolveDataUrl('/data/orders.json'));
-            const orders = await response.json();
-            currentOrder = Array.isArray(orders) ? orders.find(order => String(order.id) === String(orderId)) : null;
-        }
 
         if (!currentOrder) {
             showError('Không tìm thấy đơn hàng #' + orderId);
@@ -1648,20 +1642,25 @@ function getStatusLabel(status) {
 
 window.reorder = reorder;
 
-function initOrderDetail() {
-    const params = new URLSearchParams(window.location.search);
-    let guestParam = params.get('guest');
-    if (!guestParam && window.location.hash.includes('?')) {
-        const hashParams = new URLSearchParams(window.location.hash.split('?')[1]);
-        guestParam = hashParams.get('guest');
+let isInitRunning = false;
+
+export async function initOrderDetail() {
+    if (isInitRunning) return;
+    isInitRunning = true;
+    try {
+        const params = new URLSearchParams(window.location.search);
+        let guestParam = params.get('guest');
+        if (!guestParam && window.location.hash.includes('?')) {
+            const hashParams = new URLSearchParams(window.location.hash.split('?')[1]);
+            guestParam = hashParams.get('guest');
+        }
+        isGuest = guestParam === 'true';
+        
+        await loadOrderDetail();
+    } finally {
+        isInitRunning = false;
     }
-    isGuest = guestParam === 'true';
-    
-    loadOrderDetail();
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initOrderDetail);
-} else {
-    initOrderDetail();
-}
+export const init = initOrderDetail;
+window.initOrderDetail = initOrderDetail;

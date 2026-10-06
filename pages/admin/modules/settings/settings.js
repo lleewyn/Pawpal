@@ -2173,9 +2173,6 @@
         // -------------------------------------------------------------
         setupSettingsEvents();
 
-        await loadSettingsModuleData();
-        setupSettingsRealtimeChannel();
-
         const hash = window.location.hash ? window.location.hash.replace('#', '') : '';
         const savedTab = sessionStorage.getItem('pawpal_admin_settings_subtab');
         const validTabs = ['tab-banner-promos', 'tab-content-management', 'tab-system-config', 'tab-audit-logs'];
@@ -2187,6 +2184,13 @@
             initTab = savedTab;
         }
 
+        // Kích hoạt subtab mục tiêu ngay lập tức để không bị render nhầm tab 1 trong lúc tải DB
+        switchSubtab(initTab);
+
+        await loadSettingsModuleData();
+        setupSettingsRealtimeChannel();
+
+        // Re-render subtab sau khi có dữ liệu thật từ DB
         switchSubtab(initTab);
     }
 

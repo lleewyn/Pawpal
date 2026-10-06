@@ -4,6 +4,7 @@
  */
 
 import { API } from '/scripts/api/api.js';
+import { getPets } from '/scripts/api/petService.js';
 
 const CURRENT_USER_KEY = 'pawpal_current_user';
 const PAWPAL_USERS_KEY = 'pawpal_users_db';
@@ -98,24 +99,92 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// 1. Helper lấy Supabase Client
+function getSupabaseClient() {
+    return window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+}
+
+// Đồng bộ dữ liệu Profile từ Supabase Live Database
+async function syncUserProfileFromSupabase(user) {
+    if (!user) return user;
+    try {
+        const client = getSupabaseClient();
+        if (!client) return user;
+
+        let customerId = user.id;
+        const phone = user.phone || user.phone_main || '';
+
+        let custRecord = null;
+        if (customerId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId)) {
+            const { data } = await client.from('customer').select('*').eq('id', customerId).maybeSingle();
+            custRecord = data;
+        }
+
+        if (!custRecord && phone) {
+            const cleanPhone = phone.replace(/[^0-9]/g, '');
+            const { data } = await client.from('customer').select('*').eq('phone_main', cleanPhone).maybeSingle();
+            custRecord = data;
+        }
+
+        if (custRecord) {
+            customerId = custRecord.id;
+            const [profRes, memRes, addrRes] = await Promise.all([
+                client.from('customer_profile').select('*').eq('customer_id', customerId).maybeSingle(),
+                client.from('customer_membership').select('*').eq('customer_id', customerId).maybeSingle(),
+                client.from('customer_address').select('*').eq('customer_id', customerId).order('is_default', { ascending: false })
+            ]);
+
+            const profile = profRes.data || {};
+            const membership = memRes.data || {};
+            const dbAddresses = (addrRes.data || []).map(a => ({
+                id: a.id,
+                street: [a.street_address, a.ward, a.district, a.province].filter(Boolean).join(', ') || a.street_address || '',
+                rawStreet: a.street_address || '',
+                ward: a.ward || '',
+                district: a.district || '',
+                province: a.province || '',
+                isDefault: Boolean(a.is_default),
+                receiverName: a.receiver_name || '',
+                receiverPhone: a.receiver_phone || ''
+            }));
+
+            const tierMap = {
+                'TIER_DIAMOND': 'Kim Cương',
+                'TIER_GOLD': 'Vàng',
+                'TIER_SILVER': 'Bạc',
+                'TIER_MEMBER': 'Thành viên'
+            };
+
+            const updatedUser = {
+                ...user,
+                id: customerId,
+                name: profile.full_name || user.name || 'Khách hàng',
+                fullName: profile.full_name || user.name || 'Khách hàng',
+                phone: custRecord.phone_main || user.phone || '',
+                email: custRecord.email || user.email || '',
+                status: custRecord.account_status || 'ACTIVE',
+                isLocked: custRecord.account_status === 'LOCKED',
+                points: Number(membership.current_points || user.points || 0),
+                pawPoints: Number(membership.current_points || user.points || 0),
+                membershipTier: tierMap[membership.tier_id] || user.membershipTier || 'Thành viên',
+                addresses: dbAddresses.length > 0 ? dbAddresses : (user.addresses || [])
+            };
+
+            setCurrentUser(updatedUser);
+            return updatedUser;
+        }
+    } catch (err) {
+        console.warn('[Profile] Lỗi đồng bộ dữ liệu từ Supabase:', err);
+    }
+    return user;
+}
+
 // 2. Tải và hiển thị dữ liệu Profile
 async function loadProfileData(user) {
     if (!user) return;
 
-    // Kiểm tra trạng thái tài khoản bị khóa
+    // Kiểm tra trạng thái tài khoản bị khóa trực tiếp từ Database
     let isAccountLocked = Boolean(user.isLocked || user.status === 'LOCKED');
-    try {
-        const rawAdminCusts = sessionStorage.getItem('pawpal_admin_customers_data') || localStorage.getItem('pawpal_admin_customers_data');
-        if (rawAdminCusts && user.phone) {
-            const adminCusts = JSON.parse(rawAdminCusts);
-            const cleanP = user.phone.replace(/[^0-9]/g, '');
-            const foundCust = Object.values(adminCusts).find(c => c.phone && c.phone.replace(/[^0-9]/g, '') === cleanP);
-            if (foundCust && foundCust.status === 'LOCKED') {
-                isAccountLocked = true;
-            }
-        }
-    } catch (e) {}
-
     const lockAlertEl = document.getElementById('userAccountLockAlert');
     if (lockAlertEl) {
         if (isAccountLocked) lockAlertEl.classList.remove('d-none');
@@ -130,22 +199,7 @@ async function loadProfileData(user) {
     if (pointsEl) pointsEl.textContent = (user.points || user.pawPoints || 0).toLocaleString('vi-VN');
 
     const tierEl = document.getElementById('statAccountType');
-    if (tierEl) tierEl.textContent = user.membershipTier || user.tier || 'Thành viên mới';
-
-    let pets = [];
-    try {
-        const localPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-        if (localPets.length > 0) {
-            pets = localPets.filter(p => !p.archived);
-        } else {
-            pets = (user.pets || []).filter(p => !p.archived);
-        }
-    } catch (e) {
-        pets = user.pets || [];
-    }
-
-    const petsCountEl = document.getElementById('statPetsCount');
-    if (petsCountEl) petsCountEl.textContent = pets.length;
+    if (tierEl) tierEl.textContent = user.membershipTier || user.tier || 'Thành viên';
 
     // Personal Info Card
     const nameEl = document.getElementById('profileName');
@@ -180,48 +234,50 @@ async function loadProfileData(user) {
     if (phoneInput) phoneInput.value = user.phone || '';
 }
 
-// 3. Tải danh sách thú cưng
+// 3. Tải danh sách thú cưng từ Supabase Live DB
+function getPetDefaultAvatar(species) {
+    const s = String(species || '').toLowerCase();
+    if (s.includes('chó') || s.includes('dog')) return '/assets/images/publics/dogcute3.jpg';
+    if (s.includes('mèo') || s.includes('cat')) return '/assets/images/publics/catcute5.jpg';
+    if (s.includes('thỏ') || s.includes('rabbit')) return '/assets/images/publics/pet1.jpg';
+    if (s.includes('hamster') || s.includes('chuột')) return '/assets/images/publics/hamster.jpg';
+    return '/assets/images/publics/pet.png';
+}
+
 async function loadMyPets(user) {
     const container = document.getElementById('myPetsContainerHorizontal');
     if (!container) return;
 
     let pets = [];
     try {
-        const localPets = JSON.parse(localStorage.getItem('pawpal_pets') || '[]');
-        if (localPets.length > 0) {
-            pets = localPets.filter(p => !p.archived);
-        } else {
-            pets = (user.pets || []).filter(p => !p.archived);
-        }
+        const allPets = await getPets(user?.id);
+        pets = (allPets || []).filter(p => !p.isArchived && !p.archived);
     } catch (e) {
-        pets = user.pets || [];
+        console.warn('[Profile] Lỗi tải pet từ petService:', e);
     }
+
+    const petsCountEl = document.getElementById('statPetsCount');
+    if (petsCountEl) petsCountEl.textContent = pets.length;
 
     if (pets.length === 0) {
         container.innerHTML = `
             <div class="p-3 text-muted">
                 Bạn chưa đăng ký bé cưng nào.
-                <a href="#pets" class="text-success ms-2 font-weight-bold">+ Thêm bé ngay</a>
+                <a href="#pets" class="text-success ms-2 font-weight-bold">Thêm bé ngay</a>
             </div>
         `;
         return;
     }
 
-    const defaultAvatars = {
-        dog: '/assets/images/publics/dogcute3.jpg',
-        cat: '/assets/images/publics/catcute5.jpg',
-        rabbit: '/assets/images/publics/pet1.jpg',
-        other: '/assets/images/publics/pet.jpg'
-    };
-
     let html = '';
     pets.forEach(pet => {
-        const petAvatar = pet.avatar || pet.image || defaultAvatars[pet.species] || defaultAvatars.other;
+        const petAvatar = pet.avatar || getPetDefaultAvatar(pet.species);
         const speciesLabel = pet.species === 'dog' ? 'Chó' : pet.species === 'cat' ? 'Mèo' : pet.species === 'rabbit' ? 'Thỏ' : 'Thú cưng';
+        const fallbackSrc = getPetDefaultAvatar(pet.species);
         html += `
             <div class="pet-avatar-item pawpal-smooth-entrance">
                 <a href="#pets" style="text-decoration: none;">
-                    <img src="${petAvatar}" alt="${escapeHtml(pet.name || 'Bé cưng')}" class="pet-image-circle" onerror="this.src='/assets/images/publics/pet.jpg'">
+                    <img src="${petAvatar}" alt="${escapeHtml(pet.name || 'Bé cưng')}" class="pet-image-circle" onerror="this.onerror=null; this.src='${fallbackSrc}';">
                     <div class="pet-avatar-name">${escapeHtml(pet.name || 'Bé cưng')}</div>
                     <div class="pet-avatar-breed">${escapeHtml(pet.breed || speciesLabel)}</div>
                 </a>
@@ -242,25 +298,60 @@ async function loadMyPets(user) {
     container.innerHTML = html;
 }
 
-// 4. Tải lịch hẹn sắp tới
+// 4. Tải lịch hẹn sắp tới từ Supabase Live DB
 async function loadUpcomingBooking(user) {
     const container = document.getElementById('upcomingBookingCardContainer');
     if (!container) return;
 
-    let bookings = [];
+    let upcoming = null;
     try {
-        const local = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
-        bookings = local.filter(b => String(b.userId || b.userPhone || '') === String(user.id || user.phone || ''));
+        const client = getSupabaseClient();
+        if (client && user.id) {
+            const { data, error } = await client.from('appointment')
+                .select('id, appointment_code, appointment_date, appointment_time, appointment_status, service:service_id(service_name), pet_profile:pet_id(pet_name)')
+                .eq('customer_id', user.id)
+                .in('appointment_status', ['PENDING', 'CONFIRMED', 'IN_PROGRESS'])
+                .order('appointment_date', { ascending: true })
+                .limit(1);
+
+            if (!error && data && data.length > 0) {
+                const b = data[0];
+                const srv = Array.isArray(b.service) ? b.service[0] : b.service;
+                const pet = Array.isArray(b.pet_profile) ? b.pet_profile[0] : b.pet_profile;
+                upcoming = {
+                    id: b.appointment_code || b.id,
+                    date: b.appointment_date,
+                    time: b.appointment_time ? b.appointment_time.slice(0, 5) : '',
+                    serviceName: srv?.service_name || 'Dịch vụ chăm sóc',
+                    petName: pet?.pet_name || 'Bé cưng'
+                };
+            }
+        }
     } catch (e) {
-        console.warn('[Profile] Lỗi đọc booking:', e);
+        console.warn('[Profile] Lỗi tải booking từ Supabase:', e);
     }
 
-    const upcoming = bookings.find(b => !['cancelled', 'completed'].includes(String(b.status || '').toLowerCase()));
+    if (!upcoming) {
+        try {
+            const local = JSON.parse(localStorage.getItem('pawpal_bookings') || '[]');
+            const localUpcoming = local.find(b => !['cancelled', 'completed'].includes(String(b.status || '').toLowerCase()));
+            if (localUpcoming) {
+                upcoming = {
+                    id: localUpcoming.id,
+                    date: localUpcoming.date,
+                    time: localUpcoming.time || localUpcoming.schedule?.slot,
+                    serviceName: localUpcoming.serviceName || localUpcoming.service || 'Dịch vụ chăm sóc',
+                    petName: localUpcoming.petName || 'Bé cưng'
+                };
+            }
+        } catch (e) {}
+    }
+
     if (!upcoming) {
         container.innerHTML = `
             <div class="p-3 text-muted d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <span>Bạn chưa có lịch hẹn dịch vụ nào sắp tới.</span>
-                <a href="/pages/services/booking/booking.html" class="btn-booking-detail-action">+ Đặt lịch ngay</a>
+                <a href="/pages/services/booking/booking.html" class="btn-booking-detail-action">Đặt lịch ngay</a>
             </div>
         `;
         return;
@@ -278,9 +369,8 @@ async function loadUpcomingBooking(user) {
         }
     }
 
-    const rawService = upcoming.serviceName || upcoming.selectedService?.name || upcoming.service || 'Dịch vụ Spa và Làm đẹp';
-    const serviceName = rawService.replace(/\s*&\s*/g, ' và ');
-    const timeVal = upcoming.time || upcoming.schedule?.slot || 'Theo hẹn';
+    const serviceName = String(upcoming.serviceName || 'Dịch vụ chăm sóc').replace(/\s*&\s*/g, ' và ');
+    const timeVal = upcoming.time || 'Theo lịch hẹn';
     const petName = upcoming.petName || 'Bé cưng';
 
     container.innerHTML = `
@@ -303,21 +393,39 @@ async function loadUpcomingBooking(user) {
     `;
 }
 
-// 5. Tải đơn hàng gần đây
+// 5. Tải đơn hàng gần đây từ Supabase Live DB
 async function loadRecentOrders(user) {
     const container = document.getElementById('recentOrdersContainer');
     if (!container) return;
 
     let orders = [];
     try {
-        const local = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
-        orders = local.filter(o => {
-            const uid = String(o.userId || '');
-            const phone = String(o.userPhone || o.shipping?.phone || '');
-            return (user.id && uid === String(user.id)) || (user.phone && phone === String(user.phone));
-        });
+        const client = getSupabaseClient();
+        if (client && user.id) {
+            const { data, error } = await client.from('sales_order')
+                .select('*')
+                .eq('customer_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(3);
+
+            if (!error && data && data.length > 0) {
+                orders = data.map(o => ({
+                    code: o.order_code || `#${o.id}`,
+                    total: Number(o.total_amount || 0),
+                    status: (o.order_status || 'PENDING').toLowerCase(),
+                    createdAt: o.created_at
+                }));
+            }
+        }
     } catch (e) {
-        console.warn('[Profile] Lỗi đọc orders:', e);
+        console.warn('[Profile] Lỗi tải đơn hàng từ Supabase:', e);
+    }
+
+    if (orders.length === 0) {
+        try {
+            const local = JSON.parse(localStorage.getItem('pawpal_orders') || '[]');
+            orders = local.slice(0, 3);
+        } catch (e) {}
     }
 
     if (!orders || orders.length === 0) {
@@ -325,21 +433,21 @@ async function loadRecentOrders(user) {
         return;
     }
 
-    orders.sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
-    const recent = orders.slice(0, 3);
-
     const statusMap = {
         'completed': { label: 'Hoàn thành', cls: 'status-completed' },
+        'done': { label: 'Hoàn thành', cls: 'status-completed' },
         'delivering': { label: 'Đang giao', cls: 'status-delivering' },
+        'shipping': { label: 'Đang giao', cls: 'status-delivering' },
         'in-progress': { label: 'Đang chuẩn bị', cls: 'status-in-progress' },
+        'confirmed': { label: 'Đã xác nhận', cls: 'status-in-progress' },
         'pending': { label: 'Chờ xác nhận', cls: 'status-pending' },
         'cancelled': { label: 'Đã hủy', cls: 'status-cancelled' }
     };
 
     let html = '';
-    recent.forEach(order => {
-        const orderCode = order.code || (order.id ? `#${order.id}` : '#ORD');
-        const price = (order.total || order.pricing?.total || order.totalAmount || 0).toLocaleString('vi-VN') + 'đ';
+    orders.forEach(order => {
+        const orderCode = order.code || '#ORD';
+        const price = (order.total || 0).toLocaleString('vi-VN') + 'đ';
         const stKey = String(order.status || 'pending').toLowerCase();
         const stConfig = statusMap[stKey] || { label: order.status || 'Chờ xác nhận', cls: 'status-pending' };
         const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Gần đây';
@@ -360,6 +468,7 @@ async function loadRecentOrders(user) {
 
     container.innerHTML = html;
 }
+
 
 // 6. Xử lý Modal Chỉnh sửa thông tin cá nhân và Sổ địa chỉ
 let tempAddresses = [];
@@ -512,6 +621,8 @@ function initProfileEditModal(user) {
             tempAddresses.push({
                 id: 'addr-' + Date.now(),
                 street: fullStreet,
+                province: city || '',
+                district: district || '',
                 isDefault: isFirst
             });
 
@@ -546,7 +657,50 @@ function initProfileEditModal(user) {
 
         setCurrentUser(updatedUser);
 
-        // Đồng bộ ngược sang pawpal_admin_customers_data
+        // Lưu trực tiếp vào Supabase Live DB
+        try {
+            const client = getSupabaseClient();
+            if (client && currentUser.id) {
+                const customerId = currentUser.id;
+
+                // 1. Cập nhật bảng customer
+                await client.from('customer').update({
+                    email: emailVal,
+                    phone_main: phoneVal
+                }).eq('id', customerId);
+
+                // 2. Cập nhật bảng customer_profile
+                const { data: profData } = await client.from('customer_profile').select('id').eq('customer_id', customerId).maybeSingle();
+                if (profData) {
+                    await client.from('customer_profile').update({
+                        full_name: nameVal
+                    }).eq('customer_id', customerId);
+                } else {
+                    await client.from('customer_profile').insert({
+                        customer_id: customerId,
+                        full_name: nameVal
+                    });
+                }
+
+                // 3. Cập nhật sổ địa chỉ customer_address
+                await client.from('customer_address').delete().eq('customer_id', customerId);
+                if (tempAddresses.length > 0) {
+                    const addrRows = tempAddresses.map(a => ({
+                        customer_id: customerId,
+                        receiver_name: nameVal,
+                        receiver_phone: phoneVal,
+                        street_address: a.street || a.address || '',
+                        province: a.province || '',
+                        is_default: Boolean(a.isDefault)
+                    }));
+                    await client.from('customer_address').insert(addrRows);
+                }
+            }
+        } catch (dbErr) {
+            console.warn('[Profile] Lỗi cập nhật lên Supabase Live DB:', dbErr);
+        }
+
+        // Đồng bộ ngược sang pawpal_admin_customers_data trong session
         try {
             const rawAdminCustomers = sessionStorage.getItem('pawpal_admin_customers_data') || localStorage.getItem('pawpal_admin_customers_data');
             if (rawAdminCustomers) {
@@ -580,25 +734,36 @@ function initProfileEditModal(user) {
     });
 }
 
+let isInitRunning = false;
+
 // Hàm khởi tạo chính của module Profile
-export function init() {
-    const user = getCurrentUser();
-    if (!user) return;
+export async function init() {
+    if (isInitRunning) return;
+    isInitRunning = true;
+    try {
+        let user = getCurrentUser();
+        if (!user) return;
 
-    if (typeof window.setUserSubBreadcrumb === 'function') {
-        window.setUserSubBreadcrumb('', 'profile');
+        if (typeof window.setUserSubBreadcrumb === 'function') {
+            window.setUserSubBreadcrumb('', 'profile');
+        }
+
+        // Đồng bộ thời gian thực từ Supabase Live Database trước khi render để tránh giật giao diện
+        if (window.getSupabaseClient || window.SupabaseClient) {
+            const freshUser = await syncUserProfileFromSupabase(user);
+            if (freshUser) user = freshUser;
+        }
+
+        // Tải và hiển thị dữ liệu chuẩn một lần duy nhất
+        loadProfileData(user);
+        loadMyPets(user);
+        loadUpcomingBooking(user);
+        loadRecentOrders(user);
+        initProfileEditModal(user);
+    } finally {
+        isInitRunning = false;
     }
-
-    loadProfileData(user);
-    loadMyPets(user);
-    loadUpcomingBooking(user);
-    loadRecentOrders(user);
-    initProfileEditModal(user);
 }
 
-// Tự động chạy nếu tải qua script tag thường
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+export const initProfile = init;
+window.initProfile = init;

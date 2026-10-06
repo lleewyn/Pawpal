@@ -142,9 +142,46 @@ async function initBlogDetail() {
 
         // Find target blog
         let blog = null;
+        const idParam = urlParams.get('id');
+
         if (slug) {
-            blog = blogs.find(b => b.slug === slug || b.slug === decodeURIComponent(slug));
+            const decSlug = decodeURIComponent(slug);
+            blog = blogs.find(b => b.slug === slug || b.slug === decSlug);
+        } else if (idParam) {
+            blog = blogs.find(b => String(b.id) === String(idParam));
         }
+
+        // Direct Supabase Live lookup if not found in cache
+        if (!blog && (slug || idParam)) {
+            try {
+                const db = window.SupabaseClient || (window.getSupabaseClient ? window.getSupabaseClient() : null);
+                if (db) {
+                    let q = db.from('blog_post').select('*, blog_category(category_name)');
+                    if (slug) q = q.eq('slug', decodeURIComponent(slug));
+                    else if (idParam) q = q.eq('id', idParam);
+                    const { data: dbItem, error: dbErr } = await q.maybeSingle();
+                    if (dbItem && !dbErr) {
+                        const rootPath = window.pawpalGetRootPath ? window.pawpalGetRootPath() : '../../';
+                        blog = {
+                            id: dbItem.id,
+                            title: dbItem.title,
+                            slug: dbItem.slug,
+                            summary: dbItem.summary,
+                            content: dbItem.content,
+                            thumbnail: dbItem.thumbnail_url ? (dbItem.thumbnail_url.startsWith('http') ? dbItem.thumbnail_url : rootPath + dbItem.thumbnail_url.replace(/^[\/\\]+/, '')) : rootPath + 'assets/images/publics/dog1.png',
+                            authorId: dbItem.author_id,
+                            date: dbItem.publish_at || dbItem.created_at,
+                            viewCount: dbItem.view_count || 0,
+                            categoryName: dbItem.blog_category?.category_name || 'Cẩm nang chăm sóc',
+                            categorySlug: dbItem.blog_category?.category_name ? dbItem.blog_category.category_name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'tips'
+                        };
+                    }
+                }
+            } catch (e) {
+                console.warn('Error fetching single blog from DB:', e);
+            }
+        }
+
         if (!blog && blogs.length > 0) {
             blog = blogs[0];
         }

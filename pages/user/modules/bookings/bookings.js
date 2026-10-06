@@ -4,7 +4,7 @@ import { API } from '/scripts/api/api.js';
 
 
 async function cancelOnSupabase(bookingId) {
-    const db = window.SupabaseClient;
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) return;
     try {
         const booking = allBookings.find(b => String(b.id) === String(bookingId) || String(b._id) === String(bookingId));
@@ -18,7 +18,7 @@ async function cancelOnSupabase(bookingId) {
 }
 
 async function rescheduleOnSupabase(bookingId, date, time) {
-    const db = window.SupabaseClient;
+    const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
     if (!db) return;
     try {
         const booking = allBookings.find(b => String(b.id) === String(bookingId) || String(b._id) === String(bookingId));
@@ -57,6 +57,41 @@ const statusAliases = {
 let allBookings = [];
 let currentPetMap = new Map();
 
+const DEFAULT_PET_AVATARS = {
+    dog: '/assets/images/publics/dogcute3.jpg',
+    cat: '/assets/images/publics/catcute5.jpg',
+    rabbit: '/assets/images/publics/pet1.jpg',
+    hamster: '/assets/images/publics/pet2.jpg',
+    other: '/assets/images/publics/catcute5.jpg'
+};
+
+function getBookingPetAvatar(petObj, booking) {
+    if (petObj?.image && petObj.image !== '/assets/images/placeholder.webp' && !petObj.image.includes('default-pet.png') && !petObj.image.includes('pet.jpg')) {
+        return petObj.image;
+    }
+    if (petObj?.avatar && !petObj.avatar.includes('pet.jpg') && !petObj.avatar.includes('default-pet.png')) {
+        return petObj.avatar;
+    }
+    if (booking?.petAvatar && !booking.petAvatar.includes('pet.jpg') && !booking.petAvatar.includes('default-pet.png')) {
+        return booking.petAvatar;
+    }
+
+    const rawType = (petObj?.type || petObj?.species || booking?.petSpecies || booking?.petBreed || booking?.petName || '').toLowerCase();
+    if (rawType.includes('mèo') || rawType.includes('cat') || rawType.includes('cà phê') || rawType.includes('mun') || rawType.includes('mimi') || rawType.includes('beo')) {
+        return DEFAULT_PET_AVATARS.cat;
+    }
+    if (rawType.includes('chó') || rawType.includes('dog') || rawType.includes('corgi') || rawType.includes('poodle') || rawType.includes('golden') || rawType.includes('husky') || rawType.includes('lu')) {
+        return DEFAULT_PET_AVATARS.dog;
+    }
+    if (rawType.includes('thỏ') || rawType.includes('rabbit')) {
+        return DEFAULT_PET_AVATARS.rabbit;
+    }
+    if (rawType.includes('hamster') || rawType.includes('chuột')) {
+        return DEFAULT_PET_AVATARS.hamster;
+    }
+    return DEFAULT_PET_AVATARS.cat;
+}
+
 function getServiceReviewKey(booking) {
     return `pawpal_service_review_${booking.id || booking.code || ''}`;
 }
@@ -77,19 +112,21 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-export async function init() {
-    if (!document.getElementById('bookingsList')) return;
-    if (typeof window.setUserSubBreadcrumb === 'function') {
-        window.setUserSubBreadcrumb('', 'bookings');
-    }
-    initFilterTabs();
-    await loadBookings('all');
-}
+let isInitRunning = false;
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
+export async function init() {
+    if (isInitRunning) return;
+    isInitRunning = true;
+    try {
+        if (!document.getElementById('bookingsList')) return;
+        if (typeof window.setUserSubBreadcrumb === 'function') {
+            window.setUserSubBreadcrumb('', 'bookings');
+        }
+        initFilterTabs();
+        await loadBookings('all');
+    } finally {
+        isInitRunning = false;
+    }
 }
 
 function initFilterTabs() {
@@ -111,7 +148,6 @@ function initFilterTabs() {
 async function loadBookings(status) {
     try {
         const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || { id: 'USER-001', phone: '0901234567' };
-    
 
         await API.initData();
         allBookings = currentUser ? await API.getUserBookings(currentUser.id) : [];
@@ -121,18 +157,10 @@ async function loadBookings(status) {
         (Array.isArray(userPets) ? userPets : []).forEach((pet) => {
             if (pet._id) currentPetMap.set(String(pet._id), pet);
             if (pet.id) currentPetMap.set(String(pet.id), pet);
+            if (pet.pet_code) currentPetMap.set(String(pet.pet_code), pet);
+            if (pet.name) currentPetMap.set(String(pet.name).trim().toLowerCase(), pet);
+            if (pet.pet_name) currentPetMap.set(String(pet.pet_name).trim().toLowerCase(), pet);
         });
-
-        try {
-            const rawPets = await fetch('/data/pets.json').then(r => r.json());
-            (Array.isArray(rawPets) ? rawPets : []).forEach(pet => {
-                if (pet.id && !currentPetMap.has(String(pet.id))) {
-                    currentPetMap.set(String(pet.id), pet);
-                }
-            });
-        } catch(e) {
-            console.warn('Could not load fallback pets', e);
-        }
 
         renderBookings(status);
     } catch (error) {
@@ -233,11 +261,12 @@ function createBookingCard(booking) {
         && cancelCount < 3;
     
     const petKey = String(booking.petId || '');
-    const petObj = currentPetMap.get(petKey);
+    const petNameLower = String(booking.petName || booking.petInfo?.petName || '').trim().toLowerCase();
+    const petObj = currentPetMap.get(petKey) || (petNameLower ? currentPetMap.get(petNameLower) : null);
     const petId = booking.petId || petObj?._id || petObj?.id || '';
     const bookingId = booking.id || booking._id || '';
-    const petAvatar = petObj?.avatar || booking.petAvatar || '/assets/images/shared/default-pet.png';
-    const petName = booking.petName || petObj?.name || booking.petInfo?.petName || booking.petId || 'Bé cưng';
+    const petAvatar = getBookingPetAvatar(petObj, booking);
+    const petName = booking.petName || petObj?.name || petObj?.pet_name || booking.petInfo?.petName || booking.petId || 'Bé cưng';
     const serviceName = (booking.service || booking.serviceName || booking.selectedService?.name || 'Dịch vụ PawPal').replace(/\s*&\s*/g, ' và ');
     const dateTimeText = buildDateTimeText(booking);
 
@@ -319,7 +348,7 @@ function createBookingCard(booking) {
     card.innerHTML = `
         <div class="booking-card-main-content">
             <div class="booking-pet-avatar-wrapper">
-                <img src="${petAvatar}" alt="${escapeHtml(petName)}" class="booking-pet-avatar">
+                <img src="${petAvatar}" alt="${escapeHtml(petName)}" class="booking-pet-avatar" onerror="this.onerror=null; this.src='/assets/images/publics/catcute5.jpg';">
             </div>
             <div class="booking-info-col">
                 <div class="booking-title-row">

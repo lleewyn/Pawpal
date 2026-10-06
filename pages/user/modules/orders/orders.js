@@ -53,20 +53,7 @@ async function loadOrders() {
             return false;
         });
 
-        // 3. Nếu cả local lẫn remote đều trống, nạp mẫu từ /data/orders.json cho demo
-        if (matchingLocalOrders.length === 0 && remoteOrders.length === 0) {
-            try {
-                const res = await fetch('/data/orders.json');
-                const sampleOrders = await res.json();
-                if (Array.isArray(sampleOrders)) {
-                    matchingLocalOrders = sampleOrders;
-                }
-            } catch (err) {
-                console.warn('[Orders] Không thể nạp sample orders:', err);
-            }
-        }
-
-        // 4. Hợp nhất danh sách đơn hàng
+        // 3. Hợp nhất danh sách đơn hàng
         const orderMap = new Map();
         matchingLocalOrders.forEach(order => {
             const key = String(order.id || order.orderId || order._supabaseId || '');
@@ -90,7 +77,7 @@ async function loadOrders() {
             const normalizedProducts = products.map(p => ({
                 id: p.id || p.productId || '',
                 name: p.name || p.title || 'Sản phẩm',
-                image: p.image || p.img || '/assets/images/shared/product_placeholder.png',
+                image: p.image || p.img || '/assets/images/publics/feed.jpg',
                 quantity: Number(p.quantity ?? p.qty) || 1,
                 price: Number(p.price ?? p.unitPrice) || 0,
                 total: Number(p.total) || ((Number(p.price) || 0) * (Number(p.quantity) || 1))
@@ -326,7 +313,7 @@ function createOrderCard(order) {
     const prods = Array.isArray(order.products) ? order.products : (Array.isArray(order.items) ? order.items : []);
     const firstProduct = prods.length > 0
         ? prods[0]
-        : { name: 'Sản phẩm PawPal', image: '/assets/images/shared/product_placeholder.png', sku: '', quantity: 1, price: 0, total: 0 };
+        : { name: 'Sản phẩm PawPal', image: '/assets/images/publics/feed.jpg', sku: '', quantity: 1, price: 0, total: 0 };
     const remainingCount = Math.max(0, prods.length - 1);
     const normalizedStatus = normalizeOrderStatus(order.status);
 
@@ -461,7 +448,7 @@ function createOrderCard(order) {
         <article class="order-card pawpal-smooth-entrance status-${normalizedStatus}" data-order-id="${orderId}">
             <div class="order-card-main-content" onclick="window.location.href='${detailUrl}'" role="link" tabindex="0">
                 <div class="order-product-thumb-wrapper">
-                    <img src="${firstProduct.image || '/assets/images/shared/product_placeholder.png'}" alt="${escapeHtml(firstProduct.name)}" class="order-product-thumb" loading="lazy">
+                    <img src="${firstProduct.image || '/assets/images/publics/feed.jpg'}" alt="${escapeHtml(firstProduct.name)}" class="order-product-thumb" loading="lazy" onerror="this.onerror=null; this.src='/assets/images/publics/feed.jpg';">
                 </div>
                 <div class="order-info-col">
                     <div class="order-title-row">
@@ -1164,77 +1151,80 @@ function openChangePaymentMethodModal(orderId) {
 }
 window.openChangePaymentMethodModal = openChangePaymentMethodModal;
 
-export function initOrders() {
-    if (typeof window.setUserSubBreadcrumb === 'function') {
-        window.setUserSubBreadcrumb('', 'orders');
-    }
+let isInitRunning = false;
 
-    // Kiểm tra tab ban đầu từ URL parameter (ví dụ ?status=pending_payment hoặc ?tab=pending_payment)
-    const urlParams = new URLSearchParams(window.location.search);
-    const initialStatus = urlParams.get('status') || urlParams.get('tab');
-    if (initialStatus) {
-        ordersState.currentTab = initialStatus;
-        const targetTab = document.querySelector(`.order-filter-tab[data-status="${initialStatus}"], .tab-btn[data-status="${initialStatus}"]`);
-        if (targetTab) {
-            document.querySelectorAll('.order-filter-tab, .tab-btn').forEach((item) => {
-                item.classList.remove('active');
-                item.setAttribute('aria-selected', 'false');
-            });
-            targetTab.classList.add('active');
-            targetTab.setAttribute('aria-selected', 'true');
+export async function initOrders() {
+    if (isInitRunning) return;
+    isInitRunning = true;
+    try {
+        if (typeof window.setUserSubBreadcrumb === 'function') {
+            window.setUserSubBreadcrumb('', 'orders');
         }
-    }
 
-    loadOrders();
-
-    document.querySelectorAll('.order-filter-tab, .tab-btn').forEach((button) => {
-        button.addEventListener('click', (event) => {
-            document.querySelectorAll('.order-filter-tab, .tab-btn').forEach((item) => {
-                item.classList.remove('active');
-                item.setAttribute('aria-selected', 'false');
-            });
-            event.currentTarget.classList.add('active');
-            event.currentTarget.setAttribute('aria-selected', 'true');
-            filterByStatus(event.currentTarget.dataset.status);
-        });
-    });
-
-    const searchInput = document.getElementById('order-search');
-    const searchBtn = document.getElementById('search-btn');
-
-    if (searchBtn && searchInput) {
-        searchBtn.addEventListener('click', () => {
-            searchOrders(searchInput.value);
-        });
-
-        searchInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                searchOrders(searchInput.value);
+        // Kiểm tra tab ban đầu từ URL parameter (ví dụ ?status=pending_payment hoặc ?tab=pending_payment)
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialStatus = urlParams.get('status') || urlParams.get('tab');
+        if (initialStatus) {
+            ordersState.currentTab = initialStatus;
+            const targetTab = document.querySelector(`.order-filter-tab[data-status="${initialStatus}"], .tab-btn[data-status="${initialStatus}"]`);
+            if (targetTab) {
+                document.querySelectorAll('.order-filter-tab, .tab-btn').forEach((item) => {
+                    item.classList.remove('active');
+                    item.setAttribute('aria-selected', 'false');
+                });
+                targetTab.classList.add('active');
+                targetTab.setAttribute('aria-selected', 'true');
             }
-        });
-    }
+        }
 
-    const prevBtn = document.getElementById('prev-page');
-    if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-            if (ordersState.currentPage > 1) goToPage(ordersState.currentPage - 1);
-        });
-    }
+        await loadOrders();
 
-    const nextBtn = document.getElementById('next-page');
-    if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-            const totalPages = Math.ceil(ordersState.filteredOrders.length / ordersState.ordersPerPage);
-            if (ordersState.currentPage < totalPages) goToPage(ordersState.currentPage + 1);
+        document.querySelectorAll('.order-filter-tab, .tab-btn').forEach((button) => {
+            button.addEventListener('click', (event) => {
+                document.querySelectorAll('.order-filter-tab, .tab-btn').forEach((item) => {
+                    item.classList.remove('active');
+                    item.setAttribute('aria-selected', 'false');
+                });
+                event.currentTarget.classList.add('active');
+                event.currentTarget.setAttribute('aria-selected', 'true');
+                filterByStatus(event.currentTarget.dataset.status);
+            });
         });
-    }
-}
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initOrders);
-} else {
-    initOrders();
+        const searchInput = document.getElementById('order-search');
+        const searchBtn = document.getElementById('search-btn');
+
+        if (searchBtn && searchInput) {
+            searchBtn.addEventListener('click', () => {
+                searchOrders(searchInput.value);
+            });
+
+            searchInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    searchOrders(searchInput.value);
+                }
+            });
+        }
+
+        const prevBtn = document.getElementById('prev-page');
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                if (ordersState.currentPage > 1) goToPage(ordersState.currentPage - 1);
+            });
+        }
+
+        const nextBtn = document.getElementById('next-page');
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(ordersState.filteredOrders.length / ordersState.ordersPerPage);
+                if (ordersState.currentPage < totalPages) goToPage(ordersState.currentPage + 1);
+            });
+        }
+    } finally {
+        isInitRunning = false;
+    }
 }
 
 export const init = initOrders;
+window.initOrders = initOrders;
 

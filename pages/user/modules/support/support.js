@@ -450,17 +450,39 @@ export function initSupportTickets() {
 
             // 5. Quản lý trạng thái Reply và Đánh giá CSKH
             const isCompleted = ticket.status === 'completed' || ticket.status === 'resolved' || ticket.status === 'closed';
+            const ratingScoreLabel = document.getElementById('ratingScoreLabel');
+            const btnCancelRating = document.getElementById('btnCancelRating');
+            const btnCancelRatingAction = document.getElementById('btnCancelRatingAction');
+
+            const ratingLabels = {
+                1: '1 / 5 sao (Rất không hài lòng)',
+                2: '2 / 5 sao (Chưa hài lòng)',
+                3: '3 / 5 sao (Bình thường / Tạm được)',
+                4: '4 / 5 sao (Hài lòng)',
+                5: '5 / 5 sao (Rất hài lòng)'
+            };
+
+            function updateStarDisplay(score, readOnly = false) {
+                currentSelectedRating = score;
+                const stars = document.querySelectorAll('.star-btn');
+                stars.forEach(s => {
+                    const val = parseInt(s.getAttribute('data-value'), 10);
+                    s.style.color = val <= score ? '#D97706' : '#C3DEC7';
+                    s.disabled = readOnly;
+                });
+                if (ratingScoreLabel) {
+                    ratingScoreLabel.textContent = ratingLabels[score] || `${score} / 5 sao`;
+                }
+            }
+
             if (isCompleted) {
                 replyEditorArea.classList.add('d-none');
                 ratingFeedbackArea.classList.remove('d-none');
+                if (btnCancelRating) btnCancelRating.classList.add('d-none');
+                if (btnCancelRatingAction) btnCancelRatingAction.classList.add('d-none');
 
                 if (ticket.rating) {
-                    const stars = document.querySelectorAll('.star-btn');
-                    stars.forEach(s => {
-                        const val = parseInt(s.getAttribute('data-value'), 10);
-                        s.style.color = val <= ticket.rating ? '#D97706' : '#C3DEC7';
-                        s.disabled = true;
-                    });
+                    updateStarDisplay(ticket.rating, true);
                     const commentInput = document.getElementById('ratingComment');
                     if (commentInput) {
                         commentInput.value = ticket.ratingComment || '';
@@ -472,12 +494,7 @@ export function initSupportTickets() {
                         btnSubmitRating.style.opacity = '0.7';
                     }
                 } else {
-                    const stars = document.querySelectorAll('.star-btn');
-                    stars.forEach(s => {
-                        const val = parseInt(s.getAttribute('data-value'), 10);
-                        s.style.color = val <= currentSelectedRating ? '#D97706' : '#C3DEC7';
-                        s.disabled = false;
-                    });
+                    updateStarDisplay(currentSelectedRating || 5, false);
                     const commentInput = document.getElementById('ratingComment');
                     if (commentInput) {
                         commentInput.value = '';
@@ -492,6 +509,14 @@ export function initSupportTickets() {
             } else {
                 replyEditorArea.classList.remove('d-none');
                 ratingFeedbackArea.classList.add('d-none');
+                if (btnCancelRating) btnCancelRating.classList.remove('d-none');
+                if (btnCancelRatingAction) btnCancelRatingAction.classList.remove('d-none');
+                updateStarDisplay(currentSelectedRating || 5, false);
+            }
+
+            // Đảm bảo Modal Overlay được gắn trực tiếp vào document.body để hiển thị chính giữa toàn màn hình
+            if (detailModalOverlay.parentNode !== document.body) {
+                document.body.appendChild(detailModalOverlay);
             }
 
             // Hiển thị Popup Modal và khóa cuộn nền trang
@@ -539,26 +564,51 @@ export function initSupportTickets() {
             });
         }
 
+        // Chuyển sang chế độ Đóng hỗ trợ và Đánh giá
         if (btnActionCloseTicket) {
-            btnActionCloseTicket.addEventListener('click', () => {
+            btnActionCloseTicket.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 if (replyEditorArea) replyEditorArea.classList.add('d-none');
                 if (ratingFeedbackArea) {
                     ratingFeedbackArea.classList.remove('d-none');
                     if (btnSubmitRating) {
-                        btnSubmitRating.textContent = 'Đóng hỗ trợ và Đánh giá';
+                        btnSubmitRating.textContent = 'Xác nhận hoàn tất và Đánh giá';
                     }
+                    ratingFeedbackArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
             });
         }
 
+        // Hủy đánh giá / Quay lại khung gửi phản hồi
+        const cancelRatingHandler = (e) => {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            if (ratingFeedbackArea) ratingFeedbackArea.classList.add('d-none');
+            if (replyEditorArea) replyEditorArea.classList.remove('d-none');
+        };
+        const btnCancelRating = document.getElementById('btnCancelRating');
+        const btnCancelRatingAction = document.getElementById('btnCancelRatingAction');
+        if (btnCancelRating) btnCancelRating.addEventListener('click', cancelRatingHandler);
+        if (btnCancelRatingAction) btnCancelRatingAction.addEventListener('click', cancelRatingHandler);
+
         const stars = document.querySelectorAll('.star-btn');
         stars.forEach(star => {
             star.addEventListener('click', () => {
-                currentSelectedRating = parseInt(star.getAttribute('data-value'), 10);
+                const val = parseInt(star.getAttribute('data-value'), 10);
+                currentSelectedRating = val;
                 stars.forEach(s => {
-                    const val = parseInt(s.getAttribute('data-value'), 10);
-                    s.style.color = val <= currentSelectedRating ? '#D97706' : '#C3DEC7';
+                    const sVal = parseInt(s.getAttribute('data-value'), 10);
+                    s.style.color = sVal <= currentSelectedRating ? '#D97706' : '#C3DEC7';
                 });
+                const lbl = document.getElementById('ratingScoreLabel');
+                const ratingLabels = {
+                    1: '1 / 5 sao (Rất không hài lòng)',
+                    2: '2 / 5 sao (Chưa hài lòng)',
+                    3: '3 / 5 sao (Bình thường / Tạm được)',
+                    4: '4 / 5 sao (Hài lòng)',
+                    5: '5 / 5 sao (Rất hài lòng)'
+                };
+                if (lbl) lbl.textContent = ratingLabels[val] || `${val} / 5 sao`;
             });
         });
 
@@ -566,7 +616,7 @@ export function initSupportTickets() {
             btnSubmitRating.addEventListener('click', async () => {
                 if (!activeTicketId) return;
                 const commentInput = document.getElementById('ratingComment');
-                const comment = commentInput ? commentInput.value : '';
+                const comment = commentInput ? commentInput.value.trim() : '';
 
                 btnSubmitRating.disabled = true;
                 btnSubmitRating.textContent = 'Đang lưu...';
@@ -579,12 +629,9 @@ export function initSupportTickets() {
             });
         }
 
-        document.addEventListener('tickets_updated', async () => {
-            await window.PawPalSupport.loadTickets();
+        // Cập nhật bảng dữ liệu khi có thay đổi (triệt tiêu vòng lặp gọi lại loadTickets)
+        document.addEventListener('tickets_updated', () => {
             renderTable();
-            if (activeTicketId && detailModalOverlay && !detailModalOverlay.classList.contains('d-none')) {
-                showTicketDetail(activeTicketId);
-            }
         });
 
         // Lắng nghe sự kiện lưu trữ giữa các Tab (Admin và User)

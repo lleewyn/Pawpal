@@ -20,7 +20,7 @@
                     Hoàn tất <span class="tab-count" id="countCompleted">(0)</span>
                 </button>
             </div>
-            <a href="#support-create" class="btn-support-create text-decoration-none">+ Gửi yêu cầu mới</a>
+            <a href="#support-create" class="btn-support-create text-decoration-none">Gửi yêu cầu mới</a>
         </div>
 
         <!-- Bảng danh sách phiếu hỗ trợ -->
@@ -125,16 +125,26 @@
                 <!-- Đánh giá CSKH sau giải quyết -->
                 <div class="rating-feedback-area d-none mt-3 p-3" id="ratingFeedbackArea">
                     <div class="rating-box">
-                        <h6 class="rating-title mb-2">Đánh giá chất lượng hỗ trợ</h6>
-                        <div class="star-rating-holder mb-2 d-flex gap-1" id="ratingStarsGroup">
-                            <button type="button" class="star-btn" data-value="1">★</button>
-                            <button type="button" class="star-btn" data-value="2">★</button>
-                            <button type="button" class="star-btn" data-value="3">★</button>
-                            <button type="button" class="star-btn" data-value="4">★</button>
-                            <button type="button" class="star-btn" data-value="5">★</button>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="rating-title mb-0">Đánh giá chất lượng hỗ trợ</h6>
+                            <button type="button" class="btn-cancel-rating text-muted small border-0 bg-transparent" id="btnCancelRating" style="cursor: pointer; text-decoration: underline;">Quay lại nhập phản hồi</button>
                         </div>
-                        <textarea class="form-control rating-comment mb-2" id="ratingComment" rows="2" placeholder="Cảm nghĩ của bạn về quá trình hỗ trợ..."></textarea>
-                        <button type="button" class="btn-submit-rating" id="btnSubmitRating">Gửi đánh giá</button>
+                        <p class="text-muted small mb-2">Bạn có hài lòng với cách xử lý và giải quyết của đội ngũ CSKH PawPal không?</p>
+                        <div class="star-rating-holder mb-3 d-flex gap-2 align-items-center flex-wrap" id="ratingStarsGroup">
+                            <div class="d-flex gap-1">
+                                <button type="button" class="star-btn" data-value="1" title="1 sao">★</button>
+                                <button type="button" class="star-btn" data-value="2" title="2 sao">★</button>
+                                <button type="button" class="star-btn" data-value="3" title="3 sao">★</button>
+                                <button type="button" class="star-btn" data-value="4" title="4 sao">★</button>
+                                <button type="button" class="star-btn" data-value="5" title="5 sao">★</button>
+                            </div>
+                            <span class="rating-score-label small fw-semibold" id="ratingScoreLabel" style="color: #D97706;">5 / 5 sao (Rất hài lòng)</span>
+                        </div>
+                        <textarea class="form-control rating-comment mb-3" id="ratingComment" rows="2" placeholder="Nhập cảm nghĩ hoặc đóng góp ý kiến cho PawPal (tùy chọn)..."></textarea>
+                        <div class="d-flex justify-content-end gap-2 align-items-center">
+                            <button type="button" class="btn-close-ticket" id="btnCancelRatingAction">Để sau</button>
+                            <button type="button" class="btn-submit-rating" id="btnSubmitRating">Xác nhận hoàn tất và Đánh giá</button>
+                        </div>
                     </div>
                 </div>
             </div>

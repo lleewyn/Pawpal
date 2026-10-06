@@ -137,69 +137,65 @@
 
     async function loadTickets() {
         let localList = getLocalTickets();
-        
-        // Dữ liệu mẫu ban đầu nếu hoàn toàn trống
-        if (localList.length === 0) {
-            localList = [
-                {
-                    id: 'TK-2026-001',
-                    title: '[Khiếu nại Dịch vụ] Miu Con - Gói Tắm Vệ Sinh Cơ Bản: Bé bị trầy xước nhẹ ở tai',
-                    type: 'service',
-                    status: 'processing',
-                    priority: 'Cao',
-                    rating: null,
-                    ratingComment: '',
-                    context: { bookingId: 'BKG-1001', petName: 'Miu Con', serviceName: 'Gói Tắm Vệ Sinh Cơ Bản' },
-                    messages: [
-                        { sender: 'user', text: 'Bé Miu sau khi tắm và sấy về có vết trầy nhẹ ở vành tai phải và hơi sợ nước.', time: '2026-09-28T14:30:00.000Z' },
-                        { sender: 'cskh', agent: 'Lê Lệ Quyên (CSKH)', text: 'PawPal chào bạn, chúng tôi đã tiếp nhận và đang tiến hành trích xuất camera phòng sấy của cơ sở Quận 1 để kiểm tra thao tác kỹ thuật viên nhé.', time: '2026-09-28T14:45:00.000Z' }
-                    ]
-                }
-            ];
-            saveLocalTickets(localList);
-        }
-
         const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+        
         if (db) {
             try {
-                const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user'));
+                const currentUser = JSON.parse(localStorage.getItem('pawpal_current_user')) || {};
                 let query = db.from('support_ticket').select('*').order('created_at', { ascending: false });
                 if (currentUser && currentUser.id) {
                     query = query.eq('user_id', currentUser.id);
                 }
                 const { data: ticketsData, error: tErr } = await query;
-                if (!tErr && ticketsData && ticketsData.length > 0) {
-                    const { data: msgsData } = await db.from('support_ticket_message').select('*').order('created_at', { ascending: true });
-                    const msgsByTicket = {};
-                    if (msgsData) {
-                        msgsData.forEach(m => {
-                            if (!msgsByTicket[m.ticket_id]) msgsByTicket[m.ticket_id] = [];
-                            msgsByTicket[m.ticket_id].push({
-                                sender: m.sender_type,
-                                agent: m.agent_name,
-                                text: m.content,
-                                time: m.created_at
-                            });
-                        });
-                    }
-                    ticketsData.forEach(t => {
-                        const exists = localList.some(item => item.id === t.id);
-                        if (!exists) {
-                            localList.unshift({
-                                id: t.id,
-                                title: t.title,
-                                type: t.type,
-                                status: t.status,
-                                priority: t.priority,
-                                rating: t.rating,
-                                ratingComment: t.rating_comment,
-                                messages: msgsByTicket[t.id] || []
+                if (!tErr && ticketsData) {
+                    const ticketIds = ticketsData.map(t => t.id);
+                    let msgsByTicket = {};
+                    if (ticketIds.length > 0) {
+                        const { data: msgsData } = await db
+                            .from('support_ticket_message')
+                            .select('*')
+                            .in('ticket_id', ticketIds)
+                            .order('created_at', { ascending: true });
+                            
+                        if (msgsData) {
+                            msgsData.forEach(m => {
+                                if (!msgsByTicket[m.ticket_id]) msgsByTicket[m.ticket_id] = [];
+                                msgsByTicket[m.ticket_id].push({
+                                    sender: m.sender_type,
+                                    agent: m.agent_name,
+                                    text: m.content,
+                                    time: m.created_at
+                                });
                             });
                         }
+                    }
+
+                    const supabaseTickets = ticketsData.map(t => ({
+                        id: t.id,
+                        title: t.title,
+                        type: t.type || 'other',
+                        status: t.status || 'pending',
+                        priority: t.priority || 'Trung bình',
+                        rating: t.rating,
+                        ratingComment: t.rating_comment,
+                        createdAt: t.created_at,
+                        context: t.context || {},
+                        resolution: t.resolution || null,
+                        messages: msgsByTicket[t.id] || []
+                    }));
+
+                    // Hợp nhất ticket từ Supabase và LocalStorage mà không duplicate
+                    const merged = [...supabaseTickets];
+                    localList.forEach(loc => {
+                        if (!merged.some(m => m.id === loc.id)) {
+                            merged.push(loc);
+                        }
                     });
+                    localList = merged;
+                    saveLocalTickets(localList);
                 }
             } catch (err) {
-                console.warn('[Support] Dùng local tickets fallback do không kết nối được Supabase:', err);
+                console.warn('[Support] Kết nối Supabase tickets:', err);
             }
         }
 

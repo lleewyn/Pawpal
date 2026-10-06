@@ -127,22 +127,30 @@ function formatApplicableTerms(applicable) {
     return applicable.map(k => dict[String(k).toLowerCase()] || k).join(', ');
 }
 
+let isInitRunning = false;
+
 export async function initLoyalty() {
-    let currentUser = getCurrentUser();
-
-    if (typeof window.setUserSubBreadcrumb === 'function') {
-        window.setUserSubBreadcrumb('', 'loyalty');
-    }
-
-    if (window.getSupabaseClient || window.SupabaseClient) {
-        currentUser = await syncLoyaltyFromSupabase(currentUser);
-    }
-
-    let vouchersMock = [];
+    if (isInitRunning) return;
+    isInitRunning = true;
     try {
+        let currentUser = getCurrentUser();
+
+        if (typeof window.setUserSubBreadcrumb === 'function') {
+            window.setUserSubBreadcrumb('', 'loyalty');
+        }
+
+        if (window.getSupabaseClient || window.SupabaseClient) {
+            currentUser = await syncLoyaltyFromSupabase(currentUser);
+        }
+
+        let vouchersMock = [];
         let apiVouchers = [];
         if (typeof API.getVouchers === 'function') {
-            apiVouchers = await API.getVouchers();
+            try {
+                apiVouchers = await API.getVouchers();
+            } catch (err) {
+                console.warn('Lỗi khi tải voucher từ máy chủ:', err);
+            }
         }
 
         const POINTS_TABLE = [
@@ -293,13 +301,11 @@ export async function initLoyalty() {
         });
 
         window.PawPalVoucherRedeemList = vouchersMock;
-    } catch (error) {
-        console.error('Lỗi tải vouchers:', error);
-        vouchersMock = [];
+        renderLoyaltyPage(currentUser, vouchersMock);
+        renderMyVouchers(currentUser);
+    } finally {
+        isInitRunning = false;
     }
-
-    renderLoyaltyPage(currentUser, vouchersMock);
-    renderMyVouchers(currentUser);
 }
 
 async function syncLoyaltyFromSupabase(user) {
@@ -935,7 +941,48 @@ async function doRedeem(voucherInfo, user) {
         user.points -= voucherInfo.pointsCost;
         setCurrentUser(user);
 
-        // Đồng bộ trừ điểm sang pawpal_admin_customers_data và ghi lịch sử Pawpoint
+        const newVoucherCode = voucherInfo.code || ('PAW-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+        const myVouchers = getStoredMyVouchers();
+        const newVoucherItem = {
+            id: 'MY-VOUCHER-' + Date.now(),
+            code: newVoucherCode,
+            name: voucherInfo.name,
+            discountDisplay: voucherInfo.discountDisplay,
+            pointsCost: voucherInfo.pointsCost,
+            createdAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            status: 'AVAILABLE'
+        };
+        myVouchers.unshift(newVoucherItem);
+        saveStoredMyVouchers(myVouchers);
+
+        // 1. Cập nhật trực tiếp lên Supabase Live DB (customer_membership & paw_point_transaction)
+        try {
+            const db = window.getSupabaseClient ? window.getSupabaseClient() : window.SupabaseClient;
+            if (db && user.id) {
+                // Cập nhật điểm trong customer_membership
+                await db.from('customer_membership')
+                    .update({ 
+                        total_paw_points: user.points,
+                        current_points: user.points,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('customer_id', user.id);
+
+                // Ghi lịch sử giao dịch điểm paw_point_transaction
+                await db.from('paw_point_transaction').insert({
+                    customer_id: user.id,
+                    points: -voucherInfo.pointsCost,
+                    transaction_type: 'REDEEM',
+                    description: `Đổi ưu đãi: ${voucherInfo.name}`,
+                    created_at: new Date().toISOString()
+                });
+            }
+        } catch (dbErr) {
+            console.warn('[Loyalty] Lỗi cập nhật điểm lên Supabase:', dbErr);
+        }
+
+        // 2. Đồng bộ trừ điểm sang pawpal_admin_customers_data và ghi lịch sử Pawpoint session
         try {
             const cleanPhone = (user.phone || '').replace(/[^0-9]/g, '');
             const syncAdminData = (storage) => {
@@ -952,7 +999,6 @@ async function doRedeem(voucherInfo, user) {
             syncAdminData(sessionStorage);
             syncAdminData(localStorage);
 
-            // Thêm vào lịch sử giao dịch Pawpoint Admin
             const rawHist = localStorage.getItem('pawpal_admin_pawpoint_history') || sessionStorage.getItem('pawpal_admin_pawpoint_history');
             let hist = rawHist ? JSON.parse(rawHist) : [];
             const now = new Date();
@@ -973,21 +1019,6 @@ async function doRedeem(voucherInfo, user) {
         } catch (e) {
             console.warn('Lỗi đồng bộ điểm voucher sang admin:', e);
         }
-
-        const newVoucherCode = voucherInfo.code || ('PAW-' + Math.random().toString(36).substring(2, 8).toUpperCase());
-        const myVouchers = getStoredMyVouchers();
-        const newVoucherItem = {
-            id: 'MY-VOUCHER-' + Date.now(),
-            code: newVoucherCode,
-            name: voucherInfo.name,
-            discountDisplay: voucherInfo.discountDisplay,
-            pointsCost: voucherInfo.pointsCost,
-            createdAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            status: 'AVAILABLE'
-        };
-        myVouchers.unshift(newVoucherItem);
-        saveStoredMyVouchers(myVouchers);
 
         // Update real-time UI
         const pointsDisplay = document.getElementById('current-points-display');
@@ -1066,9 +1097,4 @@ function showSecurityModal(voucherId) {
 }
 
 export const init = initLoyalty;
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initLoyalty);
-} else {
-    initLoyalty();
-}
+window.initLoyalty = initLoyalty;

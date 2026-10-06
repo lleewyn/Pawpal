@@ -113,42 +113,57 @@ document.addEventListener('DOMContentLoaded', function() {
     
 });
 
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log('--- DIAGNOSTICS START ---');
-            console.log('Bootstrap available:', typeof bootstrap !== 'undefined');
-
+        document.addEventListener('DOMContentLoaded', async function () {
             const carousel = document.getElementById('heroCarousel');
-            if (carousel) {
-                console.log('Found #heroCarousel element');
+            if (!carousel) return;
 
-                carousel.addEventListener('slide.bs.carousel', function (e) {
-                    console.log('Carousel slide event triggered. Moving to index:', e.to);
-                });
+            // Nạp banners động từ Supabase qua DataLoader
+            let attempts = 0;
+            while (!window.DataLoader && attempts < 20) {
+                await new Promise(r => setTimeout(r, 100));
+                attempts++;
+            }
 
-                const images = carousel.querySelectorAll('img');
-                console.log('Number of images in carousel:', images.length);
-                images.forEach((img, i) => {
-                    console.log(`Image ${i + 1} src:`, img.src);
+            if (window.DataLoader && typeof window.DataLoader.loadBanners === 'function') {
+                try {
+                    const banners = await window.DataLoader.loadBanners();
+                    if (banners && banners.length > 0) {
+                        const inner = carousel.querySelector('.carousel-inner');
+                        const indicators = carousel.querySelector('.carousel-indicators');
 
-                    if (img.complete) {
-                        if (img.naturalWidth === 0) {
-                            console.error(`Image ${i + 1} (${img.src}) failed to load (naturalWidth is 0)`);
-                        } else {
-                            console.log(`Image ${i + 1} loaded successfully`);
+                        if (inner) {
+                            inner.innerHTML = banners.map((b, idx) => `
+                                <div class="carousel-item ${idx === 0 ? 'active' : ''}">
+                                    <a href="${b.link || '/pages/services/services.html'}">
+                                        <img src="${b.image}" class="d-block w-100 ui-element-5 h-auto object-fit-cover"
+                                            alt="${b.title || 'PawPal'}" loading="${idx === 0 ? 'eager' : 'lazy'}">
+                                    </a>
+                                </div>
+                            `).join('');
+                        }
+
+                        if (indicators) {
+                            indicators.innerHTML = banners.map((_, idx) => `
+                                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="${idx}"
+                                    class="${idx === 0 ? 'active' : ''}" ${idx === 0 ? 'aria-current="true"' : ''}
+                                    aria-label="Slide ${idx + 1}"></button>
+                            `).join('');
+                        }
+
+                        // Reinitialize bootstrap carousel if available
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Carousel) {
+                            const inst = bootstrap.Carousel.getInstance(carousel);
+                            if (inst) inst.dispose();
+                            new bootstrap.Carousel(carousel, {
+                                interval: 4500,
+                                ride: 'carousel'
+                            });
                         }
                     }
-
-                    img.addEventListener('error', function () {
-                        console.error(`Image ${i + 1} (${img.src}) failed to load`);
-                    });
-                    img.addEventListener('load', function () {
-                        console.log(`Image ${i + 1} loaded successfully`);
-                    });
-                });
-            } else {
-                console.error('Could not find #heroCarousel element');
+                } catch (e) {
+                    console.warn('[Landing] Không thể tải banner động từ DB, giữ banner mặc định:', e);
+                }
             }
-            console.log('--- DIAGNOSTICS END ---');
         });
     
 
