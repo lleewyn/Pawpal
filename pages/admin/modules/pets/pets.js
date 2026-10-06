@@ -336,19 +336,6 @@
             }
         }
 
-        function persistPetsData() {
-            try {
-                sessionStorage.setItem('pawpal_admin_pets_data', JSON.stringify(petsData));
-                localStorage.setItem('pawpal_admin_pets_data', JSON.stringify(petsData));
-            } catch (e) {}
-        }
-
-        function persistCustomersData() {
-            try {
-                sessionStorage.setItem('pawpal_admin_customers_data', JSON.stringify(customersData));
-            } catch (e) {}
-        }
-
         // 2. Chuyển đổi giữa 4 Sub-tabs trên Header Bar
         const headerSubtabBtns = document.querySelectorAll('.header-subtab-btn');
         const subtabPanels = document.querySelectorAll('.subtab-content');
